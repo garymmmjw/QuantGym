@@ -239,6 +239,33 @@ git pull origin main
 git branch -d feature/short-description
 ```
 
+### 改动应该去哪里做
+
+GitHub 是代码和文档的源头；Render、Cloudflare 和 Resend 是部署、域名和密钥配置。大多数产品改动只需要改本地代码，push 到 GitHub，合并到 `main` 后由平台自动部署。
+
+| 要修改的内容 | 应该修改哪里 | 是否需要动 Render / Cloudflare / Resend |
+| --- | --- | --- |
+| 前端 UI、按钮、页面文案、样式 | 本地代码 -> GitHub PR -> Cloudflare Pages 自动部署 | 通常不需要 |
+| API 代码 | 本地代码 -> GitHub PR -> Render `quantgym-api` 自动部署 | 通常不需要手动改配置 |
+| LLM 代理代码 | 本地代码 -> GitHub PR -> Render `quantgym-llm` 自动部署 | 通常不需要手动改配置 |
+| README、部署文档、协作说明 | 本地文档 -> GitHub PR | 不需要 |
+| 题库 JSON、题目来源、前端静态数据 | 本地数据/脚本 -> GitHub PR -> Cloudflare/Render 自动部署 | 通常不需要 |
+| 新增或移除内测邮箱 | Render `quantgym-api` 环境变量 `QUANTGYM_BETA_EMAIL_ALLOWLIST` | 需要改 Render API，并重启/重新部署 API |
+| 更换 OpenAI API key | Render `quantgym-llm` 环境变量 `OPENAI_API_KEY` | 只需要改 Render LLM |
+| 更换 Resend API key | Render `quantgym-api` 环境变量 `QUANTGYM_SMTP_PASSWORD` | 只需要改 Render API |
+| 更换发件邮箱或发件域名 | Resend domain、Cloudflare DNS、Render API SMTP 环境变量 | 需要同时检查 Resend、Cloudflare、Render |
+| 更换 API 或 LLM 域名 | Render custom domain、Cloudflare DNS、Cloudflare Pages env | 需要改部署平台配置 |
+| 更换前端域名 `beta.quantgym.app` | Cloudflare Pages custom domain / DNS | 需要改 Cloudflare |
+| 更换数据库路径或持久化磁盘 | Render `quantgym-api` disk 和 `QUANTGYM_DB` | 需要改 Render API |
+
+最常见的例外是内测邮箱白名单：加用户不是代码修改，不要为此提交 Git。直接到 Render 的 `quantgym-api` 服务里更新：
+
+```bash
+QUANTGYM_BETA_EMAIL_ALLOWLIST=email1@example.com,email2@example.com
+```
+
+保存后重启或重新部署 API，让新白名单生效。
+
 协作规则：
 
 - `main` 只放稳定版本。
