@@ -8,27 +8,28 @@
 2. 一台能长期运行 Python 3 和 Node.js、带持久化磁盘和备份能力的服务器，或者等价的托管组合。
 3. 一个 OpenAI API key，放在 LLM 代理服务端，不要写进前端文件。
 4. 一份测试用户邮箱名单。封闭内测建议先只放行这些邮箱。
-5. 可选的 Google OAuth Web Client ID。暂时不测 Google 登录时，把 `config.js` 里的 `googleClientId` 留空。
+5. 可选的 Google OAuth Web Client ID。暂时不测 Google 登录时，让 `QUANTGYM_WEB_GOOGLE_CLIENT_ID` 为空，并设置 `QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED=0`。
 6. 题源分发权限确认。当前公共题库会导入 10 个来源、2,771 条题目，其中 `quantguide` 是本地授权账户导出的私有题源包；如果没有确认可向测试用户分发，先在 manifest 中禁用它再上线。
 
 ## 推荐拓扑
 
-- 静态网页：`https://beta.example.com`
+- 静态网页：`https://beta.example.com`，只发布构建后的 `dist/` 目录
 - API：`https://api.example.com/api`
 - LLM 代理：`https://llm.example.com/interview`
 - SQLite：放在 API 服务的持久化磁盘上，并做定时备份
 
-网页部署时编辑 [config.js](./config.js)：
+网页部署时不要直接发布仓库根目录。用构建脚本生成 `dist/`，脚本会写入部署用 `dist/config.js`：
 
-```js
-window.QUANTGYM_CONFIG = {
-  cloudApiEndpoint: "https://api.example.com/api",
-  llmEndpoint: "https://llm.example.com/interview",
-  llmModel: "gpt-5-nano",
-  googleClientId: "",
-  googleLoginEnabled: false
-};
+```bash
+QUANTGYM_WEB_API_ENDPOINT="https://api.example.com/api" \
+QUANTGYM_WEB_LLM_ENDPOINT="https://llm.example.com/interview" \
+QUANTGYM_WEB_LLM_MODEL="gpt-5-nano" \
+QUANTGYM_WEB_GOOGLE_CLIENT_ID="" \
+QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED=0 \
+node scripts/build-static-site.mjs --strict
 ```
+
+静态托管平台的 publish directory 设置为 `dist`。这样不会把 `data/question-banks/quantguide/raw-export/`、`artifacts/`、`docs/ui-reference/`、脚本或后端代码暴露成可访问静态文件。
 
 ## API 服务
 
@@ -76,12 +77,12 @@ export LLM_MAX_BODY_BYTES=12582912
 
 ## 上线步骤
 
-1. 部署静态网页，确认 `config.js` 指向 HTTPS API 和 HTTPS LLM endpoint。
+1. 生成并部署静态网页 `dist/`，确认 `dist/config.js` 指向 HTTPS API 和 HTTPS LLM endpoint。
 2. 部署 API，确认 SQLite 路径在持久化磁盘，不在临时目录。
 3. 部署 LLM 代理，确认 OpenAI key 只存在服务端环境变量，并打开 `LLM_AUTH_API_BASE`。
 4. 在反向代理或托管平台开启 HTTPS、访问日志、请求体上限和基础 rate limit。
 5. 访问 `GET /api/health` 和 `GET /health`，确认 API 和 LLM 代理在线。
-6. 运行 `node scripts/import-quant-books.mjs`，确认 `data/problem-catalog.json` 和 SQLite 公共题库数量一致。
+6. 重启 API，让它从已提交的 `data/problem-catalog.json` 导入 SQLite；确认 `GET /api/problems` 返回 2,771 条公共题。只有在重新抽取本地书籍题源时，才运行 `node scripts/import-quant-books.mjs`。
 7. 用 allowlist 里的邮箱走一遍验证码收信、注册、登录、题库读取、状态同步、模拟面试和新闻刷新。
 8. 拉 3 到 10 个测试用户先跑一轮，收集浏览器、设备、失败步骤和 LLM 成本。
 

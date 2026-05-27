@@ -7,3 +7,4 @@ api-server/__pycache__/
 node_modules/
 *.log
 .env.local
+dist/

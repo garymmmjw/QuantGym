@@ -5,7 +5,10 @@ import { fileURLToPath } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDir, "..");
-const desktopBookRoot = "/Users/miujiawei/Desktop/量化书籍";
+const options = parseArgs(process.argv.slice(2));
+const desktopBookRoot = path.resolve(
+  options.bookRoot || process.env.QUANTGYM_BOOK_ROOT || "/Users/miujiawei/Desktop/量化书籍"
+);
 const sourceRoot = path.join(projectRoot, "data", "question-banks");
 const manifestPath = path.join(sourceRoot, "catalog-manifest.json");
 const archivedQuestionBankDir = ["紫", "皮", "书"].join("");
@@ -172,7 +175,7 @@ function extractBook(inputPath, book) {
       promptZh: promptText,
       answer: "",
       explanation: solutionText,
-      createdAt: book.slug,
+      createdAt: importedAt,
       updatedAt: importedAt
     });
 
@@ -751,8 +754,33 @@ function extractArchivedAppendix(sourceLines, book, offset) {
       promptZh: promptText,
       answer: "",
       explanation: "",
-      createdAt: book.slug,
+      createdAt: importedAt,
       updatedAt: importedAt
     };
   });
+}
+
+function parseArgs(args) {
+  const parsed = { _: [] };
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (!arg.startsWith("--")) {
+      parsed._.push(arg);
+      continue;
+    }
+    const [rawKey, inlineValue] = arg.slice(2).split("=");
+    const key = rawKey.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
+    if (inlineValue !== undefined) {
+      parsed[key] = inlineValue;
+      continue;
+    }
+    const next = args[index + 1];
+    if (next && !next.startsWith("--")) {
+      parsed[key] = next;
+      index += 1;
+    } else {
+      parsed[key] = true;
+    }
+  }
+  return parsed;
 }

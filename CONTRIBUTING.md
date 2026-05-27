@@ -73,6 +73,14 @@ node --check browser-extension/popup.js
 python3 -m py_compile api-server/server.py
 ```
 
+如果本次影响部署配置、前端入口或静态资源，再检查静态发布构建：
+
+```bash
+QUANTGYM_WEB_API_ENDPOINT="https://api.example.com/api" \
+QUANTGYM_WEB_LLM_ENDPOINT="https://llm.example.com/interview" \
+node scripts/build-static-site.mjs --strict
+```
+
 如果本次只改文档，可以只检查 `git status`。
 
 ## PR 合并后
@@ -123,6 +131,7 @@ git push
 - `api-server/data/*.sqlite3`
 - 真实用户数据
 - 本地日志和缓存
+- `dist/`
 
 可以提交：
 
