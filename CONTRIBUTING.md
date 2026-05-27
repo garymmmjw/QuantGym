@@ -14,7 +14,7 @@
 ## 每次开始修改
 
 ```bash
-cd /Users/miujiawei/Desktop/QuantGym/quant-quant-leetcode-probabilty-tex
+cd /Users/miujiawei/Desktop/QuantGym
 git checkout main
 git pull origin main
 git checkout -b feature/short-description
@@ -76,8 +76,8 @@ python3 -m py_compile api-server/server.py
 如果本次影响部署配置、前端入口或静态资源，再检查静态发布构建：
 
 ```bash
-QUANTGYM_WEB_API_ENDPOINT="https://api.example.com/api" \
-QUANTGYM_WEB_LLM_ENDPOINT="https://llm.example.com/interview" \
+QUANTGYM_WEB_API_ENDPOINT="https://api.quantgym.app/api" \
+QUANTGYM_WEB_LLM_ENDPOINT="https://llm.quantgym.app/interview" \
 node scripts/build-static-site.mjs --strict
 ```
 

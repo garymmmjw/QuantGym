@@ -28,21 +28,22 @@ Optional environment variables:
 
 ```bash
 export PORT=8790
-export QUANTGYM_HOST="127.0.0.1"
-export QUANTGYM_DB="/absolute/path/quantgym.sqlite3"
+export QUANTGYM_HOST="0.0.0.0"
+export QUANTGYM_DB="/var/data/quantgym.sqlite3"
 export QUANTGYM_PROBLEM_CATALOG="/absolute/path/problem-catalog.json"
-export QUANTGYM_ALLOWED_ORIGINS="http://127.0.0.1:5176"
+export QUANTGYM_ALLOWED_ORIGINS="https://beta.quantgym.app"
 export QUANTGYM_SESSION_DAYS=30
 export QUANTGYM_BETA_EMAIL_ALLOWLIST="tester1@example.com,tester2@example.com"
 export QUANTGYM_GOOGLE_CLIENT_ID="xxxx.apps.googleusercontent.com"
 export QUANTGYM_REQUIRE_EMAIL_VERIFICATION=1
 export QUANTGYM_EMAIL_CODE_TTL_MINUTES=10
 export QUANTGYM_EMAIL_CODE_COOLDOWN_SECONDS=60
-export QUANTGYM_SMTP_HOST="smtp.example.com"
+export QUANTGYM_EMAIL_DEV_CODE_RESPONSE=0
+export QUANTGYM_SMTP_HOST="smtp.resend.com"
 export QUANTGYM_SMTP_PORT=587
-export QUANTGYM_SMTP_USERNAME="mailer@example.com"
-export QUANTGYM_SMTP_PASSWORD="app-password"
-export QUANTGYM_SMTP_FROM="QuantGym <mailer@example.com>"
+export QUANTGYM_SMTP_USERNAME="resend"
+export QUANTGYM_SMTP_PASSWORD="re_..."
+export QUANTGYM_SMTP_FROM="QuantGym <no-reply@quantgym.app>"
 ```
 
 For local development, CORS defaults to `*` and `QUANTGYM_HOST` defaults to `127.0.0.1`. For deployment, set `QUANTGYM_ALLOWED_ORIGINS` to the production web origin and set `QUANTGYM_HOST=0.0.0.0` only when the platform or reverse proxy needs a non-loopback listener.

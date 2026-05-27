@@ -4,25 +4,25 @@
 
 ## 你需要准备
 
-1. 一个内测域名或子域名，至少能给网页、API 和 LLM 代理提供 HTTPS。
-2. 一台能长期运行 Python 3 和 Node.js、带持久化磁盘和备份能力的服务器，或者等价的托管组合。
+1. 一个内测域名或子域名，至少能给网页、API 和 LLM 代理提供 HTTPS。当前使用 `quantgym.app`。
+2. 一台能长期运行 Python 3 和 Node.js、带持久化磁盘和备份能力的服务器，或者等价的托管组合。当前 API 和 LLM 代理部署在 Render。
 3. 一个 OpenAI API key，放在 LLM 代理服务端，不要写进前端文件。
 4. 一份测试用户邮箱名单。封闭内测建议先只放行这些邮箱。
 5. 可选的 Google OAuth Web Client ID。暂时不测 Google 登录时，让 `QUANTGYM_WEB_GOOGLE_CLIENT_ID` 为空，并设置 `QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED=0`。
-6. 题源分发权限确认。当前公共题库会导入 10 个来源、2,771 条题目，其中 `quantguide` 是本地授权账户导出的私有题源包；如果没有确认可向测试用户分发，先在 manifest 中禁用它再上线。
+6. 题源分发权限确认。当前公共题库会导入 10 个来源、2,771 条题目，其中 `quantguide` 已由项目 owner 确认可用于这轮内测用户；未来扩大公开发布或商业分发前需要重新确认授权边界。
 
 ## 推荐拓扑
 
-- 静态网页：`https://beta.example.com`，只发布构建后的 `dist/` 目录
-- API：`https://api.example.com/api`
-- LLM 代理：`https://llm.example.com/interview`
+- 静态网页：`https://beta.quantgym.app`，Cloudflare Pages 只发布构建后的 `dist/` 目录
+- API：`https://api.quantgym.app/api`，Render service `quantgym-api`
+- LLM 代理：`https://llm.quantgym.app/interview`，Render service `quantgym-llm`
 - SQLite：放在 API 服务的持久化磁盘上，并做定时备份
 
 网页部署时不要直接发布仓库根目录。用构建脚本生成 `dist/`，脚本会写入部署用 `dist/config.js`：
 
 ```bash
-QUANTGYM_WEB_API_ENDPOINT="https://api.example.com/api" \
-QUANTGYM_WEB_LLM_ENDPOINT="https://llm.example.com/interview" \
+QUANTGYM_WEB_API_ENDPOINT="https://api.quantgym.app/api" \
+QUANTGYM_WEB_LLM_ENDPOINT="https://llm.quantgym.app/interview" \
 QUANTGYM_WEB_LLM_MODEL="gpt-5-nano" \
 QUANTGYM_WEB_GOOGLE_CLIENT_ID="" \
 QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED=0 \
@@ -37,17 +37,17 @@ API 部署前至少设置这些环境变量：
 
 ```bash
 export PORT=8790
-export QUANTGYM_HOST=127.0.0.1
-export QUANTGYM_DB="/srv/quantgym/data/quantgym.sqlite3"
-export QUANTGYM_ALLOWED_ORIGINS="https://beta.example.com"
+export QUANTGYM_HOST=0.0.0.0
+export QUANTGYM_DB="/var/data/quantgym.sqlite3"
+export QUANTGYM_ALLOWED_ORIGINS="https://beta.quantgym.app"
 export QUANTGYM_BETA_EMAIL_ALLOWLIST="tester1@example.com,tester2@example.com"
 export QUANTGYM_REQUIRE_EMAIL_VERIFICATION=1
 export QUANTGYM_EMAIL_DEV_CODE_RESPONSE=0
-export QUANTGYM_SMTP_HOST="smtp.example.com"
+export QUANTGYM_SMTP_HOST="smtp.resend.com"
 export QUANTGYM_SMTP_PORT=587
-export QUANTGYM_SMTP_USERNAME="mailer@example.com"
-export QUANTGYM_SMTP_PASSWORD="app-password"
-export QUANTGYM_SMTP_FROM="QuantGym <mailer@example.com>"
+export QUANTGYM_SMTP_USERNAME="resend"
+export QUANTGYM_SMTP_PASSWORD="re_..."
+export QUANTGYM_SMTP_FROM="QuantGym <no-reply@quantgym.app>"
 ```
 
 如果部署平台要求进程监听公网网卡，再把 `QUANTGYM_HOST` 改为 `0.0.0.0`，并由平台或反向代理提供 HTTPS。
@@ -67,9 +67,9 @@ LLM 代理部署前至少设置：
 ```bash
 export OPENAI_API_KEY="sk-..."
 export PORT=8787
-export LLM_PROXY_HOST=127.0.0.1
-export LLM_ALLOWED_ORIGINS="https://beta.example.com"
-export LLM_AUTH_API_BASE="https://api.example.com/api"
+export LLM_PROXY_HOST=0.0.0.0
+export LLM_ALLOWED_ORIGINS="https://beta.quantgym.app"
+export LLM_AUTH_API_BASE="https://api.quantgym.app/api"
 export LLM_MAX_BODY_BYTES=12582912
 ```
 

@@ -14,7 +14,7 @@ POST http://127.0.0.1:8787/news
 Option A (recommended): put env vars in project-root `.env`:
 
 ```bash
-# /Users/miujiawei/Desktop/QuantGym/quant-quant-leetcode-probabilty-tex/.env
+# /Users/miujiawei/Desktop/QuantGym/.env
 OPENAI_API_KEY=sk-...
 PORT=8787
 LLM_PROXY_HOST=127.0.0.1
