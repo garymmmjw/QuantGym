@@ -46,7 +46,7 @@ export QUANTGYM_EMAIL_DEV_CODE_RESPONSE=0
 export QUANTGYM_SMTP_HOST="smtp.resend.com"
 export QUANTGYM_SMTP_PORT=587
 export QUANTGYM_SMTP_USERNAME="resend"
-export QUANTGYM_SMTP_PASSWORD="re_..."
+export QUANTGYM_SMTP_PASSWORD="<Resend API key>"
 export QUANTGYM_SMTP_FROM="QuantGym <no-reply@quantgym.app>"
 ```
 
@@ -65,7 +65,7 @@ export QUANTGYM_GOOGLE_CLIENT_ID="xxxx.apps.googleusercontent.com"
 LLM 代理部署前至少设置：
 
 ```bash
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<OpenAI API key>"
 export PORT=8787
 export LLM_PROXY_HOST=0.0.0.0
 export LLM_ALLOWED_ORIGINS="https://beta.quantgym.app"
