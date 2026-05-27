@@ -464,6 +464,16 @@ const i18n = {
     checkInDone: "已打卡",
     todayGuide: "今日向导",
     tasksWaiting: "3 个任务待完成",
+    todoButton: "今日待办",
+    todoEyebrow: "TODAY",
+    todoTitle: "To-do list",
+    todoSummaryEmpty: "生成今日计划后，这里会同步更新。",
+    todoEmpty: "还没有任务。先生成今日计划，或直接添加一个待办。",
+    todoAddPlaceholder: "添加一个任务",
+    todoAdd: "添加",
+    todoDone: "标为未完成",
+    todoUndone: "标为完成",
+    problemDifficultyAll: "全部难度",
     provider: "登录方式",
     createdAt: "账户创建",
     currentRank: "当前排名"
@@ -647,6 +657,16 @@ const i18n = {
     checkInDone: "Checked in",
     todayGuide: "Today's guide",
     tasksWaiting: "3 tasks waiting",
+    todoButton: "Tasks",
+    todoEyebrow: "TODAY",
+    todoTitle: "To-do list",
+    todoSummaryEmpty: "Generate today's plan and it will sync here.",
+    todoEmpty: "No tasks yet. Generate today's plan or add one directly.",
+    todoAddPlaceholder: "Add a task",
+    todoAdd: "Add",
+    todoDone: "Mark not done",
+    todoUndone: "Mark done",
+    problemDifficultyAll: "All difficulty",
     provider: "Provider",
     createdAt: "Created",
     currentRank: "Current Rank",
@@ -1094,8 +1114,10 @@ let communityFilter = "all";
 let problemSocial = new Map();
 let problemViewMode = "all";
 let problemThemeFilter = "all";
+let problemDifficultyFilter = "all";
 let problemSocialNotice = "";
 let leetcodeHotExpanded = false;
+let todoDockOpen = false;
 let heroTypewriterTimer = null;
 const PROBLEM_PAGE_SIZE = 24;
 let problemVisibleCount = PROBLEM_PAGE_SIZE;
@@ -1240,6 +1262,7 @@ function bindElements() {
     "problemCompletionProgress",
     "problemThemeFilter",
     "problemThemeSummary",
+    "problemDifficultyFilter",
     "problemRanking",
     "problemRankingList",
     "leetcodeHotTitle",
@@ -1253,6 +1276,18 @@ function bindElements() {
     "problemList",
     "loadMoreProblemsBtn",
     "problemDetail",
+    "todoDockButton",
+    "todoDockButtonLabel",
+    "todoDockCount",
+    "todoDockPanel",
+    "todoDockCloseBtn",
+    "todoDockEyebrow",
+    "todoDockTitle",
+    "todoDockSummary",
+    "todoDockList",
+    "todoDockEmpty",
+    "todoDockAddForm",
+    "todoDockAddInput",
     "interviewSummary",
     "interviewTypeSelect",
     "interviewQuestionCount",
@@ -1533,9 +1568,30 @@ function bindEvents() {
     problemVisibleCount = PROBLEM_PAGE_SIZE;
     returnToProblemList();
   });
+  els.problemDifficultyFilter?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-problem-difficulty]");
+    if (!button) return;
+    problemDifficultyFilter = normalizeDifficultyFilter(button.dataset.problemDifficulty || "all");
+    problemVisibleCount = PROBLEM_PAGE_SIZE;
+    returnToProblemList();
+  });
   els.leetcodeHotToggleBtn?.addEventListener("click", () => {
     leetcodeHotExpanded = !leetcodeHotExpanded;
     renderLeetcodeHot100();
+  });
+  els.todoDockButton?.addEventListener("click", () => {
+    todoDockOpen = !todoDockOpen;
+    renderTodoDock();
+  });
+  els.todoDockCloseBtn?.addEventListener("click", () => {
+    todoDockOpen = false;
+    renderTodoDock();
+  });
+  els.todoDockPanel?.addEventListener("click", handleTodoDockClick);
+  els.todoDockPanel?.addEventListener("change", handleTodoDockEdit);
+  els.todoDockAddForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    addTodoTask();
   });
   els.addProblemBtn.addEventListener("click", () => {
     els.problemForm.classList.toggle("hidden");
@@ -1689,7 +1745,7 @@ function bindEvents() {
 
 function setupButtonRipples() {
   document.addEventListener("click", (event) => {
-    const button = event.target.closest("button, .primary-button, .secondary-button, .module-tab, .segment, .feature-launch-card, .leetcode-hot-link, .leetcode-hot-done");
+    const button = event.target.closest("button, .primary-button, .secondary-button, .module-tab, .segment, .feature-launch-card, .leetcode-hot-link, .leetcode-hot-done, .todo-dock-button, .todo-task-toggle");
     if (!button || button.closest(".auth-provider-stack")) return;
     const rect = button.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
@@ -1831,6 +1887,24 @@ function normalizePrepPlan(raw = null) {
   const diagnosticScores = raw.diagnosticScores && typeof raw.diagnosticScores === "object"
     ? Object.fromEntries(Object.entries(raw.diagnosticScores).map(([key, value]) => [key, Math.max(0, Math.min(100, Number(value || 0)))]))
     : {};
+  const taskOverrides = raw.taskOverrides && typeof raw.taskOverrides === "object"
+    ? Object.fromEntries(Object.entries(raw.taskOverrides).map(([key, value]) => [key, {
+      title: String(value?.title || "").trim().slice(0, 120),
+      detail: String(value?.detail || "").trim().slice(0, 260),
+      minutes: Math.max(0, Number(value?.minutes || 0))
+    }]))
+    : {};
+  const customTasks = Array.isArray(raw.customTasks)
+    ? raw.customTasks.map((task) => ({
+      id: String(task?.id || makeId()).trim(),
+      date: String(task?.date || localDateKey()).slice(0, 10),
+      title: String(task?.title || "").trim().slice(0, 120),
+      detail: String(task?.detail || "").trim().slice(0, 260),
+      minutes: Math.max(0, Number(task?.minutes || 15)),
+      action: String(task?.action || "custom").trim(),
+      query: String(task?.query || "").trim()
+    })).filter((task) => task.id && (task.title || task.detail))
+    : [];
   return {
     track,
     role: raw.role,
@@ -1840,6 +1914,8 @@ function normalizePrepPlan(raw = null) {
     diagnosticScore: Math.max(0, Math.min(prepDiagnosticQuestions.length, Number(raw.diagnosticScore || 0))),
     diagnosticScores,
     completedTasks: raw.completedTasks && typeof raw.completedTasks === "object" ? raw.completedTasks : {},
+    taskOverrides,
+    customTasks,
     createdAt: raw.createdAt || new Date().toISOString(),
     updatedAt: raw.updatedAt || raw.createdAt || new Date().toISOString()
   };
@@ -3340,6 +3416,11 @@ function applyLanguage() {
   setAttribute("#globalSearchInput", "aria-label", t("appSearchPlaceholder"));
   setTexts(".app-command-actions .app-stat-pill small", [t("commandStreakLabel"), t("commandXpLabel")]);
   updateCheckInPill();
+  setText("#todoDockButtonLabel", t("todoButton"));
+  setText("#todoDockEyebrow", t("todoEyebrow"));
+  setText("#todoDockTitle", t("todoTitle"));
+  setPlaceholder("todoDockAddInput", t("todoAddPlaceholder"));
+  setButtonLabel("#todoDockAddForm .secondary-button", t("todoAdd"));
   setAttribute(".app-account-chip", "aria-label", t("accountInfo"));
   setAttribute(".app-settings-button", "aria-label", t("settings"));
   setText(".hero-kicker", t("heroKicker"));
@@ -3583,6 +3664,7 @@ function renderAll() {
   renderNetwork();
   renderTodayPlan();
   renderPrepPlan();
+  renderTodoDock();
   renderExperiences();
   renderResume();
   renderJobs();
@@ -3692,6 +3774,16 @@ function problemMatchesTheme(problem, theme = problemThemeFilter) {
   return normalizeCategory(problem.category) === theme;
 }
 
+function normalizeDifficultyFilter(value = "all") {
+  return ["easy", "medium", "hard"].includes(value) ? value : "all";
+}
+
+function problemMatchesDifficulty(problem, difficulty = problemDifficultyFilter) {
+  const normalized = normalizeDifficultyFilter(difficulty);
+  if (normalized === "all") return true;
+  return difficultyClass(problem.difficulty) === normalized;
+}
+
 function getProblemThemeEntries(problems = getCatalogProblems()) {
   return Object.keys(skillDefs)
     .map((key) => ({
@@ -3722,6 +3814,26 @@ function renderProblemThemeFilter(problems = getCatalogProblems()) {
     const active = entries.find((item) => item.key === problemThemeFilter) || entries[0];
     els.problemThemeSummary.textContent = `${active.label} · ${active.count} ${isEn ? "problems" : "题"}`;
   }
+}
+
+function renderProblemDifficultyFilter(problems = getCatalogProblems()) {
+  if (!els.problemDifficultyFilter) return;
+  const isEn = getLanguage() === "en";
+  const themeProblems = problems.filter((problem) => problemMatchesTheme(problem, problemThemeFilter));
+  const entries = [
+    { key: "all", label: t("problemDifficultyAll"), count: themeProblems.length },
+    { key: "easy", label: "Easy", count: themeProblems.filter((problem) => difficultyClass(problem.difficulty) === "easy").length },
+    { key: "medium", label: "Medium", count: themeProblems.filter((problem) => difficultyClass(problem.difficulty) === "medium").length },
+    { key: "hard", label: "Hard", count: themeProblems.filter((problem) => difficultyClass(problem.difficulty) === "hard").length }
+  ];
+  els.problemDifficultyFilter.querySelectorAll("[data-problem-difficulty]").forEach((button) => {
+    const key = normalizeDifficultyFilter(button.dataset.problemDifficulty);
+    const entry = entries.find((item) => item.key === key);
+    button.classList.toggle("active", key === problemDifficultyFilter);
+    button.innerHTML = `${escapeHtml(entry?.label || button.textContent.trim())}<small>${escapeHtml(String(entry?.count || 0))}</small>`;
+    button.setAttribute("aria-pressed", String(key === problemDifficultyFilter));
+    button.title = isEn ? `${entry?.count || 0} problems` : `${entry?.count || 0} 题`;
+  });
 }
 
 function buildProblemProgressItems(problems = getCatalogProblems()) {
@@ -3910,6 +4022,7 @@ function renderTodayPlan() {
   open.addEventListener("click", () => switchModule("plan"));
 
   els.todayPlanCard.append(top, list, open);
+  renderTodoDock();
 }
 
 function generateTodayStudyPlan() {
@@ -3921,6 +4034,7 @@ function generateTodayStudyPlan() {
   state.studyPlan = plan;
   saveState();
   renderTodayPlan();
+  renderTodoDock();
   refreshIcons();
   els.todayPlanCard?.classList.add("just-created");
   window.setTimeout(() => els.todayPlanCard?.classList.remove("just-created"), 600);
@@ -4033,6 +4147,8 @@ function createPrepPlan() {
     diagnosticScore: diagnosticStatus === "completed" ? previous.diagnosticScore : 0,
     diagnosticScores: diagnosticStatus === "completed" ? previous.diagnosticScores : {},
     completedTasks: sameTarget ? previous.completedTasks : {},
+    taskOverrides: sameTarget ? previous.taskOverrides : {},
+    customTasks: sameTarget ? previous.customTasks : [],
     createdAt: sameTarget ? previous.createdAt : new Date().toISOString(),
     updatedAt: new Date().toISOString()
   });
@@ -4041,6 +4157,7 @@ function createPrepPlan() {
   saveState();
   renderPrepPlan();
   renderTodayPlan();
+  renderTodoDock();
   refreshIcons();
 }
 
@@ -4052,6 +4169,7 @@ function renderPrepPlan() {
   els.prepPlanDashboard.classList.toggle("hidden", !plan || showSetup);
   els.editPrepPlanBtn?.classList.toggle("hidden", !plan || showSetup);
   updatePrepTaskIndicator();
+  renderTodoDock();
 
   if (plan && showSetup) populatePrepPlanForm(plan);
   if (!plan || showSetup) return;
@@ -4137,11 +4255,180 @@ function updatePrepTaskIndicator() {
   const plan = normalizePrepPlan(state.prepPlan);
   if (!plan) {
     setText(".sidebar-helper span", t("tasksWaiting"));
+    renderTodoDock();
     return;
   }
   const pending = getPrepDailyTasks(plan).filter((task) => !task.done).length;
   const label = getLanguage() === "en" ? `${pending} tasks waiting` : `${pending} 个任务待完成`;
   setText(".sidebar-helper span", label);
+  renderTodoDock();
+}
+
+function getTodoDockPlan() {
+  const prepPlan = normalizePrepPlan(state.prepPlan);
+  if (prepPlan) {
+    const todayPlan = buildTodayStudyPlan();
+    return {
+      type: "prep",
+      summary: todayPlan.summary,
+      items: todayPlan.items
+    };
+  }
+  const studyPlan = normalizeStudyPlan(state.studyPlan);
+  if (!studyPlan) return null;
+  return {
+    type: "study",
+    summary: studyPlan.summary || t("planGenerated"),
+    items: studyPlan.items
+  };
+}
+
+function renderTodoDock() {
+  if (!els.todoDockButton || !els.todoDockPanel || !els.todoDockList) return;
+  const plan = getTodoDockPlan();
+  const items = plan?.items || [];
+  const pending = items.filter((item) => !item.done).length;
+  els.todoDockPanel.classList.toggle("hidden", !todoDockOpen);
+  els.todoDockButton.classList.toggle("open", todoDockOpen);
+  els.todoDockButton.setAttribute("aria-expanded", String(todoDockOpen));
+  if (els.todoDockButtonLabel) els.todoDockButtonLabel.textContent = t("todoButton");
+  if (els.todoDockCount) els.todoDockCount.textContent = String(pending);
+  if (els.todoDockEyebrow) els.todoDockEyebrow.textContent = t("todoEyebrow");
+  if (els.todoDockTitle) els.todoDockTitle.textContent = t("todoTitle");
+  if (els.todoDockSummary) els.todoDockSummary.textContent = plan?.summary || t("todoSummaryEmpty");
+  if (els.todoDockEmpty) {
+    els.todoDockEmpty.textContent = t("todoEmpty");
+    els.todoDockEmpty.classList.toggle("hidden", items.length > 0);
+  }
+  if (els.todoDockAddInput) els.todoDockAddInput.placeholder = t("todoAddPlaceholder");
+  els.todoDockList.innerHTML = "";
+  items.forEach((item) => {
+    const row = document.createElement("article");
+    row.className = `todo-task${item.done ? " done" : ""}`;
+    row.dataset.todoId = item.id;
+    row.innerHTML = `
+      <button class="todo-task-toggle" type="button" data-todo-toggle="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.done ? t("todoDone") : t("todoUndone"))}">
+        <i data-lucide="${item.done ? "check" : "circle"}"></i>
+      </button>
+      <div class="todo-task-fields">
+        <input type="text" value="${escapeHtml(item.title)}" data-todo-id="${escapeHtml(item.id)}" data-todo-field="title" aria-label="${escapeHtml(item.title || t("todoAddPlaceholder"))}">
+        <textarea rows="2" data-todo-id="${escapeHtml(item.id)}" data-todo-field="detail" aria-label="${escapeHtml(item.title || t("todoAddPlaceholder"))} detail">${escapeHtml(item.detail || "")}</textarea>
+      </div>
+      <span class="todo-task-time">${escapeHtml(String(item.minutes || 0))}m</span>
+    `;
+    els.todoDockList.appendChild(row);
+  });
+  refreshIcons();
+}
+
+function handleTodoDockClick(event) {
+  const toggle = event.target.closest("[data-todo-toggle]");
+  if (!toggle) return;
+  toggleTodoTask(toggle.dataset.todoToggle);
+}
+
+function handleTodoDockEdit(event) {
+  const field = event.target.dataset.todoField;
+  const taskId = event.target.dataset.todoId;
+  if (!field || !taskId) return;
+  updateTodoTask(taskId, field, event.target.value);
+}
+
+function addTodoTask() {
+  const title = String(els.todoDockAddInput?.value || "").trim();
+  if (!title) return;
+  const prepPlan = normalizePrepPlan(state.prepPlan);
+  if (prepPlan) {
+    prepPlan.customTasks = [
+      ...(prepPlan.customTasks || []),
+      {
+        id: `custom-${makeId()}`,
+        date: localDateKey(),
+        title,
+        detail: "",
+        minutes: 15,
+        action: "custom",
+        query: ""
+      }
+    ];
+    prepPlan.updatedAt = new Date().toISOString();
+    state.prepPlan = prepPlan;
+    state.studyPlan = buildTodayStudyPlan();
+  } else {
+    const plan = normalizeStudyPlan(state.studyPlan) || {
+      createdAt: new Date().toISOString(),
+      summary: t("planGenerated"),
+      items: []
+    };
+    plan.items.push({
+      id: `custom-${makeId()}`,
+      title,
+      detail: "",
+      minutes: 15,
+      skill: "custom",
+      done: false
+    });
+    state.studyPlan = plan;
+  }
+  if (els.todoDockAddInput) els.todoDockAddInput.value = "";
+  saveState();
+  renderPrepPlan();
+  renderTodayPlan();
+  renderTodoDock();
+}
+
+function toggleTodoTask(taskId) {
+  if (!taskId) return;
+  const prepPlan = normalizePrepPlan(state.prepPlan);
+  if (prepPlan) {
+    togglePrepTask(taskId);
+    return;
+  }
+  const plan = normalizeStudyPlan(state.studyPlan);
+  if (!plan) return;
+  const task = plan.items.find((item) => item.id === taskId);
+  if (!task) return;
+  task.done = !task.done;
+  state.studyPlan = plan;
+  saveState();
+  renderTodayPlan();
+  renderTodoDock();
+}
+
+function updateTodoTask(taskId, field, rawValue) {
+  if (!["title", "detail"].includes(field) || !taskId) return;
+  const value = String(rawValue || "").trim().slice(0, field === "title" ? 120 : 260);
+  const prepPlan = normalizePrepPlan(state.prepPlan);
+  if (prepPlan) {
+    const customTask = (prepPlan.customTasks || []).find((task) => task.date === localDateKey() && task.id === taskId);
+    if (customTask) {
+      customTask[field] = value;
+    } else {
+      const key = `${localDateKey()}:${taskId}`;
+      const existing = prepPlan.taskOverrides?.[key] || {};
+      prepPlan.taskOverrides = {
+        ...(prepPlan.taskOverrides || {}),
+        [key]: {
+          ...existing,
+          [field]: value
+        }
+      };
+    }
+    prepPlan.updatedAt = new Date().toISOString();
+    state.prepPlan = prepPlan;
+    state.studyPlan = buildTodayStudyPlan();
+  } else {
+    const plan = normalizeStudyPlan(state.studyPlan);
+    if (!plan) return;
+    const task = plan.items.find((item) => item.id === taskId);
+    if (!task) return;
+    task[field] = value;
+    state.studyPlan = plan;
+  }
+  saveState();
+  renderPrepPlan();
+  renderTodayPlan();
+  renderTodoDock();
 }
 
 function populatePrepPlanForm(plan) {
@@ -4247,11 +4534,26 @@ function getPrepDailyTasks(plan) {
   ];
   const limit = plan.weeklyHours <= 5 ? 3 : plan.weeklyHours <= 8 ? 4 : 5;
   const dateKey = localDateKey();
-  return tasks.slice(0, limit).map((task) => ({
-    ...task,
-    skill: task.query || task.action,
-    done: Boolean(plan.completedTasks[`${dateKey}:${task.id}`])
-  }));
+  const preparedTasks = tasks.slice(0, limit).map((task) => {
+    const key = `${dateKey}:${task.id}`;
+    const override = plan.taskOverrides?.[key] || {};
+    return {
+      ...task,
+      title: override.title || task.title,
+      detail: override.detail || task.detail,
+      minutes: override.minutes || task.minutes,
+      skill: task.query || task.action,
+      done: Boolean(plan.completedTasks[key])
+    };
+  });
+  const customTasks = (plan.customTasks || [])
+    .filter((task) => task.date === dateKey)
+    .map((task) => ({
+      ...task,
+      skill: task.query || task.action || "custom",
+      done: Boolean(plan.completedTasks[`${dateKey}:${task.id}`])
+    }));
+  return [...preparedTasks, ...customTasks];
 }
 
 function renderPrepTaskMarkup(task) {
@@ -4345,6 +4647,7 @@ function handlePrepPlanAction(event) {
     state.prepPlan = { ...normalizePrepPlan(state.prepPlan), diagnosticStatus: "pending", updatedAt: new Date().toISOString() };
     saveState();
     renderPrepPlan();
+    renderTodoDock();
     return;
   }
   if (event.target.closest("[data-prep-skip-test]")) {
@@ -4353,6 +4656,7 @@ function handlePrepPlanAction(event) {
     saveState();
     renderPrepPlan();
     renderTodayPlan();
+    renderTodoDock();
     return;
   }
   const open = event.target.closest("[data-prep-open]");
@@ -4370,6 +4674,7 @@ function togglePrepTask(taskId) {
   saveState();
   renderPrepPlan();
   renderTodayPlan();
+  renderTodoDock();
 }
 
 function submitPrepDiagnostic(form) {
@@ -4407,6 +4712,7 @@ function submitPrepDiagnostic(form) {
   saveState();
   renderPrepPlan();
   renderTodayPlan();
+  renderTodoDock();
 }
 
 function openPrepTask(action, query = "") {
@@ -6507,6 +6813,7 @@ function renderProblems() {
   renderLeetcodeHot100();
   const allCatalogProblems = state.problems.filter(isCatalogProblem);
   renderProblemThemeFilter(allCatalogProblems);
+  renderProblemDifficultyFilter(allCatalogProblems);
   renderProblemCompletionDashboard(allCatalogProblems);
   if (selectedProblemDetailId) {
     const selected = state.problems.find((item) => item.id === selectedProblemDetailId && isCatalogProblem(item));
@@ -6523,7 +6830,10 @@ function renderProblems() {
   els.problemDetail.classList.add("hidden");
   const query = (els.problemSearch.value || "").trim().toLowerCase();
   const isEn = getLanguage() === "en";
-  let problems = allCatalogProblems.filter((problem) => problemMatchesTheme(problem, problemThemeFilter)).filter((problem) => {
+  let problems = allCatalogProblems
+    .filter((problem) => problemMatchesTheme(problem, problemThemeFilter))
+    .filter((problem) => problemMatchesDifficulty(problem, problemDifficultyFilter))
+    .filter((problem) => {
     if (!query) return true;
     return [
       problem.titleEn,
