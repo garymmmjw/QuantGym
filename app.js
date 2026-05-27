@@ -373,7 +373,7 @@ const i18n = {
     commandStreakLabel: "连续天数",
     commandXpLabel: "/100",
     heroKicker: "欢迎回来，Quant。",
-    heroTitle: "今天，打磨你的量化优势",
+    heroTitle: "Sharpen your quant edge today.",
     designStudyPlan: "进入备战计划",
     planTitle: "今日学习计划",
     planGenerated: "已根据你的薄弱项生成今日计划。",
@@ -553,7 +553,7 @@ const i18n = {
     commandStreakLabel: "day streak",
     commandXpLabel: "/100",
     heroKicker: "Welcome back, quant.",
-    heroTitle: "Ready to build your edge today?",
+    heroTitle: "Sharpen your quant edge today.",
     designStudyPlan: "Open prep plan",
     planTitle: "Today's Study Plan",
     planGenerated: "Built from your weakest areas.",
@@ -1087,7 +1087,9 @@ let pendingExperienceShareId = "";
 let communityFilter = "all";
 let problemSocial = new Map();
 let problemViewMode = "all";
+let problemThemeFilter = "all";
 let problemSocialNotice = "";
+let heroTypewriterTimer = null;
 const PROBLEM_PAGE_SIZE = 24;
 let problemVisibleCount = PROBLEM_PAGE_SIZE;
 
@@ -1097,6 +1099,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.scrollTo(0, 0);
   bindElements();
   bindEvents();
+  setupButtonRipples();
   renderSession();
   initGoogleLogin();
   if (currentUser) newDrill(false);
@@ -1158,8 +1161,12 @@ function bindElements() {
     "commandStreakCount",
     "commandXpCount",
     "checkInPill",
+    "heroTypewriter",
     "generateStudyPlanBtn",
     "todayPlanCard",
+    "overviewProblemProgress",
+    "overviewXpBars",
+    "overviewContributionHeatmap",
     "editPrepPlanBtn",
     "prepPlanSetupForm",
     "prepRoleSelect",
@@ -1223,6 +1230,9 @@ function bindElements() {
     "problemImportForm",
     "problemJsonInput",
     "problemInteractionStatus",
+    "problemCompletionProgress",
+    "problemThemeFilter",
+    "problemThemeSummary",
     "problemRanking",
     "problemRankingList",
     "leetcodeHotTitle",
@@ -1507,6 +1517,13 @@ function bindEvents() {
     problemVisibleCount = PROBLEM_PAGE_SIZE;
     renderProblems();
   });
+  els.problemThemeFilter?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-problem-theme]");
+    if (!button) return;
+    problemThemeFilter = button.dataset.problemTheme || "all";
+    problemVisibleCount = PROBLEM_PAGE_SIZE;
+    returnToProblemList();
+  });
   els.addProblemBtn.addEventListener("click", () => {
     els.problemForm.classList.toggle("hidden");
     if (!els.problemForm.classList.contains("hidden")) els.problemTitleEn.focus();
@@ -1655,6 +1672,21 @@ function bindEvents() {
   });
 
   els.resourceFile.addEventListener("change", handleResourceFile);
+}
+
+function setupButtonRipples() {
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("button, .primary-button, .secondary-button, .module-tab, .segment, .feature-launch-card, .leetcode-hot-link");
+    if (!button || button.closest(".auth-provider-stack")) return;
+    const rect = button.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const ripple = document.createElement("span");
+    ripple.className = "ui-ripple";
+    ripple.style.left = `${event.clientX - rect.left}px`;
+    ripple.style.top = `${event.clientY - rect.top}px`;
+    button.appendChild(ripple);
+    ripple.addEventListener("animationend", () => ripple.remove(), { once: true });
+  });
 }
 
 function createBaseState() {
@@ -1930,6 +1962,8 @@ function normalizeProblemState(raw = {}) {
     problemId,
     interviewCount: Math.max(0, Number(raw.interviewCount || 0)),
     favorite: Boolean(raw.favorite),
+    completed: Boolean(raw.completed),
+    completedAt: raw.completedAt || "",
     favorites: Array.isArray(raw.favorites) ? raw.favorites.filter((favorite) => favorite?.id) : [],
     scoreHistory: Array.isArray(raw.scoreHistory) ? raw.scoreHistory.filter((score) => score?.id) : [],
     lastPracticedAt: raw.lastPracticedAt || "",
@@ -1950,11 +1984,14 @@ function mergeProblemStates(...lists) {
     const lastScoreAt = latestIso(previous.lastScoreAt, next.lastScoreAt);
     const scoreSource = previous.lastScoreAt === lastScoreAt ? previous : next;
     const favoriteSource = latestIso(previous.updatedAt, next.updatedAt) === next.updatedAt ? next : previous;
+    const completedSource = latestIso(previous.updatedAt, next.updatedAt) === next.updatedAt ? next : previous;
     byId.set(next.problemId, {
       ...previous,
       ...next,
       interviewCount: Math.max(previous.interviewCount || 0, next.interviewCount || 0),
       favorite: Boolean(favoriteSource.favorite),
+      completed: Boolean(completedSource.completed),
+      completedAt: completedSource.completed ? latestIso(previous.completedAt, next.completedAt) : "",
       favorites: mergeRecordsById(previous.favorites || [], next.favorites || []),
       scoreHistory: mergeRecordsById(previous.scoreHistory || [], next.scoreHistory || []),
       lastScore: scoreSource.lastScore,
@@ -3378,6 +3415,7 @@ function applyLanguage() {
     scopeOptions[1].textContent = t("leaderboardCountry");
     scopeOptions[2].textContent = t("leaderboardRegion");
   }
+  startHeroTypewriter();
 }
 
 function setButtonLabel(selector, label) {
@@ -3565,6 +3603,252 @@ function renderSummary() {
   if (els.commandStreakCount) els.commandStreakCount.textContent = streak;
   if (els.commandXpCount) els.commandXpCount.textContent = formatScore(score);
   renderRegionRank();
+  renderOverviewProblemProgress();
+  renderOverviewXpBars();
+  renderOverviewContributionHeatmap();
+}
+
+function startHeroTypewriter() {
+  const node = els.heroTypewriter;
+  if (!node) return;
+  if (heroTypewriterTimer) window.clearTimeout(heroTypewriterTimer);
+  const phrases = [
+    "Sharpen your quant edge today.",
+    "Practice faster. Think clearer.",
+    "Turn solved problems into signal.",
+    "Build interview-ready intuition."
+  ];
+  let phraseIndex = 0;
+  let charIndex = 0;
+  let deleting = false;
+
+  const tick = () => {
+    const phrase = phrases[phraseIndex];
+    node.textContent = phrase.slice(0, charIndex);
+    if (!deleting && charIndex < phrase.length) {
+      charIndex += 1;
+      heroTypewriterTimer = window.setTimeout(tick, 34);
+      return;
+    }
+    if (!deleting) {
+      deleting = true;
+      heroTypewriterTimer = window.setTimeout(tick, 620);
+      return;
+    }
+    if (charIndex > 0) {
+      charIndex -= 1;
+      heroTypewriterTimer = window.setTimeout(tick, 18);
+      return;
+    }
+    deleting = false;
+    phraseIndex = (phraseIndex + 1) % phrases.length;
+    heroTypewriterTimer = window.setTimeout(tick, 140);
+  };
+
+  tick();
+}
+
+function getCatalogProblems() {
+  return state.problems.filter(isCatalogProblem);
+}
+
+function isProblemCompleted(problemId) {
+  return Boolean(getProblemPersonalState(problemId).completed);
+}
+
+function getProblemCompletionCount(problems = getCatalogProblems()) {
+  return problems.filter((problem) => isProblemCompleted(problem.id)).length;
+}
+
+function getLeetcodeHotCompletionStats() {
+  const done = normalizeLeetcodeHot100Done(state.leetcodeHot100Done).length;
+  return {
+    done,
+    total: leetcodeHot100.length || 100
+  };
+}
+
+function problemMatchesTheme(problem, theme = problemThemeFilter) {
+  if (!theme || theme === "all") return true;
+  return normalizeCategory(problem.category) === theme;
+}
+
+function getProblemThemeEntries(problems = getCatalogProblems()) {
+  return Object.keys(skillDefs)
+    .map((key) => ({
+      key,
+      label: skillDefs[key].name,
+      count: problems.filter((problem) => normalizeCategory(problem.category) === key).length
+    }))
+    .filter((item) => item.count > 0);
+}
+
+function renderProblemThemeFilter(problems = getCatalogProblems()) {
+  if (!els.problemThemeFilter) return;
+  const isEn = getLanguage() === "en";
+  const entries = [
+    { key: "all", label: isEn ? "All themes" : "全部主题", count: problems.length },
+    ...getProblemThemeEntries(problems)
+  ];
+  els.problemThemeFilter.innerHTML = "";
+  entries.forEach((item) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `problem-theme-chip${problemThemeFilter === item.key ? " active" : ""}`;
+    button.dataset.problemTheme = item.key;
+    button.innerHTML = `<span>${escapeHtml(item.label)}</span><small>${escapeHtml(String(item.count))}</small>`;
+    els.problemThemeFilter.appendChild(button);
+  });
+  if (els.problemThemeSummary) {
+    const active = entries.find((item) => item.key === problemThemeFilter) || entries[0];
+    els.problemThemeSummary.textContent = `${active.label} · ${active.count} ${isEn ? "problems" : "题"}`;
+  }
+}
+
+function buildProblemProgressItems(problems = getCatalogProblems()) {
+  const isEn = getLanguage() === "en";
+  const allDone = getProblemCompletionCount(problems);
+  const hot = getLeetcodeHotCompletionStats();
+  const activeThemeProblems = problems.filter((problem) => problemMatchesTheme(problem, problemThemeFilter));
+  const themeEntries = getProblemThemeEntries(problems)
+    .map((item) => {
+      const themeProblems = problems.filter((problem) => normalizeCategory(problem.category) === item.key);
+      return {
+        key: item.key,
+        label: item.label,
+        done: getProblemCompletionCount(themeProblems),
+        total: themeProblems.length
+      };
+    })
+    .sort((left, right) => right.total - left.total);
+
+  const items = [
+    {
+      key: "all",
+      label: isEn ? "All problems" : "全部题库",
+      done: allDone,
+      total: problems.length
+    },
+    {
+      key: "leetcode-hot",
+      label: "LeetCode Hot 100",
+      done: hot.done,
+      total: hot.total
+    }
+  ];
+
+  if (problemThemeFilter !== "all") {
+    items.push({
+      key: "active-theme",
+      label: `${isEn ? "Current theme" : "当前主题"} · ${formatCategoryLabel(problemThemeFilter)}`,
+      done: getProblemCompletionCount(activeThemeProblems),
+      total: activeThemeProblems.length
+    });
+  }
+
+  themeEntries.slice(0, problemThemeFilter === "all" ? 3 : 2).forEach((item) => items.push(item));
+  return items.filter((item) => item.total > 0);
+}
+
+function renderProgressGroup(container, items) {
+  if (!container) return;
+  container.innerHTML = "";
+  items.forEach((item, index) => {
+    const percent = Math.round((Number(item.done || 0) / Math.max(Number(item.total || 0), 1)) * 100);
+    const row = document.createElement("div");
+    row.className = "effect-progress-row";
+    row.style.setProperty("--value", String(percent));
+    row.style.setProperty("--accent-index", String(index));
+    row.innerHTML = `
+      <div>
+        <strong>${escapeHtml(item.label)}</strong>
+        <span>${escapeHtml(String(item.done))} / ${escapeHtml(String(item.total))}</span>
+      </div>
+      <i aria-hidden="true"><span></span></i>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function renderOverviewProblemProgress() {
+  renderProgressGroup(els.overviewProblemProgress, buildProblemProgressItems(getCatalogProblems()).slice(0, 4));
+}
+
+function renderProblemCompletionDashboard(problems = getCatalogProblems()) {
+  renderProgressGroup(els.problemCompletionProgress, buildProblemProgressItems(problems).slice(0, 5));
+}
+
+function getDailyXpSeries(days = 7) {
+  const today = new Date();
+  const totals = new Map();
+  state.entries.forEach((entry) => {
+    const key = dayKey(entry.date);
+    totals.set(key, (totals.get(key) || 0) + Number(entry.totalXp || 0));
+  });
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (days - index - 1));
+    const key = dayKey(date);
+    return {
+      key,
+      label: new Intl.DateTimeFormat(getLocale(), { weekday: "short" }).format(date),
+      xp: totals.get(key) || 0
+    };
+  });
+}
+
+function renderOverviewXpBars() {
+  if (!els.overviewXpBars) return;
+  const series = getDailyXpSeries(7);
+  const maxXp = Math.max(20, ...series.map((item) => item.xp));
+  els.overviewXpBars.innerHTML = "";
+  series.forEach((item) => {
+    const bar = document.createElement("div");
+    bar.className = "daily-xp-bar";
+    bar.style.setProperty("--h", `${Math.max(8, Math.round((item.xp / maxXp) * 100))}%`);
+    bar.innerHTML = `<strong>${escapeHtml(String(item.xp))}</strong><i></i><span>${escapeHtml(item.label)}</span>`;
+    els.overviewXpBars.appendChild(bar);
+  });
+}
+
+function getContributionSeries(days = 35) {
+  const today = new Date();
+  const xpByDay = new Map();
+  const completedByDay = new Map();
+  state.entries.forEach((entry) => {
+    const key = dayKey(entry.date);
+    xpByDay.set(key, (xpByDay.get(key) || 0) + Number(entry.totalXp || 0));
+  });
+  (state.problemStates || []).forEach((item) => {
+    if (!item.completedAt) return;
+    const key = dayKey(item.completedAt);
+    completedByDay.set(key, (completedByDay.get(key) || 0) + 1);
+  });
+  const hotDoneCount = normalizeLeetcodeHot100Done(state.leetcodeHot100Done).length;
+  if (hotDoneCount) {
+    const key = dayKey(today);
+    completedByDay.set(key, (completedByDay.get(key) || 0) + Math.min(5, Math.ceil(hotDoneCount / 20)));
+  }
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (days - index - 1));
+    const key = dayKey(date);
+    const xp = xpByDay.get(key) || 0;
+    const completed = completedByDay.get(key) || 0;
+    const level = Math.min(5, Math.max(0, Math.ceil(xp / 24) + Math.ceil(completed)));
+    return { key, date, xp, completed, level };
+  });
+}
+
+function renderOverviewContributionHeatmap() {
+  if (!els.overviewContributionHeatmap) return;
+  els.overviewContributionHeatmap.innerHTML = "";
+  getContributionSeries(35).forEach((day) => {
+    const cell = document.createElement("span");
+    cell.style.setProperty("--v", String(day.level));
+    cell.title = `${formatNewsDate(day.key)} · ${day.xp} XP · ${Math.floor(day.completed)} completed`;
+    els.overviewContributionHeatmap.appendChild(cell);
+  });
 }
 
 function renderTodayPlan() {
@@ -6177,6 +6461,9 @@ function networkStatusWeight(status) {
 function renderProblems() {
   renderProblemViewTabs();
   renderLeetcodeHot100();
+  const allCatalogProblems = state.problems.filter(isCatalogProblem);
+  renderProblemThemeFilter(allCatalogProblems);
+  renderProblemCompletionDashboard(allCatalogProblems);
   if (selectedProblemDetailId) {
     const selected = state.problems.find((item) => item.id === selectedProblemDetailId && isCatalogProblem(item));
     if (selected) {
@@ -6192,7 +6479,7 @@ function renderProblems() {
   els.problemDetail.classList.add("hidden");
   const query = (els.problemSearch.value || "").trim().toLowerCase();
   const isEn = getLanguage() === "en";
-  let problems = state.problems.filter(isCatalogProblem).filter((problem) => {
+  let problems = allCatalogProblems.filter((problem) => problemMatchesTheme(problem, problemThemeFilter)).filter((problem) => {
     if (!query) return true;
     return [
       problem.titleEn,
@@ -6292,10 +6579,22 @@ function renderProblems() {
       event.stopPropagation();
       toggleProblemSaved(problem.id);
     });
+    const complete = document.createElement("button");
+    complete.type = "button";
+    complete.className = `problem-complete-button${personal.completed ? " active" : ""}`;
+    complete.title = personal.completed
+      ? (isEn ? "Mark unfinished" : "标记为未完成")
+      : (isEn ? "Mark completed" : "标记完成");
+    complete.setAttribute("aria-label", complete.title);
+    complete.innerHTML = `<i data-lucide="${personal.completed ? "check-circle-2" : "circle"}"></i>`;
+    complete.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleProblemCompleted(problem.id);
+    });
     const open = document.createElement("span");
     open.className = "problem-card-open";
     open.innerHTML = `${t("viewFullProblem")} <i data-lucide="chevron-right"></i>`;
-    footer.append(metrics, save, open);
+    footer.append(metrics, complete, save, open);
 
     card.append(title, meta, prompt, footer);
     els.problemList.appendChild(card);
@@ -6364,6 +6663,8 @@ function toggleLeetcodeHotDone(problemId) {
   state.skills.leetcode = Math.max(Number(state.skills.leetcode || 0), Math.min(100, state.leetcodeHot100Done.length));
   saveState();
   renderLeetcodeHot100();
+  renderSummary();
+  renderProblemCompletionDashboard();
   renderSkills();
   drawRadar();
 }
@@ -6386,6 +6687,18 @@ function toggleProblemSaved(problemId) {
     lastFavoriteAt: isSaved ? "" : new Date().toISOString()
   });
   saveState();
+  renderProblems();
+}
+
+function toggleProblemCompleted(problemId) {
+  const isCompleted = getProblemPersonalState(problemId).completed;
+  updateProblemState(problemId, {
+    completed: !isCompleted,
+    completedAt: isCompleted ? "" : new Date().toISOString()
+  });
+  saveState();
+  renderSummary();
+  renderSkills();
   renderProblems();
 }
 
@@ -6606,6 +6919,13 @@ function renderProblemDetail(problem) {
   practice.addEventListener("click", () => selectProblemForInterview(problem.id));
 
   const saved = getProblemPersonalState(problem.id).favorite;
+  const completed = getProblemPersonalState(problem.id).completed;
+  const complete = document.createElement("button");
+  complete.className = `secondary-button problem-detail-complete${completed ? " active" : ""}`;
+  complete.type = "button";
+  complete.innerHTML = `<i data-lucide="${completed ? "check-circle-2" : "circle"}"></i> ${completed ? (isEn ? "Completed" : "已完成") : (isEn ? "Mark completed" : "标记完成")}`;
+  complete.addEventListener("click", () => toggleProblemCompleted(problem.id));
+
   const save = document.createElement("button");
   save.className = `secondary-button problem-detail-save${saved ? " active" : ""}`;
   save.type = "button";
@@ -6614,7 +6934,7 @@ function renderProblemDetail(problem) {
 
   const actions = document.createElement("div");
   actions.className = "problem-detail-actions";
-  actions.append(save, practice);
+  actions.append(complete, save, practice);
   top.append(back, actions);
 
   const title = document.createElement("h2");
