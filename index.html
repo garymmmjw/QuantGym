@@ -249,7 +249,7 @@
         <section class="quanty-hero">
           <div class="quanty-hero-copy">
             <span class="hero-kicker">欢迎回来，Quant。</span>
-            <h2>今天，打磨你的量化优势</h2>
+            <h2 id="heroTypewriter">Sharpen your quant edge today.</h2>
             <div class="hero-actions">
               <button class="primary-button" id="generateStudyPlanBtn" type="button">
                 <i data-lucide="calendar-check-2"></i>
@@ -305,6 +305,41 @@
               <small>7 日 XP</small>
             </div>
           </div>
+        </section>
+
+        <section class="overview-effect-grid" aria-label="训练进度可视化">
+          <article class="overview-effect-panel problem-progress-panel">
+            <div class="effect-panel-heading">
+              <div>
+                <span class="rank-label">PROGRESS</span>
+                <h2>Problem completion</h2>
+              </div>
+              <button class="icon-button ghost" type="button" data-jump-module="problems" title="打开题库" aria-label="打开题库">
+                <i data-lucide="arrow-up-right"></i>
+              </button>
+            </div>
+            <div id="overviewProblemProgress" class="effect-progress-group"></div>
+          </article>
+
+          <article class="overview-effect-panel daily-xp-panel">
+            <div class="effect-panel-heading">
+              <div>
+                <span class="rank-label">DAILY XP</span>
+                <h2>Experience rhythm</h2>
+              </div>
+            </div>
+            <div id="overviewXpBars" class="daily-xp-bars" aria-label="每日经验值柱状图"></div>
+          </article>
+
+          <article class="overview-effect-panel contribution-panel">
+            <div class="effect-panel-heading">
+              <div>
+                <span class="rank-label">CONSISTENCY</span>
+                <h2>Contribution heatmap</h2>
+              </div>
+            </div>
+            <div id="overviewContributionHeatmap" class="contribution-heatmap" aria-label="贡献热力图"></div>
+          </article>
         </section>
 
         <section class="workspace-grid">
@@ -788,6 +823,15 @@
             </button>
           </div>
         </div>
+        <section class="problem-completion-panel" aria-label="题目完成进度">
+          <div class="effect-panel-heading">
+            <div>
+              <span class="rank-label">COMPLETION</span>
+              <h2>题目完成进度</h2>
+            </div>
+          </div>
+          <div id="problemCompletionProgress" class="effect-progress-group compact"></div>
+        </section>
         <form id="problemForm" class="problem-form hidden">
           <input id="problemTitleEn" type="text" placeholder="English title">
           <input id="problemTitleZh" type="text" placeholder="中文标题">
@@ -851,6 +895,13 @@
           </div>
           <span id="problemInteractionStatus" class="problem-interaction-status" aria-live="polite"></span>
         </div>
+        <section class="problem-theme-panel" aria-label="标签筛选">
+          <div class="problem-theme-heading">
+            <strong>标签筛选</strong>
+            <span id="problemThemeSummary">全部主题</span>
+          </div>
+          <div id="problemThemeFilter" class="problem-theme-filter" role="listbox" aria-label="题目主题筛选"></div>
+        </section>
         <section id="problemRanking" class="problem-ranking hidden" aria-label="题目排行榜">
           <div class="problem-ranking-header">
             <div>
