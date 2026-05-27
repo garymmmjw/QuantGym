@@ -99,6 +99,28 @@ curl http://127.0.0.1:8787/health
 
 模型不需要写进 `.env`。前端会把你在模拟面试或设置里选择的模型传给本地代理。
 
+## 静态网页发布构建
+
+内测部署静态网页时，不要把仓库根目录直接作为公开目录。仓库里包含题源原始导出、QA 截图、脚本和后端代码；公开静态目录应只包含前端运行必需文件。
+
+生成安全的静态发布目录：
+
+```bash
+QUANTGYM_WEB_API_ENDPOINT="https://api.example.com/api" \
+QUANTGYM_WEB_LLM_ENDPOINT="https://llm.example.com/interview" \
+QUANTGYM_WEB_LLM_MODEL="gpt-5-nano" \
+QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED=0 \
+node scripts/build-static-site.mjs --strict
+```
+
+输出目录：
+
+```text
+dist/
+```
+
+静态托管平台只发布 `dist/`。脚本会生成部署用 `dist/config.js`，并只复制 `index.html`、`app.js`、`styles.css`、`assets/generated/`、`data/problem-catalog.js` 和 `data/leetcode-hot-100.js`。
+
 ## 当前文件结构
 
 ```text
@@ -142,6 +164,7 @@ quant-quant-leetcode-probabilty-tex/
       2026-05-22-11-mascot-rewards/
       2026-05-22-19-module-radar/
   scripts/
+    build-static-site.mjs
     build-problem-catalog.mjs
     extract-latex-question-bank.mjs
     import-quant-books.mjs
@@ -171,7 +194,8 @@ quant-quant-leetcode-probabilty-tex/
 - `data/problem-catalog.json` 是由所有题库源合并出来的后端公共题库数据。
 - `data/problem-catalog.js` 是同一份合并题库保留给静态前端使用的数据。
 - `docs/ui-reference/` 是用户提供过的 UI/品牌参考图归档，不作为线上 UI 直接依赖。
-- `scripts/import-quant-books.mjs` 用来从桌面 `量化书籍/` 批量抽取当前题库来源，并处理 Hull PDF 题面；disabled 来源重建时不会合并进网页题库。
+- `scripts/build-static-site.mjs` 用来生成内测静态发布目录 `dist/`，避免把题源原始导出、脚本和后端代码暴露为网页静态文件。
+- `scripts/import-quant-books.mjs` 用来从本地 `量化书籍/` 批量抽取当前题库来源，并处理 Hull PDF 题面；可用 `--book-root` 或 `QUANTGYM_BOOK_ROOT` 指定书籍目录，disabled 来源重建时不会合并进网页题库。
 - `scripts/extract-latex-question-bank.mjs` 保留给临时单本 LaTeX 资料导入。
 - `scripts/build-problem-catalog.mjs` 用来把所有书的题目合并成 `data/problem-catalog.json` 和 `data/problem-catalog.js`。
 - `api-server/server.py` 是 SQLite 后端 API。
@@ -370,6 +394,12 @@ cd /Users/miujiawei/Desktop/QuantGym/quant-quant-leetcode-probabilty-tex
 node scripts/import-quant-books.mjs
 ```
 
+如果书籍目录不在默认位置：
+
+```bash
+node scripts/import-quant-books.mjs --book-root /absolute/path/to/量化书籍
+```
+
 当前网页启用来源包含：
 
 - 绿皮书 183
@@ -533,6 +563,14 @@ python3 -m py_compile api-server/server.py
 node --check browser-extension/popup.js
 ```
 
+检查静态发布构建：
+
+```bash
+QUANTGYM_WEB_API_ENDPOINT="https://api.example.com/api" \
+QUANTGYM_WEB_LLM_ENDPOINT="https://llm.example.com/interview" \
+node scripts/build-static-site.mjs --strict
+```
+
 ## 故障排查
 
 ### 页面打不开
@@ -644,6 +682,7 @@ sessionStorage.clear()
 - 前端仍是单文件主逻辑，后续可拆成 Vite + 模块化结构。
 - 求职模块目前是结构和样例数据，后续需要接入真实爬虫或职位 API。
 - LeetCode 目前有能力项和 Chrome 插件收集入口，Hot 100 专属页面、跳转和完成记录还没有做完。
+- Chrome 插件默认打开本地网页地址，内测时需要让测试者在插件弹窗里改成部署后的 `https://.../index.html`，或暂时不作为正式内测功能。
 - `docs/ui-reference/` 里的参考图多数没有 alpha，正式接入前需要重新抠图或生成透明 WebP。
 
 ## 推荐下一步

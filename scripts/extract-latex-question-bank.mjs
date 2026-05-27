@@ -15,6 +15,7 @@ const inputPath = path.resolve(
 const sourceDir = path.join(projectRoot, "data", "question-banks", sourceSlug);
 const jsOutputPath = path.join(sourceDir, "problems.js");
 const jsonOutputPath = path.join(sourceDir, "problems.json");
+const importedAt = new Date().toISOString();
 
 if (!fs.existsSync(inputPath)) {
   console.error(`Input TeX file not found: ${inputPath}`);
@@ -135,7 +136,6 @@ function slugify(value) {
 function writeSourceMetadata(problemCount) {
   const metadataPath = path.join(sourceDir, "metadata.json");
   const manifestPath = path.join(projectRoot, "data", "question-banks", "catalog-manifest.json");
-  const importedAt = new Date().toISOString();
   const metadata = {
     slug: sourceSlug,
     name: sourceName,
@@ -226,7 +226,8 @@ function makeProblem({ id, title, chapter, section, prompt, solution, category, 
     promptZh: cleanTexBlock(prompt),
     answer: "",
     explanation: cleanTexBlock(solution),
-    createdAt: sourceSlug
+    createdAt: importedAt,
+    updatedAt: importedAt
   };
 }
 
