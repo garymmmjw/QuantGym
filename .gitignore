@@ -1,0 +1,9 @@
+api-server/data/*.sqlite3
+api-server/data/*.sqlite3-*
+api-server/__pycache__/
+*.pyc
+.DS_Store
+.env
+node_modules/
+*.log
+.env.local

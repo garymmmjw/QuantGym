@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Quant Memory Collector",
+  "version": "0.1.0",
+  "description": "Collect LeetCode and interview problems into QuantGym.",
+  "permissions": ["activeTab", "scripting", "storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "Collect problem",
+    "default_popup": "popup.html"
+  }
+}

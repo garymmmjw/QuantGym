@@ -1,0 +1,10 @@
+{
+  "slug": "yellow-book",
+  "name": "黄皮书 150 Most Frequently Asked Questions",
+  "type": "latex",
+  "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/黄皮书/quant_yellow_book.tex",
+  "problemFile": "problems.json",
+  "browserFile": "problems.js",
+  "problemCount": 153,
+  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+}

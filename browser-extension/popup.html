@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quant Collector</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <strong>Quant Collector</strong>
+        <span id="sourceHost">...</span>
+      </header>
+
+      <section class="preview">
+        <h1 id="problemTitle">读取中</h1>
+        <div id="problemMeta"></div>
+        <p id="problemPrompt"></p>
+      </section>
+
+      <label>
+        Board URL
+        <input id="boardUrl" type="url" spellcheck="false">
+      </label>
+
+      <div class="actions">
+        <button id="collectBtn" type="button">收录到面板</button>
+        <button id="copyBtn" type="button">复制 JSON</button>
+      </div>
+
+      <p id="status" aria-live="polite"></p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

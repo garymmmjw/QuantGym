@@ -1,0 +1,10 @@
+{
+  "slug": "linalg-primer",
+  "name": "金融工程线性代数入门",
+  "type": "latex",
+  "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/金融工程线性代数入门/quant_linalg_book.tex",
+  "problemFile": "problems.json",
+  "browserFile": "problems.js",
+  "problemCount": 18,
+  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+}

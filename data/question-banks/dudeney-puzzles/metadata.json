@@ -1,0 +1,10 @@
+{
+  "slug": "dudeney-puzzles",
+  "name": "Dudeney 经典挑战谜题",
+  "type": "latex",
+  "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/Dudeney挑战谜题/quant_dudeney_book.tex",
+  "problemFile": "problems.json",
+  "browserFile": "problems.js",
+  "problemCount": 123,
+  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+}

@@ -1,0 +1,10 @@
+{
+  "slug": "green-book",
+  "name": "绿皮书",
+  "type": "latex",
+  "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/绿皮书/quant_green_book.tex",
+  "problemFile": "problems.json",
+  "browserFile": "problems.js",
+  "problemCount": 183,
+  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+}

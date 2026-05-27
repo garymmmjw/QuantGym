@@ -1,0 +1,1458 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>QuantGym</title>
+    <link rel="stylesheet" href="styles.css?v=premium-system-13">
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [["$", "$"], ["\\(", "\\)"]],
+          displayMath: [["\\[", "\\]"], ["$$", "$$"]],
+          macros: {
+            E: "\\mathbb{E}",
+            Prob: "\\mathbb{P}",
+            Var: "\\mathrm{Var}",
+            Cov: "\\mathrm{Cov}",
+            Unif: "\\operatorname{Unif}",
+            Bin: "\\operatorname{Bin}",
+            dd: "\\mathrm{d}",
+            R: "\\mathbb{R}",
+            N: "\\mathbb{N}"
+          }
+        }
+      };
+    </script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" defer></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="config.js"></script>
+    <script src="data/problem-catalog.js?v=quant-books-1"></script>
+    <script src="data/leetcode-hot-100.js?v=leetcode-hot-100-1"></script>
+    <script src="app.js?v=premium-system-17" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">Q</div>
+        <div>
+          <h1>QuantGym</h1>
+          <p id="todayLine">Loading</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="region-rank top-region-rank hidden" id="regionRank" title="地区排名">
+          <span class="medal gold" id="regionMedal">G</span>
+          <span id="regionRankText">Shanghai #1</span>
+        </div>
+        <button class="user-chip hidden" id="userChip" type="button" title="Account" aria-label="打开账户设置">
+          <div class="avatar" id="userAvatar" aria-hidden="true">Q</div>
+          <div>
+            <strong id="userName">Guest</strong>
+            <small id="userProvider">Local</small>
+          </div>
+        </button>
+        <select class="language-select hidden" id="languageSelect" aria-label="语言">
+          <option value="zh">中文</option>
+          <option value="en">English</option>
+        </select>
+        <button class="icon-button hidden" id="settingsBtn" type="button" title="设置" aria-label="设置">
+          <i data-lucide="settings"></i>
+        </button>
+      </div>
+    </header>
+
+    <section class="auth-shell" id="authShell">
+      <div class="auth-panel" role="dialog" aria-labelledby="authTitle" aria-describedby="authSubtitle">
+        <div class="auth-copy">
+          <h2 id="authTitle">登录或注册</h2>
+          <p id="authSubtitle">同步你的题库、模拟面试复盘、简历和训练进度。</p>
+        </div>
+
+        <div class="auth-provider-stack">
+          <div id="googleButton" class="google-button"></div>
+        </div>
+
+        <div class="divider"><span>或</span></div>
+
+        <div class="auth-tabs" role="tablist" aria-label="登录或注册">
+          <button class="tab active" type="button" data-auth-tab="login">登录</button>
+          <button class="tab" type="button" data-auth-tab="register">注册</button>
+        </div>
+
+        <form class="auth-form" id="loginForm" autocomplete="on">
+          <label class="sr-only" for="loginEmail">电子邮件地址</label>
+          <input id="loginEmail" type="email" autocomplete="email" placeholder="电子邮件地址">
+          <label class="sr-only" for="loginPassword">密码</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="密码">
+          <button class="primary-button auth-submit" type="submit">继续</button>
+        </form>
+
+        <form class="auth-form hidden" id="registerForm" autocomplete="on">
+          <label class="sr-only" for="registerName">名字</label>
+          <input id="registerName" type="text" autocomplete="name" placeholder="名字">
+          <label class="sr-only" for="registerEmail">电子邮件地址</label>
+          <input id="registerEmail" type="email" autocomplete="email" placeholder="电子邮件地址">
+          <label class="sr-only" for="registerPassword">密码</label>
+          <input id="registerPassword" type="password" autocomplete="new-password" placeholder="设置密码，至少 6 位">
+          <div class="auth-code-row">
+            <label class="sr-only" for="registerVerificationCode">邮箱验证码</label>
+            <input id="registerVerificationCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="邮箱验证码">
+            <button class="secondary-button" id="sendRegisterCodeBtn" type="button">发送验证码</button>
+          </div>
+          <button class="primary-button auth-submit" type="submit">创建账户</button>
+        </form>
+
+        <details class="google-config hidden" aria-hidden="true">
+          <summary>配置 Google Client ID</summary>
+          <div class="config-row">
+            <input id="googleClientIdInput" type="text" spellcheck="false" placeholder="xxxx.apps.googleusercontent.com">
+            <button class="secondary-button" id="saveGoogleClientBtn" type="button">保存</button>
+          </div>
+        </details>
+
+        <p id="authMessage" class="auth-message" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <main id="appShell" class="hidden">
+      <nav class="module-nav" aria-label="模块导航">
+        <div class="sidebar-brand" aria-label="QuantGym">
+          <img src="assets/generated/brand-q-mark.webp?v=premium-system-2" alt="">
+          <strong>QuantGym</strong>
+        </div>
+        <div class="module-nav-group" aria-label="备战">
+          <span class="module-nav-label">备战</span>
+          <button class="module-tab active" type="button" data-module-tab="overview">
+            <i data-lucide="layout-dashboard"></i>
+            总览
+          </button>
+          <button class="module-tab" type="button" data-module-tab="plan">
+            <i data-lucide="calendar-check-2"></i>
+            计划
+          </button>
+          <button class="module-tab" type="button" data-module-tab="experiences">
+            <i data-lucide="notebook-pen"></i>
+            面经
+          </button>
+          <button class="module-tab" type="button" data-module-tab="interview">
+            <i data-lucide="messages-square"></i>
+            模拟面试
+          </button>
+        </div>
+        <div class="module-nav-group" aria-label="训练">
+          <span class="module-nav-label">训练</span>
+          <button class="module-tab" type="button" data-module-tab="problems">
+            <i data-lucide="library-big"></i>
+            所有题目
+          </button>
+          <button class="module-tab" type="button" data-module-tab="tools">
+            <i data-lucide="brain"></i>
+            速算
+          </button>
+          <button class="module-tab" type="button" data-module-tab="skills">
+            <i data-lucide="radar"></i>
+            能力值
+          </button>
+          <button class="module-tab" type="button" data-module-tab="pk">
+            <i data-lucide="swords"></i>
+            PK
+          </button>
+        </div>
+        <div class="module-nav-group" aria-label="求职与社群">
+          <span class="module-nav-label">求职与社群</span>
+          <button class="module-tab" type="button" data-module-tab="jobs">
+            <i data-lucide="briefcase-business"></i>
+            求职
+          </button>
+          <button class="module-tab" type="button" data-module-tab="resume">
+            <i data-lucide="file-user"></i>
+            简历
+          </button>
+          <button class="module-tab" type="button" data-module-tab="network">
+            <i data-lucide="network"></i>
+            人脉
+          </button>
+          <button class="module-tab" type="button" data-module-tab="community">
+            <i data-lucide="message-circle-heart"></i>
+            社群
+          </button>
+          <button class="module-tab" type="button" data-module-tab="news">
+            <i data-lucide="newspaper"></i>
+            新闻
+          </button>
+        </div>
+        <div class="module-nav-group compact" aria-label="资源">
+          <span class="module-nav-label">资源</span>
+          <button class="module-tab" type="button" data-module-tab="courses">
+            <i data-lucide="video"></i>
+            课程
+          </button>
+          <button class="module-tab" type="button" data-module-tab="memory">
+            <i data-lucide="archive"></i>
+            笔记
+          </button>
+          <button class="module-tab" type="button" data-module-tab="settings">
+            <i data-lucide="settings"></i>
+            设置
+          </button>
+        </div>
+        <aside class="sidebar-helper" aria-label="Today guide">
+          <img src="assets/generated/quanty-side-coach.webp?v=premium-system-2" alt="">
+          <strong>今日向导</strong>
+          <span>3 个任务待完成</span>
+        </aside>
+      </nav>
+
+      <section class="app-command-bar" aria-label="全局搜索和状态">
+        <div class="app-search" role="search">
+          <i data-lucide="search"></i>
+          <input id="globalSearchInput" type="search" placeholder="Search topics, lessons, or concepts..." aria-label="Search topics">
+          <div id="globalSearchResults" class="global-search-results hidden" role="listbox" aria-label="搜索结果"></div>
+        </div>
+        <div class="app-command-actions">
+          <button class="app-stat-pill streak-pill" id="checkInPill" type="button">
+            <span class="stat-art stat-art-fire" aria-hidden="true"></span>
+            <strong id="commandStreakCount">0</strong>
+            <small>day streak</small>
+          </button>
+          <button class="app-stat-pill" type="button" data-jump-module="skills">
+            <span class="stat-art stat-art-xp" aria-hidden="true"></span>
+            <strong id="commandXpCount">0</strong>
+            <small>/100</small>
+          </button>
+          <button class="app-account-chip" type="button" data-jump-module="account" aria-label="打开账号">
+            <span class="avatar app-account-avatar" id="commandUserAvatar" aria-hidden="true">Q</span>
+            <span class="app-account-meta">
+              <strong id="commandUserName">Quant</strong>
+              <small id="commandUserProvider">账号</small>
+            </span>
+          </button>
+          <button class="app-settings-button" type="button" data-jump-module="settings" aria-label="设置">
+            <i data-lucide="settings"></i>
+          </button>
+        </div>
+      </section>
+
+      <section class="news-ticker" aria-label="Quant 新闻滚动条">
+        <div class="ticker-label">
+          <i data-lucide="radio"></i>
+          <span>Quant Wire</span>
+        </div>
+        <div class="ticker-viewport">
+          <div id="newsTickerTrack" class="news-ticker-track"></div>
+        </div>
+      </section>
+
+      <section class="module-view active" data-module-view="overview">
+        <section class="quanty-hero">
+          <div class="quanty-hero-copy">
+            <span class="hero-kicker">欢迎回来，Quant。</span>
+            <h2>今天，打磨你的量化优势</h2>
+            <div class="hero-actions">
+              <button class="primary-button" id="generateStudyPlanBtn" type="button">
+                <i data-lucide="calendar-check-2"></i>
+                进入备战计划
+              </button>
+            </div>
+            <div class="today-plan-card hidden" id="todayPlanCard"></div>
+          </div>
+          <img src="assets/generated/shark-hero.webp?v=premium-system-2" alt="" loading="lazy">
+        </section>
+
+        <section class="feature-launch-grid" aria-label="主要功能入口">
+          <button class="feature-launch-card" type="button" data-jump-module="problems" aria-label="进入学习题库">
+            <img src="assets/generated/feature-learn.webp?v=premium-system-2" alt="" loading="lazy">
+            <strong>题库</strong>
+          </button>
+          <button class="feature-launch-card" type="button" data-jump-module="tools" aria-label="进入练习">
+            <img src="assets/generated/feature-practice.webp?v=premium-system-2" alt="" loading="lazy">
+            <strong>限时训练</strong>
+          </button>
+          <button class="feature-launch-card" type="button" data-jump-module="skills" aria-label="进入任务和能力值">
+            <img src="assets/generated/feature-quest.webp?v=premium-system-2" alt="" loading="lazy">
+            <strong>能力值</strong>
+          </button>
+          <button class="feature-launch-card" type="button" data-jump-module="experiences" aria-label="记录面经">
+            <img src="assets/generated/feature-notebook.webp?v=premium-system-2" alt="" loading="lazy">
+            <strong>面经记录</strong>
+          </button>
+        </section>
+
+        <section class="summary-band">
+          <div class="summary-copy">
+            <div class="rank-row">
+              <span class="rank-label">当前段位</span>
+              <strong id="rankName">Analyst I</strong>
+            </div>
+            <div class="total-xp">
+              <span id="totalXp">0</span>
+              <span>分 / 100</span>
+            </div>
+          </div>
+          <div class="summary-metrics" aria-label="学习统计">
+            <div class="metric-card metric-streak">
+              <span id="streakCount">0</span>
+              <small>连续天数</small>
+            </div>
+            <div class="metric-card metric-records">
+              <span id="entryCount">0</span>
+              <small>记录</small>
+            </div>
+            <div class="metric-card metric-xp">
+              <span id="weeklyXp">0</span>
+              <small>7 日 XP</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace-grid">
+          <form class="log-panel" id="logForm">
+            <div class="panel-heading">
+              <h2>今日记录</h2>
+              <button class="icon-button ghost" id="sampleBtn" type="button" title="填入示例" aria-label="填入示例">
+                <i data-lucide="wand-sparkles"></i>
+              </button>
+            </div>
+            <textarea id="logText" rows="8" placeholder="例：今天刷了 3 道 LeetCode；用 pandas 做了 groupby；复盘 Bayes 和 OLS；练了 option Greeks 和速算。"></textarea>
+            <div id="autoClassifyChips" class="auto-classify-chips" aria-live="polite"></div>
+            <div class="form-row">
+              <input id="durationInput" type="number" min="0" step="5" placeholder="分钟">
+              <select id="difficultyInput" aria-label="难度">
+                <option value="1">普通</option>
+                <option value="1.25">较难</option>
+                <option value="1.6">很难</option>
+              </select>
+              <button class="primary-button" type="submit">
+                <i data-lucide="plus"></i>
+                记录
+              </button>
+            </div>
+            <div id="analysisPreview" class="analysis-preview" aria-live="polite"></div>
+          </form>
+
+          <aside class="leaderboard-panel">
+            <div class="panel-heading">
+              <h2>排行榜</h2>
+              <button class="icon-button ghost" id="refreshLeaderboardBtn" type="button" title="刷新排行榜" aria-label="刷新排行榜">
+                <i data-lucide="trophy"></i>
+              </button>
+            </div>
+            <div class="leaderboard-controls" aria-label="排行榜设置">
+              <select id="leaderboardMetricSelect" aria-label="排行榜指标"></select>
+              <select id="leaderboardScopeSelect" aria-label="排行榜范围">
+                <option value="global">全部</option>
+                <option value="country">国家</option>
+                <option value="region">地区</option>
+              </select>
+              <select id="leaderboardCountrySelect" aria-label="排行榜国家"></select>
+              <select id="leaderboardRegionSelect" aria-label="排行榜地区"></select>
+            </div>
+            <div id="leaderboardList" class="leaderboard-list"></div>
+          </aside>
+        </section>
+
+        <section class="community-panel overview-community">
+          <div class="section-heading">
+            <div>
+              <h2>社区</h2>
+              <small id="overviewCommunitySummary">分享进度、照片、视频和面试灵感。</small>
+            </div>
+            <button class="icon-button ghost" id="overviewCommunityExpandBtn" type="button" title="打开社区" aria-label="打开社区">
+              <i data-lucide="panel-top-open"></i>
+            </button>
+          </div>
+          <form id="overviewCommunityForm" class="community-form">
+            <textarea id="overviewCommunityText" rows="3" placeholder="发一条动态：今天练了什么、遇到什么题、想问什么？"></textarea>
+            <div id="overviewCommunityMediaPreview" class="community-media-preview hidden"></div>
+            <div class="community-compose-actions">
+              <label class="icon-button ghost file-button" title="添加照片或视频" aria-label="添加照片或视频">
+                <input id="overviewCommunityMedia" type="file" accept="image/*,video/*">
+                <i data-lucide="image-plus"></i>
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="send"></i>
+                发布
+              </button>
+            </div>
+          </form>
+          <div id="overviewCommunityList" class="community-list compact"></div>
+        </section>
+      </section>
+
+      <section class="module-view" data-module-view="plan">
+        <section class="prep-plan-section">
+          <header class="prep-plan-header">
+            <div>
+              <span class="rank-label">PREP PLAN</span>
+              <h2>Quant 面试备战计划</h2>
+              <p>以目标招聘季和岗位方向为起点，覆盖 assessment、技术面、behavioral 与 final day。</p>
+            </div>
+            <button class="secondary-button hidden" id="editPrepPlanBtn" type="button">
+              <i data-lucide="sliders-horizontal"></i>
+              调整目标
+            </button>
+          </header>
+
+          <form class="prep-plan-setup" id="prepPlanSetupForm">
+            <div class="prep-setup-heading">
+              <strong>建立你的备战路线</strong>
+              <span>不同岗位和招聘季，需要不同的训练重点与节奏。</span>
+            </div>
+            <fieldset class="prep-choice-group">
+              <legend>你要申请什么类型的岗位？</legend>
+              <label class="prep-choice">
+                <input type="radio" name="prepTrack" value="internship" checked>
+                <strong>Internship</strong>
+                <span>在校生暑期实习，围绕目标 summer 做倒排。</span>
+              </label>
+              <label class="prep-choice">
+                <input type="radio" name="prepTrack" value="fulltime">
+                <strong>Full-time / New Grad</strong>
+                <span>校招或毕业岗，增加项目表达与完整面试循环。</span>
+              </label>
+            </fieldset>
+            <fieldset class="prep-choice-group three">
+              <legend>目标招聘季</legend>
+              <label class="prep-choice">
+                <input type="radio" name="prepSeason" value="2026-summer">
+                <strong>2026 Summer</strong>
+                <span>临近开工，按补录与即时面试冲刺。</span>
+              </label>
+              <label class="prep-choice">
+                <input type="radio" name="prepSeason" value="2027-summer" checked>
+                <strong>2027 Summer</strong>
+                <span>主申请周期，系统建设能力与申请材料。</span>
+              </label>
+              <label class="prep-choice">
+                <input type="radio" name="prepSeason" value="2028-summer">
+                <strong>2028 Summer</strong>
+                <span>提前布局，先建立基础与项目经历。</span>
+              </label>
+            </fieldset>
+            <div class="prep-setup-fields">
+              <label>
+                目标方向
+                <select id="prepRoleSelect" name="prepRole">
+                  <option value="quantTrading">Quant Trading</option>
+                  <option value="quantResearch">Quant Research</option>
+                  <option value="quantDeveloper">Quant Developer</option>
+                </select>
+              </label>
+              <label>
+                每周可投入
+                <select id="prepHoursSelect" name="prepHours">
+                  <option value="5">5 小时 / 周</option>
+                  <option value="8" selected>8 小时 / 周</option>
+                  <option value="12">12 小时 / 周</option>
+                  <option value="16">16+ 小时 / 周</option>
+                </select>
+              </label>
+            </div>
+            <fieldset class="prep-choice-group">
+              <legend>是否先做水平测试？</legend>
+              <label class="prep-choice">
+                <input type="radio" name="prepDiagnostic" value="take" checked>
+                <strong>先做 baseline 测评</strong>
+                <span>8 道短题，识别概率、速算、代码和市场基础的优先级。</span>
+              </label>
+              <label class="prep-choice">
+                <input type="radio" name="prepDiagnostic" value="skip">
+                <strong>暂不测试</strong>
+                <span>直接按岗位常见要求开始，之后可补做测评。</span>
+              </label>
+            </fieldset>
+            <button class="primary-button prep-create-button" type="submit">
+              <i data-lucide="route"></i>
+              制定计划
+            </button>
+          </form>
+
+          <div class="prep-plan-dashboard hidden" id="prepPlanDashboard" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section class="module-view" data-module-view="experiences">
+        <section class="experience-section">
+          <header class="experience-header">
+            <div>
+              <span class="experience-kicker">INTERVIEW LOG</span>
+              <h2>面经记录</h2>
+              <p>按轮次沉淀面试过程、考察主题和复盘行动，建立自己的面试档案。</p>
+            </div>
+            <button class="secondary-button" id="newExperienceBtn" type="button">
+              <i data-lucide="plus"></i>
+              新建记录
+            </button>
+          </header>
+          <div class="experience-workspace">
+            <form class="experience-form" id="experienceForm">
+              <div class="experience-panel-heading">
+                <h3 id="experienceFormTitle">新建面经</h3>
+                <span class="experience-private"><i data-lucide="lock-keyhole"></i> 私有保存</span>
+              </div>
+              <input id="experienceId" type="hidden">
+              <div class="experience-fields">
+                <label>
+                  公司
+                  <input id="experienceFirm" type="text" required placeholder="例如：Optiver / 匿名做市公司">
+                </label>
+                <label>
+                  岗位方向
+                  <select id="experienceRole">
+                    <option value="Quant Trading">Quant Trading</option>
+                    <option value="Quant Research">Quant Research</option>
+                    <option value="Quant Developer">Quant Developer</option>
+                    <option value="Other">其他方向</option>
+                  </select>
+                </label>
+                <label>
+                  轮次
+                  <select id="experienceStage">
+                    <option value="OA / Assessment">OA / Assessment</option>
+                    <option value="Recruiter / HR Screen">Recruiter / HR Screen</option>
+                    <option value="Technical Interview">Technical Interview</option>
+                    <option value="Behavioral / Fit">Behavioral / Fit</option>
+                    <option value="Final Day / Superday">Final Day / Superday</option>
+                    <option value="HR Close / Offer">HR Close / Offer</option>
+                  </select>
+                </label>
+                <label>
+                  目标季次
+                  <select id="experienceSeason">
+                    <option value="2026 Summer">2026 Summer</option>
+                    <option value="2027 Summer" selected>2027 Summer</option>
+                    <option value="2028 Summer">2028 Summer</option>
+                    <option value="Off-cycle">Off-cycle</option>
+                  </select>
+                </label>
+                <label>
+                  面试日期
+                  <input id="experienceDate" type="date">
+                </label>
+                <label>
+                  结果状态
+                  <select id="experienceOutcome">
+                    <option value="Waiting">等待结果</option>
+                    <option value="Advanced">进入下一轮</option>
+                    <option value="Offer">Offer</option>
+                    <option value="Closed">流程结束</option>
+                    <option value="Withdrawn">已撤回</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                标签
+                <input id="experienceTags" type="text" placeholder="例如：mental math, probability, market making">
+              </label>
+              <label>
+                流程概览
+                <textarea id="experienceSummaryInput" rows="3" required placeholder="轮次时长、交流方式、整体节奏和感受。"></textarea>
+              </label>
+              <label>
+                考察主题
+                <textarea id="experienceTopics" rows="4" placeholder="记录题型与能力主题即可，请勿写入受保密要求约束的原题。"></textarea>
+              </label>
+              <label>
+                复盘与下一步
+                <textarea id="experienceReflection" rows="4" placeholder="做得好的地方、卡住的点、下一次要强化的训练。"></textarea>
+              </label>
+              <p class="experience-safety"><i data-lucide="shield-check"></i> 分享前请移除姓名、联系方式及公司要求保密的具体题目。</p>
+              <div class="experience-form-actions">
+                <button class="primary-button" type="submit"><i data-lucide="save"></i>保存面经</button>
+                <button class="secondary-button hidden" id="cancelExperienceEditBtn" type="button">取消编辑</button>
+              </div>
+            </form>
+            <aside class="experience-side-panel">
+              <div>
+                <strong id="experienceCount">0</strong>
+                <span>条面经记录</span>
+              </div>
+              <div>
+                <strong id="sharedExperienceCount">0</strong>
+                <span>已分享到社群</span>
+              </div>
+              <button class="secondary-button" id="openCommunityExperiencesBtn" type="button" data-jump-module="community">
+                <i data-lucide="users-round"></i>
+                查看社群面经
+              </button>
+            </aside>
+          </div>
+          <div class="experience-list-toolbar">
+            <h3>我的面经</h3>
+            <select id="experienceFilter" aria-label="筛选面经轮次">
+              <option value="all">全部轮次</option>
+              <option value="OA / Assessment">OA / Assessment</option>
+              <option value="Recruiter / HR Screen">Recruiter / HR Screen</option>
+              <option value="Technical Interview">Technical Interview</option>
+              <option value="Behavioral / Fit">Behavioral / Fit</option>
+              <option value="Final Day / Superday">Final Day / Superday</option>
+              <option value="HR Close / Offer">HR Close / Offer</option>
+            </select>
+          </div>
+          <div class="experience-list" id="experienceList"></div>
+        </section>
+      </section>
+
+      <section class="module-view" data-module-view="account">
+        <section class="account-section">
+          <div class="section-heading">
+            <div>
+              <h2>账户信息</h2>
+              <small id="accountMessage">管理昵称、邮箱、头像和地区。</small>
+            </div>
+          </div>
+          <div class="account-grid">
+            <form id="accountForm" class="account-panel">
+              <div class="account-avatar-row">
+                <div class="avatar account-avatar-preview" id="accountAvatarPreview" aria-hidden="true">Q</div>
+                <div class="avatar-actions">
+                  <input id="accountAvatarUrl" type="url" placeholder="头像图片链接">
+                  <div class="avatar-button-row">
+                    <label class="secondary-button avatar-upload">
+                      <input id="accountAvatarFile" type="file" accept="image/*">
+                      <i data-lucide="image-plus"></i>
+                      上传头像
+                    </label>
+                    <button class="icon-button ghost danger" id="accountClearAvatarBtn" type="button" title="清除头像" aria-label="清除头像">
+                      <i data-lucide="x"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <label>
+                昵称
+                <input id="accountNameInput" type="text" autocomplete="name" placeholder="你的显示名">
+              </label>
+              <label>
+                邮箱
+                <input id="accountEmailInput" type="email" autocomplete="email" placeholder="you@example.com">
+              </label>
+              <label>
+                国家
+                <select id="accountCountrySelect" aria-label="账户国家"></select>
+              </label>
+              <label>
+                地区
+                <select id="accountRegionSelect" aria-label="账户地区"></select>
+              </label>
+              <label>
+                毕业时间
+                <input id="accountGraduationTermInput" type="month" value="2027-09">
+              </label>
+              <label>
+                简历
+                <input id="accountResumeFile" type="file" accept=".txt,.md,.tex,.pdf,text/plain,text/markdown,application/pdf">
+                <small id="accountResumeMeta">上传 txt/md 简历可直接分析；PDF 会先保存文件名。</small>
+              </label>
+              <label>
+                当前密码
+                <input id="accountCurrentPassword" type="password" autocomplete="current-password" placeholder="仅更改本地账户邮箱时填写">
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="save"></i>
+                保存账户
+              </button>
+            </form>
+            <aside class="account-panel account-meta-panel">
+              <h3>账户信息</h3>
+              <dl>
+                <div>
+                  <dt>登录方式</dt>
+                  <dd id="accountProviderText">Local</dd>
+                </div>
+                <div>
+                  <dt>账户创建</dt>
+                  <dd id="accountCreatedText">-</dd>
+                </div>
+                <div>
+                  <dt>当前排名</dt>
+                  <dd id="accountRankText">-</dd>
+                </div>
+              </dl>
+            </aside>
+          </div>
+        </section>
+      </section>
+
+      <section class="module-view" data-module-view="resume">
+        <section class="resume-section">
+          <div class="section-heading">
+            <div>
+              <h2>简历模块</h2>
+              <small id="resumeSummary">上传或粘贴简历，获取针对 quant internship / full-time 的修改建议。</small>
+            </div>
+          </div>
+          <div class="resume-grid">
+            <form id="resumeForm" class="resume-panel">
+              <label>
+                简历内容
+                <textarea id="resumeText" rows="14" placeholder="粘贴简历文本，或先在账户里上传 txt/md 简历。"></textarea>
+              </label>
+              <div class="form-row">
+                <button class="primary-button" id="reviewResumeBtn" type="submit">
+                  <i data-lucide="wand-sparkles"></i>
+                  LLM 修改简历
+                </button>
+                <button class="secondary-button" id="saveResumeBtn" type="button">
+                  <i data-lucide="save"></i>
+                  保存简历
+                </button>
+              </div>
+            </form>
+            <aside class="resume-panel">
+              <h3>修改要点</h3>
+              <div id="resumeReview" class="resume-review"></div>
+            </aside>
+          </div>
+        </section>
+      </section>
+
+      <section class="module-view" data-module-view="jobs">
+        <section class="jobs-section">
+          <div class="section-heading">
+            <div>
+              <h2>求职</h2>
+              <small id="jobsSummary">追踪 quant internship / full-time 岗位，点击链接跳转申请。</small>
+            </div>
+            <div class="view-tabs" role="tablist" aria-label="岗位类型">
+              <button class="tab active" type="button" data-job-filter="all">全部</button>
+              <button class="tab" type="button" data-job-filter="internship">Internship</button>
+              <button class="tab" type="button" data-job-filter="fulltime">Full-time</button>
+              <button class="icon-button ghost" id="refreshJobsBtn" type="button" title="刷新岗位" aria-label="刷新岗位">
+                <i data-lucide="refresh-cw"></i>
+              </button>
+            </div>
+          </div>
+          <div id="jobsList" class="jobs-list"></div>
+        </section>
+      </section>
+
+      <section class="module-view" data-module-view="courses">
+        <section class="courses-section">
+          <div class="section-heading">
+            <div>
+              <h2>课程</h2>
+              <small id="coursesSummary">精选 YouTube / Bilibili 课程，点击后直接跳转平台。</small>
+            </div>
+          </div>
+          <div id="courseList" class="course-list"></div>
+        </section>
+      </section>
+
+      <section class="module-view" data-module-view="community">
+        <section class="community-section">
+          <div class="section-heading">
+            <div>
+              <h2>社区</h2>
+              <small id="communitySummary">像朋友圈一样分享训练动态，也可以点赞评论。</small>
+            </div>
+          </div>
+          <form id="communityForm" class="community-form">
+            <textarea id="communityText" rows="4" placeholder="发一条动态：照片、视频、刷题进度、面试复盘都可以。"></textarea>
+            <div id="communityMediaPreview" class="community-media-preview hidden"></div>
+            <div class="community-compose-actions">
+              <label class="secondary-button file-button">
+                <input id="communityMedia" type="file" accept="image/*,video/*">
+                <i data-lucide="image-plus"></i>
+                添加照片/视频
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="send"></i>
+                发布
+              </button>
+            </div>
+          </form>
+          <div class="community-feed-tabs" role="tablist" aria-label="社群内容筛选">
+            <button class="segment active" type="button" data-community-filter="all">全部动态</button>
+            <button class="segment" type="button" data-community-filter="experience">面经分享</button>
+          </div>
+          <div id="communityList" class="community-list"></div>
+        </section>
+      </section>
+
+      <section class="module-view" data-module-view="problems">
+      <section class="problem-section">
+        <div class="problem-page-header">
+          <div class="problem-page-copy">
+            <span class="rank-label">题库</span>
+            <h2>所有题目</h2>
+            <p>系统练习概率、期望、博弈和 quant 面试基础题。</p>
+          </div>
+          <img src="assets/generated/mascot-calculator.webp?v=premium-system-2" alt="" loading="lazy">
+          <div class="problem-actions">
+            <input id="problemSearch" type="search" placeholder="搜索题目">
+            <button class="icon-button ghost hidden" id="addProblemBtn" type="button" title="添加题目" aria-label="添加题目">
+              <i data-lucide="book-plus"></i>
+            </button>
+          </div>
+        </div>
+        <form id="problemForm" class="problem-form hidden">
+          <input id="problemTitleEn" type="text" placeholder="English title">
+          <input id="problemTitleZh" type="text" placeholder="中文标题">
+          <select id="problemCategory" aria-label="题目类别">
+            <option value="leetcode">LeetCode</option>
+            <option value="pandasNumpy">Pandas/NumPy</option>
+            <option value="probabilityExpectation">Probability/Expectation</option>
+            <option value="statistics">Statistics</option>
+            <option value="machineLearning">Machine Learning</option>
+            <option value="deepLearning">Deep Learning</option>
+            <option value="market">Market</option>
+            <option value="option">Option</option>
+            <option value="mentalMath">Mental Math</option>
+          </select>
+          <select id="problemDifficulty" aria-label="题目难度">
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+          <input id="problemTags" type="text" placeholder="tags: dp, bayes, market-making">
+          <input id="problemSourceUrl" type="url" placeholder="source url">
+          <textarea id="problemPromptEn" rows="4" placeholder="English prompt"></textarea>
+          <textarea id="problemPromptZh" rows="4" placeholder="中文题干"></textarea>
+          <textarea id="problemAnswer" rows="4" placeholder="答案"></textarea>
+          <textarea id="problemExplanation" rows="5" placeholder="解答 / reasoning"></textarea>
+          <button class="secondary-button" type="submit">
+            <i data-lucide="save"></i>
+            保存题目
+          </button>
+        </form>
+        <form id="problemImportForm" class="problem-import hidden">
+          <textarea id="problemJsonInput" rows="3" placeholder="插件 JSON"></textarea>
+          <button class="secondary-button" type="submit">
+            <i data-lucide="file-json"></i>
+            导入
+          </button>
+        </form>
+        <section class="leetcode-hot-panel" aria-labelledby="leetcodeHotTitle">
+          <div class="leetcode-hot-copy">
+            <span class="rank-label">LeetCode</span>
+            <h3 id="leetcodeHotTitle">Hot 100</h3>
+            <p id="leetcodeHotSummary">跳转原题并记录完成状态。</p>
+          </div>
+          <div class="leetcode-hot-progress">
+            <strong id="leetcodeHotProgressText">0 / 100</strong>
+            <div class="progress-track" aria-hidden="true">
+              <div id="leetcodeHotProgressFill" class="progress-fill"></div>
+            </div>
+            <a id="leetcodeHotPlanLink" class="secondary-button" href="https://leetcode.com/studyplan/top-100-liked/" target="_blank" rel="noreferrer">
+              <i data-lucide="external-link"></i>
+              LeetCode
+            </a>
+          </div>
+          <div id="leetcodeHotList" class="leetcode-hot-list" aria-live="polite"></div>
+        </section>
+        <div class="problem-browser-toolbar">
+          <div class="problem-view-tabs" role="tablist" aria-label="题目浏览方式">
+            <button class="segment active" type="button" data-problem-view="all">全部题目</button>
+            <button class="segment" type="button" data-problem-view="saved">我的收藏</button>
+            <button class="segment" type="button" data-problem-view="ranking">热门排行</button>
+          </div>
+          <span id="problemInteractionStatus" class="problem-interaction-status" aria-live="polite"></span>
+        </div>
+        <section id="problemRanking" class="problem-ranking hidden" aria-label="题目排行榜">
+          <div class="problem-ranking-header">
+            <div>
+              <h3>题目排行榜</h3>
+              <p>按点赞与讨论热度排序，找到值得优先复习的题目。</p>
+            </div>
+          </div>
+          <div id="problemRankingList" class="problem-ranking-list"></div>
+        </section>
+        <div id="problemList" class="problem-list"></div>
+        <button id="loadMoreProblemsBtn" class="secondary-button problem-load-more hidden" type="button">
+          <i data-lucide="chevrons-down"></i>
+          加载更多题目
+        </button>
+        <article id="problemDetail" class="problem-detail hidden" aria-live="polite"></article>
+      </section>
+      </section>
+
+      <section class="module-view" data-module-view="interview">
+      <section class="interview-section">
+        <div class="section-heading">
+          <div>
+            <h2>模拟面试</h2>
+            <small id="interviewSummary">配置题型、题数、作答方式和题目来源。</small>
+          </div>
+          <div class="segmented">
+            <button class="segment active" type="button" data-interview-lang="zh">中文</button>
+            <button class="segment" type="button" data-interview-lang="en">English</button>
+          </div>
+        </div>
+        <div id="interviewGrid" class="interview-grid setup-only">
+          <div id="interviewSetup" class="interview-setup">
+            <label>
+              面试类型
+              <select id="interviewTypeSelect" aria-label="面试类型">
+                <option value="oa">Online Assessment</option>
+                <option value="technical">Technical Interview</option>
+                <option value="behavioral">Behavioral Interview</option>
+              </select>
+            </label>
+            <label>
+              问题数量
+              <input id="interviewQuestionCount" type="number" min="1" max="12" value="3">
+            </label>
+            <label>
+              每题时间（分钟）
+              <input id="interviewQuestionTime" type="number" min="1" max="60" value="5">
+            </label>
+            <label>
+              作答方式
+              <select id="interviewAnswerModeSelect" aria-label="作答方式">
+                <option value="text">文字作答</option>
+                <option value="file">文件上传</option>
+                <option value="voice">语音作答</option>
+              </select>
+            </label>
+            <label>
+              题目来源
+              <select id="interviewSourceSelect" aria-label="题目来源">
+                <option value="full">全范围题库</option>
+                <option value="pdf">上传 PDF 生成题目</option>
+              </select>
+            </label>
+            <label id="interviewPdfRow" class="interview-pdf-row hidden">
+              PDF 文件
+              <input id="interviewPdfInput" type="file" accept="application/pdf">
+              <small id="interviewPdfMeta">上传 PDF 后会由 LLM 总结重点并生成题目。</small>
+            </label>
+            <div id="interviewCategoryRow" class="interview-category-row">
+              <span>主题范围</span>
+              <div id="interviewCategoryPicker" class="interview-category-picker" aria-label="主题范围"></div>
+            </div>
+            <input id="llmEndpointInput" type="url" value="http://127.0.0.1:8787/interview" placeholder="http://127.0.0.1:8787/interview">
+            <select id="llmModelInput" aria-label="LLM Model">
+              <option value="gpt-5-nano" selected>gpt-5-nano · 最便宜</option>
+              <option value="gpt-5-mini">gpt-5-mini · 更稳</option>
+              <option value="gpt-5">gpt-5 · 更强</option>
+              <option value="gpt-5.4-mini">gpt-5.4-mini · 新 mini</option>
+              <option value="gpt-5.4">gpt-5.4 · 高质量</option>
+              <option value="gpt-4o-mini">gpt-4o-mini · 旧版低价</option>
+              <option value="gpt-4.1-nano">gpt-4.1-nano · 旧版 nano</option>
+            </select>
+            <button class="primary-button" id="startInterviewBtn" type="button">
+              <i data-lucide="messages-square"></i>
+              开始模拟
+            </button>
+            <button class="secondary-button" id="saveLlmConfigBtn" type="button">
+              <i data-lucide="plug"></i>
+              保存连接
+            </button>
+          </div>
+          <div id="interviewConsole" class="interview-console hidden">
+            <div class="interview-console-head">
+              <div>
+                <strong id="interviewSessionTitle">Ready</strong>
+                <small id="interviewQuestionStatus">还没有开始。</small>
+              </div>
+              <div id="interviewTimer" class="interview-timer">--:--</div>
+            </div>
+            <div id="interviewTranscript" class="interview-transcript"></div>
+            <form id="interviewForm" class="interview-form">
+              <textarea id="interviewAnswer" rows="4" placeholder="输入你的回答"></textarea>
+              <label id="interviewAnswerFileRow" class="interview-answer-file hidden">
+                上传回答文件
+                <input id="interviewAnswerFile" type="file" accept=".txt,.md,.tex,.pdf,text/*,application/pdf">
+                <small id="interviewAnswerFileMeta">支持文本文件；PDF 会传给 LLM 读取。</small>
+              </label>
+              <div class="form-row">
+                <button class="primary-button" type="submit">
+                  <i data-lucide="send"></i>
+                  提交回答
+                </button>
+                <button class="icon-button ghost" id="hintInterviewBtn" type="button" title="Hint" aria-label="Hint">
+                  <i data-lucide="lightbulb"></i>
+                </button>
+                <button class="icon-button ghost" id="revealAnswerBtn" type="button" title="显示参考答案" aria-label="显示参考答案">
+                  <i data-lucide="book-open"></i>
+                </button>
+                <button class="icon-button ghost" id="voiceAnswerBtn" type="button" title="语音作答" aria-label="语音作答">
+                  <i data-lucide="mic"></i>
+                </button>
+                <button class="icon-button ghost" id="clearInterviewBtn" type="button" title="清空模拟" aria-label="清空模拟">
+                  <i data-lucide="eraser"></i>
+                </button>
+              </div>
+            </form>
+            <div id="interviewCompleteActions" class="interview-complete-actions hidden">
+              <button class="primary-button" id="nextInterviewQuestionBtn" type="button">
+                <i data-lucide="skip-forward"></i>
+                下一题
+              </button>
+              <button class="secondary-button" id="saveInterviewFavoriteBtn" type="button">
+                <i data-lucide="bookmark-plus"></i>
+                总结到收藏夹
+              </button>
+              <button class="secondary-button" id="shareInterviewQuestionBtn" type="button">
+                <i data-lucide="copy"></i>
+                分享
+              </button>
+            </div>
+            <div class="interview-favorites">
+              <div class="interview-favorites-head">
+                <strong>收藏夹</strong>
+                <small id="interviewFavoritesSummary">保存高价值题目复盘。</small>
+              </div>
+              <div id="interviewFavoritesList" class="interview-favorites-list"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      </section>
+
+      <section class="module-view" data-module-view="pk">
+      <section class="pk-section">
+        <div class="section-heading">
+          <h2>PK</h2>
+          <button class="secondary-button" id="startPkBtn" type="button">
+            <i data-lucide="swords"></i>
+            匹配在线 Quant
+          </button>
+        </div>
+        <div class="pk-grid">
+          <div class="pk-arena">
+            <div class="pk-scoreboard">
+              <div>
+                <small>你</small>
+                <strong id="pkUserScore">0</strong>
+              </div>
+              <div>
+                <small id="pkOpponentName">Online Quant</small>
+                <strong id="pkOpponentScore">0</strong>
+              </div>
+            </div>
+            <div id="pkProblem" class="pk-problem">点击匹配开始。</div>
+            <form id="pkForm" class="pk-form">
+              <textarea id="pkAnswer" rows="5" placeholder="写下你的解法、推导或交易直觉"></textarea>
+              <div class="form-row">
+                <button class="primary-button" type="submit">
+                  <i data-lucide="send"></i>
+                  提交 PK
+                </button>
+                <button class="icon-button ghost" id="pkRevealBtn" type="button" title="查看参考答案" aria-label="查看参考答案">
+                  <i data-lucide="lightbulb"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+          <aside class="pk-feed" id="pkFeed"></aside>
+        </div>
+      </section>
+      </section>
+
+      <section class="module-view" data-module-view="news">
+      <section class="news-section">
+        <div class="section-heading">
+          <div>
+            <h2>Quant 新闻</h2>
+            <small id="newsUpdatedAt">Jane Street、做市、AI 算力与市场结构</small>
+          </div>
+          <div class="problem-actions">
+            <button class="icon-button ghost" id="addNewsBtn" type="button" title="添加新闻" aria-label="添加新闻">
+              <i data-lucide="file-plus-2"></i>
+            </button>
+            <button class="icon-button ghost" id="refreshNewsBtn" type="button" title="刷新新闻" aria-label="刷新新闻">
+              <i data-lucide="refresh-cw"></i>
+            </button>
+          </div>
+        </div>
+        <form id="newsForm" class="news-form hidden">
+          <input id="newsTitle" type="text" placeholder="新闻标题">
+          <input id="newsSource" type="text" placeholder="来源，例如 Reuters / Bloomberg">
+          <input id="newsUrl" type="url" placeholder="来源链接">
+          <select id="newsPrimarySkill" aria-label="关联能力">
+            <option value="market">Market</option>
+            <option value="deepLearning">Deep Learning</option>
+            <option value="option">Option</option>
+            <option value="statistics">Statistics</option>
+            <option value="machineLearning">Machine Learning</option>
+            <option value="probabilityExpectation">Probability/Expectation</option>
+            <option value="pandasNumpy">Pandas/NumPy</option>
+            <option value="leetcode">LeetCode</option>
+            <option value="mentalMath">Mental Math</option>
+          </select>
+          <input id="newsTags" type="text" placeholder="tags: Jane Street, market making, AI">
+          <textarea id="newsSummary" rows="4" placeholder="摘要：发生了什么？"></textarea>
+          <textarea id="newsInsight" rows="3" placeholder="面试启发：这和 quant 面试有什么关系？"></textarea>
+          <button class="secondary-button" type="submit">
+            <i data-lucide="save"></i>
+            保存新闻
+          </button>
+        </form>
+        <div id="newsList" class="news-list">
+          <article class="news-card" data-news-id="news-jane-street-q1-2026">
+            <div class="news-meta">
+              <span>2026/05/08</span>
+              <span>Reuters / Investing.com</span>
+            </div>
+            <h3>Jane Street Q1 交易收入创纪录</h3>
+            <p>Reuters 报道称，Jane Street 2026 年第一季度交易收入达到 161 亿美元，市场波动、机器辅助中频策略和 AI 公司持仓表现是关键词。</p>
+            <div class="news-impact">
+              <strong>面试启发</strong>
+              <span>为什么波动率上升会利好做市和多资产交易？可以用 bid-ask spread、inventory risk、holding period 和模型定价来解释。</span>
+            </div>
+            <div class="pill-row">
+              <span class="pill">Market</span>
+              <span class="pill">Option</span>
+              <span class="pill">Deep Learning</span>
+              <span class="pill muted-pill">Jane Street</span>
+              <span class="pill muted-pill">volatility</span>
+            </div>
+            <div class="news-actions">
+              <a class="news-link" href="https://m.investing.com/news/stock-market-news/jane-street-posts-big-jump-in-trading-revenue-for-first-quarter-with-161-billion-haul-sources-say-4673532?ampMode=1" target="_blank" rel="noreferrer">来源</a>
+            </div>
+          </article>
+
+          <article class="news-card" data-news-id="news-jane-street-2025-haul">
+            <div class="news-meta">
+              <span>2026/04/24</span>
+              <span>Bloomberg</span>
+            </div>
+            <h3>Jane Street 2025 年交易收入刷新纪录</h3>
+            <p>Bloomberg 报道，Jane Street 2025 年交易收入达到 396 亿美元，并与大型投行交易业务形成直接比较。</p>
+            <div class="news-impact">
+              <strong>面试启发</strong>
+              <span>可以比较自营做市商与投行交易台：资本、技术、风险约束和市场结构分别如何影响收益上限。</span>
+            </div>
+            <div class="pill-row">
+              <span class="pill">Market</span>
+              <span class="pill">Statistics</span>
+              <span class="pill muted-pill">trading revenue</span>
+              <span class="pill muted-pill">banks</span>
+            </div>
+            <div class="news-actions">
+              <a class="news-link" href="https://www.bloomberg.com/news/articles/2026-04-24/jane-street-snatches-wall-street-crown-with-record-39-6-billion-trading-haul?srnd=phx-industries-finance" target="_blank" rel="noreferrer">来源</a>
+            </div>
+          </article>
+
+          <article class="news-card" data-news-id="news-jane-street-coreweave-2026">
+            <div class="news-meta">
+              <span>2026/04/16</span>
+              <span>Data Center Dynamics</span>
+            </div>
+            <h3>Jane Street 与 CoreWeave 签下 AI 云算力协议</h3>
+            <p>Data Center Dynamics 报道，Jane Street 与 CoreWeave 签下 60 亿美元 AI 云容量协议，并进行了 10 亿美元股权投资。</p>
+            <div class="news-impact">
+              <strong>面试启发</strong>
+              <span>现代 quant 越来越像大规模 ML 系统题：噪声数据、训练成本、GPU 资源和低延迟部署都会进入讨论。</span>
+            </div>
+            <div class="pill-row">
+              <span class="pill">Deep Learning</span>
+              <span class="pill">Machine Learning</span>
+              <span class="pill">Market</span>
+              <span class="pill muted-pill">GPU</span>
+              <span class="pill muted-pill">CoreWeave</span>
+            </div>
+            <div class="news-actions">
+              <a class="news-link" href="https://www.datacenterdynamics.com/en/news/quantative-trading-firm-jane-street-signs-6bn-ai-cloud-deal-with-coreweave/" target="_blank" rel="noreferrer">来源</a>
+            </div>
+          </article>
+
+          <article class="news-card" data-news-id="news-squarepoint-stg-2026">
+            <div class="news-meta">
+              <span>2026/03/04</span>
+              <span>Bloomberg</span>
+            </div>
+            <h3>Squarepoint 关联方启动电子做市业务</h3>
+            <p>Bloomberg 报道，Squarepoint 关联方将成立电子交易/做市业务 STG Securities，体现 hedge fund 与 market maker 模式的融合。</p>
+            <div class="news-impact">
+              <strong>面试启发</strong>
+              <span>可以比较 hedge fund alpha、market making spread capture 和 execution technology 的差异，顺带复习 order book 与实时系统。</span>
+            </div>
+            <div class="pill-row">
+              <span class="pill">Market</span>
+              <span class="pill">Statistics</span>
+              <span class="pill">LeetCode</span>
+              <span class="pill muted-pill">market making</span>
+              <span class="pill muted-pill">Squarepoint</span>
+            </div>
+            <div class="news-actions">
+              <a class="news-link" href="https://www.bloomberg.com/news/articles/2026-03-04/squarepoint-affiliate-starts-market-making-arm-to-rival-citadel" target="_blank" rel="noreferrer">来源</a>
+            </div>
+          </article>
+        </div>
+        <article id="newsDetail" class="news-detail hidden">
+          <div class="news-detail-header">
+            <button class="icon-button ghost" id="newsBackBtn" type="button" title="返回新闻" aria-label="返回新闻">
+              <i data-lucide="arrow-left"></i>
+            </button>
+            <span id="newsDetailReadBadge" class="read-badge hidden">已读</span>
+          </div>
+          <div class="news-detail-meta" id="newsDetailMeta"></div>
+          <h2 id="newsDetailTitle"></h2>
+          <p id="newsDetailSummary"></p>
+          <div class="news-impact">
+            <strong>面试启发</strong>
+            <span id="newsDetailInsight"></span>
+          </div>
+          <div id="newsDetailPills" class="pill-row"></div>
+          <a id="newsDetailLink" class="news-link" href="#" target="_blank" rel="noreferrer">来源</a>
+        </article>
+      </section>
+      </section>
+
+      <section class="module-view" data-module-view="network">
+        <section class="network-section">
+          <div class="section-heading">
+            <div>
+              <h2>Network</h2>
+              <small id="networkSummary">记录联系人、公司和下一步 follow-up。</small>
+            </div>
+            <button class="icon-button ghost" id="addNetworkBtn" type="button" title="添加联系人" aria-label="添加联系人">
+              <i data-lucide="user-round-plus"></i>
+            </button>
+          </div>
+          <form id="networkForm" class="network-form hidden">
+            <input id="networkName" type="text" placeholder="姓名">
+            <input id="networkCompany" type="text" placeholder="公司 / 学校">
+            <input id="networkRole" type="text" placeholder="职位 / 关系">
+            <select id="networkStatus" aria-label="关系状态">
+              <option value="To reach out">To reach out</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Warm">Warm</option>
+              <option value="Archived">Archived</option>
+            </select>
+            <input id="networkChannel" type="text" placeholder="LinkedIn / Email / WeChat">
+            <input id="networkNextStep" type="text" placeholder="下一步">
+            <textarea id="networkNotes" rows="4" placeholder="备注"></textarea>
+            <button class="secondary-button" type="submit">
+              <i data-lucide="save"></i>
+              保存联系人
+            </button>
+          </form>
+          <div id="networkList" class="network-list"></div>
+        </section>
+      </section>
+
+      <section class="module-view" data-module-view="skills">
+      <section class="skills-section">
+        <div class="section-heading">
+          <div>
+            <h2 id="skillsPageTitle">能力值</h2>
+            <small id="skillsPageSubtitle">把训练记录、题目表现和面试反馈汇总成 quant readiness score。</small>
+          </div>
+        </div>
+        <div class="skill-value-hero">
+          <article class="skill-score-panel">
+            <span class="rank-label" id="skillsScoreLabel">Quant Score</span>
+            <div class="skill-score-number" aria-live="polite">
+              <strong id="skillsScoreValue">0</strong>
+              <span>/100</span>
+            </div>
+            <p id="skillsScoreCopy">分数来自九个能力维度。继续刷题、模拟面试和记录训练，能力值会自动更新。</p>
+            <div class="skill-score-meta">
+              <span>
+                <b id="skillsEntriesCount">0</b>
+                <small id="skillsEntriesLabel">训练记录</small>
+              </span>
+              <span>
+                <b id="skillsAverageScore">-</b>
+                <small id="skillsAverageLabel">平均得分</small>
+              </span>
+              <span>
+                <b id="skillsWeakestSkill">-</b>
+                <small id="skillsWeakestLabel">优先补强</small>
+              </span>
+            </div>
+          </article>
+          <article class="skill-radar-panel">
+            <div class="skill-radar-header">
+              <div>
+                <h3 id="skillRadarTitle">能力雷达</h3>
+                <small id="skillRadarHint">悬停到能力点或右侧分数，查看做题情况和平均得分。</small>
+              </div>
+              <img class="skill-radar-coach" src="assets/generated/mascot-teacher-chart.webp?v=premium-system-2" alt="" loading="lazy">
+            </div>
+            <div class="skill-radar-visual">
+              <div class="skill-radar-canvas-wrap">
+                <canvas id="skillRadar" width="680" height="440" aria-label="能力值雷达图"></canvas>
+                <div id="skillRadarTooltip" class="skill-radar-tooltip hidden" role="status"></div>
+              </div>
+              <div id="skillRadarLegend" class="skill-radar-legend" aria-label="能力分数"></div>
+            </div>
+          </article>
+        </div>
+        <div id="skillsGrid" class="skills-grid"></div>
+      </section>
+      </section>
+
+      <section class="module-view" data-module-view="tools">
+      <section class="tool-grid">
+        <div class="drill-panel">
+          <div class="panel-heading">
+            <h2>速算</h2>
+            <div class="segmented">
+              <button class="segment active" type="button" data-drill="percent">百分比</button>
+              <button class="segment" type="button" data-drill="square">平方</button>
+              <button class="segment" type="button" data-drill="ev">期望</button>
+            </div>
+          </div>
+          <div class="drill-card">
+            <div id="drillQuestion" class="drill-question"></div>
+            <form id="drillForm" class="drill-answer">
+              <input id="drillInput" type="text" inputmode="decimal" autocomplete="off" placeholder="答案">
+              <button class="icon-button accent" type="submit" title="提交" aria-label="提交">
+                <i data-lucide="check"></i>
+              </button>
+              <button class="icon-button ghost" id="nextDrillBtn" type="button" title="下一题" aria-label="下一题">
+                <i data-lucide="skip-forward"></i>
+              </button>
+            </form>
+            <div id="drillFeedback" class="drill-feedback" aria-live="polite"></div>
+          </div>
+        </div>
+
+      </section>
+      </section>
+
+      <section class="module-view" data-module-view="memory">
+      <section class="tool-grid single-column">
+        <div class="resource-panel">
+          <div class="panel-heading">
+            <h2>资料</h2>
+            <button class="icon-button ghost" id="addResourceBtn" type="button" title="添加资料" aria-label="添加资料">
+              <i data-lucide="paperclip"></i>
+            </button>
+          </div>
+          <form id="resourceForm" class="resource-form hidden">
+            <input id="resourceTitle" type="text" placeholder="标题">
+            <select id="resourceType" aria-label="资料类型">
+              <option value="tex">TeX</option>
+              <option value="image">图片</option>
+              <option value="link">链接</option>
+              <option value="note">笔记</option>
+            </select>
+            <input id="resourceFile" type="file" accept=".tex,.txt,text/*,image/*">
+            <textarea id="resourceContent" rows="4" placeholder="粘贴 TeX、图片路径、链接或摘要"></textarea>
+            <button class="secondary-button" type="submit">
+              <i data-lucide="save"></i>
+              保存
+            </button>
+          </form>
+          <div id="resourceList" class="resource-list"></div>
+        </div>
+      </section>
+
+      <section class="history-section">
+        <div class="section-heading">
+          <h2>记忆</h2>
+          <button class="icon-button ghost" id="clearTodayBtn" type="button" title="删除最新记录" aria-label="删除最新记录">
+            <i data-lucide="undo-2"></i>
+          </button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+      </section>
+
+      <section class="module-view" data-module-view="settings">
+        <section class="settings-section">
+          <div class="section-heading">
+            <div>
+              <h2>设置</h2>
+              <small id="settingsMessage">应用偏好和数据管理。</small>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <form id="settingsForm" class="settings-panel">
+              <h3>偏好</h3>
+              <label>
+                语言
+                <select id="settingsLanguageSelect" aria-label="语言">
+                  <option value="zh">中文</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
+              <label>
+                默认国家
+                <select id="settingsCountrySelect" aria-label="默认国家"></select>
+              </label>
+              <label>
+                默认地区
+                <select id="settingsRegionSelect" aria-label="默认地区"></select>
+              </label>
+              <label>
+                LLM Endpoint
+                <input id="settingsLlmEndpointInput" type="url" value="http://127.0.0.1:8787/interview" placeholder="http://127.0.0.1:8787/interview">
+              </label>
+              <label>
+                LLM Model
+                <select id="settingsLlmModelInput" aria-label="LLM Model">
+                  <option value="gpt-5-nano" selected>gpt-5-nano · 最便宜</option>
+                  <option value="gpt-5-mini">gpt-5-mini · 更稳</option>
+                  <option value="gpt-5">gpt-5 · 更强</option>
+                  <option value="gpt-5.4-mini">gpt-5.4-mini · 新 mini</option>
+                  <option value="gpt-5.4">gpt-5.4 · 高质量</option>
+                  <option value="gpt-4o-mini">gpt-4o-mini · 旧版低价</option>
+                  <option value="gpt-4.1-nano">gpt-4.1-nano · 旧版 nano</option>
+                </select>
+              </label>
+              <label>
+                Cloud API Endpoint
+                <input id="settingsCloudApiInput" type="url" placeholder="http://127.0.0.1:8790/api">
+              </label>
+              <label>
+                Google Client ID
+                <input id="settingsGoogleClientIdInput" type="text" spellcheck="false" placeholder="xxxx.apps.googleusercontent.com">
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="save"></i>
+                保存设置
+              </button>
+            </form>
+
+            <div class="settings-panel">
+              <h3>数据</h3>
+              <div class="settings-actions">
+                <button class="secondary-button" id="exportBtn" type="button">
+                  <i data-lucide="download"></i>
+                  导出备份
+                </button>
+                <label class="secondary-button file-button settings-file-button">
+                  <input id="importInput" type="file" accept="application/json">
+                  <i data-lucide="upload"></i>
+                  导入备份
+                </label>
+                <button class="secondary-button danger-action" id="resetBtn" type="button">
+                  <i data-lucide="trash-2"></i>
+                  清空训练记录
+                </button>
+                <button class="secondary-button" id="syncCloudBtn" type="button">
+                  <i data-lucide="cloud-upload"></i>
+                  同步云端
+                </button>
+                <button class="secondary-button" id="logoutBtn" type="button">
+                  <i data-lucide="log-out"></i>
+                  退出登录
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <template id="skillTemplate">
+      <article class="skill-card">
+        <div class="skill-head">
+          <span class="skill-icon"></span>
+          <div>
+            <h3></h3>
+            <small></small>
+          </div>
+        </div>
+        <div class="level-row">
+          <strong></strong>
+          <span></span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill"></div>
+        </div>
+        <div class="subskills"></div>
+      </article>
+    </template>
+  </body>
+</html>

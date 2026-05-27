@@ -1,0 +1,10 @@
+{
+  "slug": "probability-stochastic-10",
+  "name": "概率与随机分析面试题 10 题",
+  "type": "latex",
+  "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/概率随机分析10题/quant_prob10_book.tex",
+  "problemFile": "problems.json",
+  "browserFile": "problems.js",
+  "problemCount": 11,
+  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+}

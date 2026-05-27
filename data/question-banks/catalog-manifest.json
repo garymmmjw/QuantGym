@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "compiledCatalog": "../problem-catalog.json",
+  "browserCatalog": "../problem-catalog.js",
+  "sources": [
+    {
+      "slug": "question-bank",
+      "name": "Archived Question Bank",
+      "type": "latex",
+      "sourceTexPath": "",
+      "problemFile": "question-bank/problems.json",
+      "browserFile": "question-bank/problems.js",
+      "problemCount": 128,
+      "lastBuiltAt": "2026-05-27T03:07:24.699Z",
+      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "disabled": true,
+      "disabledReason": "Temporarily removed from the web catalog pending copyright review.",
+      "disabledAt": "2026-05-26T22:03:49.003Z"
+    },
+    {
+      "slug": "green-book",
+      "name": "绿皮书",
+      "type": "latex",
+      "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/绿皮书/quant_green_book.tex",
+      "problemFile": "green-book/problems.json",
+      "browserFile": "green-book/problems.js",
+      "problemCount": 183,
+      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "lastBuiltAt": "2026-05-27T03:07:24.702Z"
+    },
+    {
+      "slug": "yellow-book",
+      "name": "黄皮书 150 Most Frequently Asked Questions",
+      "type": "latex",
+      "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/黄皮书/quant_yellow_book.tex",
+      "problemFile": "yellow-book/problems.json",
+      "browserFile": "yellow-book/problems.js",
+      "problemCount": 153,
+      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "lastBuiltAt": "2026-05-27T03:07:24.703Z"
+    },
+    {
+      "slug": "red-book",
+      "name": "红宝书 Quant Job Interview Questions And Answers",
+      "type": "latex",
+      "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/红宝书/quant_red_book.tex",
+      "problemFile": "red-book/problems.json",
+      "browserFile": "red-book/problems.js",
+      "problemCount": 240,
+      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "lastBuiltAt": "2026-05-27T03:07:24.707Z"
+    },
+    {
+      "slug": "hull-derivatives",
+      "name": "Hull 期权期货及其他衍生品",
+      "type": "latex",
+      "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/Hull期权期货及其他衍生品/quant_hull_book.tex",
+      "problemFile": "hull-derivatives/problems.json",
+      "browserFile": "hull-derivatives/problems.js",
+      "problemCount": 763,
+      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "lastBuiltAt": "2026-05-27T03:07:24.711Z"
+    },
+    {
+      "slug": "stefanica-fe-math",
+      "name": "Stefanica 金融工程数学入门",
+      "type": "latex",
+      "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/Stefanica金融工程数学入门/quant_stefanica_book.tex",
+      "problemFile": "stefanica-fe-math/problems.json",
+      "browserFile": "stefanica-fe-math/problems.js",
+      "problemCount": 35,
+      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "lastBuiltAt": "2026-05-27T03:07:24.712Z"
+    },
+    {
+      "slug": "quantitative-primer",
+      "name": "Quantitative Primer",
+      "type": "latex",
+      "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/QuantitativePrimer/quant_qprimer_book.tex",
+      "problemFile": "quantitative-primer/problems.json",
+      "browserFile": "quantitative-primer/problems.js",
+      "problemCount": 41,
+      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "lastBuiltAt": "2026-05-27T03:07:24.713Z"
+    },
+    {
+      "slug": "dudeney-puzzles",
+      "name": "Dudeney 经典挑战谜题",
+      "type": "latex",
+      "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/Dudeney挑战谜题/quant_dudeney_book.tex",
+      "problemFile": "dudeney-puzzles/problems.json",
+      "browserFile": "dudeney-puzzles/problems.js",
+      "problemCount": 123,
+      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "lastBuiltAt": "2026-05-27T03:07:24.715Z"
+    },
+    {
+      "slug": "linalg-primer",
+      "name": "金融工程线性代数入门",
+      "type": "latex",
+      "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/金融工程线性代数入门/quant_linalg_book.tex",
+      "problemFile": "linalg-primer/problems.json",
+      "browserFile": "linalg-primer/problems.js",
+      "problemCount": 18,
+      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "lastBuiltAt": "2026-05-27T03:07:24.715Z"
+    },
+    {
+      "slug": "probability-stochastic-10",
+      "name": "概率与随机分析面试题 10 题",
+      "type": "latex",
+      "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/概率随机分析10题/quant_prob10_book.tex",
+      "problemFile": "probability-stochastic-10/problems.json",
+      "browserFile": "probability-stochastic-10/problems.js",
+      "problemCount": 11,
+      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "lastBuiltAt": "2026-05-27T03:07:24.716Z"
+    },
+    {
+      "slug": "quantguide",
+      "name": "QuantGuide",
+      "type": "platform",
+      "sourceUrl": "https://www.quantguide.io/questions",
+      "problemFile": "quantguide/problems.json",
+      "browserFile": "quantguide/problems.js",
+      "problemCount": 1204,
+      "lastImportedAt": "2026-05-27T01:15:01.981713Z",
+      "privacyNote": "Private local import from an authorized signed-in QuantGuide account.",
+      "lastBuiltAt": "2026-05-27T03:07:24.730Z"
+    }
+  ]
+}
