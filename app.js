@@ -372,7 +372,7 @@ const i18n = {
     appSearchPlaceholder: "搜索题目、工作、课程、知识点或模块",
     commandStreakLabel: "连续天数",
     commandXpLabel: "/100",
-    heroKicker: "欢迎回来，Quant。",
+    heroKicker: "Welcome back, Quant.",
     heroTitle: "Sharpen your quant edge today.",
     designStudyPlan: "进入备战计划",
     planTitle: "今日学习计划",
