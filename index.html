@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>QuantGym</title>
-    <link rel="stylesheet" href="styles.css?v=premium-system-14">
+    <link rel="stylesheet" href="styles.css?v=premium-system-15">
     <script>
       window.MathJax = {
         tex: {
@@ -30,7 +30,7 @@
     <script src="config.js"></script>
     <script src="data/problem-catalog.js?v=quant-books-1"></script>
     <script src="data/leetcode-hot-100.js?v=leetcode-hot-100-1"></script>
-    <script src="app.js?v=premium-system-18" defer></script>
+    <script src="app.js?v=premium-system-19" defer></script>
   </head>
   <body>
     <header class="topbar">
@@ -261,7 +261,7 @@
           <img src="assets/generated/shark-hero.webp?v=premium-system-2" alt="" loading="lazy">
         </section>
 
-        <section class="feature-launch-grid" aria-label="主要功能入口">
+        <section class="feature-launch-grid hidden" aria-label="主要功能入口">
           <button class="feature-launch-card" type="button" data-jump-module="problems" aria-label="进入学习题库">
             <img src="assets/generated/feature-learn.webp?v=premium-system-2" alt="" loading="lazy">
             <strong>题库</strong>
@@ -342,7 +342,7 @@
           </article>
         </section>
 
-        <section class="workspace-grid">
+        <section class="workspace-grid hidden">
           <form class="log-panel" id="logForm">
             <div class="panel-heading">
               <h2>今日记录</h2>
@@ -388,7 +388,7 @@
           </aside>
         </section>
 
-        <section class="community-panel overview-community">
+        <section class="community-panel overview-community hidden">
           <div class="section-heading">
             <div>
               <h2>社区</h2>
@@ -870,22 +870,33 @@
           </button>
         </form>
         <section class="leetcode-hot-panel" aria-labelledby="leetcodeHotTitle">
-          <div class="leetcode-hot-copy">
-            <span class="rank-label">LeetCode</span>
-            <h3 id="leetcodeHotTitle">Hot 100</h3>
-            <p id="leetcodeHotSummary">跳转原题并记录完成状态。</p>
-          </div>
-          <div class="leetcode-hot-progress">
-            <strong id="leetcodeHotProgressText">0 / 100</strong>
-            <div class="progress-track" aria-hidden="true">
-              <div id="leetcodeHotProgressFill" class="progress-fill"></div>
+          <div class="leetcode-hot-summary-card">
+            <div class="leetcode-hot-art" aria-hidden="true">
+              <i data-lucide="heart"></i>
             </div>
-            <a id="leetcodeHotPlanLink" class="secondary-button" href="https://leetcode.com/studyplan/top-100-liked/" target="_blank" rel="noreferrer">
-              <i data-lucide="external-link"></i>
-              LeetCode
-            </a>
+            <div class="leetcode-hot-copy">
+              <span class="rank-label">LeetCode</span>
+              <h3 id="leetcodeHotTitle">Hot 100</h3>
+              <p id="leetcodeHotSummary">跳转原题并记录完成状态。</p>
+              <div class="progress-track" aria-hidden="true">
+                <div id="leetcodeHotProgressFill" class="progress-fill"></div>
+              </div>
+            </div>
+            <div class="leetcode-hot-progress">
+              <span id="leetcodeHotProgressLabel">完成进度</span>
+              <strong id="leetcodeHotProgressText">0 / 100</strong>
+            </div>
+            <div class="leetcode-hot-actions">
+              <button id="leetcodeHotToggleBtn" class="secondary-button" type="button" aria-expanded="false" aria-controls="leetcodeHotList">
+                <i data-lucide="list-checks"></i>
+                查看题单
+              </button>
+              <a id="leetcodeHotPlanLink" class="leetcode-hot-link" href="https://leetcode.com/studyplan/top-100-liked/" target="_blank" rel="noreferrer" aria-label="打开 LeetCode">
+                <i data-lucide="external-link"></i>
+              </a>
+            </div>
           </div>
-          <div id="leetcodeHotList" class="leetcode-hot-list" aria-live="polite"></div>
+          <div id="leetcodeHotList" class="leetcode-hot-list hidden" aria-live="polite"></div>
         </section>
         <div class="problem-browser-toolbar">
           <div class="problem-view-tabs" role="tablist" aria-label="题目浏览方式">

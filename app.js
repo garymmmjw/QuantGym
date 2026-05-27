@@ -476,6 +476,9 @@ const i18n = {
     leetcodeHotTitle: "LeetCode Hot 100",
     leetcodeHotSummary: "从官方 Top 100 Liked 学习计划生成，跳转原题并记录完成状态。",
     leetcodeHotOpen: "打开 LeetCode",
+    leetcodeHotManage: "查看题单",
+    leetcodeHotCollapse: "收起题单",
+    leetcodeHotProgressLabel: "完成进度",
     leetcodeHotDone: "已完成",
     leetcodeHotMarkDone: "标记完成",
     leetcodeHotUndo: "取消完成",
@@ -655,6 +658,9 @@ const i18n = {
     leetcodeHotTitle: "LeetCode Hot 100",
     leetcodeHotSummary: "Generated from the official Top 100 Liked study plan. Open the original problem and track completion here.",
     leetcodeHotOpen: "Open LeetCode",
+    leetcodeHotManage: "View list",
+    leetcodeHotCollapse: "Collapse list",
+    leetcodeHotProgressLabel: "Progress",
     leetcodeHotDone: "Done",
     leetcodeHotMarkDone: "Mark done",
     leetcodeHotUndo: "Mark not done",
@@ -1089,6 +1095,7 @@ let problemSocial = new Map();
 let problemViewMode = "all";
 let problemThemeFilter = "all";
 let problemSocialNotice = "";
+let leetcodeHotExpanded = false;
 let heroTypewriterTimer = null;
 const PROBLEM_PAGE_SIZE = 24;
 let problemVisibleCount = PROBLEM_PAGE_SIZE;
@@ -1237,8 +1244,10 @@ function bindElements() {
     "problemRankingList",
     "leetcodeHotTitle",
     "leetcodeHotSummary",
+    "leetcodeHotProgressLabel",
     "leetcodeHotProgressText",
     "leetcodeHotProgressFill",
+    "leetcodeHotToggleBtn",
     "leetcodeHotPlanLink",
     "leetcodeHotList",
     "problemList",
@@ -1524,6 +1533,10 @@ function bindEvents() {
     problemVisibleCount = PROBLEM_PAGE_SIZE;
     returnToProblemList();
   });
+  els.leetcodeHotToggleBtn?.addEventListener("click", () => {
+    leetcodeHotExpanded = !leetcodeHotExpanded;
+    renderLeetcodeHot100();
+  });
   els.addProblemBtn.addEventListener("click", () => {
     els.problemForm.classList.toggle("hidden");
     if (!els.problemForm.classList.contains("hidden")) els.problemTitleEn.focus();
@@ -1676,7 +1689,7 @@ function bindEvents() {
 
 function setupButtonRipples() {
   document.addEventListener("click", (event) => {
-    const button = event.target.closest("button, .primary-button, .secondary-button, .module-tab, .segment, .feature-launch-card, .leetcode-hot-link");
+    const button = event.target.closest("button, .primary-button, .secondary-button, .module-tab, .segment, .feature-launch-card, .leetcode-hot-link, .leetcode-hot-done");
     if (!button || button.closest(".auth-provider-stack")) return;
     const rect = button.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
@@ -3326,6 +3339,7 @@ function applyLanguage() {
   setPlaceholder("globalSearchInput", t("appSearchPlaceholder"));
   setAttribute("#globalSearchInput", "aria-label", t("appSearchPlaceholder"));
   setTexts(".app-command-actions .app-stat-pill small", [t("commandStreakLabel"), t("commandXpLabel")]);
+  updateCheckInPill();
   setAttribute(".app-account-chip", "aria-label", t("accountInfo"));
   setAttribute(".app-settings-button", "aria-label", t("settings"));
   setText(".hero-kicker", t("heroKicker"));
@@ -3602,6 +3616,7 @@ function renderSummary() {
   els.streakCount.textContent = streak;
   if (els.commandStreakCount) els.commandStreakCount.textContent = streak;
   if (els.commandXpCount) els.commandXpCount.textContent = formatScore(score);
+  updateCheckInPill();
   renderRegionRank();
   renderOverviewProblemProgress();
   renderOverviewXpBars();
@@ -3612,6 +3627,10 @@ function startHeroTypewriter() {
   const node = els.heroTypewriter;
   if (!node) return;
   if (heroTypewriterTimer) window.clearTimeout(heroTypewriterTimer);
+  const typeDelay = 78;
+  const deleteDelay = 44;
+  const phrasePause = 6800;
+  const nextPhraseDelay = 460;
   const phrases = [
     "Sharpen your quant edge today.",
     "Practice faster. Think clearer.",
@@ -3627,22 +3646,22 @@ function startHeroTypewriter() {
     node.textContent = phrase.slice(0, charIndex);
     if (!deleting && charIndex < phrase.length) {
       charIndex += 1;
-      heroTypewriterTimer = window.setTimeout(tick, 34);
+      heroTypewriterTimer = window.setTimeout(tick, typeDelay);
       return;
     }
     if (!deleting) {
       deleting = true;
-      heroTypewriterTimer = window.setTimeout(tick, 620);
+      heroTypewriterTimer = window.setTimeout(tick, phrasePause);
       return;
     }
     if (charIndex > 0) {
       charIndex -= 1;
-      heroTypewriterTimer = window.setTimeout(tick, 18);
+      heroTypewriterTimer = window.setTimeout(tick, deleteDelay);
       return;
     }
     deleting = false;
     phraseIndex = (phraseIndex + 1) % phrases.length;
-    heroTypewriterTimer = window.setTimeout(tick, 140);
+    heroTypewriterTimer = window.setTimeout(tick, nextPhraseDelay);
   };
 
   tick();
@@ -5271,17 +5290,42 @@ function cssEscape(value) {
 }
 
 function handleTopCheckIn() {
+  if (hasCheckedInToday()) {
+    updateCheckInPill();
+    return;
+  }
   const previous = getStreak();
-  const next = previous + 1;
+  const today = dayKey(new Date());
+  const nextCheckIns = (state.checkIns || []).filter((item) => dayKey(item.date) !== today);
+  state.checkIns = [
+    ...nextCheckIns,
+    {
+      id: `checkin-${today}`,
+      date: new Date().toISOString()
+    }
+  ];
+  const next = getStreak();
   state.streakCount = next;
-  state.checkIns = mergeRecordsById(state.checkIns || [], [{
-    id: makeId(),
-    date: new Date().toISOString(),
-    streak: next
-  }]);
   saveState();
   renderSummary();
   animateStreakCount(previous, next);
+}
+
+function hasCheckedInToday() {
+  const today = dayKey(new Date());
+  return (state.checkIns || []).some((item) => dayKey(item.date) === today);
+}
+
+function updateCheckInPill() {
+  const pill = els.checkInPill;
+  if (!pill) return;
+  const checked = hasCheckedInToday();
+  pill.classList.toggle("is-checked", checked);
+  pill.disabled = checked;
+  pill.setAttribute("aria-disabled", String(checked));
+  pill.setAttribute("aria-label", checked ? t("checkInDone") : t("commandStreakLabel"));
+  const label = pill.querySelector("small");
+  if (label) label.textContent = checked ? t("checkInDone") : t("commandStreakLabel");
 }
 
 function animateStreakCount(previous, next) {
@@ -6619,12 +6663,26 @@ function renderLeetcodeHot100() {
   const doneCount = done.size;
   if (els.leetcodeHotTitle) els.leetcodeHotTitle.textContent = t("leetcodeHotTitle");
   if (els.leetcodeHotSummary) els.leetcodeHotSummary.textContent = t("leetcodeHotSummary");
+  if (els.leetcodeHotProgressLabel) els.leetcodeHotProgressLabel.textContent = t("leetcodeHotProgressLabel");
   if (els.leetcodeHotProgressText) els.leetcodeHotProgressText.textContent = `${doneCount} / ${total}`;
   if (els.leetcodeHotProgressFill) els.leetcodeHotProgressFill.style.width = `${Math.round((doneCount / Math.max(total, 1)) * 100)}%`;
+  const panel = els.leetcodeHotList.closest(".leetcode-hot-panel");
+  panel?.classList.toggle("is-expanded", leetcodeHotExpanded);
+  if (els.leetcodeHotToggleBtn) {
+    els.leetcodeHotToggleBtn.setAttribute("aria-expanded", String(leetcodeHotExpanded));
+    els.leetcodeHotToggleBtn.innerHTML = `<i data-lucide="${leetcodeHotExpanded ? "chevron-up" : "list-checks"}"></i>${escapeHtml(t(leetcodeHotExpanded ? "leetcodeHotCollapse" : "leetcodeHotManage"))}`;
+  }
   if (els.leetcodeHotPlanLink) {
-    els.leetcodeHotPlanLink.innerHTML = `<i data-lucide="external-link"></i>${escapeHtml(t("leetcodeHotOpen"))}`;
+    els.leetcodeHotPlanLink.title = t("leetcodeHotOpen");
+    els.leetcodeHotPlanLink.setAttribute("aria-label", t("leetcodeHotOpen"));
+    els.leetcodeHotPlanLink.innerHTML = '<i data-lucide="external-link"></i>';
   }
   els.leetcodeHotList.innerHTML = "";
+  els.leetcodeHotList.classList.toggle("hidden", !leetcodeHotExpanded);
+  if (!leetcodeHotExpanded) {
+    refreshIcons();
+    return;
+  }
   if (!leetcodeHot100.length) {
     els.leetcodeHotList.appendChild(emptyBlock(isEn ? "Hot 100 data is not available." : "Hot 100 数据暂不可用。"));
     return;
@@ -9616,14 +9674,17 @@ function getWeeklyXp() {
 }
 
 function getStreak() {
-  const days = new Set(state.entries.map((entry) => dayKey(entry.date)));
+  const days = new Set([
+    ...state.entries.map((entry) => dayKey(entry.date)),
+    ...(state.checkIns || []).map((item) => dayKey(item.date))
+  ]);
   let streak = 0;
   const cursor = new Date();
   while (days.has(dayKey(cursor))) {
     streak += 1;
     cursor.setDate(cursor.getDate() - 1);
   }
-  return Math.max(streak, Number(state.streakCount || 0));
+  return streak;
 }
 
 function dayKey(date) {
