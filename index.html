@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>QuantGym</title>
-    <link rel="stylesheet" href="styles.css?v=premium-system-16">
+    <link rel="stylesheet" href="styles.css?v=premium-system-17">
     <script>
       window.MathJax = {
         tex: {
@@ -30,7 +30,7 @@
     <script src="config.js"></script>
     <script src="data/problem-catalog.js?v=quant-books-1"></script>
     <script src="data/leetcode-hot-100.js?v=leetcode-hot-100-1"></script>
-    <script src="app.js?v=premium-system-20" defer></script>
+    <script src="app.js?v=premium-system-21" defer></script>
   </head>
   <body>
     <header class="topbar">
@@ -198,7 +198,7 @@
             设置
           </button>
         </div>
-        <aside class="sidebar-helper" aria-label="Today guide">
+        <aside class="sidebar-helper hidden" aria-label="Today guide">
           <img src="assets/generated/quanty-side-coach.webp?v=premium-system-2" alt="">
           <strong>今日向导</strong>
           <span>3 个任务待完成</span>
@@ -342,8 +342,8 @@
           </article>
         </section>
 
-        <section class="workspace-grid hidden">
-          <form class="log-panel" id="logForm">
+        <section class="workspace-grid overview-ranking-grid">
+          <form class="log-panel hidden" id="logForm">
             <div class="panel-heading">
               <h2>今日记录</h2>
               <button class="icon-button ghost" id="sampleBtn" type="button" title="填入示例" aria-label="填入示例">
@@ -912,6 +912,12 @@
             <span id="problemThemeSummary">全部主题</span>
           </div>
           <div id="problemThemeFilter" class="problem-theme-filter" role="listbox" aria-label="题目主题筛选"></div>
+          <div class="problem-difficulty-filter" id="problemDifficultyFilter" role="tablist" aria-label="题目难度筛选">
+            <button class="segment active" type="button" data-problem-difficulty="all">全部难度</button>
+            <button class="segment" type="button" data-problem-difficulty="easy">Easy</button>
+            <button class="segment" type="button" data-problem-difficulty="medium">Medium</button>
+            <button class="segment" type="button" data-problem-difficulty="hard">Hard</button>
+          </div>
         </section>
         <section id="problemRanking" class="problem-ranking hidden" aria-label="题目排行榜">
           <div class="problem-ranking-header">
@@ -1496,6 +1502,35 @@
         </section>
       </section>
     </main>
+
+    <section class="todo-dock" aria-label="今日待办">
+      <button id="todoDockButton" class="todo-dock-button" type="button" aria-expanded="false" aria-controls="todoDockPanel">
+        <i data-lucide="list-checks"></i>
+        <span id="todoDockButtonLabel">今日待办</span>
+        <strong id="todoDockCount">0</strong>
+      </button>
+      <div id="todoDockPanel" class="todo-dock-panel hidden">
+        <div class="todo-dock-head">
+          <div>
+            <span class="rank-label" id="todoDockEyebrow">TODAY</span>
+            <h2 id="todoDockTitle">To-do list</h2>
+          </div>
+          <button id="todoDockCloseBtn" class="icon-button ghost" type="button" aria-label="关闭待办">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <p id="todoDockSummary" class="todo-dock-summary">生成今日计划后，这里会同步更新。</p>
+        <div id="todoDockList" class="todo-task-list"></div>
+        <p id="todoDockEmpty" class="todo-empty hidden">还没有任务。先生成今日计划，或直接添加一个待办。</p>
+        <form id="todoDockAddForm" class="todo-add-form">
+          <input id="todoDockAddInput" type="text" maxlength="90" placeholder="添加一个任务">
+          <button class="secondary-button" type="submit">
+            <i data-lucide="plus"></i>
+            添加
+          </button>
+        </form>
+      </div>
+    </section>
 
     <template id="skillTemplate">
       <article class="skill-card">
