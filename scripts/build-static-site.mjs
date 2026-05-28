@@ -12,7 +12,7 @@ const webConfig = {
   llmEndpoint: value("QUANTGYM_WEB_LLM_ENDPOINT"),
   llmModel: value("QUANTGYM_WEB_LLM_MODEL") || "gpt-5-nano",
   googleClientId: value("QUANTGYM_WEB_GOOGLE_CLIENT_ID"),
-  googleLoginEnabled: boolValue("QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED")
+  googleLoginEnabled: boolValue("QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED", Boolean(value("QUANTGYM_WEB_GOOGLE_CLIENT_ID")))
 };
 
 if (strict) {
@@ -30,6 +30,8 @@ copyFile("styles.css");
 copyFile(path.join("data", "problem-catalog.js"));
 copyFile(path.join("data", "leetcode-hot-100.js"));
 copyDir(path.join("assets", "generated"));
+writeLocaleEntry("zh");
+writeLocaleEntry("en");
 writeConfig();
 
 console.log(`Built static site in ${path.relative(projectRoot, outputDir) || outputDir}`);
@@ -41,8 +43,11 @@ function value(name) {
   return String(process.env[name] || "").trim();
 }
 
-function boolValue(name) {
-  return ["1", "true", "yes", "on"].includes(value(name).toLowerCase());
+function boolValue(name, fallback = false) {
+  const raw = value(name).toLowerCase();
+  if (!raw) return fallback;
+  if (["0", "false", "no", "off"].includes(raw)) return false;
+  return ["1", "true", "yes", "on"].includes(raw);
 }
 
 function requireHttps(name, endpoint) {
@@ -73,6 +78,22 @@ function copyDir(relativePath) {
   const to = path.join(outputDir, relativePath);
   if (!fs.existsSync(from)) throw new Error(`Missing required directory: ${relativePath}`);
   fs.cpSync(from, to, { recursive: true });
+}
+
+function writeLocaleEntry(locale) {
+  const htmlPath = path.join(projectRoot, "index.html");
+  const to = path.join(outputDir, locale, "index.html");
+  const htmlLang = locale === "en" ? "en" : "zh-CN";
+  let content = fs.readFileSync(htmlPath, "utf8");
+  content = content
+    .replace(/<html lang="[^"]*">/, `<html lang="${htmlLang}">`)
+    .replaceAll('href="styles.css', 'href="../styles.css')
+    .replaceAll('src="config.js"', 'src="../config.js"')
+    .replaceAll('src="app.js', 'src="../app.js')
+    .replaceAll('src="data/', 'src="../data/')
+    .replaceAll('src="assets/', 'src="../assets/');
+  fs.mkdirSync(path.dirname(to), { recursive: true });
+  fs.writeFileSync(to, content);
 }
 
 function writeConfig() {

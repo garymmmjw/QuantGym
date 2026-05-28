@@ -42,22 +42,22 @@
         </div>
       </div>
       <div class="top-actions">
-        <div class="region-rank top-region-rank hidden" id="regionRank" title="地区排名">
+        <div class="region-rank top-region-rank hidden" id="regionRank" title="地区排名" data-i18n-title="regionRankTitle">
           <span class="medal gold" id="regionMedal">G</span>
           <span id="regionRankText">Shanghai #1</span>
         </div>
-        <button class="user-chip hidden" id="userChip" type="button" title="Account" aria-label="打开账户设置">
+        <button class="user-chip hidden" id="userChip" type="button" title="Account" aria-label="打开账户设置" data-i18n-aria-label="accountSettingsAria">
           <div class="avatar" id="userAvatar" aria-hidden="true">Q</div>
           <div>
             <strong id="userName">Guest</strong>
             <small id="userProvider">Local</small>
           </div>
         </button>
-        <select class="language-select hidden" id="languageSelect" aria-label="语言">
+        <select class="language-select hidden" id="languageSelect" aria-label="语言" data-i18n-aria-label="language">
           <option value="zh">中文</option>
           <option value="en">English</option>
         </select>
-        <button class="icon-button hidden" id="settingsBtn" type="button" title="设置" aria-label="设置">
+        <button class="icon-button hidden" id="settingsBtn" type="button" title="设置" aria-label="设置" data-i18n-title="openSettings" data-i18n-aria-label="openSettings">
           <i data-lucide="settings"></i>
         </button>
       </div>
@@ -66,49 +66,49 @@
     <section class="auth-shell" id="authShell">
       <div class="auth-panel" role="dialog" aria-labelledby="authTitle" aria-describedby="authSubtitle">
         <div class="auth-copy">
-          <h2 id="authTitle">登录或注册</h2>
-          <p id="authSubtitle">同步你的题库、模拟面试复盘、简历和训练进度。</p>
+          <h2 id="authTitle" data-i18n="authTitle">登录或注册</h2>
+          <p id="authSubtitle" data-i18n="authSubtitle">同步你的题库、模拟面试复盘、简历和训练进度。</p>
         </div>
 
         <div class="auth-provider-stack">
           <div id="googleButton" class="google-button"></div>
         </div>
 
-        <div class="divider"><span>或</span></div>
+        <div class="divider"><span data-i18n="authOr">或</span></div>
 
-        <div class="auth-tabs" role="tablist" aria-label="登录或注册">
-          <button class="tab active" type="button" data-auth-tab="login">登录</button>
-          <button class="tab" type="button" data-auth-tab="register">注册</button>
+        <div class="auth-tabs" role="tablist" aria-label="登录或注册" data-i18n-aria-label="authTabsLabel">
+          <button class="tab active" type="button" data-auth-tab="login" data-i18n="login">登录</button>
+          <button class="tab" type="button" data-auth-tab="register" data-i18n="register">注册</button>
         </div>
 
         <form class="auth-form" id="loginForm" autocomplete="on">
-          <label class="sr-only" for="loginEmail">电子邮件地址</label>
-          <input id="loginEmail" type="email" autocomplete="email" placeholder="电子邮件地址">
-          <label class="sr-only" for="loginPassword">密码</label>
-          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="密码">
-          <button class="primary-button auth-submit" type="submit">继续</button>
+          <label class="sr-only" for="loginEmail" data-i18n="emailAddress">电子邮件地址</label>
+          <input id="loginEmail" type="email" autocomplete="email" placeholder="电子邮件地址" data-i18n-placeholder="emailAddress">
+          <label class="sr-only" for="loginPassword" data-i18n="password">密码</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" placeholder="密码" data-i18n-placeholder="password">
+          <button class="primary-button auth-submit" type="submit" data-i18n="continueAction">继续</button>
         </form>
 
         <form class="auth-form hidden" id="registerForm" autocomplete="on">
-          <label class="sr-only" for="registerName">名字</label>
-          <input id="registerName" type="text" autocomplete="name" placeholder="名字">
-          <label class="sr-only" for="registerEmail">电子邮件地址</label>
-          <input id="registerEmail" type="email" autocomplete="email" placeholder="电子邮件地址">
-          <label class="sr-only" for="registerPassword">密码</label>
-          <input id="registerPassword" type="password" autocomplete="new-password" placeholder="设置密码，至少 6 位">
+          <label class="sr-only" for="registerName" data-i18n="name">名字</label>
+          <input id="registerName" type="text" autocomplete="name" placeholder="名字" data-i18n-placeholder="name">
+          <label class="sr-only" for="registerEmail" data-i18n="emailAddress">电子邮件地址</label>
+          <input id="registerEmail" type="email" autocomplete="email" placeholder="电子邮件地址" data-i18n-placeholder="emailAddress">
+          <label class="sr-only" for="registerPassword" data-i18n="password">密码</label>
+          <input id="registerPassword" type="password" autocomplete="new-password" placeholder="设置密码，至少 6 位" data-i18n-placeholder="registerPasswordPlaceholder">
           <div class="auth-code-row">
-            <label class="sr-only" for="registerVerificationCode">邮箱验证码</label>
-            <input id="registerVerificationCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="邮箱验证码">
-            <button class="secondary-button" id="sendRegisterCodeBtn" type="button">发送验证码</button>
+            <label class="sr-only" for="registerVerificationCode" data-i18n="verificationCode">邮箱验证码</label>
+            <input id="registerVerificationCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="邮箱验证码" data-i18n-placeholder="verificationCode">
+            <button class="secondary-button" id="sendRegisterCodeBtn" type="button" data-i18n="sendVerificationCode">发送验证码</button>
           </div>
-          <button class="primary-button auth-submit" type="submit">创建账户</button>
+          <button class="primary-button auth-submit" type="submit" data-i18n="createAccount">创建账户</button>
         </form>
 
         <details class="google-config hidden" aria-hidden="true">
-          <summary>配置 Google Client ID</summary>
+          <summary data-i18n="googleClientSummary">配置 Google Client ID</summary>
           <div class="config-row">
             <input id="googleClientIdInput" type="text" spellcheck="false" placeholder="xxxx.apps.googleusercontent.com">
-            <button class="secondary-button" id="saveGoogleClientBtn" type="button">保存</button>
+            <button class="secondary-button" id="saveGoogleClientBtn" type="button" data-i18n="save">保存</button>
           </div>
         </details>
 
@@ -117,19 +117,19 @@
     </section>
 
     <main id="appShell" class="hidden">
-      <nav class="module-nav" id="moduleNav" aria-label="模块导航">
+      <nav class="module-nav" id="moduleNav" aria-label="模块导航" data-i18n-aria-label="moduleNavLabel">
         <div class="sidebar-brand" aria-label="QuantGym">
           <img src="assets/generated/brand-q-mark.webp?v=premium-system-2" alt="">
           <strong>QuantGym</strong>
         </div>
-        <div class="module-nav-group primary" aria-label="总览">
+        <div class="module-nav-group primary" aria-label="总览" data-i18n-aria-label="navOverview">
           <button class="module-tab active" type="button" data-module-tab="overview">
             <i data-lucide="layout-dashboard"></i>
             总览
           </button>
         </div>
-        <div class="module-nav-group" aria-label="成长">
-          <span class="module-nav-label">成长</span>
+        <div class="module-nav-group" aria-label="成长" data-i18n-aria-label="navGrowth">
+          <span class="module-nav-label" data-i18n="navGrowth">成长</span>
           <button class="module-tab" type="button" data-module-tab="plan">
             <i data-lucide="calendar-check-2"></i>
             计划
@@ -139,8 +139,8 @@
             能力值
           </button>
         </div>
-        <div class="module-nav-group" aria-label="训练">
-          <span class="module-nav-label">训练</span>
+        <div class="module-nav-group" aria-label="训练" data-i18n-aria-label="navTraining">
+          <span class="module-nav-label" data-i18n="navTraining">训练</span>
           <button class="module-tab" type="button" data-module-tab="interview">
             <i data-lucide="messages-square"></i>
             模拟面试
@@ -158,8 +158,8 @@
             面经
           </button>
         </div>
-        <div class="module-nav-group" aria-label="社群">
-          <span class="module-nav-label">社群</span>
+        <div class="module-nav-group" aria-label="社群" data-i18n-aria-label="navSocial">
+          <span class="module-nav-label" data-i18n="navSocial">社群</span>
           <button class="module-tab" type="button" data-module-tab="news">
             <i data-lucide="newspaper"></i>
             新闻
@@ -177,8 +177,8 @@
             人脉
           </button>
         </div>
-        <div class="module-nav-group" aria-label="求职">
-          <span class="module-nav-label">求职</span>
+        <div class="module-nav-group" aria-label="求职" data-i18n-aria-label="navCareer">
+          <span class="module-nav-label" data-i18n="navCareer">求职</span>
           <button class="module-tab" type="button" data-module-tab="resume">
             <i data-lucide="file-user"></i>
             简历
@@ -192,8 +192,8 @@
             公司
           </button>
         </div>
-        <div class="module-nav-group" aria-label="资源">
-          <span class="module-nav-label">资源</span>
+        <div class="module-nav-group" aria-label="资源" data-i18n-aria-label="navResources">
+          <span class="module-nav-label" data-i18n="navResources">资源</span>
           <button class="module-tab" type="button" data-module-tab="courses">
             <i data-lucide="video"></i>
             课程
@@ -203,7 +203,7 @@
             资料笔记
           </button>
         </div>
-        <div class="module-nav-group compact" aria-label="设置">
+        <div class="module-nav-group compact" aria-label="设置" data-i18n-aria-label="settings">
           <button class="module-tab" type="button" data-module-tab="settings">
             <i data-lucide="settings"></i>
             设置
@@ -216,14 +216,14 @@
         </aside>
       </nav>
 
-      <section class="app-command-bar" aria-label="全局搜索和状态">
+      <section class="app-command-bar" aria-label="全局搜索和状态" data-i18n-aria-label="commandBarLabel">
         <button class="sidebar-toggle-button" id="sidebarToggleBtn" type="button" aria-controls="moduleNav" aria-expanded="true" aria-label="隐藏模块列表" title="隐藏模块列表">
           <i data-lucide="panel-left-close"></i>
         </button>
         <div class="app-search" role="search">
           <i data-lucide="search"></i>
           <input id="globalSearchInput" type="search" placeholder="Search topics, lessons, or concepts..." aria-label="Search topics">
-          <div id="globalSearchResults" class="global-search-results hidden" role="listbox" aria-label="搜索结果"></div>
+          <div id="globalSearchResults" class="global-search-results hidden" role="listbox" aria-label="搜索结果" data-i18n-aria-label="searchResultsLabel"></div>
         </div>
         <div class="app-command-actions">
           <button class="app-stat-pill streak-pill" id="checkInPill" type="button">
@@ -231,25 +231,25 @@
             <strong id="commandStreakCount">0</strong>
             <small>day streak</small>
           </button>
-          <button class="app-stat-pill chat-pill" id="commandChatBtn" type="button" data-jump-module="messages" aria-label="打开聊天">
+          <button class="app-stat-pill chat-pill" id="commandChatBtn" type="button" data-jump-module="messages" aria-label="打开聊天" data-i18n-aria-label="openChat">
             <span class="stat-art stat-art-chat" aria-hidden="true"><i data-lucide="message-square-text"></i></span>
             <strong id="commandUnreadCount">0</strong>
             <small>聊天</small>
           </button>
-          <button class="app-account-chip" type="button" data-jump-module="account" aria-label="打开账号">
+          <button class="app-account-chip" type="button" data-jump-module="account" aria-label="打开账号" data-i18n-aria-label="openAccount">
             <span class="avatar app-account-avatar" id="commandUserAvatar" aria-hidden="true">Q</span>
             <span class="app-account-meta">
               <strong id="commandUserName">Quant</strong>
               <small id="commandUserProvider">账号</small>
             </span>
           </button>
-          <button class="app-settings-button" type="button" data-jump-module="settings" aria-label="设置">
+          <button class="app-settings-button" type="button" data-jump-module="settings" aria-label="设置" data-i18n-aria-label="openSettings">
             <i data-lucide="settings"></i>
           </button>
         </div>
       </section>
 
-      <section class="news-ticker" aria-label="Quant 新闻滚动条">
+      <section class="news-ticker" aria-label="Quant 新闻滚动条" data-i18n-aria-label="newsTickerLabel">
         <div class="ticker-label">
           <i data-lucide="radio"></i>
           <span>Quant Wire</span>
@@ -804,6 +804,13 @@
               <small id="coursesSummary">精选 YouTube / Bilibili 课程，点击后直接跳转平台。</small>
             </div>
           </div>
+          <aside class="learning-path-panel" aria-labelledby="learningPathTitle">
+            <div>
+              <h3 id="learningPathTitle">学习路径</h3>
+              <p id="learningPathHint">把课程加入路径后，会在这里形成你的资源学习顺序。</p>
+            </div>
+            <div id="coursePathList" class="course-path-list"></div>
+          </aside>
           <div id="courseList" class="course-list"></div>
         </section>
       </section>
@@ -1209,10 +1216,40 @@
             </button>
           </div>
         </div>
+        <div class="news-intel-board" aria-label="新闻情报控制台" data-i18n-aria-label="newsIntelAria">
+          <div class="news-intel-copy">
+            <strong id="newsIntelTitle">信息雷达</strong>
+            <span id="newsIntelSummary">新闻/RSS 自动同步，LinkedIn 和小红书作为人工线索入口。</span>
+          </div>
+          <div id="newsIntelStats" class="news-intel-stats" aria-live="polite"></div>
+          <div class="news-filter-row">
+            <div class="segmented news-topic-filter" id="newsTopicFilter" role="tablist" aria-label="新闻主题筛选" data-i18n-aria-label="newsTopicFilterAria">
+              <button class="segment active" type="button" data-news-topic="all">全部</button>
+              <button class="segment" type="button" data-news-topic="quantFirms">公司</button>
+              <button class="segment" type="button" data-news-topic="marketStructure">市场结构</button>
+              <button class="segment" type="button" data-news-topic="aiInfra">AI/算力</button>
+              <button class="segment" type="button" data-news-topic="recruiting">求职/社群</button>
+            </div>
+            <div class="segmented news-source-filter" id="newsSourceFilter" role="tablist" aria-label="新闻来源筛选" data-i18n-aria-label="newsSourceFilterAria">
+              <button class="segment active" type="button" data-news-source-filter="all">全部来源</button>
+              <button class="segment" type="button" data-news-source-filter="news">新闻/RSS</button>
+              <button class="segment" type="button" data-news-source-filter="official">官方</button>
+              <button class="segment" type="button" data-news-source-filter="social">社交线索</button>
+            </div>
+          </div>
+          <p id="newsSocialHint" class="news-social-hint">LinkedIn / 小红书目前支持粘贴公开链接、摘要和启发；不做自动爬取，点击来源回原站核验。</p>
+        </div>
         <form id="newsForm" class="news-form hidden">
           <input id="newsTitle" type="text" placeholder="新闻标题">
           <input id="newsSource" type="text" placeholder="来源，例如 Reuters / Bloomberg">
           <input id="newsUrl" type="url" placeholder="来源链接">
+          <select id="newsSourceType" aria-label="来源类型">
+            <option value="news">新闻/RSS</option>
+            <option value="official">官方公告</option>
+            <option value="linkedin">LinkedIn 线索</option>
+            <option value="xiaohongshu">小红书线索</option>
+            <option value="manual">手动记录</option>
+          </select>
           <select id="newsPrimarySkill" aria-label="关联能力">
             <option value="market">Market</option>
             <option value="deepLearning">Deep Learning</option>
@@ -1554,7 +1591,7 @@
               <div id="marketGameFeedback" class="game-feedback"></div>
             </article>
 
-            <article class="poker-game-card">
+            <article class="poker-game-card poker-table-card">
               <div class="game-card-head">
                 <div>
                   <span class="rank-label">TOURNAMENT</span>
@@ -1562,16 +1599,40 @@
                 </div>
                 <strong id="pokerGameScore">0</strong>
               </div>
+              <div class="poker-match-bar">
+                <select id="pokerModeSelect" aria-label="Poker match mode">
+                  <option value="bots">Match robots</option>
+                  <option value="local">Local human table</option>
+                </select>
+                <button id="pokerMatchBtn" class="secondary-button compact" type="button">Match</button>
+                <button id="resetPokerGameBtn" class="secondary-button compact" type="button">Reset</button>
+              </div>
+              <div class="poker-table" id="pokerTable">
+                <div class="poker-table-meta">
+                  <span id="pokerStageText">Preflop</span>
+                  <span id="pokerBlindText">Blinds 10/20</span>
+                </div>
+                <div id="pokerSeatGrid" class="poker-seat-grid"></div>
+                <div id="pokerBoard" class="poker-board" aria-label="Community cards"></div>
+                <div id="pokerPot" class="poker-pot">Pot 0</div>
+              </div>
               <div id="pokerGamePrompt" class="game-prompt"></div>
+              <div id="pokerTurnPrompt" class="poker-turn-prompt"></div>
+              <label class="poker-raise-control">
+                Raise to
+                <input id="pokerRaiseInput" type="number" min="0" step="10">
+              </label>
               <div class="poker-action-grid">
                 <button type="button" data-poker-action="fold">Fold</button>
-                <button type="button" data-poker-action="call">Call</button>
+                <button type="button" data-poker-action="call">Check / Call</button>
                 <button type="button" data-poker-action="raise">Raise</button>
+                <button type="button" data-poker-action="allin">All-in</button>
               </div>
               <div class="game-actions">
-                <button id="nextPokerGameBtn" class="secondary-button compact" type="button">New hand</button>
+                <button id="nextPokerGameBtn" class="secondary-button compact" type="button">Next hand</button>
               </div>
               <div id="pokerGameFeedback" class="game-feedback"></div>
+              <div id="pokerLog" class="poker-log"></div>
             </article>
           </div>
         </section>
@@ -1597,6 +1658,7 @@
             </select>
             <input id="resourceFile" type="file" accept=".tex,.txt,text/*,image/*">
             <textarea id="resourceContent" rows="4" placeholder="粘贴 TeX、图片路径、链接或摘要"></textarea>
+            <textarea id="resourceSources" rows="3" placeholder="可选：每行一个 YouTube / Bilibili / 原站 URL，作为备用来源"></textarea>
             <button class="secondary-button" type="submit">
               <i data-lucide="save"></i>
               保存
@@ -1630,7 +1692,7 @@
               <h3>偏好</h3>
               <label>
                 语言
-                <select id="settingsLanguageSelect" aria-label="语言">
+                <select id="settingsLanguageSelect" aria-label="语言" data-i18n-aria-label="language">
                   <option value="zh">中文</option>
                   <option value="en">English</option>
                 </select>
@@ -1704,7 +1766,7 @@
       </section>
     </main>
 
-    <section class="todo-dock" aria-label="今日待办">
+    <section class="todo-dock" aria-label="今日待办" data-i18n-aria-label="todayTodo">
       <button id="todoDockButton" class="todo-dock-button" type="button" aria-expanded="false" aria-controls="todoDockPanel">
         <i data-lucide="list-checks"></i>
         <span id="todoDockButtonLabel">今日待办</span>

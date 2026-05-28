@@ -22,6 +22,42 @@ const DEFAULT_NEWS_QUERIES = [
   '"Jane Street" CoreWeave AI',
   '"hedge fund" "electronic trading" market making'
 ];
+const NEWS_QUERY_PACKS = {
+  all: DEFAULT_NEWS_QUERIES,
+  quantFirms: [
+    '"Jane Street" trading revenue',
+    '"Citadel Securities" market maker',
+    '"Optiver" quant trading',
+    '"IMC Trading" market making',
+    '"Jump Trading" quant',
+    '"Hudson River Trading" quant',
+    '"Two Sigma" quant trading',
+    '"DE Shaw" systematic trading'
+  ],
+  marketStructure: [
+    '"market making" "exchange"',
+    '"electronic trading" "liquidity"',
+    '"order book" "market structure"',
+    '"options volatility" "market makers"',
+    '"SEC" "market structure" trading',
+    '"CME" "market making"'
+  ],
+  aiInfra: [
+    '"quant trading" "AI infrastructure"',
+    '"Jane Street" CoreWeave AI',
+    '"hedge fund" GPU AI',
+    '"machine learning" "market making"',
+    '"low latency" "machine learning" trading'
+  ],
+  recruiting: [
+    '"quant trading" internship',
+    '"Jane Street" campus recruiting',
+    '"Optiver" graduate trader',
+    '"Citadel Securities" internship',
+    '"IMC Trading" graduate',
+    '"quant researcher" "new grad"'
+  ]
+};
 const DEFAULT_JOB_BOARDS = [
   { token: "janestreet", company: "Jane Street" },
   { token: "optiverus", company: "Optiver" },
@@ -267,6 +303,7 @@ function dedupeJobs(items) {
 }
 
 function normalizeNewsQueries(payload, searchParams) {
+  const topic = normalizeNewsTopic(payload.topic || searchParams.get("topic"));
   const queryParam = searchParams.getAll("q").filter(Boolean);
   const payloadQueries = Array.isArray(payload.queries) ? payload.queries : [];
   const singleQuery = payload.query || searchParams.get("query") || "";
@@ -274,7 +311,12 @@ function normalizeNewsQueries(payload, searchParams) {
     .flatMap((item) => String(item || "").split("|"))
     .map((item) => item.trim())
     .filter(Boolean);
-  return queries.length ? [...new Set(queries)] : DEFAULT_NEWS_QUERIES;
+  return queries.length ? [...new Set(queries)] : NEWS_QUERY_PACKS[topic];
+}
+
+function normalizeNewsTopic(value) {
+  const topic = String(value || "all").trim();
+  return NEWS_QUERY_PACKS[topic] ? topic : "all";
 }
 
 function normalizeNewsFeeds(payload) {
@@ -337,6 +379,7 @@ function parseRssItems(xml, query) {
       title,
       titleZh: title,
       source,
+      sourceType: inferNewsSourceType(link, source),
       sourceUrl: link,
       publishedAt,
       tags,
@@ -402,9 +445,9 @@ function dedupeNews(items) {
 
 function isLowQualityNews(item) {
   const text = `${item.title || ""} ${item.summary || ""} ${item.source || ""}`.toLowerCase();
-  if (/trading bot|stock trading bot|crypto trading bot|best ai trading|for beginners|platforms? in 2026|mexc/.test(text)) return true;
-  if (/jane street|citadel|two sigma|squarepoint|optiver|imc|hudson river|jump trading|tower research/.test(text)) return false;
-  return !/market making|electronic trading|options?|volatility|derivatives?|exchange|hedge fund|coreweave|gpu|liquidity|order book/.test(text);
+  if (/trading bot|stock trading bot|crypto trading bot|best ai trading|forex signals?|for beginners|platforms? in 2026|mexc|coupon|promo code/.test(text)) return true;
+  if (/jane street|citadel|two sigma|squarepoint|optiver|imc|hudson river|hrt|jump trading|tower research|virtu|drw|d\.e\. shaw|de shaw|flow traders|five rings/.test(text)) return false;
+  return !/market making|electronic trading|options?|volatility|derivatives?|exchange|hedge fund|coreweave|gpu|liquidity|order book|low latency|campus|internship|graduate trader|quant researcher/.test(text);
 }
 
 function stableNewsId(title, link) {
@@ -432,13 +475,21 @@ function inferNewsTags(text, source) {
     ["Jane Street", /jane street/],
     ["Citadel", /citadel/],
     ["Two Sigma", /two sigma/],
+    ["Optiver", /optiver/],
+    ["IMC", /\bimc\b|imc trading/],
+    ["Jump Trading", /jump trading/],
+    ["Hudson River Trading", /hudson river|hrt/],
+    ["D.E. Shaw", /d\.e\. shaw|de shaw/],
+    ["Virtu", /virtu/],
+    ["DRW", /\bdrw\b/],
     ["Squarepoint", /squarepoint/],
     ["CoreWeave", /coreweave/],
     ["market making", /market making|market-maker/],
     ["volatility", /volatility|vix/],
     ["AI", /\bai\b|artificial intelligence|gpu/],
     ["options", /option/],
-    ["electronic trading", /electronic trading|execution|latency/]
+    ["electronic trading", /electronic trading|execution|latency/],
+    ["recruiting", /internship|campus|graduate|new grad|career/]
   ].forEach(([label, pattern]) => {
     if (pattern.test(lower)) tags.push(label);
   });
@@ -465,6 +516,9 @@ function buildNewsInsight(skills, text) {
   if (skills.includes("option")) {
     return "面试启发：练习解释波动率、Greeks、对冲频率和尾部风险如何影响交易收益。";
   }
+  if (/internship|campus|graduate|new grad|career|recruiting/.test(lower)) {
+    return "面试启发：把招聘线索拆成目标岗位、能力要求、时间线和可反向练习的题型。";
+  }
   return "面试启发：试着用市场结构、风险约束和数据证据解释这条新闻为什么重要。";
 }
 
@@ -474,6 +528,23 @@ function inferSourceFromUrl(value) {
   } catch {
     return "";
   }
+}
+
+function inferNewsSourceType(sourceUrl = "", source = "") {
+  let host = "";
+  try {
+    host = new URL(sourceUrl).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    host = "";
+  }
+  const text = `${host} ${String(source || "").toLowerCase()}`;
+  if (/linkedin\.com/.test(text)) return "linkedin";
+  if (/xiaohongshu\.com|xhslink\.com|rednote/.test(text)) return "xiaohongshu";
+  if (/janestreet\.com|citadel(?:securities)?\.com|optiver\.com|imc\.com|jumptrading\.com|hudsonrivertrading\.com|twosigma\.com|deshaw\.com|virtu\.com|drw\.com|flowtraders\.com|nasdaq\.com|nyse\.com|cmegroup\.com|sec\.gov/.test(text)) {
+    return "official";
+  }
+  if (/rss|feed|news\.google\.com|google news/.test(text)) return "rss";
+  return "news";
 }
 
 async function classifyLog(payload) {
