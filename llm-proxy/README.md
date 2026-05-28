@@ -47,6 +47,18 @@ The app derives classification and news endpoints from that same base URL.
 
 The news route works from RSS feeds by default. OpenAI is used only when routes such as `/interview` and `/classify-log` need model output.
 
+`POST /news` accepts a `topic` such as `all`, `quantFirms`, `marketStructure`, `aiInfra`, or `recruiting`. The proxy expands that topic into focused Google News RSS queries unless you pass explicit `queries` or configured `NEWS_RSS_FEEDS`.
+
+Example:
+
+```bash
+curl -X POST http://127.0.0.1:8787/news \
+  -H 'Content-Type: application/json' \
+  -d '{"topic":"marketStructure","max":12}'
+```
+
+LinkedIn, Xiaohongshu, and similar social sources should be stored in the app as manually added signal links. The proxy intentionally does not scrape social platforms.
+
 Optional environment variables:
 
 ```bash

@@ -6,11 +6,16 @@ const PENDING_CAPTURE_KEY = "quantMemoryBoard.pendingCapture.v1";
 const APP_PREFS_KEY = "quantMemoryBoard.preferences.v1";
 const COMMUNITY_KEY = "quantMemoryBoard.community.v1";
 const CLOUD_CONFIG_KEY = "quantMemoryBoard.cloud.v1";
+const SUPPORTED_LANGUAGES = ["zh", "en"];
+const DEFAULT_LANGUAGE = "zh";
 const RUNTIME_CONFIG = globalThis.QUANTGYM_CONFIG || {};
 const DEFAULT_LLM_ENDPOINT = String(RUNTIME_CONFIG.llmEndpoint || "http://127.0.0.1:8787/interview").trim();
 const DEFAULT_LLM_MODEL = String(RUNTIME_CONFIG.llmModel || "gpt-5-nano").trim();
 const DEFAULT_GOOGLE_CLIENT_ID = String(RUNTIME_CONFIG.googleClientId || "").trim();
-const GOOGLE_LOGIN_ENABLED = RUNTIME_CONFIG.googleLoginEnabled === true || String(RUNTIME_CONFIG.googleLoginEnabled || "").toLowerCase() === "true";
+const GOOGLE_LOGIN_FLAG = String(RUNTIME_CONFIG.googleLoginEnabled ?? "").toLowerCase();
+const GOOGLE_LOGIN_ENABLED = RUNTIME_CONFIG.googleLoginEnabled === true
+  || GOOGLE_LOGIN_FLAG === "true"
+  || (Boolean(DEFAULT_GOOGLE_CLIENT_ID) && !["0", "false", "off", "no"].includes(GOOGLE_LOGIN_FLAG));
 const LLM_DEFAULTS_VERSION = 2;
 const LLM_MODEL_OPTIONS = [
   "gpt-5-nano",
@@ -26,8 +31,80 @@ const CLOUD_SYNC_DEBOUNCE_MS = 700;
 const SCORE_XP_PER_POINT = 40;
 const NEWS_AUTO_REFRESH_MS = 60 * 60 * 1000;
 const NEWS_RETRY_MS = 10 * 60 * 1000;
+const NEWS_TOPIC_QUERY_PACKS = {
+  all: [
+    '"Jane Street" quant trading',
+    '"market making" "quant"',
+    '"options volatility" trading',
+    '"electronic trading" "hedge fund"',
+    '"Citadel Securities" market making',
+    '"Optiver" "market making"',
+    '"IMC Trading" "quant"',
+    '"Jane Street" CoreWeave AI'
+  ],
+  quantFirms: [
+    '"Jane Street" trading revenue',
+    '"Citadel Securities" market maker',
+    '"Optiver" quant trading',
+    '"IMC Trading" market making',
+    '"Jump Trading" quant',
+    '"Hudson River Trading" quant',
+    '"Two Sigma" quant trading',
+    '"DE Shaw" systematic trading'
+  ],
+  marketStructure: [
+    '"market making" "exchange"',
+    '"electronic trading" "liquidity"',
+    '"order book" "market structure"',
+    '"options volatility" "market makers"',
+    '"SEC" "market structure" trading',
+    '"CME" "market making"'
+  ],
+  aiInfra: [
+    '"quant trading" "AI infrastructure"',
+    '"Jane Street" CoreWeave AI',
+    '"hedge fund" GPU AI',
+    '"machine learning" "market making"',
+    '"low latency" "machine learning" trading'
+  ],
+  recruiting: [
+    '"quant trading" internship',
+    '"Jane Street" campus recruiting',
+    '"Optiver" graduate trader',
+    '"Citadel Securities" internship',
+    '"IMC Trading" graduate',
+    '"quant researcher" "new grad"'
+  ]
+};
+const NEWS_SOURCE_FILTERS = ["all", "news", "official", "social"];
 const JOBS_AUTO_REFRESH_MS = 12 * 60 * 60 * 1000;
 const JOBS_RETRY_MS = 20 * 60 * 1000;
+const POKER_RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
+const POKER_SUITS = [
+  { key: "s", symbol: "♠" },
+  { key: "h", symbol: "♥" },
+  { key: "d", symbol: "♦" },
+  { key: "c", symbol: "♣" }
+];
+const POKER_BLIND_LEVELS = [
+  { small: 10, big: 20 },
+  { small: 15, big: 30 },
+  { small: 25, big: 50 },
+  { small: 50, big: 100 },
+  { small: 75, big: 150 },
+  { small: 100, big: 200 }
+];
+const POKER_HAND_NAMES = [
+  "High card",
+  "One pair",
+  "Two pair",
+  "Three of a kind",
+  "Straight",
+  "Flush",
+  "Full house",
+  "Four of a kind",
+  "Straight flush"
+];
 const DEFAULT_GRADUATION_TERM = "2027-09";
 const leetcodeHot100 = Array.isArray(globalThis.leetcodeHot100?.problems)
   ? globalThis.leetcodeHot100.problems
@@ -348,6 +425,84 @@ const regionEnLabels = {
 
 const i18n = {
   zh: {
+    appTitle: "QuantGym",
+    loading: "Loading",
+    navOverview: "总览",
+    navGrowth: "成长",
+    navTraining: "训练",
+    navSocial: "社群",
+    navCareer: "求职",
+    navResources: "资源",
+    authTitle: "登录或注册",
+    authSubtitle: "同步你的题库、模拟面试复盘、简历和训练进度。",
+    authOr: "或",
+    authTabsLabel: "登录或注册",
+    login: "登录",
+    register: "注册",
+    emailAddress: "电子邮件地址",
+    password: "密码",
+    continueAction: "继续",
+    name: "名字",
+    registerPasswordPlaceholder: "设置密码，至少 6 位",
+    verificationCode: "邮箱验证码",
+    sendVerificationCode: "发送验证码",
+    sending: "发送中...",
+    resendIn: "重新发送",
+    createAccount: "创建账户",
+    googleClientSummary: "配置 Google Client ID",
+    save: "保存",
+    googleContinue: "使用 Google 账号继续",
+    notEnabled: "暂未启用",
+    authReadyFile: "当前是 file:// 打开方式，账户/Google 登录可能被浏览器限制。请用 http://127.0.0.1:5176/index.html 打开。",
+    authReadyCloud: "邮箱账户会优先尝试云端同步；注册时先发送邮箱验证码。",
+    authReadyLocal: "邮箱登录已可用；注册时先发送验证码。Google 登录入口已预留，暂未启用。",
+    authNeedEmail: "先填写有效的邮箱地址。",
+    authDuplicateEmail: "这个邮箱已经有账户了，可以直接登录。",
+    authVerificationSent: "验证码已发送到 {email}。{delivery}{devCode}",
+    authDevCode: " 开发模式验证码：{code}",
+    authDeliveryDev: "API 终端已打印验证码。",
+    authDeliveryEmail: "请检查邮箱收件箱。",
+    authCloudVerificationUnavailable: "云端 API 未连接，暂时无法发送验证码；本机测试可直接创建本地账户。",
+    authMissingRegisterFields: "名字、邮箱和至少 6 位密码都要填。",
+    authNeedVerificationCode: "请先发送邮箱验证码，并填写收到的 6 位数字。",
+    authCreatedSynced: "账户已创建，并已同步到云端。",
+    authCloudLocalCreated: "云端暂时连不上；已创建仅本机账户，稍后可从设置里同步。",
+    authCloudNoLocal: "云端暂时连不上；这台浏览器里也没有这个本地账户。",
+    authCloudLoginFailed: "云端没有找到这个邮箱，或密码不对。",
+    authNoLocalAccount: "没有找到这个本地账户。",
+    authWrongPassword: "密码不对。",
+    authGoogleLoading: "Google 登录组件还在加载，稍后会自动可用。",
+    authGoogleLoadFailed: "Google 登录组件没有加载成功，请检查网络或 Client ID。",
+    authGoogleEnabled: "Google 登录已启用。云端同步会校验 ID token。",
+    authGoogleClientMismatch: "Google token 的 Client ID 不匹配。",
+    authGoogleParseFailed: "Google 登录结果无法解析。",
+    verificationForbidden: "这个邮箱还不在内测名单里。",
+    verificationTooSoon: "验证码刚发过，请稍后再试。",
+    verificationTooMany: "验证码尝试次数太多，请稍后重新发送。",
+    verificationEmailDown: "邮件服务暂时没有发出验证码，请检查 SMTP 配置后重试。",
+    verificationInvalid: "验证码不正确或已过期，请重新发送后再试。",
+    verificationFailed: "验证码流程暂时失败，请稍后再试。",
+    authStorageFileBlocked: "浏览器限制了本地文件模式下的账户存储。请用 http://127.0.0.1:5176/index.html 打开后再创建账户。",
+    authStorageBlocked: "浏览器阻止了本地存储，请检查隐私模式/站点存储权限后重试。",
+    authOperationFailed: "账户操作失败，请刷新页面后再试。",
+    cloudNoSession: "云端还没有登录会话，请先用邮箱密码登录一次。",
+    cloudSyncing: "云端同步中...",
+    cloudDisconnected: "云端未连接；本地记录仍可继续使用。",
+    cloudFailed: "云端同步失败：{error}",
+    cloudSynced: "云端已同步：{date}",
+    cloudConnected: "云端已连接。",
+    llmSaved: "LLM 连接已保存。",
+    regionRankTitle: "地区排名",
+    accountSettingsAria: "打开账户设置",
+    openSettings: "设置",
+    moduleNavLabel: "模块导航",
+    commandBarLabel: "全局搜索和状态",
+    searchResultsLabel: "搜索结果",
+    openChat: "打开聊天",
+    openAccount: "打开账号",
+    newsTickerLabel: "Quant 新闻滚动条",
+    todayTodo: "今日待办",
+    startAfterLogin: "登录后开始",
     overview: "总览",
     plan: "计划",
     experiences: "面经",
@@ -470,8 +625,67 @@ const i18n = {
     applyNow: "打开申请",
     refreshJobs: "刷新岗位",
     coursesModule: "课程",
-    coursesSummary: "精选 YouTube / Bilibili 课程，点击后直接跳转平台。",
+    coursesSummary: "精选 YouTube / Bilibili 官方播放器资源，支持备用来源、收藏、笔记和学习路径。",
     openCourse: "打开课程",
+    openOriginal: "打开原站",
+    officialPlayer: "官方播放器",
+    previewUnavailable: "该来源暂不支持站内预览，或可能受地区/权限限制。请切换备用来源或打开原站。",
+    saveCourse: "收藏",
+    savedCourse: "已收藏",
+    addToPath: "加入路径",
+    inLearningPath: "路径中",
+    markCourseDone: "标记完成",
+    courseDone: "已完成",
+    courseNote: "学习笔记",
+    courseNotePlaceholder: "记录这节课对应的题目、公式或易错点",
+    learningPathTitle: "学习路径",
+    learningPathHint: "把课程加入路径后，会在这里形成你的资源学习顺序。",
+    learningPathEmpty: "还没有学习路径。先把一个课程加入路径。",
+    resourceSourcesPlaceholder: "可选：每行一个 YouTube / Bilibili / 原站 URL，作为备用来源",
+    newsModuleTitle: "Quant 新闻",
+    newsDefaultSubtitle: "Jane Street、做市、AI 算力与市场结构",
+    newsIntelTitle: "信息雷达",
+    newsIntelSummary: "新闻/RSS 自动同步，LinkedIn 和小红书作为人工线索入口。",
+    newsIntelAria: "新闻情报控制台",
+    newsTopicFilterAria: "新闻主题筛选",
+    newsSourceFilterAria: "新闻来源筛选",
+    newsSocialHint: "LinkedIn / 小红书目前支持粘贴公开链接、摘要和启发；不做自动爬取，点击来源回原站核验。",
+    newsTopicAll: "全部",
+    newsTopicQuantFirms: "公司",
+    newsTopicMarketStructure: "市场结构",
+    newsTopicAiInfra: "AI/算力",
+    newsTopicRecruiting: "求职/社群",
+    newsSourceAll: "全部来源",
+    newsSourceNews: "新闻/RSS",
+    newsSourceOfficial: "官方",
+    newsSourceSocial: "社交线索",
+    newsSourceManual: "手动",
+    newsSourceLinkedIn: "LinkedIn",
+    newsSourceXiaohongshu: "小红书",
+    newsVerified: "可核验来源",
+    newsNeedsVerify: "待核验线索",
+    newsSavedCount: "收录",
+    newsAutoCount: "新闻/RSS",
+    newsOfficialCount: "官方",
+    newsSocialCount: "社交线索",
+    newsReadCount: "已读",
+    newsRefreshSyncing: "新闻 API 同步中...",
+    newsApiUnavailable: "API 暂不可用",
+    newsNoItems: "还没有新闻。",
+    newsNoFilterItems: "当前筛选没有内容，试试刷新或切换主题。",
+    newsImpact: "面试启发",
+    newsFallbackInsight: "把这条新闻转成一个市场、概率或系统设计追问。",
+    newsSourceLabel: "来源",
+    newsOpenOriginal: "打开原站",
+    newsAdd: "添加新闻",
+    newsSave: "保存新闻",
+    refreshNews: "刷新新闻",
+    newsTitlePlaceholder: "新闻标题或社交线索标题",
+    newsSourcePlaceholder: "来源，例如 Reuters / Bloomberg / LinkedIn / 小红书",
+    newsUrlPlaceholder: "来源链接",
+    newsTagsPlaceholder: "tags: Jane Street, market making, AI",
+    newsSummaryPlaceholder: "摘要：发生了什么？",
+    newsInsightPlaceholder: "面试启发：这和 quant 面试有什么关系？",
     searchEmpty: "没有找到匹配内容。",
     searchOpen: "打开",
     checkInDone: "已打卡",
@@ -555,6 +769,84 @@ const i18n = {
     latestPractice: "最近训练"
   },
   en: {
+    appTitle: "QuantGym",
+    loading: "Loading",
+    navOverview: "Overview",
+    navGrowth: "Growth",
+    navTraining: "Training",
+    navSocial: "Community",
+    navCareer: "Careers",
+    navResources: "Resources",
+    authTitle: "Log in or sign up",
+    authSubtitle: "Sync your problem bank, mock interview reviews, resume, and training progress.",
+    authOr: "or",
+    authTabsLabel: "Log in or sign up",
+    login: "Log in",
+    register: "Sign up",
+    emailAddress: "Email address",
+    password: "Password",
+    continueAction: "Continue",
+    name: "Name",
+    registerPasswordPlaceholder: "Set a password, at least 6 characters",
+    verificationCode: "Email code",
+    sendVerificationCode: "Send code",
+    sending: "Sending...",
+    resendIn: "Resend",
+    createAccount: "Create account",
+    googleClientSummary: "Configure Google Client ID",
+    save: "Save",
+    googleContinue: "Continue with Google",
+    notEnabled: "Not enabled",
+    authReadyFile: "You are using file://. Account and Google login may be blocked by the browser. Open http://127.0.0.1:5176/index.html instead.",
+    authReadyCloud: "Email accounts will try cloud sync first. Registration starts with an email verification code.",
+    authReadyLocal: "Email login is available. Registration starts with a verification code. Google login is reserved but not enabled.",
+    authNeedEmail: "Enter a valid email address first.",
+    authDuplicateEmail: "An account already exists for this email. You can log in directly.",
+    authVerificationSent: "Code sent to {email}. {delivery}{devCode}",
+    authDevCode: " Dev code: {code}",
+    authDeliveryDev: "The API terminal printed the code.",
+    authDeliveryEmail: "Please check your inbox.",
+    authCloudVerificationUnavailable: "The cloud API is not connected, so the code cannot be sent right now. Local testing can create a local account directly.",
+    authMissingRegisterFields: "Name, email, and a password with at least 6 characters are required.",
+    authNeedVerificationCode: "Send the email code first, then enter the 6-digit code you received.",
+    authCreatedSynced: "Account created and synced to the cloud.",
+    authCloudLocalCreated: "Cloud is temporarily unreachable. A local account was created and can sync from Settings later.",
+    authCloudNoLocal: "Cloud is temporarily unreachable, and this browser does not have that local account.",
+    authCloudLoginFailed: "Cloud could not find this email, or the password is wrong.",
+    authNoLocalAccount: "No local account found.",
+    authWrongPassword: "Wrong password.",
+    authGoogleLoading: "Google login is still loading and will become available shortly.",
+    authGoogleLoadFailed: "Google login did not load. Check the network or Client ID.",
+    authGoogleEnabled: "Google login is enabled. Cloud sync will verify the ID token.",
+    authGoogleClientMismatch: "The Google token Client ID does not match.",
+    authGoogleParseFailed: "Could not parse the Google login result.",
+    verificationForbidden: "This email is not on the beta allowlist yet.",
+    verificationTooSoon: "A code was sent recently. Please try again later.",
+    verificationTooMany: "Too many verification attempts. Please try again later.",
+    verificationEmailDown: "The email service did not send the code. Check SMTP configuration and retry.",
+    verificationInvalid: "The code is incorrect or expired. Send a new code and try again.",
+    verificationFailed: "Verification failed for now. Please try again later.",
+    authStorageFileBlocked: "The browser blocked account storage in local file mode. Open http://127.0.0.1:5176/index.html and create the account there.",
+    authStorageBlocked: "The browser blocked local storage. Check private browsing or site storage permissions and retry.",
+    authOperationFailed: "Account operation failed. Refresh the page and try again.",
+    cloudNoSession: "No cloud session yet. Log in once with email and password first.",
+    cloudSyncing: "Syncing cloud...",
+    cloudDisconnected: "Cloud is not connected. Local records still work.",
+    cloudFailed: "Cloud sync failed: {error}",
+    cloudSynced: "Cloud synced: {date}",
+    cloudConnected: "Cloud connected.",
+    llmSaved: "LLM connection saved.",
+    regionRankTitle: "Regional rank",
+    accountSettingsAria: "Open account settings",
+    openSettings: "Settings",
+    moduleNavLabel: "Module navigation",
+    commandBarLabel: "Global search and status",
+    searchResultsLabel: "Search results",
+    openChat: "Open messages",
+    openAccount: "Open account",
+    newsTickerLabel: "Quant news ticker",
+    todayTodo: "Today's tasks",
+    startAfterLogin: "Start after login",
     overview: "Overview",
     plan: "Plan",
     experiences: "Interview Log",
@@ -677,8 +969,67 @@ const i18n = {
     applyNow: "Open application",
     refreshJobs: "Refresh jobs",
     coursesModule: "Courses",
-    coursesSummary: "Curated YouTube / Bilibili lessons that open directly on the platform.",
+    coursesSummary: "Curated YouTube / Bilibili resources with official embeds, fallback sources, saves, notes, and a learning path.",
     openCourse: "Open course",
+    openOriginal: "Open original",
+    officialPlayer: "Official player",
+    previewUnavailable: "This source cannot be previewed here, or may be blocked by region or permissions. Switch source or open the original site.",
+    saveCourse: "Save",
+    savedCourse: "Saved",
+    addToPath: "Add to path",
+    inLearningPath: "In path",
+    markCourseDone: "Mark done",
+    courseDone: "Done",
+    courseNote: "Notes",
+    courseNotePlaceholder: "Capture related problems, formulas, or pitfalls",
+    learningPathTitle: "Learning Path",
+    learningPathHint: "Courses added to your path become your ordered resource queue.",
+    learningPathEmpty: "No learning path yet. Add a course to your path first.",
+    resourceSourcesPlaceholder: "Optional: one YouTube / Bilibili / original URL per line as fallback sources",
+    newsModuleTitle: "Quant News",
+    newsDefaultSubtitle: "Jane Street, market making, AI compute, and market structure",
+    newsIntelTitle: "Intelligence Radar",
+    newsIntelSummary: "News/RSS sync automatically; LinkedIn and Xiaohongshu are manual signal sources.",
+    newsIntelAria: "News intelligence dashboard",
+    newsTopicFilterAria: "News topic filter",
+    newsSourceFilterAria: "News source filter",
+    newsSocialHint: "LinkedIn / Xiaohongshu support public-link notes, summaries, and takeaways. No automated scraping; open the source to verify.",
+    newsTopicAll: "All",
+    newsTopicQuantFirms: "Firms",
+    newsTopicMarketStructure: "Market Structure",
+    newsTopicAiInfra: "AI/Compute",
+    newsTopicRecruiting: "Careers/Social",
+    newsSourceAll: "All sources",
+    newsSourceNews: "News/RSS",
+    newsSourceOfficial: "Official",
+    newsSourceSocial: "Social Signals",
+    newsSourceManual: "Manual",
+    newsSourceLinkedIn: "LinkedIn",
+    newsSourceXiaohongshu: "Xiaohongshu",
+    newsVerified: "Verifiable source",
+    newsNeedsVerify: "Signal to verify",
+    newsSavedCount: "Saved",
+    newsAutoCount: "News/RSS",
+    newsOfficialCount: "Official",
+    newsSocialCount: "Social signals",
+    newsReadCount: "Read",
+    newsRefreshSyncing: "Syncing news API...",
+    newsApiUnavailable: "API unavailable",
+    newsNoItems: "No news yet.",
+    newsNoFilterItems: "No items match this filter. Refresh or switch topics.",
+    newsImpact: "Interview angle",
+    newsFallbackInsight: "Turn this story into a market, probability, or system-design follow-up.",
+    newsSourceLabel: "Source",
+    newsOpenOriginal: "Open original",
+    newsAdd: "Add news",
+    newsSave: "Save news",
+    refreshNews: "Refresh news",
+    newsTitlePlaceholder: "News or social-signal title",
+    newsSourcePlaceholder: "Source, e.g. Reuters / Bloomberg / LinkedIn / Xiaohongshu",
+    newsUrlPlaceholder: "Source link",
+    newsTagsPlaceholder: "tags: Jane Street, market making, AI",
+    newsSummaryPlaceholder: "Summary: what happened?",
+    newsInsightPlaceholder: "Interview angle: why does this matter for quant interviews?",
     searchEmpty: "No matching results.",
     searchOpen: "Open",
     checkInDone: "Checked in",
@@ -1234,6 +1585,18 @@ const seedCourses = [
     platform: "YouTube",
     provider: "StatQuest",
     url: "https://www.youtube.com/@statquest/search?query=probability%20statistics%20machine%20learning",
+    sources: [
+      {
+        provider: "YouTube",
+        title: "Probability Distributions",
+        url: "https://www.youtube.com/watch?v=oI3hZJqXJuc"
+      },
+      {
+        provider: "StatQuest",
+        title: "Video index",
+        url: "https://statquest.org/video-index/"
+      }
+    ],
     topic: "Statistics / ML",
     level: "Foundation",
     summary: "统计、回归、机器学习概念拆解清楚，适合面试前补知识点。",
@@ -1334,6 +1697,8 @@ let pkSession = null;
 let newsRefreshInFlight = false;
 let jobsRefreshInFlight = false;
 let activeNewsDetailId = "";
+let newsTopicFilter = "all";
+let newsSourceFilter = "all";
 let globalSearchMatches = [];
 let problemCatalogRefresh = null;
 let radarHitAreas = [];
@@ -1588,6 +1953,12 @@ function bindElements() {
     "pkFeed",
     "newsTickerTrack",
     "newsUpdatedAt",
+    "newsIntelTitle",
+    "newsIntelSummary",
+    "newsIntelStats",
+    "newsTopicFilter",
+    "newsSourceFilter",
+    "newsSocialHint",
     "newsList",
     "addNewsBtn",
     "refreshNewsBtn",
@@ -1595,6 +1966,7 @@ function bindElements() {
     "newsTitle",
     "newsSource",
     "newsUrl",
+    "newsSourceType",
     "newsPrimarySkill",
     "newsTags",
     "newsSummary",
@@ -1634,6 +2006,7 @@ function bindElements() {
     "companyOverviewList",
     "coursesSummary",
     "courseList",
+    "coursePathList",
     "skillsPageTitle",
     "skillsPageSubtitle",
     "skillsScoreLabel",
@@ -1693,13 +2066,26 @@ function bindElements() {
     "marketGameFeedback",
     "pokerGameScore",
     "pokerGamePrompt",
+    "pokerModeSelect",
+    "pokerMatchBtn",
+    "pokerTable",
+    "pokerSeatGrid",
+    "pokerBoard",
+    "pokerPot",
+    "pokerStageText",
+    "pokerBlindText",
+    "pokerTurnPrompt",
+    "pokerRaiseInput",
     "nextPokerGameBtn",
+    "resetPokerGameBtn",
     "pokerGameFeedback",
+    "pokerLog",
     "resourceForm",
     "resourceTitle",
     "resourceType",
     "resourceFile",
     "resourceContent",
+    "resourceSources",
     "resourceList",
     "addResourceBtn",
     "settingsForm",
@@ -2000,6 +2386,16 @@ function bindEvents() {
   els.refreshNewsBtn.addEventListener("click", () => {
     refreshNewsFromApi(true);
   });
+  els.newsTopicFilter?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-news-topic]");
+    if (!button) return;
+    setNewsTopicFilter(button.dataset.newsTopic);
+  });
+  els.newsSourceFilter?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-news-source-filter]");
+    if (!button) return;
+    setNewsSourceFilter(button.dataset.newsSourceFilter);
+  });
   els.newsForm.addEventListener("submit", (event) => {
     event.preventDefault();
     addNewsFromForm();
@@ -2068,6 +2464,12 @@ function bindEvents() {
     button.addEventListener("click", () => submitPokerAction(button.dataset.pokerAction));
   });
   els.nextPokerGameBtn?.addEventListener("click", () => newPokerGame(true));
+  els.resetPokerGameBtn?.addEventListener("click", () => resetPokerTournament(true));
+  els.pokerMatchBtn?.addEventListener("click", () => resetPokerTournament(true));
+  els.pokerModeSelect?.addEventListener("change", () => resetPokerTournament(true));
+  els.courseList?.addEventListener("click", handleCourseListClick);
+  els.courseList?.addEventListener("change", handleCourseNoteChange);
+  els.coursePathList?.addEventListener("click", handleCourseListClick);
 
   els.addResourceBtn.addEventListener("click", () => {
     els.resourceForm.classList.toggle("hidden");
@@ -2108,6 +2510,7 @@ function createBaseState() {
     interviewFavorites: [],
     mentalMathRecords: [],
     gameRecords: [],
+    courseStates: [],
     problemStates: [],
     leetcodeHot100Done: [],
     studyPlan: null,
@@ -2167,11 +2570,12 @@ function normalizeState(rawState) {
     ...rawState,
     skills: normalizeSkills(rawState?.skills || {}),
     entries: Array.isArray(rawState?.entries) ? rawState.entries : [],
-    resources: Array.isArray(rawState?.resources) ? rawState.resources : [],
+    resources: normalizeResources(rawState?.resources),
     network: Array.isArray(rawState?.network) ? rawState.network.map(normalizeNetworkContact) : [],
     interviewFavorites: legacyFavorites.filter((favorite) => !favorite?.problemId),
     mentalMathRecords: normalizeMentalMathRecords(rawState?.mentalMathRecords),
     gameRecords: normalizeGameRecords(rawState?.gameRecords),
+    courseStates: normalizeCourseStates(rawState?.courseStates),
     problemStates: mergeProblemStates(
       Array.isArray(rawState?.problemStates) ? rawState.problemStates : [],
       problemStatesFromFavorites(legacyFavorites.filter((favorite) => favorite?.problemId))
@@ -2346,17 +2750,60 @@ function normalizeJobs(rawJobs) {
 
 function normalizeCourses(rawCourses) {
   const courses = Array.isArray(rawCourses) && rawCourses.length ? rawCourses : seedCourses;
-  return courses.map((course) => ({
-    id: String(course?.id || stableCourseId(`${course?.platform || "course"}-${course?.title || makeId()}`, course?.url)),
-    title: String(course?.title || "Quant Course").trim(),
-    platform: String(course?.platform || "Course").trim(),
-    provider: String(course?.provider || course?.platform || "Course").trim(),
-    url: String(course?.url || "#").trim(),
-    topic: String(course?.topic || "Quant").trim(),
-    level: String(course?.level || "Core").trim(),
-    summary: String(course?.summary || "").trim(),
-    tags: Array.isArray(course?.tags) ? course.tags.map(String).filter(Boolean) : parseTags(course?.tags || "")
-  }));
+  return courses.map((course) => {
+    const url = String(course?.url || "#").trim();
+    const sources = normalizeContentSources(course?.sources, {
+      title: course?.provider || course?.platform || "Original",
+      provider: course?.platform || inferSource(url) || "Original",
+      url
+    });
+    return {
+      id: String(course?.id || stableCourseId(`${course?.platform || "course"}-${course?.title || makeId()}`, url)),
+      title: String(course?.title || "Quant Course").trim(),
+      platform: String(course?.platform || sources[0]?.provider || "Course").trim(),
+      provider: String(course?.provider || course?.platform || sources[0]?.title || "Course").trim(),
+      url,
+      sources,
+      topic: String(course?.topic || "Quant").trim(),
+      level: String(course?.level || "Core").trim(),
+      summary: String(course?.summary || "").trim(),
+      tags: Array.isArray(course?.tags) ? course.tags.map(String).filter(Boolean) : parseTags(course?.tags || "")
+    };
+  });
+}
+
+function normalizeResources(rawResources) {
+  return (Array.isArray(rawResources) ? rawResources : []).map((resource) => {
+    const content = String(resource?.content || "").trim();
+    const urlSources = normalizeContentSources(resource?.sources, {
+      title: resource?.type === "link" ? "Original" : "",
+      provider: resource?.type === "link" ? inferSource(content) || "Original" : "",
+      url: /^https?:\/\//i.test(content) ? content : ""
+    });
+    return {
+      id: String(resource?.id || makeId()),
+      title: String(resource?.title || "").trim(),
+      type: String(resource?.type || "note").trim(),
+      content,
+      sources: urlSources,
+      dataUrl: String(resource?.dataUrl || ""),
+      date: resource?.date || resource?.createdAt || new Date().toISOString()
+    };
+  }).filter((resource) => resource.title || resource.content || resource.dataUrl);
+}
+
+function normalizeCourseStates(rawStates = []) {
+  const states = Array.isArray(rawStates) ? rawStates : [];
+  return states.map((item) => ({
+    courseId: String(item?.courseId || item?.id || "").trim(),
+    saved: Boolean(item?.saved),
+    inPath: Boolean(item?.inPath),
+    done: Boolean(item?.done),
+    note: String(item?.note || "").slice(0, 4000),
+    selectedSourceId: String(item?.selectedSourceId || ""),
+    pathAddedAt: item?.pathAddedAt || "",
+    updatedAt: item?.updatedAt || item?.createdAt || new Date().toISOString()
+  })).filter((item) => item.courseId);
 }
 
 function normalizeSkills(rawSkills) {
@@ -2573,15 +3020,64 @@ function normalizeLlmModel(model) {
   return LLM_MODEL_OPTIONS.includes(value) ? value : DEFAULT_LLM_MODEL;
 }
 
+function normalizeLanguage(language) {
+  const value = String(language || "").toLowerCase().trim();
+  return SUPPORTED_LANGUAGES.includes(value) ? value : DEFAULT_LANGUAGE;
+}
+
+function getUrlLanguage() {
+  const queryLanguage = new URLSearchParams(window.location.search).get("lang");
+  if (SUPPORTED_LANGUAGES.includes(String(queryLanguage || "").toLowerCase())) {
+    return normalizeLanguage(queryLanguage);
+  }
+  const localeSegment = window.location.pathname
+    .split("/")
+    .filter(Boolean)
+    .find((segment) => SUPPORTED_LANGUAGES.includes(String(segment || "").toLowerCase()));
+  return localeSegment
+    ? normalizeLanguage(localeSegment)
+    : "";
+}
+
+function getBrowserLanguage() {
+  const browserLanguages = Array.isArray(navigator.languages) && navigator.languages.length
+    ? navigator.languages
+    : [navigator.language];
+  const preferred = browserLanguages
+    .map((language) => String(language || "").toLowerCase())
+    .find((language) => language.startsWith("zh") || language.startsWith("en"));
+  return preferred?.startsWith("en") ? "en" : DEFAULT_LANGUAGE;
+}
+
+function getInitialLanguage(storedLanguage = "") {
+  return normalizeLanguage(getUrlLanguage() || storedLanguage || getBrowserLanguage());
+}
+
+function syncLanguageToUrl(language) {
+  if (!window.history?.replaceState || !/^https?:$/.test(window.location.protocol)) return;
+  const nextLanguage = normalizeLanguage(language);
+  const url = new URL(window.location.href);
+  const segments = url.pathname.split("/").filter(Boolean);
+  const localeIndex = segments.findIndex((segment) => SUPPORTED_LANGUAGES.includes(String(segment || "").toLowerCase()));
+  if (localeIndex >= 0) {
+    segments[localeIndex] = nextLanguage;
+    url.pathname = `/${segments.join("/")}`;
+    url.searchParams.delete("lang");
+  } else {
+    url.searchParams.set("lang", nextLanguage);
+  }
+  window.history.replaceState({}, "", url);
+}
+
 function loadAppPrefs() {
   try {
     const parsed = JSON.parse(localStorage.getItem(APP_PREFS_KEY) || "{}");
     return {
-      language: parsed.language === "en" ? "en" : "zh",
+      language: getInitialLanguage(parsed.language),
       sidebarCollapsed: parsed.sidebarCollapsed === true
     };
   } catch {
-    return { language: "zh", sidebarCollapsed: false };
+    return { language: getInitialLanguage(), sidebarCollapsed: false };
   }
 }
 
@@ -2590,20 +3086,30 @@ function saveAppPrefs() {
 }
 
 function getLanguage() {
-  return appPrefs.language === "en" ? "en" : "zh";
+  return normalizeLanguage(appPrefs.language);
 }
 
 function getLocale() {
   return getLanguage() === "en" ? "en-US" : "zh-CN";
 }
 
-function t(key) {
-  return i18n[getLanguage()]?.[key] || i18n.zh[key] || key;
+function t(key, params = {}) {
+  const template = i18n[getLanguage()]?.[key] || i18n.zh[key] || key;
+  return Object.entries(params).reduce((text, [name, value]) => (
+    text.replaceAll(`{${name}}`, String(value ?? ""))
+  ), template);
 }
 
-function setLanguage(language) {
-  appPrefs.language = language === "en" ? "en" : "zh";
+function textMatchesI18nKeys(text, keys = []) {
+  const value = String(text || "").trim();
+  return keys.some((key) => SUPPORTED_LANGUAGES.some((language) => i18n[language]?.[key] === value));
+}
+
+function setLanguage(language, options = {}) {
+  const nextLanguage = normalizeLanguage(language);
+  appPrefs.language = nextLanguage;
   saveAppPrefs();
+  if (options.updateUrl !== false) syncLanguageToUrl(nextLanguage);
   applySidebarState();
   applyLanguage();
   renderAll();
@@ -2799,6 +3305,7 @@ function mergeCloudState(remoteState, localState) {
     network: mergeRecordsById(remote.network, local.network),
     interviewFavorites: mergeRecordsById(remote.interviewFavorites, local.interviewFavorites),
     interviewExperiences: mergeRecordsById(remote.interviewExperiences, local.interviewExperiences).map(normalizeInterviewExperience),
+    courseStates: mergeCourseStates(remote.courseStates, local.courseStates),
     problemStates: mergeProblemStates(remote.problemStates, local.problemStates),
     studyPlan: latestIso(remote.studyPlan?.createdAt, local.studyPlan?.createdAt) === remote.studyPlan?.createdAt ? remote.studyPlan : local.studyPlan,
     prepPlan: latestIso(remote.prepPlan?.updatedAt, local.prepPlan?.updatedAt) === remote.prepPlan?.updatedAt ? remote.prepPlan : local.prepPlan,
@@ -2828,6 +3335,26 @@ function mergeRecordsById(...lists) {
     byId.set(id, { ...(byId.get(id) || {}), ...item, id });
   });
   return [...byId.values()].sort((a, b) => new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0));
+}
+
+function mergeCourseStates(...lists) {
+  const byId = new Map();
+  [].concat(...lists).filter(Boolean).forEach((item) => {
+    const normalized = normalizeCourseStates([item])[0];
+    if (!normalized) return;
+    const previous = byId.get(normalized.courseId) || {};
+    const previousIsNewer = latestIso(previous.updatedAt, normalized.updatedAt) === previous.updatedAt;
+    byId.set(normalized.courseId, {
+      ...previous,
+      ...normalized,
+      saved: Boolean(previous.saved || normalized.saved),
+      inPath: Boolean(previous.inPath || normalized.inPath),
+      done: Boolean(previous.done || normalized.done),
+      note: previousIsNewer ? previous.note || normalized.note : normalized.note || previous.note,
+      pathAddedAt: previous.pathAddedAt || normalized.pathAddedAt
+    });
+  });
+  return [...byId.values()];
 }
 
 function mergeResumeState(remoteResume, localResume) {
@@ -3041,11 +3568,11 @@ async function flushCloudSync() {
 async function syncCloudNow() {
   if (!currentUser) return;
   if (!cloudConfig.token || cloudConfig.userId !== currentUser.id) {
-    els.settingsMessage.textContent = "云端还没有登录会话，请先用邮箱密码登录一次。";
+    els.settingsMessage.textContent = t("cloudNoSession");
     return;
   }
   cloudDirty = { state: true, community: true, account: true };
-  els.settingsMessage.textContent = "云端同步中...";
+  els.settingsMessage.textContent = t("cloudSyncing");
   await flushCloudSync();
   els.settingsMessage.textContent = getCloudStatusText();
 }
@@ -3057,11 +3584,11 @@ function renderCloudStatus() {
 }
 
 function getCloudStatusText() {
-  if (!cloudConfig.token || cloudConfig.userId !== currentUser?.id) return "云端未连接；本地记录仍可继续使用。";
-  if (cloudConfig.lastError) return `云端同步失败：${cloudConfig.lastError}`;
-  if (cloudSyncInFlight) return "云端同步中...";
-  if (cloudConfig.lastSyncAt) return `云端已同步：${formatDate(cloudConfig.lastSyncAt)}`;
-  return "云端已连接。";
+  if (!cloudConfig.token || cloudConfig.userId !== currentUser?.id) return t("cloudDisconnected");
+  if (cloudConfig.lastError) return t("cloudFailed", { error: cloudConfig.lastError });
+  if (cloudSyncInFlight) return t("cloudSyncing");
+  if (cloudConfig.lastSyncAt) return t("cloudSynced", { date: formatDate(cloudConfig.lastSyncAt) });
+  return t("cloudConnected");
 }
 
 function makeId() {
@@ -3101,7 +3628,7 @@ function renderSession() {
   });
 
   if (!currentUser) {
-    els.todayLine.textContent = "登录后开始";
+    els.todayLine.textContent = t("startAfterLogin");
     els.authMessage.textContent = getAuthReadyMessage();
     renderGoogleClientInput();
     applyLanguage();
@@ -3284,26 +3811,26 @@ function switchAuthTab(tab) {
 async function sendRegisterVerificationCode() {
   const email = normalizeEmail(els.registerEmail.value);
   if (!email || !email.includes("@")) {
-    showAuthMessage("先填写有效的邮箱地址。");
+    showAuthMessage(t("authNeedEmail"));
     return;
   }
   if (auth.accounts.some((account) => normalizeEmail(account.email) === email)) {
-    showAuthMessage("这个邮箱已经有账户了，可以直接登录。");
+    showAuthMessage(t("authDuplicateEmail"));
     return;
   }
 
   delete els.registerForm.dataset.verificationOptional;
-  setRegisterCodeButtonBusy(true, "发送中...");
+  setRegisterCodeButtonBusy(true, t("sending"));
   try {
     const result = await sendCloudVerificationCode(email, "register");
     startRegisterCodeCooldown(Number(result.cooldownSeconds || 60));
-    const devCode = result.devCode ? ` 开发模式验证码：${result.devCode}` : "";
-    const delivery = result.delivery === "dev" ? "API 终端已打印验证码。" : "请检查邮箱收件箱。";
-    showAuthMessage(`验证码已发送到 ${email}。${delivery}${devCode}`);
+    const devCode = result.devCode ? t("authDevCode", { code: result.devCode }) : "";
+    const delivery = result.delivery === "dev" ? t("authDeliveryDev") : t("authDeliveryEmail");
+    showAuthMessage(t("authVerificationSent", { email, delivery, devCode }));
   } catch (error) {
     if (!error.status) {
       els.registerForm.dataset.verificationOptional = "true";
-      showAuthMessage("云端 API 未连接，暂时无法发送验证码；本机测试可直接创建本地账户。");
+      showAuthMessage(t("authCloudVerificationUnavailable"));
     } else {
       showAuthMessage(getVerificationErrorMessage(error));
     }
@@ -3311,7 +3838,7 @@ async function sendRegisterVerificationCode() {
   }
 }
 
-function setRegisterCodeButtonBusy(isBusy, label = "发送验证码") {
+function setRegisterCodeButtonBusy(isBusy, label = t("sendVerificationCode")) {
   if (!els.sendRegisterCodeBtn) return;
   els.sendRegisterCodeBtn.disabled = Boolean(isBusy);
   els.sendRegisterCodeBtn.textContent = label;
@@ -3327,7 +3854,7 @@ function startRegisterCodeCooldown(seconds) {
       registerCodeTimer = null;
       return;
     }
-    setRegisterCodeButtonBusy(true, `重新发送 ${remaining}s`);
+    setRegisterCodeButtonBusy(true, `${t("resendIn")} ${remaining}s`);
     remaining -= 1;
   };
   render();
@@ -3343,16 +3870,16 @@ async function registerLocal() {
     const verificationOptional = els.registerForm.dataset.verificationOptional === "true";
 
     if (!name || !email || password.length < 6) {
-      showAuthMessage("名字、邮箱和至少 6 位密码都要填。");
+      showAuthMessage(t("authMissingRegisterFields"));
       return;
     }
     if (!verificationCode && !verificationOptional) {
-      showAuthMessage("请先发送邮箱验证码，并填写收到的 6 位数字。");
+      showAuthMessage(t("authNeedVerificationCode"));
       return;
     }
 
     if (auth.accounts.some((account) => normalizeEmail(account.email) === email)) {
-      showAuthMessage("这个邮箱已经有账户了，可以直接登录。");
+      showAuthMessage(t("authDuplicateEmail"));
       return;
     }
 
@@ -3380,7 +3907,7 @@ async function registerLocal() {
           passwordHash: account.passwordHash
         });
         els.registerForm.reset();
-        showAuthMessage("账户已创建，并已同步到云端。");
+        showAuthMessage(t("authCreatedSynced"));
         renderSession();
         return;
       } catch (error) {
@@ -3388,7 +3915,7 @@ async function registerLocal() {
           showAuthMessage(getVerificationErrorMessage(error));
           return;
         }
-        showAuthMessage("云端暂时连不上；已创建仅本机账户，稍后可从设置里同步。");
+        showAuthMessage(t("authCloudLocalCreated"));
       }
     }
 
@@ -3427,23 +3954,23 @@ async function loginLocal() {
       return;
     } catch (error) {
       if (!account && error.status && error.status !== 401) {
-        showAuthMessage("云端暂时连不上；这台浏览器里也没有这个本地账户。");
+        showAuthMessage(t("authCloudNoLocal"));
         return;
       }
       if (!account && error.status === 401) {
-        showAuthMessage("云端没有找到这个邮箱，或密码不对。");
+        showAuthMessage(t("authCloudLoginFailed"));
         return;
       }
     }
 
     if (!account) {
-      showAuthMessage("没有找到这个本地账户。");
+      showAuthMessage(t("authNoLocalAccount"));
       return;
     }
 
     const passwordHash = await hashPassword(email, password);
     if (passwordHash !== account.passwordHash) {
-      showAuthMessage("密码不对。");
+      showAuthMessage(t("authWrongPassword"));
       return;
     }
 
@@ -3459,7 +3986,9 @@ async function loginLocal() {
         passwordHash: account.passwordHash
       });
     } catch {
-      cloudConfig.lastError = "云端 API 未连接，本次使用本地账户。";
+      cloudConfig.lastError = getLanguage() === "en"
+        ? "Cloud API is not connected; this session is using the local account."
+        : "云端 API 未连接，本次使用本地账户。";
       saveCloudConfig();
     }
     els.loginForm.reset();
@@ -3495,8 +4024,8 @@ function renderGooglePlaceholder() {
   els.googleButton.innerHTML = `
     <button class="auth-provider-button disabled" type="button" disabled aria-disabled="true">
       <span class="google-mark" aria-hidden="true">G</span>
-      <span>使用 Google 账号继续</span>
-      <small>暂未启用</small>
+      <span>${escapeHtml(t("googleContinue"))}</span>
+      <small>${escapeHtml(t("notEnabled"))}</small>
     </button>
   `;
 }
@@ -3521,10 +4050,10 @@ function initGoogleLogin() {
   if (!window.google?.accounts?.id) {
     if (googleInitRetries < 12) {
       googleInitRetries += 1;
-      showAuthMessage("Google 登录组件还在加载，稍后会自动可用。");
+      showAuthMessage(t("authGoogleLoading"));
       window.setTimeout(initGoogleLogin, 500);
     } else {
-      showAuthMessage("Google 登录组件没有加载成功，请检查网络或 Client ID。");
+      showAuthMessage(t("authGoogleLoadFailed"));
     }
     return;
   }
@@ -3542,14 +4071,14 @@ function initGoogleLogin() {
     text: "signin_with",
     width: Math.min(420, els.googleButton.clientWidth || 420)
   });
-  showAuthMessage("Google 登录已启用。云端同步会校验 ID token。");
+  showAuthMessage(t("authGoogleEnabled"));
 }
 
 async function handleGoogleCredential(response) {
   try {
     const payload = parseJwt(response.credential);
     if (payload.aud !== auth.googleClientId) {
-      showAuthMessage("Google token 的 Client ID 不匹配。");
+      showAuthMessage(t("authGoogleClientMismatch"));
       return;
     }
 
@@ -3582,12 +4111,14 @@ async function handleGoogleCredential(response) {
       const cloudSession = await loginCloudGoogle(account, response.credential, localState, community);
       applyCloudSession(cloudSession, { localState, localCommunity: community });
     } catch {
-      cloudConfig.lastError = "Google 已本地登录；云端 API 未连接。";
+      cloudConfig.lastError = getLanguage() === "en"
+        ? "Google signed in locally; cloud API is not connected."
+        : "Google 已本地登录；云端 API 未连接。";
       saveCloudConfig();
     }
     renderSession();
   } catch {
-    showAuthMessage("Google 登录结果无法解析。");
+    showAuthMessage(t("authGoogleParseFailed"));
   }
 }
 
@@ -3619,31 +4150,31 @@ function fallbackHash(value) {
 
 function getAuthReadyMessage() {
   if (location.protocol === "file:") {
-    return "当前是 file:// 打开方式，账户/Google 登录可能被浏览器限制。请用 http://127.0.0.1:5176/index.html 打开。";
+    return t("authReadyFile");
   }
   return GOOGLE_LOGIN_ENABLED
-    ? "邮箱账户会优先尝试云端同步；注册时先发送邮箱验证码。"
-    : "邮箱登录已可用；注册时先发送验证码。Google 登录入口已预留，暂未启用。";
+    ? t("authReadyCloud")
+    : t("authReadyLocal");
 }
 
 function getVerificationErrorMessage(error) {
   const raw = String(error?.message || "");
-  if (error?.status === 409) return "这个邮箱已经有账户了，可以直接登录。";
-  if (error?.status === 403) return "这个邮箱还不在内测名单里。";
-  if (error?.status === 429) return raw.includes("wait") ? "验证码刚发过，请稍后再试。" : "验证码尝试次数太多，请稍后重新发送。";
-  if (error?.status === 502) return "邮件服务暂时没有发出验证码，请检查 SMTP 配置后重试。";
-  if (/verification|code/i.test(raw)) return "验证码不正确或已过期，请重新发送后再试。";
-  return "验证码流程暂时失败，请稍后再试。";
+  if (error?.status === 409) return t("authDuplicateEmail");
+  if (error?.status === 403) return t("verificationForbidden");
+  if (error?.status === 429) return raw.includes("wait") ? t("verificationTooSoon") : t("verificationTooMany");
+  if (error?.status === 502) return t("verificationEmailDown");
+  if (/verification|code/i.test(raw)) return t("verificationInvalid");
+  return t("verificationFailed");
 }
 
 function getAuthErrorMessage(error) {
   if (location.protocol === "file:") {
-    return "浏览器限制了本地文件模式下的账户存储。请用 http://127.0.0.1:5176/index.html 打开后再创建账户。";
+    return t("authStorageFileBlocked");
   }
   if (/quota|storage|localStorage|SecurityError/i.test(`${error?.name || ""} ${error?.message || ""}`)) {
-    return "浏览器阻止了本地存储，请检查隐私模式/站点存储权限后重试。";
+    return t("authStorageBlocked");
   }
-  return "账户操作失败，请刷新页面后再试。";
+  return t("authOperationFailed");
 }
 
 function normalizeEmail(email) {
@@ -3805,8 +4336,17 @@ function showAuthMessage(message) {
 function applyLanguage() {
   const language = getLanguage();
   document.documentElement.lang = language === "en" ? "en" : "zh-CN";
+  document.title = t("appTitle");
   if (els.languageSelect) els.languageSelect.value = language;
   if (els.settingsLanguageSelect) els.settingsLanguageSelect.value = language;
+  applyStaticTranslations();
+  if (els.googleButton?.querySelector(".auth-provider-button.disabled")) renderGooglePlaceholder();
+  if (!currentUser && els.authMessage && (
+    !els.authMessage.textContent.trim()
+    || textMatchesI18nKeys(els.authMessage.textContent, ["authReadyFile", "authReadyCloud", "authReadyLocal"])
+  )) {
+    els.authMessage.textContent = getAuthReadyMessage();
+  }
 
   setButtonLabel('[data-module-tab="overview"]', t("overview"));
   setButtonLabel('[data-module-tab="plan"]', t("plan"));
@@ -3855,8 +4395,6 @@ function applyLanguage() {
   setAttribute(".app-account-chip", "aria-label", t("accountInfo"));
   setAttribute(".app-settings-button", "aria-label", t("settings"));
   applySidebarState();
-  setText(".hero-kicker", t("heroKicker"));
-  setText(".quanty-hero h2", t("heroTitle"));
   setButtonLabel("#generateStudyPlanBtn", t("designStudyPlan"));
 
   setText(".summary-copy .rank-label", t("rankLabel"));
@@ -3930,8 +4468,42 @@ function applyLanguage() {
   setButtonLabel('[data-job-filter="fulltime"]', t("fulltime"));
   setAttribute("#refreshJobsBtn", "title", t("refreshJobs"));
   setAttribute("#refreshJobsBtn", "aria-label", t("refreshJobs"));
+  setText(".news-section h2", t("newsModuleTitle"));
+  setText("#newsIntelTitle", t("newsIntelTitle"));
+  setText("#newsIntelSummary", t("newsIntelSummary"));
+  setText("#newsSocialHint", t("newsSocialHint"));
+  setAttribute("#addNewsBtn", "title", t("newsAdd"));
+  setAttribute("#addNewsBtn", "aria-label", t("newsAdd"));
+  setAttribute("#refreshNewsBtn", "title", t("refreshNews"));
+  setAttribute("#refreshNewsBtn", "aria-label", t("refreshNews"));
+  setButtonLabel('[data-news-topic="all"]', t("newsTopicAll"));
+  setButtonLabel('[data-news-topic="quantFirms"]', t("newsTopicQuantFirms"));
+  setButtonLabel('[data-news-topic="marketStructure"]', t("newsTopicMarketStructure"));
+  setButtonLabel('[data-news-topic="aiInfra"]', t("newsTopicAiInfra"));
+  setButtonLabel('[data-news-topic="recruiting"]', t("newsTopicRecruiting"));
+  setButtonLabel('[data-news-source-filter="all"]', t("newsSourceAll"));
+  setButtonLabel('[data-news-source-filter="news"]', t("newsSourceNews"));
+  setButtonLabel('[data-news-source-filter="official"]', t("newsSourceOfficial"));
+  setButtonLabel('[data-news-source-filter="social"]', t("newsSourceSocial"));
+  setSelectOptionLabels("newsSourceType", [
+    t("newsSourceNews"),
+    t("newsSourceOfficial"),
+    t("newsSourceLinkedIn"),
+    t("newsSourceXiaohongshu"),
+    t("newsSourceManual")
+  ]);
+  setPlaceholder("newsTitle", t("newsTitlePlaceholder"));
+  setPlaceholder("newsSource", t("newsSourcePlaceholder"));
+  setPlaceholder("newsUrl", t("newsUrlPlaceholder"));
+  setPlaceholder("newsTags", t("newsTagsPlaceholder"));
+  setPlaceholder("newsSummary", t("newsSummaryPlaceholder"));
+  setPlaceholder("newsInsight", t("newsInsightPlaceholder"));
+  setButtonLabel("#newsForm .secondary-button", t("newsSave"));
   setText(".courses-section h2", t("coursesModule"));
   setText("#coursesSummary", t("coursesSummary"));
+  setText("#learningPathTitle", t("learningPathTitle"));
+  setText("#learningPathHint", t("learningPathHint"));
+  setPlaceholder("resourceSources", t("resourceSourcesPlaceholder"));
   setText(".network-section h2", t("networkModule"));
   setAttribute("#addNetworkBtn", "title", t("networkAdd"));
   setAttribute("#addNetworkBtn", "aria-label", t("networkAdd"));
@@ -4013,6 +4585,102 @@ function openExternalUrl(value) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+function normalizeContentSources(rawSources, fallback = {}) {
+  const sourceList = Array.isArray(rawSources) ? rawSources : [];
+  const fallbackUrl = String(fallback.url || "").trim();
+  const candidates = [
+    ...sourceList,
+    ...(fallbackUrl ? [fallback] : [])
+  ];
+  const seen = new Set();
+  return candidates
+    .map((source, index) => normalizeContentSource(source, index))
+    .filter((source) => {
+      if (!source.url || safeExternalUrl(source.url) === "#") return false;
+      const key = source.url.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function normalizeContentSource(raw = {}, index = 0) {
+  const url = String(raw?.url || raw?.sourceUrl || raw || "").trim();
+  const provider = normalizeSourceProvider(raw?.provider || raw?.platform || inferSource(url));
+  const embed = getOfficialEmbed(url, provider);
+  const title = String(raw?.title || raw?.label || provider || "Original").trim();
+  return {
+    id: String(raw?.id || stableCourseId(`${provider}-${title}-${index}`, url)),
+    title,
+    provider,
+    url,
+    embedUrl: String(raw?.embedUrl || embed.embedUrl || "").trim(),
+    videoId: String(raw?.videoId || embed.videoId || "").trim(),
+    embeddable: Boolean(raw?.embedUrl || embed.embedUrl)
+  };
+}
+
+function normalizeSourceProvider(value) {
+  const raw = String(value || "").trim();
+  const lower = raw.toLowerCase();
+  if (/youtube|youtu\.be/.test(lower)) return "YouTube";
+  if (/bilibili|bili|b站/.test(lower)) return "Bilibili";
+  if (/ocw|mit/.test(lower)) return raw || "MIT OCW";
+  return raw || "Original";
+}
+
+function getOfficialEmbed(url, provider = "") {
+  const youtubeId = getYouTubeVideoId(url);
+  if (youtubeId) {
+    return {
+      provider: "YouTube",
+      videoId: youtubeId,
+      embedUrl: `https://www.youtube.com/embed/${encodeURIComponent(youtubeId)}`
+    };
+  }
+  const bvid = getBilibiliBvid(url);
+  if (bvid) {
+    return {
+      provider: "Bilibili",
+      videoId: bvid,
+      embedUrl: `https://player.bilibili.com/player.html?bvid=${encodeURIComponent(bvid)}&autoplay=0`
+    };
+  }
+  const lower = String(provider || "").toLowerCase();
+  if (lower.includes("youtube") || lower.includes("bilibili")) return { provider, videoId: "", embedUrl: "" };
+  return { provider, videoId: "", embedUrl: "" };
+}
+
+function getYouTubeVideoId(url) {
+  try {
+    const parsed = new URL(String(url || ""));
+    const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "youtu.be") return parsed.pathname.split("/").filter(Boolean)[0] || "";
+    if (host.endsWith("youtube.com")) {
+      if (parsed.pathname.startsWith("/embed/")) return parsed.pathname.split("/").filter(Boolean)[1] || "";
+      if (parsed.pathname.startsWith("/shorts/")) return parsed.pathname.split("/").filter(Boolean)[1] || "";
+      return parsed.searchParams.get("v") || "";
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+function getBilibiliBvid(url) {
+  const value = String(url || "");
+  try {
+    const parsed = new URL(value);
+    const fromQuery = parsed.searchParams.get("bvid");
+    if (fromQuery) return fromQuery;
+    const match = parsed.pathname.match(/\/video\/(BV[a-zA-Z0-9]+)/i);
+    return match?.[1] || "";
+  } catch {
+    const match = value.match(/BV[a-zA-Z0-9]+/i);
+    return match?.[0] || "";
+  }
+}
+
 function setAttribute(selector, attribute, value) {
   const node = document.querySelector(selector);
   if (node) node.setAttribute(attribute, value);
@@ -4021,6 +4689,21 @@ function setAttribute(selector, attribute, value) {
 function setTexts(selector, values) {
   document.querySelectorAll(selector).forEach((node, index) => {
     if (values[index]) node.textContent = values[index];
+  });
+}
+
+function applyStaticTranslations(root = document) {
+  root.querySelectorAll("[data-i18n]").forEach((node) => {
+    node.textContent = t(node.dataset.i18n);
+  });
+  root.querySelectorAll("[data-i18n-placeholder]").forEach((node) => {
+    node.setAttribute("placeholder", t(node.dataset.i18nPlaceholder));
+  });
+  root.querySelectorAll("[data-i18n-title]").forEach((node) => {
+    node.setAttribute("title", t(node.dataset.i18nTitle));
+  });
+  root.querySelectorAll("[data-i18n-aria-label]").forEach((node) => {
+    node.setAttribute("aria-label", t(node.dataset.i18nAriaLabel));
   });
 }
 
@@ -5890,26 +6573,56 @@ function getActiveJobFilter() {
   return document.querySelector("[data-job-filter].active")?.dataset.jobFilter || "all";
 }
 
+function getCourseState(courseId) {
+  const normalized = normalizeCourseStates(state.courseStates).find((item) => item.courseId === courseId);
+  return normalized || {
+    courseId,
+    saved: false,
+    inPath: false,
+    done: false,
+    note: "",
+    selectedSourceId: "",
+    pathAddedAt: "",
+    updatedAt: ""
+  };
+}
+
+function updateCourseState(courseId, patch = {}) {
+  const current = getCourseState(courseId);
+  const next = normalizeCourseStates([{
+    ...current,
+    ...patch,
+    courseId,
+    updatedAt: new Date().toISOString()
+  }])[0];
+  const without = normalizeCourseStates(state.courseStates).filter((item) => item.courseId !== courseId);
+  if (next.saved || next.inPath || next.done || next.note || next.selectedSourceId) {
+    state.courseStates = [...without, next];
+  } else {
+    state.courseStates = without;
+  }
+  saveState();
+}
+
+function getSelectedCourseSource(course, courseState = getCourseState(course.id)) {
+  const sources = normalizeContentSources(course.sources, { title: course.provider, provider: course.platform, url: course.url });
+  return sources.find((source) => source.id === courseState.selectedSourceId)
+    || sources.find((source) => source.embeddable)
+    || sources[0]
+    || null;
+}
+
 function renderCourses() {
   if (!els.courseList) return;
   const courses = normalizeCourses(state.courses);
   els.courseList.innerHTML = "";
+  renderLearningPath(courses);
   courses.forEach((course) => {
+    const courseState = getCourseState(course.id);
+    const selectedSource = getSelectedCourseSource(course, courseState);
     const card = document.createElement("article");
     card.className = "course-card content-card problem-card";
     card.dataset.courseId = course.id;
-    card.tabIndex = 0;
-    card.setAttribute("role", "link");
-    card.setAttribute("aria-label", `${t("openCourse")}: ${course.title}`);
-    card.addEventListener("click", (event) => {
-      if (event.target.closest("a")) return;
-      openExternalUrl(course.url);
-    });
-    card.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      openExternalUrl(course.url);
-    });
 
     const title = document.createElement("h3");
     title.textContent = course.title;
@@ -5924,26 +6637,158 @@ function renderCourses() {
     prompt.className = "problem-prompt";
     prompt.textContent = `${course.provider} · ${course.summary}`;
 
+    const sourceBar = document.createElement("div");
+    sourceBar.className = "course-source-bar";
+    course.sources.forEach((source) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.courseAction = "source";
+      button.dataset.courseId = course.id;
+      button.dataset.sourceId = source.id;
+      button.className = source.id === selectedSource?.id ? "active" : "";
+      button.textContent = source.provider;
+      sourceBar.appendChild(button);
+    });
+
+    const player = document.createElement("div");
+    player.className = "course-player";
+    if (selectedSource?.embedUrl) {
+      const iframe = document.createElement("iframe");
+      iframe.src = selectedSource.embedUrl;
+      iframe.title = `${course.title} · ${selectedSource.provider}`;
+      iframe.loading = "lazy";
+      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      iframe.allowFullscreen = true;
+      player.appendChild(iframe);
+    } else {
+      const fallback = document.createElement("div");
+      fallback.className = "course-player-fallback";
+      fallback.innerHTML = `<strong>${escapeHtml(t("previewUnavailable"))}</strong>`;
+      player.appendChild(fallback);
+    }
+
     const tags = document.createElement("div");
     tags.className = "problem-meta";
     course.tags.slice(0, 4).forEach((tag) => addProblemTag(tags, tag, "skill"));
+
+    const actions = document.createElement("div");
+    actions.className = "course-actions";
+    [
+      ["save", courseState.saved ? t("savedCourse") : t("saveCourse"), courseState.saved ? "bookmark-check" : "bookmark"],
+      ["path", courseState.inPath ? t("inLearningPath") : t("addToPath"), courseState.inPath ? "route" : "plus"],
+      ["done", courseState.done ? t("courseDone") : t("markCourseDone"), courseState.done ? "check-circle-2" : "circle"]
+    ].forEach(([action, label, iconName]) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `secondary-button compact${courseState[action === "save" ? "saved" : action === "path" ? "inPath" : "done"] ? " is-active" : ""}`;
+      button.dataset.courseAction = action;
+      button.dataset.courseId = course.id;
+      button.innerHTML = `<i data-lucide="${iconName}"></i>${escapeHtml(label)}`;
+      actions.appendChild(button);
+    });
+
+    const notes = document.createElement("label");
+    notes.className = "course-note-field";
+    notes.innerHTML = `<span>${escapeHtml(t("courseNote"))}</span>`;
+    const textarea = document.createElement("textarea");
+    textarea.dataset.courseNote = course.id;
+    textarea.rows = 3;
+    textarea.placeholder = t("courseNotePlaceholder");
+    textarea.value = courseState.note || "";
+    notes.appendChild(textarea);
 
     const footer = document.createElement("div");
     footer.className = "problem-card-footer";
     const link = document.createElement("a");
     link.className = "content-card-link";
-    link.href = safeExternalUrl(course.url);
+    link.href = safeExternalUrl(selectedSource?.url || course.url);
     link.target = "_blank";
     link.rel = "noreferrer";
-    link.textContent = t("openCourse");
+    link.textContent = t("openOriginal");
     const icon = document.createElement("i");
     icon.setAttribute("data-lucide", "external-link");
     footer.append(link, icon);
 
-    card.append(title, meta, prompt, tags, footer);
+    card.append(title, meta, prompt, sourceBar, player, tags, actions, notes, footer);
     els.courseList.appendChild(card);
   });
   refreshIcons();
+}
+
+function renderLearningPath(courses = normalizeCourses(state.courses)) {
+  if (!els.coursePathList) return;
+  const isEn = getLanguage() === "en";
+  setText("#learningPathTitle", t("learningPathTitle"));
+  setText("#learningPathHint", t("learningPathHint"));
+  const courseById = new Map(courses.map((course) => [course.id, course]));
+  const pathItems = normalizeCourseStates(state.courseStates)
+    .filter((item) => item.inPath && courseById.has(item.courseId))
+    .sort((a, b) => new Date(a.pathAddedAt || a.updatedAt || 0) - new Date(b.pathAddedAt || b.updatedAt || 0));
+  els.coursePathList.innerHTML = "";
+  if (!pathItems.length) {
+    els.coursePathList.appendChild(emptyBlock(t("learningPathEmpty")));
+    return;
+  }
+  pathItems.forEach((item, index) => {
+    const course = courseById.get(item.courseId);
+    const row = document.createElement("div");
+    row.className = `course-path-item${item.done ? " is-done" : ""}`;
+    const indexNode = document.createElement("span");
+    indexNode.className = "course-path-index";
+    indexNode.textContent = String(index + 1);
+    const copy = document.createElement("div");
+    copy.innerHTML = `<strong>${escapeHtml(course.title)}</strong><small>${escapeHtml(course.topic)} · ${escapeHtml(item.done ? t("courseDone") : (isEn ? "Queued" : "待学习"))}</small>`;
+    const done = document.createElement("button");
+    done.type = "button";
+    done.className = "icon-button ghost";
+    done.dataset.courseAction = "done";
+    done.dataset.courseId = course.id;
+    done.title = item.done ? t("courseDone") : t("markCourseDone");
+    done.setAttribute("aria-label", done.title);
+    done.innerHTML = `<i data-lucide="${item.done ? "check-circle-2" : "circle"}"></i>`;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "icon-button ghost";
+    remove.dataset.courseAction = "path";
+    remove.dataset.courseId = course.id;
+    remove.title = isEn ? "Remove from path" : "移出路径";
+    remove.setAttribute("aria-label", remove.title);
+    remove.innerHTML = '<i data-lucide="x"></i>';
+    row.append(indexNode, copy, done, remove);
+    els.coursePathList.appendChild(row);
+  });
+}
+
+function handleCourseListClick(event) {
+  const button = event.target.closest("[data-course-action]");
+  if (!button) return;
+  const courseId = button.dataset.courseId || "";
+  const course = normalizeCourses(state.courses).find((item) => item.id === courseId);
+  if (!course) return;
+  const courseState = getCourseState(courseId);
+  const action = button.dataset.courseAction;
+  if (action === "source") {
+    updateCourseState(courseId, { selectedSourceId: button.dataset.sourceId || "" });
+  } else if (action === "save") {
+    updateCourseState(courseId, { saved: !courseState.saved });
+  } else if (action === "path") {
+    const inPath = !courseState.inPath;
+    updateCourseState(courseId, {
+      inPath,
+      pathAddedAt: inPath ? (courseState.pathAddedAt || new Date().toISOString()) : ""
+    });
+  } else if (action === "done") {
+    updateCourseState(courseId, { done: !courseState.done, inPath: courseState.inPath || true, pathAddedAt: courseState.pathAddedAt || new Date().toISOString() });
+  }
+  renderCourses();
+  refreshIcons();
+}
+
+function handleCourseNoteChange(event) {
+  const field = event.target.closest("[data-course-note]");
+  if (!field) return;
+  updateCourseState(field.dataset.courseNote, { note: field.value });
+  renderLearningPath();
 }
 
 function maybeAutoRefreshJobs() {
@@ -6176,7 +7021,16 @@ function buildGlobalSearchResults(query) {
   });
 
   normalizeCourses(state.courses).forEach((course) => {
-    const fields = [course.title, course.platform, course.provider, course.topic, course.level, course.summary, course.tags.join(" ")];
+    const fields = [
+      course.title,
+      course.platform,
+      course.provider,
+      course.topic,
+      course.level,
+      course.summary,
+      course.tags.join(" "),
+      course.sources.map((source) => `${source.provider} ${source.title} ${source.url}`).join(" ")
+    ];
     if (!matchesQuery(fields, normalized)) return;
     results.push({
       type: "course",
@@ -6689,12 +7543,13 @@ function getLeaderboardMetricLabel(metric) {
 
 function renderResources() {
   els.resourceList.innerHTML = "";
-  if (!state.resources.length) {
-    els.resourceList.appendChild(emptyBlock("资料会保存在这里。"));
+  const resources = normalizeResources(state.resources);
+  if (!resources.length) {
+    els.resourceList.appendChild(emptyBlock(getLanguage() === "en" ? "Resources will be saved here." : "资料会保存在这里。"));
     return;
   }
 
-  state.resources.slice().reverse().forEach((resource) => {
+  resources.slice().reverse().forEach((resource) => {
     const item = document.createElement("article");
     item.className = "resource-item";
     const top = document.createElement("div");
@@ -6708,6 +7563,32 @@ function renderResources() {
     const content = document.createElement("p");
     content.textContent = resource.content;
     item.append(top, content);
+    const previewSource = resource.sources.find((source) => source.embeddable);
+    if (previewSource?.embedUrl) {
+      const player = document.createElement("div");
+      player.className = "resource-player";
+      const iframe = document.createElement("iframe");
+      iframe.src = previewSource.embedUrl;
+      iframe.title = `${resource.title} · ${previewSource.provider}`;
+      iframe.loading = "lazy";
+      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      iframe.allowFullscreen = true;
+      player.appendChild(iframe);
+      item.appendChild(player);
+    }
+    if (resource.sources.length) {
+      const links = document.createElement("div");
+      links.className = "resource-source-links";
+      resource.sources.forEach((source) => {
+        const link = document.createElement("a");
+        link.href = safeExternalUrl(source.url);
+        link.target = "_blank";
+        link.rel = "noreferrer";
+        link.textContent = source.provider || t("openOriginal");
+        links.appendChild(link);
+      });
+      item.appendChild(links);
+    }
     if (resource.dataUrl) {
       const image = document.createElement("img");
       image.className = "resource-image";
@@ -6717,6 +7598,14 @@ function renderResources() {
     }
     els.resourceList.appendChild(item);
   });
+}
+
+function parseResourceSources(text) {
+  const urls = String(text || "")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter((line) => /^https?:\/\//i.test(line));
+  return normalizeContentSources(urls.map((url) => ({ url, provider: inferSource(url), title: inferSource(url) })));
 }
 
 function renderNewsTicker() {
@@ -6762,26 +7651,39 @@ function renderNews() {
   if (!els.newsList) return;
   try {
     els.newsList.innerHTML = "";
-    const news = sortNews(state.news || []);
-    const latest = news[0]?.publishedAt || news[0]?.createdAt || "";
+    const allNews = sortNews(state.news || []);
+    const news = getFilteredNews(allNews);
+    renderNewsIntelligence(allNews);
+    const latest = allNews[0]?.publishedAt || allNews[0]?.createdAt || "";
     if (els.newsUpdatedAt) {
-      const latestText = latest ? `已收录 ${news.length} 条 · 最近 ${formatNewsDate(latest)}` : "Jane Street、做市、AI 算力与市场结构";
+      const filteredText = news.length === allNews.length
+        ? ""
+        : ` · ${getLanguage() === "en" ? "Showing" : "当前"} ${news.length}`;
+      const latestText = latest
+        ? `${t("newsSavedCount")} ${allNews.length} · ${getLanguage() === "en" ? "Latest" : "最近"} ${formatNewsDate(latest)}${filteredText}`
+        : t("newsDefaultSubtitle");
       const syncText = state.newsSyncError
-        ? " · API 暂不可用"
+        ? ` · ${t("newsApiUnavailable")}`
         : state.newsFetchedAt
           ? ` · API ${formatTimeOnly(state.newsFetchedAt)}`
           : "";
       els.newsUpdatedAt.textContent = `${latestText}${syncText}`;
     }
 
+    if (!allNews.length) {
+      els.newsList.appendChild(emptyBlock(t("newsNoItems")));
+      return;
+    }
+
     if (!news.length) {
-      els.newsList.appendChild(emptyBlock("还没有新闻。"));
+      els.newsList.appendChild(emptyBlock(t("newsNoFilterItems")));
       return;
     }
 
     news.forEach((item) => {
       const card = document.createElement("article");
-      card.className = `news-card content-card problem-card${item.readAt ? " read" : ""}`;
+      const sourceType = normalizeNewsSourceType(item.sourceType || inferNewsSourceType(item));
+      card.className = `news-card content-card problem-card news-source-${sourceType}${item.readAt ? " read" : ""}`;
       card.dataset.newsId = item.id;
       card.tabIndex = 0;
       card.setAttribute("role", "button");
@@ -6800,6 +7702,8 @@ function renderNews() {
       meta.className = "problem-meta";
       addProblemTag(meta, formatNewsDate(item.publishedAt || item.createdAt), "source");
       addProblemTag(meta, item.source || inferSource(item.sourceUrl), "topic");
+      addProblemTag(meta, getNewsSourceTypeLabel(sourceType), sourceType === "official" ? "skill" : "source");
+      addProblemTag(meta, getNewsVerificationLabel(sourceType, item.sourceUrl), isSocialNewsType(sourceType) ? "score" : "source");
       if (item.readAt) addProblemTag(meta, getLanguage() === "en" ? "Read" : "已读", "score");
 
       const title = document.createElement("h3");
@@ -6812,9 +7716,9 @@ function renderNews() {
       const impact = document.createElement("div");
       impact.className = "content-card-note";
       const impactLabel = document.createElement("strong");
-      impactLabel.textContent = "面试启发";
+      impactLabel.textContent = t("newsImpact");
       const impactText = document.createElement("span");
-      impactText.textContent = item.insight || "把这条新闻转成一个市场、概率或系统设计追问。";
+      impactText.textContent = item.insight || t("newsFallbackInsight");
       impact.append(impactLabel, impactText);
 
       const pills = document.createElement("div");
@@ -6835,7 +7739,7 @@ function renderNews() {
         link.href = safeExternalUrl(item.sourceUrl);
         link.target = "_blank";
         link.rel = "noreferrer";
-        link.textContent = getLanguage() === "en" ? "Source" : "来源";
+        link.textContent = t("newsOpenOriginal");
         link.addEventListener("click", (event) => event.stopPropagation());
         const icon = document.createElement("i");
         icon.setAttribute("data-lucide", "external-link");
@@ -6856,6 +7760,105 @@ function renderNews() {
     els.newsList.innerHTML = "";
     els.newsList.appendChild(emptyBlock(`新闻渲染失败：${error.message || "unknown"}`));
   }
+}
+
+function getFilteredNews(allNews = sortNews(state.news || [])) {
+  const topic = normalizeNewsTopicFilter(newsTopicFilter);
+  const source = normalizeNewsSourceFilter(newsSourceFilter);
+  return allNews.filter((item) => newsMatchesTopic(item, topic) && newsMatchesSourceFilter(item, source));
+}
+
+function renderNewsIntelligence(allNews = sortNews(state.news || [])) {
+  updateNewsFilterButtons();
+  if (els.newsIntelTitle) els.newsIntelTitle.textContent = t("newsIntelTitle");
+  if (els.newsSocialHint) els.newsSocialHint.textContent = t("newsSocialHint");
+  if (els.newsIntelSummary) {
+    const syncText = state.newsSyncError
+      ? t("newsApiUnavailable")
+      : state.newsFetchedAt
+        ? `API ${formatTimeOnly(state.newsFetchedAt)}`
+        : t("newsDefaultSubtitle");
+    els.newsIntelSummary.textContent = `${t("newsIntelSummary")} · ${syncText}`;
+  }
+  if (!els.newsIntelStats) return;
+  els.newsIntelStats.innerHTML = "";
+  const stats = [
+    { label: t("newsSavedCount"), value: allNews.length },
+    { label: t("newsAutoCount"), value: allNews.filter((item) => newsMatchesSourceFilter(item, "news")).length },
+    { label: t("newsOfficialCount"), value: allNews.filter((item) => newsMatchesSourceFilter(item, "official")).length },
+    { label: t("newsSocialCount"), value: allNews.filter((item) => newsMatchesSourceFilter(item, "social")).length },
+    { label: t("newsReadCount"), value: allNews.filter((item) => item.readAt).length }
+  ];
+  stats.forEach((stat) => {
+    const node = document.createElement("span");
+    node.className = "news-intel-stat";
+    node.innerHTML = `<strong>${escapeHtml(String(stat.value))}</strong><small>${escapeHtml(stat.label)}</small>`;
+    els.newsIntelStats.appendChild(node);
+  });
+}
+
+function setNewsTopicFilter(value) {
+  const next = normalizeNewsTopicFilter(value);
+  if (next === newsTopicFilter) return;
+  newsTopicFilter = next;
+  if (activeNewsDetailId) closeNewsDetail();
+  else renderNews();
+}
+
+function setNewsSourceFilter(value) {
+  const next = normalizeNewsSourceFilter(value);
+  if (next === newsSourceFilter) return;
+  newsSourceFilter = next;
+  if (activeNewsDetailId) closeNewsDetail();
+  else renderNews();
+}
+
+function updateNewsFilterButtons() {
+  document.querySelectorAll("[data-news-topic]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.newsTopic === normalizeNewsTopicFilter(newsTopicFilter));
+  });
+  document.querySelectorAll("[data-news-source-filter]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.newsSourceFilter === normalizeNewsSourceFilter(newsSourceFilter));
+  });
+}
+
+function normalizeNewsTopicFilter(value) {
+  const key = String(value || "all").trim();
+  return NEWS_TOPIC_QUERY_PACKS[key] ? key : "all";
+}
+
+function normalizeNewsSourceFilter(value) {
+  const key = String(value || "all").trim();
+  return NEWS_SOURCE_FILTERS.includes(key) ? key : "all";
+}
+
+function newsMatchesTopic(item, topic) {
+  if (!topic || topic === "all") return true;
+  const text = [
+    item.title,
+    item.titleZh,
+    item.source,
+    item.summary,
+    item.insight,
+    ...(item.tags || []),
+    ...(item.skills || [])
+  ].join(" ").toLowerCase();
+  const matchers = {
+    quantFirms: /jane street|citadel|optiver|imc|jump trading|two sigma|de shaw|d\.e\. shaw|hudson river|hrt|tower research|virtu|drw|flow traders|five rings/,
+    marketStructure: /market making|market maker|electronic trading|liquidity|order book|exchange|options?|volatility|derivatives?|execution|sec|cme|nasdaq|nyse/,
+    aiInfra: /\bai\b|artificial intelligence|gpu|coreweave|cloud|machine learning|deep learning|model|infrastructure|low latency|算力|模型/,
+    recruiting: /intern|internship|graduate|new grad|campus|career|recruiting|job|offer|linkedin|xiaohongshu|小红书|social/
+  };
+  return (matchers[topic] || /./).test(text);
+}
+
+function newsMatchesSourceFilter(item, sourceFilter) {
+  if (!sourceFilter || sourceFilter === "all") return true;
+  const sourceType = normalizeNewsSourceType(item.sourceType || inferNewsSourceType(item));
+  if (sourceFilter === "news") return sourceType === "news" || sourceType === "rss";
+  if (sourceFilter === "official") return sourceType === "official";
+  if (sourceFilter === "social") return isSocialNewsType(sourceType);
+  return true;
 }
 
 function maybeAutoRefreshNews() {
@@ -6898,14 +7901,9 @@ async function requestNewsFromApi() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      max: 14,
-      queries: [
-        '"Jane Street" quant trading',
-        '"market making" "quant"',
-        '"options volatility" trading',
-        '"Jane Street" CoreWeave AI',
-        '"electronic trading" "hedge fund"'
-      ]
+      max: 24,
+      topic: normalizeNewsTopicFilter(newsTopicFilter),
+      queries: getNewsQueriesForTopic(newsTopicFilter)
     })
   });
 
@@ -6913,6 +7911,10 @@ async function requestNewsFromApi() {
   const data = await response.json();
   const items = Array.isArray(data) ? data : data.items || data.news || [];
   return items.map(normalizeNewsItem);
+}
+
+function getNewsQueriesForTopic(topic) {
+  return NEWS_TOPIC_QUERY_PACKS[normalizeNewsTopicFilter(topic)] || NEWS_TOPIC_QUERY_PACKS.all;
 }
 
 function getNewsEndpoint() {
@@ -6929,10 +7931,12 @@ function getNewsEndpoint() {
 }
 
 function addNewsFromForm() {
+  const selectedSourceType = normalizeNewsSourceType(els.newsSourceType?.value || "news");
   const item = normalizeNewsItem({
     title: els.newsTitle.value,
     titleZh: els.newsTitle.value,
-    source: els.newsSource.value,
+    source: els.newsSource.value || getNewsSourceTypeLabel(selectedSourceType),
+    sourceType: selectedSourceType,
     sourceUrl: els.newsUrl.value,
     publishedAt: new Date().toISOString(),
     tags: parseTags(els.newsTags.value),
@@ -6971,14 +7975,24 @@ function openNewsDetail(id) {
 }
 
 function renderNewsDetail(item) {
+  const sourceType = normalizeNewsSourceType(item.sourceType || inferNewsSourceType(item));
   els.newsDetailReadBadge.classList.toggle("hidden", !item.readAt);
-  els.newsDetailMeta.textContent = [formatNewsDate(item.publishedAt || item.createdAt), item.source || inferSource(item.sourceUrl)]
+  els.newsDetailMeta.textContent = [
+    formatNewsDate(item.publishedAt || item.createdAt),
+    item.source || inferSource(item.sourceUrl),
+    getNewsSourceTypeLabel(sourceType),
+    getNewsVerificationLabel(sourceType, item.sourceUrl)
+  ]
     .filter(Boolean)
     .join(" · ");
   els.newsDetailTitle.textContent = item.titleZh || item.title;
   els.newsDetailSummary.textContent = item.summary;
-  els.newsDetailInsight.textContent = item.insight || "把这条新闻转成一个市场、概率或系统设计追问。";
+  els.newsDetailInsight.textContent = item.insight || t("newsFallbackInsight");
   els.newsDetailPills.innerHTML = "";
+  const sourcePill = document.createElement("span");
+  sourcePill.className = "pill";
+  sourcePill.textContent = getNewsSourceTypeLabel(sourceType);
+  els.newsDetailPills.appendChild(sourcePill);
   normalizeNewsSkills(item.skills).forEach((key) => {
     const pill = document.createElement("span");
     pill.className = "pill";
@@ -6993,6 +8007,7 @@ function renderNewsDetail(item) {
   });
   els.newsDetailLink.classList.toggle("hidden", !item.sourceUrl);
   els.newsDetailLink.href = safeExternalUrl(item.sourceUrl);
+  els.newsDetailLink.textContent = t("newsOpenOriginal");
 }
 
 function closeNewsDetail() {
@@ -9159,11 +10174,13 @@ function normalizeNewsItem(raw) {
   const tags = parseTags(raw?.tags || "");
   const skills = normalizeNewsSkills(raw?.skills || raw?.skill || raw?.primarySkill || inferNewsSkill(`${title} ${titleZh} ${summary} ${tags.join(" ")}`));
   const id = raw?.id || stableNewsId(titleZh || title || sourceUrl || makeId(), sourceUrl);
+  const sourceType = normalizeNewsSourceType(raw?.sourceType || raw?.type || raw?.platform || inferNewsSourceType({ ...raw, sourceUrl }));
   return {
     id,
     title,
     titleZh,
     source: cleanNewsSource(raw?.source, sourceUrl),
+    sourceType,
     sourceUrl,
     publishedAt,
     tags,
@@ -9174,6 +10191,73 @@ function normalizeNewsItem(raw) {
     createdAt: raw?.createdAt || new Date().toISOString(),
     updatedAt: raw?.updatedAt || ""
   };
+}
+
+function normalizeNewsSourceType(value) {
+  const key = String(value || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
+  const aliases = {
+    rss: "rss",
+    feed: "rss",
+    news: "news",
+    media: "news",
+    article: "news",
+    official: "official",
+    company: "official",
+    announcement: "official",
+    linkedin: "linkedin",
+    linkedinsignal: "linkedin",
+    xiaohongshu: "xiaohongshu",
+    rednote: "xiaohongshu",
+    xhs: "xiaohongshu",
+    social: "social",
+    manual: "manual"
+  };
+  return aliases[key] || "news";
+}
+
+function inferNewsSourceType(raw) {
+  const sourceUrl = String(raw?.sourceUrl || raw?.url || "").trim();
+  const source = String(raw?.source || "").toLowerCase();
+  let host = "";
+  try {
+    host = new URL(sourceUrl).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    host = "";
+  }
+  const text = `${host} ${source}`.toLowerCase();
+  if (/linkedin\.com/.test(text)) return "linkedin";
+  if (/xiaohongshu\.com|xhslink\.com|rednote/.test(text)) return "xiaohongshu";
+  if (/janestreet\.com|citadel(?:securities)?\.com|optiver\.com|imc\.com|jumptrading\.com|hudsonrivertrading\.com|twosigma\.com|deshaw\.com|virtu\.com|drw\.com|flowtraders\.com|nasdaq\.com|nyse\.com|cmegroup\.com|sec\.gov/.test(text)) {
+    return "official";
+  }
+  if (/rss|feed|google news|news\.google\.com/.test(text)) return "rss";
+  if (!sourceUrl && /linkedin|小红书|xiaohongshu|rednote|social/.test(text)) return "social";
+  if (!sourceUrl && /manual|手动/.test(text)) return "manual";
+  return "news";
+}
+
+function isSocialNewsType(sourceType) {
+  return ["linkedin", "xiaohongshu", "social", "manual"].includes(normalizeNewsSourceType(sourceType));
+}
+
+function getNewsSourceTypeLabel(sourceType) {
+  const type = normalizeNewsSourceType(sourceType);
+  const labels = {
+    rss: "newsSourceNews",
+    news: "newsSourceNews",
+    official: "newsSourceOfficial",
+    linkedin: "newsSourceLinkedIn",
+    xiaohongshu: "newsSourceXiaohongshu",
+    social: "newsSourceSocial",
+    manual: "newsSourceManual"
+  };
+  return t(labels[type] || "newsSourceNews");
+}
+
+function getNewsVerificationLabel(sourceType, sourceUrl = "") {
+  const type = normalizeNewsSourceType(sourceType);
+  if (isSocialNewsType(type)) return t("newsNeedsVerify");
+  return sourceUrl ? t("newsVerified") : t("newsSourceManual");
 }
 
 function cleanNewsText(value) {
@@ -9377,7 +10461,7 @@ function saveLlmConfig() {
     model: normalizeLlmModel(els.llmModelInput.value)
   };
   saveLlmConfigToStorage();
-  appendInterviewMessage("system", "LLM 连接已保存。");
+  appendInterviewMessage("system", t("llmSaved"));
 }
 
 function renderSettings() {
@@ -9394,8 +10478,9 @@ function renderSettings() {
 
 function saveSettings() {
   if (!currentUser) return;
-  appPrefs.language = els.settingsLanguageSelect.value === "en" ? "en" : "zh";
+  appPrefs.language = normalizeLanguage(els.settingsLanguageSelect.value);
   saveAppPrefs();
+  syncLanguageToUrl(appPrefs.language);
   const country = normalizeCountry(els.settingsCountrySelect.value);
   const region = normalizeRegionForCountry(els.settingsRegionSelect.value, country);
   llmConfig = {
@@ -10831,12 +11916,14 @@ function addResource() {
   const title = els.resourceTitle.value.trim();
   const content = els.resourceContent.value.trim();
   if (!title || !content) return;
+  const sources = parseResourceSources(els.resourceSources?.value || content);
 
   state.resources.push({
     id: makeId(),
     title,
     type: els.resourceType.value,
     content,
+    sources,
     dataUrl: els.resourceForm.dataset.previewData || "",
     date: new Date().toISOString()
   });
@@ -11438,69 +12525,720 @@ function submitMarketQuote() {
 }
 
 function makePokerGameRound() {
-  const hands = [
-    { hand: "A♠ K♠", strength: 86 },
-    { hand: "Q♥ Q♦", strength: 91 },
-    { hand: "9♣ 9♠", strength: 68 },
-    { hand: "A♦ 7♦", strength: 58 },
-    { hand: "K♣ J♥", strength: 49 },
-    { hand: "7♠ 2♦", strength: 14 },
-    { hand: "5♥ 6♥", strength: 43 },
-    { hand: "A♣ A♥", strength: 98 }
-  ];
-  const hand = randomChoice(hands);
-  const pot = randomInt(12, 48);
-  const call = randomInt(4, 22);
-  const stack = randomInt(35, 120);
-  const pressure = stack < 55 ? 9 : stack > 95 ? -4 : 1;
-  const edge = hand.strength + pot - call * 2 + pressure;
-  const bestAction = edge > 92 ? "raise" : edge > 52 ? "call" : "fold";
+  const game = createPokerTournament(getPokerMode());
+  startNextPokerHand(game);
+  return game;
+}
+
+function getPokerMode() {
+  return els.pokerModeSelect?.value === "local" ? "local" : "bots";
+}
+
+function createPokerTournament(mode = "bots") {
   return {
     id: makeId(),
-    ...hand,
-    pot,
-    call,
-    stack,
-    bestAction,
-    score: Number(currentPokerGame?.score || 0),
-    answered: false,
-    feedback: ""
+    mode,
+    players: createPokerPlayers(mode),
+    dealerIndex: -1,
+    handNumber: 0,
+    handsPlayed: 0,
+    blindInterval: 3,
+    level: 0,
+    levelIncreasedAt: -1,
+    smallBlind: POKER_BLIND_LEVELS[0].small,
+    bigBlind: POKER_BLIND_LEVELS[0].big,
+    stage: "waiting",
+    board: [],
+    deck: [],
+    pot: 0,
+    currentBet: 0,
+    minRaise: POKER_BLIND_LEVELS[0].big,
+    actionIndex: -1,
+    handActive: false,
+    handComplete: true,
+    tournamentOver: false,
+    heroStackAtHandStart: 0,
+    showdown: null,
+    feedback: "Match a robot table or a local human table, then play real Hold'em streets.",
+    log: []
   };
+}
+
+function createPokerPlayers(mode = "bots") {
+  const names = mode === "local"
+    ? [
+      { id: "hero", name: "You", type: "human" },
+      { id: "guest", name: "Guest", type: "human" },
+      { id: "bot-ivy", name: "Ivy Bot", type: "bot" },
+      { id: "bot-max", name: "Max Bot", type: "bot" }
+    ]
+    : [
+      { id: "hero", name: "You", type: "human" },
+      { id: "bot-ivy", name: "Ivy Bot", type: "bot" },
+      { id: "bot-max", name: "Max Bot", type: "bot" },
+      { id: "bot-rio", name: "Rio Bot", type: "bot" }
+    ];
+  return names.map((player, index) => ({
+    ...player,
+    seat: index,
+    stack: 1000,
+    cards: [],
+    currentBet: 0,
+    committed: 0,
+    inHand: false,
+    folded: false,
+    allIn: false,
+    acted: false,
+    eliminated: false,
+    lastAction: ""
+  }));
 }
 
 function renderPokerGame() {
   if (!currentPokerGame || !els.pokerGamePrompt) return;
-  if (els.pokerGameScore) els.pokerGameScore.textContent = String(Math.round(currentPokerGame.score || 0));
+  const game = currentPokerGame;
+  const hero = getPokerHero(game);
+  if (els.pokerModeSelect && els.pokerModeSelect.value !== game.mode) els.pokerModeSelect.value = game.mode;
+  if (els.pokerGameScore) els.pokerGameScore.textContent = hero ? String(Math.round(hero.stack)) : "0";
+  if (els.pokerStageText) els.pokerStageText.textContent = getPokerStageLabel(game.stage);
+  if (els.pokerBlindText) {
+    const nextBlind = Math.max(0, game.blindInterval - (game.handsPlayed % game.blindInterval));
+    els.pokerBlindText.textContent = `Blinds ${game.smallBlind}/${game.bigBlind} · level ${game.level + 1} · up in ${nextBlind}`;
+  }
+  renderPokerSeats(game);
+  renderPokerBoard(game);
+  renderPokerActions(game);
+  renderPokerLog(game);
+  if (els.pokerPot) els.pokerPot.textContent = `Pot ${game.pot}`;
+  const active = getCurrentPokerPlayer(game);
+  const toCall = active ? getPokerToCall(game, active) : 0;
   els.pokerGamePrompt.innerHTML = `
-    <span>Hand: <b>${escapeHtml(currentPokerGame.hand)}</b></span>
-    <span>Pot ${escapeHtml(String(currentPokerGame.pot))} · call ${escapeHtml(String(currentPokerGame.call))} · stack ${escapeHtml(String(currentPokerGame.stack))}</span>
-    <small>Choose the tournament action with the best risk-adjusted EV.</small>
+    <span>${escapeHtml(game.mode === "local" ? "Local human table" : "Robot match")} · hand <b>#${escapeHtml(String(game.handNumber || 1))}</b></span>
+    <span>${escapeHtml(getPokerStageLabel(game.stage))} · pot ${escapeHtml(String(game.pot))} · current bet ${escapeHtml(String(game.currentBet))}</span>
+    <small>${escapeHtml(game.handComplete ? "Hand finished. Deal the next hand when ready." : `Action on ${active?.name || "table"}${toCall ? `, call ${toCall}` : ", check is available"}.`)}</small>
   `;
-  if (els.pokerGameFeedback) els.pokerGameFeedback.textContent = currentPokerGame.feedback || "";
+  if (els.pokerGameFeedback) els.pokerGameFeedback.textContent = game.feedback || "";
+}
+
+function renderPokerSeats(game) {
+  if (!els.pokerSeatGrid) return;
+  els.pokerSeatGrid.innerHTML = "";
+  game.players.forEach((player, index) => {
+    const seat = document.createElement("div");
+    const isTurn = index === game.actionIndex && game.handActive && !game.handComplete;
+    seat.className = [
+      "poker-seat",
+      player.type === "human" ? "human" : "bot",
+      isTurn ? "active" : "",
+      player.folded ? "folded" : "",
+      player.allIn ? "all-in" : "",
+      player.eliminated || player.stack <= 0 && !player.inHand ? "eliminated" : ""
+    ].filter(Boolean).join(" ");
+    const badges = [];
+    if (index === game.dealerIndex) badges.push("D");
+    if (player.allIn) badges.push("ALL-IN");
+    if (player.folded) badges.push("FOLD");
+    seat.innerHTML = `
+      <div class="poker-seat-top">
+        <strong>${escapeHtml(player.name)}</strong>
+        <span>${badges.map(escapeHtml).join(" · ") || escapeHtml(player.type === "human" ? "Human" : "Bot")}</span>
+      </div>
+      <div class="poker-hole-cards">${renderPokerHoleCards(game, player)}</div>
+      <div class="poker-seat-stack">
+        <span>Stack ${escapeHtml(String(Math.max(0, Math.round(player.stack))))}</span>
+        <span>Bet ${escapeHtml(String(Math.round(player.currentBet || 0)))}</span>
+      </div>
+      <small>${escapeHtml(player.lastAction || (player.inHand ? "Waiting" : "Out"))}</small>
+    `;
+    els.pokerSeatGrid.appendChild(seat);
+  });
+}
+
+function renderPokerHoleCards(game, player) {
+  const shouldReveal = player.type === "human" || game.handComplete || game.stage === "showdown";
+  const cards = player.cards.length ? player.cards : [null, null];
+  return cards.map((card) => shouldReveal && card ? pokerCardHtml(card) : '<span class="poker-card back">?</span>').join("");
+}
+
+function renderPokerBoard(game) {
+  if (!els.pokerBoard) return;
+  els.pokerBoard.innerHTML = "";
+  const cards = [...game.board];
+  while (cards.length < 5) cards.push(null);
+  cards.forEach((card) => {
+    const slot = document.createElement("span");
+    slot.className = card ? `poker-card ${isRedPokerCard(card) ? "red" : ""}` : "poker-card empty";
+    slot.textContent = card ? pokerCardLabel(card) : "";
+    els.pokerBoard.appendChild(slot);
+  });
+}
+
+function renderPokerActions(game) {
+  const active = getCurrentPokerPlayer(game);
+  const canAct = Boolean(active && active.type === "human" && game.handActive && !game.handComplete && !game.tournamentOver);
+  const toCall = active ? getPokerToCall(game, active) : 0;
+  document.querySelectorAll("[data-poker-action]").forEach((button) => {
+    const action = button.dataset.pokerAction;
+    button.disabled = !canAct;
+    if (action === "call") button.textContent = toCall ? `Call ${toCall}` : "Check";
+    if (action === "raise") button.textContent = "Raise";
+    if (action === "allin") button.textContent = "All-in";
+  });
+  if (els.pokerRaiseInput) {
+    const minRaiseTo = active ? getMinimumPokerRaiseTo(game, active) : 0;
+    const maxRaiseTo = active ? active.currentBet + active.stack : 0;
+    els.pokerRaiseInput.disabled = !canAct;
+    els.pokerRaiseInput.min = String(minRaiseTo);
+    els.pokerRaiseInput.max = String(maxRaiseTo);
+    els.pokerRaiseInput.step = String(game.bigBlind);
+    if (canAct && (!Number(els.pokerRaiseInput.value) || Number(els.pokerRaiseInput.value) < minRaiseTo)) {
+      els.pokerRaiseInput.value = String(Math.min(maxRaiseTo, minRaiseTo));
+    }
+  }
+  if (els.pokerTurnPrompt) {
+    els.pokerTurnPrompt.textContent = canAct
+      ? `${active.name} to act · ${toCall ? `call ${toCall}` : "check or bet"} · stack ${active.stack}`
+      : game.handComplete
+        ? "Hand complete."
+        : "Bots are acting...";
+  }
+  if (els.nextPokerGameBtn) {
+    els.nextPokerGameBtn.disabled = Boolean(game.handActive && !game.handComplete && !game.tournamentOver);
+    els.nextPokerGameBtn.textContent = game.tournamentOver ? "New tournament" : "Next hand";
+  }
+}
+
+function renderPokerLog(game) {
+  if (!els.pokerLog) return;
+  els.pokerLog.innerHTML = "";
+  game.log.slice(-7).reverse().forEach((line) => {
+    const row = document.createElement("div");
+    row.textContent = line;
+    els.pokerLog.appendChild(row);
+  });
 }
 
 function newPokerGame(renderAfter = true) {
+  if (!currentPokerGame || currentPokerGame.tournamentOver) {
+    resetPokerTournament(false);
+  } else if (currentPokerGame.handActive && !currentPokerGame.handComplete) {
+    currentPokerGame.feedback = "Finish the current hand before dealing the next one.";
+  } else {
+    startNextPokerHand(currentPokerGame);
+  }
+  if (renderAfter) renderMentalMath();
+}
+
+function resetPokerTournament(renderAfter = true) {
   currentPokerGame = makePokerGameRound();
   if (renderAfter) renderMentalMath();
 }
 
-function submitPokerAction(action) {
-  if (!currentPokerGame || !action) return;
-  if (currentPokerGame.answered) {
-    currentPokerGame.feedback = "Hand already scored. Start a new hand.";
-    renderPokerGame();
+function startNextPokerHand(game) {
+  if (!game) return;
+  maybeIncreasePokerBlinds(game);
+  game.players.forEach((player) => {
+    player.eliminated = player.stack <= 0;
+    player.cards = [];
+    player.currentBet = 0;
+    player.committed = 0;
+    player.inHand = !player.eliminated;
+    player.folded = false;
+    player.allIn = false;
+    player.acted = false;
+    player.lastAction = player.eliminated ? "Eliminated" : "";
+  });
+  const livePlayers = game.players.filter((player) => !player.eliminated);
+  if (livePlayers.length <= 1) {
+    game.tournamentOver = true;
+    game.handActive = false;
+    game.handComplete = true;
+    game.feedback = livePlayers[0] ? `${livePlayers[0].name} wins the tournament.` : "Tournament complete.";
+    addPokerLog(game, game.feedback);
     return;
   }
-  const correct = action === currentPokerGame.bestAction;
-  const score = correct ? 12 : -5;
-  currentPokerGame.score = Number(currentPokerGame.score || 0) + score;
-  currentPokerGame.answered = true;
-  currentPokerGame.feedback = correct
-    ? `Good ${action}. Strength ${currentPokerGame.strength}; pressure-adjusted EV supports it.`
-    : `Best action was ${currentPokerGame.bestAction}. Strength ${currentPokerGame.strength}, call ${currentPokerGame.call}, pot ${currentPokerGame.pot}.`;
-  recordGameResult("poker", score, `Poker ${currentPokerGame.hand}: chose ${action}, best ${currentPokerGame.bestAction}`);
+  game.handNumber += 1;
+  game.stage = "preflop";
+  game.board = [];
+  game.deck = shufflePokerDeck(createPokerDeck());
+  game.pot = 0;
+  game.currentBet = 0;
+  game.minRaise = game.bigBlind;
+  game.showdown = null;
+  game.handActive = true;
+  game.handComplete = false;
+  game.heroStackAtHandStart = getPokerHero(game)?.stack || 0;
+  game.dealerIndex = nextPokerSeatWithStack(game, game.dealerIndex);
+  const blindSeats = getPokerBlindSeats(game);
+  dealPokerHoleCards(game);
+  postPokerBlind(game, blindSeats.small, game.smallBlind, "small blind");
+  postPokerBlind(game, blindSeats.big, game.bigBlind, "big blind");
+  game.actionIndex = nextPokerActionSeat(game, blindSeats.big);
+  addPokerLog(game, `Hand #${game.handNumber}: blinds ${game.smallBlind}/${game.bigBlind}.`);
+  game.feedback = `${game.players[game.dealerIndex].name} has the button.`;
+  continuePokerHand(game);
+}
+
+function submitPokerAction(action) {
+  const game = currentPokerGame;
+  if (!game || !action || game.handComplete || game.tournamentOver) return;
+  const player = getCurrentPokerPlayer(game);
+  if (!player || player.type !== "human") return;
+  const raiseTo = action === "raise" ? Number(els.pokerRaiseInput?.value || 0) : 0;
+  performPokerAction(game, game.actionIndex, action, raiseTo);
+  continuePokerHand(game);
   renderPokerGame();
   renderSkills();
+}
+
+function continuePokerHand(game) {
+  let guard = 0;
+  while (game.handActive && !game.handComplete && !game.tournamentOver && guard < 80) {
+    guard += 1;
+    const contenders = getPokerContenders(game);
+    if (contenders.length <= 1) {
+      awardPokerPot(game, contenders[0], "Everyone else folded.");
+      break;
+    }
+    const eligible = getPokerEligiblePlayers(game);
+    if (!eligible.length) {
+      runPokerBoardToShowdown(game);
+      break;
+    }
+    if (isPokerBettingRoundComplete(game)) {
+      advancePokerStreet(game);
+      continue;
+    }
+    if (!isPokerActionSeat(game, game.actionIndex)) {
+      game.actionIndex = nextPokerActionSeat(game, game.actionIndex);
+      continue;
+    }
+    const player = game.players[game.actionIndex];
+    if (player.type === "human") break;
+    const botDecision = choosePokerBotAction(game, player);
+    performPokerAction(game, game.actionIndex, botDecision.action, botDecision.raiseTo);
+  }
+  if (guard >= 80) {
+    game.feedback = "Poker engine paused after too many automatic actions. Start a new hand.";
+    game.handComplete = true;
+    game.handActive = false;
+  }
+}
+
+function performPokerAction(game, playerIndex, action, raiseTo = 0) {
+  const player = game.players[playerIndex];
+  if (!player || !player.inHand || player.folded || player.allIn) return;
+  const toCall = getPokerToCall(game, player);
+  if (action === "fold") {
+    player.folded = true;
+    player.acted = true;
+    player.lastAction = "Fold";
+    addPokerLog(game, `${player.name} folds.`);
+    game.actionIndex = nextPokerActionSeat(game, playerIndex);
+    return;
+  }
+  if (action === "allin") {
+    raiseTo = player.currentBet + player.stack;
+    action = raiseTo > game.currentBet ? "raise" : "call";
+  }
+  if (action === "raise") {
+    const previousBet = game.currentBet;
+    const maxTotal = player.currentBet + player.stack;
+    const minTotal = getMinimumPokerRaiseTo(game, player);
+    const targetTotal = Math.min(maxTotal, Math.max(minTotal, Math.round(Number(raiseTo || minTotal))));
+    const paid = commitPokerChips(player, targetTotal - player.currentBet);
+    if (targetTotal > previousBet) {
+      const raiseSize = targetTotal - previousBet;
+      game.currentBet = targetTotal;
+      game.minRaise = Math.max(game.bigBlind, raiseSize);
+      game.players.forEach((other) => {
+        if (other.inHand && !other.folded && !other.allIn && other.id !== player.id) other.acted = false;
+      });
+    }
+    player.acted = true;
+    player.lastAction = player.allIn ? "All-in" : `Raise to ${player.currentBet}`;
+    game.pot += paid;
+    addPokerLog(game, `${player.name} raises to ${player.currentBet}${player.allIn ? " and is all-in" : ""}.`);
+    game.actionIndex = nextPokerActionSeat(game, playerIndex);
+    return;
+  }
+  const paid = commitPokerChips(player, toCall);
+  game.pot += paid;
+  player.acted = true;
+  player.lastAction = toCall ? `Call ${paid}` : "Check";
+  addPokerLog(game, toCall ? `${player.name} calls ${paid}${player.allIn ? " and is all-in" : ""}.` : `${player.name} checks.`);
+  game.actionIndex = nextPokerActionSeat(game, playerIndex);
+}
+
+function commitPokerChips(player, amount) {
+  const paid = Math.min(Math.max(0, Math.round(Number(amount || 0))), player.stack);
+  player.stack -= paid;
+  player.currentBet += paid;
+  player.committed += paid;
+  if (player.stack <= 0) {
+    player.stack = 0;
+    player.allIn = true;
+  }
+  return paid;
+}
+
+function advancePokerStreet(game) {
+  if (game.stage === "river") {
+    showdownPokerHand(game);
+    return;
+  }
+  game.stage = game.stage === "preflop" ? "flop" : game.stage === "flop" ? "turn" : "river";
+  const cardsToDeal = game.stage === "flop" ? 3 : 1;
+  for (let index = 0; index < cardsToDeal; index += 1) {
+    const card = drawPokerCard(game);
+    if (card) game.board.push(card);
+  }
+  resetPokerStreetBets(game);
+  game.actionIndex = nextPokerActionSeat(game, game.dealerIndex);
+  addPokerLog(game, `${getPokerStageLabel(game.stage)}: ${game.board.map(pokerCardLabel).join(" ")}.`);
+}
+
+function runPokerBoardToShowdown(game) {
+  while (game.stage !== "river") advancePokerStreet(game);
+  showdownPokerHand(game);
+}
+
+function showdownPokerHand(game) {
+  const contenders = getPokerContenders(game);
+  const results = contenders.map((player) => ({
+    player,
+    hand: evaluatePokerHand([...player.cards, ...game.board])
+  }));
+  results.sort((a, b) => comparePokerHands(b.hand, a.hand));
+  const best = results[0]?.hand;
+  const winners = results.filter((result) => best && comparePokerHands(result.hand, best) === 0);
+  const share = winners.length ? Math.floor(game.pot / winners.length) : 0;
+  winners.forEach((result) => {
+    result.player.stack += share;
+  });
+  const winnerNames = winners.map((result) => result.player.name).join(", ");
+  const bestName = best ? `${best.name} (${best.cards.map(pokerCardLabel).join(" ")})` : "best hand";
+  game.showdown = { winners: winners.map((result) => result.player.id), results };
+  finishPokerHand(game, `${winnerNames} wins ${game.pot} with ${bestName}.`);
+}
+
+function awardPokerPot(game, winner, reason = "") {
+  if (winner) winner.stack += game.pot;
+  finishPokerHand(game, `${winner?.name || "Nobody"} wins ${game.pot}. ${reason}`.trim());
+}
+
+function finishPokerHand(game, message) {
+  game.feedback = message;
+  game.handComplete = true;
+  game.handActive = false;
+  game.stage = game.showdown ? "showdown" : game.stage;
+  game.actionIndex = -1;
+  game.handsPlayed += 1;
+  game.players.forEach((player) => {
+    player.eliminated = player.stack <= 0;
+    if (player.eliminated) player.lastAction = "Eliminated";
+  });
+  addPokerLog(game, message);
+  recordPokerHandResult(game, message);
+  const livePlayers = game.players.filter((player) => !player.eliminated);
+  if (livePlayers.length <= 1) {
+    game.tournamentOver = true;
+    game.feedback = `${livePlayers[0]?.name || "Winner"} wins the tournament.`;
+    addPokerLog(game, game.feedback);
+  }
+}
+
+function recordPokerHandResult(game, message) {
+  if (game.recordedHandId === `${game.id}:${game.handNumber}`) return;
+  game.recordedHandId = `${game.id}:${game.handNumber}`;
+  const hero = getPokerHero(game);
+  if (!hero) return;
+  const chipDelta = hero.stack - game.heroStackAtHandStart;
+  const score = clampNumber(Math.round(chipDelta / Math.max(game.bigBlind, 1)), -24, 36);
+  recordGameResult("poker", score, `Poker hand #${game.handNumber}: ${message} Hero ${chipDelta >= 0 ? "+" : ""}${chipDelta} chips`);
+}
+
+function choosePokerBotAction(game, player) {
+  const toCall = getPokerToCall(game, player);
+  const strength = getPokerDecisionStrength(game, player) + randomInt(-8, 8);
+  const potOddsPressure = toCall ? (toCall / Math.max(game.pot + toCall, 1)) * 100 : 0;
+  if (toCall > 0) {
+    if (strength < 28 + potOddsPressure * 0.8 && toCall > game.bigBlind * 0.5) return { action: "fold" };
+    if (strength > 76 && player.stack > toCall + game.bigBlind * 2) {
+      return { action: "raise", raiseTo: Math.min(player.currentBet + player.stack, game.currentBet + game.minRaise * randomChoice([1, 2, 3])) };
+    }
+    return { action: "call" };
+  }
+  if (strength > 72 && player.stack > game.bigBlind * 2) {
+    return { action: "raise", raiseTo: Math.min(player.currentBet + player.stack, game.bigBlind * randomChoice([2, 3, 4])) };
+  }
+  if (strength > 58 && Math.random() < 0.2 && player.stack > game.bigBlind * 2) {
+    return { action: "raise", raiseTo: Math.min(player.currentBet + player.stack, game.bigBlind * 2) };
+  }
+  return { action: "call" };
+}
+
+function getPokerDecisionStrength(game, player) {
+  if (!game.board.length) return estimatePreflopStrength(player.cards);
+  const evaluated = evaluatePokerHand([...player.cards, ...game.board]);
+  const base = evaluated.rank * 12 + (evaluated.tiebreakers[0] || 0) * 1.4;
+  const boardPressure = game.board.length < 5 ? 6 : 0;
+  return clampNumber(Math.round(base + boardPressure), 0, 100);
+}
+
+function estimatePreflopStrength(cards) {
+  if (!cards || cards.length < 2) return 0;
+  const [a, b] = [...cards].sort((left, right) => right.value - left.value);
+  const pair = a.value === b.value;
+  const suited = a.suit === b.suit;
+  const gap = Math.abs(a.value - b.value);
+  let score = a.value * 3 + b.value * 2 - gap * 2;
+  if (pair) score += 34 + a.value * 2;
+  if (suited) score += 7;
+  if (gap <= 1) score += 6;
+  if (a.value === 14) score += 8;
+  return clampNumber(Math.round(score), 8, 98);
+}
+
+function evaluatePokerHand(cards) {
+  const sorted = [...cards].filter(Boolean).sort((a, b) => b.value - a.value);
+  const groups = new Map();
+  sorted.forEach((card) => {
+    if (!groups.has(card.value)) groups.set(card.value, []);
+    groups.get(card.value).push(card);
+  });
+  const groupsByCount = [...groups.entries()]
+    .map(([value, valueCards]) => ({ value: Number(value), cards: valueCards, count: valueCards.length }))
+    .sort((a, b) => b.count - a.count || b.value - a.value);
+  const flushCards = POKER_SUITS
+    .map((suit) => sorted.filter((card) => card.suit === suit.key))
+    .find((suitedCards) => suitedCards.length >= 5);
+  const straightHigh = findPokerStraightHigh([...groups.keys()].map(Number));
+  const straightFlushHigh = flushCards ? findPokerStraightHigh([...new Set(flushCards.map((card) => card.value))]) : 0;
+  if (straightFlushHigh) return buildPokerEval(8, [straightFlushHigh], straightCards(sorted, straightFlushHigh, flushCards?.[0]?.suit));
+  const quads = groupsByCount.find((group) => group.count === 4);
+  if (quads) {
+    const kicker = sorted.find((card) => card.value !== quads.value);
+    return buildPokerEval(7, [quads.value, kicker?.value || 0], [...quads.cards, kicker].filter(Boolean));
+  }
+  const trips = groupsByCount.filter((group) => group.count >= 3);
+  const pairs = groupsByCount.filter((group) => group.count >= 2 && group.value !== trips[0]?.value);
+  if (trips.length && (pairs.length || trips.length > 1)) {
+    const pairGroup = pairs[0] || trips[1];
+    return buildPokerEval(6, [trips[0].value, pairGroup.value], [...trips[0].cards.slice(0, 3), ...pairGroup.cards.slice(0, 2)]);
+  }
+  if (flushCards) return buildPokerEval(5, flushCards.slice(0, 5).map((card) => card.value), flushCards.slice(0, 5));
+  if (straightHigh) return buildPokerEval(4, [straightHigh], straightCards(sorted, straightHigh));
+  if (trips.length) {
+    const kickers = sorted.filter((card) => card.value !== trips[0].value).slice(0, 2);
+    return buildPokerEval(3, [trips[0].value, ...kickers.map((card) => card.value)], [...trips[0].cards.slice(0, 3), ...kickers]);
+  }
+  const madePairs = groupsByCount.filter((group) => group.count >= 2);
+  if (madePairs.length >= 2) {
+    const topPairs = madePairs.slice(0, 2);
+    const kicker = sorted.find((card) => !topPairs.some((pair) => pair.value === card.value));
+    return buildPokerEval(2, [topPairs[0].value, topPairs[1].value, kicker?.value || 0], [...topPairs[0].cards.slice(0, 2), ...topPairs[1].cards.slice(0, 2), kicker].filter(Boolean));
+  }
+  if (madePairs.length === 1) {
+    const kickers = sorted.filter((card) => card.value !== madePairs[0].value).slice(0, 3);
+    return buildPokerEval(1, [madePairs[0].value, ...kickers.map((card) => card.value)], [...madePairs[0].cards.slice(0, 2), ...kickers]);
+  }
+  return buildPokerEval(0, sorted.slice(0, 5).map((card) => card.value), sorted.slice(0, 5));
+}
+
+function buildPokerEval(rank, tiebreakers, cards) {
+  return {
+    rank,
+    name: POKER_HAND_NAMES[rank] || "Hand",
+    tiebreakers,
+    cards: cards.filter(Boolean).slice(0, 5)
+  };
+}
+
+function comparePokerHands(a, b) {
+  if ((a?.rank || 0) !== (b?.rank || 0)) return (a?.rank || 0) - (b?.rank || 0);
+  const left = a?.tiebreakers || [];
+  const right = b?.tiebreakers || [];
+  for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+    const diff = (left[index] || 0) - (right[index] || 0);
+    if (diff) return diff;
+  }
+  return 0;
+}
+
+function findPokerStraightHigh(values) {
+  const unique = [...new Set(values)].sort((a, b) => b - a);
+  if (unique.includes(14)) unique.push(1);
+  for (let index = 0; index <= unique.length - 5; index += 1) {
+    const run = unique.slice(index, index + 5);
+    if (run.every((value, runIndex) => runIndex === 0 || value === run[runIndex - 1] - 1)) return run[0] === 1 ? 5 : run[0];
+  }
+  return 0;
+}
+
+function straightCards(cards, high, suit = "") {
+  const values = high === 5 ? [5, 4, 3, 2, 14] : [high, high - 1, high - 2, high - 3, high - 4];
+  return values.map((value) => cards.find((card) => card.value === value && (!suit || card.suit === suit))).filter(Boolean);
+}
+
+function createPokerDeck() {
+  return POKER_SUITS.flatMap((suit) => POKER_RANKS.map((rank, index) => ({
+    rank,
+    value: index + 2,
+    suit: suit.key,
+    suitSymbol: suit.symbol,
+    id: `${rank}${suit.key}`
+  })));
+}
+
+function shufflePokerDeck(deck) {
+  const cards = [...deck];
+  for (let index = cards.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(0, index);
+    [cards[index], cards[swapIndex]] = [cards[swapIndex], cards[index]];
+  }
+  return cards;
+}
+
+function drawPokerCard(game) {
+  return game.deck.pop();
+}
+
+function dealPokerHoleCards(game) {
+  for (let round = 0; round < 2; round += 1) {
+    game.players.forEach((player) => {
+      if (player.inHand) player.cards.push(drawPokerCard(game));
+    });
+  }
+}
+
+function postPokerBlind(game, playerIndex, amount, label) {
+  const player = game.players[playerIndex];
+  const paid = commitPokerChips(player, amount);
+  player.acted = false;
+  player.lastAction = `${label} ${paid}`;
+  game.currentBet = Math.max(game.currentBet, player.currentBet);
+  game.pot += paid;
+  addPokerLog(game, `${player.name} posts ${label} ${paid}.`);
+}
+
+function resetPokerStreetBets(game) {
+  game.currentBet = 0;
+  game.minRaise = game.bigBlind;
+  game.players.forEach((player) => {
+    player.currentBet = 0;
+    player.acted = false;
+  });
+}
+
+function maybeIncreasePokerBlinds(game) {
+  if (game.handsPlayed > 0 && game.handsPlayed % game.blindInterval === 0 && game.levelIncreasedAt !== game.handsPlayed) {
+    game.level = Math.min(POKER_BLIND_LEVELS.length - 1, game.level + 1);
+    game.levelIncreasedAt = game.handsPlayed;
+    const level = POKER_BLIND_LEVELS[game.level];
+    game.smallBlind = level.small;
+    game.bigBlind = level.big;
+    game.minRaise = level.big;
+    addPokerLog(game, `Blinds increase to ${game.smallBlind}/${game.bigBlind}.`);
+  }
+}
+
+function getPokerBlindSeats(game) {
+  const liveCount = game.players.filter((player) => !player.eliminated).length;
+  if (liveCount === 2) {
+    return {
+      small: game.dealerIndex,
+      big: nextPokerSeatWithStack(game, game.dealerIndex)
+    };
+  }
+  const small = nextPokerSeatWithStack(game, game.dealerIndex);
+  return {
+    small,
+    big: nextPokerSeatWithStack(game, small)
+  };
+}
+
+function nextPokerSeatWithStack(game, fromIndex) {
+  for (let step = 1; step <= game.players.length; step += 1) {
+    const index = (fromIndex + step + game.players.length) % game.players.length;
+    if (game.players[index].stack > 0) return index;
+  }
+  return 0;
+}
+
+function nextPokerActionSeat(game, fromIndex) {
+  for (let step = 1; step <= game.players.length; step += 1) {
+    const index = (fromIndex + step + game.players.length) % game.players.length;
+    if (isPokerActionSeat(game, index)) return index;
+  }
+  return -1;
+}
+
+function isPokerActionSeat(game, index) {
+  const player = game.players[index];
+  return Boolean(player && player.inHand && !player.folded && !player.allIn && player.stack > 0);
+}
+
+function getPokerContenders(game) {
+  return game.players.filter((player) => player.inHand && !player.folded);
+}
+
+function getPokerEligiblePlayers(game) {
+  return game.players.filter((player) => player.inHand && !player.folded && !player.allIn && player.stack > 0);
+}
+
+function isPokerBettingRoundComplete(game) {
+  const eligible = getPokerEligiblePlayers(game);
+  if (!eligible.length) return true;
+  return eligible.every((player) => player.acted && player.currentBet === game.currentBet);
+}
+
+function getPokerToCall(game, player) {
+  return Math.max(0, game.currentBet - (player?.currentBet || 0));
+}
+
+function getMinimumPokerRaiseTo(game, player) {
+  if (!player) return 0;
+  if (game.currentBet <= 0) return Math.min(player.stack, game.bigBlind);
+  return Math.min(player.currentBet + player.stack, game.currentBet + game.minRaise);
+}
+
+function getCurrentPokerPlayer(game) {
+  return game.players[game.actionIndex] || null;
+}
+
+function getPokerHero(game) {
+  return game.players.find((player) => player.id === "hero") || game.players[0];
+}
+
+function getPokerStageLabel(stage) {
+  const labels = {
+    waiting: "Waiting",
+    preflop: "Preflop",
+    flop: "Flop",
+    turn: "Turn",
+    river: "River",
+    showdown: "Showdown"
+  };
+  return labels[stage] || "Hand";
+}
+
+function addPokerLog(game, line) {
+  if (!line) return;
+  game.log = [...(game.log || []), line].slice(-24);
+  game.feedback = line;
+}
+
+function pokerCardLabel(card) {
+  return `${card.rank}${card.suitSymbol}`;
+}
+
+function pokerCardHtml(card) {
+  return `<span class="poker-card ${isRedPokerCard(card) ? "red" : ""}">${escapeHtml(pokerCardLabel(card))}</span>`;
+}
+
+function isRedPokerCard(card) {
+  return card?.suit === "h" || card?.suit === "d";
 }
 
 function recordGameResult(game, score, detail) {

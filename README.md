@@ -34,6 +34,8 @@ Open:
 http://127.0.0.1:5176/index.html
 ```
 
+Language can be switched from the app header or Settings. The static app supports Chinese and English with one shared UI and localized copy; `?lang=zh` / `?lang=en` work in local development, and the deployment build also emits `/zh/` and `/en/` entry pages.
+
 Start the LLM proxy when you need mock interviews, log classification, or LLM resume feedback:
 
 ```bash
@@ -41,6 +43,8 @@ node llm-proxy/server.mjs
 ```
 
 The proxy reads local secrets from `.env`. Copy [.env.example](./.env.example) and fill in real values locally. Do not commit `.env`.
+
+The News module uses the proxy's `/news` route for RSS / Google News style aggregation, then keeps LinkedIn, Xiaohongshu, and other social platforms as manual signal links with original-site verification. Do not scrape social platforms or mirror their posts into QuantGym.
 
 ## Local Endpoints
 

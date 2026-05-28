@@ -1203,6 +1203,89 @@ main {
   -webkit-backdrop-filter: var(--blur);
 }
 
+.news-intel-board {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid var(--line-bright);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(245, 247, 255, 0.7)),
+    var(--panel);
+  box-shadow: 0 12px 34px rgba(60, 44, 120, 0.06);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+.news-intel-copy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.news-intel-copy strong {
+  color: var(--text-main);
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.news-intel-copy span,
+.news-social-hint {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 680;
+  line-height: 1.55;
+}
+
+.news-intel-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.news-intel-stat {
+  display: grid;
+  gap: 3px;
+  min-height: 62px;
+  padding: 10px 12px;
+  border: 1px solid rgba(99, 91, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.news-intel-stat strong {
+  color: var(--text-main);
+  font-size: 1.12rem;
+  font-weight: 940;
+}
+
+.news-intel-stat small {
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 760;
+}
+
+.news-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.news-topic-filter,
+.news-source-filter {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.news-social-hint {
+  margin: 0;
+}
+
 .news-form textarea,
 .news-form button {
   grid-column: 1 / -1;
@@ -1247,6 +1330,17 @@ main {
 
 .news-card.read {
   border-color: rgba(95, 97, 242, 0.32);
+}
+
+.news-card.news-source-linkedin,
+.news-card.news-source-xiaohongshu,
+.news-card.news-source-social,
+.news-card.news-source-manual {
+  border-color: rgba(82, 102, 255, 0.26);
+}
+
+.news-card.news-source-official {
+  border-color: rgba(49, 143, 91, 0.28);
 }
 
 .read-badge {
@@ -2611,6 +2705,19 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .news-intel-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .news-filter-row {
+    align-items: stretch;
+  }
+
+  .news-topic-filter,
+  .news-source-filter {
+    width: 100%;
+  }
+
   .account-avatar-row {
     grid-template-columns: 1fr;
     justify-items: start;
@@ -3862,6 +3969,10 @@ body.is-authenticated .news-list {
 }
 
 @media (max-width: 760px) {
+  .learning-path-panel {
+    grid-template-columns: 1fr;
+  }
+
   body.is-authenticated {
     padding: 0;
   }
@@ -6103,6 +6214,149 @@ body.is-authenticated .problem-card .problem-prompt mjx-container {
   gap: var(--space-6);
 }
 
+.learning-path-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
+  gap: 18px;
+  margin-bottom: var(--space-6);
+  padding: 18px;
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+  background: #fffdf9;
+}
+
+.learning-path-panel h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.learning-path-panel p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.course-path-list {
+  display: grid;
+  gap: 10px;
+}
+
+.course-path-item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 36px 36px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  background: #fbfaf6;
+}
+
+.course-path-item.is-done {
+  opacity: 0.72;
+}
+
+.course-path-index {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: #171717;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.course-path-item strong,
+.course-path-item small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-path-item small {
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.course-source-bar,
+.course-actions,
+.resource-source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.course-source-bar button,
+.resource-source-links a {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.course-source-bar button.active {
+  border-color: #171717;
+  background: #171717;
+  color: #fff;
+}
+
+.course-player,
+.resource-player {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  background: #111;
+}
+
+.course-player iframe,
+.resource-player iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.course-player-fallback {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 18px;
+  color: #fff;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.course-actions .secondary-button.is-active {
+  border-color: #171717;
+  background: #171717;
+  color: #fff;
+}
+
+.course-note-field {
+  display: grid;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.course-note-field textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 86px;
+}
+
 .course-card.spotlight,
 .job-card.spotlight,
 .content-card.spotlight {
@@ -7020,7 +7274,7 @@ body:not(.is-authenticated) .topbar {
 }
 
 body:not(.is-authenticated) .top-actions {
-  display: none;
+  display: flex;
 }
 
 body:not(.is-authenticated) .brand h1 {
@@ -9791,6 +10045,28 @@ body.is-authenticated .global-search-result {
     linear-gradient(135deg, #fbfcff 0%, #f5f7fa 100%);
 }
 
+.poker-table-card {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 0.94fr) minmax(320px, 0.56fr);
+  align-items: start;
+}
+
+.poker-table-card .game-card-head,
+.poker-table-card .poker-match-bar,
+.poker-table-card .poker-table,
+.poker-table-card .game-feedback,
+.poker-table-card .poker-log {
+  grid-column: 1 / -1;
+}
+
+.poker-table-card .game-prompt,
+.poker-table-card .poker-turn-prompt,
+.poker-table-card .poker-raise-control,
+.poker-table-card .poker-action-grid,
+.poker-table-card .game-actions {
+  grid-column: 2;
+}
+
 .game-card-head {
   display: flex;
   align-items: start;
@@ -9812,6 +10088,203 @@ body.is-authenticated .global-search-result {
   border-radius: 12px;
   background: #18181b;
   color: #fff;
+}
+
+.poker-match-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.poker-match-bar select {
+  min-height: 38px;
+  min-width: 180px;
+  padding: 0 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text-main);
+  font-weight: 820;
+}
+
+.poker-table {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  min-height: 440px;
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(38, 126, 84, 0.24);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(41, 148, 96, 0.34), transparent 42%),
+    linear-gradient(135deg, #143d31, #0d221d 70%);
+  color: #fff;
+  box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.04), 0 20px 50px rgba(16, 38, 32, 0.16);
+}
+
+.poker-table::before {
+  content: "";
+  position: absolute;
+  inset: 76px 120px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.poker-table-meta,
+.poker-pot {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.86rem;
+  font-weight: 880;
+}
+
+.poker-pot {
+  justify-content: center;
+  min-height: 34px;
+  align-items: center;
+  justify-self: center;
+  min-width: 118px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+}
+
+.poker-seat-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.poker-seat {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(10px);
+  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+}
+
+.poker-seat.active {
+  transform: translateY(-2px);
+  border-color: rgba(255, 224, 123, 0.72);
+  background: rgba(255, 224, 123, 0.16);
+}
+
+.poker-seat.folded,
+.poker-seat.eliminated {
+  opacity: 0.52;
+}
+
+.poker-seat-top,
+.poker-seat-stack {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.poker-seat-top strong,
+.poker-seat-top span,
+.poker-seat-stack span,
+.poker-seat small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.poker-seat-top strong {
+  color: #fff;
+  font-size: 0.94rem;
+}
+
+.poker-seat-top span,
+.poker-seat-stack,
+.poker-seat small {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.76rem;
+  font-weight: 780;
+}
+
+.poker-hole-cards,
+.poker-board {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.poker-board {
+  position: relative;
+  z-index: 1;
+  min-height: 84px;
+}
+
+.poker-card {
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 62px;
+  border: 1px solid rgba(30, 34, 42, 0.12);
+  border-radius: 9px;
+  background: #fff;
+  color: #16181d;
+  font-size: 1.06rem;
+  font-weight: 950;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
+}
+
+.poker-card.red {
+  color: #d0364f;
+}
+
+.poker-card.back {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03)),
+    #343ce0;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.poker-card.empty {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.poker-turn-prompt {
+  min-height: 38px;
+  padding: 10px 12px;
+  border: 1px solid rgba(99, 91, 255, 0.13);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text-main);
+  font-weight: 850;
+}
+
+.poker-raise-control {
+  display: grid;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-weight: 850;
+}
+
+.poker-raise-control input {
+  min-height: 42px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 0 12px;
 }
 
 .game-prompt {
@@ -9852,7 +10325,7 @@ body.is-authenticated .global-search-result {
 
 .poker-action-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -9876,6 +10349,30 @@ body.is-authenticated .global-search-result {
   min-height: 24px;
   color: var(--text-secondary);
   font-weight: 750;
+}
+
+.poker-log {
+  display: grid;
+  gap: 6px;
+  max-height: 150px;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  font-weight: 740;
+}
+
+.poker-log div {
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eef0f5;
+}
+
+.poker-log div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .messages-layout {
@@ -10067,12 +10564,47 @@ body.is-authenticated .global-search-result {
     grid-template-columns: 1fr;
   }
 
+  .poker-table-card,
+  .poker-table-card .game-prompt,
+  .poker-table-card .poker-turn-prompt,
+  .poker-table-card .poker-raise-control,
+  .poker-table-card .poker-action-grid,
+  .poker-table-card .game-actions {
+    grid-column: 1;
+  }
+
+  .poker-table-card {
+    grid-template-columns: 1fr;
+  }
+
+  .poker-seat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .poker-table::before {
+    inset: 96px 28px;
+  }
+
   .drill-options {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 620px) {
+  .poker-action-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .poker-card {
+    width: 38px;
+    height: 54px;
+    font-size: 0.92rem;
+  }
+
+  .poker-table {
+    padding: 14px;
+  }
+
   .problem-company-list {
     grid-template-columns: 1fr;
   }
