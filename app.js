@@ -4820,6 +4820,7 @@ function switchModule(moduleName = "overview") {
   document.querySelectorAll("[data-module-view]").forEach((view) => {
     view.classList.toggle("active", view.dataset.moduleView === targetModule);
   });
+  if (targetModule === "overview") renderNewsTicker();
   if (targetModule === "news") {
     renderNewsTicker();
     renderNews();
@@ -5295,7 +5296,7 @@ function getContributionStatsByDay(today = new Date()) {
 
 function renderOverviewContributionHeatmap() {
   if (!els.overviewContributionHeatmap) return;
-  const heatmap = buildMonthlyContributionHeatmap(4);
+  const heatmap = buildRecentContributionHeatmap(12);
   els.overviewContributionHeatmap.innerHTML = "";
   const grid = document.createElement("div");
   grid.className = "contribution-heatmap-grid";
@@ -5307,14 +5308,14 @@ function renderOverviewContributionHeatmap() {
     const cell = document.createElement("span");
     cell.className = [
       "contribution-heatmap-cell",
-      `level-${day.inRange ? day.level : 0}`,
-      day.inRange ? "" : "is-empty",
-      day.key === dayKey(new Date()) ? "is-today" : "",
-      day.future ? "is-future" : ""
+      `level-${day.future ? 0 : day.level}`,
+      day.future ? "is-future" : "",
+      day.key === dayKey(new Date()) ? "is-today" : ""
     ].filter(Boolean).join(" ");
     cell.style.setProperty("--v", String(day.level));
-    cell.title = day.inRange
-      ? `${formatNewsDate(day.key)} · ${day.xp} XP · ${Math.floor(day.completed)} completed`
+    const completedLabel = getLanguage() === "en" ? "completed" : "完成";
+    cell.title = !day.future
+      ? `${formatNewsDate(day.key)} · ${day.xp} XP · ${Math.floor(day.completed)} ${completedLabel}`
       : "";
     grid.appendChild(cell);
   });
@@ -5322,50 +5323,67 @@ function renderOverviewContributionHeatmap() {
   const labels = document.createElement("div");
   labels.className = "contribution-month-labels";
   labels.style.gridTemplateColumns = `repeat(${heatmap.weekCount}, var(--heatmap-cell-size))`;
-  heatmap.months.forEach((month) => {
+  heatmap.labels.forEach((month) => {
     const label = document.createElement("span");
     label.textContent = month.label;
-    label.style.gridColumn = `${month.startWeek + 1} / span ${Math.min(3, heatmap.weekCount - month.startWeek)}`;
+    label.style.gridColumn = `${month.startWeek + 1} / span ${Math.min(month.weekSpan, heatmap.weekCount - month.startWeek)}`;
     labels.appendChild(label);
   });
 
-  els.overviewContributionHeatmap.append(grid, labels);
+  const summary = document.createElement("div");
+  summary.className = "contribution-range-label";
+  const rangeLabel = getLanguage() === "en" ? "Last 12 weeks" : "最近 12 周";
+  summary.textContent = `${rangeLabel} · ${formatNewsDate(heatmap.startKey)} - ${formatNewsDate(heatmap.endKey)}`;
+
+  els.overviewContributionHeatmap.append(grid, labels, summary);
 }
 
-function buildMonthlyContributionHeatmap(monthCount = 4) {
+function buildRecentContributionHeatmap(weekCount = 12) {
   const today = new Date();
-  const monthStart = new Date(today.getFullYear(), today.getMonth() - monthCount + 1, 1, 12);
-  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0, 12);
-  const alignedStart = shiftDate(monthStart, -monthStart.getDay());
-  const alignedEnd = shiftDate(monthEnd, 6 - monthEnd.getDay());
+  const alignedEnd = shiftDate(today, 6 - today.getDay());
+  const alignedStart = shiftDate(alignedEnd, -(weekCount * 7 - 1));
   const statsByDay = getContributionStatsByDay(today);
   const days = [];
   for (let cursor = new Date(alignedStart); cursor <= alignedEnd; cursor = shiftDate(cursor, 1)) {
     const key = dayKey(cursor);
     const stats = statsByDay.get(key) || { xp: 0, completed: 0, level: 0 };
-    const inRange = cursor >= monthStart && cursor <= monthEnd;
     days.push({
       key,
       date: new Date(cursor),
-      inRange,
       future: cursor > today,
       ...stats
     });
   }
-  const weekCount = Math.ceil(days.length / 7);
-  const monthFormatter = new Intl.DateTimeFormat(getLocale(), { month: "long" });
-  const months = Array.from({ length: monthCount }, (_, index) => {
-    const start = new Date(monthStart.getFullYear(), monthStart.getMonth() + index, 1, 12);
-    const end = new Date(start.getFullYear(), start.getMonth() + 1, 0, 12);
-    const startWeek = Math.floor((shiftDate(start, -start.getDay()) - alignedStart) / (7 * 24 * 60 * 60 * 1000));
-    const endWeek = Math.floor((shiftDate(end, 6 - end.getDay()) - alignedStart) / (7 * 24 * 60 * 60 * 1000));
+
+  const monthFormatter = new Intl.DateTimeFormat(getLocale(), { month: "short" });
+  const labelsByMonth = new Map();
+  days.forEach((day, index) => {
+    const monthKey = `${day.date.getFullYear()}-${day.date.getMonth()}`;
+    if (labelsByMonth.has(monthKey)) return;
+    labelsByMonth.set(monthKey, {
+      label: monthFormatter.format(day.date),
+      startWeek: Math.floor(index / 7),
+      weekSpan: 1
+    });
+  });
+  const labels = [...labelsByMonth.values()].map((label, index, allLabels) => {
+    const next = allLabels[index + 1];
     return {
-      label: monthFormatter.format(start),
-      startWeek,
-      weekSpan: Math.max(1, endWeek - startWeek + 1)
+      ...label,
+      weekSpan: Math.max(1, (next?.startWeek ?? weekCount) - label.startWeek)
     };
   });
-  return { days, months, weekCount };
+  return {
+    days,
+    labels,
+    weekCount,
+    startKey: dayKey(alignedStart),
+    endKey: dayKey(today)
+  };
+}
+
+function buildMonthlyContributionHeatmap(monthCount = 4) {
+  return buildRecentContributionHeatmap(Math.max(8, monthCount * 4));
 }
 
 function renderTodayPlan() {
