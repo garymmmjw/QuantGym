@@ -3262,43 +3262,50 @@ function startHeroTypewriter() {
   const node = els.heroTypewriter;
   if (!node) return;
   if (heroTypewriterTimer) window.clearTimeout(heroTypewriterTimer);
-  const typeDelay = 78;
-  const deleteDelay = 44;
-  const phrasePause = 6800;
-  const nextPhraseDelay = 460;
+  const typeDelay = 118;
+  const phrasePause = 4200;
+  const swapDelay = 260;
   const phrases = [
-    "Sharpen your quant edge today.",
+    "Sharpen your quant edge.",
     "Practice faster. Think clearer.",
-    "Turn solved problems into signal.",
-    "Build interview-ready intuition."
+    "Turn problems into signal.",
+    "Build interview intuition."
   ];
+  const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  if (prefersReducedMotion) {
+    node.textContent = phrases[0];
+    return;
+  }
+
   let phraseIndex = 0;
-  let charIndex = 0;
-  let deleting = false;
+  let tokenIndex = 0;
+
+  node.setAttribute("aria-live", "polite");
 
   const tick = () => {
     const phrase = phrases[phraseIndex];
-    node.textContent = phrase.slice(0, charIndex);
-    if (!deleting && charIndex < phrase.length) {
-      charIndex += 1;
+    const tokens = phrase.match(/\S+\s*/g) || [phrase];
+
+    if (tokenIndex < tokens.length) {
+      tokenIndex += 1;
+      node.textContent = tokens.slice(0, tokenIndex).join("").trimEnd();
       heroTypewriterTimer = window.setTimeout(tick, typeDelay);
       return;
     }
-    if (!deleting) {
-      deleting = true;
-      heroTypewriterTimer = window.setTimeout(tick, phrasePause);
-      return;
-    }
-    if (charIndex > 0) {
-      charIndex -= 1;
-      heroTypewriterTimer = window.setTimeout(tick, deleteDelay);
-      return;
-    }
-    deleting = false;
-    phraseIndex = (phraseIndex + 1) % phrases.length;
-    heroTypewriterTimer = window.setTimeout(tick, nextPhraseDelay);
+
+    heroTypewriterTimer = window.setTimeout(() => {
+      node.classList.add("is-changing");
+      heroTypewriterTimer = window.setTimeout(() => {
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        tokenIndex = 0;
+        node.textContent = "";
+        node.classList.remove("is-changing");
+        tick();
+      }, swapDelay);
+    }, phrasePause);
   };
 
+  node.textContent = "";
   tick();
 }
 
