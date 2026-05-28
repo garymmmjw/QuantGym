@@ -531,17 +531,20 @@ async function createInterviewEvaluation(payload) {
   const model = payload.model || DEFAULT_MODEL;
   const answerAttachment = payload.answerAttachment || null;
   const feedbackFormat = language === "Chinese"
-    ? "固定两行：得分：一个 0-100 的整数/100；评价：一句最重要的评价。"
-    : "Use exactly 2 lines: Score: one integer from 0-100/100; Evaluation: one highest-signal sentence.";
+    ? "第一行必须是「得分：X/100」。然后用「评价」「遗漏」「参考方向」「下一步」四段给出高信号反馈。"
+    : "The first line must be `Score: X/100`. Then include concise sections for Evaluation, Missing pieces, Reference direction, and Next step.";
+  const problemImages = collectProblemImageRefs(problem);
 
   const instructions = [
     "You are a rigorous quant interview coach.",
     "Use the provided problem bank item as ground truth.",
     "Evaluate the candidate's answer for relevance to the question, correctness, reasoning quality, and interview clarity.",
     "Use one overall score, not multiple sub-scores.",
-    "Be terse and high-signal. Do not repeat the problem, do not give the full solution, do not add follow-up questions, and do not add encouragement filler.",
+    "Be high-signal and practical. Do not repeat the full problem, do not add encouragement filler, and do not invent missing facts.",
+    "Give enough detail for the candidate to know what to fix; include the key reference approach when the answer is incomplete.",
+    "If the problem or candidate answer includes images, use them in the evaluation and mention what the image contributes.",
     feedbackFormat,
-    "Keep the whole response under 70 Chinese characters or 45 English words.",
+    "Keep the whole response compact: about 120-220 Chinese characters or 90-160 English words.",
     `Respond in ${language}.`
   ].join(" ");
 
@@ -554,24 +557,27 @@ async function createInterviewEvaluation(payload) {
     `Prompt ZH:\n${problem.promptZh || ""}`,
     `Reference answer:\n${problem.answer || ""}`,
     `Reference explanation:\n${problem.explanation || ""}`,
+    problemImages.length ? `Problem image references:\n${problemImages.join("\n")}` : "",
     "Transcript:",
-    transcript.map((item) => `${item.role}: ${item.text}`).join("\n"),
+    transcript.map((item) => `${item.role}: ${item.text}${Array.isArray(item.attachments) && item.attachments.length ? ` [attachments: ${item.attachments.map((file) => file.name || file.type || "file").join(", ")}]` : ""}`).join("\n"),
     `Candidate latest answer:\n${payload.answer || ""}`,
     answerAttachment?.text ? `Candidate uploaded answer text (${answerAttachment.name || "file"}):\n${answerAttachment.text}` : "",
     answerAttachment?.dataUrl ? `Candidate uploaded a file named ${answerAttachment.name || "answer file"}. Evaluate it together with the typed answer.` : ""
   ].join("\n\n");
 
-  const input = answerAttachment?.dataUrl
+  const content = [{ type: "input_text", text: inputText }];
+  problemImages
+    .filter((url) => /^https?:\/\//i.test(url) || /^data:image\//i.test(url))
+    .slice(0, 4)
+    .forEach((url) => content.push({ type: "input_image", image_url: url }));
+  if (answerAttachment?.dataUrl) {
+    content.push(createAttachmentInputPart(answerAttachment));
+  }
+
+  const input = content.length > 1
     ? [{
       role: "user",
-      content: [
-        { type: "input_text", text: inputText },
-        {
-          type: "input_file",
-          filename: answerAttachment.name || "answer.pdf",
-          file_data: answerAttachment.dataUrl
-        }
-      ]
+      content
     }]
     : inputText;
 
@@ -585,7 +591,7 @@ async function createInterviewEvaluation(payload) {
       model,
       instructions,
       input,
-      ...modelOptions(model, 260)
+      ...modelOptions(model, 900)
     })
   });
 
@@ -594,6 +600,49 @@ async function createInterviewEvaluation(payload) {
     throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
   }
   return normalizeFeedbackText(requireOutputText(data, "OpenAI returned no feedback text"));
+}
+
+function createAttachmentInputPart(attachment) {
+  if (isImageAttachmentPayload(attachment)) {
+    return { type: "input_image", image_url: attachment.dataUrl };
+  }
+  return {
+    type: "input_file",
+    filename: attachment.name || "answer.pdf",
+    file_data: attachment.dataUrl
+  };
+}
+
+function isImageAttachmentPayload(attachment = {}) {
+  return String(attachment.type || "").startsWith("image/")
+    || /^data:image\//i.test(String(attachment.dataUrl || ""))
+    || /\.(png|jpe?g|gif|webp|svg)$/i.test(String(attachment.name || ""));
+}
+
+function collectProblemImageRefs(problem = {}) {
+  const keys = [
+    "image", "imageUrl", "imageUrls", "images", "diagram", "diagramUrl",
+    "promptImage", "promptImages", "answerImage", "answerImages",
+    "explanationImage", "explanationImages", "solutionImage", "solutionImages"
+  ];
+  const refs = [];
+  const push = (value) => {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      value.forEach(push);
+      return;
+    }
+    if (typeof value === "object") {
+      push(value.url || value.src || value.href || value.dataUrl);
+      return;
+    }
+    const ref = String(value || "").trim();
+    if (ref && (/^https?:\/\//i.test(ref) || /^data:image\//i.test(ref) || /\.(png|jpe?g|gif|webp|svg)(?:\?.*)?$/i.test(ref))) {
+      refs.push(ref);
+    }
+  };
+  keys.forEach((key) => push(problem[key]));
+  return [...new Set(refs)];
 }
 
 async function createInterviewHint(payload) {
@@ -731,12 +780,17 @@ function normalizeFeedbackText(text) {
   return String(text || "")
     .replace(/(得分[:：])/g, "\n$1")
     .replace(/(评价[:：])/g, "\n$1")
+    .replace(/(遗漏[:：])/g, "\n$1")
+    .replace(/(参考方向[:：])/g, "\n$1")
+    .replace(/(下一步[:：])/g, "\n$1")
     .replace(/(Score:)/gi, "\n$1")
     .replace(/(Evaluation:)/gi, "\n$1")
+    .replace(/(Missing pieces:)/gi, "\n$1")
+    .replace(/(Reference direction:)/gi, "\n$1")
+    .replace(/(Next step:)/gi, "\n$1")
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
-    .slice(0, 2)
     .join("\n");
 }
 

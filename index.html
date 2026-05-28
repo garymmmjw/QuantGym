@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>QuantGym</title>
-    <link rel="stylesheet" href="styles.css?v=premium-system-19">
+    <link rel="stylesheet" href="styles.css?v=search-interview-2">
     <script>
       window.MathJax = {
         tex: {
@@ -30,7 +30,7 @@
     <script src="config.js"></script>
     <script src="data/problem-catalog.js?v=quant-books-1"></script>
     <script src="data/leetcode-hot-100.js?v=leetcode-hot-100-1"></script>
-    <script src="app.js?v=premium-system-22" defer></script>
+    <script src="app.js?v=search-interview-2" defer></script>
   </head>
   <body>
     <header class="topbar">
@@ -122,68 +122,69 @@
           <img src="assets/generated/brand-q-mark.webp?v=premium-system-2" alt="">
           <strong>QuantGym</strong>
         </div>
-        <div class="module-nav-group" aria-label="备战">
-          <span class="module-nav-label">备战</span>
+        <div class="module-nav-group primary" aria-label="总览">
           <button class="module-tab active" type="button" data-module-tab="overview">
             <i data-lucide="layout-dashboard"></i>
             总览
           </button>
+        </div>
+        <div class="module-nav-group" aria-label="成长">
+          <span class="module-nav-label">成长</span>
           <button class="module-tab" type="button" data-module-tab="plan">
             <i data-lucide="calendar-check-2"></i>
             计划
-          </button>
-          <button class="module-tab" type="button" data-module-tab="experiences">
-            <i data-lucide="notebook-pen"></i>
-            面经
-          </button>
-          <button class="module-tab" type="button" data-module-tab="interview">
-            <i data-lucide="messages-square"></i>
-            模拟面试
-          </button>
-        </div>
-        <div class="module-nav-group" aria-label="训练">
-          <span class="module-nav-label">训练</span>
-          <button class="module-tab" type="button" data-module-tab="problems">
-            <i data-lucide="library-big"></i>
-            所有题目
-          </button>
-          <button class="module-tab" type="button" data-module-tab="tools">
-            <i data-lucide="brain"></i>
-            速算
           </button>
           <button class="module-tab" type="button" data-module-tab="skills">
             <i data-lucide="radar"></i>
             能力值
           </button>
-          <button class="module-tab" type="button" data-module-tab="pk">
-            <i data-lucide="swords"></i>
-            PK
+        </div>
+        <div class="module-nav-group" aria-label="训练">
+          <span class="module-nav-label">训练</span>
+          <button class="module-tab" type="button" data-module-tab="interview">
+            <i data-lucide="messages-square"></i>
+            模拟面试
+          </button>
+          <button class="module-tab" type="button" data-module-tab="problems">
+            <i data-lucide="library-big"></i>
+            题目
+          </button>
+          <button class="module-tab" type="button" data-module-tab="tools">
+            <i data-lucide="brain"></i>
+            Mental Math
+          </button>
+          <button class="module-tab" type="button" data-module-tab="experiences">
+            <i data-lucide="notebook-pen"></i>
+            面经
           </button>
         </div>
-        <div class="module-nav-group" aria-label="求职与社群">
-          <span class="module-nav-label">求职与社群</span>
-          <button class="module-tab" type="button" data-module-tab="jobs">
-            <i data-lucide="briefcase-business"></i>
-            求职
-          </button>
-          <button class="module-tab" type="button" data-module-tab="resume">
-            <i data-lucide="file-user"></i>
-            简历
-          </button>
-          <button class="module-tab" type="button" data-module-tab="network">
-            <i data-lucide="network"></i>
-            人脉
+        <div class="module-nav-group" aria-label="社群">
+          <span class="module-nav-label">社群</span>
+          <button class="module-tab" type="button" data-module-tab="news">
+            <i data-lucide="newspaper"></i>
+            新闻
           </button>
           <button class="module-tab" type="button" data-module-tab="community">
             <i data-lucide="message-circle-heart"></i>
             社群
           </button>
-          <button class="module-tab" type="button" data-module-tab="news">
-            <i data-lucide="newspaper"></i>
-            新闻
+          <button class="module-tab" type="button" data-module-tab="network">
+            <i data-lucide="network"></i>
+            人脉
           </button>
         </div>
-        <div class="module-nav-group compact" aria-label="资源">
+        <div class="module-nav-group" aria-label="求职">
+          <span class="module-nav-label">求职</span>
+          <button class="module-tab" type="button" data-module-tab="resume">
+            <i data-lucide="file-user"></i>
+            简历
+          </button>
+          <button class="module-tab" type="button" data-module-tab="jobs">
+            <i data-lucide="briefcase-business"></i>
+            求职
+          </button>
+        </div>
+        <div class="module-nav-group" aria-label="资源">
           <span class="module-nav-label">资源</span>
           <button class="module-tab" type="button" data-module-tab="courses">
             <i data-lucide="video"></i>
@@ -191,8 +192,10 @@
           </button>
           <button class="module-tab" type="button" data-module-tab="memory">
             <i data-lucide="archive"></i>
-            笔记
+            资料笔记
           </button>
+        </div>
+        <div class="module-nav-group compact" aria-label="设置">
           <button class="module-tab" type="button" data-module-tab="settings">
             <i data-lucide="settings"></i>
             设置
@@ -815,11 +818,12 @@
         <div class="problem-page-header">
           <div class="problem-page-copy">
             <span class="rank-label">题库</span>
-            <h2>所有题目</h2>
+            <h2>题目</h2>
             <p>系统练习概率、期望、博弈和 quant 面试基础题。</p>
           </div>
           <img src="assets/generated/mascot-calculator.webp?v=premium-system-2" alt="" loading="lazy">
           <div class="problem-actions">
+            <i data-lucide="search"></i>
             <input id="problemSearch" type="search" placeholder="搜索题目">
             <button class="icon-button ghost hidden" id="addProblemBtn" type="button" title="添加题目" aria-label="添加题目">
               <i data-lucide="book-plus"></i>
@@ -945,15 +949,21 @@
         <div class="section-heading">
           <div>
             <h2>模拟面试</h2>
-            <small id="interviewSummary">配置题型、题数、作答方式和题目来源。</small>
-          </div>
-          <div class="segmented">
-            <button class="segment active" type="button" data-interview-lang="zh">中文</button>
-            <button class="segment" type="button" data-interview-lang="en">English</button>
+            <small id="interviewSummary">配置题型、题数、主题范围和题目来源。</small>
           </div>
         </div>
         <div id="interviewGrid" class="interview-grid setup-only">
           <div id="interviewSetup" class="interview-setup">
+            <div class="interview-setup-top">
+              <div>
+                <strong>Mock setup</strong>
+                <small>开始后可以直接输入文字、上传图片或文件，也可以语音转写。</small>
+              </div>
+              <div class="segmented interview-language-toggle" aria-label="面试语言">
+                <button class="segment active" type="button" data-interview-lang="zh">中文</button>
+                <button class="segment" type="button" data-interview-lang="en">English</button>
+              </div>
+            </div>
             <label>
               面试类型
               <select id="interviewTypeSelect" aria-label="面试类型">
@@ -970,7 +980,7 @@
               每题时间（分钟）
               <input id="interviewQuestionTime" type="number" min="1" max="60" value="5">
             </label>
-            <label>
+            <label class="hidden" aria-hidden="true">
               作答方式
               <select id="interviewAnswerModeSelect" aria-label="作答方式">
                 <option value="text">文字作答</option>
@@ -1021,31 +1031,36 @@
               </div>
               <div id="interviewTimer" class="interview-timer">--:--</div>
             </div>
-            <div id="interviewTranscript" class="interview-transcript"></div>
+            <div class="interview-workspace">
+              <div id="interviewTranscript" class="interview-transcript"></div>
+              <aside id="interviewQuestionPanel" class="interview-question-panel" aria-label="本轮面试题目"></aside>
+            </div>
             <form id="interviewForm" class="interview-form">
-              <textarea id="interviewAnswer" rows="4" placeholder="输入你的回答"></textarea>
-              <label id="interviewAnswerFileRow" class="interview-answer-file hidden">
-                上传回答文件
-                <input id="interviewAnswerFile" type="file" accept=".txt,.md,.tex,.pdf,text/*,application/pdf">
-                <small id="interviewAnswerFileMeta">支持文本文件；PDF 会传给 LLM 读取。</small>
-              </label>
-              <div class="form-row">
-                <button class="primary-button" type="submit">
-                  <i data-lucide="send"></i>
-                  提交回答
-                </button>
-                <button class="icon-button ghost" id="hintInterviewBtn" type="button" title="Hint" aria-label="Hint">
-                  <i data-lucide="lightbulb"></i>
-                </button>
-                <button class="icon-button ghost" id="revealAnswerBtn" type="button" title="显示参考答案" aria-label="显示参考答案">
-                  <i data-lucide="book-open"></i>
-                </button>
-                <button class="icon-button ghost" id="voiceAnswerBtn" type="button" title="语音作答" aria-label="语音作答">
-                  <i data-lucide="mic"></i>
-                </button>
-                <button class="icon-button ghost" id="clearInterviewBtn" type="button" title="清空模拟" aria-label="清空模拟">
-                  <i data-lucide="eraser"></i>
-                </button>
+              <div class="interview-chat-input">
+                <textarea id="interviewAnswer" rows="1" placeholder="输入你的回答"></textarea>
+                <div id="interviewAttachmentPreview" class="interview-attachment-preview hidden"></div>
+                <div class="interview-chat-actions">
+                  <label id="interviewAnswerFileRow" class="icon-button ghost interview-attach-button" title="上传图片或文件" aria-label="上传图片或文件">
+                    <input id="interviewAnswerFile" type="file" accept=".txt,.md,.tex,.pdf,text/*,application/pdf,image/*">
+                    <i data-lucide="paperclip"></i>
+                    <span id="interviewAnswerFileMeta" class="sr-only">支持图片、文本文件和 PDF。</span>
+                  </label>
+                  <button class="icon-button ghost" id="voiceAnswerBtn" type="button" title="语音作答" aria-label="语音作答">
+                    <i data-lucide="mic"></i>
+                  </button>
+                  <button class="icon-button ghost" id="hintInterviewBtn" type="button" title="Hint" aria-label="Hint">
+                    <i data-lucide="lightbulb"></i>
+                  </button>
+                  <button class="icon-button ghost" id="revealAnswerBtn" type="button" title="显示参考答案" aria-label="显示参考答案">
+                    <i data-lucide="book-open"></i>
+                  </button>
+                  <button class="icon-button ghost" id="clearInterviewBtn" type="button" title="清空模拟" aria-label="清空模拟">
+                    <i data-lucide="eraser"></i>
+                  </button>
+                  <button class="icon-button accent interview-send-button" type="submit" title="提交回答" aria-label="提交回答">
+                    <i data-lucide="send"></i>
+                  </button>
+                </div>
               </div>
             </form>
             <div id="interviewCompleteActions" class="interview-complete-actions hidden">

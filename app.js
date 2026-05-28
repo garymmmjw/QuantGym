@@ -352,7 +352,7 @@ const i18n = {
     plan: "计划",
     experiences: "面经",
     community: "社群",
-    problems: "所有题目",
+    problems: "题目",
     interview: "模拟面试",
     pk: "PK",
     news: "新闻",
@@ -361,7 +361,7 @@ const i18n = {
     jobs: "求职",
     courses: "课程",
     skills: "能力值",
-    tools: "速算",
+    tools: "Mental Math",
     memory: "资料笔记",
     settings: "设置",
     rankLabel: "当前段位",
@@ -479,7 +479,7 @@ const i18n = {
     currentRank: "当前排名"
     ,
     problemEyebrow: "题库",
-    problemTitle: "所有题目",
+    problemTitle: "题目",
     problemSubtitle: "系统练习概率、期望、博弈和 quant 面试基础题。",
     problemSearchPlaceholder: "搜索题目",
     addProblem: "添加题目",
@@ -505,7 +505,7 @@ const i18n = {
     noPrompt: "暂无题干。",
     noAnswer: "暂无单独答案，请参考解析。",
     noExplanation: "暂无解析。",
-    allProblems: "全部题目",
+    allProblems: "全部",
     savedProblems: "我的收藏",
     popularProblems: "热门排行",
     saveForReview: "收藏到复习本",
@@ -555,7 +555,7 @@ const i18n = {
     jobs: "Jobs",
     courses: "Courses",
     skills: "Ability Score",
-    tools: "Drills",
+    tools: "Mental Math",
     memory: "Memory",
     settings: "Settings",
     rankLabel: "Current Rank",
@@ -672,7 +672,7 @@ const i18n = {
     createdAt: "Created",
     currentRank: "Current Rank",
     problemEyebrow: "Question Bank",
-    problemTitle: "All Problems",
+    problemTitle: "Problems",
     problemSubtitle: "Practice probability, expectation, games, and quant interview fundamentals.",
     problemSearchPlaceholder: "Search problems",
     addProblem: "Add Problem",
@@ -698,7 +698,7 @@ const i18n = {
     noPrompt: "No prompt yet.",
     noAnswer: "No standalone answer yet. See the explanation.",
     noExplanation: "No explanation yet.",
-    allProblems: "All problems",
+    allProblems: "All",
     savedProblems: "Saved",
     popularProblems: "Popular",
     saveForReview: "Save for review",
@@ -1096,6 +1096,7 @@ let interviewPrepTimer = null;
 let interviewQuestionTimer = null;
 let interviewVoiceRecognition = null;
 let interviewTypingTimers = new Map();
+let interviewPanelExpandedIndex = 0;
 let mathTypesetTimer = null;
 let llmConfig = loadLlmConfig();
 let latestClassification = null;
@@ -1315,11 +1316,13 @@ function bindElements() {
     "interviewQuestionStatus",
     "interviewTimer",
     "interviewTranscript",
+    "interviewQuestionPanel",
     "interviewForm",
     "interviewAnswer",
     "interviewAnswerFileRow",
     "interviewAnswerFile",
     "interviewAnswerFileMeta",
+    "interviewAttachmentPreview",
     "hintInterviewBtn",
     "revealAnswerBtn",
     "interviewCompleteActions",
@@ -1564,10 +1567,8 @@ function bindEvents() {
     updatePreview();
   });
 
-  els.problemSearch.addEventListener("input", () => {
-    problemVisibleCount = PROBLEM_PAGE_SIZE;
-    renderProblems();
-  });
+  els.problemSearch.addEventListener("input", handleProblemSearchInput);
+  els.problemSearch.addEventListener("keydown", handleProblemSearchKeydown);
   els.problemThemeFilter?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-problem-theme]");
     if (!button) return;
@@ -1629,7 +1630,11 @@ function bindEvents() {
       document.querySelectorAll("[data-interview-lang]").forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
       interviewLanguage = button.dataset.interviewLang;
+      renderInterviewCategoryPicker();
+      updateInterviewSetupVisibility();
+      updateInterviewAnswerMode();
       renderInterviewTranscript();
+      renderInterviewQuestionPanel();
     });
   });
 
@@ -1652,6 +1657,8 @@ function bindEvents() {
   els.interviewAnswerModeSelect?.addEventListener("change", updateInterviewAnswerMode);
   els.interviewPdfInput?.addEventListener("change", updateInterviewPdfMeta);
   els.interviewAnswerFile?.addEventListener("change", updateInterviewAnswerFileMeta);
+  els.interviewAnswer?.addEventListener("input", autoSizeInterviewAnswer);
+  els.interviewAnswer?.addEventListener("keydown", handleInterviewAnswerKeydown);
   els.saveLlmConfigBtn.addEventListener("click", saveLlmConfig);
   els.startInterviewBtn.addEventListener("click", startInterview);
   els.hintInterviewBtn?.addEventListener("click", requestInterviewHint);
@@ -5415,6 +5422,7 @@ function renderGlobalSearchResults() {
     const detail = document.createElement("small");
     detail.textContent = result.detail;
     button.append(meta, title, detail);
+    button.addEventListener("mousedown", (event) => event.preventDefault());
     button.addEventListener("click", () => activateGlobalSearchResult(index));
     els.globalSearchResults.appendChild(button);
   });
@@ -5490,7 +5498,8 @@ function buildGlobalSearchResults(query) {
       typeLabel: t("problems"),
       title,
       detail: `${formatCategoryLabel(problem.category)} · ${problem.difficulty}`,
-      id: problem.id
+      id: problem.id,
+      rank: scoreProblemSearchMatch(problem, normalized)
     });
   });
 
@@ -5544,7 +5553,9 @@ function buildGlobalSearchResults(query) {
     });
   });
 
-  return results.slice(0, 14);
+  return results
+    .sort((a, b) => (a.rank ?? 40) - (b.rank ?? 40))
+    .slice(0, 14);
 }
 
 function activateGlobalSearchResult(index) {
@@ -5558,8 +5569,7 @@ function activateGlobalSearchResult(index) {
   }
   if (result.type === "problem") {
     switchModule("problems");
-    renderProblems();
-    window.setTimeout(() => openProblemDetail(result.id), 80);
+    openProblemFromSearch(result.id);
     return;
   }
   if (result.type === "job") {
@@ -6838,6 +6848,100 @@ function networkStatusWeight(status) {
   }[status] ?? 5;
 }
 
+function handleProblemSearchInput() {
+  selectedProblemDetailId = "";
+  problemVisibleCount = PROBLEM_PAGE_SIZE;
+  if (normalizeSearchQuery(els.problemSearch?.value)) problemViewMode = "all";
+  renderProblems();
+}
+
+function handleProblemSearchKeydown(event) {
+  if (event.key !== "Enter") return;
+  const query = normalizeSearchQuery(els.problemSearch?.value);
+  if (!query) return;
+  event.preventDefault();
+  const firstMatch = getProblemBrowserMatches({ forceAllView: true })[0];
+  if (firstMatch) openProblemDetail(firstMatch.id);
+}
+
+function getProblemSearchFields(problem) {
+  return [
+    getProblemDisplayTitle(problem, true),
+    getProblemDisplayTitle(problem, false),
+    problem.titleEn,
+    problem.titleZh,
+    problem.promptEn,
+    problem.promptZh,
+    problem.answer,
+    problem.explanation,
+    problem.category,
+    problem.difficulty,
+    problem.source,
+    problem.sourceType,
+    problem.bookSlug,
+    problem.bookName,
+    Array.isArray(problem.tags) ? problem.tags.map(formatProblemTag).join(" ") : "",
+    Array.isArray(problem.tags) ? problem.tags.join(" ") : ""
+  ];
+}
+
+function scoreProblemSearchMatch(problem, normalizedQuery) {
+  const query = normalizeSearchQuery(normalizedQuery);
+  if (!query) return 20;
+  const titleText = normalizeSearchQuery([
+    getProblemDisplayTitle(problem, true),
+    getProblemDisplayTitle(problem, false),
+    problem.titleEn,
+    problem.titleZh
+  ].filter(Boolean).join(" "));
+  const promptText = normalizeSearchQuery([problem.promptEn, problem.promptZh].filter(Boolean).join(" "));
+  const metaText = normalizeSearchQuery([
+    problem.category,
+    problem.difficulty,
+    problem.bookName,
+    Array.isArray(problem.tags) ? problem.tags.join(" ") : ""
+  ].filter(Boolean).join(" "));
+  const tokens = query.split(/\s+/).filter(Boolean);
+
+  if (titleText === query) return 0;
+  if (titleText.includes(query)) return 1;
+  if (tokens.every((token) => titleText.includes(token))) return 2;
+  if (promptText.includes(query)) return 5;
+  if (tokens.every((token) => promptText.includes(token))) return 7;
+  if (tokens.every((token) => metaText.includes(token))) return 10;
+  return 20;
+}
+
+function getProblemBrowserMatches(options = {}) {
+  const query = normalizeSearchQuery(els.problemSearch?.value || "");
+  const forceAllView = Boolean(options.forceAllView);
+  let problems = state.problems
+    .filter(isCatalogProblem)
+    .filter((problem) => problemMatchesTheme(problem, problemThemeFilter))
+    .filter((problem) => problemMatchesDifficulty(problem, problemDifficultyFilter))
+    .filter((problem) => !query || matchesQuery(getProblemSearchFields(problem), query));
+
+  if (!forceAllView && problemViewMode === "saved") {
+    problems = problems.filter((problem) => getProblemPersonalState(problem.id).favorite);
+  }
+  if (query) {
+    problems = problems.sort((a, b) => (
+      scoreProblemSearchMatch(a, query) - scoreProblemSearchMatch(b, query)
+      || getProblemDisplayTitle(a, getLanguage() === "en").localeCompare(getProblemDisplayTitle(b, getLanguage() === "en"))
+    ));
+  }
+  return problems;
+}
+
+function openProblemFromSearch(problemId) {
+  selectedProblemDetailId = "";
+  problemViewMode = "all";
+  problemVisibleCount = PROBLEM_PAGE_SIZE;
+  if (els.problemSearch) els.problemSearch.value = "";
+  renderProblems();
+  window.setTimeout(() => openProblemDetail(problemId), 40);
+}
+
 function renderProblems() {
   renderProblemViewTabs();
   renderLeetcodeHot100();
@@ -6858,30 +6962,8 @@ function renderProblems() {
     selectedProblemDetailId = "";
   }
   els.problemDetail.classList.add("hidden");
-  const query = (els.problemSearch.value || "").trim().toLowerCase();
   const isEn = getLanguage() === "en";
-  let problems = allCatalogProblems
-    .filter((problem) => problemMatchesTheme(problem, problemThemeFilter))
-    .filter((problem) => problemMatchesDifficulty(problem, problemDifficultyFilter))
-    .filter((problem) => {
-    if (!query) return true;
-    return [
-      problem.titleEn,
-      problem.titleZh,
-      problem.promptEn,
-      problem.promptZh,
-      problem.answer,
-      problem.explanation,
-      problem.category,
-      problem.difficulty,
-      problem.source,
-      problem.sourceType,
-      problem.bookSlug,
-      problem.bookName,
-      problem.tags.map(formatProblemTag).join(" "),
-      problem.tags.join(" ")
-    ].join(" ").toLowerCase().includes(query);
-  });
+  let problems = getProblemBrowserMatches();
 
   if (problemViewMode === "ranking") {
     els.problemList.classList.add("hidden");
@@ -7300,6 +7382,7 @@ function returnToProblemList() {
 
 function renderProblemDetail(problem) {
   els.problemDetail.innerHTML = "";
+  const isEn = getLanguage() === "en";
 
   const top = document.createElement("div");
   top.className = "problem-detail-top";
@@ -7336,7 +7419,6 @@ function renderProblemDetail(problem) {
   top.append(back, actions);
 
   const title = document.createElement("h2");
-  const isEn = getLanguage() === "en";
   const titleZh = String(problem.titleZh || "").trim();
   const titleEn = String(problem.titleEn || "").trim();
   title.textContent = isEn
@@ -7597,6 +7679,7 @@ function renderInterviewSetup() {
   updateInterviewSetupVisibility();
   updateInterviewAnswerMode();
   updateInterviewStatus();
+  renderInterviewQuestionPanel();
 }
 
 function renderInterviewTranscript() {
@@ -7605,17 +7688,23 @@ function renderInterviewTranscript() {
     const typeDef = interviewTypeDefs[getInterviewType()];
     const source = getInterviewSource() === "pdf" ? "PDF" : "题库";
     appendMessageNode("system", interviewLanguage === "zh"
-      ? `选择 ${typeDef.label}，设置题数和作答方式，然后点击开始模拟。当前来源：${source}。`
-      : `Choose ${typeDef.label}, set question count and answer mode, then start. Source: ${source}.`);
+      ? `选择 ${typeDef.label}，设置题数、主题范围和来源，然后点击开始模拟。当前来源：${source}。`
+      : `Choose ${typeDef.label}, set question count, topic range, and source, then start. Source: ${source}.`);
     return;
   }
 
-  interviewMessages.forEach((message) => appendMessageNode(message.role, message.displayText ?? message.text, message.typing, message.thinking));
+  interviewMessages.forEach((message) => appendMessageNode(message.role, message.displayText ?? message.text, {
+    typing: message.typing,
+    thinking: message.thinking,
+    attachments: message.attachments || []
+  }));
   els.interviewTranscript.scrollTop = els.interviewTranscript.scrollHeight;
   if (!interviewMessages.some((message) => message.typing)) scheduleMathTypeset(els.interviewTranscript);
 }
 
-function appendMessageNode(role, text, typing = false, thinking = false) {
+function appendMessageNode(role, text, options = {}) {
+  const typing = Boolean(options.typing);
+  const thinking = Boolean(options.thinking);
   const node = document.createElement("div");
   node.className = `message ${role}`;
   if (typing) node.classList.add("typing");
@@ -7629,6 +7718,7 @@ function appendMessageNode(role, text, typing = false, thinking = false) {
     node.textContent = text;
   } else {
     renderRichText(node, text);
+    appendMessageAttachments(node, options.attachments || []);
   }
   els.interviewTranscript.appendChild(node);
 }
@@ -7636,7 +7726,7 @@ function appendMessageNode(role, text, typing = false, thinking = false) {
 function renderRichText(node, text) {
   node.classList.add("rich-text");
   node.textContent = "";
-  const lines = String(text || "").replace(/\r/g, "").split("\n");
+  const lines = normalizeRichTextContent(text).replace(/\r/g, "").split("\n");
   let paragraph = [];
   let list = null;
 
@@ -7682,19 +7772,83 @@ function renderRichText(node, text) {
   flushParagraph();
 }
 
+function normalizeRichTextContent(text) {
+  return String(text || "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\\\[/g, "\\[")
+    .replace(/\\\]/g, "\\]")
+    .replace(/\\\(/g, "\\(")
+    .replace(/\\\)/g, "\\)");
+}
+
 function appendInlineRichText(node, text) {
   const value = String(text || "");
-  const pattern = /(`[^`]+`|\*\*[^*]+\*\*)/g;
+  const pattern = /(!\[[^\]]*\]\([^)]+\)|\[[^\]]+\]\([^)]+\)|https?:\/\/[^\s)]+?\.(?:png|jpe?g|gif|webp|svg)(?:\?[^\s)]*)?|`[^`]+`|\*\*[^*]+\*\*)/gi;
   let cursor = 0;
   for (const match of value.matchAll(pattern)) {
     if (match.index > cursor) node.appendChild(document.createTextNode(value.slice(cursor, match.index)));
     const token = match[0];
-    const inline = document.createElement(token.startsWith("`") ? "code" : "strong");
-    inline.textContent = token.slice(token.startsWith("`") ? 1 : 2, token.startsWith("`") ? -1 : -2);
-    node.appendChild(inline);
+    const imageMatch = token.match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$/);
+    const linkMatch = token.match(/^\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$/);
+    if (imageMatch && isSafeRichMediaUrl(imageMatch[2])) {
+      node.appendChild(createRichImage(imageMatch[2], imageMatch[1] || "Interview image"));
+    } else if (linkMatch && isSafeRichMediaUrl(linkMatch[2], { allowData: false })) {
+      const link = document.createElement("a");
+      link.href = linkMatch[2];
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      link.textContent = linkMatch[1];
+      node.appendChild(link);
+    } else if (/^https?:\/\//i.test(token) && isSafeRichMediaUrl(token)) {
+      node.appendChild(createRichImage(token, "Interview image"));
+    } else {
+      const inline = document.createElement(token.startsWith("`") ? "code" : "strong");
+      inline.textContent = token.slice(token.startsWith("`") ? 1 : 2, token.startsWith("`") ? -1 : -2);
+      node.appendChild(inline);
+    }
     cursor = match.index + token.length;
   }
   if (cursor < value.length) node.appendChild(document.createTextNode(value.slice(cursor)));
+}
+
+function isSafeRichMediaUrl(url, options = {}) {
+  const allowData = options.allowData !== false;
+  const value = String(url || "").trim();
+  if (!value) return false;
+  if (/^https?:\/\//i.test(value)) return true;
+  if (allowData && /^data:image\/(?:png|jpe?g|gif|webp|svg\+xml);base64,/i.test(value)) return true;
+  return /^(?:\.{0,2}\/|assets\/|data\/)[\w./%-]+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?$/i.test(value);
+}
+
+function createRichImage(src, alt = "") {
+  const image = document.createElement("img");
+  image.className = "rich-media";
+  image.src = src;
+  image.alt = alt;
+  image.loading = "lazy";
+  return image;
+}
+
+function appendMessageAttachments(node, attachments = []) {
+  const safeAttachments = attachments.filter(Boolean);
+  if (!safeAttachments.length) return;
+  const tray = document.createElement("div");
+  tray.className = "message-attachments";
+  safeAttachments.forEach((attachment) => {
+    const item = document.createElement("div");
+    item.className = "message-attachment";
+    if (isImageAttachment(attachment) && attachment.dataUrl) {
+      item.appendChild(createRichImage(attachment.dataUrl, attachment.name || "Uploaded image"));
+    }
+    const label = document.createElement("span");
+    label.textContent = [
+      attachment.name || (interviewLanguage === "zh" ? "附件" : "Attachment"),
+      attachment.size ? `${Math.max(1, Math.round(Number(attachment.size) / 1024))} KB` : ""
+    ].filter(Boolean).join(" · ");
+    item.appendChild(label);
+    tray.appendChild(item);
+  });
+  node.appendChild(tray);
 }
 
 function scheduleMathTypeset(root) {
@@ -7711,6 +7865,113 @@ function updateInterviewLayout() {
   els.interviewConsole?.classList.toggle("hidden", !showConsole);
   els.interviewGrid?.classList.toggle("setup-only", !showConsole);
   els.interviewGrid?.classList.toggle("session-only", showConsole);
+}
+
+function renderInterviewQuestionPanel() {
+  if (!els.interviewQuestionPanel) return;
+  els.interviewQuestionPanel.innerHTML = "";
+
+  if (!interviewSession?.questions?.length) {
+    const empty = document.createElement("div");
+    empty.className = "interview-question-panel-empty";
+    empty.textContent = interviewLanguage === "zh"
+      ? "开始模拟后，这里会显示本轮题目和得分。"
+      : "Once the mock starts, this panel shows each question and score.";
+    els.interviewQuestionPanel.appendChild(empty);
+    return;
+  }
+
+  const heading = document.createElement("div");
+  heading.className = "interview-question-panel-head";
+  const title = document.createElement("strong");
+  title.textContent = interviewLanguage === "zh" ? "本轮题目" : "Questions";
+  const progress = document.createElement("span");
+  progress.textContent = `${Math.max(0, interviewSession.currentIndex + 1)} / ${interviewSession.questions.length}`;
+  heading.append(title, progress);
+  els.interviewQuestionPanel.appendChild(heading);
+
+  const list = document.createElement("div");
+  list.className = "interview-question-accordion";
+  interviewSession.questions.forEach((problem, index) => {
+    const result = interviewSession.questionResults?.[index] || null;
+    const expanded = index === interviewPanelExpandedIndex;
+    const current = index === interviewSession.currentIndex;
+    const titleText = interviewLanguage === "zh" ? problem.titleZh || problem.titleEn : problem.titleEn || problem.titleZh;
+    const promptText = interviewLanguage === "zh" ? problem.promptZh || problem.promptEn : problem.promptEn || problem.promptZh;
+
+    const item = document.createElement("article");
+    item.tabIndex = 0;
+    item.setAttribute("role", "button");
+    item.className = [
+      "interview-question-item",
+      expanded ? "is-expanded" : "",
+      current ? "is-current" : "",
+      result?.score != null ? "is-scored" : ""
+    ].filter(Boolean).join(" ");
+    item.dataset.interviewQuestionIndex = String(index);
+    item.setAttribute("aria-expanded", String(expanded));
+
+    const main = document.createElement("span");
+    main.className = "interview-question-main";
+    const label = document.createElement("strong");
+    label.textContent = `Q${index + 1}. ${titleText || (interviewLanguage === "zh" ? "未命名题目" : "Untitled question")}`;
+    const meta = document.createElement("small");
+    meta.textContent = [formatCategoryLabel(problem.category), problem.difficulty || ""].filter(Boolean).join(" · ");
+    main.append(label, meta);
+
+    const score = document.createElement("span");
+    score.className = `interview-question-score${result?.fresh ? " score-pop" : ""}`;
+    score.textContent = result?.score == null ? "--" : `${Math.round(result.score)}`;
+    if (result?.score != null) score.dataset.targetScore = String(Math.round(result.score));
+
+    item.append(main, score);
+
+    const detail = document.createElement("div");
+    detail.className = "interview-question-detail";
+    const prompt = document.createElement("p");
+    prompt.textContent = promptText || (interviewLanguage === "zh" ? "暂无题干。" : "No prompt.");
+    detail.appendChild(prompt);
+    if (result?.evaluation) {
+      const evaluation = document.createElement("small");
+      evaluation.textContent = result.evaluation;
+      detail.appendChild(evaluation);
+    }
+    item.appendChild(detail);
+
+    item.addEventListener("click", () => {
+      interviewPanelExpandedIndex = expanded ? -1 : index;
+      renderInterviewQuestionPanel();
+    });
+    item.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      interviewPanelExpandedIndex = expanded ? -1 : index;
+      renderInterviewQuestionPanel();
+    });
+    list.appendChild(item);
+  });
+  els.interviewQuestionPanel.appendChild(list);
+  animateInterviewScores(els.interviewQuestionPanel);
+  refreshIcons();
+}
+
+function animateInterviewScores(root) {
+  root.querySelectorAll("[data-target-score]").forEach((node) => {
+    if (node.dataset.animatedScore === node.dataset.targetScore) return;
+    const target = Math.round(clampNumber(node.dataset.targetScore, 0, 100));
+    node.dataset.animatedScore = String(target);
+    const start = performance.now();
+    const duration = 850;
+    const tick = (now) => {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      node.textContent = String(Math.round(target * eased));
+      if (progress < 1) window.requestAnimationFrame(tick);
+      else node.textContent = String(target);
+    };
+    node.textContent = "0";
+    window.requestAnimationFrame(tick);
+  });
 }
 
 function renderInterviewFavorites() {
@@ -8263,7 +8524,9 @@ function renderInterviewCategoryPicker() {
     button.className = `interview-category-chip${active ? " active" : ""}`;
     button.dataset.interviewCategory = key;
     button.setAttribute("aria-pressed", String(active));
-    button.textContent = key === "all" ? "所有" : formatCategoryLabel(key);
+    button.textContent = key === "all"
+      ? (interviewLanguage === "zh" ? "随机" : "Random")
+      : formatCategoryLabel(key);
     els.interviewCategoryPicker.appendChild(button);
   });
 }
@@ -8305,20 +8568,18 @@ function updateInterviewSetupVisibility() {
 
 function formatInterviewCategorySummary() {
   const selected = getInterviewSelectedCategories();
-  if (selected.includes("all")) return "所有主题";
+  if (selected.includes("all")) return interviewLanguage === "zh" ? "随机主题" : "Random themes";
   return selected.map(formatCategoryLabel).join("、");
 }
 
 function updateInterviewAnswerMode() {
-  const mode = getInterviewAnswerMode();
-  els.interviewAnswerFileRow?.classList.toggle("hidden", mode !== "file");
-  els.voiceAnswerBtn?.classList.toggle("hidden", mode !== "voice");
+  els.interviewAnswerFileRow?.classList.remove("hidden");
+  els.voiceAnswerBtn?.classList.remove("hidden");
   if (els.interviewAnswer) {
-    els.interviewAnswer.placeholder = mode === "voice"
-      ? "点击麦克风开始语音作答，也可以手动修改转写文本"
-      : mode === "file"
-        ? "可补充说明；主要回答从上传文件读取"
-        : "输入你的回答";
+    els.interviewAnswer.placeholder = interviewLanguage === "zh"
+      ? "输入你的回答，Enter 发送，Shift+Enter 换行"
+      : "Type your answer. Enter sends, Shift+Enter adds a line";
+    autoSizeInterviewAnswer();
   }
 }
 
@@ -8332,10 +8593,31 @@ function updateInterviewPdfMeta() {
 
 function updateInterviewAnswerFileMeta() {
   const file = els.interviewAnswerFile?.files?.[0];
-  if (!els.interviewAnswerFileMeta) return;
-  els.interviewAnswerFileMeta.textContent = file
-    ? `${file.name} · ${Math.round(file.size / 1024)} KB`
-    : "支持文本文件；PDF 会传给 LLM 读取。";
+  const label = file
+    ? `${file.name} · ${Math.max(1, Math.round(file.size / 1024))} KB`
+    : (interviewLanguage === "zh" ? "支持图片、文本文件和 PDF。" : "Supports images, text files, and PDF.");
+  if (els.interviewAnswerFileMeta) els.interviewAnswerFileMeta.textContent = label;
+  if (!els.interviewAttachmentPreview) return;
+  els.interviewAttachmentPreview.innerHTML = "";
+  els.interviewAttachmentPreview.classList.toggle("hidden", !file);
+  if (!file) return;
+  const chip = document.createElement("span");
+  chip.className = "interview-attachment-chip";
+  chip.innerHTML = `<i data-lucide="${file.type.startsWith("image/") ? "image" : "paperclip"}"></i><span>${escapeHtml(label)}</span>`;
+  els.interviewAttachmentPreview.appendChild(chip);
+  refreshIcons();
+}
+
+function autoSizeInterviewAnswer() {
+  if (!els.interviewAnswer) return;
+  els.interviewAnswer.style.height = "auto";
+  els.interviewAnswer.style.height = `${Math.min(Math.max(44, els.interviewAnswer.scrollHeight), 220)}px`;
+}
+
+function handleInterviewAnswerKeydown(event) {
+  if (event.key !== "Enter" || event.shiftKey || event.isComposing) return;
+  event.preventDefault();
+  els.interviewForm?.requestSubmit();
 }
 
 function resetInterview(options = {}) {
@@ -8343,23 +8625,26 @@ function resetInterview(options = {}) {
   interviewSession = null;
   interviewPreparing = false;
   interviewMessages = [];
+  interviewPanelExpandedIndex = 0;
   if (!options.keepSetup) renderInterviewSetup();
   if (els.interviewAnswer) els.interviewAnswer.value = "";
   if (els.interviewAnswerFile) els.interviewAnswerFile.value = "";
   updateInterviewAnswerFileMeta();
   updateInterviewStatus();
   renderInterviewTranscript();
+  renderInterviewQuestionPanel();
 }
 
 async function startInterview() {
   const source = getInterviewSource();
   const type = getInterviewType();
   const count = getInterviewQuestionCount();
-  const answerMode = getInterviewAnswerMode();
+  const answerMode = "chat";
   clearInterviewTimers();
   interviewMessages = [];
   interviewSession = null;
   interviewPreparing = true;
+  interviewPanelExpandedIndex = 0;
   updateInterviewStatus("loading");
   setButtonBusy(els.startInterviewBtn, true, interviewLanguage === "zh" ? "准备中" : "Preparing");
 
@@ -8388,6 +8673,8 @@ async function startInterview() {
       currentProblem: null,
       awaitingNext: false,
       completed: false,
+      questionResults: [],
+      latestScoredIndex: -1,
       startedAt: new Date().toISOString()
     };
     interviewPreparing = false;
@@ -8487,11 +8774,13 @@ function showInterviewQuestion(index) {
   interviewSession.awaitingNext = false;
   interviewSession.answeredCurrent = false;
   interviewSession.remainingSeconds = interviewSession.questionSeconds;
+  interviewPanelExpandedIndex = index;
   if (els.interviewAnswer) els.interviewAnswer.value = "";
   if (els.interviewAnswerFile) els.interviewAnswerFile.value = "";
   updateInterviewAnswerFileMeta();
+  autoSizeInterviewAnswer();
 
-  interviewSession.currentQuestionMessageId = appendInterviewMessage("system", formatInterviewQuestion(problem, index));
+  interviewSession.currentQuestionMessageId = appendInterviewMessage("system", formatInterviewQuestion(problem, index), { typewriter: false });
   appendInterviewMessage("coach", interviewLanguage === "zh"
     ? "请开始作答。可以先讲思路，再给结论。需要提示时点 Hint。"
     : "Start your answer. Explain your approach first, then give the conclusion. Use Hint if needed.");
@@ -8509,6 +8798,7 @@ function showInterviewQuestion(index) {
       updateInterviewStatus("timeup");
     }
   }, 1000);
+  renderInterviewQuestionPanel();
   els.interviewAnswer?.focus();
 }
 
@@ -8516,12 +8806,41 @@ function formatInterviewQuestion(problem, index) {
   const title = interviewLanguage === "zh" ? problem.titleZh || problem.titleEn : problem.titleEn || problem.titleZh;
   const prompt = interviewLanguage === "zh" ? problem.promptZh || problem.promptEn : problem.promptEn || problem.promptZh;
   return [
-    `Q${index + 1}/${interviewSession.questions.length} · ${interviewTypeDefs[interviewSession.type]?.label || "Interview"} · ${formatCategoryLabel(problem.category)} · ${problem.difficulty}`,
+    `# Q${index + 1}/${interviewSession.questions.length} · ${interviewTypeDefs[interviewSession.type]?.label || "Interview"} · ${formatCategoryLabel(problem.category)} · ${problem.difficulty}`,
     "",
-    title,
+    `**${title}**`,
     "",
-    prompt || "No prompt."
-  ].join("\n");
+    prompt || "No prompt.",
+    getProblemMediaMarkdown(problem, "prompt")
+  ].filter(Boolean).join("\n");
+}
+
+function getProblemMediaMarkdown(problem, scope = "all") {
+  const values = [];
+  const pushValue = (value) => {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      value.forEach(pushValue);
+      return;
+    }
+    if (typeof value === "object") {
+      pushValue(value.url || value.src || value.href || value.dataUrl);
+      return;
+    }
+    const url = String(value || "").trim();
+    if (isSafeRichMediaUrl(url)) values.push(url);
+  };
+
+  if (scope === "prompt" || scope === "all") {
+    ["image", "imageUrl", "imageUrls", "images", "diagram", "diagramUrl", "promptImage", "promptImages"].forEach((key) => pushValue(problem?.[key]));
+  }
+  if (scope === "answer" || scope === "all") {
+    ["answerImage", "answerImages", "explanationImage", "explanationImages", "solutionImage", "solutionImages"].forEach((key) => pushValue(problem?.[key]));
+  }
+
+  return [...new Set(values)]
+    .map((url, index) => `![${scope === "answer" ? "answer" : "problem"} image ${index + 1}](${url})`)
+    .join("\n");
 }
 
 async function submitInterviewAnswer() {
@@ -8540,12 +8859,16 @@ async function submitInterviewAnswer() {
   clearInterviewQuestionTimer();
   const displayAnswer = [
     answerPayload.text || "",
-    answerPayload.attachment ? `[${interviewLanguage === "zh" ? "上传文件" : "Uploaded file"}: ${answerPayload.attachment.name}]` : ""
+    answerPayload.attachment ? `[${interviewLanguage === "zh" ? "上传附件" : "Attachment"}: ${answerPayload.attachment.name}]` : ""
   ].filter(Boolean).join("\n");
-  appendInterviewMessage("user", displayAnswer);
+  appendInterviewMessage("user", displayAnswer, {
+    typewriter: false,
+    attachments: answerPayload.attachment ? [answerPayload.attachment] : []
+  });
   els.interviewAnswer.value = "";
   if (els.interviewAnswerFile) els.interviewAnswerFile.value = "";
   updateInterviewAnswerFileMeta();
+  autoSizeInterviewAnswer();
   const thinkingId = appendInterviewMessage("coach", "", { thinking: true });
   let feedback;
 
@@ -8555,10 +8878,11 @@ async function submitInterviewAnswer() {
   } catch {
     feedback = normalizeInterviewFeedback(localInterviewFeedback(problem, answerPayload.text), problem, answerPayload.text);
   }
-  updateInterviewMessage(thinkingId, feedback.text, { typewriter: true });
+  updateInterviewMessage(thinkingId, feedback.text);
 
   recordInterviewPractice(problem, feedback);
   interviewSession.answeredCurrent = true;
+  renderInterviewQuestionPanel();
   const isLast = interviewSession.currentIndex >= interviewSession.questions.length - 1;
   if (isLast) {
     completeInterview();
@@ -8569,26 +8893,37 @@ async function submitInterviewAnswer() {
 }
 
 async function collectInterviewAnswer() {
-  const mode = getInterviewAnswerMode();
   const text = els.interviewAnswer.value.trim();
-  if (mode !== "file") return { text, attachment: null };
   const file = els.interviewAnswerFile?.files?.[0];
   if (!file) return { text, attachment: null };
-  const attachment = await readFilePayload(file, { preferDataUrl: file.type === "application/pdf" || /\.pdf$/i.test(file.name) });
+  const attachment = await readFilePayload(file, { preferDataUrl: isBinaryInterviewAttachment(file) });
   return { text, attachment };
 }
 
 async function readFilePayload(file, options = {}) {
   const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+  const isImage = isImageFile(file);
   const preferDataUrl = options.preferDataUrl || isPdf;
   const content = preferDataUrl ? await readFileAsDataUrl(file) : await readFileAsText(file);
   return {
     name: file.name,
-    type: file.type || (isPdf ? "application/pdf" : "text/plain"),
+    type: file.type || (isPdf ? "application/pdf" : isImage ? "image/*" : "text/plain"),
     size: file.size,
     dataUrl: preferDataUrl ? content : "",
     text: preferDataUrl ? "" : String(content || "").slice(0, 80_000)
   };
+}
+
+function isImageFile(file) {
+  return Boolean(file && (String(file.type || "").startsWith("image/") || /\.(png|jpe?g|gif|webp|svg)$/i.test(file.name || "")));
+}
+
+function isImageAttachment(attachment) {
+  return Boolean(attachment && (String(attachment.type || "").startsWith("image/") || /^data:image\//i.test(attachment.dataUrl || "") || /\.(png|jpe?g|gif|webp|svg)$/i.test(attachment.name || "")));
+}
+
+function isBinaryInterviewAttachment(file) {
+  return Boolean(file && (isImageFile(file) || file.type === "application/pdf" || /\.pdf$/i.test(file.name || "")));
 }
 
 function readFileAsText(file) {
@@ -8630,7 +8965,7 @@ async function requestInterviewFeedback(problem, answer, attachment = null) {
       questionIndex: interviewSession?.currentIndex || 0,
       questionCount: interviewSession?.questions?.length || 1,
       problem,
-      transcript: interviewMessages,
+      transcript: getSerializableInterviewTranscript(),
       answer,
       answerAttachment: attachment
     })
@@ -8639,6 +8974,20 @@ async function requestInterviewFeedback(problem, answer, attachment = null) {
   if (!response.ok) throw new Error(`LLM endpoint ${response.status}`);
   const data = await response.json();
   return data.reply || data.text || localInterviewFeedback(problem, answer);
+}
+
+function getSerializableInterviewTranscript() {
+  return interviewMessages
+    .filter((message) => !message.thinking)
+    .map((message) => ({
+      role: message.role,
+      text: String(message.text || message.displayText || "").slice(0, 6000),
+      attachments: (message.attachments || []).map((attachment) => ({
+        name: attachment.name || "",
+        type: attachment.type || "",
+        size: attachment.size || 0
+      }))
+    }));
 }
 
 async function requestPdfQuestionGeneration(filePayload, count, type) {
@@ -8703,22 +9052,32 @@ function localInterviewFeedback(problem, answer) {
   const missing = getLocalInterviewMissingSignals(problem, answer);
   const score = scoreLocalInterviewAnswer(answer, missing.length);
   const evaluation = getLocalInterviewEvaluation(answer, missing);
+  const reference = getInterviewReferenceSummary(problem);
+  const nextStep = missing.length
+    ? (interviewLanguage === "zh"
+      ? `下一步：补齐 ${missing.join("、")}，再用 60 秒重讲一遍。`
+      : `Next: add ${missing.join(", ")} and restate the answer in 60 seconds.`)
+    : (interviewLanguage === "zh"
+      ? "下一步：把最终结论提前，并补一句复杂度、风险或边界条件。"
+      : "Next: lead with the final conclusion and add one complexity, risk, or edge-case line.");
   return interviewLanguage === "zh"
-    ? `得分：${score}/100\n评价：${evaluation}`
-    : `Score: ${score}/100\nEvaluation: ${evaluation}`;
+    ? `得分：${score}/100\n\n评价：${evaluation}\n\n参考方向：${reference}\n\n${nextStep}`
+    : `Score: ${score}/100\n\nEvaluation: ${evaluation}\n\nReference direction: ${reference}\n\n${nextStep}`;
 }
 
 function normalizeInterviewFeedback(text, problem, answer) {
-  const raw = String(text || "").trim();
+  const raw = normalizeRichTextContent(text).trim();
   const local = localInterviewFeedback(problem, answer);
   const score = parseInterviewFeedbackScore(raw) ?? parseInterviewFeedbackScore(local) ?? 0;
   const evaluation = parseInterviewFeedbackEvaluation(raw) || parseInterviewFeedbackEvaluation(local);
+  const displayText = raw || local;
+  const hasScoreLine = parseInterviewFeedbackScore(displayText) != null;
   return {
     score,
     evaluation,
-    text: interviewLanguage === "zh"
-      ? `得分：${score}/100\n评价：${evaluation}`
-      : `Score: ${score}/100\nEvaluation: ${evaluation}`
+    text: hasScoreLine
+      ? displayText
+      : (interviewLanguage === "zh" ? `得分：${score}/100\n\n${displayText}` : `Score: ${score}/100\n\n${displayText}`)
   };
 }
 
@@ -8739,7 +9098,7 @@ function parseInterviewFeedbackEvaluation(text) {
   const labeled = lines.find((line) => /^(评价|evaluation)\s*[:：]/i.test(line));
   const olderLine = lines.find((line) => /^(改进|fix|亮点|good)\s*[:：]/i.test(line));
   const fallback = lines.find((line) => !/^(得分|评分|score)\s*[:：]/i.test(line));
-  return stripInterviewFeedbackLabel(labeled || olderLine || fallback || "").slice(0, 220);
+  return stripInterviewFeedbackLabel(labeled || olderLine || fallback || "").slice(0, 900);
 }
 
 function stripInterviewFeedbackLabel(text) {
@@ -8788,6 +9147,20 @@ function getLocalInterviewEvaluation(answer, missing) {
   return interviewLanguage === "zh"
     ? `优先补上${missing.join("、") || "更明确的中间推导"}。`
     : `Prioritize ${missing.join(", ") || "clearer intermediate reasoning"}.`;
+}
+
+function getInterviewReferenceSummary(problem) {
+  const raw = [problem.answer, problem.explanation]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!raw) {
+    return interviewLanguage === "zh"
+      ? "围绕题干建立变量、说明推导，再给出可验证结论。"
+      : "Define the variables, explain the reasoning, then give a checkable conclusion.";
+  }
+  return raw.slice(0, interviewLanguage === "zh" ? 180 : 240);
 }
 
 function localInterviewHint(problem) {
@@ -8943,6 +9316,7 @@ function recordInterviewPractice(problem, feedback = {}) {
   const entryId = makeId();
   const score = Number.isFinite(Number(feedback.score)) ? Math.round(clampNumber(Number(feedback.score), 0, 100)) : null;
   const evaluation = String(feedback.evaluation || "").trim();
+  const currentIndex = interviewSession?.currentIndex ?? -1;
   state.skills[category] = Math.max(0, (state.skills[category] || 0) + xpGain);
   state.entries.push({
     id: entryId,
@@ -8974,11 +9348,23 @@ function recordInterviewPractice(problem, feedback = {}) {
         scoredAt: practicedAt
       }].slice(-40)
   }));
+  if (interviewSession && currentIndex >= 0) {
+    interviewSession.questionResults = interviewSession.questionResults || [];
+    interviewSession.questionResults = interviewSession.questionResults.map((item) => item ? { ...item, fresh: false } : item);
+    interviewSession.questionResults[currentIndex] = {
+      score,
+      evaluation,
+      scoredAt: practicedAt,
+      fresh: score != null
+    };
+    interviewSession.latestScoredIndex = currentIndex;
+  }
   saveState();
   renderSummary();
   renderSkills();
   renderHistory();
   renderProblems();
+  renderInterviewQuestionPanel();
 }
 
 function goToNextInterviewQuestion() {
@@ -8995,6 +9381,7 @@ function completeInterview() {
   appendInterviewMessage("coach", interviewLanguage === "zh"
     ? "模拟面试结束。建议复盘每题：题意、核心思路、遗漏点、60 秒答案。"
     : "Mock interview complete. Review each question: prompt, core idea, missing points, and 60-second answer.");
+  renderInterviewQuestionPanel();
 }
 
 function clearInterviewTimers() {
@@ -9093,7 +9480,10 @@ function toggleVoiceAnswer() {
       .map((result) => result[0]?.transcript || "")
       .join(" ")
       .trim();
-    if (transcript) els.interviewAnswer.value = transcript;
+    if (transcript) {
+      els.interviewAnswer.value = transcript;
+      autoSizeInterviewAnswer();
+    }
   });
   recognition.addEventListener("end", () => {
     interviewVoiceRecognition = null;
@@ -9107,7 +9497,14 @@ function toggleVoiceAnswer() {
 function revealInterviewAnswer() {
   const problem = getSelectedProblem();
   if (!problem) return;
-  appendInterviewMessage("system", `Answer:\n${problem.answer || "未填写"}\n\nExplanation:\n${problem.explanation || "未填写"}`);
+  appendInterviewMessage("system", [
+    interviewLanguage === "zh" ? "### 参考答案" : "### Reference answer",
+    problem.answer || (interviewLanguage === "zh" ? "未填写" : "Not provided"),
+    "",
+    interviewLanguage === "zh" ? "### 解析" : "### Explanation",
+    problem.explanation || (interviewLanguage === "zh" ? "未填写" : "Not provided"),
+    getProblemMediaMarkdown(problem, "answer")
+  ].filter(Boolean).join("\n"));
 }
 
 function startPkMatch() {
@@ -9228,15 +9625,16 @@ function renderPkFeed(items) {
 
 function appendInterviewMessage(role, text, options = {}) {
   const id = makeId();
+  const attachments = Array.isArray(options.attachments) ? options.attachments : [];
   if (options.thinking) {
-    interviewMessages.push({ id, role, text: "", displayText: "", typing: false, thinking: true });
+    interviewMessages.push({ id, role, text: "", displayText: "", typing: false, thinking: true, attachments });
     renderInterviewTranscript();
     return id;
   }
-  const typewriter = options.typewriter ?? role !== "user";
+  const typewriter = options.typewriter ?? role === "coach";
   interviewMessages.push(typewriter
-    ? { id, role, text: String(text || ""), displayText: "", typing: true }
-    : { id, role, text: String(text || ""), displayText: String(text || ""), typing: false });
+    ? { id, role, text: String(text || ""), displayText: "", typing: true, attachments }
+    : { id, role, text: String(text || ""), displayText: String(text || ""), typing: false, attachments });
   renderInterviewTranscript();
   if (typewriter) startInterviewTyping(id, text);
   return id;
@@ -9249,7 +9647,7 @@ function updateInterviewMessage(id, text, options = {}) {
     return;
   }
   interviewMessages = interviewMessages.map((message) => (
-    message.id === id ? { ...message, text, displayText: text, typing: false, thinking: false } : message
+    message.id === id ? { ...message, text, displayText: text, typing: false, thinking: false, attachments: options.attachments || message.attachments || [] } : message
   ));
   renderInterviewTranscript();
 }
@@ -9257,7 +9655,7 @@ function updateInterviewMessage(id, text, options = {}) {
 function startInterviewTyping(id, text) {
   const fullText = String(text || "");
   let index = 0;
-  const step = 1;
+  const step = Math.max(1, Math.ceil(fullText.length / 160));
 
   interviewMessages = interviewMessages.map((message) => (
     message.id === id ? { ...message, text: fullText, displayText: "", typing: true, thinking: false } : message
@@ -9275,7 +9673,7 @@ function startInterviewTyping(id, text) {
     renderInterviewTranscript();
 
     if (done) stopInterviewTyping(id);
-  }, 42);
+  }, 24);
   interviewTypingTimers.set(id, timer);
 }
 
