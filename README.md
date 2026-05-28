@@ -58,6 +58,56 @@ LLM health: http://127.0.0.1:8787/health
 
 `config.js` can stay empty in local development. The frontend falls back to local API and LLM endpoints.
 
+## Git Workflow
+
+This repository is connected to GitHub at `https://github.com/garymmmjw/QuantGym.git`.
+
+Use a feature branch for UI / product iterations:
+
+```bash
+git status --short --branch
+git switch -c codex/your-change-name
+```
+
+Before handing off a change, review the exact patch:
+
+```bash
+git diff -- app.js styles.css index.html README.md
+```
+
+## Local UI QA
+
+For page-wide regressions, run the app locally and check the authenticated shell at desktop and mobile widths:
+
+```bash
+python3 -m http.server 5176
+python3 api-server/server.py
+```
+
+Then open `http://127.0.0.1:5176/index.html` and smoke-test:
+
+- login / register fallback
+- global search and problem search
+- module navigation on desktop and mobile
+- problem detail, LeetCode Hot 100 toggle, and company filters
+- mock interview setup
+- Mental Math start / skip / next
+- News filters and detail back
+- Settings language switch
+
+If the API port is already occupied but the page shows cloud or problem-social errors, check for a stale process:
+
+```bash
+lsof -nP -iTCP:8790 -sTCP:LISTEN
+curl -sS http://127.0.0.1:8790/api/health
+```
+
+`curl: (52) Empty reply from server` means the process on `8790` is accepting connections but not serving the current API correctly. Stop the stale process or run the API on another port while debugging:
+
+```bash
+PORT=8791 python3 api-server/server.py
+```
+
 ## Repository Map
 
 ```text
