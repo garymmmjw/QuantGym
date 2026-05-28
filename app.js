@@ -527,6 +527,7 @@ const i18n = {
     records: "记录",
     weeklyXp: "7 日 XP",
     appSearchPlaceholder: "搜索题目、工作、课程、知识点或模块",
+    appSearchPlaceholderCompact: "搜索",
     commandStreakLabel: "火焰日历",
     commandChatLabel: "聊天",
     heroKicker: "Welcome back, Quant.",
@@ -878,6 +879,7 @@ const i18n = {
     records: "Records",
     weeklyXp: "7-Day XP",
     appSearchPlaceholder: "Search problems, jobs, courses, skills, or modules",
+    appSearchPlaceholderCompact: "Search",
     commandStreakLabel: "Fire calendar",
     commandChatLabel: "Chat",
     heroKicker: "Welcome back, quant.",
@@ -1752,6 +1754,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (currentUser) renderMentalMath();
   window.setInterval(maybeAutoRefreshNews, NEWS_AUTO_REFRESH_MS);
   window.setInterval(maybeAutoRefreshJobs, JOBS_AUTO_REFRESH_MS);
+  window.addEventListener("resize", updateGlobalSearchPlaceholder);
   refreshIcons();
 });
 
@@ -4413,8 +4416,7 @@ function applyLanguage() {
   setText(".sidebar-helper strong", t("todayGuide"));
   updatePrepTaskIndicator();
 
-  setPlaceholder("globalSearchInput", t("appSearchPlaceholder"));
-  setAttribute("#globalSearchInput", "aria-label", t("appSearchPlaceholder"));
+  updateGlobalSearchPlaceholder();
   setTexts(".app-command-actions .app-stat-pill small", [t("commandStreakLabel"), t("commandChatLabel")]);
   updateCheckInPill();
   setText("#todoDockButtonLabel", t("todoButton"));
@@ -4762,6 +4764,12 @@ function setNetworkStatusOptionLabels() {
 
 function setPlaceholder(id, text) {
   if (els[id]) els[id].placeholder = text;
+}
+
+function updateGlobalSearchPlaceholder() {
+  const compact = window.matchMedia?.("(max-width: 520px)")?.matches;
+  setPlaceholder("globalSearchInput", t(compact ? "appSearchPlaceholderCompact" : "appSearchPlaceholder"));
+  setAttribute("#globalSearchInput", "aria-label", t("appSearchPlaceholder"));
 }
 
 function setLabelFor(id, text) {

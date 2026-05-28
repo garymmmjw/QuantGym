@@ -12221,3 +12221,82 @@ body.is-authenticated .app-command-actions {
     border-right: 0;
   }
 }
+
+/* Final shell stabilization: keep the command search readable after layered UI iterations. */
+body.is-authenticated .global-search-results {
+  background: #ffffff;
+}
+
+@media (max-width: 520px) {
+  body.is-authenticated #appShell {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  body.is-authenticated .module-nav {
+    width: 72px;
+    padding: 10px 5px 12px;
+  }
+
+  body.is-authenticated .module-tab,
+  body.is-authenticated .module-nav-group .module-tab {
+    height: 52px;
+    min-height: 52px;
+    padding: 4px 2px;
+    font-size: 0.62rem;
+  }
+
+  body.is-authenticated .app-command-bar {
+    grid-template-columns: 36px minmax(0, 1fr) 38px;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  body.is-authenticated .sidebar-toggle-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  body.is-authenticated .app-search input {
+    height: 36px;
+    padding-left: 40px;
+  }
+
+  body.is-authenticated .app-search svg {
+    left: 13px;
+    width: 18px;
+    height: 18px;
+  }
+
+  body.is-authenticated .app-command-actions {
+    justify-self: end;
+    width: 38px;
+    min-width: 38px;
+  }
+
+  body.is-authenticated .app-command-actions .streak-widget,
+  body.is-authenticated .app-command-actions .chat-pill,
+  body.is-authenticated .app-command-actions .app-account-chip {
+    display: none;
+  }
+
+  body.is-authenticated .app-command-actions .app-settings-button {
+    display: inline-flex;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    min-height: 38px;
+  }
+
+  body.is-authenticated .global-search-results {
+    max-height: min(430px, calc(100dvh - 72px));
+  }
+
+  body.is-authenticated.sidebar-collapsed #appShell {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+
+  body.is-authenticated.sidebar-collapsed .module-nav {
+    width: 0;
+    padding: 0;
+  }
+}
