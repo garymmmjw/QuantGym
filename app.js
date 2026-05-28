@@ -524,8 +524,9 @@ const i18n = {
     problemRankingTitle: "题目排行榜",
     problemRankingHint: "按点赞与讨论热度排序，找到值得优先复习的题目。",
     popularity: "热度",
-    settingsMessageDefault: "应用偏好和数据管理。"
-    ,
+    settingsMessageDefault: "应用偏好和数据管理。",
+    sidebarShow: "显示模块列表",
+    sidebarHide: "隐藏模块列表",
     skillPageSubtitle: "把训练记录、题目表现和面试反馈汇总成 quant readiness score。",
     quantScore: "Quant Score",
     skillScoreCopy: "分数来自九个能力维度。继续刷题、模拟面试和记录训练，能力值会自动更新。",
@@ -717,6 +718,8 @@ const i18n = {
     problemRankingHint: "Ranked by likes and discussion activity.",
     popularity: "Heat",
     settingsMessageDefault: "App preferences and data management.",
+    sidebarShow: "Show module list",
+    sidebarHide: "Hide module list",
     skillPageSubtitle: "A quant readiness score built from training logs, problem performance, and interview feedback.",
     quantScore: "Quant Score",
     skillScoreCopy: "Your score combines nine ability dimensions. Practice, mock interviews, and daily logs update it automatically.",
@@ -1145,6 +1148,8 @@ function bindElements() {
     "regionRankText",
     "authShell",
     "appShell",
+    "moduleNav",
+    "sidebarToggleBtn",
     "loginForm",
     "loginEmail",
     "loginPassword",
@@ -1451,6 +1456,8 @@ function bindEvents() {
       switchModule(button.dataset.jumpModule);
     });
   });
+
+  els.sidebarToggleBtn?.addEventListener("click", toggleSidebarNav);
 
   document.querySelectorAll("[data-auth-tab]").forEach((button) => {
     button.addEventListener("click", () => switchAuthTab(button.dataset.authTab));
@@ -2190,10 +2197,11 @@ function loadAppPrefs() {
   try {
     const parsed = JSON.parse(localStorage.getItem(APP_PREFS_KEY) || "{}");
     return {
-      language: parsed.language === "en" ? "en" : "zh"
+      language: parsed.language === "en" ? "en" : "zh",
+      sidebarCollapsed: parsed.sidebarCollapsed === true
     };
   } catch {
-    return { language: "zh" };
+    return { language: "zh", sidebarCollapsed: false };
   }
 }
 
@@ -2216,8 +2224,28 @@ function t(key) {
 function setLanguage(language) {
   appPrefs.language = language === "en" ? "en" : "zh";
   saveAppPrefs();
+  applySidebarState();
   applyLanguage();
   renderAll();
+}
+
+function applySidebarState() {
+  const collapsed = appPrefs.sidebarCollapsed === true;
+  document.body.classList.toggle("sidebar-collapsed", collapsed);
+  if (!els.sidebarToggleBtn) return;
+  const label = t(collapsed ? "sidebarShow" : "sidebarHide");
+  const icon = els.sidebarToggleBtn.querySelector("i");
+  els.sidebarToggleBtn.setAttribute("aria-expanded", String(!collapsed));
+  els.sidebarToggleBtn.setAttribute("aria-label", label);
+  els.sidebarToggleBtn.title = label;
+  if (icon) icon.setAttribute("data-lucide", collapsed ? "panel-left-open" : "panel-left-close");
+  refreshIcons();
+}
+
+function toggleSidebarNav() {
+  appPrefs.sidebarCollapsed = appPrefs.sidebarCollapsed !== true;
+  saveAppPrefs();
+  applySidebarState();
 }
 
 function loadCommunity() {
@@ -2664,6 +2692,7 @@ function renderSession() {
 
   els.authShell.classList.toggle("hidden", Boolean(currentUser));
   els.appShell.classList.toggle("hidden", !currentUser);
+  applySidebarState();
   els.regionRank.classList.toggle("hidden", !currentUser);
   els.userChip.classList.toggle("hidden", !currentUser);
   els.languageSelect.classList.remove("hidden");
@@ -3423,6 +3452,7 @@ function applyLanguage() {
   setButtonLabel("#todoDockAddForm .secondary-button", t("todoAdd"));
   setAttribute(".app-account-chip", "aria-label", t("accountInfo"));
   setAttribute(".app-settings-button", "aria-label", t("settings"));
+  applySidebarState();
   setText(".hero-kicker", t("heroKicker"));
   setText(".quanty-hero h2", t("heroTitle"));
   setButtonLabel("#generateStudyPlanBtn", t("designStudyPlan"));
