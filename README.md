@@ -158,7 +158,13 @@ Install dependencies first (Vite is required):
 npm install
 ```
 
-Generate a safe static deployment directory:
+Generate a local static deployment directory:
+
+```bash
+npm run build
+```
+
+For beta or production deploys, use strict mode and provide the public HTTPS service URLs:
 
 ```bash
 QUANTGYM_WEB_API_ENDPOINT="https://api.quantgym.app/api" \
@@ -168,7 +174,9 @@ QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED=0 \
 node scripts/build-static-site.mjs --strict
 ```
 
-The build script runs `vite build` internally, then writes locale entry pages (`/zh/`, `/en/`) from the built `dist/index.html`. Publish only `dist/`. Do not publish the repository root as a static site.
+Strict mode fails fast unless both `QUANTGYM_WEB_API_ENDPOINT` and `QUANTGYM_WEB_LLM_ENDPOINT` are set and start with `https://`.
+
+The build script runs `vite build` internally, writes `dist/config.js`, copies runtime data scripts and generated image assets, and writes locale entry pages (`/zh/`, `/en/`) from the built `dist/index.html`. Publish only `dist/`. Do not publish the repository root as a static site.
 
 Cloudflare Pages build command: `npm install && node scripts/build-static-site.mjs --strict`
 

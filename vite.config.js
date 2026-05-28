@@ -5,8 +5,8 @@ export default defineConfig({
   // index.html is the entry point; Vite resolves <script type="module"> tags from it.
   root: ".",
   build: {
-    outDir: "dist",
-    emptyOutDir: false,
+    outDir: process.env.QUANTGYM_WEB_DIST || "dist",
+    emptyOutDir: true,
     // Keep asset filenames predictable for the static deploy pipeline.
     rollupOptions: {
       output: {
