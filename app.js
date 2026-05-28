@@ -5218,6 +5218,16 @@ function renderOverviewXpBars() {
 
 function getContributionSeries(days = 35) {
   const today = new Date();
+  const statsByDay = getContributionStatsByDay(today);
+  return Array.from({ length: days }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (days - index - 1));
+    const key = dayKey(date);
+    return { key, date, ...(statsByDay.get(key) || { xp: 0, completed: 0, level: 0 }) };
+  });
+}
+
+function getContributionStatsByDay(today = new Date()) {
   const xpByDay = new Map();
   const completedByDay = new Map();
   state.entries.forEach((entry) => {
@@ -5234,26 +5244,88 @@ function getContributionSeries(days = 35) {
     const key = dayKey(today);
     completedByDay.set(key, (completedByDay.get(key) || 0) + Math.min(5, Math.ceil(hotDoneCount / 20)));
   }
-  return Array.from({ length: days }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - (days - index - 1));
-    const key = dayKey(date);
+  const keys = new Set([...xpByDay.keys(), ...completedByDay.keys()]);
+  return new Map([...keys].map((key) => {
     const xp = xpByDay.get(key) || 0;
     const completed = completedByDay.get(key) || 0;
     const level = Math.min(5, Math.max(0, Math.ceil(xp / 24) + Math.ceil(completed)));
-    return { key, date, xp, completed, level };
-  });
+    return [key, { xp, completed, level }];
+  }));
 }
 
 function renderOverviewContributionHeatmap() {
   if (!els.overviewContributionHeatmap) return;
+  const heatmap = buildMonthlyContributionHeatmap(4);
   els.overviewContributionHeatmap.innerHTML = "";
-  getContributionSeries(35).forEach((day) => {
+  const grid = document.createElement("div");
+  grid.className = "contribution-heatmap-grid";
+  grid.style.gridTemplateRows = "repeat(7, var(--heatmap-cell-size))";
+  grid.style.gridAutoColumns = "var(--heatmap-cell-size)";
+  grid.style.setProperty("--weeks", String(heatmap.weekCount));
+
+  heatmap.days.forEach((day) => {
     const cell = document.createElement("span");
+    cell.className = [
+      "contribution-heatmap-cell",
+      `level-${day.inRange ? day.level : 0}`,
+      day.inRange ? "" : "is-empty",
+      day.key === dayKey(new Date()) ? "is-today" : "",
+      day.future ? "is-future" : ""
+    ].filter(Boolean).join(" ");
     cell.style.setProperty("--v", String(day.level));
-    cell.title = `${formatNewsDate(day.key)} · ${day.xp} XP · ${Math.floor(day.completed)} completed`;
-    els.overviewContributionHeatmap.appendChild(cell);
+    cell.title = day.inRange
+      ? `${formatNewsDate(day.key)} · ${day.xp} XP · ${Math.floor(day.completed)} completed`
+      : "";
+    grid.appendChild(cell);
   });
+
+  const labels = document.createElement("div");
+  labels.className = "contribution-month-labels";
+  labels.style.gridTemplateColumns = `repeat(${heatmap.weekCount}, var(--heatmap-cell-size))`;
+  heatmap.months.forEach((month) => {
+    const label = document.createElement("span");
+    label.textContent = month.label;
+    label.style.gridColumn = `${month.startWeek + 1} / span ${Math.min(3, heatmap.weekCount - month.startWeek)}`;
+    labels.appendChild(label);
+  });
+
+  els.overviewContributionHeatmap.append(grid, labels);
+}
+
+function buildMonthlyContributionHeatmap(monthCount = 4) {
+  const today = new Date();
+  const monthStart = new Date(today.getFullYear(), today.getMonth() - monthCount + 1, 1, 12);
+  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0, 12);
+  const alignedStart = shiftDate(monthStart, -monthStart.getDay());
+  const alignedEnd = shiftDate(monthEnd, 6 - monthEnd.getDay());
+  const statsByDay = getContributionStatsByDay(today);
+  const days = [];
+  for (let cursor = new Date(alignedStart); cursor <= alignedEnd; cursor = shiftDate(cursor, 1)) {
+    const key = dayKey(cursor);
+    const stats = statsByDay.get(key) || { xp: 0, completed: 0, level: 0 };
+    const inRange = cursor >= monthStart && cursor <= monthEnd;
+    days.push({
+      key,
+      date: new Date(cursor),
+      inRange,
+      future: cursor > today,
+      ...stats
+    });
+  }
+  const weekCount = Math.ceil(days.length / 7);
+  const monthFormatter = new Intl.DateTimeFormat(getLocale(), { month: "long" });
+  const months = Array.from({ length: monthCount }, (_, index) => {
+    const start = new Date(monthStart.getFullYear(), monthStart.getMonth() + index, 1, 12);
+    const end = new Date(start.getFullYear(), start.getMonth() + 1, 0, 12);
+    const startWeek = Math.floor((shiftDate(start, -start.getDay()) - alignedStart) / (7 * 24 * 60 * 60 * 1000));
+    const endWeek = Math.floor((shiftDate(end, 6 - end.getDay()) - alignedStart) / (7 * 24 * 60 * 60 * 1000));
+    return {
+      label: monthFormatter.format(start),
+      startWeek,
+      weekSpan: Math.max(1, endWeek - startWeek + 1)
+    };
+  });
+  return { days, months, weekCount };
 }
 
 function renderTodayPlan() {
