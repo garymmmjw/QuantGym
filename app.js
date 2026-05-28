@@ -1714,6 +1714,7 @@ let activeNewsDetailId = "";
 let newsTopicFilter = "all";
 let newsSourceFilter = "all";
 let globalSearchMatches = [];
+let globalSearchTimer = 0;
 let problemCatalogRefresh = null;
 let radarHitAreas = [];
 let radarHoverKey = "";
@@ -2236,7 +2237,7 @@ function bindEvents() {
     if (careers) openExternalUrl(careers.dataset.companyCareers);
   });
 
-  els.globalSearchInput?.addEventListener("input", renderGlobalSearchResults);
+  els.globalSearchInput?.addEventListener("input", scheduleGlobalSearchResults);
   els.globalSearchInput?.addEventListener("focus", renderGlobalSearchResults);
   els.globalSearchInput?.addEventListener("keydown", handleGlobalSearchKeydown);
   document.addEventListener("click", (event) => {
@@ -6899,6 +6900,10 @@ function upsertJobs(items, options = {}) {
 }
 
 function renderGlobalSearchResults() {
+  if (globalSearchTimer) {
+    window.clearTimeout(globalSearchTimer);
+    globalSearchTimer = 0;
+  }
   if (!els.globalSearchInput || !els.globalSearchResults) return;
   const query = els.globalSearchInput.value.trim();
   globalSearchMatches = buildGlobalSearchResults(query);
@@ -6937,7 +6942,19 @@ function renderGlobalSearchResults() {
   els.globalSearchResults.classList.remove("hidden");
 }
 
+function scheduleGlobalSearchResults() {
+  if (globalSearchTimer) window.clearTimeout(globalSearchTimer);
+  globalSearchTimer = window.setTimeout(() => {
+    globalSearchTimer = 0;
+    renderGlobalSearchResults();
+  }, 90);
+}
+
 function hideGlobalSearchResults() {
+  if (globalSearchTimer) {
+    window.clearTimeout(globalSearchTimer);
+    globalSearchTimer = 0;
+  }
   els.globalSearchResults?.classList.add("hidden");
 }
 
@@ -6954,6 +6971,10 @@ function handleGlobalSearchKeydown(event) {
   }
   if (event.key === "Enter") {
     event.preventDefault();
+    if (globalSearchTimer) {
+      window.clearTimeout(globalSearchTimer);
+      globalSearchTimer = 0;
+    }
     if (!globalSearchMatches.length) renderGlobalSearchResults();
     if (globalSearchMatches.length) activateGlobalSearchResult(0);
     return;
