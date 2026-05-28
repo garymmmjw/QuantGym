@@ -4,7 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>QuantGym</title>
-    <link rel="stylesheet" href="styles.css?v=shark-blue-1">
+    <meta name="description" content="QuantGym — 量化金融面试备考平台。题库、模拟面试、速算训练，一站式 quant 备战工具。">
+    <meta name="theme-color" content="#5b5ff5">
+    <meta property="og:title" content="QuantGym">
+    <meta property="og:description" content="量化金融面试备考平台：题库、模拟面试、技能雷达、速算训练。">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="assets/generated/brand-quantgym-logo.webp">
+    <link rel="stylesheet" href="styles.css?v=2">
     <script>
       window.MathJax = {
         tex: {
@@ -27,10 +33,13 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" defer></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- config.js and data scripts must load before the ES module bundle so that
+         window.QUANTGYM_CONFIG, window.quantProblemCatalog, and window.leetcodeHot100
+         are available when src/main.js is evaluated. -->
     <script src="config.js"></script>
-    <script src="data/problem-catalog.js?v=quant-books-1"></script>
-    <script src="data/leetcode-hot-100.js?v=leetcode-hot-100-1"></script>
-    <script src="app.js?v=shark-blue-1" defer></script>
+    <script src="data/problem-catalog.js?v=2"></script>
+    <script src="data/leetcode-hot-100.js?v=2"></script>
+    <script type="module" src="/src/main.js"></script>
   </head>
   <body>
     <header class="topbar">
