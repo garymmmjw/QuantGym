@@ -351,7 +351,8 @@ const i18n = {
     overview: "总览",
     plan: "计划",
     experiences: "面经",
-    community: "社群",
+    community: "论坛",
+    messages: "聊天",
     problems: "题目",
     interview: "模拟面试",
     pk: "PK",
@@ -359,6 +360,7 @@ const i18n = {
     network: "人脉",
     resume: "简历",
     jobs: "求职",
+    companies: "公司",
     courses: "课程",
     skills: "能力值",
     tools: "Mental Math",
@@ -371,7 +373,7 @@ const i18n = {
     weeklyXp: "7 日 XP",
     appSearchPlaceholder: "搜索题目、工作、课程、知识点或模块",
     commandStreakLabel: "连续天数",
-    commandXpLabel: "/100",
+    commandChatLabel: "聊天",
     heroKicker: "Welcome back, Quant.",
     heroTitle: "Sharpen your quant edge today.",
     designStudyPlan: "进入备战计划",
@@ -411,6 +413,11 @@ const i18n = {
     syncCloud: "同步云端",
     logout: "退出登录",
     communitySummary: "像朋友圈一样分享训练动态，也可以点赞评论。",
+    messagesSummary: "和论坛里的同学、校友或 recruiter 继续私聊。",
+    messageEmpty: "还没有聊天。可以从论坛动态里点“私信”。",
+    messageComposerPlaceholder: "写一条消息",
+    messageSend: "发送",
+    messageDirect: "私信",
     overviewCommunitySummary: "分享进度、照片、视频和面试灵感。",
     communityPostSingular: "条动态",
     communityPostPlural: "条动态",
@@ -451,6 +458,12 @@ const i18n = {
     resumeNoContent: "先上传或粘贴简历内容。",
     jobsModule: "求职",
     jobsSummary: "追踪 quant internship / full-time 岗位，点击链接跳转申请。",
+    companiesSummary: "按公司了解面试风格、tier、重点 topic 和对应题库。",
+    allCompanies: "全部公司",
+    companyPractice: "刷该公司题",
+    companyCareers: "打开官网",
+    companyQuestions: "题",
+    companyProgress: "完成进度",
     allJobs: "全部",
     internship: "Internship",
     fulltime: "Full-time",
@@ -545,7 +558,8 @@ const i18n = {
     overview: "Overview",
     plan: "Plan",
     experiences: "Interview Log",
-    community: "Community",
+    community: "Forum",
+    messages: "Messages",
     problems: "Problems",
     interview: "Interview",
     pk: "PK",
@@ -553,6 +567,7 @@ const i18n = {
     network: "Network",
     resume: "Resume",
     jobs: "Jobs",
+    companies: "Companies",
     courses: "Courses",
     skills: "Ability Score",
     tools: "Mental Math",
@@ -565,7 +580,7 @@ const i18n = {
     weeklyXp: "7-Day XP",
     appSearchPlaceholder: "Search problems, jobs, courses, skills, or modules",
     commandStreakLabel: "day streak",
-    commandXpLabel: "/100",
+    commandChatLabel: "Chat",
     heroKicker: "Welcome back, quant.",
     heroTitle: "Sharpen your quant edge today.",
     designStudyPlan: "Open prep plan",
@@ -605,6 +620,11 @@ const i18n = {
     syncCloud: "Sync Cloud",
     logout: "Log Out",
     communitySummary: "Share training updates, photos, videos, likes, and comments.",
+    messagesSummary: "Continue private conversations with people from the forum.",
+    messageEmpty: "No messages yet. Open a forum post and start a direct message.",
+    messageComposerPlaceholder: "Write a message",
+    messageSend: "Send",
+    messageDirect: "Message",
     overviewCommunitySummary: "Share progress, media, and interview sparks.",
     communityPostSingular: "post",
     communityPostPlural: "posts",
@@ -645,6 +665,12 @@ const i18n = {
     resumeNoContent: "Upload or paste resume content first.",
     jobsModule: "Jobs",
     jobsSummary: "Track quant internship / full-time roles and open application links.",
+    companiesSummary: "Understand interview style, tier, core topics, and matching problems by firm.",
+    allCompanies: "All companies",
+    companyPractice: "Practice questions",
+    companyCareers: "Open careers",
+    companyQuestions: "questions",
+    companyProgress: "Progress",
     allJobs: "All",
     internship: "Internship",
     fulltime: "Full-time",
@@ -981,6 +1007,204 @@ const seedJobs = [
   }
 ];
 
+const quantCompanyDefs = [
+  {
+    slug: "jane-street",
+    name: "Jane Street",
+    short: "JS",
+    tier: "S",
+    type: "Prop trading / market making",
+    color: "#6f5a2f",
+    accent: "#d3a632",
+    aliases: ["Jane Street", "JaneStreet"],
+    website: "https://www.janestreet.com/join-jane-street/open-roles/",
+    locations: ["New York", "London", "Hong Kong"],
+    focus: ["Probability", "Game theory", "Trading intuition", "OCaml / systems"],
+    summaryZh: "强概率、博弈和交易直觉，题目常要求把不确定性讲成清晰策略。",
+    summaryEn: "Probability-heavy, game-oriented interviews that reward clean strategy under uncertainty."
+  },
+  {
+    slug: "citadel",
+    name: "Citadel Securities",
+    short: "C",
+    tier: "S",
+    type: "Market maker / quant research",
+    color: "#27376f",
+    accent: "#4f80ff",
+    aliases: ["Citadel", "Citadel Securities"],
+    website: "https://www.citadelsecurities.com/careers/open-opportunities/",
+    locations: ["New York", "Chicago", "London"],
+    focus: ["Statistics", "Market microstructure", "Research design", "Coding"],
+    summaryZh: "更偏研究、统计和市场结构，适合把假设、数据和风险讲严谨。",
+    summaryEn: "Research-heavy interviews around statistics, market structure, data, and risk."
+  },
+  {
+    slug: "optiver",
+    name: "Optiver",
+    short: "O",
+    tier: "A",
+    type: "Options market maker",
+    color: "#6d3d1b",
+    accent: "#f08b24",
+    aliases: ["Optiver"],
+    website: "https://optiver.com/working-at-optiver/career-opportunities/",
+    locations: ["Chicago", "Amsterdam", "Sydney"],
+    focus: ["Mental math", "Options", "Probability", "Market making"],
+    summaryZh: "速算、期权、做市和风险反应速度很重要，适合限时训练。",
+    summaryEn: "Fast-paced trading screens with mental math, options, probability, and market making."
+  },
+  {
+    slug: "imc",
+    name: "IMC",
+    short: "IMC",
+    tier: "A",
+    type: "Market maker",
+    color: "#13576a",
+    accent: "#1fb4d1",
+    aliases: ["IMC", "IMC Trading"],
+    website: "https://www.imc.com/us/careers/jobs/",
+    locations: ["Chicago", "Amsterdam", "Sydney"],
+    focus: ["Probability", "Mental math", "Trading", "Coding"],
+    summaryZh: "常见概率、速算和交易推理，强调把思路快速说完整。",
+    summaryEn: "Probability, mental math, and trading reasoning with clear communication under time pressure."
+  },
+  {
+    slug: "drw",
+    name: "DRW",
+    short: "DRW",
+    tier: "A",
+    type: "Trading / research",
+    color: "#254447",
+    accent: "#39b7aa",
+    aliases: ["DRW", "DRW OA"],
+    website: "https://drw.com/work-at-drw/listings/",
+    locations: ["Chicago", "New York", "London"],
+    focus: ["Probability", "Markets", "Data", "Systems"],
+    summaryZh: "覆盖交易、研究和系统思维，题目常把概率和市场背景结合。",
+    summaryEn: "Trading, research, and systems interviews with probability tied back to markets."
+  },
+  {
+    slug: "jump-trading",
+    name: "Jump Trading",
+    short: "JT",
+    tier: "A",
+    type: "Low-latency trading / research",
+    color: "#74333d",
+    accent: "#ff6b6b",
+    aliases: ["Jump", "Jump Trading"],
+    website: "https://www.jumptrading.com/careers/",
+    locations: ["Chicago", "New York", "London"],
+    focus: ["Systems", "Probability", "Research", "Coding"],
+    summaryZh: "偏系统、研究和高频交易背景，适合同时准备 coding 与概率。",
+    summaryEn: "Systems and research oriented, often blending coding depth with probability."
+  },
+  {
+    slug: "hrt",
+    name: "HRT",
+    short: "HRT",
+    tier: "S",
+    type: "Quant trading / HFT",
+    color: "#184559",
+    accent: "#27c6e8",
+    aliases: ["HRT", "Hudson River Trading"],
+    website: "https://www.hudsonrivertrading.com/careers/",
+    locations: ["New York", "London", "Singapore"],
+    focus: ["Algorithms", "Probability", "C++", "Systems"],
+    summaryZh: "算法和系统要求高，适合把复杂度、边界和工程权衡讲清楚。",
+    summaryEn: "Algorithmic and systems-heavy interviews with strong emphasis on engineering tradeoffs."
+  },
+  {
+    slug: "two-sigma",
+    name: "Two Sigma",
+    short: "2S",
+    tier: "S",
+    type: "Quant research / hedge fund",
+    color: "#155f66",
+    accent: "#28b5bc",
+    aliases: ["Two Sigma", "2 Sigma"],
+    website: "https://www.twosigma.com/careers/",
+    locations: ["New York", "London"],
+    focus: ["Statistics", "ML", "Research", "Data"],
+    summaryZh: "偏统计、机器学习和研究设计，适合准备 estimator、bias 和验证。",
+    summaryEn: "Statistics, ML, and research design with emphasis on estimators, bias, and validation."
+  },
+  {
+    slug: "de-shaw",
+    name: "D. E. Shaw",
+    short: "DES",
+    tier: "S",
+    type: "Quant hedge fund",
+    color: "#44355d",
+    accent: "#b776ff",
+    aliases: ["D.E. Shaw", "D. E. Shaw", "DE Shaw"],
+    website: "https://www.deshaw.com/careers",
+    locations: ["New York", "London", "Hong Kong"],
+    focus: ["Statistics", "Research", "Probability", "Coding"],
+    summaryZh: "研究型题目较多，重视严谨推导、实验设计和代码基本功。",
+    summaryEn: "Research-oriented interviews around rigorous reasoning, experiments, and coding fundamentals."
+  },
+  {
+    slug: "virtu",
+    name: "Virtu Financial",
+    short: "V",
+    tier: "A",
+    type: "Market maker",
+    color: "#18403b",
+    accent: "#2abf8f",
+    aliases: ["Virtu", "Virtu Financial"],
+    website: "https://www.virtu.com/careers/",
+    locations: ["New York", "Austin", "London"],
+    focus: ["Market making", "Probability", "Risk", "Coding"],
+    summaryZh: "偏电子做市和风险控制，常把概率题落到报价与库存直觉。",
+    summaryEn: "Electronic market making and risk control, often tying probability back to quotes and inventory."
+  },
+  {
+    slug: "sig",
+    name: "SIG",
+    short: "SIG",
+    tier: "A",
+    type: "Options trading / decision science",
+    color: "#3f4c62",
+    accent: "#8fb3ff",
+    aliases: ["SIG", "Susquehanna", "Susquehanna International Group"],
+    website: "https://careers.sig.com/",
+    locations: ["Philadelphia", "New York", "Dublin"],
+    focus: ["Decision science", "Options", "Probability", "Games"],
+    summaryZh: "决策科学和期权风格强，适合训练条件概率、博弈和风险偏好。",
+    summaryEn: "Decision science and options-heavy interviews with conditional probability and games."
+  },
+  {
+    slug: "five-rings",
+    name: "Five Rings",
+    short: "5R",
+    tier: "A",
+    type: "Proprietary trading",
+    color: "#4c3c5f",
+    accent: "#b39ddb",
+    aliases: ["Five Rings", "5 Rings"],
+    website: "https://fiverings.com/careers/",
+    locations: ["New York", "London"],
+    focus: ["Probability", "Puzzles", "Trading", "Coding"],
+    summaryZh: "题型偏概率和 puzzle，适合练习小样本推理和口述结构。",
+    summaryEn: "Probability and puzzle-heavy interviews that reward crisp small-case reasoning."
+  },
+  {
+    slug: "akuna",
+    name: "Akuna Capital",
+    short: "AK",
+    tier: "B",
+    type: "Options market maker",
+    color: "#59364c",
+    accent: "#f25f9c",
+    aliases: ["Akuna", "Akuna Capital"],
+    website: "https://akunacapital.com/careers/",
+    locations: ["Chicago", "Sydney"],
+    focus: ["Options", "Mental math", "Probability", "Coding"],
+    summaryZh: "期权、速算和交易基础占比高，适合做入门到中阶题单。",
+    summaryEn: "Options, mental math, and trading basics across beginner-to-intermediate screens."
+  }
+];
+
 const seedCourses = [
   {
     id: "course-atypicalquant-interview",
@@ -1082,7 +1306,12 @@ let cloudSyncTimer = null;
 let cloudSyncInFlight = false;
 let cloudDirty = { state: false, community: false, account: false };
 let currentDrill = null;
-let drillMode = "percent";
+let drillMode = "numberLogic";
+let drillSession = null;
+let drillTimerId = null;
+let currentMarketGame = null;
+let currentPokerGame = null;
+let selectedMessageThreadId = "";
 let googleInitRetries = 0;
 let registerCodeTimer = null;
 let interviewLanguage = "zh";
@@ -1119,6 +1348,8 @@ let problemSocial = new Map();
 let problemViewMode = "all";
 let problemThemeFilter = "all";
 let problemDifficultyFilter = "all";
+let problemCompanyFilter = "all";
+let companyTierFilter = "all";
 let problemSocialNotice = "";
 let leetcodeHotExpanded = false;
 let todoDockOpen = false;
@@ -1135,7 +1366,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupButtonRipples();
   renderSession();
   initGoogleLogin();
-  if (currentUser) newDrill(false);
+  if (currentUser) renderMentalMath();
   window.setInterval(maybeAutoRefreshNews, NEWS_AUTO_REFRESH_MS);
   window.setInterval(maybeAutoRefreshJobs, JOBS_AUTO_REFRESH_MS);
   refreshIcons();
@@ -1171,6 +1402,8 @@ function bindElements() {
     "commandUserAvatar",
     "commandUserName",
     "commandUserProvider",
+    "commandChatBtn",
+    "commandUnreadCount",
     "languageSelect",
     "settingsBtn",
     "logoutBtn",
@@ -1194,7 +1427,6 @@ function bindElements() {
     "rankName",
     "totalXp",
     "commandStreakCount",
-    "commandXpCount",
     "checkInPill",
     "heroTypewriter",
     "generateStudyPlanBtn",
@@ -1243,6 +1475,13 @@ function bindElements() {
     "communityMediaPreview",
     "communityList",
     "communitySummary",
+    "messagesPageTitle",
+    "messagesSummary",
+    "messageThreadList",
+    "messageConversationHeader",
+    "messageConversationBody",
+    "messageComposerForm",
+    "messageComposerInput",
     "logForm",
     "logText",
     "durationInput",
@@ -1269,6 +1508,11 @@ function bindElements() {
     "problemThemeFilter",
     "problemThemeSummary",
     "problemDifficultyFilter",
+    "problemCompanyPanel",
+    "problemCompanyTitle",
+    "problemCompanySummary",
+    "problemCompanyClearBtn",
+    "problemCompanyList",
     "problemRanking",
     "problemRankingList",
     "leetcodeHotTitle",
@@ -1384,6 +1628,10 @@ function bindElements() {
     "resumeReview",
     "jobsSummary",
     "jobsList",
+    "companiesPageTitle",
+    "companiesSummary",
+    "companyTierFilter",
+    "companyOverviewList",
     "coursesSummary",
     "courseList",
     "skillsPageTitle",
@@ -1419,8 +1667,34 @@ function bindElements() {
     "drillQuestion",
     "drillForm",
     "drillInput",
+    "drillOptions",
     "drillFeedback",
+    "drillScore",
+    "drillAccuracy",
+    "drillTimer",
+    "drillProgressText",
+    "drillTimeLeftText",
+    "drillProgressFill",
+    "drillCountSelect",
+    "drillTimeSelect",
+    "startDrillSessionBtn",
+    "skipDrillBtn",
     "nextDrillBtn",
+    "mentalBestScore",
+    "mentalSparkline",
+    "mentalRecordList",
+    "mentalLeaderboardList",
+    "marketGameScore",
+    "marketGamePrompt",
+    "marketBidInput",
+    "marketAskInput",
+    "submitMarketQuoteBtn",
+    "nextMarketGameBtn",
+    "marketGameFeedback",
+    "pokerGameScore",
+    "pokerGamePrompt",
+    "nextPokerGameBtn",
+    "pokerGameFeedback",
     "resourceForm",
     "resourceTitle",
     "resourceType",
@@ -1534,6 +1808,21 @@ function bindEvents() {
     });
   });
   els.refreshJobsBtn?.addEventListener("click", () => refreshJobsFromApi(true));
+  els.companyTierFilter?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-company-tier]");
+    if (!button) return;
+    companyTierFilter = button.dataset.companyTier || "all";
+    renderCompanies();
+  });
+  els.companyOverviewList?.addEventListener("click", (event) => {
+    const practice = event.target.closest("[data-company-practice]");
+    if (practice) {
+      showCompanyProblems(practice.dataset.companyPractice);
+      return;
+    }
+    const careers = event.target.closest("[data-company-careers]");
+    if (careers) openExternalUrl(careers.dataset.companyCareers);
+  });
 
   els.globalSearchInput?.addEventListener("input", renderGlobalSearchResults);
   els.globalSearchInput?.addEventListener("focus", renderGlobalSearchResults);
@@ -1560,6 +1849,17 @@ function bindEvents() {
       renderCommunity();
     });
   });
+  els.messageThreadList?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-message-thread]");
+    if (!button) return;
+    selectedMessageThreadId = button.dataset.messageThread || "";
+    markThreadRead(selectedMessageThreadId);
+    renderMessages();
+  });
+  els.messageComposerForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    sendDirectMessage();
+  });
 
   els.sampleBtn.addEventListener("click", () => {
     els.logText.value = sampleEntries[Math.floor(Math.random() * sampleEntries.length)];
@@ -1580,6 +1880,19 @@ function bindEvents() {
     const button = event.target.closest("[data-problem-difficulty]");
     if (!button) return;
     problemDifficultyFilter = normalizeDifficultyFilter(button.dataset.problemDifficulty || "all");
+    problemVisibleCount = PROBLEM_PAGE_SIZE;
+    returnToProblemList();
+  });
+  els.problemCompanyList?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-problem-company]");
+    if (!button) return;
+    problemCompanyFilter = button.dataset.problemCompany || "all";
+    problemViewMode = "all";
+    problemVisibleCount = PROBLEM_PAGE_SIZE;
+    returnToProblemList();
+  });
+  els.problemCompanyClearBtn?.addEventListener("click", () => {
+    problemCompanyFilter = "all";
     problemVisibleCount = PROBLEM_PAGE_SIZE;
     returnToProblemList();
   });
@@ -1731,16 +2044,30 @@ function bindEvents() {
       document.querySelectorAll("[data-drill]").forEach((item) => item.classList.remove("active"));
       button.classList.add("active");
       drillMode = button.dataset.drill;
-      newDrill(true);
+      startDrillSession();
     });
   });
 
   els.drillForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    checkDrill();
+    const selected = event.submitter?.dataset?.drillOption;
+    if (selected) checkDrill(selected);
   });
 
-  els.nextDrillBtn.addEventListener("click", () => newDrill(true));
+  els.startDrillSessionBtn?.addEventListener("click", startDrillSession);
+  els.skipDrillBtn?.addEventListener("click", skipDrill);
+  els.nextDrillBtn?.addEventListener("click", () => advanceDrillQuestion());
+  els.drillOptions?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-drill-option]");
+    if (!button) return;
+    checkDrill(button.dataset.drillOption);
+  });
+  els.submitMarketQuoteBtn?.addEventListener("click", submitMarketQuote);
+  els.nextMarketGameBtn?.addEventListener("click", () => newMarketGame(true));
+  document.querySelectorAll("[data-poker-action]").forEach((button) => {
+    button.addEventListener("click", () => submitPokerAction(button.dataset.pokerAction));
+  });
+  els.nextPokerGameBtn?.addEventListener("click", () => newPokerGame(true));
 
   els.addResourceBtn.addEventListener("click", () => {
     els.resourceForm.classList.toggle("hidden");
@@ -1779,6 +2106,8 @@ function createBaseState() {
     resources: [],
     network: [],
     interviewFavorites: [],
+    mentalMathRecords: [],
+    gameRecords: [],
     problemStates: [],
     leetcodeHot100Done: [],
     studyPlan: null,
@@ -1841,6 +2170,8 @@ function normalizeState(rawState) {
     resources: Array.isArray(rawState?.resources) ? rawState.resources : [],
     network: Array.isArray(rawState?.network) ? rawState.network.map(normalizeNetworkContact) : [],
     interviewFavorites: legacyFavorites.filter((favorite) => !favorite?.problemId),
+    mentalMathRecords: normalizeMentalMathRecords(rawState?.mentalMathRecords),
+    gameRecords: normalizeGameRecords(rawState?.gameRecords),
     problemStates: mergeProblemStates(
       Array.isArray(rawState?.problemStates) ? rawState.problemStates : [],
       problemStatesFromFavorites(legacyFavorites.filter((favorite) => favorite?.problemId))
@@ -1933,6 +2264,38 @@ function normalizePrepPlan(raw = null) {
     createdAt: raw.createdAt || new Date().toISOString(),
     updatedAt: raw.updatedAt || raw.createdAt || new Date().toISOString()
   };
+}
+
+function normalizeMentalMathRecords(records = []) {
+  return (Array.isArray(records) ? records : [])
+    .map((record) => ({
+      id: String(record?.id || makeId()),
+      mode: String(record?.mode || "numberLogic"),
+      label: String(record?.label || "").trim(),
+      score: Number(record?.score || 0),
+      correct: Math.max(0, Number(record?.correct || 0)),
+      incorrect: Math.max(0, Number(record?.incorrect || 0)),
+      skipped: Math.max(0, Number(record?.skipped || 0)),
+      total: Math.max(0, Number(record?.total || 0)),
+      accuracy: Math.max(0, Math.min(100, Number(record?.accuracy || 0))),
+      durationSeconds: Math.max(0, Number(record?.durationSeconds || 0)),
+      createdAt: record?.createdAt || new Date().toISOString()
+    }))
+    .filter((record) => record.total > 0 || record.score !== 0)
+    .slice(-80);
+}
+
+function normalizeGameRecords(records = []) {
+  return (Array.isArray(records) ? records : [])
+    .map((record) => ({
+      id: String(record?.id || makeId()),
+      game: String(record?.game || "market"),
+      score: Number(record?.score || 0),
+      detail: String(record?.detail || "").trim().slice(0, 280),
+      createdAt: record?.createdAt || new Date().toISOString()
+    }))
+    .filter((record) => record.game)
+    .slice(-80);
 }
 
 function normalizeInterviewExperience(raw = {}) {
@@ -2048,7 +2411,17 @@ function mergeProblems(seed, saved) {
   const byId = new Map();
   [...seed, ...saved].forEach((problem) => {
     const normalized = normalizeProblem(problem);
-    byId.set(normalized.id, normalized);
+    const previous = byId.get(normalized.id);
+    if (!previous) {
+      byId.set(normalized.id, normalized);
+      return;
+    }
+    byId.set(normalized.id, {
+      ...previous,
+      ...normalized,
+      tags: sanitizeProblemTags([...(previous.tags || []), ...(normalized.tags || [])]),
+      companies: normalized.companies?.length ? normalized.companies : previous.companies || []
+    });
   });
   return [...byId.values()];
 }
@@ -2259,7 +2632,7 @@ function loadCommunity() {
   try {
     return normalizeCommunityStore(JSON.parse(localStorage.getItem(COMMUNITY_KEY) || "{}"));
   } catch {
-    return { posts: [] };
+    return { posts: [], threads: [] };
   }
 }
 
@@ -2270,7 +2643,8 @@ function saveCommunity(options = {}) {
 
 function normalizeCommunityStore(raw = {}) {
   return {
-    posts: Array.isArray(raw?.posts) ? raw.posts.map(normalizeCommunityPost) : []
+    posts: Array.isArray(raw?.posts) ? raw.posts.map(normalizeCommunityPost) : [],
+    threads: Array.isArray(raw?.threads) ? raw.threads.map(normalizeMessageThread).filter((thread) => thread.participants.length >= 2) : []
   };
 }
 
@@ -2489,6 +2863,7 @@ function mergeCourses(remoteCourses, localCourses) {
 
 function mergeCloudCommunity(remoteCommunity, localCommunity) {
   const byId = new Map();
+  const threadsById = new Map();
   [normalizeCommunityStore(remoteCommunity), normalizeCommunityStore(localCommunity)].forEach((source) => {
     source.posts.forEach((post) => {
       const existing = byId.get(post.id) || {};
@@ -2499,9 +2874,27 @@ function mergeCloudCommunity(remoteCommunity, localCommunity) {
         comments: mergeRecordsById(existing.comments || [], post.comments || [])
       }));
     });
+    source.threads.forEach((thread) => {
+      const existing = threadsById.get(thread.id);
+      if (!existing) {
+        threadsById.set(thread.id, thread);
+        return;
+      }
+      const messages = mergeRecordsById(existing.messages || [], thread.messages || [])
+        .map(normalizeDirectMessage)
+        .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+      threadsById.set(thread.id, normalizeMessageThread({
+        ...existing,
+        ...thread,
+        participants: [...(existing.participants || []), ...(thread.participants || [])],
+        messages,
+        updatedAt: latestIso(existing.updatedAt, thread.updatedAt, messages.at(-1)?.createdAt)
+      }));
+    });
   });
   return {
-    posts: [...byId.values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    posts: [...byId.values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)),
+    threads: [...threadsById.values()].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
   };
 }
 
@@ -2717,7 +3110,7 @@ function renderSession() {
 
   renderUserChip();
   renderAll();
-  newDrill(false);
+  renderMentalMath();
   refreshProblemCatalog();
   refreshProblemSocial();
 }
@@ -3424,8 +3817,10 @@ function applyLanguage() {
   setButtonLabel('[data-module-tab="pk"]', t("pk"));
   setButtonLabel('[data-module-tab="news"]', t("news"));
   setButtonLabel('[data-module-tab="network"]', t("network"));
+  setButtonLabel('[data-module-tab="messages"]', t("messages"));
   setButtonLabel('[data-module-tab="resume"]', t("resume"));
   setButtonLabel('[data-module-tab="jobs"]', t("jobs"));
+  setButtonLabel('[data-module-tab="companies"]', t("companies"));
   setButtonLabel('[data-module-tab="courses"]', t("courses"));
   setButtonLabel('[data-module-tab="skills"]', t("skills"));
   setButtonLabel('[data-module-tab="tools"]', t("tools"));
@@ -3450,7 +3845,7 @@ function applyLanguage() {
 
   setPlaceholder("globalSearchInput", t("appSearchPlaceholder"));
   setAttribute("#globalSearchInput", "aria-label", t("appSearchPlaceholder"));
-  setTexts(".app-command-actions .app-stat-pill small", [t("commandStreakLabel"), t("commandXpLabel")]);
+  setTexts(".app-command-actions .app-stat-pill small", [t("commandStreakLabel"), t("commandChatLabel")]);
   updateCheckInPill();
   setText("#todoDockButtonLabel", t("todoButton"));
   setText("#todoDockEyebrow", t("todoEyebrow"));
@@ -3477,6 +3872,9 @@ function applyLanguage() {
   setText("#overviewCommunitySummary", t("overviewCommunitySummary"));
   setText(".community-section h2", t("community"));
   setText("#communitySummary", t("communitySummary"));
+  setText("#messagesPageTitle", t("messages"));
+  setText("#messagesSummary", t("messagesSummary"));
+  setPlaceholder("messageComposerInput", t("messageComposerPlaceholder"));
   setText(".problem-page-copy .rank-label", t("problemEyebrow"));
   setText(".problem-page-copy h2", t("problemTitle"));
   setText(".problem-page-copy p", t("problemSubtitle"));
@@ -3516,6 +3914,17 @@ function applyLanguage() {
   setText(".resume-panel h3", t("resumeReviewTitle"));
   setText(".jobs-section h2", t("jobsModule"));
   setText("#jobsSummary", t("jobsSummary"));
+  setText("#companiesPageTitle", t("companies"));
+  setText("#companiesSummary", t("companiesSummary"));
+  setText("#problemCompanyTitle", getLanguage() === "en" ? "Prepare by Company" : "按公司刷题");
+  setText("#problemCompanySummary", getLanguage() === "en"
+    ? "Practice tagged interview questions from quant firms."
+    : "从真实 quant firm 高频题出发，按公司题源定向练习。");
+  setButtonLabel("#problemCompanyClearBtn", t("allCompanies"));
+  setButtonLabel('[data-company-tier="all"]', t("allCompanies"));
+  setButtonLabel('[data-company-tier="s"]', "Tier S");
+  setButtonLabel('[data-company-tier="a"]', "Tier A");
+  setButtonLabel('[data-company-tier="b"]', "Tier B");
   setButtonLabel('[data-job-filter="all"]', t("allJobs"));
   setButtonLabel('[data-job-filter="internship"]', t("internship"));
   setButtonLabel('[data-job-filter="fulltime"]', t("fulltime"));
@@ -3672,9 +4081,12 @@ function switchModule(moduleName = "overview") {
   if (targetModule === "plan") renderPrepPlan();
   if (targetModule === "experiences") renderExperiences();
   if (targetModule === "community") renderCommunity();
+  if (targetModule === "messages") renderMessages();
+  if (targetModule === "tools") renderMentalMath();
   if (targetModule === "network") renderNetwork();
   if (targetModule === "resume") renderResume();
   if (targetModule === "jobs") renderJobs();
+  if (targetModule === "companies") renderCompanies();
   if (targetModule === "courses") renderCourses();
   if (targetModule === "settings") renderSettings();
   if (targetModule === "skills") drawRadar();
@@ -3705,8 +4117,11 @@ function renderAll() {
   renderExperiences();
   renderResume();
   renderJobs();
+  renderCompanies();
   renderCourses();
   renderCommunity();
+  renderMessages();
+  renderMentalMath();
   renderSettings();
   renderNewsTicker();
   renderNews();
@@ -3734,7 +4149,7 @@ function renderSummary() {
   els.weeklyXp.textContent = getWeeklyXp();
   els.streakCount.textContent = streak;
   if (els.commandStreakCount) els.commandStreakCount.textContent = streak;
-  if (els.commandXpCount) els.commandXpCount.textContent = formatScore(score);
+  updateUnreadMessageBadge();
   updateCheckInPill();
   renderRegionRank();
   renderOverviewProblemProgress();
@@ -3819,6 +4234,115 @@ function problemMatchesDifficulty(problem, difficulty = problemDifficultyFilter)
   const normalized = normalizeDifficultyFilter(difficulty);
   if (normalized === "all") return true;
   return difficultyClass(problem.difficulty) === normalized;
+}
+
+function companyKey(value = "") {
+  return String(value || "")
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function getCompanyAliases(company) {
+  if (!company) return [];
+  return [company.name, company.short, ...(company.aliases || [])].filter(Boolean);
+}
+
+function getCompanyDef(value) {
+  const key = companyKey(value);
+  if (!key) return null;
+  return quantCompanyDefs.find((company) => (
+    company.slug === value
+    || getCompanyAliases(company).some((alias) => companyKey(alias) === key)
+  )) || null;
+}
+
+function normalizeProblemCompanies(raw = {}, tags = [], source = "") {
+  const explicitValues = [
+    raw.company,
+    raw.firm,
+    raw.employer,
+    raw.sourceCompany,
+    ...(Array.isArray(raw.companies) ? raw.companies : parseTags(raw.companies || ""))
+  ];
+  const textHints = [
+    ...explicitValues,
+    ...(Array.isArray(tags) ? tags : []),
+    source
+  ].filter(Boolean);
+  const companies = [];
+  textHints.forEach((value) => {
+    const company = getCompanyDef(value);
+    if (!company || companies.includes(company.name)) return;
+    companies.push(company.name);
+  });
+  return companies;
+}
+
+function getProblemCompanies(problem = {}) {
+  const companies = Array.isArray(problem.companies) ? problem.companies : [];
+  const defs = companies
+    .map(getCompanyDef)
+    .filter(Boolean);
+  if (defs.length) return [...new Map(defs.map((company) => [company.slug, company])).values()];
+  return normalizeProblemCompanies(problem, problem.tags || [], problem.source || "")
+    .map(getCompanyDef)
+    .filter(Boolean);
+}
+
+function problemMatchesCompany(problem, companySlug = problemCompanyFilter) {
+  if (!companySlug || companySlug === "all") return true;
+  return getProblemCompanies(problem).some((company) => company.slug === companySlug);
+}
+
+function getCompanyProblemStats(company, problems = getCatalogProblems()) {
+  const scoped = problems.filter((problem) => problemMatchesCompany(problem, company.slug));
+  const completed = getProblemCompletionCount(scoped);
+  const scored = scoped
+    .map((problem) => Number(getProblemPersonalState(problem.id).lastScore))
+    .filter((score) => Number.isFinite(score));
+  const averageScore = scored.length
+    ? Math.round(scored.reduce((sum, score) => sum + score, 0) / scored.length)
+    : null;
+  return {
+    total: scoped.length,
+    completed,
+    averageScore,
+    percent: Math.round((completed / Math.max(scoped.length, 1)) * 100)
+  };
+}
+
+function companyTierWeight(tier = "") {
+  return { S: 0, A: 1, B: 2 }[String(tier).toUpperCase()] ?? 5;
+}
+
+function getCompanyJobs(company) {
+  const aliases = getCompanyAliases(company).map(companyKey);
+  return normalizeJobs(state.jobs).filter((job) => aliases.includes(companyKey(job.company)));
+}
+
+function createCompanyMark(company, className = "") {
+  const mark = document.createElement("div");
+  mark.className = `company-mark${className ? ` ${className}` : ""}`;
+  mark.style.setProperty("--company-color", company.color);
+  mark.style.setProperty("--company-accent", company.accent);
+  mark.setAttribute("aria-hidden", "true");
+  mark.textContent = company.short || getInitials(company.name);
+  return mark;
+}
+
+function showCompanyProblems(companySlug) {
+  const company = getCompanyDef(companySlug);
+  if (!company) return;
+  problemCompanyFilter = company.slug;
+  problemViewMode = "all";
+  selectedProblemDetailId = "";
+  problemVisibleCount = PROBLEM_PAGE_SIZE;
+  if (els.problemSearch) els.problemSearch.value = "";
+  switchModule("problems");
+  renderProblems();
+  window.setTimeout(() => spotlightElement(`[data-problem-company="${cssEscape(company.slug)}"]`), 80);
 }
 
 function getProblemThemeEntries(problems = getCatalogProblems()) {
@@ -5247,6 +5771,116 @@ function renderJobs(filter = getActiveJobFilter()) {
   refreshIcons();
 }
 
+function renderCompanies() {
+  if (!els.companyOverviewList) return;
+  const isEn = getLanguage() === "en";
+  document.querySelectorAll("[data-company-tier]").forEach((button) => {
+    const tier = button.dataset.companyTier || "all";
+    button.classList.toggle("active", tier === companyTierFilter);
+    button.setAttribute("aria-pressed", String(tier === companyTierFilter));
+  });
+
+  const problems = getCatalogProblems();
+  const entries = quantCompanyDefs
+    .map((company) => ({
+      company,
+      stats: getCompanyProblemStats(company, problems),
+      jobs: getCompanyJobs(company)
+    }))
+    .filter((entry) => companyTierFilter === "all" || entry.company.tier.toLowerCase() === companyTierFilter)
+    .sort((left, right) => (
+      companyTierWeight(left.company.tier) - companyTierWeight(right.company.tier)
+      || right.stats.total - left.stats.total
+      || left.company.name.localeCompare(right.company.name)
+    ));
+
+  if (els.companiesPageTitle) els.companiesPageTitle.textContent = t("companies");
+  if (els.companiesSummary) {
+    const questionCount = entries.reduce((sum, entry) => sum + entry.stats.total, 0);
+    els.companiesSummary.textContent = isEn
+      ? `${entries.length} firms · ${questionCount} tagged questions · tier, topics, careers`
+      : `${entries.length} 家公司 · ${questionCount} 道标注题 · tier、考点和官网入口`;
+  }
+
+  els.companyOverviewList.innerHTML = "";
+  if (!entries.length) {
+    els.companyOverviewList.appendChild(emptyBlock(t("searchEmpty")));
+    return;
+  }
+
+  entries.forEach(({ company, stats, jobs }) => {
+    const summary = isEn ? company.summaryEn : company.summaryZh;
+    const card = document.createElement("article");
+    card.className = "company-overview-card";
+    card.dataset.companyCard = company.slug;
+    card.style.setProperty("--company-color", company.color);
+    card.style.setProperty("--company-accent", company.accent);
+
+    const head = document.createElement("div");
+    head.className = "company-card-head";
+    const identity = document.createElement("div");
+    identity.className = "company-card-identity";
+    identity.appendChild(createCompanyMark(company));
+    const titleWrap = document.createElement("div");
+    const title = document.createElement("h3");
+    title.textContent = company.name;
+    const meta = document.createElement("small");
+    meta.textContent = `Tier ${company.tier} · ${company.type}`;
+    titleWrap.append(title, meta);
+    identity.appendChild(titleWrap);
+    const count = document.createElement("div");
+    count.className = "company-question-count";
+    count.innerHTML = `<strong>${escapeHtml(String(stats.total))}</strong><span>${escapeHtml(t("companyQuestions"))}</span>`;
+    head.append(identity, count);
+
+    const copy = document.createElement("p");
+    copy.className = "company-summary";
+    copy.textContent = summary;
+
+    const focus = document.createElement("div");
+    focus.className = "company-focus-list";
+    company.focus.slice(0, 4).forEach((item) => {
+      const chip = document.createElement("span");
+      chip.textContent = item;
+      focus.appendChild(chip);
+    });
+
+    const detail = document.createElement("div");
+    detail.className = "company-detail-grid";
+    detail.innerHTML = `
+      <span><b>${escapeHtml(String(stats.completed))}/${escapeHtml(String(stats.total))}</b><small>${escapeHtml(t("companyProgress"))}</small></span>
+      <span><b>${escapeHtml(String(jobs.length))}</b><small>${escapeHtml(isEn ? "open roles" : "岗位入口")}</small></span>
+      <span><b>${escapeHtml(company.locations.slice(0, 2).join(" / "))}</b><small>${escapeHtml(isEn ? "locations" : "常见地点")}</small></span>
+    `;
+
+    const progress = document.createElement("div");
+    progress.className = "company-progress-track";
+    progress.innerHTML = `<i style="width:${stats.percent}%"></i>`;
+
+    const actions = document.createElement("div");
+    actions.className = "company-card-actions";
+    const practice = document.createElement("button");
+    practice.type = "button";
+    practice.className = "primary-button compact";
+    practice.dataset.companyPractice = company.slug;
+    practice.innerHTML = `<i data-lucide="target"></i>${escapeHtml(t("companyPractice"))}`;
+    const careers = document.createElement("button");
+    careers.type = "button";
+    careers.className = "secondary-button compact";
+    careers.dataset.companyCareers = company.website;
+    careers.innerHTML = `<i data-lucide="external-link"></i>${escapeHtml(t("companyCareers"))}`;
+    actions.append(practice, careers);
+
+    const watermark = document.createElement("div");
+    watermark.className = "company-watermark";
+    watermark.textContent = company.short;
+
+    card.append(watermark, head, copy, focus, detail, progress, actions);
+    els.companyOverviewList.appendChild(card);
+  });
+  refreshIcons();
+}
+
 function jobTime(job) {
   const value = new Date(job?.postedAt || job?.createdAt || 0).getTime();
   return Number.isNaN(value) ? 0 : value;
@@ -5490,7 +6124,8 @@ function buildGlobalSearchResults(query) {
       problem.category,
       problem.difficulty,
       problem.tags.join(" "),
-      problem.tags.map(formatProblemTag).join(" ")
+      problem.tags.map(formatProblemTag).join(" "),
+      getProblemCompanies(problem).map((company) => getCompanyAliases(company).join(" ")).join(" ")
     ];
     if (!matchesQuery(fields, normalized)) return;
     results.push({
@@ -5500,6 +6135,30 @@ function buildGlobalSearchResults(query) {
       detail: `${formatCategoryLabel(problem.category)} · ${problem.difficulty}`,
       id: problem.id,
       rank: scoreProblemSearchMatch(problem, normalized)
+    });
+  });
+
+  quantCompanyDefs.forEach((company) => {
+    const summary = getLanguage() === "en" ? company.summaryEn : company.summaryZh;
+    const stats = getCompanyProblemStats(company);
+    const fields = [
+      company.name,
+      company.short,
+      company.tier,
+      company.type,
+      summary,
+      company.locations.join(" "),
+      company.focus.join(" "),
+      company.aliases.join(" ")
+    ];
+    if (!matchesQuery(fields, normalized)) return;
+    results.push({
+      type: "company",
+      typeLabel: t("companies"),
+      title: company.name,
+      detail: `Tier ${company.tier} · ${stats.total} ${t("companyQuestions")}`,
+      id: company.slug,
+      rank: company.name.toLowerCase().includes(normalized) ? 2 : 12
     });
   });
 
@@ -5577,6 +6236,12 @@ function activateGlobalSearchResult(index) {
     window.setTimeout(() => spotlightElement(`[data-job-id="${cssEscape(result.id)}"]`), 80);
     return;
   }
+  if (result.type === "company") {
+    companyTierFilter = "all";
+    switchModule("companies");
+    window.setTimeout(() => spotlightElement(`[data-company-card="${cssEscape(result.id)}"]`), 80);
+    return;
+  }
   if (result.type === "course") {
     switchModule("courses");
     window.setTimeout(() => spotlightElement(`[data-course-id="${cssEscape(result.id)}"]`), 80);
@@ -5597,7 +6262,8 @@ function getModuleSearchDefs() {
     { module: "overview", label: t("overview"), detail: "Dashboard / 总览", fields: [t("overview"), "overview", "dashboard", "总览", "首页", "home"] },
     { module: "plan", label: t("plan"), detail: "Interview prep plan / 备战计划", fields: [t("plan"), "plan", "计划", "备战", "schedule", "baseline"] },
     { module: "experiences", label: t("experiences"), detail: "Interview log / 面经", fields: [t("experiences"), "interview log", "面经", "复盘", "debrief", "experience"] },
-    { module: "community", label: t("community"), detail: "Community / 社区", fields: [t("community"), "community", "社区", "动态"] },
+    { module: "community", label: t("community"), detail: "Forum / 论坛", fields: [t("community"), "community", "forum", "论坛", "社区", "动态"] },
+    { module: "messages", label: t("messages"), detail: "Messages / 聊天", fields: [t("messages"), "messages", "chat", "dm", "私信", "聊天"] },
     { module: "problems", label: t("problems"), detail: "Problem bank / 题库", fields: [t("problems"), "problems", "题目", "题库", "question bank", "problem bank", "概率题"] },
     { module: "interview", label: t("interview"), detail: "Mock interview / 模拟面试", fields: [t("interview"), "interview", "mock", "模拟面试", "面试", "oa"] },
     { module: "pk", label: t("pk"), detail: "PK", fields: [t("pk"), "pk", "对战", "battle"] },
@@ -5605,6 +6271,7 @@ function getModuleSearchDefs() {
     { module: "network", label: t("network"), detail: "Network / 人脉", fields: [t("network"), "network", "人脉", "networking"] },
     { module: "resume", label: t("resume"), detail: "Resume / 简历", fields: [t("resume"), "resume", "cv", "简历"] },
     { module: "jobs", label: t("jobs"), detail: "Jobs / 求职", fields: [t("jobs"), "jobs", "job", "求职", "岗位", "申请", "internship", "full-time"] },
+    { module: "companies", label: t("companies"), detail: "Companies / 公司", fields: [t("companies"), "companies", "company", "firm", "公司", "tier", "quant firm", "jane street", "citadel", "optiver"] },
     { module: "courses", label: t("courses"), detail: "Courses / 课程", fields: [t("courses"), "course", "courses", "课程", "视频", "youtube", "bilibili", "b站"] },
     { module: "skills", label: t("skills"), detail: "Ability radar / 能力值", fields: [t("skills"), "skills", "ability", "能力值", "雷达", "知识点"] },
     { module: "tools", label: t("tools"), detail: "Mental math / 速算", fields: [t("tools"), "tools", "drills", "速算", "mental math"] },
@@ -6434,6 +7101,39 @@ function normalizeCommunityComment(raw = {}) {
   };
 }
 
+function normalizeMessageParticipant(raw = {}) {
+  return {
+    id: String(raw?.id || "").trim(),
+    name: String(raw?.name || "Quant").trim() || "Quant",
+    avatar: String(raw?.avatar || "").trim()
+  };
+}
+
+function normalizeDirectMessage(raw = {}) {
+  return {
+    id: String(raw?.id || makeId()),
+    senderId: String(raw?.senderId || "").trim(),
+    text: String(raw?.text || "").trim().slice(0, 2000),
+    createdAt: raw?.createdAt || new Date().toISOString(),
+    readBy: Array.isArray(raw?.readBy) ? raw.readBy.map(String) : []
+  };
+}
+
+function normalizeMessageThread(raw = {}) {
+  const participants = Array.isArray(raw?.participants)
+    ? raw.participants.map(normalizeMessageParticipant).filter((participant) => participant.id)
+    : [];
+  const messages = Array.isArray(raw?.messages)
+    ? raw.messages.map(normalizeDirectMessage).filter((message) => message.text)
+    : [];
+  return {
+    id: String(raw?.id || makeMessageThreadId(participants.map((participant) => participant.id))),
+    participants: [...new Map(participants.map((participant) => [participant.id, participant])).values()],
+    messages,
+    updatedAt: raw?.updatedAt || messages.at(-1)?.createdAt || new Date().toISOString()
+  };
+}
+
 function handleCommunityMedia(scope, event) {
   const composer = getCommunityComposer(scope);
   const file = event.target.files?.[0];
@@ -6616,6 +7316,18 @@ function renderCommunityList(container, posts, options = {}) {
     likeButton.innerHTML = `<i data-lucide="heart"></i> ${liked ? t("unlike") : t("like")} · ${post.likes.length}`;
     likeButton.addEventListener("click", () => toggleCommunityLike(post.id));
     actions.appendChild(likeButton);
+    if (post.authorId && post.authorId !== currentUser?.id) {
+      const messageButton = document.createElement("button");
+      messageButton.className = "secondary-button";
+      messageButton.type = "button";
+      messageButton.innerHTML = `<i data-lucide="message-square-text"></i> ${t("messageDirect")}`;
+      messageButton.addEventListener("click", () => startDirectMessageWithUser({
+        id: post.authorId,
+        name: post.authorName,
+        avatar: post.authorAvatar
+      }));
+      actions.appendChild(messageButton);
+    }
 
     if (!options.compact) {
       const commentCount = document.createElement("span");
@@ -6727,6 +7439,184 @@ function deleteCommunityPost(postId) {
     renderExperiences();
   }
   renderCommunity();
+}
+
+function getCurrentMessageParticipant() {
+  return normalizeMessageParticipant({
+    id: currentUser?.id || "local-user",
+    name: currentUser?.name || currentUser?.email || "Quant",
+    avatar: currentUser?.picture || ""
+  });
+}
+
+function makeMessageThreadId(ids = []) {
+  return `thread-${[...new Set(ids.filter(Boolean).map(String))].sort().join("-")}`;
+}
+
+function getThreadOtherParticipant(thread) {
+  const currentId = currentUser?.id || "local-user";
+  return thread?.participants?.find((participant) => participant.id !== currentId)
+    || thread?.participants?.[0]
+    || normalizeMessageParticipant({ id: "unknown", name: "Quant" });
+}
+
+function getUserMessageThreads() {
+  const currentId = currentUser?.id || "local-user";
+  community = loadCommunity();
+  return normalizeCommunityStore(community).threads
+    .filter((thread) => thread.participants.some((participant) => participant.id === currentId))
+    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+}
+
+function getUnreadMessageCount() {
+  const currentId = currentUser?.id || "local-user";
+  return getUserMessageThreads().reduce((count, thread) => (
+    count + thread.messages.filter((message) => message.senderId !== currentId && !message.readBy.includes(currentId)).length
+  ), 0);
+}
+
+function updateUnreadMessageBadge() {
+  if (!els.commandUnreadCount) return;
+  const unread = getUnreadMessageCount();
+  els.commandUnreadCount.textContent = unread ? String(unread) : "0";
+  els.commandChatBtn?.classList.toggle("has-unread", unread > 0);
+}
+
+function startDirectMessageWithUser(participant) {
+  if (!currentUser || !participant?.id || participant.id === currentUser.id) return;
+  community = loadCommunity();
+  const me = getCurrentMessageParticipant();
+  const other = normalizeMessageParticipant(participant);
+  const id = makeMessageThreadId([me.id, other.id]);
+  const existing = community.threads.find((thread) => thread.id === id);
+  if (!existing) {
+    community.threads.unshift(normalizeMessageThread({
+      id,
+      participants: [me, other],
+      messages: [{
+        id: makeId(),
+        senderId: me.id,
+        text: getLanguage() === "en" ? `Hi ${other.name}, saw your forum post and wanted to connect.` : `${other.name} 你好，我在论坛看到你的动态，想继续交流一下。`,
+        createdAt: new Date().toISOString(),
+        readBy: [me.id]
+      }],
+      updatedAt: new Date().toISOString()
+    }));
+    saveCommunity();
+  }
+  selectedMessageThreadId = id;
+  switchModule("messages");
+  renderMessages();
+}
+
+function markThreadRead(threadId) {
+  if (!threadId || !currentUser) return;
+  const currentId = currentUser.id;
+  community = loadCommunity();
+  community.threads = community.threads.map((thread) => {
+    if (thread.id !== threadId) return thread;
+    return normalizeMessageThread({
+      ...thread,
+      messages: thread.messages.map((message) => ({
+        ...message,
+        readBy: message.readBy.includes(currentId) ? message.readBy : [...message.readBy, currentId]
+      }))
+    });
+  });
+  saveCommunity();
+  updateUnreadMessageBadge();
+}
+
+function renderMessages() {
+  if (!els.messageThreadList) return;
+  const threads = getUserMessageThreads();
+  if (!selectedMessageThreadId && threads.length) selectedMessageThreadId = threads[0].id;
+  if (selectedMessageThreadId && !threads.some((thread) => thread.id === selectedMessageThreadId)) {
+    selectedMessageThreadId = threads[0]?.id || "";
+  }
+  els.messageThreadList.innerHTML = "";
+  if (!threads.length) {
+    els.messageThreadList.appendChild(emptyBlock(t("messageEmpty")));
+  } else {
+    threads.forEach((thread) => {
+      const other = getThreadOtherParticipant(thread);
+      const last = thread.messages.at(-1);
+      const unread = thread.messages.filter((message) => message.senderId !== currentUser?.id && !message.readBy.includes(currentUser?.id || "")).length;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `message-thread-item${thread.id === selectedMessageThreadId ? " active" : ""}`;
+      button.dataset.messageThread = thread.id;
+      button.innerHTML = `
+        <span class="avatar">${other.avatar ? `<img src="${escapeAttribute(other.avatar)}" alt="">` : escapeHtml(getInitials(other.name))}</span>
+        <span>
+          <strong>${escapeHtml(other.name)}</strong>
+          <small>${escapeHtml(last?.text || t("messageEmpty"))}</small>
+        </span>
+        ${unread ? `<b>${escapeHtml(String(unread))}</b>` : ""}
+      `;
+      els.messageThreadList.appendChild(button);
+    });
+  }
+
+  const active = threads.find((thread) => thread.id === selectedMessageThreadId);
+  renderMessageConversation(active);
+  updateUnreadMessageBadge();
+  refreshIcons();
+}
+
+function renderMessageConversation(thread) {
+  if (!els.messageConversationHeader || !els.messageConversationBody || !els.messageComposerForm) return;
+  els.messageConversationHeader.innerHTML = "";
+  els.messageConversationBody.innerHTML = "";
+  els.messageComposerForm.classList.toggle("hidden", !thread);
+  if (!thread) {
+    els.messageConversationHeader.innerHTML = `<strong>${escapeHtml(t("messages"))}</strong><small>${escapeHtml(t("messageEmpty"))}</small>`;
+    els.messageConversationBody.appendChild(emptyBlock(t("messageEmpty")));
+    return;
+  }
+  const other = getThreadOtherParticipant(thread);
+  els.messageConversationHeader.innerHTML = `
+    <span class="avatar">${other.avatar ? `<img src="${escapeAttribute(other.avatar)}" alt="">` : escapeHtml(getInitials(other.name))}</span>
+    <div>
+      <strong>${escapeHtml(other.name)}</strong>
+      <small>${escapeHtml(thread.messages.length)} messages</small>
+    </div>
+  `;
+  const currentId = currentUser?.id || "local-user";
+  thread.messages.forEach((message) => {
+    const bubble = document.createElement("div");
+    bubble.className = `direct-message ${message.senderId === currentId ? "mine" : "theirs"}`;
+    bubble.innerHTML = `<p>${escapeHtml(message.text)}</p><small>${escapeHtml(formatDate(message.createdAt))}</small>`;
+    els.messageConversationBody.appendChild(bubble);
+  });
+  window.requestAnimationFrame(() => {
+    els.messageConversationBody.scrollTop = els.messageConversationBody.scrollHeight;
+  });
+}
+
+function sendDirectMessage() {
+  if (!currentUser || !selectedMessageThreadId || !els.messageComposerInput) return;
+  const text = els.messageComposerInput.value.trim();
+  if (!text) return;
+  community = loadCommunity();
+  const now = new Date().toISOString();
+  community.threads = community.threads.map((thread) => {
+    if (thread.id !== selectedMessageThreadId) return thread;
+    return normalizeMessageThread({
+      ...thread,
+      messages: [...thread.messages, {
+        id: makeId(),
+        senderId: currentUser.id,
+        text,
+        createdAt: now,
+        readBy: [currentUser.id]
+      }],
+      updatedAt: now
+    });
+  });
+  els.messageComposerInput.value = "";
+  saveCommunity();
+  renderMessages();
 }
 
 function renderNetwork() {
@@ -6880,6 +7770,7 @@ function getProblemSearchFields(problem) {
     problem.sourceType,
     problem.bookSlug,
     problem.bookName,
+    getProblemCompanies(problem).map((company) => getCompanyAliases(company).join(" ")).join(" "),
     Array.isArray(problem.tags) ? problem.tags.map(formatProblemTag).join(" ") : "",
     Array.isArray(problem.tags) ? problem.tags.join(" ") : ""
   ];
@@ -6899,6 +7790,7 @@ function scoreProblemSearchMatch(problem, normalizedQuery) {
     problem.category,
     problem.difficulty,
     problem.bookName,
+    getProblemCompanies(problem).map((company) => company.name).join(" "),
     Array.isArray(problem.tags) ? problem.tags.join(" ") : ""
   ].filter(Boolean).join(" "));
   const tokens = query.split(/\s+/).filter(Boolean);
@@ -6917,6 +7809,7 @@ function getProblemBrowserMatches(options = {}) {
   const forceAllView = Boolean(options.forceAllView);
   let problems = state.problems
     .filter(isCatalogProblem)
+    .filter((problem) => problemMatchesCompany(problem, problemCompanyFilter))
     .filter((problem) => problemMatchesTheme(problem, problemThemeFilter))
     .filter((problem) => problemMatchesDifficulty(problem, problemDifficultyFilter))
     .filter((problem) => !query || matchesQuery(getProblemSearchFields(problem), query));
@@ -6936,6 +7829,7 @@ function getProblemBrowserMatches(options = {}) {
 function openProblemFromSearch(problemId) {
   selectedProblemDetailId = "";
   problemViewMode = "all";
+  problemCompanyFilter = "all";
   problemVisibleCount = PROBLEM_PAGE_SIZE;
   if (els.problemSearch) els.problemSearch.value = "";
   renderProblems();
@@ -6946,9 +7840,11 @@ function renderProblems() {
   renderProblemViewTabs();
   renderLeetcodeHot100();
   const allCatalogProblems = state.problems.filter(isCatalogProblem);
-  renderProblemThemeFilter(allCatalogProblems);
-  renderProblemDifficultyFilter(allCatalogProblems);
-  renderProblemCompletionDashboard(allCatalogProblems);
+  renderProblemCompanyPanel(allCatalogProblems);
+  const scopedCatalogProblems = allCatalogProblems.filter((problem) => problemMatchesCompany(problem, problemCompanyFilter));
+  renderProblemThemeFilter(scopedCatalogProblems);
+  renderProblemDifficultyFilter(scopedCatalogProblems);
+  renderProblemCompletionDashboard(scopedCatalogProblems);
   if (selectedProblemDetailId) {
     const selected = state.problems.find((item) => item.id === selectedProblemDetailId && isCatalogProblem(item));
     if (selected) {
@@ -7013,6 +7909,7 @@ function renderProblems() {
     const social = getProblemSocial(problem.id);
     const lastScore = personal.lastScore;
     if (problem.bookName) addProblemTag(meta, problem.bookName, "source");
+    getProblemCompanies(problem).slice(0, 2).forEach((company) => addProblemTag(meta, company.name, "company"));
     addProblemTag(meta, formatCategoryLabel(problem.category), "topic");
     addProblemTag(meta, problem.difficulty, `difficulty ${difficultyClass(problem.difficulty)}`);
     problem.tags
@@ -7074,6 +7971,66 @@ function renderProblems() {
     els.loadMoreProblemsBtn.innerHTML = `<i data-lucide="chevrons-down"></i> ${label}`;
   }
   scheduleMathTypeset(els.problemList);
+  refreshIcons();
+}
+
+function renderProblemCompanyPanel(problems = getCatalogProblems()) {
+  if (!els.problemCompanyList) return;
+  const isEn = getLanguage() === "en";
+  const entries = quantCompanyDefs
+    .map((company) => ({
+      company,
+      stats: getCompanyProblemStats(company, problems)
+    }))
+    .filter((entry) => entry.stats.total > 0)
+    .sort((left, right) => (
+      companyTierWeight(left.company.tier) - companyTierWeight(right.company.tier)
+      || right.stats.total - left.stats.total
+      || left.company.name.localeCompare(right.company.name)
+    ));
+
+  if (els.problemCompanyTitle) els.problemCompanyTitle.textContent = isEn ? "Prepare by Company" : "按公司刷题";
+  if (els.problemCompanySummary) {
+    const tagged = entries.reduce((sum, entry) => sum + entry.stats.total, 0);
+    els.problemCompanySummary.textContent = isEn
+      ? `${entries.length} firms · ${tagged} tagged questions from real interview sources`
+      : `${entries.length} 家公司 · ${tagged} 道真实题源标注题`;
+  }
+  if (els.problemCompanyClearBtn) {
+    els.problemCompanyClearBtn.classList.toggle("hidden", problemCompanyFilter === "all");
+    els.problemCompanyClearBtn.innerHTML = `<i data-lucide="rotate-ccw"></i>${escapeHtml(t("allCompanies"))}`;
+  }
+
+  els.problemCompanyList.innerHTML = "";
+  entries.forEach(({ company, stats }) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = `problem-company-card${problemCompanyFilter === company.slug ? " active" : ""}`;
+    card.dataset.problemCompany = company.slug;
+    card.style.setProperty("--company-color", company.color);
+    card.style.setProperty("--company-accent", company.accent);
+    card.setAttribute("aria-pressed", String(problemCompanyFilter === company.slug));
+
+    const mark = createCompanyMark(company, "small");
+    const main = document.createElement("span");
+    main.className = "problem-company-main";
+    main.innerHTML = `
+      <strong>${escapeHtml(company.name)}</strong>
+      <small>Tier ${escapeHtml(company.tier)} · ${escapeHtml(company.focus.slice(0, 2).join(" / "))}</small>
+    `;
+    const count = document.createElement("span");
+    count.className = "problem-company-count";
+    count.innerHTML = `
+      <b>${escapeHtml(String(stats.total))}</b>
+      <small>${escapeHtml(t("companyQuestions"))}</small>
+    `;
+    const progress = document.createElement("span");
+    progress.className = "problem-company-progress";
+    progress.innerHTML = `<i style="width:${stats.percent}%"></i>`;
+
+    card.append(mark, main, count, progress);
+    els.problemCompanyList.appendChild(card);
+  });
   refreshIcons();
 }
 
@@ -8159,6 +9116,7 @@ function normalizeProblem(raw) {
   const source = normalizeProblemSource(raw?.source || inferSource(sourceUrl));
   const sourceType = String(raw?.sourceType || raw?.collection || "").trim();
   const bookSlug = String(raw?.bookSlug || "").trim();
+  const tags = sanitizeProblemTags(Array.isArray(raw?.tags) ? raw.tags.map(String).filter(Boolean) : parseTags(raw?.tags || ""));
   const visibility = raw?.visibility || (
     source === "seed" || source === "question-bank" || sourceType === "book" || bookSlug
       ? "public"
@@ -8170,7 +9128,8 @@ function normalizeProblem(raw) {
     titleZh,
     category: normalizeCategory(raw?.category || inferProblemCategory(raw)),
     difficulty: raw?.difficulty || "Medium",
-    tags: sanitizeProblemTags(Array.isArray(raw?.tags) ? raw.tags.map(String).filter(Boolean) : parseTags(raw?.tags || "")),
+    tags,
+    companies: normalizeProblemCompanies(raw, tags, source),
     source,
     sourceUrl,
     sourceType,
@@ -9970,6 +10929,8 @@ function importState(event) {
         resources: Array.isArray(importedState.resources) ? importedState.resources : [],
         network: Array.isArray(importedState.network) ? importedState.network : [],
         interviewFavorites: Array.isArray(importedState.interviewFavorites) ? importedState.interviewFavorites : [],
+        mentalMathRecords: normalizeMentalMathRecords(importedState.mentalMathRecords),
+        gameRecords: normalizeGameRecords(importedState.gameRecords),
         problemStates: mergeProblemStates(
           state.problemStates || [],
           Array.isArray(importedState.problemStates) ? importedState.problemStates : [],
@@ -9996,82 +10957,573 @@ function importState(event) {
   reader.readAsText(file);
 }
 
-function newDrill(shouldFocus = true) {
-  currentDrill = makeDrill(drillMode);
-  els.drillQuestion.textContent = currentDrill.question;
-  els.drillInput.value = "";
-  els.drillFeedback.textContent = "";
-  if (shouldFocus) els.drillInput.focus();
+function getDrillModeLabel(mode = drillMode) {
+  const labels = {
+    numberLogic: "Number Logic",
+    arithmetic: "Arithmetic",
+    percent: getLanguage() === "en" ? "Percent" : "百分比",
+    square: getLanguage() === "en" ? "Squares" : "平方",
+    ev: "EV"
+  };
+  return labels[mode] || labels.numberLogic;
 }
 
-function checkDrill() {
-  if (!currentDrill) return;
-  const raw = els.drillInput.value.trim();
-  if (!raw) return;
+function createDrillSession(running = false) {
+  const total = Math.max(1, Number(els.drillCountSelect?.value || 20));
+  const durationSeconds = Math.max(60, Number(els.drillTimeSelect?.value || 1500));
+  return {
+    id: makeId(),
+    mode: drillMode,
+    total,
+    index: 0,
+    score: 0,
+    correct: 0,
+    incorrect: 0,
+    skipped: 0,
+    durationSeconds,
+    remainingSeconds: durationSeconds,
+    running,
+    answered: false,
+    completed: false,
+    startedAt: Date.now()
+  };
+}
 
-  const answer = Number(raw.replace("%", ""));
-  if (Number.isNaN(answer)) {
-    els.drillFeedback.textContent = "请输入数字。";
+function ensureDrillSession() {
+  if (drillSession && currentDrill) return;
+  drillSession = createDrillSession(false);
+  currentDrill = makeDrill(drillSession.mode);
+}
+
+function startDrillSession() {
+  stopDrillTimer();
+  drillSession = createDrillSession(true);
+  currentDrill = makeDrill(drillSession.mode);
+  startDrillTimer();
+  renderMentalMath();
+}
+
+function startDrillTimer() {
+  stopDrillTimer();
+  drillTimerId = window.setInterval(() => {
+    if (!drillSession?.running) return;
+    drillSession.remainingSeconds = Math.max(0, drillSession.remainingSeconds - 1);
+    renderDrillStatus();
+    if (drillSession.remainingSeconds <= 0) finishDrillSession("time");
+  }, 1000);
+}
+
+function stopDrillTimer() {
+  if (drillTimerId) window.clearInterval(drillTimerId);
+  drillTimerId = null;
+}
+
+function renderMentalMath() {
+  if (!els.drillQuestion) return;
+  ensureDrillSession();
+  document.querySelectorAll("[data-drill]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.drill === drillMode);
+  });
+  renderDrillStatus();
+  renderDrillQuestion();
+  renderMentalRecords();
+  renderMentalLeaderboard();
+  if (!currentMarketGame) currentMarketGame = makeMarketGameRound();
+  if (!currentPokerGame) currentPokerGame = makePokerGameRound();
+  renderMarketGame();
+  renderPokerGame();
+  refreshIcons();
+}
+
+function renderDrillStatus() {
+  if (!drillSession) return;
+  const answered = drillSession.correct + drillSession.incorrect;
+  const accuracy = answered ? Math.round((drillSession.correct / answered) * 100) : 0;
+  const timeText = formatDuration(drillSession.remainingSeconds);
+  if (els.drillScore) els.drillScore.textContent = String(drillSession.score);
+  if (els.drillAccuracy) els.drillAccuracy.textContent = `${accuracy}%`;
+  if (els.drillTimer) els.drillTimer.textContent = timeText;
+  if (els.drillProgressText) els.drillProgressText.textContent = `${drillSession.completed ? "Finished" : "Question"} ${Math.min(drillSession.index + 1, drillSession.total)}/${drillSession.total}`;
+  if (els.drillTimeLeftText) els.drillTimeLeftText.textContent = `Time left: ${timeText}`;
+  if (els.drillProgressFill) {
+    const percent = Math.round((Math.min(drillSession.index, drillSession.total) / Math.max(drillSession.total, 1)) * 100);
+    els.drillProgressFill.style.width = `${percent}%`;
+  }
+}
+
+function renderDrillQuestion() {
+  if (!currentDrill || !els.drillQuestion || !els.drillOptions) return;
+  els.drillQuestion.textContent = currentDrill.question;
+  els.drillOptions.innerHTML = "";
+  currentDrill.options.forEach((option) => {
+    const button = document.createElement("button");
+    const selected = currentDrill.selected != null && Number(option) === Number(currentDrill.selected);
+    const correct = Math.abs(Number(option) - Number(currentDrill.answer)) <= currentDrill.tolerance;
+    button.type = "button";
+    button.className = [
+      "drill-option",
+      currentDrill.answered && correct ? "correct" : "",
+      currentDrill.answered && selected && !correct ? "incorrect" : ""
+    ].filter(Boolean).join(" ");
+    button.dataset.drillOption = String(option);
+    button.disabled = Boolean(!drillSession?.running || currentDrill.answered || drillSession?.completed);
+    button.textContent = formatNumber(option);
+    els.drillOptions.appendChild(button);
+  });
+  if (els.drillFeedback) {
+    els.drillFeedback.textContent = currentDrill.feedback || (drillSession?.running
+      ? (getLanguage() === "en" ? "Choose one answer or skip if unsure." : "选择一个答案；不确定就跳过。")
+      : (getLanguage() === "en" ? "Press Start to begin a timed set." : "点击开始进入限时训练。"));
+  }
+}
+
+function checkDrill(rawAnswer) {
+  if (!currentDrill || !drillSession?.running || drillSession.completed || currentDrill.answered) return;
+  const answer = Number(rawAnswer);
+  if (!Number.isFinite(answer)) return;
+  const correct = Math.abs(answer - currentDrill.answer) <= currentDrill.tolerance;
+  currentDrill.answered = true;
+  currentDrill.selected = answer;
+  currentDrill.feedback = correct
+    ? `Correct. ${currentDrill.explain}`
+    : `Answer: ${formatNumber(currentDrill.answer)}. ${currentDrill.explain}`;
+  drillSession.answered = true;
+  if (correct) {
+    drillSession.correct += 1;
+    drillSession.score += 1;
+  } else {
+    drillSession.incorrect += 1;
+    drillSession.score -= 1;
+  }
+  renderMentalMath();
+  if (drillSession.running) window.setTimeout(() => advanceDrillQuestion({ countSkip: false }), 520);
+}
+
+function skipDrill() {
+  if (!currentDrill || !drillSession?.running || drillSession.completed) return;
+  if (currentDrill.answered) {
+    advanceDrillQuestion({ countSkip: false });
     return;
   }
+  currentDrill.answered = true;
+  currentDrill.skipped = true;
+  currentDrill.feedback = `Skipped. Answer: ${formatNumber(currentDrill.answer)}. ${currentDrill.explain}`;
+  drillSession.skipped += 1;
+  drillSession.answered = true;
+  renderMentalMath();
+  if (drillSession.running) window.setTimeout(() => advanceDrillQuestion({ countSkip: false }), 420);
+}
 
-  const tolerance = currentDrill.tolerance;
-  const diff = Math.abs(answer - currentDrill.answer);
-  const correct = diff <= tolerance;
-  els.drillFeedback.textContent = correct
-    ? `正确。${currentDrill.explain}`
-    : `答案约 ${formatNumber(currentDrill.answer)}。${currentDrill.explain}`;
+function advanceDrillQuestion(options = {}) {
+  if (!drillSession || drillSession.completed) return;
+  if (!drillSession.running) return;
+  if (!currentDrill?.answered && options.countSkip !== false) {
+    drillSession.skipped += 1;
+  }
+  if (drillSession.index + 1 >= drillSession.total) {
+    finishDrillSession("complete");
+    return;
+  }
+  drillSession.index += 1;
+  drillSession.answered = false;
+  currentDrill = makeDrill(drillSession.mode);
+  renderMentalMath();
+}
 
-  if (correct) {
-    state.skills.mentalMath += 4;
+function finishDrillSession(reason = "complete") {
+  if (!drillSession || drillSession.completed) return;
+  stopDrillTimer();
+  drillSession.completed = true;
+  drillSession.running = false;
+  const answered = drillSession.correct + drillSession.incorrect;
+  const accuracy = answered ? Math.round((drillSession.correct / answered) * 100) : 0;
+  const usedSeconds = Math.max(0, drillSession.durationSeconds - drillSession.remainingSeconds);
+  const record = normalizeMentalMathRecords([{
+    id: drillSession.id,
+    mode: drillSession.mode,
+    label: getDrillModeLabel(drillSession.mode),
+    score: drillSession.score,
+    correct: drillSession.correct,
+    incorrect: drillSession.incorrect,
+    skipped: drillSession.skipped,
+    total: drillSession.total,
+    accuracy,
+    durationSeconds: usedSeconds,
+    createdAt: new Date().toISOString()
+  }])[0];
+  if (record && !state.mentalMathRecords.some((item) => item.id === record.id)) {
+    state.mentalMathRecords = normalizeMentalMathRecords([...(state.mentalMathRecords || []), record]);
+    const xpGain = Math.max(4, record.correct * 3 + Math.max(0, record.score));
+    state.skills.mentalMath = Math.max(0, (state.skills.mentalMath || 0) + xpGain);
     state.entries.push({
       id: makeId(),
       date: new Date().toISOString(),
-      text: `速算练习：${currentDrill.question}`,
-      gains: { leetcode: 0, pandasNumpy: 0, probabilityExpectation: 0, statistics: 0, machineLearning: 0, deepLearning: 0, market: 0, option: 0, mentalMath: 4 },
-      totalXp: 4,
-      duration: 0
+      text: `Mental Math ${record.label}: ${record.score} (${record.correct}/${record.total}, ${reason})`,
+      gains: { leetcode: 0, pandasNumpy: 0, probabilityExpectation: 0, statistics: 0, machineLearning: 0, deepLearning: 0, market: 0, option: 0, mentalMath: xpGain },
+      totalXp: xpGain,
+      duration: Math.round(usedSeconds / 60)
     });
     saveState();
-    renderAll();
+    renderSummary();
+    renderSkills();
+    renderHistory();
   }
+  if (currentDrill) currentDrill.feedback = `Session complete. Score ${drillSession.score}, accuracy ${accuracy}%.`;
+  renderMentalMath();
 }
 
 function makeDrill(mode) {
+  if (mode === "numberLogic") return makeNumberLogicDrill();
+  if (mode === "arithmetic") return makeArithmeticDrill();
   if (mode === "square") {
     const n = randomInt(12, 45);
-    return {
-      question: `${n}² = ?`,
-      answer: n * n,
-      tolerance: 0,
-      explain: `${n}² = ${n * n}`
-    };
+    const answer = n * n;
+    return makeChoiceDrill(`${n}² = ?`, answer, `${n}² = ${answer}`, { spread: Math.max(8, n), integer: true });
   }
-
   if (mode === "ev") {
     const p = randomChoice([0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.75]);
     const win = randomInt(20, 90);
     const lose = randomInt(5, 35);
     const answer = p * win - (1 - p) * lose;
-    return {
-      question: `${Math.round(p * 100)}% 赢 ${win}，否则亏 ${lose}，EV = ?`,
-      answer,
-      tolerance: 0.15,
-      explain: `${p} x ${win} - ${formatNumber(1 - p)} x ${lose}`
-    };
+    return makeChoiceDrill(`${Math.round(p * 100)}% win ${win}, otherwise lose ${lose}. EV = ?`, answer, `${p} x ${win} - ${formatNumber(1 - p)} x ${lose}`, { spread: 8, tolerance: 0.15 });
   }
-
   const base = randomInt(40, 240);
   const pct = randomChoice([5, 8, 10, 12, 15, 18, 20, 25, 30, 35]);
   const direction = Math.random() > 0.5 ? "increase" : "decrease";
   const answer = direction === "increase" ? base * (1 + pct / 100) : base * (1 - pct / 100);
-  const word = direction === "increase" ? "上涨" : "下跌";
+  const word = direction === "increase" ? "up" : "down";
+  return makeChoiceDrill(`${base} ${word} ${pct}% = ?`, answer, `${base} x ${formatNumber(direction === "increase" ? 1 + pct / 100 : 1 - pct / 100)}`, { spread: Math.max(5, base * 0.08), tolerance: 0.1 });
+}
+
+function makeNumberLogicDrill() {
+  const type = randomChoice(["arithmetic", "geometric", "alternating", "fibonacci"]);
+  let sequence = [];
+  let answer = 0;
+  let explain = "";
+  if (type === "geometric") {
+    const start = randomChoice([1, 2, 3, 4, 5]);
+    const ratio = randomChoice([2, 3, 4]);
+    sequence = Array.from({ length: 5 }, (_, index) => start * ratio ** index);
+    answer = start * ratio ** 5;
+    explain = `Multiply by ${ratio}.`;
+  } else if (type === "alternating") {
+    const start = randomInt(8, 24);
+    const up = randomInt(4, 12);
+    const down = randomInt(1, 5);
+    sequence = [start];
+    for (let index = 1; index < 6; index += 1) {
+      sequence.push(sequence[index - 1] + (index % 2 ? up : -down));
+    }
+    answer = sequence.pop();
+    explain = `Alternate +${up}, -${down}.`;
+  } else if (type === "fibonacci") {
+    const a = randomInt(1, 6);
+    const b = randomInt(2, 9);
+    sequence = [a, b];
+    while (sequence.length < 6) sequence.push(sequence.at(-1) + sequence.at(-2));
+    answer = sequence.pop();
+    explain = "Each value is the sum of the previous two.";
+  } else {
+    const start = randomInt(2, 28);
+    const step = randomInt(2, 13);
+    sequence = Array.from({ length: 5 }, (_, index) => start + step * index);
+    answer = start + step * 5;
+    explain = `Add ${step} each step.`;
+  }
+  return makeChoiceDrill(`${sequence.join("   ")}   ?`, answer, explain, { spread: Math.max(6, Math.abs(answer) * 0.2), integer: true });
+}
+
+function makeArithmeticDrill() {
+  const type = randomChoice(["multiply", "divide", "add", "fraction"]);
+  if (type === "divide") {
+    const divisor = randomInt(3, 12);
+    const answer = randomInt(8, 36);
+    const dividend = divisor * answer;
+    return makeChoiceDrill(`${dividend} ÷ ${divisor} = ?`, answer, `${divisor} x ${answer} = ${dividend}`, { spread: 8, integer: true });
+  }
+  if (type === "fraction") {
+    const denominator = randomChoice([4, 5, 8, 10, 12, 16]);
+    const numerator = randomInt(1, denominator - 1);
+    const base = randomChoice([80, 96, 120, 160, 200, 240]);
+    const answer = (base * numerator) / denominator;
+    return makeChoiceDrill(`${numerator}/${denominator} of ${base} = ?`, answer, `${base} ÷ ${denominator} x ${numerator}`, { spread: 10, tolerance: 0.1 });
+  }
+  if (type === "add") {
+    const a = randomInt(120, 980);
+    const b = randomInt(80, 760);
+    const sign = Math.random() > 0.45 ? "+" : "-";
+    const answer = sign === "+" ? a + b : a - b;
+    return makeChoiceDrill(`${a} ${sign} ${b} = ?`, answer, `${a} ${sign} ${b}`, { spread: 30, integer: true });
+  }
+  const a = randomInt(11, 29);
+  const b = randomInt(6, 24);
+  const answer = a * b;
+  return makeChoiceDrill(`${a} × ${b} = ?`, answer, `${a} x ${b} = ${answer}`, { spread: 18, integer: true });
+}
+
+function makeChoiceDrill(question, answer, explain, options = {}) {
+  const tolerance = options.tolerance ?? 0;
   return {
-    question: `${base} ${word} ${pct}% = ?`,
+    question,
     answer,
-    tolerance: 0.1,
-    explain: `${base} x ${formatNumber(direction === "increase" ? 1 + pct / 100 : 1 - pct / 100)}`
+    tolerance,
+    explain,
+    options: makeAnswerOptions(answer, options),
+    answered: false,
+    selected: null,
+    feedback: ""
   };
+}
+
+function makeAnswerOptions(answer, options = {}) {
+  const integer = options.integer !== false && Math.abs(answer - Math.round(answer)) < 0.001;
+  const spread = Math.max(1, Number(options.spread || Math.abs(answer) * 0.12 || 6));
+  const normalize = (value) => integer ? Math.round(value) : Number(value.toFixed(1));
+  const values = new Set([String(normalize(answer))]);
+  const offsets = [-2, -1, 1, 2, 3, -3, 4, -4];
+  offsets.forEach((offset) => {
+    if (values.size >= 5) return;
+    values.add(String(normalize(answer + offset * spread * randomChoice([0.45, 0.7, 1, 1.35]))));
+  });
+  while (values.size < 5) {
+    values.add(String(normalize(answer + randomInt(-5, 5) * spread || answer + values.size + 1)));
+  }
+  return [...values].map(Number).sort(() => Math.random() - 0.5).slice(0, 5);
+}
+
+function formatDuration(seconds) {
+  const safe = Math.max(0, Math.floor(Number(seconds || 0)));
+  const minutes = Math.floor(safe / 60);
+  const rest = String(safe % 60).padStart(2, "0");
+  return `${minutes}:${rest}`;
+}
+
+function renderMentalRecords() {
+  const records = normalizeMentalMathRecords(state.mentalMathRecords);
+  if (els.mentalBestScore) {
+    const best = records.length ? Math.max(...records.map((record) => record.score)) : 0;
+    els.mentalBestScore.textContent = `Best ${best}`;
+  }
+  renderSparkline(els.mentalSparkline, records.map((record) => record.score));
+  if (!els.mentalRecordList) return;
+  els.mentalRecordList.innerHTML = "";
+  if (!records.length) {
+    els.mentalRecordList.appendChild(emptyBlock(getLanguage() === "en" ? "No sessions yet." : "还没有训练记录。"));
+    return;
+  }
+  records.slice(-5).reverse().forEach((record) => {
+    const row = document.createElement("div");
+    row.className = "mental-record-row";
+    row.innerHTML = `
+      <div>
+        <strong>${escapeHtml(record.label || getDrillModeLabel(record.mode))}</strong>
+        <small>${escapeHtml(formatDate(record.createdAt))} · ${escapeHtml(formatDuration(record.durationSeconds))}</small>
+      </div>
+      <span>${escapeHtml(String(record.score))}</span>
+      <small>${escapeHtml(String(record.correct))}/${escapeHtml(String(record.total))} · ${escapeHtml(String(record.accuracy))}%</small>
+    `;
+    els.mentalRecordList.appendChild(row);
+  });
+}
+
+function renderSparkline(svg, values = []) {
+  if (!svg) return;
+  svg.innerHTML = "";
+  const series = values.slice(-18);
+  if (series.length < 2) {
+    svg.innerHTML = '<text x="16" y="42">No trend yet</text>';
+    return;
+  }
+  const min = Math.min(...series);
+  const max = Math.max(...series);
+  const range = Math.max(1, max - min);
+  const points = series.map((value, index) => {
+    const x = 10 + (index / Math.max(series.length - 1, 1)) * 240;
+    const y = 58 - ((value - min) / range) * 44;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  svg.innerHTML = `
+    <polyline class="sparkline-area" points="10,62 ${points} 250,62"></polyline>
+    <polyline class="sparkline-line" points="${points}"></polyline>
+    ${series.map((value, index) => {
+      const [x, y] = points.split(" ")[index].split(",");
+      return `<circle cx="${x}" cy="${y}" r="2.8"><title>${escapeHtml(String(value))}</title></circle>`;
+    }).join("")}
+  `;
+}
+
+function renderMentalLeaderboard() {
+  if (!els.mentalLeaderboardList) return;
+  const records = normalizeMentalMathRecords(state.mentalMathRecords);
+  const best = records.length ? Math.max(...records.map((record) => record.score)) : 0;
+  const rows = [
+    { name: currentUser?.name || "You", score: best, self: true },
+    { name: "Ari Chen", score: 22 },
+    { name: "Mina Patel", score: 18 },
+    { name: "Leo Wang", score: 15 },
+    { name: "Sofia Kim", score: 12 }
+  ].sort((a, b) => b.score - a.score);
+  els.mentalLeaderboardList.innerHTML = "";
+  rows.forEach((row, index) => {
+    const item = document.createElement("div");
+    item.className = `mental-leaderboard-row${row.self ? " self" : ""}`;
+    item.innerHTML = `
+      <span>${index + 1}</span>
+      <strong>${escapeHtml(row.name)}</strong>
+      <b>${escapeHtml(String(row.score))}</b>
+    `;
+    els.mentalLeaderboardList.appendChild(item);
+  });
+}
+
+function makeMarketGameRound() {
+  const fairValue = randomInt(82, 118);
+  const volatility = randomChoice([1.5, 2, 2.5, 3.5, 4]);
+  const news = randomChoice(["thin book", "fast tape", "wide client flow", "quiet auction", "late imbalance"]);
+  return {
+    id: makeId(),
+    fairValue,
+    volatility,
+    news,
+    score: Number(currentMarketGame?.score || 0),
+    quoted: false,
+    feedback: ""
+  };
+}
+
+function renderMarketGame() {
+  if (!currentMarketGame || !els.marketGamePrompt) return;
+  if (els.marketGameScore) els.marketGameScore.textContent = String(Math.round(currentMarketGame.score || 0));
+  els.marketGamePrompt.innerHTML = `
+    <span>Indicative fair: <b>${escapeHtml(String(currentMarketGame.fairValue))}</b></span>
+    <span>Vol: ${escapeHtml(String(currentMarketGame.volatility))} · ${escapeHtml(currentMarketGame.news)}</span>
+    <small>Quote a two-sided market. Tight and centered quotes score best; crossed markets are rejected.</small>
+  `;
+  if (els.marketBidInput && !currentMarketGame.quoted) els.marketBidInput.value = String(Math.round(currentMarketGame.fairValue - currentMarketGame.volatility));
+  if (els.marketAskInput && !currentMarketGame.quoted) els.marketAskInput.value = String(Math.round(currentMarketGame.fairValue + currentMarketGame.volatility));
+  if (els.marketGameFeedback) els.marketGameFeedback.textContent = currentMarketGame.feedback || "";
+}
+
+function newMarketGame(renderAfter = true) {
+  currentMarketGame = makeMarketGameRound();
+  if (renderAfter) renderMentalMath();
+}
+
+function submitMarketQuote() {
+  if (!currentMarketGame) return;
+  if (currentMarketGame.quoted) {
+    currentMarketGame.feedback = "Round already scored. Start a new market.";
+    renderMarketGame();
+    return;
+  }
+  const bid = Number(els.marketBidInput?.value);
+  const ask = Number(els.marketAskInput?.value);
+  if (!Number.isFinite(bid) || !Number.isFinite(ask) || bid >= ask) {
+    currentMarketGame.feedback = "Bid must be below ask.";
+    renderMarketGame();
+    return;
+  }
+  const fair = currentMarketGame.fairValue;
+  const mid = (bid + ask) / 2;
+  const width = ask - bid;
+  const centerPenalty = Math.abs(mid - fair) * 2.2;
+  const widthPenalty = Math.max(0, width - currentMarketGame.volatility * 2.2);
+  const score = Math.round(20 - centerPenalty - widthPenalty + Math.max(0, currentMarketGame.volatility * 2 - width));
+  currentMarketGame.score = Number(currentMarketGame.score || 0) + score;
+  currentMarketGame.quoted = true;
+  currentMarketGame.feedback = `Round ${score >= 0 ? "+" : ""}${score}. Mid ${formatNumber(mid)}, width ${formatNumber(width)}, fair ${fair}.`;
+  recordGameResult("market", score, `Market making quote ${bid}/${ask}; fair ${fair}`);
+  renderMarketGame();
+  renderSkills();
+}
+
+function makePokerGameRound() {
+  const hands = [
+    { hand: "A♠ K♠", strength: 86 },
+    { hand: "Q♥ Q♦", strength: 91 },
+    { hand: "9♣ 9♠", strength: 68 },
+    { hand: "A♦ 7♦", strength: 58 },
+    { hand: "K♣ J♥", strength: 49 },
+    { hand: "7♠ 2♦", strength: 14 },
+    { hand: "5♥ 6♥", strength: 43 },
+    { hand: "A♣ A♥", strength: 98 }
+  ];
+  const hand = randomChoice(hands);
+  const pot = randomInt(12, 48);
+  const call = randomInt(4, 22);
+  const stack = randomInt(35, 120);
+  const pressure = stack < 55 ? 9 : stack > 95 ? -4 : 1;
+  const edge = hand.strength + pot - call * 2 + pressure;
+  const bestAction = edge > 92 ? "raise" : edge > 52 ? "call" : "fold";
+  return {
+    id: makeId(),
+    ...hand,
+    pot,
+    call,
+    stack,
+    bestAction,
+    score: Number(currentPokerGame?.score || 0),
+    answered: false,
+    feedback: ""
+  };
+}
+
+function renderPokerGame() {
+  if (!currentPokerGame || !els.pokerGamePrompt) return;
+  if (els.pokerGameScore) els.pokerGameScore.textContent = String(Math.round(currentPokerGame.score || 0));
+  els.pokerGamePrompt.innerHTML = `
+    <span>Hand: <b>${escapeHtml(currentPokerGame.hand)}</b></span>
+    <span>Pot ${escapeHtml(String(currentPokerGame.pot))} · call ${escapeHtml(String(currentPokerGame.call))} · stack ${escapeHtml(String(currentPokerGame.stack))}</span>
+    <small>Choose the tournament action with the best risk-adjusted EV.</small>
+  `;
+  if (els.pokerGameFeedback) els.pokerGameFeedback.textContent = currentPokerGame.feedback || "";
+}
+
+function newPokerGame(renderAfter = true) {
+  currentPokerGame = makePokerGameRound();
+  if (renderAfter) renderMentalMath();
+}
+
+function submitPokerAction(action) {
+  if (!currentPokerGame || !action) return;
+  if (currentPokerGame.answered) {
+    currentPokerGame.feedback = "Hand already scored. Start a new hand.";
+    renderPokerGame();
+    return;
+  }
+  const correct = action === currentPokerGame.bestAction;
+  const score = correct ? 12 : -5;
+  currentPokerGame.score = Number(currentPokerGame.score || 0) + score;
+  currentPokerGame.answered = true;
+  currentPokerGame.feedback = correct
+    ? `Good ${action}. Strength ${currentPokerGame.strength}; pressure-adjusted EV supports it.`
+    : `Best action was ${currentPokerGame.bestAction}. Strength ${currentPokerGame.strength}, call ${currentPokerGame.call}, pot ${currentPokerGame.pot}.`;
+  recordGameResult("poker", score, `Poker ${currentPokerGame.hand}: chose ${action}, best ${currentPokerGame.bestAction}`);
+  renderPokerGame();
+  renderSkills();
+}
+
+function recordGameResult(game, score, detail) {
+  state.gameRecords = normalizeGameRecords([...(state.gameRecords || []), {
+    id: makeId(),
+    game,
+    score,
+    detail,
+    createdAt: new Date().toISOString()
+  }]);
+  const skillKey = game === "market" ? "market" : "probabilityExpectation";
+  const xpGain = Math.max(2, Math.abs(score));
+  state.skills[skillKey] = Math.max(0, (state.skills[skillKey] || 0) + xpGain);
+  state.entries.push({
+    id: makeId(),
+    date: new Date().toISOString(),
+    text: detail,
+    gains: Object.fromEntries(Object.keys(skillDefs).map((key) => [key, key === skillKey ? xpGain : 0])),
+    totalXp: xpGain,
+    duration: 0
+  });
+  saveState();
+  renderSummary();
 }
 
 function setupSkillRadarInteractions() {
