@@ -226,11 +226,23 @@
           <div id="globalSearchResults" class="global-search-results hidden" role="listbox" aria-label="搜索结果" data-i18n-aria-label="searchResultsLabel"></div>
         </div>
         <div class="app-command-actions">
-          <button class="app-stat-pill streak-pill" id="checkInPill" type="button">
-            <span class="stat-art stat-art-fire" aria-hidden="true"></span>
-            <strong id="commandStreakCount">0</strong>
-            <small>day streak</small>
-          </button>
+          <div class="streak-widget" id="streakWidget">
+            <button class="app-stat-pill streak-pill" id="checkInPill" type="button" aria-expanded="false" aria-controls="streakCalendarPanel">
+              <span class="stat-art stat-art-fire" aria-hidden="true"></span>
+              <strong id="commandStreakCount" class="sr-only">0</strong>
+              <small class="sr-only">day streak</small>
+              <i class="streak-toggle-icon" data-lucide="chevron-down" aria-hidden="true"></i>
+            </button>
+            <div class="streak-calendar-panel" id="streakCalendarPanel" hidden>
+              <div class="streak-panel-head">
+                <span class="streak-panel-kicker">Fire streak</span>
+                <strong id="streakPanelCount">0</strong>
+              </div>
+              <div class="streak-weekdays" id="streakCalendarWeekdays"></div>
+              <div class="streak-calendar-grid" id="streakCalendarGrid" aria-label="打卡日历"></div>
+              <p id="streakPanelMessage">完成任意一件事，今天的火苗会自动点亮。</p>
+            </div>
+          </div>
           <button class="app-stat-pill chat-pill" id="commandChatBtn" type="button" data-jump-module="messages" aria-label="打开聊天" data-i18n-aria-label="openChat">
             <span class="stat-art stat-art-chat" aria-hidden="true"><i data-lucide="message-square-text"></i></span>
             <strong id="commandUnreadCount">0</strong>

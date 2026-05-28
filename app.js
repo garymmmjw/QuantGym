@@ -527,7 +527,7 @@ const i18n = {
     records: "记录",
     weeklyXp: "7 日 XP",
     appSearchPlaceholder: "搜索题目、工作、课程、知识点或模块",
-    commandStreakLabel: "连续天数",
+    commandStreakLabel: "火焰日历",
     commandChatLabel: "聊天",
     heroKicker: "Welcome back, Quant.",
     heroTitle: "Sharpen your quant edge today.",
@@ -689,6 +689,13 @@ const i18n = {
     searchEmpty: "没有找到匹配内容。",
     searchOpen: "打开",
     checkInDone: "已打卡",
+    openStreakCalendar: "打开火焰日历",
+    closeStreakCalendar: "收起火焰日历",
+    streakPanelTitle: "连续战绩",
+    streakPanelReady: "今天已点燃，保持节奏。",
+    streakPanelPrompt: "完成任意一件事，今天的火苗会自动点亮。",
+    checkInToastTitle: "打卡成功",
+    checkInToastDetail: "今日火苗已点亮，连续 {count} 天。",
     todayGuide: "今日向导",
     tasksWaiting: "3 个任务待完成",
     todoButton: "今日待办",
@@ -871,7 +878,7 @@ const i18n = {
     records: "Records",
     weeklyXp: "7-Day XP",
     appSearchPlaceholder: "Search problems, jobs, courses, skills, or modules",
-    commandStreakLabel: "day streak",
+    commandStreakLabel: "Fire calendar",
     commandChatLabel: "Chat",
     heroKicker: "Welcome back, quant.",
     heroTitle: "Sharpen your quant edge today.",
@@ -1033,6 +1040,13 @@ const i18n = {
     searchEmpty: "No matching results.",
     searchOpen: "Open",
     checkInDone: "Checked in",
+    openStreakCalendar: "Open fire calendar",
+    closeStreakCalendar: "Close fire calendar",
+    streakPanelTitle: "Streak",
+    streakPanelReady: "Today's flame is lit. Keep the rhythm.",
+    streakPanelPrompt: "Finish any action and today's flame lights automatically.",
+    checkInToastTitle: "Checked in",
+    checkInToastDetail: "Today's flame is lit. {count}-day streak.",
     todayGuide: "Today's guide",
     tasksWaiting: "3 tasks waiting",
     todoButton: "Tasks",
@@ -1719,6 +1733,9 @@ let problemSocialNotice = "";
 let leetcodeHotExpanded = false;
 let todoDockOpen = false;
 let heroTypewriterTimer = null;
+let streakPanelOpen = false;
+let freshCheckInKey = "";
+let checkInToastTimer = null;
 const PROBLEM_PAGE_SIZE = 24;
 let problemVisibleCount = PROBLEM_PAGE_SIZE;
 
@@ -1792,7 +1809,13 @@ function bindElements() {
     "rankName",
     "totalXp",
     "commandStreakCount",
+    "streakWidget",
     "checkInPill",
+    "streakCalendarPanel",
+    "streakPanelCount",
+    "streakCalendarWeekdays",
+    "streakCalendarGrid",
+    "streakPanelMessage",
     "heroTypewriter",
     "generateStudyPlanBtn",
     "todayPlanCard",
@@ -2142,7 +2165,10 @@ function bindEvents() {
   els.languageSelect.addEventListener("change", () => setLanguage(els.languageSelect.value));
   els.settingsBtn.addEventListener("click", () => switchModule("settings"));
   els.logoutBtn.addEventListener("click", logout);
-  els.checkInPill?.addEventListener("click", handleTopCheckIn);
+  els.checkInPill?.addEventListener("click", toggleStreakPanel);
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".streak-widget")) setStreakPanelOpen(false);
+  });
   els.generateStudyPlanBtn?.addEventListener("click", () => switchModule("plan"));
   els.prepPlanSetupForm?.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -2831,9 +2857,11 @@ function loadStateForUser(userId) {
 
 function saveState(options = {}) {
   if (!currentUser) return;
+  const checkInResult = options.checkIn === false ? null : markActivityCheckIn();
   state.updatedAt = new Date().toISOString();
   localStorage.setItem(userStateKey(currentUser.id), JSON.stringify(localStatePayload(state)));
   if (options.sync !== false) queueCloudSync("state");
+  queueCheckInCelebration(checkInResult);
 }
 
 function localStatePayload(rawState) {
@@ -3145,6 +3173,7 @@ function loadCommunity() {
 function saveCommunity(options = {}) {
   localStorage.setItem(COMMUNITY_KEY, JSON.stringify(community));
   if (options.sync !== false) queueCloudSync("community");
+  if (options.checkIn !== false) persistActivityCheckIn();
 }
 
 function normalizeCommunityStore(raw = {}) {
@@ -3217,7 +3246,7 @@ async function refreshProblemCatalog(force = false) {
       if (!problems.length) return;
       state.problems = mergeProblems(getUserCatalogProblems(state.problems), problems);
       state.problemStates = (state.problemStates || []).filter((problemState) => !isDisabledProblemId(problemState.problemId));
-      saveState({ sync: false });
+      saveState({ sync: false, checkIn: false });
       renderProblems();
       renderInterviewSetup();
     })
@@ -3459,7 +3488,7 @@ function applyCloudSession(payload, options = {}) {
   community = options.merge === false
     ? normalizeCommunityStore(payload.community || community)
     : mergeCloudCommunity(payload.community, options.localCommunity || community);
-  saveCommunity({ sync: false });
+  saveCommunity({ sync: false, checkIn: false });
   queueCloudSync("state", 0);
   queueCloudSync("community", 0);
   queueCloudSync("account", 0);
@@ -6808,14 +6837,14 @@ async function refreshJobsFromApi(showStatus = false) {
 
   try {
     const items = await requestJobsFromApi();
-    if (items.length) upsertJobs(items);
+    if (items.length) upsertJobs(items, { checkIn: false });
     state.jobsFetchedAt = new Date().toISOString();
     state.jobsSyncError = "";
-    saveState();
+    saveState({ checkIn: false });
     renderJobs();
   } catch (error) {
     state.jobsSyncError = error.message || "Jobs API failed";
-    saveState();
+    saveState({ checkIn: false });
     if (showStatus && els.jobsSummary) els.jobsSummary.textContent = getLanguage() === "en"
       ? "Live job API is unavailable. Showing saved links."
       : "岗位 API 暂不可用，先显示已保存链接。";
@@ -6859,14 +6888,14 @@ function normalizeJobItem(raw = {}) {
   return normalizeJobs([raw])[0];
 }
 
-function upsertJobs(items) {
+function upsertJobs(items, options = {}) {
   const byId = new Map(normalizeJobs(state.jobs).map((item) => [item.id, item]));
   items.map(normalizeJobItem).forEach((item) => {
     if (safeExternalUrl(item.url) === "#") return;
     byId.set(item.id, { ...(byId.get(item.id) || {}), ...item });
   });
   state.jobs = [...byId.values()];
-  saveState();
+  saveState({ checkIn: options.checkIn !== false });
 }
 
 function renderGlobalSearchResults() {
@@ -7156,26 +7185,61 @@ function cssEscape(value) {
   return String(value).replace(/"/g, '\\"');
 }
 
-function handleTopCheckIn() {
-  if (hasCheckedInToday()) {
-    updateCheckInPill();
-    return;
-  }
-  const previous = getStreak();
-  const today = dayKey(new Date());
+function toggleStreakPanel() {
+  setStreakPanelOpen(!streakPanelOpen);
+}
+
+function setStreakPanelOpen(open) {
+  streakPanelOpen = Boolean(open);
+  els.streakWidget?.classList.toggle("is-open", streakPanelOpen);
+  els.checkInPill?.setAttribute("aria-expanded", String(streakPanelOpen));
+  els.checkInPill?.setAttribute("aria-label", t(streakPanelOpen ? "closeStreakCalendar" : "openStreakCalendar"));
+  els.checkInPill?.setAttribute("title", t(streakPanelOpen ? "closeStreakCalendar" : "openStreakCalendar"));
+  const actions = els.checkInPill?.closest(".app-command-actions");
+  actions?.classList.toggle("is-streak-open", streakPanelOpen);
+  if (els.streakCalendarPanel) els.streakCalendarPanel.hidden = !streakPanelOpen;
+  if (streakPanelOpen) renderStreakCalendar();
+}
+
+function markActivityCheckIn() {
+  if (!currentUser || hasCheckedInToday()) return null;
+  const displayedStreak = Number(els.streakCount?.textContent || els.commandStreakCount?.textContent || state.streakCount || 0);
+  const previous = Number.isFinite(displayedStreak) ? displayedStreak : getStreak();
+  const now = new Date();
+  const today = dayKey(now);
   const nextCheckIns = (state.checkIns || []).filter((item) => dayKey(item.date) !== today);
   state.checkIns = [
     ...nextCheckIns,
     {
       id: `checkin-${today}`,
-      date: new Date().toISOString()
+      date: now.toISOString(),
+      source: "activity"
     }
   ];
-  const next = getStreak();
-  state.streakCount = next;
-  saveState();
-  renderSummary();
-  animateStreakCount(previous, next);
+  state.streakCount = getStreak();
+  freshCheckInKey = today;
+  return { previous, next: state.streakCount, day: today };
+}
+
+function persistActivityCheckIn(options = {}) {
+  if (!currentUser) return;
+  const checkInResult = markActivityCheckIn();
+  if (!checkInResult) return;
+  state.updatedAt = new Date().toISOString();
+  localStorage.setItem(userStateKey(currentUser.id), JSON.stringify(localStatePayload(state)));
+  if (options.sync !== false) queueCloudSync("state");
+  queueCheckInCelebration(checkInResult);
+}
+
+function queueCheckInCelebration(checkInResult) {
+  if (!checkInResult) return;
+  window.requestAnimationFrame(() => {
+    updateCheckInPill();
+    renderStreakCalendar();
+    if (els.streakCount) els.streakCount.textContent = String(checkInResult.next);
+    animateStreakCount(checkInResult.previous, checkInResult.next);
+    showCheckInToast(checkInResult.next);
+  });
 }
 
 function hasCheckedInToday() {
@@ -7188,11 +7252,103 @@ function updateCheckInPill() {
   if (!pill) return;
   const checked = hasCheckedInToday();
   pill.classList.toggle("is-checked", checked);
-  pill.disabled = checked;
-  pill.setAttribute("aria-disabled", String(checked));
-  pill.setAttribute("aria-label", checked ? t("checkInDone") : t("commandStreakLabel"));
+  pill.disabled = false;
+  pill.setAttribute("aria-disabled", "false");
+  pill.setAttribute("aria-label", t(streakPanelOpen ? "closeStreakCalendar" : "openStreakCalendar"));
+  pill.setAttribute("title", t(streakPanelOpen ? "closeStreakCalendar" : "openStreakCalendar"));
   const label = pill.querySelector("small");
   if (label) label.textContent = checked ? t("checkInDone") : t("commandStreakLabel");
+  renderStreakCalendar();
+}
+
+function renderStreakCalendar() {
+  if (!els.streakCalendarGrid || !els.streakCalendarWeekdays) return;
+  const daySet = getActivityDaySet();
+  const days = buildStreakCalendarDays();
+  const formatter = new Intl.DateTimeFormat(getLocale(), { weekday: "short" });
+  els.streakCalendarWeekdays.innerHTML = "";
+  days.slice(0, 7).forEach(({ date }) => {
+    const label = document.createElement("span");
+    label.textContent = formatter.format(date).replace("周", "");
+    els.streakCalendarWeekdays.appendChild(label);
+  });
+
+  els.streakCalendarGrid.innerHTML = "";
+  days.forEach(({ date, key }) => {
+    const lit = daySet.has(key);
+    const beforeLit = daySet.has(dayKey(shiftDate(date, -1)));
+    const afterLit = daySet.has(dayKey(shiftDate(date, 1)));
+    const cell = document.createElement("span");
+    cell.className = [
+      "streak-day",
+      lit ? "is-lit" : "",
+      lit && beforeLit ? "connect-left" : "",
+      lit && afterLit ? "connect-right" : "",
+      key === dayKey(new Date()) ? "is-today" : "",
+      key === freshCheckInKey ? "is-fresh" : ""
+    ].filter(Boolean).join(" ");
+    cell.title = key;
+    cell.innerHTML = `
+      <span class="streak-day-number">${date.getDate()}</span>
+      <span class="streak-day-fire" aria-hidden="true"></span>
+    `;
+    els.streakCalendarGrid.appendChild(cell);
+  });
+
+  if (els.streakPanelCount) els.streakPanelCount.textContent = String(getStreak());
+  const kicker = els.streakCalendarPanel?.querySelector(".streak-panel-kicker");
+  if (kicker) kicker.textContent = t("streakPanelTitle");
+  if (els.streakPanelMessage) {
+    els.streakPanelMessage.textContent = hasCheckedInToday() ? t("streakPanelReady") : t("streakPanelPrompt");
+  }
+}
+
+function getActivityDaySet() {
+  return new Set([
+    ...(state.entries || []).map((entry) => dayKey(entry.date)),
+    ...(state.checkIns || []).map((item) => dayKey(item.date))
+  ].filter(Boolean));
+}
+
+function buildStreakCalendarDays() {
+  const today = new Date();
+  const start = shiftDate(today, -13);
+  return Array.from({ length: 14 }, (_, index) => {
+    const date = shiftDate(start, index);
+    return { date, key: dayKey(date) };
+  });
+}
+
+function shiftDate(date, amount) {
+  const next = new Date(date);
+  next.setHours(12, 0, 0, 0);
+  next.setDate(next.getDate() + amount);
+  return next;
+}
+
+function showCheckInToast(streak) {
+  let toast = document.querySelector(".checkin-toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.className = "checkin-toast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `
+    <span class="stat-art stat-art-fire" aria-hidden="true"></span>
+    <span>
+      <strong>${escapeHtml(t("checkInToastTitle"))}</strong>
+      <small>${escapeHtml(t("checkInToastDetail", { count: streak }))}</small>
+    </span>
+  `;
+  toast.classList.remove("show");
+  toast.offsetWidth;
+  toast.classList.add("show");
+  if (checkInToastTimer) window.clearTimeout(checkInToastTimer);
+  checkInToastTimer = window.setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3400);
 }
 
 function animateStreakCount(previous, next) {
@@ -7878,15 +8034,15 @@ async function refreshNewsFromApi(showStatus = false) {
 
   try {
     const items = await requestNewsFromApi();
-    if (items.length) upsertNews(items);
+    if (items.length) upsertNews(items, { checkIn: false });
     state.newsFetchedAt = new Date().toISOString();
     state.newsSyncError = "";
-    saveState();
+    saveState({ checkIn: false });
     renderNewsTicker();
     renderNews();
   } catch (error) {
     state.newsSyncError = error.message || "News API failed";
-    saveState();
+    saveState({ checkIn: false });
     if (showStatus) renderNews();
   } finally {
     newsRefreshInFlight = false;
@@ -7953,14 +8109,14 @@ function addNewsFromForm() {
   renderAll();
 }
 
-function upsertNews(items) {
+function upsertNews(items, options = {}) {
   const byId = new Map((state.news || []).map((item) => [item.id, item]));
   items.map(normalizeNewsItem).forEach((item) => {
     if (isLowQualityNews(item)) return;
     byId.set(item.id, { ...(byId.get(item.id) || {}), ...item, updatedAt: new Date().toISOString() });
   });
   state.news = sortNews([...byId.values()]);
-  saveState();
+  saveState({ checkIn: options.checkIn !== false });
 }
 
 function openNewsDetail(id) {
@@ -9327,7 +9483,7 @@ function pruneProblemCatalog() {
   if (catalogItems.length === state.problems.length && problemStates.length === (state.problemStates || []).length) return;
   state.problems = catalogItems;
   state.problemStates = problemStates;
-  saveState({ sync: false });
+  saveState({ sync: false, checkIn: false });
 }
 
 function openProblemDetail(problemId) {
