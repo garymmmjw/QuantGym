@@ -8583,3 +8583,514 @@ body.is-authenticated.sidebar-collapsed #appShell > :not(.module-nav) {
     transform: translateX(0) scale(1);
   }
 }
+
+/* Search and mock interview refinements */
+body.is-authenticated .module-nav {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+body.is-authenticated .module-nav-group.primary {
+  margin-bottom: 12px;
+}
+
+body.is-authenticated .module-nav-group.compact {
+  margin-top: auto;
+}
+
+body.is-authenticated .app-command-bar {
+  position: relative;
+  z-index: 80;
+}
+
+body.is-authenticated .app-search {
+  z-index: 90;
+  width: min(410px, 100%);
+  transition: width 420ms cubic-bezier(.2, 1.32, .24, 1), transform 260ms ease;
+}
+
+body.is-authenticated .app-search:focus-within {
+  width: min(620px, 100%);
+  transform: translateY(-1px);
+}
+
+body.is-authenticated .global-search-results {
+  z-index: 1000;
+  pointer-events: auto;
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(17, 24, 39, 0.16);
+}
+
+body.is-authenticated .global-search-result {
+  cursor: pointer;
+}
+
+.problem-page-header .problem-actions {
+  position: relative;
+  z-index: 3;
+  width: min(350px, 100%);
+  transition: width 420ms cubic-bezier(.2, 1.32, .24, 1), transform 260ms ease;
+}
+
+.problem-page-header .problem-actions:focus-within {
+  width: min(480px, 100%);
+  transform: translateY(-1px);
+}
+
+.problem-page-header .problem-actions > svg {
+  position: absolute;
+  top: 50%;
+  left: 17px;
+  z-index: 1;
+  width: 19px;
+  height: 19px;
+  color: var(--text-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.problem-page-header .problem-actions input {
+  padding-left: 48px;
+  box-shadow: 0 12px 34px rgba(92, 64, 28, 0.05);
+}
+
+.interview-section {
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
+}
+
+.interview-setup-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(228, 231, 240, 0.86);
+}
+
+.interview-setup-top div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.interview-setup-top small {
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.interview-language-toggle {
+  flex: 0 0 auto;
+}
+
+.interview-grid.session-only .interview-console {
+  width: min(100%, 1180px);
+}
+
+.interview-console {
+  overflow: hidden;
+  padding: 0;
+  border-color: rgba(228, 231, 240, 0.95);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(17, 24, 39, 0.10);
+}
+
+.interview-console-head {
+  margin: 0;
+  padding: 16px 20px;
+  border: 0;
+  border-bottom: 1px solid rgba(228, 231, 240, 0.9);
+  border-radius: 0;
+  background: #fff;
+}
+
+.interview-console-head strong,
+.interview-question-status {
+  color: #18181b;
+}
+
+.interview-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  min-height: min(680px, calc(100vh - 260px));
+}
+
+.interview-transcript {
+  min-height: 560px;
+  max-height: min(680px, calc(100vh - 260px));
+  padding: 24px clamp(18px, 3vw, 36px);
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.message {
+  max-width: min(760px, 100%);
+  padding: 9px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+  color: #1f2328;
+  font-size: 0.98rem;
+  line-height: 1.62;
+  white-space: normal;
+}
+
+.message.user {
+  max-width: min(620px, 82%);
+  justify-self: end;
+  padding: 10px 14px;
+  border-radius: 18px;
+  background: #f4f4f5 !important;
+  color: #1f2328;
+}
+
+.message.coach,
+.message.system {
+  justify-self: start;
+  color: #1f2328;
+}
+
+.message.system {
+  max-width: min(820px, 100%);
+}
+
+.rich-text h4,
+.rich-text h5,
+.rich-text h6 {
+  margin: 0 0 6px;
+  color: #161618;
+  font-size: 0.98rem;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.rich-text strong {
+  color: #151517;
+  font-weight: 760;
+}
+
+.rich-text a {
+  color: #315fdc;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.rich-text a:hover {
+  text-decoration: underline;
+}
+
+.rich-text .rich-media,
+.message-attachment .rich-media {
+  display: block;
+  width: min(100%, 560px);
+  max-height: 360px;
+  margin: 10px 0;
+  object-fit: contain;
+  border: 1px solid rgba(228, 231, 240, 0.95);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.rich-text mjx-container {
+  color: #1f2328;
+  font-size: 1em;
+}
+
+.message-attachments {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.message-attachment {
+  display: grid;
+  gap: 6px;
+  color: #5c6470;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.interview-question-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 18px;
+  overflow: auto;
+  border-left: 1px solid rgba(228, 231, 240, 0.95);
+  background: #fbfbfc;
+}
+
+.interview-question-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #18181b;
+}
+
+.interview-question-panel-head span,
+.interview-question-panel-empty {
+  color: #737782;
+  font-size: 0.84rem;
+  font-weight: 720;
+}
+
+.interview-question-accordion {
+  display: grid;
+  gap: 10px;
+}
+
+.interview-question-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(228, 231, 240, 0.95);
+  border-radius: 14px;
+  background: #fff;
+  color: #1f2328;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.interview-question-item:hover,
+.interview-question-item:focus-visible {
+  border-color: rgba(24, 24, 27, 0.22);
+  box-shadow: 0 12px 30px rgba(17, 24, 39, 0.08);
+  outline: none;
+}
+
+.interview-question-item.is-current {
+  border-color: rgba(24, 24, 27, 0.42);
+}
+
+.interview-question-main {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.interview-question-main strong {
+  overflow: hidden;
+  color: #18181b;
+  font-size: 0.92rem;
+  line-height: 1.32;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interview-question-main small,
+.interview-question-detail small {
+  color: #737782;
+  font-weight: 690;
+}
+
+.interview-question-score {
+  display: grid;
+  place-items: center;
+  min-width: 42px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eceef2;
+  color: #5f6672;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 850;
+}
+
+.interview-question-item.is-scored .interview-question-score {
+  background: #18181b;
+  color: #fff;
+}
+
+.interview-question-detail {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  max-height: 0;
+  overflow: hidden;
+  color: #4f5661;
+  transition: max-height 260ms ease;
+}
+
+.interview-question-item.is-expanded .interview-question-detail {
+  max-height: 220px;
+}
+
+.interview-question-detail p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+.score-pop {
+  animation: interviewScorePop 900ms cubic-bezier(.2, 1.4, .2, 1) both;
+}
+
+@keyframes interviewScorePop {
+  0% {
+    transform: scale(0.74);
+    box-shadow: 0 0 0 0 rgba(24, 24, 27, 0.26);
+  }
+
+  45% {
+    transform: scale(1.18);
+    box-shadow: 0 0 0 10px rgba(24, 24, 27, 0.08);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(24, 24, 27, 0);
+  }
+}
+
+.interview-form {
+  margin: 0;
+  padding: 0 20px 18px;
+  background: #fff;
+}
+
+.interview-chat-input {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid rgba(210, 214, 222, 0.96);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(17, 24, 39, 0.10);
+}
+
+.interview-chat-input textarea {
+  min-height: 44px;
+  max-height: 220px;
+  padding: 10px 12px;
+  resize: none;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #1f2328;
+  font: inherit;
+  line-height: 1.55;
+}
+
+.interview-chat-input textarea:focus {
+  outline: none;
+}
+
+.interview-attachment-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 8px;
+}
+
+.interview-attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid rgba(228, 231, 240, 0.95);
+  border-radius: 999px;
+  background: #f7f7f8;
+  color: #4f5661;
+  font-size: 0.82rem;
+  font-weight: 720;
+}
+
+.interview-attachment-chip svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+.interview-attachment-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.interview-chat-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.interview-chat-actions .icon-button,
+.interview-attach-button {
+  width: 38px;
+  min-width: 38px;
+  height: 38px;
+  border-radius: 999px;
+}
+
+.interview-attach-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.interview-send-button {
+  margin-left: auto;
+  background: #18181b;
+  border-color: #18181b;
+  color: #fff;
+}
+
+.interview-complete-actions {
+  padding: 0 20px 18px;
+  margin-top: 0;
+  background: #fff;
+}
+
+.interview-favorites {
+  margin: 0;
+  padding: 16px 20px 20px;
+  border-top: 1px solid rgba(228, 231, 240, 0.95);
+  background: #fff;
+}
+
+@media (max-width: 980px) {
+  .interview-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .interview-question-panel {
+    max-height: 320px;
+    border-top: 1px solid rgba(228, 231, 240, 0.95);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  body.is-authenticated .app-search,
+  body.is-authenticated .app-search:focus-within,
+  .problem-page-header .problem-actions,
+  .problem-page-header .problem-actions:focus-within {
+    width: 100%;
+  }
+
+  .interview-transcript {
+    min-height: 420px;
+    padding: 18px;
+  }
+
+  .message.user {
+    max-width: 92%;
+  }
+}
