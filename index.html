@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>QuantGym</title>
-    <link rel="stylesheet" href="styles.css?v=search-interview-2">
+    <link rel="stylesheet" href="styles.css?v=company-module-1">
     <script>
       window.MathJax = {
         tex: {
@@ -30,7 +30,7 @@
     <script src="config.js"></script>
     <script src="data/problem-catalog.js?v=quant-books-1"></script>
     <script src="data/leetcode-hot-100.js?v=leetcode-hot-100-1"></script>
-    <script src="app.js?v=search-interview-2" defer></script>
+    <script src="app.js?v=company-module-1" defer></script>
   </head>
   <body>
     <header class="topbar">
@@ -166,7 +166,11 @@
           </button>
           <button class="module-tab" type="button" data-module-tab="community">
             <i data-lucide="message-circle-heart"></i>
-            社群
+            论坛
+          </button>
+          <button class="module-tab" type="button" data-module-tab="messages">
+            <i data-lucide="message-square-text"></i>
+            聊天
           </button>
           <button class="module-tab" type="button" data-module-tab="network">
             <i data-lucide="network"></i>
@@ -182,6 +186,10 @@
           <button class="module-tab" type="button" data-module-tab="jobs">
             <i data-lucide="briefcase-business"></i>
             求职
+          </button>
+          <button class="module-tab" type="button" data-module-tab="companies">
+            <i data-lucide="building-2"></i>
+            公司
           </button>
         </div>
         <div class="module-nav-group" aria-label="资源">
@@ -223,10 +231,10 @@
             <strong id="commandStreakCount">0</strong>
             <small>day streak</small>
           </button>
-          <button class="app-stat-pill" type="button" data-jump-module="skills">
-            <span class="stat-art stat-art-xp" aria-hidden="true"></span>
-            <strong id="commandXpCount">0</strong>
-            <small>/100</small>
+          <button class="app-stat-pill chat-pill" id="commandChatBtn" type="button" data-jump-module="messages" aria-label="打开聊天">
+            <span class="stat-art stat-art-chat" aria-hidden="true"><i data-lucide="message-square-text"></i></span>
+            <strong id="commandUnreadCount">0</strong>
+            <small>聊天</small>
           </button>
           <button class="app-account-chip" type="button" data-jump-module="account" aria-label="打开账号">
             <span class="avatar app-account-avatar" id="commandUserAvatar" aria-hidden="true">Q</span>
@@ -770,6 +778,24 @@
         </section>
       </section>
 
+      <section class="module-view" data-module-view="companies">
+        <section class="companies-section">
+          <div class="section-heading">
+            <div>
+              <h2 id="companiesPageTitle">公司</h2>
+              <small id="companiesSummary">按公司了解面试风格、tier、重点 topic 和对应题库。</small>
+            </div>
+            <div id="companyTierFilter" class="segmented" role="tablist" aria-label="公司 tier 筛选">
+              <button class="segment active" type="button" data-company-tier="all">全部</button>
+              <button class="segment" type="button" data-company-tier="s">Tier S</button>
+              <button class="segment" type="button" data-company-tier="a">Tier A</button>
+              <button class="segment" type="button" data-company-tier="b">Tier B</button>
+            </div>
+          </div>
+          <div id="companyOverviewList" class="company-overview-list"></div>
+        </section>
+      </section>
+
       <section class="module-view" data-module-view="courses">
         <section class="courses-section">
           <div class="section-heading">
@@ -810,6 +836,30 @@
             <button class="segment" type="button" data-community-filter="experience">面经分享</button>
           </div>
           <div id="communityList" class="community-list"></div>
+        </section>
+      </section>
+
+      <section class="module-view" data-module-view="messages">
+        <section class="messages-section">
+          <div class="section-heading">
+            <div>
+              <h2 id="messagesPageTitle">聊天</h2>
+              <small id="messagesSummary">和论坛里的同学、校友或 recruiter 继续私聊。</small>
+            </div>
+          </div>
+          <div class="messages-layout">
+            <aside class="message-thread-list" id="messageThreadList" aria-label="私信列表"></aside>
+            <section class="message-conversation" aria-live="polite">
+              <div id="messageConversationHeader" class="message-conversation-header"></div>
+              <div id="messageConversationBody" class="message-conversation-body"></div>
+              <form id="messageComposerForm" class="message-composer">
+                <input id="messageComposerInput" type="text" autocomplete="off" placeholder="写一条消息">
+                <button class="icon-button accent" type="submit" title="发送" aria-label="发送">
+                  <i data-lucide="send"></i>
+                </button>
+              </form>
+            </section>
+          </div>
         </section>
       </section>
 
@@ -904,6 +954,20 @@
             </div>
           </div>
           <div id="leetcodeHotList" class="leetcode-hot-list hidden" aria-live="polite"></div>
+        </section>
+        <section id="problemCompanyPanel" class="problem-company-panel" aria-labelledby="problemCompanyTitle">
+          <div class="problem-company-heading">
+            <div>
+              <span class="rank-label">FIRMS</span>
+              <h3 id="problemCompanyTitle">按公司刷题</h3>
+              <p id="problemCompanySummary">从真实 quant firm 高频题出发，按公司题源定向练习。</p>
+            </div>
+            <button id="problemCompanyClearBtn" class="secondary-button compact hidden" type="button">
+              <i data-lucide="rotate-ccw"></i>
+              全部公司
+            </button>
+          </div>
+          <div id="problemCompanyList" class="problem-company-list" aria-label="公司题库"></div>
         </section>
         <div class="problem-browser-toolbar">
           <div class="problem-view-tabs" role="tablist" aria-label="题目浏览方式">
@@ -1367,31 +1431,150 @@
       </section>
 
       <section class="module-view" data-module-view="tools">
-      <section class="tool-grid">
-        <div class="drill-panel">
-          <div class="panel-heading">
-            <h2>速算</h2>
-            <div class="segmented">
-              <button class="segment active" type="button" data-drill="percent">百分比</button>
-              <button class="segment" type="button" data-drill="square">平方</button>
-              <button class="segment" type="button" data-drill="ev">期望</button>
-            </div>
+      <section class="mental-math-section">
+        <div class="mental-hero">
+          <div>
+            <span class="rank-label">OPTIVER STYLE</span>
+            <h2>Mental Math</h2>
+            <p>按 NumberLogic 的节奏练习：限时、多选、跳过不扣分，目标是在压力下保持准确率。</p>
           </div>
-          <div class="drill-card">
-            <div id="drillQuestion" class="drill-question"></div>
-            <form id="drillForm" class="drill-answer">
-              <input id="drillInput" type="text" inputmode="decimal" autocomplete="off" placeholder="答案">
-              <button class="icon-button accent" type="submit" title="提交" aria-label="提交">
-                <i data-lucide="check"></i>
-              </button>
-              <button class="icon-button ghost" id="nextDrillBtn" type="button" title="下一题" aria-label="下一题">
-                <i data-lucide="skip-forward"></i>
-              </button>
-            </form>
-            <div id="drillFeedback" class="drill-feedback" aria-live="polite"></div>
+          <div class="mental-session-stats">
+            <span><b id="drillScore">0</b><small>score</small></span>
+            <span><b id="drillAccuracy">0%</b><small>accuracy</small></span>
+            <span><b id="drillTimer">25:00</b><small>time left</small></span>
           </div>
         </div>
 
+        <div class="mental-filter-bar">
+          <div class="segmented" aria-label="Mental math 题型">
+            <button class="segment active" type="button" data-drill="numberLogic">Number Logic</button>
+            <button class="segment" type="button" data-drill="arithmetic">Arithmetic</button>
+            <button class="segment" type="button" data-drill="percent">百分比</button>
+            <button class="segment" type="button" data-drill="square">平方</button>
+            <button class="segment" type="button" data-drill="ev">EV</button>
+          </div>
+          <div class="mental-session-controls">
+            <label>
+              题量
+              <select id="drillCountSelect">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="25">25</option>
+                <option value="40">40</option>
+              </select>
+            </label>
+            <label>
+              时间
+              <select id="drillTimeSelect">
+                <option value="300">5:00</option>
+                <option value="600">10:00</option>
+                <option value="1500" selected>25:00</option>
+              </select>
+            </label>
+            <button id="startDrillSessionBtn" class="primary-button" type="button">
+              <i data-lucide="timer-reset"></i>
+              开始
+            </button>
+          </div>
+        </div>
+
+        <div class="mental-workspace">
+          <section class="drill-panel mental-oa-panel">
+            <div class="mental-oa-top">
+              <span id="drillProgressText">Question 1/20</span>
+              <span id="drillTimeLeftText">Time left: 25:00</span>
+            </div>
+            <div class="mental-progress-rail" aria-hidden="true">
+              <i id="drillProgressFill"></i>
+            </div>
+            <div class="drill-card">
+              <div id="drillQuestion" class="drill-question"></div>
+              <form id="drillForm" class="drill-answer">
+                <div id="drillOptions" class="drill-options" role="group" aria-label="答案选项"></div>
+                <input id="drillInput" class="hidden" type="text" inputmode="decimal" autocomplete="off" placeholder="答案">
+                <div class="drill-actions">
+                  <button class="secondary-button compact" id="skipDrillBtn" type="button">
+                    <i data-lucide="skip-forward"></i>
+                    Skip
+                  </button>
+                  <button class="secondary-button compact" id="nextDrillBtn" type="button">
+                    <i data-lucide="arrow-right"></i>
+                    Next
+                  </button>
+                </div>
+              </form>
+              <div id="drillFeedback" class="drill-feedback" aria-live="polite"></div>
+            </div>
+          </section>
+
+          <aside class="mental-side-stack">
+            <section class="mental-record-panel">
+              <div class="panel-heading">
+                <h3>训练记录</h3>
+                <span id="mentalBestScore">Best 0</span>
+              </div>
+              <svg id="mentalSparkline" class="mental-sparkline" viewBox="0 0 260 72" role="img" aria-label="Mental math 得分趋势"></svg>
+              <div id="mentalRecordList" class="mental-record-list"></div>
+            </section>
+            <section class="mental-leaderboard-panel">
+              <div class="panel-heading">
+                <h3>排行榜</h3>
+                <span>local</span>
+              </div>
+              <div id="mentalLeaderboardList" class="mental-leaderboard-list"></div>
+            </section>
+          </aside>
+        </div>
+
+        <section class="mental-games-panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Game</h3>
+              <small>把速算和交易直觉放到互动题里练。</small>
+            </div>
+          </div>
+          <div class="mental-games-grid">
+            <article class="market-game-card">
+              <div class="game-card-head">
+                <div>
+                  <span class="rank-label">MARKET MAKING</span>
+                  <h4>Market Making Game</h4>
+                </div>
+                <strong id="marketGameScore">0</strong>
+              </div>
+              <div id="marketGamePrompt" class="game-prompt"></div>
+              <div class="market-quote-grid">
+                <label>Bid <input id="marketBidInput" type="number" step="0.1"></label>
+                <label>Ask <input id="marketAskInput" type="number" step="0.1"></label>
+              </div>
+              <div class="game-actions">
+                <button id="submitMarketQuoteBtn" class="primary-button compact" type="button">Quote</button>
+                <button id="nextMarketGameBtn" class="secondary-button compact" type="button">New market</button>
+              </div>
+              <div id="marketGameFeedback" class="game-feedback"></div>
+            </article>
+
+            <article class="poker-game-card">
+              <div class="game-card-head">
+                <div>
+                  <span class="rank-label">TOURNAMENT</span>
+                  <h4>Poker Tournament</h4>
+                </div>
+                <strong id="pokerGameScore">0</strong>
+              </div>
+              <div id="pokerGamePrompt" class="game-prompt"></div>
+              <div class="poker-action-grid">
+                <button type="button" data-poker-action="fold">Fold</button>
+                <button type="button" data-poker-action="call">Call</button>
+                <button type="button" data-poker-action="raise">Raise</button>
+              </div>
+              <div class="game-actions">
+                <button id="nextPokerGameBtn" class="secondary-button compact" type="button">New hand</button>
+              </div>
+              <div id="pokerGameFeedback" class="game-feedback"></div>
+            </article>
+          </div>
+        </section>
       </section>
       </section>
 
