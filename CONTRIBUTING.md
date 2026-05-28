@@ -14,7 +14,6 @@
 ## 每次开始修改
 
 ```bash
-cd /Users/miujiawei/Desktop/QuantGym
 git checkout main
 git pull origin main
 git checkout -b feature/short-description
@@ -132,6 +131,7 @@ git push
 - 真实用户数据
 - 本地日志和缓存
 - `dist/`
+- 原始题源导出、OCR 中间产物和本地 QA 截图
 
 可以提交：
 
@@ -139,7 +139,7 @@ git push
 - README 和部署说明
 - 前端、API、LLM proxy、插件和脚本代码
 - 已确认可用于内测分发的题库数据
-- UI 资产和文档素材
+- 线上实际加载的 UI 资产
 
 当前 `quantguide` 题源已由项目 owner 确认可用于内测用户。若未来要扩大公开发布范围，需要重新确认分发权限。
 

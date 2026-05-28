@@ -42,7 +42,7 @@ export QUANTGYM_EMAIL_DEV_CODE_RESPONSE=0
 export QUANTGYM_SMTP_HOST="smtp.resend.com"
 export QUANTGYM_SMTP_PORT=587
 export QUANTGYM_SMTP_USERNAME="resend"
-export QUANTGYM_SMTP_PASSWORD="re_..."
+export QUANTGYM_SMTP_PASSWORD="<Resend API key>"
 export QUANTGYM_SMTP_FROM="QuantGym <no-reply@quantgym.app>"
 ```
 

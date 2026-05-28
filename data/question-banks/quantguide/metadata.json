@@ -486,16 +486,5 @@
     "various": 1,
     "virtu": 3
   },
-  "rawExport": {
-    "directory": "raw-export",
-    "files": [
-      "quantguide_account_questions.csv",
-      "quantguide_account_questions.jsonl",
-      "quantguide_account_questions_full.json",
-      "quantguide_account_question_bank.md",
-      "quantguide_account_indexes.md",
-      "quantguide_account_questions_md/"
-    ]
-  },
   "privacyNote": "Contains content exported from an authorized signed-in QuantGuide account. Keep this source private unless you have permission to redistribute it."
 }

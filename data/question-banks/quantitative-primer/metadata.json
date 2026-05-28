@@ -2,9 +2,8 @@
   "slug": "quantitative-primer",
   "name": "Quantitative Primer",
   "type": "latex",
-  "sourceTexPath": "/Users/miujiawei/Desktop/量化书籍/QuantitativePrimer/quant_qprimer_book.tex",
+  "sourceTexPath": "QuantitativePrimer/quant_qprimer_book.tex",
   "problemFile": "problems.json",
-  "browserFile": "problems.js",
   "problemCount": 41,
   "lastImportedAt": "2026-05-27T03:07:21.649Z"
 }

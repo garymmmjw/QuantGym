@@ -4,7 +4,6 @@
   "type": "latex",
   "sourceTexPath": "",
   "problemFile": "problems.json",
-  "browserFile": "problems.js",
   "problemCount": 128,
   "lastImportedAt": "2026-05-24T04:53:57.407Z"
 }

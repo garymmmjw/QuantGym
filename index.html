@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>QuantGym</title>
-    <link rel="stylesheet" href="styles.css?v=premium-system-17">
+    <link rel="stylesheet" href="styles.css?v=premium-system-19">
     <script>
       window.MathJax = {
         tex: {
@@ -30,7 +30,7 @@
     <script src="config.js"></script>
     <script src="data/problem-catalog.js?v=quant-books-1"></script>
     <script src="data/leetcode-hot-100.js?v=leetcode-hot-100-1"></script>
-    <script src="app.js?v=premium-system-21" defer></script>
+    <script src="app.js?v=premium-system-22" defer></script>
   </head>
   <body>
     <header class="topbar">
@@ -117,7 +117,7 @@
     </section>
 
     <main id="appShell" class="hidden">
-      <nav class="module-nav" aria-label="模块导航">
+      <nav class="module-nav" id="moduleNav" aria-label="模块导航">
         <div class="sidebar-brand" aria-label="QuantGym">
           <img src="assets/generated/brand-q-mark.webp?v=premium-system-2" alt="">
           <strong>QuantGym</strong>
@@ -206,6 +206,9 @@
       </nav>
 
       <section class="app-command-bar" aria-label="全局搜索和状态">
+        <button class="sidebar-toggle-button" id="sidebarToggleBtn" type="button" aria-controls="moduleNav" aria-expanded="true" aria-label="隐藏模块列表" title="隐藏模块列表">
+          <i data-lucide="panel-left-close"></i>
+        </button>
         <div class="app-search" role="search">
           <i data-lucide="search"></i>
           <input id="globalSearchInput" type="search" placeholder="Search topics, lessons, or concepts..." aria-label="Search topics">

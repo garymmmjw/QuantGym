@@ -4,7 +4,30 @@ api-server/__pycache__/
 *.pyc
 .DS_Store
 .env
+.env.*
+!.env.example
 node_modules/
 *.log
-.env.local
 dist/
+
+# Local Codex/agent tooling should not travel with the app repo.
+.agents/
+skills-lock.json
+
+# Build and QA outputs.
+artifacts/**/*.png
+artifacts/**/*.jpg
+artifacts/**/*.jpeg
+artifacts/**/*.webp
+artifacts/**/*.pdf
+artifacts/quantguide-ocr/
+
+# Private/raw source exports. Keep normalized catalogs in Git instead.
+data/question-banks/quantguide/raw-export/
+data/question-banks/*/problems.js
+
+# Large design references are archived outside the runtime repo.
+docs/ui-reference/**/*.png
+docs/ui-reference/**/*.jpg
+docs/ui-reference/**/*.jpeg
+docs/ui-reference/**/*.webp

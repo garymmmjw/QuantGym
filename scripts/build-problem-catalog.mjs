@@ -86,8 +86,7 @@ function resolveSources(manifest) {
         slug: entry.name,
         name: metadata.name || entry.name,
         type: metadata.type || "latex",
-        problemFile: `${entry.name}/problems.json`,
-        browserFile: `${entry.name}/problems.js`
+        problemFile: `${entry.name}/problems.json`
       };
     });
 }
