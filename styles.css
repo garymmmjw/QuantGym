@@ -1,19 +1,19 @@
 :root {
   color-scheme: light;
-  --bg-app: #f6f7fb;
-  --bg-panel: #fbfcff;
+  --bg-app: #f7f8ff;
+  --bg-panel: #f7f8ff;
   --bg-card: #ffffff;
   --bg-soft: #eef1ff;
-  --primary: #5f61f2;
-  --primary-hover: #4b4dda;
-  --primary-soft: #eceeff;
-  --text-main: #151721;
-  --text-secondary: #62687a;
-  --text-muted: #9aa0ae;
-  --border-soft: #e4e7f0;
-  --border-purple: #d9dcff;
-  --shadow-card: 0 18px 55px rgba(33, 43, 72, 0.075);
-  --shadow-card-hover: 0 24px 70px rgba(33, 43, 72, 0.12);
+  --primary: #5b5ff5;
+  --primary-hover: #484bd7;
+  --primary-soft: #eef1ff;
+  --text-main: #1b2033;
+  --text-secondary: #596173;
+  --text-muted: #9aa3b5;
+  --border-soft: #e4e8f6;
+  --border-purple: #d8ddff;
+  --shadow-card: 0 1px 2px rgba(42, 45, 84, 0.05);
+  --shadow-card-hover: 0 10px 24px rgba(72, 75, 215, 0.11);
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -25,18 +25,18 @@
   --space-12: 48px;
   --ink: var(--text-main);
   --muted: var(--text-secondary);
-  --paper: var(--bg-app);
-  --panel: var(--bg-card);
-  --panel-strong: var(--bg-card);
-  --panel-soft: var(--bg-panel);
-  --line: var(--border-soft);
-  --line-bright: var(--border-soft);
-  --green: #5f61f2;
-  --green-dark: #4b4dda;
-  --blue: #465f77;
-  --gold: #9b6c2e;
+  --paper: #f7f8ff;
+  --panel: #ffffff;
+  --panel-strong: #ffffff;
+  --panel-soft: #f7f8ff;
+  --line: #e4e8f6;
+  --line-bright: #e8ebf8;
+  --green: #5b5ff5;
+  --green-dark: #484bd7;
+  --blue: #3867d6;
+  --gold: #b86c12;
   --rose: #9b4a4a;
-  --teal: #4e6d73;
+  --teal: #16879a;
   --teal-soft: #eef4f2;
   --blue-soft: #f1f4f7;
   --gold-soft: #f7f2e9;
@@ -47,6 +47,7 @@
   --radius: 8px;
   --radius-sm: 6px;
   --blur: none;
+  --font-app: "HarmonyOS Sans SC", "HarmonyOS Sans", "HarmonyOS Sans TC", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * {
@@ -10996,38 +10997,6 @@ body.is-authenticated .global-search-result {
   }
 }
 
-/* Full-screen shell refresh with shark-blue brand tokens */
-:root {
-  --bg-app: #f7f8ff;
-  --bg-panel: #f7f8ff;
-  --bg-card: #ffffff;
-  --bg-soft: #eef1ff;
-  --primary: #5b5ff5;
-  --primary-hover: #484bd7;
-  --primary-soft: #eef1ff;
-  --text-main: #1b2033;
-  --text-secondary: #596173;
-  --text-muted: #9aa3b5;
-  --border-soft: #e4e8f6;
-  --border-purple: #d8ddff;
-  --shadow-card: 0 1px 2px rgba(42, 45, 84, 0.05);
-  --shadow-card-hover: 0 10px 24px rgba(72, 75, 215, 0.11);
-  --paper: #f7f8ff;
-  --panel: #ffffff;
-  --panel-strong: #ffffff;
-  --panel-soft: #f7f8ff;
-  --line: #e4e8f6;
-  --line-bright: #e8ebf8;
-  --green: #5b5ff5;
-  --green-dark: #484bd7;
-  --blue: #3867d6;
-  --gold: #b86c12;
-  --teal: #16879a;
-  --radius: 8px;
-  --radius-sm: 6px;
-  --font-app: "HarmonyOS Sans SC", "HarmonyOS Sans", "HarmonyOS Sans TC", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
 body,
 button,
 input,
@@ -12803,5 +12772,16 @@ body.is-authenticated [data-module-view="overview"] .problem-progress-panel {
 
   body.is-authenticated [data-module-view="overview"] .summary-metrics {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
