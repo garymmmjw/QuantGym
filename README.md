@@ -4,7 +4,7 @@ QuantGym is a local-first workspace for quant interview preparation. It combines
 
 The current beta setup is intentionally simple:
 
-- Web app: `index.html`, `app.js`, `styles.css`
+- Web app: `index.html`, `src/` (ES modules, bundled by Vite), `styles.css`
 - API: `api-server/server.py`
 - LLM proxy: `llm-proxy/server.mjs`
 - Public problem catalog: `data/problem-catalog.json` and `data/problem-catalog.js`
@@ -22,10 +22,11 @@ Start the API:
 python3 api-server/server.py
 ```
 
-Start the static web app:
+Start the static web app with Vite (required for ES module dev):
 
 ```bash
-python3 -m http.server 5176
+npm install   # first time only
+npm run dev
 ```
 
 Open:
@@ -72,7 +73,7 @@ git switch -c codex/your-change-name
 Before handing off a change, review the exact patch:
 
 ```bash
-git diff -- app.js styles.css index.html README.md
+git diff -- src/ styles.css index.html README.md
 ```
 
 ## Local UI QA
@@ -80,7 +81,7 @@ git diff -- app.js styles.css index.html README.md
 For page-wide regressions, run the app locally and check the authenticated shell at desktop and mobile widths:
 
 ```bash
-python3 -m http.server 5176
+npm run dev
 python3 api-server/server.py
 ```
 
@@ -113,9 +114,17 @@ PORT=8791 python3 api-server/server.py
 ```text
 .
   index.html
-  app.js
   styles.css
   config.js
+  package.json
+  vite.config.js
+  src/
+    main.js          ← app entry point (ES module)
+    constants.js
+    i18n.js
+    skills.js
+    prep-data.js
+    catalog-data.js
   assets/generated/
   api-server/
   llm-proxy/
@@ -143,6 +152,12 @@ Key notes:
 
 ## Static Build
 
+Install dependencies first (Vite is required):
+
+```bash
+npm install
+```
+
 Generate a safe static deployment directory:
 
 ```bash
@@ -153,7 +168,9 @@ QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED=0 \
 node scripts/build-static-site.mjs --strict
 ```
 
-Publish only `dist/`. Do not publish the repository root as a static site.
+The build script runs `vite build` internally, then writes locale entry pages (`/zh/`, `/en/`) from the built `dist/index.html`. Publish only `dist/`. Do not publish the repository root as a static site.
+
+Cloudflare Pages build command: `npm install && node scripts/build-static-site.mjs --strict`
 
 ## Problem Catalog
 
@@ -180,7 +197,7 @@ Private raw exports, including the QuantGuide raw export folder, are ignored and
 ## Checks
 
 ```bash
-node --check app.js
+node --check src/main.js
 node --check llm-proxy/server.mjs
 node --check browser-extension/popup.js
 python3 -m py_compile api-server/server.py
