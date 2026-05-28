@@ -1717,6 +1717,7 @@ let newsTopicFilter = "all";
 let newsSourceFilter = "all";
 let globalSearchMatches = [];
 let globalSearchTimer = 0;
+let globalSearchComposing = false;
 let problemCatalogRefresh = null;
 let radarHitAreas = [];
 let radarHoverKey = "";
@@ -1740,7 +1741,14 @@ let streakPanelOpen = false;
 let freshCheckInKey = "";
 let checkInToastTimer = null;
 const PROBLEM_PAGE_SIZE = 24;
+const PROBLEM_SEARCH_DEBOUNCE_MS = 140;
 let problemVisibleCount = PROBLEM_PAGE_SIZE;
+let problemSearchTimer = 0;
+let problemSearchComposing = false;
+const problemSearchRecordCache = new Map();
+const problemCompanyCache = new Map();
+let problemStateCacheSource = null;
+let problemStateCache = null;
 
 const els = {};
 
@@ -2240,6 +2248,13 @@ function bindEvents() {
     if (careers) openExternalUrl(careers.dataset.companyCareers);
   });
 
+  els.globalSearchInput?.addEventListener("compositionstart", () => {
+    globalSearchComposing = true;
+  });
+  els.globalSearchInput?.addEventListener("compositionend", () => {
+    globalSearchComposing = false;
+    scheduleGlobalSearchResults();
+  });
   els.globalSearchInput?.addEventListener("input", scheduleGlobalSearchResults);
   els.globalSearchInput?.addEventListener("focus", renderGlobalSearchResults);
   els.globalSearchInput?.addEventListener("keydown", handleGlobalSearchKeydown);
@@ -2283,6 +2298,13 @@ function bindEvents() {
     updatePreview();
   });
 
+  els.problemSearch.addEventListener("compositionstart", () => {
+    problemSearchComposing = true;
+  });
+  els.problemSearch.addEventListener("compositionend", () => {
+    problemSearchComposing = false;
+    handleProblemSearchInput();
+  });
   els.problemSearch.addEventListener("input", handleProblemSearchInput);
   els.problemSearch.addEventListener("keydown", handleProblemSearchKeydown);
   els.problemThemeFilter?.addEventListener("click", (event) => {
@@ -2987,6 +3009,7 @@ function updateProblemState(problemId, update) {
     updatedAt: new Date().toISOString()
   });
   state.problemStates = mergeProblemStates(state.problemStates || [], [next]);
+  clearProblemStateCache();
 }
 
 function mergeNews(seed, saved) {
@@ -3250,6 +3273,7 @@ async function refreshProblemCatalog(force = false) {
       if (!problems.length) return;
       state.problems = mergeProblems(getUserCatalogProblems(state.problems), problems);
       state.problemStates = (state.problemStates || []).filter((problemState) => !isDisabledProblemId(problemState.problemId));
+      clearProblemLookupCaches();
       saveState({ sync: false, checkIn: false });
       renderProblems();
       renderInterviewSetup();
@@ -3488,6 +3512,7 @@ function applyCloudSession(payload, options = {}) {
     : mergeCloudState(remoteState, localState);
   localStorage.setItem(userStateKey(account.id), JSON.stringify(localStatePayload(nextState)));
   state = nextState;
+  clearProblemLookupCaches();
 
   community = options.merge === false
     ? normalizeCommunityStore(payload.community || community)
@@ -3643,6 +3668,7 @@ function migrateLegacyState(userId) {
 function renderSession() {
   currentUser = getCurrentUser();
   state = loadState();
+  clearProblemLookupCaches();
   problemSocial = new Map();
   problemSocialNotice = "";
   pruneProblemCatalog();
@@ -5002,14 +5028,20 @@ function normalizeProblemCompanies(raw = {}, tags = [], source = "") {
 }
 
 function getProblemCompanies(problem = {}) {
+  const cacheKey = String(problem.id || "");
+  const cached = cacheKey ? problemCompanyCache.get(cacheKey) : null;
+  if (cached?.source === problem) return cached.companies;
   const companies = Array.isArray(problem.companies) ? problem.companies : [];
   const defs = companies
     .map(getCompanyDef)
     .filter(Boolean);
-  if (defs.length) return [...new Map(defs.map((company) => [company.slug, company])).values()];
-  return normalizeProblemCompanies(problem, problem.tags || [], problem.source || "")
+  const resolved = defs.length
+    ? [...new Map(defs.map((company) => [company.slug, company])).values()]
+    : normalizeProblemCompanies(problem, problem.tags || [], problem.source || "")
     .map(getCompanyDef)
     .filter(Boolean);
+  if (cacheKey) problemCompanyCache.set(cacheKey, { source: problem, companies: resolved });
+  return resolved;
 }
 
 function problemMatchesCompany(problem, companySlug = problemCompanyFilter) {
@@ -7023,6 +7055,7 @@ function renderGlobalSearchResults() {
 }
 
 function scheduleGlobalSearchResults() {
+  if (globalSearchComposing) return;
   if (globalSearchTimer) window.clearTimeout(globalSearchTimer);
   globalSearchTimer = window.setTimeout(() => {
     globalSearchTimer = 0;
@@ -7087,29 +7120,15 @@ function buildGlobalSearchResults(query) {
 
   state.problems.filter(isCatalogProblem).forEach((problem) => {
     const isEn = getLanguage() === "en";
-    const title = getProblemDisplayTitle(problem, isEn);
-    const fields = [
-      title,
-      problem.titleEn,
-      problem.titleZh,
-      problem.promptEn,
-      problem.promptZh,
-      problem.answer,
-      problem.explanation,
-      problem.category,
-      problem.difficulty,
-      problem.tags.join(" "),
-      problem.tags.map(formatProblemTag).join(" "),
-      getProblemCompanies(problem).map((company) => getCompanyAliases(company).join(" ")).join(" ")
-    ];
-    if (!matchesQuery(fields, normalized)) return;
+    const searchRecord = getProblemSearchRecord(problem);
+    if (!matchesNormalizedText(searchRecord.searchText, normalized)) return;
     results.push({
       type: "problem",
       typeLabel: t("problems"),
-      title,
+      title: isEn ? searchRecord.titleEn : searchRecord.titleZh,
       detail: `${formatCategoryLabel(problem.category)} · ${problem.difficulty}`,
       id: problem.id,
-      rank: scoreProblemSearchMatch(problem, normalized)
+      rank: scoreProblemSearchRecord(searchRecord, normalized)
     });
   });
 
@@ -7268,9 +7287,22 @@ function normalizeSearchQuery(query) {
   return String(query || "").normalize("NFKC").trim().toLowerCase();
 }
 
+function normalizeSearchFields(fields) {
+  return normalizeSearchQuery((Array.isArray(fields) ? fields : [fields]).filter(Boolean).join(" "));
+}
+
+function getSearchTokens(normalizedQuery) {
+  return normalizeSearchQuery(normalizedQuery).split(/\s+/).filter(Boolean);
+}
+
+function matchesNormalizedText(normalizedText, normalizedQuery) {
+  const tokens = getSearchTokens(normalizedQuery);
+  if (!tokens.length) return true;
+  return tokens.every((token) => normalizedText.includes(token));
+}
+
 function matchesQuery(fields, normalizedQuery) {
-  const text = normalizeSearchQuery(fields.filter(Boolean).join(" "));
-  return normalizedQuery.split(/\s+/).filter(Boolean).every((token) => text.includes(token));
+  return matchesNormalizedText(normalizeSearchFields(fields), normalizedQuery);
 }
 
 function spotlightElement(selector) {
@@ -9011,10 +9043,11 @@ function networkStatusWeight(status) {
 }
 
 function handleProblemSearchInput() {
+  if (problemSearchComposing) return;
   selectedProblemDetailId = "";
   problemVisibleCount = PROBLEM_PAGE_SIZE;
   if (normalizeSearchQuery(els.problemSearch?.value)) problemViewMode = "all";
-  renderProblems();
+  scheduleProblemSearchRender();
 }
 
 function handleProblemSearchKeydown(event) {
@@ -9022,58 +9055,99 @@ function handleProblemSearchKeydown(event) {
   const query = normalizeSearchQuery(els.problemSearch?.value);
   if (!query) return;
   event.preventDefault();
+  cancelProblemSearchRender();
   const firstMatch = getProblemBrowserMatches({ forceAllView: true })[0];
   if (firstMatch) openProblemDetail(firstMatch.id);
 }
 
-function getProblemSearchFields(problem) {
-  return [
-    getProblemDisplayTitle(problem, true),
-    getProblemDisplayTitle(problem, false),
-    problem.titleEn,
-    problem.titleZh,
-    problem.promptEn,
-    problem.promptZh,
-    problem.answer,
-    problem.explanation,
+function scheduleProblemSearchRender() {
+  if (problemSearchTimer) window.clearTimeout(problemSearchTimer);
+  problemSearchTimer = window.setTimeout(() => {
+    problemSearchTimer = 0;
+    renderProblems({ resultsOnly: true });
+  }, PROBLEM_SEARCH_DEBOUNCE_MS);
+}
+
+function cancelProblemSearchRender() {
+  if (!problemSearchTimer) return;
+  window.clearTimeout(problemSearchTimer);
+  problemSearchTimer = 0;
+}
+
+function getProblemTagSearchText(tags = []) {
+  return (Array.isArray(tags) ? tags : [])
+    .flatMap((tag) => {
+      const label = problemTagLabels[String(tag)] || {};
+      return [tag, label.zh, label.en];
+    })
+    .filter(Boolean)
+    .join(" ");
+}
+
+function getProblemSearchRecord(problem) {
+  const cacheKey = String(problem?.id || "");
+  const cached = cacheKey ? problemSearchRecordCache.get(cacheKey) : null;
+  if (cached?.source === problem) return cached;
+
+  const companies = getProblemCompanies(problem);
+  const companyText = companies.map((company) => getCompanyAliases(company).join(" ")).join(" ");
+  const tagText = getProblemTagSearchText(problem.tags);
+  const titleEn = getProblemDisplayTitle(problem, true);
+  const titleZh = getProblemDisplayTitle(problem, false);
+  const titleText = normalizeSearchFields([titleEn, titleZh, problem.titleEn, problem.titleZh]);
+  const promptText = normalizeSearchFields([problem.promptEn, problem.promptZh]);
+  const metaText = normalizeSearchFields([
     problem.category,
     problem.difficulty,
     problem.source,
     problem.sourceType,
     problem.bookSlug,
     problem.bookName,
-    getProblemCompanies(problem).map((company) => getCompanyAliases(company).join(" ")).join(" "),
-    Array.isArray(problem.tags) ? problem.tags.map(formatProblemTag).join(" ") : "",
+    companyText,
+    tagText,
     Array.isArray(problem.tags) ? problem.tags.join(" ") : ""
-  ];
+  ]);
+  const searchText = normalizeSearchFields([
+    titleText,
+    promptText,
+    problem.answer,
+    problem.explanation,
+    metaText
+  ]);
+  const record = {
+    source: problem,
+    searchText,
+    titleText,
+    promptText,
+    metaText,
+    titleEn,
+    titleZh: titleZh || titleEn
+  };
+  if (cacheKey) problemSearchRecordCache.set(cacheKey, record);
+  return record;
+}
+
+function getProblemSearchFields(problem) {
+  const searchRecord = getProblemSearchRecord(problem);
+  return [searchRecord.searchText];
+}
+
+function scoreProblemSearchRecord(searchRecord, normalizedQuery) {
+  const query = normalizeSearchQuery(normalizedQuery);
+  if (!query) return 20;
+  const tokens = query.split(/\s+/).filter(Boolean);
+
+  if (searchRecord.titleText === query) return 0;
+  if (searchRecord.titleText.includes(query)) return 1;
+  if (tokens.every((token) => searchRecord.titleText.includes(token))) return 2;
+  if (searchRecord.promptText.includes(query)) return 5;
+  if (tokens.every((token) => searchRecord.promptText.includes(token))) return 7;
+  if (tokens.every((token) => searchRecord.metaText.includes(token))) return 10;
+  return 20;
 }
 
 function scoreProblemSearchMatch(problem, normalizedQuery) {
-  const query = normalizeSearchQuery(normalizedQuery);
-  if (!query) return 20;
-  const titleText = normalizeSearchQuery([
-    getProblemDisplayTitle(problem, true),
-    getProblemDisplayTitle(problem, false),
-    problem.titleEn,
-    problem.titleZh
-  ].filter(Boolean).join(" "));
-  const promptText = normalizeSearchQuery([problem.promptEn, problem.promptZh].filter(Boolean).join(" "));
-  const metaText = normalizeSearchQuery([
-    problem.category,
-    problem.difficulty,
-    problem.bookName,
-    getProblemCompanies(problem).map((company) => company.name).join(" "),
-    Array.isArray(problem.tags) ? problem.tags.join(" ") : ""
-  ].filter(Boolean).join(" "));
-  const tokens = query.split(/\s+/).filter(Boolean);
-
-  if (titleText === query) return 0;
-  if (titleText.includes(query)) return 1;
-  if (tokens.every((token) => titleText.includes(token))) return 2;
-  if (promptText.includes(query)) return 5;
-  if (tokens.every((token) => promptText.includes(token))) return 7;
-  if (tokens.every((token) => metaText.includes(token))) return 10;
-  return 20;
+  return scoreProblemSearchRecord(getProblemSearchRecord(problem), normalizedQuery);
 }
 
 function getProblemBrowserMatches(options = {}) {
@@ -9083,17 +9157,25 @@ function getProblemBrowserMatches(options = {}) {
     .filter(isCatalogProblem)
     .filter((problem) => problemMatchesCompany(problem, problemCompanyFilter))
     .filter((problem) => problemMatchesTheme(problem, problemThemeFilter))
-    .filter((problem) => problemMatchesDifficulty(problem, problemDifficultyFilter))
-    .filter((problem) => !query || matchesQuery(getProblemSearchFields(problem), query));
+    .filter((problem) => problemMatchesDifficulty(problem, problemDifficultyFilter));
+
+  if (query) {
+    const isEn = getLanguage() === "en";
+    problems = problems
+      .map((problem) => ({ problem, searchRecord: getProblemSearchRecord(problem) }))
+      .filter(({ searchRecord }) => matchesNormalizedText(searchRecord.searchText, query))
+      .sort((a, b) => (
+        scoreProblemSearchRecord(a.searchRecord, query) - scoreProblemSearchRecord(b.searchRecord, query)
+        || (isEn ? a.searchRecord.titleEn : a.searchRecord.titleZh).localeCompare(
+          isEn ? b.searchRecord.titleEn : b.searchRecord.titleZh,
+          getLocale()
+        )
+      ))
+      .map(({ problem }) => problem);
+  }
 
   if (!forceAllView && problemViewMode === "saved") {
     problems = problems.filter((problem) => getProblemPersonalState(problem.id).favorite);
-  }
-  if (query) {
-    problems = problems.sort((a, b) => (
-      scoreProblemSearchMatch(a, query) - scoreProblemSearchMatch(b, query)
-      || getProblemDisplayTitle(a, getLanguage() === "en").localeCompare(getProblemDisplayTitle(b, getLanguage() === "en"))
-    ));
   }
   return problems;
 }
@@ -9108,15 +9190,19 @@ function openProblemFromSearch(problemId) {
   window.setTimeout(() => openProblemDetail(problemId), 40);
 }
 
-function renderProblems() {
+function renderProblems(options = {}) {
+  cancelProblemSearchRender();
+  const resultsOnly = Boolean(options.resultsOnly);
   renderProblemViewTabs();
-  renderLeetcodeHot100();
-  const allCatalogProblems = state.problems.filter(isCatalogProblem);
-  renderProblemCompanyPanel(allCatalogProblems);
-  const scopedCatalogProblems = allCatalogProblems.filter((problem) => problemMatchesCompany(problem, problemCompanyFilter));
-  renderProblemThemeFilter(scopedCatalogProblems);
-  renderProblemDifficultyFilter(scopedCatalogProblems);
-  renderProblemCompletionDashboard(scopedCatalogProblems);
+  if (!resultsOnly) {
+    renderLeetcodeHot100();
+    const allCatalogProblems = state.problems.filter(isCatalogProblem);
+    renderProblemCompanyPanel(allCatalogProblems);
+    const scopedCatalogProblems = allCatalogProblems.filter((problem) => problemMatchesCompany(problem, problemCompanyFilter));
+    renderProblemThemeFilter(scopedCatalogProblems);
+    renderProblemDifficultyFilter(scopedCatalogProblems);
+    renderProblemCompletionDashboard(scopedCatalogProblems);
+  }
   if (selectedProblemDetailId) {
     const selected = state.problems.find((item) => item.id === selectedProblemDetailId && isCatalogProblem(item));
     if (selected) {
@@ -9385,8 +9471,27 @@ function renderProblemViewTabs() {
   if (els.problemInteractionStatus) els.problemInteractionStatus.textContent = problemSocialNotice;
 }
 
+function clearProblemLookupCaches() {
+  problemSearchRecordCache.clear();
+  problemCompanyCache.clear();
+  clearProblemStateCache();
+}
+
+function clearProblemStateCache() {
+  problemStateCacheSource = null;
+  problemStateCache = null;
+}
+
+function getProblemStateCache() {
+  const source = state.problemStates || [];
+  if (problemStateCache && problemStateCacheSource === source) return problemStateCache;
+  problemStateCacheSource = source;
+  problemStateCache = new Map(source.map((item) => [item.problemId, item]));
+  return problemStateCache;
+}
+
 function getProblemPersonalState(problemId) {
-  return (state.problemStates || []).find((item) => item.problemId === problemId) || normalizeProblemState({ problemId });
+  return getProblemStateCache().get(problemId) || normalizeProblemState({ problemId });
 }
 
 function toggleProblemSaved(problemId) {
@@ -9584,6 +9689,7 @@ function pruneProblemCatalog() {
   if (catalogItems.length === state.problems.length && problemStates.length === (state.problemStates || []).length) return;
   state.problems = catalogItems;
   state.problemStates = problemStates;
+  clearProblemLookupCaches();
   saveState({ sync: false, checkIn: false });
 }
 
@@ -10311,6 +10417,7 @@ function upsertProblems(problems) {
     byId.set(problem.id, { ...(byId.get(problem.id) || {}), ...problem, updatedAt: new Date().toISOString() });
   });
   state.problems = [...byId.values()].filter(isCatalogProblem);
+  clearProblemLookupCaches();
   saveState();
 }
 
@@ -10318,6 +10425,7 @@ async function deleteProblem(id) {
   const problem = state.problems.find((item) => item.id === id);
   if (!problem || !isUserProblem(problem)) return;
   state.problems = state.problems.filter((problem) => problem.id !== id);
+  clearProblemLookupCaches();
   if (selectedInterviewProblemId === id) {
     selectedInterviewProblemId = "";
     resetInterview();
@@ -12239,6 +12347,7 @@ function resetState() {
   if (!ok) return;
   if (currentUser) localStorage.removeItem(userStateKey(currentUser.id));
   state = loadState();
+  clearProblemLookupCaches();
   saveState();
   renderAll();
 }
@@ -12290,6 +12399,7 @@ function importState(event) {
         updatedAt: new Date().toISOString()
       };
       state = normalizeState(next);
+      clearProblemLookupCaches();
       saveState();
       renderAll();
     } catch {
