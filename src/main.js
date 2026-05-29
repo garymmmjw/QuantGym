@@ -6205,6 +6205,57 @@ function renderHistory() {
   });
 }
 
+function leaderboardSnapshotKey(settings) {
+  return `qg.leaderboard.ranks.${settings.metric || "overall"}.${settings.scope || "global"}.${settings.country || ""}.${settings.region || ""}`;
+}
+
+// Reads the previous-rank snapshot, returns per-id deltas (positive = moved up),
+// then stores the current ranks for next time.
+function computeLeaderboardRankChanges(rows, settings) {
+  const key = leaderboardSnapshotKey(settings);
+  let previous = {};
+  try {
+    previous = JSON.parse(localStorage.getItem(key) || "{}") || {};
+  } catch {
+    previous = {};
+  }
+  const changes = {};
+  const next = {};
+  rows.forEach((row, index) => {
+    const place = row.place || index + 1;
+    next[row.id] = place;
+    const prior = previous[row.id];
+    changes[row.id] = Number.isFinite(prior) ? prior - place : null;
+  });
+  try {
+    localStorage.setItem(key, JSON.stringify(next));
+  } catch {
+    /* storage unavailable — arrows just won't persist */
+  }
+  return changes;
+}
+
+function buildLeaderboardTrend(delta) {
+  const trend = document.createElement("span");
+  trend.className = "leaderboard-trend";
+  if (delta === null) {
+    trend.classList.add("new");
+    trend.textContent = "·";
+    return trend;
+  }
+  if (delta > 0) {
+    trend.classList.add("up");
+    trend.innerHTML = `<i data-lucide="arrow-up-right"></i><b>+${delta}</b>`;
+  } else if (delta < 0) {
+    trend.classList.add("down");
+    trend.innerHTML = `<i data-lucide="arrow-down-right"></i><b>${delta}</b>`;
+  } else {
+    trend.classList.add("flat");
+    trend.textContent = "—";
+  }
+  return trend;
+}
+
 function renderLeaderboard() {
   renderLeaderboardControls();
   refreshLeaderboardFromCloud(false);
@@ -6217,12 +6268,14 @@ function renderLeaderboard() {
     return;
   }
 
+  const changes = computeLeaderboardRankChanges(rows, settings);
+
   rows.forEach((row, index) => {
+    const rankPosition = row.place || index + 1;
     const item = document.createElement("div");
     item.className = `leaderboard-item${row.isCurrent ? " current" : ""}`;
 
     const place = document.createElement("strong");
-    const rankPosition = row.place || index + 1;
     place.className = `leaderboard-rank ${rankPosition === 1 ? "gold" : rankPosition === 2 ? "silver" : rankPosition === 3 ? "bronze" : "plain"}`;
     place.textContent = String(rankPosition);
 
@@ -6241,20 +6294,24 @@ function renderLeaderboard() {
     }
 
     const identity = document.createElement("div");
+    identity.className = "leaderboard-identity";
     const name = document.createElement("span");
-    name.textContent = row.name;
+    name.textContent = row.isCurrent ? `${row.name} · ${t("leaderboardYou")}` : row.name;
     const rankMeta = document.createElement("small");
-    const sourceLabel = row.isCurrent ? t("leaderboardYou") : "";
-    rankMeta.textContent = [row.locationLabel, row.rank, sourceLabel].filter(Boolean).join(" · ");
+    rankMeta.textContent = [row.rank, row.locationLabel].filter(Boolean).join(" · ");
     identity.append(name, rankMeta);
 
     const score = document.createElement("b");
     score.className = "leaderboard-score";
-    score.innerHTML = `<span>${formatScore(row.score)}</span><img src="assets/generated/reward-xp.webp" alt="" loading="lazy">`;
+    score.innerHTML = `<span>${formatScore(row.score)}</span><small>${t("leaderboardScoreUnit")}</small>`;
 
-    item.append(place, avatar, identity, score);
+    const trend = buildLeaderboardTrend(changes[row.id]);
+
+    item.append(place, avatar, identity, score, trend);
     els.leaderboardList.appendChild(item);
   });
+
+  if (window.lucide?.createIcons) window.lucide.createIcons();
 }
 
 function renderLeaderboardControls() {
