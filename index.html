@@ -162,6 +162,10 @@
             <i data-lucide="brain"></i>
             Mental Math
           </button>
+          <button class="module-tab" type="button" data-module-tab="poker">
+            <i data-lucide="spade"></i>
+            Poker
+          </button>
           <button class="module-tab" type="button" data-module-tab="experiences">
             <i data-lucide="notebook-pen"></i>
             面经
@@ -1612,49 +1616,147 @@
               <div id="marketGameFeedback" class="game-feedback"></div>
             </article>
 
-            <article class="poker-game-card poker-table-card">
+            <article class="poker-game-card poker-launch-card">
               <div class="game-card-head">
                 <div>
                   <span class="rank-label">TOURNAMENT</span>
                   <h4>Poker Tournament</h4>
                 </div>
-                <strong id="pokerGameScore">0</strong>
+                <strong>100BB</strong>
               </div>
-              <div class="poker-match-bar">
-                <select id="pokerModeSelect" aria-label="Poker match mode">
-                  <option value="bots">Match robots</option>
-                  <option value="local">Local human table</option>
-                </select>
-                <button id="pokerMatchBtn" class="secondary-button compact" type="button">Match</button>
-                <button id="resetPokerGameBtn" class="secondary-button compact" type="button">Reset</button>
+              <p>独立牌桌大厅、入座、补 bot、盲注升级和翻前策略矩阵。</p>
+              <div class="game-actions">
+                <button class="primary-button compact" type="button" data-jump-module="poker">
+                  <i data-lucide="door-open"></i>
+                  Open table
+                </button>
               </div>
-              <div class="poker-table" id="pokerTable">
-                <div class="poker-table-meta">
-                  <span id="pokerStageText">Preflop</span>
-                  <span id="pokerBlindText">Blinds 10/20</span>
-                </div>
-                <div id="pokerSeatGrid" class="poker-seat-grid"></div>
-                <div id="pokerBoard" class="poker-board" aria-label="Community cards"></div>
-                <div id="pokerPot" class="poker-pot">Pot 0</div>
+            </article>
+          </div>
+        </section>
+      </section>
+      </section>
+
+      <section class="module-view" data-module-view="poker">
+      <section class="poker-room-section">
+        <div class="poker-now-shell">
+          <div class="poker-now-brand">POKER <span>GYM</span></div>
+          <div class="poker-now-room-meta">
+            <small>OWNER: GARY</small>
+            <strong>NLH ~ <span id="pokerBlindText">10 / 20</span></strong>
+            <em id="pokerRoomCode">QG</em>
+          </div>
+
+          <aside class="poker-side-rail left" aria-label="Poker table options">
+            <button type="button" title="Options" aria-label="Options"><i data-lucide="menu"></i><span>OPTIONS</span></button>
+            <button type="button" data-jump-module="tools" title="Leave table" aria-label="Leave table"><i data-lucide="log-out"></i><span>LEAVE TABLE</span></button>
+            <button type="button" title="Away" aria-label="Away"><i data-lucide="person-standing"></i><span>AWAY</span></button>
+          </aside>
+
+          <aside class="poker-side-rail right" aria-label="Poker table media controls">
+            <button type="button" title="Sound" aria-label="Sound"><i data-lucide="volume-2"></i></button>
+            <button type="button" title="Pause" aria-label="Pause"><i data-lucide="pause"></i></button>
+            <button type="button" title="Stop" aria-label="Stop"><i data-lucide="square"></i></button>
+            <button class="poker-side-burst" type="button" title="Table energy" aria-label="Table energy"><i data-lucide="sparkles"></i></button>
+          </aside>
+
+          <section class="poker-table-panel">
+            <div class="poker-table" id="pokerTable">
+              <div class="poker-table-meta">
+                <span id="pokerStageText">Waiting</span>
+                <span id="pokerPlayerCount">1/6</span>
               </div>
-              <div id="pokerGamePrompt" class="game-prompt"></div>
+              <div id="pokerPot" class="poker-pot">Pot 0</div>
+              <div id="pokerBoard" class="poker-board" aria-label="Community cards"></div>
+              <div class="poker-table-watermark">No Limit Texas Hold'em</div>
+              <div id="pokerSeatGrid" class="poker-seat-grid"></div>
+            </div>
+          </section>
+
+          <aside class="poker-lobby-panel">
+            <div class="poker-lobby-head">
+              <strong>LOG / LEDGER</strong>
+              <span id="pokerLobbySummary">Registering · 100BB starting stack</span>
+            </div>
+            <div class="poker-match-bar">
+              <select id="pokerModeSelect" aria-label="Poker match mode">
+                <option value="private">Private table</option>
+                <option value="match">Quick match pool</option>
+              </select>
+              <button id="pokerMatchBtn" class="secondary-button compact" type="button">
+                <i data-lucide="shuffle"></i>
+                New
+              </button>
+              <button id="resetPokerGameBtn" class="secondary-button compact" type="button">
+                <i data-lucide="rotate-ccw"></i>
+                Reset
+              </button>
+            </div>
+            <label class="poker-room-link">
+              Room link
+              <div>
+                <input id="pokerRoomLinkInput" type="text" readonly value="">
+                <button id="pokerCopyLinkBtn" class="secondary-button compact" type="button">
+                  <i data-lucide="copy"></i>
+                </button>
+              </div>
+            </label>
+            <div class="poker-seat-form">
+              <label>
+                Player
+                <input id="pokerPlayerNameInput" type="text" placeholder="Your table name">
+              </label>
+              <button id="pokerTakeSeatBtn" class="primary-button compact" type="button">JOIN</button>
+            </div>
+            <div class="poker-lobby-actions">
+              <button id="pokerAddBotBtn" class="secondary-button compact" type="button"><i data-lucide="bot"></i>Bot</button>
+              <button id="pokerFillBotsBtn" class="secondary-button compact" type="button"><i data-lucide="users-round"></i>Fill</button>
+              <button id="pokerStartTournamentBtn" class="primary-button compact" type="button"><i data-lucide="play"></i>Start</button>
+            </div>
+            <div id="pokerLobbyList" class="poker-lobby-list"></div>
+            <div id="pokerLog" class="poker-log"></div>
+          </aside>
+
+          <section class="poker-bottom-hud">
+            <div id="pokerGamePrompt" class="game-prompt poker-game-prompt"></div>
+            <div class="poker-action-panel">
               <div id="pokerTurnPrompt" class="poker-turn-prompt"></div>
               <label class="poker-raise-control">
                 Raise to
-                <input id="pokerRaiseInput" type="number" min="0" step="10">
+                <input id="pokerRaiseInput" type="number" min="0" step="20">
               </label>
               <div class="poker-action-grid">
-                <button type="button" data-poker-action="fold">Fold</button>
                 <button type="button" data-poker-action="call">Check / Call</button>
                 <button type="button" data-poker-action="raise">Raise</button>
                 <button type="button" data-poker-action="allin">All-in</button>
+                <button type="button" data-poker-action="fold">Fold</button>
               </div>
               <div class="game-actions">
                 <button id="nextPokerGameBtn" class="secondary-button compact" type="button">Next hand</button>
               </div>
               <div id="pokerGameFeedback" class="game-feedback"></div>
-              <div id="pokerLog" class="poker-log"></div>
-            </article>
+            </div>
+          </section>
+        </div>
+
+        <section class="poker-solver-panel">
+          <div class="panel-heading">
+            <div>
+              <h3>100BB Preflop Solver Lite</h3>
+              <small>简化 6-max baseline：RFI / mix / defend / fold，用来训练翻前直觉。</small>
+            </div>
+            <select id="pokerPreflopPositionSelect" aria-label="Preflop position">
+              <option value="utg">UTG</option>
+              <option value="hj">HJ</option>
+              <option value="co">CO</option>
+              <option value="btn" selected>BTN</option>
+              <option value="sb">SB</option>
+              <option value="bb">BB vs BTN</option>
+            </select>
+          </div>
+          <div class="poker-solver-layout">
+            <div id="pokerPreflopMatrix" class="poker-preflop-matrix" aria-label="100BB preflop hand matrix"></div>
+            <aside id="pokerPreflopDetail" class="poker-preflop-detail"></aside>
           </div>
         </section>
       </section>
