@@ -556,7 +556,7 @@ function bindEvents() {
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".streak-widget")) setStreakPanelOpen(false);
   });
-  els.generateStudyPlanBtn?.addEventListener("click", () => switchModule("problems"));
+  els.generateStudyPlanBtn?.addEventListener("click", () => switchModule("plan"));
   els.prepPlanSetupForm?.addEventListener("submit", (event) => {
     event.preventDefault();
     createPrepPlan();
@@ -3374,10 +3374,10 @@ function startHeroTypewriter() {
   const phrasePause = 6800;
   const nextPhraseDelay = 460;
   const phrases = [
-    "Solve the next quant problem.",
-    "Practice like it is interview day.",
-    "Turn firm tags into a prep map.",
-    "Build the quant ecosystem together."
+    "Sharpen your quant edge today.",
+    "Practice faster. Think clearer.",
+    "Turn solved problems into signal.",
+    "Build interview-ready intuition."
   ];
   const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
   if (prefersReducedMotion) {
