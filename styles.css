@@ -14493,7 +14493,7 @@ body.is-authenticated.is-poker-module #appShell > .module-view[data-module-view=
   width: 0.07em;
   height: 0.82em;
   margin-left: 5px;
-  border-radius: 2px;
+  border-radius: 0;
   background: #635bff;
   -webkit-text-fill-color: #635bff;
   vertical-align: -0.06em;
@@ -15080,8 +15080,9 @@ body.is-authenticated [data-module-view="overview"] .quanty-hero h2 {
   min-height: 0 !important;
   max-width: min(12.5ch, 100%);
   overflow: visible !important;
+  padding-bottom: 0.12em;
   font-size: clamp(2.35rem, 5.1cqw, 4.05rem);
-  line-height: 0.98;
+  line-height: 1.1;
   text-wrap: pretty;
 }
 
@@ -15143,7 +15144,7 @@ body.is-authenticated [data-module-view="overview"] .quanty-hero .shark-bubble.i
   body.is-authenticated [data-module-view="overview"] .quanty-hero h2 {
     max-width: min(13ch, 100%);
     font-size: clamp(2.1rem, 5cqw, 3.2rem);
-    line-height: 1;
+    line-height: 1.1;
   }
 
   body.is-authenticated [data-module-view="overview"] .quanty-hero .shark-stage {
@@ -15162,7 +15163,7 @@ body.is-authenticated [data-module-view="overview"] .quanty-hero .shark-bubble.i
   body.is-authenticated [data-module-view="overview"] .quanty-hero h2 {
     max-width: min(12ch, 100%);
     font-size: clamp(1.8rem, 6.4cqw, 2.35rem);
-    line-height: 1.02;
+    line-height: 1.1;
   }
 
   body.is-authenticated [data-module-view="overview"] .quanty-hero .shark-stage {
