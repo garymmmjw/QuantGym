@@ -14447,3 +14447,407 @@ body.is-authenticated.is-poker-module #appShell {
 body.is-authenticated.is-poker-module #appShell > .module-view[data-module-view="poker"] {
   grid-column: 1 !important;
 }
+
+/* =====================================================================
+   OVERVIEW PREMIUM POLISH  (appended — wins the cascade)
+   1. Hero typewriter + Space Grotesk
+   2. Interactive shark
+   3. Rank card / effect panels / fire + chat pills depth
+   ===================================================================== */
+
+:root {
+  --font-display: "Space Grotesk", "Plus Jakarta Sans", "SF Pro Display", Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---- 1. HERO TITLE + TYPEWRITER ------------------------------------ */
+.quanty-hero h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  /* kill the per-keystroke reflow that made the text jump */
+  text-wrap: normal;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: keep-all;
+  /* reserve a stable two-line box so nothing shifts while typing */
+  min-height: 2.16em;
+  max-width: 12ch;
+  line-height: 1.04;
+  background: linear-gradient(120deg, #1c1740 0%, #4b3fb8 48%, #635bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #1c1740; /* fallback */
+}
+
+.quanty-hero .hero-kicker {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* blinking caret (was animation:none → looked frozen/buggy) */
+.quanty-hero h2::after {
+  content: "";
+  display: inline-block;
+  width: 0.07em;
+  height: 0.82em;
+  margin-left: 5px;
+  border-radius: 2px;
+  background: #635bff;
+  -webkit-text-fill-color: #635bff;
+  vertical-align: -0.06em;
+  animation: heroCaretBlink 1.05s steps(1, end) infinite;
+}
+
+@keyframes heroCaretBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quanty-hero h2::after { animation: none; opacity: 1; }
+}
+
+@media (max-width: 980px) {
+  .quanty-hero h2 { min-height: 2.9em; max-width: 16ch; }
+}
+
+/* ---- 2. INTERACTIVE SHARK ------------------------------------------ */
+.shark-stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  align-self: end;
+  justify-self: center;
+  perspective: 900px;
+}
+
+.shark-interactive {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  /* JS sets these vars on mousemove for the "looking at you" parallax */
+  --sx: 0px;
+  --sy: 0px;
+  --srot: 0deg;
+  --sscale: 1;
+  transform: translate3d(var(--sx), var(--sy), 0) rotate(var(--srot)) scale(var(--sscale));
+  transform-origin: 50% 88%;
+  transition: transform 360ms cubic-bezier(.22, 1, .36, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shark-interactive:focus-visible {
+  outline: 3px solid rgba(99, 91, 255, 0.55);
+  outline-offset: 8px;
+  border-radius: 24px;
+}
+
+.shark-glow {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 76%;
+  height: 30%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 91, 255, 0.34), transparent 68%);
+  filter: blur(6px);
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity 320ms ease, transform 320ms ease;
+}
+
+.shark-interactive:hover .shark-glow { opacity: 1; transform: translateX(-50%) scale(1.08); }
+
+#heroShark {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(90%, 410px);
+  /* override the old .quanty-hero img float; gentle idle bob lives on the img,
+     parallax tilt lives on the parent so the two transforms compose */
+  animation: sharkBob 4.6s ease-in-out infinite;
+  filter: drop-shadow(0 20px 30px rgba(70, 54, 113, 0.18));
+  transition: filter 300ms ease;
+  user-select: none;
+}
+
+.shark-interactive:hover #heroShark {
+  filter: drop-shadow(0 26px 34px rgba(70, 54, 113, 0.26));
+}
+
+@keyframes sharkBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+/* poke reaction */
+.shark-interactive.is-poked #heroShark { animation: sharkPoke 620ms cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes sharkPoke {
+  0%   { transform: translateY(0) scale(1) rotate(0deg); }
+  25%  { transform: translateY(-26px) scale(1.06, 0.94) rotate(-5deg); }
+  55%  { transform: translateY(4px) scale(0.96, 1.05) rotate(4deg); }
+  78%  { transform: translateY(-6px) scale(1.02, 0.98) rotate(-2deg); }
+  100% { transform: translateY(0) scale(1) rotate(0deg); }
+}
+
+/* idle wiggle (fires periodically from JS) */
+.shark-interactive.is-idle-wiggle #heroShark { animation: sharkWiggle 1.3s ease-in-out; }
+@keyframes sharkWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(3deg); }
+  45% { transform: rotate(-3deg); }
+  70% { transform: rotate(2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #heroShark, .shark-interactive { animation: none !important; transition: none !important; }
+}
+
+/* speech bubble */
+.shark-bubble {
+  position: absolute;
+  top: 2%;
+  left: 50%;
+  z-index: 5;
+  max-width: 210px;
+  padding: 11px 15px;
+  transform: translate(-50%, -8px) scale(0.85);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(99, 91, 255, 0.18);
+  box-shadow: 0 16px 34px rgba(70, 54, 113, 0.2);
+  color: #2a2550;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 240ms ease, transform 320ms cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.shark-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  transform: translateX(-50%) rotate(45deg);
+  background: rgba(255, 255, 255, 0.96);
+  border-right: 1px solid rgba(99, 91, 255, 0.18);
+  border-bottom: 1px solid rgba(99, 91, 255, 0.18);
+}
+
+.shark-bubble.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+@media (max-width: 980px) {
+  .shark-bubble { max-width: 170px; font-size: 0.84rem; }
+}
+
+/* ---- 3a. RANK CARD (summary-band) ---------------------------------- */
+body.is-authenticated .summary-band {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(99, 91, 255, 0.16);
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 88% -10%, rgba(255, 196, 91, 0.22), transparent 42%),
+    radial-gradient(circle at 6% 110%, rgba(99, 91, 255, 0.16), transparent 46%),
+    linear-gradient(150deg, #ffffff 0%, #f7f5ff 60%, #f0edff 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 24px 50px rgba(78, 62, 145, 0.16);
+}
+
+body.is-authenticated .summary-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 70% 22%, rgba(99, 91, 255, 0.12) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 90% 70%, rgba(255, 196, 91, 0.35) 0 1.5px, transparent 2.5px);
+  pointer-events: none;
+}
+
+.rank-row .rank-label {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--text-secondary, #5a5f73);
+}
+
+#rankName {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.total-xp span:first-child {
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: linear-gradient(120deg, #4b3fb8, #635bff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* metric chips inside the rank card */
+body.is-authenticated .summary-metrics .metric-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(99, 91, 255, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.95), rgba(247, 245, 255, 0.85));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 10px 22px rgba(78, 62, 145, 0.1);
+  transition: transform 280ms cubic-bezier(.22, 1, .36, 1), box-shadow 280ms ease;
+}
+
+body.is-authenticated .summary-metrics .metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 16px 30px rgba(78, 62, 145, 0.18);
+}
+
+body.is-authenticated .summary-metrics .metric-card span {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* ---- 3b. THREE OVERVIEW EFFECT PANELS ------------------------------ */
+.overview-effect-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(99, 91, 255, 0.12);
+  border-radius: 24px;
+  background: linear-gradient(168deg, #ffffff 0%, #fbfaff 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 18px 40px rgba(78, 62, 145, 0.1);
+  transition: transform 300ms cubic-bezier(.22, 1, .36, 1), box-shadow 300ms ease, border-color 300ms ease;
+}
+
+.overview-effect-panel::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99, 91, 255, 0.1), transparent 70%);
+  pointer-events: none;
+}
+
+.overview-effect-panel:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 91, 255, 0.24);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 26px 52px rgba(78, 62, 145, 0.2);
+}
+
+.effect-panel-heading .rank-label {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  font-size: 0.68rem;
+  color: #8a7fe0;
+}
+
+.effect-panel-heading h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ---- 3c. TOP-BAR FIRE (streak) + CHAT PILLS ------------------------ */
+.app-stat-pill {
+  position: relative;
+  overflow: visible;
+  border: 1px solid rgba(99, 91, 255, 0.14);
+  border-radius: 16px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(246, 244, 255, 0.9));
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 8px 18px rgba(78, 62, 145, 0.1);
+  transition: transform 240ms cubic-bezier(.22, 1, .36, 1), box-shadow 240ms ease, border-color 240ms ease;
+}
+
+.app-stat-pill:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 91, 255, 0.3);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 12px 26px rgba(78, 62, 145, 0.2);
+}
+
+.app-stat-pill strong {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* fire emblem — warm gradient coin so the flame reads as "premium" */
+.streak-pill .stat-art-fire {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(150deg, #ffd27a 0%, #ff9d4d 52%, #ff6f5b 100%);
+  box-shadow: 0 4px 12px rgba(255, 130, 70, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+.streak-pill.is-burning .stat-art-fire,
+.streak-pill.is-checked .stat-art-fire {
+  animation: firePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes firePulse {
+  0%, 100% { box-shadow: 0 4px 12px rgba(255, 130, 70, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.5) inset; }
+  50%      { box-shadow: 0 6px 18px rgba(255, 110, 60, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.6) inset; }
+}
+
+/* chat emblem — cool gradient coin to balance the warm fire */
+.chat-pill .stat-art-chat {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(150deg, #7c75ff 0%, #5b5ff5 100%);
+  box-shadow: 0 4px 12px rgba(91, 95, 245, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.45) inset;
+}
+
+.chat-pill .stat-art-chat svg { stroke: #fff; }
+
+/* unread dot */
+.chat-pill.has-unread .stat-art-chat::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ff6f5b;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-stat-pill, .overview-effect-panel, body.is-authenticated .summary-metrics .metric-card {
+    transition: none;
+  }
+  .streak-pill.is-burning .stat-art-fire, .streak-pill.is-checked .stat-art-fire { animation: none; }
+}

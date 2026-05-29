@@ -123,6 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.setInterval(maybeAutoRefreshJobs, JOBS_AUTO_REFRESH_MS);
   window.addEventListener("resize", updateGlobalSearchPlaceholder);
   refreshIcons();
+  initSharkInteractions();
 });
 
 function bindElements() {
@@ -3416,6 +3417,128 @@ function startHeroTypewriter() {
 
   node.textContent = "";
   tick();
+}
+
+function initSharkInteractions() {
+  const stage = document.getElementById("sharkStage");
+  const btn = document.getElementById("sharkInteractive");
+  const shark = document.getElementById("heroShark");
+  const bubble = document.getElementById("sharkBubble");
+  if (!stage || !btn || !shark) return;
+
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+
+  // --- cursor-follow parallax ("looking at you") ---
+  let raf = null;
+  let targetX = 0;
+  let targetY = 0;
+  let targetRot = 0;
+  let curX = 0;
+  let curY = 0;
+  let curRot = 0;
+
+  const apply = () => {
+    curX += (targetX - curX) * 0.12;
+    curY += (targetY - curY) * 0.12;
+    curRot += (targetRot - curRot) * 0.12;
+    btn.style.setProperty("--sx", curX.toFixed(2) + "px");
+    btn.style.setProperty("--sy", curY.toFixed(2) + "px");
+    btn.style.setProperty("--srot", curRot.toFixed(2) + "deg");
+    if (Math.abs(targetX - curX) > 0.1 || Math.abs(targetY - curY) > 0.1 || Math.abs(targetRot - curRot) > 0.05) {
+      raf = window.requestAnimationFrame(apply);
+    } else {
+      raf = null;
+    }
+  };
+  const schedule = () => { if (!raf) raf = window.requestAnimationFrame(apply); };
+
+  if (!reduceMotion) {
+    window.addEventListener("mousemove", (e) => {
+      const rect = stage.getBoundingClientRect();
+      if (!rect.width) return;
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (e.clientX - cx) / rect.width;   // ~ -0.5..0.5+
+      const dy = (e.clientY - cy) / rect.height;
+      targetX = Math.max(-1, Math.min(1, dx)) * 16;
+      targetY = Math.max(-1, Math.min(1, dy)) * 10;
+      targetRot = Math.max(-1, Math.min(1, dx)) * 5;
+      schedule();
+    }, { passive: true });
+
+    document.addEventListener("mouseleave", () => {
+      targetX = 0; targetY = 0; targetRot = 0; schedule();
+    });
+  }
+
+  // --- speech bubble helper ---
+  let bubbleTimer = null;
+  const sharkLines = [
+    "嘿，专注一点 🦈",
+    "今天也要 sharpen 一下！",
+    "解一道题，就离 offer 更近一点。",
+    "概率题别慌，先写样本空间。",
+    "连续打卡中，别断啊！",
+    "速算练了吗？我在看着你哦。",
+    "蒙特卡洛说：再来一次。",
+    "Greeks 复习一下？",
+    "好好刷题，鲨鱼罩着你。",
+    "深呼吸，面试稳得很。"
+  ];
+  let lastLine = -1;
+  const sayLine = (text) => {
+    if (!bubble) return;
+    bubble.textContent = text;
+    bubble.classList.add("is-visible");
+    if (bubbleTimer) window.clearTimeout(bubbleTimer);
+    bubbleTimer = window.setTimeout(() => bubble.classList.remove("is-visible"), 2600);
+  };
+  const sayRandom = () => {
+    let i = Math.floor(Math.random() * sharkLines.length);
+    if (i === lastLine) i = (i + 1) % sharkLines.length;
+    lastLine = i;
+    sayLine(sharkLines[i]);
+  };
+
+  // --- click / poke reaction ---
+  btn.addEventListener("click", () => {
+    if (!reduceMotion) {
+      btn.classList.remove("is-poked");
+      void shark.offsetWidth; // restart animation
+      btn.classList.add("is-poked");
+      window.setTimeout(() => btn.classList.remove("is-poked"), 640);
+    }
+    sayRandom();
+  });
+
+  // --- hover greeting ---
+  let hoverCooldown = 0;
+  btn.addEventListener("mouseenter", () => {
+    const now = Date.now();
+    if (now - hoverCooldown > 6000) {
+      hoverCooldown = now;
+      if (!bubble?.classList.contains("is-visible")) sayLine("点我一下试试 👆");
+    }
+  });
+
+  // --- idle micro-animations ---
+  if (!reduceMotion) {
+    let lastActivity = Date.now();
+    const markActivity = () => { lastActivity = Date.now(); };
+    window.addEventListener("mousemove", markActivity, { passive: true });
+    window.addEventListener("keydown", markActivity);
+    window.setInterval(() => {
+      const idleFor = Date.now() - lastActivity;
+      const overviewVisible = stage.offsetParent !== null;
+      if (idleFor > 9000 && overviewVisible && !btn.classList.contains("is-poked")) {
+        btn.classList.remove("is-idle-wiggle");
+        void shark.offsetWidth;
+        btn.classList.add("is-idle-wiggle");
+        window.setTimeout(() => btn.classList.remove("is-idle-wiggle"), 1400);
+        lastActivity = Date.now(); // avoid back-to-back
+      }
+    }, 4000);
+  }
 }
 
 function getCatalogProblems() {
