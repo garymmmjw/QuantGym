@@ -3262,14 +3262,15 @@ function startHeroTypewriter() {
   const node = els.heroTypewriter;
   if (!node) return;
   if (heroTypewriterTimer) window.clearTimeout(heroTypewriterTimer);
-  const typeDelay = 118;
-  const phrasePause = 4200;
-  const swapDelay = 260;
+  const typeDelay = 78;
+  const deleteDelay = 44;
+  const phrasePause = 6800;
+  const nextPhraseDelay = 460;
   const phrases = [
-    "Sharpen your quant edge.",
+    "Sharpen your quant edge today.",
     "Practice faster. Think clearer.",
-    "Turn problems into signal.",
-    "Build interview intuition."
+    "Turn solved problems into signal.",
+    "Build interview-ready intuition."
   ];
   const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
   if (prefersReducedMotion) {
@@ -3278,31 +3279,33 @@ function startHeroTypewriter() {
   }
 
   let phraseIndex = 0;
-  let tokenIndex = 0;
+  let charIndex = 0;
+  let deleting = false;
 
   node.setAttribute("aria-live", "polite");
+  node.classList.remove("is-changing");
 
   const tick = () => {
     const phrase = phrases[phraseIndex];
-    const tokens = phrase.match(/\S+\s*/g) || [phrase];
-
-    if (tokenIndex < tokens.length) {
-      tokenIndex += 1;
-      node.textContent = tokens.slice(0, tokenIndex).join("").trimEnd();
+    node.textContent = phrase.slice(0, charIndex);
+    if (!deleting && charIndex < phrase.length) {
+      charIndex += 1;
       heroTypewriterTimer = window.setTimeout(tick, typeDelay);
       return;
     }
-
-    heroTypewriterTimer = window.setTimeout(() => {
-      node.classList.add("is-changing");
-      heroTypewriterTimer = window.setTimeout(() => {
-        phraseIndex = (phraseIndex + 1) % phrases.length;
-        tokenIndex = 0;
-        node.textContent = "";
-        node.classList.remove("is-changing");
-        tick();
-      }, swapDelay);
-    }, phrasePause);
+    if (!deleting) {
+      deleting = true;
+      heroTypewriterTimer = window.setTimeout(tick, phrasePause);
+      return;
+    }
+    if (charIndex > 0) {
+      charIndex -= 1;
+      heroTypewriterTimer = window.setTimeout(tick, deleteDelay);
+      return;
+    }
+    deleting = false;
+    phraseIndex = (phraseIndex + 1) % phrases.length;
+    heroTypewriterTimer = window.setTimeout(tick, nextPhraseDelay);
   };
 
   node.textContent = "";
