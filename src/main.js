@@ -6205,6 +6205,56 @@ function renderHistory() {
   });
 }
 
+function buildLeaderboardPodium(topRows) {
+  // Visual order: 2nd, 1st, 3rd (champion centered and tallest).
+  const order = [topRows[1], topRows[0], topRows[2]];
+  const medals = { 1: "🥇", 2: "🥈", 3: "🥉" };
+  const podium = document.createElement("div");
+  podium.className = "leaderboard-podium";
+
+  order.forEach((row) => {
+    if (!row) return;
+    const rankPosition = row.place || topRows.indexOf(row) + 1;
+    const spot = document.createElement("div");
+    spot.className = `podium-spot rank-${rankPosition}${row.isCurrent ? " current" : ""}`;
+
+    const avatar = document.createElement("span");
+    avatar.className = "podium-avatar";
+    avatar.style.setProperty("--avatar-hue", String(hashStringToHue(row.id || row.name)));
+    if (row.picture) {
+      avatar.classList.add("has-image");
+      const image = document.createElement("img");
+      image.src = row.picture;
+      image.alt = "";
+      image.loading = "lazy";
+      avatar.appendChild(image);
+    } else {
+      avatar.textContent = getInitials(row.name);
+    }
+
+    const medal = document.createElement("span");
+    medal.className = "podium-medal";
+    medal.textContent = medals[rankPosition] || `#${rankPosition}`;
+
+    const name = document.createElement("span");
+    name.className = "podium-name";
+    name.textContent = row.isCurrent ? `${row.name} · ${t("leaderboardYou")}` : row.name;
+
+    const score = document.createElement("span");
+    score.className = "podium-score";
+    score.innerHTML = `<b>${formatScore(row.score)}</b><img src="assets/generated/reward-xp.webp" alt="" loading="lazy">`;
+
+    const base = document.createElement("div");
+    base.className = "podium-base";
+    base.textContent = String(rankPosition);
+
+    spot.append(medal, avatar, name, score, base);
+    podium.appendChild(spot);
+  });
+
+  return podium;
+}
+
 function renderLeaderboard() {
   renderLeaderboardControls();
   refreshLeaderboardFromCloud(false);
@@ -6217,7 +6267,13 @@ function renderLeaderboard() {
     return;
   }
 
-  rows.forEach((row, index) => {
+  if (rows.length >= 3) {
+    els.leaderboardList.appendChild(buildLeaderboardPodium(rows.slice(0, 3)));
+  }
+
+  const listRows = rows.length >= 3 ? rows.slice(3) : rows;
+  listRows.forEach((row, idx) => {
+    const index = rows.length >= 3 ? idx + 3 : idx;
     const item = document.createElement("div");
     item.className = `leaderboard-item${row.isCurrent ? " current" : ""}`;
 

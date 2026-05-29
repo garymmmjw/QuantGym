@@ -1968,6 +1968,134 @@ select {
   gap: 10px;
 }
 
+.leaderboard-podium {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: end;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 12px 6px 0;
+}
+
+.podium-spot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.podium-medal {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.podium-avatar {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background:
+    linear-gradient(145deg, hsla(var(--avatar-hue), 42%, 62%, 0.28), hsla(var(--avatar-hue), 36%, 40%, 0.18)),
+    rgba(255, 255, 255, 0.8);
+  color: hsl(var(--avatar-hue), 34%, 28%);
+  font-size: 0.9rem;
+  font-weight: 920;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.podium-avatar.has-image {
+  background: none;
+}
+
+.podium-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.podium-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 850;
+  font-size: 0.82rem;
+}
+
+.podium-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.podium-score b {
+  font-weight: 900;
+}
+
+.podium-score img {
+  width: 14px;
+  height: 14px;
+}
+
+.podium-base {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  border-radius: 14px 14px 0 0;
+  color: #fff;
+  font-weight: 920;
+  font-size: 1.05rem;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35);
+}
+
+.podium-spot.rank-1 {
+  order: 2;
+}
+
+.podium-spot.rank-1 .podium-avatar {
+  width: 60px;
+  height: 60px;
+  font-size: 1.05rem;
+}
+
+.podium-spot.rank-1 .podium-base {
+  height: 78px;
+  background: linear-gradient(180deg, #ffd75e, #f5a623);
+}
+
+.podium-spot.rank-2 {
+  order: 1;
+}
+
+.podium-spot.rank-2 .podium-base {
+  height: 58px;
+  background: linear-gradient(180deg, #d8dde6, #aeb6c2);
+}
+
+.podium-spot.rank-3 {
+  order: 3;
+}
+
+.podium-spot.rank-3 .podium-base {
+  height: 44px;
+  background: linear-gradient(180deg, #e8a877, #cd7f4d);
+}
+
+.podium-spot.current .podium-name {
+  color: var(--green-dark, #1c7c4a);
+}
+
+.podium-spot.current .podium-avatar {
+  outline: 2px solid var(--green, #2bb673);
+  outline-offset: 2px;
+}
+
 .leaderboard-controls {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
