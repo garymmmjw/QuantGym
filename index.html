@@ -79,7 +79,7 @@
 
       <div class="auth-brand" aria-hidden="true">
         <div class="auth-brand-logo">
-          <img src="assets/generated/brand-q-mark.webp?v=premium-system-2" alt="">
+          <div class="auth-brand-q">Q</div>
           <strong>QuantGym</strong>
         </div>
         <div class="auth-brand-body">
@@ -88,15 +88,15 @@
         </div>
         <div class="auth-brand-stats">
           <div class="auth-stat">
-            <span class="auth-stat-num">2,000+</span>
+            <span class="auth-stat-num" data-count="2000" data-suffix="+">2,000+</span>
             <span class="auth-stat-label">高频题目</span>
           </div>
           <div class="auth-stat">
-            <span class="auth-stat-num">500+</span>
+            <span class="auth-stat-num" data-count="500" data-suffix="+">500+</span>
             <span class="auth-stat-label">面试复盘</span>
           </div>
           <div class="auth-stat">
-            <span class="auth-stat-num">98%</span>
+            <span class="auth-stat-num" data-count="98" data-suffix="%">98%</span>
             <span class="auth-stat-label">用户满意度</span>
           </div>
         </div>
@@ -1985,5 +1985,52 @@
         <div class="subskills"></div>
       </article>
     </template>
+
+  <script>
+  (function () {
+    function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
+
+    function animateCounter(el) {
+      var target = parseInt(el.dataset.count, 10);
+      var suffix = el.dataset.suffix || '';
+      var duration = 1600;
+      var start = null;
+
+      function format(n) {
+        return n >= 1000 ? Math.floor(n / 100) / 10 + ',000' : String(n);
+      }
+
+      function step(ts) {
+        if (!start) start = ts;
+        var progress = Math.min((ts - start) / duration, 1);
+        var value = Math.floor(easeOutQuart(progress) * target);
+        el.textContent = format(value) + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = format(target) + suffix;
+      }
+
+      requestAnimationFrame(step);
+    }
+
+    function runCounters() {
+      document.querySelectorAll('.auth-stat-num[data-count]').forEach(function (el) {
+        animateCounter(el);
+      });
+    }
+
+    var brand = document.querySelector('.auth-brand');
+    if (!brand) return;
+
+    if ('IntersectionObserver' in window) {
+      var obs = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) { runCounters(); obs.disconnect(); }
+      }, { threshold: 0.3 });
+      obs.observe(brand);
+    } else {
+      setTimeout(runCounters, 400);
+    }
+  })();
+  </script>
+
   </body>
 </html>

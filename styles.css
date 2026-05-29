@@ -7800,12 +7800,12 @@ body:not(.is-authenticated) .brand-mark {
 
 /* ── Left brand panel ── */
 .auth-brand {
-  width: 42%;
+  width: 45%;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 52px 56px;
+  padding: 48px 52px;
   background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   position: relative;
   overflow: hidden;
@@ -7814,10 +7814,9 @@ body:not(.is-authenticated) .brand-mark {
 .auth-brand::before {
   content: '';
   position: absolute;
-  bottom: -120px; right: -120px;
-  width: 380px; height: 380px;
-  background: rgba(255, 255, 255, 0.07);
-  border-radius: 50%;
+  bottom: -100px; right: -100px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.25) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -7825,9 +7824,8 @@ body:not(.is-authenticated) .brand-mark {
   content: '';
   position: absolute;
   top: -80px; left: -80px;
-  width: 280px; height: 280px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 50%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -7848,10 +7846,24 @@ body:not(.is-authenticated) .brand-mark {
 }
 
 .auth-brand-logo strong {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   color: #fff;
   letter-spacing: -0.02em;
+}
+
+.auth-brand-q {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 20px;
+  color: #fff;
+  flex-shrink: 0;
 }
 
 .auth-brand-body {
@@ -7859,18 +7871,18 @@ body:not(.is-authenticated) .brand-mark {
 }
 
 .auth-brand-body h2 {
-  font-size: clamp(26px, 2.8vw, 36px);
+  font-size: 36px;
   font-weight: 800;
   color: #fff;
-  line-height: 1.22;
-  letter-spacing: -0.04em;
-  margin-bottom: 14px;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
 }
 
 .auth-brand-body p {
-  font-size: 14.5px;
-  color: rgba(255, 255, 255, 0.65);
-  line-height: 1.75;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.7;
 }
 
 .auth-brand-stats {
@@ -7886,16 +7898,15 @@ body:not(.is-authenticated) .brand-mark {
 }
 
 .auth-stat-num {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   color: #fff;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 .auth-stat-label {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-  letter-spacing: 0.02em;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* ── Right form panel ── */
@@ -7952,17 +7963,23 @@ body:not(.is-authenticated) .brand-mark {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 13px;
+  gap: 10px;
   width: 100%;
-  min-height: 60px;
-  padding: 0 22px;
-  border: 1px solid #d9d9d7;
-  border-radius: 999px;
+  min-height: auto;
+  padding: 13px 22px;
+  border: 1.5px solid #ebebeb;
+  border-radius: 10px;
   background: #fff;
-  color: #151515;
-  font-size: 1.08rem;
-  font-weight: 690;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
   box-shadow: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.auth-provider-button:hover {
+  border-color: #ccc;
+  background: #fafafa;
 }
 
 .auth-provider-button.disabled {
@@ -8001,31 +8018,37 @@ body:not(.is-authenticated) .brand-mark {
 }
 
 .auth-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
   width: 100%;
   max-width: 400px;
-  padding: 4px;
-  border-radius: 12px;
-  background: #f4f4f2;
-  border: 1px solid #e2e2df;
-  margin-bottom: 20px;
+  gap: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 0;
+  margin-bottom: 28px;
 }
 
 .auth-tabs .tab {
-  min-height: 40px;
+  min-height: auto;
+  padding: 0 0 12px 0;
   border: 0;
-  border-radius: 9px;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   background: transparent;
-  color: #888;
-  font-weight: 700;
+  color: #ccc;
+  font-size: 14px;
+  font-weight: 600;
   box-shadow: none;
+  margin-bottom: -1px;
 }
 
 .auth-tabs .tab.active {
-  background: #fff;
-  color: #111;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
+  background: transparent;
+  color: #0f0f0f;
+  border-bottom-color: #0f0f0f;
+  box-shadow: none;
 }
 
 .auth-form {
@@ -8034,23 +8057,25 @@ body:not(.is-authenticated) .brand-mark {
 
 .auth-form input {
   width: 100%;
-  height: 62px;
-  padding: 0 28px;
-  border: 1px solid #d7d7d5;
-  border-radius: 999px;
-  background: #fff;
-  color: #111;
-  font-size: 1.08rem;
+  height: auto;
+  padding: 13px 15px;
+  border: 1.5px solid #ebebeb;
+  border-radius: 10px;
+  background: #f8f9fa;
+  color: #0f0f0f;
+  font-size: 15px;
   box-shadow: none;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .auth-form input::placeholder {
-  color: #9b9b9b;
+  color: #ccc;
 }
 
 .auth-form input:focus {
-  border-color: #111;
-  box-shadow: 0 0 0 3px rgba(17, 17, 17, 0.08);
+  border-color: #6366f1;
+  background: #fff;
+  box-shadow: none;
   outline: none;
 }
 
@@ -8061,13 +8086,13 @@ body:not(.is-authenticated) .brand-mark {
 }
 
 .auth-code-row .secondary-button {
-  min-height: 62px;
-  padding: 0 18px;
-  border-radius: 999px;
+  min-height: auto;
+  padding: 13px 16px;
+  border-radius: 10px;
   background: #fff;
-  border-color: #d9d9d7;
+  border-color: #ebebeb;
   color: #111;
-  font-weight: 760;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -8078,18 +8103,20 @@ body:not(.is-authenticated) .brand-mark {
 }
 
 .auth-submit.primary-button {
-  min-height: 62px;
-  border-radius: 999px;
-  background: #0d0d0d;
-  border-color: #0d0d0d;
+  min-height: auto;
+  padding: 14px;
+  border-radius: 10px;
+  background: #0f0f0f;
+  border-color: #0f0f0f;
   color: #fff;
-  font-size: 1.08rem;
-  font-weight: 760;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .auth-submit.primary-button:hover {
-  background: #000;
-  border-color: #000;
+  background: #1a1a1a;
+  border-color: #1a1a1a;
   transform: translateY(-1px);
 }
 
