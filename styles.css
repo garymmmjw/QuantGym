@@ -14851,3 +14851,193 @@ body.is-authenticated .summary-metrics .metric-card span {
   }
   .streak-pill.is-burning .stat-art-fire, .streak-pill.is-checked .stat-art-fire { animation: none; }
 }
+
+/* =====================================================================
+   OVERVIEW POLISH — FIXES (shark layout, metric hover, panel centering,
+   leaderboard depth). Scoped to authenticated overview, appended last.
+   ===================================================================== */
+
+/* ---- SHARK: make the interactive wrapper occupy the old img slot ---- */
+body.is-authenticated [data-module-view="overview"] .quanty-hero .shark-stage {
+  position: absolute;
+  right: clamp(18px, 3.2vw, 52px);
+  bottom: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  align-self: auto;
+  width: clamp(205px, 22vw, 280px);
+  height: clamp(215px, 20vw, 260px);
+  perspective: 900px;
+  pointer-events: none; /* let only the button capture clicks */
+}
+
+body.is-authenticated [data-module-view="overview"] .quanty-hero .shark-interactive {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+}
+
+/* #heroShark uses id specificity to beat the old absolute img rule */
+#heroShark {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+}
+
+body.is-authenticated [data-module-view="overview"] .quanty-hero .shark-bubble {
+  top: -14px;
+}
+
+@media (max-width: 980px) {
+  body.is-authenticated [data-module-view="overview"] .quanty-hero .shark-stage {
+    right: clamp(12px, 2.4vw, 26px);
+    width: clamp(195px, 27vw, 260px);
+    height: clamp(190px, 23vw, 230px);
+  }
+}
+
+/* ---- METRIC ROWS: clearer hover in the rank card ------------------- */
+body.is-authenticated [data-module-view="overview"] .summary-metrics .metric-card {
+  border-radius: 12px;
+  padding: 8px 12px;
+  transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease, color 200ms ease;
+}
+
+body.is-authenticated [data-module-view="overview"] .summary-metrics .metric-card:hover {
+  transform: translateX(4px);
+  background: linear-gradient(90deg, rgba(99, 91, 255, 0.12), rgba(99, 91, 255, 0.02));
+  box-shadow: inset 0 0 0 1px rgba(99, 91, 255, 0.22), 0 8px 18px rgba(78, 62, 145, 0.12);
+}
+
+body.is-authenticated [data-module-view="overview"] .summary-metrics .metric-card:hover span {
+  color: #4b3fb8;
+}
+
+body.is-authenticated [data-module-view="overview"] .summary-metrics .metric-card:hover small {
+  color: #5b52c9;
+}
+
+/* ---- PANEL CONTENT CENTERING --------------------------------------- */
+body.is-authenticated [data-module-view="overview"] .overview-effect-panel {
+  grid-template-rows: auto 1fr;
+  align-content: stretch;
+}
+
+/* center the chart body in the remaining vertical space, keep heading at top */
+body.is-authenticated [data-module-view="overview"] .overview-effect-panel > .effect-progress-group,
+body.is-authenticated [data-module-view="overview"] .overview-effect-panel > .daily-xp-bars,
+body.is-authenticated [data-module-view="overview"] .overview-effect-panel > .contribution-heatmap {
+  align-self: center;
+}
+
+body.is-authenticated [data-module-view="overview"] .effect-progress-group {
+  width: 100%;
+  align-content: center;
+}
+
+body.is-authenticated [data-module-view="overview"] .daily-xp-bars {
+  width: 100%;
+  justify-content: center;
+}
+
+body.is-authenticated [data-module-view="overview"] .contribution-heatmap {
+  justify-content: center;
+  justify-items: center;
+}
+
+/* ---- LEADERBOARD: premium depth ------------------------------------ */
+body.is-authenticated .overview-ranking-grid .leaderboard-panel {
+  border: 1px solid rgba(99, 91, 255, 0.12);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 92% -6%, rgba(255, 196, 91, 0.14), transparent 40%),
+    linear-gradient(168deg, #ffffff 0%, #fbfaff 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 18px 40px rgba(78, 62, 145, 0.1);
+}
+
+body.is-authenticated .overview-ranking-grid .leaderboard-panel h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+body.is-authenticated .overview-ranking-grid .leaderboard-item {
+  border-bottom: 0;
+  border-radius: 14px;
+  padding: 12px 12px;
+  margin-bottom: 2px;
+  transition: background 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+}
+
+body.is-authenticated .overview-ranking-grid .leaderboard-item:hover {
+  background: linear-gradient(90deg, rgba(99, 91, 255, 0.09), rgba(99, 91, 255, 0.01));
+  transform: translateX(4px);
+}
+
+body.is-authenticated .overview-ranking-grid .leaderboard-item.current {
+  border: 1px solid rgba(99, 91, 255, 0.28);
+  border-radius: 14px;
+  background: linear-gradient(120deg, rgba(99, 91, 255, 0.14), rgba(255, 196, 91, 0.08));
+  box-shadow:
+    inset 3px 0 0 var(--primary, #635bff),
+    0 10px 24px rgba(78, 62, 145, 0.14);
+}
+
+body.is-authenticated .overview-ranking-grid .leaderboard-avatar {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 4px 10px rgba(78, 62, 145, 0.12);
+}
+
+body.is-authenticated .overview-ranking-grid .leaderboard-score strong,
+body.is-authenticated .overview-ranking-grid .leaderboard-item strong {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* soften the badge strip at the bottom so it reads as premium, not boxy */
+body.is-authenticated .overview-ranking-grid .leaderboard-panel::after {
+  border-color: rgba(99, 91, 255, 0.14);
+  border-radius: 16px;
+  background:
+    url("assets/generated/quanty-badge-strip.webp") center / 86% auto no-repeat,
+    linear-gradient(135deg, #fff8ef, #f3f1ff);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated [data-module-view="overview"] .summary-metrics .metric-card,
+  body.is-authenticated .overview-ranking-grid .leaderboard-item {
+    transition: none;
+    transform: none;
+  }
+}
+
+@media (max-width: 760px) {
+  body.is-authenticated [data-module-view="overview"] .quanty-hero .shark-stage {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    width: min(42%, 150px);
+    height: auto;
+    margin: 10px 0 0 auto;
+    align-self: flex-end;
+  }
+  body.is-authenticated [data-module-view="overview"] #heroShark {
+    height: auto;
+    width: 100%;
+  }
+}
