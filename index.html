@@ -414,15 +414,28 @@
               </button>
             </div>
             <div class="leaderboard-controls" aria-label="排行榜设置">
-              <select id="leaderboardMetricSelect" aria-label="排行榜指标"></select>
-              <select id="leaderboardScopeSelect" aria-label="排行榜范围">
-                <option value="global">全部</option>
-                <option value="country">国家</option>
-                <option value="region">地区</option>
-              </select>
-              <select id="leaderboardCountrySelect" aria-label="排行榜国家"></select>
-              <select id="leaderboardRegionSelect" aria-label="排行榜地区"></select>
+              <label class="leaderboard-control">
+                指标
+                <select id="leaderboardMetricSelect" aria-label="排行榜指标"></select>
+              </label>
+              <label class="leaderboard-control">
+                视图
+                <select id="leaderboardScopeSelect" aria-label="排行榜范围">
+                  <option value="global">全部用户</option>
+                  <option value="country">按国家</option>
+                  <option value="region">按地区</option>
+                </select>
+              </label>
+              <label class="leaderboard-control leaderboard-location-control" data-leaderboard-country-control>
+                国家
+                <select id="leaderboardCountrySelect" aria-label="排行榜国家"></select>
+              </label>
+              <label class="leaderboard-control leaderboard-location-control" data-leaderboard-region-control>
+                地区
+                <select id="leaderboardRegionSelect" aria-label="排行榜地区"></select>
+              </label>
             </div>
+            <div id="leaderboardScopeSummary" class="leaderboard-scope-summary"></div>
             <div id="leaderboardList" class="leaderboard-list"></div>
           </aside>
         </section>

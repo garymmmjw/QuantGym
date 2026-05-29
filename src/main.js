@@ -36,6 +36,12 @@ let cloudConfig = loadCloudConfig();
 let cloudSyncTimer = null;
 let cloudSyncInFlight = false;
 let cloudDirty = { state: false, community: false, account: false };
+const LEADERBOARD_CLOUD_REFRESH_MS = 45_000;
+let leaderboardCloudRows = [];
+let leaderboardCloudLoadedAt = "";
+let leaderboardCloudLoading = false;
+let leaderboardCloudError = "";
+let leaderboardCloudRefreshPromise = null;
 let currentDrill = null;
 let drillMode = "numberLogic";
 let drillSession = null;
@@ -418,6 +424,7 @@ function bindElements() {
     "leaderboardScopeSelect",
     "leaderboardCountrySelect",
     "leaderboardRegionSelect",
+    "leaderboardScopeSummary",
     "sampleBtn",
     "exportBtn",
     "importInput",
@@ -833,7 +840,7 @@ function bindEvents() {
   els.exportBtn.addEventListener("click", exportState);
   els.importInput.addEventListener("change", importState);
   els.resetBtn.addEventListener("click", resetState);
-  els.refreshLeaderboardBtn.addEventListener("click", renderLeaderboard);
+  els.refreshLeaderboardBtn.addEventListener("click", () => refreshLeaderboardFromCloud(true));
   [
     els.leaderboardMetricSelect,
     els.leaderboardScopeSelect,
@@ -1638,6 +1645,70 @@ async function cloudApi(path, options = {}) {
   return data;
 }
 
+function invalidateLeaderboardCloud(options = {}) {
+  leaderboardCloudLoadedAt = "";
+  leaderboardCloudError = "";
+  if (options.clear) leaderboardCloudRows = [];
+  if (options.refresh) refreshLeaderboardFromCloud(true);
+}
+
+async function refreshLeaderboardFromCloud(force = false) {
+  if (leaderboardCloudLoading) return leaderboardCloudRefreshPromise;
+  const lastAttemptAt = leaderboardCloudLoadedAt ? new Date(leaderboardCloudLoadedAt).getTime() : 0;
+  if (!force && lastAttemptAt && Date.now() - lastAttemptAt < LEADERBOARD_CLOUD_REFRESH_MS) {
+    return leaderboardCloudRows;
+  }
+
+  leaderboardCloudLoading = true;
+  leaderboardCloudError = "";
+  renderLeaderboardScopeSummary(normalizeLeaderboardSettings(state.leaderboard), getLeaderboardRows(), "loading");
+
+  leaderboardCloudRefreshPromise = cloudApi("/leaderboard", { auth: false })
+    .then((data) => {
+      const rows = Array.isArray(data.leaderboard) ? data.leaderboard : Array.isArray(data.rows) ? data.rows : [];
+      leaderboardCloudRows = normalizeCloudLeaderboardRows(rows);
+      leaderboardCloudLoadedAt = data.updatedAt || new Date().toISOString();
+      leaderboardCloudError = "";
+      return leaderboardCloudRows;
+    })
+    .catch((error) => {
+      leaderboardCloudLoadedAt = new Date().toISOString();
+      leaderboardCloudError = error.message || "Leaderboard unavailable";
+      return leaderboardCloudRows;
+    })
+    .finally(() => {
+      leaderboardCloudLoading = false;
+      leaderboardCloudRefreshPromise = null;
+      renderLeaderboard();
+      renderRegionRank();
+      refreshIcons();
+    });
+  return leaderboardCloudRefreshPromise;
+}
+
+function normalizeCloudLeaderboardRows(rows = []) {
+  return rows
+    .map((row) => {
+      const account = normalizeAccount({
+        id: row.id,
+        name: row.name,
+        country: row.country,
+        region: row.region,
+        picture: row.picture
+      });
+      return {
+        id: String(account.id || "").trim(),
+        name: String(account.name || "Quant").trim() || "Quant",
+        country: account.country,
+        region: account.region,
+        picture: String(account.picture || ""),
+        skills: normalizeSkills(row.skills || {}),
+        updatedAt: String(row.updatedAt || "")
+      };
+    })
+    .filter((row) => row.id);
+}
+
 async function refreshProblemCatalog(force = false) {
   if (problemCatalogRefresh && !force) return problemCatalogRefresh;
   problemCatalogRefresh = cloudApi("/problems")
@@ -1896,6 +1967,7 @@ function applyCloudSession(payload, options = {}) {
   queueCloudSync("state", 0);
   queueCloudSync("community", 0);
   queueCloudSync("account", 0);
+  invalidateLeaderboardCloud({ refresh: true });
 }
 
 async function sendCloudVerificationCode(email, purpose = "register") {
@@ -1984,6 +2056,7 @@ async function flushCloudSync() {
     cloudConfig.lastError = "";
     saveCloudConfig();
     renderCloudStatus();
+    if (dirty.state || dirty.account) invalidateLeaderboardCloud({ refresh: true });
   } catch (error) {
     cloudDirty = {
       state: cloudDirty.state || dirty.state,
@@ -2735,7 +2808,7 @@ function defaultLeaderboardSettings() {
   const country = currentUser?.country || "china";
   const region = currentUser?.region || getDefaultRegion(country);
   return {
-    scope: "region",
+    scope: "global",
     country: normalizeCountry(country),
     region: normalizeRegionForCountry(region, country),
     metric: "overall"
@@ -2839,6 +2912,10 @@ function applyLanguage() {
   setSelectOptionLabels("difficultyInput", [t("difficultyNormal"), t("difficultyMedium"), t("difficultyHard")]);
   setButtonLabel("#logForm .primary-button", t("submitLog"));
   setText(".leaderboard-panel h2", t("leaderboard"));
+  setLabelFor("leaderboardMetricSelect", t("leaderboardMetric"));
+  setLabelFor("leaderboardScopeSelect", t("leaderboardScope"));
+  setLabelFor("leaderboardCountrySelect", t("country"));
+  setLabelFor("leaderboardRegionSelect", t("region"));
   setText(".overview-community h2", t("community"));
   setText("#overviewCommunitySummary", t("overviewCommunitySummary"));
   setText(".community-section h2", t("community"));
@@ -2962,6 +3039,7 @@ function applyLanguage() {
     scopeOptions[1].textContent = t("leaderboardCountry");
     scopeOptions[2].textContent = t("leaderboardRegion");
   }
+  renderLeaderboardScopeSummary(normalizeLeaderboardSettings(state.leaderboard), getLeaderboardRows());
   startHeroTypewriter();
 }
 
@@ -5927,10 +6005,15 @@ function animateStreakCount(previous, next) {
 function renderRegionRank() {
   const settings = normalizeLeaderboardSettings(state.leaderboard);
   const metric = settings.metric || "overall";
-  const rows = getAllLeaderboardRows(metric);
   const country = currentUser?.country || "china";
   const region = currentUser?.region || getDefaultRegion(country);
-  const regionalRows = rows.filter((row) => row.country === country && row.region === region);
+  const regionalRows = getLeaderboardRowsForSettings({
+    ...settings,
+    scope: "region",
+    country,
+    region,
+    metric
+  }, 50);
   const place = regionalRows.findIndex((row) => row.id === currentUser?.id) + 1;
   const rank = place > 0 ? place : 1;
   const metricLabel = metric === "overall" ? "" : ` · ${getLeaderboardMetricLabel(metric)}`;
@@ -6124,8 +6207,11 @@ function renderHistory() {
 
 function renderLeaderboard() {
   renderLeaderboardControls();
+  refreshLeaderboardFromCloud(false);
   els.leaderboardList.innerHTML = "";
-  const rows = getLeaderboardRows();
+  const settings = normalizeLeaderboardSettings(state.leaderboard);
+  const rows = getLeaderboardRowsForSettings(settings, 10);
+  renderLeaderboardScopeSummary(settings, rows);
   if (!rows.length) {
     els.leaderboardList.appendChild(emptyBlock(t("leaderboardEmpty")));
     return;
@@ -6136,22 +6222,37 @@ function renderLeaderboard() {
     item.className = `leaderboard-item${row.isCurrent ? " current" : ""}`;
 
     const place = document.createElement("strong");
-    const rankPosition = index + 1;
+    const rankPosition = row.place || index + 1;
     place.className = `leaderboard-rank ${rankPosition === 1 ? "gold" : rankPosition === 2 ? "silver" : rankPosition === 3 ? "bronze" : "plain"}`;
     place.textContent = String(rankPosition);
+
+    const avatar = document.createElement("span");
+    avatar.className = "leaderboard-avatar";
+    avatar.style.setProperty("--avatar-hue", String(hashStringToHue(row.id || row.name)));
+    if (row.picture) {
+      avatar.classList.add("has-image");
+      const image = document.createElement("img");
+      image.src = row.picture;
+      image.alt = "";
+      image.loading = "lazy";
+      avatar.appendChild(image);
+    } else {
+      avatar.textContent = getInitials(row.name);
+    }
 
     const identity = document.createElement("div");
     const name = document.createElement("span");
     name.textContent = row.name;
     const rankMeta = document.createElement("small");
-    rankMeta.textContent = `${row.locationLabel} · ${row.rank}`;
+    const sourceLabel = row.isCurrent ? t("leaderboardYou") : "";
+    rankMeta.textContent = [row.locationLabel, row.rank, sourceLabel].filter(Boolean).join(" · ");
     identity.append(name, rankMeta);
 
     const score = document.createElement("b");
     score.className = "leaderboard-score";
     score.innerHTML = `<span>${formatScore(row.score)}</span><img src="assets/generated/reward-xp.webp" alt="" loading="lazy">`;
 
-    item.append(place, identity, score);
+    item.append(place, avatar, identity, score);
     els.leaderboardList.appendChild(item);
   });
 }
@@ -6165,6 +6266,10 @@ function renderLeaderboardControls() {
   renderRegionOptions(els.leaderboardRegionSelect, settings.country, settings.region);
   const isGlobal = settings.scope === "global";
   const isCountry = settings.scope === "country";
+  const countryControl = els.leaderboardCountrySelect.closest("label");
+  const regionControl = els.leaderboardRegionSelect.closest("label");
+  countryControl?.classList.toggle("hidden", isGlobal);
+  regionControl?.classList.toggle("hidden", isGlobal || isCountry);
   els.leaderboardCountrySelect.disabled = isGlobal;
   els.leaderboardRegionSelect.disabled = isGlobal || isCountry;
 }
@@ -6186,9 +6291,6 @@ function renderLeaderboardMetricOptions(selected = "overall") {
 function updateLeaderboardSettings() {
   const country = normalizeCountry(els.leaderboardCountrySelect.value || currentUser?.country);
   const region = normalizeRegionForCountry(els.leaderboardRegionSelect.value, country);
-  if (els.leaderboardCountrySelect.value !== country) {
-    renderRegionOptions(els.leaderboardRegionSelect, country, region);
-  }
   state.leaderboard = normalizeLeaderboardSettings({
     metric: els.leaderboardMetricSelect.value,
     scope: els.leaderboardScopeSelect.value,
@@ -6202,33 +6304,75 @@ function updateLeaderboardSettings() {
 
 function getLeaderboardRows() {
   const settings = normalizeLeaderboardSettings(state.leaderboard);
-  return getAllLeaderboardRows(settings.metric)
-    .filter((row) => {
-      if (settings.scope === "global") return true;
-      if (settings.scope === "country") return row.country === settings.country;
-      return row.country === settings.country && row.region === settings.region;
-    })
-    .slice(0, 10);
+  return getLeaderboardRowsForSettings(settings, 10);
+}
+
+function getLeaderboardRowsForSettings(settings, limit = 10) {
+  const normalized = normalizeLeaderboardSettings(settings);
+  const metric = normalized.metric || "overall";
+  const baseRows = getAllLeaderboardRows(metric);
+  const merged = filterLeaderboardRows(baseRows, normalized)
+    .sort(compareLeaderboardRows)
+    .map((row, index) => ({ ...row, place: index + 1 }));
+  return keepCurrentLeaderboardRow(merged, limit);
+}
+
+function filterLeaderboardRows(rows, settings) {
+  return rows.filter((row) => {
+    if (settings.scope === "global") return true;
+    if (settings.scope === "country") return row.country === settings.country;
+    return row.country === settings.country && row.region === settings.region;
+  });
+}
+
+function compareLeaderboardRows(a, b) {
+  return b.score - a.score
+    || Number(Boolean(b.isCurrent)) - Number(Boolean(a.isCurrent))
+    || a.name.localeCompare(b.name);
+}
+
+function keepCurrentLeaderboardRow(rows, limit = 10) {
+  if (!Number.isFinite(limit) || limit <= 0 || rows.length <= limit) return rows;
+  const currentIndex = rows.findIndex((row) => row.isCurrent);
+  if (currentIndex < 0 || currentIndex < limit) return rows.slice(0, limit);
+  return [...rows.slice(0, limit - 1), rows[currentIndex]];
 }
 
 function getAllLeaderboardRows(metric = "overall") {
-  return auth.accounts
-    .map((account) => {
-      const accountState = loadStateForUser(account.id);
-      const normalizedAccount = normalizeAccount(account);
-      const score = getLeaderboardScore(accountState.skills, metric);
-      return {
-        id: normalizedAccount.id,
-        name: normalizedAccount.name || normalizedAccount.email || "Quant",
-        country: normalizedAccount.country,
-        region: normalizedAccount.region,
-        locationLabel: `${getCountryLabel(normalizedAccount.country)} · ${getRegionLabel(normalizedAccount.region)}`,
-        score,
-        rank: metric === "overall" ? getRank(score) : getLeaderboardMetricLabel(metric),
-        isCurrent: currentUser?.id === normalizedAccount.id
-      };
-    })
-    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+  const cloudRows = leaderboardCloudRows.map((profile) => makeLeaderboardRow(profile, metric, "cloud"));
+  const localRows = getLocalLeaderboardRows(metric);
+  return mergeLeaderboardRows(cloudRows, localRows).sort(compareLeaderboardRows);
+}
+
+function getLocalLeaderboardRows(metric = "overall") {
+  return auth.accounts.map((account) => {
+    const accountState = loadStateForUser(account.id);
+    return makeLeaderboardRow({
+      ...account,
+      name: account.name || account.email || "Quant",
+      skills: accountState.skills,
+      source: "local"
+    }, metric, "local");
+  });
+}
+
+function makeLeaderboardRow(profile, metric = "overall", source = "cloud") {
+  const account = normalizeAccount(profile);
+  const skills = normalizeSkills(profile.skills || {});
+  const score = getLeaderboardScore(skills, metric);
+  return {
+    id: String(account.id || "").trim(),
+    name: String(account.name || account.email || "Quant").trim() || "Quant",
+    country: account.country,
+    region: account.region,
+    picture: String(account.picture || ""),
+    locationLabel: `${getCountryLabel(account.country)} · ${getRegionLabel(account.region)}`,
+    score,
+    rank: metric === "overall" ? getRank(score) : getLeaderboardMetricLabel(metric),
+    isCurrent: currentUser?.id === account.id,
+    source,
+    updatedAt: profile.updatedAt || ""
+  };
 }
 
 function getLeaderboardScore(skills, metric) {
@@ -6237,7 +6381,59 @@ function getLeaderboardScore(skills, metric) {
 }
 
 function getLeaderboardMetricLabel(metric) {
-  return metric === "overall" ? "总分" : skillDefs[metric]?.name || "总分";
+  return metric === "overall" ? t("leaderboardOverall") : skillDefs[metric]?.name || t("leaderboardOverall");
+}
+
+function mergeLeaderboardRows(...rowGroups) {
+  const byId = new Map();
+  rowGroups.flat().forEach((row) => {
+    if (!row?.id) return;
+    const previous = byId.get(row.id) || {};
+    const preferExistingCloud = previous.source === "cloud" && row.source === "local" && !row.isCurrent;
+    const merged = preferExistingCloud ? { ...row, ...previous } : { ...previous, ...row };
+    byId.set(row.id, {
+      ...merged,
+      isCurrent: Boolean(previous.isCurrent || row.isCurrent)
+    });
+  });
+  return [...byId.values()];
+}
+
+function hashStringToHue(value) {
+  return String(value || "").split("").reduce((hash, char) => (
+    (hash * 31 + char.charCodeAt(0)) % 360
+  ), 0);
+}
+
+function renderLeaderboardScopeSummary(settings, rows, forcedStatus = "") {
+  if (!els.leaderboardScopeSummary) return;
+  const metricLabel = getLeaderboardMetricLabel(settings.metric);
+  const location = getLeaderboardScopeText(settings);
+  const userLabel = getLanguage() === "en" ? "users" : "位用户";
+  const sourceCopy = getLeaderboardSourceText(forcedStatus);
+  els.leaderboardScopeSummary.textContent = `${metricLabel} · ${location} · ${rows.length} ${userLabel} · ${sourceCopy}`;
+}
+
+function getLeaderboardSourceText(forcedStatus = "") {
+  const status = forcedStatus || (
+    leaderboardCloudLoading
+      ? "loading"
+      : leaderboardCloudRows.length
+        ? "cloud"
+        : leaderboardCloudError
+          ? "error"
+          : "local"
+  );
+  if (status === "loading") return t("leaderboardLoading");
+  if (status === "cloud") return t("leaderboardCloudLive");
+  if (status === "error") return t("leaderboardUnavailable");
+  return t("leaderboardLocalOnly");
+}
+
+function getLeaderboardScopeText(settings) {
+  if (settings.scope === "global") return t("leaderboardGlobal");
+  if (settings.scope === "country") return getCountryLabel(settings.country);
+  return `${getCountryLabel(settings.country)} · ${getRegionLabel(settings.region)}`;
 }
 
 function renderResources() {
@@ -9256,6 +9452,7 @@ function saveSettings() {
   appPrefs.language = normalizeLanguage(els.settingsLanguageSelect.value);
   saveAppPrefs();
   syncLanguageToUrl(appPrefs.language);
+  const previousCloudEndpoint = cloudConfig.endpoint;
   const country = normalizeCountry(els.settingsCountrySelect.value);
   const region = normalizeRegionForCountry(els.settingsRegionSelect.value, country);
   llmConfig = {
@@ -9274,6 +9471,7 @@ function saveSettings() {
   state.leaderboard = normalizeLeaderboardSettings({ ...state.leaderboard, country, region });
   saveState();
   queueCloudSync("account", 0);
+  if (previousCloudEndpoint !== cloudConfig.endpoint) invalidateLeaderboardCloud({ clear: true, refresh: true });
   renderGoogleClientInput();
   renderAll();
   switchModule("settings");

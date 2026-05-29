@@ -1972,17 +1972,31 @@ select {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
-.leaderboard-controls select:disabled {
-  opacity: 0.52;
-  cursor: not-allowed;
+.leaderboard-control {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 820;
+}
+
+.leaderboard-control select {
+  min-width: 0;
+}
+
+.leaderboard-scope-summary {
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .leaderboard-item {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: 42px 38px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 13px;
@@ -2000,6 +2014,21 @@ select {
 .leaderboard-item strong {
   color: var(--green-dark);
   font-size: 1rem;
+}
+
+.leaderboard-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background:
+    linear-gradient(145deg, hsla(var(--avatar-hue), 42%, 62%, 0.24), hsla(var(--avatar-hue), 36%, 40%, 0.16)),
+    rgba(255, 255, 255, 0.72);
+  color: hsl(var(--avatar-hue), 34%, 28%);
+  font-size: 0.76rem;
+  font-weight: 920;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
 .leaderboard-item div {
@@ -2021,6 +2050,22 @@ select {
 .leaderboard-item small {
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.leaderboard-item .leaderboard-avatar {
+  display: grid;
+}
+
+.leaderboard-avatar.has-image {
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.leaderboard-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .leaderboard-item b {
@@ -9150,14 +9195,21 @@ body.is-authenticated.sidebar-collapsed #appShell > :not(.module-nav) {
     padding: 13px;
   }
 
-  .leaderboard-item,
   .leetcode-hot-item {
     grid-template-columns: auto minmax(0, 1fr);
   }
 
-  .leetcode-hot-link,
-  .leaderboard-score {
+  .leaderboard-item {
+    grid-template-columns: 38px 34px minmax(0, 1fr);
+  }
+
+  .leetcode-hot-link {
     grid-column: 2;
+    justify-self: start;
+  }
+
+  .leaderboard-score {
+    grid-column: 3;
     justify-self: start;
   }
 }
