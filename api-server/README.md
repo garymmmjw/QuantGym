@@ -61,6 +61,7 @@ Email verification is required for local-account cloud registration by default. 
 - `POST /api/auth/google`
 - `GET /api/account`
 - `PATCH /api/account`
+- `GET /api/leaderboard`
 - `GET /api/state`
 - `PUT /api/state`
 - `GET /api/problems`
