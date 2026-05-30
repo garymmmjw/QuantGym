@@ -64,6 +64,7 @@ let interviewQuestionTimer = null;
 let interviewVoiceRecognition = null;
 let interviewTypingTimers = new Map();
 let interviewPanelExpandedIndex = 0;
+let interviewSnapshotRestored = false;
 let mathTypesetTimer = null;
 let llmConfig = loadLlmConfig();
 let latestClassification = null;
@@ -101,6 +102,7 @@ let freshCheckInKey = "";
 let checkInToastTimer = null;
 const PROBLEM_PAGE_SIZE = 24;
 const PROBLEM_SEARCH_DEBOUNCE_MS = 140;
+const INTERVIEW_SESSION_STORAGE_KEY = "quantgym-interview-session-v2";
 let problemVisibleCount = PROBLEM_PAGE_SIZE;
 let problemSearchTimer = 0;
 let problemSearchComposing = false;
@@ -785,6 +787,7 @@ function bindEvents() {
   els.interviewAnswerFile?.addEventListener("change", updateInterviewAnswerFileMeta);
   els.interviewAnswer?.addEventListener("input", autoSizeInterviewAnswer);
   els.interviewAnswer?.addEventListener("keydown", handleInterviewAnswerKeydown);
+  els.interviewTranscript?.addEventListener("click", handleInterviewTranscriptAction);
   els.saveLlmConfigBtn.addEventListener("click", saveLlmConfig);
   els.startInterviewBtn.addEventListener("click", startInterview);
   els.hintInterviewBtn?.addEventListener("click", requestInterviewHint);
@@ -8742,58 +8745,219 @@ const interviewTypeDefs = {
   }
 };
 
-const behavioralInterviewProblems = [
-  {
-    id: "behavioral-impact",
-    titleEn: "High-impact project story",
-    titleZh: "高影响力项目经历",
-    category: "leetcode",
-    difficulty: "Medium",
-    tags: ["behavioral", "impact", "STAR"],
-    promptEn: "Tell me about a project where you created measurable impact. Use a clear situation, task, action, and result structure.",
-    promptZh: "讲一个你做出可量化影响的项目经历。请用 Situation、Task、Action、Result 的结构回答。",
-    answer: "Use STAR. Quantify the baseline, your ownership, the technical or analytical decision, and the result.",
-    explanation: "A strong answer has context, personal contribution, trade-off, metric, and reflection."
+const interviewModeDefs = {
+  practice: {
+    labelZh: "训练练习",
+    labelEn: "Practice",
+    descriptionZh: "即时评分、Hint、参考答案和复盘面板都会开启。",
+    descriptionEn: "Immediate scoring, hints, reference answer, and review panel stay on."
   },
-  {
-    id: "behavioral-conflict",
-    titleEn: "Disagreement with a teammate",
-    titleZh: "和队友意见不一致",
-    category: "market",
-    difficulty: "Medium",
-    tags: ["behavioral", "teamwork"],
-    promptEn: "Describe a time you disagreed with a teammate or mentor. How did you handle it and what changed afterward?",
-    promptZh: "讲一次你和队友或 mentor 意见不一致的经历。你如何处理，最后有什么改变？",
-    answer: "Show respect, evidence, listening, a decision process, and a concrete outcome.",
-    explanation: "Interviewers look for maturity, clarity under disagreement, and ability to update beliefs."
-  },
-  {
-    id: "behavioral-failure",
-    titleEn: "Failure and learning",
-    titleZh: "失败和复盘",
-    category: "statistics",
-    difficulty: "Medium",
-    tags: ["behavioral", "reflection"],
-    promptEn: "Tell me about a failure or mistake. What did you learn, and how did you change your process?",
-    promptZh: "讲一次失败或犯错经历。你学到了什么，后来如何改变流程？",
-    answer: "Pick a real mistake, own it, explain the root cause, then show a changed system.",
-    explanation: "Avoid blaming others. The strongest signal is a repeatable prevention mechanism."
-  },
-  {
-    id: "behavioral-pressure",
-    titleEn: "Working under pressure",
-    titleZh: "压力下完成任务",
-    category: "option",
-    difficulty: "Medium",
-    tags: ["behavioral", "pressure"],
-    promptEn: "Describe a time you had to make progress under time pressure or ambiguity.",
-    promptZh: "讲一次你在时间压力或信息不完整的情况下推进任务的经历。",
-    answer: "Explain prioritization, assumptions, communication, and what you delivered.",
-    explanation: "Quant roles reward clear thinking under uncertainty and fast feedback loops."
+  live: {
+    labelZh: "真实面试",
+    labelEn: "Live mock",
+    descriptionZh: "过程中隐藏分数和答案，只通过追问推进，结束后统一反馈。",
+    descriptionEn: "Scores and answers stay hidden; follow-ups drive the interview until the final report."
   }
+};
+
+const interviewPersonaDefs = {
+  friendly: {
+    labelZh: "友好引导",
+    labelEn: "Friendly",
+    prompt: "Patient, warm, and Socratic. Give small footholds without revealing the answer."
+  },
+  neutral: {
+    labelZh: "中性专业",
+    labelEn: "Professional",
+    prompt: "Concise and professional. Ask precise follow-ups and keep the candidate accountable."
+  },
+  pressure: {
+    labelZh: "高压快节奏",
+    labelEn: "Pressure",
+    prompt: "Fast-paced and exacting. Challenge vague reasoning, but remain fair and interview-realistic."
+  }
+};
+
+const interviewDifficultyDefs = {
+  easy: { labelZh: "简单", labelEn: "Easy", values: ["Easy"] },
+  medium: { labelZh: "中等", labelEn: "Medium", values: ["Medium"] },
+  hard: { labelZh: "困难", labelEn: "Hard", values: ["Hard"] },
+  adaptive: { labelZh: "自适应", labelEn: "Adaptive", values: [] }
+};
+
+const interviewFocusDefs = {
+  mixed: {
+    labelZh: "混合",
+    labelEn: "Mixed",
+    categories: ["leetcode", "pandasNumpy", "probabilityExpectation", "statistics", "machineLearning", "deepLearning", "market", "option", "mentalMath"],
+    type: "technical"
+  },
+  probability: {
+    labelZh: "概率统计",
+    labelEn: "Probability & stats",
+    categories: ["probabilityExpectation", "statistics", "mentalMath"],
+    type: "technical"
+  },
+  algorithms: {
+    labelZh: "算法",
+    labelEn: "Algorithms",
+    categories: ["leetcode", "pandasNumpy"],
+    type: "oa"
+  },
+  ml: {
+    labelZh: "ML",
+    labelEn: "Machine learning",
+    categories: ["machineLearning", "deepLearning", "statistics"],
+    type: "technical"
+  },
+  market: {
+    labelZh: "市场直觉",
+    labelEn: "Trading intuition",
+    categories: ["market", "option", "mentalMath"],
+    type: "technical"
+  },
+  marketMaking: {
+    labelZh: "做市",
+    labelEn: "Market making",
+    categories: ["market", "mentalMath", "option"],
+    type: "technical"
+  },
+  behavioral: {
+    labelZh: "行为面",
+    labelEn: "Behavioral",
+    categories: [],
+    type: "behavioral"
+  },
+  resume: {
+    labelZh: "简历深挖",
+    labelEn: "Resume deep dive",
+    categories: [],
+    type: "behavioral"
+  },
+  research: {
+    labelZh: "研究项目深挖",
+    labelEn: "Research project",
+    categories: [],
+    type: "behavioral"
+  }
+};
+
+const interviewOnboardingSteps = ["language", "mode", "focus", "difficulty", "scope", "persona", "tts"];
+
+const behavioralInterviewTopics = [
+  ["behavioral-impact", "High-impact project story", "高影响力项目经历", "Tell me about a project where you created measurable impact. Use a clear situation, task, action, and result structure.", "讲一个你做出可量化影响的项目经历。请用 Situation、Task、Action、Result 的结构回答。", "impact", "Medium", "leetcode"],
+  ["behavioral-conflict", "Disagreement with a teammate", "和队友意见不一致", "Describe a time you disagreed with a teammate or mentor. How did you handle it and what changed afterward?", "讲一次你和队友或 mentor 意见不一致的经历。你如何处理，最后有什么改变？", "teamwork", "Medium", "market"],
+  ["behavioral-failure", "Failure and learning", "失败和复盘", "Tell me about a failure or mistake. What did you learn, and how did you change your process?", "讲一次失败或犯错经历。你学到了什么，后来如何改变流程？", "reflection", "Medium", "statistics"],
+  ["behavioral-pressure", "Working under pressure", "压力下完成任务", "Describe a time you had to make progress under time pressure or ambiguity.", "讲一次你在时间压力或信息不完整的情况下推进任务的经历。", "pressure", "Medium", "option"],
+  ["behavioral-why-quant", "Why quant finance", "为什么选择量化", "Why are you interested in quant finance, and what evidence shows you are prepared for it?", "你为什么想做量化？有哪些经历证明你准备好了？", "motivation", "Easy", "market"],
+  ["behavioral-why-firm", "Why this firm", "为什么选择这家公司", "Why are you interested in this firm or desk? Give a specific reason beyond prestige.", "你为什么对这家公司或这个 desk 感兴趣？请给出具体原因，而不是只说名气。", "motivation", "Easy", "market"],
+  ["behavioral-leadership", "Leading without authority", "无职权领导", "Tell me about a time you led a group without formal authority.", "讲一次你在没有正式职权时推动团队前进的经历。", "leadership", "Medium", "leetcode"],
+  ["behavioral-fast-learning", "Learning a hard topic fast", "快速学习陌生领域", "Describe a time you had to learn a difficult technical topic quickly.", "讲一次你必须快速掌握一个困难技术主题的经历。", "learning", "Medium", "machineLearning"],
+  ["behavioral-ambiguous-data", "Ambiguous data decision", "数据不完整时做判断", "Tell me about a time you made a decision with incomplete or noisy data.", "讲一次你在数据不完整或噪声很大时做判断的经历。", "judgment", "Hard", "statistics"],
+  ["behavioral-ethical-tradeoff", "Ethical tradeoff", "伦理或合规取舍", "Describe a time you faced an ethical, fairness, or compliance tradeoff.", "讲一次你面对伦理、公平或合规取舍的经历。", "judgment", "Hard", "market"],
+  ["behavioral-feedback", "Receiving tough feedback", "接受尖锐反馈", "Tell me about tough feedback you received and what changed afterward.", "讲一次你收到尖锐反馈，以及之后实际改变了什么。", "reflection", "Medium", "statistics"],
+  ["behavioral-give-feedback", "Giving difficult feedback", "给别人困难反馈", "Describe a time you had to give difficult feedback to a teammate.", "讲一次你需要给队友困难反馈的经历。", "communication", "Medium", "leetcode"],
+  ["behavioral-prioritization", "Prioritizing under constraint", "资源有限时排序", "Tell me about a time you had more work than time. How did you prioritize?", "讲一次任务多于时间时，你如何排序和取舍。", "execution", "Medium", "market"],
+  ["behavioral-ownership", "Taking ownership", "主动承担责任", "Describe a time you took ownership of a problem nobody clearly owned.", "讲一次你主动承担一个没人明确负责的问题。", "ownership", "Medium", "leetcode"],
+  ["behavioral-missed-deadline", "Missed deadline", "错过截止日期", "Tell me about a time you missed a deadline or almost missed one.", "讲一次你错过或差点错过截止日期的经历。", "execution", "Medium", "statistics"],
+  ["behavioral-quality-speed", "Quality versus speed", "质量和速度取舍", "Describe a time you had to trade off speed and rigor.", "讲一次你必须在速度和严谨性之间取舍的经历。", "tradeoff", "Hard", "market"],
+  ["behavioral-risk-taking", "Calculated risk", "有计算的冒险", "Tell me about a calculated risk you took. What made it worth taking?", "讲一次你做过的有计算的冒险。为什么值得？", "risk", "Medium", "option"],
+  ["behavioral-change-mind", "Changing your mind", "改变观点", "Describe a time evidence made you change your mind.", "讲一次证据让你改变观点的经历。", "humility", "Medium", "statistics"],
+  ["behavioral-deep-work", "Deep focus", "深度专注", "Tell me about a period when you needed sustained focus to solve a hard problem.", "讲一段你需要长时间深度专注解决难题的经历。", "execution", "Easy", "leetcode"],
+  ["behavioral-simplify", "Simplifying complexity", "把复杂问题讲清楚", "Describe a time you simplified a complex idea for someone else.", "讲一次你把复杂问题解释给别人听的经历。", "communication", "Medium", "machineLearning"],
+  ["behavioral-cross-functional", "Working across functions", "跨团队协作", "Tell me about a time you worked with people from a different background or function.", "讲一次你和不同背景或职能的人协作的经历。", "teamwork", "Medium", "market"],
+  ["behavioral-mentoring", "Mentoring someone", "辅导他人", "Describe a time you helped someone else improve technically or analytically.", "讲一次你帮助别人提升技术或分析能力的经历。", "leadership", "Easy", "leetcode"],
+  ["behavioral-competition", "Competitive pressure", "竞争压力", "Tell me about a time you were in a competitive environment. How did you respond?", "讲一次你处于竞争环境时如何应对。", "pressure", "Medium", "mentalMath"],
+  ["behavioral-bug", "Hard-to-find bug", "难定位的问题", "Describe the hardest bug or error you found. How did you isolate it?", "讲一次你定位过的最难 bug 或错误。你如何隔离问题？", "debugging", "Medium", "leetcode"],
+  ["behavioral-model-risk", "Model did not work", "模型效果不佳", "Tell me about a model, analysis, or strategy that did not work as expected.", "讲一次模型、分析或策略效果不如预期的经历。", "reflection", "Hard", "machineLearning"],
+  ["behavioral-data-quality", "Data quality issue", "数据质量问题", "Describe a time a data quality issue changed your conclusion.", "讲一次数据质量问题改变你结论的经历。", "data", "Hard", "statistics"],
+  ["behavioral-independent", "Independent initiative", "独立发起项目", "Tell me about something useful you built or investigated without being asked.", "讲一次你在没人要求的情况下主动做出的有价值项目或研究。", "initiative", "Medium", "leetcode"],
+  ["behavioral-resilience", "Resilience after setback", "挫折后的恢复", "Describe a setback and how you recovered operationally, not just emotionally.", "讲一次挫折，以及你如何在行动上恢复，而不只是情绪上恢复。", "resilience", "Medium", "statistics"],
+  ["behavioral-detail", "Attention to detail", "细节把关", "Tell me about a time attention to detail materially changed the outcome.", "讲一次细节把关明显改变结果的经历。", "rigor", "Medium", "option"],
+  ["behavioral-disagree-senior", "Disagreeing with a senior person", "反对更资深的人", "Describe a time you disagreed with someone more senior than you.", "讲一次你和更资深的人意见不同的经历。", "communication", "Hard", "market"],
+  ["behavioral-unclear-goal", "Unclear goal", "目标不清晰", "Tell me about a time the goal was unclear. How did you define success?", "讲一次目标不清晰时，你如何定义成功标准。", "execution", "Medium", "statistics"],
+  ["behavioral-scope-cut", "Reducing scope", "削减范围", "Describe a time you reduced scope to ship something useful.", "讲一次你为了交付有用结果而缩小范围的经历。", "execution", "Medium", "leetcode"],
+  ["behavioral-research-defense", "Defending a conclusion", "捍卫结论", "Tell me about a time you had to defend an analysis against skeptical questions.", "讲一次你必须面对质疑捍卫分析结论的经历。", "defense", "Hard", "statistics"],
+  ["behavioral-help-request", "Asking for help", "主动求助", "Describe a time you asked for help effectively.", "讲一次你有效求助的经历。", "humility", "Easy", "leetcode"],
+  ["behavioral-calibration", "Calibrating confidence", "校准信心", "Tell me about a time you were overconfident or underconfident. How did you recalibrate?", "讲一次你过度自信或不够自信，以及你如何校准。", "reflection", "Hard", "statistics"],
+  ["behavioral-user-impact", "User or stakeholder impact", "用户或利益相关方影响", "Describe a time you changed your work after understanding a user or stakeholder better.", "讲一次你更理解用户或利益相关方后改变工作方式的经历。", "impact", "Medium", "market"],
+  ["behavioral-long-term", "Long-term commitment", "长期投入", "Tell me about a long project where motivation was hard to maintain.", "讲一次长期项目中你如何保持推进。", "resilience", "Medium", "leetcode"],
+  ["behavioral-trade-idea", "Market idea communication", "表达交易想法", "Describe a time you explained a market or investment idea clearly.", "讲一次你清晰表达市场或投资想法的经历。", "market", "Medium", "market"],
+  ["behavioral-automation", "Automation impact", "自动化带来的影响", "Tell me about a task you automated. What did it save and what new risk did it create?", "讲一次你自动化某个任务。它节省了什么，又带来了什么新风险？", "automation", "Medium", "leetcode"],
+  ["behavioral-noisy-feedback", "Conflicting feedback", "反馈相互矛盾", "Describe a time different people gave conflicting feedback. How did you decide what to do?", "讲一次不同人给出矛盾反馈时，你如何决定怎么做。", "judgment", "Hard", "statistics"],
+  ["behavioral-team-failure", "Team failure", "团队失败", "Tell me about a team failure. What was your role in the outcome?", "讲一次团队失败。你在结果中承担什么责任？", "ownership", "Hard", "market"],
+  ["behavioral-culture-add", "Culture add", "你能带来什么文化增量", "What would teammates learn from working with you?", "队友和你共事会从你身上学到什么？", "self-awareness", "Easy", "leetcode"],
+  ["behavioral-last-minute", "Last-minute change", "最后一刻变化", "Describe a time requirements changed late. What did you do first?", "讲一次需求在最后阶段改变时，你第一步做了什么。", "adaptability", "Medium", "market"],
+  ["behavioral-technical-debt", "Technical debt", "技术债", "Tell me about a time you chose to accept or repay technical debt.", "讲一次你选择接受或偿还技术债的经历。", "tradeoff", "Hard", "leetcode"],
+  ["behavioral-bias", "Bias in your own analysis", "发现自己的分析偏差", "Describe a time you discovered bias in your own analysis.", "讲一次你发现自己分析中存在偏差的经历。", "rigor", "Hard", "statistics"],
+  ["behavioral-low-data", "Small sample decision", "小样本决策", "Tell me about a time you had to reason from a small sample.", "讲一次你必须基于小样本进行推理的经历。", "judgment", "Medium", "statistics"],
+  ["behavioral-presentation", "High-stakes presentation", "高压汇报", "Describe a high-stakes presentation or demo. How did you prepare?", "讲一次高压汇报或 demo。你如何准备？", "communication", "Medium", "machineLearning"],
+  ["behavioral-repetitive-task", "Staying sharp on repetitive work", "重复任务中保持准确", "Tell me about a repetitive task where accuracy mattered.", "讲一次重复性任务中准确性很重要的经历。", "rigor", "Easy", "mentalMath"],
+  ["behavioral-open-ended", "Open-ended problem", "开放问题", "Describe the most open-ended problem you have worked on.", "讲一次你做过的最开放的问题。", "ambiguity", "Hard", "machineLearning"],
+  ["behavioral-values", "Values under pressure", "压力下坚持原则", "Tell me about a time pressure tested one of your values.", "讲一次压力考验你某个原则的经历。", "values", "Hard", "market"],
+  ["behavioral-interviewer-question", "Question for interviewer", "反问面试官", "What is one thoughtful question you would ask a quant interviewer at the end?", "如果面试最后让你反问，你会问一个什么有含金量的问题？", "closing", "Easy", "market"],
+  ["behavioral-weakness", "Current weakness", "当前短板", "What is one weakness you are actively working on, and what evidence shows progress?", "你正在改进的一个短板是什么？有什么证据说明你在进步？", "self-awareness", "Medium", "statistics"]
 ];
 
+const behavioralInterviewProblems = behavioralInterviewTopics.map(([id, titleEn, titleZh, promptEn, promptZh, tag, difficulty, category]) => ({
+  id,
+  titleEn,
+  titleZh,
+  category,
+  difficulty,
+  tags: ["behavioral", "STAR", tag],
+  promptEn,
+  promptZh,
+  answer: "Use a concrete STAR structure. Name your role, quantify the situation when possible, explain the tradeoff, and end with learning.",
+  explanation: "Strong behavioral answers are specific, personally owned, evidence-based, and reflective without sounding rehearsed."
+}));
+
+const resumeDeepDiveProblems = [
+  ["resume-ownership", "Ownership of a resume project", "简历项目 ownership", "Pick one resume project. What exactly was your personal contribution, and what would not have happened without you?", "选一个简历项目。你具体负责哪一部分？如果没有你，哪些结果不会发生？", "ownership"],
+  ["resume-hardest-detail", "Hardest technical detail", "最难技术细节", "Choose a project and explain the hardest technical detail at implementation level.", "选一个项目，把最难的技术细节讲到实现层面。", "technical-depth"],
+  ["resume-metric", "Project success metric", "项目成功指标", "How did you measure whether this project worked? What baseline did you compare against?", "你如何衡量这个项目是否成功？和什么 baseline 比较？", "metric"],
+  ["resume-tradeoff", "Design tradeoff", "设计取舍", "What was the most important design tradeoff in this project?", "这个项目里最重要的设计取舍是什么？", "tradeoff"],
+  ["resume-bug-risk", "Failure mode", "失败模式", "What could break this project in production or under real market data?", "这个项目在生产环境或真实市场数据下可能哪里会坏？", "risk"],
+  ["resume-reproduce", "Reproducibility", "可复现性", "If I asked you to reproduce the result from scratch, what steps and dependencies matter most?", "如果我让你从零复现结果，哪些步骤和依赖最关键？", "reproducibility"],
+  ["resume-critique", "Self critique", "自我质疑", "What is the strongest critique of this project, and how would you respond?", "对这个项目最强的质疑是什么？你会如何回应？", "defense"],
+  ["resume-next-version", "Next version", "下一版改进", "If you had two more weeks, what would you change first and why?", "如果你还有两周，最先改什么？为什么？", "iteration"]
+].map(([id, titleEn, titleZh, promptEn, promptZh, tag]) => ({
+  id,
+  titleEn,
+  titleZh,
+  category: "machineLearning",
+  difficulty: "Hard",
+  tags: ["resume", "deep-dive", tag],
+  promptEn,
+  promptZh,
+  answer: "Anchor the answer in a specific project. Show ownership, technical depth, measurement, risk awareness, and honest reflection.",
+  explanation: "Resume deep dives test whether the candidate truly built and understood the work on the page."
+}));
+
+const researchDeepDiveProblems = [
+  ["research-hypothesis", "Research hypothesis", "研究假设", "What hypothesis did your research project test, and why was it plausible?", "你的研究项目检验了什么假设？为什么这个假设有合理性？", "hypothesis"],
+  ["research-data", "Data construction", "数据构造", "How did you construct the dataset, and what data quality issue worried you most?", "你如何构造数据集？最担心的数据质量问题是什么？", "data"],
+  ["research-method", "Method choice", "方法选择", "Why did you choose this method over a simpler baseline?", "为什么选择这个方法，而不是更简单的 baseline？", "method"],
+  ["research-bias", "Look-ahead or selection bias", "前视偏差或选择偏差", "If I accuse the project of look-ahead bias or selection bias, how do you check that?", "如果我质疑这个项目有前视偏差或选择偏差，你怎么检查？", "bias"],
+  ["research-robustness", "Robustness check", "稳健性检验", "What robustness check would make you trust the result more?", "什么稳健性检验会让你更相信结果？", "robustness"],
+  ["research-economics", "Economic intuition", "经济直觉", "What is the economic or behavioral intuition behind the result?", "结果背后的经济或行为直觉是什么？", "intuition"],
+  ["research-live-market", "Live market translation", "落到真实市场", "What would change if this research were deployed in a live trading setting?", "如果这个研究要落到真实交易环境，什么会改变？", "deployment"],
+  ["research-negative-result", "Negative result", "负结果", "Tell me about the strongest negative result or failed experiment in this project.", "讲一个这个项目里最强的负结果或失败实验。", "negative-result"]
+].map(([id, titleEn, titleZh, promptEn, promptZh, tag]) => ({
+  id,
+  titleEn,
+  titleZh,
+  category: "statistics",
+  difficulty: "Hard",
+  tags: ["research", "deep-dive", tag],
+  promptEn,
+  promptZh,
+  answer: "Give the hypothesis, data construction, baseline, validation, failure mode, and economic intuition.",
+  explanation: "Research deep dives test rigor, ownership, robustness, and ability to defend assumptions."
+}));
+
 function renderInterviewSetup() {
+  if (!interviewSnapshotRestored) restoreInterviewSessionSnapshot();
   els.llmEndpointInput.value = llmConfig.endpoint || "";
   els.llmModelInput.value = llmConfig.model || "";
   renderInterviewCategoryPicker();
@@ -8806,18 +8970,19 @@ function renderInterviewSetup() {
 function renderInterviewTranscript() {
   els.interviewTranscript.innerHTML = "";
   if (!interviewMessages.length) {
-    const typeDef = interviewTypeDefs[getInterviewType()];
-    const source = getInterviewSource() === "pdf" ? "PDF" : "题库";
     appendMessageNode("system", interviewLanguage === "zh"
-      ? `选择 ${typeDef.label}，设置题数、主题范围和来源，然后点击开始模拟。当前来源：${source}。`
-      : `Choose ${typeDef.label}, set question count, topic range, and source, then start. Source: ${source}.`);
+      ? "进入模拟面试后，我会先用对话问你本场语言、模式、方向、难度、题量、风格和语音设置，然后自然进入第一题。"
+      : "When you start, I will ask for language, mode, focus, difficulty, scope, interviewer style, and voice settings, then move into the first question.");
     return;
   }
 
   interviewMessages.forEach((message) => appendMessageNode(message.role, message.displayText ?? message.text, {
     typing: message.typing,
     thinking: message.thinking,
-    attachments: message.attachments || []
+    attachments: message.attachments || [],
+    actions: message.actions || [],
+    actionStep: message.actionStep || "",
+    variant: message.variant || ""
   }));
   els.interviewTranscript.scrollTop = els.interviewTranscript.scrollHeight;
   if (!interviewMessages.some((message) => message.typing)) scheduleMathTypeset(els.interviewTranscript);
@@ -8826,28 +8991,81 @@ function renderInterviewTranscript() {
 function appendMessageNode(role, text, options = {}) {
   const typing = Boolean(options.typing);
   const thinking = Boolean(options.thinking);
+  const turn = document.createElement("article");
+  turn.className = `message-turn ${role}`;
+  if (options.variant) turn.classList.add(`message-${options.variant}`);
+  if (typing) turn.classList.add("is-streaming");
+
+  const avatar = document.createElement("div");
+  avatar.className = "message-avatar";
+  avatar.setAttribute("aria-hidden", "true");
+  avatar.textContent = getInterviewMessageAvatar(role);
+
+  const stack = document.createElement("div");
+  stack.className = "message-stack";
+  const meta = document.createElement("div");
+  meta.className = "message-meta";
+  meta.textContent = getInterviewMessageLabel(role);
   const node = document.createElement("div");
   node.className = `message ${role}`;
-  if (typing) node.classList.add("typing");
+  if (options.variant) node.classList.add(`message-${options.variant}`);
+  if (role === "user" && isCompactInterviewReply(text)) node.classList.add("message-short");
   if (thinking) {
     node.classList.add("thinking");
     node.setAttribute("aria-label", interviewLanguage === "zh" ? "正在思考" : "Thinking");
+    const thinkingLabel = document.createElement("span");
+    thinkingLabel.className = "thinking-label";
+    thinkingLabel.textContent = interviewLanguage === "zh" ? "正在组织追问" : "Thinking";
+    node.appendChild(thinkingLabel);
+    const dots = document.createElement("span");
+    dots.className = "thinking-dots";
     for (let index = 0; index < 3; index += 1) {
-      node.appendChild(document.createElement("span"));
+      dots.appendChild(document.createElement("i"));
     }
+    node.appendChild(dots);
   } else if (typing) {
-    node.textContent = text;
+    renderRichText(node, text);
   } else {
     renderRichText(node, text);
     appendMessageAttachments(node, options.attachments || []);
+    appendInterviewActions(node, options.actions || [], options.actionStep || "");
   }
-  els.interviewTranscript.appendChild(node);
+  if (role === "user") {
+    stack.append(node);
+    turn.append(stack);
+  } else {
+    stack.append(meta, node);
+    turn.append(avatar, stack);
+  }
+  els.interviewTranscript.appendChild(turn);
+}
+
+function isCompactInterviewReply(text) {
+  const raw = String(text || "").trim();
+  if (!raw || raw.includes("\n")) return false;
+  const compact = raw.replace(/[*_`#[\]()]/g, "").replace(/\s+/g, "");
+  return compact.length > 0 && compact.length <= 8;
+}
+
+function getInterviewMessageAvatar(role) {
+  if (role === "user") return "你";
+  if (role === "system") return "i";
+  return "Q";
+}
+
+function getInterviewMessageLabel(role) {
+  if (role === "user") return interviewLanguage === "zh" ? "你" : "You";
+  if (role === "system") return interviewLanguage === "zh" ? "面试题" : "Prompt";
+  return interviewLanguage === "zh" ? "AI 面试官" : "AI interviewer";
 }
 
 function renderRichText(node, text) {
   node.classList.add("rich-text");
   node.textContent = "";
-  const lines = normalizeRichTextContent(text).replace(/\r/g, "").split("\n");
+  const normalized = normalizeRichTextContent(text).replace(/\r/g, "");
+  if (renderInterviewQuestionCard(node, normalized)) return;
+  if (renderInterviewFeedbackCard(node, normalized)) return;
+  const lines = normalized.split("\n");
   let paragraph = [];
   let list = null;
 
@@ -8891,6 +9109,190 @@ function renderRichText(node, text) {
     paragraph.push(line);
   });
   flushParagraph();
+}
+
+function renderInterviewQuestionCard(node, text) {
+  const lines = String(text || "").split("\n");
+  const heading = lines[0]?.match(/^#\s+(Q\d+\/\d+)\s+·\s+(.+)$/);
+  if (!heading) return false;
+  const titleLineIndex = lines.findIndex((line, index) => index > 0 && /^\*\*.+\*\*$/.test(line.trim()));
+  const title = titleLineIndex >= 0 ? lines[titleLineIndex].trim().replace(/^\*\*|\*\*$/g, "") : heading[1];
+  const prompt = lines.slice(titleLineIndex >= 0 ? titleLineIndex + 1 : 1).join("\n").trim();
+
+  const card = document.createElement("section");
+  card.className = "interview-prompt-card";
+  const top = document.createElement("div");
+  top.className = "interview-prompt-top";
+  const badge = document.createElement("span");
+  badge.textContent = heading[1];
+  const meta = document.createElement("small");
+  meta.textContent = heading[2];
+  top.append(badge, meta);
+
+  const titleNode = document.createElement("strong");
+  titleNode.className = "interview-prompt-title";
+  titleNode.textContent = title || heading[1];
+  const body = document.createElement("div");
+  body.className = "interview-prompt-body";
+  renderRichTextBlocks(body, prompt || (interviewLanguage === "zh" ? "暂无题干。" : "No prompt."));
+  card.append(top, titleNode, body);
+  node.appendChild(card);
+  return true;
+}
+
+function renderInterviewFeedbackCard(node, text) {
+  const data = parseInterviewFeedbackCardText(text);
+  if (!data) return false;
+  const useZh = interviewLanguage !== "en";
+  const card = document.createElement("section");
+  card.className = "interview-feedback-card";
+
+  const hero = document.createElement("div");
+  hero.className = "interview-feedback-hero";
+  const score = document.createElement("div");
+  score.className = "interview-feedback-score";
+  const scoreValue = document.createElement("strong");
+  scoreValue.textContent = String(data.score);
+  const scoreMeta = document.createElement("span");
+  scoreMeta.textContent = "/100";
+  score.append(scoreValue, scoreMeta);
+  const summary = document.createElement("div");
+  summary.className = "interview-feedback-summary";
+  const eyebrow = document.createElement("small");
+  eyebrow.textContent = useZh ? "即时反馈" : "Instant feedback";
+  const copy = document.createElement("p");
+  copy.textContent = data.summary || (useZh ? "回答已记录，建议继续复盘关键步骤。" : "Answer recorded. Review the key steps next.");
+  summary.append(eyebrow, copy);
+  hero.append(score, summary);
+  card.appendChild(hero);
+
+  if (data.dimensions.length) {
+    const grid = document.createElement("div");
+    grid.className = "interview-feedback-dimensions";
+    data.dimensions.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "interview-feedback-dimension";
+      const label = document.createElement("span");
+      label.textContent = item.label;
+      const bar = document.createElement("i");
+      bar.style.setProperty("--score", String(clampNumber(item.score / 5, 0, 1)));
+      const value = document.createElement("em");
+      value.textContent = `${item.score}/5`;
+      const note = document.createElement("small");
+      note.textContent = item.comment;
+      row.append(label, bar, value, note);
+      grid.appendChild(row);
+    });
+    card.appendChild(grid);
+  }
+
+  const sectionWrap = document.createElement("div");
+  sectionWrap.className = "interview-feedback-sections";
+  [
+    [useZh ? "缺失要点" : "Missing pieces", data.missing],
+    [useZh ? "真实面试风险" : "Interview risk", data.risk],
+    [useZh ? "参考差距" : "Reference delta", data.reference],
+    [useZh ? "下一步" : "Next step", data.nextStep]
+  ].filter(([, value]) => value.length).forEach(([label, value]) => {
+    const section = document.createElement("section");
+    const title = document.createElement("h5");
+    title.textContent = label;
+    section.appendChild(title);
+    if (Array.isArray(value)) {
+      const list = document.createElement("ul");
+      value.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        list.appendChild(li);
+      });
+      section.appendChild(list);
+    } else {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = value;
+      section.appendChild(paragraph);
+    }
+    sectionWrap.appendChild(section);
+  });
+  card.appendChild(sectionWrap);
+  node.appendChild(card);
+  return true;
+}
+
+function renderRichTextBlocks(node, text) {
+  const lines = String(text || "").split("\n");
+  let paragraph = [];
+  let list = null;
+  const flush = () => {
+    if (!paragraph.length) return;
+    const block = document.createElement("p");
+    appendInlineRichText(block, paragraph.join("\n"));
+    node.appendChild(block);
+    paragraph = [];
+  };
+  lines.forEach((line) => {
+    const bullet = line.match(/^\s*[-*]\s+(.+)$/);
+    if (!line.trim()) {
+      flush();
+      list = null;
+      return;
+    }
+    if (bullet) {
+      flush();
+      if (!list) {
+        list = document.createElement("ul");
+        node.appendChild(list);
+      }
+      const item = document.createElement("li");
+      appendInlineRichText(item, bullet[1]);
+      list.appendChild(item);
+      return;
+    }
+    list = null;
+    paragraph.push(line);
+  });
+  flush();
+}
+
+function parseInterviewFeedbackCardText(text) {
+  const source = String(text || "").trim();
+  const score = parseInterviewFeedbackScore(source);
+  if (score == null || !/(维度分|Dimensions|缺失要点|Missing pieces|真实面试风险|Interview risk)/i.test(source)) return null;
+  const lines = source.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const findValue = (patterns) => {
+    const line = lines.find((item) => patterns.some((pattern) => pattern.test(item)));
+    if (!line) return "";
+    return line.replace(/^(评价|Evaluation|真实面试风险|Interview risk|参考差距|Reference delta)\s*[:：]\s*/i, "").trim();
+  };
+  const collectListAfter = (patterns) => {
+    const start = lines.findIndex((item) => patterns.some((pattern) => pattern.test(item)));
+    if (start < 0) return [];
+    const items = [];
+    for (let index = start + 1; index < lines.length; index += 1) {
+      const line = lines[index];
+      if (/^(维度分|Dimensions|缺失要点|Missing pieces|真实面试风险|Interview risk|参考差距|Reference delta|下一步|Next step)\s*[:：]?$/i.test(line)) break;
+      if (/^(真实面试风险|Interview risk|参考差距|Reference delta)\s*[:：]/i.test(line)) break;
+      const item = line.replace(/^[-*]\s*/, "").trim();
+      if (item) items.push(item);
+    }
+    return items;
+  };
+  const dimensions = lines
+    .map((line) => line.match(/^[-*]\s*([^:：]+)\s*[:：]\s*(\d(?:\.\d+)?)\s*\/\s*5(?:\s*[-–]\s*(.+))?$/))
+    .filter(Boolean)
+    .map((match) => ({
+      label: match[1].trim(),
+      score: Math.round(clampNumber(match[2], 0, 5)),
+      comment: String(match[3] || "").trim()
+    }));
+  return {
+    score,
+    summary: findValue([/^评价\s*[:：]/i, /^Evaluation\s*:/i]),
+    dimensions,
+    missing: collectListAfter([/^缺失要点/i, /^Missing pieces/i]),
+    risk: findValue([/^真实面试风险\s*[:：]/i, /^Interview risk\s*:/i]),
+    reference: findValue([/^参考差距\s*[:：]/i, /^Reference delta\s*:/i]),
+    nextStep: collectListAfter([/^下一步/i, /^Next step/i])
+  };
 }
 
 function normalizeRichTextContent(text) {
@@ -8972,6 +9374,25 @@ function appendMessageAttachments(node, attachments = []) {
   node.appendChild(tray);
 }
 
+function appendInterviewActions(node, actions = [], actionStep = "") {
+  const safeActions = actions.filter((action) => action && action.label);
+  if (!safeActions.length) return;
+  if (actionStep && !isCurrentOnboardingStep(actionStep)) return;
+  const tray = document.createElement("div");
+  tray.className = "interview-action-chips";
+  safeActions.forEach((action) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "interview-action-chip";
+    button.dataset.interviewAction = actionStep || "choice";
+    button.dataset.interviewActionValue = action.value || action.label;
+    button.textContent = action.label;
+    if (action.description) button.title = action.description;
+    tray.appendChild(button);
+  });
+  node.appendChild(tray);
+}
+
 function scheduleMathTypeset(root) {
   if (!root || !window.MathJax?.typesetPromise || mathTypesetTimer) return;
   mathTypesetTimer = window.setTimeout(() => {
@@ -8996,20 +9417,24 @@ function renderInterviewQuestionPanel() {
     const empty = document.createElement("div");
     empty.className = "interview-question-panel-empty";
     empty.textContent = interviewLanguage === "zh"
-      ? "开始模拟后，这里会显示本轮题目和得分。"
-      : "Once the mock starts, this panel shows each question and score.";
+      ? "完成 AI 配置后，这里会显示本轮进度。"
+      : "After AI setup, this panel shows session progress.";
     els.interviewQuestionPanel.appendChild(empty);
     return;
   }
 
+  const live = isInterviewLiveMode();
   const heading = document.createElement("div");
   heading.className = "interview-question-panel-head";
   const title = document.createElement("strong");
-  title.textContent = interviewLanguage === "zh" ? "本轮题目" : "Questions";
+  title.textContent = live
+    ? (interviewLanguage === "zh" ? "真实面试进度" : "Live progress")
+    : (interviewLanguage === "zh" ? "训练面板" : "Practice panel");
   const progress = document.createElement("span");
   progress.textContent = `${Math.max(0, interviewSession.currentIndex + 1)} / ${interviewSession.questions.length}`;
   heading.append(title, progress);
   els.interviewQuestionPanel.appendChild(heading);
+  els.interviewQuestionPanel.appendChild(createInterviewPanelStats(live));
 
   const list = document.createElement("div");
   list.className = "interview-question-accordion";
@@ -9027,7 +9452,8 @@ function renderInterviewQuestionPanel() {
       "interview-question-item",
       expanded ? "is-expanded" : "",
       current ? "is-current" : "",
-      result?.score != null ? "is-scored" : ""
+      result?.score != null && !live ? "is-scored" : "",
+      result?.status === "wrapped" ? "is-wrapped" : ""
     ].filter(Boolean).join(" ");
     item.dataset.interviewQuestionIndex = String(index);
     item.setAttribute("aria-expanded", String(expanded));
@@ -9041,9 +9467,14 @@ function renderInterviewQuestionPanel() {
     main.append(label, meta);
 
     const score = document.createElement("span");
-    score.className = `interview-question-score${result?.fresh ? " score-pop" : ""}`;
-    score.textContent = result?.score == null ? "--" : `${Math.round(result.score)}`;
-    if (result?.score != null) score.dataset.targetScore = String(Math.round(result.score));
+    score.className = `interview-question-score${result?.fresh && !live ? " score-pop" : ""}`;
+    if (live) {
+      score.classList.add("is-live-state");
+      score.textContent = current ? (interviewLanguage === "zh" ? "当前" : "Now") : result ? (interviewLanguage === "zh" ? "完成" : "Done") : "--";
+    } else {
+      score.textContent = result?.score == null ? "--" : `${Math.round(result.score)}`;
+      if (result?.score != null) score.dataset.targetScore = String(Math.round(result.score));
+    }
 
     item.append(main, score);
 
@@ -9056,6 +9487,9 @@ function renderInterviewQuestionPanel() {
       const evaluation = document.createElement("small");
       evaluation.textContent = result.evaluation;
       detail.appendChild(evaluation);
+    }
+    if (!live && result?.dimensions) {
+      detail.appendChild(createInterviewDimensionMiniBars(result.dimensions));
     }
     item.appendChild(detail);
 
@@ -9074,6 +9508,54 @@ function renderInterviewQuestionPanel() {
   els.interviewQuestionPanel.appendChild(list);
   animateInterviewScores(els.interviewQuestionPanel);
   refreshIcons();
+}
+
+function createInterviewPanelStats(live = false) {
+  const stats = document.createElement("div");
+  stats.className = "interview-panel-stats";
+  const results = interviewSession?.questionResults || [];
+  const completed = results.filter(Boolean).length;
+  const scored = results.filter((item) => Number.isFinite(Number(item?.score)));
+  const average = scored.length
+    ? Math.round(scored.reduce((sum, item) => sum + Number(item.score || 0), 0) / scored.length)
+    : null;
+  const focus = interviewFocusDefs[interviewSession?.sessionConfig?.focusKey || "mixed"];
+  const items = live
+    ? [
+      [interviewLanguage === "zh" ? "模式" : "Mode", interviewLanguage === "zh" ? "真实面试" : "Live"],
+      [interviewLanguage === "zh" ? "进度" : "Progress", `${completed}/${interviewSession?.questions?.length || 0}`],
+      [interviewLanguage === "zh" ? "方向" : "Focus", interviewLanguage === "zh" ? focus?.labelZh || "混合" : focus?.labelEn || "Mixed"]
+    ]
+    : [
+      [interviewLanguage === "zh" ? "平均分" : "Average", average == null ? "--" : `${average}`],
+      [interviewLanguage === "zh" ? "已完成" : "Done", `${completed}/${interviewSession?.questions?.length || 0}`],
+      [interviewLanguage === "zh" ? "方向" : "Focus", interviewLanguage === "zh" ? focus?.labelZh || "混合" : focus?.labelEn || "Mixed"]
+    ];
+  items.forEach(([label, value]) => {
+    const item = document.createElement("span");
+    item.innerHTML = `<small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong>`;
+    stats.appendChild(item);
+  });
+  return stats;
+}
+
+function createInterviewDimensionMiniBars(dimensions = {}) {
+  const labels = {
+    correctness: interviewLanguage === "zh" ? "正确" : "Correct",
+    reasoning: interviewLanguage === "zh" ? "推理" : "Reasoning",
+    communication: interviewLanguage === "zh" ? "表达" : "Comms",
+    speed: interviewLanguage === "zh" ? "速度" : "Speed",
+    readiness: interviewLanguage === "zh" ? "可用" : "Ready"
+  };
+  const wrap = document.createElement("div");
+  wrap.className = "interview-dimension-bars";
+  Object.entries(labels).forEach(([key, label]) => {
+    const score = Math.round(clampNumber(dimensions?.[key]?.score ?? 0, 0, 5));
+    const row = document.createElement("span");
+    row.innerHTML = `<b>${escapeHtml(label)}</b><i style="--score:${score / 5}"></i><em>${score}/5</em>`;
+    wrap.appendChild(row);
+  });
+  return wrap;
 }
 
 function animateInterviewScores(root) {
@@ -9140,8 +9622,11 @@ function getInterviewFavorites() {
 
 function updateInterviewActionPanel() {
   if (!els.interviewCompleteActions) return;
+  const onboarding = isInterviewOnboarding();
+  const live = isInterviewLiveMode();
+  const completed = Boolean(interviewSession?.completed);
   const hasCompletedQuestion = Boolean(interviewSession && interviewSession.currentIndex >= 0 && interviewSession.answeredCurrent);
-  els.interviewCompleteActions.classList.toggle("hidden", !hasCompletedQuestion);
+  els.interviewCompleteActions.classList.toggle("hidden", !hasCompletedQuestion || completed || onboarding);
 
   const hasNext = Boolean(
     interviewSession
@@ -9151,6 +9636,16 @@ function updateInterviewActionPanel() {
   if (els.nextInterviewQuestionBtn) els.nextInterviewQuestionBtn.disabled = !hasNext;
   if (els.saveInterviewFavoriteBtn) els.saveInterviewFavoriteBtn.disabled = !hasCompletedQuestion;
   if (els.shareInterviewQuestionBtn) els.shareInterviewQuestionBtn.disabled = !hasCompletedQuestion;
+  els.hintInterviewBtn?.classList.toggle("hidden", onboarding || live || completed);
+  els.revealAnswerBtn?.classList.toggle("hidden", onboarding || live || completed);
+  els.interviewAnswerFileRow?.classList.toggle("hidden", onboarding || completed);
+  els.voiceAnswerBtn?.classList.toggle("hidden", onboarding || completed);
+  if (els.interviewAnswer) {
+    els.interviewAnswer.disabled = completed || Boolean(interviewSession?.submitting);
+    els.interviewAnswer.placeholder = onboarding
+      ? (interviewLanguage === "zh" ? "直接输入你的选择，也可以点快捷按钮" : "Type your choice or use a quick option")
+      : (interviewLanguage === "zh" ? "输入你的回答，Enter 发送，Shift+Enter 换行" : "Type your answer. Enter sends, Shift+Enter adds a line");
+  }
 }
 
 function addProblemFromForm() {
@@ -9678,15 +10173,19 @@ function getInterviewQuestionSeconds() {
   return Math.round(clampNumber(els.interviewQuestionTime?.value || interviewTypeDefs[getInterviewType()].minutes, 1, 60) * 60);
 }
 
-function makeInterviewProblemPool(type = getInterviewType()) {
-  const base = makeInterviewBaseProblemPool(type);
-  const selectedCategories = getInterviewSelectedCategories();
+function makeInterviewProblemPool(type = getInterviewType(), config = null) {
+  const base = makeInterviewBaseProblemPool(type, config);
+  const selectedCategories = config?.focusKey
+    ? (interviewFocusDefs[config.focusKey]?.categories?.length ? interviewFocusDefs[config.focusKey].categories : ["all"])
+    : getInterviewSelectedCategories();
   if (selectedCategories.includes("all")) return base;
   return base.filter((problem) => selectedCategories.includes(normalizeCategory(problem.category)));
 }
 
-function makeInterviewBaseProblemPool(type = getInterviewType()) {
-  if (type === "behavioral") return behavioralInterviewProblems.map(normalizeProblem);
+function makeInterviewBaseProblemPool(type = getInterviewType(), config = null) {
+  if (config?.focusKey === "resume") return resumeDeepDiveProblems.map(normalizeProblem);
+  if (config?.focusKey === "research") return researchDeepDiveProblems.map(normalizeProblem);
+  if (config?.focusKey === "behavioral" || type === "behavioral") return behavioralInterviewProblems.map(normalizeProblem);
   const categories = interviewTypeDefs[type]?.categories || [];
   const filtered = state.problems.filter((problem) => categories.includes(normalizeCategory(problem.category)));
   return filtered.length ? filtered : state.problems;
@@ -9757,9 +10256,10 @@ function updateInterviewSetupVisibility() {
     els.interviewCategoryRow.classList.toggle("hidden", getInterviewSource() !== "full");
   }
   if (els.interviewSummary) {
-    const typeDef = interviewTypeDefs[getInterviewType()];
-    const source = getInterviewSource() === "pdf" ? "PDF 生成题目" : `全范围题库抽题 · ${formatInterviewCategorySummary()}`;
-    els.interviewSummary.textContent = `${typeDef.label} · ${source} · ${getInterviewQuestionCount()} 题`;
+    const source = getInterviewSource() === "pdf" ? "PDF 题源" : `题库抽题 · ${formatInterviewCategorySummary()}`;
+    els.interviewSummary.textContent = interviewLanguage === "zh"
+      ? `AI 面试官会通过对话配置 practice / live。${source}`
+      : `The AI interviewer configures practice / live through chat. ${source}`;
   }
 }
 
@@ -9817,12 +10317,21 @@ function handleInterviewAnswerKeydown(event) {
   els.interviewForm?.requestSubmit();
 }
 
+function handleInterviewTranscriptAction(event) {
+  const button = event.target.closest("[data-interview-action-value]");
+  if (!button || button.disabled) return;
+  const value = button.dataset.interviewActionValue || button.textContent || "";
+  handleOnboardingAnswer(value);
+}
+
 function resetInterview(options = {}) {
   clearInterviewTimers();
+  stopInterviewSpeech();
   interviewSession = null;
   interviewPreparing = false;
   interviewMessages = [];
   interviewPanelExpandedIndex = 0;
+  sessionStorage.removeItem(INTERVIEW_SESSION_STORAGE_KEY);
   if (!options.keepSetup) renderInterviewSetup();
   if (els.interviewAnswer) els.interviewAnswer.value = "";
   if (els.interviewAnswerFile) els.interviewAnswerFile.value = "";
@@ -9833,72 +10342,430 @@ function resetInterview(options = {}) {
 }
 
 async function startInterview() {
-  const source = getInterviewSource();
-  const type = getInterviewType();
-  const count = getInterviewQuestionCount();
-  const answerMode = "chat";
   clearInterviewTimers();
+  stopInterviewSpeech();
   interviewMessages = [];
-  interviewSession = null;
-  interviewPreparing = true;
   interviewPanelExpandedIndex = 0;
+  interviewPreparing = false;
+  interviewSession = createInterviewOnboardingSession();
+  updateInterviewStatus("onboarding");
+  askInterviewOnboardingStep("language");
+  persistInterviewSessionSnapshot();
+}
+
+function createInterviewOnboardingSession() {
+  return {
+    id: makeId(),
+    phase: "onboarding",
+    mode: "practice",
+    type: "technical",
+    source: getInterviewSource(),
+    answerMode: "chat",
+    sessionConfig: {
+      language: "",
+      mode: "",
+      focusKey: "",
+      focusTags: [],
+      difficulty: "",
+      questionCount: 0,
+      durationMinutes: 0,
+      persona: "",
+      ttsEnabled: true,
+      source: getInterviewSource()
+    },
+    onboardingStep: "language",
+    questions: [],
+    currentIndex: -1,
+    currentProblem: null,
+    awaitingNext: false,
+    completed: false,
+    questionResults: [],
+    questionConversations: [],
+    latestScoredIndex: -1,
+    startedAt: new Date().toISOString()
+  };
+}
+
+function isInterviewOnboarding() {
+  return interviewSession?.phase === "onboarding";
+}
+
+function isInterviewLiveMode() {
+  return interviewSession?.mode === "live" || interviewSession?.sessionConfig?.mode === "live";
+}
+
+function isCurrentOnboardingStep(step) {
+  return Boolean(isInterviewOnboarding() && interviewSession.onboardingStep === step);
+}
+
+function askInterviewOnboardingStep(step) {
+  if (!interviewSession) return;
+  interviewSession.onboardingStep = step;
+  const prompt = getInterviewOnboardingPrompt(step);
+  appendInterviewMessage("coach", prompt.text, {
+    actions: prompt.actions,
+    actionStep: step,
+    typewriter: step !== "language"
+  });
+  updateInterviewStatus("onboarding");
+  persistInterviewSessionSnapshot();
+}
+
+function getInterviewOnboardingPrompt(step) {
+  const uiLanguage = step === "language" ? getLanguage() : interviewLanguage;
+  const useZh = uiLanguage !== "en";
+  const modeOptions = Object.entries(interviewModeDefs).map(([value, item]) => ({
+    value,
+    label: useZh ? item.labelZh : item.labelEn,
+    description: useZh ? item.descriptionZh : item.descriptionEn
+  }));
+  const focusOptions = Object.entries(interviewFocusDefs).map(([value, item]) => ({
+    value,
+    label: useZh ? item.labelZh : item.labelEn
+  }));
+  const difficultyOptions = Object.entries(interviewDifficultyDefs).map(([value, item]) => ({
+    value,
+    label: useZh ? item.labelZh : item.labelEn
+  }));
+  const personaOptions = Object.entries(interviewPersonaDefs).map(([value, item]) => ({
+    value,
+    label: useZh ? item.labelZh : item.labelEn
+  }));
+
+  const prompts = {
+    language: {
+      text: useZh ? "今天的面试想用什么语言？" : "Which language should we use for this interview?",
+      actions: [
+        { value: "zh", label: "中文" },
+        { value: "en", label: "English" }
+      ]
+    },
+    mode: {
+      text: useZh ? "好的，本场我会全程使用中文。你想进行真实模拟面试，还是训练练习？" : "Great. Should this be a live mock interview or a practice session?",
+      actions: modeOptions
+    },
+    focus: {
+      text: useZh ? "今天主要想练哪一类题？" : "What should we focus on today?",
+      actions: focusOptions
+    },
+    difficulty: {
+      text: useZh ? "难度希望设成什么？" : "What difficulty should I use?",
+      actions: difficultyOptions
+    },
+    scope: {
+      text: useZh ? "这场想做多少题，或者按时长来？" : "How many questions, or should we run by time?",
+      actions: [
+        { value: "3", label: useZh ? "3 题" : "3 questions" },
+        { value: "5", label: useZh ? "5 题" : "5 questions" },
+        { value: "10", label: useZh ? "10 题" : "10 questions" },
+        { value: "30m", label: useZh ? "30 分钟" : "30 minutes" }
+      ]
+    },
+    persona: {
+      text: useZh ? "你希望面试官是什么风格？" : "What interviewer style do you want?",
+      actions: personaOptions
+    },
+    tts: {
+      text: useZh ? "最后一个设置：要不要开启读题？" : "Last setting: should I read questions aloud?",
+      actions: [
+        { value: "on", label: useZh ? "开启读题" : "Read aloud" },
+        { value: "off", label: useZh ? "关闭读题" : "Text only" }
+      ]
+    }
+  };
+  return prompts[step] || prompts.language;
+}
+
+async function handleOnboardingAnswer(value) {
+  if (!isInterviewOnboarding()) return false;
+  const step = interviewSession.onboardingStep || "language";
+  const parsed = parseInterviewOnboardingAnswer(step, value);
+  if (!parsed.ok) {
+    appendInterviewMessage("system", parsed.message, { typewriter: false });
+    return true;
+  }
+
+  appendInterviewMessage("user", parsed.label, { typewriter: false });
+  applyInterviewOnboardingAnswer(step, parsed);
+  const nextStep = getNextInterviewOnboardingStep(step);
+  if (nextStep) {
+    askInterviewOnboardingStep(nextStep);
+  } else {
+    await finalizeInterviewOnboarding();
+  }
+  return true;
+}
+
+function parseInterviewOnboardingAnswer(step, value) {
+  const raw = String(value || "").trim();
+  const lower = raw.toLowerCase();
+  const useZh = interviewLanguage !== "en";
+  const fail = () => ({
+    ok: false,
+    message: useZh ? "我没有完全识别这个设置。可以点一下快捷选项，或换一种说法。" : "I could not read that setting. Use a quick option or phrase it another way."
+  });
+
+  if (step === "language") {
+    if (/^(en|english)$/i.test(lower) || /英/.test(raw)) return { ok: true, value: "en", label: "English" };
+    if (/^(zh|cn|chinese|中文)$/i.test(lower) || /中/.test(raw)) return { ok: true, value: "zh", label: "中文" };
+    return fail();
+  }
+
+  if (step === "mode") {
+    if (/live|real|mock|真实|正式|模拟真实/.test(lower) || /真实|正式/.test(raw)) {
+      const item = interviewModeDefs.live;
+      return { ok: true, value: "live", label: useZh ? item.labelZh : item.labelEn };
+    }
+    if (/practice|train|练习|训练|刷题/.test(lower) || /练习|训练/.test(raw)) {
+      const item = interviewModeDefs.practice;
+      return { ok: true, value: "practice", label: useZh ? item.labelZh : item.labelEn };
+    }
+    if (interviewModeDefs[lower]) {
+      const item = interviewModeDefs[lower];
+      return { ok: true, value: lower, label: useZh ? item.labelZh : item.labelEn };
+    }
+    return fail();
+  }
+
+  if (step === "focus") {
+    const directFocus = Object.keys(interviewFocusDefs).find((key) => key.toLowerCase() === lower);
+    if (directFocus) {
+      const item = interviewFocusDefs[directFocus];
+      return { ok: true, value: directFocus, label: useZh ? item.labelZh : item.labelEn };
+    }
+    const aliases = {
+      mixed: ["mixed", "mix", "综合", "混合", "随机"],
+      probability: ["probability", "statistics", "stats", "概率", "统计"],
+      algorithms: ["algorithm", "algorithms", "leetcode", "oa", "算法"],
+      ml: ["ml", "machine learning", "deep learning", "机器学习", "深度学习"],
+      market: ["market", "trading", "市场", "交易", "直觉"],
+      marketMaking: ["market making", "making", "做市", "bid", "ask"],
+      behavioral: ["behavioral", "behavior", "行为", "star"],
+      resume: ["resume", "cv", "简历"],
+      research: ["research", "project", "研究", "项目深挖", "论文"]
+    };
+    const match = Object.entries(aliases).find(([key, words]) => key === lower || words.some((word) => lower.includes(word) || raw.includes(word)));
+    if (!match) return fail();
+    const item = interviewFocusDefs[match[0]];
+    return { ok: true, value: match[0], label: useZh ? item.labelZh : item.labelEn };
+  }
+
+  if (step === "difficulty") {
+    const aliases = {
+      easy: ["easy", "简单", "基础"],
+      medium: ["medium", "中等", "普通"],
+      hard: ["hard", "困难", "高难", "难"],
+      adaptive: ["adaptive", "自适应", "动态"]
+    };
+    const match = Object.entries(aliases).find(([key, words]) => key === lower || words.some((word) => lower.includes(word) || raw.includes(word)));
+    if (!match) return fail();
+    const item = interviewDifficultyDefs[match[0]];
+    return { ok: true, value: match[0], label: useZh ? item.labelZh : item.labelEn };
+  }
+
+  if (step === "scope") {
+    const number = Number((lower.match(/\d+/) || [])[0]);
+    if (/30m|minute|minutes|分钟|时长/.test(lower) || /分钟|时长/.test(raw)) {
+      return { ok: true, value: { durationMinutes: number || 30, questionCount: 0 }, label: useZh ? `${number || 30} 分钟` : `${number || 30} minutes` };
+    }
+    if (Number.isFinite(number) && number > 0) {
+      const questionCount = Math.round(clampNumber(number, 1, 12));
+      return { ok: true, value: { questionCount, durationMinutes: 0 }, label: useZh ? `${questionCount} 题` : `${questionCount} questions` };
+    }
+    return fail();
+  }
+
+  if (step === "persona") {
+    const aliases = {
+      friendly: ["friendly", "kind", "友好", "引导", "温和"],
+      neutral: ["neutral", "professional", "中性", "专业"],
+      pressure: ["pressure", "stress", "fast", "高压", "快节奏", "严格"]
+    };
+    const match = Object.entries(aliases).find(([key, words]) => key === lower || words.some((word) => lower.includes(word) || raw.includes(word)));
+    if (!match) return fail();
+    const item = interviewPersonaDefs[match[0]];
+    return { ok: true, value: match[0], label: useZh ? item.labelZh : item.labelEn };
+  }
+
+  if (step === "tts") {
+    const enabled = !(/off|no|false|关闭|不要|不用|文字/.test(lower) || /关闭|不要|不用|文字/.test(raw));
+    return { ok: true, value: enabled, label: enabled ? (useZh ? "开启读题" : "Read aloud") : (useZh ? "关闭读题" : "Text only") };
+  }
+
+  return fail();
+}
+
+function applyInterviewOnboardingAnswer(step, parsed) {
+  const config = interviewSession.sessionConfig || {};
+  if (step === "language") {
+    interviewLanguage = parsed.value;
+    config.language = parsed.value;
+    syncInterviewLanguageControls();
+  } else if (step === "mode") {
+    config.mode = parsed.value;
+    interviewSession.mode = parsed.value;
+  } else if (step === "focus") {
+    const focus = interviewFocusDefs[parsed.value] || interviewFocusDefs.mixed;
+    config.focusKey = parsed.value;
+    config.focusTags = [parsed.value, ...(focus.categories || [])];
+    interviewSession.type = focus.type || "technical";
+    if (els.interviewTypeSelect) els.interviewTypeSelect.value = interviewSession.type;
+    selectedInterviewCategories = new Set(focus.categories?.length ? focus.categories : ["all"]);
+  } else if (step === "difficulty") {
+    config.difficulty = parsed.value;
+  } else if (step === "scope") {
+    config.questionCount = parsed.value.questionCount || 0;
+    config.durationMinutes = parsed.value.durationMinutes || 0;
+    if (config.questionCount && els.interviewQuestionCount) els.interviewQuestionCount.value = String(config.questionCount);
+    if (config.durationMinutes && els.interviewQuestionTime) els.interviewQuestionTime.value = String(Math.max(3, Math.round(config.durationMinutes / 5)));
+  } else if (step === "persona") {
+    config.persona = parsed.value;
+  } else if (step === "tts") {
+    config.ttsEnabled = parsed.value;
+  }
+  interviewSession.sessionConfig = config;
+  updateInterviewSetupVisibility();
+  renderInterviewQuestionPanel();
+}
+
+function getNextInterviewOnboardingStep(step) {
+  const index = interviewOnboardingSteps.indexOf(step);
+  return index >= 0 ? interviewOnboardingSteps[index + 1] || "" : "";
+}
+
+async function finalizeInterviewOnboarding() {
+  if (!interviewSession) return;
+  const config = normalizeInterviewSessionConfig(interviewSession.sessionConfig || {});
+  interviewSession.sessionConfig = config;
+  interviewSession.mode = config.mode;
+  interviewSession.type = getInterviewTypeForConfig(config);
+  interviewSession.source = config.source;
+  interviewPreparing = true;
   updateInterviewStatus("loading");
-  setButtonBusy(els.startInterviewBtn, true, interviewLanguage === "zh" ? "准备中" : "Preparing");
+  appendInterviewMessage("coach", formatInterviewConfigSummary(config));
 
   try {
-    const questions = source === "pdf"
-      ? await buildPdfInterviewQuestions(count, type)
-      : buildFullRangeInterviewQuestions(count, type);
+    const count = getInterviewQuestionCountForConfig(config);
+    const questions = config.source === "pdf"
+      ? await buildPdfInterviewQuestions(count, interviewSession.type)
+      : buildFullRangeInterviewQuestions(count, interviewSession.type, config);
 
     if (!questions.length) {
       appendInterviewMessage("system", interviewLanguage === "zh"
         ? "没有可用题目。请先添加题库，或切换到 PDF 生成题目。"
         : "No questions available. Add problems first or switch to PDF generation.");
       interviewPreparing = false;
-      updateInterviewStatus();
+      updateInterviewStatus("onboarding");
       return;
     }
 
     interviewSession = {
-      id: makeId(),
-      type,
-      source,
-      answerMode,
-      questionSeconds: getInterviewQuestionSeconds(),
+      ...interviewSession,
+      phase: "running",
+      type: interviewSession.type,
+      source: config.source,
+      answerMode: "chat",
+      questionSeconds: getInterviewQuestionSecondsForConfig(config, count),
       questions,
       currentIndex: -1,
       currentProblem: null,
       awaitingNext: false,
       completed: false,
+      answeredCurrent: false,
       questionResults: [],
+      questionConversations: [],
       latestScoredIndex: -1,
-      startedAt: new Date().toISOString()
+      startedAt: interviewSession.startedAt || new Date().toISOString()
     };
     interviewPreparing = false;
 
     appendInterviewMessage("coach", interviewLanguage === "zh"
-      ? `已生成 ${questions.length} 道题，题目已准备。`
-      : `${questions.length} questions are ready.`);
-    startInterviewPrepCountdown(5);
+      ? "设置完成。我会按这个配置开始第一题。"
+      : "Configuration is set. I will start with the first question.");
+    startInterviewPrepCountdown(2);
   } catch (error) {
     appendInterviewMessage("system", interviewLanguage === "zh"
       ? `准备模拟面试失败：${error.message || "请检查 LLM 代理是否启动。"}`
       : `Failed to prepare interview: ${error.message || "Check the LLM proxy."}`);
     interviewPreparing = false;
-    updateInterviewStatus();
+    updateInterviewStatus("onboarding");
   } finally {
-    setButtonBusy(els.startInterviewBtn, false);
+    persistInterviewSessionSnapshot();
   }
 }
 
-function buildFullRangeInterviewQuestions(count, type) {
-  const pool = makeInterviewProblemPool(type);
+function normalizeInterviewSessionConfig(raw = {}) {
+  const focusKey = interviewFocusDefs[raw.focusKey] ? raw.focusKey : "mixed";
+  const mode = interviewModeDefs[raw.mode] ? raw.mode : "practice";
+  const difficulty = interviewDifficultyDefs[raw.difficulty] ? raw.difficulty : "adaptive";
+  const persona = interviewPersonaDefs[raw.persona] ? raw.persona : "neutral";
+  const questionCount = Math.round(clampNumber(raw.questionCount || getInterviewQuestionCount(), 1, 12));
+  const durationMinutes = Math.round(clampNumber(raw.durationMinutes || 0, 0, 90));
+  const focus = interviewFocusDefs[focusKey] || interviewFocusDefs.mixed;
+  return {
+    language: raw.language === "en" ? "en" : "zh",
+    mode,
+    focusKey,
+    focusTags: [focusKey, ...(focus.categories || [])],
+    difficulty,
+    questionCount: durationMinutes ? 0 : questionCount,
+    durationMinutes,
+    persona,
+    ttsEnabled: raw.ttsEnabled !== false,
+    source: raw.source === "pdf" || getInterviewSource() === "pdf" ? "pdf" : "full"
+  };
+}
+
+function getInterviewTypeForConfig(config = {}) {
+  return interviewFocusDefs[config.focusKey]?.type || getInterviewType();
+}
+
+function getInterviewQuestionCountForConfig(config = {}) {
+  if (config.durationMinutes) return Math.round(clampNumber(Math.ceil(config.durationMinutes / 6), 3, 10));
+  return Math.round(clampNumber(config.questionCount || getInterviewQuestionCount(), 1, 12));
+}
+
+function getInterviewQuestionSecondsForConfig(config = {}, count = 1) {
+  if (config.durationMinutes) return Math.max(120, Math.round((config.durationMinutes * 60) / Math.max(1, count)));
+  return getInterviewQuestionSeconds();
+}
+
+function formatInterviewConfigSummary(config = {}) {
+  const useZh = interviewLanguage !== "en";
+  const focus = interviewFocusDefs[config.focusKey] || interviewFocusDefs.mixed;
+  const difficulty = interviewDifficultyDefs[config.difficulty] || interviewDifficultyDefs.adaptive;
+  const persona = interviewPersonaDefs[config.persona] || interviewPersonaDefs.neutral;
+  const mode = interviewModeDefs[config.mode] || interviewModeDefs.practice;
+  const scope = config.durationMinutes
+    ? (useZh ? `${config.durationMinutes} 分钟` : `${config.durationMinutes} minutes`)
+    : (useZh ? `${config.questionCount || getInterviewQuestionCount()} 题` : `${config.questionCount || getInterviewQuestionCount()} questions`);
+  return useZh
+    ? `本场设置：${mode.labelZh}，方向 ${focus.labelZh}，难度 ${difficulty.labelZh}，${scope}，风格 ${persona.labelZh}，${config.ttsEnabled ? "开启读题" : "关闭读题"}。`
+    : `Session setup: ${mode.labelEn}, focus ${focus.labelEn}, difficulty ${difficulty.labelEn}, ${scope}, ${persona.labelEn} style, ${config.ttsEnabled ? "read aloud on" : "text only"}.`;
+}
+
+function syncInterviewLanguageControls() {
+  document.querySelectorAll("[data-interview-lang]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.interviewLang === interviewLanguage);
+  });
+}
+
+function buildFullRangeInterviewQuestions(count, type, config = {}) {
+  const pool = makeInterviewProblemPool(type, config);
+  const difficultyPool = filterInterviewPoolByDifficulty(pool, config.difficulty);
   const selectedProblem = pool.find((problem) => problem.id === selectedInterviewProblemId);
   const sampled = sampleInterviewQuestions(
-    selectedProblem ? pool.filter((problem) => problem.id !== selectedProblem.id) : pool,
+    selectedProblem ? difficultyPool.filter((problem) => problem.id !== selectedProblem.id) : difficultyPool,
     selectedProblem ? Math.max(0, count - 1) : count
   );
   return (selectedProblem ? [selectedProblem, ...sampled] : sampled).map((problem) => normalizeProblem(problem));
+}
+
+function filterInterviewPoolByDifficulty(pool, difficulty = "") {
+  const values = interviewDifficultyDefs[difficulty]?.values || [];
+  if (!values.length) return pool;
+  const filtered = pool.filter((problem) => values.includes(String(problem.difficulty || "").trim()));
+  return filtered.length >= 2 ? filtered : pool;
 }
 
 async function buildPdfInterviewQuestions(count, type) {
@@ -9971,6 +10838,14 @@ function showInterviewQuestion(index) {
   interviewSession.awaitingNext = false;
   interviewSession.answeredCurrent = false;
   interviewSession.remainingSeconds = interviewSession.questionSeconds;
+  interviewSession.questionConversations = interviewSession.questionConversations || [];
+  interviewSession.questionConversations[index] = {
+    turns: [],
+    followupCount: 0,
+    maxFollowups: getInterviewMaxFollowups(problem),
+    interviewerSatisfied: false,
+    status: "answering"
+  };
   interviewPanelExpandedIndex = index;
   if (els.interviewAnswer) els.interviewAnswer.value = "";
   if (els.interviewAnswerFile) els.interviewAnswerFile.value = "";
@@ -9978,9 +10853,15 @@ function showInterviewQuestion(index) {
   autoSizeInterviewAnswer();
 
   interviewSession.currentQuestionMessageId = appendInterviewMessage("system", formatInterviewQuestion(problem, index), { typewriter: false });
-  appendInterviewMessage("coach", interviewLanguage === "zh"
-    ? "请开始作答。可以先讲思路，再给结论。需要提示时点 Hint。"
-    : "Start your answer. Explain your approach first, then give the conclusion. Use Hint if needed.");
+  const opening = isInterviewLiveMode()
+    ? (interviewLanguage === "zh"
+      ? "请开始作答。你可以先讲思路，我会根据你的回答继续追问。"
+      : "Start your answer. Walk me through your thinking; I will ask follow-ups from there.")
+    : (interviewLanguage === "zh"
+      ? "请开始作答。可以先讲思路，再给结论。需要提示时点 Hint。"
+      : "Start your answer. Explain your approach first, then give the conclusion. Use Hint if needed.");
+  appendInterviewMessage("coach", opening);
+  speakInterviewText(getInterviewQuestionSpeechText(problem));
   updateInterviewStatus("active");
   setInterviewTimer(interviewSession.remainingSeconds);
   interviewQuestionTimer = window.setInterval(() => {
@@ -9990,12 +10871,13 @@ function showInterviewQuestion(index) {
     if (interviewSession.remainingSeconds <= 0) {
       clearInterviewQuestionTimer();
       appendInterviewMessage("coach", interviewLanguage === "zh"
-        ? "时间到。你仍然可以提交当前回答，我会按已有内容评测。"
-        : "Time is up. You can still submit the current answer for evaluation.");
+        ? (isInterviewLiveMode() ? "时间到。请用一句话收尾，或者直接提交已有回答。" : "时间到。你仍然可以提交当前回答，我会按已有内容评测。")
+        : (isInterviewLiveMode() ? "Time is up. Please wrap up in one sentence or submit what you have." : "Time is up. You can still submit the current answer for evaluation."));
       updateInterviewStatus("timeup");
     }
   }, 1000);
   renderInterviewQuestionPanel();
+  persistInterviewSessionSnapshot();
   els.interviewAnswer?.focus();
 }
 
@@ -10041,6 +10923,18 @@ function getProblemMediaMarkdown(problem, scope = "all") {
 }
 
 async function submitInterviewAnswer() {
+  if (isInterviewOnboarding()) {
+    const value = els.interviewAnswer?.value.trim() || "";
+    if (!value) {
+      els.interviewAnswer?.focus();
+      return;
+    }
+    els.interviewAnswer.value = "";
+    autoSizeInterviewAnswer();
+    await handleOnboardingAnswer(value);
+    return;
+  }
+
   const problem = getSelectedProblem();
   if (!interviewSession || interviewSession.currentIndex < 0 || !problem) {
     appendInterviewMessage("system", interviewLanguage === "zh" ? "请先点击开始模拟。" : "Start the mock interview first.");
@@ -10053,6 +10947,15 @@ async function submitInterviewAnswer() {
     return;
   }
 
+  if (isInterviewLiveMode()) {
+    await submitLiveInterviewTurn(problem, answerPayload);
+    return;
+  }
+
+  await submitPracticeInterviewAnswer(problem, answerPayload);
+}
+
+async function submitPracticeInterviewAnswer(problem, answerPayload) {
   clearInterviewQuestionTimer();
   const displayAnswer = [
     answerPayload.text || "",
@@ -10079,6 +10982,7 @@ async function submitInterviewAnswer() {
 
   recordInterviewPractice(problem, feedback);
   interviewSession.answeredCurrent = true;
+  persistInterviewSessionSnapshot();
   renderInterviewQuestionPanel();
   const isLast = interviewSession.currentIndex >= interviewSession.questions.length - 1;
   if (isLast) {
@@ -10086,6 +10990,85 @@ async function submitInterviewAnswer() {
   } else {
     interviewSession.awaitingNext = true;
     updateInterviewStatus("awaitingNext");
+  }
+}
+
+async function submitLiveInterviewTurn(problem, answerPayload) {
+  if (interviewSession.submitting) return;
+  interviewSession.submitting = true;
+  const conversation = getCurrentInterviewConversation();
+  conversation.status = "followup";
+  const displayAnswer = [
+    answerPayload.text || "",
+    answerPayload.attachment ? `[${interviewLanguage === "zh" ? "上传附件" : "Attachment"}: ${answerPayload.attachment.name}]` : ""
+  ].filter(Boolean).join("\n");
+  appendInterviewMessage("user", displayAnswer, {
+    typewriter: false,
+    attachments: answerPayload.attachment ? [answerPayload.attachment] : []
+  });
+  conversation.turns.push({ role: "user", text: answerPayload.text || "", attachment: summarizeAttachment(answerPayload.attachment) });
+  els.interviewAnswer.value = "";
+  if (els.interviewAnswerFile) els.interviewAnswerFile.value = "";
+  updateInterviewAnswerFileMeta();
+  autoSizeInterviewAnswer();
+  updateInterviewActionPanel();
+  const thinkingId = appendInterviewMessage("coach", "", { thinking: true });
+
+  try {
+    const reply = await requestInterviewConverse(problem, answerPayload, conversation);
+    const normalized = normalizeInterviewConverseReply(reply, problem, conversation);
+    conversation.turns.push({ role: "coach", text: normalized.message });
+    conversation.coverage = normalized.coverage;
+    conversation.missing = normalized.missing;
+    conversation.runningAssessment = normalized.runningAssessment;
+    conversation.followupCount += normalized.action === "followup" ? 1 : 0;
+    const shouldWrap = normalized.action === "wrap" || (normalized.action === "followup" && conversation.followupCount > conversation.maxFollowups);
+    conversation.status = shouldWrap ? "wrapped" : "followup";
+    conversation.interviewerSatisfied = shouldWrap;
+    updateInterviewMessage(thinkingId, normalized.message, { typewriter: true });
+    speakInterviewText(normalized.message);
+
+    if (shouldWrap) {
+      clearInterviewQuestionTimer();
+      interviewSession.answeredCurrent = true;
+      recordLiveInterviewQuestionResult(problem, conversation);
+      const isLast = interviewSession.currentIndex >= interviewSession.questions.length - 1;
+      if (isLast) {
+        completeInterview();
+      } else {
+        interviewSession.awaitingNext = true;
+        updateInterviewStatus("awaitingNext");
+      }
+    } else {
+      updateInterviewStatus("active");
+    }
+  } catch {
+    const fallback = normalizeInterviewConverseReply(localInterviewConverse(problem, conversation), problem, conversation);
+    conversation.turns.push({ role: "coach", text: fallback.message });
+    conversation.followupCount += fallback.action === "followup" ? 1 : 0;
+    conversation.runningAssessment = fallback.runningAssessment;
+    conversation.missing = fallback.missing;
+    const shouldWrap = fallback.action === "wrap" || (fallback.action === "followup" && conversation.followupCount > conversation.maxFollowups);
+    conversation.status = shouldWrap ? "wrapped" : "followup";
+    updateInterviewMessage(thinkingId, fallback.message, { typewriter: true });
+    speakInterviewText(fallback.message);
+    if (shouldWrap) {
+      clearInterviewQuestionTimer();
+      interviewSession.answeredCurrent = true;
+      recordLiveInterviewQuestionResult(problem, conversation);
+      const isLast = interviewSession.currentIndex >= interviewSession.questions.length - 1;
+      if (isLast) {
+        completeInterview();
+      } else {
+        interviewSession.awaitingNext = true;
+        updateInterviewStatus("awaitingNext");
+      }
+    }
+  } finally {
+    interviewSession.submitting = false;
+    renderInterviewQuestionPanel();
+    updateInterviewActionPanel();
+    persistInterviewSessionSnapshot();
   }
 }
 
@@ -10170,7 +11153,182 @@ async function requestInterviewFeedback(problem, answer, attachment = null) {
 
   if (!response.ok) throw new Error(`LLM endpoint ${response.status}`);
   const data = await response.json();
-  return data.reply || data.text || localInterviewFeedback(problem, answer);
+  return data.feedback || data.reply || data.text || data || localInterviewFeedback(problem, answer);
+}
+
+async function requestInterviewConverse(problem, answerPayload, conversation) {
+  const endpoint = (els.llmEndpointInput.value.trim() || llmConfig.endpoint || "").trim();
+  if (!endpoint) throw new Error("Missing endpoint");
+  llmConfig = {
+    endpoint,
+    model: normalizeLlmModel(els.llmModelInput.value || llmConfig.model)
+  };
+  saveLlmConfigToStorage();
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: getLlmRequestHeaders(),
+    body: JSON.stringify({
+      task: "converse",
+      model: llmConfig.model,
+      language: interviewLanguage,
+      mode: interviewSession?.mode || "live",
+      sessionConfig: interviewSession?.sessionConfig || {},
+      interviewType: interviewSession?.type || getInterviewType(),
+      questionIndex: interviewSession?.currentIndex || 0,
+      questionCount: interviewSession?.questions?.length || 1,
+      problem,
+      groundTruth: {
+        answer: problem.answer || "",
+        explanation: problem.explanation || ""
+      },
+      turns: conversation.turns || [],
+      followupCount: conversation.followupCount || 0,
+      maxFollowups: conversation.maxFollowups || getInterviewMaxFollowups(problem),
+      timeRemaining: interviewSession?.remainingSeconds || 0,
+      persona: interviewPersonaDefs[interviewSession?.sessionConfig?.persona || "neutral"]?.prompt || "",
+      latestAnswer: answerPayload.text || "",
+      answerAttachment: answerPayload.attachment || null
+    })
+  });
+
+  if (!response.ok) throw new Error(`LLM endpoint ${response.status}`);
+  const data = await response.json();
+  return data.reply || data.conversation || data;
+}
+
+function getCurrentInterviewConversation() {
+  const index = Math.max(0, interviewSession?.currentIndex || 0);
+  interviewSession.questionConversations = interviewSession.questionConversations || [];
+  if (!interviewSession.questionConversations[index]) {
+    interviewSession.questionConversations[index] = {
+      turns: [],
+      followupCount: 0,
+      maxFollowups: getInterviewMaxFollowups(getSelectedProblem()),
+      interviewerSatisfied: false,
+      status: "answering"
+    };
+  }
+  return interviewSession.questionConversations[index];
+}
+
+function getInterviewMaxFollowups(problem = {}) {
+  const category = normalizeCategory(problem.category);
+  const difficulty = String(problem.difficulty || "").toLowerCase();
+  const configDifficulty = interviewSession?.sessionConfig?.difficulty || "";
+  if (configDifficulty === "easy" || difficulty === "easy") return 2;
+  if (configDifficulty === "hard" || difficulty === "hard") return category === "mentalMath" ? 2 : 4;
+  return category === "market" || category === "statistics" || category === "machineLearning" ? 3 : 2;
+}
+
+function normalizeInterviewConverseReply(input, problem, conversation) {
+  const fallback = localInterviewConverse(problem, conversation);
+  const source = typeof input === "string" ? parseLooseInterviewConverseText(input) : (input || {});
+  const action = source.action === "wrap" || source.action === "followup" ? source.action : fallback.action;
+  const message = String(source.message || source.reply || source.text || fallback.message || "").trim();
+  return {
+    action,
+    message,
+    coverage: Array.isArray(source.coverage) ? source.coverage.map(String).slice(0, 6) : fallback.coverage,
+    missing: Array.isArray(source.missing) ? source.missing.map(String).slice(0, 6) : fallback.missing,
+    runningAssessment: String(source.runningAssessment || source.assessment || fallback.runningAssessment || "").trim()
+  };
+}
+
+function parseLooseInterviewConverseText(text) {
+  const raw = String(text || "").trim();
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {
+      action: /wrap|收尾|下一题|move on/i.test(raw) ? "wrap" : "followup",
+      message: raw
+    };
+  }
+}
+
+function localInterviewConverse(problem, conversation = {}) {
+  const missing = getLocalInterviewMissingSignals(problem, (conversation.turns || []).map((turn) => turn.text).join(" "));
+  const shouldWrap = (conversation.followupCount || 0) >= Math.max(1, (conversation.maxFollowups || 2) - 1);
+  if (shouldWrap) {
+    return {
+      action: "wrap",
+      message: interviewLanguage === "zh"
+        ? "好的，这题先到这里。我们进入下一题。"
+        : "Good, we will stop this question here and move on.",
+      coverage: [],
+      missing,
+      runningAssessment: missing.length
+        ? (interviewLanguage === "zh" ? `仍缺少：${missing.join("、")}` : `Still missing: ${missing.join(", ")}`)
+        : (interviewLanguage === "zh" ? "回答已覆盖主要方向。" : "The answer covered the main direction.")
+    };
+  }
+  if (isBehavioralLikeProblem(problem)) {
+    const followups = interviewLanguage === "zh"
+      ? [
+        "能给一个具体例子吗？请说清楚当时背景、你的动作和结果。",
+        "这个结果怎么衡量？如果没有数字，有什么证据说明它真的有影响？",
+        "复盘来看，如果重来一次，你会改变哪一步？"
+      ]
+      : [
+        "Can you give one concrete example with context, your action, and the result?",
+        "How did you measure the outcome? If there is no metric, what evidence shows impact?",
+        "Looking back, what would you change if you did it again?"
+      ];
+    return {
+      action: "followup",
+      message: followups[Math.min(followups.length - 1, conversation.followupCount || 0)],
+      coverage: [],
+      missing,
+      runningAssessment: interviewLanguage === "zh" ? "需要更具体的行为证据。" : "Needs more specific behavioral evidence."
+    };
+  }
+  const category = normalizeCategory(problem.category);
+  const followups = {
+    leetcode: interviewLanguage === "zh" ? "请把时间复杂度、空间复杂度和关键数据结构说清楚。" : "Clarify the time complexity, space complexity, and core data structure.",
+    probabilityExpectation: interviewLanguage === "zh" ? "请明确随机变量和条件概率结构，再继续推导。" : "Define the random variables and conditioning structure, then continue.",
+    statistics: interviewLanguage === "zh" ? "请说明样本、估计量或检验假设，以及你如何验证结论。" : "State the sample, estimator or hypothesis, and how you would validate the conclusion.",
+    machineLearning: interviewLanguage === "zh" ? "请补充特征、验证方式和如何避免 leakage。" : "Add features, validation, and how you would avoid leakage.",
+    deepLearning: interviewLanguage === "zh" ? "请说明输入输出、loss 和训练信号。" : "Clarify inputs, outputs, loss, and training signal.",
+    market: interviewLanguage === "zh" ? "请把 fair value、spread 和 inventory risk 的关系讲清楚。" : "Clarify the relationship between fair value, spread, and inventory risk.",
+    option: interviewLanguage === "zh" ? "请补充 Greeks、波动率或对冲频率会如何影响答案。" : "Add how Greeks, volatility, or hedge frequency affects the answer.",
+    mentalMath: interviewLanguage === "zh" ? "请用更快的数量级估算方式重算一遍。" : "Redo it with a faster order-of-magnitude estimate."
+  };
+  return {
+    action: "followup",
+    message: followups[category] || (interviewLanguage === "zh" ? "请更具体一点：你的关键假设是什么？" : "Be more specific: what is your key assumption?"),
+    coverage: [],
+    missing,
+    runningAssessment: interviewLanguage === "zh" ? "需要继续追问。" : "Needs another follow-up."
+  };
+}
+
+function recordLiveInterviewQuestionResult(problem, conversation = {}) {
+  const currentIndex = interviewSession?.currentIndex ?? -1;
+  if (currentIndex < 0) return;
+  const answer = (conversation.turns || []).filter((turn) => turn.role === "user").map((turn) => turn.text).join(" ");
+  const structured = localStructuredInterviewFeedback(problem, answer);
+  interviewSession.questionResults = interviewSession.questionResults || [];
+  interviewSession.questionResults[currentIndex] = {
+    score: structured.overall,
+    evaluation: conversation.runningAssessment || structured.summary,
+    dimensions: structured.dimensions,
+    missing: conversation.missing || structured.missing,
+    nextStep: structured.nextStep,
+    status: conversation.status || "wrapped",
+    liveHidden: true,
+    scoredAt: new Date().toISOString(),
+    fresh: false
+  };
+}
+
+function summarizeAttachment(attachment) {
+  if (!attachment) return null;
+  return {
+    name: attachment.name || "",
+    type: attachment.type || "",
+    size: attachment.size || 0
+  };
 }
 
 function getSerializableInterviewTranscript() {
@@ -10213,6 +11371,10 @@ async function requestPdfQuestionGeneration(filePayload, count, type) {
 }
 
 async function requestInterviewHint() {
+  if (isInterviewLiveMode() || isInterviewOnboarding()) {
+    appendInterviewMessage("system", interviewLanguage === "zh" ? "真实面试模式中不会提供 Hint。" : "Hints are not available during live mock mode.");
+    return;
+  }
   const problem = getSelectedProblem();
   if (!problem) return;
   const thinkingId = appendInterviewMessage("coach", interviewLanguage === "zh" ? "生成 hint 中..." : "Generating hint...");
@@ -10245,25 +11407,53 @@ async function requestInterviewHintFromApi(problem, partialAnswer) {
   return data.hint || data.reply || data.text || localInterviewHint(problem);
 }
 
-function localInterviewFeedback(problem, answer) {
+function localStructuredInterviewFeedback(problem, answer) {
   const missing = getLocalInterviewMissingSignals(problem, answer);
   const score = scoreLocalInterviewAnswer(answer, missing.length);
   const evaluation = getLocalInterviewEvaluation(answer, missing);
   const reference = getInterviewReferenceSummary(problem);
   const nextStep = missing.length
-    ? (interviewLanguage === "zh"
-      ? `下一步：补齐 ${missing.join("、")}，再用 60 秒重讲一遍。`
-      : `Next: add ${missing.join(", ")} and restate the answer in 60 seconds.`)
-    : (interviewLanguage === "zh"
-      ? "下一步：把最终结论提前，并补一句复杂度、风险或边界条件。"
-      : "Next: lead with the final conclusion and add one complexity, risk, or edge-case line.");
-  return interviewLanguage === "zh"
-    ? `得分：${score}/100\n\n评价：${evaluation}\n\n参考方向：${reference}\n\n${nextStep}`
-    : `Score: ${score}/100\n\nEvaluation: ${evaluation}\n\nReference direction: ${reference}\n\n${nextStep}`;
+    ? [interviewLanguage === "zh" ? `补齐 ${missing.join("、")}，再用 60 秒重讲一遍。` : `Add ${missing.join(", ")} and restate the answer in 60 seconds.`]
+    : [interviewLanguage === "zh" ? "把最终结论提前，并补一句复杂度、风险或边界条件。" : "Lead with the final conclusion and add one complexity, risk, or edge-case line."];
+  const dimensionBase = Math.round(clampNumber(score / 20, 1, 5));
+  return {
+    overall: score,
+    summary: evaluation,
+    dimensions: {
+      correctness: { score: clampNumber(dimensionBase - (missing.length ? 1 : 0), 1, 5), comment: missing.length ? missing[0] : (interviewLanguage === "zh" ? "核心方向覆盖。" : "Core direction covered.") },
+      reasoning: { score: dimensionBase, comment: interviewLanguage === "zh" ? "推理需要显式写出关键步骤。" : "Make the key steps explicit." },
+      communication: { score: Math.min(5, dimensionBase + 1), comment: interviewLanguage === "zh" ? "先结论后展开会更像面试答案。" : "Lead with the conclusion, then expand." },
+      speed: { score: dimensionBase, comment: interviewLanguage === "zh" ? "保持 60 秒版本。" : "Keep a 60-second version ready." },
+      readiness: { score: dimensionBase, comment: interviewLanguage === "zh" ? "可进入下一轮，但仍需补齐要点。" : "Usable with some missing details." }
+    },
+    missing,
+    interviewerConcern: missing.length
+      ? (interviewLanguage === "zh" ? `真实面试中会担心：${missing.join("、")}没有说清。` : `A real interviewer may worry that ${missing.join(", ")} was not clear.`)
+      : (interviewLanguage === "zh" ? "真实面试中主要风险是结论不够前置。" : "The main interview risk is not leading with the conclusion."),
+    referenceDelta: reference,
+    nextStep
+  };
 }
 
-function normalizeInterviewFeedback(text, problem, answer) {
-  const raw = normalizeRichTextContent(text).trim();
+function localInterviewFeedback(problem, answer) {
+  return formatStructuredInterviewFeedback(localStructuredInterviewFeedback(problem, answer));
+}
+
+function normalizeInterviewFeedback(input, problem, answer) {
+  if (input && typeof input === "object") {
+    const structured = normalizeStructuredInterviewFeedback(input.feedback || input, problem, answer);
+    return {
+      score: structured.overall,
+      evaluation: structured.summary || parseInterviewFeedbackEvaluation(formatStructuredInterviewFeedback(structured)),
+      dimensions: structured.dimensions,
+      missing: structured.missing,
+      interviewerConcern: structured.interviewerConcern,
+      referenceDelta: structured.referenceDelta,
+      nextStep: structured.nextStep,
+      text: formatStructuredInterviewFeedback(structured)
+    };
+  }
+  const raw = normalizeRichTextContent(input).trim();
   const local = localInterviewFeedback(problem, answer);
   const score = parseInterviewFeedbackScore(raw) ?? parseInterviewFeedbackScore(local) ?? 0;
   const evaluation = parseInterviewFeedbackEvaluation(raw) || parseInterviewFeedbackEvaluation(local);
@@ -10276,6 +11466,88 @@ function normalizeInterviewFeedback(text, problem, answer) {
       ? displayText
       : (interviewLanguage === "zh" ? `得分：${score}/100\n\n${displayText}` : `Score: ${score}/100\n\n${displayText}`)
   };
+}
+
+function normalizeStructuredInterviewFeedback(input, problem, answer) {
+  const local = localStructuredInterviewFeedback(problem, answer);
+  const source = input && typeof input === "object" ? input : {};
+  const dimensions = source.dimensions && typeof source.dimensions === "object" ? source.dimensions : local.dimensions;
+  return {
+    overall: Math.round(clampNumber(source.overall ?? source.score ?? local.overall, 0, 100)),
+    summary: String(source.summary || source.evaluation || local.summary || "").trim(),
+    dimensions: normalizeInterviewDimensions(dimensions, local.dimensions),
+    missing: Array.isArray(source.missing) ? source.missing.map(String).filter(Boolean).slice(0, 6) : local.missing,
+    interviewerConcern: String(source.interviewerConcern || source.concern || local.interviewerConcern || "").trim(),
+    referenceDelta: String(source.referenceDelta || source.reference || local.referenceDelta || "").trim(),
+    nextStep: Array.isArray(source.nextStep) ? source.nextStep.map(String).filter(Boolean).slice(0, 4) : local.nextStep
+  };
+}
+
+function normalizeInterviewDimensions(dimensions, fallback = {}) {
+  const keys = ["correctness", "reasoning", "communication", "speed", "readiness"];
+  return Object.fromEntries(keys.map((key) => {
+    const item = dimensions?.[key] || fallback[key] || {};
+    return [key, {
+      score: Math.round(clampNumber(item.score ?? item.value ?? 3, 0, 5)),
+      comment: String(item.comment || item.note || "").trim()
+    }];
+  }));
+}
+
+function formatStructuredInterviewFeedback(feedback = {}) {
+  const useZh = interviewLanguage !== "en";
+  const labels = {
+    correctness: useZh ? "正确性" : "Correctness",
+    reasoning: useZh ? "推理" : "Reasoning",
+    communication: useZh ? "表达" : "Communication",
+    speed: useZh ? "速度" : "Speed",
+    readiness: useZh ? "面试可用度" : "Readiness"
+  };
+  const dimensionLines = Object.entries(feedback.dimensions || {})
+    .map(([key, item]) => `- ${labels[key] || key}: ${Math.round(clampNumber(item.score, 0, 5))}/5${item.comment ? ` - ${item.comment}` : ""}`);
+  const missing = Array.isArray(feedback.missing) && feedback.missing.length
+    ? feedback.missing.map((item) => `- ${item}`).join("\n")
+    : (useZh ? "- 暂无明显缺失。" : "- No major missing piece.");
+  const nextStep = Array.isArray(feedback.nextStep) && feedback.nextStep.length
+    ? feedback.nextStep.map((item) => `- ${item}`).join("\n")
+    : (useZh ? "- 用 60 秒重新组织答案。" : "- Reframe the answer in 60 seconds.");
+  return interviewLanguage === "zh"
+    ? [
+      `得分：${Math.round(clampNumber(feedback.overall, 0, 100))}/100`,
+      "",
+      `评价：${feedback.summary || "回答已记录。"}`,
+      "",
+      "维度分：",
+      ...dimensionLines,
+      "",
+      "缺失要点：",
+      missing,
+      "",
+      `真实面试风险：${feedback.interviewerConcern || "需要更快给出结构化结论。"}`,
+      "",
+      `参考差距：${feedback.referenceDelta || "对照参考思路补齐关键步骤即可。"}`,
+      "",
+      "下一步：",
+      nextStep
+    ].join("\n")
+    : [
+      `Score: ${Math.round(clampNumber(feedback.overall, 0, 100))}/100`,
+      "",
+      `Evaluation: ${feedback.summary || "Answer recorded."}`,
+      "",
+      "Dimensions:",
+      ...dimensionLines,
+      "",
+      "Missing pieces:",
+      missing,
+      "",
+      `Interview risk: ${feedback.interviewerConcern || "The answer needs a faster structured conclusion."}`,
+      "",
+      `Reference delta: ${feedback.referenceDelta || "Compare against the reference approach and add the key steps."}`,
+      "",
+      "Next step:",
+      nextStep
+    ].join("\n");
 }
 
 function parseInterviewFeedbackScore(text) {
@@ -10304,6 +11576,15 @@ function stripInterviewFeedbackLabel(text) {
 
 function getLocalInterviewMissingSignals(problem, answer) {
   const missing = [];
+  if (isBehavioralLikeProblem(problem)) {
+    if (!/(situation|task|action|result|star|背景|任务|行动|结果|我负责|我做|反思|learn|impact|影响)/i.test(answer)) {
+      missing.push(interviewLanguage === "zh" ? "STAR 结构和个人责任" : "STAR structure and personal ownership");
+    }
+    if (!/(\d+|%|percent|baseline|metric|指标|提升|降低|节省|用户|收益|准确率|延迟|成本)/i.test(answer)) {
+      missing.push(interviewLanguage === "zh" ? "具体证据或可量化结果" : "specific evidence or measurable result");
+    }
+    return missing;
+  }
   const category = normalizeCategory(problem.category);
   if (category === "leetcode" && !/(o\(|time|space|复杂度|哈希|hash|dp|binary|二分)/i.test(answer)) {
     missing.push(interviewLanguage === "zh" ? "复杂度或关键数据结构" : "complexity or core data structure");
@@ -10327,6 +11608,13 @@ function getLocalInterviewMissingSignals(problem, answer) {
     missing.push(interviewLanguage === "zh" ? "Greeks、波动率或对冲逻辑" : "Greeks, volatility, or hedging logic");
   }
   return missing;
+}
+
+function isBehavioralLikeProblem(problem = {}) {
+  const tags = Array.isArray(problem.tags) ? problem.tags.join(" ") : String(problem.tags || "");
+  return interviewSession?.type === "behavioral"
+    || /behavioral|resume|research|deep-dive|STAR/i.test(tags)
+    || /^behavioral-|^resume-|^research-/i.test(String(problem.id || ""));
 }
 
 function scoreLocalInterviewAnswer(answer, missingCount) {
@@ -10551,6 +11839,9 @@ function recordInterviewPractice(problem, feedback = {}) {
     interviewSession.questionResults[currentIndex] = {
       score,
       evaluation,
+      dimensions: feedback.dimensions || null,
+      missing: feedback.missing || [],
+      nextStep: feedback.nextStep || [],
       scoredAt: practicedAt,
       fresh: score != null
     };
@@ -10575,10 +11866,122 @@ function completeInterview() {
   interviewSession.completed = true;
   interviewSession.awaitingNext = false;
   updateInterviewStatus("completed");
-  appendInterviewMessage("coach", interviewLanguage === "zh"
-    ? "模拟面试结束。建议复盘每题：题意、核心思路、遗漏点、60 秒答案。"
-    : "Mock interview complete. Review each question: prompt, core idea, missing points, and 60-second answer.");
+  appendInterviewMessage("coach", buildInterviewCompletionReport(), { variant: "report" });
+  launchInterviewConfetti();
+  sessionStorage.removeItem(INTERVIEW_SESSION_STORAGE_KEY);
   renderInterviewQuestionPanel();
+}
+
+function buildInterviewCompletionReport() {
+  const useZh = interviewLanguage !== "en";
+  const results = interviewSession?.questionResults || [];
+  const scored = results.filter((item) => Number.isFinite(Number(item?.score)));
+  const average = scored.length
+    ? Math.round(scored.reduce((sum, item) => sum + Number(item.score || 0), 0) / scored.length)
+    : null;
+  const dimensionSummary = summarizeInterviewDimensions(scored);
+  const strongest = dimensionSummary[0];
+  const weakest = dimensionSummary[dimensionSummary.length - 1];
+  const tags = getInterviewPerformanceTags(average, strongest, weakest);
+  const questionLines = (interviewSession?.questions || []).map((problem, index) => {
+    const result = results[index] || {};
+    const title = useZh ? problem.titleZh || problem.titleEn : problem.titleEn || problem.titleZh;
+    const scoreText = Number.isFinite(Number(result.score)) ? `${Math.round(result.score)}/100` : (useZh ? "未评分" : "Not scored");
+    const note = result.evaluation || (useZh ? "已记录回答。" : "Answer recorded.");
+    return `- Q${index + 1}: ${title || (useZh ? "未命名题目" : "Untitled")} - ${scoreText} - ${note}`;
+  });
+  const nextSteps = getInterviewNextSteps(average, weakest);
+  return useZh
+    ? [
+      "### 你完成了一场模拟面试",
+      average == null ? "总分：样本不足" : `总分：${average}/100`,
+      tags.length ? `表现标签：${tags.join("、")}` : "",
+      strongest ? `最强维度：${strongest.label} ${strongest.score}/5` : "",
+      weakest ? `最弱维度：${weakest.label} ${weakest.score}/5` : "",
+      "",
+      "逐题复盘：",
+      ...questionLines,
+      "",
+      "下一步训练：",
+      ...nextSteps.map((item) => `- ${item}`)
+    ].filter(Boolean).join("\n")
+    : [
+      "### Interview completed",
+      average == null ? "Overall: not enough scored answers" : `Overall: ${average}/100`,
+      tags.length ? `Tags: ${tags.join(", ")}` : "",
+      strongest ? `Strongest dimension: ${strongest.label} ${strongest.score}/5` : "",
+      weakest ? `Weakest dimension: ${weakest.label} ${weakest.score}/5` : "",
+      "",
+      "Question review:",
+      ...questionLines,
+      "",
+      "Next training:",
+      ...nextSteps.map((item) => `- ${item}`)
+    ].filter(Boolean).join("\n");
+}
+
+function summarizeInterviewDimensions(results = []) {
+  const labels = {
+    correctness: interviewLanguage === "zh" ? "正确性" : "Correctness",
+    reasoning: interviewLanguage === "zh" ? "推理" : "Reasoning",
+    communication: interviewLanguage === "zh" ? "表达" : "Communication",
+    speed: interviewLanguage === "zh" ? "速度" : "Speed",
+    readiness: interviewLanguage === "zh" ? "面试可用度" : "Readiness"
+  };
+  return Object.keys(labels)
+    .map((key) => {
+      const values = results.map((item) => Number(item?.dimensions?.[key]?.score)).filter(Number.isFinite);
+      const score = values.length ? Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10 : 0;
+      return { key, label: labels[key], score };
+    })
+    .sort((a, b) => b.score - a.score);
+}
+
+function getInterviewPerformanceTags(average, strongest, weakest) {
+  const useZh = interviewLanguage !== "en";
+  const tags = [];
+  if (average != null && average >= 82) tags.push(useZh ? "面试可用" : "Interview-ready");
+  if (average != null && average < 65) tags.push(useZh ? "需要专项复盘" : "Needs targeted review");
+  if (strongest?.key === "reasoning") tags.push(useZh ? "推理较强" : "Strong reasoning");
+  if (strongest?.key === "communication") tags.push(useZh ? "表达清楚" : "Clear communication");
+  if (weakest?.key === "speed") tags.push(useZh ? "速度待练" : "Needs speed practice");
+  if (weakest?.key === "correctness") tags.push(useZh ? "正确性优先" : "Correctness first");
+  return [...new Set(tags)].slice(0, 4);
+}
+
+function getInterviewNextSteps(average, weakest) {
+  const useZh = interviewLanguage !== "en";
+  if (!weakest) {
+    return [useZh ? "选择 3 题同方向训练，保留 60 秒口头版答案。" : "Run 3 same-focus questions and keep a 60-second spoken answer."];
+  }
+  const map = {
+    correctness: useZh ? "先重做低分题，补齐标准解法中的关键变量和边界条件。" : "Redo low-score questions and add the key variables and edge cases from the reference.",
+    reasoning: useZh ? "每题先写三步推理骨架，再开口作答。" : "Write a three-step reasoning skeleton before speaking.",
+    communication: useZh ? "练习先给结论，再按假设、过程、检查展开。" : "Practice conclusion first, then assumptions, process, and checks.",
+    speed: useZh ? "把同类题做成 90 秒限时复述。" : "Turn similar questions into 90-second timed explanations.",
+    readiness: useZh ? "用 live 模式重开一场，重点练追问下保持结构。" : "Restart in live mode and practice staying structured under follow-ups."
+  };
+  const primary = map[weakest.key] || map.reasoning;
+  const secondary = average != null && average < 70
+    ? (useZh ? "下一场建议降一档难度，把完整表达先稳定下来。" : "For the next session, lower difficulty once and stabilize complete answers.")
+    : (useZh ? "下一场可以保持难度，增加做市或简历深挖追问。" : "Next session can keep difficulty and add market-making or resume follow-ups.");
+  return [primary, secondary];
+}
+
+function launchInterviewConfetti() {
+  if (!els.interviewTranscript) return;
+  const burst = document.createElement("div");
+  burst.className = "interview-confetti";
+  for (let index = 0; index < 34; index += 1) {
+    const piece = document.createElement("span");
+    piece.style.setProperty("--x", `${Math.round(Math.random() * 100)}%`);
+    piece.style.setProperty("--delay", `${Math.round(Math.random() * 360)}ms`);
+    piece.style.setProperty("--spin", `${Math.round(120 + Math.random() * 420)}deg`);
+    burst.appendChild(piece);
+  }
+  els.interviewTranscript.appendChild(burst);
+  els.interviewTranscript.scrollTop = els.interviewTranscript.scrollHeight;
+  window.setTimeout(() => burst.remove(), 2200);
 }
 
 function clearInterviewTimers() {
@@ -10600,6 +12003,82 @@ function clearInterviewTypingTimers() {
   interviewTypingTimers.clear();
 }
 
+function persistInterviewSessionSnapshot() {
+  if (!interviewSession || interviewSession.completed) {
+    sessionStorage.removeItem(INTERVIEW_SESSION_STORAGE_KEY);
+    return;
+  }
+  try {
+    const snapshot = {
+      interviewLanguage,
+      interviewPanelExpandedIndex,
+      session: {
+        ...interviewSession,
+        currentProblem: null,
+        submitting: false
+      },
+      messages: interviewMessages
+        .filter((message) => !message.thinking)
+        .map((message) => ({
+          id: message.id,
+          role: message.role,
+          text: message.text,
+          displayText: message.displayText || message.text,
+          typing: false,
+          thinking: false,
+          actions: message.actions || [],
+          actionStep: message.actionStep || "",
+          variant: message.variant || "",
+          attachments: (message.attachments || []).map(summarizeAttachment).filter(Boolean)
+        }))
+    };
+    sessionStorage.setItem(INTERVIEW_SESSION_STORAGE_KEY, JSON.stringify(snapshot));
+  } catch {
+    sessionStorage.removeItem(INTERVIEW_SESSION_STORAGE_KEY);
+  }
+}
+
+function restoreInterviewSessionSnapshot() {
+  interviewSnapshotRestored = true;
+  const raw = sessionStorage.getItem(INTERVIEW_SESSION_STORAGE_KEY);
+  if (!raw || interviewSession) return;
+  try {
+    const snapshot = JSON.parse(raw);
+    if (!snapshot?.session || snapshot.session.completed) {
+      sessionStorage.removeItem(INTERVIEW_SESSION_STORAGE_KEY);
+      return;
+    }
+    interviewLanguage = snapshot.interviewLanguage === "en" ? "en" : "zh";
+    syncInterviewLanguageControls();
+    interviewPanelExpandedIndex = Number.isFinite(Number(snapshot.interviewPanelExpandedIndex)) ? Number(snapshot.interviewPanelExpandedIndex) : 0;
+    interviewSession = snapshot.session;
+    interviewSession.currentProblem = interviewSession.currentIndex >= 0 ? interviewSession.questions?.[interviewSession.currentIndex] || null : null;
+    interviewMessages = Array.isArray(snapshot.messages) ? snapshot.messages : [];
+    resumeInterviewQuestionTimer();
+  } catch {
+    sessionStorage.removeItem(INTERVIEW_SESSION_STORAGE_KEY);
+  }
+}
+
+function resumeInterviewQuestionTimer() {
+  if (!interviewSession || interviewSession.phase !== "running" || interviewSession.completed || interviewSession.awaitingNext) return;
+  if (interviewSession.currentIndex < 0 || interviewSession.remainingSeconds <= 0) return;
+  clearInterviewQuestionTimer();
+  setInterviewTimer(interviewSession.remainingSeconds);
+  interviewQuestionTimer = window.setInterval(() => {
+    if (!interviewSession || interviewSession.completed) return;
+    interviewSession.remainingSeconds -= 1;
+    setInterviewTimer(interviewSession.remainingSeconds);
+    if (interviewSession.remainingSeconds <= 0) {
+      clearInterviewQuestionTimer();
+      appendInterviewMessage("coach", interviewLanguage === "zh"
+        ? (isInterviewLiveMode() ? "时间到。请用一句话收尾，或者直接提交已有回答。" : "时间到。你仍然可以提交当前回答，我会按已有内容评测。")
+        : (isInterviewLiveMode() ? "Time is up. Please wrap up in one sentence or submit what you have." : "Time is up. You can still submit the current answer for evaluation."));
+      updateInterviewStatus("timeup");
+    }
+  }, 1000);
+}
+
 function updateInterviewStatus(status = "") {
   updateInterviewLayout();
   if (!els.interviewSessionTitle || !els.interviewQuestionStatus || !els.interviewTimer) return;
@@ -10611,16 +12090,21 @@ function updateInterviewStatus(status = "") {
     return;
   }
 
+  const modeLabel = interviewSession.mode === "live"
+    ? (interviewLanguage === "zh" ? "真实面试" : "Live mock")
+    : (interviewLanguage === "zh" ? "训练练习" : "Practice");
   const typeLabel = interviewTypeDefs[interviewSession.type]?.label || "Interview";
-  els.interviewSessionTitle.textContent = typeLabel;
+  els.interviewSessionTitle.textContent = isInterviewOnboarding() ? (interviewLanguage === "zh" ? "AI 面试官配置" : "AI interviewer setup") : `${modeLabel} · ${typeLabel}`;
   if (status === "loading") {
     els.interviewQuestionStatus.textContent = interviewLanguage === "zh" ? "正在准备题目..." : "Preparing questions...";
+  } else if (status === "onboarding") {
+    els.interviewQuestionStatus.textContent = interviewLanguage === "zh" ? "正在通过对话配置本场面试。" : "Configuring this interview through chat.";
   } else if (status === "preparing") {
     els.interviewQuestionStatus.textContent = interviewLanguage === "zh" ? "题目已准备。" : "Questions are ready.";
   } else if (status === "timeup") {
     els.interviewQuestionStatus.textContent = interviewLanguage === "zh" ? "本题时间到。" : "Time is up.";
   } else if (status === "awaitingNext") {
-    els.interviewQuestionStatus.textContent = interviewLanguage === "zh" ? "可以进入下一题。" : "Ready for the next question.";
+    els.interviewQuestionStatus.textContent = interviewLanguage === "zh" ? "本题收尾，可以进入下一题。" : "This question is wrapped. Ready for the next one.";
   } else if (status === "completed") {
     els.interviewQuestionStatus.textContent = interviewLanguage === "zh" ? "模拟面试已结束。" : "Mock interview complete.";
     els.interviewTimer.textContent = "Done";
@@ -10649,6 +12133,35 @@ function setButtonBusy(button, busy, label = "") {
   } else if (button.dataset.originalText) {
     setButtonLabel(`#${button.id}`, button.dataset.originalText);
     delete button.dataset.originalText;
+  }
+}
+
+function getInterviewQuestionSpeechText(problem = {}) {
+  const title = interviewLanguage === "zh" ? problem.titleZh || problem.titleEn : problem.titleEn || problem.titleZh;
+  const prompt = interviewLanguage === "zh" ? problem.promptZh || problem.promptEn : problem.promptEn || problem.promptZh;
+  return [title, prompt].filter(Boolean).join(". ");
+}
+
+function speakInterviewText(text) {
+  if (!interviewSession?.sessionConfig?.ttsEnabled || !window.speechSynthesis) return;
+  const cleanText = normalizeRichTextContent(text)
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
+    .replace(/[#*_`>-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 1200);
+  if (!cleanText) return;
+  stopInterviewSpeech();
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = interviewLanguage === "zh" ? "zh-CN" : "en-US";
+  utterance.rate = interviewLanguage === "zh" ? 0.96 : 1;
+  utterance.pitch = 1;
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopInterviewSpeech() {
+  if (window.speechSynthesis?.speaking || window.speechSynthesis?.pending) {
+    window.speechSynthesis.cancel();
   }
 }
 
@@ -10692,6 +12205,10 @@ function toggleVoiceAnswer() {
 }
 
 function revealInterviewAnswer() {
+  if (isInterviewLiveMode() || isInterviewOnboarding()) {
+    appendInterviewMessage("system", interviewLanguage === "zh" ? "真实面试模式中不会展示参考答案；结束报告会统一复盘。" : "Reference answers stay hidden in live mock mode; the final report will summarize the review.");
+    return;
+  }
   const problem = getSelectedProblem();
   if (!problem) return;
   appendInterviewMessage("system", [
@@ -10823,15 +12340,18 @@ function renderPkFeed(items) {
 function appendInterviewMessage(role, text, options = {}) {
   const id = makeId();
   const attachments = Array.isArray(options.attachments) ? options.attachments : [];
+  const actions = Array.isArray(options.actions) ? options.actions : [];
+  const actionStep = options.actionStep || "";
+  const variant = options.variant || "";
   if (options.thinking) {
-    interviewMessages.push({ id, role, text: "", displayText: "", typing: false, thinking: true, attachments });
+    interviewMessages.push({ id, role, text: "", displayText: "", typing: false, thinking: true, attachments, actions, actionStep, variant });
     renderInterviewTranscript();
     return id;
   }
   const typewriter = options.typewriter ?? role === "coach";
   interviewMessages.push(typewriter
-    ? { id, role, text: String(text || ""), displayText: "", typing: true, attachments }
-    : { id, role, text: String(text || ""), displayText: String(text || ""), typing: false, attachments });
+    ? { id, role, text: String(text || ""), displayText: "", typing: true, attachments, actions, actionStep, variant }
+    : { id, role, text: String(text || ""), displayText: String(text || ""), typing: false, attachments, actions, actionStep, variant });
   renderInterviewTranscript();
   if (typewriter) startInterviewTyping(id, text);
   return id;
@@ -10844,7 +12364,17 @@ function updateInterviewMessage(id, text, options = {}) {
     return;
   }
   interviewMessages = interviewMessages.map((message) => (
-    message.id === id ? { ...message, text, displayText: text, typing: false, thinking: false, attachments: options.attachments || message.attachments || [] } : message
+    message.id === id ? {
+      ...message,
+      text,
+      displayText: text,
+      typing: false,
+      thinking: false,
+      attachments: options.attachments || message.attachments || [],
+      actions: options.actions || message.actions || [],
+      actionStep: options.actionStep || message.actionStep || "",
+      variant: options.variant || message.variant || ""
+    } : message
   ));
   renderInterviewTranscript();
 }

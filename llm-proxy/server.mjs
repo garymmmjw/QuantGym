@@ -590,6 +590,7 @@ async function classifyLog(payload) {
 
 async function createInterviewReply(payload) {
   if (payload.task === "hint") return createInterviewHint(payload);
+  if (payload.task === "converse") return createInterviewConverse(payload);
   if (payload.task === "generate_pdf_questions") return createPdfInterviewQuestions(payload);
   if (payload.task === "evaluate" || !payload.task) return createInterviewEvaluation(payload);
   throw new Error(`Unsupported interview task: ${payload.task}`);
@@ -601,16 +602,17 @@ async function createInterviewEvaluation(payload) {
   const transcript = Array.isArray(payload.transcript) ? payload.transcript : [];
   const model = payload.model || DEFAULT_MODEL;
   const answerAttachment = payload.answerAttachment || null;
-  const feedbackFormat = language === "Chinese"
-    ? "第一行必须是「得分：X/100」。然后用「评价」「遗漏」「参考方向」「下一步」四段给出高信号反馈。"
-    : "The first line must be `Score: X/100`. Then include concise sections for Evaluation, Missing pieces, Reference direction, and Next step.";
+  const feedbackFormat = [
+    "Return only compact JSON.",
+    "Schema: {\"overall\":0-100,\"summary\":\"one sentence\",\"dimensions\":{\"correctness\":{\"score\":0-5,\"comment\":\"short\"},\"reasoning\":{\"score\":0-5,\"comment\":\"short\"},\"communication\":{\"score\":0-5,\"comment\":\"short\"},\"speed\":{\"score\":0-5,\"comment\":\"short\"},\"readiness\":{\"score\":0-5,\"comment\":\"short\"}},\"missing\":[\"short bullets\"],\"interviewerConcern\":\"short\",\"referenceDelta\":\"short, do not restate full answer\",\"nextStep\":[\"actionable next steps\"]}."
+  ].join(" ");
   const problemImages = collectProblemImageRefs(problem);
 
   const instructions = [
     "You are a rigorous quant interview coach.",
     "Use the provided problem bank item as ground truth.",
     "Evaluate the candidate's answer for relevance to the question, correctness, reasoning quality, and interview clarity.",
-    "Use one overall score, not multiple sub-scores.",
+    "Use one overall score plus the requested 0-5 diagnostic dimensions.",
     "Be high-signal and practical. Do not repeat the full problem, do not add encouragement filler, and do not invent missing facts.",
     "Give enough detail for the candidate to know what to fix; include the key reference approach when the answer is incomplete.",
     "If the problem or candidate answer includes images, use them in the evaluation and mention what the image contributes.",
@@ -670,7 +672,92 @@ async function createInterviewEvaluation(payload) {
   if (!response.ok) {
     throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
   }
-  return normalizeFeedbackText(requireOutputText(data, "OpenAI returned no feedback text"));
+  const text = requireOutputText(data, "OpenAI returned no feedback text");
+  try {
+    const feedback = normalizeStructuredInterviewEvaluation(parseJsonObject(text));
+    return {
+      feedback,
+      reply: formatStructuredInterviewEvaluation(feedback, language)
+    };
+  } catch {
+    return normalizeFeedbackText(text);
+  }
+}
+
+async function createInterviewConverse(payload) {
+  const problem = payload.problem || {};
+  const language = payload.language === "en" ? "English" : "Chinese";
+  const model = payload.model || DEFAULT_MODEL;
+  const turns = Array.isArray(payload.turns) ? payload.turns : [];
+  const sessionConfig = payload.sessionConfig || {};
+  const maxFollowups = clampInt(payload.maxFollowups || 3, 1, 5);
+  const followupCount = clampInt(payload.followupCount || 0, 0, maxFollowups);
+  const persona = String(payload.persona || "").trim();
+  const instructions = [
+    "You are a quant interviewer running a realistic live mock interview.",
+    "Return only compact JSON with keys action, message, coverage, missing, runningAssessment.",
+    "action must be either followup or wrap.",
+    "message must be one interviewer utterance only.",
+    "Do not reveal the reference answer, final solution, rubric, or direct correction during the live interview.",
+    "If the candidate asks for the answer, politely refuse and continue the interview.",
+    "If the candidate says they do not know, give a small foothold and ask one focused follow-up.",
+    "If the answer has enough signal, or max follow-ups is reached, set action to wrap and give a short transition.",
+    "Keep message under 55 Chinese characters or 45 English words.",
+    persona ? `Interviewer style: ${persona}` : "",
+    `Respond in ${language}.`
+  ].filter(Boolean).join(" ");
+
+  const input = [
+    `Session config:\n${JSON.stringify(sessionConfig)}`,
+    `Question index: ${payload.questionIndex || 0} / ${payload.questionCount || 1}`,
+    `Followups used: ${followupCount} / ${maxFollowups}`,
+    `Time remaining seconds: ${payload.timeRemaining || 0}`,
+    `Problem title EN: ${problem.titleEn || ""}`,
+    `Problem title ZH: ${problem.titleZh || ""}`,
+    `Category: ${problem.category || ""}`,
+    `Difficulty: ${problem.difficulty || ""}`,
+    `Prompt EN:\n${problem.promptEn || ""}`,
+    `Prompt ZH:\n${problem.promptZh || ""}`,
+    `Ground truth answer:\n${payload.groundTruth?.answer || problem.answer || ""}`,
+    `Ground truth explanation:\n${payload.groundTruth?.explanation || problem.explanation || ""}`,
+    "Current question turns:",
+    turns.map((turn) => `${turn.role}: ${turn.text || ""}`).join("\n"),
+    `Candidate latest answer:\n${payload.latestAnswer || ""}`,
+    payload.answerAttachment?.text ? `Candidate uploaded answer text (${payload.answerAttachment.name || "file"}):\n${payload.answerAttachment.text}` : ""
+  ].join("\n\n");
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model,
+      instructions,
+      input,
+      ...modelOptions(model, 700)
+    })
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
+  }
+  const text = requireOutputText(data, "OpenAI returned no conversation text");
+  try {
+    return { reply: normalizeInterviewConverseJson(parseJsonObject(text)) };
+  } catch {
+    return {
+      reply: {
+        action: /wrap|move on|下一题|收尾/i.test(text) || followupCount + 1 >= maxFollowups ? "wrap" : "followup",
+        message: text.slice(0, language === "Chinese" ? 140 : 220),
+        coverage: [],
+        missing: [],
+        runningAssessment: ""
+      }
+    };
+  }
 }
 
 function createAttachmentInputPart(attachment) {
@@ -863,6 +950,95 @@ function normalizeFeedbackText(text) {
     .map((line) => line.trim())
     .filter(Boolean)
     .join("\n");
+}
+
+function normalizeStructuredInterviewEvaluation(raw = {}) {
+  const dimensions = raw.dimensions && typeof raw.dimensions === "object" ? raw.dimensions : {};
+  const normalizeDimension = (key) => {
+    const item = dimensions[key] || {};
+    return {
+      score: clampInt(item.score ?? item.value ?? 3, 0, 5),
+      comment: String(item.comment || item.note || "").trim().slice(0, 180)
+    };
+  };
+  return {
+    overall: clampInt(raw.overall ?? raw.score ?? 0, 0, 100),
+    summary: String(raw.summary || raw.evaluation || "").trim().slice(0, 260),
+    dimensions: {
+      correctness: normalizeDimension("correctness"),
+      reasoning: normalizeDimension("reasoning"),
+      communication: normalizeDimension("communication"),
+      speed: normalizeDimension("speed"),
+      readiness: normalizeDimension("readiness")
+    },
+    missing: Array.isArray(raw.missing) ? raw.missing.map(String).map((item) => item.trim()).filter(Boolean).slice(0, 6) : [],
+    interviewerConcern: String(raw.interviewerConcern || raw.concern || "").trim().slice(0, 260),
+    referenceDelta: String(raw.referenceDelta || raw.reference || "").trim().slice(0, 320),
+    nextStep: Array.isArray(raw.nextStep) ? raw.nextStep.map(String).map((item) => item.trim()).filter(Boolean).slice(0, 4) : []
+  };
+}
+
+function formatStructuredInterviewEvaluation(feedback, language = "English") {
+  const zh = language === "Chinese";
+  const labels = {
+    correctness: zh ? "正确性" : "Correctness",
+    reasoning: zh ? "推理" : "Reasoning",
+    communication: zh ? "表达" : "Communication",
+    speed: zh ? "速度" : "Speed",
+    readiness: zh ? "面试可用度" : "Readiness"
+  };
+  const dimensionLines = Object.entries(feedback.dimensions || {})
+    .map(([key, item]) => `- ${labels[key] || key}: ${item.score}/5${item.comment ? ` - ${item.comment}` : ""}`);
+  const missing = feedback.missing?.length ? feedback.missing.map((item) => `- ${item}`).join("\n") : (zh ? "- 暂无明显缺失。" : "- No major missing piece.");
+  const nextStep = feedback.nextStep?.length ? feedback.nextStep.map((item) => `- ${item}`).join("\n") : (zh ? "- 用 60 秒重新组织答案。" : "- Reframe the answer in 60 seconds.");
+  return zh
+    ? [
+      `得分：${feedback.overall}/100`,
+      "",
+      `评价：${feedback.summary}`,
+      "",
+      "维度分：",
+      ...dimensionLines,
+      "",
+      "缺失要点：",
+      missing,
+      "",
+      `真实面试风险：${feedback.interviewerConcern}`,
+      "",
+      `参考差距：${feedback.referenceDelta}`,
+      "",
+      "下一步：",
+      nextStep
+    ].join("\n")
+    : [
+      `Score: ${feedback.overall}/100`,
+      "",
+      `Evaluation: ${feedback.summary}`,
+      "",
+      "Dimensions:",
+      ...dimensionLines,
+      "",
+      "Missing pieces:",
+      missing,
+      "",
+      `Interview risk: ${feedback.interviewerConcern}`,
+      "",
+      `Reference delta: ${feedback.referenceDelta}`,
+      "",
+      "Next step:",
+      nextStep
+    ].join("\n");
+}
+
+function normalizeInterviewConverseJson(raw = {}) {
+  const action = raw.action === "wrap" ? "wrap" : "followup";
+  return {
+    action,
+    message: String(raw.message || raw.reply || raw.text || "").trim(),
+    coverage: Array.isArray(raw.coverage) ? raw.coverage.map(String).map((item) => item.trim()).filter(Boolean).slice(0, 6) : [],
+    missing: Array.isArray(raw.missing) ? raw.missing.map(String).map((item) => item.trim()).filter(Boolean).slice(0, 6) : [],
+    runningAssessment: String(raw.runningAssessment || raw.assessment || "").trim().slice(0, 260)
+  };
 }
 
 function modelOptions(model, maxOutputTokens) {

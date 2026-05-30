@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
-    <link rel="stylesheet" href="styles.css?direct&v=19">
+    <link rel="stylesheet" href="styles.css?direct&v=23">
     <script>
       window.MathJax = {
         tex: {
@@ -1100,67 +1100,76 @@
           <div id="interviewSetup" class="interview-setup">
             <div class="interview-setup-top">
               <div>
-                <strong>Mock setup</strong>
-                <small>开始后可以直接输入文字、上传图片或文件，也可以语音转写。</small>
-              </div>
-              <div class="segmented interview-language-toggle" aria-label="面试语言">
-                <button class="segment active" type="button" data-interview-lang="zh">中文</button>
-                <button class="segment" type="button" data-interview-lang="en">English</button>
+                <strong>AI interviewer</strong>
+                <small>由面试官用对话完成语言、模式、方向、难度、题量、风格和语音设置。</small>
               </div>
             </div>
-            <label>
-              面试类型
-              <select id="interviewTypeSelect" aria-label="面试类型">
-                <option value="oa">Online Assessment</option>
-                <option value="technical">Technical Interview</option>
-                <option value="behavioral">Behavioral Interview</option>
-              </select>
-            </label>
-            <label>
-              问题数量
-              <input id="interviewQuestionCount" type="number" min="1" max="12" value="3">
-            </label>
-            <label>
-              每题时间（分钟）
-              <input id="interviewQuestionTime" type="number" min="1" max="60" value="5">
-            </label>
-            <label class="hidden" aria-hidden="true">
-              作答方式
-              <select id="interviewAnswerModeSelect" aria-label="作答方式">
-                <option value="text">文字作答</option>
-                <option value="file">文件上传</option>
-                <option value="voice">语音作答</option>
-              </select>
-            </label>
-            <label>
-              题目来源
-              <select id="interviewSourceSelect" aria-label="题目来源">
-                <option value="full">全范围题库</option>
-                <option value="pdf">上传 PDF 生成题目</option>
-              </select>
-            </label>
-            <label id="interviewPdfRow" class="interview-pdf-row hidden">
-              PDF 文件
-              <input id="interviewPdfInput" type="file" accept="application/pdf">
-              <small id="interviewPdfMeta">上传 PDF 后会由 LLM 总结重点并生成题目。</small>
-            </label>
-            <div id="interviewCategoryRow" class="interview-category-row">
-              <span>主题范围</span>
-              <div id="interviewCategoryPicker" class="interview-category-picker" aria-label="主题范围"></div>
+            <div class="interview-setup-hero">
+              <span>practice / live</span>
+              <p>进入后先回答几个短问题，配置完成后会直接进入第一题。</p>
             </div>
-            <input id="llmEndpointInput" type="url" value="http://127.0.0.1:8787/interview" placeholder="http://127.0.0.1:8787/interview">
-            <select id="llmModelInput" aria-label="LLM Model">
-              <option value="gpt-5-nano" selected>gpt-5-nano · 最便宜</option>
-              <option value="gpt-5-mini">gpt-5-mini · 更稳</option>
-              <option value="gpt-5">gpt-5 · 更强</option>
-              <option value="gpt-5.4-mini">gpt-5.4-mini · 新 mini</option>
-              <option value="gpt-5.4">gpt-5.4 · 高质量</option>
-              <option value="gpt-4o-mini">gpt-4o-mini · 旧版低价</option>
-              <option value="gpt-4.1-nano">gpt-4.1-nano · 旧版 nano</option>
-            </select>
+            <details class="interview-advanced-config">
+              <summary>连接与题源</summary>
+              <div class="interview-advanced-grid">
+                <div class="segmented interview-language-toggle" aria-label="面试语言">
+                  <button class="segment active" type="button" data-interview-lang="zh">中文</button>
+                  <button class="segment" type="button" data-interview-lang="en">English</button>
+                </div>
+                <label>
+                  面试类型
+                  <select id="interviewTypeSelect" aria-label="面试类型">
+                    <option value="oa">Online Assessment</option>
+                    <option value="technical">Technical Interview</option>
+                    <option value="behavioral">Behavioral Interview</option>
+                  </select>
+                </label>
+                <label>
+                  问题数量
+                  <input id="interviewQuestionCount" type="number" min="1" max="12" value="3">
+                </label>
+                <label>
+                  每题时间（分钟）
+                  <input id="interviewQuestionTime" type="number" min="1" max="60" value="5">
+                </label>
+                <label class="hidden" aria-hidden="true">
+                  作答方式
+                  <select id="interviewAnswerModeSelect" aria-label="作答方式">
+                    <option value="text">文字作答</option>
+                    <option value="file">文件上传</option>
+                    <option value="voice">语音作答</option>
+                  </select>
+                </label>
+                <label>
+                  题目来源
+                  <select id="interviewSourceSelect" aria-label="题目来源">
+                    <option value="full">全范围题库</option>
+                    <option value="pdf">上传 PDF 生成题目</option>
+                  </select>
+                </label>
+                <label id="interviewPdfRow" class="interview-pdf-row hidden">
+                  PDF 文件
+                  <input id="interviewPdfInput" type="file" accept="application/pdf">
+                  <small id="interviewPdfMeta">上传 PDF 后会由 LLM 总结重点并生成题目。</small>
+                </label>
+                <div id="interviewCategoryRow" class="interview-category-row">
+                  <span>主题范围</span>
+                  <div id="interviewCategoryPicker" class="interview-category-picker" aria-label="主题范围"></div>
+                </div>
+                <input id="llmEndpointInput" type="url" value="http://127.0.0.1:8787/interview" placeholder="http://127.0.0.1:8787/interview">
+                <select id="llmModelInput" aria-label="LLM Model">
+                  <option value="gpt-5-nano" selected>gpt-5-nano · 最便宜</option>
+                  <option value="gpt-5-mini">gpt-5-mini · 更稳</option>
+                  <option value="gpt-5">gpt-5 · 更强</option>
+                  <option value="gpt-5.4-mini">gpt-5.4-mini · 新 mini</option>
+                  <option value="gpt-5.4">gpt-5.4 · 高质量</option>
+                  <option value="gpt-4o-mini">gpt-4o-mini · 旧版低价</option>
+                  <option value="gpt-4.1-nano">gpt-4.1-nano · 旧版 nano</option>
+                </select>
+              </div>
+            </details>
             <button class="primary-button" id="startInterviewBtn" type="button">
               <i data-lucide="messages-square"></i>
-              开始模拟
+              打开 AI 面试官
             </button>
             <button class="secondary-button" id="saveLlmConfigBtn" type="button">
               <i data-lucide="plug"></i>
