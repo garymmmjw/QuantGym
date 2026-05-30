@@ -36,12 +36,19 @@ let cloudConfig = loadCloudConfig();
 let cloudSyncTimer = null;
 let cloudSyncInFlight = false;
 let cloudDirty = { state: false, community: false, account: false };
+const LEADERBOARD_CLOUD_REFRESH_MS = 45_000;
+let leaderboardCloudRows = [];
+let leaderboardCloudLoadedAt = "";
+let leaderboardCloudLoading = false;
+let leaderboardCloudError = "";
+let leaderboardCloudRefreshPromise = null;
 let currentDrill = null;
 let drillMode = "numberLogic";
 let drillSession = null;
 let drillTimerId = null;
 let currentMarketGame = null;
 let currentPokerGame = null;
+let selectedPokerPreflopHand = "AKs";
 let selectedMessageThreadId = "";
 let googleInitRetries = 0;
 let registerCodeTimer = null;
@@ -116,6 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.setInterval(maybeAutoRefreshJobs, JOBS_AUTO_REFRESH_MS);
   window.addEventListener("resize", updateGlobalSearchPlaceholder);
   refreshIcons();
+  initSharkInteractions();
 });
 
 function bindElements() {
@@ -417,6 +425,7 @@ function bindElements() {
     "leaderboardScopeSelect",
     "leaderboardCountrySelect",
     "leaderboardRegionSelect",
+    "leaderboardScopeSummary",
     "sampleBtn",
     "exportBtn",
     "importInput",
@@ -452,6 +461,17 @@ function bindElements() {
     "nextMarketGameBtn",
     "marketGameFeedback",
     "pokerGameScore",
+    "pokerPlayerCount",
+    "pokerRoomCode",
+    "pokerLobbySummary",
+    "pokerRoomLinkInput",
+    "pokerCopyLinkBtn",
+    "pokerPlayerNameInput",
+    "pokerTakeSeatBtn",
+    "pokerAddBotBtn",
+    "pokerFillBotsBtn",
+    "pokerStartTournamentBtn",
+    "pokerLobbyList",
     "pokerGamePrompt",
     "pokerModeSelect",
     "pokerMatchBtn",
@@ -467,6 +487,9 @@ function bindElements() {
     "resetPokerGameBtn",
     "pokerGameFeedback",
     "pokerLog",
+    "pokerPreflopPositionSelect",
+    "pokerPreflopMatrix",
+    "pokerPreflopDetail",
     "resourceForm",
     "resourceTitle",
     "resourceType",
@@ -818,7 +841,7 @@ function bindEvents() {
   els.exportBtn.addEventListener("click", exportState);
   els.importInput.addEventListener("change", importState);
   els.resetBtn.addEventListener("click", resetState);
-  els.refreshLeaderboardBtn.addEventListener("click", renderLeaderboard);
+  els.refreshLeaderboardBtn.addEventListener("click", () => refreshLeaderboardFromCloud(true));
   [
     els.leaderboardMetricSelect,
     els.leaderboardScopeSelect,
@@ -869,8 +892,16 @@ function bindEvents() {
   });
   els.nextPokerGameBtn?.addEventListener("click", () => newPokerGame(true));
   els.resetPokerGameBtn?.addEventListener("click", () => resetPokerTournament(true));
-  els.pokerMatchBtn?.addEventListener("click", () => resetPokerTournament(true));
+  els.pokerMatchBtn?.addEventListener("click", () => matchPokerTournament(true));
   els.pokerModeSelect?.addEventListener("change", () => resetPokerTournament(true));
+  els.pokerCopyLinkBtn?.addEventListener("click", copyPokerRoomLink);
+  els.pokerTakeSeatBtn?.addEventListener("click", () => takePokerSeat());
+  els.pokerAddBotBtn?.addEventListener("click", () => addPokerBot(true));
+  els.pokerFillBotsBtn?.addEventListener("click", () => fillPokerBots(true));
+  els.pokerStartTournamentBtn?.addEventListener("click", () => startPokerTournament(true));
+  els.pokerSeatGrid?.addEventListener("click", handlePokerSeatClick);
+  els.pokerPreflopPositionSelect?.addEventListener("change", renderPokerPreflopChart);
+  els.pokerPreflopMatrix?.addEventListener("click", handlePokerPreflopMatrixClick);
   els.courseList?.addEventListener("click", handleCourseListClick);
   els.courseList?.addEventListener("change", handleCourseNoteChange);
   els.coursePathList?.addEventListener("click", handleCourseListClick);
@@ -1615,6 +1646,70 @@ async function cloudApi(path, options = {}) {
   return data;
 }
 
+function invalidateLeaderboardCloud(options = {}) {
+  leaderboardCloudLoadedAt = "";
+  leaderboardCloudError = "";
+  if (options.clear) leaderboardCloudRows = [];
+  if (options.refresh) refreshLeaderboardFromCloud(true);
+}
+
+async function refreshLeaderboardFromCloud(force = false) {
+  if (leaderboardCloudLoading) return leaderboardCloudRefreshPromise;
+  const lastAttemptAt = leaderboardCloudLoadedAt ? new Date(leaderboardCloudLoadedAt).getTime() : 0;
+  if (!force && lastAttemptAt && Date.now() - lastAttemptAt < LEADERBOARD_CLOUD_REFRESH_MS) {
+    return leaderboardCloudRows;
+  }
+
+  leaderboardCloudLoading = true;
+  leaderboardCloudError = "";
+  renderLeaderboardScopeSummary(normalizeLeaderboardSettings(state.leaderboard), getLeaderboardRows(), "loading");
+
+  leaderboardCloudRefreshPromise = cloudApi("/leaderboard", { auth: false })
+    .then((data) => {
+      const rows = Array.isArray(data.leaderboard) ? data.leaderboard : Array.isArray(data.rows) ? data.rows : [];
+      leaderboardCloudRows = normalizeCloudLeaderboardRows(rows);
+      leaderboardCloudLoadedAt = data.updatedAt || new Date().toISOString();
+      leaderboardCloudError = "";
+      return leaderboardCloudRows;
+    })
+    .catch((error) => {
+      leaderboardCloudLoadedAt = new Date().toISOString();
+      leaderboardCloudError = error.message || "Leaderboard unavailable";
+      return leaderboardCloudRows;
+    })
+    .finally(() => {
+      leaderboardCloudLoading = false;
+      leaderboardCloudRefreshPromise = null;
+      renderLeaderboard();
+      renderRegionRank();
+      refreshIcons();
+    });
+  return leaderboardCloudRefreshPromise;
+}
+
+function normalizeCloudLeaderboardRows(rows = []) {
+  return rows
+    .map((row) => {
+      const account = normalizeAccount({
+        id: row.id,
+        name: row.name,
+        country: row.country,
+        region: row.region,
+        picture: row.picture
+      });
+      return {
+        id: String(account.id || "").trim(),
+        name: String(account.name || "Quant").trim() || "Quant",
+        country: account.country,
+        region: account.region,
+        picture: String(account.picture || ""),
+        skills: normalizeSkills(row.skills || {}),
+        updatedAt: String(row.updatedAt || "")
+      };
+    })
+    .filter((row) => row.id);
+}
+
 async function refreshProblemCatalog(force = false) {
   if (problemCatalogRefresh && !force) return problemCatalogRefresh;
   problemCatalogRefresh = cloudApi("/problems")
@@ -1873,6 +1968,7 @@ function applyCloudSession(payload, options = {}) {
   queueCloudSync("state", 0);
   queueCloudSync("community", 0);
   queueCloudSync("account", 0);
+  invalidateLeaderboardCloud({ refresh: true });
 }
 
 async function sendCloudVerificationCode(email, purpose = "register") {
@@ -1961,6 +2057,7 @@ async function flushCloudSync() {
     cloudConfig.lastError = "";
     saveCloudConfig();
     renderCloudStatus();
+    if (dirty.state || dirty.account) invalidateLeaderboardCloud({ refresh: true });
   } catch (error) {
     cloudDirty = {
       state: cloudDirty.state || dirty.state,
@@ -2712,7 +2809,7 @@ function defaultLeaderboardSettings() {
   const country = currentUser?.country || "china";
   const region = currentUser?.region || getDefaultRegion(country);
   return {
-    scope: "region",
+    scope: "global",
     country: normalizeCountry(country),
     region: normalizeRegionForCountry(region, country),
     metric: "overall"
@@ -2816,6 +2913,10 @@ function applyLanguage() {
   setSelectOptionLabels("difficultyInput", [t("difficultyNormal"), t("difficultyMedium"), t("difficultyHard")]);
   setButtonLabel("#logForm .primary-button", t("submitLog"));
   setText(".leaderboard-panel h2", t("leaderboard"));
+  setLabelFor("leaderboardMetricSelect", t("leaderboardMetric"));
+  setLabelFor("leaderboardScopeSelect", t("leaderboardScope"));
+  setLabelFor("leaderboardCountrySelect", t("country"));
+  setLabelFor("leaderboardRegionSelect", t("region"));
   setText(".overview-community h2", t("community"));
   setText("#overviewCommunitySummary", t("overviewCommunitySummary"));
   setText(".community-section h2", t("community"));
@@ -2939,6 +3040,7 @@ function applyLanguage() {
     scopeOptions[1].textContent = t("leaderboardCountry");
     scopeOptions[2].textContent = t("leaderboardRegion");
   }
+  renderLeaderboardScopeSummary(normalizeLeaderboardSettings(state.leaderboard), getLeaderboardRows());
   startHeroTypewriter();
 }
 
@@ -3173,6 +3275,7 @@ function switchModule(moduleName = "overview") {
   document.querySelectorAll("[data-module-view]").forEach((view) => {
     view.classList.toggle("active", view.dataset.moduleView === targetModule);
   });
+  document.body.classList.toggle("is-poker-module", targetModule === "poker");
   if (targetModule === "overview") renderNewsTicker();
   if (targetModule === "news") {
     renderNewsTicker();
@@ -3184,6 +3287,10 @@ function switchModule(moduleName = "overview") {
   if (targetModule === "community") renderCommunity();
   if (targetModule === "messages") renderMessages();
   if (targetModule === "tools") renderMentalMath();
+  if (targetModule === "poker") {
+    if (!currentPokerGame) currentPokerGame = makePokerGameRound();
+    renderPokerGame();
+  }
   if (targetModule === "network") renderNetwork();
   if (targetModule === "resume") renderResume();
   if (targetModule === "jobs") renderJobs();
@@ -3272,9 +3379,18 @@ function startHeroTypewriter() {
     "Turn solved problems into signal.",
     "Build interview-ready intuition."
   ];
+  const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+  if (prefersReducedMotion) {
+    node.textContent = phrases[0];
+    return;
+  }
+
   let phraseIndex = 0;
   let charIndex = 0;
   let deleting = false;
+
+  node.setAttribute("aria-live", "polite");
+  node.classList.remove("is-changing");
 
   const tick = () => {
     const phrase = phrases[phraseIndex];
@@ -3299,7 +3415,130 @@ function startHeroTypewriter() {
     heroTypewriterTimer = window.setTimeout(tick, nextPhraseDelay);
   };
 
+  node.textContent = "";
   tick();
+}
+
+function initSharkInteractions() {
+  const stage = document.getElementById("sharkStage");
+  const btn = document.getElementById("sharkInteractive");
+  const shark = document.getElementById("heroShark");
+  const bubble = document.getElementById("sharkBubble");
+  if (!stage || !btn || !shark) return;
+
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+
+  // --- cursor-follow parallax ("looking at you") ---
+  let raf = null;
+  let targetX = 0;
+  let targetY = 0;
+  let targetRot = 0;
+  let curX = 0;
+  let curY = 0;
+  let curRot = 0;
+
+  const apply = () => {
+    curX += (targetX - curX) * 0.12;
+    curY += (targetY - curY) * 0.12;
+    curRot += (targetRot - curRot) * 0.12;
+    btn.style.setProperty("--sx", curX.toFixed(2) + "px");
+    btn.style.setProperty("--sy", curY.toFixed(2) + "px");
+    btn.style.setProperty("--srot", curRot.toFixed(2) + "deg");
+    if (Math.abs(targetX - curX) > 0.1 || Math.abs(targetY - curY) > 0.1 || Math.abs(targetRot - curRot) > 0.05) {
+      raf = window.requestAnimationFrame(apply);
+    } else {
+      raf = null;
+    }
+  };
+  const schedule = () => { if (!raf) raf = window.requestAnimationFrame(apply); };
+
+  if (!reduceMotion) {
+    window.addEventListener("mousemove", (e) => {
+      const rect = stage.getBoundingClientRect();
+      if (!rect.width) return;
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (e.clientX - cx) / rect.width;   // ~ -0.5..0.5+
+      const dy = (e.clientY - cy) / rect.height;
+      targetX = Math.max(-1, Math.min(1, dx)) * 16;
+      targetY = Math.max(-1, Math.min(1, dy)) * 10;
+      targetRot = Math.max(-1, Math.min(1, dx)) * 5;
+      schedule();
+    }, { passive: true });
+
+    document.addEventListener("mouseleave", () => {
+      targetX = 0; targetY = 0; targetRot = 0; schedule();
+    });
+  }
+
+  // --- speech bubble helper ---
+  let bubbleTimer = null;
+  const sharkLines = [
+    "嘿，专注一点 🦈",
+    "今天也要 sharpen 一下！",
+    "解一道题，就离 offer 更近一点。",
+    "概率题别慌，先写样本空间。",
+    "连续打卡中，别断啊！",
+    "速算练了吗？我在看着你哦。",
+    "蒙特卡洛说：再来一次。",
+    "Greeks 复习一下？",
+    "好好刷题，鲨鱼罩着你。",
+    "深呼吸，面试稳得很。"
+  ];
+  let lastLine = -1;
+  const sayLine = (text) => {
+    if (!bubble) return;
+    bubble.textContent = text;
+    bubble.classList.add("is-visible");
+    if (bubbleTimer) window.clearTimeout(bubbleTimer);
+    bubbleTimer = window.setTimeout(() => bubble.classList.remove("is-visible"), 2600);
+  };
+  const sayRandom = () => {
+    let i = Math.floor(Math.random() * sharkLines.length);
+    if (i === lastLine) i = (i + 1) % sharkLines.length;
+    lastLine = i;
+    sayLine(sharkLines[i]);
+  };
+
+  // --- click / poke reaction ---
+  btn.addEventListener("click", () => {
+    if (!reduceMotion) {
+      btn.classList.remove("is-poked");
+      void shark.offsetWidth; // restart animation
+      btn.classList.add("is-poked");
+      window.setTimeout(() => btn.classList.remove("is-poked"), 640);
+    }
+    sayRandom();
+  });
+
+  // --- hover greeting ---
+  let hoverCooldown = 0;
+  btn.addEventListener("mouseenter", () => {
+    const now = Date.now();
+    if (now - hoverCooldown > 6000) {
+      hoverCooldown = now;
+      if (!bubble?.classList.contains("is-visible")) sayLine("点我一下试试 👆");
+    }
+  });
+
+  // --- idle micro-animations ---
+  if (!reduceMotion) {
+    let lastActivity = Date.now();
+    const markActivity = () => { lastActivity = Date.now(); };
+    window.addEventListener("mousemove", markActivity, { passive: true });
+    window.addEventListener("keydown", markActivity);
+    window.setInterval(() => {
+      const idleFor = Date.now() - lastActivity;
+      const overviewVisible = stage.offsetParent !== null;
+      if (idleFor > 9000 && overviewVisible && !btn.classList.contains("is-poked")) {
+        btn.classList.remove("is-idle-wiggle");
+        void shark.offsetWidth;
+        btn.classList.add("is-idle-wiggle");
+        window.setTimeout(() => btn.classList.remove("is-idle-wiggle"), 1400);
+        lastActivity = Date.now(); // avoid back-to-back
+      }
+    }, 4000);
+  }
 }
 
 function getCatalogProblems() {
@@ -5649,6 +5888,7 @@ function getModuleSearchDefs() {
     { module: "courses", label: t("courses"), detail: "Courses / 课程", fields: [t("courses"), "course", "courses", "课程", "视频", "youtube", "bilibili", "b站"] },
     { module: "skills", label: t("skills"), detail: "Ability radar / 能力值", fields: [t("skills"), "skills", "ability", "能力值", "雷达", "知识点"] },
     { module: "tools", label: t("tools"), detail: "Mental math / 速算", fields: [t("tools"), "tools", "drills", "速算", "mental math"] },
+    { module: "poker", label: "Poker", detail: "Tournament room / 扑克锦标赛", fields: ["poker", "holdem", "tournament", "preflop", "solver", "扑克", "锦标赛", "翻前", "德州扑克"] },
     { module: "memory", label: t("memory"), detail: "Memory / 资料笔记", fields: [t("memory"), "memory", "notes", "资料", "笔记"] },
     { module: "settings", label: t("settings"), detail: "Settings / 设置", fields: [t("settings"), "settings", "设置", "config"] }
   ];
@@ -5888,10 +6128,15 @@ function animateStreakCount(previous, next) {
 function renderRegionRank() {
   const settings = normalizeLeaderboardSettings(state.leaderboard);
   const metric = settings.metric || "overall";
-  const rows = getAllLeaderboardRows(metric);
   const country = currentUser?.country || "china";
   const region = currentUser?.region || getDefaultRegion(country);
-  const regionalRows = rows.filter((row) => row.country === country && row.region === region);
+  const regionalRows = getLeaderboardRowsForSettings({
+    ...settings,
+    scope: "region",
+    country,
+    region,
+    metric
+  }, 50);
   const place = regionalRows.findIndex((row) => row.id === currentUser?.id) + 1;
   const rank = place > 0 ? place : 1;
   const metricLabel = metric === "overall" ? "" : ` · ${getLeaderboardMetricLabel(metric)}`;
@@ -6083,38 +6328,113 @@ function renderHistory() {
   });
 }
 
+function leaderboardSnapshotKey(settings) {
+  return `qg.leaderboard.ranks.${settings.metric || "overall"}.${settings.scope || "global"}.${settings.country || ""}.${settings.region || ""}`;
+}
+
+// Reads the previous-rank snapshot, returns per-id deltas (positive = moved up),
+// then stores the current ranks for next time.
+function computeLeaderboardRankChanges(rows, settings) {
+  const key = leaderboardSnapshotKey(settings);
+  let previous = {};
+  try {
+    previous = JSON.parse(localStorage.getItem(key) || "{}") || {};
+  } catch {
+    previous = {};
+  }
+  const changes = {};
+  const next = {};
+  rows.forEach((row, index) => {
+    const place = row.place || index + 1;
+    next[row.id] = place;
+    const prior = previous[row.id];
+    changes[row.id] = Number.isFinite(prior) ? prior - place : null;
+  });
+  try {
+    localStorage.setItem(key, JSON.stringify(next));
+  } catch {
+    /* storage unavailable — arrows just won't persist */
+  }
+  return changes;
+}
+
+function buildLeaderboardTrend(delta) {
+  const trend = document.createElement("span");
+  trend.className = "leaderboard-trend";
+  if (delta === null) {
+    trend.classList.add("new");
+    trend.textContent = "·";
+    return trend;
+  }
+  if (delta > 0) {
+    trend.classList.add("up");
+    trend.innerHTML = `<i data-lucide="arrow-up-right"></i><b>+${delta}</b>`;
+  } else if (delta < 0) {
+    trend.classList.add("down");
+    trend.innerHTML = `<i data-lucide="arrow-down-right"></i><b>${delta}</b>`;
+  } else {
+    trend.classList.add("flat");
+    trend.textContent = "—";
+  }
+  return trend;
+}
+
 function renderLeaderboard() {
   renderLeaderboardControls();
+  refreshLeaderboardFromCloud(false);
   els.leaderboardList.innerHTML = "";
-  const rows = getLeaderboardRows();
+  const settings = normalizeLeaderboardSettings(state.leaderboard);
+  const rows = getLeaderboardRowsForSettings(settings, 10);
+  renderLeaderboardScopeSummary(settings, rows);
   if (!rows.length) {
     els.leaderboardList.appendChild(emptyBlock(t("leaderboardEmpty")));
     return;
   }
 
+  const changes = computeLeaderboardRankChanges(rows, settings);
+
   rows.forEach((row, index) => {
+    const rankPosition = row.place || index + 1;
     const item = document.createElement("div");
     item.className = `leaderboard-item${row.isCurrent ? " current" : ""}`;
 
     const place = document.createElement("strong");
-    const rankPosition = index + 1;
     place.className = `leaderboard-rank ${rankPosition === 1 ? "gold" : rankPosition === 2 ? "silver" : rankPosition === 3 ? "bronze" : "plain"}`;
     place.textContent = String(rankPosition);
 
+    const avatar = document.createElement("span");
+    avatar.className = "leaderboard-avatar";
+    avatar.style.setProperty("--avatar-hue", String(hashStringToHue(row.id || row.name)));
+    if (row.picture) {
+      avatar.classList.add("has-image");
+      const image = document.createElement("img");
+      image.src = row.picture;
+      image.alt = "";
+      image.loading = "lazy";
+      avatar.appendChild(image);
+    } else {
+      avatar.textContent = getInitials(row.name);
+    }
+
     const identity = document.createElement("div");
+    identity.className = "leaderboard-identity";
     const name = document.createElement("span");
-    name.textContent = row.name;
+    name.textContent = row.isCurrent ? `${row.name} · ${t("leaderboardYou")}` : row.name;
     const rankMeta = document.createElement("small");
-    rankMeta.textContent = `${row.locationLabel} · ${row.rank}`;
+    rankMeta.textContent = [row.rank, row.locationLabel].filter(Boolean).join(" · ");
     identity.append(name, rankMeta);
 
     const score = document.createElement("b");
     score.className = "leaderboard-score";
-    score.innerHTML = `<span>${formatScore(row.score)}</span><img src="assets/generated/reward-xp.webp" alt="" loading="lazy">`;
+    score.innerHTML = `<span>${formatScore(row.score)}</span><small>${t("leaderboardScoreUnit")}</small>`;
 
-    item.append(place, identity, score);
+    const trend = buildLeaderboardTrend(changes[row.id]);
+
+    item.append(place, avatar, identity, score, trend);
     els.leaderboardList.appendChild(item);
   });
+
+  if (window.lucide?.createIcons) window.lucide.createIcons();
 }
 
 function renderLeaderboardControls() {
@@ -6126,6 +6446,10 @@ function renderLeaderboardControls() {
   renderRegionOptions(els.leaderboardRegionSelect, settings.country, settings.region);
   const isGlobal = settings.scope === "global";
   const isCountry = settings.scope === "country";
+  const countryControl = els.leaderboardCountrySelect.closest("label");
+  const regionControl = els.leaderboardRegionSelect.closest("label");
+  countryControl?.classList.toggle("hidden", isGlobal);
+  regionControl?.classList.toggle("hidden", isGlobal || isCountry);
   els.leaderboardCountrySelect.disabled = isGlobal;
   els.leaderboardRegionSelect.disabled = isGlobal || isCountry;
 }
@@ -6147,9 +6471,6 @@ function renderLeaderboardMetricOptions(selected = "overall") {
 function updateLeaderboardSettings() {
   const country = normalizeCountry(els.leaderboardCountrySelect.value || currentUser?.country);
   const region = normalizeRegionForCountry(els.leaderboardRegionSelect.value, country);
-  if (els.leaderboardCountrySelect.value !== country) {
-    renderRegionOptions(els.leaderboardRegionSelect, country, region);
-  }
   state.leaderboard = normalizeLeaderboardSettings({
     metric: els.leaderboardMetricSelect.value,
     scope: els.leaderboardScopeSelect.value,
@@ -6163,33 +6484,75 @@ function updateLeaderboardSettings() {
 
 function getLeaderboardRows() {
   const settings = normalizeLeaderboardSettings(state.leaderboard);
-  return getAllLeaderboardRows(settings.metric)
-    .filter((row) => {
-      if (settings.scope === "global") return true;
-      if (settings.scope === "country") return row.country === settings.country;
-      return row.country === settings.country && row.region === settings.region;
-    })
-    .slice(0, 10);
+  return getLeaderboardRowsForSettings(settings, 10);
+}
+
+function getLeaderboardRowsForSettings(settings, limit = 10) {
+  const normalized = normalizeLeaderboardSettings(settings);
+  const metric = normalized.metric || "overall";
+  const baseRows = getAllLeaderboardRows(metric);
+  const merged = filterLeaderboardRows(baseRows, normalized)
+    .sort(compareLeaderboardRows)
+    .map((row, index) => ({ ...row, place: index + 1 }));
+  return keepCurrentLeaderboardRow(merged, limit);
+}
+
+function filterLeaderboardRows(rows, settings) {
+  return rows.filter((row) => {
+    if (settings.scope === "global") return true;
+    if (settings.scope === "country") return row.country === settings.country;
+    return row.country === settings.country && row.region === settings.region;
+  });
+}
+
+function compareLeaderboardRows(a, b) {
+  return b.score - a.score
+    || Number(Boolean(b.isCurrent)) - Number(Boolean(a.isCurrent))
+    || a.name.localeCompare(b.name);
+}
+
+function keepCurrentLeaderboardRow(rows, limit = 10) {
+  if (!Number.isFinite(limit) || limit <= 0 || rows.length <= limit) return rows;
+  const currentIndex = rows.findIndex((row) => row.isCurrent);
+  if (currentIndex < 0 || currentIndex < limit) return rows.slice(0, limit);
+  return [...rows.slice(0, limit - 1), rows[currentIndex]];
 }
 
 function getAllLeaderboardRows(metric = "overall") {
-  return auth.accounts
-    .map((account) => {
-      const accountState = loadStateForUser(account.id);
-      const normalizedAccount = normalizeAccount(account);
-      const score = getLeaderboardScore(accountState.skills, metric);
-      return {
-        id: normalizedAccount.id,
-        name: normalizedAccount.name || normalizedAccount.email || "Quant",
-        country: normalizedAccount.country,
-        region: normalizedAccount.region,
-        locationLabel: `${getCountryLabel(normalizedAccount.country)} · ${getRegionLabel(normalizedAccount.region)}`,
-        score,
-        rank: metric === "overall" ? getRank(score) : getLeaderboardMetricLabel(metric),
-        isCurrent: currentUser?.id === normalizedAccount.id
-      };
-    })
-    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+  const cloudRows = leaderboardCloudRows.map((profile) => makeLeaderboardRow(profile, metric, "cloud"));
+  const localRows = getLocalLeaderboardRows(metric);
+  return mergeLeaderboardRows(cloudRows, localRows).sort(compareLeaderboardRows);
+}
+
+function getLocalLeaderboardRows(metric = "overall") {
+  return auth.accounts.map((account) => {
+    const accountState = loadStateForUser(account.id);
+    return makeLeaderboardRow({
+      ...account,
+      name: account.name || account.email || "Quant",
+      skills: accountState.skills,
+      source: "local"
+    }, metric, "local");
+  });
+}
+
+function makeLeaderboardRow(profile, metric = "overall", source = "cloud") {
+  const account = normalizeAccount(profile);
+  const skills = normalizeSkills(profile.skills || {});
+  const score = getLeaderboardScore(skills, metric);
+  return {
+    id: String(account.id || "").trim(),
+    name: String(account.name || account.email || "Quant").trim() || "Quant",
+    country: account.country,
+    region: account.region,
+    picture: String(account.picture || ""),
+    locationLabel: `${getCountryLabel(account.country)} · ${getRegionLabel(account.region)}`,
+    score,
+    rank: metric === "overall" ? getRank(score) : getLeaderboardMetricLabel(metric),
+    isCurrent: currentUser?.id === account.id,
+    source,
+    updatedAt: profile.updatedAt || ""
+  };
 }
 
 function getLeaderboardScore(skills, metric) {
@@ -6198,7 +6561,59 @@ function getLeaderboardScore(skills, metric) {
 }
 
 function getLeaderboardMetricLabel(metric) {
-  return metric === "overall" ? "总分" : skillDefs[metric]?.name || "总分";
+  return metric === "overall" ? t("leaderboardOverall") : skillDefs[metric]?.name || t("leaderboardOverall");
+}
+
+function mergeLeaderboardRows(...rowGroups) {
+  const byId = new Map();
+  rowGroups.flat().forEach((row) => {
+    if (!row?.id) return;
+    const previous = byId.get(row.id) || {};
+    const preferExistingCloud = previous.source === "cloud" && row.source === "local" && !row.isCurrent;
+    const merged = preferExistingCloud ? { ...row, ...previous } : { ...previous, ...row };
+    byId.set(row.id, {
+      ...merged,
+      isCurrent: Boolean(previous.isCurrent || row.isCurrent)
+    });
+  });
+  return [...byId.values()];
+}
+
+function hashStringToHue(value) {
+  return String(value || "").split("").reduce((hash, char) => (
+    (hash * 31 + char.charCodeAt(0)) % 360
+  ), 0);
+}
+
+function renderLeaderboardScopeSummary(settings, rows, forcedStatus = "") {
+  if (!els.leaderboardScopeSummary) return;
+  const metricLabel = getLeaderboardMetricLabel(settings.metric);
+  const location = getLeaderboardScopeText(settings);
+  const userLabel = getLanguage() === "en" ? "users" : "位用户";
+  const sourceCopy = getLeaderboardSourceText(forcedStatus);
+  els.leaderboardScopeSummary.textContent = `${metricLabel} · ${location} · ${rows.length} ${userLabel} · ${sourceCopy}`;
+}
+
+function getLeaderboardSourceText(forcedStatus = "") {
+  const status = forcedStatus || (
+    leaderboardCloudLoading
+      ? "loading"
+      : leaderboardCloudRows.length
+        ? "cloud"
+        : leaderboardCloudError
+          ? "error"
+          : "local"
+  );
+  if (status === "loading") return t("leaderboardLoading");
+  if (status === "cloud") return t("leaderboardCloudLive");
+  if (status === "error") return t("leaderboardUnavailable");
+  return t("leaderboardLocalOnly");
+}
+
+function getLeaderboardScopeText(settings) {
+  if (settings.scope === "global") return t("leaderboardGlobal");
+  if (settings.scope === "country") return getCountryLabel(settings.country);
+  return `${getCountryLabel(settings.country)} · ${getRegionLabel(settings.region)}`;
 }
 
 function renderResources() {
@@ -9217,6 +9632,7 @@ function saveSettings() {
   appPrefs.language = normalizeLanguage(els.settingsLanguageSelect.value);
   saveAppPrefs();
   syncLanguageToUrl(appPrefs.language);
+  const previousCloudEndpoint = cloudConfig.endpoint;
   const country = normalizeCountry(els.settingsCountrySelect.value);
   const region = normalizeRegionForCountry(els.settingsRegionSelect.value, country);
   llmConfig = {
@@ -9235,6 +9651,7 @@ function saveSettings() {
   state.leaderboard = normalizeLeaderboardSettings({ ...state.leaderboard, country, region });
   saveState();
   queueCloudSync("account", 0);
+  if (previousCloudEndpoint !== cloudConfig.endpoint) invalidateLeaderboardCloud({ clear: true, refresh: true });
   renderGoogleClientInput();
   renderAll();
   switchModule("settings");
@@ -11262,64 +11679,98 @@ function submitMarketQuote() {
   renderSkills();
 }
 
+const POKER_TABLE_SEATS = 10;
+const POKER_STARTING_STACK_BB = 100;
+const POKER_MIN_PLAYERS = 2;
+const POKER_BOT_NAMES = ["Ivy Bot", "Max Bot", "Rio Bot", "Nova Bot", "Kai Bot", "Vega Bot", "Mina Bot", "Theo Bot", "Luna Bot", "Axel Bot"];
+const POKER_MATRIX_RANKS = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
+const POKER_POSITION_LABELS = {
+  utg: "UTG",
+  hj: "HJ",
+  co: "CO",
+  btn: "Button",
+  sb: "Small Blind",
+  bb: "BB vs BTN"
+};
+
 function makePokerGameRound() {
-  const game = createPokerTournament(getPokerMode());
-  startNextPokerHand(game);
-  return game;
+  return createPokerTournament(getPokerMode());
 }
 
 function getPokerMode() {
-  return els.pokerModeSelect?.value === "local" ? "local" : "bots";
+  const value = els.pokerModeSelect?.value || "private";
+  return ["private", "match", "local", "bots"].includes(value) ? value : "private";
 }
 
-function createPokerTournament(mode = "bots") {
-  return {
+function createPokerTournament(mode = "private") {
+  const smallBlind = POKER_BLIND_LEVELS[0].small;
+  const bigBlind = POKER_BLIND_LEVELS[0].big;
+  const game = {
     id: makeId(),
     mode,
-    players: createPokerPlayers(mode),
+    roomCode: makePokerRoomCode(),
+    status: "registering",
+    seatCount: POKER_TABLE_SEATS,
+    startingStack: bigBlind * POKER_STARTING_STACK_BB,
+    players: [],
     dealerIndex: -1,
     handNumber: 0,
     handsPlayed: 0,
     blindInterval: 3,
     level: 0,
     levelIncreasedAt: -1,
-    smallBlind: POKER_BLIND_LEVELS[0].small,
-    bigBlind: POKER_BLIND_LEVELS[0].big,
+    smallBlind,
+    bigBlind,
     stage: "waiting",
     board: [],
     deck: [],
     pot: 0,
     currentBet: 0,
-    minRaise: POKER_BLIND_LEVELS[0].big,
+    minRaise: bigBlind,
     actionIndex: -1,
     handActive: false,
     handComplete: true,
     tournamentOver: false,
-    heroStackAtHandStart: 0,
+    heroStackAtHandStart: bigBlind * POKER_STARTING_STACK_BB,
     showdown: null,
-    feedback: "Match a robot table or a local human table, then play real Hold'em streets.",
+    dealSerial: 0,
+    feedback: "Room created. Take seats, add bots if needed, then start the tournament.",
     log: []
   };
+  addPokerHumanToGame(game, {
+    id: "hero",
+    name: getDefaultPokerPlayerName(),
+    seat: 0,
+    isHero: true
+  });
+  if (mode === "match" || mode === "bots") fillPokerBotsForGame(game, 3);
+  addPokerLog(game, `Room ${game.roomCode} opened with 100BB stacks.`);
+  return game;
 }
 
-function createPokerPlayers(mode = "bots") {
-  const names = mode === "local"
-    ? [
-      { id: "hero", name: "You", type: "human" },
-      { id: "guest", name: "Guest", type: "human" },
-      { id: "bot-ivy", name: "Ivy Bot", type: "bot" },
-      { id: "bot-max", name: "Max Bot", type: "bot" }
-    ]
-    : [
-      { id: "hero", name: "You", type: "human" },
-      { id: "bot-ivy", name: "Ivy Bot", type: "bot" },
-      { id: "bot-max", name: "Max Bot", type: "bot" },
-      { id: "bot-rio", name: "Rio Bot", type: "bot" }
-    ];
-  return names.map((player, index) => ({
-    ...player,
-    seat: index,
-    stack: 1000,
+function makePokerRoomCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let suffix = "";
+  for (let index = 0; index < 5; index += 1) suffix += alphabet[randomInt(0, alphabet.length - 1)];
+  return `QG-${suffix}`;
+}
+
+function getDefaultPokerPlayerName() {
+  return normalizePokerPlayerName(currentUser?.name || "You");
+}
+
+function normalizePokerPlayerName(name) {
+  return String(name || "").trim().replace(/\s+/g, " ").slice(0, 18) || "Player";
+}
+
+function createPokerPlayer({ id, name, type = "human", seat, stack, isHero = false }) {
+  return {
+    id: id || `${type}-${makeId()}`,
+    name: normalizePokerPlayerName(name),
+    type,
+    isHero,
+    seat,
+    stack: Math.max(0, Math.round(Number(stack || POKER_BLIND_LEVELS[0].big * POKER_STARTING_STACK_BB))),
     cards: [],
     currentBet: 0,
     committed: 0,
@@ -11328,41 +11779,148 @@ function createPokerPlayers(mode = "bots") {
     allIn: false,
     acted: false,
     eliminated: false,
-    lastAction: ""
-  }));
+    lastAction: "Registered"
+  };
 }
 
 function renderPokerGame() {
-  if (!currentPokerGame || !els.pokerGamePrompt) return;
+  if (!els.pokerGamePrompt) return;
+  if (!currentPokerGame) currentPokerGame = makePokerGameRound();
   const game = currentPokerGame;
   const hero = getPokerHero(game);
-  if (els.pokerModeSelect && els.pokerModeSelect.value !== game.mode) els.pokerModeSelect.value = game.mode;
+  const livePlayers = getPokerLivePlayers(game);
+  if (els.pokerModeSelect && els.pokerModeSelect.value !== game.mode) {
+    els.pokerModeSelect.value = ["private", "match"].includes(game.mode) ? game.mode : "private";
+  }
   if (els.pokerGameScore) els.pokerGameScore.textContent = hero ? String(Math.round(hero.stack)) : "0";
+  if (els.pokerPlayerCount) els.pokerPlayerCount.textContent = `${game.players.length}/${game.seatCount}`;
+  if (els.pokerRoomCode) els.pokerRoomCode.textContent = game.roomCode;
   if (els.pokerStageText) els.pokerStageText.textContent = getPokerStageLabel(game.stage);
   if (els.pokerBlindText) {
-    const nextBlind = Math.max(0, game.blindInterval - (game.handsPlayed % game.blindInterval));
-    els.pokerBlindText.textContent = `Blinds ${game.smallBlind}/${game.bigBlind} · level ${game.level + 1} · up in ${nextBlind}`;
+    els.pokerBlindText.textContent = `${game.smallBlind} / ${game.bigBlind}`;
   }
+  if (els.pokerPot) els.pokerPot.textContent = `Pot ${game.pot}`;
+  renderPokerRoomControls(game);
   renderPokerSeats(game);
   renderPokerBoard(game);
   renderPokerActions(game);
+  renderPokerLobby(game);
   renderPokerLog(game);
-  if (els.pokerPot) els.pokerPot.textContent = `Pot ${game.pot}`;
+  renderPokerPreflopChart();
   const active = getCurrentPokerPlayer(game);
   const toCall = active ? getPokerToCall(game, active) : 0;
+  const coach = getPokerHeroPreflopCoach(game);
   els.pokerGamePrompt.innerHTML = `
-    <span>${escapeHtml(game.mode === "local" ? "Local human table" : "Robot match")} · hand <b>#${escapeHtml(String(game.handNumber || 1))}</b></span>
+    <span>${escapeHtml(game.status === "registering" ? "Registering" : "Running")} · hand <b>#${escapeHtml(String(game.handNumber || 0))}</b> · ${escapeHtml(String(livePlayers.length))} live</span>
     <span>${escapeHtml(getPokerStageLabel(game.stage))} · pot ${escapeHtml(String(game.pot))} · current bet ${escapeHtml(String(game.currentBet))}</span>
-    <small>${escapeHtml(game.handComplete ? "Hand finished. Deal the next hand when ready." : `Action on ${active?.name || "table"}${toCall ? `, call ${toCall}` : ", check is available"}.`)}</small>
+    <small>${escapeHtml(getPokerTableHint(game, active, toCall))}</small>
+    ${coach ? `<small class="poker-coach-line">${escapeHtml(coach)}</small>` : ""}
   `;
   if (els.pokerGameFeedback) els.pokerGameFeedback.textContent = game.feedback || "";
+  refreshIcons();
+}
+
+function getPokerTableHint(game, active, toCall) {
+  if (game.tournamentOver) return "Tournament complete. Start a new room to run it back.";
+  if (game.status === "registering") return "Seat at least two players. Add bots when the table is short.";
+  if (game.handComplete) return "Hand finished. Deal the next hand when ready.";
+  if (!active) return "Table is resolving automatic actions.";
+  return `Action on ${active.name}${toCall ? `, call ${toCall}` : ", check is available"}.`;
+}
+
+function renderPokerRoomControls(game) {
+  const canRegister = canPokerRegister(game);
+  if (els.pokerRoomLinkInput) els.pokerRoomLinkInput.value = getPokerInviteLink(game);
+  if (els.pokerPlayerNameInput && !els.pokerPlayerNameInput.value) els.pokerPlayerNameInput.value = getDefaultPokerPlayerName();
+  const hasOpenSeat = getNextOpenPokerSeat(game) != null;
+  if (els.pokerTakeSeatBtn) els.pokerTakeSeatBtn.disabled = !canRegister || !hasOpenSeat;
+  if (els.pokerAddBotBtn) els.pokerAddBotBtn.disabled = !canRegister || !hasOpenSeat;
+  if (els.pokerFillBotsBtn) els.pokerFillBotsBtn.disabled = !canRegister || !hasOpenSeat;
+  if (els.pokerStartTournamentBtn) {
+    els.pokerStartTournamentBtn.disabled = game.status === "running" || game.players.length < POKER_MIN_PLAYERS;
+    els.pokerStartTournamentBtn.innerHTML = `<i data-lucide="play"></i>${game.status === "running" ? "Running" : "Start tournament"}`;
+  }
+}
+
+function getPokerInviteLink(game) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("pokerRoom", game?.roomCode || "QG");
+  url.hash = "poker";
+  return url.toString();
+}
+
+async function copyPokerRoomLink() {
+  if (!currentPokerGame) currentPokerGame = makePokerGameRound();
+  const link = getPokerInviteLink(currentPokerGame);
+  try {
+    await navigator.clipboard?.writeText(link);
+    currentPokerGame.feedback = "Room link copied. Share it with players before starting.";
+  } catch (error) {
+    els.pokerRoomLinkInput?.select();
+    document.execCommand?.("copy");
+    currentPokerGame.feedback = "Room link selected for copying.";
+  }
+  renderPokerGame();
+}
+
+function renderPokerLobby(game) {
+  if (els.pokerLobbySummary) {
+    const avgStack = game.players.length
+      ? Math.round(game.players.reduce((sum, player) => sum + player.stack, 0) / game.players.length)
+      : 0;
+    const late = canPokerRegister(game) && game.status === "running" ? " · late reg open" : "";
+    els.pokerLobbySummary.textContent = `${getPokerStatusLabel(game)} · avg ${avgStack} · ${POKER_STARTING_STACK_BB}BB start${late}`;
+  }
+  if (!els.pokerLobbyList) return;
+  els.pokerLobbyList.innerHTML = "";
+  game.players
+    .slice()
+    .sort((a, b) => a.seat - b.seat)
+    .forEach((player) => {
+      const row = document.createElement("div");
+      row.className = `poker-lobby-row ${player.eliminated ? "eliminated" : ""}`;
+      row.innerHTML = `
+        <span>Seat ${escapeHtml(String(player.seat + 1))}</span>
+        <strong>${escapeHtml(player.name)}</strong>
+        <small>${escapeHtml(player.type === "bot" ? "Bot" : player.isHero ? "You" : "Human")}</small>
+        <b>${escapeHtml(String(Math.round(player.stack)))}</b>
+      `;
+      els.pokerLobbyList.appendChild(row);
+    });
+}
+
+function getPokerStatusLabel(game) {
+  if (game.tournamentOver) return "Complete";
+  if (game.status === "running") return game.handActive ? "In hand" : "Between hands";
+  return "Registering";
 }
 
 function renderPokerSeats(game) {
   if (!els.pokerSeatGrid) return;
   els.pokerSeatGrid.innerHTML = "";
-  game.players.forEach((player, index) => {
+  const playersBySeat = new Map(game.players.map((player) => [player.seat, player]));
+  for (let seatIndex = 0; seatIndex < game.seatCount; seatIndex += 1) {
+    const player = playersBySeat.get(seatIndex);
     const seat = document.createElement("div");
+    if (!player) {
+      seat.className = "poker-seat empty";
+      const disabled = canPokerRegister(game) ? "" : "disabled";
+      seat.innerHTML = `
+        <span class="poker-seat-number">${escapeHtml(String(seatIndex + 1))}</span>
+        <div class="poker-seat-top">
+          <strong>SIT</strong>
+          <span>Open seat</span>
+        </div>
+        <div class="poker-empty-seat-actions">
+          <button type="button" data-poker-seat-action="sit" data-seat="${escapeHtml(String(seatIndex))}" ${disabled}>SIT</button>
+          <button type="button" data-poker-seat-action="bot" data-seat="${escapeHtml(String(seatIndex))}" ${disabled}>BOT</button>
+        </div>
+        <small>${canPokerRegister(game) ? "Ready for player" : "Registration closed"}</small>
+      `;
+      els.pokerSeatGrid.appendChild(seat);
+      continue;
+    }
+    const index = game.players.indexOf(player);
     const isTurn = index === game.actionIndex && game.handActive && !game.handComplete;
     seat.className = [
       "poker-seat",
@@ -11370,12 +11928,16 @@ function renderPokerSeats(game) {
       isTurn ? "active" : "",
       player.folded ? "folded" : "",
       player.allIn ? "all-in" : "",
-      player.eliminated || player.stack <= 0 && !player.inHand ? "eliminated" : ""
+      player.eliminated || (player.stack <= 0 && !player.inHand) ? "eliminated" : ""
     ].filter(Boolean).join(" ");
     const badges = [];
     if (index === game.dealerIndex) badges.push("D");
     if (player.allIn) badges.push("ALL-IN");
     if (player.folded) badges.push("FOLD");
+    if (player.eliminated) badges.push("OUT");
+    const removeButton = game.status === "registering"
+      ? `<button type="button" data-poker-seat-action="remove" data-player-id="${escapeHtml(player.id)}">Remove</button>`
+      : "";
     seat.innerHTML = `
       <div class="poker-seat-top">
         <strong>${escapeHtml(player.name)}</strong>
@@ -11383,19 +11945,25 @@ function renderPokerSeats(game) {
       </div>
       <div class="poker-hole-cards">${renderPokerHoleCards(game, player)}</div>
       <div class="poker-seat-stack">
-        <span>Stack ${escapeHtml(String(Math.max(0, Math.round(player.stack))))}</span>
+        <span>${escapeHtml(String(Math.max(0, Math.round(player.stack))))}</span>
         <span>Bet ${escapeHtml(String(Math.round(player.currentBet || 0)))}</span>
       </div>
-      <small>${escapeHtml(player.lastAction || (player.inHand ? "Waiting" : "Out"))}</small>
+      <small>${escapeHtml(player.lastAction || (player.inHand ? "Waiting" : "Registered"))}</small>
+      ${removeButton}
     `;
     els.pokerSeatGrid.appendChild(seat);
-  });
+  }
 }
 
 function renderPokerHoleCards(game, player) {
   const shouldReveal = player.type === "human" || game.handComplete || game.stage === "showdown";
   const cards = player.cards.length ? player.cards : [null, null];
-  return cards.map((card) => shouldReveal && card ? pokerCardHtml(card) : '<span class="poker-card back">?</span>').join("");
+  return cards.map((card, index) => {
+    const style = `style="--deal-index:${index}"`;
+    return shouldReveal && card
+      ? pokerCardHtml(card, { className: "dealt", style })
+      : `<span class="poker-card back dealt" ${style}>?</span>`;
+  }).join("");
 }
 
 function renderPokerBoard(game) {
@@ -11403,23 +11971,29 @@ function renderPokerBoard(game) {
   els.pokerBoard.innerHTML = "";
   const cards = [...game.board];
   while (cards.length < 5) cards.push(null);
-  cards.forEach((card) => {
+  cards.forEach((card, index) => {
+    if (card) {
+      els.pokerBoard.insertAdjacentHTML("beforeend", pokerCardHtml(card, {
+        className: "dealt",
+        style: `style="--deal-index:${index + 2}"`
+      }));
+      return;
+    }
     const slot = document.createElement("span");
-    slot.className = card ? `poker-card ${isRedPokerCard(card) ? "red" : ""}` : "poker-card empty";
-    slot.textContent = card ? pokerCardLabel(card) : "";
+    slot.className = "poker-card empty";
     els.pokerBoard.appendChild(slot);
   });
 }
 
 function renderPokerActions(game) {
   const active = getCurrentPokerPlayer(game);
-  const canAct = Boolean(active && active.type === "human" && game.handActive && !game.handComplete && !game.tournamentOver);
+  const canAct = Boolean(active && active.type === "human" && game.status === "running" && game.handActive && !game.handComplete && !game.tournamentOver);
   const toCall = active ? getPokerToCall(game, active) : 0;
   document.querySelectorAll("[data-poker-action]").forEach((button) => {
     const action = button.dataset.pokerAction;
     button.disabled = !canAct;
     if (action === "call") button.textContent = toCall ? `Call ${toCall}` : "Check";
-    if (action === "raise") button.textContent = "Raise";
+    if (action === "raise") button.textContent = game.currentBet ? "Raise" : "Bet";
     if (action === "allin") button.textContent = "All-in";
   });
   if (els.pokerRaiseInput) {
@@ -11435,67 +12009,253 @@ function renderPokerActions(game) {
   }
   if (els.pokerTurnPrompt) {
     els.pokerTurnPrompt.textContent = canAct
-      ? `${active.name} to act · ${toCall ? `call ${toCall}` : "check or bet"} · stack ${active.stack}`
-      : game.handComplete
-        ? "Hand complete."
-        : "Bots are acting...";
+      ? active.isHero || active.id === "hero"
+        ? "YOUR TURN"
+        : `${active.name} to act`
+      : game.status === "registering"
+        ? "Lobby open. Seat players or add bots."
+        : game.handComplete
+          ? "Hand complete."
+          : "Bots are acting...";
   }
   if (els.nextPokerGameBtn) {
     els.nextPokerGameBtn.disabled = Boolean(game.handActive && !game.handComplete && !game.tournamentOver);
-    els.nextPokerGameBtn.textContent = game.tournamentOver ? "New tournament" : "Next hand";
+    els.nextPokerGameBtn.textContent = game.tournamentOver
+      ? "New tournament"
+      : game.status === "registering" ? "Start tournament" : "Next hand";
   }
 }
 
 function renderPokerLog(game) {
   if (!els.pokerLog) return;
   els.pokerLog.innerHTML = "";
-  game.log.slice(-7).reverse().forEach((line) => {
+  game.log.slice(-9).reverse().forEach((line) => {
     const row = document.createElement("div");
     row.textContent = line;
     els.pokerLog.appendChild(row);
   });
 }
 
+function matchPokerTournament(renderAfter = true) {
+  currentPokerGame = makePokerGameRound();
+  if (currentPokerGame.mode === "private") fillPokerBotsForGame(currentPokerGame, 2);
+  currentPokerGame.feedback = "New room matched. Start now or add more players.";
+  if (renderAfter) renderPokerGame();
+}
+
 function newPokerGame(renderAfter = true) {
   if (!currentPokerGame || currentPokerGame.tournamentOver) {
     resetPokerTournament(false);
+  } else if (currentPokerGame.status === "registering") {
+    startPokerTournament(false);
   } else if (currentPokerGame.handActive && !currentPokerGame.handComplete) {
     currentPokerGame.feedback = "Finish the current hand before dealing the next one.";
   } else {
     startNextPokerHand(currentPokerGame);
   }
-  if (renderAfter) renderMentalMath();
+  if (renderAfter) renderPokerGame();
 }
 
 function resetPokerTournament(renderAfter = true) {
   currentPokerGame = makePokerGameRound();
-  if (renderAfter) renderMentalMath();
+  if (renderAfter) renderPokerGame();
+}
+
+function startPokerTournament(renderAfter = true) {
+  const game = currentPokerGame || makePokerGameRound();
+  currentPokerGame = game;
+  if (game.players.length < POKER_MIN_PLAYERS) {
+    game.feedback = "Need at least two seated players. Add a bot to start heads-up.";
+    if (renderAfter) renderPokerGame();
+    return;
+  }
+  if (game.status !== "running") {
+    game.status = "running";
+    game.feedback = "Tournament started. Shuffle up and deal.";
+    addPokerLog(game, "Tournament started.");
+  }
+  if (!game.handActive && game.handComplete && !game.tournamentOver) startNextPokerHand(game);
+  if (renderAfter) renderPokerGame();
+}
+
+function canPokerRegister(game) {
+  if (!game || game.tournamentOver || game.handActive) return false;
+  if (game.status === "registering") return true;
+  return game.status === "running" && game.handsPlayed < 3;
+}
+
+function getNextOpenPokerSeat(game) {
+  const occupied = new Set(game.players.map((player) => player.seat));
+  for (let seat = 0; seat < game.seatCount; seat += 1) {
+    if (!occupied.has(seat)) return seat;
+  }
+  return null;
+}
+
+function takePokerSeat(seat = null, renderAfter = true) {
+  if (!currentPokerGame) currentPokerGame = makePokerGameRound();
+  const game = currentPokerGame;
+  if (!canPokerRegister(game)) {
+    game.feedback = "Registration is closed while a hand is running.";
+    if (renderAfter) renderPokerGame();
+    return;
+  }
+  const targetSeat = Number.isInteger(seat) ? seat : getNextOpenPokerSeat(game);
+  if (targetSeat == null) {
+    game.feedback = "No open seats at this table.";
+    if (renderAfter) renderPokerGame();
+    return;
+  }
+  const isHero = !getPokerHero(game);
+  const rawName = els.pokerPlayerNameInput?.value || (isHero ? getDefaultPokerPlayerName() : `Guest ${game.players.length + 1}`);
+  const name = uniquePokerName(game, rawName);
+  addPokerHumanToGame(game, { id: isHero ? "hero" : `human-${makeId()}`, name, seat: targetSeat, isHero });
+  game.feedback = `${name} took seat ${targetSeat + 1}.`;
+  addPokerLog(game, game.feedback);
+  if (renderAfter) renderPokerGame();
+}
+
+function addPokerHumanToGame(game, options = {}) {
+  const seat = Number.isInteger(options.seat) ? options.seat : getNextOpenPokerSeat(game);
+  if (seat == null) return null;
+  const player = createPokerPlayer({
+    id: options.id,
+    name: options.name,
+    type: "human",
+    seat,
+    stack: game.startingStack,
+    isHero: Boolean(options.isHero)
+  });
+  game.players.push(player);
+  sortPokerPlayers(game);
+  return player;
+}
+
+function addPokerBot(renderAfter = true, seat = null) {
+  if (!currentPokerGame) currentPokerGame = makePokerGameRound();
+  const game = currentPokerGame;
+  if (!canPokerRegister(game)) {
+    game.feedback = "Bots can join before the next hand, not mid-hand.";
+    if (renderAfter) renderPokerGame();
+    return;
+  }
+  const player = addPokerBotToGame(game, seat);
+  game.feedback = player ? `${player.name} joined seat ${player.seat + 1}.` : "No open seats for another bot.";
+  if (player) addPokerLog(game, game.feedback);
+  if (renderAfter) renderPokerGame();
+}
+
+function addPokerBotToGame(game, seat = null) {
+  const targetSeat = Number.isInteger(seat) ? seat : getNextOpenPokerSeat(game);
+  if (targetSeat == null) return null;
+  const usedNames = new Set(game.players.map((player) => player.name));
+  const name = POKER_BOT_NAMES.find((botName) => !usedNames.has(botName)) || `Bot ${game.players.length + 1}`;
+  const player = createPokerPlayer({
+    id: `bot-${makeId()}`,
+    name,
+    type: "bot",
+    seat: targetSeat,
+    stack: game.startingStack
+  });
+  game.players.push(player);
+  sortPokerPlayers(game);
+  return player;
+}
+
+function fillPokerBots(renderAfter = true) {
+  if (!currentPokerGame) currentPokerGame = makePokerGameRound();
+  const added = fillPokerBotsForGame(currentPokerGame, currentPokerGame.seatCount);
+  currentPokerGame.feedback = added
+    ? `Added ${added} bot${added > 1 ? "s" : ""}.`
+    : "Table is already full.";
+  if (renderAfter) renderPokerGame();
+}
+
+function fillPokerBotsForGame(game, targetCount = game.seatCount) {
+  let added = 0;
+  while (game.players.length < Math.min(targetCount, game.seatCount) && getNextOpenPokerSeat(game) != null) {
+    if (!addPokerBotToGame(game)) break;
+    added += 1;
+  }
+  return added;
+}
+
+function handlePokerSeatClick(event) {
+  const button = event.target.closest("[data-poker-seat-action]");
+  if (!button || !currentPokerGame) return;
+  const seat = Number(button.dataset.seat);
+  const action = button.dataset.pokerSeatAction;
+  if (action === "sit") {
+    takePokerSeat(Number.isInteger(seat) ? seat : null);
+    return;
+  }
+  if (action === "bot") {
+    addPokerBot(true, Number.isInteger(seat) ? seat : null);
+    return;
+  }
+  if (action === "remove") {
+    removePokerPlayer(button.dataset.playerId);
+  }
+}
+
+function removePokerPlayer(playerId) {
+  const game = currentPokerGame;
+  if (!game || game.status !== "registering") return;
+  const player = game.players.find((item) => item.id === playerId);
+  if (!player) return;
+  game.players = game.players.filter((item) => item.id !== playerId);
+  if (player.isHero && game.players[0]) game.players[0].isHero = true;
+  game.feedback = `${player.name} left the room.`;
+  addPokerLog(game, game.feedback);
+  renderPokerGame();
+}
+
+function uniquePokerName(game, rawName) {
+  const base = normalizePokerPlayerName(rawName);
+  const used = new Set(game.players.map((player) => player.name.toLowerCase()));
+  if (!used.has(base.toLowerCase())) return base;
+  for (let index = 2; index <= 99; index += 1) {
+    const candidate = `${base} ${index}`;
+    if (!used.has(candidate.toLowerCase())) return candidate;
+  }
+  return `${base} ${randomInt(100, 999)}`;
+}
+
+function sortPokerPlayers(game) {
+  game.players.sort((a, b) => a.seat - b.seat);
 }
 
 function startNextPokerHand(game) {
   if (!game) return;
+  if (game.status !== "running") {
+    startPokerTournament(false);
+    return;
+  }
+  sortPokerPlayers(game);
   maybeIncreasePokerBlinds(game);
   game.players.forEach((player) => {
     player.eliminated = player.stack <= 0;
     player.cards = [];
     player.currentBet = 0;
     player.committed = 0;
-    player.inHand = !player.eliminated;
+    player.inHand = !player.eliminated && player.stack > 0;
     player.folded = false;
     player.allIn = false;
     player.acted = false;
-    player.lastAction = player.eliminated ? "Eliminated" : "";
+    player.lastAction = player.eliminated ? "Eliminated" : "In hand";
   });
-  const livePlayers = game.players.filter((player) => !player.eliminated);
+  const livePlayers = getPokerLivePlayers(game);
   if (livePlayers.length <= 1) {
     game.tournamentOver = true;
     game.handActive = false;
     game.handComplete = true;
+    game.stage = "showdown";
     game.feedback = livePlayers[0] ? `${livePlayers[0].name} wins the tournament.` : "Tournament complete.";
     addPokerLog(game, game.feedback);
     return;
   }
   game.handNumber += 1;
+  game.dealSerial += 1;
   game.stage = "preflop";
   game.board = [];
   game.deck = shufflePokerDeck(createPokerDeck());
@@ -11513,7 +12273,7 @@ function startNextPokerHand(game) {
   postPokerBlind(game, blindSeats.big, game.bigBlind, "big blind");
   game.actionIndex = nextPokerActionSeat(game, blindSeats.big);
   addPokerLog(game, `Hand #${game.handNumber}: blinds ${game.smallBlind}/${game.bigBlind}.`);
-  game.feedback = `${game.players[game.dealerIndex].name} has the button.`;
+  game.feedback = `${game.players[game.dealerIndex]?.name || "Dealer"} has the button.`;
   continuePokerHand(game);
 }
 
@@ -11626,6 +12386,7 @@ function advancePokerStreet(game) {
     return;
   }
   game.stage = game.stage === "preflop" ? "flop" : game.stage === "flop" ? "turn" : "river";
+  game.dealSerial += 1;
   const cardsToDeal = game.stage === "flop" ? 3 : 1;
   for (let index = 0; index < cardsToDeal; index += 1) {
     const card = drawPokerCard(game);
@@ -11648,16 +12409,48 @@ function showdownPokerHand(game) {
     hand: evaluatePokerHand([...player.cards, ...game.board])
   }));
   results.sort((a, b) => comparePokerHands(b.hand, a.hand));
-  const best = results[0]?.hand;
-  const winners = results.filter((result) => best && comparePokerHands(result.hand, best) === 0);
-  const share = winners.length ? Math.floor(game.pot / winners.length) : 0;
-  winners.forEach((result) => {
-    result.player.stack += share;
+  const pots = buildPokerPots(game.players);
+  const awardLines = [];
+  const winnerIds = new Set();
+  pots.forEach((pot, potIndex) => {
+    const eligible = results.filter((result) => pot.eligibleIds.includes(result.player.id));
+    eligible.sort((a, b) => comparePokerHands(b.hand, a.hand));
+    const best = eligible[0]?.hand;
+    const winners = eligible.filter((result) => best && comparePokerHands(result.hand, best) === 0);
+    if (!winners.length || pot.amount <= 0) return;
+    const share = Math.floor(pot.amount / winners.length);
+    let remainder = pot.amount - share * winners.length;
+    winners.forEach((result) => {
+      result.player.stack += share + (remainder > 0 ? 1 : 0);
+      if (remainder > 0) remainder -= 1;
+      winnerIds.add(result.player.id);
+    });
+    const label = potIndex === 0 ? "main pot" : `side pot ${potIndex}`;
+    awardLines.push(`${winners.map((result) => result.player.name).join(", ")} wins ${pot.amount} ${label}`);
   });
-  const winnerNames = winners.map((result) => result.player.name).join(", ");
-  const bestName = best ? `${best.name} (${best.cards.map(pokerCardLabel).join(" ")})` : "best hand";
-  game.showdown = { winners: winners.map((result) => result.player.id), results };
-  finishPokerHand(game, `${winnerNames} wins ${game.pot} with ${bestName}.`);
+  const top = results[0]?.hand;
+  const bestName = top ? `${top.name} (${top.cards.map(pokerCardLabel).join(" ")})` : "best hand";
+  game.showdown = { winners: [...winnerIds], results, pots };
+  finishPokerHand(game, `${awardLines.join(". ")} with ${bestName}.`);
+}
+
+function buildPokerPots(players) {
+  const levels = [...new Set(players
+    .map((player) => Math.round(player.committed || 0))
+    .filter((amount) => amount > 0))]
+    .sort((a, b) => a - b);
+  let previous = 0;
+  return levels.map((level) => {
+    const contributors = players.filter((player) => (player.committed || 0) >= level);
+    const amount = (level - previous) * contributors.length;
+    previous = level;
+    return {
+      amount,
+      eligibleIds: contributors
+        .filter((player) => player.inHand && !player.folded)
+        .map((player) => player.id)
+    };
+  }).filter((pot) => pot.amount > 0 && pot.eligibleIds.length);
 }
 
 function awardPokerPot(game, winner, reason = "") {
@@ -11678,7 +12471,7 @@ function finishPokerHand(game, message) {
   });
   addPokerLog(game, message);
   recordPokerHandResult(game, message);
-  const livePlayers = game.players.filter((player) => !player.eliminated);
+  const livePlayers = getPokerLivePlayers(game);
   if (livePlayers.length <= 1) {
     game.tournamentOver = true;
     game.feedback = `${livePlayers[0]?.name || "Winner"} wins the tournament.`;
@@ -11698,16 +12491,18 @@ function recordPokerHandResult(game, message) {
 
 function choosePokerBotAction(game, player) {
   const toCall = getPokerToCall(game, player);
+  const preflopPlan = !game.board.length ? getPreflopStrategyForCards(player.cards, getPokerPositionForPlayer(game, game.players.indexOf(player))) : null;
   const strength = getPokerDecisionStrength(game, player) + randomInt(-8, 8);
   const potOddsPressure = toCall ? (toCall / Math.max(game.pot + toCall, 1)) * 100 : 0;
   if (toCall > 0) {
+    if (preflopPlan?.tier === "fold" && toCall > game.bigBlind * 0.5) return { action: "fold" };
     if (strength < 28 + potOddsPressure * 0.8 && toCall > game.bigBlind * 0.5) return { action: "fold" };
-    if (strength > 76 && player.stack > toCall + game.bigBlind * 2) {
+    if ((strength > 76 || preflopPlan?.tier === "raise") && player.stack > toCall + game.bigBlind * 2) {
       return { action: "raise", raiseTo: Math.min(player.currentBet + player.stack, game.currentBet + game.minRaise * randomChoice([1, 2, 3])) };
     }
     return { action: "call" };
   }
-  if (strength > 72 && player.stack > game.bigBlind * 2) {
+  if ((strength > 72 || preflopPlan?.tier === "raise") && player.stack > game.bigBlind * 2) {
     return { action: "raise", raiseTo: Math.min(player.currentBet + player.stack, game.bigBlind * randomChoice([2, 3, 4])) };
   }
   if (strength > 58 && Math.random() < 0.2 && player.stack > game.bigBlind * 2) {
@@ -11725,17 +12520,213 @@ function getPokerDecisionStrength(game, player) {
 }
 
 function estimatePreflopStrength(cards) {
-  if (!cards || cards.length < 2) return 0;
+  const handKey = getStartingHandKey(cards);
+  return handKey ? getStartingHandScore(handKey) : 0;
+}
+
+function renderPokerPreflopChart() {
+  if (!els.pokerPreflopMatrix || !els.pokerPreflopDetail) return;
+  const position = els.pokerPreflopPositionSelect?.value || "btn";
+  els.pokerPreflopMatrix.innerHTML = "";
+  const corner = document.createElement("span");
+  corner.className = "poker-matrix-header corner";
+  corner.textContent = POKER_POSITION_LABELS[position] || "POS";
+  els.pokerPreflopMatrix.appendChild(corner);
+  POKER_MATRIX_RANKS.forEach((rank) => {
+    const header = document.createElement("span");
+    header.className = "poker-matrix-header";
+    header.textContent = rank;
+    els.pokerPreflopMatrix.appendChild(header);
+  });
+  POKER_MATRIX_RANKS.forEach((rowRank, rowIndex) => {
+    const rowHeader = document.createElement("span");
+    rowHeader.className = "poker-matrix-header";
+    rowHeader.textContent = rowRank;
+    els.pokerPreflopMatrix.appendChild(rowHeader);
+    POKER_MATRIX_RANKS.forEach((colRank, colIndex) => {
+      const handKey = getMatrixHandKey(rowIndex, colIndex);
+      const strategy = getPreflopStrategyForHand(handKey, position);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `poker-matrix-cell ${strategy.tier}${handKey === selectedPokerPreflopHand ? " selected" : ""}`;
+      button.dataset.hand = handKey;
+      button.title = `${handKey}: ${strategy.label}`;
+      button.innerHTML = `<strong>${escapeHtml(handKey)}</strong><span>${escapeHtml(strategy.code)}</span>`;
+      els.pokerPreflopMatrix.appendChild(button);
+    });
+  });
+  renderPokerPreflopDetail(selectedPokerPreflopHand, position);
+}
+
+function handlePokerPreflopMatrixClick(event) {
+  const button = event.target.closest("[data-hand]");
+  if (!button) return;
+  selectedPokerPreflopHand = button.dataset.hand || selectedPokerPreflopHand;
+  renderPokerPreflopChart();
+}
+
+function renderPokerPreflopDetail(handKey = selectedPokerPreflopHand, position = els.pokerPreflopPositionSelect?.value || "btn") {
+  if (!els.pokerPreflopDetail) return;
+  const strategy = getPreflopStrategyForHand(handKey, position);
+  els.pokerPreflopDetail.innerHTML = `
+    <span class="rank-label">100BB ${escapeHtml(POKER_POSITION_LABELS[position] || position.toUpperCase())}</span>
+    <h4>${escapeHtml(handKey)} · ${escapeHtml(strategy.label)}</h4>
+    <p>${escapeHtml(strategy.description)}</p>
+    <div class="poker-frequency-bar" aria-label="Suggested frequency">
+      <i style="width:${escapeHtml(String(strategy.frequency))}%"></i>
+    </div>
+    <small>Frequency ${escapeHtml(String(strategy.frequency))}% · sizing baseline: open 2.2BB, 3-bet 8-10BB in position, 10-12BB out of position.</small>
+  `;
+}
+
+function getPokerHeroPreflopCoach(game) {
+  const hero = getPokerHero(game);
+  if (!hero || game.stage !== "preflop" || hero.cards.length < 2 || game.handComplete) return "";
+  const position = getPokerPositionForPlayer(game, game.players.indexOf(hero));
+  const strategy = getPreflopStrategyForCards(hero.cards, position);
+  const handKey = getStartingHandKey(hero.cards);
+  return `100BB chart: ${handKey} from ${POKER_POSITION_LABELS[position] || position.toUpperCase()} -> ${strategy.label} (${strategy.frequency}%).`;
+}
+
+function getPreflopStrategyForCards(cards, position = "btn") {
+  const handKey = getStartingHandKey(cards);
+  return handKey ? getPreflopStrategyForHand(handKey, position) : getPreflopStrategyForHand("72o", position);
+}
+
+function getMatrixHandKey(rowIndex, colIndex) {
+  const high = POKER_MATRIX_RANKS[Math.min(rowIndex, colIndex)];
+  const low = POKER_MATRIX_RANKS[Math.max(rowIndex, colIndex)];
+  if (rowIndex === colIndex) return `${high}${low}`;
+  return `${high}${low}${colIndex > rowIndex ? "s" : "o"}`;
+}
+
+function getStartingHandKey(cards) {
+  if (!cards || cards.length < 2) return "";
   const [a, b] = [...cards].sort((left, right) => right.value - left.value);
-  const pair = a.value === b.value;
-  const suited = a.suit === b.suit;
-  const gap = Math.abs(a.value - b.value);
-  let score = a.value * 3 + b.value * 2 - gap * 2;
-  if (pair) score += 34 + a.value * 2;
-  if (suited) score += 7;
-  if (gap <= 1) score += 6;
-  if (a.value === 14) score += 8;
-  return clampNumber(Math.round(score), 8, 98);
+  if (a.rank === b.rank) return `${a.rank}${b.rank}`;
+  return `${a.rank}${b.rank}${a.suit === b.suit ? "s" : "o"}`;
+}
+
+function getStartingHandScore(handKey) {
+  const parsed = parseStartingHandKey(handKey);
+  if (!parsed) return 0;
+  const { high, low, pair, suited, gap } = parsed;
+  let score = high * 4 + low * 2 - gap * 4;
+  if (pair) score += 38 + high * 2.2;
+  if (suited) score += 8;
+  if (gap <= 1) score += 7;
+  if (gap === 2) score += 3;
+  if (high === 14) score += 8;
+  if (suited && high === 14) score += 6;
+  if (suited && high <= 9 && gap <= 1) score += 9;
+  if (!suited && high < 12 && gap > 2) score -= 10;
+  return clampNumber(Math.round(score), 0, 100);
+}
+
+function getPreflopStrategyForHand(handKey, position = "btn") {
+  const score = getStartingHandScore(handKey);
+  const parsed = parseStartingHandKey(handKey);
+  const thresholds = {
+    utg: { open: 78, mix: 70 },
+    hj: { open: 72, mix: 64 },
+    co: { open: 64, mix: 55 },
+    btn: { open: 52, mix: 42 },
+    sb: { open: 58, mix: 47 },
+    bb: { open: 45, mix: 34 }
+  };
+  const limits = thresholds[position] || thresholds.btn;
+  if (position === "bb") {
+    if (score >= 78) {
+      return {
+        tier: "raise",
+        code: "3B",
+        label: "3-bet or defend",
+        frequency: 90,
+        description: "Strong enough to 3-bet for value often; flat sometimes to keep dominated hands in."
+      };
+    }
+    if (score >= limits.open) {
+      return {
+        tier: "defend",
+        code: "DEF",
+        label: "Defend",
+        frequency: clampNumber(score, 45, 78),
+        description: "Continue versus a button open. Prefer call with playable suited and connected hands."
+      };
+    }
+    if (score >= limits.mix) {
+      return {
+        tier: "mix",
+        code: "MIX",
+        label: "Mix defend",
+        frequency: 35,
+        description: "Borderline defend. Continue more versus small opens or passive opponents; fold versus larger sizing."
+      };
+    }
+    return {
+      tier: "fold",
+      code: "F",
+      label: "Fold",
+      frequency: 0,
+      description: "Too weak to defend profitably at 100BB without a clear exploit."
+    };
+  }
+  const premiumBroadway = ["AKs", "AKo", "AQs", "AQo", "AJs"].includes(handKey);
+  if (score >= 84 || (parsed?.pair && parsed.high >= 11) || premiumBroadway) {
+    return {
+      tier: "raise",
+      code: "R",
+      label: "Open raise",
+      frequency: 100,
+      description: "Pure open at 100BB. Continue aggressively versus 3-bets depending on position and sizing."
+    };
+  }
+  if (score >= limits.open) {
+    return {
+      tier: "open",
+      code: "R",
+      label: "Open raise",
+      frequency: 85,
+      description: "Profitable open in this position. Use 2.0-2.5BB sizing and keep postflop plan simple."
+    };
+  }
+  if (score >= limits.mix) {
+    return {
+      tier: "mix",
+      code: "MIX",
+      label: "Mix open",
+      frequency: 40,
+      description: "Open some frequency, especially at softer tables or when blinds overfold. Otherwise fold."
+    };
+  }
+  return {
+    tier: "fold",
+    code: "F",
+    label: "Fold",
+    frequency: 0,
+    description: "Default fold in this position at 100BB. Save chips for better blockers, pairs, suited aces, and connected hands."
+  };
+}
+
+function parseStartingHandKey(handKey) {
+  const text = String(handKey || "");
+  if (text.length < 2) return null;
+  const rankValue = (rank) => POKER_RANKS.indexOf(rank) + 2;
+  const first = text[0];
+  const second = text[1];
+  const firstValue = rankValue(first);
+  const secondValue = rankValue(second);
+  if (firstValue < 2 || secondValue < 2) return null;
+  const high = Math.max(firstValue, secondValue);
+  const low = Math.min(firstValue, secondValue);
+  return {
+    high,
+    low,
+    pair: first === second,
+    suited: text.endsWith("s"),
+    offsuit: text.endsWith("o"),
+    gap: Math.abs(high - low)
+  };
 }
 
 function evaluatePokerHand(cards) {
@@ -11852,6 +12843,7 @@ function dealPokerHoleCards(game) {
 
 function postPokerBlind(game, playerIndex, amount, label) {
   const player = game.players[playerIndex];
+  if (!player) return;
   const paid = commitPokerChips(player, amount);
   player.acted = false;
   player.lastAction = `${label} ${paid}`;
@@ -11879,6 +12871,30 @@ function maybeIncreasePokerBlinds(game) {
     game.minRaise = level.big;
     addPokerLog(game, `Blinds increase to ${game.smallBlind}/${game.bigBlind}.`);
   }
+}
+
+function getPokerLivePlayers(game) {
+  return game.players.filter((player) => !player.eliminated && player.stack > 0);
+}
+
+function getPokerPositionForPlayer(game, playerIndex) {
+  const player = game.players[playerIndex];
+  if (!player || game.dealerIndex < 0) return "btn";
+  const liveIndexes = game.players
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => !item.eliminated && item.stack > 0)
+    .map(({ index }) => index);
+  const heroOrder = liveIndexes.indexOf(playerIndex);
+  const dealerOrder = liveIndexes.indexOf(game.dealerIndex);
+  if (heroOrder < 0 || dealerOrder < 0) return "btn";
+  const count = liveIndexes.length;
+  const relative = (heroOrder - dealerOrder + count) % count;
+  if (count === 2) return relative === 0 ? "sb" : "bb";
+  if (relative === 0) return "btn";
+  if (relative === 1) return "sb";
+  if (relative === 2) return "bb";
+  const early = ["utg", "hj", "co"];
+  return early[Math.max(0, early.length - (count - relative))] || "co";
 }
 
 function getPokerBlindSeats(game) {
@@ -11946,7 +12962,7 @@ function getCurrentPokerPlayer(game) {
 }
 
 function getPokerHero(game) {
-  return game.players.find((player) => player.id === "hero") || game.players[0];
+  return game.players.find((player) => player.isHero || player.id === "hero") || game.players[0];
 }
 
 function getPokerStageLabel(stage) {
@@ -11971,8 +12987,16 @@ function pokerCardLabel(card) {
   return `${card.rank}${card.suitSymbol}`;
 }
 
-function pokerCardHtml(card) {
-  return `<span class="poker-card ${isRedPokerCard(card) ? "red" : ""}">${escapeHtml(pokerCardLabel(card))}</span>`;
+function pokerCardHtml(card, options = {}) {
+  const extraClass = options.className ? ` ${options.className}` : "";
+  const style = options.style ? ` ${options.style}` : "";
+  const rank = card.rank === "T" ? "10" : card.rank;
+  return `
+    <span class="poker-card ${isRedPokerCard(card) ? "red" : "black"}${extraClass}"${style} aria-label="${escapeHtml(pokerCardLabel(card))}">
+      <span class="poker-card-rank">${escapeHtml(rank)}</span>
+      <span class="poker-card-suit">${escapeHtml(card.suitSymbol)}</span>
+    </span>
+  `;
 }
 
 function isRedPokerCard(card) {

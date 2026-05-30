@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import math
 import os
 import re
 import secrets
@@ -315,6 +316,21 @@ def sanitize_problem_state(state: dict | None) -> dict:
     return next_state
 
 
+def sanitize_leaderboard_skills(skills) -> dict:
+    if not isinstance(skills, dict):
+        return {}
+    cleaned = {}
+    for key, value in skills.items():
+        try:
+            number = max(0, float(value))
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(number):
+            continue
+        cleaned[str(key)] = int(number) if number.is_integer() else number
+    return cleaned
+
+
 def merge_community(existing: dict | None, incoming: dict | None) -> dict:
     existing_posts = (existing or {}).get("posts") if isinstance(existing, dict) else []
     incoming_posts = (incoming or {}).get("posts") if isinstance(incoming, dict) else []
@@ -494,6 +510,39 @@ class Database:
     def get_state(self, conn: sqlite3.Connection, user_id: str) -> dict:
         row = conn.execute("SELECT state_json FROM user_states WHERE user_id = ?", (user_id,)).fetchone()
         return parse_json(row["state_json"], {}) if row else {}
+
+    def get_leaderboard(self, conn: sqlite3.Connection) -> list[dict]:
+        rows = conn.execute(
+            """
+            SELECT
+              u.id AS user_id,
+              u.account_json,
+              u.created_at AS user_created_at,
+              u.updated_at AS user_updated_at,
+              s.state_json,
+              s.updated_at AS state_updated_at
+            FROM users u
+            LEFT JOIN user_states s ON s.user_id = u.id
+            ORDER BY COALESCE(s.updated_at, u.updated_at) DESC
+            LIMIT 500
+            """
+        ).fetchall()
+        leaderboard = []
+        for row in rows:
+            account = sanitize_account(parse_json(row["account_json"], {}), row["user_id"])
+            state = parse_json(row["state_json"], {})
+            leaderboard.append(
+                {
+                    "id": row["user_id"],
+                    "name": account.get("name") or "Quant",
+                    "country": account.get("country") or "china",
+                    "region": account.get("region") or "",
+                    "picture": account.get("picture") or "",
+                    "skills": sanitize_leaderboard_skills(state.get("skills") if isinstance(state, dict) else {}),
+                    "updatedAt": row["state_updated_at"] or row["user_updated_at"] or row["user_created_at"],
+                }
+            )
+        return leaderboard
 
     def save_state(self, conn: sqlite3.Connection, user_id: str, state: dict | None) -> dict:
         next_state = state if isinstance(state, dict) else {}
@@ -892,6 +941,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.get_account()
             if path == "/api/account" and self.command == "PATCH":
                 return self.patch_account()
+            if path == "/api/leaderboard" and self.command == "GET":
+                return self.get_leaderboard()
             if path == "/api/state" and self.command == "GET":
                 return self.get_state()
             if path == "/api/state" and self.command == "PUT":
@@ -1271,6 +1322,10 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         with db.connect() as conn:
             state = db.save_state(conn, user["id"], data.get("state") if isinstance(data.get("state"), dict) else {})
             self.send_json(200, {"state": state})
+
+    def get_leaderboard(self):
+        with db.connect() as conn:
+            self.send_json(200, {"leaderboard": db.get_leaderboard(conn), "updatedAt": utc_now()})
 
     def get_problems(self):
         user = self.optional_user()
