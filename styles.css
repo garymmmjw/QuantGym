@@ -9702,7 +9702,24 @@ body.is-authenticated .global-search-result {
 .interview-section {
   position: relative;
   isolation: isolate;
-  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
+  font-family: "Inter", "Söhne", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.011em;
+}
+
+/* Apply the ChatGPT-like font across all interview UI, overriding inherited display fonts. */
+.interview-section,
+.interview-section input,
+.interview-section textarea,
+.interview-section select,
+.interview-section button {
+  font-family: "Inter", "Söhne", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* Match ChatGPT's lighter, cleaner type inside the whole interview module. */
+.interview-section strong,
+.interview-section b {
+  font-weight: 600;
 }
 
 .module-view[data-module-view="interview"] {
@@ -9762,15 +9779,84 @@ body.is-authenticated .global-search-result {
 }
 
 .interview-setup-field .segmented {
+  display: flex;
   width: 100%;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #e6e8ee;
+  border-radius: 12px;
+  background: #f3f4f6;
 }
 
 .interview-setup-field .segment {
   flex: 1;
+  min-height: 40px;
+  border-radius: 9px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+
+.interview-setup-field .segment:hover {
+  color: #374151;
+}
+
+.interview-setup-field .segment:active {
+  transform: scale(0.98);
+}
+
+.interview-setup-field .segment.active {
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.10), 0 0 0 1.5px rgba(99, 91, 255, 0.45);
 }
 
 .interview-setup-field select {
   width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #e6e8ee;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #111827;
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+
+/* Mascot beside the setup card (overview-style shark); hidden once the session starts. */
+.interview-setup-shark {
+  display: none;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+.interview-grid.setup-only {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 3vw, 44px);
+  grid-template-columns: none;
+}
+
+.interview-grid.setup-only .interview-setup {
+  flex: 0 1 560px;
+}
+
+.interview-grid.setup-only .interview-setup-shark {
+  display: block;
+}
+
+.interview-setup-shark img {
+  width: clamp(120px, 13vw, 200px);
+  height: auto;
+  transform-origin: 50% 80%;
+  animation: sharkFloat 4.8s ease-in-out infinite;
 }
 
 .interview-setup-hero {
@@ -9810,20 +9896,40 @@ body.is-authenticated .global-search-result {
 .interview-advanced-config {
   display: grid;
   gap: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.48);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid #e6e8ee;
+  border-radius: 12px;
+  background: #fafafb;
+  box-shadow: none;
+}
+
+.interview-advanced-config[open] {
+  background: #ffffff;
 }
 
 .interview-advanced-config summary {
   padding: 12px 14px;
-  color: #4f5661;
-  font-size: 0.86rem;
-  font-weight: 780;
+  color: #4b5563;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
+  list-style: none;
+}
+
+.interview-advanced-config summary::-webkit-details-marker {
+  display: none;
+}
+
+.interview-advanced-config summary::before {
+  content: "›";
+  display: inline-block;
+  margin-right: 8px;
+  color: #9ca3af;
+  transform: rotate(0deg);
+  transition: transform 0.15s ease;
+}
+
+.interview-advanced-config[open] summary::before {
+  transform: rotate(90deg);
 }
 
 .interview-advanced-grid {
@@ -10114,14 +10220,14 @@ body.is-authenticated .global-search-result {
 }
 
 .interview-action-chip {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid rgba(24, 24, 27, 0.14);
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid #e1e4ea;
   border-radius: 999px;
   background: #fff;
-  color: #24272f;
-  font-size: 0.86rem;
-  font-weight: 760;
+  color: #1f2430;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
   transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
@@ -10706,12 +10812,16 @@ body.is-authenticated .global-search-result {
 
 .interview-chat-input {
   display: grid;
-  gap: 8px;
-  max-width: 880px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  column-gap: 8px;
+  row-gap: 8px;
+  width: 100%;
+  max-width: 820px;
   margin: 0 auto;
-  padding: 9px;
+  padding: 6px 8px 6px 18px;
   border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 20px;
+  border-radius: 28px;
   background: rgba(255, 255, 255, 0.62);
   box-shadow:
     0 20px 58px rgba(74, 101, 140, 0.16),
@@ -10731,17 +10841,33 @@ body.is-authenticated .global-search-result {
 }
 
 .interview-chat-input textarea {
-  min-height: 46px;
-  max-height: 220px;
-  padding: 10px 11px 7px;
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+  max-height: 200px;
+  padding: 11px 0 9px;
   resize: none;
   border: 0;
   background: transparent;
   box-shadow: none;
   color: #172033;
   font: inherit;
-  font-size: 0.98rem;
-  line-height: 1.55;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.interview-chat-input .interview-chat-actions {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+  padding-bottom: 3px;
+}
+
+.interview-chat-input .interview-attachment-preview {
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 .interview-chat-input textarea:focus {

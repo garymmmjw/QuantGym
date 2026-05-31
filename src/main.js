@@ -825,7 +825,7 @@ function bindEvents() {
   els.interviewAnswer?.addEventListener("input", autoSizeInterviewAnswer);
   els.interviewAnswer?.addEventListener("keydown", handleInterviewAnswerKeydown);
   els.interviewTranscript?.addEventListener("click", handleInterviewTranscriptAction);
-  els.saveLlmConfigBtn.addEventListener("click", saveLlmConfig);
+  els.saveLlmConfigBtn?.addEventListener("click", saveLlmConfig);
   els.startInterviewBtn.addEventListener("click", startInterview);
   els.hintInterviewBtn?.addEventListener("click", requestInterviewHint);
   els.revealAnswerBtn.addEventListener("click", revealInterviewAnswer);
@@ -9738,7 +9738,7 @@ function updateInterviewActionPanel() {
   if (els.interviewAnswer) {
     els.interviewAnswer.disabled = completed || Boolean(interviewSession?.submitting);
     els.interviewAnswer.placeholder = onboarding
-      ? (interviewLanguage === "zh" ? "输入你的选择，或点快捷按钮" : "Type your choice or tap an option")
+      ? (interviewLanguage === "zh" ? "输入你的选择，或点上方按钮…" : "Type your choice…")
       : (interviewLanguage === "zh" ? "输入你的回答…" : "Type your answer…");
   }
 }
@@ -12724,7 +12724,8 @@ function updateInterviewMessage(id, text, options = {}) {
 function startInterviewTyping(id, text) {
   const fullText = String(text || "");
   let index = 0;
-  const step = Math.max(1, Math.ceil(fullText.length / 160));
+  // Slower, more natural typing for interviewer/onboarding messages (questions are shown instantly elsewhere).
+  const step = Math.max(1, Math.ceil(fullText.length / 130));
 
   interviewMessages = interviewMessages.map((message) => (
     message.id === id ? { ...message, text: fullText, displayText: "", typing: true, thinking: false } : message
@@ -12743,21 +12744,23 @@ function startInterviewTyping(id, text) {
       message.id === id ? { ...message, displayText, typing: !done } : message
     ));
 
+    if (done) {
+      stopInterviewTyping(id);
+      // Full re-render once at the end so attachments and quick-option chips render.
+      renderInterviewTranscript();
+      scheduleMathTypeset(els.interviewTranscript);
+      return;
+    }
+
     const turn = findTurn();
     const node = turn?.querySelector(".message");
     if (node) {
       renderRichText(node, displayText);
-      if (done) turn.classList.remove("is-streaming");
       els.interviewTranscript.scrollTop = els.interviewTranscript.scrollHeight;
     } else {
       renderInterviewTranscript();
     }
-
-    if (done) {
-      stopInterviewTyping(id);
-      scheduleMathTypeset(els.interviewTranscript);
-    }
-  }, 24);
+  }, 42);
   interviewTypingTimers.set(id, timer);
 }
 
