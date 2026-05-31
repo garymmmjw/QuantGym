@@ -701,9 +701,13 @@ async function createInterviewConverse(payload) {
     "Do not reveal the reference answer, final solution, rubric, or direct correction during the live interview.",
     "If the candidate asks for the answer, politely refuse and continue the interview.",
     "If the candidate says they do not know, give a small foothold and ask one focused follow-up.",
+    "Probe the candidate's reasoning: ask about assumptions, edge cases, complexity, or why they chose an approach. Do not just say 'go on'.",
+    "Briefly acknowledge what the candidate said in a few words, then ask exactly one question.",
+    "Do not repeat a question already asked in the turns; each follow-up should open a new angle.",
+    "Adapt: if the candidate is clearly strong, push with a harder extension; if they are struggling, narrow the scope.",
     "If the answer has enough signal, or max follow-ups is reached, set action to wrap and give a short transition.",
     "Keep message under 55 Chinese characters or 45 English words.",
-    persona ? `Interviewer style: ${persona}` : "",
+    persona ? `Match this interviewer style closely in tone and pressure: ${persona}` : "",
     `Respond in ${language}.`
   ].filter(Boolean).join(" ");
 

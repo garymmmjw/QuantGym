@@ -20,6 +20,32 @@ import {
   seedNews, seedJobs, quantCompanyDefs, seedCourses
 } from './catalog-data.js';
 
+const PROBLEM_MEDIA_FIELD_KEYS = [
+  "image",
+  "imageUrl",
+  "imageUrls",
+  "images",
+  "diagram",
+  "diagramUrl",
+  "promptImage",
+  "promptImages",
+  "answerImage",
+  "answerImages",
+  "explanationImage",
+  "explanationImages",
+  "solutionImage",
+  "solutionImages"
+];
+
+const PROBLEM_LOCALIZED_FIELD_KEYS = [
+  "answerEn",
+  "answerZh",
+  "explanationEn",
+  "explanationZh",
+  "hint",
+  "quantguide"
+];
+
 if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 window.addEventListener("load", () => {
   requestAnimationFrame(() => window.scrollTo(0, 0));
@@ -103,6 +129,7 @@ let checkInToastTimer = null;
 const PROBLEM_PAGE_SIZE = 24;
 const PROBLEM_SEARCH_DEBOUNCE_MS = 140;
 const INTERVIEW_SESSION_STORAGE_KEY = "quantgym-interview-session-v2";
+const INTERVIEW_HISTORY_STORAGE_KEY = "quantgym-interview-history-v1";
 let problemVisibleCount = PROBLEM_PAGE_SIZE;
 let problemSearchTimer = 0;
 let problemSearchComposing = false;
@@ -321,6 +348,7 @@ function bindElements() {
     "interviewSessionTitle",
     "interviewQuestionStatus",
     "interviewTimer",
+    "toggleInterviewPanelBtn",
     "interviewTranscript",
     "interviewQuestionPanel",
     "interviewForm",
@@ -335,6 +363,8 @@ function bindElements() {
     "nextInterviewQuestionBtn",
     "saveInterviewFavoriteBtn",
     "shareInterviewQuestionBtn",
+    "restartInterviewBtn",
+    "exportInterviewReportBtn",
     "interviewFavoritesSummary",
     "interviewFavoritesList",
     "voiceAnswerBtn",
@@ -766,6 +796,13 @@ function bindEvents() {
     });
   });
 
+  document.querySelectorAll("[data-interview-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll("[data-interview-mode]").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+    });
+  });
+
   [els.interviewTypeSelect, els.interviewQuestionCount, els.interviewQuestionTime, els.interviewSourceSelect].filter(Boolean).forEach((node) => {
     node.addEventListener("change", () => {
       if (node === els.interviewTypeSelect || node === els.interviewSourceSelect) selectedInterviewCategories = new Set(["all"]);
@@ -795,6 +832,9 @@ function bindEvents() {
   els.nextInterviewQuestionBtn?.addEventListener("click", goToNextInterviewQuestion);
   els.saveInterviewFavoriteBtn?.addEventListener("click", saveCurrentInterviewFavorite);
   els.shareInterviewQuestionBtn?.addEventListener("click", shareCurrentInterviewQuestion);
+  els.restartInterviewBtn?.addEventListener("click", restartInterviewWithSameConfig);
+  els.exportInterviewReportBtn?.addEventListener("click", exportInterviewReport);
+  els.toggleInterviewPanelBtn?.addEventListener("click", toggleInterviewPanel);
   els.voiceAnswerBtn?.addEventListener("click", toggleVoiceAnswer);
   els.clearInterviewBtn.addEventListener("click", resetInterview);
   els.interviewForm.addEventListener("submit", (event) => {
@@ -7900,7 +7940,11 @@ function getProblemSearchRecord(problem) {
     titleText,
     promptText,
     problem.answer,
+    problem.answerEn,
+    problem.answerZh,
     problem.explanation,
+    problem.explanationEn,
+    problem.explanationZh,
     metaText
   ]);
   const record = {
@@ -8396,6 +8440,12 @@ function getProblemDisplayTitle(problem, isEn = getLanguage() === "en") {
   return number ? `${categoryLabel} Challenge ${number}` : t("problemTitle");
 }
 
+function getLocalizedProblemField(problem, field, isEn = getLanguage() === "en") {
+  const primary = isEn ? `${field}En` : `${field}Zh`;
+  const secondary = isEn ? `${field}Zh` : `${field}En`;
+  return String(problem?.[primary] || problem?.[field] || problem?.[secondary] || "").trim();
+}
+
 function getProblemExcerptText(problem, isEn = getLanguage() === "en") {
   if (!isEn) return problem.promptZh || problem.promptEn || t("noPrompt");
   return problem.promptEn || t("untranslatedProblemFallback");
@@ -8565,13 +8615,23 @@ function renderProblemDetail(problem) {
     meta.appendChild(pill);
   });
 
+  const questionContent = [
+    (isEn ? problem.promptEn || problem.promptZh : problem.promptZh || problem.promptEn) || t("noPrompt"),
+    getProblemMediaMarkdown(problem, "prompt")
+  ].filter(Boolean).join("\n\n");
+  const answerContent = getLocalizedProblemField(problem, "answer", isEn) || t("noAnswer");
+  const explanationContent = [
+    getLocalizedProblemField(problem, "explanation", isEn) || t("noExplanation"),
+    getProblemMediaMarkdown(problem, "answer")
+  ].filter(Boolean).join("\n\n");
+
   els.problemDetail.append(
     top,
     title,
     meta,
-    createProblemDetailBlock(t("problemQuestion"), (isEn ? problem.promptEn || problem.promptZh : problem.promptZh || problem.promptEn) || t("noPrompt")),
-    createProblemDetailBlock(t("problemAnswer"), problem.answer || t("noAnswer")),
-    createProblemDetailBlock(t("problemExplanation"), problem.explanation || t("noExplanation")),
+    createProblemDetailBlock(t("problemQuestion"), questionContent),
+    createProblemDetailBlock(t("problemAnswer"), answerContent),
+    createProblemDetailBlock(t("problemExplanation"), explanationContent),
     createProblemSocialPanel(problem)
   );
   scheduleMathTypeset(els.problemDetail);
@@ -8971,19 +9031,26 @@ function renderInterviewTranscript() {
   els.interviewTranscript.innerHTML = "";
   if (!interviewMessages.length) {
     appendMessageNode("system", interviewLanguage === "zh"
-      ? "进入模拟面试后，我会先用对话问你本场语言、模式、方向、难度、题量、风格和语音设置，然后自然进入第一题。"
-      : "When you start, I will ask for language, mode, focus, difficulty, scope, interviewer style, and voice settings, then move into the first question.");
+      ? "进入后，我会用对话和你确认方向、难度、题量和风格，然后自然进入第一题。"
+      : "Once we start, I will confirm focus, difficulty, scope, and style through chat, then move into the first question.");
     return;
   }
 
-  interviewMessages.forEach((message) => appendMessageNode(message.role, message.displayText ?? message.text, {
-    typing: message.typing,
-    thinking: message.thinking,
-    attachments: message.attachments || [],
-    actions: message.actions || [],
-    actionStep: message.actionStep || "",
-    variant: message.variant || ""
-  }));
+  let prevRole = null;
+  interviewMessages.forEach((message) => {
+    const grouped = message.role !== "user" && message.role === prevRole;
+    appendMessageNode(message.role, message.displayText ?? message.text, {
+      id: message.id,
+      typing: message.typing,
+      thinking: message.thinking,
+      attachments: message.attachments || [],
+      actions: message.actions || [],
+      actionStep: message.actionStep || "",
+      variant: message.variant || "",
+      grouped
+    });
+    prevRole = message.role;
+  });
   els.interviewTranscript.scrollTop = els.interviewTranscript.scrollHeight;
   if (!interviewMessages.some((message) => message.typing)) scheduleMathTypeset(els.interviewTranscript);
 }
@@ -8991,15 +9058,19 @@ function renderInterviewTranscript() {
 function appendMessageNode(role, text, options = {}) {
   const typing = Boolean(options.typing);
   const thinking = Boolean(options.thinking);
+  const grouped = Boolean(options.grouped);
   const turn = document.createElement("article");
   turn.className = `message-turn ${role}`;
+  if (options.id) turn.dataset.messageId = options.id;
   if (options.variant) turn.classList.add(`message-${options.variant}`);
   if (typing) turn.classList.add("is-streaming");
+  if (grouped) turn.classList.add("is-grouped");
 
   const avatar = document.createElement("div");
   avatar.className = "message-avatar";
   avatar.setAttribute("aria-hidden", "true");
   avatar.textContent = getInterviewMessageAvatar(role);
+  if (grouped) avatar.style.visibility = "hidden";
 
   const stack = document.createElement("div");
   stack.className = "message-stack";
@@ -9034,7 +9105,8 @@ function appendMessageNode(role, text, options = {}) {
     stack.append(node);
     turn.append(stack);
   } else {
-    stack.append(meta, node);
+    if (!grouped) stack.append(meta);
+    stack.append(node);
     turn.append(avatar, stack);
   }
   els.interviewTranscript.appendChild(turn);
@@ -9620,19 +9692,42 @@ function getInterviewFavorites() {
     .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
 }
 
+function toggleInterviewPanel() {
+  if (!els.interviewConsole) return;
+  const active = els.interviewConsole.classList.toggle("show-panel");
+  els.toggleInterviewPanelBtn?.classList.toggle("is-active", active);
+  els.toggleInterviewPanelBtn?.setAttribute("aria-pressed", String(active));
+  if (active) renderInterviewQuestionPanel();
+}
+
 function updateInterviewActionPanel() {
   if (!els.interviewCompleteActions) return;
   const onboarding = isInterviewOnboarding();
   const live = isInterviewLiveMode();
   const completed = Boolean(interviewSession?.completed);
   const hasCompletedQuestion = Boolean(interviewSession && interviewSession.currentIndex >= 0 && interviewSession.answeredCurrent);
-  els.interviewCompleteActions.classList.toggle("hidden", !hasCompletedQuestion || completed || onboarding);
+  // Show the action bar when a question is answered, OR at the end of the session (for restart/export).
+  els.interviewCompleteActions.classList.toggle("hidden", onboarding || (!hasCompletedQuestion && !completed));
 
   const hasNext = Boolean(
     interviewSession
     && interviewSession.awaitingNext
     && interviewSession.currentIndex < interviewSession.questions.length - 1
   );
+  // In-session buttons hide at completion; restart/export show only at completion.
+  els.nextInterviewQuestionBtn?.classList.toggle("hidden", completed);
+  els.saveInterviewFavoriteBtn?.classList.toggle("hidden", completed);
+  els.shareInterviewQuestionBtn?.classList.toggle("hidden", completed);
+  els.restartInterviewBtn?.classList.toggle("hidden", !completed);
+  els.exportInterviewReportBtn?.classList.toggle("hidden", !completed);
+
+  const showPanelToggle = Boolean(interviewSession && interviewSession.questions?.length && !onboarding);
+  els.toggleInterviewPanelBtn?.classList.toggle("hidden", !showPanelToggle);
+  if (!showPanelToggle) {
+    els.interviewConsole?.classList.remove("show-panel");
+    els.toggleInterviewPanelBtn?.classList.remove("is-active");
+    els.toggleInterviewPanelBtn?.setAttribute("aria-pressed", "false");
+  }
   if (els.nextInterviewQuestionBtn) els.nextInterviewQuestionBtn.disabled = !hasNext;
   if (els.saveInterviewFavoriteBtn) els.saveInterviewFavoriteBtn.disabled = !hasCompletedQuestion;
   if (els.shareInterviewQuestionBtn) els.shareInterviewQuestionBtn.disabled = !hasCompletedQuestion;
@@ -9643,8 +9738,8 @@ function updateInterviewActionPanel() {
   if (els.interviewAnswer) {
     els.interviewAnswer.disabled = completed || Boolean(interviewSession?.submitting);
     els.interviewAnswer.placeholder = onboarding
-      ? (interviewLanguage === "zh" ? "直接输入你的选择，也可以点快捷按钮" : "Type your choice or use a quick option")
-      : (interviewLanguage === "zh" ? "输入你的回答，Enter 发送，Shift+Enter 换行" : "Type your answer. Enter sends, Shift+Enter adds a line");
+      ? (interviewLanguage === "zh" ? "输入你的选择，或点快捷按钮" : "Type your choice or tap an option")
+      : (interviewLanguage === "zh" ? "输入你的回答…" : "Type your answer…");
   }
 }
 
@@ -9763,6 +9858,16 @@ function sanitizeProblemTitleEn(title, raw = {}) {
   return exerciseTitleOverrides[number]?.en || title.replace(new RegExp(legacyBookPattern.source, "ig"), "Question Bank").trim();
 }
 
+function pickProblemExtendedFields(raw) {
+  const extra = {};
+  [...PROBLEM_MEDIA_FIELD_KEYS, ...PROBLEM_LOCALIZED_FIELD_KEYS].forEach((key) => {
+    if (raw && raw[key] !== undefined && raw[key] !== null && raw[key] !== "") {
+      extra[key] = raw[key];
+    }
+  });
+  return extra;
+}
+
 function normalizeProblem(raw) {
   const sourceUrl = String(raw?.sourceUrl || raw?.url || "").trim();
   let titleEn = sanitizeProblemTitleEn(String(raw?.titleEn || raw?.title || "").trim(), raw);
@@ -9803,7 +9908,8 @@ function normalizeProblem(raw) {
     visibility: visibility === "public" ? "public" : "user",
     ownerUserId: String(raw?.ownerUserId || "").trim(),
     createdAt: isLegacyCatalogMarker(raw?.createdAt) ? "catalog" : raw?.createdAt || new Date().toISOString(),
-    updatedAt: raw?.updatedAt || ""
+    updatedAt: raw?.updatedAt || "",
+    ...pickProblemExtendedFields(raw)
   };
 }
 
@@ -10274,8 +10380,8 @@ function updateInterviewAnswerMode() {
   els.voiceAnswerBtn?.classList.remove("hidden");
   if (els.interviewAnswer) {
     els.interviewAnswer.placeholder = interviewLanguage === "zh"
-      ? "输入你的回答，Enter 发送，Shift+Enter 换行"
-      : "Type your answer. Enter sends, Shift+Enter adds a line";
+      ? "输入你的回答…"
+      : "Type your answer…";
     autoSizeInterviewAnswer();
   }
 }
@@ -10341,29 +10447,62 @@ function resetInterview(options = {}) {
   renderInterviewQuestionPanel();
 }
 
+function getInterviewSetupLanguage() {
+  const active = document.querySelector("[data-interview-lang].active");
+  return active?.dataset.interviewLang === "en" ? "en" : "zh";
+}
+
+function getInterviewSetupMode() {
+  const active = document.querySelector("[data-interview-mode].active");
+  const mode = active?.dataset.interviewMode;
+  return interviewModeDefs[mode] ? mode : "practice";
+}
+
 async function startInterview() {
   clearInterviewTimers();
   stopInterviewSpeech();
   interviewMessages = [];
   interviewPanelExpandedIndex = 0;
   interviewPreparing = false;
-  interviewSession = createInterviewOnboardingSession();
+
+  // Apply the three buffer-screen choices: language, model, mode.
+  interviewLanguage = getInterviewSetupLanguage();
+  syncInterviewLanguageControls();
+  const mode = getInterviewSetupMode();
+  llmConfig = {
+    endpoint: (els.llmEndpointInput?.value.trim() || llmConfig.endpoint || ""),
+    model: normalizeLlmModel(els.llmModelInput?.value || llmConfig.model)
+  };
+  saveLlmConfigToStorage();
+
+  interviewSession = createInterviewOnboardingSession({ language: interviewLanguage, mode });
   updateInterviewStatus("onboarding");
-  askInterviewOnboardingStep("language");
+
+  const useZh = interviewLanguage !== "en";
+  const modeLabel = useZh
+    ? (interviewModeDefs[mode]?.labelZh || "训练练习")
+    : (interviewModeDefs[mode]?.labelEn || "Practice");
+  const langLabel = useZh ? "中文" : "English";
+  appendInterviewMessage("coach", useZh
+    ? `好的，本场用${langLabel}进行${modeLabel}。下面我快速问你几个设置。`
+    : `Great — this session is ${modeLabel} in ${langLabel}. Let me ask a few quick settings.`);
+  askInterviewOnboardingStep("focus");
   persistInterviewSessionSnapshot();
 }
 
-function createInterviewOnboardingSession() {
+function createInterviewOnboardingSession(opts = {}) {
+  const presetLanguage = opts.language === "en" ? "en" : opts.language === "zh" ? "zh" : interviewLanguage;
+  const presetMode = interviewModeDefs[opts.mode] ? opts.mode : "practice";
   return {
     id: makeId(),
     phase: "onboarding",
-    mode: "practice",
+    mode: presetMode,
     type: "technical",
     source: getInterviewSource(),
     answerMode: "chat",
     sessionConfig: {
-      language: "",
-      mode: "",
+      language: presetLanguage,
+      mode: presetMode,
       focusKey: "",
       focusTags: [],
       difficulty: "",
@@ -10373,7 +10512,7 @@ function createInterviewOnboardingSession() {
       ttsEnabled: true,
       source: getInterviewSource()
     },
-    onboardingStep: "language",
+    onboardingStep: "focus",
     questions: [],
     currentIndex: -1,
     currentProblem: null,
@@ -10852,6 +10991,12 @@ function showInterviewQuestion(index) {
   updateInterviewAnswerFileMeta();
   autoSizeInterviewAnswer();
 
+  const isFirstQuestion = index === 0;
+  const totalQuestions = interviewSession.questions.length;
+  const transition = interviewLanguage === "zh"
+    ? (isFirstQuestion ? `我们开始吧，第 1 题（共 ${totalQuestions} 题）。` : "好，看下一题。")
+    : (isFirstQuestion ? `Let's begin — question 1 of ${totalQuestions}.` : "Alright, here is the next question.");
+  appendInterviewMessage("coach", transition);
   interviewSession.currentQuestionMessageId = appendInterviewMessage("system", formatInterviewQuestion(problem, index), { typewriter: false });
   const opening = isInterviewLiveMode()
     ? (interviewLanguage === "zh"
@@ -10881,8 +11026,20 @@ function showInterviewQuestion(index) {
   els.interviewAnswer?.focus();
 }
 
+function prettyInterviewTitle(problem) {
+  const raw = String(interviewLanguage === "zh"
+    ? problem.titleZh || problem.titleEn
+    : problem.titleEn || problem.titleZh || "").trim();
+  // Strip book-import numbering like "Question 5.6 – futures ..." → "Futures ..."
+  let cleaned = raw.replace(/^\s*(question|problem|题目|第)\s*[\d.]+\s*[-–—:：.]*\s*/i, "").trim();
+  if (!cleaned || /^[\d.\s]+$/.test(cleaned)) {
+    cleaned = formatCategoryLabel(problem.category) || (interviewLanguage === "zh" ? "面试题" : "Question");
+  }
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
 function formatInterviewQuestion(problem, index) {
-  const title = interviewLanguage === "zh" ? problem.titleZh || problem.titleEn : problem.titleEn || problem.titleZh;
+  const title = prettyInterviewTitle(problem);
   const prompt = interviewLanguage === "zh" ? problem.promptZh || problem.promptEn : problem.promptEn || problem.promptZh;
   return [
     `# Q${index + 1}/${interviewSession.questions.length} · ${interviewTypeDefs[interviewSession.type]?.label || "Interview"} · ${formatCategoryLabel(problem.category)} · ${problem.difficulty}`,
@@ -11179,8 +11336,8 @@ async function requestInterviewConverse(problem, answerPayload, conversation) {
       questionCount: interviewSession?.questions?.length || 1,
       problem,
       groundTruth: {
-        answer: problem.answer || "",
-        explanation: problem.explanation || ""
+        answer: getLocalizedProblemField(problem, "answer", interviewLanguage === "en"),
+        explanation: getLocalizedProblemField(problem, "explanation", interviewLanguage === "en")
       },
       turns: conversation.turns || [],
       followupCount: conversation.followupCount || 0,
@@ -11635,7 +11792,11 @@ function getLocalInterviewEvaluation(answer, missing) {
 }
 
 function getInterviewReferenceSummary(problem) {
-  const raw = [problem.answer, problem.explanation]
+  const isEn = interviewLanguage === "en";
+  const raw = [
+    getLocalizedProblemField(problem, "answer", isEn),
+    getLocalizedProblemField(problem, "explanation", isEn)
+  ]
     .filter(Boolean)
     .join(" ")
     .replace(/\s+/g, " ")
@@ -11866,10 +12027,180 @@ function completeInterview() {
   interviewSession.completed = true;
   interviewSession.awaitingNext = false;
   updateInterviewStatus("completed");
-  appendInterviewMessage("coach", buildInterviewCompletionReport(), { variant: "report" });
+  const report = buildInterviewCompletionReport();
+  // Persist this session for cross-session trends (after the report reads prior history).
+  const scoredResults = (interviewSession.questionResults || []).filter((item) => Number.isFinite(Number(item?.score)));
+  const sessionAverage = scoredResults.length
+    ? Math.round(scoredResults.reduce((sum, item) => sum + Number(item.score || 0), 0) / scoredResults.length)
+    : null;
+  if (Number.isFinite(sessionAverage)) {
+    const dims = {};
+    summarizeInterviewDimensions(scoredResults).forEach((dimension) => { dims[dimension.key] = dimension.score; });
+    saveCompletedInterviewToHistory({
+      date: new Date().toISOString(),
+      mode: interviewSession.mode,
+      type: interviewSession.type,
+      focusKey: interviewSession.sessionConfig?.focusKey || "",
+      average: sessionAverage,
+      dimensions: dims,
+      questionCount: interviewSession.questions?.length || 0
+    });
+  }
+  appendInterviewMessage("coach", report, { variant: "report", typewriter: false });
   launchInterviewConfetti();
   sessionStorage.removeItem(INTERVIEW_SESSION_STORAGE_KEY);
   renderInterviewQuestionPanel();
+}
+
+async function restartInterviewWithSameConfig() {
+  const config = normalizeInterviewSessionConfig(interviewSession?.sessionConfig || {});
+  clearInterviewTimers();
+  stopInterviewSpeech();
+  interviewMessages = [];
+  interviewPanelExpandedIndex = 0;
+  interviewLanguage = config.language === "en" ? "en" : "zh";
+  syncInterviewLanguageControls();
+  const type = getInterviewTypeForConfig(config);
+  interviewSession = {
+    id: makeId(),
+    phase: "running",
+    mode: config.mode,
+    type,
+    source: config.source,
+    answerMode: "chat",
+    sessionConfig: config,
+    questions: [],
+    currentIndex: -1,
+    currentProblem: null,
+    awaitingNext: false,
+    completed: false,
+    answeredCurrent: false,
+    questionResults: [],
+    questionConversations: [],
+    latestScoredIndex: -1,
+    startedAt: new Date().toISOString()
+  };
+  interviewPreparing = true;
+  updateInterviewStatus("loading");
+  renderInterviewTranscript();
+  try {
+    const count = getInterviewQuestionCountForConfig(config);
+    const questions = config.source === "pdf"
+      ? await buildPdfInterviewQuestions(count, type)
+      : buildFullRangeInterviewQuestions(count, type, config);
+    if (!questions.length) {
+      appendInterviewMessage("system", interviewLanguage === "zh"
+        ? "没有可用题目，请调整设置后重试。"
+        : "No questions available. Adjust settings and retry.");
+      interviewPreparing = false;
+      updateInterviewStatus("onboarding");
+      return;
+    }
+    interviewSession = { ...interviewSession, questionSeconds: getInterviewQuestionSecondsForConfig(config, count), questions };
+    interviewPreparing = false;
+    appendInterviewMessage("coach", interviewLanguage === "zh"
+      ? "好，用同样的设置再来一场。"
+      : "Same setup — let's go again.");
+    startInterviewPrepCountdown(2);
+  } catch (error) {
+    appendInterviewMessage("system", interviewLanguage === "zh"
+      ? `重新开始失败：${error.message || "请检查 LLM 代理。"}`
+      : `Restart failed: ${error.message || "Check the LLM proxy."}`);
+    interviewPreparing = false;
+    updateInterviewStatus("onboarding");
+  } finally {
+    persistInterviewSessionSnapshot();
+  }
+}
+
+function exportInterviewReport() {
+  if (!interviewSession) return;
+  const reportText = buildInterviewCompletionReport();
+  const win = window.open("", "_blank");
+  if (!win) {
+    appendInterviewMessage("system", interviewLanguage === "zh"
+      ? "无法打开导出窗口，请允许弹出窗口后重试。"
+      : "Could not open the export window. Allow pop-ups and retry.");
+    return;
+  }
+  win.document.write(buildInterviewReportHtml(reportText));
+  win.document.close();
+  win.focus();
+  setTimeout(() => { try { win.print(); } catch (error) { /* user can print manually */ } }, 350);
+}
+
+function buildInterviewReportHtml(text) {
+  const esc = (value) => String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const body = [];
+  let inList = false;
+  const closeList = () => { if (inList) { body.push("</ul>"); inList = false; } };
+  String(text).split("\n").forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) { closeList(); return; }
+    if (trimmed.startsWith("### ")) { closeList(); body.push(`<h2>${esc(trimmed.slice(4))}</h2>`); return; }
+    if (trimmed.startsWith("- ")) {
+      if (!inList) { body.push("<ul>"); inList = true; }
+      body.push(`<li>${esc(trimmed.slice(2))}</li>`);
+      return;
+    }
+    closeList();
+    body.push(`<p>${esc(trimmed)}</p>`);
+  });
+  closeList();
+  const title = interviewLanguage === "zh" ? "QuantGym 模拟面试报告" : "QuantGym Mock Interview Report";
+  return `<!doctype html><html lang="${interviewLanguage === "zh" ? "zh" : "en"}"><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;max-width:720px;margin:48px auto;padding:0 24px;color:#18181b;line-height:1.7}h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:22px 0 8px;color:#2c3138}p{margin:4px 0}ul{margin:6px 0 6px 20px;padding:0}li{margin:3px 0}.meta{color:#6b7280;font-size:13px;margin-bottom:18px}</style></head><body><h1>${esc(title)}</h1><div class="meta">${esc(new Date().toLocaleString())}</div>${body.join("\n")}</body></html>`;
+}
+
+function loadInterviewHistory() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(INTERVIEW_HISTORY_STORAGE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveCompletedInterviewToHistory(entry) {
+  try {
+    const history = loadInterviewHistory();
+    history.push(entry);
+    localStorage.setItem(INTERVIEW_HISTORY_STORAGE_KEY, JSON.stringify(history.slice(-50)));
+  } catch {
+    /* ignore storage quota / disabled storage */
+  }
+}
+
+function interviewSparkline(values) {
+  const blocks = "▁▂▃▄▅▆▇█";
+  const nums = values.filter((value) => Number.isFinite(value));
+  if (!nums.length) return "";
+  const min = Math.min(...nums);
+  const max = Math.max(...nums);
+  const span = max - min || 1;
+  return nums.map((value) => blocks[Math.min(blocks.length - 1, Math.round(((value - min) / span) * (blocks.length - 1)))]).join("");
+}
+
+function getInterviewTrendLines(currentAverage) {
+  const useZh = interviewLanguage !== "en";
+  const past = loadInterviewHistory().map((item) => Number(item.average)).filter(Number.isFinite);
+  const series = [...past, ...(Number.isFinite(currentAverage) ? [currentAverage] : [])];
+  if (series.length < 2) return [];
+  const recent = series.slice(-8);
+  const spark = interviewSparkline(recent);
+  const first = recent[0];
+  const last = recent[recent.length - 1];
+  const arrow = last > first ? "↑" : last < first ? "↓" : "→";
+  const lines = [useZh
+    ? `总分趋势（近 ${recent.length} 场）：${spark} ${first}→${last} ${arrow}`
+    : `Overall trend (last ${recent.length}): ${spark} ${first}→${last} ${arrow}`];
+  if (past.length && Number.isFinite(currentAverage)) {
+    const personalAvg = Math.round(past.reduce((sum, value) => sum + value, 0) / past.length);
+    const delta = currentAverage - personalAvg;
+    lines.push(useZh
+      ? `相比你的历史平均 ${personalAvg}：${delta >= 0 ? "+" : ""}${delta}`
+      : `vs your average ${personalAvg}: ${delta >= 0 ? "+" : ""}${delta}`);
+  }
+  return lines;
 }
 
 function buildInterviewCompletionReport() {
@@ -11879,13 +12210,14 @@ function buildInterviewCompletionReport() {
   const average = scored.length
     ? Math.round(scored.reduce((sum, item) => sum + Number(item.score || 0), 0) / scored.length)
     : null;
+  const trendLines = getInterviewTrendLines(average);
   const dimensionSummary = summarizeInterviewDimensions(scored);
   const strongest = dimensionSummary[0];
   const weakest = dimensionSummary[dimensionSummary.length - 1];
   const tags = getInterviewPerformanceTags(average, strongest, weakest);
   const questionLines = (interviewSession?.questions || []).map((problem, index) => {
     const result = results[index] || {};
-    const title = useZh ? problem.titleZh || problem.titleEn : problem.titleEn || problem.titleZh;
+    const title = prettyInterviewTitle(problem);
     const scoreText = Number.isFinite(Number(result.score)) ? `${Math.round(result.score)}/100` : (useZh ? "未评分" : "Not scored");
     const note = result.evaluation || (useZh ? "已记录回答。" : "Answer recorded.");
     return `- Q${index + 1}: ${title || (useZh ? "未命名题目" : "Untitled")} - ${scoreText} - ${note}`;
@@ -11898,6 +12230,7 @@ function buildInterviewCompletionReport() {
       tags.length ? `表现标签：${tags.join("、")}` : "",
       strongest ? `最强维度：${strongest.label} ${strongest.score}/5` : "",
       weakest ? `最弱维度：${weakest.label} ${weakest.score}/5` : "",
+      ...(trendLines.length ? ["", "趋势：", ...trendLines] : []),
       "",
       "逐题复盘：",
       ...questionLines,
@@ -11911,6 +12244,7 @@ function buildInterviewCompletionReport() {
       tags.length ? `Tags: ${tags.join(", ")}` : "",
       strongest ? `Strongest dimension: ${strongest.label} ${strongest.score}/5` : "",
       weakest ? `Weakest dimension: ${weakest.label} ${weakest.score}/5` : "",
+      ...(trendLines.length ? ["", "Trends:", ...trendLines] : []),
       "",
       "Question review:",
       ...questionLines,
@@ -12099,6 +12433,7 @@ function updateInterviewStatus(status = "") {
     els.interviewQuestionStatus.textContent = interviewLanguage === "zh" ? "正在准备题目..." : "Preparing questions...";
   } else if (status === "onboarding") {
     els.interviewQuestionStatus.textContent = interviewLanguage === "zh" ? "正在通过对话配置本场面试。" : "Configuring this interview through chat.";
+    els.interviewTimer.textContent = "--:--";
   } else if (status === "preparing") {
     els.interviewQuestionStatus.textContent = interviewLanguage === "zh" ? "题目已准备。" : "Questions are ready.";
   } else if (status === "timeup") {
@@ -12213,10 +12548,10 @@ function revealInterviewAnswer() {
   if (!problem) return;
   appendInterviewMessage("system", [
     interviewLanguage === "zh" ? "### 参考答案" : "### Reference answer",
-    problem.answer || (interviewLanguage === "zh" ? "未填写" : "Not provided"),
+    getLocalizedProblemField(problem, "answer", interviewLanguage === "en") || (interviewLanguage === "zh" ? "未填写" : "Not provided"),
     "",
     interviewLanguage === "zh" ? "### 解析" : "### Explanation",
-    problem.explanation || (interviewLanguage === "zh" ? "未填写" : "Not provided"),
+    getLocalizedProblemField(problem, "explanation", interviewLanguage === "en") || (interviewLanguage === "zh" ? "未填写" : "Not provided"),
     getProblemMediaMarkdown(problem, "answer")
   ].filter(Boolean).join("\n"));
 }
@@ -12298,7 +12633,14 @@ function submitPkAnswer() {
 }
 
 function scorePkAnswer(problem, answer, elapsed) {
-  const source = `${problem.answer || ""} ${problem.explanation || ""} ${problem.promptEn || ""} ${problem.promptZh || ""}`;
+  const source = [
+    getLocalizedProblemField(problem, "answer", false),
+    getLocalizedProblemField(problem, "answer", true),
+    getLocalizedProblemField(problem, "explanation", false),
+    getLocalizedProblemField(problem, "explanation", true),
+    problem.promptEn || "",
+    problem.promptZh || ""
+  ].join(" ");
   const keywords = extractKeywords(source);
   const lower = answer.toLowerCase();
   const hits = keywords.filter((keyword) => lower.includes(keyword.toLowerCase())).length;
@@ -12322,8 +12664,8 @@ function revealPkAnswer() {
   if (!pkSession) return;
   renderPkFeed([
     "参考答案",
-    pkSession.problem.answer || "未填写",
-    pkSession.problem.explanation || "未填写"
+    getLocalizedProblemField(pkSession.problem, "answer", false) || "未填写",
+    getLocalizedProblemField(pkSession.problem, "explanation", false) || "未填写"
   ]);
 }
 
@@ -12389,17 +12731,32 @@ function startInterviewTyping(id, text) {
   ));
   renderInterviewTranscript();
 
+  const findTurn = () => els.interviewTranscript?.querySelector(`[data-message-id="${id}"]`);
+
   const timer = window.setInterval(() => {
     index = Math.min(fullText.length, index + step);
     const displayText = fullText.slice(0, index);
     const done = index >= fullText.length;
 
+    // Keep state in sync, but update only the active bubble instead of re-rendering everything.
     interviewMessages = interviewMessages.map((message) => (
       message.id === id ? { ...message, displayText, typing: !done } : message
     ));
-    renderInterviewTranscript();
 
-    if (done) stopInterviewTyping(id);
+    const turn = findTurn();
+    const node = turn?.querySelector(".message");
+    if (node) {
+      renderRichText(node, displayText);
+      if (done) turn.classList.remove("is-streaming");
+      els.interviewTranscript.scrollTop = els.interviewTranscript.scrollHeight;
+    } else {
+      renderInterviewTranscript();
+    }
+
+    if (done) {
+      stopInterviewTyping(id);
+      scheduleMathTypeset(els.interviewTranscript);
+    }
   }, 24);
   interviewTypingTimers.set(id, timer);
 }
