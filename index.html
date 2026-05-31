@@ -13,7 +13,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
-    <link rel="stylesheet" href="styles.css?direct&v=23">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="styles.css?direct&v=24">
     <script>
       window.MathJax = {
         tex: {
@@ -1097,6 +1098,9 @@
           </div>
         </div>
         <div id="interviewGrid" class="interview-grid setup-only">
+          <div class="interview-setup-shark" id="interviewSetupShark" aria-hidden="true">
+            <img src="assets/generated/shark-hero-clean.png?v=original-clean-1" alt="" loading="lazy" draggable="false">
+          </div>
           <div id="interviewSetup" class="interview-setup">
             <div class="interview-setup-top">
               <div>
@@ -1133,7 +1137,7 @@
               </div>
             </div>
             <details class="interview-advanced-config">
-              <summary>高级设置（题源 / 连接）</summary>
+              <summary>高级设置</summary>
               <div class="interview-advanced-grid">
                 <label>
                   面试类型
@@ -1181,10 +1185,6 @@
             <button class="primary-button" id="startInterviewBtn" type="button">
               <i data-lucide="messages-square"></i>
               进入模拟面试
-            </button>
-            <button class="secondary-button" id="saveLlmConfigBtn" type="button">
-              <i data-lucide="plug"></i>
-              保存连接
             </button>
           </div>
           <div id="interviewConsole" class="interview-console hidden">
