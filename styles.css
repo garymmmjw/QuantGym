@@ -9742,6 +9742,37 @@ body.is-authenticated .global-search-result {
   line-height: 1.45;
 }
 
+.interview-setup-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  padding: 4px 0 2px;
+}
+
+.interview-setup-field {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.interview-setup-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.interview-setup-field .segmented {
+  width: 100%;
+}
+
+.interview-setup-field .segment {
+  flex: 1;
+}
+
+.interview-setup-field select {
+  width: 100%;
+}
+
 .interview-setup-hero {
   display: grid;
   gap: 10px;
@@ -9806,12 +9837,16 @@ body.is-authenticated .global-search-result {
 }
 
 .interview-grid.session-only .interview-console {
-  width: min(100%, 1180px);
+  width: min(100%, 920px);
+  margin: 0 auto;
 }
 
 .interview-console {
   position: relative;
   isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  height: min(760px, calc(100vh - 210px));
   overflow: hidden;
   padding: 0;
   border-color: rgba(255, 255, 255, 0.78);
@@ -9857,15 +9892,55 @@ body.is-authenticated .global-search-result {
   color: #18181b;
 }
 
+.interview-console-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.interview-console-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .interview-workspace {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Single-column chat by default; the panel opens as a collapsible right column. */
+.interview-question-panel {
+  display: none;
+  overflow-y: auto;
+  border-left: 1px solid rgba(228, 231, 240, 0.7);
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.interview-console.show-panel .interview-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 330px;
-  min-height: min(680px, calc(100vh - 260px));
+  grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.interview-console.show-panel .interview-question-panel {
+  display: block;
+}
+
+.interview-favorites {
+  display: none !important;
+}
+
+.interview-panel-toggle.is-active {
+  background: #efeee9;
 }
 
 .interview-transcript {
-  min-height: 560px;
-  max-height: min(680px, calc(100vh - 260px));
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
   padding: 26px clamp(18px, 3vw, 38px) 34px;
   border: 0;
   border-radius: 0;
@@ -9882,10 +9957,14 @@ body.is-authenticated .global-search-result {
   display: grid;
   grid-template-columns: 32px minmax(0, 1fr);
   gap: 12px;
-  width: min(880px, 100%);
-  max-width: min(880px, 100%);
+  width: min(760px, 100%);
+  max-width: min(760px, 100%);
   margin: 0 auto 18px;
   animation: interviewTurnIn 260ms cubic-bezier(.2, .9, .24, 1) both;
+}
+
+.message-turn.is-grouped {
+  margin-top: -10px;
 }
 
 .message-turn.user {
