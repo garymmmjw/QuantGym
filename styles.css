@@ -10349,13 +10349,13 @@ body.is-authenticated .global-search-result {
   display: inline-grid;
   place-items: center;
   min-height: 28px;
-  padding: 0 9px;
+  padding: 0 10px;
   border-radius: 9px;
-  background: linear-gradient(145deg, #2c3240 0%, #121621 100%);
-  color: #fff;
+  background: rgba(79, 125, 246, 0.12);
+  color: #3a63c8;
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
-  font-weight: 820;
+  font-weight: 800;
 }
 
 .interview-prompt-top small {
@@ -10812,7 +10812,7 @@ body.is-authenticated .global-search-result {
 
 .interview-chat-input {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: end;
   column-gap: 8px;
   row-gap: 8px;
@@ -10833,15 +10833,49 @@ body.is-authenticated .global-search-result {
 }
 
 .interview-chat-input:focus-within {
-  border-color: rgba(136, 173, 230, 0.72);
+  border-color: rgba(0, 0, 0, 0.12);
   box-shadow:
-    0 24px 68px rgba(74, 101, 140, 0.20),
-    0 0 0 4px rgba(144, 185, 255, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+    0 20px 58px rgba(74, 101, 140, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.90);
+}
+
+.interview-attach-plus {
+  grid-column: 1;
+  grid-row: 1;
+  display: inline-grid;
+  place-items: center;
+  align-self: end;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 3px;
+  border-radius: 50%;
+  border: 1px solid #e3e6ec;
+  background: #fff;
+  color: #4b5563;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.interview-attach-plus:hover {
+  background: #f3f4f6;
+  border-color: #cdd2db;
+}
+
+.interview-attach-plus svg {
+  width: 18px;
+  height: 18px;
+}
+
+.interview-attach-plus input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .interview-chat-input textarea {
-  grid-column: 1;
+  grid-column: 2;
   grid-row: 1;
   width: 100%;
   box-sizing: border-box;
@@ -10859,7 +10893,7 @@ body.is-authenticated .global-search-result {
 }
 
 .interview-chat-input .interview-chat-actions {
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 1;
   align-self: end;
   padding-bottom: 3px;
@@ -16500,3 +16534,34 @@ body.is-authenticated .module-view[data-module-view="interview"] .interview-setu
 body.interview-immersive .todo-dock { display: none !important; }
 body.interview-immersive .interview-console { height: calc(100vh - 140px); }
 body.interview-immersive .interview-grid.session-only .interview-console { width: min(100%, 1120px); }
+
+/* ===== Mock interview v3: input plus button, feedback polish, reference card ===== */
+.interview-feedback-hero {
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eef0f4;
+}
+.interview-feedback-score { min-width: 78px; min-height: 64px; border-radius: 14px; flex: 0 0 auto; }
+.interview-feedback-score strong { font-size: 1.9rem; font-weight: 800; }
+.interview-feedback-dims-inline { gap: 24px; }
+.interview-feedback-dim-inline { gap: 3px; align-items: flex-start; }
+.interview-feedback-dim-inline span { font-size: 0.78rem; color: #8a91a0; font-weight: 600; }
+.interview-feedback-dim-inline em { font-size: 1.15rem; color: #1f2937; font-weight: 700; }
+
+/* Reference answer as a clean white card (mirrors the question card) */
+.message.message-reference {
+  background: #ffffff !important;
+  border: 1px solid #eceef2;
+  border-radius: 16px;
+  padding: 16px 18px 18px;
+  box-shadow: 0 14px 38px rgba(40, 70, 120, 0.08);
+  width: min(760px, 100%);
+}
+.message.message-reference h3,
+.message.message-reference h4,
+.message.message-reference h5 { margin: 12px 0 6px; font-size: 0.95rem; font-weight: 700; color: #111827; }
+.message.message-reference h3:first-child,
+.message.message-reference h4:first-child,
+.message.message-reference h5:first-child { margin-top: 0; }
+.message.message-reference p { margin: 4px 0; color: #1f2430; line-height: 1.65; }

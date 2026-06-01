@@ -9479,8 +9479,13 @@ function updateInterviewLayout() {
   els.interviewConsole?.classList.toggle("hidden", !showConsole);
   els.interviewGrid?.classList.toggle("setup-only", !showConsole);
   els.interviewGrid?.classList.toggle("session-only", showConsole);
-  // Immersive mode: fill the screen and hide the floating to-do dock during a session.
+  // Immersive mode: fill the screen, hide the floating to-do dock, and collapse the left nav.
   document.body.classList.toggle("interview-immersive", showConsole);
+  if (showConsole) {
+    document.body.classList.add("sidebar-collapsed");
+  } else {
+    applySidebarState();
+  }
 }
 
 function renderInterviewQuestionPanel() {
@@ -12594,7 +12599,7 @@ function revealInterviewAnswer() {
     interviewLanguage === "zh" ? "### 解析" : "### Explanation",
     getLocalizedProblemField(problem, "explanation", interviewLanguage === "en") || (interviewLanguage === "zh" ? "未填写" : "Not provided"),
     getProblemMediaMarkdown(problem, "answer")
-  ].filter(Boolean).join("\n"));
+  ].filter(Boolean).join("\n"), { variant: "reference" });
 }
 
 function startPkMatch() {

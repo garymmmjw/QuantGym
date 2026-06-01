@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="styles.css?direct&v=25">
+    <link rel="stylesheet" href="styles.css?direct&v=26">
     <script>
       window.MathJax = {
         tex: {
@@ -1216,14 +1216,14 @@
             </div>
             <form id="interviewForm" class="interview-form">
               <div class="interview-chat-input">
+                <label id="interviewAnswerFileRow" class="interview-attach-plus" title="上传图片或文件" aria-label="上传图片或文件">
+                  <input id="interviewAnswerFile" type="file" accept=".txt,.md,.tex,.pdf,text/*,application/pdf,image/*">
+                  <i data-lucide="plus"></i>
+                  <span id="interviewAnswerFileMeta" class="sr-only">支持图片、文本文件和 PDF。</span>
+                </label>
                 <textarea id="interviewAnswer" rows="1" placeholder="输入你的回答"></textarea>
                 <div id="interviewAttachmentPreview" class="interview-attachment-preview hidden"></div>
                 <div class="interview-chat-actions">
-                  <label id="interviewAnswerFileRow" class="icon-button ghost interview-attach-button" title="上传图片或文件" aria-label="上传图片或文件">
-                    <input id="interviewAnswerFile" type="file" accept=".txt,.md,.tex,.pdf,text/*,application/pdf,image/*">
-                    <i data-lucide="paperclip"></i>
-                    <span id="interviewAnswerFileMeta" class="sr-only">支持图片、文本文件和 PDF。</span>
-                  </label>
                   <button class="icon-button ghost" id="voiceAnswerBtn" type="button" title="语音作答" aria-label="语音作答">
                     <i data-lucide="mic"></i>
                   </button>
