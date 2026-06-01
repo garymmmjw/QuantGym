@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="styles.css?direct&v=24">
+    <link rel="stylesheet" href="styles.css?direct&v=25">
     <script>
       window.MathJax = {
         tex: {
@@ -1186,12 +1186,22 @@
               <i data-lucide="messages-square"></i>
               进入模拟面试
             </button>
+            <button class="secondary-button hidden" id="resumeInterviewBtn" type="button">
+              <i data-lucide="rotate-ccw"></i>
+              继续上次面试
+            </button>
           </div>
           <div id="interviewConsole" class="interview-console hidden">
             <div class="interview-console-head">
-              <div>
-                <strong id="interviewSessionTitle">Ready</strong>
-                <small id="interviewQuestionStatus">还没有开始。</small>
+              <div class="interview-console-head-main">
+                <button class="interview-exit-btn" id="exitInterviewBtn" type="button" title="退出模拟面试" aria-label="退出模拟面试">
+                  <i data-lucide="log-out"></i>
+                  退出
+                </button>
+                <div>
+                  <strong id="interviewSessionTitle">Ready</strong>
+                  <small id="interviewQuestionStatus">还没有开始。</small>
+                </div>
               </div>
               <div class="interview-console-head-actions">
                 <button class="icon-button ghost interview-panel-toggle hidden" id="toggleInterviewPanelBtn" type="button" title="进度面板" aria-label="进度面板" aria-pressed="false">
@@ -1222,9 +1232,6 @@
                   </button>
                   <button class="icon-button ghost" id="revealAnswerBtn" type="button" title="显示参考答案" aria-label="显示参考答案">
                     <i data-lucide="book-open"></i>
-                  </button>
-                  <button class="icon-button ghost" id="clearInterviewBtn" type="button" title="清空模拟" aria-label="清空模拟">
-                    <i data-lucide="eraser"></i>
                   </button>
                   <button class="icon-button accent interview-send-button" type="submit" title="提交回答" aria-label="提交回答">
                     <i data-lucide="send"></i>

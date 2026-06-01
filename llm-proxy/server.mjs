@@ -604,7 +604,9 @@ async function createInterviewEvaluation(payload) {
   const answerAttachment = payload.answerAttachment || null;
   const feedbackFormat = [
     "Return only compact JSON.",
-    "Schema: {\"overall\":0-100,\"summary\":\"one sentence\",\"dimensions\":{\"correctness\":{\"score\":0-5,\"comment\":\"short\"},\"reasoning\":{\"score\":0-5,\"comment\":\"short\"},\"communication\":{\"score\":0-5,\"comment\":\"short\"},\"speed\":{\"score\":0-5,\"comment\":\"short\"},\"readiness\":{\"score\":0-5,\"comment\":\"short\"}},\"missing\":[\"short bullets\"],\"interviewerConcern\":\"short\",\"referenceDelta\":\"short, do not restate full answer\",\"nextStep\":[\"actionable next steps\"]}."
+    "Schema: {\"overall\":0-100,\"summary\":\"one or two sentences of the main feedback\",\"dimensions\":{\"correctness\":{\"score\":0-5},\"reasoning\":{\"score\":0-5},\"communication\":{\"score\":0-5}},\"missing\":[\"short bullets of what was missing\"]}.",
+    "Use only these three dimensions: correctness, reasoning, communication. Do not include speed or readiness.",
+    "Wrap any math in LaTeX delimiters: inline as $...$ and display as $$...$$."
   ].join(" ");
   const problemImages = collectProblemImageRefs(problem);
 
@@ -817,6 +819,7 @@ async function createInterviewHint(payload) {
     "You are a quant interview coach.",
     "Give one helpful hint only. Do not reveal the final answer.",
     "The hint should point to the next reasoning step or the right structure.",
+    "Wrap any math in LaTeX delimiters: inline as $...$ and display as $$...$$.",
     `Respond in ${language}.`
   ].join(" ");
 
@@ -971,14 +974,9 @@ function normalizeStructuredInterviewEvaluation(raw = {}) {
     dimensions: {
       correctness: normalizeDimension("correctness"),
       reasoning: normalizeDimension("reasoning"),
-      communication: normalizeDimension("communication"),
-      speed: normalizeDimension("speed"),
-      readiness: normalizeDimension("readiness")
+      communication: normalizeDimension("communication")
     },
-    missing: Array.isArray(raw.missing) ? raw.missing.map(String).map((item) => item.trim()).filter(Boolean).slice(0, 6) : [],
-    interviewerConcern: String(raw.interviewerConcern || raw.concern || "").trim().slice(0, 260),
-    referenceDelta: String(raw.referenceDelta || raw.reference || "").trim().slice(0, 320),
-    nextStep: Array.isArray(raw.nextStep) ? raw.nextStep.map(String).map((item) => item.trim()).filter(Boolean).slice(0, 4) : []
+    missing: Array.isArray(raw.missing) ? raw.missing.map(String).map((item) => item.trim()).filter(Boolean).slice(0, 6) : []
   };
 }
 
@@ -987,50 +985,33 @@ function formatStructuredInterviewEvaluation(feedback, language = "English") {
   const labels = {
     correctness: zh ? "正确性" : "Correctness",
     reasoning: zh ? "推理" : "Reasoning",
-    communication: zh ? "表达" : "Communication",
-    speed: zh ? "速度" : "Speed",
-    readiness: zh ? "面试可用度" : "Readiness"
+    communication: zh ? "表达" : "Communication"
   };
-  const dimensionLines = Object.entries(feedback.dimensions || {})
-    .map(([key, item]) => `- ${labels[key] || key}: ${item.score}/5${item.comment ? ` - ${item.comment}` : ""}`);
+  const dimensionLines = ["correctness", "reasoning", "communication"]
+    .map((key) => `- ${labels[key]}: ${(feedback.dimensions?.[key]?.score) ?? 0}/5`);
   const missing = feedback.missing?.length ? feedback.missing.map((item) => `- ${item}`).join("\n") : (zh ? "- 暂无明显缺失。" : "- No major missing piece.");
-  const nextStep = feedback.nextStep?.length ? feedback.nextStep.map((item) => `- ${item}`).join("\n") : (zh ? "- 用 60 秒重新组织答案。" : "- Reframe the answer in 60 seconds.");
   return zh
     ? [
       `得分：${feedback.overall}/100`,
       "",
-      `评价：${feedback.summary}`,
-      "",
       "维度分：",
       ...dimensionLines,
       "",
+      `主要反馈：${feedback.summary}`,
+      "",
       "缺失要点：",
-      missing,
-      "",
-      `真实面试风险：${feedback.interviewerConcern}`,
-      "",
-      `参考差距：${feedback.referenceDelta}`,
-      "",
-      "下一步：",
-      nextStep
+      missing
     ].join("\n")
     : [
       `Score: ${feedback.overall}/100`,
       "",
-      `Evaluation: ${feedback.summary}`,
-      "",
       "Dimensions:",
       ...dimensionLines,
       "",
+      `Key feedback: ${feedback.summary}`,
+      "",
       "Missing pieces:",
-      missing,
-      "",
-      `Interview risk: ${feedback.interviewerConcern}`,
-      "",
-      `Reference delta: ${feedback.referenceDelta}`,
-      "",
-      "Next step:",
-      nextStep
+      missing
     ].join("\n");
 }
 

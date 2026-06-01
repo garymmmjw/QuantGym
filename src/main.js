@@ -130,6 +130,7 @@ const PROBLEM_PAGE_SIZE = 24;
 const PROBLEM_SEARCH_DEBOUNCE_MS = 140;
 const INTERVIEW_SESSION_STORAGE_KEY = "quantgym-interview-session-v2";
 const INTERVIEW_HISTORY_STORAGE_KEY = "quantgym-interview-history-v1";
+const INTERVIEW_RESUME_STORAGE_KEY = "quantgym-interview-resume-v1";
 let problemVisibleCount = PROBLEM_PAGE_SIZE;
 let problemSearchTimer = 0;
 let problemSearchComposing = false;
@@ -349,6 +350,8 @@ function bindElements() {
     "interviewQuestionStatus",
     "interviewTimer",
     "toggleInterviewPanelBtn",
+    "exitInterviewBtn",
+    "resumeInterviewBtn",
     "interviewTranscript",
     "interviewQuestionPanel",
     "interviewForm",
@@ -835,8 +838,10 @@ function bindEvents() {
   els.restartInterviewBtn?.addEventListener("click", restartInterviewWithSameConfig);
   els.exportInterviewReportBtn?.addEventListener("click", exportInterviewReport);
   els.toggleInterviewPanelBtn?.addEventListener("click", toggleInterviewPanel);
+  els.exitInterviewBtn?.addEventListener("click", exitInterview);
+  els.resumeInterviewBtn?.addEventListener("click", resumeDurableInterview);
   els.voiceAnswerBtn?.addEventListener("click", toggleVoiceAnswer);
-  els.clearInterviewBtn.addEventListener("click", resetInterview);
+  els.clearInterviewBtn?.addEventListener("click", resetInterview);
   els.interviewForm.addEventListener("submit", (event) => {
     event.preventDefault();
     submitInterviewAnswer();
@@ -8902,7 +8907,7 @@ const interviewFocusDefs = {
   }
 };
 
-const interviewOnboardingSteps = ["language", "mode", "focus", "difficulty", "scope", "persona", "tts"];
+const interviewOnboardingSteps = ["language", "mode", "focus", "difficulty", "scope", "persona"];
 
 const behavioralInterviewTopics = [
   ["behavioral-impact", "High-impact project story", "高影响力项目经历", "Tell me about a project where you created measurable impact. Use a clear situation, task, action, and result structure.", "讲一个你做出可量化影响的项目经历。请用 Situation、Task、Action、Result 的结构回答。", "impact", "Medium", "leetcode"],
@@ -9020,6 +9025,7 @@ function renderInterviewSetup() {
   if (!interviewSnapshotRestored) restoreInterviewSessionSnapshot();
   els.llmEndpointInput.value = llmConfig.endpoint || "";
   els.llmModelInput.value = llmConfig.model || "";
+  els.resumeInterviewBtn?.classList.toggle("hidden", !hasDurableInterview());
   renderInterviewCategoryPicker();
   updateInterviewSetupVisibility();
   updateInterviewAnswerMode();
@@ -9067,9 +9073,18 @@ function appendMessageNode(role, text, options = {}) {
   if (grouped) turn.classList.add("is-grouped");
 
   const avatar = document.createElement("div");
-  avatar.className = "message-avatar";
+  avatar.className = `message-avatar avatar-${role}`;
   avatar.setAttribute("aria-hidden", "true");
-  avatar.textContent = getInterviewMessageAvatar(role);
+  if (role === "coach") {
+    avatar.classList.add("avatar-shark");
+    const sharkImg = document.createElement("img");
+    sharkImg.src = "assets/generated/shark-avatar-happy.webp?v=premium-system-4";
+    sharkImg.alt = "";
+    sharkImg.loading = "lazy";
+    avatar.appendChild(sharkImg);
+  } else {
+    avatar.textContent = getInterviewMessageAvatar(role);
+  }
   if (grouped) avatar.style.visibility = "hidden";
 
   const stack = document.createElement("div");
@@ -9086,7 +9101,7 @@ function appendMessageNode(role, text, options = {}) {
     node.setAttribute("aria-label", interviewLanguage === "zh" ? "正在思考" : "Thinking");
     const thinkingLabel = document.createElement("span");
     thinkingLabel.className = "thinking-label";
-    thinkingLabel.textContent = interviewLanguage === "zh" ? "正在组织追问" : "Thinking";
+    thinkingLabel.textContent = interviewLanguage === "zh" ? "分析回答" : "Analyzing";
     node.appendChild(thinkingLabel);
     const dots = document.createElement("span");
     dots.className = "thinking-dots";
@@ -9228,64 +9243,52 @@ function renderInterviewFeedbackCard(node, text) {
   const scoreMeta = document.createElement("span");
   scoreMeta.textContent = "/100";
   score.append(scoreValue, scoreMeta);
-  const summary = document.createElement("div");
-  summary.className = "interview-feedback-summary";
-  const eyebrow = document.createElement("small");
-  eyebrow.textContent = useZh ? "即时反馈" : "Instant feedback";
-  const copy = document.createElement("p");
-  copy.textContent = data.summary || (useZh ? "回答已记录，建议继续复盘关键步骤。" : "Answer recorded. Review the key steps next.");
-  summary.append(eyebrow, copy);
-  hero.append(score, summary);
-  card.appendChild(hero);
+  hero.appendChild(score);
 
   if (data.dimensions.length) {
-    const grid = document.createElement("div");
-    grid.className = "interview-feedback-dimensions";
+    const dims = document.createElement("div");
+    dims.className = "interview-feedback-dims-inline";
     data.dimensions.forEach((item) => {
       const row = document.createElement("div");
-      row.className = "interview-feedback-dimension";
+      row.className = "interview-feedback-dim-inline";
       const label = document.createElement("span");
       label.textContent = item.label;
-      const bar = document.createElement("i");
-      bar.style.setProperty("--score", String(clampNumber(item.score / 5, 0, 1)));
       const value = document.createElement("em");
       value.textContent = `${item.score}/5`;
-      const note = document.createElement("small");
-      note.textContent = item.comment;
-      row.append(label, bar, value, note);
-      grid.appendChild(row);
+      row.append(label, value);
+      dims.appendChild(row);
     });
-    card.appendChild(grid);
+    hero.appendChild(dims);
+  }
+  card.appendChild(hero);
+
+  if (data.summary) {
+    const main = document.createElement("div");
+    main.className = "interview-feedback-main";
+    const title = document.createElement("h5");
+    title.textContent = useZh ? "主要反馈" : "Key feedback";
+    const copy = document.createElement("p");
+    appendInlineRichText(copy, data.summary);
+    main.append(title, copy);
+    card.appendChild(main);
   }
 
-  const sectionWrap = document.createElement("div");
-  sectionWrap.className = "interview-feedback-sections";
-  [
-    [useZh ? "缺失要点" : "Missing pieces", data.missing],
-    [useZh ? "真实面试风险" : "Interview risk", data.risk],
-    [useZh ? "参考差距" : "Reference delta", data.reference],
-    [useZh ? "下一步" : "Next step", data.nextStep]
-  ].filter(([, value]) => value.length).forEach(([label, value]) => {
+  if (data.missing.length) {
     const section = document.createElement("section");
+    section.className = "interview-feedback-missing";
     const title = document.createElement("h5");
-    title.textContent = label;
+    title.textContent = useZh ? "缺失要点" : "Missing pieces";
     section.appendChild(title);
-    if (Array.isArray(value)) {
-      const list = document.createElement("ul");
-      value.forEach((item) => {
-        const li = document.createElement("li");
-        li.textContent = item;
-        list.appendChild(li);
-      });
-      section.appendChild(list);
-    } else {
-      const paragraph = document.createElement("p");
-      paragraph.textContent = value;
-      section.appendChild(paragraph);
-    }
-    sectionWrap.appendChild(section);
-  });
-  card.appendChild(sectionWrap);
+    const list = document.createElement("ul");
+    data.missing.forEach((item) => {
+      const li = document.createElement("li");
+      appendInlineRichText(li, item);
+      list.appendChild(li);
+    });
+    section.appendChild(list);
+    card.appendChild(section);
+  }
+
   node.appendChild(card);
   return true;
 }
@@ -9333,7 +9336,7 @@ function parseInterviewFeedbackCardText(text) {
   const findValue = (patterns) => {
     const line = lines.find((item) => patterns.some((pattern) => pattern.test(item)));
     if (!line) return "";
-    return line.replace(/^(评价|Evaluation|真实面试风险|Interview risk|参考差距|Reference delta)\s*[:：]\s*/i, "").trim();
+    return line.replace(/^(主要反馈|Key feedback|评价|Evaluation|真实面试风险|Interview risk|参考差距|Reference delta)\s*[:：]\s*/i, "").trim();
   };
   const collectListAfter = (patterns) => {
     const start = lines.findIndex((item) => patterns.some((pattern) => pattern.test(item)));
@@ -9358,12 +9361,9 @@ function parseInterviewFeedbackCardText(text) {
     }));
   return {
     score,
-    summary: findValue([/^评价\s*[:：]/i, /^Evaluation\s*:/i]),
+    summary: findValue([/^主要反馈\s*[:：]/i, /^Key feedback\s*:/i, /^评价\s*[:：]/i, /^Evaluation\s*:/i]),
     dimensions,
-    missing: collectListAfter([/^缺失要点/i, /^Missing pieces/i]),
-    risk: findValue([/^真实面试风险\s*[:：]/i, /^Interview risk\s*:/i]),
-    reference: findValue([/^参考差距\s*[:：]/i, /^Reference delta\s*:/i]),
-    nextStep: collectListAfter([/^下一步/i, /^Next step/i])
+    missing: collectListAfter([/^缺失要点/i, /^Missing pieces/i])
   };
 }
 
@@ -9479,6 +9479,8 @@ function updateInterviewLayout() {
   els.interviewConsole?.classList.toggle("hidden", !showConsole);
   els.interviewGrid?.classList.toggle("setup-only", !showConsole);
   els.interviewGrid?.classList.toggle("session-only", showConsole);
+  // Immersive mode: fill the screen and hide the floating to-do dock during a session.
+  document.body.classList.toggle("interview-immersive", showConsole);
 }
 
 function renderInterviewQuestionPanel() {
@@ -9539,7 +9541,7 @@ function renderInterviewQuestionPanel() {
     main.append(label, meta);
 
     const score = document.createElement("span");
-    score.className = `interview-question-score${result?.fresh && !live ? " score-pop" : ""}`;
+    score.className = "interview-question-score";
     if (live) {
       score.classList.add("is-live-state");
       score.textContent = current ? (interviewLanguage === "zh" ? "当前" : "Now") : result ? (interviewLanguage === "zh" ? "完成" : "Done") : "--";
@@ -9557,7 +9559,7 @@ function renderInterviewQuestionPanel() {
     detail.appendChild(prompt);
     if (result?.evaluation) {
       const evaluation = document.createElement("small");
-      evaluation.textContent = result.evaluation;
+      appendInlineRichText(evaluation, result.evaluation);
       detail.appendChild(evaluation);
     }
     if (!live && result?.dimensions) {
@@ -9578,7 +9580,7 @@ function renderInterviewQuestionPanel() {
     list.appendChild(item);
   });
   els.interviewQuestionPanel.appendChild(list);
-  animateInterviewScores(els.interviewQuestionPanel);
+  scheduleMathTypeset(els.interviewQuestionPanel);
   refreshIcons();
 }
 
@@ -9615,9 +9617,7 @@ function createInterviewDimensionMiniBars(dimensions = {}) {
   const labels = {
     correctness: interviewLanguage === "zh" ? "正确" : "Correct",
     reasoning: interviewLanguage === "zh" ? "推理" : "Reasoning",
-    communication: interviewLanguage === "zh" ? "表达" : "Comms",
-    speed: interviewLanguage === "zh" ? "速度" : "Speed",
-    readiness: interviewLanguage === "zh" ? "可用" : "Ready"
+    communication: interviewLanguage === "zh" ? "表达" : "Comms"
   };
   const wrap = document.createElement("div");
   wrap.className = "interview-dimension-bars";
@@ -10879,8 +10879,8 @@ function formatInterviewConfigSummary(config = {}) {
     ? (useZh ? `${config.durationMinutes} 分钟` : `${config.durationMinutes} minutes`)
     : (useZh ? `${config.questionCount || getInterviewQuestionCount()} 题` : `${config.questionCount || getInterviewQuestionCount()} questions`);
   return useZh
-    ? `本场设置：${mode.labelZh}，方向 ${focus.labelZh}，难度 ${difficulty.labelZh}，${scope}，风格 ${persona.labelZh}，${config.ttsEnabled ? "开启读题" : "关闭读题"}。`
-    : `Session setup: ${mode.labelEn}, focus ${focus.labelEn}, difficulty ${difficulty.labelEn}, ${scope}, ${persona.labelEn} style, ${config.ttsEnabled ? "read aloud on" : "text only"}.`;
+    ? `本场设置：${mode.labelZh}，方向 ${focus.labelZh}，难度 ${difficulty.labelZh}，${scope}，风格 ${persona.labelZh}。`
+    : `Session setup: ${mode.labelEn}, focus ${focus.labelEn}, difficulty ${difficulty.labelEn}, ${scope}, ${persona.labelEn} style.`;
 }
 
 function syncInterviewLanguageControls() {
@@ -11006,7 +11006,6 @@ function showInterviewQuestion(index) {
       ? "请开始作答。可以先讲思路，再给结论。需要提示时点 Hint。"
       : "Start your answer. Explain your approach first, then give the conclusion. Use Hint if needed.");
   appendInterviewMessage("coach", opening);
-  speakInterviewText(getInterviewQuestionSpeechText(problem));
   updateInterviewStatus("active");
   setInterviewTimer(interviewSession.remainingSeconds);
   interviewQuestionTimer = window.setInterval(() => {
@@ -11183,7 +11182,6 @@ async function submitLiveInterviewTurn(problem, answerPayload) {
     conversation.status = shouldWrap ? "wrapped" : "followup";
     conversation.interviewerSatisfied = shouldWrap;
     updateInterviewMessage(thinkingId, normalized.message, { typewriter: true });
-    speakInterviewText(normalized.message);
 
     if (shouldWrap) {
       clearInterviewQuestionTimer();
@@ -11208,7 +11206,6 @@ async function submitLiveInterviewTurn(problem, answerPayload) {
     const shouldWrap = fallback.action === "wrap" || (fallback.action === "followup" && conversation.followupCount > conversation.maxFollowups);
     conversation.status = shouldWrap ? "wrapped" : "followup";
     updateInterviewMessage(thinkingId, fallback.message, { typewriter: true });
-    speakInterviewText(fallback.message);
     if (shouldWrap) {
       clearInterviewQuestionTimer();
       interviewSession.answeredCurrent = true;
@@ -11656,54 +11653,38 @@ function formatStructuredInterviewFeedback(feedback = {}) {
   const labels = {
     correctness: useZh ? "正确性" : "Correctness",
     reasoning: useZh ? "推理" : "Reasoning",
-    communication: useZh ? "表达" : "Communication",
-    speed: useZh ? "速度" : "Speed",
-    readiness: useZh ? "面试可用度" : "Readiness"
+    communication: useZh ? "表达" : "Communication"
   };
-  const dimensionLines = Object.entries(feedback.dimensions || {})
-    .map(([key, item]) => `- ${labels[key] || key}: ${Math.round(clampNumber(item.score, 0, 5))}/5${item.comment ? ` - ${item.comment}` : ""}`);
+  const dimensionLines = ["correctness", "reasoning", "communication"]
+    .map((key) => {
+      const item = feedback.dimensions?.[key] || {};
+      return `- ${labels[key]}: ${Math.round(clampNumber(item.score, 0, 5))}/5`;
+    });
   const missing = Array.isArray(feedback.missing) && feedback.missing.length
     ? feedback.missing.map((item) => `- ${item}`).join("\n")
     : (useZh ? "- 暂无明显缺失。" : "- No major missing piece.");
-  const nextStep = Array.isArray(feedback.nextStep) && feedback.nextStep.length
-    ? feedback.nextStep.map((item) => `- ${item}`).join("\n")
-    : (useZh ? "- 用 60 秒重新组织答案。" : "- Reframe the answer in 60 seconds.");
-  return interviewLanguage === "zh"
+  return useZh
     ? [
       `得分：${Math.round(clampNumber(feedback.overall, 0, 100))}/100`,
-      "",
-      `评价：${feedback.summary || "回答已记录。"}`,
       "",
       "维度分：",
       ...dimensionLines,
       "",
+      `主要反馈：${feedback.summary || "回答已记录。"}`,
+      "",
       "缺失要点：",
-      missing,
-      "",
-      `真实面试风险：${feedback.interviewerConcern || "需要更快给出结构化结论。"}`,
-      "",
-      `参考差距：${feedback.referenceDelta || "对照参考思路补齐关键步骤即可。"}`,
-      "",
-      "下一步：",
-      nextStep
+      missing
     ].join("\n")
     : [
       `Score: ${Math.round(clampNumber(feedback.overall, 0, 100))}/100`,
       "",
-      `Evaluation: ${feedback.summary || "Answer recorded."}`,
-      "",
       "Dimensions:",
       ...dimensionLines,
       "",
+      `Key feedback: ${feedback.summary || "Answer recorded."}`,
+      "",
       "Missing pieces:",
-      missing,
-      "",
-      `Interview risk: ${feedback.interviewerConcern || "The answer needs a faster structured conclusion."}`,
-      "",
-      `Reference delta: ${feedback.referenceDelta || "Compare against the reference approach and add the key steps."}`,
-      "",
-      "Next step:",
-      nextStep
+      missing
     ].join("\n");
 }
 
@@ -12258,9 +12239,7 @@ function summarizeInterviewDimensions(results = []) {
   const labels = {
     correctness: interviewLanguage === "zh" ? "正确性" : "Correctness",
     reasoning: interviewLanguage === "zh" ? "推理" : "Reasoning",
-    communication: interviewLanguage === "zh" ? "表达" : "Communication",
-    speed: interviewLanguage === "zh" ? "速度" : "Speed",
-    readiness: interviewLanguage === "zh" ? "面试可用度" : "Readiness"
+    communication: interviewLanguage === "zh" ? "表达" : "Communication"
   };
   return Object.keys(labels)
     .map((key) => {
@@ -12370,6 +12349,68 @@ function persistInterviewSessionSnapshot() {
   } catch {
     sessionStorage.removeItem(INTERVIEW_SESSION_STORAGE_KEY);
   }
+}
+
+function hasDurableInterview() {
+  try {
+    return Boolean(localStorage.getItem(INTERVIEW_RESUME_STORAGE_KEY));
+  } catch {
+    return false;
+  }
+}
+
+function clearDurableInterview() {
+  try {
+    localStorage.removeItem(INTERVIEW_RESUME_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function exitInterview() {
+  if (!interviewSession) return;
+  const useZh = interviewLanguage !== "en";
+  const completed = Boolean(interviewSession.completed);
+  let keep = false;
+  if (!completed) {
+    keep = window.confirm(useZh
+      ? "保留这次面试进程？\n点击「确定」保留，下次回来可继续；点击「取消」放弃本次进程。"
+      : "Keep this interview in progress?\nOK = save and resume later. Cancel = discard this session.");
+  }
+  try {
+    if (keep) {
+      persistInterviewSessionSnapshot();
+      const snapshot = sessionStorage.getItem(INTERVIEW_SESSION_STORAGE_KEY);
+      if (snapshot) localStorage.setItem(INTERVIEW_RESUME_STORAGE_KEY, snapshot);
+    } else {
+      clearDurableInterview();
+    }
+  } catch {
+    /* ignore storage errors */
+  }
+  resetInterview();
+}
+
+function resumeDurableInterview() {
+  let raw = null;
+  try {
+    raw = localStorage.getItem(INTERVIEW_RESUME_STORAGE_KEY);
+  } catch {
+    raw = null;
+  }
+  if (!raw) return;
+  try {
+    sessionStorage.setItem(INTERVIEW_SESSION_STORAGE_KEY, raw);
+  } catch {
+    /* ignore */
+  }
+  interviewSession = null;
+  interviewSnapshotRestored = false;
+  restoreInterviewSessionSnapshot();
+  clearDurableInterview();
+  updateInterviewStatus();
+  renderInterviewTranscript();
+  renderInterviewQuestionPanel();
 }
 
 function restoreInterviewSessionSnapshot() {
