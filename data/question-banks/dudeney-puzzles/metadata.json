@@ -2,8 +2,8 @@
   "slug": "dudeney-puzzles",
   "name": "Dudeney 经典挑战谜题",
   "type": "latex",
-  "sourceTexPath": "Dudeney挑战谜题/quant_dudeney_book.tex",
+  "sourceTexPath": "有题目的/Dudeney挑战谜题 Challenging Puzzles/quant_dudeney_book.tex",
   "problemFile": "problems.json",
   "problemCount": 123,
-  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+  "lastImportedAt": "2026-06-02T01:06:35.867Z"
 }

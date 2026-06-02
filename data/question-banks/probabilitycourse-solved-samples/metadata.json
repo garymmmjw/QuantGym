@@ -1,0 +1,27 @@
+{
+  "slug": "probabilitycourse-solved-samples",
+  "name": "ProbabilityCourse Public Solved Samples",
+  "type": "open-access-web-solved-example",
+  "sourceUrl": "https://www.probabilitycourse.com/",
+  "sourcePageUrls": [
+    "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+    "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+    "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+    "https://www.probabilitycourse.com/chapter8/8_2_5_solved_probs.php",
+    "https://www.probabilitycourse.com/chapter9/9_1_10_solved_probs.php",
+    "https://www.probabilitycourse.com/chapter11/11_1_5_solved_probs.php",
+    "https://www.probabilitycourse.com/chapter11/11_4_3_solved_probs.php"
+  ],
+  "problemCount": 16,
+  "generatedAt": "2026-06-02T08:21:57+00:00",
+  "cachedSourceFiles": [
+    "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+    "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+    "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+    "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+    "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+    "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+    "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+  ],
+  "rightsNote": "Curated from public ProbabilityCourse in-chapter solved example pages. Excludes commercial student solutions guide content; entries are paraphrased and locally reviewed."
+}

@@ -1,0 +1,1124 @@
+{
+  "problems": [
+    {
+      "id": "probabilitycourse-solved-samples-problem-001",
+      "titleEn": "Conditional lifetime of an exponential-like product",
+      "titleZh": "指数型寿命产品的条件失效概率",
+      "category": "probabilityExpectation",
+      "difficulty": "Easy",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "conditional probability",
+        "survival function",
+        "exponential distribution"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Easy",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 1.4.5 solved problem 1",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "A product lifetime $T$ satisfies $P(T\\ge t)=e^{-t/5}$ for all $t\\ge0$. You have used the product for two years with no failure. What is the conditional probability that it fails during the third year, i.e. between years 2 and 3?",
+      "promptZh": "某产品寿命 $T$ 满足对所有 $t\\ge0$ 都有 $P(T\\ge t)=e^{-t/5}$。你已经无故障使用了 2 年。求它在第 3 年内失效，也就是在第 2 年到第 3 年之间失效的条件概率。",
+      "answer": "The conditional probability is $1-e^{-1/5}\\approx 0.1813$.",
+      "answerEn": "The conditional probability is $1-e^{-1/5}\\approx 0.1813$.",
+      "answerZh": "条件概率为 $1-e^{-1/5}\\approx 0.1813$。",
+      "explanation": "Condition on survival to time 2:\n$$P(2\\le T\\le 3\\mid T\\ge2)=\\frac{P(T\\ge2)-P(T\\ge3)}{P(T\\ge2)}.$$\nUsing the survival function,\n$$\\frac{e^{-2/5}-e^{-3/5}}{e^{-2/5}}=1-e^{-1/5}\\approx0.1813.$$\nThis is the memoryless-style calculation behind exponential lifetimes.",
+      "explanationZh": "在已经存活到 2 年的条件下，\n$$P(2\\le T\\le 3\\mid T\\ge2)=\\frac{P(T\\ge2)-P(T\\ge3)}{P(T\\ge2)}.$$\n代入生存函数得到\n$$\\frac{e^{-2/5}-e^{-3/5}}{e^{-2/5}}=1-e^{-1/5}\\approx0.1813.$$\n这正是指数型寿命的无记忆性计算。"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-002",
+      "titleEn": "Three fair coin tosses with conditional information",
+      "titleZh": "三次公平抛硬币的条件概率",
+      "category": "probabilityExpectation",
+      "difficulty": "Easy",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "conditional probability",
+        "coin tosses",
+        "counting"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Easy",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 1.4.5 solved problem 2",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "A fair coin is tossed three independent times. Find: (a) $P(HHH)$; (b) the probability of exactly one head; (c) the probability of at least two heads given that at least one head occurred.",
+      "promptZh": "公平硬币独立抛 3 次。求：(a) $P(HHH)$；(b) 恰好出现 1 次正面的概率；(c) 已知至少出现 1 次正面时，至少出现 2 次正面的条件概率。",
+      "answer": "The answers are $\\frac18$, $\\frac38$, and $\\frac47$.",
+      "answerEn": "The answers are $\\frac18$, $\\frac38$, and $\\frac47$.",
+      "answerZh": "答案分别为 $\\frac18$、$\\frac38$、$\\frac47$。",
+      "explanation": "There are $2^3=8$ equally likely sequences. Only one sequence is $HHH$, so $P(HHH)=1/8$. Exactly one head can occur in $HTT,THT,TTH$, so the probability is $3/8$.\n\nGiven at least one head, the all-tails sequence is excluded, leaving 7 equally likely sequences. At least two heads occur in $HHT,HTH,THH,HHH$, hence\n$$P(\\text{at least 2 H}\\mid \\text{at least 1 H})=\\frac{4}{7}.$$",
+      "explanationZh": "共有 $2^3=8$ 个等可能序列。只有 $HHH$ 一个序列对应三次正面，所以 $P(HHH)=1/8$。恰好一次正面有 $HTT,THT,TTH$ 三种，因此概率为 $3/8$。\n\n已知至少一次正面时，排除 $TTT$，剩下 7 个等可能序列。至少两次正面对应 $HHT,HTH,THH,HHH$ 四种，所以\n$$P(\\text{至少 2 次正面}\\mid \\text{至少 1 次正面})=\\frac{4}{7}.$$"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-003",
+      "titleEn": "Rain, traffic, and lateness by total probability",
+      "titleZh": "下雨、拥堵与迟到的全概率计算",
+      "category": "probabilityExpectation",
+      "difficulty": "Medium",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "Bayes rule",
+        "total probability",
+        "conditional probability"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Medium",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 1.4.5 solved problem 5",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "On a random day, it rains with probability $1/3$. Conditional on rain, heavy traffic occurs with probability $1/2$; conditional on no rain, heavy traffic occurs with probability $1/4$. The probability of being late is $1/2$ if it rains and traffic is heavy, $1/8$ if it neither rains nor has heavy traffic, and $1/4$ in the other two weather-traffic cases. Find:\n(a) $P(R^c\\cap T\\cap L^c)$; (b) $P(L)$; (c) $P(R\\mid L)$.",
+      "promptZh": "随机一天，下雨概率为 $1/3$。若下雨，严重拥堵概率为 $1/2$；若不下雨，严重拥堵概率为 $1/4$。若下雨且拥堵，迟到概率为 $1/2$；若不下雨且不拥堵，迟到概率为 $1/8$；另外两种天气-交通情形下迟到概率均为 $1/4$。求：\n(a) $P(R^c\\cap T\\cap L^c)$；(b) $P(L)$；(c) $P(R\\mid L)$。",
+      "answer": "The three probabilities are $\\frac18$, $\\frac{11}{48}$, and $\\frac6{11}$.",
+      "answerEn": "The three probabilities are $\\frac18$, $\\frac{11}{48}$, and $\\frac6{11}$.",
+      "answerZh": "三个概率分别为 $\\frac18$、$\\frac{11}{48}$、$\\frac6{11}$。",
+      "explanation": "For (a), multiply along the branch:\n$$P(R^c\\cap T\\cap L^c)=P(R^c)P(T\\mid R^c)P(L^c\\mid R^c,T)=\\frac23\\cdot\\frac14\\cdot\\frac34=\\frac18.$$\nFor (b), sum the four late branches:\n$$P(L)=\\frac13\\frac12\\frac12+\\frac13\\frac12\\frac14+\\frac23\\frac14\\frac14+\\frac23\\frac34\\frac18=\\frac{11}{48}.$$\nFor (c),\n$$P(R\\cap L)=\\frac13\\frac12\\frac12+\\frac13\\frac12\\frac14=\\frac18,$$\nso\n$$P(R\\mid L)=\\frac{P(R\\cap L)}{P(L)}=\\frac{1/8}{11/48}=\\frac6{11}.$$",
+      "explanationZh": "(a) 沿条件概率树相乘：\n$$P(R^c\\cap T\\cap L^c)=P(R^c)P(T\\mid R^c)P(L^c\\mid R^c,T)=\\frac23\\cdot\\frac14\\cdot\\frac34=\\frac18.$$\n(b) 把四个会迟到的分支相加：\n$$P(L)=\\frac13\\frac12\\frac12+\\frac13\\frac12\\frac14+\\frac23\\frac14\\frac14+\\frac23\\frac34\\frac18=\\frac{11}{48}.$$\n(c) 先算\n$$P(R\\cap L)=\\frac13\\frac12\\frac12+\\frac13\\frac12\\frac14=\\frac18,$$\n于是\n$$P(R\\mid L)=\\frac{P(R\\cap L)}{P(L)}=\\frac{1/8}{11/48}=\\frac6{11}.$$"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-004",
+      "titleEn": "Bayes rule with a two-headed coin",
+      "titleZh": "含双正面硬币的贝叶斯更新",
+      "category": "probabilityExpectation",
+      "difficulty": "Easy",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "Bayes rule",
+        "law of total probability",
+        "coin tosses"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Easy",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 1.4.5 solved problem 6",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "A box contains two fair coins and one two-headed coin. A coin is chosen uniformly at random and tossed once. Find (a) the probability of observing heads; (b) the probability that the chosen coin was the two-headed coin given that heads was observed.",
+      "promptZh": "盒中有两枚公平硬币和一枚双正面硬币。随机等概率选一枚硬币并抛一次。求：(a) 出现正面的概率；(b) 已知出现正面时，选中双正面硬币的概率。",
+      "answer": "The answers are $P(H)=\\frac23$ and $P(\\text{two-headed}\\mid H)=\\frac12$.",
+      "answerEn": "The answers are $P(H)=\\frac23$ and $P(\\text{two-headed}\\mid H)=\\frac12$.",
+      "answerZh": "答案为 $P(H)=\\frac23$，且 $P(\\text{双正面}\\mid H)=\\frac12$。",
+      "explanation": "Let $C_F$ be choosing a fair coin and $C_D$ choosing the two-headed coin. Then\n$$P(H)=P(H\\mid C_F)P(C_F)+P(H\\mid C_D)P(C_D)=\\frac12\\cdot\\frac23+1\\cdot\\frac13=\\frac23.$$\nBayes' rule gives\n$$P(C_D\\mid H)=\\frac{P(H\\mid C_D)P(C_D)}{P(H)}=\\frac{1\\cdot(1/3)}{2/3}=\\frac12.$$",
+      "explanationZh": "令 $C_F$ 表示选中公平硬币，$C_D$ 表示选中双正面硬币。则\n$$P(H)=P(H\\mid C_F)P(C_F)+P(H\\mid C_D)P(C_D)=\\frac12\\cdot\\frac23+1\\cdot\\frac13=\\frac23.$$\n由贝叶斯公式，\n$$P(C_D\\mid H)=\\frac{P(H\\mid C_D)P(C_D)}{P(H)}=\\frac{1\\cdot(1/3)}{2/3}=\\frac12.$$"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-005",
+      "titleEn": "Joint PMF marginals and independence",
+      "titleZh": "联合 PMF 的边缘分布与独立性",
+      "category": "probabilityExpectation",
+      "difficulty": "Medium",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "joint distribution",
+        "marginal distribution",
+        "independence"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Medium",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 5.1.6 solved problem 1",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "Random variables $X$ and $Y$ have joint PMF:\n\n|  | $Y=2$ | $Y=4$ | $Y=5$ |\n|---|---:|---:|---:|\n| $X=1$ | $1/12$ | $1/24$ | $1/24$ |\n| $X=2$ | $1/6$ | $1/12$ | $1/8$ |\n| $X=3$ | $1/4$ | $1/8$ | $1/12$ |\n\nFind $P(X\\le2,Y\\le4)$, the marginal PMFs, $P(Y=2\\mid X=1)$, and whether $X,Y$ are independent.",
+      "promptZh": "随机变量 $X,Y$ 的联合 PMF 如下：\n\n|  | $Y=2$ | $Y=4$ | $Y=5$ |\n|---|---:|---:|---:|\n| $X=1$ | $1/12$ | $1/24$ | $1/24$ |\n| $X=2$ | $1/6$ | $1/12$ | $1/8$ |\n| $X=3$ | $1/4$ | $1/8$ | $1/12$ |\n\n求 $P(X\\le2,Y\\le4)$、边缘 PMF、$P(Y=2\\mid X=1)$，并判断 $X,Y$ 是否独立。",
+      "answer": "$P(X\\le2,Y\\le4)=\\frac38$. The marginals are $P_X=(1/6,3/8,11/24)$ for $X=1,2,3$ and $P_Y=(1/2,1/4,1/4)$ for $Y=2,4,5$. Also $P(Y=2\\mid X=1)=\\frac12$, and the variables are not independent.",
+      "answerEn": "$P(X\\le2,Y\\le4)=\\frac38$. The marginals are $P_X=(1/6,3/8,11/24)$ for $X=1,2,3$ and $P_Y=(1/2,1/4,1/4)$ for $Y=2,4,5$. Also $P(Y=2\\mid X=1)=\\frac12$, and the variables are not independent.",
+      "answerZh": "$P(X\\le2,Y\\le4)=\\frac38$。$X=1,2,3$ 的边缘分布为 $(1/6,3/8,11/24)$，$Y=2,4,5$ 的边缘分布为 $(1/2,1/4,1/4)$。且 $P(Y=2\\mid X=1)=\\frac12$，二者不独立。",
+      "explanation": "The requested joint event sums four cells:\n$$\\frac1{12}+\\frac1{24}+\\frac16+\\frac1{12}=\\frac38.$$\nRow sums give\n$$P_X(1)=\\frac16,\\quad P_X(2)=\\frac38,\\quad P_X(3)=\\frac{11}{24},$$\nand column sums give\n$$P_Y(2)=\\frac12,\\quad P_Y(4)=\\frac14,\\quad P_Y(5)=\\frac14.$$\nFor the conditional probability,\n$$P(Y=2\\mid X=1)=\\frac{P(X=1,Y=2)}{P_X(1)}=\\frac{1/12}{1/6}=\\frac12.$$\nIndependence would require every cell to factor. But\n$$P(X=2,Y=2)=\\frac16\\ne P_X(2)P_Y(2)=\\frac38\\cdot\\frac12=\\frac3{16},$$\nso $X$ and $Y$ are not independent.",
+      "explanationZh": "目标联合事件包含四个格子：\n$$\\frac1{12}+\\frac1{24}+\\frac16+\\frac1{12}=\\frac38.$$\n行和给出\n$$P_X(1)=\\frac16,\\quad P_X(2)=\\frac38,\\quad P_X(3)=\\frac{11}{24},$$\n列和给出\n$$P_Y(2)=\\frac12,\\quad P_Y(4)=\\frac14,\\quad P_Y(5)=\\frac14.$$\n条件概率为\n$$P(Y=2\\mid X=1)=\\frac{P(X=1,Y=2)}{P_X(1)}=\\frac{1/12}{1/6}=\\frac12.$$\n若独立，每个格子都应等于边缘概率乘积。但\n$$P(X=2,Y=2)=\\frac16\\ne P_X(2)P_Y(2)=\\frac38\\cdot\\frac12=\\frac3{16},$$\n所以 $X$ 与 $Y$ 不独立。"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-006",
+      "titleEn": "Poisson thinning into buyers and non-buyers",
+      "titleZh": "泊松顾客流的购买者与非购买者拆分",
+      "category": "probabilityExpectation",
+      "difficulty": "Medium",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "Poisson thinning",
+        "joint distribution",
+        "expectation"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Medium",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 5.1.6 solved problem 5",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "The number of customers visiting a restaurant in a day is $N\\sim Poisson(\\lambda)$. Each customer buys a drink independently with probability $p$. Let $X$ be the number who buy drinks and $Y$ the number who do not, so $X+Y=N$. Find the marginal PMFs of $X,Y$, their joint PMF, whether they are independent, and $E[X^2Y^2]$.",
+      "promptZh": "某餐厅一天顾客数 $N\\sim Poisson(\\lambda)$。每位顾客独立地以概率 $p$ 买饮料。令 $X$ 为买饮料的人数，$Y$ 为不买饮料的人数，因此 $X+Y=N$。求 $X,Y$ 的边缘 PMF、联合 PMF、是否独立，以及 $E[X^2Y^2]$。",
+      "answer": "$X\\sim Poisson(\\lambda p)$ and $Y\\sim Poisson(\\lambda(1-p))$ are independent. Thus $E[X^2Y^2]=(\\lambda p+(\\lambda p)^2)(\\lambda(1-p)+(\\lambda(1-p))^2)$.",
+      "answerEn": "$X\\sim Poisson(\\lambda p)$ and $Y\\sim Poisson(\\lambda(1-p))$ are independent. Thus $E[X^2Y^2]=(\\lambda p+(\\lambda p)^2)(\\lambda(1-p)+(\\lambda(1-p))^2)$.",
+      "answerZh": "$X\\sim Poisson(\\lambda p)$，$Y\\sim Poisson(\\lambda(1-p))$，且二者独立。因此 $E[X^2Y^2]=(\\lambda p+(\\lambda p)^2)(\\lambda(1-p)+(\\lambda(1-p))^2)$。",
+      "explanation": "Condition on $N=n$. Then $X\\mid N=n\\sim Binomial(n,p)$ and $Y=n-X$. Summing out $n$ gives the standard Poisson-thinning result:\n$$P(X=x)=e^{-\\lambda p}\\frac{(\\lambda p)^x}{x!},\\qquad P(Y=y)=e^{-\\lambda(1-p)}\\frac{(\\lambda(1-p))^y}{y!}.$$\nFor $x,y\\ge0$,\n$$P(X=x,Y=y)=P(N=x+y)\\binom{x+y}{x}p^x(1-p)^y\n=e^{-\\lambda}\\frac{(\\lambda p)^x}{x!}\\frac{(\\lambda(1-p))^y}{y!}.$$\nThis factors into the two marginals, so $X$ and $Y$ are independent. Let $a=\\lambda p$ and $b=\\lambda(1-p)$. For a Poisson variable $Z$ with mean $m$, $E[Z^2]=m+m^2$, hence\n$$E[X^2Y^2]=E[X^2]E[Y^2]=(a+a^2)(b+b^2).$$",
+      "explanationZh": "在 $N=n$ 条件下，$X\\mid N=n\\sim Binomial(n,p)$，且 $Y=n-X$。对 $n$ 求和得到泊松拆分结论：\n$$P(X=x)=e^{-\\lambda p}\\frac{(\\lambda p)^x}{x!},\\qquad P(Y=y)=e^{-\\lambda(1-p)}\\frac{(\\lambda(1-p))^y}{y!}.$$\n对 $x,y\\ge0$，\n$$P(X=x,Y=y)=P(N=x+y)\\binom{x+y}{x}p^x(1-p)^y\n=e^{-\\lambda}\\frac{(\\lambda p)^x}{x!}\\frac{(\\lambda(1-p))^y}{y!}.$$\n该式可分解为两个边缘分布的乘积，所以 $X,Y$ 独立。令 $a=\\lambda p$、$b=\\lambda(1-p)$。若 $Z$ 为均值 $m$ 的泊松变量，则 $E[Z^2]=m+m^2$，因此\n$$E[X^2Y^2]=E[X^2]E[Y^2]=(a+a^2)(b+b^2).$$"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-007",
+      "titleEn": "Expected waiting time for two consecutive heads",
+      "titleZh": "等待连续两次正面的期望抛掷次数",
+      "category": "probabilityExpectation",
+      "difficulty": "Medium",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "conditional expectation",
+        "recursion",
+        "coin tosses"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Medium",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 5.1.6 solved problem 6",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "A biased coin has $P(H)=p$. It is tossed until two consecutive heads appear. Let $X$ be the total number of tosses. Find $E[X]$.",
+      "promptZh": "一枚偏硬币满足 $P(H)=p$。反复抛掷直到第一次出现连续两个正面。令 $X$ 为总抛掷次数，求 $E[X]$。",
+      "answer": "$E[X]=\\frac{1+p}{p^2}$.",
+      "answerEn": "$E[X]=\\frac{1+p}{p^2}$.",
+      "answerZh": "$E[X]=\\frac{1+p}{p^2}$。",
+      "explanation": "Let $\\mu=E[X]$ and let $a$ be the expected remaining tosses after one head has just been observed. From the start,\n$$\\mu=1+(1-p)\\mu+p a.$$\nFrom the one-head state, the next toss either finishes or resets:\n$$a=1+(1-p)\\mu.$$\nSubstitute:\n$$\\mu=1+(1-p)\\mu+p\\bigl(1+(1-p)\\mu\\bigr)\n=1+p+(1-p^2)\\mu.$$\nThus $p^2\\mu=1+p$, so\n$$\\mu=\\frac{1+p}{p^2}.$$",
+      "explanationZh": "令 $\\mu=E[X]$，并令 $a$ 表示“刚看到一个正面后”的期望剩余抛掷次数。从起点出发，\n$$\\mu=1+(1-p)\\mu+p a.$$\n在已经看到一个正面的状态下，下一次抛掷要么成功结束，要么失败并重置：\n$$a=1+(1-p)\\mu.$$\n代入得到\n$$\\mu=1+(1-p)\\mu+p\\bigl(1+(1-p)\\mu\\bigr)\n=1+p+(1-p^2)\\mu.$$\n所以\n$$p^2\\mu=1+p,\\qquad \\mu=\\frac{1+p}{p^2}.$$"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-008",
+      "titleEn": "CLT approximation for total passenger weight",
+      "titleZh": "乘客总重量的中心极限定理近似",
+      "category": "probabilityExpectation",
+      "difficulty": "Easy",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "CLT",
+        "normal approximation",
+        "variance"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Easy",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 7.1.3 solved problem 1",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "The weights of 100 passengers are i.i.d. with mean 170 pounds and standard deviation 30 pounds. Use the central limit theorem to approximate the probability that their total weight exceeds 18,000 pounds.",
+      "promptZh": "100 名乘客体重独立同分布，均值 170 磅、标准差 30 磅。用中心极限定理近似总重量超过 18,000 磅的概率。",
+      "answer": "The CLT approximation is $1-\\Phi(10/3)\\approx 0.000429$.",
+      "answerEn": "The CLT approximation is $1-\\Phi(10/3)\\approx 0.000429$.",
+      "answerZh": "CLT 近似结果为 $1-\\Phi(10/3)\\approx 0.000429$。",
+      "explanation": "Let $W=\\sum_{i=1}^{100}X_i$. Then\n$$E[W]=100\\cdot170=17000,\\qquad Var(W)=100\\cdot30^2=90000,$$\nso $\\sigma_W=300$. By the CLT,\n$$P(W>18000)\\approx P\\left(Z>\\frac{18000-17000}{300}\\right)=P(Z>10/3)=1-\\Phi(10/3).$$\nNumerically this is about $4.29\\times10^{-4}$.",
+      "explanationZh": "令 $W=\\sum_{i=1}^{100}X_i$。则\n$$E[W]=100\\cdot170=17000,\\qquad Var(W)=100\\cdot30^2=90000,$$\n所以 $\\sigma_W=300$。由中心极限定理，\n$$P(W>18000)\\approx P\\left(Z>\\frac{18000-17000}{300}\\right)=P(Z>10/3)=1-\\Phi(10/3).$$\n数值约为 $4.29\\times10^{-4}$。"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-009",
+      "titleEn": "CLT planning for party sandwiches",
+      "titleZh": "用 CLT 规划聚会三明治数量",
+      "category": "probabilityExpectation",
+      "difficulty": "Medium",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "CLT",
+        "quantile",
+        "normal approximation"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Medium",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 7.1.3 solved problem 3",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "There are 64 guests. Each guest independently needs 0, 1, or 2 sandwiches with probabilities $1/4$, $1/2$, and $1/4$. How many sandwiches should be prepared so that the probability of no shortage is approximately at least 95%?",
+      "promptZh": "有 64 位客人。每位客人独立地需要 0、1、2 个三明治，概率分别为 $1/4$、$1/2$、$1/4$。为了使“不短缺”的概率近似至少为 95%，应准备多少个三明治？",
+      "answer": "Prepare 74 sandwiches.",
+      "answerEn": "Prepare 74 sandwiches.",
+      "answerZh": "应准备 74 个三明治。",
+      "explanation": "For one guest, $E[X]=1$ and\n$$E[X^2]=0^2\\frac14+1^2\\frac12+2^2\\frac14=\\frac32,$$\nso $Var(X)=1/2$. For $Y=\\sum_{i=1}^{64}X_i$,\n$$E[Y]=64,\\qquad Var(Y)=32,\\qquad \\sigma_Y=4\\sqrt2.$$\nUsing the CLT, choose $y$ with\n$$\\Phi\\left(\\frac{y-64}{4\\sqrt2}\\right)\\ge0.95.$$\nSince $\\Phi^{-1}(0.95)\\approx1.645$,\n$$y\\ge64+1.645(4\\sqrt2)\\approx73.3.$$\nThe smallest integer meeting this target is 74.",
+      "explanationZh": "对单个客人，$E[X]=1$，且\n$$E[X^2]=0^2\\frac14+1^2\\frac12+2^2\\frac14=\\frac32,$$\n所以 $Var(X)=1/2$。令 $Y=\\sum_{i=1}^{64}X_i$，则\n$$E[Y]=64,\\qquad Var(Y)=32,\\qquad \\sigma_Y=4\\sqrt2.$$\n由 CLT，选择 $y$ 使\n$$\\Phi\\left(\\frac{y-64}{4\\sqrt2}\\right)\\ge0.95.$$\n由于 $\\Phi^{-1}(0.95)\\approx1.645$，\n$$y\\ge64+1.645(4\\sqrt2)\\approx73.3.$$\n满足条件的最小整数为 74。"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-010",
+      "titleEn": "Sample size for an exponential sample mean",
+      "titleZh": "指数样本均值所需样本量",
+      "category": "statistics",
+      "difficulty": "Medium",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "CLT",
+        "sample mean",
+        "sample size"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "statistics",
+        "difficulty": "Medium",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 7.1.3 solved problem 4",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "Let $X_1,\\ldots,X_n$ be i.i.d. $Exponential(1)$ variables, and let $\\bar X=n^{-1}\\sum_i X_i$. Use the CLT to find how large $n$ should be so that $P(0.9\\le \\bar X\\le1.1)\\ge0.95$ approximately.",
+      "promptZh": "令 $X_1,\\ldots,X_n$ 独立同分布且服从 $Exponential(1)$，并令 $\\bar X=n^{-1}\\sum_i X_i$。用 CLT 近似求使 $P(0.9\\le \\bar X\\le1.1)\\ge0.95$ 所需的样本量 $n$。",
+      "answer": "The CLT calculation gives $n\\ge385$.",
+      "answerEn": "The CLT calculation gives $n\\ge385$.",
+      "answerZh": "CLT 计算给出 $n\\ge385$。",
+      "explanation": "For $Exponential(1)$, $E[X_i]=1$ and $Var(X_i)=1$. Then\n$$\\frac{\\bar X-1}{1/\\sqrt n}\\approx N(0,1).$$\nThus\n$$P(0.9\\le\\bar X\\le1.1)\\approx P(-0.1\\sqrt n\\le Z\\le0.1\\sqrt n)=2\\Phi(0.1\\sqrt n)-1.$$\nRequire this to be at least $0.95$:\n$$\\Phi(0.1\\sqrt n)\\ge0.975.$$\nSince $\\Phi^{-1}(0.975)\\approx1.96$, we need $\\sqrt n\\ge19.6$, hence $n\\ge384.16$. The integer answer is $n\\ge385$.",
+      "explanationZh": "对 $Exponential(1)$，有 $E[X_i]=1$、$Var(X_i)=1$。因此\n$$\\frac{\\bar X-1}{1/\\sqrt n}\\approx N(0,1).$$\n于是\n$$P(0.9\\le\\bar X\\le1.1)\\approx P(-0.1\\sqrt n\\le Z\\le0.1\\sqrt n)=2\\Phi(0.1\\sqrt n)-1.$$\n要求该值至少为 $0.95$：\n$$\\Phi(0.1\\sqrt n)\\ge0.975.$$\n由于 $\\Phi^{-1}(0.975)\\approx1.96$，需要 $\\sqrt n\\ge19.6$，即 $n\\ge384.16$。整数样本量为 $n\\ge385$。"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-011",
+      "titleEn": "Bias and MSE of the maximum uniform estimator",
+      "titleZh": "均匀分布最大值估计量的偏差与 MSE",
+      "category": "statistics",
+      "difficulty": "Medium",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "estimator",
+        "bias",
+        "MSE",
+        "uniform distribution"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "statistics",
+        "difficulty": "Medium",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter8/8_2_5_solved_probs.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter8/8_2_5_solved_probs.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 8.2.5 solved problem 3",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter8/8_2_5_solved_probs.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "Let $X_1,\\ldots,X_n$ be a random sample from $Uniform(0,\\theta)$, where $\\theta$ is unknown. Define $\\hat\\Theta_n=\\max_i X_i$. Find the bias and MSE of $\\hat\\Theta_n$, and decide whether it is consistent for $\\theta$.",
+      "promptZh": "令 $X_1,\\ldots,X_n$ 为来自 $Uniform(0,\\theta)$ 的样本，其中 $\\theta$ 未知。定义 $\\hat\\Theta_n=\\max_i X_i$。求 $\\hat\\Theta_n$ 的偏差、MSE，并判断它是否为 $\\theta$ 的一致估计量。",
+      "answer": "The bias is $-\\theta/(n+1)$, the MSE is $\\frac{2\\theta^2}{(n+1)(n+2)}$, and the estimator is consistent.",
+      "answerEn": "The bias is $-\\theta/(n+1)$, the MSE is $\\frac{2\\theta^2}{(n+1)(n+2)}$, and the estimator is consistent.",
+      "answerZh": "偏差为 $-\\theta/(n+1)$，MSE 为 $\\frac{2\\theta^2}{(n+1)(n+2)}$，该估计量是一致的。",
+      "explanation": "For $M=\\max_iX_i$,\n$$P(M\\le m)=\\left(\\frac{m}{\\theta}\\right)^n,\\qquad 0\\le m\\le\\theta.$$\nTherefore\n$$f_M(m)=\\frac{n m^{n-1}}{\\theta^n}.$$\nMoments are\n$$E[M]=\\frac{n}{n+1}\\theta,\\qquad E[M^2]=\\frac{n}{n+2}\\theta^2.$$\nThus\n$$Bias(M)=E[M]-\\theta=-\\frac{\\theta}{n+1}.$$\nAlso\n$$MSE(M)=E[(M-\\theta)^2]=E[M^2]-2\\theta E[M]+\\theta^2=\\frac{2\\theta^2}{(n+1)(n+2)}.$$\nThis tends to 0 as $n\\to\\infty$, so $\\hat\\Theta_n$ is consistent.",
+      "explanationZh": "令 $M=\\max_iX_i$。则\n$$P(M\\le m)=\\left(\\frac{m}{\\theta}\\right)^n,\\qquad 0\\le m\\le\\theta.$$\n因此\n$$f_M(m)=\\frac{n m^{n-1}}{\\theta^n}.$$\n可得矩：\n$$E[M]=\\frac{n}{n+1}\\theta,\\qquad E[M^2]=\\frac{n}{n+2}\\theta^2.$$\n所以\n$$Bias(M)=E[M]-\\theta=-\\frac{\\theta}{n+1}.$$\n并且\n$$MSE(M)=E[(M-\\theta)^2]=E[M^2]-2\\theta E[M]+\\theta^2=\\frac{2\\theta^2}{(n+1)(n+2)}.$$\n该 MSE 随 $n\\to\\infty$ 收敛到 0，因此 $\\hat\\Theta_n$ 是一致估计量。"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-012",
+      "titleEn": "Normal-normal posterior update",
+      "titleZh": "正态-正态模型的后验更新",
+      "category": "statistics",
+      "difficulty": "Medium",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "Bayesian inference",
+        "normal distribution",
+        "posterior"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "statistics",
+        "difficulty": "Medium",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter9/9_1_10_solved_probs.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter9/9_1_10_solved_probs.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 9.1.10 solved problem 1",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter9/9_1_10_solved_probs.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "Let $X\\sim N(0,1)$ and suppose $Y\\mid X=x\\sim N(x,1)$. Show the posterior distribution of $X$ given $Y=y$.",
+      "promptZh": "令 $X\\sim N(0,1)$，且 $Y\\mid X=x\\sim N(x,1)$。求给定 $Y=y$ 后 $X$ 的后验分布。",
+      "answer": "$X\\mid Y=y\\sim N(y/2,\\,1/2)$.",
+      "answerEn": "$X\\mid Y=y\\sim N(y/2,\\,1/2)$.",
+      "answerZh": "$X\\mid Y=y\\sim N(y/2,\\,1/2)$。",
+      "explanation": "Up to a normalizing constant in $x$,\n$$f_{X\\mid Y}(x\\mid y)\\propto f_{Y\\mid X}(y\\mid x)f_X(x)\n\\propto \\exp\\left[-\\frac{(y-x)^2}{2}\\right]\\exp\\left[-\\frac{x^2}{2}\\right].$$\nCombine the exponent:\n$$-\\frac12\\{(y-x)^2+x^2\\}=-x^2+xy-\\frac{y^2}{2}\n=-\\left(x-\\frac y2\\right)^2+\\text{constant in }y.$$\nThis is the kernel of a normal distribution with mean $y/2$ and variance $1/2$.",
+      "explanationZh": "忽略只依赖于 $y$ 的归一化常数，\n$$f_{X\\mid Y}(x\\mid y)\\propto f_{Y\\mid X}(y\\mid x)f_X(x)\n\\propto \\exp\\left[-\\frac{(y-x)^2}{2}\\right]\\exp\\left[-\\frac{x^2}{2}\\right].$$\n合并指数项：\n$$-\\frac12\\{(y-x)^2+x^2\\}=-x^2+xy-\\frac{y^2}{2}\n=-\\left(x-\\frac y2\\right)^2+\\text{只依赖于 }y\\text{ 的常数}.$$\n这是均值 $y/2$、方差 $1/2$ 的正态分布核。"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-013",
+      "titleEn": "Basic probabilities for a Poisson process",
+      "titleZh": "泊松过程的基本区间概率",
+      "category": "probabilityExpectation",
+      "difficulty": "Easy",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "Poisson process",
+        "independent increments"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Easy",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter11/11_1_5_solved_probs.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter11/11_1_5_solved_probs.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 11.1.5 solved problem 1",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter11/11_1_5_solved_probs.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "Let $N(t)$ be a Poisson process with rate $\\lambda=0.5$. Find: (a) the probability of no arrivals in $(3,5]$; (b) the probability of exactly one arrival in each of $(0,1]$, $(1,2]$, $(2,3]$, and $(3,4]$.",
+      "promptZh": "令 $N(t)$ 为速率 $\\lambda=0.5$ 的泊松过程。求：(a) 区间 $(3,5]$ 中没有到达的概率；(b) 在 $(0,1]$、$(1,2]$、$(2,3]$、$(3,4]$ 每个区间中都恰有一次到达的概率。",
+      "answer": "The answers are $e^{-1}\\approx 0.3679$ and $[0.5e^{-0.5}]^4\\approx 0.008458$.",
+      "answerEn": "The answers are $e^{-1}\\approx 0.3679$ and $[0.5e^{-0.5}]^4\\approx 0.008458$.",
+      "answerZh": "答案为 $e^{-1}\\approx 0.3679$ 和 $[0.5e^{-0.5}]^4\\approx 0.008458$。",
+      "explanation": "The length of $(3,5]$ is 2, so the count has distribution $Poisson(0.5\\cdot2)=Poisson(1)$. Thus\n$$P(N(5)-N(3)=0)=e^{-1}.$$\nEach unit interval has count $Poisson(0.5)$, and disjoint increments are independent. Therefore\n$$P(\\text{one in each of four intervals})=\\left(e^{-0.5}\\frac{0.5^1}{1!}\\right)^4=[0.5e^{-0.5}]^4.$$",
+      "explanationZh": "区间 $(3,5]$ 长度为 2，因此计数服从 $Poisson(0.5\\cdot2)=Poisson(1)$。所以\n$$P(N(5)-N(3)=0)=e^{-1}.$$\n每个单位区间的计数服从 $Poisson(0.5)$，且不相交增量独立。因此\n$$P(\\text{四个区间各一次到达})=\\left(e^{-0.5}\\frac{0.5^1}{1!}\\right)^4=[0.5e^{-0.5}]^4.$$"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-014",
+      "titleEn": "Merged Poisson processes and source attribution",
+      "titleZh": "合并泊松过程与来源归因",
+      "category": "probabilityExpectation",
+      "difficulty": "Medium",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "Poisson process",
+        "merging",
+        "splitting"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Medium",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter11/11_1_5_solved_probs.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter11/11_1_5_solved_probs.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 11.1.5 solved problem 5",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter11/11_1_5_solved_probs.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "Let $N_1(t)$ and $N_2(t)$ be independent Poisson processes with rates 1 and 2. Let $N(t)=N_1(t)+N_2(t)$. Find: (a) $P(N(1)=2,N(2)=5)$; (b) $P(N_1(1)=1\\mid N(1)=2)$.",
+      "promptZh": "令 $N_1(t)$ 与 $N_2(t)$ 为相互独立的泊松过程，速率分别为 1 和 2。令 $N(t)=N_1(t)+N_2(t)$。求：(a) $P(N(1)=2,N(2)=5)$；(b) $P(N_1(1)=1\\mid N(1)=2)$。",
+      "answer": "The answers are $\\frac{3^5}{2!3!}e^{-6}\\approx 0.05019$ and $\\frac49$.",
+      "answerEn": "The answers are $\\frac{3^5}{2!3!}e^{-6}\\approx 0.05019$ and $\\frac49$.",
+      "answerZh": "答案为 $\\frac{3^5}{2!3!}e^{-6}\\approx 0.05019$ 和 $\\frac49$。",
+      "explanation": "The merged process is Poisson with rate $1+2=3$. Independent increments give\n$$P(N(1)=2,N(2)=5)=P(N(1)=2)P(N(2)-N(1)=3).$$\nThus\n$$P=\\left(e^{-3}\\frac{3^2}{2!}\\right)\\left(e^{-3}\\frac{3^3}{3!}\\right)=\\frac{3^5}{2!3!}e^{-6}.$$\nFor the source of two arrivals by time 1, each arrival belongs to process 1 with probability $1/(1+2)=1/3$. Conditional on $N(1)=2$,\n$$N_1(1)\\mid N(1)=2\\sim Binomial(2,1/3),$$\nso\n$$P(N_1(1)=1\\mid N(1)=2)=\\binom21\\frac13\\frac23=\\frac49.$$",
+      "explanationZh": "合并过程是速率 $1+2=3$ 的泊松过程。由独立增量，\n$$P(N(1)=2,N(2)=5)=P(N(1)=2)P(N(2)-N(1)=3).$$\n因此\n$$P=\\left(e^{-3}\\frac{3^2}{2!}\\right)\\left(e^{-3}\\frac{3^3}{3!}\\right)=\\frac{3^5}{2!3!}e^{-6}.$$\n在时刻 1 前的两次到达中，每次来自过程 1 的概率为 $1/(1+2)=1/3$。在 $N(1)=2$ 条件下，\n$$N_1(1)\\mid N(1)=2\\sim Binomial(2,1/3),$$\n所以\n$$P(N_1(1)=1\\mid N(1)=2)=\\binom21\\frac13\\frac23=\\frac49.$$"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-015",
+      "titleEn": "A linear combination of Brownian motion values",
+      "titleZh": "布朗运动取值线性组合的概率",
+      "category": "probabilityExpectation",
+      "difficulty": "Medium",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "Brownian motion",
+        "Gaussian process",
+        "covariance"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Medium",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter11/11_4_3_solved_probs.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter11/11_4_3_solved_probs.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 11.4.3 solved problem 1",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter11/11_4_3_solved_probs.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "Let $W(t)$ be standard Brownian motion. Find $P(W(1)+W(2)>2)$.",
+      "promptZh": "令 $W(t)$ 为标准布朗运动。求 $P(W(1)+W(2)>2)$。",
+      "answer": "The probability is $1-\\Phi(2/\\sqrt5)\\approx 0.1855$.",
+      "answerEn": "The probability is $1-\\Phi(2/\\sqrt5)\\approx 0.1855$.",
+      "answerZh": "概率为 $1-\\Phi(2/\\sqrt5)\\approx 0.1855$。",
+      "explanation": "Because Brownian motion is Gaussian, $X=W(1)+W(2)$ is normal. Its mean is 0. Its variance is\n$$Var(W(1))+Var(W(2))+2Cov(W(1),W(2))=1+2+2\\min(1,2)=5.$$\nTherefore $X\\sim N(0,5)$ and\n$$P(W(1)+W(2)>2)=P\\left(Z>\\frac{2}{\\sqrt5}\\right)=1-\\Phi(2/\\sqrt5).$$",
+      "explanationZh": "由于布朗运动是高斯过程，$X=W(1)+W(2)$ 服从正态分布。其均值为 0，方差为\n$$Var(W(1))+Var(W(2))+2Cov(W(1),W(2))=1+2+2\\min(1,2)=5.$$\n因此 $X\\sim N(0,5)$，从而\n$$P(W(1)+W(2)>2)=P\\left(Z>\\frac{2}{\\sqrt5}\\right)=1-\\Phi(2/\\sqrt5).$$"
+    },
+    {
+      "id": "probabilitycourse-solved-samples-problem-016",
+      "titleEn": "Moments of exponentiated Brownian motion",
+      "titleZh": "指数布朗运动的矩与协方差",
+      "category": "probabilityExpectation",
+      "difficulty": "Hard",
+      "tags": [
+        "ProbabilityCourse",
+        "public solved example",
+        "Brownian motion",
+        "lognormal distribution",
+        "covariance"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Hard",
+        "logic": "Curated from a public ProbabilityCourse solved-example page and reviewed for QuantGym topic fit.",
+        "reviewedBy": "Codex import-probabilitycourse-solved-samples"
+      },
+      "source": "probabilitycourse-solved-samples",
+      "sourceUrl": "https://www.probabilitycourse.com/chapter11/11_4_3_solved_probs.php",
+      "sourceType": "open-access-web-solved-example",
+      "bookSlug": "probabilitycourse-solved-samples",
+      "bookName": "ProbabilityCourse Public Solved Samples",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.probabilitycourse.com/chapter11/11_4_3_solved_probs.php",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+        "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+      ],
+      "sourceQuestion": "Chapter 11.4.3 solved problem 3",
+      "answerOfficial": false,
+      "answerPolicy": "Problem topic and numerical target are attributed to a public ProbabilityCourse solved-example page; this QuantGym entry uses a paraphrased prompt and locally reviewed bilingual solution, not a copy of the commercial student solutions guide.",
+      "answerSource": {
+        "type": "generated-reviewed-from-public-solved-example",
+        "official": false,
+        "verificationScript": "scripts/import-probabilitycourse-solved-samples.py",
+        "sourceFiles": [
+          "https://www.probabilitycourse.com/chapter11/11_4_3_solved_probs.php",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/1_4_5_solved3.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/5_1_6_solved_prob.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/7_1_3_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/8_2_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/9_1_10_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_1_5_solved_probs.html",
+          "artifacts/source-research-report/downloads/probabilitycourse/solved-pages/11_4_3_solved_probs.html"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-open-access-page",
+        "note": "The source homepage describes the textbook as open access, while the odd-numbered end-of-chapter student solutions guide is sold separately. This source imports only publicly displayed in-chapter solved examples.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:21:57+00:00"
+      },
+      "createdAt": "2026-06-02T08:21:57+00:00",
+      "updatedAt": "2026-06-02T08:21:57+00:00",
+      "promptEn": "Let $W(t)$ be standard Brownian motion and define $X(t)=\\exp(W(t))$. Find $E[X(t)]$, $Var(X(t))$, and $Cov(X(s),X(t))$ for $0\\le s\\le t$.",
+      "promptZh": "令 $W(t)$ 为标准布朗运动，并定义 $X(t)=\\exp(W(t))$。求 $E[X(t)]$、$Var(X(t))$，以及当 $0\\le s\\le t$ 时的 $Cov(X(s),X(t))$。",
+      "answer": "$E[X(t)]=e^{t/2}$, $Var(X(t))=e^{2t}-e^t$, and $Cov(X(s),X(t))=e^{(s+t)/2}(e^s-1)$ for $s\\le t$.",
+      "answerEn": "$E[X(t)]=e^{t/2}$, $Var(X(t))=e^{2t}-e^t$, and $Cov(X(s),X(t))=e^{(s+t)/2}(e^s-1)$ for $s\\le t$.",
+      "answerZh": "$E[X(t)]=e^{t/2}$，$Var(X(t))=e^{2t}-e^t$，且当 $s\\le t$ 时 $Cov(X(s),X(t))=e^{(s+t)/2}(e^s-1)$。",
+      "explanation": "Since $W(t)\\sim N(0,t)$, the normal MGF gives\n$$E[e^{W(t)}]=e^{t/2},\\qquad E[e^{2W(t)}]=e^{2t}.$$\nTherefore\n$$Var(X(t))=E[e^{2W(t)}]-E[e^{W(t)}]^2=e^{2t}-e^t.$$\nFor $0\\le s\\le t$, $W(s)+W(t)$ is normal with mean 0 and variance\n$$Var(W(s))+Var(W(t))+2Cov(W(s),W(t))=s+t+2s=t+3s.$$\nThus\n$$E[X(s)X(t)]=E[e^{W(s)+W(t)}]=e^{(t+3s)/2}.$$\nSubtracting the product of means,\n$$Cov(X(s),X(t))=e^{(t+3s)/2}-e^{s/2}e^{t/2}=e^{(s+t)/2}(e^s-1).$$",
+      "explanationZh": "因为 $W(t)\\sim N(0,t)$，由正态分布 MGF，\n$$E[e^{W(t)}]=e^{t/2},\\qquad E[e^{2W(t)}]=e^{2t}.$$\n因此\n$$Var(X(t))=E[e^{2W(t)}]-E[e^{W(t)}]^2=e^{2t}-e^t.$$\n当 $0\\le s\\le t$ 时，$W(s)+W(t)$ 为均值 0 的正态变量，方差为\n$$Var(W(s))+Var(W(t))+2Cov(W(s),W(t))=s+t+2s=t+3s.$$\n所以\n$$E[X(s)X(t)]=E[e^{W(s)+W(t)}]=e^{(t+3s)/2}.$$\n减去均值乘积：\n$$Cov(X(s),X(t))=e^{(t+3s)/2}-e^{s/2}e^{t/2}=e^{(s+t)/2}(e^s-1).$$"
+    }
+  ]
+}

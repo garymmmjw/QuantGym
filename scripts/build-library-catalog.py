@@ -405,6 +405,7 @@ def make_private_asset(entry: dict[str, Any]) -> dict[str, Any] | None:
                 "titleEn": entry.get("titleEn", ""),
                 "sourceSlug": entry.get("sourceSlug", ""),
                 "path": relative_url(full_path),
+                "storagePath": f"{entry['id']}.pdf",
                 "contentType": "application/pdf",
                 "minTier": "registered",
                 "visibility": "registered",

@@ -2,8 +2,8 @@
   "slug": "yellow-book",
   "name": "黄皮书 150 Most Frequently Asked Questions",
   "type": "latex",
-  "sourceTexPath": "黄皮书/quant_yellow_book.tex",
+  "sourceTexPath": "有题目的/黄皮书 150 Most Frequently Asked Questions on Quant Interviews/quant_yellow_book.tex",
   "problemFile": "problems.json",
   "problemCount": 153,
-  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+  "lastImportedAt": "2026-06-02T01:06:35.867Z"
 }

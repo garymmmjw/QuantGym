@@ -1,0 +1,308 @@
+QuantGym question-bank handoff
+Updated: 2026-06-02 01:35 PDT
+Workspace: /Users/miujiawei/Desktop/QuantGym
+
+Purpose
+This file is the handoff for a fresh Codex conversation. The goal is to continue
+download / convert / analyze / translate / organize work for the sources mentioned
+in:
+
+  /Users/miujiawei/Downloads/量化金融面试经典书目与开源题集研究报告.pdf
+
+Strict rules for the next conversation
+1. Only use official public pages, user-provided files, or clearly authorized local
+   copies. Do not download pirated commercial books or solution manuals.
+2. Every new question-bank source must preserve the raw source file path, source
+   URL, conversion script, normalized JSON, Chinese translation status, image/media
+   status, category/difficulty review status, and database rebuild command.
+3. If a problem text or answer references a figure/table/diagram, attach a
+   promptImages or solutionImages asset, or add a figureReview note explaining why
+   no image is needed.
+4. If there is no official solution, do not pretend there is one. Either leave the
+   answer empty with a clear source note, or add a generated/verified solution and
+   mark it as non-official.
+5. Rebuild and audit after every source import:
+   node scripts/build-problem-catalog.mjs
+   node scripts/review-question-bank-quality.mjs --catalog data/problem-catalog.json
+   node scripts/audit-question-bank.mjs
+   npm run build
+
+Already completed
+1. Harvard Stat 110 Strategic Practice / Homework
+   - Source folder:
+     量化书籍/有题目的/Harvard Stat 110 概率论战略练习 Statistics 110 Strategic Practice/
+   - Download cache:
+     artifacts/source-research-report/downloads/stat110/
+   - Import script:
+     scripts/import-stat110-strategic-practice.py
+   - Translation script:
+     scripts/translate-stat110-zh.mjs
+   - Normalized source:
+     data/question-banks/stat110-strategic-practice/problems.json
+     data/question-banks/stat110-strategic-practice/metadata.json
+   - Media:
+     assets/problem-media/stat110-strategic-practice/
+   - Status:
+     184 problems imported, Chinese title/prompt/explanation complete, 9 media
+     files created, classificationReviewed=true, no known solution-matching gaps.
+   - Last verified catalog count after Stat110 import:
+     2,956 public problems across 11 active sources.
+
+2. Stanford MS&E 214 HW3 Logistics/Finance
+   - Source folder:
+     量化书籍/有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/
+   - Download cache:
+     artifacts/source-research-report/downloads/stanford-msande214/
+   - Import script:
+     scripts/import-stanford-msande214-hw3.py
+   - Chinese coverage script:
+     scripts/translate-stanford-msande214-hw3-zh.mjs
+   - Normalized source:
+     data/question-banks/stanford-msande214-hw3/problems.json
+     data/question-banks/stanford-msande214-hw3/metadata.json
+   - Media:
+     assets/problem-media/stanford-msande214-hw3/pipeline-network.png
+   - Status:
+     5 HW3 problems imported, Chinese title/prompt/answer/explanation complete,
+     generated answers marked non-official and solver-verified,
+     classificationReviewed=true, reconstructed Problem 5 pipeline image attached
+     with figureReview explaining the missing original ps4 source image.
+   - Last verified catalog/database count after Stanford HW3 import:
+     2,961 public problems across 12 active sources.
+
+3. ProbabilityCourse public solved samples
+   - Official homepage:
+     https://www.probabilitycourse.com/
+   - Public solved pages cached under:
+     artifacts/source-research-report/downloads/probabilitycourse/solved-pages/
+   - Import script:
+     scripts/import-probabilitycourse-solved-samples.py
+   - Normalized source:
+     data/question-banks/probabilitycourse-solved-samples/problems.json
+     data/question-banks/probabilitycourse-solved-samples/metadata.json
+   - Status:
+     16 curated public in-chapter solved examples imported with paraphrased
+     prompts and locally reviewed bilingual answers/explanations. The importer
+     explicitly excludes the separately sold student solutions guide for
+     odd-numbered end-of-chapter problems.
+   - Last verified catalog/database count after ProbabilityCourse import:
+     2,977 public problems across 13 active sources.
+   - Targeted LLM review:
+     artifacts/llm-question-bank-review/probabilitycourse-solved-samples-import-recheck/llm-review-report.json
+     16 reviewed, 16 pass, failed=0, issueRows=0, blockers=0, major=0.
+
+4. Boyd Convex Optimization additional exercises
+   - Official cvxbook page:
+     https://web.stanford.edu/~boyd/cvxbook/
+   - Official public GitHub repo:
+     https://github.com/cvxgrp/cvxbook_additional_exercises
+   - Download cache / shallow clone:
+     artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/
+   - Import script:
+     scripts/import-boyd-cvxbook-additional-exercises.py
+   - Normalized source:
+     data/question-banks/boyd-cvxbook-additional-exercises/problems.json
+     data/question-banks/boyd-cvxbook-additional-exercises/metadata.json
+   - Status:
+     10 curated public non-computational additional exercises imported with
+     generated/reviewed non-official bilingual answers. The official page and
+     repo both state that complete solutions are available only to instructors
+     by request, so no public solution-source import was attempted.
+   - Last verified catalog/database count after Boyd import:
+     2,987 public problems across 14 active sources.
+   - Targeted LLM review:
+     artifacts/llm-question-bank-review/boyd-cvxbook-additional-exercises-import-recheck/llm-review-report.json
+     10 reviewed, 10 pass, failed=0, issueRows=0, blockers=0, major=0.
+
+5. Main audit/update document
+   - Detailed running record:
+     docs/question-bank-audit-and-update.md
+   - Last known deterministic audit result after Boyd:
+     latexTranslationIssues=0
+     missingAnswerImageIssues=0
+     classificationDifficultyIssues=0
+     manualReviewItems=0
+
+6. EPI Judge triage
+   - Official repo:
+     https://github.com/adnanaziz/EPIJudge
+   - Lightweight triage note:
+     artifacts/source-research-report/downloads/epijudge-triage.md
+   - HEAD inspected:
+     b736406dfb6e8e6be2612e8a57e710baf90a2d3e
+   - Status:
+     Not imported. README describes the repo as a companion to Elements of
+     Programming Interviews, with stubs, test cases, and a local judge
+     framework. LICENSE is CC BY-NC-ND 4.0. QuantGym import would require
+     normalized bilingual prompts/answers, which would be adapted material, so
+     keep EPI Judge as an external practice link unless explicit permission or a
+     purely local non-shared workflow is requested.
+
+7. Alison Etheridge stochastic calculus for finance problem sheets
+   - Official author/course page:
+     https://www.stats.ox.ac.uk/~etheridg/finmath/index.html
+   - Public problem sheet:
+     https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html
+     https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf
+   - Download cache:
+     artifacts/source-research-report/downloads/alison-etheridge-finmath/
+   - Import script:
+     scripts/import-etheridge-finmath-problem-sheets.py
+   - Normalized source:
+     data/question-banks/etheridge-finmath-problem-sheets/problems.json
+     data/question-banks/etheridge-finmath-problem-sheets/metadata.json
+   - Status:
+     10 curated public stochastic-finance problems imported with
+     generated/reviewed non-official bilingual answers. No public official
+     solution file was found in the cached source.
+   - Last verified catalog/database count after Etheridge import:
+     2,997 public problems across 15 active sources.
+   - Targeted LLM review:
+     artifacts/llm-question-bank-review/etheridge-finmath-problem-sheets-import-recheck/llm-review-report.json
+     10 reviewed, 10 pass, failed=0, issueRows=0, blockers=0, major=0.
+
+Downloaded/organized from the research report
+1. Boyd & Vandenberghe Convex Optimization
+   - Local:
+     量化书籍/纯textbook/凸优化 Convex Optimization/bv_cvxbook.pdf
+   - Cache:
+     artifacts/source-research-report/downloads/boyd-convex-optimization/bv_cvxbook.pdf
+   - Current status:
+     Official public book PDF downloaded. Official cvxbook page points to the
+     public additional-exercises GitHub repo, and the repo/PDF explicitly say
+     public solutions are not included. A curated 10-question source has been
+     imported from the additional exercises with generated/reviewed non-official
+     answers as `boyd-cvxbook-additional-exercises`.
+
+2. Mike Giles Multilevel Monte Carlo Methods
+   - Local:
+     量化书籍/纯textbook/多层蒙特卡洛方法 Multilevel Monte Carlo Methods/mcqmc12_giles.pdf
+   - Cache:
+     artifacts/source-research-report/downloads/mike-giles-mlmc/mcqmc12_giles.pdf
+   - Current status:
+     Official/public lecture-survey PDF downloaded. Keyword scan found no real
+     homework/exercise structure. Keep as textbook/watchlist, not a question-bank
+     source for now. Rechecked 2026-06-02: 20 pages, 0 Exercise/Exercises hits,
+     0 Homework hits; "problem" occurrences are prose, not a problem set.
+
+3. Bath Market Microstructure Lecture Notes
+   - Local:
+     量化书籍/纯textbook/市场微观结构讲义 Market Microstructure Lecture Notes/Microstructure.pdf
+   - Cache:
+     artifacts/source-research-report/downloads/bath-market-microstructure/Microstructure.pdf
+   - Current status:
+     Public PDF downloaded. It appears to be lecture/textbook material, not a clean
+     question-bank source. Keep as textbook/watchlist unless later inspection finds
+     exercises with answers. Rechecked 2026-06-02: 322 pages, 0 Exercise/Exercises
+     hits, 0 Homework hits; "problem" occurrences are lecture prose, not a
+     structured problem set.
+
+4. ProbabilityCourse.com
+   - Local:
+     量化书籍/纯textbook/ProbabilityCourse概率统计与随机过程 Introduction to Probability Statistics and Random Processes/index.html
+   - Cache:
+     artifacts/source-research-report/downloads/probabilitycourse/index.html
+   - Current status:
+     Homepage saved. The main Introduction to Probability, Statistics, and Random
+     Processes student solutions guide is sold commercially, so do not
+     scrape/import that guide. A curated set of 16 public in-chapter solved
+     examples has been imported as `probabilitycourse-solved-samples` with
+     paraphrased prompts and locally reviewed bilingual solutions.
+
+5. Stanford MS&E 214 Handouts
+   - Local:
+     量化书籍/有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/
+   - Cache:
+     artifacts/source-research-report/downloads/stanford-msande214/
+   - Files downloaded:
+     index.html
+     hw1_files.zip
+     hw2_files.zip
+     hw3_files.zip
+   - Current status:
+     The index page is useful and public. HW1 and HW2 zip files download
+     successfully but their extracted tex/pdf/csv/xlsx payloads are 0-byte files.
+     HW3 is valid and has been imported as `stanford-msande214-hw3`.
+   - HW3 content:
+     5 main problems on LP/logistics/finance:
+       Problem 1 staffing LP
+       Problem 2 min-cost flow for aid logistics
+       Problem 3 currency/options hedging and arbitrage LP
+       Problem 4 portfolio quadratic optimization using homework3.xlsx
+       Problem 5 oil pipeline network flow/reliability problem
+   - HW3 image issue resolved:
+     Problem 5 references a figure above, and LaTeX references includegraphics{ps4},
+     but the downloaded zip does not include a ps4 image and the PDF has no embedded
+     image object for it. The import reconstructs the network diagram from the edge
+     table, attaches it as promptImages, and records a figureReview note.
+   - HW3 answer issue resolved:
+     No official solution file is included. The import uses generated solver-verified
+     answers and marks them clearly as non-official.
+
+Next highest-priority work
+1. Continue research-report source triage after Stanford.
+   Recommended order:
+     a. Other public lecture handouts with explicit homework + answers, if any
+        remain outside the already triaged Stat110 / Stanford / ProbabilityCourse
+        / Boyd / Etheridge set.
+     b. Larger Boyd or Etheridge generated-answer imports only if you want more
+        non-official optimization/stochastic-finance answers and are comfortable
+        maintaining them.
+     c. EPI Judge only as an external practice resource unless rights/usage
+        permissions change.
+   Skip for question-bank import unless better evidence appears:
+     Mike Giles MLMC PDF, Bath Microstructure PDF.
+
+2. Rebuild database after each future catalog rebuild.
+   Use:
+     python - <<'PY'
+     import sys
+     from pathlib import Path
+     sys.path.insert(0, str(Path('api-server').resolve()))
+     import server
+     print({'importedCatalogCount': server.IMPORTED_CATALOG_COUNT,
+            'dbPath': str(server.DB_PATH)})
+     PY
+
+Known current problems / risks
+1. Stanford HW1/HW2 zip payloads are empty after extraction; do not waste time
+   parsing them until a non-empty official source is found.
+2. Boyd has many more public exercises but no bundled public solutions. Only a
+   small generated-answer sample is imported; expanding it should remain a
+   deliberate decision.
+3. ProbabilityCourse commercial student solutions guide remains off-limits; the
+   current imported source is limited to public in-chapter solved examples.
+4. EPI Judge is CC BY-NC-ND; do not normalize/translate/import its prompts into
+   the shared question bank without explicit permission.
+5. Several repo changes are already dirty from previous work. Do not revert
+   unrelated changes. Work with current files and only edit the scoped sources.
+
+Suggested prompt for the new conversation
+Read /Users/miujiawei/Desktop/QuantGym/docs/next-question-bank-work.txt and continue
+from there. Stanford MS&E 214 HW3 and ProbabilityCourse public solved samples are
+complete, and a small Boyd additional-exercises generated-answer source is also
+complete. EPI Judge has been triaged as external-only due CC BY-NC-ND. Continue
+research-report source triage next with any remaining official public course
+handout sources, while keeping the rights boundary strict.
+
+Cleanup performed for handoff
+The following redundant/generated files were removed after this handoff was
+created:
+  - All .DS_Store files.
+  - All AppleDouble ._* files from zip extraction.
+  - All __MACOSX directories from zip extraction.
+  - All __pycache__ directories.
+  - LaTeX build intermediates under 量化书籍: *.aux, *.log, *.out, *.toc.
+  - artifacts/source-research-report/stat110-debug-pages/.
+  - Scratch extracted text files:
+    artifacts/source-research-report/downloads/stat110/*.pdf.txt
+  - Empty Stanford HW1/HW2 extracted directories in both:
+    artifacts/source-research-report/downloads/stanford-msande214/
+    量化书籍/有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/
+
+Preserved intentionally:
+  - All original PDFs and zip files.
+  - Stanford HW3 extracted valid files: hw3.tex, hw3.pdf, homework3.xlsx.
+  - All normalized question-bank JSON files.
+  - All media assets under assets/problem-media/.
+  - All audit/translation/research artifacts that may be needed for traceability.

@@ -1,0 +1,22 @@
+{
+  "slug": "stat110-strategic-practice",
+  "name": "Harvard Stat 110 概率论战略练习 Statistics 110 Strategic Practice",
+  "type": "pdf",
+  "sourceUrl": "https://stat110.hsites.harvard.edu/strategic-practice-problems",
+  "problemCount": 184,
+  "generatedAt": "2026-06-02T03:16:28.806267+00:00",
+  "sourceFiles": [
+    "strategic_practice_and_homework_1.pdf",
+    "strategic_practice_and_homework_2.pdf",
+    "strategic_practice_and_homework_3.pdf",
+    "strategic_practice_and_homework_4.pdf",
+    "strategic_practice_and_homework_5.pdf",
+    "strategic_practice_and_homework_6.pdf",
+    "strategic_practice_and_homework_7.pdf",
+    "strategic_practice_and_homework_8.pdf",
+    "strategic_practice_and_homework_9.pdf",
+    "strategic_practice_and_homework_10.pdf",
+    "strategic_practice_and_homework_11.pdf"
+  ],
+  "rightsNote": "Official public Harvard Stat 110 course practice/homework PDFs. Keep distribution status reviewed before publishing beyond the local app."
+}

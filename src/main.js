@@ -136,7 +136,7 @@ const PROBLEM_SEARCH_DEBOUNCE_MS = 140;
 const INTERVIEW_SESSION_STORAGE_KEY = "quantgym-interview-session-v2";
 const INTERVIEW_HISTORY_STORAGE_KEY = "quantgym-interview-history-v1";
 const INTERVIEW_RESUME_STORAGE_KEY = "quantgym-interview-resume-v1";
-let problemVisibleCount = PROBLEM_PAGE_SIZE;
+let problemPage = 1;
 let problemSearchTimer = 0;
 let problemSearchComposing = false;
 const problemSearchRecordCache = new Map();
@@ -332,7 +332,9 @@ function bindElements() {
     "leetcodeHotToggleBtn",
     "leetcodeHotPlanLink",
     "leetcodeHotList",
+    "problemCollectionGrid",
     "problemList",
+    "problemPagination",
     "loadMoreProblemsBtn",
     "problemDetail",
     "todoDockButton",
@@ -760,14 +762,14 @@ function bindEvents() {
     const button = event.target.closest("[data-problem-theme]");
     if (!button) return;
     problemThemeFilter = button.dataset.problemTheme || "all";
-    problemVisibleCount = PROBLEM_PAGE_SIZE;
+    resetProblemPagination();
     returnToProblemList();
   });
   els.problemDifficultyFilter?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-problem-difficulty]");
     if (!button) return;
     problemDifficultyFilter = normalizeDifficultyFilter(button.dataset.problemDifficulty || "all");
-    problemVisibleCount = PROBLEM_PAGE_SIZE;
+    resetProblemPagination();
     returnToProblemList();
   });
   els.problemCompanyList?.addEventListener("click", (event) => {
@@ -775,19 +777,20 @@ function bindEvents() {
     if (!button) return;
     problemCompanyFilter = button.dataset.problemCompany || "all";
     problemViewMode = "all";
-    problemVisibleCount = PROBLEM_PAGE_SIZE;
+    resetProblemPagination();
     returnToProblemList();
   });
   els.problemCompanyClearBtn?.addEventListener("click", () => {
     problemCompanyFilter = "all";
-    problemVisibleCount = PROBLEM_PAGE_SIZE;
+    resetProblemPagination();
     returnToProblemList();
   });
   els.problemSourceFilterClearBtn?.addEventListener("click", () => {
     problemSourceFilter = "all";
-    problemVisibleCount = PROBLEM_PAGE_SIZE;
+    resetProblemPagination();
     returnToProblemList();
   });
+  els.problemCollectionGrid?.addEventListener("click", handleProblemCollectionClick);
   els.leetcodeHotToggleBtn?.addEventListener("click", () => {
     leetcodeHotExpanded = !leetcodeHotExpanded;
     renderLeetcodeHot100();
@@ -821,14 +824,12 @@ function bindEvents() {
   document.querySelectorAll("[data-problem-view]").forEach((button) => {
     button.addEventListener("click", () => {
       problemViewMode = ["saved", "ranking"].includes(button.dataset.problemView) ? button.dataset.problemView : "all";
-      problemVisibleCount = PROBLEM_PAGE_SIZE;
+      resetProblemPagination();
       returnToProblemList();
     });
   });
-  els.loadMoreProblemsBtn?.addEventListener("click", () => {
-    problemVisibleCount += PROBLEM_PAGE_SIZE;
-    renderProblems();
-  });
+  els.problemPagination?.addEventListener("click", handleProblemPaginationClick);
+  els.loadMoreProblemsBtn?.classList.add("hidden");
 
   document.querySelectorAll("[data-interview-lang]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -3793,7 +3794,7 @@ function showCompanyProblems(companySlug) {
   problemSourceFilter = "all";
   problemViewMode = "all";
   selectedProblemDetailId = "";
-  problemVisibleCount = PROBLEM_PAGE_SIZE;
+  resetProblemPagination();
   if (els.problemSearch) els.problemSearch.value = "";
   switchModule("problems");
   renderProblems();
@@ -3922,7 +3923,118 @@ function renderOverviewProblemProgress() {
 }
 
 function renderProblemCompletionDashboard(problems = getCatalogProblems()) {
-  renderProgressGroup(els.problemCompletionProgress, buildProblemProgressItems(problems).slice(0, 5));
+  renderProgressGroup(els.problemCompletionProgress, buildProblemProgressItems(problems).slice(0, 8));
+}
+
+function getProblemCollectionEntries(problems = getCatalogProblems()) {
+  const isEn = getLanguage() === "en";
+  const bySource = (sourceSlug) => problems.filter((problem) => problemMatchesSource(problem, sourceSlug));
+  const byTheme = (theme) => problems.filter((problem) => normalizeCategory(problem.category) === theme);
+  const sourceEntry = (id, sourceSlug, titleZh, titleEn, descriptionZh, descriptionEn, icon, accent) => {
+    const sourceProblems = bySource(sourceSlug);
+    return {
+      id,
+      mode: "source",
+      sourceSlug,
+      icon,
+      accent,
+      title: isEn ? titleEn : titleZh,
+      description: isEn ? descriptionEn : descriptionZh,
+      total: sourceProblems.length,
+      done: getProblemCompletionCount(sourceProblems)
+    };
+  };
+  const themeEntry = (id, theme, titleZh, titleEn, descriptionZh, descriptionEn, icon, accent) => {
+    const themeProblems = byTheme(theme);
+    return {
+      id,
+      mode: "theme",
+      theme,
+      icon,
+      accent,
+      title: isEn ? titleEn : titleZh,
+      description: isEn ? descriptionEn : descriptionZh,
+      total: themeProblems.length,
+      done: getProblemCompletionCount(themeProblems)
+    };
+  };
+  const hot = getLeetcodeHotCompletionStats();
+  return [
+    {
+      id: "leetcode-hot",
+      mode: "leetcode",
+      icon: "heart",
+      accent: "violet",
+      title: "LeetCode Hot 100",
+      description: isEn ? "Top 100 liked study plan with completion tracking." : "官方 Top 100 liked 题单，跳转原题并记录完成。",
+      total: hot.total,
+      done: hot.done
+    },
+    sourceEntry("quantguide", "quantguide", "QuantGuide 题库", "QuantGuide Bank", "1200+ 高频 quant 面试题，适合日常主线刷题。", "1200+ quant interview prompts for the daily grind.", "sparkles", "indigo"),
+    sourceEntry("stat110", "stat110-strategic-practice", "Stat 110 概率练习", "Stat 110 Practice", "Harvard 概率战略练习，按题单进入题库。", "Harvard probability practice sheets linked into the bank.", "dice-5", "emerald"),
+    sourceEntry("hull-derivatives", "hull-derivatives", "Hull 衍生品", "Hull Derivatives", "期权、期货、Greek、对冲与风险中性定价。", "Options, futures, Greeks, hedging, and risk-neutral pricing.", "line-chart", "rose"),
+    themeEntry("probability-core", "probabilityExpectation", "概率 / 期望核心", "Probability Core", "所有概率、期望、分布、条件概率相关题。", "All probability, expectation, distribution, and conditioning problems.", "sigma", "blue"),
+    themeEntry("optimization-pack", "optimization", "优化题包", "Optimization Pack", "凸优化、线性规划、组合优化和投资组合题。", "Convex optimization, LP, modeling, and portfolio problems.", "network", "amber")
+  ].filter((entry) => entry.total > 0);
+}
+
+function renderProblemCollectionGrid() {
+  if (!els.problemCollectionGrid) return;
+  const entries = getProblemCollectionEntries(state.problems.filter(isCatalogProblem));
+  els.problemCollectionGrid.innerHTML = "";
+  entries.forEach((entry) => {
+    const percent = Math.round((entry.done / Math.max(entry.total, 1)) * 100);
+    const active = entry.mode === "leetcode"
+      ? leetcodeHotExpanded
+      : entry.mode === "source"
+        ? problemSourceFilter === entry.sourceSlug
+        : problemThemeFilter === entry.theme;
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = `problem-collection-card accent-${entry.accent}${active ? " active" : ""}`;
+    card.dataset.problemCollection = entry.id;
+    card.style.setProperty("--value", String(percent));
+    card.innerHTML = `
+      <span class="problem-collection-art"><i data-lucide="${entry.icon}"></i></span>
+      <span class="problem-collection-copy">
+        <strong>${escapeHtml(entry.title)}</strong>
+        <small>${escapeHtml(entry.description)}</small>
+      </span>
+      <span class="problem-collection-bottom">
+        <span>${escapeHtml(String(entry.done))} / ${escapeHtml(String(entry.total))}</span>
+        <i aria-hidden="true"><span></span></i>
+      </span>
+    `;
+    els.problemCollectionGrid.appendChild(card);
+  });
+}
+
+function handleProblemCollectionClick(event) {
+  const button = event.target.closest("[data-problem-collection]");
+  if (!button) return;
+  const entry = getProblemCollectionEntries(state.problems.filter(isCatalogProblem))
+    .find((item) => item.id === button.dataset.problemCollection);
+  if (!entry) return;
+  if (entry.mode === "leetcode") {
+    leetcodeHotExpanded = !leetcodeHotExpanded;
+    renderLeetcodeHot100();
+    return;
+  }
+  problemViewMode = "all";
+  problemCompanyFilter = "all";
+  problemDifficultyFilter = "all";
+  selectedProblemDetailId = "";
+  if (entry.mode === "source") {
+    problemSourceFilter = entry.sourceSlug;
+    problemThemeFilter = "all";
+  } else {
+    problemSourceFilter = "all";
+    problemThemeFilter = entry.theme;
+  }
+  resetProblemPagination();
+  if (els.problemSearch) els.problemSearch.value = "";
+  renderProblems();
+  document.querySelector(".problem-browser-toolbar")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function getDailyXpSeries(days = 7) {
@@ -5776,6 +5888,7 @@ async function openLibraryReader(entryId) {
 
   try {
     const url = await getLibraryReaderUrl(entry);
+    if (entry.readType === "pdf") await probeLibraryPdf(url);
     els.libraryReaderOpenNew.href = url;
     els.libraryReaderFrame.src = url;
   } catch (error) {
@@ -5801,6 +5914,39 @@ async function getLibraryReaderUrl(entry) {
   const url = result.url || result.path || "";
   if (!url) throw new Error(getLanguage() === "en" ? "The server did not return a reader URL." : "服务器没有返回阅读链接。");
   return absolutizeLibraryApiUrl(url);
+}
+
+async function probeLibraryPdf(url) {
+  const isEn = getLanguage() === "en";
+  let response;
+  try {
+    response = await fetch(url, { headers: { Range: "bytes=0-0" } });
+  } catch {
+    throw new Error(isEn
+      ? "The PDF reader could not reach the API server."
+      : "PDF 阅读器暂时连不上 API 服务器。");
+  }
+  if (response.ok || response.status === 206) return;
+  let serverMessage = "";
+  try {
+    const contentType = response.headers.get("Content-Type") || "";
+    if (contentType.includes("application/json")) {
+      const data = await response.json();
+      serverMessage = String(data?.error || "");
+    } else {
+      serverMessage = (await response.text()).slice(0, 160);
+    }
+  } catch {
+    serverMessage = "";
+  }
+  if (/Library PDF file not found/i.test(serverMessage)) {
+    throw new Error(isEn
+      ? "This PDF is not deployed in the private reader storage yet. Set QUANTGYM_LIBRARY_PDF_ROOT on the API server and copy the PDF there."
+      : "这本 PDF 还没有部署到服务器私有阅读目录。请在 API 服务器设置 QUANTGYM_LIBRARY_PDF_ROOT，并把对应 PDF 放进去。");
+  }
+  throw new Error(serverMessage || (isEn
+    ? `The PDF reader returned HTTP ${response.status}.`
+    : `PDF 阅读接口返回 HTTP ${response.status}。`));
 }
 
 function absolutizeLibraryApiUrl(url) {
@@ -5838,7 +5984,7 @@ function openLibraryPractice(sourceSlug) {
   problemDifficultyFilter = "all";
   problemViewMode = "all";
   selectedProblemDetailId = "";
-  problemVisibleCount = PROBLEM_PAGE_SIZE;
+  resetProblemPagination();
   if (els.problemSearch) els.problemSearch.value = "";
   closeLibraryReader();
   switchModule("problems");
@@ -8209,7 +8355,7 @@ function networkStatusWeight(status) {
 function handleProblemSearchInput() {
   if (problemSearchComposing) return;
   selectedProblemDetailId = "";
-  problemVisibleCount = PROBLEM_PAGE_SIZE;
+  resetProblemPagination();
   if (normalizeSearchQuery(els.problemSearch?.value)) problemViewMode = "all";
   scheduleProblemSearchRender();
 }
@@ -8354,10 +8500,92 @@ function openProblemFromSearch(problemId) {
   problemViewMode = "all";
   problemCompanyFilter = "all";
   problemSourceFilter = "all";
-  problemVisibleCount = PROBLEM_PAGE_SIZE;
+  resetProblemPagination();
   if (els.problemSearch) els.problemSearch.value = "";
   renderProblems();
   window.setTimeout(() => openProblemDetail(problemId), 40);
+}
+
+function resetProblemPagination() {
+  problemPage = 1;
+}
+
+function hideProblemPagination() {
+  els.problemPagination?.classList.add("hidden");
+  els.loadMoreProblemsBtn?.classList.add("hidden");
+}
+
+function handleProblemPaginationClick(event) {
+  const button = event.target.closest("[data-problem-page]");
+  if (!button) return;
+  const totalPages = Math.max(1, Number(button.dataset.totalPages || 1));
+  const target = button.dataset.problemPage;
+  const nextPage = target === "prev"
+    ? problemPage - 1
+    : target === "next"
+      ? problemPage + 1
+      : Number(target);
+  if (!Number.isFinite(nextPage)) return;
+  problemPage = Math.min(Math.max(1, Math.round(nextPage)), totalPages);
+  renderProblems({ resultsOnly: true });
+  els.problemList?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderProblemPagination(totalProblems) {
+  if (!els.problemPagination) return;
+  const total = Math.max(0, Number(totalProblems || 0));
+  const totalPages = Math.max(1, Math.ceil(total / PROBLEM_PAGE_SIZE));
+  if (total <= PROBLEM_PAGE_SIZE) {
+    hideProblemPagination();
+    return;
+  }
+  problemPage = Math.min(Math.max(1, problemPage), totalPages);
+  const isEn = getLanguage() === "en";
+  const pages = getPaginationWindow(problemPage, totalPages);
+  els.problemPagination.innerHTML = "";
+  const summary = document.createElement("span");
+  summary.className = "problem-pagination-summary";
+  summary.textContent = isEn
+    ? `Page ${problemPage} / ${totalPages} · ${total} problems`
+    : `第 ${problemPage} / ${totalPages} 页 · 共 ${total} 题`;
+  els.problemPagination.appendChild(summary);
+  els.problemPagination.appendChild(createProblemPageButton("prev", isEn ? "Previous" : "上一页", "chevron-left", totalPages, problemPage <= 1));
+  pages.forEach((page) => {
+    if (page === "gap") {
+      const gap = document.createElement("span");
+      gap.className = "problem-pagination-gap";
+      gap.textContent = "...";
+      els.problemPagination.appendChild(gap);
+      return;
+    }
+    els.problemPagination.appendChild(createProblemPageButton(String(page), String(page), "", totalPages, false, page === problemPage));
+  });
+  els.problemPagination.appendChild(createProblemPageButton("next", isEn ? "Next" : "下一页", "chevron-right", totalPages, problemPage >= totalPages));
+  els.problemPagination.classList.remove("hidden");
+  els.loadMoreProblemsBtn?.classList.add("hidden");
+}
+
+function getPaginationWindow(currentPage, totalPages) {
+  const pages = new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
+  const visible = [...pages]
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((left, right) => left - right);
+  return visible.flatMap((page, index) => {
+    if (index === 0 || page - visible[index - 1] <= 1) return [page];
+    return ["gap", page];
+  });
+}
+
+function createProblemPageButton(page, label, icon, totalPages, disabled = false, active = false) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `problem-page-button${active ? " active" : ""}`;
+  button.dataset.problemPage = page;
+  button.dataset.totalPages = String(totalPages);
+  button.disabled = disabled;
+  button.setAttribute("aria-current", active ? "page" : "false");
+  button.innerHTML = icon ? `<i data-lucide="${icon}"></i><span>${escapeHtml(label)}</span>` : escapeHtml(label);
+  return button;
 }
 
 function renderProblems(options = {}) {
@@ -8378,7 +8606,7 @@ function renderProblems(options = {}) {
     const selected = state.problems.find((item) => item.id === selectedProblemDetailId && isCatalogProblem(item));
     if (selected) {
       els.problemList.classList.add("hidden");
-      els.loadMoreProblemsBtn.classList.add("hidden");
+      hideProblemPagination();
       els.problemRanking.classList.add("hidden");
       els.problemDetail.classList.remove("hidden");
       renderProblemDetail(selected);
@@ -8392,7 +8620,7 @@ function renderProblems(options = {}) {
 
   if (problemViewMode === "ranking") {
     els.problemList.classList.add("hidden");
-    els.loadMoreProblemsBtn.classList.add("hidden");
+    hideProblemPagination();
     els.problemRanking.classList.remove("hidden");
     renderProblemRanking(problems);
     return;
@@ -8406,14 +8634,17 @@ function renderProblems(options = {}) {
   }
 
   if (!problems.length) {
-    els.loadMoreProblemsBtn.classList.add("hidden");
+    hideProblemPagination();
     els.problemList.appendChild(emptyBlock(problemViewMode === "saved"
       ? (isEn ? "No saved problems yet. Add any problem to your private review list." : "收藏本还没有题目。你可以把任意题目加入自己的复习本。")
       : t("problemEmpty")));
     return;
   }
 
-  const visibleProblems = problems.slice(0, problemVisibleCount);
+  const totalPages = Math.max(1, Math.ceil(problems.length / PROBLEM_PAGE_SIZE));
+  problemPage = Math.min(Math.max(1, problemPage), totalPages);
+  const pageStart = (problemPage - 1) * PROBLEM_PAGE_SIZE;
+  const visibleProblems = problems.slice(pageStart, pageStart + PROBLEM_PAGE_SIZE);
   visibleProblems.forEach((problem) => {
     const titleText = getProblemDisplayTitle(problem, isEn);
     const promptText = getProblemExcerptText(problem, isEn);
@@ -8432,11 +8663,25 @@ function renderProblems(options = {}) {
     const title = document.createElement("h3");
     title.textContent = titleText;
 
-    const meta = document.createElement("div");
-    meta.className = "problem-meta";
     const personal = getProblemPersonalState(problem.id);
     const social = getProblemSocial(problem.id);
     const lastScore = personal.lastScore;
+
+    const complete = document.createElement("button");
+    complete.type = "button";
+    complete.className = `problem-complete-button problem-complete-corner${personal.completed ? " active" : ""}`;
+    complete.title = personal.completed
+      ? (isEn ? "Mark unfinished" : "标记为未完成")
+      : (isEn ? "Mark completed" : "标记完成");
+    complete.setAttribute("aria-label", complete.title);
+    complete.innerHTML = `<i data-lucide="${personal.completed ? "check-circle-2" : "circle"}"></i>`;
+    complete.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleProblemCompleted(problem.id);
+    });
+
+    const meta = document.createElement("div");
+    meta.className = "problem-meta";
     if (problem.bookName) addProblemTag(meta, problem.bookName, "source");
     getProblemCompanies(problem).slice(0, 2).forEach((company) => addProblemTag(meta, company.name, "company"));
     addProblemTag(meta, formatCategoryLabel(problem.category), "topic");
@@ -8451,7 +8696,7 @@ function renderProblems(options = {}) {
 
     const prompt = document.createElement("div");
     prompt.className = "problem-prompt";
-    renderRichText(prompt, formatProblemExcerpt(promptText));
+    prompt.textContent = formatProblemCardPreview(promptText);
 
     const footer = document.createElement("div");
     footer.className = "problem-card-footer";
@@ -8471,35 +8716,15 @@ function renderProblems(options = {}) {
       event.stopPropagation();
       toggleProblemSaved(problem.id);
     });
-    const complete = document.createElement("button");
-    complete.type = "button";
-    complete.className = `problem-complete-button${personal.completed ? " active" : ""}`;
-    complete.title = personal.completed
-      ? (isEn ? "Mark unfinished" : "标记为未完成")
-      : (isEn ? "Mark completed" : "标记完成");
-    complete.setAttribute("aria-label", complete.title);
-    complete.innerHTML = `<i data-lucide="${personal.completed ? "check-circle-2" : "circle"}"></i>`;
-    complete.addEventListener("click", (event) => {
-      event.stopPropagation();
-      toggleProblemCompleted(problem.id);
-    });
     const open = document.createElement("span");
     open.className = "problem-card-open";
     open.innerHTML = `${t("viewFullProblem")} <i data-lucide="chevron-right"></i>`;
-    footer.append(metrics, complete, save, open);
+    footer.append(metrics, save, open);
 
-    card.append(title, meta, prompt, footer);
+    card.append(title, complete, meta, prompt, footer);
     els.problemList.appendChild(card);
   });
-  const hiddenCount = problems.length - visibleProblems.length;
-  els.loadMoreProblemsBtn.classList.toggle("hidden", hiddenCount <= 0);
-  if (hiddenCount > 0) {
-    const label = getLanguage() === "en"
-      ? `Load more problems (${hiddenCount} remaining)`
-      : `加载更多题目（剩余 ${hiddenCount}）`;
-    els.loadMoreProblemsBtn.innerHTML = `<i data-lucide="chevrons-down"></i> ${label}`;
-  }
-  scheduleMathTypeset(els.problemList);
+  renderProblemPagination(problems.length);
   refreshIcons();
 }
 
@@ -8576,6 +8801,7 @@ function renderLeetcodeHot100() {
   if (els.leetcodeHotProgressFill) els.leetcodeHotProgressFill.style.width = `${Math.round((doneCount / Math.max(total, 1)) * 100)}%`;
   const panel = els.leetcodeHotList.closest(".leetcode-hot-panel");
   panel?.classList.toggle("is-expanded", leetcodeHotExpanded);
+  renderProblemCollectionGrid();
   if (els.leetcodeHotToggleBtn) {
     els.leetcodeHotToggleBtn.setAttribute("aria-expanded", String(leetcodeHotExpanded));
     els.leetcodeHotToggleBtn.innerHTML = `<i data-lucide="${leetcodeHotExpanded ? "chevron-up" : "list-checks"}"></i>${escapeHtml(t(leetcodeHotExpanded ? "leetcodeHotCollapse" : "leetcodeHotManage"))}`;
@@ -8758,6 +8984,55 @@ function formatProblemExcerpt(text) {
     .filter((index) => index > 220);
   const boundary = stops.length ? Math.max(...stops) : 560;
   return trimDanglingMath(slice.slice(0, boundary).trim()) + " ...";
+}
+
+function formatProblemCardPreview(text) {
+  return simplifyLatexPreview(formatProblemExcerpt(text))
+    .replace(/\s+([,.;:!?，。；：！？])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function simplifyLatexPreview(text) {
+  let value = String(text || "").replace(/\\\$/g, "__QG_DOLLAR__");
+  value = value
+    .replace(/\\\[(.*?)\\\]/gs, "$1")
+    .replace(/\\\((.*?)\\\)/gs, "$1")
+    .replace(/\$\$(.*?)\$\$/gs, "$1")
+    .replace(/\$(.*?)\$/gs, "$1")
+    .replace(/\\frac\s*\{([^{}]+)\}\s*\{([^{}]+)\}/g, "($1)/($2)")
+    .replace(/\\sqrt\s*\{([^{}]+)\}/g, "sqrt($1)")
+    .replace(/\^\\circ/g, "°")
+    .replace(/\\%/g, "%")
+    .replace(/\\,/g, " ")
+    .replace(/\\cdot|\\times/g, "×")
+    .replace(/\\leq?|≤/g, "≤")
+    .replace(/\\geq?|≥/g, "≥")
+    .replace(/\\neq?/g, "≠")
+    .replace(/\\approx/g, "≈")
+    .replace(/\\infty/g, "∞")
+    .replace(/\\sum/g, "Σ")
+    .replace(/\\prod/g, "Π")
+    .replace(/\\int/g, "∫")
+    .replace(/\\Delta/g, "Δ")
+    .replace(/\\delta/g, "δ")
+    .replace(/\\sigma/g, "σ")
+    .replace(/\\mu/g, "μ")
+    .replace(/\\rho/g, "ρ")
+    .replace(/\\lambda/g, "λ")
+    .replace(/\\alpha/g, "α")
+    .replace(/\\beta/g, "β")
+    .replace(/\\gamma/g, "γ")
+    .replace(/\\theta/g, "θ")
+    .replace(/\\pi/g, "π")
+    .replace(/\\left|\\right/g, "")
+    .replace(/\\[a-zA-Z]+/g, "")
+    .replace(/__QG_DOLLAR__/g, "$")
+    .replace(/\${2,}(?=\d)/g, "$$")
+    .replace(/[{}]/g, "")
+    .replace(/_([A-Za-z0-9]+)/g, "_$1")
+    .replace(/\s+/g, " ");
+  return value;
 }
 
 function trimDanglingMath(value) {
@@ -9140,12 +9415,12 @@ async function deleteProblemComment(problemId, commentId) {
 const interviewTypeDefs = {
   oa: {
     label: "Online Assessment",
-    categories: ["leetcode", "probabilityExpectation", "statistics", "pandasNumpy", "mentalMath"],
+    categories: ["leetcode", "probabilityExpectation", "statistics", "calculus", "algebra", "linearAlgebra", "optimization", "complexNumbers", "pandasNumpy", "mentalMath"],
     minutes: 5
   },
   technical: {
     label: "Technical Interview",
-    categories: ["leetcode", "pandasNumpy", "probabilityExpectation", "statistics", "machineLearning", "deepLearning", "market", "option"],
+    categories: ["leetcode", "cppProgramming", "pandasNumpy", "probabilityExpectation", "statistics", "calculus", "algebra", "linearAlgebra", "optimization", "complexNumbers", "machineLearning", "deepLearning", "market", "option"],
     minutes: 8
   },
   behavioral: {
@@ -9199,7 +9474,7 @@ const interviewFocusDefs = {
   mixed: {
     labelZh: "混合",
     labelEn: "Mixed",
-    categories: ["leetcode", "pandasNumpy", "probabilityExpectation", "statistics", "machineLearning", "deepLearning", "market", "option", "mentalMath"],
+    categories: ["leetcode", "cppProgramming", "pandasNumpy", "probabilityExpectation", "statistics", "calculus", "algebra", "linearAlgebra", "optimization", "complexNumbers", "machineLearning", "deepLearning", "market", "option", "mentalMath"],
     type: "technical"
   },
   probability: {
@@ -9208,11 +9483,29 @@ const interviewFocusDefs = {
     categories: ["probabilityExpectation", "statistics", "mentalMath"],
     type: "technical"
   },
+  math: {
+    labelZh: "数学基础",
+    labelEn: "Math foundations",
+    categories: ["calculus", "algebra", "linearAlgebra", "optimization", "complexNumbers", "probabilityExpectation", "statistics"],
+    type: "technical"
+  },
+  optimization: {
+    labelZh: "优化建模",
+    labelEn: "Optimization",
+    categories: ["optimization", "linearAlgebra", "market"],
+    type: "technical"
+  },
   algorithms: {
     labelZh: "算法",
     labelEn: "Algorithms",
     categories: ["leetcode", "pandasNumpy"],
     type: "oa"
+  },
+  cpp: {
+    labelZh: "C++",
+    labelEn: "C++ programming",
+    categories: ["cppProgramming", "leetcode"],
+    type: "technical"
   },
   ml: {
     labelZh: "ML",
@@ -10428,10 +10721,16 @@ function stableCourseId(title, sourceUrl) {
 function inferProblemCategory(raw) {
   const text = `${raw?.sourceUrl || ""} ${raw?.source || ""} ${raw?.title || ""} ${raw?.prompt || ""}`.toLowerCase();
   if (text.includes("leetcode")) return "leetcode";
+  if (/c\+\+|\bcpp\b|virtual function|abstract class|polymorphism|strcmp|destructor|\bconst\s+(?:keyword|member|method|pointer|reference)\b|\bstatic\s+(?:keyword|member|function|variable)\b|虚函数|抽象类|多态|c\+\+.*(?:指针|引用|静态|常量)/.test(text)) return "cppProgramming";
   if (text.includes("pandas") || text.includes("numpy") || text.includes("dataframe")) return "pandasNumpy";
   if (text.includes("option") || text.includes("greeks") || text.includes("volatility")) return "option";
   if (text.includes("market") || text.includes("trading")) return "market";
   if (text.includes("statistics") || text.includes("p-value") || text.includes("hypothesis")) return "statistics";
+  if (/complex number|complex analysis|imaginary|euler'?s formula|principal logarithm|\bi\^i\b|复数|虚数|欧拉公式|主值对数/.test(text)) return "complexNumbers";
+  if (/linear algebra|matrix|matrices|determinant|eigen(?:value|vector)?|cholesky|positive semi.?definite|positive definite|vector space|线性代数|矩阵|行列式|特征值|特征向量|正半定|正定/.test(text)) return "linearAlgebra";
+  if (/optimization|linear programming|linear program|quadratic programming|quadratic program|min.?cost flow|max flow|network flow|dual variable|convex optimization|最优化|优化|线性规划|二次规划|网络流|最小费用流|最大流|对偶变量|凸优化/.test(text)) return "optimization";
+  if (/calculus|analysis|integral|integration|derivative|limits?|\bl'?hospital\b|ordinary differential equation|differential equation|\bode\b|微积分|分析|积分|导数|极限|洛必达|微分方程|常微分/.test(text)) return "calculus";
+  if (/algebra|inequalit(?:y|ies)|bernoulli inequality|polynomial|binomial|induction|代数|不等式|伯努利不等式|多项式|二项式|归纳法/.test(text)) return "algebra";
   if (text.includes("deep learning") || text.includes("transformer") || text.includes("neural")) return "deepLearning";
   if (text.includes("machine learning") || text.includes("xgboost") || text.includes("feature")) return "machineLearning";
   if (text.includes("probability") || text.includes("expected") || text.includes("bayes")) return "probabilityExpectation";
@@ -10440,9 +10739,19 @@ function inferProblemCategory(raw) {
 
 function normalizeCategory(category) {
   const key = String(category || "").trim();
+  const lookupKey = key.toLowerCase().replace(/[\s-]+/g, "_");
   const aliases = {
     probability: "probabilityExpectation",
     expectation: "probabilityExpectation",
+    cpp: "cppProgramming",
+    "c++": "cppProgramming",
+    "c++_programming": "cppProgramming",
+    cplusplus: "cppProgramming",
+    c_plus_plus: "cppProgramming",
+    c___programming: "cppProgramming",
+    cpp_programming: "cppProgramming",
+    cplusplus_programming: "cppProgramming",
+    object_oriented_programming: "cppProgramming",
     mental: "mentalMath",
     mental_math: "mentalMath",
     pandas: "pandasNumpy",
@@ -10452,9 +10761,41 @@ function normalizeCategory(category) {
     dl: "deepLearning",
     deep_learning: "deepLearning",
     options: "option",
+    calculus: "calculus",
+    integration: "calculus",
+    integral: "calculus",
+    derivative: "calculus",
+    limits: "calculus",
+    analysis: "calculus",
+    ode: "calculus",
+    ordinary_differential_equation: "calculus",
+    differential_equation: "calculus",
+    differential_equations: "calculus",
+    algebra: "algebra",
+    inequality: "algebra",
+    inequalities: "algebra",
+    linear_algebra: "linearAlgebra",
+    matrix: "linearAlgebra",
+    matrices: "linearAlgebra",
+    optimization: "optimization",
+    optim: "optimization",
+    linear_programming: "optimization",
+    linear_program: "optimization",
+    lp: "optimization",
+    quadratic_programming: "optimization",
+    quadratic_program: "optimization",
+    qp: "optimization",
+    network_flow: "optimization",
+    min_cost_flow: "optimization",
+    max_flow: "optimization",
+    convex_optimization: "optimization",
+    complex: "complexNumbers",
+    complex_number: "complexNumbers",
+    complex_numbers: "complexNumbers",
+    complex_analysis: "complexNumbers",
     communication: "leetcode"
   };
-  return skillDefs[key] ? key : aliases[key] || "probabilityExpectation";
+  return skillDefs[key] ? key : aliases[key] || aliases[lookupKey] || "probabilityExpectation";
 }
 
 function inferSource(sourceUrl) {
@@ -11790,8 +12131,14 @@ function localInterviewConverse(problem, conversation = {}) {
   const category = normalizeCategory(problem.category);
   const followups = {
     leetcode: interviewLanguage === "zh" ? "请把时间复杂度、空间复杂度和关键数据结构说清楚。" : "Clarify the time complexity, space complexity, and core data structure.",
+    cppProgramming: interviewLanguage === "zh" ? "请说明 C++ 语义、对象生命周期或内存/const 边界。" : "Clarify the C++ semantics, object lifetime, or memory/const boundary.",
     probabilityExpectation: interviewLanguage === "zh" ? "请明确随机变量和条件概率结构，再继续推导。" : "Define the random variables and conditioning structure, then continue.",
     statistics: interviewLanguage === "zh" ? "请说明样本、估计量或检验假设，以及你如何验证结论。" : "State the sample, estimator or hypothesis, and how you would validate the conclusion.",
+    calculus: interviewLanguage === "zh" ? "请说明用到的极限、导数、积分或微分方程步骤。" : "Clarify the limit, derivative, integral, or differential-equation step you are using.",
+    algebra: interviewLanguage === "zh" ? "请把代数恒等变形、不等式条件或归纳步骤说清楚。" : "Clarify the algebraic manipulation, inequality condition, or induction step.",
+    linearAlgebra: interviewLanguage === "zh" ? "请说明矩阵、特征值、正定性或线性空间条件。" : "Clarify the matrix, eigenvalue, definiteness, or vector-space condition.",
+    optimization: interviewLanguage === "zh" ? "请明确决策变量、目标函数、约束和对偶/松弛解释。" : "Clarify the decision variables, objective, constraints, and dual or slack interpretation.",
+    complexNumbers: interviewLanguage === "zh" ? "请说明复数表示、分支选择或欧拉公式的使用。" : "Clarify the complex representation, branch choice, or Euler-formula step.",
     machineLearning: interviewLanguage === "zh" ? "请补充特征、验证方式和如何避免 leakage。" : "Add features, validation, and how you would avoid leakage.",
     deepLearning: interviewLanguage === "zh" ? "请说明输入输出、loss 和训练信号。" : "Clarify inputs, outputs, loss, and training signal.",
     market: interviewLanguage === "zh" ? "请把 fair value、spread 和 inventory risk 的关系讲清楚。" : "Clarify the relationship between fair value, spread, and inventory risk.",
@@ -12077,11 +12424,29 @@ function getLocalInterviewMissingSignals(problem, answer) {
   if (category === "leetcode" && !/(o\(|time|space|复杂度|哈希|hash|dp|binary|二分)/i.test(answer)) {
     missing.push(interviewLanguage === "zh" ? "复杂度或关键数据结构" : "complexity or core data structure");
   }
+  if (category === "cppProgramming" && !/(c\+\+|const|static|virtual|pointer|reference|lifetime|memory|thread|class|inherit|指针|引用|虚函数|多态|抽象类|生命周期|内存|线程|常量|静态)/i.test(answer)) {
+    missing.push(interviewLanguage === "zh" ? "C++ 语义、内存或对象生命周期" : "C++ semantics, memory, or object lifetime");
+  }
   if (category === "probabilityExpectation" && !/(期望|概率|条件|bayes|expect|prob|conditional|sample space)/i.test(answer)) {
     missing.push(interviewLanguage === "zh" ? "随机变量或条件概率结构" : "random variable or conditioning structure");
   }
   if (category === "statistics" && !/(p-value|hypothesis|置信|检验|估计|regression|回归|sample|抽样)/i.test(answer)) {
     missing.push(interviewLanguage === "zh" ? "统计假设、估计或样本结构" : "statistical hypothesis, estimator, or sampling setup");
+  }
+  if (category === "calculus" && !/(limit|derivative|integral|l'hospital|differential|ode|极限|导数|积分|洛必达|微分方程|常微分)/i.test(answer)) {
+    missing.push(interviewLanguage === "zh" ? "极限、导数、积分或微分方程步骤" : "limit, derivative, integral, or differential-equation step");
+  }
+  if (category === "algebra" && !/(inequality|induction|polynomial|binomial|algebra|不等式|归纳|多项式|二项式|代数)/i.test(answer)) {
+    missing.push(interviewLanguage === "zh" ? "代数变形、不等式条件或归纳结构" : "algebraic manipulation, inequality condition, or induction structure");
+  }
+  if (category === "linearAlgebra" && !/(matrix|eigen|determinant|semidefinite|definite|rank|矩阵|特征值|特征向量|行列式|半正定|正定|秩)/i.test(answer)) {
+    missing.push(interviewLanguage === "zh" ? "矩阵、特征值或正定性条件" : "matrix, eigenvalue, or definiteness condition");
+  }
+  if (category === "optimization" && !/(decision variable|objective|constraint|dual|slack|linear program|quadratic program|network flow|决策变量|目标函数|约束|对偶|松弛|线性规划|二次规划|网络流)/i.test(answer)) {
+    missing.push(interviewLanguage === "zh" ? "决策变量、目标函数或约束结构" : "decision variables, objective, or constraint structure");
+  }
+  if (category === "complexNumbers" && !/(complex|imaginary|euler|polar|logarithm|branch|复数|虚数|欧拉|极形式|对数|分支)/i.test(answer)) {
+    missing.push(interviewLanguage === "zh" ? "复数表示、欧拉公式或分支选择" : "complex representation, Euler formula, or branch choice");
   }
   if (category === "machineLearning" && !/(feature|特征|validation|验证|overfit|过拟合|metric|指标|model|模型)/i.test(answer)) {
     missing.push(interviewLanguage === "zh" ? "特征、验证或指标" : "features, validation, or metrics");
@@ -12144,9 +12509,15 @@ function localInterviewHint(problem) {
   const category = normalizeCategory(problem.category);
   const hints = {
     leetcode: ["先说 brute force，再说如何优化。", "明确输入规模、时间复杂度和关键数据结构。"],
+    cppProgramming: ["先说语言语义，再说边界和代价。", "注意对象生命周期、const、指针/引用或线程安全。"],
     pandasNumpy: ["先说明表结构和目标列。", "考虑 groupby、merge、pivot 或向量化。"],
     probabilityExpectation: ["先定义随机变量和样本空间。", "尝试条件期望或递推。"],
     statistics: ["先说假设、样本、估计量和评价指标。", "区分 correlation、causality 和 sampling bias。"],
+    calculus: ["先确定这是极限、导数、积分还是微分方程。", "把换元、分部积分或边界条件写清楚。"],
+    algebra: ["先写出要证明的不等式或恒等式。", "考虑归纳、展开或构造平方项。"],
+    linearAlgebra: ["先写矩阵条件和目标量。", "考虑特征值、行列式或正定性。"],
+    optimization: ["先定义决策变量、目标函数和约束。", "检查 binding 约束、对偶变量或网络流结构。"],
+    complexNumbers: ["先选定复数表示和对数分支。", "考虑欧拉公式或极形式。"],
     machineLearning: ["先定义 label、feature 和 validation。", "说明避免 leakage 和 overfitting 的方法。"],
     deepLearning: ["先说输入、输出、loss 和训练信号。", "如果有序列或注意力，明确 token/embedding 结构。"],
     market: ["从 fair value、spread、inventory risk 三个角度开始。", "把市场微观结构和风险约束讲清楚。"],
@@ -12157,12 +12528,24 @@ function localInterviewHint(problem) {
   const translation = {
     "先说 brute force，再说如何优化。": "Start with brute force, then explain the optimization.",
     "明确输入规模、时间复杂度和关键数据结构。": "Clarify input size, time complexity, and the key data structure.",
+    "先说语言语义，再说边界和代价。": "Start with language semantics, then discuss boundaries and cost.",
+    "注意对象生命周期、const、指针/引用或线程安全。": "Watch object lifetime, const, pointers/references, or thread safety.",
     "先说明表结构和目标列。": "Start by describing the table schema and target columns.",
     "考虑 groupby、merge、pivot 或向量化。": "Consider groupby, merge, pivot, or vectorization.",
     "先定义随机变量和样本空间。": "Define the random variables and sample space first.",
     "尝试条件期望或递推。": "Try conditional expectation or recurrence.",
     "先说假设、样本、估计量和评价指标。": "State the hypothesis, sample, estimator, and evaluation metric.",
     "区分 correlation、causality 和 sampling bias。": "Separate correlation, causality, and sampling bias.",
+    "先确定这是极限、导数、积分还是微分方程。": "First identify whether this is a limit, derivative, integral, or differential equation.",
+    "把换元、分部积分或边界条件写清楚。": "Make the substitution, integration by parts, or boundary condition explicit.",
+    "先写出要证明的不等式或恒等式。": "Start by writing the inequality or identity to be proved.",
+    "考虑归纳、展开或构造平方项。": "Consider induction, expansion, or completing a square.",
+    "先写矩阵条件和目标量。": "Start with the matrix condition and target quantity.",
+    "考虑特征值、行列式或正定性。": "Consider eigenvalues, determinants, or definiteness.",
+    "先定义决策变量、目标函数和约束。": "Define the decision variables, objective, and constraints first.",
+    "检查 binding 约束、对偶变量或网络流结构。": "Check binding constraints, dual variables, or network-flow structure.",
+    "先选定复数表示和对数分支。": "Choose the complex representation and logarithm branch first.",
+    "考虑欧拉公式或极形式。": "Consider Euler's formula or polar form.",
     "先定义 label、feature 和 validation。": "Define labels, features, and validation.",
     "说明避免 leakage 和 overfitting 的方法。": "Explain how you avoid leakage and overfitting.",
     "先说输入、输出、loss 和训练信号。": "Start with input, output, loss, and training signal.",
@@ -13279,6 +13662,10 @@ function analyzeEntry(text) {
     if (hits.leetcode.length) gains.leetcode += problemCount * 12;
     if (hits.probabilityExpectation.length) gains.probabilityExpectation += problemCount * 12;
     if (hits.statistics.length) gains.statistics += problemCount * 10;
+    if (hits.calculus.length) gains.calculus += problemCount * 10;
+    if (hits.algebra.length) gains.algebra += problemCount * 10;
+    if (hits.linearAlgebra.length) gains.linearAlgebra += problemCount * 10;
+    if (hits.complexNumbers.length) gains.complexNumbers += problemCount * 10;
     if (hits.machineLearning.length) gains.machineLearning += problemCount * 10;
     if (hits.deepLearning.length) gains.deepLearning += problemCount * 10;
     if (hits.option.length) gains.option += problemCount * 10;
@@ -13682,7 +14069,7 @@ function finishDrillSession(reason = "complete") {
       id: makeId(),
       date: new Date().toISOString(),
       text: `Mental Math ${record.label}: ${record.score} (${record.correct}/${record.total}, ${reason})`,
-      gains: { leetcode: 0, pandasNumpy: 0, probabilityExpectation: 0, statistics: 0, machineLearning: 0, deepLearning: 0, market: 0, option: 0, mentalMath: xpGain },
+      gains: Object.fromEntries(Object.keys(skillDefs).map((key) => [key, key === "mentalMath" ? xpGain : 0])),
       totalXp: xpGain,
       duration: Math.round(usedSeconds / 60)
     });

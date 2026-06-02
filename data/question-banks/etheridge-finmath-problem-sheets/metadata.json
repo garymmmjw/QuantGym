@@ -1,0 +1,13 @@
+{
+  "slug": "etheridge-finmath-problem-sheets",
+  "name": "Alison Etheridge Stochastic Calculus for Finance Problems",
+  "type": "public-course-problem-sheet-with-generated-answer",
+  "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+  "problemHtmlUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+  "problemPdfUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+  "sourceHtmlPath": "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+  "sourcePdfPath": "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf",
+  "problemCount": 10,
+  "generatedAt": "2026-06-02T08:34:19+00:00",
+  "rightsNote": "Official public Oxford author-hosted problem sheet. No public solution file was found in the cached source; answers are generated/reviewed and non-official."
+}

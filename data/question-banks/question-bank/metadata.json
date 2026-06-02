@@ -2,7 +2,7 @@
   "slug": "question-bank",
   "name": "Archived Question Bank",
   "type": "latex",
-  "sourceTexPath": "",
+  "sourceTexPath": "有题目的/紫皮书 量化面试中的数学技巧 Quantitative Interview Problems Collection/quant_purple_book.tex",
   "problemFile": "problems.json",
   "problemCount": 128,
   "lastImportedAt": "2026-05-24T04:53:57.407Z"

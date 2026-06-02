@@ -1093,33 +1093,15 @@
             导入
           </button>
         </form>
-        <section class="leetcode-hot-panel" aria-labelledby="leetcodeHotTitle">
-          <div class="leetcode-hot-summary-card">
-            <div class="leetcode-hot-art" aria-hidden="true">
-              <i data-lucide="heart"></i>
+        <section class="leetcode-hot-panel problem-collections-panel" aria-labelledby="problemCollectionsTitle">
+          <div class="problem-collections-heading">
+            <div>
+              <span class="rank-label">PLAYLISTS</span>
+              <h3 id="problemCollectionsTitle">题单集合</h3>
             </div>
-            <div class="leetcode-hot-copy">
-              <span class="rank-label">LeetCode</span>
-              <h3 id="leetcodeHotTitle">Hot 100</h3>
-              <p id="leetcodeHotSummary">跳转原题并记录完成状态。</p>
-              <div class="progress-track" aria-hidden="true">
-                <div id="leetcodeHotProgressFill" class="progress-fill"></div>
-              </div>
-            </div>
-            <div class="leetcode-hot-progress">
-              <span id="leetcodeHotProgressLabel">完成进度</span>
-              <strong id="leetcodeHotProgressText">0 / 100</strong>
-            </div>
-            <div class="leetcode-hot-actions">
-              <button id="leetcodeHotToggleBtn" class="secondary-button" type="button" aria-expanded="false" aria-controls="leetcodeHotList">
-                <i data-lucide="list-checks"></i>
-                查看题单
-              </button>
-              <a id="leetcodeHotPlanLink" class="leetcode-hot-link" href="https://leetcode.com/studyplan/top-100-liked/" target="_blank" rel="noreferrer" aria-label="打开 LeetCode">
-                <i data-lucide="external-link"></i>
-              </a>
-            </div>
+            <p>从常刷集合直接进入题库；LeetCode 会展开原题清单并记录完成状态。</p>
           </div>
+          <div id="problemCollectionGrid" class="problem-collection-grid" aria-label="题单集合"></div>
           <div id="leetcodeHotList" class="leetcode-hot-list hidden" aria-live="polite"></div>
         </section>
         <section id="problemCompanyPanel" class="problem-company-panel" aria-labelledby="problemCompanyTitle">
@@ -1171,10 +1153,7 @@
           <div id="problemRankingList" class="problem-ranking-list"></div>
         </section>
         <div id="problemList" class="problem-list"></div>
-        <button id="loadMoreProblemsBtn" class="secondary-button problem-load-more hidden" type="button">
-          <i data-lucide="chevrons-down"></i>
-          加载更多题目
-        </button>
+        <nav id="problemPagination" class="problem-pagination hidden" aria-label="题目分页"></nav>
         <article id="problemDetail" class="problem-detail hidden" aria-live="polite"></article>
       </section>
       </section>

@@ -2,8 +2,8 @@
   "slug": "red-book",
   "name": "红宝书 Quant Job Interview Questions And Answers",
   "type": "latex",
-  "sourceTexPath": "红宝书/quant_red_book.tex",
+  "sourceTexPath": "有题目的/红宝书 Quant Job Interview Questions And Answers/quant_red_book.tex",
   "problemFile": "problems.json",
-  "problemCount": 240,
-  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+  "problemCount": 242,
+  "lastImportedAt": "2026-06-02T01:06:35.867Z"
 }

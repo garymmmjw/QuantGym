@@ -1,0 +1,23 @@
+{
+  "slug": "stanford-msande214-hw3",
+  "name": "Stanford MS&E 214 HW3 Logistics/Finance",
+  "type": "course-homework",
+  "sourceUrl": "https://web.stanford.edu/~ashishg/msande214/spr_2024/handouts/index.html",
+  "sourceZipUrl": "https://web.stanford.edu/~ashishg/msande214/spr_2024/handouts/hw3_files.zip",
+  "sourceTexPath": "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+  "sourcePdfPath": "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+  "sourceWorkbookPath": "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx",
+  "problemFile": "problems.json",
+  "problemCount": 5,
+  "generatedAt": "2026-06-02T08:13:22+00:00",
+  "sourceFiles": [
+    "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+    "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+    "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+  ],
+  "answerPolicy": "Official prompts/data; no official solution file in public HW3 bundle. Answers are generated and solver-verified, not official.",
+  "mediaFiles": [
+    "assets/problem-media/stanford-msande214-hw3/pipeline-network.png"
+  ],
+  "rightsNote": "Official public Stanford course handout files. Keep distribution status reviewed before publishing beyond the local app."
+}
