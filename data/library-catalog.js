@@ -1,0 +1,341 @@
+window.quantLibraryCatalog = [
+  {
+    "id": "green-book",
+    "kind": "book",
+    "titleZh": "绿皮书",
+    "titleEn": "A Practical Guide to Quantitative Finance Interviews",
+    "sourceSlug": "green-book",
+    "problemCount": 183,
+    "category": "Quant Interview",
+    "language": "EN + ZH",
+    "tags": [
+      "brain-teasers",
+      "probability",
+      "markets"
+    ],
+    "readType": "pdf",
+    "readAssetId": "green-book",
+    "coverUrl": "assets/library-covers/green-book.webp"
+  },
+  {
+    "id": "yellow-book",
+    "kind": "book",
+    "titleZh": "黄皮书",
+    "titleEn": "150 Most Frequently Asked Questions on Quant Interviews",
+    "sourceSlug": "yellow-book",
+    "problemCount": 153,
+    "category": "Quant Interview",
+    "language": "EN + ZH",
+    "tags": [
+      "interviews",
+      "probability",
+      "derivatives"
+    ],
+    "readType": "pdf",
+    "readAssetId": "yellow-book",
+    "coverUrl": "assets/library-covers/yellow-book.webp"
+  },
+  {
+    "id": "red-book",
+    "kind": "book",
+    "titleZh": "红宝书",
+    "titleEn": "Quant Job Interview Questions And Answers",
+    "sourceSlug": "red-book",
+    "problemCount": 242,
+    "category": "Quant Interview",
+    "language": "EN + ZH",
+    "tags": [
+      "interviews",
+      "answers",
+      "case drills"
+    ],
+    "readType": "pdf",
+    "readAssetId": "red-book",
+    "coverUrl": "assets/library-covers/red-book.webp"
+  },
+  {
+    "id": "hull-derivatives",
+    "kind": "book",
+    "titleZh": "Hull 衍生品",
+    "titleEn": "Options, Futures, and Other Derivatives",
+    "sourceSlug": "hull-derivatives",
+    "problemCount": 763,
+    "category": "Derivatives",
+    "language": "EN + ZH",
+    "tags": [
+      "options",
+      "futures",
+      "risk-neutral pricing"
+    ],
+    "readType": "pdf",
+    "readAssetId": "hull-derivatives",
+    "coverUrl": "assets/library-covers/hull-derivatives.webp"
+  },
+  {
+    "id": "stefanica-fe-math",
+    "kind": "book",
+    "titleZh": "金融工程数学入门",
+    "titleEn": "A Primer for the Mathematics of Financial Engineering",
+    "sourceSlug": "stefanica-fe-math",
+    "problemCount": 35,
+    "category": "Financial Math",
+    "language": "EN + ZH",
+    "tags": [
+      "calculus",
+      "probability",
+      "stochastic basics"
+    ],
+    "readType": "pdf",
+    "readAssetId": "stefanica-fe-math",
+    "coverUrl": "assets/library-covers/stefanica-fe-math.webp"
+  },
+  {
+    "id": "dudeney-puzzles",
+    "kind": "book",
+    "titleZh": "Dudeney 挑战谜题",
+    "titleEn": "Challenging Puzzles",
+    "sourceSlug": "dudeney-puzzles",
+    "problemCount": 123,
+    "category": "Puzzles",
+    "language": "EN + ZH",
+    "tags": [
+      "logic",
+      "combinatorics",
+      "classic puzzles"
+    ],
+    "readType": "pdf",
+    "readAssetId": "dudeney-puzzles",
+    "coverUrl": "assets/library-covers/dudeney-puzzles.webp"
+  },
+  {
+    "id": "linalg-primer",
+    "kind": "book",
+    "titleZh": "金融工程线性代数入门",
+    "titleEn": "A Linear Algebra Primer for Financial Engineering",
+    "sourceSlug": "linalg-primer",
+    "problemCount": 18,
+    "category": "Linear Algebra",
+    "language": "EN + ZH",
+    "tags": [
+      "vectors",
+      "matrices",
+      "factorization"
+    ],
+    "readType": "pdf",
+    "readAssetId": "linalg-primer",
+    "coverUrl": "assets/library-covers/linalg-primer.webp"
+  },
+  {
+    "id": "quantitative-primer",
+    "kind": "book",
+    "titleZh": "Quantitative Primer",
+    "titleEn": "Quantitative Primer",
+    "sourceSlug": "quantitative-primer",
+    "problemCount": 41,
+    "category": "Quant Basics",
+    "language": "EN + ZH",
+    "tags": [
+      "math drills",
+      "probability",
+      "finance basics"
+    ],
+    "readType": "pdf",
+    "readAssetId": "quantitative-primer",
+    "coverUrl": "assets/library-covers/quantitative-primer.webp"
+  },
+  {
+    "id": "probability-stochastic-10",
+    "kind": "book",
+    "titleZh": "概率随机分析 10 题",
+    "titleEn": "First 10 Questions - Probability Stochastic Calc IQs",
+    "sourceSlug": "probability-stochastic-10",
+    "problemCount": 10,
+    "category": "Probability",
+    "language": "EN + ZH",
+    "tags": [
+      "stochastic calculus",
+      "probability",
+      "interview"
+    ],
+    "readType": "pdf",
+    "readAssetId": "probability-stochastic-10",
+    "coverUrl": "assets/library-covers/probability-stochastic-10.webp"
+  },
+  {
+    "id": "boyd-convex-optimization",
+    "kind": "book",
+    "titleZh": "凸优化",
+    "titleEn": "Convex Optimization",
+    "sourceSlug": "boyd-cvxbook-additional-exercises",
+    "problemCount": 10,
+    "category": "Optimization",
+    "language": "EN + ZH",
+    "tags": [
+      "convex sets",
+      "duality",
+      "optimization"
+    ],
+    "readType": "pdf",
+    "readAssetId": "boyd-convex-optimization",
+    "coverUrl": "assets/library-covers/boyd-convex-optimization.webp"
+  },
+  {
+    "id": "probabilitycourse-textbook",
+    "kind": "book",
+    "titleZh": "概率统计与随机过程",
+    "titleEn": "Introduction to Probability, Statistics, and Random Processes",
+    "sourceSlug": "probabilitycourse-solved-samples",
+    "problemCount": 16,
+    "category": "Probability",
+    "language": "EN + ZH",
+    "tags": [
+      "probability",
+      "statistics",
+      "random processes"
+    ],
+    "readType": "external",
+    "readUrl": "https://www.probabilitycourse.com/",
+    "coverUrl": "assets/library-covers/probabilitycourse-textbook.webp"
+  },
+  {
+    "id": "mike-giles-mlmc",
+    "kind": "book",
+    "titleZh": "多层蒙特卡洛方法",
+    "titleEn": "Multilevel Monte Carlo Methods",
+    "problemCount": 0,
+    "category": "Monte Carlo",
+    "language": "EN",
+    "tags": [
+      "simulation",
+      "numerical methods",
+      "research notes"
+    ],
+    "readType": "pdf",
+    "readAssetId": "mike-giles-mlmc",
+    "coverUrl": "assets/library-covers/mike-giles-mlmc.webp"
+  },
+  {
+    "id": "market-microstructure",
+    "kind": "book",
+    "titleZh": "市场微观结构讲义",
+    "titleEn": "Market Microstructure Lecture Notes",
+    "problemCount": 0,
+    "category": "Market Microstructure",
+    "language": "EN",
+    "tags": [
+      "order books",
+      "liquidity",
+      "trading"
+    ],
+    "readType": "pdf",
+    "readAssetId": "market-microstructure",
+    "coverUrl": "assets/library-covers/market-microstructure.webp"
+  },
+  {
+    "id": "stat110-strategic-practice",
+    "kind": "questionSet",
+    "titleZh": "Stat 110 战略练习",
+    "titleEn": "Statistics 110 Strategic Practice",
+    "sourceSlug": "stat110-strategic-practice",
+    "problemCount": 184,
+    "category": "Probability",
+    "language": "EN + ZH",
+    "tags": [
+      "Harvard",
+      "practice sheets",
+      "probability"
+    ],
+    "readType": "pdf",
+    "readAssetId": "stat110-strategic-practice",
+    "coverUrl": "assets/library-covers/stat110-strategic-practice.webp"
+  },
+  {
+    "id": "stanford-msande214-hw3",
+    "kind": "questionSet",
+    "titleZh": "Stanford MS&E 214 HW3",
+    "titleEn": "Financial Optimization Homework 3",
+    "sourceSlug": "stanford-msande214-hw3",
+    "problemCount": 5,
+    "category": "Optimization",
+    "language": "EN + ZH",
+    "tags": [
+      "Stanford",
+      "homework",
+      "portfolio optimization"
+    ],
+    "readType": "pdf",
+    "readAssetId": "stanford-msande214-hw3",
+    "coverUrl": "assets/library-covers/stanford-msande214-hw3.webp"
+  },
+  {
+    "id": "boyd-cvxbook-additional-exercises",
+    "kind": "questionSet",
+    "titleZh": "Boyd 凸优化补充题",
+    "titleEn": "Convex Optimization Additional Exercises",
+    "sourceSlug": "boyd-cvxbook-additional-exercises",
+    "problemCount": 10,
+    "category": "Optimization",
+    "language": "EN + ZH",
+    "tags": [
+      "convex optimization",
+      "exercises",
+      "duality"
+    ],
+    "readType": "pdf",
+    "readAssetId": "boyd-cvxbook-additional-exercises",
+    "coverUrl": "assets/library-covers/boyd-cvxbook-additional-exercises.webp"
+  },
+  {
+    "id": "etheridge-finmath-problem-sheets",
+    "kind": "questionSet",
+    "titleZh": "Etheridge 金融数学题单",
+    "titleEn": "Financial Mathematics Problem Sheets",
+    "sourceSlug": "etheridge-finmath-problem-sheets",
+    "problemCount": 10,
+    "category": "Financial Math",
+    "language": "EN + ZH",
+    "tags": [
+      "martingales",
+      "Black-Scholes",
+      "problem sheets"
+    ],
+    "readType": "pdf",
+    "readAssetId": "etheridge-finmath-problem-sheets",
+    "coverUrl": "assets/library-covers/etheridge-finmath-problem-sheets.webp"
+  },
+  {
+    "id": "probabilitycourse-solved-samples",
+    "kind": "questionSet",
+    "titleZh": "ProbabilityCourse 已解析样题",
+    "titleEn": "ProbabilityCourse Solved Sample Problems",
+    "sourceSlug": "probabilitycourse-solved-samples",
+    "problemCount": 16,
+    "category": "Probability",
+    "language": "EN + ZH",
+    "tags": [
+      "worked examples",
+      "statistics",
+      "random processes"
+    ],
+    "readType": "external",
+    "readUrl": "https://www.probabilitycourse.com/",
+    "coverUrl": "assets/library-covers/probabilitycourse-solved-samples.webp"
+  },
+  {
+    "id": "quantguide",
+    "kind": "questionSet",
+    "titleZh": "QuantGuide 题库",
+    "titleEn": "QuantGuide Interview Problems",
+    "sourceSlug": "quantguide",
+    "problemCount": 1204,
+    "category": "Quant Interview",
+    "language": "EN + ZH",
+    "tags": [
+      "interview bank",
+      "probability",
+      "markets"
+    ],
+    "readType": "none",
+    "coverUrl": "assets/library-covers/quantguide.webp"
+  }
+];

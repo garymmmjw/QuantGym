@@ -1,0 +1,180 @@
+{
+  "assets": [
+    {
+      "id": "green-book",
+      "kind": "book",
+      "titleZh": "绿皮书",
+      "titleEn": "A Practical Guide to Quantitative Finance Interviews",
+      "sourceSlug": "green-book",
+      "path": "量化书籍/有题目的/绿皮书 A Practical Guide to Quantitative Finance Interviews/绿皮书-A Practical Guide to Quantitative Finance Interviews.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "yellow-book",
+      "kind": "book",
+      "titleZh": "黄皮书",
+      "titleEn": "150 Most Frequently Asked Questions on Quant Interviews",
+      "sourceSlug": "yellow-book",
+      "path": "量化书籍/有题目的/黄皮书 150 Most Frequently Asked Questions on Quant Interviews/黄皮书150 Most Frequently Asked Questions on Quant Interviews.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "red-book",
+      "kind": "book",
+      "titleZh": "红宝书",
+      "titleEn": "Quant Job Interview Questions And Answers",
+      "sourceSlug": "red-book",
+      "path": "量化书籍/有题目的/红宝书 Quant Job Interview Questions And Answers/红宝书Quant Job Interview Questions And Answers (2008, CreateSpace) - libgen.li.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "hull-derivatives",
+      "kind": "book",
+      "titleZh": "Hull 衍生品",
+      "titleEn": "Options, Futures, and Other Derivatives",
+      "sourceSlug": "hull-derivatives",
+      "path": "量化书籍/纯textbook/Hull期权期货及其他衍生品 Options Futures and Other Derivatives/option futures and other derivatives 11th.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "stefanica-fe-math",
+      "kind": "book",
+      "titleZh": "金融工程数学入门",
+      "titleEn": "A Primer for the Mathematics of Financial Engineering",
+      "sourceSlug": "stefanica-fe-math",
+      "path": "量化书籍/纯textbook/Stefanica金融工程数学入门 A Primer for the Mathematics of Financial Engineering/A Primer For The Mathematics Of Financial Engineering - Stefanica.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "dudeney-puzzles",
+      "kind": "book",
+      "titleZh": "Dudeney 挑战谜题",
+      "titleEn": "Challenging Puzzles",
+      "sourceSlug": "dudeney-puzzles",
+      "path": "量化书籍/有题目的/Dudeney挑战谜题 Challenging Puzzles/challengingpuzzles.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "linalg-primer",
+      "kind": "book",
+      "titleZh": "金融工程线性代数入门",
+      "titleEn": "A Linear Algebra Primer for Financial Engineering",
+      "sourceSlug": "linalg-primer",
+      "path": "量化书籍/纯textbook/金融工程线性代数入门 A Linear Algebra Primer for Financial Engineering/A Linear Algebra Primer for Financial Engineering.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "quantitative-primer",
+      "kind": "book",
+      "titleZh": "Quantitative Primer",
+      "titleEn": "Quantitative Primer",
+      "sourceSlug": "quantitative-primer",
+      "path": "量化书籍/有题目的/Quantitative Primer/QuantitativePrimer.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "probability-stochastic-10",
+      "kind": "book",
+      "titleZh": "概率随机分析 10 题",
+      "titleEn": "First 10 Questions - Probability Stochastic Calc IQs",
+      "sourceSlug": "probability-stochastic-10",
+      "path": "量化书籍/有题目的/概率随机分析10题 First 10 Questions - Probability Stochastic Calc IQs/First 10 Questions - Probability Stochastic Calc IQs.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "boyd-convex-optimization",
+      "kind": "book",
+      "titleZh": "凸优化",
+      "titleEn": "Convex Optimization",
+      "sourceSlug": "boyd-cvxbook-additional-exercises",
+      "path": "量化书籍/纯textbook/凸优化 Convex Optimization/bv_cvxbook.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "mike-giles-mlmc",
+      "kind": "book",
+      "titleZh": "多层蒙特卡洛方法",
+      "titleEn": "Multilevel Monte Carlo Methods",
+      "sourceSlug": "",
+      "path": "量化书籍/纯textbook/多层蒙特卡洛方法 Multilevel Monte Carlo Methods/mcqmc12_giles.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "market-microstructure",
+      "kind": "book",
+      "titleZh": "市场微观结构讲义",
+      "titleEn": "Market Microstructure Lecture Notes",
+      "sourceSlug": "",
+      "path": "量化书籍/纯textbook/市场微观结构讲义 Market Microstructure Lecture Notes/Microstructure.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "stat110-strategic-practice",
+      "kind": "questionSet",
+      "titleZh": "Stat 110 战略练习",
+      "titleEn": "Statistics 110 Strategic Practice",
+      "sourceSlug": "stat110-strategic-practice",
+      "path": "量化书籍/有题目的/Harvard Stat 110 概率论战略练习 Statistics 110 Strategic Practice/strategic_practice_and_homework_1.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "stanford-msande214-hw3",
+      "kind": "questionSet",
+      "titleZh": "Stanford MS&E 214 HW3",
+      "titleEn": "Financial Optimization Homework 3",
+      "sourceSlug": "stanford-msande214-hw3",
+      "path": "量化书籍/有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "boyd-cvxbook-additional-exercises",
+      "kind": "questionSet",
+      "titleZh": "Boyd 凸优化补充题",
+      "titleEn": "Convex Optimization Additional Exercises",
+      "sourceSlug": "boyd-cvxbook-additional-exercises",
+      "path": "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    },
+    {
+      "id": "etheridge-finmath-problem-sheets",
+      "kind": "questionSet",
+      "titleZh": "Etheridge 金融数学题单",
+      "titleEn": "Financial Mathematics Problem Sheets",
+      "sourceSlug": "etheridge-finmath-problem-sheets",
+      "path": "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf",
+      "contentType": "application/pdf",
+      "minTier": "registered",
+      "visibility": "registered"
+    }
+  ]
+}
