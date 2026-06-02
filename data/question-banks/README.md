@@ -21,18 +21,23 @@ Raw exports, OCR pages, PDFs, and private account dumps should stay local and ig
 
 ## Current Catalog
 
-The app catalog currently has 2,771 entries across 10 active sources:
+The app catalog currently has 2,997 entries across 15 active sources:
 
 - `green-book`: 183
 - `yellow-book`: 153
-- `red-book`: 240
+- `red-book`: 242
 - `hull-derivatives`: 763
 - `stefanica-fe-math`: 35
 - `quantitative-primer`: 41
 - `dudeney-puzzles`: 123
 - `linalg-primer`: 18
-- `probability-stochastic-10`: 11
+- `probability-stochastic-10`: 10
 - `quantguide`: 1,204
+- `stat110-strategic-practice`: 184
+- `stanford-msande214-hw3`: 5
+- `probabilitycourse-solved-samples`: 16
+- `boyd-cvxbook-additional-exercises`: 10
+- `etheridge-finmath-problem-sheets`: 10
 
 `question-bank` is an archived disabled source and is not merged into the app catalog.
 

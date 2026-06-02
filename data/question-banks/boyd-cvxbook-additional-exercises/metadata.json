@@ -1,0 +1,12 @@
+{
+  "slug": "boyd-cvxbook-additional-exercises",
+  "name": "Boyd Convex Optimization Additional Exercises",
+  "type": "open-access-exercise-with-generated-answer",
+  "sourceUrl": "https://web.stanford.edu/~boyd/cvxbook/",
+  "repoUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+  "repoCommit": "6423524f947a7b3f14314015c06d8077a403502f",
+  "sourcePdfPath": "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf",
+  "problemCount": 10,
+  "generatedAt": "2026-06-02T08:27:52+00:00",
+  "rightsNote": "Official public additional-exercises repository. The PDF permits use with acknowledgement; public repo has no solutions, so answers are generated/reviewed and non-official."
+}

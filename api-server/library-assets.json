@@ -7,6 +7,7 @@
       "titleEn": "A Practical Guide to Quantitative Finance Interviews",
       "sourceSlug": "green-book",
       "path": "量化书籍/有题目的/绿皮书 A Practical Guide to Quantitative Finance Interviews/绿皮书-A Practical Guide to Quantitative Finance Interviews.pdf",
+      "storagePath": "green-book.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -18,6 +19,7 @@
       "titleEn": "150 Most Frequently Asked Questions on Quant Interviews",
       "sourceSlug": "yellow-book",
       "path": "量化书籍/有题目的/黄皮书 150 Most Frequently Asked Questions on Quant Interviews/黄皮书150 Most Frequently Asked Questions on Quant Interviews.pdf",
+      "storagePath": "yellow-book.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -29,6 +31,7 @@
       "titleEn": "Quant Job Interview Questions And Answers",
       "sourceSlug": "red-book",
       "path": "量化书籍/有题目的/红宝书 Quant Job Interview Questions And Answers/红宝书Quant Job Interview Questions And Answers (2008, CreateSpace) - libgen.li.pdf",
+      "storagePath": "red-book.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -40,6 +43,7 @@
       "titleEn": "Options, Futures, and Other Derivatives",
       "sourceSlug": "hull-derivatives",
       "path": "量化书籍/纯textbook/Hull期权期货及其他衍生品 Options Futures and Other Derivatives/option futures and other derivatives 11th.pdf",
+      "storagePath": "hull-derivatives.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -51,6 +55,7 @@
       "titleEn": "A Primer for the Mathematics of Financial Engineering",
       "sourceSlug": "stefanica-fe-math",
       "path": "量化书籍/纯textbook/Stefanica金融工程数学入门 A Primer for the Mathematics of Financial Engineering/A Primer For The Mathematics Of Financial Engineering - Stefanica.pdf",
+      "storagePath": "stefanica-fe-math.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -62,6 +67,7 @@
       "titleEn": "Challenging Puzzles",
       "sourceSlug": "dudeney-puzzles",
       "path": "量化书籍/有题目的/Dudeney挑战谜题 Challenging Puzzles/challengingpuzzles.pdf",
+      "storagePath": "dudeney-puzzles.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -73,6 +79,7 @@
       "titleEn": "A Linear Algebra Primer for Financial Engineering",
       "sourceSlug": "linalg-primer",
       "path": "量化书籍/纯textbook/金融工程线性代数入门 A Linear Algebra Primer for Financial Engineering/A Linear Algebra Primer for Financial Engineering.pdf",
+      "storagePath": "linalg-primer.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -84,6 +91,7 @@
       "titleEn": "Quantitative Primer",
       "sourceSlug": "quantitative-primer",
       "path": "量化书籍/有题目的/Quantitative Primer/QuantitativePrimer.pdf",
+      "storagePath": "quantitative-primer.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -95,6 +103,7 @@
       "titleEn": "First 10 Questions - Probability Stochastic Calc IQs",
       "sourceSlug": "probability-stochastic-10",
       "path": "量化书籍/有题目的/概率随机分析10题 First 10 Questions - Probability Stochastic Calc IQs/First 10 Questions - Probability Stochastic Calc IQs.pdf",
+      "storagePath": "probability-stochastic-10.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -106,6 +115,7 @@
       "titleEn": "Convex Optimization",
       "sourceSlug": "boyd-cvxbook-additional-exercises",
       "path": "量化书籍/纯textbook/凸优化 Convex Optimization/bv_cvxbook.pdf",
+      "storagePath": "boyd-convex-optimization.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -117,6 +127,7 @@
       "titleEn": "Multilevel Monte Carlo Methods",
       "sourceSlug": "",
       "path": "量化书籍/纯textbook/多层蒙特卡洛方法 Multilevel Monte Carlo Methods/mcqmc12_giles.pdf",
+      "storagePath": "mike-giles-mlmc.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -128,6 +139,7 @@
       "titleEn": "Market Microstructure Lecture Notes",
       "sourceSlug": "",
       "path": "量化书籍/纯textbook/市场微观结构讲义 Market Microstructure Lecture Notes/Microstructure.pdf",
+      "storagePath": "market-microstructure.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -139,6 +151,7 @@
       "titleEn": "Statistics 110 Strategic Practice",
       "sourceSlug": "stat110-strategic-practice",
       "path": "量化书籍/有题目的/Harvard Stat 110 概率论战略练习 Statistics 110 Strategic Practice/strategic_practice_and_homework_1.pdf",
+      "storagePath": "stat110-strategic-practice.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -150,6 +163,7 @@
       "titleEn": "Financial Optimization Homework 3",
       "sourceSlug": "stanford-msande214-hw3",
       "path": "量化书籍/有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+      "storagePath": "stanford-msande214-hw3.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -161,6 +175,7 @@
       "titleEn": "Convex Optimization Additional Exercises",
       "sourceSlug": "boyd-cvxbook-additional-exercises",
       "path": "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf",
+      "storagePath": "boyd-cvxbook-additional-exercises.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"
@@ -172,6 +187,7 @@
       "titleEn": "Financial Mathematics Problem Sheets",
       "sourceSlug": "etheridge-finmath-problem-sheets",
       "path": "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf",
+      "storagePath": "etheridge-finmath-problem-sheets.pdf",
       "contentType": "application/pdf",
       "minTier": "registered",
       "visibility": "registered"

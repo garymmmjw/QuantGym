@@ -1,0 +1,651 @@
+{
+  "problems": [
+    {
+      "id": "etheridge-finmath-problem-sheets-problem-001",
+      "titleEn": "One-period binomial call price",
+      "titleZh": "单周期二叉树欧式看涨定价",
+      "category": "option",
+      "difficulty": "Medium",
+      "tags": [
+        "Alison Etheridge",
+        "Stochastic Calculus for Finance",
+        "Oxford problem sheet",
+        "binomial model",
+        "risk-neutral pricing"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "option",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Oxford stochastic-calculus-for-finance problem sheet and reviewed for quant interview relevance.",
+        "reviewedBy": "Codex import-etheridge-finmath-problem-sheets"
+      },
+      "source": "etheridge-finmath-problem-sheets",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "sourceType": "public-course-problem-sheet-with-generated-answer",
+      "bookSlug": "etheridge-finmath-problem-sheets",
+      "bookName": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+      ],
+      "sourceQuestion": "Problem 1",
+      "answerOfficial": false,
+      "answerPolicy": "The public Oxford problem sheet includes prompts but no official solution file in the cached source; this answer is generated and locally reviewed, not an official course solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-etheridge-finmath-problem-sheets.py",
+        "sourceFiles": [
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "official-public-author-page",
+        "note": "Official author-hosted Oxford teaching materials. Imported as a small generated-answer sample with attribution; distribution review required before publishing beyond the local app.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:34:19+00:00"
+      },
+      "createdAt": "2026-06-02T08:34:19+00:00",
+      "updatedAt": "2026-06-02T08:34:19+00:00",
+      "promptEn": "A stock starts at $S_0$ and after one period $\\Delta T$ moves to either $S_0u$ or $S_0d$. One dollar invested risk-free grows to $e^{r\\Delta T}$. Assume $d<e^{r\\Delta T}<u$. Derive the no-arbitrage price at time 0 of a European call with strike $K$ maturing after this period. What goes wrong if the inequality is dropped?",
+      "promptZh": "股票初始价格为 $S_0$，一个周期 $\\Delta T$ 后变为 $S_0u$ 或 $S_0d$。1 美元无风险投资在该周期后变为 $e^{r\\Delta T}$。假设 $d<e^{r\\Delta T}<u$。推导到期为一个周期、执行价为 $K$ 的欧式看涨期权在 0 时刻的无套利价格。若该不等式不成立，会发生什么？",
+      "answer": "The price is $e^{-r\\Delta T}\\{q(S_0u-K)^++(1-q)(S_0d-K)^+\\}$ with $q=(e^{r\\Delta T}-d)/(u-d)$. If $e^{r\\Delta T}$ is outside $[d,u]$, the stock and bond admit arbitrage and no risk-neutral probability in $[0,1]$ exists.",
+      "answerEn": "The price is $e^{-r\\Delta T}\\{q(S_0u-K)^++(1-q)(S_0d-K)^+\\}$ with $q=(e^{r\\Delta T}-d)/(u-d)$. If $e^{r\\Delta T}$ is outside $[d,u]$, the stock and bond admit arbitrage and no risk-neutral probability in $[0,1]$ exists.",
+      "answerZh": "价格为 $e^{-r\\Delta T}\\{q(S_0u-K)^++(1-q)(S_0d-K)^+\\}$，其中 $q=(e^{r\\Delta T}-d)/(u-d)$。若 $e^{r\\Delta T}$ 不在 $[d,u]$ 内，股票和债券之间存在套利，且不存在位于 $[0,1]$ 的风险中性概率。",
+      "explanation": "The risk-neutral probability $q$ is defined by matching the discounted stock price:\n$$S_0=e^{-r\\Delta T}\\bigl(qS_0u+(1-q)S_0d\\bigr).$$\nSolving gives\n$$q=\\frac{e^{r\\Delta T}-d}{u-d}.$$\nThen the option price is the discounted risk-neutral expected payoff:\n$$C_0=e^{-r\\Delta T}\\left[q(S_0u-K)^++(1-q)(S_0d-K)^+\\right].$$\nThe strict inequality ensures $0<q<1$. If the bank account return is at least the up factor, shorting stock and investing proceeds in the bank gives arbitrage; if it is at most the down factor, borrowing to buy stock gives arbitrage.",
+      "explanationZh": "风险中性概率 $q$ 由贴现股票价格匹配确定：\n$$S_0=e^{-r\\Delta T}\\bigl(qS_0u+(1-q)S_0d\\bigr).$$\n解得\n$$q=\\frac{e^{r\\Delta T}-d}{u-d}.$$\n于是期权价格为贴现的风险中性期望收益：\n$$C_0=e^{-r\\Delta T}\\left[q(S_0u-K)^++(1-q)(S_0d-K)^+\\right].$$\n严格不等式保证 $0<q<1$。若银行账户收益率至少等于上涨因子，可卖空股票并把所得投入银行套利；若银行账户收益率至多等于下跌因子，可借钱买股票套利。"
+    },
+    {
+      "id": "etheridge-finmath-problem-sheets-problem-002",
+      "titleEn": "Currency put mispricing in a one-period model",
+      "titleZh": "单周期汇率模型中的看跌期权错价",
+      "category": "option",
+      "difficulty": "Medium",
+      "tags": [
+        "Alison Etheridge",
+        "Stochastic Calculus for Finance",
+        "Oxford problem sheet",
+        "arbitrage",
+        "replication",
+        "currency option"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "option",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Oxford stochastic-calculus-for-finance problem sheet and reviewed for quant interview relevance.",
+        "reviewedBy": "Codex import-etheridge-finmath-problem-sheets"
+      },
+      "source": "etheridge-finmath-problem-sheets",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "sourceType": "public-course-problem-sheet-with-generated-answer",
+      "bookSlug": "etheridge-finmath-problem-sheets",
+      "bookName": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+      ],
+      "sourceQuestion": "Problem 2",
+      "answerOfficial": false,
+      "answerPolicy": "The public Oxford problem sheet includes prompts but no official solution file in the cached source; this answer is generated and locally reviewed, not an official course solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-etheridge-finmath-problem-sheets.py",
+        "sourceFiles": [
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "official-public-author-page",
+        "note": "Official author-hosted Oxford teaching materials. Imported as a small generated-answer sample with attribution; distribution review required before publishing beyond the local app.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:34:19+00:00"
+      },
+      "createdAt": "2026-06-02T08:34:19+00:00",
+      "updatedAt": "2026-06-02T08:34:19+00:00",
+      "promptEn": "At current exchange rates, 100 pounds are worth 280 DM. At year end the value will be either 260 DM or 300 DM. A European put allows the holder to sell 100 pounds for 290 DM at year end. The risk-free rate is zero and the put trades for 20 DM. Use a one-period binary model to decide whether this is fair, and if not construct an arbitrage.",
+      "promptZh": "当前汇率下，100 英镑价值 280 马克。年末它将价值 260 马克或 300 马克。某欧式看跌期权允许持有人年末以 290 马克卖出 100 英镑。无风险利率为 0，该看跌期权价格为 20 马克。用单周期二叉模型判断价格是否公平；若不公平，构造套利。",
+      "answer": "The fair value is 15 DM, so the put is overpriced. Sell the put for 20 DM and buy its replicating portfolio for 15 DM, locking in 5 DM.",
+      "answerEn": "The fair value is 15 DM, so the put is overpriced. Sell the put for 20 DM and buy its replicating portfolio for 15 DM, locking in 5 DM.",
+      "answerZh": "公允价值为 15 马克，因此该看跌期权被高估。卖出期权收 20 马克，同时用 15 马克买入复制组合，可锁定 5 马克利润。",
+      "explanation": "The put payoff is 30 DM in the down state and 0 in the up state. The risk-neutral up probability $q$ satisfies\n$$300q+260(1-q)=280,$$\nso $q=1/2$. With zero interest, the fair value is\n$$\\frac12\\cdot0+\\frac12\\cdot30=15.$$\nA replicating portfolio has stock exposure\n$$\\Delta=\\frac{0-30}{300-260}=-\\frac34,$$\nand cash\n$$B=30-\\Delta\\cdot260=225.$$\nIts initial cost is $-\\frac34\\cdot280+225=15$. Selling the option for 20 and buying this replicating payoff leaves a riskless 5 DM surplus.",
+      "explanationZh": "看跌期权在下跌状态收益为 30 马克，在上涨状态收益为 0。风险中性上涨概率 $q$ 满足\n$$300q+260(1-q)=280,$$\n所以 $q=1/2$。无风险利率为 0，因此公允价值为\n$$\\frac12\\cdot0+\\frac12\\cdot30=15.$$\n复制组合的标的头寸为\n$$\\Delta=\\frac{0-30}{300-260}=-\\frac34,$$\n现金头寸为\n$$B=30-\\Delta\\cdot260=225.$$\n初始成本为 $-\\frac34\\cdot280+225=15$。以 20 卖出期权并以 15 买入复制组合，可无风险留下 5 马克。"
+    },
+    {
+      "id": "etheridge-finmath-problem-sheets-problem-003",
+      "titleEn": "Put-call parity with constant rates",
+      "titleZh": "常利率下的看跌-看涨平价",
+      "category": "option",
+      "difficulty": "Easy",
+      "tags": [
+        "Alison Etheridge",
+        "Stochastic Calculus for Finance",
+        "Oxford problem sheet",
+        "put-call parity",
+        "replication"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "option",
+        "difficulty": "Easy",
+        "logic": "Curated from the public Oxford stochastic-calculus-for-finance problem sheet and reviewed for quant interview relevance.",
+        "reviewedBy": "Codex import-etheridge-finmath-problem-sheets"
+      },
+      "source": "etheridge-finmath-problem-sheets",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "sourceType": "public-course-problem-sheet-with-generated-answer",
+      "bookSlug": "etheridge-finmath-problem-sheets",
+      "bookName": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+      ],
+      "sourceQuestion": "Problem 3",
+      "answerOfficial": false,
+      "answerPolicy": "The public Oxford problem sheet includes prompts but no official solution file in the cached source; this answer is generated and locally reviewed, not an official course solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-etheridge-finmath-problem-sheets.py",
+        "sourceFiles": [
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "official-public-author-page",
+        "note": "Official author-hosted Oxford teaching materials. Imported as a small generated-answer sample with attribution; distribution review required before publishing beyond the local app.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:34:19+00:00"
+      },
+      "createdAt": "2026-06-02T08:34:19+00:00",
+      "updatedAt": "2026-06-02T08:34:19+00:00",
+      "promptEn": "Let $C_t$ and $P_t$ be the prices at time $t$ of European call and put options on the same asset, both with maturity $T$ and strike $K$. The risk-free rate is constant $r$. Show that\n$$C_t-P_t=S_t-Ke^{-r(T-t)}.$$",
+      "promptZh": "令 $C_t$ 与 $P_t$ 分别表示同一标的、相同到期日 $T$、相同执行价 $K$ 的欧式看涨和看跌期权在 $t$ 时刻的价格。无风险利率为常数 $r$。证明\n$$C_t-P_t=S_t-Ke^{-r(T-t)}.$$",
+      "answer": "$C_t-P_t=S_t-Ke^{-r(T-t)}$.",
+      "answerEn": "$C_t-P_t=S_t-Ke^{-r(T-t)}$.",
+      "answerZh": "$C_t-P_t=S_t-Ke^{-r(T-t)}$。",
+      "explanation": "Compare two portfolios at maturity. Portfolio A is long one call and short one put. Its payoff is\n$$ (S_T-K)^+-(K-S_T)^+=S_T-K.$$\nPortfolio B is long one share and short a zero-coupon bond that pays $K$ at $T$. Its payoff is also $S_T-K$. By no-arbitrage, equal terminal payoffs have equal time-$t$ values:\n$$C_t-P_t=S_t-Ke^{-r(T-t)}.$$",
+      "explanationZh": "比较两个组合的到期收益。组合 A：买入一份看涨、卖出一份看跌，到期收益为\n$$ (S_T-K)^+-(K-S_T)^+=S_T-K.$$\n组合 B：持有一股标的，同时卖空一张到期支付 $K$ 的零息债券，到期收益同样为 $S_T-K$。由无套利，相同到期收益的组合在 $t$ 时刻价值相同：\n$$C_t-P_t=S_t-Ke^{-r(T-t)}.$$"
+    },
+    {
+      "id": "etheridge-finmath-problem-sheets-problem-004",
+      "titleEn": "Cash-or-nothing digital option in a CRR tree",
+      "titleZh": "CRR 树中的现金或无价值数字期权",
+      "category": "option",
+      "difficulty": "Medium",
+      "tags": [
+        "Alison Etheridge",
+        "Stochastic Calculus for Finance",
+        "Oxford problem sheet",
+        "digital option",
+        "CRR model",
+        "binomial distribution"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "option",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Oxford stochastic-calculus-for-finance problem sheet and reviewed for quant interview relevance.",
+        "reviewedBy": "Codex import-etheridge-finmath-problem-sheets"
+      },
+      "source": "etheridge-finmath-problem-sheets",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "sourceType": "public-course-problem-sheet-with-generated-answer",
+      "bookSlug": "etheridge-finmath-problem-sheets",
+      "bookName": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+      ],
+      "sourceQuestion": "Problem 7",
+      "answerOfficial": false,
+      "answerPolicy": "The public Oxford problem sheet includes prompts but no official solution file in the cached source; this answer is generated and locally reviewed, not an official course solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-etheridge-finmath-problem-sheets.py",
+        "sourceFiles": [
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "official-public-author-page",
+        "note": "Official author-hosted Oxford teaching materials. Imported as a small generated-answer sample with attribution; distribution review required before publishing beyond the local app.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:34:19+00:00"
+      },
+      "createdAt": "2026-06-02T08:34:19+00:00",
+      "updatedAt": "2026-06-02T08:34:19+00:00",
+      "promptEn": "In an $N$-step Cox-Ross-Rubinstein tree, each step moves the asset from $S_n$ to $S_nu$ or $S_nd$, with $d<e^{r\\Delta T}<u$. A cash-or-nothing digital option pays $X$ at maturity if $S_T>K$ and 0 otherwise. Give the time-0 price as a finite sum.",
+      "promptZh": "在 $N$ 步 Cox-Ross-Rubinstein 二叉树中，每一步标的从 $S_n$ 变为 $S_nu$ 或 $S_nd$，并且 $d<e^{r\\Delta T}<u$。现金或无价值数字期权在到期时若 $S_T>K$ 支付 $X$，否则支付 0。请把 0 时刻价格写成有限求和形式。",
+      "answer": "The price is $e^{-rN\\Delta T}X\\sum_{j:S_0u^jd^{N-j}>K}\\binom Nj q^j(1-q)^{N-j}$, where $q=(e^{r\\Delta T}-d)/(u-d)$.",
+      "answerEn": "The price is $e^{-rN\\Delta T}X\\sum_{j:S_0u^jd^{N-j}>K}\\binom Nj q^j(1-q)^{N-j}$, where $q=(e^{r\\Delta T}-d)/(u-d)$.",
+      "answerZh": "价格为 $e^{-rN\\Delta T}X\\sum_{j:S_0u^jd^{N-j}>K}\\binom Nj q^j(1-q)^{N-j}$，其中 $q=(e^{r\\Delta T}-d)/(u-d)$。",
+      "explanation": "Under the risk-neutral measure, each step goes up with\n$$q=\\frac{e^{r\\Delta T}-d}{u-d}.$$\nAfter $j$ up moves and $N-j$ down moves, the terminal price is $S_0u^jd^{N-j}$ and that path count has binomial probability $\\binom Njq^j(1-q)^{N-j}$. Discount the expected digital payoff:\n$$V_0=e^{-rN\\Delta T}X\\sum_{\\{j:S_0u^jd^{N-j}>K\\}}\\binom Njq^j(1-q)^{N-j}.$$",
+      "explanationZh": "在风险中性测度下，每一步上涨概率为\n$$q=\\frac{e^{r\\Delta T}-d}{u-d}.$$\n若共有 $j$ 次上涨、$N-j$ 次下跌，则终值为 $S_0u^jd^{N-j}$，对应二项概率为 $\\binom Njq^j(1-q)^{N-j}$。将数字期权期望收益贴现：\n$$V_0=e^{-rN\\Delta T}X\\sum_{\\{j:S_0u^jd^{N-j}>K\\}}\\binom Njq^j(1-q)^{N-j}.$$"
+    },
+    {
+      "id": "etheridge-finmath-problem-sheets-problem-005",
+      "titleEn": "Which Brownian transformations remain Brownian?",
+      "titleZh": "哪些布朗运动变换仍是布朗运动",
+      "category": "probabilityExpectation",
+      "difficulty": "Medium",
+      "tags": [
+        "Alison Etheridge",
+        "Stochastic Calculus for Finance",
+        "Oxford problem sheet",
+        "Brownian motion",
+        "scaling",
+        "independent increments"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Oxford stochastic-calculus-for-finance problem sheet and reviewed for quant interview relevance.",
+        "reviewedBy": "Codex import-etheridge-finmath-problem-sheets"
+      },
+      "source": "etheridge-finmath-problem-sheets",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "sourceType": "public-course-problem-sheet-with-generated-answer",
+      "bookSlug": "etheridge-finmath-problem-sheets",
+      "bookName": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+      ],
+      "sourceQuestion": "Problem 10",
+      "answerOfficial": false,
+      "answerPolicy": "The public Oxford problem sheet includes prompts but no official solution file in the cached source; this answer is generated and locally reviewed, not an official course solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-etheridge-finmath-problem-sheets.py",
+        "sourceFiles": [
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "official-public-author-page",
+        "note": "Official author-hosted Oxford teaching materials. Imported as a small generated-answer sample with attribution; distribution review required before publishing beyond the local app.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:34:19+00:00"
+      },
+      "createdAt": "2026-06-02T08:34:19+00:00",
+      "updatedAt": "2026-06-02T08:34:19+00:00",
+      "promptEn": "Let $B_t$ be standard Brownian motion. Decide which processes are Brownian motions:\n(a) $-B_t$;\n(b) $cB_{t/c^2}$ for a nonzero constant $c$;\n(c) $\\sqrt t\\,B_1$;\n(d) $B_{2t}-B_t$.\nJustify each answer.",
+      "promptZh": "令 $B_t$ 为标准布朗运动。判断下列过程哪些仍是布朗运动：\n(a) $-B_t$；\n(b) 对非零常数 $c$，$cB_{t/c^2}$；\n(c) $\\sqrt t\\,B_1$；\n(d) $B_{2t}-B_t$。\n请说明理由。",
+      "answer": "Processes (a) and (b) are Brownian motions; (c) and (d) are not.",
+      "answerEn": "Processes (a) and (b) are Brownian motions; (c) and (d) are not.",
+      "answerZh": "(a) 与 (b) 是布朗运动；(c) 与 (d) 不是。",
+      "explanation": "The process $-B_t$ has continuous paths, starts at 0, and has independent Gaussian increments with variance equal to elapsed time.\n\nBrownian scaling gives $cB_{t/c^2}$ as Brownian for $c\\ne0$: increments are Gaussian with variance $c^2((t-s)/c^2)=t-s$ and remain independent.\n\nFor $\\sqrt t\\,B_1$, each marginal is $N(0,t)$, but all times are driven by the same $B_1$, so increments are not independent.\n\nFor $B_{2t}-B_t$, each marginal has variance $t$, but the covariance structure is wrong. For example if $t\\ge2s$, the increments over $[s,2s]$ and $[t,2t]$ are disjoint, so\n$$Cov(B_{2s}-B_s,\\ B_{2t}-B_t)=0,$$\nwhereas Brownian covariance would be $s$.",
+      "explanationZh": "$-B_t$ 路径连续、从 0 出发，并且增量仍为独立正态、方差等于时间长度。\n\n由布朗缩放性质，$cB_{t/c^2}$ 在 $c\\ne0$ 时仍是布朗运动：其增量方差为 $c^2((t-s)/c^2)=t-s$，独立性也保留。\n\n对 $\\sqrt t\\,B_1$，每个边缘分布确实是 $N(0,t)$，但所有时刻都由同一个 $B_1$ 驱动，增量不独立。\n\n对 $B_{2t}-B_t$，每个边缘方差为 $t$，但协方差结构不对。例如当 $t\\ge2s$ 时，区间 $[s,2s]$ 与 $[t,2t]$ 不相交，所以\n$$Cov(B_{2s}-B_s,\\ B_{2t}-B_t)=0,$$\n而标准布朗运动的协方差应为 $s$。"
+    },
+    {
+      "id": "etheridge-finmath-problem-sheets-problem-006",
+      "titleEn": "Exponential Brownian martingale drift",
+      "titleZh": "指数布朗过程成为鞅的漂移条件",
+      "category": "probabilityExpectation",
+      "difficulty": "Easy",
+      "tags": [
+        "Alison Etheridge",
+        "Stochastic Calculus for Finance",
+        "Oxford problem sheet",
+        "Brownian motion",
+        "martingale",
+        "exponential martingale"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Easy",
+        "logic": "Curated from the public Oxford stochastic-calculus-for-finance problem sheet and reviewed for quant interview relevance.",
+        "reviewedBy": "Codex import-etheridge-finmath-problem-sheets"
+      },
+      "source": "etheridge-finmath-problem-sheets",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "sourceType": "public-course-problem-sheet-with-generated-answer",
+      "bookSlug": "etheridge-finmath-problem-sheets",
+      "bookName": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+      ],
+      "sourceQuestion": "Problem 16",
+      "answerOfficial": false,
+      "answerPolicy": "The public Oxford problem sheet includes prompts but no official solution file in the cached source; this answer is generated and locally reviewed, not an official course solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-etheridge-finmath-problem-sheets.py",
+        "sourceFiles": [
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "official-public-author-page",
+        "note": "Official author-hosted Oxford teaching materials. Imported as a small generated-answer sample with attribution; distribution review required before publishing beyond the local app.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:34:19+00:00"
+      },
+      "createdAt": "2026-06-02T08:34:19+00:00",
+      "updatedAt": "2026-06-02T08:34:19+00:00",
+      "promptEn": "Let $B_t$ be Brownian motion and define $S_t=\\exp(\\sigma B_t+\\mu t)$. For which values of $\\mu$ is $S_t$ a martingale with respect to the Brownian filtration?",
+      "promptZh": "令 $B_t$ 为布朗运动，并定义 $S_t=\\exp(\\sigma B_t+\\mu t)$。对哪些 $\\mu$，$S_t$ 关于布朗运动自然滤过是鞅？",
+      "answer": "$S_t$ is a martingale iff $\\mu=-\\sigma^2/2$.",
+      "answerEn": "$S_t$ is a martingale iff $\\mu=-\\sigma^2/2$.",
+      "answerZh": "$S_t$ 是鞅当且仅当 $\\mu=-\\sigma^2/2$。",
+      "explanation": "Since $B_t-B_s$ is independent of $\\mathcal F_s$ and normal with variance $t-s$,\n$$E[S_t\\mid\\mathcal F_s]=S_s\\exp\\left((\\mu+\\sigma^2/2)(t-s)\\right).$$\nThis equals $S_s$ for all $s<t$ exactly when\n$$\\mu+\\frac12\\sigma^2=0.$$",
+      "explanationZh": "由于 $B_t-B_s$ 独立于 $\\mathcal F_s$，且服从方差为 $t-s$ 的正态分布，\n$$E[S_t\\mid\\mathcal F_s]=S_s\\exp\\left((\\mu+\\sigma^2/2)(t-s)\\right).$$\n要使它对所有 $s<t$ 都等于 $S_s$，必须且只需\n$$\\mu+\\frac12\\sigma^2=0.$$"
+    },
+    {
+      "id": "etheridge-finmath-problem-sheets-problem-007",
+      "titleEn": "Ito formula for three Brownian functionals",
+      "titleZh": "三个布朗函数的 Itô 公式",
+      "category": "probabilityExpectation",
+      "difficulty": "Medium",
+      "tags": [
+        "Alison Etheridge",
+        "Stochastic Calculus for Finance",
+        "Oxford problem sheet",
+        "Ito formula",
+        "stochastic differential equation"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Oxford stochastic-calculus-for-finance problem sheet and reviewed for quant interview relevance.",
+        "reviewedBy": "Codex import-etheridge-finmath-problem-sheets"
+      },
+      "source": "etheridge-finmath-problem-sheets",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "sourceType": "public-course-problem-sheet-with-generated-answer",
+      "bookSlug": "etheridge-finmath-problem-sheets",
+      "bookName": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+      ],
+      "sourceQuestion": "Problem 22",
+      "answerOfficial": false,
+      "answerPolicy": "The public Oxford problem sheet includes prompts but no official solution file in the cached source; this answer is generated and locally reviewed, not an official course solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-etheridge-finmath-problem-sheets.py",
+        "sourceFiles": [
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "official-public-author-page",
+        "note": "Official author-hosted Oxford teaching materials. Imported as a small generated-answer sample with attribution; distribution review required before publishing beyond the local app.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:34:19+00:00"
+      },
+      "createdAt": "2026-06-02T08:34:19+00:00",
+      "updatedAt": "2026-06-02T08:34:19+00:00",
+      "promptEn": "Use Itô's formula to write SDEs for:\n(a) $Y_t=B_t^3$;\n(b) $Y_t=\\exp(\\sigma B_t-\\frac12\\sigma^2t)$;\n(c) $Y_t=tB_t$.",
+      "promptZh": "用 Itô 公式写出下列过程的 SDE：\n(a) $Y_t=B_t^3$；\n(b) $Y_t=\\exp(\\sigma B_t-\\frac12\\sigma^2t)$；\n(c) $Y_t=tB_t$。",
+      "answer": "(a) $dY_t=3B_t^2\\,dB_t+3B_t\\,dt$; (b) $dY_t=\\sigma Y_t\\,dB_t$; (c) $dY_t=B_t\\,dt+t\\,dB_t$.",
+      "answerEn": "(a) $dY_t=3B_t^2\\,dB_t+3B_t\\,dt$; (b) $dY_t=\\sigma Y_t\\,dB_t$; (c) $dY_t=B_t\\,dt+t\\,dB_t$.",
+      "answerZh": "(a) $dY_t=3B_t^2\\,dB_t+3B_t\\,dt$；(b) $dY_t=\\sigma Y_t\\,dB_t$；(c) $dY_t=B_t\\,dt+t\\,dB_t$。",
+      "explanation": "For $f(x)=x^3$, Itô's formula gives\n$$dB_t^3=3B_t^2\\,dB_t+\\frac12(6B_t)\\,dt=3B_t^2\\,dB_t+3B_t\\,dt.$$\nFor $Y_t=e^{\\sigma B_t-\\sigma^2t/2}$, the time drift and second derivative terms cancel:\n$$dY_t=Y_t\\left(\\sigma\\,dB_t-\\frac12\\sigma^2dt\\right)+\\frac12\\sigma^2Y_tdt=\\sigma Y_t\\,dB_t.$$\nFor $Y_t=tB_t$, product/Itô formula gives\n$$d(tB_t)=B_t\\,dt+t\\,dB_t.$$",
+      "explanationZh": "对 $f(x)=x^3$，Itô 公式给出\n$$dB_t^3=3B_t^2\\,dB_t+\\frac12(6B_t)\\,dt=3B_t^2\\,dB_t+3B_t\\,dt.$$\n对 $Y_t=e^{\\sigma B_t-\\sigma^2t/2}$，时间漂移项与二阶项抵消：\n$$dY_t=Y_t\\left(\\sigma\\,dB_t-\\frac12\\sigma^2dt\\right)+\\frac12\\sigma^2Y_tdt=\\sigma Y_t\\,dB_t.$$\n对 $Y_t=tB_t$，乘积公式给出\n$$d(tB_t)=B_t\\,dt+t\\,dB_t.$$"
+    },
+    {
+      "id": "etheridge-finmath-problem-sheets-problem-008",
+      "titleEn": "Mean and variance of the Ornstein-Uhlenbeck process",
+      "titleZh": "Ornstein-Uhlenbeck 过程的均值与方差",
+      "category": "probabilityExpectation",
+      "difficulty": "Medium",
+      "tags": [
+        "Alison Etheridge",
+        "Stochastic Calculus for Finance",
+        "Oxford problem sheet",
+        "Ornstein-Uhlenbeck",
+        "SDE",
+        "Ito integral"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Oxford stochastic-calculus-for-finance problem sheet and reviewed for quant interview relevance.",
+        "reviewedBy": "Codex import-etheridge-finmath-problem-sheets"
+      },
+      "source": "etheridge-finmath-problem-sheets",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "sourceType": "public-course-problem-sheet-with-generated-answer",
+      "bookSlug": "etheridge-finmath-problem-sheets",
+      "bookName": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+      ],
+      "sourceQuestion": "Problem 24",
+      "answerOfficial": false,
+      "answerPolicy": "The public Oxford problem sheet includes prompts but no official solution file in the cached source; this answer is generated and locally reviewed, not an official course solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-etheridge-finmath-problem-sheets.py",
+        "sourceFiles": [
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "official-public-author-page",
+        "note": "Official author-hosted Oxford teaching materials. Imported as a small generated-answer sample with attribution; distribution review required before publishing beyond the local app.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:34:19+00:00"
+      },
+      "createdAt": "2026-06-02T08:34:19+00:00",
+      "updatedAt": "2026-06-02T08:34:19+00:00",
+      "promptEn": "Let $X_t$ solve the Ornstein-Uhlenbeck SDE\n$$dX_t=-\\alpha X_t\\,dt+dB_t,\\qquad X_0=x.$$\nVerify the explicit solution and compute $E[X_t]$ and $Var(X_t)$.",
+      "promptZh": "令 $X_t$ 满足 Ornstein-Uhlenbeck SDE\n$$dX_t=-\\alpha X_t\\,dt+dB_t,\\qquad X_0=x.$$\n验证显式解，并计算 $E[X_t]$ 与 $Var(X_t)$。",
+      "answer": "$X_t=e^{-\\alpha t}x+\\int_0^t e^{-\\alpha(t-s)}\\,dB_s$, so $E[X_t]=e^{-\\alpha t}x$ and $Var(X_t)=\\frac{1-e^{-2\\alpha t}}{2\\alpha}$ for $\\alpha\\ne0$ (with limit $t$ when $\\alpha=0$).",
+      "answerEn": "$X_t=e^{-\\alpha t}x+\\int_0^t e^{-\\alpha(t-s)}\\,dB_s$, so $E[X_t]=e^{-\\alpha t}x$ and $Var(X_t)=\\frac{1-e^{-2\\alpha t}}{2\\alpha}$ for $\\alpha\\ne0$ (with limit $t$ when $\\alpha=0$).",
+      "answerZh": "$X_t=e^{-\\alpha t}x+\\int_0^t e^{-\\alpha(t-s)}\\,dB_s$，所以 $E[X_t]=e^{-\\alpha t}x$，当 $\\alpha\\ne0$ 时 $Var(X_t)=\\frac{1-e^{-2\\alpha t}}{2\\alpha}$（$\\alpha=0$ 的极限为 $t$）。",
+      "explanation": "Multiply the SDE by the integrating factor $e^{\\alpha t}$:\n$$d(e^{\\alpha t}X_t)=e^{\\alpha t}\\,dB_t.$$\nIntegrating from 0 to $t$ gives\n$$X_t=e^{-\\alpha t}x+\\int_0^t e^{-\\alpha(t-s)}\\,dB_s.$$\nThe Itô integral has mean 0, so $E[X_t]=e^{-\\alpha t}x$. Its variance is the Itô isometry:\n$$Var(X_t)=\\int_0^t e^{-2\\alpha(t-s)}\\,ds=\\frac{1-e^{-2\\alpha t}}{2\\alpha},$$\nwith the continuous limit $t$ at $\\alpha=0$.",
+      "explanationZh": "将 SDE 乘以积分因子 $e^{\\alpha t}$：\n$$d(e^{\\alpha t}X_t)=e^{\\alpha t}\\,dB_t.$$\n从 0 积分到 $t$ 得到\n$$X_t=e^{-\\alpha t}x+\\int_0^t e^{-\\alpha(t-s)}\\,dB_s.$$\nItô 积分均值为 0，所以 $E[X_t]=e^{-\\alpha t}x$。方差由 Itô 等距给出：\n$$Var(X_t)=\\int_0^t e^{-2\\alpha(t-s)}\\,ds=\\frac{1-e^{-2\\alpha t}}{2\\alpha},$$\n在 $\\alpha=0$ 时连续极限为 $t$。"
+    },
+    {
+      "id": "etheridge-finmath-problem-sheets-problem-009",
+      "titleEn": "Changing the drift of Brownian motion",
+      "titleZh": "改变布朗运动漂移的测度变换",
+      "category": "probabilityExpectation",
+      "difficulty": "Hard",
+      "tags": [
+        "Alison Etheridge",
+        "Stochastic Calculus for Finance",
+        "Oxford problem sheet",
+        "Girsanov theorem",
+        "change of measure",
+        "Brownian drift"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "probabilityExpectation",
+        "difficulty": "Hard",
+        "logic": "Curated from the public Oxford stochastic-calculus-for-finance problem sheet and reviewed for quant interview relevance.",
+        "reviewedBy": "Codex import-etheridge-finmath-problem-sheets"
+      },
+      "source": "etheridge-finmath-problem-sheets",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "sourceType": "public-course-problem-sheet-with-generated-answer",
+      "bookSlug": "etheridge-finmath-problem-sheets",
+      "bookName": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+      ],
+      "sourceQuestion": "Problem 25",
+      "answerOfficial": false,
+      "answerPolicy": "The public Oxford problem sheet includes prompts but no official solution file in the cached source; this answer is generated and locally reviewed, not an official course solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-etheridge-finmath-problem-sheets.py",
+        "sourceFiles": [
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "official-public-author-page",
+        "note": "Official author-hosted Oxford teaching materials. Imported as a small generated-answer sample with attribution; distribution review required before publishing beyond the local app.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:34:19+00:00"
+      },
+      "createdAt": "2026-06-02T08:34:19+00:00",
+      "updatedAt": "2026-06-02T08:34:19+00:00",
+      "promptEn": "Under probability measure $P$, suppose $X_t=\\mu t+B_t$ where $B_t$ is standard Brownian motion. Find an equivalent measure $P^*$ under which $X_t$ is Brownian motion with drift $\\nu$ over a finite horizon $[0,T]$.",
+      "promptZh": "在概率测度 $P$ 下，设 $X_t=\\mu t+B_t$，其中 $B_t$ 为标准布朗运动。在有限时间区间 $[0,T]$ 上，找一个等价测度 $P^*$，使得 $X_t$ 在 $P^*$ 下是漂移为 $\\nu$ 的布朗运动。",
+      "answer": "Let $\\lambda=\\mu-\\nu$ and define $\\frac{dP^*}{dP}\\big|_{\\mathcal F_T}=\\exp(-\\lambda B_T-\\frac12\\lambda^2T)$. Then $B_t^*=B_t+\\lambda t$ is Brownian under $P^*$ and $X_t=\\nu t+B_t^*$.",
+      "answerEn": "Let $\\lambda=\\mu-\\nu$ and define $\\frac{dP^*}{dP}\\big|_{\\mathcal F_T}=\\exp(-\\lambda B_T-\\frac12\\lambda^2T)$. Then $B_t^*=B_t+\\lambda t$ is Brownian under $P^*$ and $X_t=\\nu t+B_t^*$.",
+      "answerZh": "令 $\\lambda=\\mu-\\nu$，并定义 $\\frac{dP^*}{dP}\\big|_{\\mathcal F_T}=\\exp(-\\lambda B_T-\\frac12\\lambda^2T)$。则 $B_t^*=B_t+\\lambda t$ 在 $P^*$ 下是布朗运动，且 $X_t=\\nu t+B_t^*$。",
+      "explanation": "Set $\\lambda=\\mu-\\nu$. The exponential martingale\n$$Z_T=\\exp\\left(-\\lambda B_T-\\frac12\\lambda^2T\\right)$$\nhas expectation 1, so it defines an equivalent measure on $\\mathcal F_T$. By Girsanov's theorem,\n$$B_t^*=B_t+\\lambda t$$\nis Brownian motion under $P^*$. Therefore\n$$X_t=\\mu t+B_t=\\mu t+B_t^*-\\lambda t=(\\mu-\\lambda)t+B_t^*=\\nu t+B_t^*,$$\nso the drift is changed from $\\mu$ to $\\nu$.",
+      "explanationZh": "令 $\\lambda=\\mu-\\nu$。指数鞅\n$$Z_T=\\exp\\left(-\\lambda B_T-\\frac12\\lambda^2T\\right)$$\n期望为 1，因此可在 $\\mathcal F_T$ 上定义等价测度。由 Girsanov 定理，\n$$B_t^*=B_t+\\lambda t$$\n在 $P^*$ 下是布朗运动。于是\n$$X_t=\\mu t+B_t=\\mu t+B_t^*-\\lambda t=(\\mu-\\lambda)t+B_t^*=\\nu t+B_t^*,$$\n漂移便从 $\\mu$ 变为 $\\nu$。"
+    },
+    {
+      "id": "etheridge-finmath-problem-sheets-problem-010",
+      "titleEn": "Discounted Black-Scholes PDE from martingales",
+      "titleZh": "由贴现鞅推出 Black-Scholes PDE",
+      "category": "option",
+      "difficulty": "Hard",
+      "tags": [
+        "Alison Etheridge",
+        "Stochastic Calculus for Finance",
+        "Oxford problem sheet",
+        "Black-Scholes",
+        "PDE",
+        "risk-neutral measure"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "option",
+        "difficulty": "Hard",
+        "logic": "Curated from the public Oxford stochastic-calculus-for-finance problem sheet and reviewed for quant interview relevance.",
+        "reviewedBy": "Codex import-etheridge-finmath-problem-sheets"
+      },
+      "source": "etheridge-finmath-problem-sheets",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "sourceType": "public-course-problem-sheet-with-generated-answer",
+      "bookSlug": "etheridge-finmath-problem-sheets",
+      "bookName": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+        "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+        "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+      ],
+      "sourceQuestion": "Problem 29",
+      "answerOfficial": false,
+      "answerPolicy": "The public Oxford problem sheet includes prompts but no official solution file in the cached source; this answer is generated and locally reviewed, not an official course solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-etheridge-finmath-problem-sheets.py",
+        "sourceFiles": [
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+          "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+          "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "official-public-author-page",
+        "note": "Official author-hosted Oxford teaching materials. Imported as a small generated-answer sample with attribution; distribution review required before publishing beyond the local app.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:34:19+00:00"
+      },
+      "createdAt": "2026-06-02T08:34:19+00:00",
+      "updatedAt": "2026-06-02T08:34:19+00:00",
+      "promptEn": "Under the risk-neutral measure, the discounted stock price $\\tilde S_t$ satisfies\n$$d\\tilde S_t=\\sigma\\tilde S_t\\,dW_t.$$\nIf the discounted option value is $\\tilde V_t=\\tilde F(t,\\tilde S_t)$ and is a martingale, find the PDE for $\\tilde F$. Then translate it to the usual Black-Scholes PDE for $F(t,S)$.",
+      "promptZh": "在风险中性测度下，贴现股票价格 $\\tilde S_t$ 满足\n$$d\\tilde S_t=\\sigma\\tilde S_t\\,dW_t.$$\n若贴现期权价值为 $\\tilde V_t=\\tilde F(t,\\tilde S_t)$ 且它是鞅，求 $\\tilde F$ 满足的 PDE。再将其转化为通常的 Black-Scholes PDE。",
+      "answer": "$\\tilde F_t+\\frac12\\sigma^2x^2\\tilde F_{xx}=0$. In undiscounted variables, $F_t+rSF_S+\\frac12\\sigma^2S^2F_{SS}-rF=0$.",
+      "answerEn": "$\\tilde F_t+\\frac12\\sigma^2x^2\\tilde F_{xx}=0$. In undiscounted variables, $F_t+rSF_S+\\frac12\\sigma^2S^2F_{SS}-rF=0$.",
+      "answerZh": "$\\tilde F_t+\\frac12\\sigma^2x^2\\tilde F_{xx}=0$。在未贴现变量下，$F_t+rSF_S+\\frac12\\sigma^2S^2F_{SS}-rF=0$。",
+      "explanation": "Apply Itô's formula to $\\tilde F(t,\\tilde S_t)$:\n$$d\\tilde F=\\left(\\tilde F_t+\\frac12\\sigma^2x^2\\tilde F_{xx}\\right)dt+\\sigma x\\tilde F_x\\,dW_t,\\qquad x=\\tilde S_t.$$\nSince $\\tilde V_t$ is a martingale, its drift must vanish:\n$$\\tilde F_t+\\frac12\\sigma^2x^2\\tilde F_{xx}=0.$$\nReturning to undiscounted variables gives the standard Black-Scholes equation\n$$F_t+rSF_S+\\frac12\\sigma^2S^2F_{SS}-rF=0.$$",
+      "explanationZh": "对 $\\tilde F(t,\\tilde S_t)$ 使用 Itô 公式：\n$$d\\tilde F=\\left(\\tilde F_t+\\frac12\\sigma^2x^2\\tilde F_{xx}\\right)dt+\\sigma x\\tilde F_x\\,dW_t,\\qquad x=\\tilde S_t.$$\n由于 $\\tilde V_t$ 是鞅，其漂移必须为 0：\n$$\\tilde F_t+\\frac12\\sigma^2x^2\\tilde F_{xx}=0.$$\n回到未贴现变量，得到标准 Black-Scholes 方程\n$$F_t+rSF_S+\\frac12\\sigma^2S^2F_{SS}-rF=0.$$"
+    }
+  ]
+}

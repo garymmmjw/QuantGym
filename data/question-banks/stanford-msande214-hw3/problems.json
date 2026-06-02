@@ -1,0 +1,302 @@
+{
+  "problems": [
+    {
+      "id": "stanford-msande214-hw3-problem-001",
+      "titleEn": "HW3 Problem 1 - Airline staffing linear program",
+      "titleZh": "HW3 问题 1 - 航空客服排班线性规划",
+      "category": "optimization",
+      "difficulty": "Medium",
+      "tags": [
+        "Stanford MS&E 214",
+        "Homework 3",
+        "Optimization",
+        "Logistics",
+        "Finance",
+        "linear programming",
+        "staffing",
+        "integer LP"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Medium",
+        "logic": "Reviewed from the Stanford MS&E 214 HW3 topic and verified solution complexity.",
+        "reviewedBy": "Codex import-stanford-msande214-hw3"
+      },
+      "source": "stanford-msande214-hw3",
+      "sourceUrl": "https://web.stanford.edu/~ashishg/msande214/spr_2024/handouts/index.html",
+      "sourceType": "course-homework",
+      "bookSlug": "stanford-msande214-hw3",
+      "bookName": "Stanford MS&E 214 HW3 Logistics/Finance",
+      "visibility": "public",
+      "sourceFiles": [
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+      ],
+      "sourceQuestion": "HW3 Problem 1",
+      "answerOfficial": false,
+      "answerPolicy": "The Stanford HW3 bundle includes official prompts and data files but no official solution file; this answer is generated and solver-verified, not an official course solution.",
+      "answerSource": {
+        "type": "generated-solver-verified",
+        "official": false,
+        "verificationScript": "scripts/import-stanford-msande214-hw3.py",
+        "sourceFiles": [
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+        ]
+      },
+      "createdAt": "2026-06-02T08:13:22+00:00",
+      "updatedAt": "2026-06-02T08:13:22+00:00",
+      "promptEn": "MSE Airlines needs to hire customer service agents. The minimum required staff by time period is:\n\n| Time period | Required staff |\n|---|---:|\n| 6am-8am | 68 |\n| 8am-10am | 90 |\n| 10am-noon | 56 |\n| Noon-2pm | 107 |\n| 2pm-4pm | 80 |\n| 4pm-6pm | 93 |\n| 6pm-8pm | 62 |\n| 8pm-10pm | 56 |\n| 10pm-midnight | 40 |\n| Midnight-6am | 15 |\n\nEach agent works one available 8-hour shift. Daily wages are:\n\n| Shift | Wage |\n|---|---:|\n| 6am-2pm | 180 dollars |\n| 8am-4pm | 170 dollars |\n| 10am-6pm | 160 dollars |\n| Noon-8pm | 190 dollars |\n| 2pm-10pm | 200 dollars |\n| 4pm-midnight | 210 dollars |\n| 10pm-6am | 225 dollars |\n| Midnight-8am | 210 dollars |\n\n(a) Write a linear program that determines the least expensive staffing plan. (b) Solve the linear program.",
+      "promptZh": "MSE Airlines 需要招聘客服人员。各时段最低在岗人数如下：\n\n| 时段 | 最低人数 |\n|---|---:|\n| 6am-8am | 68 |\n| 8am-10am | 90 |\n| 10am-noon | 56 |\n| Noon-2pm | 107 |\n| 2pm-4pm | 80 |\n| 4pm-6pm | 93 |\n| 6pm-8pm | 62 |\n| 8pm-10pm | 56 |\n| 10pm-midnight | 40 |\n| Midnight-6am | 15 |\n\n每名员工只能选择一个可用的 8 小时班次。每日工资如下：\n\n| 班次 | 工资 |\n|---|---:|\n| 6am-2pm | 180 美元 |\n| 8am-4pm | 170 美元 |\n| 10am-6pm | 160 美元 |\n| Noon-8pm | 190 美元 |\n| 2pm-10pm | 200 美元 |\n| 4pm-midnight | 210 美元 |\n| 10pm-6am | 225 美元 |\n| Midnight-8am | 210 美元 |\n\n(a) 写出决定最低成本排班方案的线性规划。(b) 求解该线性规划。",
+      "answer": "The solver-verified optimum costs 36,680 dollars per day with shift counts `(53, 37, 31, 6, 16, 40, 0, 15)` in the shift order listed in the prompt.",
+      "answerEn": "The solver-verified optimum costs 36,680 dollars per day with shift counts `(53, 37, 31, 6, 16, 40, 0, 15)` in the shift order listed in the prompt.",
+      "answerZh": "经求解器验证，最优每日成本为 36,680 美元。按题干班次顺序，排班人数为 `(53, 37, 31, 6, 16, 40, 0, 15)`。",
+      "explanation": "Let $x_1,\\ldots,x_8$ be the number of agents assigned to the eight shifts in the prompt order. Minimize\n$$180x_1+170x_2+160x_3+190x_4+200x_5+210x_6+225x_7+210x_8$$\nsubject to coverage constraints:\n$$x_1+x_8\\ge68,$$\n$$x_1+x_2\\ge90,$$\n$$x_1+x_2+x_3\\ge56,$$\n$$x_1+x_2+x_3+x_4\\ge107,$$\n$$x_2+x_3+x_4+x_5\\ge80,$$\n$$x_3+x_4+x_5+x_6\\ge93,$$\n$$x_4+x_5+x_6\\ge62,$$\n$$x_5+x_6\\ge56,$$\n$$x_6+x_7\\ge40,$$\n$$x_7+x_8\\ge15,$$\nwith $x_i\\ge0$ and, for actual staffing, integer $x_i$.\n\nSolving the continuous LP and the integer LP gives the same optimal integer solution:\n$$x=(53,37,31,6,16,40,0,15).$$\nThe resulting coverage is\n$$(68,90,121,127,90,93,62,56,40,15),$$\nso every requirement is met. The total wage cost is\n$$180(53)+170(37)+160(31)+190(6)+200(16)+210(40)+225(0)+210(15)=36680.$$",
+      "explanationZh": "令 $x_1,\\ldots,x_8$ 表示按题干顺序分配到 8 个班次的人数。目标是最小化\n$$180x_1+170x_2+160x_3+190x_4+200x_5+210x_6+225x_7+210x_8$$\n并满足覆盖约束：\n$$x_1+x_8\\ge68,$$\n$$x_1+x_2\\ge90,$$\n$$x_1+x_2+x_3\\ge56,$$\n$$x_1+x_2+x_3+x_4\\ge107,$$\n$$x_2+x_3+x_4+x_5\\ge80,$$\n$$x_3+x_4+x_5+x_6\\ge93,$$\n$$x_4+x_5+x_6\\ge62,$$\n$$x_5+x_6\\ge56,$$\n$$x_6+x_7\\ge40,$$\n$$x_7+x_8\\ge15,$$\n且 $x_i\\ge0$。若按实际员工人数排班，还要求 $x_i$ 为整数。\n\n连续 LP 与整数 LP 的最优解相同：\n$$x=(53,37,31,6,16,40,0,15).$$\n对应覆盖人数为\n$$(68,90,121,127,90,93,62,56,40,15),$$\n所有最低需求均满足。总工资成本为\n$$180(53)+170(37)+160(31)+190(6)+200(16)+210(40)+225(0)+210(15)=36680.$$"
+    },
+    {
+      "id": "stanford-msande214-hw3-problem-002",
+      "titleEn": "HW3 Problem 2 - Two-stage aid logistics min-cost flow",
+      "titleZh": "HW3 问题 2 - 两阶段援助物流最小费用流",
+      "category": "optimization",
+      "difficulty": "Hard",
+      "tags": [
+        "Stanford MS&E 214",
+        "Homework 3",
+        "Optimization",
+        "Logistics",
+        "Finance",
+        "min-cost flow",
+        "linear programming",
+        "duality",
+        "shadow prices"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Hard",
+        "logic": "Reviewed from the Stanford MS&E 214 HW3 topic and verified solution complexity.",
+        "reviewedBy": "Codex import-stanford-msande214-hw3"
+      },
+      "source": "stanford-msande214-hw3",
+      "sourceUrl": "https://web.stanford.edu/~ashishg/msande214/spr_2024/handouts/index.html",
+      "sourceType": "course-homework",
+      "bookSlug": "stanford-msande214-hw3",
+      "bookName": "Stanford MS&E 214 HW3 Logistics/Finance",
+      "visibility": "public",
+      "sourceFiles": [
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+      ],
+      "sourceQuestion": "HW3 Problem 2",
+      "answerOfficial": false,
+      "answerPolicy": "The Stanford HW3 bundle includes official prompts and data files but no official solution file; this answer is generated and solver-verified, not an official course solution.",
+      "answerSource": {
+        "type": "generated-solver-verified",
+        "official": false,
+        "verificationScript": "scripts/import-stanford-msande214-hw3.py",
+        "sourceFiles": [
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+        ]
+      },
+      "createdAt": "2026-06-02T08:13:22+00:00",
+      "updatedAt": "2026-06-02T08:13:22+00:00",
+      "promptEn": "An aid campaign ships one type of medicament from origin cities to transfer cities, then from transfer cities to destination cities. Origin supplies need not be fully used. Transfer-city inflow is capacity constrained and all transfer inflow must leave. Destination demands must be met.\n\nOrigins are Delhi, Shanghai, and Mumbai, each with availability 1,200. Transfer capacities are Jakarta 800, Surabaya 1,500, and Bandung 800. Destination demands are Palu 1,500 and Donggala 1,500. Costs are in thousands of dollars per thousand medicaments.\n\nOrigin-to-transfer costs:\n\n| Origin | Jakarta | Surabaya | Bandung |\n|---|---:|---:|---:|\n| Delhi | 10 | 12 | 25 |\n| Shanghai | 7 | 8 | 15 |\n| Mumbai | 5 | 8 | 10 |\n\nTransfer-to-destination costs:\n\n| Transfer | Palu | Donggala |\n|---|---:|---:|\n| Jakarta | 20 | 15 |\n| Surabaya | 15 | 20 |\n| Bandung | 10 | 16 |\n\n(a) Formulate a min-cost flow or LP. (b) Solve it. (c) Use dual variables to decide where to invest in one extra unit of origin availability or transfer capacity, and which destination is most expensive to serve with one extra unit.",
+      "promptZh": "某援助项目需要把一种药品先从起点城市运到中转城市，再从中转城市运到目的城市。起点供给不必全部用完；中转城市的流入受容量限制，且流入中转城市的货物必须全部流出；目的城市需求必须满足。\n\n起点城市为 Delhi、Shanghai、Mumbai，各自可用量均为 1,200。中转城市容量为 Jakarta 800、Surabaya 1,500、Bandung 800。目的城市需求为 Palu 1,500、Donggala 1,500。成本单位为“每千件药品的千美元”。\n\n起点到中转成本：\n\n| 起点 | Jakarta | Surabaya | Bandung |\n|---|---:|---:|---:|\n| Delhi | 10 | 12 | 25 |\n| Shanghai | 7 | 8 | 15 |\n| Mumbai | 5 | 8 | 10 |\n\n中转到目的地成本：\n\n| 中转 | Palu | Donggala |\n|---|---:|---:|\n| Jakarta | 20 | 15 |\n| Surabaya | 15 | 20 |\n| Bandung | 10 | 16 |\n\n(a) 写出最小费用流或 LP。(b) 求解。(c) 用对偶变量判断：若以相同成本增加某个起点供给或某个中转容量 1 单位，应投哪里？若必须给某个目的城市额外提供 1 单位，哪个最贵？",
+      "answer": "The minimum cost is 70,500. The best one-unit expansion is Jakarta transfer capacity, saving 7 cost units. An extra unit for Donggala is more expensive than for Palu.",
+      "answerEn": "The minimum cost is 70,500. The best one-unit expansion is Jakarta transfer capacity, saving 7 cost units. An extra unit for Donggala is more expensive than for Palu.",
+      "answerZh": "最小成本为 70,500。若只能扩张 1 单位，最优选择是扩张 Jakarta 中转容量，可节省 7 个成本单位。额外服务 Donggala 比额外服务 Palu 更贵。",
+      "explanation": "Let $x_{ij}$ be flow from origin $i$ to transfer city $j$, and $z_{jk}$ be flow from transfer city $j$ to destination $k$. Minimize\n$$\\sum_{i,j}c_{ij}x_{ij}+\\sum_{j,k}d_{jk}z_{jk}$$\nsubject to\n$$\\sum_j x_{ij}\\le S_i,\\qquad \\sum_i x_{ij}\\le T_j,$$\n$$\\sum_i x_{ij}=\\sum_k z_{jk},\\qquad \\sum_j z_{jk}=D_k,$$\nand nonnegative flows.\n\nA solver-verified optimum is:\n\nOrigin-to-transfer flow:\n\n| Origin | Jakarta | Surabaya | Bandung |\n|---|---:|---:|---:|\n| Delhi | 400 | 200 | 0 |\n| Shanghai | 0 | 1200 | 0 |\n| Mumbai | 400 | 0 | 800 |\n\nTransfer-to-destination flow:\n\n| Transfer | Palu | Donggala |\n|---|---:|---:|\n| Jakarta | 0 | 800 |\n| Surabaya | 700 | 700 |\n| Bandung | 800 | 0 |\n\nThe total cost is\n$$70500.$$\n\nFor the supply and transfer-capacity inequalities, the LP marginal values for relaxing the right-hand side are:\n\n| Constraint | Marginal objective change per extra unit |\n|---|---:|\n| Delhi supply | 0 |\n| Shanghai supply | -4 |\n| Mumbai supply | -5 |\n| Jakarta transfer capacity | -7 |\n| Surabaya transfer capacity | 0 |\n| Bandung transfer capacity | -2 |\n\nThe most valuable one-unit expansion is therefore Jakarta capacity, which lowers cost by 7. The demand equality marginals are Palu 27 and Donggala 32, so serving one extra unit of Donggala is more expensive.",
+      "explanationZh": "令 $x_{ij}$ 表示从起点城市 $i$ 到中转城市 $j$ 的流量，$z_{jk}$ 表示从中转城市 $j$ 到目的城市 $k$ 的流量。目标是最小化\n$$\\sum_{i,j}c_{ij}x_{ij}+\\sum_{j,k}d_{jk}z_{jk}$$\n约束为\n$$\\sum_j x_{ij}\\le S_i,\\qquad \\sum_i x_{ij}\\le T_j,$$\n$$\\sum_i x_{ij}=\\sum_k z_{jk},\\qquad \\sum_j z_{jk}=D_k,$$\n并且所有流量非负。\n\n经求解器验证，一个最优解为：\n\n起点到中转流量：\n\n| 起点 | Jakarta | Surabaya | Bandung |\n|---|---:|---:|---:|\n| Delhi | 400 | 200 | 0 |\n| Shanghai | 0 | 1200 | 0 |\n| Mumbai | 400 | 0 | 800 |\n\n中转到目的地流量：\n\n| 中转 | Palu | Donggala |\n|---|---:|---:|\n| Jakarta | 0 | 800 |\n| Surabaya | 700 | 700 |\n| Bandung | 800 | 0 |\n\n总成本为\n$$70500.$$\n\n对供给和中转容量不等式，放松右端 1 单位对应的目标函数边际变化为：\n\n| 约束 | 每增加 1 单位的目标变化 |\n|---|---:|\n| Delhi 供给 | 0 |\n| Shanghai 供给 | -4 |\n| Mumbai 供给 | -5 |\n| Jakarta 中转容量 | -7 |\n| Surabaya 中转容量 | 0 |\n| Bandung 中转容量 | -2 |\n\n因此最值得扩张的是 Jakarta 中转容量，可使成本降低 7。需求等式的边际值为 Palu 27、Donggala 32，因此额外服务 Donggala 更贵。"
+    },
+    {
+      "id": "stanford-msande214-hw3-problem-003",
+      "titleEn": "HW3 Problem 3 - Currency hedging and arbitrage LP",
+      "titleZh": "HW3 问题 3 - 汇率对冲与套利线性规划",
+      "category": "market",
+      "difficulty": "Hard",
+      "tags": [
+        "Stanford MS&E 214",
+        "Homework 3",
+        "Optimization",
+        "Logistics",
+        "Finance",
+        "hedging",
+        "arbitrage",
+        "linear programming",
+        "options",
+        "currency"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "market",
+        "difficulty": "Hard",
+        "logic": "Reviewed from the Stanford MS&E 214 HW3 topic and verified solution complexity.",
+        "reviewedBy": "Codex import-stanford-msande214-hw3"
+      },
+      "source": "stanford-msande214-hw3",
+      "sourceUrl": "https://web.stanford.edu/~ashishg/msande214/spr_2024/handouts/index.html",
+      "sourceType": "course-homework",
+      "bookSlug": "stanford-msande214-hw3",
+      "bookName": "Stanford MS&E 214 HW3 Logistics/Finance",
+      "visibility": "public",
+      "sourceFiles": [
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+      ],
+      "sourceQuestion": "HW3 Problem 3",
+      "answerOfficial": false,
+      "answerPolicy": "The Stanford HW3 bundle includes official prompts and data files but no official solution file; this answer is generated and solver-verified, not an official course solution.",
+      "answerSource": {
+        "type": "generated-solver-verified",
+        "official": false,
+        "verificationScript": "scripts/import-stanford-msande214-hw3.py",
+        "sourceFiles": [
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+        ]
+      },
+      "createdAt": "2026-06-02T08:13:22+00:00",
+      "updatedAt": "2026-06-02T08:13:22+00:00",
+      "promptEn": "A US manufacturer considers an order from China for 100,000 vehicle telematics units for Yuan 70 million. Components cost USD 5 million. Assembly in the US costs USD 4 million; alternatively the Chinese retailer can assemble in China after a Yuan 20 million price reduction. At delivery in three months the manufacturer may also sell the components in the US for USD 3 million instead. If $y$ is the dollar price of one yuan at delivery, operating profit in millions of dollars is\n$$\\max(70y-9,\\;50y-5,\\;-2).$$\n\n(a) The manufacturer can buy yuan currency, a zero-coupon USD bond with face value 1, and a Yuan/USD call option with strike 0.1. Current prices are 0.15 for yuan currency and 0.07 for the call; take the unit bond price as 1. Formulate an LP for the minimum-cost portfolio that gives no future liability, and solve it.\n\n(b) Now a Yuan/USD put with strike 0.15 is also available at price 0.03. Formulate an LP to check for arbitrage, allowing long and short positions.",
+      "promptZh": "一家美国制造商正在考虑中国零售商的订单：以 7,000 万人民币购买 100,000 套车辆远程信息系统。零部件成本为 500 万美元。若在美国组装，还需 400 万美元；也可以由中国零售商在中国组装，但价格减少 2,000 万人民币。三个月后交付时，制造商也可以不出口，而是在美国把零部件卖给经销商，收入 300 万美元。若 $y$ 表示交付时 1 元人民币的美元价格，则运营利润（百万美元）为\n$$\\max(70y-9,\\;50y-5,\\;-2).$$\n\n(a) 制造商可以买入人民币、面值为 1 美元的零息债券，以及行权价为 0.1 的人民币/美元看涨期权。当前人民币价格为 0.15，看涨期权价格为 0.07；假设单位债券价格为 1。写出使未来没有负债的最低成本组合 LP，并求解。\n\n(b) 现在还可以买卖行权价为 0.15、价格为 0.03 的人民币/美元看跌期权。允许做多和做空，写出检查套利机会的 LP。",
+      "answer": "For part (a), buying 2 units of the USD bond is optimal and costs 2 million dollars. For part (b), one zero-cost nonnegative-payoff portfolio is `(yuan, bond, call, put) = (30, -3, -30, 20)`, so the listed prices admit a weak arbitrage under the LP discretization/piecewise model.",
+      "answerEn": "For part (a), buying 2 units of the USD bond is optimal and costs 2 million dollars. For part (b), one zero-cost nonnegative-payoff portfolio is `(yuan, bond, call, put) = (30, -3, -30, 20)`, so the listed prices admit a weak arbitrage under the LP discretization/piecewise model.",
+      "answerZh": "第 (a) 问，买入 2 单位美元债券最优，成本为 200 万美元。第 (b) 问，一个零成本且未来收益非负的组合为 `(人民币, 债券, 看涨, 看跌) = (30, -3, -30, 20)`，因此在该分段线性 LP 模型下存在弱套利。",
+      "explanation": "For part (a), let $(a,b,c)$ be holdings of yuan currency, the USD bond, and the call. The LP is\n$$\\min\\;0.15a+b+0.07c$$\nsubject to\n$$ay+b+c(y-0.1)^+ + \\max(70y-9,50y-5,-2)\\ge0\\quad\\text{for all }y\\ge0,$$\nwith $a,b,c\\ge0$. Because all payoff functions are piecewise linear, it is enough to enforce the constraints at the breakpoints $y=0,0.06,0.1,0.2$ together with the nonnegative large-$y$ slope condition. At $y=0$, the operating payoff is $-2$, so $b\\ge2$ is necessary. Taking\n$$(a,b,c)=(0,2,0)$$\nmeets every constraint and costs 2.\n\nFor part (b), with holdings $(a,b,c,p)$ in yuan, bond, call, and put, use constraints\n$$ay+b+c(y-0.1)^+ + p(0.15-y)^+\\ge0$$\nat $y=0,0.1,0.15$, plus the large-$y$ slope condition $a+c\\ge0$. A standard normalization such as payoff at $y=0.1$ at least 1 avoids the zero solution. The solver returns\n$$(a,b,c,p)=(30,-3,-30,20),$$\nwhose initial cost is\n$$0.15(30)-3+0.07(-30)+0.03(20)=0.$$\nIts payoff is nonnegative for all $y\\ge0$: it is $10y$ for $0\\le y\\le0.1$, $3-20y$ for $0.1\\le y\\le0.15$, and $0$ for $y\\ge0.15$. It is positive for $0<y<0.15$, so this is a zero-cost nonnegative-payoff arbitrage certificate under the LP model.",
+      "explanationZh": "第 (a) 问，令 $(a,b,c)$ 分别为人民币、美元债券、看涨期权持仓。LP 为\n$$\\min\\;0.15a+b+0.07c$$\n约束为\n$$ay+b+c(y-0.1)^+ + \\max(70y-9,50y-5,-2)\\ge0\\quad\\text{对所有 }y\\ge0,$$\n且 $a,b,c\\ge0$。由于所有收益函数都是分段线性的，只需在断点 $y=0,0.06,0.1,0.2$ 以及大 $y$ 斜率条件处检查。$y=0$ 时运营收益为 $-2$，所以必须有 $b\\ge2$。取\n$$(a,b,c)=(0,2,0)$$\n即可满足所有约束，成本为 2。\n\n第 (b) 问，令 $(a,b,c,p)$ 分别为人民币、债券、看涨、看跌持仓。约束为\n$$ay+b+c(y-0.1)^+ + p(0.15-y)^+\\ge0$$\n在 $y=0,0.1,0.15$ 处成立，并加上大 $y$ 斜率条件 $a+c\\ge0$。为了避免零解，可规定 $y=0.1$ 时收益至少为 1。求解器给出\n$$(a,b,c,p)=(30,-3,-30,20),$$\n初始成本为\n$$0.15(30)-3+0.07(-30)+0.03(20)=0.$$\n该组合对所有 $y\\ge0$ 的未来收益非负：当 $0\\le y\\le0.1$ 时为 $10y$，当 $0.1\\le y\\le0.15$ 时为 $3-20y$，当 $y\\ge0.15$ 时为 $0$。它在 $0<y<0.15$ 上严格为正，因此在该 LP 模型下给出了零成本非负收益套利证书。"
+    },
+    {
+      "id": "stanford-msande214-hw3-problem-004",
+      "titleEn": "HW3 Problem 4 - Long-only quadratic portfolio optimization",
+      "titleZh": "HW3 问题 4 - 仅多头约束的二次投资组合优化",
+      "category": "optimization",
+      "difficulty": "Medium",
+      "tags": [
+        "Stanford MS&E 214",
+        "Homework 3",
+        "Optimization",
+        "Logistics",
+        "Finance",
+        "quadratic programming",
+        "portfolio",
+        "covariance",
+        "long-only"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Medium",
+        "logic": "Reviewed from the Stanford MS&E 214 HW3 topic and verified solution complexity.",
+        "reviewedBy": "Codex import-stanford-msande214-hw3"
+      },
+      "source": "stanford-msande214-hw3",
+      "sourceUrl": "https://web.stanford.edu/~ashishg/msande214/spr_2024/handouts/index.html",
+      "sourceType": "course-homework",
+      "bookSlug": "stanford-msande214-hw3",
+      "bookName": "Stanford MS&E 214 HW3 Logistics/Finance",
+      "visibility": "public",
+      "sourceFiles": [
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+      ],
+      "sourceQuestion": "HW3 Problem 4",
+      "answerOfficial": false,
+      "answerPolicy": "The Stanford HW3 bundle includes official prompts and data files but no official solution file; this answer is generated and solver-verified, not an official course solution.",
+      "answerSource": {
+        "type": "generated-solver-verified",
+        "official": false,
+        "verificationScript": "scripts/import-stanford-msande214-hw3.py",
+        "sourceFiles": [
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+        ]
+      },
+      "createdAt": "2026-06-02T08:13:22+00:00",
+      "updatedAt": "2026-06-02T08:13:22+00:00",
+      "promptEn": "The workbook sheet `problem4` gives lambda = 0.2, expected returns\n$$\\mu=(1,2,1.5,0),$$\nand covariance matrix\n$$V=\\begin{pmatrix}\n2&-1&0&0\\\\\n-1&2&-1&0\\\\\n0&-1&2&-1\\\\\n0&0&-1&2\n\\end{pmatrix}.$$\nFind a nonnegative portfolio $p\\in\\mathbb{R}_{\\ge0}^4$ with total weight 1 that maximizes\n$$\\mu^Tp-\\lambda p^TVp.$$",
+      "promptZh": "工作簿 `problem4` 给出 $\\lambda=0.2$，期望收益\n$$\\mu=(1,2,1.5,0),$$\n协方差矩阵\n$$V=\\begin{pmatrix}\n2&-1&0&0\\\\\n-1&2&-1&0\\\\\n0&-1&2&-1\\\\\n0&0&-1&2\n\\end{pmatrix}.$$\n求一个非负投资组合 $p\\in\\mathbb{R}_{\\ge0}^4$，总权重为 1，使\n$$\\mu^Tp-\\lambda p^TVp$$\n最大。",
+      "answer": "The optimum is $$p=(0,\\;17/24,\\;7/24,\\;0)\\approx(0,0.70833,0.29167,0).$$ The objective value is approximately 1.70208.",
+      "answerEn": "The optimum is $$p=(0,\\;17/24,\\;7/24,\\;0)\\approx(0,0.70833,0.29167,0).$$ The objective value is approximately 1.70208.",
+      "answerZh": "最优组合为 $$p=(0,\\;17/24,\\;7/24,\\;0)\\approx(0,0.70833,0.29167,0).$$ 目标函数值约为 1.70208。",
+      "explanation": "This is a concave quadratic maximization over the simplex because $V$ is positive semidefinite and $\\lambda>0$. The KKT conditions can be checked by active-set enumeration, where an active set is the subset of assets allowed to have positive weight while the remaining assets are fixed at zero. The optimal active set contains assets 2 and 3 only. Solving the stationarity equations on that active set with $p_2+p_3=1$ gives\n$$p_2=\\frac{17}{24},\\qquad p_3=\\frac{7}{24}.$$\nThus\n$$p=(0,17/24,7/24,0).$$\nThe expected return is\n$$\\mu^Tp=\\frac{89}{48}\\approx1.85417,$$\nand the variance is\n$$p^TVp=\\frac{73}{96}\\approx0.76042.$$\nWith $\\lambda=0.2$, the objective value is\n$$\\frac{89}{48}-0.2\\frac{73}{96}=\\frac{817}{480}\\approx1.70208.$$",
+      "explanationZh": "由于 $V$ 为正半定且 $\\lambda>0$，这是单纯形上的凹二次最大化问题。可通过 KKT 条件和 active-set 枚举验证；这里 active set 指允许权重为正的资产子集，其余资产权重固定为 0。最优 active set 只包含资产 2 和资产 3。在该 active set 上解驻点方程并满足 $p_2+p_3=1$，得到\n$$p_2=\\frac{17}{24},\\qquad p_3=\\frac{7}{24}.$$\n因此\n$$p=(0,17/24,7/24,0).$$\n期望收益为\n$$\\mu^Tp=\\frac{89}{48}\\approx1.85417,$$\n方差为\n$$p^TVp=\\frac{73}{96}\\approx0.76042.$$\n当 $\\lambda=0.2$ 时，目标函数值为\n$$\\frac{89}{48}-0.2\\frac{73}{96}=\\frac{817}{480}\\approx1.70208.$$"
+    },
+    {
+      "id": "stanford-msande214-hw3-problem-005",
+      "titleEn": "HW3 Problem 5 - Oil pipeline reliability and max flow",
+      "titleZh": "HW3 问题 5 - 石油管道可靠路径与最大流",
+      "category": "optimization",
+      "difficulty": "Hard",
+      "tags": [
+        "Stanford MS&E 214",
+        "Homework 3",
+        "Optimization",
+        "Logistics",
+        "Finance",
+        "network flow",
+        "max flow",
+        "shortest path",
+        "reliability"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Hard",
+        "logic": "Reviewed from the Stanford MS&E 214 HW3 topic and verified solution complexity.",
+        "reviewedBy": "Codex import-stanford-msande214-hw3"
+      },
+      "source": "stanford-msande214-hw3",
+      "sourceUrl": "https://web.stanford.edu/~ashishg/msande214/spr_2024/handouts/index.html",
+      "sourceType": "course-homework",
+      "bookSlug": "stanford-msande214-hw3",
+      "bookName": "Stanford MS&E 214 HW3 Logistics/Finance",
+      "visibility": "public",
+      "sourceFiles": [
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+        "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+      ],
+      "sourceQuestion": "HW3 Problem 5",
+      "answerOfficial": false,
+      "answerPolicy": "The Stanford HW3 bundle includes official prompts and data files but no official solution file; this answer is generated and solver-verified, not an official course solution.",
+      "answerSource": {
+        "type": "generated-solver-verified",
+        "official": false,
+        "verificationScript": "scripts/import-stanford-msande214-hw3.py",
+        "sourceFiles": [
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+          "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx"
+        ]
+      },
+      "createdAt": "2026-06-02T08:13:22+00:00",
+      "updatedAt": "2026-06-02T08:13:22+00:00",
+      "promptImages": [
+        "assets/problem-media/stanford-msande214-hw3/pipeline-network.png"
+      ],
+      "figureReview": {
+        "prompt": "source_checked_reconstructed",
+        "note": "The official HW3 TeX references includegraphics{ps4}, but the downloaded public HW3 zip contains no ps4 image. This prompt image is reconstructed from the official edge table in hw3.tex/homework3.xlsx.",
+        "reviewedBy": "Codex import-stanford-msande214-hw3"
+      },
+      "promptEn": "Consider the oil pipeline network in the attached reconstructed image. Edge data are:\n\n| Edge | Capacity | Cost | Failure probability |\n|---|---:|---:|---:|\n| AC | 5 | 7000 | 0.4 |\n| AD | 4 | 4000 | 0.9 |\n| AS | 2 | 1000 | 0.1 |\n| CD | 1 | 2000 | 0.2 |\n| CT | 1 | 4000 | 0 |\n| DT | 3 | 2000 | 0.5 |\n| DF | 1 | 2000 | 0.1 |\n| SD | 1 | 1000 | 0.3 |\n| SF | 2 | 3000 | 0.4 |\n| SG | 2 | 5000 | 0.2 |\n| FB | 1 | 2000 | 0.2 |\n| FT | 4 | 6000 | 0.2 |\n| GT | 5 | 0 | 1 |\n| TB | 2 | 1000 | 0.6 |\n| GB | 2 | 2000 | 0.8 |\n\nFor each task, construct a flow problem and solve it: (a) find the most reliable path from A to B, assuming independent edge failures; (b) find the maximum amount of oil that can be sent from A to B.",
+      "promptZh": "考虑附图中根据边表重建的石油管道网络。边数据如下：\n\n| 边 | 容量 | 成本 | 失效概率 |\n|---|---:|---:|---:|\n| AC | 5 | 7000 | 0.4 |\n| AD | 4 | 4000 | 0.9 |\n| AS | 2 | 1000 | 0.1 |\n| CD | 1 | 2000 | 0.2 |\n| CT | 1 | 4000 | 0 |\n| DT | 3 | 2000 | 0.5 |\n| DF | 1 | 2000 | 0.1 |\n| SD | 1 | 1000 | 0.3 |\n| SF | 2 | 3000 | 0.4 |\n| SG | 2 | 5000 | 0.2 |\n| FB | 1 | 2000 | 0.2 |\n| FT | 4 | 6000 | 0.2 |\n| GT | 5 | 0 | 1 |\n| TB | 2 | 1000 | 0.6 |\n| GB | 2 | 2000 | 0.8 |\n\n对每一问构造并求解一个流问题：(a) 假设各边独立失效，求从 A 到 B 的最可靠路径；(b) 求从 A 到 B 能输送的最大油量。",
+      "answer": "The most reliable path is A-S-D-F-B with success probability 0.4536. The maximum A-to-B flow is 5 million gallons per hour.",
+      "answerEn": "The most reliable path is A-S-D-F-B with success probability 0.4536. The maximum A-to-B flow is 5 million gallons per hour.",
+      "answerZh": "最可靠路径为 A-S-D-F-B，成功概率为 0.4536。A 到 B 的最大流量为每小时 5 百万加仑。",
+      "explanation": "For reliability, maximize the product of edge success probabilities. Equivalently, minimize\n$$\\sum_{e\\in P}-\\log(1-q_e),$$\nwhere $q_e$ is the edge failure probability. Edges with failure probability 1 have zero success probability and are unusable for a reliable path. Applying shortest path to these transformed edge costs gives\n$$A\\to S\\to D\\to F\\to B.$$\nIts success probability is\n$$(1-0.1)(1-0.3)(1-0.1)(1-0.2)=0.9\\cdot0.7\\cdot0.9\\cdot0.8=0.4536.$$\n\nFor maximum flow, use the listed capacities as directed edge capacities. One maximum flow of value 5 is decomposed as:\n\n- 2 units on $A\\to D\\to T\\to B$.\n- 1 unit on $A\\to C\\to D\\to F\\to B$.\n- 2 units on $A\\to S\\to G\\to B$.\n\nThe total is therefore 5 million gallons per hour.",
+      "explanationZh": "可靠路径要最大化边成功概率的乘积。等价地，最小化\n$$\\sum_{e\\in P}-\\log(1-q_e),$$\n其中 $q_e$ 为边失效概率。失效概率为 1 的边成功概率为 0，不能用于可靠路径。对这些变换后的边成本做最短路，得到\n$$A\\to S\\to D\\to F\\to B.$$\n其成功概率为\n$$(1-0.1)(1-0.3)(1-0.1)(1-0.2)=0.9\\cdot0.7\\cdot0.9\\cdot0.8=0.4536.$$\n\n最大流问题直接使用表中的容量作为有向边容量。一个流量为 5 的最大流可分解为：\n\n- 2 单位走 $A\\to D\\to T\\to B$。\n- 1 单位走 $A\\to C\\to D\\to F\\to B$。\n- 2 单位走 $A\\to S\\to G\\to B$。\n\n因此最大输送量为每小时 5 百万加仑。这里的流量单位与题干一致，均为“百万加仑/小时”。"
+    }
+  ]
+}

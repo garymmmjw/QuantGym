@@ -43,6 +43,7 @@ PROBLEM_CATALOG_PATH = Path(
     os.environ.get("QUANTGYM_PROBLEM_CATALOG", PROJECT_ROOT / "data" / "problem-catalog.json")
 )
 LIBRARY_ASSETS_PATH = Path(os.environ.get("QUANTGYM_LIBRARY_ASSETS", BASE_DIR / "library-assets.json"))
+LIBRARY_PDF_ROOT = Path(os.environ.get("QUANTGYM_LIBRARY_PDF_ROOT", PROJECT_ROOT)).expanduser()
 LIBRARY_TOKEN_SECRET = os.environ.get(
     "QUANTGYM_LIBRARY_TOKEN_SECRET",
     os.environ.get("QUANTGYM_APP_SECRET", "quantgym-local-library-dev-secret"),
@@ -243,18 +244,41 @@ def get_library_asset(asset_id: str) -> dict:
 
 def resolve_library_asset_path(asset: dict) -> Path:
     raw_path = Path(str(asset.get("path") or ""))
-    file_path = raw_path if raw_path.is_absolute() else PROJECT_ROOT / raw_path
-    resolved = file_path.resolve()
-    project_root = PROJECT_ROOT.resolve()
-    try:
-        resolved.relative_to(project_root)
-    except ValueError:
+    storage_path = str(asset.get("storagePath") or "").strip()
+    asset_id = str(asset.get("id") or "").strip()
+    candidates: list[Path] = []
+    if storage_path:
+        candidates.append(LIBRARY_PDF_ROOT / storage_path)
+    if asset_id:
+        candidates.append(LIBRARY_PDF_ROOT / f"{asset_id}.pdf")
+    if raw_path:
+        candidates.append(raw_path if raw_path.is_absolute() else PROJECT_ROOT / raw_path)
+        if not raw_path.is_absolute() and LIBRARY_PDF_ROOT.resolve() != PROJECT_ROOT.resolve():
+            candidates.append(LIBRARY_PDF_ROOT / raw_path)
+
+    allowed_roots = [PROJECT_ROOT.resolve(), LIBRARY_PDF_ROOT.resolve()]
+    saw_disallowed = False
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        if not any(path_is_relative_to(resolved, root) for root in allowed_roots):
+            saw_disallowed = True
+            continue
+        if not resolved.exists() or not resolved.is_file():
+            continue
+        if resolved.suffix.lower() != ".pdf":
+            raise HttpError(403, "Only PDF library assets can be streamed")
+        return resolved
+    if saw_disallowed and not candidates:
         raise HttpError(403, "Library asset path is not allowed")
-    if not resolved.exists() or not resolved.is_file():
-        raise HttpError(404, "Library PDF file not found")
-    if resolved.suffix.lower() != ".pdf":
-        raise HttpError(403, "Only PDF library assets can be streamed")
-    return resolved
+    raise HttpError(404, "Library PDF file not found")
+
+
+def path_is_relative_to(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
 
 
 def make_library_reader_token(asset_id: str, user_id: str) -> tuple[str, str]:
@@ -405,7 +429,8 @@ def sanitize_problem(problem: dict | None, *, visibility: str = "public", owner_
     if not prompt_en and not prompt_zh:
         raise HttpError(400, "Problem prompt is required")
     next_visibility = "user" if visibility == "user" or owner_user_id else "public"
-    return {
+    cleaned = {
+        **raw,
         "id": problem_id,
         "titleEn": title_en,
         "titleZh": title_zh,
@@ -426,6 +451,10 @@ def sanitize_problem(problem: dict | None, *, visibility: str = "public", owner_
         "createdAt": str(raw.get("createdAt") or utc_now()),
         "updatedAt": str(raw.get("updatedAt") or utc_now()),
     }
+    for key in ("answerEn", "answerZh", "explanationEn", "explanationZh", "hint"):
+        if key in raw:
+            cleaned[key] = str(raw.get(key) or "").strip()
+    return cleaned
 
 
 def sanitize_problem_state(state: dict | None) -> dict:

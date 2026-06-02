@@ -1,0 +1,610 @@
+{
+  "problems": [
+    {
+      "id": "boyd-cvxbook-additional-exercises-problem-001",
+      "titleEn": "Convex optimization true-or-false basics",
+      "titleZh": "凸优化基础判断题",
+      "category": "optimization",
+      "difficulty": "Easy",
+      "tags": [
+        "Boyd Vandenberghe",
+        "Convex Optimization",
+        "additional exercises",
+        "true false",
+        "convex optimization"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Easy",
+        "logic": "Curated from the public Boyd/Vandenberghe additional exercises and reviewed for convex optimization topic fit.",
+        "reviewedBy": "Codex import-boyd-cvxbook-additional-exercises"
+      },
+      "source": "boyd-cvxbook-additional-exercises",
+      "sourceUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "sourceType": "open-access-exercise-with-generated-answer",
+      "bookSlug": "boyd-cvxbook-additional-exercises",
+      "bookName": "Boyd Convex Optimization Additional Exercises",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://github.com/cvxgrp/cvxbook_additional_exercises",
+        "https://web.stanford.edu/~boyd/cvxbook/",
+        "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+      ],
+      "sourceQuestion": "Additional Exercises 1.1",
+      "answerOfficial": false,
+      "answerPolicy": "The public additional-exercises repository provides exercises and data but no public solutions. This answer is generated and locally reviewed, not an official Boyd/Vandenberghe solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-boyd-cvxbook-additional-exercises.py",
+        "sourceFiles": [
+          "https://github.com/cvxgrp/cvxbook_additional_exercises",
+          "https://web.stanford.edu/~boyd/cvxbook/",
+          "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-additional-exercises",
+        "note": "The additional-exercises PDF states the exercises may be used with source acknowledgement; public repository has no solutions, so generated answers are marked non-official.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:27:52+00:00"
+      },
+      "createdAt": "2026-06-02T08:27:52+00:00",
+      "updatedAt": "2026-06-02T08:27:52+00:00",
+      "promptEn": "Decide whether each statement is true or false.\n\n(a) Least squares is a special case of convex optimization.\n(b) In broad terms, convex optimization problems can often be solved efficiently.\n(c) Almost any practical problem one wants to solve is convex.\n(d) Convex optimization problems are attractive because they always have a unique solution.",
+      "promptZh": "判断下列说法真假。\n\n(a) 最小二乘是凸优化的特例。\n(b) 大体而言，凸优化问题通常可以高效求解。\n(c) 几乎所有实际想解的问题都是凸的。\n(d) 凸优化吸引人的原因是它们总有唯一解。",
+      "answer": "The answers are: (a) true, (b) true, (c) false, (d) false.",
+      "answerEn": "The answers are: (a) true, (b) true, (c) false, (d) false.",
+      "answerZh": "答案为：(a) 真，(b) 真，(c) 假，(d) 假。",
+      "explanation": "Least squares minimizes a convex quadratic objective, so it is convex. Convex problems have strong algorithmic and modeling structure, so many important classes can be solved efficiently. But most arbitrary practical problems are not convex without modeling work or relaxation. Finally, convexity does not imply uniqueness: a flat objective over a convex feasible region can have many optima.",
+      "explanationZh": "最小二乘最小化凸二次目标，因此是凸优化。凸问题有强算法结构和建模结构，许多重要类别可高效求解。但任意实际问题并不天然都是凸的，往往需要建模、近似或松弛。最后，凸性不意味着唯一解：若目标函数在某个凸可行区域上是平的，就可能有多个最优解。"
+    },
+    {
+      "id": "boyd-cvxbook-additional-exercises-problem-002",
+      "titleEn": "Dominated designs in device sizing",
+      "titleZh": "器件尺寸设计中的支配关系",
+      "category": "optimization",
+      "difficulty": "Easy",
+      "tags": [
+        "Boyd Vandenberghe",
+        "Convex Optimization",
+        "additional exercises",
+        "Pareto dominance",
+        "feasibility"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Easy",
+        "logic": "Curated from the public Boyd/Vandenberghe additional exercises and reviewed for convex optimization topic fit.",
+        "reviewedBy": "Codex import-boyd-cvxbook-additional-exercises"
+      },
+      "source": "boyd-cvxbook-additional-exercises",
+      "sourceUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "sourceType": "open-access-exercise-with-generated-answer",
+      "bookSlug": "boyd-cvxbook-additional-exercises",
+      "bookName": "Boyd Convex Optimization Additional Exercises",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://github.com/cvxgrp/cvxbook_additional_exercises",
+        "https://web.stanford.edu/~boyd/cvxbook/",
+        "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+      ],
+      "sourceQuestion": "Additional Exercises 1.2",
+      "answerOfficial": false,
+      "answerPolicy": "The public additional-exercises repository provides exercises and data but no public solutions. This answer is generated and locally reviewed, not an official Boyd/Vandenberghe solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-boyd-cvxbook-additional-exercises.py",
+        "sourceFiles": [
+          "https://github.com/cvxgrp/cvxbook_additional_exercises",
+          "https://web.stanford.edu/~boyd/cvxbook/",
+          "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-additional-exercises",
+        "note": "The additional-exercises PDF states the exercises may be used with source acknowledgement; public repository has no solutions, so generated answers are marked non-official.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:27:52+00:00"
+      },
+      "createdAt": "2026-06-02T08:27:52+00:00",
+      "updatedAt": "2026-06-02T08:27:52+00:00",
+      "promptEn": "A device-sizing problem minimizes power subject to area at most 50 plus other constraints. Four feasible-for-other-constraints designs have:\n\n| Design | Power | Area |\n|---|---:|---:|\n| A | 10 | 50 |\n| B | 8 | 55 |\n| C | 10 | 45 |\n| D | 11 | 50 |\n\nDecide whether: (a) B is better than A; (b) C is better than A; (c) D cannot be optimal.",
+      "promptZh": "某器件尺寸设计问题要在面积不超过 50 以及其他约束下最小化功耗。四个满足其他约束的候选设计如下：\n\n| 设计 | 功耗 | 面积 |\n|---|---:|---:|\n| A | 10 | 50 |\n| B | 8 | 55 |\n| C | 10 | 45 |\n| D | 11 | 50 |\n\n判断：(a) B 是否优于 A；(b) C 是否优于 A；(c) D 是否不可能最优。",
+      "answer": "The answers are: (a) false, (b) true, (c) true.",
+      "answerEn": "The answers are: (a) false, (b) true, (c) true.",
+      "answerZh": "答案为：(a) 假，(b) 真，(c) 真。",
+      "explanation": "B has lower power but violates the area constraint, so it is not a feasible improvement over A. C has the same power as A and smaller area, so it weakly dominates A and is better on the constrained resource. D has the same area as A but strictly larger power, so A dominates D; D cannot be optimal in a power-minimization problem.",
+      "explanationZh": "B 的功耗更低，但面积为 55，违反面积约束，因此不能说它优于可行的 A。C 与 A 功耗相同但面积更小，因此弱支配 A，并在受限资源上更好。D 与 A 面积相同但功耗更高，被 A 严格支配，所以在最小化功耗的问题中不可能最优。"
+    },
+    {
+      "id": "boyd-cvxbook-additional-exercises-problem-003",
+      "titleEn": "Image of an affine equality set",
+      "titleZh": "仿射等式集合的仿射像",
+      "category": "optimization",
+      "difficulty": "Medium",
+      "tags": [
+        "Boyd Vandenberghe",
+        "Convex Optimization",
+        "additional exercises",
+        "affine set",
+        "linear map"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Boyd/Vandenberghe additional exercises and reviewed for convex optimization topic fit.",
+        "reviewedBy": "Codex import-boyd-cvxbook-additional-exercises"
+      },
+      "source": "boyd-cvxbook-additional-exercises",
+      "sourceUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "sourceType": "open-access-exercise-with-generated-answer",
+      "bookSlug": "boyd-cvxbook-additional-exercises",
+      "bookName": "Boyd Convex Optimization Additional Exercises",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://github.com/cvxgrp/cvxbook_additional_exercises",
+        "https://web.stanford.edu/~boyd/cvxbook/",
+        "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+      ],
+      "sourceQuestion": "Additional Exercises 2.1",
+      "answerOfficial": false,
+      "answerPolicy": "The public additional-exercises repository provides exercises and data but no public solutions. This answer is generated and locally reviewed, not an official Boyd/Vandenberghe solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-boyd-cvxbook-additional-exercises.py",
+        "sourceFiles": [
+          "https://github.com/cvxgrp/cvxbook_additional_exercises",
+          "https://web.stanford.edu/~boyd/cvxbook/",
+          "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-additional-exercises",
+        "note": "The additional-exercises PDF states the exercises may be used with source acknowledgement; public repository has no solutions, so generated answers are marked non-official.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:27:52+00:00"
+      },
+      "createdAt": "2026-06-02T08:27:52+00:00",
+      "updatedAt": "2026-06-02T08:27:52+00:00",
+      "promptEn": "Show that the set\n$$\\{Ax+b\\mid Fx=g\\}$$\nis affine, where $A\\in\\mathbb R^{m\\times n}$, $b\\in\\mathbb R^m$, $F\\in\\mathbb R^{p\\times n}$, and $g\\in\\mathbb R^p$.",
+      "promptZh": "证明集合\n$$\\{Ax+b\\mid Fx=g\\}$$\n是仿射集，其中 $A\\in\\mathbb R^{m\\times n}$、$b\\in\\mathbb R^m$、$F\\in\\mathbb R^{p\\times n}$、$g\\in\\mathbb R^p$。",
+      "answer": "It is affine because affine combinations of any two represented points remain represented by a point satisfying the same linear equality.",
+      "answerEn": "It is affine because affine combinations of any two represented points remain represented by a point satisfying the same linear equality.",
+      "answerZh": "它是仿射集，因为任意两个可表示点的仿射组合仍可由满足同一线性等式的点表示。",
+      "explanation": "Take two points $y_1=Ax_1+b$ and $y_2=Ax_2+b$ with $Fx_1=g$ and $Fx_2=g$. For any $\\theta\\in\\mathbb R$,\n$$\\theta y_1+(1-\\theta)y_2=A(\\theta x_1+(1-\\theta)x_2)+b.$$\nLet $x_\\theta=\\theta x_1+(1-\\theta)x_2$. Then\n$$Fx_\\theta=\\theta Fx_1+(1-\\theta)Fx_2=\\theta g+(1-\\theta)g=g.$$\nSo every affine combination stays in the set. This is exactly the affine-set closure property.",
+      "explanationZh": "取两个点 $y_1=Ax_1+b$、$y_2=Ax_2+b$，其中 $Fx_1=g$、$Fx_2=g$。对任意 $\\theta\\in\\mathbb R$，\n$$\\theta y_1+(1-\\theta)y_2=A(\\theta x_1+(1-\\theta)x_2)+b.$$\n令 $x_\\theta=\\theta x_1+(1-\\theta)x_2$，则\n$$Fx_\\theta=\\theta Fx_1+(1-\\theta)Fx_2=\\theta g+(1-\\theta)g=g.$$\n所以任意仿射组合仍在集合内，这正是仿射集的闭包性质。"
+    },
+    {
+      "id": "boyd-cvxbook-additional-exercises-problem-004",
+      "titleEn": "Convexity of correlation-matrix families",
+      "titleZh": "相关矩阵族的凸性",
+      "category": "optimization",
+      "difficulty": "Medium",
+      "tags": [
+        "Boyd Vandenberghe",
+        "Convex Optimization",
+        "additional exercises",
+        "PSD cone",
+        "correlation matrix",
+        "linear constraints"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Boyd/Vandenberghe additional exercises and reviewed for convex optimization topic fit.",
+        "reviewedBy": "Codex import-boyd-cvxbook-additional-exercises"
+      },
+      "source": "boyd-cvxbook-additional-exercises",
+      "sourceUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "sourceType": "open-access-exercise-with-generated-answer",
+      "bookSlug": "boyd-cvxbook-additional-exercises",
+      "bookName": "Boyd Convex Optimization Additional Exercises",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://github.com/cvxgrp/cvxbook_additional_exercises",
+        "https://web.stanford.edu/~boyd/cvxbook/",
+        "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+      ],
+      "sourceQuestion": "Additional Exercises 2.6",
+      "answerOfficial": false,
+      "answerPolicy": "The public additional-exercises repository provides exercises and data but no public solutions. This answer is generated and locally reviewed, not an official Boyd/Vandenberghe solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-boyd-cvxbook-additional-exercises.py",
+        "sourceFiles": [
+          "https://github.com/cvxgrp/cvxbook_additional_exercises",
+          "https://web.stanford.edu/~boyd/cvxbook/",
+          "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-additional-exercises",
+        "note": "The additional-exercises PDF states the exercises may be used with source acknowledgement; public repository has no solutions, so generated answers are marked non-official.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:27:52+00:00"
+      },
+      "createdAt": "2026-06-02T08:27:52+00:00",
+      "updatedAt": "2026-06-02T08:27:52+00:00",
+      "promptEn": "Determine whether each subset of $\\mathbb S^n$ is convex:\n\n(a) correlation matrices $C_n=\\{C\\succeq0\\mid C_{ii}=1,\\ i=1,\\ldots,n\\}$;\n(b) nonnegative correlation matrices $\\{C\\in C_n\\mid C_{ij}\\ge0\\}$;\n(c) highly correlated correlation matrices $\\{C\\in C_n\\mid C_{ij}\\ge0.8\\}$.",
+      "promptZh": "判断下列 $\\mathbb S^n$ 子集是否凸：\n\n(a) 相关矩阵 $C_n=\\{C\\succeq0\\mid C_{ii}=1,\\ i=1,\\ldots,n\\}$；\n(b) 非负相关矩阵 $\\{C\\in C_n\\mid C_{ij}\\ge0\\}$；\n(c) 高相关矩阵 $\\{C\\in C_n\\mid C_{ij}\\ge0.8\\}$。",
+      "answer": "All three sets are convex.",
+      "answerEn": "All three sets are convex.",
+      "answerZh": "三个集合都是凸集。",
+      "explanation": "The PSD cone is convex. The constraints $C_{ii}=1$ are affine equalities, and inequalities such as $C_{ij}\\ge0$ or $C_{ij}\\ge0.8$ are linear halfspace constraints. Intersections of convex sets, affine sets, and halfspaces are convex. Therefore (a), (b), and (c) are all convex.",
+      "explanationZh": "PSD 锥是凸的。约束 $C_{ii}=1$ 是仿射等式；$C_{ij}\\ge0$ 或 $C_{ij}\\ge0.8$ 是线性半空间约束。凸集、仿射集和半空间的交仍是凸集。因此 (a)、(b)、(c) 都是凸的。"
+    },
+    {
+      "id": "boyd-cvxbook-additional-exercises-problem-005",
+      "titleEn": "Convexity of ratio and product sets in the positive quadrant",
+      "titleZh": "正象限中比值与乘积集合的凸性",
+      "category": "optimization",
+      "difficulty": "Medium",
+      "tags": [
+        "Boyd Vandenberghe",
+        "Convex Optimization",
+        "additional exercises",
+        "convex set",
+        "positive quadrant",
+        "epigraph"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Boyd/Vandenberghe additional exercises and reviewed for convex optimization topic fit.",
+        "reviewedBy": "Codex import-boyd-cvxbook-additional-exercises"
+      },
+      "source": "boyd-cvxbook-additional-exercises",
+      "sourceUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "sourceType": "open-access-exercise-with-generated-answer",
+      "bookSlug": "boyd-cvxbook-additional-exercises",
+      "bookName": "Boyd Convex Optimization Additional Exercises",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://github.com/cvxgrp/cvxbook_additional_exercises",
+        "https://web.stanford.edu/~boyd/cvxbook/",
+        "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+      ],
+      "sourceQuestion": "Additional Exercises 2.8",
+      "answerOfficial": false,
+      "answerPolicy": "The public additional-exercises repository provides exercises and data but no public solutions. This answer is generated and locally reviewed, not an official Boyd/Vandenberghe solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-boyd-cvxbook-additional-exercises.py",
+        "sourceFiles": [
+          "https://github.com/cvxgrp/cvxbook_additional_exercises",
+          "https://web.stanford.edu/~boyd/cvxbook/",
+          "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-additional-exercises",
+        "note": "The additional-exercises PDF states the exercises may be used with source acknowledgement; public repository has no solutions, so generated answers are marked non-official.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:27:52+00:00"
+      },
+      "createdAt": "2026-06-02T08:27:52+00:00",
+      "updatedAt": "2026-06-02T08:27:52+00:00",
+      "promptEn": "Determine whether each set is convex:\n\n(a) $\\{(x,y)\\in\\mathbb R^2_{++}\\mid x/y\\le1\\}$;\n(b) $\\{(x,y)\\in\\mathbb R^2_{++}\\mid x/y\\ge1\\}$;\n(c) $\\{(x,y)\\in\\mathbb R^2_+\\mid xy\\le1\\}$;\n(d) $\\{(x,y)\\in\\mathbb R^2_+\\mid xy\\ge1\\}$.",
+      "promptZh": "判断下列集合是否凸：\n\n(a) $\\{(x,y)\\in\\mathbb R^2_{++}\\mid x/y\\le1\\}$；\n(b) $\\{(x,y)\\in\\mathbb R^2_{++}\\mid x/y\\ge1\\}$；\n(c) $\\{(x,y)\\in\\mathbb R^2_+\\mid xy\\le1\\}$；\n(d) $\\{(x,y)\\in\\mathbb R^2_+\\mid xy\\ge1\\}$。",
+      "answer": "The answers are: (a) convex, (b) convex, (c) not convex, (d) convex.",
+      "answerEn": "The answers are: (a) convex, (b) convex, (c) not convex, (d) convex.",
+      "answerZh": "答案为：(a) 凸，(b) 凸，(c) 非凸，(d) 凸。",
+      "explanation": "For positive $y$, $x/y\\le1$ is the halfspace $x\\le y$, and $x/y\\ge1$ is the halfspace $x\\ge y$, each intersected with the convex positive quadrant. Hence (a) and (b) are convex.\n\nFor (c), $(2,0.4)$ and $(0.4,2)$ both satisfy $xy\\le1$, but their midpoint $(1.2,1.2)$ has product $1.44>1$, so the set is not convex.\n\nFor (d), $xy\\ge1$ in the nonnegative quadrant implies $x>0$ and $y\\ge1/x$. Since $1/x$ is convex on $x>0$, this is the epigraph of a convex function, hence convex.",
+      "explanationZh": "当 $y>0$ 时，$x/y\\le1$ 等价于半空间 $x\\le y$，$x/y\\ge1$ 等价于半空间 $x\\ge y$，再与凸的正象限相交。因此 (a)、(b) 凸。\n\n对 (c)，点 $(2,0.4)$ 与 $(0.4,2)$ 都满足 $xy\\le1$，但中点 $(1.2,1.2)$ 的乘积为 $1.44>1$，所以集合非凸。\n\n对 (d)，在非负象限中 $xy\\ge1$ 意味着 $x>0$ 且 $y\\ge1/x$。函数 $1/x$ 在 $x>0$ 上是凸函数，因此该集合是凸函数上图，故为凸集。"
+    },
+    {
+      "id": "boyd-cvxbook-additional-exercises-problem-006",
+      "titleEn": "Union and difference of a square and a disk",
+      "titleZh": "正方形与圆盘的并集和差集",
+      "category": "optimization",
+      "difficulty": "Medium",
+      "tags": [
+        "Boyd Vandenberghe",
+        "Convex Optimization",
+        "additional exercises",
+        "convex set",
+        "set operations"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Boyd/Vandenberghe additional exercises and reviewed for convex optimization topic fit.",
+        "reviewedBy": "Codex import-boyd-cvxbook-additional-exercises"
+      },
+      "source": "boyd-cvxbook-additional-exercises",
+      "sourceUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "sourceType": "open-access-exercise-with-generated-answer",
+      "bookSlug": "boyd-cvxbook-additional-exercises",
+      "bookName": "Boyd Convex Optimization Additional Exercises",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://github.com/cvxgrp/cvxbook_additional_exercises",
+        "https://web.stanford.edu/~boyd/cvxbook/",
+        "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+      ],
+      "sourceQuestion": "Additional Exercises 2.9",
+      "answerOfficial": false,
+      "answerPolicy": "The public additional-exercises repository provides exercises and data but no public solutions. This answer is generated and locally reviewed, not an official Boyd/Vandenberghe solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-boyd-cvxbook-additional-exercises.py",
+        "sourceFiles": [
+          "https://github.com/cvxgrp/cvxbook_additional_exercises",
+          "https://web.stanford.edu/~boyd/cvxbook/",
+          "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-additional-exercises",
+        "note": "The additional-exercises PDF states the exercises may be used with source acknowledgement; public repository has no solutions, so generated answers are marked non-official.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:27:52+00:00"
+      },
+      "createdAt": "2026-06-02T08:27:52+00:00",
+      "updatedAt": "2026-06-02T08:27:52+00:00",
+      "promptEn": "Let $S=\\{x\\in\\mathbb R^2\\mid 0\\le x_i\\le1,\\ i=1,2\\}$ be the unit square in the first quadrant, and let $D=\\{x\\in\\mathbb R^2\\mid \\|x\\|_2\\le1\\}$ be the unit disk centered at the origin. Decide whether each set is convex: (a) $S\\cap D$; (b) $S\\cup D$; (c) $S\\setminus D$.",
+      "promptZh": "令 $S=\\{x\\in\\mathbb R^2\\mid 0\\le x_i\\le1,\\ i=1,2\\}$ 为第一象限单位正方形，$D=\\{x\\in\\mathbb R^2\\mid \\|x\\|_2\\le1\\}$ 为原点单位圆盘。判断：(a) $S\\cap D$；(b) $S\\cup D$；(c) $S\\setminus D$ 是否凸。",
+      "answer": "The answers are: (a) convex, (b) convex, (c) not convex.",
+      "answerEn": "The answers are: (a) convex, (b) convex, (c) not convex.",
+      "answerZh": "答案为：(a) 凸，(b) 凸，(c) 非凸。",
+      "explanation": "The intersection of two convex sets is convex, so $S\\cap D$ is convex.\n\nThe union is also convex in this special geometry. If a convex combination of a point in $D$ and a point in $S$ has both coordinates nonnegative, then both coordinates are at most 1 and the point lies in $S$. If one coordinate is negative, the point remains inside the unit disk along the rounded boundary portion. Equivalently, $S\\cup D$ is the unit disk plus the square corner bounded by the tangent points $(1,0)$ and $(0,1)$, which is convex.\n\nThe difference $S\\setminus D$ is not convex: $(1,0.1)$ and $(0.1,1)$ lie outside the disk but in $S$, while their midpoint $(0.55,0.55)$ lies inside the disk and is removed.",
+      "explanationZh": "两个凸集的交仍是凸集，因此 $S\\cap D$ 凸。\n\n该并集在这个特殊几何中也是凸的。若 $D$ 中一点与 $S$ 中一点的凸组合两个坐标都非负，则两个坐标都不超过 1，因此该点在 $S$ 中；若某个坐标为负，则该点仍位于单位圆盘的圆弧侧。等价地看，$S\\cup D$ 是单位圆盘加上由切点 $(1,0)$、$(0,1)$ 围出的正方形角区域，整体为凸。\n\n$S\\setminus D$ 非凸：$(1,0.1)$ 与 $(0.1,1)$ 都在 $S$ 中且在圆盘外，但中点 $(0.55,0.55)$ 位于圆盘内，被差集删除。"
+    },
+    {
+      "id": "boyd-cvxbook-additional-exercises-problem-007",
+      "titleEn": "Polynomial coefficient set with uniform bounds",
+      "titleZh": "带一致界的多项式系数集合",
+      "category": "optimization",
+      "difficulty": "Medium",
+      "tags": [
+        "Boyd Vandenberghe",
+        "Convex Optimization",
+        "additional exercises",
+        "linear inequalities",
+        "polynomial",
+        "convex set"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Boyd/Vandenberghe additional exercises and reviewed for convex optimization topic fit.",
+        "reviewedBy": "Codex import-boyd-cvxbook-additional-exercises"
+      },
+      "source": "boyd-cvxbook-additional-exercises",
+      "sourceUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "sourceType": "open-access-exercise-with-generated-answer",
+      "bookSlug": "boyd-cvxbook-additional-exercises",
+      "bookName": "Boyd Convex Optimization Additional Exercises",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://github.com/cvxgrp/cvxbook_additional_exercises",
+        "https://web.stanford.edu/~boyd/cvxbook/",
+        "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+      ],
+      "sourceQuestion": "Additional Exercises 2.10",
+      "answerOfficial": false,
+      "answerPolicy": "The public additional-exercises repository provides exercises and data but no public solutions. This answer is generated and locally reviewed, not an official Boyd/Vandenberghe solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-boyd-cvxbook-additional-exercises.py",
+        "sourceFiles": [
+          "https://github.com/cvxgrp/cvxbook_additional_exercises",
+          "https://web.stanford.edu/~boyd/cvxbook/",
+          "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-additional-exercises",
+        "note": "The additional-exercises PDF states the exercises may be used with source acknowledgement; public repository has no solutions, so generated answers are marked non-official.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:27:52+00:00"
+      },
+      "createdAt": "2026-06-02T08:27:52+00:00",
+      "updatedAt": "2026-06-02T08:27:52+00:00",
+      "promptEn": "For $p(t)=a_1+a_2t+\\cdots+a_kt^{k-1}$, decide whether the coefficient set\n$$\\{a\\in\\mathbb R^k\\mid p(0)=1,\\ |p(t)|\\le1\\text{ for all }\\alpha\\le t\\le\\beta\\}$$\nis convex.",
+      "promptZh": "对 $p(t)=a_1+a_2t+\\cdots+a_kt^{k-1}$，判断系数集合\n$$\\{a\\in\\mathbb R^k\\mid p(0)=1,\\ |p(t)|\\le1\\text{ 对所有 }\\alpha\\le t\\le\\beta\\}$$\n是否凸。",
+      "answer": "The set is convex.",
+      "answerEn": "The set is convex.",
+      "answerZh": "该集合是凸集。",
+      "explanation": "For each fixed $t$, $p(t)$ is affine in the coefficient vector $a$. The constraint $p(0)=1$ is affine. The bound $|p(t)|\\le1$ is equivalent to two affine inequalities,\n$$p(t)\\le1,\\qquad -p(t)\\le1,$$\nfor every $t\\in[\\alpha,\\beta]$. An arbitrary intersection of affine halfspaces and an affine equality set is convex.",
+      "explanationZh": "对每个固定的 $t$，$p(t)$ 都是系数向量 $a$ 的仿射函数。约束 $p(0)=1$ 是仿射等式。界约束 $|p(t)|\\le1$ 等价于对每个 $t\\in[\\alpha,\\beta]$ 都有两个仿射不等式：\n$$p(t)\\le1,\\qquad -p(t)\\le1.$$\n任意多个仿射半空间与仿射等式集合的交仍为凸集。"
+    },
+    {
+      "id": "boyd-cvxbook-additional-exercises-problem-008",
+      "titleEn": "Minimal and minimum elements under componentwise order",
+      "titleZh": "分量偏序下的极小元与最小元",
+      "category": "optimization",
+      "difficulty": "Easy",
+      "tags": [
+        "Boyd Vandenberghe",
+        "Convex Optimization",
+        "additional exercises",
+        "partial order",
+        "minimal element",
+        "Pareto"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Easy",
+        "logic": "Curated from the public Boyd/Vandenberghe additional exercises and reviewed for convex optimization topic fit.",
+        "reviewedBy": "Codex import-boyd-cvxbook-additional-exercises"
+      },
+      "source": "boyd-cvxbook-additional-exercises",
+      "sourceUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "sourceType": "open-access-exercise-with-generated-answer",
+      "bookSlug": "boyd-cvxbook-additional-exercises",
+      "bookName": "Boyd Convex Optimization Additional Exercises",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://github.com/cvxgrp/cvxbook_additional_exercises",
+        "https://web.stanford.edu/~boyd/cvxbook/",
+        "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+      ],
+      "sourceQuestion": "Additional Exercises 2.14",
+      "answerOfficial": false,
+      "answerPolicy": "The public additional-exercises repository provides exercises and data but no public solutions. This answer is generated and locally reviewed, not an official Boyd/Vandenberghe solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-boyd-cvxbook-additional-exercises.py",
+        "sourceFiles": [
+          "https://github.com/cvxgrp/cvxbook_additional_exercises",
+          "https://web.stanford.edu/~boyd/cvxbook/",
+          "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-additional-exercises",
+        "note": "The additional-exercises PDF states the exercises may be used with source acknowledgement; public repository has no solutions, so generated answers are marked non-official.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:27:52+00:00"
+      },
+      "createdAt": "2026-06-02T08:27:52+00:00",
+      "updatedAt": "2026-06-02T08:27:52+00:00",
+      "promptEn": "Let $S=\\{(0,2),(1,1),(2,3),(1,2),(4,0)\\}$. Minimum and minimal are defined with respect to the nonnegative orthant order: $u\\preceq v$ when $u_i\\le v_i$ for both coordinates. Decide whether:\n(a) $(0,2)$ is the minimum element;\n(b) $(0,2)$ is a minimal element;\n(c) $(2,3)$ is a minimal element;\n(d) $(1,1)$ is a minimal element.",
+      "promptZh": "令 $S=\\{(0,2),(1,1),(2,3),(1,2),(4,0)\\}$。最小元和极小元均相对于非负正交锥偏序定义：当两个坐标都满足 $u_i\\le v_i$ 时，$u\\preceq v$。判断：\n(a) $(0,2)$ 是否为最小元；\n(b) $(0,2)$ 是否为极小元；\n(c) $(2,3)$ 是否为极小元；\n(d) $(1,1)$ 是否为极小元。",
+      "answer": "The answers are: (a) false, (b) true, (c) false, (d) true.",
+      "answerEn": "The answers are: (a) false, (b) true, (c) false, (d) true.",
+      "answerZh": "答案为：(a) 假，(b) 真，(c) 假，(d) 真。",
+      "explanation": "A minimum element must be componentwise no larger than every other point. $(0,2)$ is not no larger than $(1,1)$ because $2>1$, so it is not a minimum.\n\nA point is minimal if no other distinct point is componentwise no larger. No listed point has first coordinate $\\le0$ and second coordinate $\\le2$, so $(0,2)$ is minimal. But $(0,2)\\preceq(2,3)$ and the points differ, so $(2,3)$ is not minimal. Finally, no listed point is componentwise no larger than $(1,1)$, so $(1,1)$ is minimal.",
+      "explanationZh": "最小元必须在两个坐标上都不大于集合中所有其他点。$(0,2)$ 并不小于等于 $(1,1)$，因为第二个坐标 $2>1$，所以它不是最小元。\n\n极小元要求不存在另一个不同点在所有坐标上都不大于它。列表中没有点同时满足第一坐标 $\\le0$、第二坐标 $\\le2$，所以 $(0,2)$ 是极小元。但 $(0,2)\\preceq(2,3)$ 且两点不同，所以 $(2,3)$ 不是极小元。最后，列表中没有点在分量上不大于 $(1,1)$，所以 $(1,1)$ 是极小元。"
+    },
+    {
+      "id": "boyd-cvxbook-additional-exercises-problem-009",
+      "titleEn": "Basic polar-set calculations",
+      "titleZh": "极集的基础计算",
+      "category": "optimization",
+      "difficulty": "Hard",
+      "tags": [
+        "Boyd Vandenberghe",
+        "Convex Optimization",
+        "additional exercises",
+        "polar set",
+        "dual norm",
+        "simplex"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Hard",
+        "logic": "Curated from the public Boyd/Vandenberghe additional exercises and reviewed for convex optimization topic fit.",
+        "reviewedBy": "Codex import-boyd-cvxbook-additional-exercises"
+      },
+      "source": "boyd-cvxbook-additional-exercises",
+      "sourceUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "sourceType": "open-access-exercise-with-generated-answer",
+      "bookSlug": "boyd-cvxbook-additional-exercises",
+      "bookName": "Boyd Convex Optimization Additional Exercises",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://github.com/cvxgrp/cvxbook_additional_exercises",
+        "https://web.stanford.edu/~boyd/cvxbook/",
+        "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+      ],
+      "sourceQuestion": "Additional Exercises 2.15",
+      "answerOfficial": false,
+      "answerPolicy": "The public additional-exercises repository provides exercises and data but no public solutions. This answer is generated and locally reviewed, not an official Boyd/Vandenberghe solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-boyd-cvxbook-additional-exercises.py",
+        "sourceFiles": [
+          "https://github.com/cvxgrp/cvxbook_additional_exercises",
+          "https://web.stanford.edu/~boyd/cvxbook/",
+          "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-additional-exercises",
+        "note": "The additional-exercises PDF states the exercises may be used with source acknowledgement; public repository has no solutions, so generated answers are marked non-official.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:27:52+00:00"
+      },
+      "createdAt": "2026-06-02T08:27:52+00:00",
+      "updatedAt": "2026-06-02T08:27:52+00:00",
+      "promptEn": "For a set $C\\subseteq\\mathbb R^n$, its polar is\n$$C^\\circ=\\{y\\mid y^Tx\\le1\\ \\text{for all }x\\in C\\}.$$\nAnswer the following: (a) why is $C^\\circ$ convex even if $C$ is not? (b) what is the polar of a cone? (c) what is the polar of the unit ball of a norm $\\|\\cdot\\|$? (d) what is the polar of the simplex $\\{x\\mid \\mathbf1^Tx=1,\\ x\\succeq0\\}$?",
+      "promptZh": "对集合 $C\\subseteq\\mathbb R^n$，其极集定义为\n$$C^\\circ=\\{y\\mid y^Tx\\le1\\ \\text{对所有 }x\\in C\\}.$$\n回答：(a) 为什么即使 $C$ 非凸，$C^\\circ$ 仍凸？(b) 锥的极集是什么？(c) 范数 $\\|\\cdot\\|$ 单位球的极集是什么？(d) 单纯形 $\\{x\\mid \\mathbf1^Tx=1,\\ x\\succeq0\\}$ 的极集是什么？",
+      "answer": "$C^\\circ$ is an intersection of halfspaces. A cone polar is the negative dual cone $\\{y\\mid y^Tx\\le0,\\ \\forall x\\in C\\}$. A norm unit ball polar is the dual-norm unit ball. The simplex polar is $\\{y\\mid \\max_i y_i\\le1\\}$.",
+      "answerEn": "$C^\\circ$ is an intersection of halfspaces. A cone polar is the negative dual cone $\\{y\\mid y^Tx\\le0,\\ \\forall x\\in C\\}$. A norm unit ball polar is the dual-norm unit ball. The simplex polar is $\\{y\\mid \\max_i y_i\\le1\\}$.",
+      "answerZh": "$C^\\circ$ 是半空间交。锥的极集是负对偶锥 $\\{y\\mid y^Tx\\le0,\\ \\forall x\\in C\\}$。范数单位球的极集是对偶范数单位球。单纯形的极集是 $\\{y\\mid \\max_i y_i\\le1\\}$。",
+      "explanation": "For each fixed $x\\in C$, the constraint $y^Tx\\le1$ is a halfspace in $y$. Therefore $C^\\circ$ is an intersection of halfspaces and is convex.\n\nIf $C$ is a cone and $y^Tx\\le1$ for all $x\\in C$, then for any $t\\ge0$, $t x\\in C$, so $t y^Tx\\le1$ for all $t$. This is possible only when $y^Tx\\le0$ for all $x\\in C$. Hence $C^\\circ=-C^*$ under the convention $C^*=\\{y\\mid y^Tx\\ge0,\\ \\forall x\\in C\\}$.\n\nFor a norm unit ball $B=\\{x\\mid\\|x\\|\\le1\\}$, the polar is\n$$B^\\circ=\\{y\\mid \\sup_{\\|x\\|\\le1}y^Tx\\le1\\}=\\{y\\mid\\|y\\|_*\\le1\\}.$$\nFor the simplex, maximizing $y^Tx$ over probability vectors puts all mass on the largest component, so the condition is $\\max_i y_i\\le1$.",
+      "explanationZh": "对每个固定的 $x\\in C$，约束 $y^Tx\\le1$ 是关于 $y$ 的半空间。因此 $C^\\circ$ 是半空间交，必为凸集。\n\n若 $C$ 是锥且对所有 $x\\in C$ 有 $y^Tx\\le1$，则对任意 $t\\ge0$，$tx\\in C$，所以 $t y^Tx\\le1$ 对所有 $t$ 成立。这只有在 $y^Tx\\le0$ 时才可能。因此在 $C^*=\\{y\\mid y^Tx\\ge0,\\ \\forall x\\in C\\}$ 的约定下，$C^\\circ=-C^*$。\n\n若 $B=\\{x\\mid\\|x\\|\\le1\\}$ 是范数单位球，则\n$$B^\\circ=\\{y\\mid \\sup_{\\|x\\|\\le1}y^Tx\\le1\\}=\\{y\\mid\\|y\\|_*\\le1\\}.$$\n对单纯形，在线性函数 $y^Tx$ 上最大化会把全部权重放在最大分量上，因此条件为 $\\max_i y_i\\le1$。"
+    },
+    {
+      "id": "boyd-cvxbook-additional-exercises-problem-010",
+      "titleEn": "Dual cones in two dimensions",
+      "titleZh": "二维空间中的对偶锥",
+      "category": "optimization",
+      "difficulty": "Medium",
+      "tags": [
+        "Boyd Vandenberghe",
+        "Convex Optimization",
+        "additional exercises",
+        "dual cone",
+        "second-order cone",
+        "subspace"
+      ],
+      "classificationReviewed": true,
+      "classificationReview": {
+        "category": "optimization",
+        "difficulty": "Medium",
+        "logic": "Curated from the public Boyd/Vandenberghe additional exercises and reviewed for convex optimization topic fit.",
+        "reviewedBy": "Codex import-boyd-cvxbook-additional-exercises"
+      },
+      "source": "boyd-cvxbook-additional-exercises",
+      "sourceUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "sourceType": "open-access-exercise-with-generated-answer",
+      "bookSlug": "boyd-cvxbook-additional-exercises",
+      "bookName": "Boyd Convex Optimization Additional Exercises",
+      "visibility": "public",
+      "sourceFiles": [
+        "https://github.com/cvxgrp/cvxbook_additional_exercises",
+        "https://web.stanford.edu/~boyd/cvxbook/",
+        "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+      ],
+      "sourceQuestion": "Additional Exercises 2.16",
+      "answerOfficial": false,
+      "answerPolicy": "The public additional-exercises repository provides exercises and data but no public solutions. This answer is generated and locally reviewed, not an official Boyd/Vandenberghe solution.",
+      "answerSource": {
+        "type": "generated-reviewed",
+        "official": false,
+        "verificationScript": "scripts/import-boyd-cvxbook-additional-exercises.py",
+        "sourceFiles": [
+          "https://github.com/cvxgrp/cvxbook_additional_exercises",
+          "https://web.stanford.edu/~boyd/cvxbook/",
+          "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf"
+        ]
+      },
+      "rightsReview": {
+        "status": "public-additional-exercises",
+        "note": "The additional-exercises PDF states the exercises may be used with source acknowledgement; public repository has no solutions, so generated answers are marked non-official.",
+        "reviewedBy": "Codex",
+        "reviewedAt": "2026-06-02T08:27:52+00:00"
+      },
+      "createdAt": "2026-06-02T08:27:52+00:00",
+      "updatedAt": "2026-06-02T08:27:52+00:00",
+      "promptEn": "Describe the dual cone $K^*=\\{y\\mid y^Tx\\ge0\\ \\text{for all }x\\in K\\}$ for each cone:\n(a) $K=\\{0\\}$;\n(b) $K=\\mathbb R^2$;\n(c) $K=\\{(x_1,x_2)\\mid |x_1|\\le x_2\\}$;\n(d) $K=\\{(x_1,x_2)\\mid x_1+x_2=0\\}$.",
+      "promptZh": "对下列锥，描述对偶锥 $K^*=\\{y\\mid y^Tx\\ge0\\ \\text{对所有 }x\\in K\\}$：\n(a) $K=\\{0\\}$；\n(b) $K=\\mathbb R^2$；\n(c) $K=\\{(x_1,x_2)\\mid |x_1|\\le x_2\\}$；\n(d) $K=\\{(x_1,x_2)\\mid x_1+x_2=0\\}$。",
+      "answer": "The duals are: (a) $\\mathbb R^2$; (b) $\\{0\\}$; (c) the same cone $\\{y\\mid |y_1|\\le y_2\\}$; (d) the orthogonal line $\\{t(1,1)\\mid t\\in\\mathbb R\\}$.",
+      "answerEn": "The duals are: (a) $\\mathbb R^2$; (b) $\\{0\\}$; (c) the same cone $\\{y\\mid |y_1|\\le y_2\\}$; (d) the orthogonal line $\\{t(1,1)\\mid t\\in\\mathbb R\\}$.",
+      "answerZh": "对偶锥为：(a) $\\mathbb R^2$；(b) $\\{0\\}$；(c) 同一个锥 $\\{y\\mid |y_1|\\le y_2\\}$；(d) 正交直线 $\\{t(1,1)\\mid t\\in\\mathbb R\\}$。",
+      "explanation": "For $K=\\{0\\}$, the inequality $y^T0\\ge0$ imposes no restriction, so $K^*=\\mathbb R^2$. For $K=\\mathbb R^2$, requiring $y^Tx\\ge0$ for every $x$ and for $-x$ forces $y=0$.\n\nThe cone $\\{(x_1,x_2)\\mid |x_1|\\le x_2\\}$ is the two-dimensional second-order cone and is self-dual.\n\nFor the line $K=\\{t(1,-1)\\mid t\\in\\mathbb R\\}$, the inequality must hold for both $t$ and $-t$, so $y^T(1,-1)=0$. Thus $y_1-y_2=0$, i.e. $K^*=\\{t(1,1)\\mid t\\in\\mathbb R\\}$.",
+      "explanationZh": "当 $K=\\{0\\}$ 时，约束 $y^T0\\ge0$ 不限制 $y$，所以 $K^*=\\mathbb R^2$。当 $K=\\mathbb R^2$ 时，要求对所有 $x$ 和 $-x$ 都有 $y^Tx\\ge0$，只能推出 $y=0$。\n\n锥 $\\{(x_1,x_2)\\mid |x_1|\\le x_2\\}$ 是二维二阶锥，它自对偶。\n\n对直线 $K=\\{t(1,-1)\\mid t\\in\\mathbb R\\}$，不等式必须对 $t$ 和 $-t$ 同时成立，因此 $y^T(1,-1)=0$。所以 $y_1-y_2=0$，即 $K^*=\\{t(1,1)\\mid t\\in\\mathbb R\\}$。"
+    }
+  ]
+}

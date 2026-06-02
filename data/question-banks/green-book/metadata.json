@@ -2,8 +2,8 @@
   "slug": "green-book",
   "name": "绿皮书",
   "type": "latex",
-  "sourceTexPath": "绿皮书/quant_green_book.tex",
+  "sourceTexPath": "有题目的/绿皮书 A Practical Guide to Quantitative Finance Interviews/quant_green_book.tex",
   "problemFile": "problems.json",
   "problemCount": 183,
-  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+  "lastImportedAt": "2026-06-02T01:06:35.867Z"
 }

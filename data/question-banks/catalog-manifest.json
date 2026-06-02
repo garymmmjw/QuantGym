@@ -7,11 +7,11 @@
       "slug": "question-bank",
       "name": "Archived Question Bank",
       "type": "latex",
-      "sourceTexPath": "",
+      "sourceTexPath": "有题目的/紫皮书 量化面试中的数学技巧 Quantitative Interview Problems Collection/quant_purple_book.tex",
       "problemFile": "question-bank/problems.json",
       "problemCount": 128,
-      "lastBuiltAt": "2026-05-27T06:17:53.877Z",
-      "lastImportedAt": "2026-05-27T03:07:21.649Z",
+      "lastBuiltAt": "2026-06-02T08:34:19.913Z",
+      "lastImportedAt": "2026-06-02T01:06:35.867Z",
       "disabled": true,
       "disabledReason": "Temporarily removed from the web catalog pending copyright review.",
       "disabledAt": "2026-05-26T22:03:49.003Z"
@@ -20,91 +20,91 @@
       "slug": "green-book",
       "name": "绿皮书",
       "type": "latex",
-      "sourceTexPath": "绿皮书/quant_green_book.tex",
+      "sourceTexPath": "有题目的/绿皮书 A Practical Guide to Quantitative Finance Interviews/quant_green_book.tex",
       "problemFile": "green-book/problems.json",
       "problemCount": 183,
-      "lastImportedAt": "2026-05-27T03:07:21.649Z",
-      "lastBuiltAt": "2026-05-27T06:17:53.881Z"
+      "lastImportedAt": "2026-06-02T01:06:35.867Z",
+      "lastBuiltAt": "2026-06-02T08:34:19.919Z"
     },
     {
       "slug": "yellow-book",
       "name": "黄皮书 150 Most Frequently Asked Questions",
       "type": "latex",
-      "sourceTexPath": "黄皮书/quant_yellow_book.tex",
+      "sourceTexPath": "有题目的/黄皮书 150 Most Frequently Asked Questions on Quant Interviews/quant_yellow_book.tex",
       "problemFile": "yellow-book/problems.json",
       "problemCount": 153,
-      "lastImportedAt": "2026-05-27T03:07:21.649Z",
-      "lastBuiltAt": "2026-05-27T06:17:53.882Z"
+      "lastImportedAt": "2026-06-02T01:06:35.867Z",
+      "lastBuiltAt": "2026-06-02T08:34:19.923Z"
     },
     {
       "slug": "red-book",
       "name": "红宝书 Quant Job Interview Questions And Answers",
       "type": "latex",
-      "sourceTexPath": "红宝书/quant_red_book.tex",
+      "sourceTexPath": "有题目的/红宝书 Quant Job Interview Questions And Answers/quant_red_book.tex",
       "problemFile": "red-book/problems.json",
-      "problemCount": 240,
-      "lastImportedAt": "2026-05-27T03:07:21.649Z",
-      "lastBuiltAt": "2026-05-27T06:17:53.885Z"
+      "problemCount": 242,
+      "lastImportedAt": "2026-06-02T01:06:35.867Z",
+      "lastBuiltAt": "2026-06-02T08:34:19.931Z"
     },
     {
       "slug": "hull-derivatives",
       "name": "Hull 期权期货及其他衍生品",
       "type": "latex",
-      "sourceTexPath": "Hull期权期货及其他衍生品/quant_hull_book.tex",
+      "sourceTexPath": "纯textbook/Hull期权期货及其他衍生品 Options Futures and Other Derivatives/quant_hull_book.tex",
       "problemFile": "hull-derivatives/problems.json",
       "problemCount": 763,
-      "lastImportedAt": "2026-05-27T03:07:21.649Z",
-      "lastBuiltAt": "2026-05-27T06:17:53.889Z"
+      "lastImportedAt": "2026-06-02T01:06:35.867Z",
+      "lastBuiltAt": "2026-06-02T08:34:19.952Z"
     },
     {
       "slug": "stefanica-fe-math",
       "name": "Stefanica 金融工程数学入门",
       "type": "latex",
-      "sourceTexPath": "Stefanica金融工程数学入门/quant_stefanica_book.tex",
+      "sourceTexPath": "纯textbook/Stefanica金融工程数学入门 A Primer for the Mathematics of Financial Engineering/quant_stefanica_book.tex",
       "problemFile": "stefanica-fe-math/problems.json",
       "problemCount": 35,
-      "lastImportedAt": "2026-05-27T03:07:21.649Z",
-      "lastBuiltAt": "2026-05-27T06:17:53.890Z"
+      "lastImportedAt": "2026-06-02T01:06:35.867Z",
+      "lastBuiltAt": "2026-06-02T08:34:19.953Z"
     },
     {
       "slug": "quantitative-primer",
       "name": "Quantitative Primer",
       "type": "latex",
-      "sourceTexPath": "QuantitativePrimer/quant_qprimer_book.tex",
+      "sourceTexPath": "有题目的/Quantitative Primer/quant_qprimer_book.tex",
       "problemFile": "quantitative-primer/problems.json",
       "problemCount": 41,
-      "lastImportedAt": "2026-05-27T03:07:21.649Z",
-      "lastBuiltAt": "2026-05-27T06:17:53.891Z"
+      "lastImportedAt": "2026-06-02T01:06:35.867Z",
+      "lastBuiltAt": "2026-06-02T08:34:19.954Z"
     },
     {
       "slug": "dudeney-puzzles",
       "name": "Dudeney 经典挑战谜题",
       "type": "latex",
-      "sourceTexPath": "Dudeney挑战谜题/quant_dudeney_book.tex",
+      "sourceTexPath": "有题目的/Dudeney挑战谜题 Challenging Puzzles/quant_dudeney_book.tex",
       "problemFile": "dudeney-puzzles/problems.json",
       "problemCount": 123,
-      "lastImportedAt": "2026-05-27T03:07:21.649Z",
-      "lastBuiltAt": "2026-05-27T06:17:53.893Z"
+      "lastImportedAt": "2026-06-02T01:06:35.867Z",
+      "lastBuiltAt": "2026-06-02T08:34:19.958Z"
     },
     {
       "slug": "linalg-primer",
       "name": "金融工程线性代数入门",
       "type": "latex",
-      "sourceTexPath": "金融工程线性代数入门/quant_linalg_book.tex",
+      "sourceTexPath": "纯textbook/金融工程线性代数入门 A Linear Algebra Primer for Financial Engineering/quant_linalg_book.tex",
       "problemFile": "linalg-primer/problems.json",
       "problemCount": 18,
-      "lastImportedAt": "2026-05-27T03:07:21.649Z",
-      "lastBuiltAt": "2026-05-27T06:17:53.893Z"
+      "lastImportedAt": "2026-06-02T01:06:35.867Z",
+      "lastBuiltAt": "2026-06-02T08:34:19.958Z"
     },
     {
       "slug": "probability-stochastic-10",
       "name": "概率与随机分析面试题 10 题",
       "type": "latex",
-      "sourceTexPath": "概率随机分析10题/quant_prob10_book.tex",
+      "sourceTexPath": "有题目的/概率随机分析10题 First 10 Questions - Probability Stochastic Calc IQs/quant_prob10_book.tex",
       "problemFile": "probability-stochastic-10/problems.json",
-      "problemCount": 11,
-      "lastImportedAt": "2026-05-27T03:07:21.649Z",
-      "lastBuiltAt": "2026-05-27T06:17:53.894Z"
+      "problemCount": 10,
+      "lastImportedAt": "2026-06-02T01:06:35.867Z",
+      "lastBuiltAt": "2026-06-02T08:34:19.958Z"
     },
     {
       "slug": "quantguide",
@@ -115,7 +115,83 @@
       "problemCount": 1204,
       "lastImportedAt": "2026-05-27T01:15:01.981713Z",
       "privacyNote": "Private local import from an authorized signed-in QuantGuide account.",
-      "lastBuiltAt": "2026-05-27T06:17:53.906Z"
+      "lastBuiltAt": "2026-06-02T08:34:19.984Z"
+    },
+    {
+      "slug": "stat110-strategic-practice",
+      "name": "Harvard Stat 110 概率论战略练习 Statistics 110 Strategic Practice",
+      "type": "pdf",
+      "sourceUrl": "https://stat110.hsites.harvard.edu/strategic-practice-problems",
+      "sourcePdfPath": "有题目的/Harvard Stat 110 概率论战略练习 Statistics 110 Strategic Practice",
+      "problemFile": "stat110-strategic-practice/problems.json",
+      "problemCount": 184,
+      "lastImportedAt": "2026-06-02T03:16:28.806267+00:00",
+      "rightsNote": "Official public Harvard Stat 110 course materials; distribution review required before public redistribution.",
+      "lastBuiltAt": "2026-06-02T08:34:19.994Z"
+    },
+    {
+      "slug": "stanford-msande214-hw3",
+      "name": "Stanford MS&E 214 HW3 Logistics/Finance",
+      "type": "course-homework",
+      "sourceUrl": "https://web.stanford.edu/~ashishg/msande214/spr_2024/handouts/index.html",
+      "sourceZipUrl": "https://web.stanford.edu/~ashishg/msande214/spr_2024/handouts/hw3_files.zip",
+      "sourceTexPath": "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.tex",
+      "sourcePdfPath": "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/hw3.pdf",
+      "sourceWorkbookPath": "有题目的/Stanford MS&E 214 优化金融讲义 Stanford MS&E 214 Handouts/hw3_files/hw3_files/homework3.xlsx",
+      "problemFile": "stanford-msande214-hw3/problems.json",
+      "problemCount": 5,
+      "lastImportedAt": "2026-06-02T08:13:22+00:00",
+      "rightsNote": "Official public Stanford course handout files. Answers are generated/solver-verified and non-official.",
+      "lastBuiltAt": "2026-06-02T08:34:19.995Z"
+    },
+    {
+      "slug": "probabilitycourse-solved-samples",
+      "name": "ProbabilityCourse Public Solved Samples",
+      "type": "open-access-web-solved-example",
+      "sourceUrl": "https://www.probabilitycourse.com/",
+      "sourcePageUrls": [
+        "https://www.probabilitycourse.com/chapter1/1_4_5_solved3.php",
+        "https://www.probabilitycourse.com/chapter5/5_1_6_solved_prob.php",
+        "https://www.probabilitycourse.com/chapter7/7_1_3_solved_probs.php",
+        "https://www.probabilitycourse.com/chapter8/8_2_5_solved_probs.php",
+        "https://www.probabilitycourse.com/chapter9/9_1_10_solved_probs.php",
+        "https://www.probabilitycourse.com/chapter11/11_1_5_solved_probs.php",
+        "https://www.probabilitycourse.com/chapter11/11_4_3_solved_probs.php"
+      ],
+      "problemFile": "probabilitycourse-solved-samples/problems.json",
+      "problemCount": 16,
+      "lastImportedAt": "2026-06-02T08:21:57+00:00",
+      "rightsNote": "Public ProbabilityCourse in-chapter solved examples only; excludes the separately sold student solutions guide for odd-numbered end-of-chapter problems. Prompts and solutions are paraphrased/reviewed for QuantGym.",
+      "lastBuiltAt": "2026-06-02T08:34:19.996Z"
+    },
+    {
+      "slug": "boyd-cvxbook-additional-exercises",
+      "name": "Boyd Convex Optimization Additional Exercises",
+      "type": "open-access-exercise-with-generated-answer",
+      "sourceUrl": "https://web.stanford.edu/~boyd/cvxbook/",
+      "repoUrl": "https://github.com/cvxgrp/cvxbook_additional_exercises",
+      "repoCommit": "6423524f947a7b3f14314015c06d8077a403502f",
+      "sourcePdfPath": "artifacts/source-research-report/downloads/boyd-convex-optimization/cvxbook_additional_exercises/additional_exercises.pdf",
+      "problemFile": "boyd-cvxbook-additional-exercises/problems.json",
+      "problemCount": 10,
+      "lastImportedAt": "2026-06-02T08:27:52+00:00",
+      "rightsNote": "Official public additional exercises; generated non-official answers because public repository has no solutions.",
+      "lastBuiltAt": "2026-06-02T08:34:19.996Z"
+    },
+    {
+      "slug": "etheridge-finmath-problem-sheets",
+      "name": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "type": "public-course-problem-sheet-with-generated-answer",
+      "sourceUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/index.html",
+      "problemHtmlUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq/finanq.html",
+      "problemPdfUrl": "https://www.stats.ox.ac.uk/~etheridg/finmath/finanq.pdf",
+      "sourceHtmlPath": "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.html",
+      "sourcePdfPath": "artifacts/source-research-report/downloads/alison-etheridge-finmath/finanq.pdf",
+      "problemFile": "etheridge-finmath-problem-sheets/problems.json",
+      "problemCount": 10,
+      "lastImportedAt": "2026-06-02T08:34:19+00:00",
+      "rightsNote": "Official public Oxford author-hosted problem sheet; generated non-official answers because no public solution file is included.",
+      "lastBuiltAt": "2026-06-02T08:34:19.997Z"
     }
   ]
 }

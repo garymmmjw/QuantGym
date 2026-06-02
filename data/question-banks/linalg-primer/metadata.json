@@ -2,8 +2,8 @@
   "slug": "linalg-primer",
   "name": "金融工程线性代数入门",
   "type": "latex",
-  "sourceTexPath": "金融工程线性代数入门/quant_linalg_book.tex",
+  "sourceTexPath": "纯textbook/金融工程线性代数入门 A Linear Algebra Primer for Financial Engineering/quant_linalg_book.tex",
   "problemFile": "problems.json",
   "problemCount": 18,
-  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+  "lastImportedAt": "2026-06-02T01:06:35.867Z"
 }

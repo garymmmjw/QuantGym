@@ -2,8 +2,8 @@
   "slug": "stefanica-fe-math",
   "name": "Stefanica 金融工程数学入门",
   "type": "latex",
-  "sourceTexPath": "Stefanica金融工程数学入门/quant_stefanica_book.tex",
+  "sourceTexPath": "纯textbook/Stefanica金融工程数学入门 A Primer for the Mathematics of Financial Engineering/quant_stefanica_book.tex",
   "problemFile": "problems.json",
   "problemCount": 35,
-  "lastImportedAt": "2026-05-27T03:07:21.649Z"
+  "lastImportedAt": "2026-06-02T01:06:35.867Z"
 }
