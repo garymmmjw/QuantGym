@@ -3980,6 +3980,7 @@ function getProblemCollectionEntries(problems = getCatalogProblems()) {
 
 function renderProblemCollectionGrid() {
   if (!els.problemCollectionGrid) return;
+  const isEn = getLanguage() === "en";
   const entries = getProblemCollectionEntries(state.problems.filter(isCatalogProblem));
   els.problemCollectionGrid.innerHTML = "";
   entries.forEach((entry) => {
@@ -3995,15 +3996,18 @@ function renderProblemCollectionGrid() {
     card.dataset.problemCollection = entry.id;
     card.style.setProperty("--value", String(percent));
     card.innerHTML = `
-      <span class="problem-collection-art"><i data-lucide="${entry.icon}"></i></span>
+      <span class="problem-collection-art"><span><i data-lucide="${entry.icon}"></i></span></span>
       <span class="problem-collection-copy">
+        <em>${escapeHtml(entry.mode === "leetcode" ? "Featured list" : entry.mode === "source" ? "Source set" : "Topic set")}</em>
         <strong>${escapeHtml(entry.title)}</strong>
         <small>${escapeHtml(entry.description)}</small>
       </span>
       <span class="problem-collection-bottom">
-        <span>${escapeHtml(String(entry.done))} / ${escapeHtml(String(entry.total))}</span>
+        <span><strong>${escapeHtml(String(entry.done))}</strong> / ${escapeHtml(String(entry.total))}</span>
+        <small>${escapeHtml(isEn ? "completed" : "完成进度")}</small>
         <i aria-hidden="true"><span></span></i>
       </span>
+      <span class="problem-collection-go" aria-hidden="true"><i data-lucide="arrow-up-right"></i></span>
     `;
     els.problemCollectionGrid.appendChild(card);
   });
@@ -5876,11 +5880,12 @@ async function openLibraryReader(entryId) {
     return;
   }
   els.libraryReaderTitle.textContent = getLibraryTitle(entry, isEn);
-  els.libraryReaderMeta.textContent = `${entry.readType === "pdf" ? "PDF" : "HTML"} · ${entry.kind === "questionSet" ? (isEn ? "Question Set" : "题单") : (isEn ? "Book" : "书籍")}`;
+  els.libraryReaderMeta.textContent = `${entry.readType === "pdf" ? (isEn ? "Secure PDF" : "安全 PDF") : "HTML"} · ${entry.kind === "questionSet" ? (isEn ? "Question Set" : "题单") : (isEn ? "Book" : "书籍")}`;
   els.libraryReaderOpenNew.innerHTML = `<i data-lucide="external-link"></i>${escapeHtml(isEn ? "Open" : "新窗口")}`;
   els.libraryReaderOpenNew.href = "#";
   els.libraryReaderFrame.src = "about:blank";
   els.libraryReaderOverlay.style.setProperty("--reader-cover", `url("${entry.coverUrl || ""}")`);
+  els.libraryReaderOverlay.dataset.readerType = entry.readType || "pdf";
   els.libraryReaderOverlay.classList.remove("hidden");
   els.libraryReaderOverlay.classList.add("is-opening");
   document.body.classList.add("library-reader-open");
@@ -5890,7 +5895,7 @@ async function openLibraryReader(entryId) {
     const url = await getLibraryReaderUrl(entry);
     if (entry.readType === "pdf") await probeLibraryPdf(url);
     els.libraryReaderOpenNew.href = url;
-    els.libraryReaderFrame.src = url;
+    els.libraryReaderFrame.src = entry.readType === "pdf" ? formatPdfEmbedUrl(url) : url;
   } catch (error) {
     closeLibraryReader();
     window.alert(error?.message || (isEn ? "Unable to open this PDF." : "暂时无法打开这本 PDF。"));
@@ -5914,6 +5919,13 @@ async function getLibraryReaderUrl(entry) {
   const url = result.url || result.path || "";
   if (!url) throw new Error(getLanguage() === "en" ? "The server did not return a reader URL." : "服务器没有返回阅读链接。");
   return absolutizeLibraryApiUrl(url);
+}
+
+function formatPdfEmbedUrl(url) {
+  const raw = String(url || "").trim();
+  if (!raw) return "";
+  const [base] = raw.split("#");
+  return `${base}#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0`;
 }
 
 async function probeLibraryPdf(url) {
@@ -9028,7 +9040,7 @@ function simplifyLatexPreview(text) {
     .replace(/\\left|\\right/g, "")
     .replace(/\\[a-zA-Z]+/g, "")
     .replace(/__QG_DOLLAR__/g, "$")
-    .replace(/\${2,}(?=\d)/g, "$$")
+    .replace(/\${2,}(?=\d)/g, () => "$$")
     .replace(/[{}]/g, "")
     .replace(/_([A-Za-z0-9]+)/g, "_$1")
     .replace(/\s+/g, " ");
@@ -9805,9 +9817,31 @@ function renderRichText(node, text) {
   lines.forEach((line) => {
     const heading = line.match(/^(#{1,4})\s+(.+)$/);
     const bullet = line.match(/^\s*[-*]\s+(.+)$/);
+    const displayMathParts = splitDisplayMathLine(line);
     if (!line.trim()) {
       flushParagraph();
       list = null;
+      return;
+    }
+    if (displayMathParts) {
+      flushParagraph();
+      list = null;
+      displayMathParts.forEach((part) => {
+        if (!part.text) return;
+        if (part.type === "math") {
+          appendDisplayMath(node, part.text);
+          return;
+        }
+        const block = document.createElement("p");
+        appendInlineRichText(block, part.text);
+        node.appendChild(block);
+      });
+      return;
+    }
+    if (isStandaloneLatexLine(line)) {
+      flushParagraph();
+      list = null;
+      appendDisplayMath(node, line);
       return;
     }
     if (heading) {
@@ -10006,12 +10040,91 @@ function parseInterviewFeedbackCardText(text) {
 }
 
 function normalizeRichTextContent(text) {
-  return String(text || "")
+  return normalizeLatexSource(String(text || ""))
     .replace(/\u00a0/g, " ")
     .replace(/\\\[/g, "\\[")
     .replace(/\\\]/g, "\\]")
     .replace(/\\\(/g, "\\(")
     .replace(/\\\)/g, "\\)");
+}
+
+function normalizeLatexSource(text) {
+  return String(text || "")
+    .replace(/\$\$\$(?=\\)/g, () => "$$\n\n$")
+    .replace(/\\(sum|prod|int)_\{([^{}]+)\}\s+\^\{([^{}]+)\}/g, "\\$1_{$2}^{$3}")
+    .replace(/\\(sum|prod|int)_\{([^{}]+)\}\s+\^([A-Za-z0-9+-]+)/g, "\\$1_{$2}^{$3}")
+    .replace(/\\(sum|prod|int)_([A-Za-z0-9+-]+)\s+\^\{([^{}]+)\}/g, "\\$1_{$2}^{$3}")
+    .replace(/\\(sum|prod|int)_([A-Za-z0-9+-]+)\s+\^([A-Za-z0-9+-]+)/g, "\\$1_{$2}^{$3}")
+    .replace(/\$\$\s*(?=\\?(?:sum|prod|int|frac|sqrt|lim|begin|left|right|[A-Za-z]\b))/g, () => "$$");
+}
+
+function splitDisplayMathLine(line) {
+  const raw = String(line || "");
+  if (!/(?<!\\)\$\$/.test(raw)) {
+    const dollarMatches = Array.from(raw.matchAll(/(?<!\\)\$/g));
+    if (dollarMatches.length !== 1) return null;
+    const markerIndex = dollarMatches[0].index;
+    const before = raw.slice(0, markerIndex).trim();
+    const after = raw.slice(markerIndex + 1).trim();
+    if (!/[：:]\s*$/.test(before) || !looksLikeLatex(after)) return null;
+    return [
+      { type: "text", text: before },
+      { type: "math", text: after }
+    ];
+  }
+  const parts = raw.split(/(?<!\\)\$\$/);
+  const result = [];
+  parts.forEach((part, index) => {
+    const value = part.trim();
+    if (!value) return;
+    const isMathSlot = index % 2 === 1;
+    if (isMathSlot) {
+      result.push({ type: "math", text: value });
+      return;
+    }
+    if (isStandaloneLatexLine(value)) {
+      result.push({ type: "math", text: value });
+    } else {
+      result.push({ type: "text", text: value });
+    }
+  });
+  return result.length ? result : null;
+}
+
+function isStandaloneLatexLine(line) {
+  const value = String(line || "").trim().replace(/^\${2,}|\${2,}$/g, "").trim();
+  if (!value || value.length < 3 || !looksLikeLatex(value)) return false;
+  const cjkMatches = value.match(/[\u3400-\u9fff]/g) || [];
+  if (cjkMatches.length > 4) return false;
+  const proseWords = value
+    .replace(/\\[A-Za-z]+/g, " ")
+    .replace(/\$[^$]*\$/g, " ")
+    .match(/[A-Za-z]{3,}/g) || [];
+  if (proseWords.length > 4) return false;
+  if (value.length > 180 && proseWords.length > 1) return false;
+  return true;
+}
+
+function looksLikeLatex(value) {
+  return /\\(?:sum|prod|int|frac|sqrt|lim|begin|end|left|right|cdot|times|leq|geq|neq|approx|Rightarrow|rightarrow|to|infty|mathbb|mathrm|operatorname|alpha|beta|gamma|theta|sigma|mu|rho|lambda|Delta)|[_^]\{|[=<>≤≥≈]\s*\\/.test(String(value || ""));
+}
+
+function appendDisplayMath(node, text) {
+  const block = document.createElement("div");
+  block.className = "rich-math-display";
+  block.textContent = `\\[${cleanDisplayLatex(text)}\\]`;
+  node.appendChild(block);
+}
+
+function cleanDisplayLatex(text) {
+  return normalizeLatexSource(String(text || ""))
+    .replace(/\${2,}/g, " ")
+    .replace(/^\$|\$$/g, "")
+    .replace(/\\\[/g, "")
+    .replace(/\\\]/g, "")
+    .replace(/\\\(/g, "")
+    .replace(/\\\)/g, "")
+    .trim();
 }
 
 function appendInlineRichText(node, text) {
