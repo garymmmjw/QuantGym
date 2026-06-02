@@ -95,6 +95,16 @@ function copyRuntimeStaticFiles(distDir) {
   const generatedAssetsDir = path.join(projectRoot, "assets", "generated");
   const distGeneratedAssetsDir = path.join(distDir, "assets", "generated");
   fs.cpSync(generatedAssetsDir, distGeneratedAssetsDir, { recursive: true });
+
+  const problemMediaDir = path.join(projectRoot, "assets", "problem-media");
+  if (fs.existsSync(problemMediaDir)) {
+    fs.cpSync(problemMediaDir, path.join(distDir, "assets", "problem-media"), { recursive: true });
+  }
+
+  const libraryCoversDir = path.join(projectRoot, "assets", "library-covers");
+  if (fs.existsSync(libraryCoversDir)) {
+    fs.cpSync(libraryCoversDir, path.join(distDir, "assets", "library-covers"), { recursive: true });
+  }
 }
 
 function writeConfig(distDir) {

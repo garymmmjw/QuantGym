@@ -20,6 +20,8 @@ import {
   seedNews, seedJobs, quantCompanyDefs, seedCourses
 } from './catalog-data.js';
 
+const libraryCatalog = Array.isArray(globalThis.quantLibraryCatalog) ? globalThis.quantLibraryCatalog : [];
+
 const PROBLEM_MEDIA_FIELD_KEYS = [
   "image",
   "imageUrl",
@@ -118,9 +120,12 @@ let problemViewMode = "all";
 let problemThemeFilter = "all";
 let problemDifficultyFilter = "all";
 let problemCompanyFilter = "all";
+let problemSourceFilter = "all";
 let companyTierFilter = "all";
 let problemSocialNotice = "";
+let libraryKindFilter = "all";
 let leetcodeHotExpanded = false;
+let libraryQuery = "";
 let todoDockOpen = false;
 let heroTypewriterTimer = null;
 let streakPanelOpen = false;
@@ -272,6 +277,19 @@ function bindElements() {
     "messageConversationBody",
     "messageComposerForm",
     "messageComposerInput",
+    "librarySearch",
+    "libraryKindTabs",
+    "libraryStats",
+    "libraryContinueShelf",
+    "libraryBookGrid",
+    "libraryQuestionGrid",
+    "libraryEmpty",
+    "libraryReaderOverlay",
+    "libraryReaderFrame",
+    "libraryReaderTitle",
+    "libraryReaderMeta",
+    "libraryReaderClose",
+    "libraryReaderOpenNew",
     "logForm",
     "logText",
     "durationInput",
@@ -294,6 +312,7 @@ function bindElements() {
     "problemImportForm",
     "problemJsonInput",
     "problemInteractionStatus",
+    "problemSourceFilterClearBtn",
     "problemCompletionProgress",
     "problemThemeFilter",
     "problemThemeSummary",
@@ -701,6 +720,26 @@ function bindEvents() {
     event.preventDefault();
     sendDirectMessage();
   });
+  els.librarySearch?.addEventListener("input", () => {
+    libraryQuery = normalizeSearchQuery(els.librarySearch.value);
+    renderLibrary();
+  });
+  els.libraryKindTabs?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-library-kind]");
+    if (!button) return;
+    libraryKindFilter = ["book", "questionSet"].includes(button.dataset.libraryKind) ? button.dataset.libraryKind : "all";
+    renderLibrary();
+  });
+  [els.libraryContinueShelf, els.libraryBookGrid, els.libraryQuestionGrid].filter(Boolean).forEach((container) => {
+    container.addEventListener("click", handleLibraryAction);
+  });
+  els.libraryReaderClose?.addEventListener("click", closeLibraryReader);
+  els.libraryReaderOverlay?.addEventListener("click", (event) => {
+    if (event.target === els.libraryReaderOverlay) closeLibraryReader();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !els.libraryReaderOverlay?.classList.contains("hidden")) closeLibraryReader();
+  });
 
   els.sampleBtn.addEventListener("click", () => {
     els.logText.value = sampleEntries[Math.floor(Math.random() * sampleEntries.length)];
@@ -741,6 +780,11 @@ function bindEvents() {
   });
   els.problemCompanyClearBtn?.addEventListener("click", () => {
     problemCompanyFilter = "all";
+    problemVisibleCount = PROBLEM_PAGE_SIZE;
+    returnToProblemList();
+  });
+  els.problemSourceFilterClearBtn?.addEventListener("click", () => {
+    problemSourceFilter = "all";
     problemVisibleCount = PROBLEM_PAGE_SIZE;
     returnToProblemList();
   });
@@ -971,7 +1015,7 @@ function bindEvents() {
 
 function setupButtonRipples() {
   document.addEventListener("click", (event) => {
-    const button = event.target.closest("button, .primary-button, .secondary-button, .module-tab, .segment, .feature-launch-card, .leetcode-hot-link, .leetcode-hot-done, .todo-dock-button, .todo-task-toggle");
+    const button = event.target.closest("button, .primary-button, .secondary-button, .module-tab, .segment, .library-card, .feature-launch-card, .leetcode-hot-link, .leetcode-hot-done, .todo-dock-button, .todo-task-toggle");
     if (!button || button.closest(".auth-provider-stack")) return;
     const rect = button.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
@@ -2917,6 +2961,7 @@ function applyLanguage() {
   setButtonLabel('[data-module-tab="resume"]', t("resume"));
   setButtonLabel('[data-module-tab="jobs"]', t("jobs"));
   setButtonLabel('[data-module-tab="companies"]', t("companies"));
+  setButtonLabel('[data-module-tab="library"]', language === "en" ? "Library" : "书城");
   setButtonLabel('[data-module-tab="courses"]', t("courses"));
   setButtonLabel('[data-module-tab="skills"]', t("skills"));
   setButtonLabel('[data-module-tab="tools"]', t("tools"));
@@ -2972,6 +3017,14 @@ function applyLanguage() {
   setText("#messagesPageTitle", t("messages"));
   setText("#messagesSummary", t("messagesSummary"));
   setPlaceholder("messageComposerInput", t("messageComposerPlaceholder"));
+  setPlaceholder("librarySearch", language === "en" ? "Search books, sets, sources" : "搜索书籍、题单、题源");
+  setText('[data-library-kind="all"]', language === "en" ? "All" : "全部");
+  setText('[data-library-kind="book"]', language === "en" ? "Books" : "书籍");
+  setText('[data-library-kind="questionSet"]', language === "en" ? "Question Sets" : "题单");
+  setText("#libraryContinueTitle", language === "en" ? "Continue Reading" : "继续阅读");
+  setText("#libraryBookTitle", language === "en" ? "Books" : "书籍");
+  setText("#libraryQuestionTitle", language === "en" ? "Question Sets" : "题单");
+  setText("#libraryEmpty", language === "en" ? "No matching books or question sets." : "没有匹配的书籍或题单。");
   setText(".problem-page-copy .rank-label", t("problemEyebrow"));
   setText(".problem-page-copy h2", t("problemTitle"));
   setText(".problem-page-copy p", t("problemSubtitle"));
@@ -3343,6 +3396,7 @@ function switchModule(moduleName = "overview") {
   if (targetModule === "resume") renderResume();
   if (targetModule === "jobs") renderJobs();
   if (targetModule === "companies") renderCompanies();
+  if (targetModule === "library") renderLibrary();
   if (targetModule === "courses") renderCourses();
   if (targetModule === "settings") renderSettings();
   if (targetModule === "skills") drawRadar();
@@ -3374,6 +3428,7 @@ function renderAll() {
   renderResume();
   renderJobs();
   renderCompanies();
+  renderLibrary();
   renderCourses();
   renderCommunity();
   renderMessages();
@@ -3624,6 +3679,11 @@ function problemMatchesDifficulty(problem, difficulty = problemDifficultyFilter)
   return difficultyClass(problem.difficulty) === normalized;
 }
 
+function problemMatchesSource(problem, sourceSlug = problemSourceFilter) {
+  if (!sourceSlug || sourceSlug === "all") return true;
+  return problem.source === sourceSlug || problem.bookSlug === sourceSlug;
+}
+
 function companyKey(value = "") {
   return String(value || "")
     .normalize("NFKC")
@@ -3730,6 +3790,7 @@ function showCompanyProblems(companySlug) {
   const company = getCompanyDef(companySlug);
   if (!company) return;
   problemCompanyFilter = company.slug;
+  problemSourceFilter = "all";
   problemViewMode = "all";
   selectedProblemDetailId = "";
   problemVisibleCount = PROBLEM_PAGE_SIZE;
@@ -5513,6 +5574,275 @@ function renderCourses() {
     els.courseList.appendChild(card);
   });
   refreshIcons();
+}
+
+function getLibraryEntries() {
+  return libraryCatalog
+    .filter((entry) => entry && entry.id !== "question-bank")
+    .map((entry) => ({
+      ...entry,
+      kind: entry.kind === "questionSet" ? "questionSet" : "book",
+      problemCount: Math.max(0, Number(entry.problemCount || 0))
+    }));
+}
+
+function getLibraryTitle(entry, preferEnglish = getLanguage() === "en") {
+  if (preferEnglish) return entry.titleEn || entry.titleZh || entry.id;
+  return entry.titleZh || entry.titleEn || entry.id;
+}
+
+function getLibrarySubtitle(entry, preferEnglish = getLanguage() === "en") {
+  return preferEnglish ? (entry.titleZh || entry.category || "") : (entry.titleEn || entry.category || "");
+}
+
+function getLibrarySearchText(entry) {
+  return normalizeSearchFields([
+    entry.id,
+    entry.kind,
+    entry.titleZh,
+    entry.titleEn,
+    entry.sourceSlug,
+    entry.category,
+    entry.language,
+    Array.isArray(entry.tags) ? entry.tags.join(" ") : ""
+  ]);
+}
+
+function getVisibleLibraryEntries() {
+  const query = libraryQuery || normalizeSearchQuery(els.librarySearch?.value || "");
+  return getLibraryEntries()
+    .filter((entry) => libraryKindFilter === "all" || entry.kind === libraryKindFilter)
+    .filter((entry) => !query || matchesNormalizedText(getLibrarySearchText(entry), query));
+}
+
+function renderLibrary() {
+  if (!els.libraryBookGrid || !els.libraryQuestionGrid) return;
+  const isEn = getLanguage() === "en";
+  const allEntries = getLibraryEntries();
+  const entries = getVisibleLibraryEntries();
+  const books = entries.filter((entry) => entry.kind === "book");
+  const questionSets = entries.filter((entry) => entry.kind === "questionSet");
+  const readable = entries.filter((entry) => entry.readUrl || entry.readAssetId).slice(0, 7);
+  const totalProblems = state.problems.filter(isCatalogProblem).length;
+
+  els.libraryKindTabs?.querySelectorAll("[data-library-kind]").forEach((button) => {
+    const kind = ["book", "questionSet"].includes(button.dataset.libraryKind) ? button.dataset.libraryKind : "all";
+    button.classList.toggle("active", kind === libraryKindFilter);
+    button.setAttribute("aria-selected", String(kind === libraryKindFilter));
+  });
+
+  if (els.libraryStats) {
+    const bookCount = allEntries.filter((entry) => entry.kind === "book").length;
+    const setCount = allEntries.filter((entry) => entry.kind === "questionSet").length;
+    els.libraryStats.innerHTML = `
+      <span><strong>${escapeHtml(String(bookCount))}</strong><small>${escapeHtml(isEn ? "Books" : "本书籍")}</small></span>
+      <span><strong>${escapeHtml(String(setCount))}</strong><small>${escapeHtml(isEn ? "Sets" : "份题单")}</small></span>
+      <span><strong>${escapeHtml(String(totalProblems))}</strong><small>${escapeHtml(isEn ? "Linked Problems" : "关联题目")}</small></span>
+    `;
+  }
+
+  renderLibraryShelf(els.libraryContinueShelf, readable, true);
+  renderLibraryShelf(els.libraryBookGrid, books, false);
+  renderLibraryShelf(els.libraryQuestionGrid, questionSets, false);
+  els.libraryEmpty?.classList.toggle("hidden", entries.length > 0);
+  refreshIcons();
+}
+
+function renderLibraryShelf(container, entries, compact = false) {
+  if (!container) return;
+  container.innerHTML = "";
+  if (!entries.length) {
+    container.appendChild(emptyBlock(getLanguage() === "en" ? "No matching items." : "没有匹配内容。"));
+    return;
+  }
+  entries.forEach((entry) => {
+    container.appendChild(createLibraryCard(entry, compact));
+  });
+}
+
+function createLibraryCard(entry, compact = false) {
+  const isEn = getLanguage() === "en";
+  const title = getLibraryTitle(entry, isEn);
+  const subtitle = getLibrarySubtitle(entry, isEn);
+  const kindLabel = entry.kind === "questionSet" ? (isEn ? "Question Set" : "题单") : (isEn ? "Book" : "书籍");
+  const hasRead = Boolean(entry.readUrl || entry.readAssetId);
+  const hasPractice = Boolean(entry.sourceSlug && entry.problemCount > 0);
+  const card = document.createElement("article");
+  card.className = `library-card${compact ? " compact" : ""}${entry.kind === "questionSet" ? " question-set" : ""}`;
+  card.dataset.libraryId = entry.id;
+  card.tabIndex = 0;
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-label", `${hasRead ? (isEn ? "Read" : "阅读") : (isEn ? "Practice" : "练题")}: ${title}`);
+
+  const cover = document.createElement("button");
+  cover.type = "button";
+  cover.className = "library-cover-button";
+  cover.dataset.libraryId = entry.id;
+  cover.dataset.libraryAction = hasRead ? "read" : "practice";
+  cover.innerHTML = `
+    <img src="${escapeHtml(entry.coverUrl || "assets/generated/brand-q-mark.webp?v=premium-system-2")}" alt="${escapeHtml(title)}" loading="lazy">
+    <span>${escapeHtml(kindLabel)}</span>
+  `;
+
+  const copy = document.createElement("div");
+  copy.className = "library-card-copy";
+  copy.innerHTML = `
+    <h3>${escapeHtml(title)}</h3>
+    <p>${escapeHtml(subtitle)}</p>
+    <div class="library-card-meta">
+      <span>${escapeHtml(entry.category || "Quant")}</span>
+      <span>${escapeHtml(entry.language || "EN + ZH")}</span>
+      ${entry.problemCount ? `<span>${escapeHtml(String(entry.problemCount))} ${escapeHtml(isEn ? "problems" : "题")}</span>` : ""}
+    </div>
+  `;
+
+  const actions = document.createElement("div");
+  actions.className = "library-card-actions";
+  if (hasRead) {
+    actions.appendChild(createLibraryActionButton(entry.id, "read", "book-open", isEn ? "Read" : "阅读"));
+  }
+  if (hasPractice) {
+    actions.appendChild(createLibraryActionButton(entry.id, "practice", "list-checks", isEn ? "Practice" : "练题"));
+  }
+  if (!hasRead && !hasPractice) {
+    actions.innerHTML = `<span class="library-card-note">${escapeHtml(isEn ? "Reference only" : "仅作资料入口")}</span>`;
+  }
+
+  card.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    if (hasRead) openLibraryReader(entry.id);
+    else if (hasPractice) openLibraryPractice(entry.sourceSlug);
+  });
+  card.append(cover, copy, actions);
+  return card;
+}
+
+function createLibraryActionButton(entryId, action, iconName, label) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "secondary-button compact";
+  button.dataset.libraryId = entryId;
+  button.dataset.libraryAction = action;
+  button.innerHTML = `<i data-lucide="${iconName}"></i>${escapeHtml(label)}`;
+  return button;
+}
+
+function handleLibraryAction(event) {
+  const actionNode = event.target.closest("[data-library-action]");
+  const card = event.target.closest("[data-library-id]");
+  const entryId = actionNode?.dataset.libraryId || card?.dataset.libraryId || "";
+  const entry = getLibraryEntries().find((item) => item.id === entryId);
+  if (!entry) return;
+  const action = actionNode?.dataset.libraryAction || ((entry.readUrl || entry.readAssetId) ? "read" : "practice");
+  if (action === "practice") {
+    openLibraryPractice(entry.sourceSlug);
+    return;
+  }
+  openLibraryReader(entry.id);
+}
+
+function toLibraryUrl(value = "") {
+  if (!value) return "";
+  return encodeURI(value).replace(/#/g, "%23");
+}
+
+async function openLibraryReader(entryId) {
+  const entry = getLibraryEntries().find((item) => item.id === entryId);
+  if (!entry?.readUrl && !entry?.readAssetId) {
+    if (entry?.sourceSlug) openLibraryPractice(entry.sourceSlug);
+    return;
+  }
+  if (entry.readType === "external") {
+    window.open(toLibraryUrl(entry.readUrl), "_blank", "noopener,noreferrer");
+    return;
+  }
+  const isEn = getLanguage() === "en";
+  if (!els.libraryReaderOverlay || !els.libraryReaderFrame) {
+    const url = await getLibraryReaderUrl(entry).catch(() => "");
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
+    return;
+  }
+  els.libraryReaderTitle.textContent = getLibraryTitle(entry, isEn);
+  els.libraryReaderMeta.textContent = `${entry.readType === "pdf" ? "PDF" : "HTML"} · ${entry.kind === "questionSet" ? (isEn ? "Question Set" : "题单") : (isEn ? "Book" : "书籍")}`;
+  els.libraryReaderOpenNew.innerHTML = `<i data-lucide="external-link"></i>${escapeHtml(isEn ? "Open" : "新窗口")}`;
+  els.libraryReaderOpenNew.href = "#";
+  els.libraryReaderFrame.src = "about:blank";
+  els.libraryReaderOverlay.style.setProperty("--reader-cover", `url("${entry.coverUrl || ""}")`);
+  els.libraryReaderOverlay.classList.remove("hidden");
+  els.libraryReaderOverlay.classList.add("is-opening");
+  document.body.classList.add("library-reader-open");
+  refreshIcons();
+
+  try {
+    const url = await getLibraryReaderUrl(entry);
+    els.libraryReaderOpenNew.href = url;
+    els.libraryReaderFrame.src = url;
+  } catch (error) {
+    closeLibraryReader();
+    window.alert(error?.message || (isEn ? "Unable to open this PDF." : "暂时无法打开这本 PDF。"));
+    return;
+  } finally {
+    window.setTimeout(() => {
+      els.libraryReaderOverlay?.classList.remove("is-opening");
+    }, 900);
+  }
+}
+
+async function getLibraryReaderUrl(entry) {
+  if (entry.readType !== "pdf") return toLibraryUrl(entry.readUrl);
+  if (!entry.readAssetId) throw new Error(getLanguage() === "en" ? "This PDF is not configured for online reading." : "这本 PDF 尚未配置线上阅读。");
+  if (!canUseCloud()) {
+    throw new Error(getLanguage() === "en"
+      ? "Please sign in or register with the cloud account before reading PDFs."
+      : "请先用云端账号登录或注册后再阅读 PDF。");
+  }
+  const result = await cloudApi(`/library/reader-token/${encodeURIComponent(entry.readAssetId)}`, { method: "POST" });
+  const url = result.url || result.path || "";
+  if (!url) throw new Error(getLanguage() === "en" ? "The server did not return a reader URL." : "服务器没有返回阅读链接。");
+  return absolutizeLibraryApiUrl(url);
+}
+
+function absolutizeLibraryApiUrl(url) {
+  const raw = String(url || "").trim();
+  if (/^https?:\/\//i.test(raw)) return raw;
+  try {
+    const apiUrl = new URL(getCloudApiBase());
+    return `${apiUrl.origin}${raw.startsWith("/") ? raw : `/${raw}`}`;
+  } catch {
+    return raw;
+  }
+}
+
+function closeLibraryReader() {
+  els.libraryReaderOverlay?.classList.add("hidden");
+  els.libraryReaderOverlay?.classList.remove("is-opening");
+  if (els.libraryReaderFrame) els.libraryReaderFrame.src = "about:blank";
+  document.body.classList.remove("library-reader-open");
+}
+
+function getLibrarySourceLabel(sourceSlug) {
+  const entry = getLibraryEntries().find((item) => item.sourceSlug === sourceSlug);
+  return entry ? getLibraryTitle(entry, getLanguage() === "en") : sourceSlug;
+}
+
+function openLibraryPractice(sourceSlug) {
+  if (!sourceSlug) return;
+  const hasProblems = state.problems.some((problem) => isCatalogProblem(problem) && (
+    problem.source === sourceSlug || problem.bookSlug === sourceSlug
+  ));
+  if (!hasProblems) return;
+  problemSourceFilter = sourceSlug;
+  problemCompanyFilter = "all";
+  problemThemeFilter = "all";
+  problemDifficultyFilter = "all";
+  problemViewMode = "all";
+  selectedProblemDetailId = "";
+  problemVisibleCount = PROBLEM_PAGE_SIZE;
+  if (els.problemSearch) els.problemSearch.value = "";
+  closeLibraryReader();
+  switchModule("problems");
+  renderProblems();
 }
 
 function renderLearningPath(courses = normalizeCourses(state.courses)) {
@@ -7993,6 +8323,7 @@ function getProblemBrowserMatches(options = {}) {
   const forceAllView = Boolean(options.forceAllView);
   let problems = state.problems
     .filter(isCatalogProblem)
+    .filter((problem) => problemMatchesSource(problem, problemSourceFilter))
     .filter((problem) => problemMatchesCompany(problem, problemCompanyFilter))
     .filter((problem) => problemMatchesTheme(problem, problemThemeFilter))
     .filter((problem) => problemMatchesDifficulty(problem, problemDifficultyFilter));
@@ -8022,6 +8353,7 @@ function openProblemFromSearch(problemId) {
   selectedProblemDetailId = "";
   problemViewMode = "all";
   problemCompanyFilter = "all";
+  problemSourceFilter = "all";
   problemVisibleCount = PROBLEM_PAGE_SIZE;
   if (els.problemSearch) els.problemSearch.value = "";
   renderProblems();
@@ -8035,8 +8367,9 @@ function renderProblems(options = {}) {
   if (!resultsOnly) {
     renderLeetcodeHot100();
     const allCatalogProblems = state.problems.filter(isCatalogProblem);
-    renderProblemCompanyPanel(allCatalogProblems);
-    const scopedCatalogProblems = allCatalogProblems.filter((problem) => problemMatchesCompany(problem, problemCompanyFilter));
+    const sourceCatalogProblems = allCatalogProblems.filter((problem) => problemMatchesSource(problem, problemSourceFilter));
+    renderProblemCompanyPanel(sourceCatalogProblems);
+    const scopedCatalogProblems = sourceCatalogProblems.filter((problem) => problemMatchesCompany(problem, problemCompanyFilter));
     renderProblemThemeFilter(scopedCatalogProblems);
     renderProblemDifficultyFilter(scopedCatalogProblems);
     renderProblemCompletionDashboard(scopedCatalogProblems);
@@ -8306,7 +8639,19 @@ function renderProblemViewTabs() {
   document.querySelectorAll("[data-problem-view]").forEach((button) => {
     button.classList.toggle("active", button.dataset.problemView === problemViewMode);
   });
-  if (els.problemInteractionStatus) els.problemInteractionStatus.textContent = problemSocialNotice;
+  const sourceActive = problemSourceFilter && problemSourceFilter !== "all";
+  if (els.problemSourceFilterClearBtn) {
+    els.problemSourceFilterClearBtn.classList.toggle("hidden", !sourceActive);
+    els.problemSourceFilterClearBtn.innerHTML = `<i data-lucide="rotate-ccw"></i>${escapeHtml(getLanguage() === "en" ? "All sources" : "全部题源")}`;
+  }
+  if (els.problemInteractionStatus) {
+    const sourceText = sourceActive
+      ? (getLanguage() === "en"
+        ? `Source: ${getLibrarySourceLabel(problemSourceFilter)}`
+        : `题源：${getLibrarySourceLabel(problemSourceFilter)}`)
+      : "";
+    els.problemInteractionStatus.textContent = [sourceText, problemSocialNotice].filter(Boolean).join(" · ");
+  }
 }
 
 function clearProblemLookupCaches() {
@@ -9479,8 +9824,13 @@ function updateInterviewLayout() {
   els.interviewConsole?.classList.toggle("hidden", !showConsole);
   els.interviewGrid?.classList.toggle("setup-only", !showConsole);
   els.interviewGrid?.classList.toggle("session-only", showConsole);
-  // Immersive mode: fill the screen and hide the floating to-do dock during a session.
+  // Immersive mode: fill the screen, hide the floating to-do dock, and collapse the left nav.
   document.body.classList.toggle("interview-immersive", showConsole);
+  if (showConsole) {
+    document.body.classList.add("sidebar-collapsed");
+  } else {
+    applySidebarState();
+  }
 }
 
 function renderInterviewQuestionPanel() {
@@ -12594,7 +12944,7 @@ function revealInterviewAnswer() {
     interviewLanguage === "zh" ? "### 解析" : "### Explanation",
     getLocalizedProblemField(problem, "explanation", interviewLanguage === "en") || (interviewLanguage === "zh" ? "未填写" : "Not provided"),
     getProblemMediaMarkdown(problem, "answer")
-  ].filter(Boolean).join("\n"));
+  ].filter(Boolean).join("\n"), { variant: "reference" });
 }
 
 function startPkMatch() {

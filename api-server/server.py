@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import base64
 import json
 import math
 import os
@@ -17,12 +18,13 @@ import secrets
 import smtplib
 import sqlite3
 import sys
+import time
 from email.message import EmailMessage
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode, unquote, urlparse
+from urllib.parse import parse_qs, quote, urlencode, unquote, urlparse
 from urllib.request import urlopen
 
 
@@ -34,11 +36,18 @@ def env_bool(name: str, default: bool = False) -> bool:
 
 
 BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = Path(os.environ.get("QUANTGYM_DB", DATA_DIR / "quantgym.sqlite3"))
 PROBLEM_CATALOG_PATH = Path(
-    os.environ.get("QUANTGYM_PROBLEM_CATALOG", BASE_DIR.parent / "data" / "problem-catalog.json")
+    os.environ.get("QUANTGYM_PROBLEM_CATALOG", PROJECT_ROOT / "data" / "problem-catalog.json")
 )
+LIBRARY_ASSETS_PATH = Path(os.environ.get("QUANTGYM_LIBRARY_ASSETS", BASE_DIR / "library-assets.json"))
+LIBRARY_TOKEN_SECRET = os.environ.get(
+    "QUANTGYM_LIBRARY_TOKEN_SECRET",
+    os.environ.get("QUANTGYM_APP_SECRET", "quantgym-local-library-dev-secret"),
+)
+LIBRARY_READER_TOKEN_TTL_SECONDS = int(os.environ.get("QUANTGYM_LIBRARY_TOKEN_TTL_SECONDS", "600"))
 PORT = int(os.environ.get("PORT", "8790"))
 HOST = os.environ.get("QUANTGYM_HOST", os.environ.get("HOST", "127.0.0.1"))
 PBKDF2_ROUNDS = int(os.environ.get("QUANTGYM_PBKDF2_ROUNDS", "120000"))
@@ -80,6 +89,19 @@ PUBLIC_ACCOUNT_FIELDS = {
     "picture",
     "createdAt",
     "updatedAt",
+}
+
+SUBSCRIPTION_TIER_ORDER = {
+    "registered": 0,
+    "basic": 1,
+    "plus": 2,
+    "pro": 3,
+    "admin": 99,
+}
+
+_LIBRARY_ASSET_CACHE = {
+    "mtime": None,
+    "assets": {},
 }
 
 
@@ -181,6 +203,106 @@ def parse_json(raw: str, fallback):
         return json.loads(raw)
     except json.JSONDecodeError:
         return fallback
+
+
+def b64url_encode(raw: bytes) -> str:
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+
+def b64url_decode(value: str) -> bytes:
+    padding = "=" * (-len(value) % 4)
+    return base64.urlsafe_b64decode((value + padding).encode("ascii"))
+
+
+def load_library_assets() -> dict[str, dict]:
+    try:
+        mtime = LIBRARY_ASSETS_PATH.stat().st_mtime
+    except FileNotFoundError:
+        return {}
+    if _LIBRARY_ASSET_CACHE["mtime"] == mtime:
+        return _LIBRARY_ASSET_CACHE["assets"]
+    payload = parse_json(LIBRARY_ASSETS_PATH.read_text(encoding="utf-8"), {"assets": []})
+    assets = {}
+    for item in payload.get("assets", []):
+        if not isinstance(item, dict) or not str(item.get("id") or "").strip():
+            continue
+        assets[str(item["id"])] = item
+    _LIBRARY_ASSET_CACHE["mtime"] = mtime
+    _LIBRARY_ASSET_CACHE["assets"] = assets
+    return assets
+
+
+def get_library_asset(asset_id: str) -> dict:
+    asset = load_library_assets().get(str(asset_id or ""))
+    if not asset:
+        raise HttpError(404, "Library asset not found")
+    if str(asset.get("id") or "") == "question-bank":
+        raise HttpError(404, "Library asset not found")
+    return asset
+
+
+def resolve_library_asset_path(asset: dict) -> Path:
+    raw_path = Path(str(asset.get("path") or ""))
+    file_path = raw_path if raw_path.is_absolute() else PROJECT_ROOT / raw_path
+    resolved = file_path.resolve()
+    project_root = PROJECT_ROOT.resolve()
+    try:
+        resolved.relative_to(project_root)
+    except ValueError:
+        raise HttpError(403, "Library asset path is not allowed")
+    if not resolved.exists() or not resolved.is_file():
+        raise HttpError(404, "Library PDF file not found")
+    if resolved.suffix.lower() != ".pdf":
+        raise HttpError(403, "Only PDF library assets can be streamed")
+    return resolved
+
+
+def make_library_reader_token(asset_id: str, user_id: str) -> tuple[str, str]:
+    expires_at = int(time.time()) + max(60, LIBRARY_READER_TOKEN_TTL_SECONDS)
+    payload = {
+        "assetId": str(asset_id),
+        "userId": str(user_id),
+        "exp": expires_at,
+    }
+    payload_part = b64url_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+    signature = hmac.new(
+        LIBRARY_TOKEN_SECRET.encode("utf-8"),
+        payload_part.encode("ascii"),
+        hashlib.sha256,
+    ).digest()
+    return f"{payload_part}.{b64url_encode(signature)}", datetime.fromtimestamp(expires_at, timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def verify_library_reader_token(token: str) -> dict:
+    try:
+        payload_part, signature_part = str(token or "").split(".", 1)
+        expected = hmac.new(
+            LIBRARY_TOKEN_SECRET.encode("utf-8"),
+            payload_part.encode("ascii"),
+            hashlib.sha256,
+        ).digest()
+        actual = b64url_decode(signature_part)
+        if not hmac.compare_digest(expected, actual):
+            raise ValueError("bad signature")
+        payload = json.loads(b64url_decode(payload_part).decode("utf-8"))
+    except Exception:
+        raise HttpError(401, "Invalid library reader token")
+    if int(payload.get("exp") or 0) < int(time.time()):
+        raise HttpError(401, "Library reader token expired")
+    return payload
+
+
+def account_subscription_tier(user: dict) -> str:
+    account = parse_json(user.get("account_json") if isinstance(user, dict) else "", {})
+    tier = str(account.get("subscriptionTier") or account.get("plan") or "registered")
+    return tier if tier in SUBSCRIPTION_TIER_ORDER else "registered"
+
+
+def ensure_library_access(user: dict, asset: dict) -> None:
+    min_tier = str(asset.get("minTier") or "registered")
+    user_tier = account_subscription_tier(user)
+    if SUBSCRIPTION_TIER_ORDER.get(user_tier, 0) < SUBSCRIPTION_TIER_ORDER.get(min_tier, 0):
+        raise HttpError(403, "Your subscription does not include this PDF")
 
 
 def sanitize_account(account: dict | None, fallback_id: str | None = None) -> dict:
@@ -900,7 +1022,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         elif origin and origin in ALLOWED_ORIGINS:
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, Range")
+        self.send_header("Access-Control-Expose-Headers", "Accept-Ranges, Content-Range, Content-Length")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
         self.send_header("Access-Control-Max-Age", "86400")
         super().end_headers()
@@ -980,6 +1103,12 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.put_community()
             if path == "/api/sync" and self.command == "POST":
                 return self.sync()
+            library_token_match = re.fullmatch(r"/api/library/reader-token/([^/]+)", path)
+            if library_token_match and self.command == "POST":
+                return self.issue_library_reader_token(unquote(library_token_match.group(1)))
+            library_pdf_match = re.fullmatch(r"/api/library/pdfs/([^/]+)", path)
+            if library_pdf_match and self.command == "GET":
+                return self.serve_library_pdf(unquote(library_pdf_match.group(1)))
             return self.send_json(404, {"error": "Not found"})
         except HttpError as error:
             return self.send_json(error.status, {"error": error.message})
@@ -1041,6 +1170,84 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             "problemStates": db.get_problem_states(conn, user["id"]),
             "community": db.get_community(conn),
         }
+
+    def absolute_api_url(self, path: str) -> str:
+        proto = self.headers.get("X-Forwarded-Proto") or ("https" if self.headers.get("X-Forwarded-Ssl") == "on" else "http")
+        host = self.headers.get("X-Forwarded-Host") or self.headers.get("Host") or f"{HOST}:{PORT}"
+        return f"{proto}://{host}{path}"
+
+    def issue_library_reader_token(self, asset_id: str):
+        user = self.require_user()
+        asset = get_library_asset(asset_id)
+        ensure_library_access(user, asset)
+        token, expires_at = make_library_reader_token(asset["id"], user["id"])
+        path = f"/api/library/pdfs/{quote(asset['id'])}?token={quote(token)}"
+        self.send_json(200, {
+            "assetId": asset["id"],
+            "url": self.absolute_api_url(path),
+            "path": path,
+            "expiresAt": expires_at,
+            "minTier": asset.get("minTier") or "registered",
+        })
+
+    def serve_library_pdf(self, asset_id: str):
+        query = parse_qs(urlparse(self.path).query)
+        token = query.get("token", [""])[0]
+        payload = verify_library_reader_token(token)
+        if str(payload.get("assetId") or "") != str(asset_id):
+            raise HttpError(403, "Library reader token does not match this asset")
+        asset = get_library_asset(asset_id)
+        file_path = resolve_library_asset_path(asset)
+        file_size = file_path.stat().st_size
+        start = 0
+        end = file_size - 1
+        status = 200
+
+        range_header = self.headers.get("Range", "").strip()
+        if range_header:
+            match = re.fullmatch(r"bytes=(\d*)-(\d*)", range_header)
+            if not match:
+                raise HttpError(416, "Invalid range")
+            start_raw, end_raw = match.groups()
+            if start_raw == "" and end_raw == "":
+                raise HttpError(416, "Invalid range")
+            if start_raw == "":
+                suffix = int(end_raw)
+                if suffix <= 0:
+                    raise HttpError(416, "Invalid range")
+                start = max(0, file_size - suffix)
+            else:
+                start = int(start_raw)
+            if end_raw:
+                end = min(file_size - 1, int(end_raw))
+            if start > end or start >= file_size:
+                self.send_response(416)
+                self.send_header("Content-Range", f"bytes */{file_size}")
+                self.end_headers()
+                return
+            status = 206
+
+        length = end - start + 1
+        filename = file_path.name
+        self.send_response(status)
+        self.send_header("Content-Type", asset.get("contentType") or "application/pdf")
+        self.send_header("Content-Length", str(length))
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Cache-Control", "private, max-age=300")
+        self.send_header("Content-Disposition", f"inline; filename*=UTF-8''{quote(filename)}")
+        if status == 206:
+            self.send_header("Content-Range", f"bytes {start}-{end}/{file_size}")
+        self.end_headers()
+
+        with file_path.open("rb") as file:
+            file.seek(start)
+            remaining = length
+            while remaining > 0:
+                chunk = file.read(min(1024 * 1024, remaining))
+                if not chunk:
+                    break
+                self.wfile.write(chunk)
+                remaining -= len(chunk)
 
     def send_verification_code(self):
         data = self.read_json()
