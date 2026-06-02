@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="styles.css?direct&v=26">
+    <link rel="stylesheet" href="styles.css?direct&v=27">
     <script>
       window.MathJax = {
         tex: {
@@ -1011,9 +1011,12 @@
         <section id="libraryReaderOverlay" class="library-reader-overlay hidden" aria-label="PDF 阅读器" aria-modal="true" role="dialog">
           <div class="library-reader-shell">
             <header class="library-reader-header">
-              <div>
-                <span id="libraryReaderMeta" class="rank-label">PDF</span>
-                <h3 id="libraryReaderTitle">阅读</h3>
+              <div class="library-reader-titlebar">
+                <span class="library-reader-mark" aria-hidden="true"><i data-lucide="book-open"></i></span>
+                <div>
+                  <span id="libraryReaderMeta" class="rank-label">PDF</span>
+                  <h3 id="libraryReaderTitle">阅读</h3>
+                </div>
               </div>
               <div class="library-reader-actions">
                 <a id="libraryReaderOpenNew" class="secondary-button compact" href="#" target="_blank" rel="noreferrer">
@@ -1025,7 +1028,9 @@
                 </button>
               </div>
             </header>
-            <iframe id="libraryReaderFrame" class="library-reader-frame" title="PDF 阅读器"></iframe>
+            <div class="library-reader-stage">
+              <iframe id="libraryReaderFrame" class="library-reader-frame" title="PDF 阅读器"></iframe>
+            </div>
           </div>
         </section>
       </section>
