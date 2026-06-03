@@ -3426,6 +3426,7 @@ function switchModule(moduleName = "overview") {
   if (targetModule === "messages") renderMessages();
   if (targetModule === "tools") renderMentalMath();
   if (targetModule === "poker") {
+    document.body.classList.add("is-poker-module");
     if (!currentPokerGame) loadInitialPokerGame();
     renderPokerGame();
   }
@@ -14501,6 +14502,7 @@ const POKER_STARTING_STACK_BB = 100;
 const POKER_MIN_PLAYERS = 2;
 const POKER_ROOM_STORAGE_PREFIX = "quantgym.pokerRoom.v1.";
 const POKER_LAST_ROOM_KEY = "quantgym.pokerRoom.last.v1";
+const POKER_SINGLE_TABLE_CODE = "QG-MAIN";
 const POKER_DEMO_PLAYER_NAMES = ["Ivy Demo", "Max Demo", "Rio Demo", "Nova Demo", "Kai Demo", "Vega Demo", "Mina Demo", "Theo Demo", "Luna Demo", "Axel Demo"];
 const POKER_MATRIX_RANKS = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
 const POKER_POSITION_LABELS = {
@@ -14543,7 +14545,7 @@ async function ensurePokerOnlineRoom(options = {}) {
   const game = currentPokerGame;
   if (!game || game.mode === "demo" || !canUsePokerOnline()) return false;
   const urlRoomCode = getPokerRoomCodeFromUrl();
-  const targetCode = normalizePokerRoomCode(options.roomCode || urlRoomCode || game.roomCode);
+  const targetCode = getPokerSingleTableCode(options.roomCode || urlRoomCode || game.roomCode);
   if (!options.force && pokerOnline.connecting) return true;
   if (!options.force && pokerOnline.connected && pokerOnline.roomCode === targetCode) return true;
   pokerOnline.connecting = true;
@@ -14766,10 +14768,7 @@ function createPokerTournament(mode = "private") {
 }
 
 function makePokerRoomCode() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let suffix = "";
-  for (let index = 0; index < 5; index += 1) suffix += alphabet[randomInt(0, alphabet.length - 1)];
-  return `QG-${suffix}`;
+  return POKER_SINGLE_TABLE_CODE;
 }
 
 function getDefaultPokerPlayerName() {
@@ -14811,15 +14810,17 @@ function loadInitialPokerGame() {
   const fromUrl = getPokerRoomCodeFromUrl();
   if (fromUrl && canUsePokerOnline()) {
     const game = makePokerGameRound();
-    game.roomCode = fromUrl;
+    game.roomCode = getPokerSingleTableCode(fromUrl);
     game.online = true;
     game.feedback = "Joining online poker room...";
     currentPokerGame = game;
-    ensurePokerOnlineRoom({ roomCode: fromUrl, force: true });
+    ensurePokerOnlineRoom({ roomCode: game.roomCode, force: true });
     return game;
   }
-  const stored = fromUrl ? loadPokerRoomFromStorage(fromUrl) : loadPokerRoomFromStorage(safeLocalStorageGet(POKER_LAST_ROOM_KEY));
+  const storedCode = getPokerSingleTableCode(fromUrl || safeLocalStorageGet(POKER_LAST_ROOM_KEY));
+  const stored = loadPokerRoomFromStorage(storedCode);
   const game = stored || makePokerGameRound();
+  if (game.mode !== "demo") game.roomCode = POKER_SINGLE_TABLE_CODE;
   currentPokerGame = game;
   setPokerRoomUrl(game, fromUrl ? "replace" : "replace");
   if (!fromUrl && canUsePokerOnline() && game.mode !== "demo") ensurePokerOnlineRoom({ force: true });
@@ -14837,6 +14838,11 @@ function getPokerRoomCodeFromUrl() {
 
 function normalizePokerRoomCode(value) {
   return String(value || "").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 12);
+}
+
+function getPokerSingleTableCode(value = "") {
+  const normalized = normalizePokerRoomCode(value);
+  return normalized === "DEMO" ? normalized : POKER_SINGLE_TABLE_CODE;
 }
 
 function safeLocalStorageGet(key) {
