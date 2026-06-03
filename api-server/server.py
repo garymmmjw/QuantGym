@@ -19,6 +19,8 @@ import smtplib
 import sqlite3
 import sys
 import time
+import struct
+import threading
 from email.message import EmailMessage
 from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -26,6 +28,18 @@ from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote, urlencode, unquote, urlparse
 from urllib.request import urlopen
+
+from poker_engine import (
+    PokerError,
+    add_player as poker_add_player,
+    add_spectator as poker_add_spectator,
+    apply_command as poker_apply_command,
+    create_room_state as poker_create_room_state,
+    mark_disconnected as poker_mark_disconnected,
+    normalize_room_code as poker_normalize_room_code,
+    redact_state as poker_redact_state,
+    room_summary as poker_room_summary,
+)
 
 
 def env_bool(name: str, default: bool = False) -> bool:
@@ -99,6 +113,9 @@ SUBSCRIPTION_TIER_ORDER = {
     "pro": 3,
     "admin": 99,
 }
+POKER_WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+POKER_WS_MAX_MESSAGE_BYTES = int(os.environ.get("QUANTGYM_POKER_WS_MAX_MESSAGE_BYTES", str(512 * 1024)))
+POKER_SINGLE_TABLE_CODE = poker_normalize_room_code(os.environ.get("QUANTGYM_POKER_ROOM_CODE", "QG-MAIN")) or "QG-MAIN"
 
 _LIBRARY_ASSET_CACHE = {
     "mtime": None,
@@ -628,6 +645,21 @@ class Database:
 
                 CREATE INDEX IF NOT EXISTS idx_problem_comments_problem_created
                 ON problem_comments (problem_id, created_at);
+
+                CREATE TABLE IF NOT EXISTS poker_rooms (
+                  code TEXT PRIMARY KEY,
+                  host_user_id TEXT NOT NULL,
+                  room_json TEXT NOT NULL,
+                  created_at TEXT NOT NULL,
+                  updated_at TEXT NOT NULL,
+                  archived_at TEXT
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_poker_rooms_host_updated
+                ON poker_rooms (host_user_id, updated_at);
+
+                CREATE INDEX IF NOT EXISTS idx_poker_rooms_active_updated
+                ON poker_rooms (archived_at, updated_at);
                 """
             )
 
@@ -1033,13 +1065,421 @@ class Database:
                 )
             return len(saved)
 
+    def save_poker_room(self, room: dict) -> None:
+        if not isinstance(room, dict):
+            return
+        code = str(room.get("code") or room.get("state", {}).get("roomCode") or "").strip()
+        if not code:
+            return
+        now = utc_now()
+        created_at = str(room.get("createdAt") or now)
+        updated_at = str(room.get("updatedAt") or room.get("state", {}).get("updatedAt") or now)
+        host_user_id = str(room.get("hostUserId") or room.get("state", {}).get("hostUserId") or "")
+        with self.connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO poker_rooms (code, host_user_id, room_json, created_at, updated_at, archived_at)
+                VALUES (?, ?, ?, ?, ?, NULL)
+                ON CONFLICT(code) DO UPDATE SET
+                  host_user_id = excluded.host_user_id,
+                  room_json = excluded.room_json,
+                  updated_at = excluded.updated_at,
+                  archived_at = NULL
+                """,
+                (code, host_user_id, compact_json(room), created_at, updated_at),
+            )
+
+    def load_poker_room(self, code: str) -> dict | None:
+        room_code = str(code or "").strip()
+        if not room_code:
+            return None
+        with self.connect() as conn:
+            row = conn.execute(
+                """
+                SELECT room_json
+                FROM poker_rooms
+                WHERE code = ? AND archived_at IS NULL
+                """,
+                (room_code,),
+            ).fetchone()
+            return parse_json(row["room_json"], None) if row else None
+
+    def load_poker_rooms(self, limit: int = 300) -> list[dict]:
+        with self.connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT room_json
+                FROM poker_rooms
+                WHERE archived_at IS NULL
+                ORDER BY updated_at DESC
+                LIMIT ?
+                """,
+                (max(1, int(limit)),),
+            ).fetchall()
+            return [room for room in (parse_json(row["room_json"], None) for row in rows) if isinstance(room, dict)]
+
 
 db = Database(DB_PATH)
 IMPORTED_CATALOG_COUNT = db.import_problem_catalog(PROBLEM_CATALOG_PATH)
 
 
+def user_display_name(user: dict) -> str:
+    account = parse_json(user.get("account_json") if isinstance(user, dict) else "", {})
+    return str(account.get("name") or account.get("email") or user.get("email_norm") or "Player").strip()[:40] or "Player"
+
+
+class PokerWsClient:
+    def __init__(self, handler: "QuantGymHandler", user: dict, room_code: str):
+        self.handler = handler
+        self.user = user
+        self.user_id = user["id"]
+        self.room_code = room_code
+        self.lock = threading.Lock()
+        self.alive = True
+
+    def send_json(self, payload: dict) -> bool:
+        if not self.alive:
+            return False
+        try:
+            raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            frame = build_ws_frame(0x1, raw)
+            with self.lock:
+                self.handler.wfile.write(frame)
+                self.handler.wfile.flush()
+            return True
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            self.alive = False
+            return False
+
+    def send_pong(self, payload: bytes = b"") -> bool:
+        try:
+            with self.lock:
+                self.handler.wfile.write(build_ws_frame(0xA, payload))
+                self.handler.wfile.flush()
+            return True
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            self.alive = False
+            return False
+
+
+class PokerRoomHub:
+    def __init__(self):
+        self.lock = threading.RLock()
+        self.rooms: dict[str, dict] = {}
+        self.clients: dict[str, set[PokerWsClient]] = {}
+        self.load_persisted_rooms()
+
+    def room_code(self, room_code: str | None = None) -> str:
+        return POKER_SINGLE_TABLE_CODE
+
+    def list_rooms_for_user(self, user: dict) -> list[dict]:
+        with self.lock:
+            self.load_persisted_rooms()
+            rows = []
+            for room in self.rooms.values():
+                if room.get("code") != self.room_code():
+                    continue
+                rows.append({**poker_room_summary(room["state"]), "revision": room.get("revision", 0)})
+            rows.sort(key=lambda item: item.get("updatedAt") or "", reverse=True)
+            return rows
+
+    def create_room(self, user: dict, data: dict | None = None) -> dict:
+        payload = data if isinstance(data, dict) else {}
+        with self.lock:
+            room_code = self.room_code()
+            existing = self.rooms.get(room_code) or self.hydrate_room(db.load_poker_room(room_code))
+            if existing:
+                self.rooms[room_code] = existing
+                return self.join_room(room_code, user, payload)
+            state = poker_create_room_state(
+                user["id"],
+                str(payload.get("playerName") or user_display_name(user)),
+                room_code=room_code,
+                settings=payload.get("settings") if isinstance(payload.get("settings"), dict) else None,
+            )
+            room = {
+                "code": room_code,
+                "hostUserId": user["id"],
+                "createdAt": utc_now(),
+                "updatedAt": utc_now(),
+                "revision": 1,
+                "state": state,
+                "participants": {
+                    user["id"]: {
+                        "userId": user["id"],
+                        "name": user_display_name(user),
+                        "joinedAt": utc_now(),
+                        "lastSeenAt": utc_now(),
+                    }
+                },
+            }
+            self.rooms[room_code] = room
+            self.persist_room(room)
+            return self.room_payload(room_code, user["id"])
+
+    def ensure_room(self, room_code: str) -> dict:
+        code = self.room_code(room_code)
+        room = self.rooms.get(code)
+        if not room:
+            room = self.hydrate_room(db.load_poker_room(code))
+            if room:
+                self.rooms[code] = room
+        if not room:
+            raise HttpError(404, "Poker room not found")
+        return room
+
+    def get_room(self, room_code: str, user: dict) -> dict:
+        with self.lock:
+            room = self.ensure_room(room_code)
+            self.touch_participant(room, user)
+            changed = self.ensure_viewer(room, user)
+            self.mark_player_connected(room, user["id"], True)
+            if changed:
+                self.bump(room)
+            else:
+                self.persist_room(room)
+            return self.room_payload(room["code"], user["id"])
+
+    def join_room(self, room_code: str, user: dict, data: dict | None = None) -> dict:
+        payload = data if isinstance(data, dict) else {}
+        changed = False
+        with self.lock:
+            room = self.ensure_room(room_code)
+            before_players = len(room["state"].get("players", []))
+            self.touch_participant(room, user, str(payload.get("playerName") or user_display_name(user)))
+            try:
+                poker_add_player(
+                    room["state"],
+                    user["id"],
+                    str(payload.get("playerName") or user_display_name(user)),
+                    seat=payload.get("seat") if isinstance(payload.get("seat"), int) else None,
+                )
+                changed = True
+            except PokerError as error:
+                if error.status != 409:
+                    raise HttpError(error.status, error.message)
+                changed = self.add_spectator(room, user, str(payload.get("playerName") or user_display_name(user)), announce=True)
+            if changed or before_players != len(room["state"].get("players", [])):
+                self.bump(room)
+            else:
+                self.persist_room(room)
+            payload = self.room_payload(room["code"], user["id"])
+        if changed:
+            self.broadcast(room_code)
+        return payload
+
+    def apply(self, room_code: str, user: dict, command: str, payload: dict | None = None) -> dict:
+        with self.lock:
+            room = self.ensure_room(room_code)
+            self.touch_participant(room, user)
+            try:
+                poker_apply_command(room["state"], user["id"], command, payload or {})
+            except PokerError as error:
+                raise HttpError(error.status, error.message)
+            self.bump(room)
+            result = self.room_payload(room["code"], user["id"])
+        self.broadcast(room_code)
+        return result
+
+    def add_client(self, client: PokerWsClient) -> dict:
+        with self.lock:
+            room = self.ensure_room(client.room_code)
+            client.room_code = room["code"]
+            self.touch_participant(room, client.user)
+            self.ensure_viewer(room, client.user)
+            self.mark_player_connected(room, client.user_id, True)
+            self.clients.setdefault(room["code"], set()).add(client)
+            self.bump(room)
+            return self.room_payload(room["code"], client.user_id)
+
+    def remove_client(self, client: PokerWsClient) -> None:
+        client.alive = False
+        with self.lock:
+            room_clients = self.clients.get(client.room_code)
+            if room_clients and client in room_clients:
+                room_clients.remove(client)
+            room = self.rooms.get(client.room_code)
+            if room:
+                poker_mark_disconnected(room["state"], client.user_id)
+                self.bump(room)
+
+    def broadcast(self, room_code: str) -> None:
+        code = self.room_code(room_code)
+        with self.lock:
+            room = self.rooms.get(code)
+            clients = list(self.clients.get(code, set()))
+        stale = []
+        for client in clients:
+            try:
+                payload = {"type": "room", "room": self.room_payload(code, client.user_id)}
+            except HttpError:
+                continue
+            if not client.send_json(payload):
+                stale.append(client)
+        for client in stale:
+            self.remove_client(client)
+
+    def touch_participant(self, room: dict, user: dict, name: str | None = None) -> None:
+        room.setdefault("participants", {})[user["id"]] = {
+            **room.setdefault("participants", {}).get(user["id"], {}),
+            "userId": user["id"],
+            "name": str(name or user_display_name(user)),
+            "lastSeenAt": utc_now(),
+            "joinedAt": room.setdefault("participants", {}).get(user["id"], {}).get("joinedAt") or utc_now(),
+        }
+
+    def ensure_viewer(self, room: dict, user: dict) -> bool:
+        if any(player.get("userId") == user["id"] for player in room.get("state", {}).get("players", [])):
+            return False
+        return self.add_spectator(room, user, user_display_name(user), announce=False)
+
+    def add_spectator(self, room: dict, user: dict, name: str, announce: bool = False) -> bool:
+        before = compact_json(room.get("state", {}).get("spectators", []))
+        try:
+            poker_add_spectator(room["state"], user["id"], name, announce=announce)
+        except PokerError as error:
+            raise HttpError(error.status, error.message)
+        after = compact_json(room.get("state", {}).get("spectators", []))
+        room.setdefault("participants", {}).setdefault(user["id"], {
+            "userId": user["id"],
+            "name": name,
+            "joinedAt": utc_now(),
+        })
+        room["participants"][user["id"]]["role"] = "spectator"
+        room["participants"][user["id"]]["lastSeenAt"] = utc_now()
+        return before != after
+
+    def bump(self, room: dict) -> None:
+        room["revision"] = int(room.get("revision") or 0) + 1
+        room["updatedAt"] = utc_now()
+        room["state"]["updatedAt"] = room["updatedAt"]
+        self.persist_room(room)
+
+    def room_payload(self, room_code: str, user_id: str) -> dict:
+        room = self.ensure_room(room_code)
+        is_seated = any(player.get("userId") == user_id for player in room.get("state", {}).get("players", []))
+        if not is_seated and room.get("state", {}).get("settings", {}).get("allowSpectators") is False:
+            raise HttpError(403, "Spectators are not allowed at this table")
+        return {
+            "code": room["code"],
+            "revision": room.get("revision", 0),
+            "createdAt": room.get("createdAt"),
+            "updatedAt": room.get("updatedAt"),
+            "summary": poker_room_summary(room["state"]),
+            "participant": room.get("participants", {}).get(user_id, {"userId": user_id}),
+            "state": poker_redact_state(room["state"], user_id),
+        }
+
+    def persist_room(self, room: dict) -> None:
+        db.save_poker_room(self.hydrate_room(room))
+
+    def load_persisted_rooms(self) -> None:
+        for room in db.load_poker_rooms():
+            hydrated = self.hydrate_room(room)
+            if not hydrated:
+                continue
+            code = hydrated["code"]
+            if code != self.room_code():
+                continue
+            if code not in self.rooms:
+                self.rooms[code] = hydrated
+
+    def hydrate_room(self, room: dict | None) -> dict | None:
+        if not isinstance(room, dict):
+            return None
+        state = room.get("state") if isinstance(room.get("state"), dict) else {}
+        code = self.room_code(room.get("code") or state.get("roomCode") or "")
+        if not code:
+            return None
+        now = utc_now()
+        state["roomCode"] = code
+        state["online"] = True
+        state.setdefault("players", [])
+        state.setdefault("participants", [])
+        state.setdefault("chat", [])
+        state.setdefault("handHistory", [])
+        state.setdefault("ledger", [])
+        state.setdefault("log", [])
+        state.setdefault("spectators", [])
+        state.setdefault("settings", {})
+        hydrated = {
+            "code": code,
+            "hostUserId": str(room.get("hostUserId") or state.get("hostUserId") or ""),
+            "createdAt": str(room.get("createdAt") or state.get("createdAt") or now),
+            "updatedAt": str(room.get("updatedAt") or state.get("updatedAt") or now),
+            "revision": int(room.get("revision") or 1),
+            "state": state,
+            "participants": room.get("participants") if isinstance(room.get("participants"), dict) else {},
+        }
+        hydrated["state"]["hostUserId"] = hydrated["hostUserId"]
+        if not hydrated["participants"]:
+            for player in hydrated["state"].get("players", []):
+                user_id = str(player.get("userId") or "")
+                if user_id:
+                    hydrated["participants"][user_id] = {
+                        "userId": user_id,
+                        "name": str(player.get("name") or "Player"),
+                        "joinedAt": hydrated["createdAt"],
+                        "lastSeenAt": hydrated["updatedAt"],
+                    }
+        return hydrated
+
+    def mark_player_connected(self, room: dict, user_id: str, connected: bool) -> None:
+        for player in room.get("state", {}).get("players", []):
+            if player.get("userId") == user_id:
+                player["connected"] = connected
+        for spectator in room.get("state", {}).get("spectators", []):
+            if spectator.get("userId") == user_id:
+                spectator["connected"] = connected
+
+
+poker_hub = PokerRoomHub()
+
+
+def build_ws_frame(opcode: int, payload: bytes = b"") -> bytes:
+    length = len(payload)
+    first = 0x80 | (opcode & 0x0F)
+    if length < 126:
+        header = bytes([first, length])
+    elif length < 65536:
+        header = bytes([first, 126]) + struct.pack("!H", length)
+    else:
+        header = bytes([first, 127]) + struct.pack("!Q", length)
+    return header + payload
+
+
+def read_ws_frame(stream) -> tuple[int, bytes] | None:
+    header = stream.read(2)
+    if len(header) < 2:
+        return None
+    first, second = header[0], header[1]
+    opcode = first & 0x0F
+    masked = bool(second & 0x80)
+    length = second & 0x7F
+    if length == 126:
+        raw = stream.read(2)
+        if len(raw) < 2:
+            return None
+        length = struct.unpack("!H", raw)[0]
+    elif length == 127:
+        raw = stream.read(8)
+        if len(raw) < 8:
+            return None
+        length = struct.unpack("!Q", raw)[0]
+    if length > POKER_WS_MAX_MESSAGE_BYTES:
+        raise HttpError(1009, "Poker WebSocket message is too large")
+    mask = stream.read(4) if masked else b""
+    payload = stream.read(length) if length else b""
+    if len(payload) < length:
+        return None
+    if masked:
+        payload = bytes(byte ^ mask[index % 4] for index, byte in enumerate(payload))
+    return opcode, payload
+
+
 class QuantGymHandler(BaseHTTPRequestHandler):
     server_version = "QuantGymAPI/0.1"
+    protocol_version = "HTTP/1.1"
 
     def log_message(self, fmt, *args):
         sys.stderr.write("%s - - [%s] %s\n" % (self.client_address[0], self.log_date_time_string(), fmt % args))
@@ -1132,6 +1572,22 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.put_community()
             if path == "/api/sync" and self.command == "POST":
                 return self.sync()
+            if path == "/api/poker/rooms" and self.command == "GET":
+                return self.list_poker_rooms()
+            if path == "/api/poker/rooms" and self.command == "POST":
+                return self.create_poker_room()
+            poker_room_match = re.fullmatch(r"/api/poker/rooms/([^/]+)", path)
+            if poker_room_match and self.command == "GET":
+                return self.get_poker_room(unquote(poker_room_match.group(1)))
+            poker_join_match = re.fullmatch(r"/api/poker/rooms/([^/]+)/join", path)
+            if poker_join_match and self.command == "POST":
+                return self.join_poker_room(unquote(poker_join_match.group(1)))
+            poker_command_match = re.fullmatch(r"/api/poker/rooms/([^/]+)/commands", path)
+            if poker_command_match and self.command == "POST":
+                return self.send_poker_command(unquote(poker_command_match.group(1)))
+            poker_ws_match = re.fullmatch(r"/api/poker/ws/([^/]+)", path)
+            if poker_ws_match and self.command == "GET":
+                return self.handle_poker_ws(unquote(poker_ws_match.group(1)))
             library_token_match = re.fullmatch(r"/api/library/reader-token/([^/]+)", path)
             if library_token_match and self.command == "POST":
                 return self.issue_library_reader_token(unquote(library_token_match.group(1)))
@@ -1647,6 +2103,123 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 merge=False,
             )
             self.send_json(200, {"community": community})
+
+    def list_poker_rooms(self):
+        user = self.require_user()
+        self.send_json(200, {"rooms": poker_hub.list_rooms_for_user(user), "updatedAt": utc_now()})
+
+    def create_poker_room(self):
+        user = self.require_user()
+        data = self.read_json()
+        room = poker_hub.create_room(user, data)
+        self.send_json(201, {"room": room})
+
+    def get_poker_room(self, room_code: str):
+        user = self.require_user()
+        room = poker_hub.get_room(room_code, user)
+        self.send_json(200, {"room": room})
+
+    def join_poker_room(self, room_code: str):
+        user = self.require_user()
+        data = self.read_json()
+        room = poker_hub.join_room(room_code, user, data)
+        self.send_json(200, {"room": room})
+
+    def send_poker_command(self, room_code: str):
+        user = self.require_user()
+        data = self.read_json()
+        room = poker_hub.apply(
+            room_code,
+            user,
+            str(data.get("command") or data.get("type") or ""),
+            data.get("payload") if isinstance(data.get("payload"), dict) else {},
+        )
+        self.send_json(200, {"room": room})
+
+    def websocket_user(self) -> dict:
+        query = parse_qs(urlparse(self.path).query)
+        token = query.get("token", [""])[0]
+        if not token:
+            header = self.headers.get("Authorization", "")
+            if header.startswith("Bearer "):
+                token = header.removeprefix("Bearer ").strip()
+        if not token:
+            raise HttpError(401, "Missing bearer token")
+        user = db.get_user_by_session(token.strip())
+        if not user:
+            raise HttpError(401, "Invalid or expired token")
+        ensure_email_allowed(user.get("email_norm"))
+        return user
+
+    def handle_poker_ws(self, room_code: str):
+        if self.headers.get("Upgrade", "").lower() != "websocket":
+            raise HttpError(400, "Expected WebSocket upgrade")
+        user = self.websocket_user()
+        key = self.headers.get("Sec-WebSocket-Key", "").strip()
+        if not key:
+            raise HttpError(400, "Missing Sec-WebSocket-Key")
+        accept = base64.b64encode(hashlib.sha1((key + POKER_WS_GUID).encode("ascii")).digest()).decode("ascii")
+        code = poker_normalize_room_code(room_code)
+        client = PokerWsClient(self, user, code)
+
+        self.send_response(101, "Switching Protocols")
+        self.send_header("Upgrade", "websocket")
+        self.send_header("Connection", "Upgrade")
+        self.send_header("Sec-WebSocket-Accept", accept)
+        self.end_headers()
+        self.close_connection = True
+
+        try:
+            try:
+                initial_room = poker_hub.add_client(client)
+            except HttpError as error:
+                client.send_json({"type": "error", "error": error.message, "status": error.status})
+                return
+            client.send_json({"type": "room", "room": initial_room})
+            poker_hub.broadcast(code)
+            while client.alive:
+                try:
+                    frame = read_ws_frame(self.rfile)
+                except HttpError as error:
+                    client.send_json({"type": "error", "error": error.message, "status": error.status})
+                    break
+                if frame is None:
+                    break
+                opcode, payload = frame
+                if opcode == 0x8:
+                    break
+                if opcode == 0x9:
+                    client.send_pong(payload)
+                    continue
+                if opcode != 0x1:
+                    continue
+                try:
+                    message = json.loads(payload.decode("utf-8") or "{}")
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    client.send_json({"type": "error", "error": "Invalid WebSocket JSON"})
+                    continue
+                if not isinstance(message, dict):
+                    client.send_json({"type": "error", "error": "WebSocket message must be an object"})
+                    continue
+                if message.get("type") == "ping":
+                    client.send_json({"type": "pong", "at": utc_now()})
+                    continue
+                if message.get("type") != "command":
+                    client.send_json({"type": "error", "error": "Unsupported WebSocket message"})
+                    continue
+                try:
+                    room = poker_hub.apply(
+                        code,
+                        user,
+                        str(message.get("command") or ""),
+                        message.get("payload") if isinstance(message.get("payload"), dict) else {},
+                    )
+                    client.send_json({"type": "ack", "room": room})
+                except HttpError as error:
+                    client.send_json({"type": "error", "error": error.message, "status": error.status})
+        finally:
+            poker_hub.remove_client(client)
+            poker_hub.broadcast(code)
 
     def sync(self):
         user = self.require_user()
