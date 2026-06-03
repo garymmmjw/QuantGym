@@ -77,6 +77,12 @@ Email verification is required for local-account cloud registration by default. 
 - `GET /api/community`
 - `PUT /api/community`
 - `POST /api/sync`
+- `GET /api/poker/rooms`
+- `POST /api/poker/rooms`
+- `GET /api/poker/rooms/:code`
+- `POST /api/poker/rooms/:code/join`
+- `POST /api/poker/rooms/:code/commands`
+- `GET /api/poker/ws/:code` WebSocket, pass `?token=<session token>`
 
 Authenticated endpoints use:
 
@@ -92,3 +98,4 @@ Authorization: Bearer <token>
 - Shared problem likes and comments live in `problem_likes` and `problem_comments`. Social mutations require an authenticated account, and comment deletion is limited to its author.
 - Google cloud login requires `QUANTGYM_GOOGLE_CLIENT_ID` and a Google ID token. The dependency-free beta API derives the Google user id/email from Google's token validation response instead of trusting frontend account fields. Replace the tokeninfo-based verifier with a Google/JWT verification library before a public production launch.
 - Uploaded images/videos are still stored as data URLs inside the JSON state/community payload. For production, move media to object storage and store URLs in SQLite.
+- Poker is authenticated, play-money-only, and server-authoritative for dealing/actions. The beta runs a single shared table by default (`QUANTGYM_POKER_ROOM_CODE`, default `QG-MAIN`); once seats are full, additional logged-in users become spectators when `allowSpectators` is enabled. Room/session snapshots are persisted in SQLite for restart recovery; live WebSocket broadcasts still assume a single API instance unless a shared pub/sub layer is added.

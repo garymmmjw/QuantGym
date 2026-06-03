@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="styles.css?direct&v=27">
+    <link rel="stylesheet" href="styles.css?direct&v=29">
     <script>
       window.MathJax = {
         tex: {
@@ -1781,12 +1781,12 @@
             <article class="poker-game-card poker-launch-card">
               <div class="game-card-head">
                 <div>
-                  <span class="rank-label">TOURNAMENT</span>
-                  <h4>Poker Tournament</h4>
+                  <span class="rank-label">PRIVATE TABLE</span>
+                  <h4>Private Poker Room</h4>
                 </div>
                 <strong>100BB</strong>
               </div>
-              <p>独立牌桌大厅、入座、补 bot、盲注升级和翻前策略矩阵。</p>
+              <p>私房现金桌、邀请链接、入座、聊天、hand history、session ledger 和翻前策略矩阵。</p>
               <div class="game-actions">
                 <button class="primary-button compact" type="button" data-jump-module="poker">
                   <i data-lucide="door-open"></i>
@@ -1807,6 +1807,25 @@
             <small>OWNER: GARY</small>
             <strong>NLH ~ <span id="pokerBlindText">10 / 20</span></strong>
             <em id="pokerRoomCode">QG</em>
+          </div>
+
+          <div class="poker-tournament-strip" aria-label="Poker room status">
+            <span>
+              <small>Blinds</small>
+              <strong id="pokerLevelText">10 / 20</strong>
+            </span>
+            <span>
+              <small>Hand</small>
+              <strong id="pokerNextLevelText">#0</strong>
+            </span>
+            <span>
+              <small>Avg stack</small>
+              <strong id="pokerAverageStackText">2,000</strong>
+            </span>
+            <span>
+              <small>Chip leader</small>
+              <strong id="pokerLeaderText">You</strong>
+            </span>
           </div>
 
           <aside class="poker-side-rail left" aria-label="Poker table options">
@@ -1838,12 +1857,12 @@
           <aside class="poker-lobby-panel">
             <div class="poker-lobby-head">
               <strong>LOG / LEDGER</strong>
-              <span id="pokerLobbySummary">Registering · 100BB starting stack</span>
+              <span id="pokerLobbySummary">Open room · 100BB starting stack</span>
             </div>
             <div class="poker-match-bar">
               <select id="pokerModeSelect" aria-label="Poker match mode">
                 <option value="private">Private table</option>
-                <option value="match">Quick match pool</option>
+                <option value="demo">Local demo table</option>
               </select>
               <button id="pokerMatchBtn" class="secondary-button compact" type="button">
                 <i data-lucide="shuffle"></i>
@@ -1871,12 +1890,24 @@
               <button id="pokerTakeSeatBtn" class="primary-button compact" type="button">JOIN</button>
             </div>
             <div class="poker-lobby-actions">
-              <button id="pokerAddBotBtn" class="secondary-button compact" type="button"><i data-lucide="bot"></i>Bot</button>
-              <button id="pokerFillBotsBtn" class="secondary-button compact" type="button"><i data-lucide="users-round"></i>Fill</button>
+              <button id="pokerAddBotBtn" class="secondary-button compact" type="button"><i data-lucide="user-plus"></i>Demo</button>
+              <button id="pokerFillBotsBtn" class="secondary-button compact" type="button"><i data-lucide="users-round"></i>Fill demo</button>
               <button id="pokerStartTournamentBtn" class="primary-button compact" type="button"><i data-lucide="play"></i>Start</button>
             </div>
-            <div id="pokerLobbyList" class="poker-lobby-list"></div>
-            <div id="pokerLog" class="poker-log"></div>
+            <div class="poker-host-controls" aria-label="Host controls">
+              <button id="pokerPauseBtn" class="secondary-button compact" type="button"><i data-lucide="pause"></i>Pause</button>
+              <button id="pokerResumeBtn" class="secondary-button compact" type="button"><i data-lucide="play"></i>Resume</button>
+              <button id="pokerExportBtn" class="secondary-button compact" type="button"><i data-lucide="download"></i>Export</button>
+            </div>
+            <div class="poker-panel-tabs" role="tablist" aria-label="Poker room panel">
+              <button class="active" type="button" data-poker-panel-tab="chat">Chat</button>
+              <button type="button" data-poker-panel-tab="history">History</button>
+              <button type="button" data-poker-panel-tab="players">Players</button>
+              <button type="button" data-poker-panel-tab="ledger">Ledger</button>
+              <button type="button" data-poker-panel-tab="settings">Settings</button>
+            </div>
+            <div id="pokerPanelContent" class="poker-panel-content"></div>
+            <p class="poker-compliance-note">Play-money only. Chips have no monetary value; no deposits, withdrawals, rake, or real-money settlement.</p>
           </aside>
 
           <section class="poker-bottom-hud">
@@ -1892,6 +1923,12 @@
                 <button type="button" data-poker-action="raise">Raise</button>
                 <button type="button" data-poker-action="allin">All-in</button>
                 <button type="button" data-poker-action="fold">Fold</button>
+              </div>
+              <div class="poker-quick-bets" aria-label="Quick bet sizes">
+                <button type="button" data-poker-quick-bet="half">1/2 pot</button>
+                <button type="button" data-poker-quick-bet="twothirds">2/3 pot</button>
+                <button type="button" data-poker-quick-bet="pot">Pot</button>
+                <button type="button" data-poker-quick-bet="allin">All-in</button>
               </div>
               <div class="game-actions">
                 <button id="nextPokerGameBtn" class="secondary-button compact" type="button">Next hand</button>

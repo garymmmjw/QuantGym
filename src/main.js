@@ -77,6 +77,17 @@ let drillTimerId = null;
 let currentMarketGame = null;
 let currentPokerGame = null;
 let selectedPokerPreflopHand = "AKs";
+let selectedPokerPanelTab = "chat";
+let pokerOnline = {
+  roomCode: "",
+  revision: 0,
+  ws: null,
+  connected: false,
+  connecting: false,
+  applying: false,
+  lastError: "",
+  reconnectTimer: 0
+};
 let selectedMessageThreadId = "";
 let googleInitRetries = 0;
 let registerCodeTimer = null;
@@ -519,6 +530,10 @@ function bindElements() {
     "pokerGameScore",
     "pokerPlayerCount",
     "pokerRoomCode",
+    "pokerLevelText",
+    "pokerNextLevelText",
+    "pokerAverageStackText",
+    "pokerLeaderText",
     "pokerLobbySummary",
     "pokerRoomLinkInput",
     "pokerCopyLinkBtn",
@@ -527,6 +542,10 @@ function bindElements() {
     "pokerAddBotBtn",
     "pokerFillBotsBtn",
     "pokerStartTournamentBtn",
+    "pokerPauseBtn",
+    "pokerResumeBtn",
+    "pokerExportBtn",
+    "pokerPanelContent",
     "pokerLobbyList",
     "pokerGamePrompt",
     "pokerModeSelect",
@@ -572,6 +591,9 @@ function bindElements() {
 }
 
 function bindEvents() {
+  document.addEventListener("click", handlePokerDocumentClick, true);
+  document.addEventListener("submit", handlePokerDocumentSubmit, true);
+
   document.querySelectorAll("[data-module-tab]").forEach((button) => {
     button.addEventListener("click", () => {
       clearGlobalSearch();
@@ -983,6 +1005,15 @@ function bindEvents() {
   document.querySelectorAll("[data-poker-action]").forEach((button) => {
     button.addEventListener("click", () => submitPokerAction(button.dataset.pokerAction));
   });
+  document.querySelectorAll("[data-poker-quick-bet]").forEach((button) => {
+    button.addEventListener("click", () => applyPokerQuickBet(button.dataset.pokerQuickBet));
+  });
+  document.querySelectorAll("[data-poker-panel-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedPokerPanelTab = button.dataset.pokerPanelTab || "chat";
+      renderPokerGame();
+    });
+  });
   els.nextPokerGameBtn?.addEventListener("click", () => newPokerGame(true));
   els.resetPokerGameBtn?.addEventListener("click", () => resetPokerTournament(true));
   els.pokerMatchBtn?.addEventListener("click", () => matchPokerTournament(true));
@@ -992,7 +1023,12 @@ function bindEvents() {
   els.pokerAddBotBtn?.addEventListener("click", () => addPokerBot(true));
   els.pokerFillBotsBtn?.addEventListener("click", () => fillPokerBots(true));
   els.pokerStartTournamentBtn?.addEventListener("click", () => startPokerTournament(true));
+  els.pokerPauseBtn?.addEventListener("click", () => pausePokerGame(true));
+  els.pokerResumeBtn?.addEventListener("click", () => resumePokerGame(true));
+  els.pokerExportBtn?.addEventListener("click", exportPokerSession);
   els.pokerSeatGrid?.addEventListener("click", handlePokerSeatClick);
+  els.pokerPanelContent?.addEventListener("click", handlePokerPanelClick);
+  els.pokerPanelContent?.addEventListener("submit", handlePokerPanelSubmit);
   els.pokerPreflopPositionSelect?.addEventListener("change", renderPokerPreflopChart);
   els.pokerPreflopMatrix?.addEventListener("click", handlePokerPreflopMatrixClick);
   els.courseList?.addEventListener("click", handleCourseListClick);
@@ -3377,7 +3413,7 @@ function switchModule(moduleName = "overview") {
   document.querySelectorAll("[data-module-view]").forEach((view) => {
     view.classList.toggle("active", view.dataset.moduleView === targetModule);
   });
-  document.body.classList.toggle("is-poker-module", targetModule === "poker");
+  document.body.classList.remove("is-poker-module");
   if (targetModule === "overview") renderNewsTicker();
   if (targetModule === "news") {
     renderNewsTicker();
@@ -3390,7 +3426,7 @@ function switchModule(moduleName = "overview") {
   if (targetModule === "messages") renderMessages();
   if (targetModule === "tools") renderMentalMath();
   if (targetModule === "poker") {
-    if (!currentPokerGame) currentPokerGame = makePokerGameRound();
+    if (!currentPokerGame) loadInitialPokerGame();
     renderPokerGame();
   }
   if (targetModule === "network") renderNetwork();
@@ -6424,7 +6460,7 @@ function getModuleSearchDefs() {
     { module: "courses", label: t("courses"), detail: "Courses / 课程", fields: [t("courses"), "course", "courses", "课程", "视频", "youtube", "bilibili", "b站"] },
     { module: "skills", label: t("skills"), detail: "Ability radar / 能力值", fields: [t("skills"), "skills", "ability", "能力值", "雷达", "知识点"] },
     { module: "tools", label: t("tools"), detail: "Mental math / 速算", fields: [t("tools"), "tools", "drills", "速算", "mental math"] },
-    { module: "poker", label: "Poker", detail: "Tournament room / 扑克锦标赛", fields: ["poker", "holdem", "tournament", "preflop", "solver", "扑克", "锦标赛", "翻前", "德州扑克"] },
+    { module: "poker", label: "Poker", detail: "Private cash table / 私房现金桌", fields: ["poker", "holdem", "cash game", "preflop", "solver", "扑克", "现金桌", "私房局", "翻前", "德州扑克"] },
     { module: "memory", label: t("memory"), detail: "Memory / 资料笔记", fields: [t("memory"), "memory", "notes", "资料", "笔记"] },
     { module: "settings", label: t("settings"), detail: "Settings / 设置", fields: [t("settings"), "settings", "设置", "config"] }
   ];
@@ -14463,7 +14499,9 @@ function submitMarketQuote() {
 const POKER_TABLE_SEATS = 10;
 const POKER_STARTING_STACK_BB = 100;
 const POKER_MIN_PLAYERS = 2;
-const POKER_BOT_NAMES = ["Ivy Bot", "Max Bot", "Rio Bot", "Nova Bot", "Kai Bot", "Vega Bot", "Mina Bot", "Theo Bot", "Luna Bot", "Axel Bot"];
+const POKER_ROOM_STORAGE_PREFIX = "quantgym.pokerRoom.v1.";
+const POKER_LAST_ROOM_KEY = "quantgym.pokerRoom.last.v1";
+const POKER_DEMO_PLAYER_NAMES = ["Ivy Demo", "Max Demo", "Rio Demo", "Nova Demo", "Kai Demo", "Vega Demo", "Mina Demo", "Theo Demo", "Luna Demo", "Axel Demo"];
 const POKER_MATRIX_RANKS = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"];
 const POKER_POSITION_LABELS = {
   utg: "UTG",
@@ -14474,49 +14512,247 @@ const POKER_POSITION_LABELS = {
   bb: "BB vs BTN"
 };
 
+function canUsePokerOnline() {
+  return Boolean(canUseCloud() && typeof WebSocket !== "undefined");
+}
+
+function isPokerOnlineRoom(game = currentPokerGame) {
+  return Boolean(game?.online);
+}
+
+function getPokerOnlineLabel(game = currentPokerGame) {
+  if (!isPokerOnlineRoom(game)) return "Local";
+  if (pokerOnline.connected && pokerOnline.roomCode === game.roomCode) return "Online";
+  if (pokerOnline.connecting) return "Connecting";
+  if (!canUseCloud()) return "Login required";
+  return pokerOnline.lastError ? "Offline fallback" : "Online ready";
+}
+
+function getPokerOnlinePlayerName() {
+  return normalizePokerPlayerName(els.pokerPlayerNameInput?.value || currentUser?.name || currentUser?.email || "Player");
+}
+
+function getPokerWebSocketUrl(roomCode) {
+  const url = new URL(`${getCloudApiBase()}/poker/ws/${encodeURIComponent(roomCode)}`);
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  url.searchParams.set("token", cloudConfig.token);
+  return url.toString();
+}
+
+async function ensurePokerOnlineRoom(options = {}) {
+  const game = currentPokerGame;
+  if (!game || game.mode === "demo" || !canUsePokerOnline()) return false;
+  const urlRoomCode = getPokerRoomCodeFromUrl();
+  const targetCode = normalizePokerRoomCode(options.roomCode || urlRoomCode || game.roomCode);
+  if (!options.force && pokerOnline.connecting) return true;
+  if (!options.force && pokerOnline.connected && pokerOnline.roomCode === targetCode) return true;
+  pokerOnline.connecting = true;
+  pokerOnline.lastError = "";
+  if (game) {
+    game.online = true;
+    game.feedback = targetCode ? "Connecting to online poker room..." : "Creating online poker room...";
+    renderPokerGame();
+  }
+  try {
+    const body = { playerName: getPokerOnlinePlayerName(), settings: game.settings || getDefaultPokerSettings(game.bigBlind) };
+    const shouldJoinExisting = !options.create && targetCode && (urlRoomCode || pokerOnline.roomCode === targetCode);
+    const result = shouldJoinExisting
+      ? await cloudApi(`/poker/rooms/${encodeURIComponent(targetCode)}/join`, { method: "POST", body })
+      : await cloudApi("/poker/rooms", { method: "POST", body });
+    applyPokerOnlineRoom(result.room, { replaceUrl: true });
+    openPokerWebSocket(result.room.code);
+    return true;
+  } catch (error) {
+    pokerOnline.lastError = error.message || "Poker online connection failed";
+    pokerOnline.connected = false;
+    if (currentPokerGame) {
+      currentPokerGame.online = false;
+      currentPokerGame.feedback = `${pokerOnline.lastError}. Local table is still available.`;
+      renderPokerGame();
+    }
+    return false;
+  } finally {
+    pokerOnline.connecting = false;
+  }
+}
+
+function applyPokerOnlineRoom(room, options = {}) {
+  if (!room?.state) return;
+  const game = hydratePokerGame({
+    ...room.state,
+    online: true,
+    roomCode: room.code || room.state.roomCode,
+    participant: room.participant || null
+  });
+  if (!game) return;
+  pokerOnline.applying = true;
+  pokerOnline.roomCode = room.code || game.roomCode;
+  pokerOnline.revision = Number(room.revision || 0);
+  currentPokerGame = game;
+  if (options.replaceUrl !== false) setPokerRoomUrl(game, "replace");
+  renderPokerGame();
+  pokerOnline.applying = false;
+}
+
+function openPokerWebSocket(roomCode) {
+  const code = normalizePokerRoomCode(roomCode);
+  if (!code || !canUsePokerOnline()) return;
+  if (pokerOnline.ws && pokerOnline.roomCode === code && [WebSocket.CONNECTING, WebSocket.OPEN].includes(pokerOnline.ws.readyState)) return;
+  closePokerWebSocket();
+  pokerOnline.roomCode = code;
+  try {
+    const socket = new WebSocket(getPokerWebSocketUrl(code));
+    pokerOnline.ws = socket;
+    socket.addEventListener("open", () => {
+      pokerOnline.connected = true;
+      pokerOnline.connecting = false;
+      pokerOnline.lastError = "";
+      renderPokerGame();
+    });
+    socket.addEventListener("message", (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        if (message.type === "room" || message.type === "ack") applyPokerOnlineRoom(message.room, { replaceUrl: true });
+        if (message.type === "error" && currentPokerGame) {
+          currentPokerGame.feedback = message.error || "Poker command failed.";
+          renderPokerGame();
+        }
+      } catch {
+        // Ignore malformed socket messages; the next room broadcast will recover state.
+      }
+    });
+    socket.addEventListener("close", () => {
+      pokerOnline.connected = false;
+      if (currentPokerGame?.online && canUsePokerOnline()) {
+        window.clearTimeout(pokerOnline.reconnectTimer);
+        pokerOnline.reconnectTimer = window.setTimeout(() => ensurePokerOnlineRoom({ roomCode: code, force: true }), 1800);
+      }
+      renderPokerGame();
+    });
+    socket.addEventListener("error", () => {
+      pokerOnline.lastError = "Poker socket disconnected";
+      pokerOnline.connected = false;
+      renderPokerGame();
+    });
+  } catch (error) {
+    pokerOnline.lastError = error.message || "Poker socket failed";
+    pokerOnline.connected = false;
+  }
+}
+
+function closePokerWebSocket() {
+  window.clearTimeout(pokerOnline.reconnectTimer);
+  if (pokerOnline.ws) {
+    try {
+      pokerOnline.ws.close();
+    } catch {
+      // Socket may already be closed.
+    }
+  }
+  pokerOnline.ws = null;
+  pokerOnline.connected = false;
+}
+
+async function sendPokerOnlineCommand(command, payload = {}) {
+  const game = currentPokerGame;
+  if (!isPokerOnlineRoom(game) || !canUseCloud()) return false;
+  const message = { type: "command", command, payload };
+  try {
+    if (pokerOnline.ws?.readyState === WebSocket.OPEN) {
+      pokerOnline.ws.send(JSON.stringify(message));
+    } else {
+      const result = await cloudApi(`/poker/rooms/${encodeURIComponent(game.roomCode)}/commands`, {
+        method: "POST",
+        body: { command, payload }
+      });
+      applyPokerOnlineRoom(result.room, { replaceUrl: true });
+    }
+    return true;
+  } catch (error) {
+    pokerOnline.lastError = error.message || "Poker command failed";
+    game.feedback = pokerOnline.lastError;
+    renderPokerGame();
+    return true;
+  }
+}
+
 function makePokerGameRound() {
   return createPokerTournament(getPokerMode());
 }
 
 function getPokerMode() {
   const value = els.pokerModeSelect?.value || "private";
-  return ["private", "match", "local", "bots"].includes(value) ? value : "private";
+  if (value === "match" || value === "bots" || value === "local") return "demo";
+  return ["private", "demo"].includes(value) ? value : "private";
+}
+
+function getDefaultPokerSettings(bigBlind = POKER_BLIND_LEVELS[0].big) {
+  const smallBlind = Math.max(1, Math.round(bigBlind / 2));
+  return {
+    roomName: "Private cash table",
+    smallBlind,
+    bigBlind,
+    ante: 0,
+    startingStack: bigBlind * POKER_STARTING_STACK_BB,
+    maxPlayers: POKER_TABLE_SEATS,
+    decisionTimeLimit: 30,
+    allowSpectators: true,
+    spectatorChat: true,
+    autoStartNextHand: false,
+    autoIncreaseBlinds: false
+  };
 }
 
 function createPokerTournament(mode = "private") {
-  const smallBlind = POKER_BLIND_LEVELS[0].small;
-  const bigBlind = POKER_BLIND_LEVELS[0].big;
+  const base = POKER_BLIND_LEVELS[0];
+  const settings = {
+    ...getDefaultPokerSettings(base.big),
+    smallBlind: base.small,
+    bigBlind: base.big
+  };
   const game = {
     id: makeId(),
     mode,
     roomCode: makePokerRoomCode(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    version: 2,
+    hostPlayerId: "hero",
+    isPaused: false,
+    settings,
     status: "registering",
-    seatCount: POKER_TABLE_SEATS,
-    startingStack: bigBlind * POKER_STARTING_STACK_BB,
+    seatCount: settings.maxPlayers,
+    startingStack: settings.startingStack,
     players: [],
+    spectators: [],
     dealerIndex: -1,
     handNumber: 0,
     handsPlayed: 0,
     blindInterval: 3,
     level: 0,
     levelIncreasedAt: -1,
-    smallBlind,
-    bigBlind,
+    smallBlind: settings.smallBlind,
+    bigBlind: settings.bigBlind,
+    ante: settings.ante,
     stage: "waiting",
     board: [],
     deck: [],
     pot: 0,
     currentBet: 0,
-    minRaise: bigBlind,
+    minRaise: settings.bigBlind,
     actionIndex: -1,
     handActive: false,
     handComplete: true,
     tournamentOver: false,
-    heroStackAtHandStart: bigBlind * POKER_STARTING_STACK_BB,
+    heroStackAtHandStart: settings.startingStack,
     showdown: null,
     dealSerial: 0,
-    feedback: "Room created. Take seats, add bots if needed, then start the tournament.",
-    log: []
+    feedback: "Private cash table created. Share the link, take seats, then start a hand.",
+    log: [],
+    currentHandLog: [],
+    handHistory: [],
+    ledger: [],
+    chat: []
   };
   addPokerHumanToGame(game, {
     id: "hero",
@@ -14524,8 +14760,8 @@ function createPokerTournament(mode = "private") {
     seat: 0,
     isHero: true
   });
-  if (mode === "match" || mode === "bots") fillPokerBotsForGame(game, 3);
-  addPokerLog(game, `Room ${game.roomCode} opened with 100BB stacks.`);
+  if (mode === "demo") fillPokerBotsForGame(game, 6);
+  addPokerLog(game, `Room ${game.roomCode} opened with ${POKER_STARTING_STACK_BB}BB play-money stacks.`);
   return game;
 }
 
@@ -14545,13 +14781,20 @@ function normalizePokerPlayerName(name) {
 }
 
 function createPokerPlayer({ id, name, type = "human", seat, stack, isHero = false }) {
+  const normalizedStack = Math.max(0, Math.round(Number(stack || POKER_BLIND_LEVELS[0].big * POKER_STARTING_STACK_BB)));
   return {
     id: id || `${type}-${makeId()}`,
     name: normalizePokerPlayerName(name),
     type,
     isHero,
     seat,
-    stack: Math.max(0, Math.round(Number(stack || POKER_BLIND_LEVELS[0].big * POKER_STARTING_STACK_BB))),
+    stack: normalizedStack,
+    buyIn: normalizedStack,
+    cashOut: 0,
+    connected: true,
+    sittingOut: false,
+    sitOutNextHand: false,
+    isHost: false,
     cards: [],
     currentBet: 0,
     committed: 0,
@@ -14564,22 +14807,217 @@ function createPokerPlayer({ id, name, type = "human", seat, stack, isHero = fal
   };
 }
 
+function loadInitialPokerGame() {
+  const fromUrl = getPokerRoomCodeFromUrl();
+  if (fromUrl && canUsePokerOnline()) {
+    const game = makePokerGameRound();
+    game.roomCode = fromUrl;
+    game.online = true;
+    game.feedback = "Joining online poker room...";
+    currentPokerGame = game;
+    ensurePokerOnlineRoom({ roomCode: fromUrl, force: true });
+    return game;
+  }
+  const stored = fromUrl ? loadPokerRoomFromStorage(fromUrl) : loadPokerRoomFromStorage(safeLocalStorageGet(POKER_LAST_ROOM_KEY));
+  const game = stored || makePokerGameRound();
+  currentPokerGame = game;
+  setPokerRoomUrl(game, fromUrl ? "replace" : "replace");
+  if (!fromUrl && canUsePokerOnline() && game.mode !== "demo") ensurePokerOnlineRoom({ force: true });
+  return game;
+}
+
+function getPokerRoomCodeFromUrl() {
+  try {
+    const parsed = new URL(window.location.href);
+    return normalizePokerRoomCode(parsed.searchParams.get("pokerRoom") || "");
+  } catch {
+    return "";
+  }
+}
+
+function normalizePokerRoomCode(value) {
+  return String(value || "").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 12);
+}
+
+function safeLocalStorageGet(key) {
+  try {
+    return localStorage.getItem(key) || "";
+  } catch {
+    return "";
+  }
+}
+
+function safeLocalStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Local file previews may disable storage; the room still works in memory.
+  }
+}
+
+function loadPokerRoomFromStorage(roomCode) {
+  const code = normalizePokerRoomCode(roomCode);
+  if (!code) return null;
+  try {
+    const raw = localStorage.getItem(`${POKER_ROOM_STORAGE_PREFIX}${code}`);
+    if (!raw) return null;
+    return hydratePokerGame(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+function hydratePokerGame(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const defaultSettings = getDefaultPokerSettings(Number(raw.bigBlind || raw.settings?.bigBlind || POKER_BLIND_LEVELS[0].big));
+  const settings = {
+    ...defaultSettings,
+    ...(raw.settings || {})
+  };
+  settings.smallBlind = Math.max(1, Math.round(Number(settings.smallBlind || defaultSettings.smallBlind)));
+  settings.bigBlind = Math.max(settings.smallBlind + 1, Math.round(Number(settings.bigBlind || defaultSettings.bigBlind)));
+  settings.ante = Math.max(0, Math.round(Number(settings.ante || 0)));
+  settings.startingStack = Math.max(settings.bigBlind * 20, Math.round(Number(settings.startingStack || defaultSettings.startingStack)));
+  settings.maxPlayers = clampNumber(Math.round(Number(settings.maxPlayers || POKER_TABLE_SEATS)), POKER_MIN_PLAYERS, POKER_TABLE_SEATS);
+  settings.decisionTimeLimit = clampNumber(Math.round(Number(settings.decisionTimeLimit || 30)), 10, 180);
+  const game = {
+    id: raw.id || makeId(),
+    mode: raw.mode === "demo" ? "demo" : "private",
+    roomCode: normalizePokerRoomCode(raw.roomCode) || makePokerRoomCode(),
+    createdAt: raw.createdAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString(),
+    version: 2,
+    online: Boolean(raw.online),
+    hostPlayerId: raw.hostPlayerId || "hero",
+    hostUserId: raw.hostUserId || "",
+    isPaused: Boolean(raw.isPaused),
+    settings,
+    status: raw.status === "running" ? "running" : "registering",
+    seatCount: settings.maxPlayers,
+    startingStack: settings.startingStack,
+    players: [],
+    spectators: Array.isArray(raw.spectators) ? raw.spectators : [],
+    viewerRole: raw.viewerRole || raw.participant?.role || "",
+    viewer: raw.viewer && typeof raw.viewer === "object" ? raw.viewer : raw.participant || null,
+    dealerIndex: Number.isInteger(raw.dealerIndex) ? raw.dealerIndex : -1,
+    handNumber: Math.max(0, Math.round(Number(raw.handNumber || 0))),
+    handsPlayed: Math.max(0, Math.round(Number(raw.handsPlayed || 0))),
+    blindInterval: Math.max(1, Math.round(Number(raw.blindInterval || 3))),
+    level: Math.max(0, Math.round(Number(raw.level || 0))),
+    levelIncreasedAt: Number.isFinite(Number(raw.levelIncreasedAt)) ? Number(raw.levelIncreasedAt) : -1,
+    smallBlind: settings.smallBlind,
+    bigBlind: settings.bigBlind,
+    ante: settings.ante,
+    stage: raw.stage || "waiting",
+    board: Array.isArray(raw.board) ? raw.board : [],
+    deck: Array.isArray(raw.deck) ? raw.deck : [],
+    pot: Math.max(0, Math.round(Number(raw.pot || 0))),
+    currentBet: Math.max(0, Math.round(Number(raw.currentBet || 0))),
+    minRaise: Math.max(settings.bigBlind, Math.round(Number(raw.minRaise || settings.bigBlind))),
+    actionIndex: Number.isInteger(raw.actionIndex) ? raw.actionIndex : -1,
+    handActive: Boolean(raw.handActive),
+    handComplete: raw.handComplete !== false,
+    tournamentOver: false,
+    heroStackAtHandStart: Math.max(0, Math.round(Number(raw.heroStackAtHandStart || settings.startingStack))),
+    showdown: raw.showdown || null,
+    dealSerial: Math.max(0, Math.round(Number(raw.dealSerial || 0))),
+    feedback: raw.feedback || "Room restored.",
+    log: Array.isArray(raw.log) ? raw.log.slice(-24) : [],
+    currentHandLog: Array.isArray(raw.currentHandLog) ? raw.currentHandLog.slice(-120) : [],
+    handHistory: Array.isArray(raw.handHistory) ? raw.handHistory.slice(-80) : [],
+    ledger: Array.isArray(raw.ledger) ? raw.ledger.slice(-200) : [],
+    chat: Array.isArray(raw.chat) ? raw.chat.slice(-160) : []
+  };
+  const players = Array.isArray(raw.players) ? raw.players : [];
+  game.players = players
+    .map((item) => ({
+      ...createPokerPlayer({
+        id: item.id,
+        name: item.name,
+        type: item.type === "bot" ? "bot" : "human",
+        seat: Number.isInteger(item.seat) ? item.seat : getNextOpenPokerSeat({ players: game.players, seatCount: settings.maxPlayers }),
+        stack: item.stack,
+        isHero: Boolean(item.isHero)
+      }),
+      ...item,
+      cards: Array.isArray(item.cards) ? item.cards : [],
+      currentBet: Math.max(0, Math.round(Number(item.currentBet || 0))),
+      committed: Math.max(0, Math.round(Number(item.committed || 0))),
+      buyIn: Math.max(0, Math.round(Number(item.buyIn ?? item.stack ?? settings.startingStack))),
+      cashOut: Math.max(0, Math.round(Number(item.cashOut || 0))),
+      connected: item.connected !== false,
+      sittingOut: Boolean(item.sittingOut),
+      sitOutNextHand: Boolean(item.sitOutNextHand),
+      isHost: Boolean(item.isHost || item.id === (raw.hostPlayerId || "hero")),
+      stack: Math.max(0, Math.round(Number(item.stack || 0)))
+    }))
+    .filter((player, index, all) => Number.isInteger(player.seat) && player.seat >= 0 && player.seat < settings.maxPlayers && all.findIndex((item) => item.id === player.id) === index);
+  if (!game.online && !game.players.some((player) => player.isHero)) {
+    if (game.players[0]) game.players[0].isHero = true;
+    else addPokerHumanToGame(game, { id: "hero", name: getDefaultPokerPlayerName(), seat: 0, isHero: true });
+  }
+  game.players.forEach((player) => {
+    player.isHost = player.id === game.hostPlayerId;
+  });
+  game.spectators = (Array.isArray(raw.spectators) ? raw.spectators : [])
+    .map((item) => ({
+      id: item.id || `spectator-${item.userId || makeId()}`,
+      userId: item.userId || "",
+      name: normalizePokerPlayerName(item.name || "Spectator"),
+      connected: item.connected !== false,
+      joinedAt: item.joinedAt || "",
+      lastSeenAt: item.lastSeenAt || "",
+      isHero: Boolean(item.isHero || (game.online && item.userId && item.userId === currentUser?.id))
+    }))
+    .filter((item, index, all) => item.userId && all.findIndex((other) => other.userId === item.userId) === index);
+  if (game.online && !game.viewerRole) {
+    const viewerPlayer = game.players.find((player) => player.isHero || player.userId === currentUser?.id);
+    const viewerSpectator = game.spectators.find((spectator) => spectator.isHero || spectator.userId === currentUser?.id);
+    game.viewerRole = viewerPlayer?.isHost ? "host" : viewerPlayer ? "player" : viewerSpectator ? "spectator" : "guest";
+    game.viewer = viewerPlayer || viewerSpectator || game.viewer;
+  }
+  sortPokerPlayers(game);
+  return game;
+}
+
+function persistPokerRoom(game) {
+  if (!game?.roomCode) return;
+  game.updatedAt = new Date().toISOString();
+  safeLocalStorageSet(POKER_LAST_ROOM_KEY, game.roomCode);
+  safeLocalStorageSet(`${POKER_ROOM_STORAGE_PREFIX}${game.roomCode}`, JSON.stringify(game));
+}
+
+function setPokerRoomUrl(game, mode = "replace") {
+  if (!game?.roomCode) return;
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set("pokerRoom", game.roomCode);
+    url.hash = "poker";
+    if (mode === "push") window.history.pushState(null, "", url.toString());
+    else window.history.replaceState(null, "", url.toString());
+  } catch {
+    // File previews without History support can keep the in-memory room.
+  }
+}
+
 function renderPokerGame() {
   if (!els.pokerGamePrompt) return;
   if (!currentPokerGame) currentPokerGame = makePokerGameRound();
   const game = currentPokerGame;
   const hero = getPokerHero(game);
-  const livePlayers = getPokerLivePlayers(game);
+  const livePlayers = getPokerActivePlayers(game);
+  const spectatorCount = getPokerSpectators(game).length;
   if (els.pokerModeSelect && els.pokerModeSelect.value !== game.mode) {
-    els.pokerModeSelect.value = ["private", "match"].includes(game.mode) ? game.mode : "private";
+    els.pokerModeSelect.value = ["private", "demo"].includes(game.mode) ? game.mode : "private";
   }
   if (els.pokerGameScore) els.pokerGameScore.textContent = hero ? String(Math.round(hero.stack)) : "0";
-  if (els.pokerPlayerCount) els.pokerPlayerCount.textContent = `${game.players.length}/${game.seatCount}`;
+  if (els.pokerPlayerCount) els.pokerPlayerCount.textContent = `${game.players.length}/${game.seatCount}${spectatorCount ? ` · ${spectatorCount} watching` : ""}`;
   if (els.pokerRoomCode) els.pokerRoomCode.textContent = game.roomCode;
   if (els.pokerStageText) els.pokerStageText.textContent = getPokerStageLabel(game.stage);
   if (els.pokerBlindText) {
     els.pokerBlindText.textContent = `${game.smallBlind} / ${game.bigBlind}`;
   }
+  renderPokerTournamentStats(game);
   if (els.pokerPot) els.pokerPot.textContent = `Pot ${game.pot}`;
   renderPokerRoomControls(game);
   renderPokerSeats(game);
@@ -14587,40 +15025,79 @@ function renderPokerGame() {
   renderPokerActions(game);
   renderPokerLobby(game);
   renderPokerLog(game);
+  renderPokerPanelTabs();
+  renderPokerRightPanel(game);
   renderPokerPreflopChart();
   const active = getCurrentPokerPlayer(game);
   const toCall = active ? getPokerToCall(game, active) : 0;
   const coach = getPokerHeroPreflopCoach(game);
   els.pokerGamePrompt.innerHTML = `
-    <span>${escapeHtml(game.status === "registering" ? "Registering" : "Running")} · hand <b>#${escapeHtml(String(game.handNumber || 0))}</b> · ${escapeHtml(String(livePlayers.length))} live</span>
+    <span><b class="poker-viewer-badge">${escapeHtml(getPokerViewerModeLabel(game))}</b>${escapeHtml(getPokerOnlineLabel(game))} · ${escapeHtml(game.isPaused ? "Paused" : getPokerStatusLabel(game))} · hand <b>#${escapeHtml(String(game.handNumber || 0))}</b> · ${escapeHtml(String(livePlayers.length))} active${spectatorCount ? ` · ${escapeHtml(String(spectatorCount))} watching` : ""}</span>
     <span>${escapeHtml(getPokerStageLabel(game.stage))} · pot ${escapeHtml(String(game.pot))} · current bet ${escapeHtml(String(game.currentBet))}</span>
     <small>${escapeHtml(getPokerTableHint(game, active, toCall))}</small>
     ${coach ? `<small class="poker-coach-line">${escapeHtml(coach)}</small>` : ""}
   `;
   if (els.pokerGameFeedback) els.pokerGameFeedback.textContent = game.feedback || "";
+  if (!game.online) persistPokerRoom(game);
   refreshIcons();
 }
 
+function renderPokerTournamentStats(game) {
+  const livePlayers = getPokerActivePlayers(game);
+  const averageStack = livePlayers.length
+    ? Math.round(livePlayers.reduce((sum, player) => sum + player.stack, 0) / livePlayers.length)
+    : 0;
+  const leader = [...game.players]
+    .filter((player) => !player.eliminated)
+    .sort((a, b) => b.stack - a.stack)[0];
+  if (els.pokerLevelText) els.pokerLevelText.textContent = `${game.smallBlind} / ${game.bigBlind}`;
+  if (els.pokerNextLevelText) els.pokerNextLevelText.textContent = `#${game.handNumber || 0}`;
+  if (els.pokerAverageStackText) els.pokerAverageStackText.textContent = formatNumber(averageStack);
+  if (els.pokerLeaderText) {
+    els.pokerLeaderText.textContent = leader ? `${leader.name} · ${formatNumber(leader.stack)}` : "No leader yet";
+  }
+}
+
 function getPokerTableHint(game, active, toCall) {
-  if (game.tournamentOver) return "Tournament complete. Start a new room to run it back.";
-  if (game.status === "registering") return "Seat at least two players. Add bots when the table is short.";
-  if (game.handComplete) return "Hand finished. Deal the next hand when ready.";
+  if (isPokerSpectator(game)) {
+    if (getNextOpenPokerSeat(game) != null && canPokerRegister(game)) return "You are watching. An open seat is available between hands.";
+    return "You are watching this table. Player hole cards stay hidden until showdown.";
+  }
+  if (game.isPaused) return "The host paused this room. Resume before dealing or acting.";
+  if (game.status === "registering") return "Seat at least two active players, then start the first cash hand.";
+  if (game.handComplete) return "Hand finished. The host can deal the next hand when ready.";
   if (!active) return "Table is resolving automatic actions.";
   return `Action on ${active.name}${toCall ? `, call ${toCall}` : ", check is available"}.`;
 }
 
 function renderPokerRoomControls(game) {
   const canRegister = canPokerRegister(game);
+  const activeCount = getPokerActivePlayers(game).length;
+  const host = isPokerHost(game);
+  const online = isPokerOnlineRoom(game);
+  const hero = getPokerHero(game);
+  const spectator = isPokerSpectator(game);
   if (els.pokerRoomLinkInput) els.pokerRoomLinkInput.value = getPokerInviteLink(game);
   if (els.pokerPlayerNameInput && !els.pokerPlayerNameInput.value) els.pokerPlayerNameInput.value = getDefaultPokerPlayerName();
   const hasOpenSeat = getNextOpenPokerSeat(game) != null;
-  if (els.pokerTakeSeatBtn) els.pokerTakeSeatBtn.disabled = !canRegister || !hasOpenSeat;
-  if (els.pokerAddBotBtn) els.pokerAddBotBtn.disabled = !canRegister || !hasOpenSeat;
-  if (els.pokerFillBotsBtn) els.pokerFillBotsBtn.disabled = !canRegister || !hasOpenSeat;
-  if (els.pokerStartTournamentBtn) {
-    els.pokerStartTournamentBtn.disabled = game.status === "running" || game.players.length < POKER_MIN_PLAYERS;
-    els.pokerStartTournamentBtn.innerHTML = `<i data-lucide="play"></i>${game.status === "running" ? "Running" : "Start tournament"}`;
+  if (els.pokerTakeSeatBtn) {
+    const alreadySeatedOnline = online && Boolean(hero);
+    els.pokerTakeSeatBtn.disabled = alreadySeatedOnline || !canRegister || !hasOpenSeat;
+    const label = alreadySeatedOnline ? "SEATED" : hasOpenSeat ? "TAKE SEAT" : spectator ? "WATCHING" : "FULL";
+    els.pokerTakeSeatBtn.textContent = label;
   }
+  if (els.pokerAddBotBtn) els.pokerAddBotBtn.disabled = online || !canRegister || !hasOpenSeat || !host;
+  if (els.pokerFillBotsBtn) els.pokerFillBotsBtn.disabled = online || !canRegister || !hasOpenSeat || !host;
+  if (els.pokerStartTournamentBtn) {
+    els.pokerStartTournamentBtn.disabled = game.isPaused || (game.handActive && !game.handComplete) || activeCount < POKER_MIN_PLAYERS || !host;
+    const label = game.handActive && !game.handComplete
+      ? "Hand running"
+      : activeCount < POKER_MIN_PLAYERS ? "Need 2 players" : "Start hand";
+    els.pokerStartTournamentBtn.innerHTML = `<i data-lucide="play"></i>${label}`;
+  }
+  if (els.pokerPauseBtn) els.pokerPauseBtn.disabled = !host || game.isPaused || game.status === "registering";
+  if (els.pokerResumeBtn) els.pokerResumeBtn.disabled = !host || !game.isPaused;
+  if (els.pokerExportBtn) els.pokerExportBtn.disabled = !game.players.length;
 }
 
 function getPokerInviteLink(game) {
@@ -14649,8 +15126,9 @@ function renderPokerLobby(game) {
     const avgStack = game.players.length
       ? Math.round(game.players.reduce((sum, player) => sum + player.stack, 0) / game.players.length)
       : 0;
-    const late = canPokerRegister(game) && game.status === "running" ? " · late reg open" : "";
-    els.pokerLobbySummary.textContent = `${getPokerStatusLabel(game)} · avg ${avgStack} · ${POKER_STARTING_STACK_BB}BB start${late}`;
+    const waiting = game.players.filter((player) => player.sittingOut || player.stack <= 0).length;
+    const watching = getPokerSpectators(game).length;
+    els.pokerLobbySummary.textContent = `${getPokerStatusLabel(game)} · avg ${avgStack} · ${POKER_STARTING_STACK_BB}BB start${waiting ? ` · ${waiting} waiting` : ""}${watching ? ` · ${watching} watching` : ""}`;
   }
   if (!els.pokerLobbyList) return;
   els.pokerLobbyList.innerHTML = "";
@@ -14663,17 +15141,28 @@ function renderPokerLobby(game) {
       row.innerHTML = `
         <span>Seat ${escapeHtml(String(player.seat + 1))}</span>
         <strong>${escapeHtml(player.name)}</strong>
-        <small>${escapeHtml(player.type === "bot" ? "Bot" : player.isHero ? "You" : "Human")}</small>
+        <small>${escapeHtml(player.type === "bot" ? "Demo" : player.isHero ? "You" : "Player")}</small>
         <b>${escapeHtml(String(Math.round(player.stack)))}</b>
       `;
       els.pokerLobbyList.appendChild(row);
     });
+  getPokerSpectators(game).forEach((spectator) => {
+    const row = document.createElement("div");
+    row.className = `poker-lobby-row spectator ${spectator.connected ? "" : "muted"}`;
+    row.innerHTML = `
+      <span>Watch</span>
+      <strong>${escapeHtml(spectator.name)}</strong>
+      <small>${spectator.isHero ? "You" : "Spectator"}</small>
+      <b>${spectator.connected ? "Live" : "Away"}</b>
+    `;
+    els.pokerLobbyList.appendChild(row);
+  });
 }
 
 function getPokerStatusLabel(game) {
-  if (game.tournamentOver) return "Complete";
+  if (game.isPaused) return "Paused";
   if (game.status === "running") return game.handActive ? "In hand" : "Between hands";
-  return "Registering";
+  return "Open room";
 }
 
 function renderPokerSeats(game) {
@@ -14685,7 +15174,9 @@ function renderPokerSeats(game) {
     const seat = document.createElement("div");
     if (!player) {
       seat.className = "poker-seat empty";
-      const disabled = canPokerRegister(game) ? "" : "disabled";
+      const canSit = canPokerRegister(game) && (!isPokerOnlineRoom(game) || !getPokerHero(game));
+      const sitDisabled = canSit ? "" : "disabled";
+      const botDisabled = !isPokerOnlineRoom(game) && canPokerRegister(game) && isPokerHost(game) ? "" : "disabled";
       seat.innerHTML = `
         <span class="poker-seat-number">${escapeHtml(String(seatIndex + 1))}</span>
         <div class="poker-seat-top">
@@ -14693,10 +15184,10 @@ function renderPokerSeats(game) {
           <span>Open seat</span>
         </div>
         <div class="poker-empty-seat-actions">
-          <button type="button" data-poker-seat-action="sit" data-seat="${escapeHtml(String(seatIndex))}" ${disabled}>SIT</button>
-          <button type="button" data-poker-seat-action="bot" data-seat="${escapeHtml(String(seatIndex))}" ${disabled}>BOT</button>
+          <button type="button" data-poker-seat-action="sit" data-seat="${escapeHtml(String(seatIndex))}" ${sitDisabled}>SIT</button>
+          <button type="button" data-poker-seat-action="bot" data-seat="${escapeHtml(String(seatIndex))}" ${botDisabled}>DEMO</button>
         </div>
-        <small>${canPokerRegister(game) ? "Ready for player" : "Registration closed"}</small>
+        <small>${canSit ? "Ready for player" : "Join next hand"}</small>
       `;
       els.pokerSeatGrid.appendChild(seat);
       continue;
@@ -14713,16 +15204,22 @@ function renderPokerSeats(game) {
     ].filter(Boolean).join(" ");
     const badges = [];
     if (index === game.dealerIndex) badges.push("D");
+    if (game.handActive) {
+      const blindSeats = getPokerBlindSeats(game);
+      if (index === blindSeats.small) badges.push("SB");
+      if (index === blindSeats.big) badges.push("BB");
+    }
     if (player.allIn) badges.push("ALL-IN");
     if (player.folded) badges.push("FOLD");
-    if (player.eliminated) badges.push("OUT");
-    const removeButton = game.status === "registering"
+    if (player.sittingOut) badges.push("SIT OUT");
+    if (player.stack <= 0 && !player.inHand) badges.push("NEEDS BUY-IN");
+    const removeButton = canPokerRegister(game) && (isPokerHost(game) || player.isHero)
       ? `<button type="button" data-poker-seat-action="remove" data-player-id="${escapeHtml(player.id)}">Remove</button>`
       : "";
     seat.innerHTML = `
       <div class="poker-seat-top">
         <strong>${escapeHtml(player.name)}</strong>
-        <span>${badges.map(escapeHtml).join(" · ") || escapeHtml(player.type === "human" ? "Human" : "Bot")}</span>
+        <span>${badges.map(escapeHtml).join(" · ") || escapeHtml(player.type === "human" ? "Player" : "Demo")}</span>
       </div>
       <div class="poker-hole-cards">${renderPokerHoleCards(game, player)}</div>
       <div class="poker-seat-stack">
@@ -14737,7 +15234,7 @@ function renderPokerSeats(game) {
 }
 
 function renderPokerHoleCards(game, player) {
-  const shouldReveal = player.type === "human" || game.handComplete || game.stage === "showdown";
+  const shouldReveal = player.cardsVisible || player.isHero || game.handComplete || game.stage === "showdown";
   const cards = player.cards.length ? player.cards : [null, null];
   return cards.map((card, index) => {
     const style = `style="--deal-index:${index}"`;
@@ -14768,42 +15265,50 @@ function renderPokerBoard(game) {
 
 function renderPokerActions(game) {
   const active = getCurrentPokerPlayer(game);
-  const canAct = Boolean(active && active.type === "human" && game.status === "running" && game.handActive && !game.handComplete && !game.tournamentOver);
+  const hero = getPokerHero(game);
+  const canAct = Boolean(active && active.type === "human" && (active.isHero || active.id === hero?.id) && game.status === "running" && game.handActive && !game.handComplete && !game.isPaused);
   const toCall = active ? getPokerToCall(game, active) : 0;
+  const minRaiseTo = active ? getMinimumPokerRaiseTo(game, active) : 0;
+  const maxRaiseTo = active ? active.currentBet + active.stack : 0;
+  const canRaise = Boolean(canAct && maxRaiseTo >= minRaiseTo && minRaiseTo > game.currentBet);
   document.querySelectorAll("[data-poker-action]").forEach((button) => {
     const action = button.dataset.pokerAction;
-    button.disabled = !canAct;
+    button.disabled = !canAct || (action === "raise" && !canRaise) || (action === "allin" && (!active || active.stack <= 0));
     if (action === "call") button.textContent = toCall ? `Call ${toCall}` : "Check";
     if (action === "raise") button.textContent = game.currentBet ? "Raise" : "Bet";
     if (action === "allin") button.textContent = "All-in";
   });
   if (els.pokerRaiseInput) {
-    const minRaiseTo = active ? getMinimumPokerRaiseTo(game, active) : 0;
-    const maxRaiseTo = active ? active.currentBet + active.stack : 0;
-    els.pokerRaiseInput.disabled = !canAct;
+    els.pokerRaiseInput.disabled = !canRaise;
     els.pokerRaiseInput.min = String(minRaiseTo);
     els.pokerRaiseInput.max = String(maxRaiseTo);
     els.pokerRaiseInput.step = String(game.bigBlind);
-    if (canAct && (!Number(els.pokerRaiseInput.value) || Number(els.pokerRaiseInput.value) < minRaiseTo)) {
+    if (canRaise && (!Number(els.pokerRaiseInput.value) || Number(els.pokerRaiseInput.value) < minRaiseTo || Number(els.pokerRaiseInput.value) > maxRaiseTo)) {
       els.pokerRaiseInput.value = String(Math.min(maxRaiseTo, minRaiseTo));
     }
   }
+  document.querySelectorAll("[data-poker-quick-bet]").forEach((button) => {
+    button.disabled = !canRaise;
+  });
   if (els.pokerTurnPrompt) {
     els.pokerTurnPrompt.textContent = canAct
       ? active.isHero || active.id === "hero"
         ? "YOUR TURN"
         : `${active.name} to act`
+      : isPokerSpectator(game)
+        ? getNextOpenPokerSeat(game) == null ? "WATCHING · TABLE FULL" : "WATCHING · SEAT AVAILABLE"
       : game.status === "registering"
-        ? "Lobby open. Seat players or add bots."
+        ? "Room open. Seat players or add demo players."
+        : game.isPaused
+          ? "Room paused."
         : game.handComplete
           ? "Hand complete."
-          : "Bots are acting...";
+          : "Demo players are acting...";
   }
   if (els.nextPokerGameBtn) {
-    els.nextPokerGameBtn.disabled = Boolean(game.handActive && !game.handComplete && !game.tournamentOver);
-    els.nextPokerGameBtn.textContent = game.tournamentOver
-      ? "New tournament"
-      : game.status === "registering" ? "Start tournament" : "Next hand";
+    const activeCount = getPokerActivePlayers(game).length;
+    els.nextPokerGameBtn.disabled = Boolean(game.isPaused || (game.handActive && !game.handComplete) || activeCount < POKER_MIN_PLAYERS || !isPokerHost(game));
+    els.nextPokerGameBtn.textContent = game.status === "registering" ? "Start hand" : "Next hand";
   }
 }
 
@@ -14817,16 +15322,589 @@ function renderPokerLog(game) {
   });
 }
 
+function handlePokerDocumentClick(event) {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const pokerRoot = target.closest('[data-module-view="poker"]');
+  if (!pokerRoot) return;
+  const actionButton = target.closest("[data-poker-action]");
+  if (actionButton) {
+    event.preventDefault();
+    event.stopPropagation();
+    submitPokerAction(actionButton.dataset.pokerAction);
+    return;
+  }
+  const quickButton = target.closest("[data-poker-quick-bet]");
+  if (quickButton) {
+    event.preventDefault();
+    event.stopPropagation();
+    applyPokerQuickBet(quickButton.dataset.pokerQuickBet);
+    return;
+  }
+  const panelTab = target.closest("[data-poker-panel-tab]");
+  if (panelTab) {
+    event.preventDefault();
+    event.stopPropagation();
+    selectedPokerPanelTab = panelTab.dataset.pokerPanelTab || "chat";
+    renderPokerGame();
+    return;
+  }
+  const seatAction = target.closest("[data-poker-seat-action]");
+  if (seatAction) {
+    event.preventDefault();
+    event.stopPropagation();
+    handlePokerSeatClick({ target: seatAction });
+    return;
+  }
+  const playerPanelAction = target.closest("[data-poker-player-action]");
+  if (playerPanelAction) {
+    event.preventDefault();
+    event.stopPropagation();
+    handlePokerPanelClick({ target: playerPanelAction });
+    return;
+  }
+  const id = target.closest("button")?.id;
+  if (!id) return;
+  const handlers = {
+    nextPokerGameBtn: () => newPokerGame(true),
+    resetPokerGameBtn: () => resetPokerTournament(true),
+    pokerMatchBtn: () => matchPokerTournament(true),
+    pokerCopyLinkBtn: () => copyPokerRoomLink(),
+    pokerTakeSeatBtn: () => takePokerSeat(),
+    pokerAddBotBtn: () => addPokerBot(true),
+    pokerFillBotsBtn: () => fillPokerBots(true),
+    pokerStartTournamentBtn: () => startPokerTournament(true),
+    pokerPauseBtn: () => pausePokerGame(true),
+    pokerResumeBtn: () => resumePokerGame(true),
+    pokerExportBtn: () => exportPokerSession()
+  };
+  if (!handlers[id]) return;
+  event.preventDefault();
+  event.stopPropagation();
+  handlers[id]();
+}
+
+function handlePokerDocumentSubmit(event) {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  if (!target.closest('[data-module-view="poker"]')) return;
+  if (!target.closest("#pokerPanelContent")) return;
+  event.preventDefault();
+  event.stopPropagation();
+  handlePokerPanelSubmit(event);
+}
+
+function renderPokerPanelTabs() {
+  document.querySelectorAll("[data-poker-panel-tab]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.pokerPanelTab === selectedPokerPanelTab);
+  });
+}
+
+function renderPokerRightPanel(game) {
+  if (!els.pokerPanelContent) return;
+  const tab = selectedPokerPanelTab || "chat";
+  if (tab === "history") {
+    els.pokerPanelContent.innerHTML = renderPokerHistoryPanel(game);
+    return;
+  }
+  if (tab === "players") {
+    els.pokerPanelContent.innerHTML = renderPokerPlayersPanel(game);
+    return;
+  }
+  if (tab === "ledger") {
+    els.pokerPanelContent.innerHTML = renderPokerLedgerPanel(game);
+    return;
+  }
+  if (tab === "settings") {
+    els.pokerPanelContent.innerHTML = renderPokerSettingsPanel(game);
+    return;
+  }
+  els.pokerPanelContent.innerHTML = renderPokerChatPanel(game);
+}
+
+function renderPokerChatPanel(game) {
+  const messages = (game.chat || []).slice(-40);
+  const canChat = !isPokerSpectator(game) || game.settings?.spectatorChat !== false;
+  return `
+    <div class="poker-panel-stack">
+      <div class="poker-panel-title">
+        <strong>Room chat</strong>
+        <span>${escapeHtml(String(messages.length))} messages</span>
+      </div>
+      <div class="poker-chat-feed">
+        ${messages.length ? messages.map((item) => `
+          <div class="poker-chat-message">
+            <span>${escapeHtml(item.author || "Player")}</span>
+            <p>${escapeHtml(item.message || "")}</p>
+          </div>
+        `).join("") : `<div class="poker-empty-state">No messages yet.</div>`}
+      </div>
+      <form class="poker-chat-form" data-poker-chat-form>
+        <input name="message" type="text" maxlength="360" placeholder="${canChat ? "Type a message" : "Chat disabled"}" ${canChat ? "" : "disabled"}>
+        <button class="primary-button compact" type="submit" ${canChat ? "" : "disabled"}>Send</button>
+      </form>
+    </div>
+  `;
+}
+
+function renderPokerHistoryPanel(game) {
+  const hands = game.handHistory || [];
+  return `
+    <div class="poker-panel-stack">
+      <div class="poker-panel-title">
+        <strong>Hand history</strong>
+        <span>${escapeHtml(String(hands.length))} saved</span>
+      </div>
+      <div class="poker-history-list">
+        ${hands.length ? hands.map((hand) => `
+          <article class="poker-history-item">
+            <header>
+              <strong>#${escapeHtml(String(hand.handNumber))} · ${escapeHtml(hand.blinds || "")}</strong>
+              <span>${escapeHtml(hand.board?.join(" ") || "No board")}</span>
+            </header>
+            <p>${escapeHtml(hand.result || "")}</p>
+            <details>
+              <summary>Actions</summary>
+              <div>
+                ${(hand.actions || []).map((action) => `<span>${escapeHtml(action.line || "")}</span>`).join("") || "<span>No action log.</span>"}
+              </div>
+            </details>
+          </article>
+        `).join("") : `<div class="poker-empty-state">Hands will appear here after they finish.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function renderPokerPlayersPanel(game) {
+  const host = isPokerHost(game);
+  const hero = getPokerHero(game);
+  const unit = Math.max(game.bigBlind * 100, game.startingStack);
+  const spectators = getPokerSpectators(game);
+  return `
+    <div class="poker-panel-stack">
+      <div class="poker-panel-title">
+        <strong>Players</strong>
+        <span>${escapeHtml(String(getPokerActivePlayers(game).length))} active</span>
+      </div>
+      <div class="poker-player-list">
+        ${game.players.map((player) => {
+          const canManageSelf = player.id === hero?.id || player.isHero;
+          const canRemove = canPokerRegister(game) && (host || canManageSelf);
+          const status = player.sittingOut ? "Sitting out" : player.stack <= 0 ? "Needs buy-in" : player.inHand ? "In hand" : "Ready";
+          return `
+            <article class="poker-player-row">
+              <div>
+                <strong>${escapeHtml(player.name)}</strong>
+                <span>Seat ${escapeHtml(String(player.seat + 1))} · ${escapeHtml(player.type === "bot" ? "Demo" : player.isHost ? "Host" : "Player")} · ${escapeHtml(status)}</span>
+              </div>
+              <b>${escapeHtml(formatNumber(player.stack))}</b>
+              <div class="poker-player-actions">
+                ${canManageSelf ? `
+                  <button type="button" data-poker-player-action="${player.sittingOut ? "back" : "sitout"}" data-player-id="${escapeHtml(player.id)}">${player.sittingOut ? "Back" : "Sit out"}</button>
+                  <button type="button" data-poker-player-action="rebuy" data-player-id="${escapeHtml(player.id)}">Rebuy</button>
+                ` : ""}
+                ${host ? `
+                  <button type="button" data-poker-player-action="addstack" data-delta="${escapeHtml(String(unit))}" data-player-id="${escapeHtml(player.id)}">+100BB</button>
+                  <button type="button" data-poker-player-action="removestack" data-delta="${escapeHtml(String(unit))}" data-player-id="${escapeHtml(player.id)}">-100BB</button>
+                ` : ""}
+                ${canRemove ? `<button type="button" data-poker-player-action="remove" data-player-id="${escapeHtml(player.id)}">Leave</button>` : ""}
+              </div>
+            </article>
+          `;
+        }).join("") || `<div class="poker-empty-state">No seated players.</div>`}
+      </div>
+      <div class="poker-panel-title compact">
+        <strong>Spectators</strong>
+        <span>${escapeHtml(String(spectators.length))} watching</span>
+      </div>
+      <div class="poker-player-list spectator-list">
+        ${spectators.length ? spectators.map((spectator) => `
+          <article class="poker-player-row spectator">
+            <div>
+              <strong>${escapeHtml(spectator.name)}</strong>
+              <span>${escapeHtml(spectator.isHero ? "You are watching" : "Watching")} · ${escapeHtml(spectator.connected ? "Live" : "Away")}</span>
+            </div>
+            <b>VIEW</b>
+          </article>
+        `).join("") : `<div class="poker-empty-state">No spectators right now.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function renderPokerLedgerPanel(game) {
+  const rows = getPokerLedgerRows(game);
+  return `
+    <div class="poker-panel-stack">
+      <div class="poker-panel-title">
+        <strong>Session ledger</strong>
+        <span>Play money</span>
+      </div>
+      <div class="poker-ledger-table">
+        <div class="poker-ledger-head">
+          <span>Player</span><span>Buy-in</span><span>Stack</span><span>Net</span>
+        </div>
+        ${rows.length ? rows.map(({ player, buyIn, stack, net }) => `
+          <div class="poker-ledger-row">
+            <span>${escapeHtml(player.name)}</span>
+            <span>${escapeHtml(formatNumber(buyIn))}</span>
+            <span>${escapeHtml(formatNumber(stack))}</span>
+            <strong class="${net >= 0 ? "positive" : "negative"}">${net >= 0 ? "+" : ""}${escapeHtml(formatNumber(net))}</strong>
+          </div>
+        `).join("") : `<div class="poker-empty-state">No ledger rows yet.</div>`}
+      </div>
+      <div class="poker-ledger-events">
+        ${(game.ledger || []).slice(-8).reverse().map((event) => `
+          <span>${escapeHtml(event.type)} · ${escapeHtml(event.playerName || "Room")} · ${event.amount >= 0 ? "+" : ""}${escapeHtml(formatNumber(event.amount))}</span>
+        `).join("") || `<span>No ledger events yet.</span>`}
+      </div>
+    </div>
+  `;
+}
+
+function renderPokerSettingsPanel(game) {
+  const settings = game.settings || getDefaultPokerSettings(game.bigBlind);
+  const host = isPokerHost(game);
+  const disabled = host && !game.handActive ? "" : "disabled";
+  return `
+    <form class="poker-settings-form" data-poker-settings-form>
+      <div class="poker-panel-title">
+        <strong>Table settings</strong>
+        <span>${host ? game.handActive ? "Between hands only" : "Host" : "Host only"}</span>
+      </div>
+      <label>Room name<input name="roomName" type="text" maxlength="40" value="${escapeHtml(settings.roomName || "")}" ${disabled}></label>
+      <div class="poker-settings-grid">
+        <label>Small blind<input name="smallBlind" type="number" min="1" step="1" value="${escapeHtml(String(settings.smallBlind || game.smallBlind))}" ${disabled}></label>
+        <label>Big blind<input name="bigBlind" type="number" min="2" step="1" value="${escapeHtml(String(settings.bigBlind || game.bigBlind))}" ${disabled}></label>
+        <label>Starting stack<input name="startingStack" type="number" min="100" step="10" value="${escapeHtml(String(settings.startingStack || game.startingStack))}" ${disabled}></label>
+        <label>Max players<input name="maxPlayers" type="number" min="2" max="10" step="1" value="${escapeHtml(String(settings.maxPlayers || game.seatCount))}" ${disabled}></label>
+        <label>Turn seconds<input name="decisionTimeLimit" type="number" min="10" max="180" step="5" value="${escapeHtml(String(settings.decisionTimeLimit || 30))}" ${disabled}></label>
+      </div>
+      <label class="poker-check-row"><input name="allowSpectators" type="checkbox" ${settings.allowSpectators !== false ? "checked" : ""} ${disabled}>Allow spectators</label>
+      <label class="poker-check-row"><input name="spectatorChat" type="checkbox" ${settings.spectatorChat !== false ? "checked" : ""} ${disabled}>Spectator chat</label>
+      <label class="poker-check-row"><input name="autoStartNextHand" type="checkbox" ${settings.autoStartNextHand ? "checked" : ""} ${disabled}>Auto-start next hand</label>
+      <label class="poker-check-row"><input name="autoIncreaseBlinds" type="checkbox" ${settings.autoIncreaseBlinds ? "checked" : ""} ${disabled}>Auto-increase blinds</label>
+      <button class="primary-button compact" type="submit" ${disabled}>Save settings</button>
+    </form>
+  `;
+}
+
+function handlePokerPanelSubmit(event) {
+  const chatForm = event.target.closest("[data-poker-chat-form]");
+  if (chatForm) {
+    event.preventDefault();
+    sendPokerChat(chatForm);
+    return;
+  }
+  const settingsForm = event.target.closest("[data-poker-settings-form]");
+  if (settingsForm) {
+    event.preventDefault();
+    applyPokerSettings(settingsForm);
+  }
+}
+
+function handlePokerPanelClick(event) {
+  const button = event.target.closest("[data-poker-player-action]");
+  if (!button || !currentPokerGame) return;
+  const action = button.dataset.pokerPlayerAction;
+  const playerId = button.dataset.playerId;
+  if (action === "remove") {
+    removePokerPlayer(playerId);
+    return;
+  }
+  if (action === "sitout") {
+    setPokerPlayerSittingOut(playerId, true);
+    return;
+  }
+  if (action === "back") {
+    setPokerPlayerSittingOut(playerId, false);
+    return;
+  }
+  if (action === "rebuy") {
+    adjustPokerStack(playerId, currentPokerGame.startingStack, "Rebuy");
+    return;
+  }
+  if (action === "addstack") {
+    adjustPokerStack(playerId, Number(button.dataset.delta || currentPokerGame.startingStack), "Host add chips");
+    return;
+  }
+  if (action === "removestack") {
+    adjustPokerStack(playerId, -Number(button.dataset.delta || currentPokerGame.startingStack), "Host remove chips");
+  }
+}
+
+function sendPokerChat(form) {
+  const game = currentPokerGame;
+  if (!game) return;
+  const input = form.elements?.message;
+  const message = String(input?.value || "").trim().slice(0, 360);
+  if (!message) return;
+  if (isPokerOnlineRoom(game)) {
+    if (input) input.value = "";
+    sendPokerOnlineCommand("chat", { message });
+    return;
+  }
+  const author = getPokerHero(game)?.name || "Spectator";
+  game.chat = [
+    ...(game.chat || []),
+    {
+      id: makeId(),
+      author,
+      message,
+      createdAt: new Date().toISOString()
+    }
+  ].slice(-160);
+  if (input) input.value = "";
+  persistPokerRoom(game);
+  renderPokerGame();
+}
+
+function applyPokerSettings(form) {
+  const game = currentPokerGame;
+  if (!game) return;
+  if (!isPokerHost(game)) {
+    game.feedback = "Only the host can change table settings.";
+    renderPokerGame();
+    return;
+  }
+  if (game.handActive) {
+    game.feedback = "Change table settings between hands.";
+    renderPokerGame();
+    return;
+  }
+  const data = new FormData(form);
+  const occupiedMaxSeat = game.players.reduce((max, player) => Math.max(max, player.seat + 1), POKER_MIN_PLAYERS);
+  const smallBlind = Math.max(1, Math.round(Number(data.get("smallBlind") || game.smallBlind)));
+  const bigBlind = Math.max(smallBlind + 1, Math.round(Number(data.get("bigBlind") || game.bigBlind)));
+  const maxPlayers = clampNumber(Math.round(Number(data.get("maxPlayers") || game.seatCount)), occupiedMaxSeat, POKER_TABLE_SEATS);
+  const startingStack = Math.max(bigBlind * 20, Math.round(Number(data.get("startingStack") || game.startingStack)));
+  if (isPokerOnlineRoom(game)) {
+    sendPokerOnlineCommand("settings", {
+      settings: {
+        roomName: String(data.get("roomName") || "Private cash table").trim().slice(0, 40) || "Private cash table",
+        smallBlind,
+        bigBlind,
+        startingStack,
+        maxPlayers,
+        decisionTimeLimit: clampNumber(Math.round(Number(data.get("decisionTimeLimit") || 30)), 10, 180),
+        allowSpectators: data.get("allowSpectators") === "on",
+        spectatorChat: data.get("spectatorChat") === "on",
+        autoStartNextHand: data.get("autoStartNextHand") === "on",
+        autoIncreaseBlinds: data.get("autoIncreaseBlinds") === "on"
+      }
+    });
+    return;
+  }
+  game.settings = {
+    ...(game.settings || getDefaultPokerSettings(bigBlind)),
+    roomName: String(data.get("roomName") || "Private cash table").trim().slice(0, 40) || "Private cash table",
+    smallBlind,
+    bigBlind,
+    startingStack,
+    maxPlayers,
+    decisionTimeLimit: clampNumber(Math.round(Number(data.get("decisionTimeLimit") || 30)), 10, 180),
+    allowSpectators: data.get("allowSpectators") === "on",
+    spectatorChat: data.get("spectatorChat") === "on",
+    autoStartNextHand: data.get("autoStartNextHand") === "on",
+    autoIncreaseBlinds: data.get("autoIncreaseBlinds") === "on"
+  };
+  game.smallBlind = smallBlind;
+  game.bigBlind = bigBlind;
+  game.minRaise = bigBlind;
+  game.startingStack = startingStack;
+  game.seatCount = maxPlayers;
+  game.feedback = "Table settings saved.";
+  addPokerLog(game, game.feedback);
+  renderPokerGame();
+}
+
+function setPokerPlayerSittingOut(playerId, shouldSitOut) {
+  const game = currentPokerGame;
+  const player = game?.players.find((item) => item.id === playerId);
+  if (!game || !player) return;
+  if (isPokerOnlineRoom(game)) {
+    sendPokerOnlineCommand("sitOut", { playerId, sittingOut: Boolean(shouldSitOut) });
+    return;
+  }
+  const isSelf = player.isHero || player.id === getPokerHero(game)?.id;
+  if (!isSelf && !isPokerHost(game)) {
+    game.feedback = "Only the host can manage another player.";
+    renderPokerGame();
+    return;
+  }
+  if (game.handActive && player.inHand && shouldSitOut) {
+    player.sitOutNextHand = true;
+    player.lastAction = "Sit out next hand";
+    game.feedback = `${player.name} will sit out next hand.`;
+  } else {
+    player.sittingOut = Boolean(shouldSitOut);
+    player.sitOutNextHand = false;
+    player.lastAction = player.sittingOut ? "Sitting out" : "Ready";
+    game.feedback = `${player.name} is ${player.sittingOut ? "sitting out" : "back"}.`;
+  }
+  addPokerLog(game, game.feedback);
+  renderPokerGame();
+}
+
+function adjustPokerStack(playerId, delta, note = "Stack adjustment") {
+  const game = currentPokerGame;
+  const player = game?.players.find((item) => item.id === playerId);
+  const amount = Math.round(Number(delta || 0));
+  if (!game || !player || !amount) return;
+  if (isPokerOnlineRoom(game)) {
+    sendPokerOnlineCommand("adjustStack", { playerId, delta: amount, note });
+    return;
+  }
+  const isSelfRebuy = player.isHero && amount > 0 && note === "Rebuy";
+  if (!isSelfRebuy && !isPokerHost(game)) {
+    game.feedback = "Only the host can adjust stacks.";
+    renderPokerGame();
+    return;
+  }
+  if (game.handActive) {
+    game.feedback = "Adjust stacks between hands.";
+    renderPokerGame();
+    return;
+  }
+  if (amount > 0) {
+    player.stack += amount;
+    player.buyIn = Math.round(Number(player.buyIn || 0)) + amount;
+    player.sittingOut = false;
+  } else {
+    const removed = Math.min(player.stack, Math.abs(amount));
+    player.stack -= removed;
+    player.cashOut = Math.round(Number(player.cashOut || 0)) + removed;
+  }
+  recordPokerLedger(game, {
+    type: amount > 0 ? "BUY_IN" : "CASH_OUT",
+    playerId: player.id,
+    playerName: player.name,
+    amount,
+    note
+  });
+  game.feedback = `${player.name} stack adjusted ${amount > 0 ? "+" : ""}${amount}.`;
+  addPokerLog(game, game.feedback);
+  renderPokerGame();
+}
+
+function pausePokerGame(renderAfter = true) {
+  const game = currentPokerGame;
+  if (!game) return;
+  if (isPokerOnlineRoom(game)) {
+    sendPokerOnlineCommand("pause");
+    return;
+  }
+  if (!isPokerHost(game)) {
+    game.feedback = "Only the host can pause the room.";
+  } else {
+    game.isPaused = true;
+    game.feedback = "Room paused by host.";
+    addPokerLog(game, game.feedback);
+  }
+  if (renderAfter) renderPokerGame();
+}
+
+function resumePokerGame(renderAfter = true) {
+  const game = currentPokerGame;
+  if (!game) return;
+  if (isPokerOnlineRoom(game)) {
+    sendPokerOnlineCommand("resume");
+    return;
+  }
+  if (!isPokerHost(game)) {
+    game.feedback = "Only the host can resume the room.";
+  } else {
+    game.isPaused = false;
+    game.feedback = "Room resumed by host.";
+    addPokerLog(game, game.feedback);
+    continuePokerHand(game);
+  }
+  if (renderAfter) renderPokerGame();
+}
+
+function applyPokerQuickBet(size) {
+  const game = currentPokerGame;
+  const active = game ? getCurrentPokerPlayer(game) : null;
+  if (!game || !active || active.type !== "human" || game.isPaused) return;
+  const maxTotal = active.currentBet + active.stack;
+  const minTotal = getMinimumPokerRaiseTo(game, active);
+  if (!maxTotal || maxTotal < minTotal) return;
+  let target = minTotal;
+  if (size === "allin") {
+    target = maxTotal;
+  } else {
+    const multiplier = size === "half" ? 0.5 : size === "twothirds" ? 0.67 : 1;
+    const potSized = Math.round(Math.max(game.pot, game.bigBlind) * multiplier);
+    target = game.currentBet > 0
+      ? game.currentBet + Math.max(game.minRaise, potSized)
+      : Math.max(game.bigBlind, potSized);
+  }
+  if (els.pokerRaiseInput) {
+    els.pokerRaiseInput.value = String(Math.min(maxTotal, Math.max(minTotal, Math.round(target))));
+    els.pokerRaiseInput.focus();
+  }
+}
+
+function exportPokerSession() {
+  const game = currentPokerGame;
+  if (!game) return;
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    roomCode: game.roomCode,
+    mode: game.mode,
+    playMoneyOnly: true,
+    settings: game.settings,
+    players: game.players.map((player) => ({
+      id: player.id,
+      name: player.name,
+      type: player.type === "bot" ? "demo" : "player",
+      seat: player.seat,
+      stack: player.stack,
+      buyIn: player.buyIn,
+      cashOut: player.cashOut,
+      net: player.cashOut + player.stack - player.buyIn
+    })),
+    handHistory: game.handHistory || [],
+    ledger: game.ledger || [],
+    chat: game.chat || [],
+    log: game.log || []
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `quantgym-poker-${game.roomCode}-${new Date().toISOString().slice(0, 10)}.json`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+  game.feedback = "Session export prepared.";
+  renderPokerGame();
+}
+
 function matchPokerTournament(renderAfter = true) {
+  closePokerWebSocket();
   currentPokerGame = makePokerGameRound();
-  if (currentPokerGame.mode === "private") fillPokerBotsForGame(currentPokerGame, 2);
-  currentPokerGame.feedback = "New room matched. Start now or add more players.";
+  if (canUsePokerOnline() && currentPokerGame.mode !== "demo") {
+    currentPokerGame.online = true;
+    currentPokerGame.feedback = "Creating online private table...";
+    if (renderAfter) renderPokerGame();
+    ensurePokerOnlineRoom({ force: true, create: true });
+    return;
+  }
+  setPokerRoomUrl(currentPokerGame, "replace");
+  currentPokerGame.feedback = currentPokerGame.mode === "demo"
+    ? "New local demo table created."
+    : "New private table created. Share the room link when ready.";
   if (renderAfter) renderPokerGame();
 }
 
 function newPokerGame(renderAfter = true) {
-  if (!currentPokerGame || currentPokerGame.tournamentOver) {
+  if (!currentPokerGame) {
     resetPokerTournament(false);
+  } else if (isPokerOnlineRoom(currentPokerGame)) {
+    sendPokerOnlineCommand(currentPokerGame.status === "registering" ? "startHand" : "nextHand");
+    return;
   } else if (currentPokerGame.status === "registering") {
     startPokerTournament(false);
   } else if (currentPokerGame.handActive && !currentPokerGame.handComplete) {
@@ -14838,31 +15916,56 @@ function newPokerGame(renderAfter = true) {
 }
 
 function resetPokerTournament(renderAfter = true) {
+  closePokerWebSocket();
   currentPokerGame = makePokerGameRound();
+  if (canUsePokerOnline() && currentPokerGame.mode !== "demo") {
+    currentPokerGame.online = true;
+    currentPokerGame.feedback = "Creating online private table...";
+    if (renderAfter) renderPokerGame();
+    ensurePokerOnlineRoom({ force: true, create: true });
+    return;
+  }
+  setPokerRoomUrl(currentPokerGame, "replace");
   if (renderAfter) renderPokerGame();
 }
 
 function startPokerTournament(renderAfter = true) {
   const game = currentPokerGame || makePokerGameRound();
   currentPokerGame = game;
-  if (game.players.length < POKER_MIN_PLAYERS) {
-    game.feedback = "Need at least two seated players. Add a bot to start heads-up.";
+  if (isPokerOnlineRoom(game)) {
+    sendPokerOnlineCommand("startHand");
+    return;
+  }
+  if (game.isPaused) {
+    game.feedback = "Resume the room before starting a hand.";
+    if (renderAfter) renderPokerGame();
+    return;
+  }
+  if (!isPokerHost(game)) {
+    game.feedback = "Only the host can start the next hand.";
+    if (renderAfter) renderPokerGame();
+    return;
+  }
+  if (game.mode === "demo" && getPokerActivePlayers(game).length < POKER_MIN_PLAYERS) {
+    fillPokerBotsForGame(game, POKER_MIN_PLAYERS);
+  }
+  if (getPokerActivePlayers(game).length < POKER_MIN_PLAYERS) {
+    game.feedback = "Need at least two active seated players to start a hand.";
     if (renderAfter) renderPokerGame();
     return;
   }
   if (game.status !== "running") {
     game.status = "running";
-    game.feedback = "Tournament started. Shuffle up and deal.";
-    addPokerLog(game, "Tournament started.");
+    game.feedback = "Cash table started. Shuffle up and deal.";
+    addPokerLog(game, "Cash table started.");
   }
-  if (!game.handActive && game.handComplete && !game.tournamentOver) startNextPokerHand(game);
+  if (!game.handActive && game.handComplete) startNextPokerHand(game);
   if (renderAfter) renderPokerGame();
 }
 
 function canPokerRegister(game) {
-  if (!game || game.tournamentOver || game.handActive) return false;
-  if (game.status === "registering") return true;
-  return game.status === "running" && game.handsPlayed < 3;
+  if (!game || game.isPaused || game.handActive) return false;
+  return true;
 }
 
 function getNextOpenPokerSeat(game) {
@@ -14876,8 +15979,25 @@ function getNextOpenPokerSeat(game) {
 function takePokerSeat(seat = null, renderAfter = true) {
   if (!currentPokerGame) currentPokerGame = makePokerGameRound();
   const game = currentPokerGame;
+  if (isPokerOnlineRoom(game)) {
+    if (getPokerHero(game)) {
+      game.feedback = "You are already seated at this table.";
+      if (renderAfter) renderPokerGame();
+      return;
+    }
+    if (getNextOpenPokerSeat(game) == null) {
+      game.feedback = "Table is full. You are watching until a seat opens.";
+      if (renderAfter) renderPokerGame();
+      return;
+    }
+    sendPokerOnlineCommand("takeSeat", {
+      seat: Number.isInteger(seat) ? seat : undefined,
+      name: getPokerOnlinePlayerName()
+    });
+    return;
+  }
   if (!canPokerRegister(game)) {
-    game.feedback = "Registration is closed while a hand is running.";
+    game.feedback = "Take a seat between hands.";
     if (renderAfter) renderPokerGame();
     return;
   }
@@ -14907,7 +16027,16 @@ function addPokerHumanToGame(game, options = {}) {
     stack: game.startingStack,
     isHero: Boolean(options.isHero)
   });
+  player.isHost = player.id === game.hostPlayerId || (!game.players.length && Boolean(options.isHero));
+  if (player.isHost) game.hostPlayerId = player.id;
   game.players.push(player);
+  recordPokerLedger(game, {
+    type: "BUY_IN",
+    playerId: player.id,
+    playerName: player.name,
+    amount: player.buyIn,
+    note: "Player buy-in"
+  });
   sortPokerPlayers(game);
   return player;
 }
@@ -14915,13 +16044,23 @@ function addPokerHumanToGame(game, options = {}) {
 function addPokerBot(renderAfter = true, seat = null) {
   if (!currentPokerGame) currentPokerGame = makePokerGameRound();
   const game = currentPokerGame;
+  if (isPokerOnlineRoom(game)) {
+    game.feedback = "Demo players are local-only. Invite another logged-in player for online rooms.";
+    if (renderAfter) renderPokerGame();
+    return;
+  }
   if (!canPokerRegister(game)) {
-    game.feedback = "Bots can join before the next hand, not mid-hand.";
+    game.feedback = "Demo players can join between hands, not mid-hand.";
+    if (renderAfter) renderPokerGame();
+    return;
+  }
+  if (!isPokerHost(game)) {
+    game.feedback = "Only the host can add demo players.";
     if (renderAfter) renderPokerGame();
     return;
   }
   const player = addPokerBotToGame(game, seat);
-  game.feedback = player ? `${player.name} joined seat ${player.seat + 1}.` : "No open seats for another bot.";
+  game.feedback = player ? `${player.name} joined seat ${player.seat + 1}.` : "No open seats for another demo player.";
   if (player) addPokerLog(game, game.feedback);
   if (renderAfter) renderPokerGame();
 }
@@ -14930,7 +16069,7 @@ function addPokerBotToGame(game, seat = null) {
   const targetSeat = Number.isInteger(seat) ? seat : getNextOpenPokerSeat(game);
   if (targetSeat == null) return null;
   const usedNames = new Set(game.players.map((player) => player.name));
-  const name = POKER_BOT_NAMES.find((botName) => !usedNames.has(botName)) || `Bot ${game.players.length + 1}`;
+  const name = POKER_DEMO_PLAYER_NAMES.find((demoName) => !usedNames.has(demoName)) || `Demo ${game.players.length + 1}`;
   const player = createPokerPlayer({
     id: `bot-${makeId()}`,
     name,
@@ -14939,15 +16078,32 @@ function addPokerBotToGame(game, seat = null) {
     stack: game.startingStack
   });
   game.players.push(player);
+  recordPokerLedger(game, {
+    type: "BUY_IN",
+    playerId: player.id,
+    playerName: player.name,
+    amount: player.buyIn,
+    note: "Demo player buy-in"
+  });
   sortPokerPlayers(game);
   return player;
 }
 
 function fillPokerBots(renderAfter = true) {
   if (!currentPokerGame) currentPokerGame = makePokerGameRound();
+  if (isPokerOnlineRoom(currentPokerGame)) {
+    currentPokerGame.feedback = "Demo players are local-only. Invite another logged-in player for online rooms.";
+    if (renderAfter) renderPokerGame();
+    return;
+  }
+  if (!isPokerHost(currentPokerGame)) {
+    currentPokerGame.feedback = "Only the host can fill demo seats.";
+    if (renderAfter) renderPokerGame();
+    return;
+  }
   const added = fillPokerBotsForGame(currentPokerGame, currentPokerGame.seatCount);
   currentPokerGame.feedback = added
-    ? `Added ${added} bot${added > 1 ? "s" : ""}.`
+    ? `Added ${added} demo player${added > 1 ? "s" : ""}.`
     : "Table is already full.";
   if (renderAfter) renderPokerGame();
 }
@@ -14981,11 +16137,32 @@ function handlePokerSeatClick(event) {
 
 function removePokerPlayer(playerId) {
   const game = currentPokerGame;
-  if (!game || game.status !== "registering") return;
+  if (!game || !canPokerRegister(game)) return;
   const player = game.players.find((item) => item.id === playerId);
   if (!player) return;
+  if (isPokerOnlineRoom(game)) {
+    sendPokerOnlineCommand("leaveSeat", { playerId });
+    return;
+  }
+  if (!player.isHero && !isPokerHost(game)) {
+    game.feedback = "Only the host can remove another player.";
+    renderPokerGame();
+    return;
+  }
+  recordPokerLedger(game, {
+    type: "CASH_OUT",
+    playerId: player.id,
+    playerName: player.name,
+    amount: player.stack,
+    note: "Left seat"
+  });
+  player.cashOut = Math.max(player.cashOut || 0, player.stack);
   game.players = game.players.filter((item) => item.id !== playerId);
   if (player.isHero && game.players[0]) game.players[0].isHero = true;
+  if (player.id === game.hostPlayerId && game.players[0]) {
+    game.hostPlayerId = game.players[0].id;
+    game.players[0].isHost = true;
+  }
   game.feedback = `${player.name} left the room.`;
   addPokerLog(game, game.feedback);
   renderPokerGame();
@@ -15008,6 +16185,10 @@ function sortPokerPlayers(game) {
 
 function startNextPokerHand(game) {
   if (!game) return;
+  if (game.isPaused) {
+    game.feedback = "Resume the room before dealing.";
+    return;
+  }
   if (game.status !== "running") {
     startPokerTournament(false);
     return;
@@ -15015,28 +16196,32 @@ function startNextPokerHand(game) {
   sortPokerPlayers(game);
   maybeIncreasePokerBlinds(game);
   game.players.forEach((player) => {
-    player.eliminated = player.stack <= 0;
+    if (player.sitOutNextHand) {
+      player.sittingOut = true;
+      player.sitOutNextHand = false;
+    }
+    player.eliminated = false;
     player.cards = [];
     player.currentBet = 0;
     player.committed = 0;
-    player.inHand = !player.eliminated && player.stack > 0;
+    player.inHand = !player.sittingOut && player.stack > 0;
     player.folded = false;
     player.allIn = false;
     player.acted = false;
-    player.lastAction = player.eliminated ? "Eliminated" : "In hand";
+    player.lastAction = player.sittingOut ? "Sitting out" : player.stack > 0 ? "In hand" : "Needs buy-in";
   });
-  const livePlayers = getPokerLivePlayers(game);
+  const livePlayers = getPokerActivePlayers(game);
   if (livePlayers.length <= 1) {
-    game.tournamentOver = true;
     game.handActive = false;
     game.handComplete = true;
-    game.stage = "showdown";
-    game.feedback = livePlayers[0] ? `${livePlayers[0].name} wins the tournament.` : "Tournament complete.";
+    game.stage = "waiting";
+    game.feedback = "Need at least two active seated players to deal.";
     addPokerLog(game, game.feedback);
     return;
   }
   game.handNumber += 1;
   game.dealSerial += 1;
+  game.currentHandLog = [];
   game.stage = "preflop";
   game.board = [];
   game.deck = shufflePokerDeck(createPokerDeck());
@@ -15060,10 +16245,15 @@ function startNextPokerHand(game) {
 
 function submitPokerAction(action) {
   const game = currentPokerGame;
-  if (!game || !action || game.handComplete || game.tournamentOver) return;
+  if (!game || !action || game.handComplete || game.isPaused) return;
   const player = getCurrentPokerPlayer(game);
-  if (!player || player.type !== "human") return;
+  const hero = getPokerHero(game);
+  if (!player || player.type !== "human" || (!player.isHero && player.id !== hero?.id)) return;
   const raiseTo = action === "raise" ? Number(els.pokerRaiseInput?.value || 0) : 0;
+  if (isPokerOnlineRoom(game)) {
+    sendPokerOnlineCommand("action", { action, raiseTo });
+    return;
+  }
   performPokerAction(game, game.actionIndex, action, raiseTo);
   continuePokerHand(game);
   renderPokerGame();
@@ -15072,7 +16262,7 @@ function submitPokerAction(action) {
 
 function continuePokerHand(game) {
   let guard = 0;
-  while (game.handActive && !game.handComplete && !game.tournamentOver && guard < 80) {
+  while (game.handActive && !game.handComplete && !game.isPaused && guard < 80) {
     guard += 1;
     const contenders = getPokerContenders(game);
     if (contenders.length <= 1) {
@@ -15124,22 +16314,28 @@ function performPokerAction(game, playerIndex, action, raiseTo = 0) {
     const previousBet = game.currentBet;
     const maxTotal = player.currentBet + player.stack;
     const minTotal = getMinimumPokerRaiseTo(game, player);
-    const targetTotal = Math.min(maxTotal, Math.max(minTotal, Math.round(Number(raiseTo || minTotal))));
-    const paid = commitPokerChips(player, targetTotal - player.currentBet);
-    if (targetTotal > previousBet) {
-      const raiseSize = targetTotal - previousBet;
-      game.currentBet = targetTotal;
-      game.minRaise = Math.max(game.bigBlind, raiseSize);
-      game.players.forEach((other) => {
-        if (other.inHand && !other.folded && !other.allIn && other.id !== player.id) other.acted = false;
-      });
+    if (maxTotal <= previousBet && previousBet > 0) {
+      action = "call";
+    } else {
+      const targetTotal = Math.min(maxTotal, Math.max(minTotal, Math.round(Number(raiseTo || minTotal))));
+      const paid = commitPokerChips(player, targetTotal - player.currentBet);
+      if (targetTotal > previousBet) {
+        const raiseSize = targetTotal - previousBet;
+        game.currentBet = targetTotal;
+        const isFullRaise = previousBet <= 0 ? raiseSize >= game.bigBlind : raiseSize >= game.minRaise;
+        if (isFullRaise) game.minRaise = Math.max(game.bigBlind, raiseSize);
+        game.players.forEach((other) => {
+          if (other.inHand && !other.folded && !other.allIn && other.id !== player.id && other.currentBet < game.currentBet) other.acted = false;
+        });
+      }
+      player.acted = true;
+      player.lastAction = player.allIn ? `All-in ${player.currentBet}` : previousBet ? `Raise to ${player.currentBet}` : `Bet ${player.currentBet}`;
+      game.pot += paid;
+      const verb = player.allIn ? "is all-in for" : previousBet ? "raises to" : "bets";
+      addPokerLog(game, `${player.name} ${verb} ${player.currentBet}.`);
+      game.actionIndex = nextPokerActionSeat(game, playerIndex);
+      return;
     }
-    player.acted = true;
-    player.lastAction = player.allIn ? "All-in" : `Raise to ${player.currentBet}`;
-    game.pot += paid;
-    addPokerLog(game, `${player.name} raises to ${player.currentBet}${player.allIn ? " and is all-in" : ""}.`);
-    game.actionIndex = nextPokerActionSeat(game, playerIndex);
-    return;
   }
   const paid = commitPokerChips(player, toCall);
   game.pot += paid;
@@ -15247,17 +16443,12 @@ function finishPokerHand(game, message) {
   game.actionIndex = -1;
   game.handsPlayed += 1;
   game.players.forEach((player) => {
-    player.eliminated = player.stack <= 0;
-    if (player.eliminated) player.lastAction = "Eliminated";
+    player.eliminated = false;
+    if (player.stack <= 0) player.lastAction = "Needs buy-in";
   });
   addPokerLog(game, message);
+  archivePokerHand(game, message);
   recordPokerHandResult(game, message);
-  const livePlayers = getPokerLivePlayers(game);
-  if (livePlayers.length <= 1) {
-    game.tournamentOver = true;
-    game.feedback = `${livePlayers[0]?.name || "Winner"} wins the tournament.`;
-    addPokerLog(game, game.feedback);
-  }
 }
 
 function recordPokerHandResult(game, message) {
@@ -15643,6 +16834,7 @@ function resetPokerStreetBets(game) {
 }
 
 function maybeIncreasePokerBlinds(game) {
+  if (!game.settings?.autoIncreaseBlinds) return;
   if (game.handsPlayed > 0 && game.handsPlayed % game.blindInterval === 0 && game.levelIncreasedAt !== game.handsPlayed) {
     game.level = Math.min(POKER_BLIND_LEVELS.length - 1, game.level + 1);
     game.levelIncreasedAt = game.handsPlayed;
@@ -15655,7 +16847,16 @@ function maybeIncreasePokerBlinds(game) {
 }
 
 function getPokerLivePlayers(game) {
-  return game.players.filter((player) => !player.eliminated && player.stack > 0);
+  return getPokerActivePlayers(game);
+}
+
+function getPokerActivePlayers(game) {
+  return (game?.players || []).filter((player) => !player.sittingOut && player.stack > 0);
+}
+
+function isPokerHost(game, player = getPokerHero(game)) {
+  if (!game || !player) return false;
+  return player.isHost || player.id === game.hostPlayerId;
 }
 
 function getPokerPositionForPlayer(game, playerIndex) {
@@ -15663,7 +16864,7 @@ function getPokerPositionForPlayer(game, playerIndex) {
   if (!player || game.dealerIndex < 0) return "btn";
   const liveIndexes = game.players
     .map((item, index) => ({ item, index }))
-    .filter(({ item }) => !item.eliminated && item.stack > 0)
+    .filter(({ item }) => !item.sittingOut && item.stack > 0)
     .map(({ index }) => index);
   const heroOrder = liveIndexes.indexOf(playerIndex);
   const dealerOrder = liveIndexes.indexOf(game.dealerIndex);
@@ -15679,7 +16880,7 @@ function getPokerPositionForPlayer(game, playerIndex) {
 }
 
 function getPokerBlindSeats(game) {
-  const liveCount = game.players.filter((player) => !player.eliminated).length;
+  const liveCount = getPokerActivePlayers(game).length;
   if (liveCount === 2) {
     return {
       small: game.dealerIndex,
@@ -15696,7 +16897,7 @@ function getPokerBlindSeats(game) {
 function nextPokerSeatWithStack(game, fromIndex) {
   for (let step = 1; step <= game.players.length; step += 1) {
     const index = (fromIndex + step + game.players.length) % game.players.length;
-    if (game.players[index].stack > 0) return index;
+    if (!game.players[index].sittingOut && game.players[index].stack > 0) return index;
   }
   return 0;
 }
@@ -15743,7 +16944,34 @@ function getCurrentPokerPlayer(game) {
 }
 
 function getPokerHero(game) {
-  return game.players.find((player) => player.isHero || player.id === "hero") || game.players[0];
+  if (!game) return null;
+  if (game.online) {
+    return game.players.find((player) => player.isHero || player.userId === currentUser?.id) || null;
+  }
+  return game.players.find((player) => player.isHero || player.id === "hero") || game.players[0] || null;
+}
+
+function getPokerSpectators(game) {
+  return (game?.spectators || []).filter((spectator) => spectator && spectator.userId);
+}
+
+function getPokerHeroSpectator(game) {
+  if (!game?.online) return null;
+  return getPokerSpectators(game).find((spectator) => spectator.isHero || spectator.userId === currentUser?.id) || null;
+}
+
+function isPokerSpectator(game) {
+  if (!isPokerOnlineRoom(game)) return false;
+  if (getPokerHero(game)) return false;
+  return game.viewerRole === "spectator" || Boolean(getPokerHeroSpectator(game));
+}
+
+function getPokerViewerModeLabel(game) {
+  if (!isPokerOnlineRoom(game)) return "LOCAL";
+  if (isPokerHost(game)) return "HOST";
+  if (getPokerHero(game)) return "PLAYER";
+  if (isPokerSpectator(game)) return "WATCHING";
+  return "GUEST";
 }
 
 function getPokerStageLabel(stage) {
@@ -15758,9 +16986,86 @@ function getPokerStageLabel(stage) {
   return labels[stage] || "Hand";
 }
 
+function archivePokerHand(game, message) {
+  if (!game || !game.handNumber) return;
+  const handId = `${game.id}:${game.handNumber}`;
+  if (game.archivedHandId === handId) return;
+  game.archivedHandId = handId;
+  const entry = {
+    id: handId,
+    handNumber: game.handNumber,
+    createdAt: new Date().toISOString(),
+    blinds: `${game.smallBlind}/${game.bigBlind}`,
+    stage: game.stage,
+    buttonSeat: Number.isInteger(game.dealerIndex) ? game.players[game.dealerIndex]?.seat + 1 : null,
+    board: game.board.map(pokerCardLabel),
+    pot: game.pot,
+    result: message,
+    actions: [...(game.currentHandLog || [])],
+    showdown: game.showdown
+      ? {
+        winners: game.showdown.winners,
+        pots: game.showdown.pots,
+        results: (game.showdown.results || []).map((item) => ({
+          playerId: item.player.id,
+          playerName: item.player.name,
+          hand: item.hand?.name || ""
+        }))
+      }
+      : null
+  };
+  game.handHistory = [entry, ...(game.handHistory || [])].slice(0, 80);
+}
+
+function recordPokerLedger(game, entry = {}) {
+  if (!game) return;
+  const amount = Math.round(Number(entry.amount || 0));
+  game.ledger = [
+    ...(game.ledger || []),
+    {
+      id: makeId(),
+      createdAt: new Date().toISOString(),
+      type: entry.type || "ADJUSTMENT",
+      playerId: entry.playerId || "",
+      playerName: entry.playerName || "",
+      amount,
+      note: entry.note || ""
+    }
+  ].slice(-200);
+}
+
+function getPokerLedgerRows(game) {
+  return (game?.players || [])
+    .slice()
+    .sort((a, b) => a.seat - b.seat)
+    .map((player) => {
+      const buyIn = Math.round(Number(player.buyIn || 0));
+      const cashOut = Math.round(Number(player.cashOut || 0));
+      const stack = Math.round(Number(player.stack || 0));
+      const net = cashOut + stack - buyIn;
+      return {
+        player,
+        buyIn,
+        cashOut,
+        stack,
+        net
+      };
+    });
+}
+
 function addPokerLog(game, line) {
   if (!line) return;
   game.log = [...(game.log || []), line].slice(-24);
+  if (game.handActive || game.handNumber) {
+    game.currentHandLog = [
+      ...(game.currentHandLog || []),
+      {
+        at: new Date().toISOString(),
+        stage: game.stage,
+        line
+      }
+    ].slice(-120);
+  }
   game.feedback = line;
 }
 
