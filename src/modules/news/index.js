@@ -8,6 +8,7 @@ export function createNewsModule(deps = {}) {
   const getElements = () => deps.elements || {};
   const getTopicFilter = () => deps.getTopicFilter?.() || "all";
   const getSourceFilter = () => deps.getSourceFilter?.() || "all";
+  const isEnglish = () => deps.getLanguage?.() === "en";
   const text = (key, params) => deps.t?.(key, params) || key;
   const bind = (node, eventName, handler) => {
     disposers.push(listen(node, eventName, handler));
@@ -52,7 +53,7 @@ export function createNewsModule(deps = {}) {
       const source = document.createElement("span");
       source.textContent = item.source || "News";
       const title = document.createElement("strong");
-      title.textContent = item.titleZh || item.title;
+      title.textContent = isEnglish() ? item.title || item.titleZh : item.titleZh || item.title;
       button.append(source, title);
       els.newsTickerTrack.appendChild(button);
     });
