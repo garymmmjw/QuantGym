@@ -1,0 +1,37 @@
+      <section class="tool-grid single-column">
+        <div class="resource-panel">
+          <div class="panel-heading">
+            <h2>资料</h2>
+            <button class="icon-button ghost" id="addResourceBtn" type="button" title="添加资料" aria-label="添加资料">
+              <i data-lucide="paperclip"></i>
+            </button>
+          </div>
+          <form id="resourceForm" class="resource-form hidden">
+            <input id="resourceTitle" type="text" placeholder="标题">
+            <select id="resourceType" aria-label="资料类型">
+              <option value="tex">TeX</option>
+              <option value="image">图片</option>
+              <option value="link">链接</option>
+              <option value="note">笔记</option>
+            </select>
+            <input id="resourceFile" type="file" accept=".tex,.txt,text/*,image/*">
+            <textarea id="resourceContent" rows="4" placeholder="粘贴 TeX、图片路径、链接或摘要"></textarea>
+            <textarea id="resourceSources" rows="3" placeholder="可选：每行一个 YouTube / Bilibili / 原站 URL，作为备用来源"></textarea>
+            <button class="secondary-button" type="submit">
+              <i data-lucide="save"></i>
+              保存
+            </button>
+          </form>
+          <div id="resourceList" class="resource-list"></div>
+        </div>
+      </section>
+
+      <section class="history-section">
+        <div class="section-heading">
+          <h2>记忆</h2>
+          <button class="icon-button ghost" id="clearTodayBtn" type="button" title="删除最新记录" aria-label="删除最新记录">
+            <i data-lucide="undo-2"></i>
+          </button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>

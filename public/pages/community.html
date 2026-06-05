@@ -1,0 +1,28 @@
+        <section class="community-section">
+          <div class="section-heading">
+            <div>
+              <h2>社区</h2>
+              <small id="communitySummary">像朋友圈一样分享训练动态，也可以点赞评论。</small>
+            </div>
+          </div>
+          <form id="communityForm" class="community-form">
+            <textarea id="communityText" rows="4" placeholder="发一条动态：照片、视频、刷题进度、面试复盘都可以。"></textarea>
+            <div id="communityMediaPreview" class="community-media-preview hidden"></div>
+            <div class="community-compose-actions">
+              <label class="secondary-button file-button">
+                <input id="communityMedia" type="file" accept="image/*,video/*">
+                <i data-lucide="image-plus"></i>
+                添加照片/视频
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="send"></i>
+                发布
+              </button>
+            </div>
+          </form>
+          <div class="community-feed-tabs" role="tablist" aria-label="社群内容筛选">
+            <button class="segment active" type="button" data-community-filter="all">全部动态</button>
+            <button class="segment" type="button" data-community-filter="experience">面经分享</button>
+          </div>
+          <div id="communityList" class="community-list"></div>
+        </section>

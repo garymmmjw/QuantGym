@@ -66,7 +66,8 @@ PR 合并前至少做一次自查：
 
 ```bash
 git status
-node --check app.js
+node --check src/main.js
+node --check src/router.js
 node --check llm-proxy/server.mjs
 node --check browser-extension/popup.js
 python3 -m py_compile api-server/server.py

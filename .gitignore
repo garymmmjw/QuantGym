@@ -16,6 +16,8 @@ dist/
 skills-lock.json
 
 # Build and QA outputs.
+artifacts/*
+!artifacts/README.md
 artifacts/**/*.png
 artifacts/**/*.jpg
 artifacts/**/*.jpeg
@@ -32,3 +34,7 @@ docs/ui-reference/**/*.png
 docs/ui-reference/**/*.jpg
 docs/ui-reference/**/*.jpeg
 docs/ui-reference/**/*.webp
+
+# Local extraction/scraping workspaces and raw book archives.
+QuantGuide/
+量化书籍/

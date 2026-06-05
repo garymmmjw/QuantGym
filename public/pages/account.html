@@ -1,0 +1,78 @@
+        <section class="account-section">
+          <div class="section-heading">
+            <div>
+              <h2>账户信息</h2>
+              <small id="accountMessage">管理昵称、邮箱、头像和地区。</small>
+            </div>
+          </div>
+          <div class="account-grid">
+            <form id="accountForm" class="account-panel">
+              <div class="account-avatar-row">
+                <div class="avatar account-avatar-preview" id="accountAvatarPreview" aria-hidden="true">Q</div>
+                <div class="avatar-actions">
+                  <input id="accountAvatarUrl" type="url" placeholder="头像图片链接">
+                  <div class="avatar-button-row">
+                    <label class="secondary-button avatar-upload">
+                      <input id="accountAvatarFile" type="file" accept="image/*">
+                      <i data-lucide="image-plus"></i>
+                      上传头像
+                    </label>
+                    <button class="icon-button ghost danger" id="accountClearAvatarBtn" type="button" title="清除头像" aria-label="清除头像">
+                      <i data-lucide="x"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <label>
+                昵称
+                <input id="accountNameInput" type="text" autocomplete="name" placeholder="你的显示名">
+              </label>
+              <label>
+                邮箱
+                <input id="accountEmailInput" type="email" autocomplete="email" placeholder="you@example.com">
+              </label>
+              <label>
+                国家
+                <select id="accountCountrySelect" aria-label="账户国家"></select>
+              </label>
+              <label>
+                地区
+                <select id="accountRegionSelect" aria-label="账户地区"></select>
+              </label>
+              <label>
+                毕业时间
+                <input id="accountGraduationTermInput" type="month" value="2027-09">
+              </label>
+              <label>
+                简历
+                <input id="accountResumeFile" type="file" accept=".txt,.md,.tex,.pdf,text/plain,text/markdown,application/pdf">
+                <small id="accountResumeMeta">上传 txt/md 简历可直接分析；PDF 会先保存文件名。</small>
+              </label>
+              <label>
+                当前密码
+                <input id="accountCurrentPassword" type="password" autocomplete="current-password" placeholder="仅更改本地账户邮箱时填写">
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="save"></i>
+                保存账户
+              </button>
+            </form>
+            <aside class="account-panel account-meta-panel">
+              <h3>账户信息</h3>
+              <dl>
+                <div>
+                  <dt>登录方式</dt>
+                  <dd id="accountProviderText">Local</dd>
+                </div>
+                <div>
+                  <dt>账户创建</dt>
+                  <dd id="accountCreatedText">-</dd>
+                </div>
+                <div>
+                  <dt>当前排名</dt>
+                  <dd id="accountRankText">-</dd>
+                </div>
+              </dl>
+            </aside>
+          </div>
+        </section>

@@ -1,0 +1,83 @@
+        <section class="library-section" aria-labelledby="libraryPageTitle">
+          <header class="library-topbar">
+            <label class="library-search">
+              <i data-lucide="search"></i>
+              <input id="librarySearch" type="search" placeholder="搜索书籍、题单、题源">
+            </label>
+            <div id="libraryKindTabs" class="library-kind-tabs" role="tablist" aria-label="书城内容类型">
+              <button class="library-chip active" type="button" data-library-kind="all">全部</button>
+              <button class="library-chip" type="button" data-library-kind="book">书籍</button>
+              <button class="library-chip" type="button" data-library-kind="questionSet">题单</button>
+            </div>
+          </header>
+
+          <div class="library-hero-row">
+            <div class="library-reading-card">
+              <span class="rank-label">本周阅读</span>
+              <strong>0<span> 分钟</span></strong>
+              <div class="library-week-bars" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+              <small>一 二 三 四 五 六 日</small>
+            </div>
+            <div id="libraryStats" class="library-stats" aria-live="polite"></div>
+          </div>
+
+          <section class="library-continue" aria-labelledby="libraryContinueTitle">
+            <div class="library-block-heading">
+              <div>
+                <span class="rank-label">READING</span>
+                <h2 id="libraryContinueTitle">继续阅读</h2>
+              </div>
+            </div>
+            <div id="libraryContinueShelf" class="library-cover-rail"></div>
+          </section>
+
+          <section class="library-block" aria-labelledby="libraryBookTitle">
+            <div class="library-block-heading">
+              <div>
+                <span class="rank-label">BOOKS</span>
+                <h2 id="libraryBookTitle">书籍</h2>
+              </div>
+            </div>
+            <div id="libraryBookGrid" class="library-grid"></div>
+          </section>
+
+          <section class="library-block" aria-labelledby="libraryQuestionTitle">
+            <div class="library-block-heading">
+              <div>
+                <span class="rank-label">QUESTION SETS</span>
+                <h2 id="libraryQuestionTitle">题单</h2>
+              </div>
+            </div>
+            <div id="libraryQuestionGrid" class="library-grid question-grid"></div>
+          </section>
+
+          <p id="libraryEmpty" class="library-empty hidden">没有匹配的书籍或题单。</p>
+        </section>
+
+        <section id="libraryReaderOverlay" class="library-reader-overlay hidden" aria-label="PDF 阅读器" aria-modal="true" role="dialog">
+          <div class="library-reader-shell">
+            <header class="library-reader-header">
+              <div class="library-reader-titlebar">
+                <span class="library-reader-mark" aria-hidden="true"><i data-lucide="book-open"></i></span>
+                <div>
+                  <span id="libraryReaderMeta" class="rank-label">PDF</span>
+                  <h3 id="libraryReaderTitle">阅读</h3>
+                </div>
+              </div>
+              <div class="library-reader-actions">
+                <a id="libraryReaderOpenNew" class="secondary-button compact" href="#" target="_blank" rel="noreferrer">
+                  <i data-lucide="external-link"></i>
+                  新窗口
+                </a>
+                <button id="libraryReaderClose" class="icon-button ghost" type="button" title="关闭" aria-label="关闭阅读器">
+                  <i data-lucide="x"></i>
+                </button>
+              </div>
+            </header>
+            <div class="library-reader-stage">
+              <iframe id="libraryReaderFrame" class="library-reader-frame" title="PDF 阅读器"></iframe>
+            </div>
+          </div>
+        </section>

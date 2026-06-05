@@ -1,0 +1,89 @@
+        <section class="prep-plan-section">
+          <header class="prep-plan-header">
+            <div>
+              <span class="rank-label">PREP PLAN</span>
+              <h2>Quant 面试备战计划</h2>
+              <p>以目标招聘季和岗位方向为起点，覆盖 assessment、技术面、behavioral 与 final day。</p>
+            </div>
+            <button class="secondary-button hidden" id="editPrepPlanBtn" type="button">
+              <i data-lucide="sliders-horizontal"></i>
+              调整目标
+            </button>
+          </header>
+
+          <form class="prep-plan-setup" id="prepPlanSetupForm">
+            <div class="prep-setup-heading">
+              <strong>建立你的备战路线</strong>
+              <span>不同岗位和招聘季，需要不同的训练重点与节奏。</span>
+            </div>
+            <fieldset class="prep-choice-group">
+              <legend>你要申请什么类型的岗位？</legend>
+              <label class="prep-choice">
+                <input type="radio" name="prepTrack" value="internship" checked>
+                <strong>Internship</strong>
+                <span>在校生暑期实习，围绕目标 summer 做倒排。</span>
+              </label>
+              <label class="prep-choice">
+                <input type="radio" name="prepTrack" value="fulltime">
+                <strong>Full-time / New Grad</strong>
+                <span>校招或毕业岗，增加项目表达与完整面试循环。</span>
+              </label>
+            </fieldset>
+            <fieldset class="prep-choice-group three">
+              <legend>目标招聘季</legend>
+              <label class="prep-choice">
+                <input type="radio" name="prepSeason" value="2026-summer">
+                <strong>2026 Summer</strong>
+                <span>临近开工，按补录与即时面试冲刺。</span>
+              </label>
+              <label class="prep-choice">
+                <input type="radio" name="prepSeason" value="2027-summer" checked>
+                <strong>2027 Summer</strong>
+                <span>主申请周期，系统建设能力与申请材料。</span>
+              </label>
+              <label class="prep-choice">
+                <input type="radio" name="prepSeason" value="2028-summer">
+                <strong>2028 Summer</strong>
+                <span>提前布局，先建立基础与项目经历。</span>
+              </label>
+            </fieldset>
+            <div class="prep-setup-fields">
+              <label>
+                目标方向
+                <select id="prepRoleSelect" name="prepRole">
+                  <option value="quantTrading">Quant Trading</option>
+                  <option value="quantResearch">Quant Research</option>
+                  <option value="quantDeveloper">Quant Developer</option>
+                </select>
+              </label>
+              <label>
+                每周可投入
+                <select id="prepHoursSelect" name="prepHours">
+                  <option value="5">5 小时 / 周</option>
+                  <option value="8" selected>8 小时 / 周</option>
+                  <option value="12">12 小时 / 周</option>
+                  <option value="16">16+ 小时 / 周</option>
+                </select>
+              </label>
+            </div>
+            <fieldset class="prep-choice-group">
+              <legend>是否先做水平测试？</legend>
+              <label class="prep-choice">
+                <input type="radio" name="prepDiagnostic" value="take" checked>
+                <strong>先做 baseline 测评</strong>
+                <span>8 道短题，识别概率、速算、代码和市场基础的优先级。</span>
+              </label>
+              <label class="prep-choice">
+                <input type="radio" name="prepDiagnostic" value="skip">
+                <strong>暂不测试</strong>
+                <span>直接按岗位常见要求开始，之后可补做测评。</span>
+              </label>
+            </fieldset>
+            <button class="primary-button prep-create-button" type="submit">
+              <i data-lucide="route"></i>
+              制定计划
+            </button>
+          </form>
+
+          <div class="prep-plan-dashboard hidden" id="prepPlanDashboard" aria-live="polite"></div>
+        </section>

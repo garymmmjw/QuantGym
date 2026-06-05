@@ -1,0 +1,197 @@
+        <section class="news-ticker" aria-label="Quant 新闻滚动条" data-i18n-aria-label="newsTickerLabel">
+          <div class="ticker-label">
+            <i data-lucide="radio"></i>
+            <span>Quant Wire</span>
+          </div>
+          <div class="ticker-viewport">
+            <div id="newsTickerTrack" class="news-ticker-track"></div>
+          </div>
+        </section>
+
+        <section class="quanty-hero">
+          <div class="quanty-hero-copy">
+            <span class="hero-kicker">Welcome back, Quant</span>
+            <h2 id="heroTypewriter">Sharpen your quant edge today.</h2>
+            <div class="hero-actions">
+              <button class="primary-button" id="generateStudyPlanBtn" type="button">
+                <i data-lucide="calendar-check-2"></i>
+                进入备战计划
+              </button>
+            </div>
+            <div class="today-plan-card hidden" id="todayPlanCard"></div>
+          </div>
+          <div class="shark-stage" id="sharkStage">
+            <div class="shark-bubble" id="sharkBubble" role="status" aria-live="polite"></div>
+            <button class="shark-interactive" id="sharkInteractive" type="button" aria-label="戳一下 Quanty">
+              <span class="shark-glow" aria-hidden="true"></span>
+              <img src="assets/generated/shark-hero-clean.png?v=original-clean-1" alt="" loading="lazy" id="heroShark" draggable="false">
+            </button>
+          </div>
+        </section>
+
+        <section class="feature-launch-grid hidden" aria-label="主要功能入口">
+          <button class="feature-launch-card" type="button" data-jump-module="problems" aria-label="进入学习题库">
+            <img src="assets/generated/feature-learn.webp?v=premium-system-2" alt="" loading="lazy">
+            <strong>题库</strong>
+          </button>
+          <button class="feature-launch-card" type="button" data-jump-module="tools" aria-label="进入练习">
+            <img src="assets/generated/feature-practice.webp?v=premium-system-2" alt="" loading="lazy">
+            <strong>限时训练</strong>
+          </button>
+          <button class="feature-launch-card" type="button" data-jump-module="skills" aria-label="进入任务和能力值">
+            <img src="assets/generated/feature-quest.webp?v=premium-system-2" alt="" loading="lazy">
+            <strong>能力值</strong>
+          </button>
+          <button class="feature-launch-card" type="button" data-jump-module="experiences" aria-label="记录面经">
+            <img src="assets/generated/feature-notebook.webp?v=premium-system-2" alt="" loading="lazy">
+            <strong>面经记录</strong>
+          </button>
+        </section>
+
+        <section class="summary-band">
+          <div class="summary-copy">
+            <div class="rank-row">
+              <span class="rank-label">当前段位</span>
+              <strong id="rankName">Analyst I</strong>
+            </div>
+            <div class="total-xp">
+              <span id="totalXp">0</span>
+              <span>分 / 100</span>
+            </div>
+          </div>
+          <div class="summary-metrics" aria-label="学习统计">
+            <div class="metric-card metric-streak">
+              <span id="streakCount">0</span>
+              <small>连续天数</small>
+            </div>
+            <div class="metric-card metric-records">
+              <span id="entryCount">0</span>
+              <small>记录</small>
+            </div>
+            <div class="metric-card metric-xp">
+              <span id="weeklyXp">0</span>
+              <small>7 日 XP</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="overview-effect-grid" aria-label="训练进度可视化">
+          <article class="overview-effect-panel problem-progress-panel">
+            <div class="effect-panel-heading">
+              <div>
+                <span class="rank-label">PROGRESS</span>
+                <h2>Problem completion</h2>
+              </div>
+              <button class="icon-button ghost" type="button" data-jump-module="problems" title="打开题库" aria-label="打开题库">
+                <i data-lucide="arrow-up-right"></i>
+              </button>
+            </div>
+            <div id="overviewProblemProgress" class="effect-progress-group"></div>
+          </article>
+
+          <article class="overview-effect-panel daily-xp-panel">
+            <div class="effect-panel-heading">
+              <div>
+                <span class="rank-label">DAILY XP</span>
+                <h2>Experience rhythm</h2>
+              </div>
+            </div>
+            <div id="overviewXpBars" class="daily-xp-bars" aria-label="每日经验值柱状图"></div>
+          </article>
+
+          <article class="overview-effect-panel contribution-panel">
+            <div class="effect-panel-heading">
+              <div>
+                <span class="rank-label">CONSISTENCY</span>
+                <h2>Contribution heatmap</h2>
+              </div>
+            </div>
+            <div id="overviewContributionHeatmap" class="contribution-heatmap" aria-label="贡献热力图"></div>
+          </article>
+        </section>
+
+        <section class="workspace-grid overview-ranking-grid">
+          <form class="log-panel hidden" id="logForm">
+            <div class="panel-heading">
+              <h2>今日记录</h2>
+              <button class="icon-button ghost" id="sampleBtn" type="button" title="填入示例" aria-label="填入示例">
+                <i data-lucide="wand-sparkles"></i>
+              </button>
+            </div>
+            <textarea id="logText" rows="8" placeholder="例：今天刷了 3 道 LeetCode；用 pandas 做了 groupby；复盘 Bayes 和 OLS；练了 option Greeks 和速算。"></textarea>
+            <div id="autoClassifyChips" class="auto-classify-chips" aria-live="polite"></div>
+            <div class="form-row">
+              <input id="durationInput" type="number" min="0" step="5" placeholder="分钟">
+              <select id="difficultyInput" aria-label="难度">
+                <option value="1">普通</option>
+                <option value="1.25">较难</option>
+                <option value="1.6">很难</option>
+              </select>
+              <button class="primary-button" type="submit">
+                <i data-lucide="plus"></i>
+                记录
+              </button>
+            </div>
+            <div id="analysisPreview" class="analysis-preview" aria-live="polite"></div>
+          </form>
+
+          <aside class="leaderboard-panel">
+            <div class="panel-heading">
+              <h2>排行榜</h2>
+              <button class="icon-button ghost" id="refreshLeaderboardBtn" type="button" title="刷新排行榜" aria-label="刷新排行榜">
+                <i data-lucide="trophy"></i>
+              </button>
+            </div>
+            <div class="leaderboard-controls" aria-label="排行榜设置">
+              <label class="leaderboard-control">
+                指标
+                <select id="leaderboardMetricSelect" aria-label="排行榜指标"></select>
+              </label>
+              <label class="leaderboard-control">
+                视图
+                <select id="leaderboardScopeSelect" aria-label="排行榜范围">
+                  <option value="global">全部用户</option>
+                  <option value="country">按国家</option>
+                  <option value="region">按地区</option>
+                </select>
+              </label>
+              <label class="leaderboard-control leaderboard-location-control" data-leaderboard-country-control>
+                国家
+                <select id="leaderboardCountrySelect" aria-label="排行榜国家"></select>
+              </label>
+              <label class="leaderboard-control leaderboard-location-control" data-leaderboard-region-control>
+                地区
+                <select id="leaderboardRegionSelect" aria-label="排行榜地区"></select>
+              </label>
+            </div>
+            <div id="leaderboardScopeSummary" class="leaderboard-scope-summary"></div>
+            <div id="leaderboardList" class="leaderboard-list"></div>
+          </aside>
+        </section>
+
+        <section class="community-panel overview-community hidden">
+          <div class="section-heading">
+            <div>
+              <h2>社区</h2>
+              <small id="overviewCommunitySummary">分享进度、照片、视频和面试灵感。</small>
+            </div>
+            <button class="icon-button ghost" id="overviewCommunityExpandBtn" type="button" title="打开社区" aria-label="打开社区">
+              <i data-lucide="panel-top-open"></i>
+            </button>
+          </div>
+          <form id="overviewCommunityForm" class="community-form">
+            <textarea id="overviewCommunityText" rows="3" placeholder="发一条动态：今天练了什么、遇到什么题、想问什么？"></textarea>
+            <div id="overviewCommunityMediaPreview" class="community-media-preview hidden"></div>
+            <div class="community-compose-actions">
+              <label class="icon-button ghost file-button" title="添加照片或视频" aria-label="添加照片或视频">
+                <input id="overviewCommunityMedia" type="file" accept="image/*,video/*">
+                <i data-lucide="image-plus"></i>
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="send"></i>
+                发布
+              </button>
+            </div>
+          </form>
+          <div id="overviewCommunityList" class="community-list compact"></div>
+        </section>
