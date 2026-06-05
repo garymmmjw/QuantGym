@@ -38,7 +38,8 @@ export function registerDashboardModules(deps = {}) {
     t: deps.t,
     emptyBlock: deps.emptyBlock,
     escapeHtml: deps.escapeHtml,
-    refreshIcons: deps.refreshIcons
+    refreshIcons: deps.refreshIcons,
+    getLanguage: deps.getLanguage,
   });
   registerModule("news", newsModule);
 

@@ -526,6 +526,7 @@ export function registerAppFeatureModules(deps = {}) {
     emptyBlock,
     escapeHtml,
     refreshIcons,
+    getLanguage,
     renderTodayPlan,
     renderCommunity: communityModule.render,
     getCatalogProblems,
