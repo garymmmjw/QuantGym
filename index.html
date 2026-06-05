@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="styles.css?direct&v=35">
+    <link rel="stylesheet" href="styles.css?direct&v=36">
     <script>
       window.MathJax = {
         tex: {
@@ -169,87 +169,112 @@
           </button>
         </div>
         <div class="module-nav-group" aria-label="成长" data-i18n-aria-label="navGrowth">
-          <span class="module-nav-label" data-i18n="navGrowth">成长</span>
-          <button class="module-tab" type="button" data-module-tab="plan">
-            <i data-lucide="calendar-check-2"></i>
-            计划
+          <button class="module-nav-trigger" type="button" aria-haspopup="true">
+            <span data-i18n="navGrowth">成长</span>
+            <i data-lucide="chevron-down"></i>
           </button>
-          <button class="module-tab" type="button" data-module-tab="skills">
-            <i data-lucide="radar"></i>
-            能力值
-          </button>
+          <div class="module-nav-menu">
+            <button class="module-tab" type="button" data-module-tab="plan">
+              <i data-lucide="calendar-check-2"></i>
+              计划
+            </button>
+            <button class="module-tab" type="button" data-module-tab="skills">
+              <i data-lucide="radar"></i>
+              能力值
+            </button>
+          </div>
         </div>
-        <div class="module-nav-group" aria-label="训练" data-i18n-aria-label="navTraining">
-          <span class="module-nav-label" data-i18n="navTraining">训练</span>
-          <button class="module-tab" type="button" data-module-tab="interview">
-            <i data-lucide="messages-square"></i>
-            模拟面试
+        <div class="module-nav-group" aria-label="刷题" data-i18n-aria-label="navTraining">
+          <button class="module-nav-trigger" type="button" aria-haspopup="true">
+            <span data-i18n="navTraining">刷题</span>
+            <i data-lucide="chevron-down"></i>
           </button>
-          <button class="module-tab" type="button" data-module-tab="problems">
-            <i data-lucide="library-big"></i>
-            题目
-          </button>
-          <button class="module-tab" type="button" data-module-tab="tools">
-            <i data-lucide="brain"></i>
-            Mental Math
-          </button>
-          <button class="module-tab" type="button" data-module-tab="poker">
-            <i data-lucide="spade"></i>
-            Poker
-          </button>
-          <button class="module-tab" type="button" data-module-tab="experiences">
-            <i data-lucide="notebook-pen"></i>
-            面经
-          </button>
+          <div class="module-nav-menu wide">
+            <button class="module-tab" type="button" data-module-tab="interview">
+              <i data-lucide="messages-square"></i>
+              模拟面试
+            </button>
+            <button class="module-tab" type="button" data-module-tab="problems">
+              <i data-lucide="library-big"></i>
+              题目
+            </button>
+            <button class="module-tab" type="button" data-module-tab="tools">
+              <i data-lucide="brain"></i>
+              Mental Math
+            </button>
+            <button class="module-tab" type="button" data-module-tab="poker">
+              <i data-lucide="spade"></i>
+              Poker
+            </button>
+            <button class="module-tab" type="button" data-module-tab="experiences">
+              <i data-lucide="notebook-pen"></i>
+              面经
+            </button>
+          </div>
         </div>
         <div class="module-nav-group" aria-label="社群" data-i18n-aria-label="navSocial">
-          <span class="module-nav-label" data-i18n="navSocial">社群</span>
-          <button class="module-tab" type="button" data-module-tab="news">
-            <i data-lucide="newspaper"></i>
-            新闻
+          <button class="module-nav-trigger" type="button" aria-haspopup="true">
+            <span data-i18n="navSocial">社群</span>
+            <i data-lucide="chevron-down"></i>
           </button>
-          <button class="module-tab" type="button" data-module-tab="community">
-            <i data-lucide="message-circle-heart"></i>
-            论坛
-          </button>
-          <button class="module-tab" type="button" data-module-tab="messages">
-            <i data-lucide="message-square-text"></i>
-            聊天
-          </button>
-          <button class="module-tab" type="button" data-module-tab="network">
-            <i data-lucide="network"></i>
-            人脉
-          </button>
+          <div class="module-nav-menu">
+            <button class="module-tab" type="button" data-module-tab="news">
+              <i data-lucide="newspaper"></i>
+              新闻
+            </button>
+            <button class="module-tab" type="button" data-module-tab="community">
+              <i data-lucide="message-circle-heart"></i>
+              论坛
+            </button>
+            <button class="module-tab" type="button" data-module-tab="messages">
+              <i data-lucide="message-square-text"></i>
+              聊天
+            </button>
+            <button class="module-tab" type="button" data-module-tab="network">
+              <i data-lucide="network"></i>
+              人脉
+            </button>
+          </div>
         </div>
         <div class="module-nav-group" aria-label="求职" data-i18n-aria-label="navCareer">
-          <span class="module-nav-label" data-i18n="navCareer">求职</span>
-          <button class="module-tab" type="button" data-module-tab="resume">
-            <i data-lucide="file-user"></i>
-            简历
+          <button class="module-nav-trigger" type="button" aria-haspopup="true">
+            <span data-i18n="navCareer">求职</span>
+            <i data-lucide="chevron-down"></i>
           </button>
-          <button class="module-tab" type="button" data-module-tab="jobs">
-            <i data-lucide="briefcase-business"></i>
-            求职
-          </button>
-          <button class="module-tab" type="button" data-module-tab="companies">
-            <i data-lucide="building-2"></i>
-            公司
-          </button>
+          <div class="module-nav-menu">
+            <button class="module-tab" type="button" data-module-tab="resume">
+              <i data-lucide="file-user"></i>
+              简历
+            </button>
+            <button class="module-tab" type="button" data-module-tab="jobs">
+              <i data-lucide="briefcase-business"></i>
+              求职
+            </button>
+            <button class="module-tab" type="button" data-module-tab="companies">
+              <i data-lucide="building-2"></i>
+              公司
+            </button>
+          </div>
         </div>
         <div class="module-nav-group" aria-label="资源" data-i18n-aria-label="navResources">
-          <span class="module-nav-label" data-i18n="navResources">资源</span>
-          <button class="module-tab" type="button" data-module-tab="library">
-            <i data-lucide="book-open"></i>
-            书城
+          <button class="module-nav-trigger" type="button" aria-haspopup="true">
+            <span data-i18n="navResources">资源</span>
+            <i data-lucide="chevron-down"></i>
           </button>
-          <button class="module-tab" type="button" data-module-tab="courses">
-            <i data-lucide="video"></i>
-            课程
-          </button>
-          <button class="module-tab" type="button" data-module-tab="memory">
-            <i data-lucide="archive"></i>
-            资料笔记
-          </button>
+          <div class="module-nav-menu">
+            <button class="module-tab" type="button" data-module-tab="library">
+              <i data-lucide="book-open"></i>
+              书城
+            </button>
+            <button class="module-tab" type="button" data-module-tab="courses">
+              <i data-lucide="video"></i>
+              课程
+            </button>
+            <button class="module-tab" type="button" data-module-tab="memory">
+              <i data-lucide="archive"></i>
+              资料笔记
+            </button>
+          </div>
         </div>
         <div class="module-nav-group compact" aria-label="设置" data-i18n-aria-label="settings">
           <button class="module-tab" type="button" data-module-tab="settings">
