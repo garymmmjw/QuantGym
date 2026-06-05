@@ -1,0 +1,37 @@
+      <section class="pk-section">
+        <div class="section-heading">
+          <h2>PK</h2>
+          <button class="secondary-button" id="startPkBtn" type="button">
+            <i data-lucide="swords"></i>
+            匹配在线 Quant
+          </button>
+        </div>
+        <div class="pk-grid">
+          <div class="pk-arena">
+            <div class="pk-scoreboard">
+              <div>
+                <small>你</small>
+                <strong id="pkUserScore">0</strong>
+              </div>
+              <div>
+                <small id="pkOpponentName">Online Quant</small>
+                <strong id="pkOpponentScore">0</strong>
+              </div>
+            </div>
+            <div id="pkProblem" class="pk-problem">点击匹配开始。</div>
+            <form id="pkForm" class="pk-form">
+              <textarea id="pkAnswer" rows="5" placeholder="写下你的解法、推导或交易直觉"></textarea>
+              <div class="form-row">
+                <button class="primary-button" type="submit">
+                  <i data-lucide="send"></i>
+                  提交 PK
+                </button>
+                <button class="icon-button ghost" id="pkRevealBtn" type="button" title="查看参考答案" aria-label="查看参考答案">
+                  <i data-lucide="lightbulb"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+          <aside class="pk-feed" id="pkFeed"></aside>
+        </div>
+      </section>

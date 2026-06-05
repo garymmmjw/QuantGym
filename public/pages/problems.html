@@ -1,0 +1,133 @@
+<section class="problem-section">
+  <div class="problem-workspace-grid">
+    <main class="problem-main-column">
+      <div class="problem-page-header">
+        <div class="problem-page-copy">
+          <span class="rank-label">题库</span>
+          <h2>题目</h2>
+          <p>系统练习概率、期望、博弈和 quant 面试基础题。</p>
+        </div>
+        <img src="/assets/generated/mascot-calculator.webp?v=premium-system-2" alt="" loading="lazy">
+        <div class="problem-actions">
+          <i data-lucide="search"></i>
+          <input id="problemSearch" type="search" placeholder="搜索题目">
+          <button class="icon-button ghost hidden" id="addProblemBtn" type="button" title="添加题目" aria-label="添加题目">
+            <i data-lucide="book-plus"></i>
+          </button>
+        </div>
+      </div>
+      <form id="problemForm" class="problem-form hidden">
+        <input id="problemTitleEn" type="text" placeholder="English title">
+        <input id="problemTitleZh" type="text" placeholder="中文标题">
+        <select id="problemCategory" aria-label="题目类别">
+          <option value="leetcode">LeetCode</option>
+          <option value="pandasNumpy">Pandas/NumPy</option>
+          <option value="probabilityExpectation">Probability/Expectation</option>
+          <option value="statistics">Statistics</option>
+          <option value="machineLearning">Machine Learning</option>
+          <option value="deepLearning">Deep Learning</option>
+          <option value="market">Market</option>
+          <option value="option">Option</option>
+          <option value="mentalMath">Mental Math</option>
+        </select>
+        <select id="problemDifficulty" aria-label="题目难度">
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+        <input id="problemTags" type="text" placeholder="tags: dp, bayes, market-making">
+        <input id="problemSourceUrl" type="url" placeholder="source url">
+        <textarea id="problemPromptEn" rows="4" placeholder="English prompt"></textarea>
+        <textarea id="problemPromptZh" rows="4" placeholder="中文题干"></textarea>
+        <textarea id="problemAnswer" rows="4" placeholder="答案"></textarea>
+        <textarea id="problemExplanation" rows="5" placeholder="解答 / reasoning"></textarea>
+        <button class="secondary-button" type="submit">
+          <i data-lucide="save"></i>
+          保存题目
+        </button>
+      </form>
+      <form id="problemImportForm" class="problem-import hidden">
+        <textarea id="problemJsonInput" rows="3" placeholder="插件 JSON"></textarea>
+        <button class="secondary-button" type="submit">
+          <i data-lucide="file-json"></i>
+          导入
+        </button>
+      </form>
+      <section class="leetcode-hot-panel problem-collections-panel" aria-labelledby="problemCollectionsTitle">
+        <div class="problem-collections-heading">
+          <div>
+            <span class="rank-label">PLAYLISTS</span>
+            <h3 id="problemCollectionsTitle">题单集合</h3>
+          </div>
+          <p>从常刷集合直接进入题库；LeetCode 会展开原题清单并记录完成状态。</p>
+        </div>
+        <div id="problemCollectionGrid" class="problem-collection-grid" aria-label="题单集合"></div>
+        <div id="leetcodeHotList" class="leetcode-hot-list hidden" aria-live="polite"></div>
+      </section>
+      <section class="problem-practice-zone" aria-label="刷题列表">
+        <div class="problem-browser-toolbar">
+          <div class="problem-view-tabs" role="tablist" aria-label="题目浏览方式">
+            <button class="segment active" type="button" data-problem-view="all">全部题目</button>
+            <button class="segment" type="button" data-problem-view="saved">我的收藏</button>
+            <button class="segment" type="button" data-problem-view="ranking">热门排行</button>
+          </div>
+          <span id="problemInteractionStatus" class="problem-interaction-status" aria-live="polite"></span>
+          <button id="problemSourceFilterClearBtn" class="secondary-button compact hidden" type="button">
+            <i data-lucide="rotate-ccw"></i>
+            全部题源
+          </button>
+        </div>
+        <section class="problem-theme-panel" aria-label="标签筛选">
+          <div class="problem-theme-heading">
+            <strong>标签筛选</strong>
+            <span id="problemThemeSummary">全部主题</span>
+          </div>
+          <div id="problemThemeFilter" class="problem-theme-filter" role="listbox" aria-label="题目主题筛选"></div>
+          <div class="problem-difficulty-filter" id="problemDifficultyFilter" role="tablist" aria-label="题目难度筛选">
+            <button class="segment active" type="button" data-problem-difficulty="all">全部难度</button>
+            <button class="segment" type="button" data-problem-difficulty="easy">Easy</button>
+            <button class="segment" type="button" data-problem-difficulty="medium">Medium</button>
+            <button class="segment" type="button" data-problem-difficulty="hard">Hard</button>
+          </div>
+        </section>
+        <section id="problemRanking" class="problem-ranking hidden" aria-label="题目排行榜">
+          <div class="problem-ranking-header">
+            <div>
+              <h3>题目排行榜</h3>
+              <p>按点赞与讨论热度排序，找到值得优先复习的题目。</p>
+            </div>
+          </div>
+          <div id="problemRankingList" class="problem-ranking-list"></div>
+        </section>
+        <div id="problemList" class="problem-list"></div>
+        <nav id="problemPagination" class="problem-pagination hidden" aria-label="题目分页"></nav>
+        <article id="problemDetail" class="problem-detail hidden" aria-live="polite"></article>
+      </section>
+    </main>
+    <aside class="problem-side-rail">
+      <section class="problem-completion-panel" aria-label="题目完成进度">
+        <div class="effect-panel-heading">
+          <div>
+            <span class="rank-label">COMPLETION</span>
+            <h2>题目完成进度</h2>
+          </div>
+        </div>
+        <div id="problemCompletionProgress" class="effect-progress-group compact"></div>
+      </section>
+      <section id="problemCompanyPanel" class="problem-company-panel" aria-labelledby="problemCompanyTitle">
+        <div class="problem-company-heading">
+          <div>
+            <span class="rank-label">FIRMS</span>
+            <h3 id="problemCompanyTitle">按公司刷题</h3>
+            <p id="problemCompanySummary">从真实 quant firm 高频题出发，按公司题源定向练习。</p>
+          </div>
+          <button id="problemCompanyClearBtn" class="secondary-button compact hidden" type="button">
+            <i data-lucide="rotate-ccw"></i>
+            全部公司
+          </button>
+        </div>
+        <div id="problemCompanyList" class="problem-company-list" aria-label="公司题库"></div>
+      </section>
+    </aside>
+  </div>
+</section>

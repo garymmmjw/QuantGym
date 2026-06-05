@@ -1,0 +1,31 @@
+        <section class="network-section">
+          <div class="section-heading">
+            <div>
+              <h2>Network</h2>
+              <small id="networkSummary">记录联系人、公司和下一步 follow-up。</small>
+            </div>
+            <button class="icon-button ghost" id="addNetworkBtn" type="button" title="添加联系人" aria-label="添加联系人">
+              <i data-lucide="user-round-plus"></i>
+            </button>
+          </div>
+          <form id="networkForm" class="network-form hidden">
+            <input id="networkName" type="text" placeholder="姓名">
+            <input id="networkCompany" type="text" placeholder="公司 / 学校">
+            <input id="networkRole" type="text" placeholder="职位 / 关系">
+            <select id="networkStatus" aria-label="关系状态">
+              <option value="To reach out">To reach out</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Warm">Warm</option>
+              <option value="Archived">Archived</option>
+            </select>
+            <input id="networkChannel" type="text" placeholder="LinkedIn / Email / WeChat">
+            <input id="networkNextStep" type="text" placeholder="下一步">
+            <textarea id="networkNotes" rows="4" placeholder="备注"></textarea>
+            <button class="secondary-button" type="submit">
+              <i data-lucide="save"></i>
+              保存联系人
+            </button>
+          </form>
+          <div id="networkList" class="network-list"></div>
+        </section>

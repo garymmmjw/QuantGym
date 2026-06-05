@@ -1,0 +1,49 @@
+      <section class="skills-section">
+        <div class="section-heading">
+          <div>
+            <h2 id="skillsPageTitle">能力值</h2>
+            <small id="skillsPageSubtitle">把训练记录、题目表现和面试反馈汇总成 quant readiness score。</small>
+          </div>
+        </div>
+        <div class="skill-value-hero">
+          <article class="skill-score-panel">
+            <span class="rank-label" id="skillsScoreLabel">Quant Score</span>
+            <div class="skill-score-number" aria-live="polite">
+              <strong id="skillsScoreValue">0</strong>
+              <span>/100</span>
+            </div>
+            <p id="skillsScoreCopy">分数来自九个能力维度。继续刷题、模拟面试和记录训练，能力值会自动更新。</p>
+            <div class="skill-score-meta">
+              <span>
+                <b id="skillsEntriesCount">0</b>
+                <small id="skillsEntriesLabel">训练记录</small>
+              </span>
+              <span>
+                <b id="skillsAverageScore">-</b>
+                <small id="skillsAverageLabel">平均得分</small>
+              </span>
+              <span>
+                <b id="skillsWeakestSkill">-</b>
+                <small id="skillsWeakestLabel">优先补强</small>
+              </span>
+            </div>
+          </article>
+          <article class="skill-radar-panel">
+            <div class="skill-radar-header">
+              <div>
+                <h3 id="skillRadarTitle">能力雷达</h3>
+                <small id="skillRadarHint">悬停到能力点或右侧分数，查看做题情况和平均得分。</small>
+              </div>
+              <img class="skill-radar-coach" src="assets/generated/mascot-teacher-chart.webp?v=premium-system-2" alt="" loading="lazy">
+            </div>
+            <div class="skill-radar-visual">
+              <div class="skill-radar-canvas-wrap">
+                <canvas id="skillRadar" width="680" height="440" aria-label="能力值雷达图"></canvas>
+                <div id="skillRadarTooltip" class="skill-radar-tooltip hidden" role="status"></div>
+              </div>
+              <div id="skillRadarLegend" class="skill-radar-legend" aria-label="能力分数"></div>
+            </div>
+          </article>
+        </div>
+        <div id="skillsGrid" class="skills-grid"></div>
+      </section>

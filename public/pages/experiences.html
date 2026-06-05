@@ -1,0 +1,119 @@
+        <section class="experience-section">
+          <header class="experience-header">
+            <div>
+              <span class="experience-kicker">INTERVIEW LOG</span>
+              <h2>面经记录</h2>
+              <p>按轮次沉淀面试过程、考察主题和复盘行动，建立自己的面试档案。</p>
+            </div>
+            <button class="secondary-button" id="newExperienceBtn" type="button">
+              <i data-lucide="plus"></i>
+              新建记录
+            </button>
+          </header>
+          <div class="experience-workspace">
+            <form class="experience-form" id="experienceForm">
+              <div class="experience-panel-heading">
+                <h3 id="experienceFormTitle">新建面经</h3>
+                <span class="experience-private"><i data-lucide="lock-keyhole"></i> 私有保存</span>
+              </div>
+              <input id="experienceId" type="hidden">
+              <div class="experience-fields">
+                <label>
+                  公司
+                  <input id="experienceFirm" type="text" required placeholder="例如：Optiver / 匿名做市公司">
+                </label>
+                <label>
+                  岗位方向
+                  <select id="experienceRole">
+                    <option value="Quant Trading">Quant Trading</option>
+                    <option value="Quant Research">Quant Research</option>
+                    <option value="Quant Developer">Quant Developer</option>
+                    <option value="Other">其他方向</option>
+                  </select>
+                </label>
+                <label>
+                  轮次
+                  <select id="experienceStage">
+                    <option value="OA / Assessment">OA / Assessment</option>
+                    <option value="Recruiter / HR Screen">Recruiter / HR Screen</option>
+                    <option value="Technical Interview">Technical Interview</option>
+                    <option value="Behavioral / Fit">Behavioral / Fit</option>
+                    <option value="Final Day / Superday">Final Day / Superday</option>
+                    <option value="HR Close / Offer">HR Close / Offer</option>
+                  </select>
+                </label>
+                <label>
+                  目标季次
+                  <select id="experienceSeason">
+                    <option value="2026 Summer">2026 Summer</option>
+                    <option value="2027 Summer" selected>2027 Summer</option>
+                    <option value="2028 Summer">2028 Summer</option>
+                    <option value="Off-cycle">Off-cycle</option>
+                  </select>
+                </label>
+                <label>
+                  面试日期
+                  <input id="experienceDate" type="date">
+                </label>
+                <label>
+                  结果状态
+                  <select id="experienceOutcome">
+                    <option value="Waiting">等待结果</option>
+                    <option value="Advanced">进入下一轮</option>
+                    <option value="Offer">Offer</option>
+                    <option value="Closed">流程结束</option>
+                    <option value="Withdrawn">已撤回</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                标签
+                <input id="experienceTags" type="text" placeholder="例如：mental math, probability, market making">
+              </label>
+              <label>
+                流程概览
+                <textarea id="experienceSummaryInput" rows="3" required placeholder="轮次时长、交流方式、整体节奏和感受。"></textarea>
+              </label>
+              <label>
+                考察主题
+                <textarea id="experienceTopics" rows="4" placeholder="记录题型与能力主题即可，请勿写入受保密要求约束的原题。"></textarea>
+              </label>
+              <label>
+                复盘与下一步
+                <textarea id="experienceReflection" rows="4" placeholder="做得好的地方、卡住的点、下一次要强化的训练。"></textarea>
+              </label>
+              <p class="experience-safety"><i data-lucide="shield-check"></i> 分享前请移除姓名、联系方式及公司要求保密的具体题目。</p>
+              <div class="experience-form-actions">
+                <button class="primary-button" type="submit"><i data-lucide="save"></i>保存面经</button>
+                <button class="secondary-button hidden" id="cancelExperienceEditBtn" type="button">取消编辑</button>
+              </div>
+            </form>
+            <aside class="experience-side-panel">
+              <div>
+                <strong id="experienceCount">0</strong>
+                <span>条面经记录</span>
+              </div>
+              <div>
+                <strong id="sharedExperienceCount">0</strong>
+                <span>已分享到社群</span>
+              </div>
+              <button class="secondary-button" id="openCommunityExperiencesBtn" type="button" data-jump-module="community">
+                <i data-lucide="users-round"></i>
+                查看社群面经
+              </button>
+            </aside>
+          </div>
+          <div class="experience-list-toolbar">
+            <h3>我的面经</h3>
+            <select id="experienceFilter" aria-label="筛选面经轮次">
+              <option value="all">全部轮次</option>
+              <option value="OA / Assessment">OA / Assessment</option>
+              <option value="Recruiter / HR Screen">Recruiter / HR Screen</option>
+              <option value="Technical Interview">Technical Interview</option>
+              <option value="Behavioral / Fit">Behavioral / Fit</option>
+              <option value="Final Day / Superday">Final Day / Superday</option>
+              <option value="HR Close / Offer">HR Close / Offer</option>
+            </select>
+          </div>
+          <div class="experience-list" id="experienceList"></div>
+        </section>

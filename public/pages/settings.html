@@ -1,0 +1,83 @@
+        <section class="settings-section">
+          <div class="section-heading">
+            <div>
+              <h2>设置</h2>
+              <small id="settingsMessage">应用偏好和数据管理。</small>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <form id="settingsForm" class="settings-panel">
+              <h3>偏好</h3>
+              <label>
+                语言
+                <select id="settingsLanguageSelect" aria-label="语言" data-i18n-aria-label="language">
+                  <option value="zh">中文</option>
+                  <option value="en">English</option>
+                </select>
+              </label>
+              <label>
+                默认国家
+                <select id="settingsCountrySelect" aria-label="默认国家"></select>
+              </label>
+              <label>
+                默认地区
+                <select id="settingsRegionSelect" aria-label="默认地区"></select>
+              </label>
+              <label>
+                LLM Endpoint
+                <input id="settingsLlmEndpointInput" type="url" value="http://127.0.0.1:8787/interview" placeholder="http://127.0.0.1:8787/interview">
+              </label>
+              <label>
+                LLM Model
+                <select id="settingsLlmModelInput" aria-label="LLM Model">
+                  <option value="gpt-5-nano" selected>gpt-5-nano · 最便宜</option>
+                  <option value="gpt-5-mini">gpt-5-mini · 更稳</option>
+                  <option value="gpt-5">gpt-5 · 更强</option>
+                  <option value="gpt-5.4-mini">gpt-5.4-mini · 新 mini</option>
+                  <option value="gpt-5.4">gpt-5.4 · 高质量</option>
+                  <option value="gpt-4o-mini">gpt-4o-mini · 旧版低价</option>
+                  <option value="gpt-4.1-nano">gpt-4.1-nano · 旧版 nano</option>
+                </select>
+              </label>
+              <label>
+                Cloud API Endpoint
+                <input id="settingsCloudApiInput" type="url" placeholder="http://127.0.0.1:8790/api">
+              </label>
+              <label>
+                Google Client ID
+                <input id="settingsGoogleClientIdInput" type="text" spellcheck="false" placeholder="xxxx.apps.googleusercontent.com">
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="save"></i>
+                保存设置
+              </button>
+            </form>
+
+            <div class="settings-panel">
+              <h3>数据</h3>
+              <div class="settings-actions">
+                <button class="secondary-button" id="exportBtn" type="button">
+                  <i data-lucide="download"></i>
+                  导出备份
+                </button>
+                <label class="secondary-button file-button settings-file-button">
+                  <input id="importInput" type="file" accept="application/json">
+                  <i data-lucide="upload"></i>
+                  导入备份
+                </label>
+                <button class="secondary-button danger-action" id="resetBtn" type="button">
+                  <i data-lucide="trash-2"></i>
+                  清空训练记录
+                </button>
+                <button class="secondary-button" id="syncCloudBtn" type="button">
+                  <i data-lucide="cloud-upload"></i>
+                  同步云端
+                </button>
+                <button class="secondary-button" id="logoutBtn" type="button">
+                  <i data-lucide="log-out"></i>
+                  退出登录
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>

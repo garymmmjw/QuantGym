@@ -1,0 +1,30 @@
+        <section class="resume-section">
+          <div class="section-heading">
+            <div>
+              <h2>简历模块</h2>
+              <small id="resumeSummary">上传或粘贴简历，获取针对 quant internship / full-time 的修改建议。</small>
+            </div>
+          </div>
+          <div class="resume-grid">
+            <form id="resumeForm" class="resume-panel">
+              <label>
+                简历内容
+                <textarea id="resumeText" rows="14" placeholder="粘贴简历文本，或先在账户里上传 txt/md 简历。"></textarea>
+              </label>
+              <div class="form-row">
+                <button class="primary-button" id="reviewResumeBtn" type="submit">
+                  <i data-lucide="wand-sparkles"></i>
+                  LLM 修改简历
+                </button>
+                <button class="secondary-button" id="saveResumeBtn" type="button">
+                  <i data-lucide="save"></i>
+                  保存简历
+                </button>
+              </div>
+            </form>
+            <aside class="resume-panel">
+              <h3>修改要点</h3>
+              <div id="resumeReview" class="resume-review"></div>
+            </aside>
+          </div>
+        </section>

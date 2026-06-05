@@ -1,0 +1,178 @@
+      <section class="news-section">
+        <div class="section-heading">
+          <div>
+            <h2>Quant 新闻</h2>
+            <small id="newsUpdatedAt">Jane Street、做市、AI 算力与市场结构</small>
+          </div>
+          <div class="problem-actions">
+            <button class="icon-button ghost" id="addNewsBtn" type="button" title="添加新闻" aria-label="添加新闻">
+              <i data-lucide="file-plus-2"></i>
+            </button>
+            <button class="icon-button ghost" id="refreshNewsBtn" type="button" title="刷新新闻" aria-label="刷新新闻">
+              <i data-lucide="refresh-cw"></i>
+            </button>
+          </div>
+        </div>
+        <div class="news-intel-board" aria-label="新闻情报控制台" data-i18n-aria-label="newsIntelAria">
+          <div class="news-intel-copy">
+            <strong id="newsIntelTitle">信息雷达</strong>
+            <span id="newsIntelSummary">新闻/RSS 自动同步，LinkedIn 和小红书作为人工线索入口。</span>
+          </div>
+          <div id="newsIntelStats" class="news-intel-stats" aria-live="polite"></div>
+          <div class="news-filter-row">
+            <div class="segmented news-topic-filter" id="newsTopicFilter" role="tablist" aria-label="新闻主题筛选" data-i18n-aria-label="newsTopicFilterAria">
+              <button class="segment active" type="button" data-news-topic="all">全部</button>
+              <button class="segment" type="button" data-news-topic="quantFirms">公司</button>
+              <button class="segment" type="button" data-news-topic="marketStructure">市场结构</button>
+              <button class="segment" type="button" data-news-topic="aiInfra">AI/算力</button>
+              <button class="segment" type="button" data-news-topic="recruiting">求职/社群</button>
+            </div>
+            <div class="segmented news-source-filter" id="newsSourceFilter" role="tablist" aria-label="新闻来源筛选" data-i18n-aria-label="newsSourceFilterAria">
+              <button class="segment active" type="button" data-news-source-filter="all">全部来源</button>
+              <button class="segment" type="button" data-news-source-filter="news">新闻/RSS</button>
+              <button class="segment" type="button" data-news-source-filter="official">官方</button>
+              <button class="segment" type="button" data-news-source-filter="social">社交线索</button>
+            </div>
+          </div>
+          <p id="newsSocialHint" class="news-social-hint">LinkedIn / 小红书目前支持粘贴公开链接、摘要和启发；不做自动爬取，点击来源回原站核验。</p>
+        </div>
+        <form id="newsForm" class="news-form hidden">
+          <input id="newsTitle" type="text" placeholder="新闻标题">
+          <input id="newsSource" type="text" placeholder="来源，例如 Reuters / Bloomberg">
+          <input id="newsUrl" type="url" placeholder="来源链接">
+          <select id="newsSourceType" aria-label="来源类型">
+            <option value="news">新闻/RSS</option>
+            <option value="official">官方公告</option>
+            <option value="linkedin">LinkedIn 线索</option>
+            <option value="xiaohongshu">小红书线索</option>
+            <option value="manual">手动记录</option>
+          </select>
+          <select id="newsPrimarySkill" aria-label="关联能力">
+            <option value="market">Market</option>
+            <option value="deepLearning">Deep Learning</option>
+            <option value="option">Option</option>
+            <option value="statistics">Statistics</option>
+            <option value="machineLearning">Machine Learning</option>
+            <option value="probabilityExpectation">Probability/Expectation</option>
+            <option value="pandasNumpy">Pandas/NumPy</option>
+            <option value="leetcode">LeetCode</option>
+            <option value="mentalMath">Mental Math</option>
+          </select>
+          <input id="newsTags" type="text" placeholder="tags: Jane Street, market making, AI">
+          <textarea id="newsSummary" rows="4" placeholder="摘要：发生了什么？"></textarea>
+          <textarea id="newsInsight" rows="3" placeholder="面试启发：这和 quant 面试有什么关系？"></textarea>
+          <button class="secondary-button" type="submit">
+            <i data-lucide="save"></i>
+            保存新闻
+          </button>
+        </form>
+        <div id="newsList" class="news-list">
+          <article class="news-card" data-news-id="news-jane-street-q1-2026">
+            <div class="news-meta">
+              <span>2026/05/08</span>
+              <span>Reuters / Investing.com</span>
+            </div>
+            <h3>Jane Street Q1 交易收入创纪录</h3>
+            <p>Reuters 报道称，Jane Street 2026 年第一季度交易收入达到 161 亿美元，市场波动、机器辅助中频策略和 AI 公司持仓表现是关键词。</p>
+            <div class="news-impact">
+              <strong>面试启发</strong>
+              <span>为什么波动率上升会利好做市和多资产交易？可以用 bid-ask spread、inventory risk、holding period 和模型定价来解释。</span>
+            </div>
+            <div class="pill-row">
+              <span class="pill">Market</span>
+              <span class="pill">Option</span>
+              <span class="pill">Deep Learning</span>
+              <span class="pill muted-pill">Jane Street</span>
+              <span class="pill muted-pill">volatility</span>
+            </div>
+            <div class="news-actions">
+              <a class="news-link" href="https://m.investing.com/news/stock-market-news/jane-street-posts-big-jump-in-trading-revenue-for-first-quarter-with-161-billion-haul-sources-say-4673532?ampMode=1" target="_blank" rel="noreferrer">来源</a>
+            </div>
+          </article>
+
+          <article class="news-card" data-news-id="news-jane-street-2025-haul">
+            <div class="news-meta">
+              <span>2026/04/24</span>
+              <span>Bloomberg</span>
+            </div>
+            <h3>Jane Street 2025 年交易收入刷新纪录</h3>
+            <p>Bloomberg 报道，Jane Street 2025 年交易收入达到 396 亿美元，并与大型投行交易业务形成直接比较。</p>
+            <div class="news-impact">
+              <strong>面试启发</strong>
+              <span>可以比较自营做市商与投行交易台：资本、技术、风险约束和市场结构分别如何影响收益上限。</span>
+            </div>
+            <div class="pill-row">
+              <span class="pill">Market</span>
+              <span class="pill">Statistics</span>
+              <span class="pill muted-pill">trading revenue</span>
+              <span class="pill muted-pill">banks</span>
+            </div>
+            <div class="news-actions">
+              <a class="news-link" href="https://www.bloomberg.com/news/articles/2026-04-24/jane-street-snatches-wall-street-crown-with-record-39-6-billion-trading-haul?srnd=phx-industries-finance" target="_blank" rel="noreferrer">来源</a>
+            </div>
+          </article>
+
+          <article class="news-card" data-news-id="news-jane-street-coreweave-2026">
+            <div class="news-meta">
+              <span>2026/04/16</span>
+              <span>Data Center Dynamics</span>
+            </div>
+            <h3>Jane Street 与 CoreWeave 签下 AI 云算力协议</h3>
+            <p>Data Center Dynamics 报道，Jane Street 与 CoreWeave 签下 60 亿美元 AI 云容量协议，并进行了 10 亿美元股权投资。</p>
+            <div class="news-impact">
+              <strong>面试启发</strong>
+              <span>现代 quant 越来越像大规模 ML 系统题：噪声数据、训练成本、GPU 资源和低延迟部署都会进入讨论。</span>
+            </div>
+            <div class="pill-row">
+              <span class="pill">Deep Learning</span>
+              <span class="pill">Machine Learning</span>
+              <span class="pill">Market</span>
+              <span class="pill muted-pill">GPU</span>
+              <span class="pill muted-pill">CoreWeave</span>
+            </div>
+            <div class="news-actions">
+              <a class="news-link" href="https://www.datacenterdynamics.com/en/news/quantative-trading-firm-jane-street-signs-6bn-ai-cloud-deal-with-coreweave/" target="_blank" rel="noreferrer">来源</a>
+            </div>
+          </article>
+
+          <article class="news-card" data-news-id="news-squarepoint-stg-2026">
+            <div class="news-meta">
+              <span>2026/03/04</span>
+              <span>Bloomberg</span>
+            </div>
+            <h3>Squarepoint 关联方启动电子做市业务</h3>
+            <p>Bloomberg 报道，Squarepoint 关联方将成立电子交易/做市业务 STG Securities，体现 hedge fund 与 market maker 模式的融合。</p>
+            <div class="news-impact">
+              <strong>面试启发</strong>
+              <span>可以比较 hedge fund alpha、market making spread capture 和 execution technology 的差异，顺带复习 order book 与实时系统。</span>
+            </div>
+            <div class="pill-row">
+              <span class="pill">Market</span>
+              <span class="pill">Statistics</span>
+              <span class="pill">LeetCode</span>
+              <span class="pill muted-pill">market making</span>
+              <span class="pill muted-pill">Squarepoint</span>
+            </div>
+            <div class="news-actions">
+              <a class="news-link" href="https://www.bloomberg.com/news/articles/2026-03-04/squarepoint-affiliate-starts-market-making-arm-to-rival-citadel" target="_blank" rel="noreferrer">来源</a>
+            </div>
+          </article>
+        </div>
+        <article id="newsDetail" class="news-detail hidden">
+          <div class="news-detail-header">
+            <button class="icon-button ghost" id="newsBackBtn" type="button" title="返回新闻" aria-label="返回新闻">
+              <i data-lucide="arrow-left"></i>
+            </button>
+            <span id="newsDetailReadBadge" class="read-badge hidden">已读</span>
+          </div>
+          <div class="news-detail-meta" id="newsDetailMeta"></div>
+          <h2 id="newsDetailTitle"></h2>
+          <p id="newsDetailSummary"></p>
+          <div class="news-impact">
+            <strong>面试启发</strong>
+            <span id="newsDetailInsight"></span>
+          </div>
+          <div id="newsDetailPills" class="pill-row"></div>
+          <a id="newsDetailLink" class="news-link" href="#" target="_blank" rel="noreferrer">来源</a>
+        </article>
+      </section>
