@@ -147,6 +147,10 @@ export function createAccountAuthController(deps = {}) {
         deps.renderSession?.();
         return;
       } catch (error) {
+        if (isBlockingCloudAuthError(error)) {
+          deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error));
+          return;
+        }
         if (!account && error?.status && error.status !== 401) {
           deps.showAuthMessage?.(text("authCloudNoLocal"));
           return;
@@ -256,4 +260,8 @@ export function createAccountAuthController(deps = {}) {
     saveGoogleClientId,
     sendRegisterVerificationCode
   };
+}
+
+function isBlockingCloudAuthError(error) {
+  return Boolean(error?.status && error.status >= 400 && error.status < 500 && error.status !== 401);
 }

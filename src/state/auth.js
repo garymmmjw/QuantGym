@@ -165,10 +165,23 @@ export function getVerificationErrorMessage(error, options = {}) {
 export function getAuthErrorMessage(error, options = {}) {
   const text = resolveText(options);
   const protocol = options.protocol ?? globalThis.location?.protocol ?? "";
+  const raw = String(error?.message || "");
+  if (error?.status === 403 || /allowlist/i.test(raw)) {
+    return text("verificationForbidden");
+  }
+  if (error?.status === 401) {
+    return text("authCloudLoginFailed");
+  }
+  if (error?.status === 409) {
+    return text("authDuplicateEmail");
+  }
+  if (error?.status === 429) {
+    return text("verificationTooMany");
+  }
   if (protocol === "file:") {
     return text("authStorageFileBlocked");
   }
-  if (/quota|storage|localStorage|SecurityError/i.test(`${error?.name || ""} ${error?.message || ""}`)) {
+  if (/quota|storage|localStorage|SecurityError/i.test(`${error?.name || ""} ${raw}`)) {
     return text("authStorageBlocked");
   }
   return text("authOperationFailed");

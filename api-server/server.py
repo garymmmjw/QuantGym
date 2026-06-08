@@ -1244,7 +1244,12 @@ class PokerRoomHub:
         payload = data if isinstance(data, dict) else {}
         changed = False
         with self.lock:
-            room = self.ensure_room(room_code)
+            try:
+                room = self.ensure_room(room_code)
+            except HttpError as error:
+                if error.status != 404 or self.room_code(room_code) != self.room_code():
+                    raise
+                return self.create_room(user, payload)
             before_players = len(room["state"].get("players", []))
             self.touch_participant(room, user, str(payload.get("playerName") or user_display_name(user)))
             try:
