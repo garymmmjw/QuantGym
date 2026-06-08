@@ -20,7 +20,12 @@ export function loadAuth(key, options = {}) {
 }
 
 export function saveAuth(key, auth) {
-  localStorage.setItem(key, JSON.stringify(auth));
+  try {
+    localStorage.setItem(key, JSON.stringify(auth));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function getCurrentUser(auth = {}) {
