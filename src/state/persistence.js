@@ -8,7 +8,12 @@ export function readJsonStorage(key, fallback) {
 }
 
 export function writeJsonStorage(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function loadUserState(userId, options = {}) {
@@ -28,12 +33,21 @@ export function loadUserState(userId, options = {}) {
 export function writeUserState(userId, rawState, options = {}) {
   if (!userId || typeof options.userStateKey !== "function") return;
   const serializeState = options.serializeState || ((state) => state);
-  localStorage.setItem(options.userStateKey(userId), JSON.stringify(serializeState(rawState)));
+  try {
+    localStorage.setItem(options.userStateKey(userId), JSON.stringify(serializeState(rawState)));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function clearUserState(userId, options = {}) {
   if (!userId || typeof options.userStateKey !== "function") return;
-  localStorage.removeItem(options.userStateKey(userId));
+  try {
+    localStorage.removeItem(options.userStateKey(userId));
+  } catch {
+    /* storage unavailable */
+  }
 }
 
 export function migrateLegacyState(userId, options = {}) {
@@ -45,13 +59,22 @@ export function migrateLegacyState(userId, options = {}) {
   } = options;
   if (!legacyKey || !userId || typeof userStateKey !== "function") return;
   const nextKey = userStateKey(userId);
-  const raw = localStorage.getItem(legacyKey);
-  if (!raw || localStorage.getItem(nextKey)) return;
+  let raw = "";
+  try {
+    raw = localStorage.getItem(legacyKey);
+    if (!raw || localStorage.getItem(nextKey)) return;
+  } catch {
+    return;
+  }
   try {
     const legacy = normalizeState(JSON.parse(raw));
     localStorage.setItem(nextKey, JSON.stringify(serializeState(legacy)));
     localStorage.removeItem(legacyKey);
   } catch {
-    localStorage.removeItem(legacyKey);
+    try {
+      localStorage.removeItem(legacyKey);
+    } catch {
+      /* storage unavailable */
+    }
   }
 }

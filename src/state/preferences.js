@@ -39,7 +39,11 @@ export function saveLlmConfig(key, config = {}, options = {}) {
     model: normalizeLlmModel(config.model, { defaultModel, modelOptions }),
     defaultsVersion
   };
-  localStorage.setItem(key, JSON.stringify(normalized));
+  try {
+    localStorage.setItem(key, JSON.stringify(normalized));
+  } catch {
+    /* storage unavailable */
+  }
   return normalized;
 }
 
@@ -130,7 +134,12 @@ export function loadAppPrefs(key, options = {}) {
 }
 
 export function saveAppPrefs(key, appPrefs = {}) {
-  localStorage.setItem(key, JSON.stringify(appPrefs));
+  try {
+    localStorage.setItem(key, JSON.stringify(appPrefs));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function toggleSidebarPreference(appPrefs = {}) {

@@ -27,6 +27,11 @@ export function createAccountSessionController(deps = {}) {
     appState.currentUser = deps.getCurrentUser?.() || null;
     if (userStateStore) userStateStore.value = deps.loadState?.();
 
+    const hasAppShell = Boolean(getElements().appShell || documentRef?.getElementById?.("appShell"));
+    if (appState.currentUser && !hasAppShell) {
+      return;
+    }
+
     deps.clearProblemLookupCaches?.();
     deps.problemSocialState?.reset?.();
     deps.pruneProblemCatalog?.();
