@@ -1,0 +1,90 @@
+{
+  "status": "pass",
+  "screenshots": [
+    "247-cdp-experiences-initial.png",
+    "248-cdp-experiences-after-create.png",
+    "249-cdp-experiences-after-edit.png",
+    "250-cdp-experiences-after-share-community.png",
+    "251-cdp-experiences-return-shared-badge.png",
+    "252-cdp-experiences-after-delete.png",
+    "253-cdp-experiences-reload-persistence.png"
+  ],
+  "checks": {
+    "initialContract": {
+      "missing": [],
+      "title": "面经记录",
+      "count": "0",
+      "shared": "0"
+    },
+    "createRecord": {
+      "cardVisible": true,
+      "count": "1",
+      "storedFirm": "QA Optiver Deep Flow",
+      "storedTags": [
+        "probability",
+        "mental",
+        "math",
+        "market",
+        "making"
+      ]
+    },
+    "editRecord": {
+      "cardVisible": true,
+      "storedFirm": "QA Optiver Edited Flow",
+      "storedOutcome": "Offer",
+      "storedReflection": "Edited reflection survived React state and storage update."
+    },
+    "stageFilter": {
+      "filteredCount": 1
+    },
+    "shareToCommunity": {
+      "url": "http://127.0.0.1:5179/community?qa=experiences-deep",
+      "postId": "c4460589-023d-4529-aab0-4bfb9dd594eb",
+      "sharedPostId": "c4460589-023d-4529-aab0-4bfb9dd594eb",
+      "postKind": "experience",
+      "postTextIncludesFirm": true
+    },
+    "returnSharedState": {
+      "count": "1",
+      "sharedCount": "1"
+    },
+    "deletePrivateRecord": {
+      "count": "1",
+      "deletedMissing": true,
+      "dialog": {
+        "type": "confirm",
+        "message": "确认删除这条面经记录？"
+      }
+    },
+    "reloadPersistence": {
+      "storedRecords": [
+        {
+          "firm": "QA Optiver Edited Flow",
+          "sharedPostId": "c4460589-023d-4529-aab0-4bfb9dd594eb"
+        }
+      ],
+      "communityPosts": [
+        {
+          "id": "c4460589-023d-4529-aab0-4bfb9dd594eb",
+          "kind": "experience",
+          "text": "QA Optiver Edited Flow · Quant Research · Technical Interview\n2027 Summer · 2026/06/08\n流程：QA create flow summary for Exp"
+        }
+      ]
+    }
+  },
+  "errors": [
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  ],
+  "lastDialog": {
+    "type": "confirm",
+    "message": "确认删除这条面经记录？"
+  }
+}

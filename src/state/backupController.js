@@ -33,8 +33,11 @@ export function createBackupController(deps = {}) {
     downloadJsonFile(backup.payload, backup.filename);
   }
 
-  async function importState(event) {
-    const file = event?.target?.files?.[0];
+  async function importState(eventOrFile, inputOverride = null) {
+    const input = inputOverride || eventOrFile?.target || eventOrFile?.currentTarget || null;
+    const file = eventOrFile instanceof File
+      ? eventOrFile
+      : input?.files?.[0] || eventOrFile?.files?.[0];
     if (!file) return;
     try {
       const result = await mergeBackupFile(file, deps.getState?.(), {
@@ -54,10 +57,11 @@ export function createBackupController(deps = {}) {
       deps.clearProblemLookupCaches?.();
       deps.saveState?.();
       deps.renderAll?.();
-    } catch {
+    } catch (error) {
+      console.error("[QuantGym] Failed to import backup", error?.stack || error?.message || error);
       windowRef.alert?.(importErrorMessage);
     } finally {
-      if (event?.target) event.target.value = "";
+      if (input) input.value = "";
     }
   }
 

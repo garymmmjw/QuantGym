@@ -1,0 +1,8 @@
+{
+  "before": "codex-browser-smoke.apps.googleusercontent.com",
+  "afterFillDom": "codex-browser-smoke.apps.googleusercontent.com",
+  "afterSaveDom": "codex-browser-smoke.apps.googleusercontent.com",
+  "afterReload": "codex-browser-smoke.apps.googleusercontent.com",
+  "message": "应用偏好和数据管理。",
+  "status": "fail"
+}

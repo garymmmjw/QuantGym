@@ -17,6 +17,7 @@ export function createPokerRoomController(deps = {}) {
     normalizePlayerName = (value) => String(value || ""),
     normalizeRoomCode = (value) => String(value || ""),
     renderGame = () => {},
+    routingMode = "hash",
     state = {},
     windowRef = globalThis.window || globalThis
   } = deps;
@@ -108,7 +109,8 @@ export function createPokerRoomController(deps = {}) {
     try {
       const url = new URL(windowRef.location.href);
       url.searchParams.set("pokerRoom", game.roomCode);
-      url.hash = "poker";
+      if (routingMode === "browser") url.hash = "";
+      else url.hash = "poker";
       if (mode === "push") windowRef.history.pushState(null, "", url.toString());
       else windowRef.history.replaceState(null, "", url.toString());
     } catch {
@@ -119,7 +121,8 @@ export function createPokerRoomController(deps = {}) {
   function getInviteLink(game) {
     const url = new URL(windowRef.location.href);
     url.searchParams.set("pokerRoom", game?.roomCode || "QG");
-    url.hash = "poker";
+    if (routingMode === "browser") url.hash = "";
+    else url.hash = "poker";
     return url.toString();
   }
 

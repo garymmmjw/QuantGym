@@ -5,9 +5,26 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/build-static-site.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:stage1": "node scripts/check-stage1.mjs",
+    "check:stage2": "node scripts/check-stage2.mjs --bridge",
+    "check:stage2:full": "node scripts/check-stage2.mjs --full",
+    "check:stage2:strict": "node scripts/check-stage2.mjs --full --strict",
+    "check:browser-evidence": "node scripts/check-browser-evidence.mjs",
+    "check:migration-completion": "node scripts/check-migration-completion.mjs",
+    "check:ui-contracts": "node scripts/check-ui-contracts.mjs",
+    "check:release-readiness": "node scripts/check-release-readiness.mjs",
+    "check:release-readiness:local": "node scripts/check-release-readiness.mjs --allow-partial-production --summary docs/browser-audit-screenshots/323-release-readiness-summary.json",
+    "verify:production-boundaries": "node scripts/verify-production-boundaries.mjs",
+    "google:token-helper": "node scripts/create-google-token-helper.mjs"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
     "vite": "^8.0.14"
+  },
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.17.0"
   }
 }

@@ -1,0 +1,835 @@
+{
+  "status": "pass",
+  "browser": "Google Chrome headless via CDP",
+  "profile": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-memory-cdp-i5xnhkhn",
+  "fixtures": {
+    "tex": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-memory-fixtures-1eb4b9ee/qa-memory-formula.tex",
+    "smallImage": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-memory-fixtures-1eb4b9ee/qa-memory-small.png",
+    "largeImage": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-memory-fixtures-1eb4b9ee/qa-memory-large.png"
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "steps": [
+    {
+      "name": "initial seeded memory page",
+      "state": {
+        "resourceCount": 0,
+        "titles": [],
+        "types": [],
+        "imageCount": 0,
+        "largeFallbackVisible": false,
+        "texVisible": false,
+        "historyCount": 2,
+        "historyTexts": [
+          "LATEST ENTRY SHOULD BE UNDONE",
+          "OLD ENTRY SHOULD REMAIN"
+        ],
+        "formHidden": true,
+        "fileAccept": ".tex,.txt,text/*,image/*"
+      },
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/225-cdp-memory-initial-seeded.png"
+    },
+    {
+      "name": "tex file upload and save",
+      "files": [
+        {
+          "name": "qa-memory-formula.tex",
+          "type": "",
+          "size": 84
+        }
+      ],
+      "state": {
+        "resourceCount": 1,
+        "titles": [
+          "qa-memory-formula.tex"
+        ],
+        "types": [
+          "TEX"
+        ],
+        "imageCount": 0,
+        "largeFallbackVisible": false,
+        "texVisible": true,
+        "historyCount": 2,
+        "historyTexts": [
+          "LATEST ENTRY SHOULD BE UNDONE",
+          "OLD ENTRY SHOULD REMAIN"
+        ],
+        "formHidden": true,
+        "fileAccept": ".tex,.txt,text/*,image/*"
+      },
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/226-cdp-memory-tex-file-saved.png"
+    },
+    {
+      "name": "small image upload dataUrl save",
+      "files": [
+        {
+          "name": "qa-memory-small.png",
+          "type": "image/png",
+          "size": 77
+        }
+      ],
+      "state": {
+        "resourceCount": 2,
+        "titles": [
+          "qa-memory-small.png",
+          "qa-memory-formula.tex"
+        ],
+        "types": [
+          "IMAGE",
+          "TEX"
+        ],
+        "imageCount": 1,
+        "largeFallbackVisible": false,
+        "texVisible": true,
+        "historyCount": 2,
+        "historyTexts": [
+          "LATEST ENTRY SHOULD BE UNDONE",
+          "OLD ENTRY SHOULD REMAIN"
+        ],
+        "formHidden": true,
+        "fileAccept": ".tex,.txt,text/*,image/*"
+      },
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/227-cdp-memory-small-image-dataurl-saved.png"
+    },
+    {
+      "name": "large image upload filename fallback save",
+      "files": [
+        {
+          "name": "qa-memory-large.png",
+          "type": "image/png",
+          "size": 1650077
+        }
+      ],
+      "state": {
+        "resourceCount": 3,
+        "titles": [
+          "qa-memory-large.png",
+          "qa-memory-small.png",
+          "qa-memory-formula.tex"
+        ],
+        "types": [
+          "IMAGE",
+          "IMAGE",
+          "TEX"
+        ],
+        "imageCount": 1,
+        "largeFallbackVisible": true,
+        "texVisible": true,
+        "historyCount": 2,
+        "historyTexts": [
+          "LATEST ENTRY SHOULD BE UNDONE",
+          "OLD ENTRY SHOULD REMAIN"
+        ],
+        "formHidden": true,
+        "fileAccept": ".tex,.txt,text/*,image/*"
+      },
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/228-cdp-memory-large-image-fallback-saved.png"
+    },
+    {
+      "name": "reload persisted uploaded resources",
+      "state": {
+        "resourceCount": 3,
+        "titles": [
+          "qa-memory-large.png",
+          "qa-memory-small.png",
+          "qa-memory-formula.tex"
+        ],
+        "types": [
+          "IMAGE",
+          "IMAGE",
+          "TEX"
+        ],
+        "imageCount": 1,
+        "largeFallbackVisible": true,
+        "texVisible": true,
+        "historyCount": 2,
+        "historyTexts": [
+          "LATEST ENTRY SHOULD BE UNDONE",
+          "OLD ENTRY SHOULD REMAIN"
+        ],
+        "formHidden": true,
+        "fileAccept": ".tex,.txt,text/*,image/*"
+      },
+      "storedResources": [
+        {
+          "id": "d3b21162-cb2f-4196-93d8-98fcff56ed41",
+          "title": "qa-memory-formula.tex",
+          "type": "tex",
+          "content": "\\section{Bayes}\nP(A\\mid B)=\\frac{P(B\\mid A)P(A)}{P(B)}\nhttps://youtu.be/dQw4w9WgXcQ",
+          "sources": [
+            {
+              "id": "course-youtube-youtu-be-0-https-youtu-be-dqw4w9wgxcq",
+              "title": "youtu.be",
+              "provider": "YouTube",
+              "url": "https://youtu.be/dQw4w9WgXcQ",
+              "embedUrl": "https://www.youtube.com/embed/dQw4w9WgXcQ",
+              "videoId": "dQw4w9WgXcQ",
+              "embeddable": true
+            }
+          ],
+          "dataUrl": "",
+          "date": "2026-06-08T07:08:35.649Z"
+        },
+        {
+          "id": "8ea2252a-7ac5-4e77-b972-e0ac06eb80d2",
+          "title": "qa-memory-small.png",
+          "type": "image",
+          "content": "qa-memory-small.png",
+          "sources": [],
+          "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGP8z8Dwn4GBgYGJAQoAHxcCA5D8G3QAAAAASUVORK5CYII=",
+          "date": "2026-06-08T07:08:36.205Z"
+        },
+        {
+          "id": "61cfc63b-5968-4d1c-adf6-a5736af3633d",
+          "title": "qa-memory-large.png",
+          "type": "image",
+          "content": "qa-memory-large.png (1611 KB)",
+          "sources": [],
+          "dataUrl": "",
+          "date": "2026-06-08T07:08:36.804Z"
+        }
+      ],
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/229-cdp-memory-reload-file-resources-persisted.png"
+    },
+    {
+      "name": "scrolled clearTodayBtn into viewport",
+      "state": {
+        "rect": {
+          "x": 1369.59375,
+          "y": 672.15625,
+          "w": 40,
+          "h": 40,
+          "top": 652.15625,
+          "bottom": 692.15625
+        }
+      }
+    },
+    {
+      "name": "clearToday undo latest history entry",
+      "state": {
+        "resourceCount": 3,
+        "titles": [
+          "qa-memory-large.png",
+          "qa-memory-small.png",
+          "qa-memory-formula.tex"
+        ],
+        "types": [
+          "IMAGE",
+          "IMAGE",
+          "TEX"
+        ],
+        "imageCount": 1,
+        "largeFallbackVisible": true,
+        "texVisible": true,
+        "historyCount": 1,
+        "historyTexts": [
+          "OLD ENTRY SHOULD REMAIN"
+        ],
+        "formHidden": true,
+        "fileAccept": ".tex,.txt,text/*,image/*"
+      },
+      "storedEntries": [
+        {
+          "id": "qa-entry-old",
+          "date": "2026-06-07T20:00:00.000Z",
+          "text": "OLD ENTRY SHOULD REMAIN",
+          "duration": 30,
+          "difficulty": 1,
+          "gains": {
+            "probabilityExpectation": 5
+          },
+          "totalXp": 5
+        }
+      ],
+      "storedSkills": {
+        "leetcode": 0,
+        "cppProgramming": 0,
+        "pandasNumpy": 0,
+        "probabilityExpectation": 5,
+        "statistics": 0,
+        "calculus": 0,
+        "algebra": 0,
+        "linearAlgebra": 0,
+        "optimization": 0,
+        "complexNumbers": 0,
+        "machineLearning": 0,
+        "deepLearning": 0,
+        "market": 0,
+        "option": 0,
+        "mentalMath": 0
+      },
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/230-cdp-memory-undo-latest-entry.png"
+    }
+  ],
+  "assertions": {
+    "initialHasTwoHistoryEntries": true,
+    "texResourceSaved": true,
+    "smallImageDataUrlSaved": true,
+    "largeImageFallbackSaved": true,
+    "reloadKeepsThreeResources": true,
+    "storedSmallHasDataUrl": true,
+    "storedLargeNoDataUrl": true,
+    "undoLatestEntryUiUpdated": true,
+    "undoLatestEntryPersisted": true,
+    "undoLatestEntryAdjustedSkill": true
+  },
+  "events": [
+    {
+      "method": "Runtime.consoleAPICalled",
+      "params": {
+        "type": "debug",
+        "args": [
+          {
+            "type": "string",
+            "value": "[vite] connecting..."
+          }
+        ],
+        "executionContextId": 2,
+        "timestamp": 1780902512160.959,
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 850,
+              "columnNumber": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "Runtime.consoleAPICalled",
+      "params": {
+        "type": "debug",
+        "args": [
+          {
+            "type": "string",
+            "value": "[vite] connected."
+          }
+        ],
+        "executionContextId": 2,
+        "timestamp": 1780902512173.507,
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "handleMessage",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 954,
+              "columnNumber": 11
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 451,
+              "columnNumber": 41
+            },
+            {
+              "functionName": "dequeue",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 473,
+              "columnNumber": 7
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 465,
+              "columnNumber": 8
+            },
+            {
+              "functionName": "enqueue",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 459,
+              "columnNumber": 9
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 451,
+              "columnNumber": 27
+            },
+            {
+              "functionName": "onMessage",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 293,
+              "columnNumber": 5
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 407,
+              "columnNumber": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "Runtime.consoleAPICalled",
+      "params": {
+        "type": "info",
+        "args": [
+          {
+            "type": "string",
+            "value": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools"
+          },
+          {
+            "type": "string",
+            "value": "font-weight:bold"
+          }
+        ],
+        "executionContextId": 2,
+        "timestamp": 1780902512406.899,
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14336,
+              "columnNumber": 48
+            },
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14373,
+              "columnNumber": 3
+            },
+            {
+              "functionName": "",
+              "scriptId": "18",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-Ea1HnpA1.js?v=c82bb5b2",
+              "lineNumber": 7,
+              "columnNumber": 48
+            },
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14378,
+              "columnNumber": 18
+            },
+            {
+              "functionName": "",
+              "scriptId": "18",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-Ea1HnpA1.js?v=c82bb5b2",
+              "lineNumber": 7,
+              "columnNumber": 48
+            },
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14381,
+              "columnNumber": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "Log.entryAdded",
+      "params": {
+        "entry": {
+          "source": "network",
+          "level": "error",
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+          "timestamp": 1780902512419.9,
+          "url": "http://127.0.0.1:5179/favicon.ico",
+          "networkRequestId": "17625.117"
+        }
+      }
+    },
+    {
+      "method": "Runtime.consoleAPICalled",
+      "params": {
+        "type": "debug",
+        "args": [
+          {
+            "type": "string",
+            "value": "[vite] connecting..."
+          }
+        ],
+        "executionContextId": 3,
+        "timestamp": 1780902512988.646,
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 850,
+              "columnNumber": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "Runtime.consoleAPICalled",
+      "params": {
+        "type": "debug",
+        "args": [
+          {
+            "type": "string",
+            "value": "[vite] connected."
+          }
+        ],
+        "executionContextId": 3,
+        "timestamp": 1780902513023.44,
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "handleMessage",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 954,
+              "columnNumber": 11
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 451,
+              "columnNumber": 41
+            },
+            {
+              "functionName": "dequeue",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 473,
+              "columnNumber": 7
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 465,
+              "columnNumber": 8
+            },
+            {
+              "functionName": "enqueue",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 459,
+              "columnNumber": 9
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 451,
+              "columnNumber": 27
+            },
+            {
+              "functionName": "onMessage",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 293,
+              "columnNumber": 5
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 407,
+              "columnNumber": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "Runtime.consoleAPICalled",
+      "params": {
+        "type": "info",
+        "args": [
+          {
+            "type": "string",
+            "value": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools"
+          },
+          {
+            "type": "string",
+            "value": "font-weight:bold"
+          }
+        ],
+        "executionContextId": 3,
+        "timestamp": 1780902513033.335,
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14336,
+              "columnNumber": 48
+            },
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14373,
+              "columnNumber": 3
+            },
+            {
+              "functionName": "",
+              "scriptId": "18",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-Ea1HnpA1.js?v=c82bb5b2",
+              "lineNumber": 7,
+              "columnNumber": 48
+            },
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14378,
+              "columnNumber": 18
+            },
+            {
+              "functionName": "",
+              "scriptId": "18",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-Ea1HnpA1.js?v=c82bb5b2",
+              "lineNumber": 7,
+              "columnNumber": 48
+            },
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14381,
+              "columnNumber": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "Log.entryAdded",
+      "params": {
+        "entry": {
+          "source": "network",
+          "level": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+          "timestamp": 1780902514951.144,
+          "url": "http://127.0.0.1:8787/news",
+          "networkRequestId": "17625.834"
+        }
+      }
+    },
+    {
+      "method": "Log.entryAdded",
+      "params": {
+        "entry": {
+          "source": "network",
+          "level": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+          "timestamp": 1780902515159.12,
+          "url": "http://127.0.0.1:8787/jobs",
+          "networkRequestId": "17625.835"
+        }
+      }
+    },
+    {
+      "method": "Runtime.consoleAPICalled",
+      "params": {
+        "type": "debug",
+        "args": [
+          {
+            "type": "string",
+            "value": "[vite] connecting..."
+          }
+        ],
+        "executionContextId": 4,
+        "timestamp": 1780902517340.55,
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 850,
+              "columnNumber": 8
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "Runtime.consoleAPICalled",
+      "params": {
+        "type": "debug",
+        "args": [
+          {
+            "type": "string",
+            "value": "[vite] connected."
+          }
+        ],
+        "executionContextId": 4,
+        "timestamp": 1780902517360.476,
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "handleMessage",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 954,
+              "columnNumber": 11
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 451,
+              "columnNumber": 41
+            },
+            {
+              "functionName": "dequeue",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 473,
+              "columnNumber": 7
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 465,
+              "columnNumber": 8
+            },
+            {
+              "functionName": "enqueue",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 459,
+              "columnNumber": 9
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 451,
+              "columnNumber": 27
+            },
+            {
+              "functionName": "onMessage",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 293,
+              "columnNumber": 5
+            },
+            {
+              "functionName": "",
+              "scriptId": "7",
+              "url": "http://127.0.0.1:5179/@vite/client",
+              "lineNumber": 407,
+              "columnNumber": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "Runtime.consoleAPICalled",
+      "params": {
+        "type": "info",
+        "args": [
+          {
+            "type": "string",
+            "value": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools"
+          },
+          {
+            "type": "string",
+            "value": "font-weight:bold"
+          }
+        ],
+        "executionContextId": 4,
+        "timestamp": 1780902517367.738,
+        "stackTrace": {
+          "callFrames": [
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14336,
+              "columnNumber": 48
+            },
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14373,
+              "columnNumber": 3
+            },
+            {
+              "functionName": "",
+              "scriptId": "18",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-Ea1HnpA1.js?v=c82bb5b2",
+              "lineNumber": 7,
+              "columnNumber": 48
+            },
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14378,
+              "columnNumber": 18
+            },
+            {
+              "functionName": "",
+              "scriptId": "18",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-Ea1HnpA1.js?v=c82bb5b2",
+              "lineNumber": 7,
+              "columnNumber": 48
+            },
+            {
+              "functionName": "",
+              "scriptId": "17",
+              "url": "http://127.0.0.1:5179/node_modules/.vite/deps/react-dom_client.js?v=c82bb5b2",
+              "lineNumber": 14381,
+              "columnNumber": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "method": "Log.entryAdded",
+      "params": {
+        "entry": {
+          "source": "network",
+          "level": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+          "timestamp": 1780902519617.917,
+          "url": "http://127.0.0.1:8787/news",
+          "networkRequestId": "17625.1255"
+        }
+      }
+    },
+    {
+      "method": "Log.entryAdded",
+      "params": {
+        "entry": {
+          "source": "network",
+          "level": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+          "timestamp": 1780902519833.953,
+          "url": "http://127.0.0.1:8787/jobs",
+          "networkRequestId": "17625.1256"
+        }
+      }
+    }
+  ],
+  "eventCount": 14
+}

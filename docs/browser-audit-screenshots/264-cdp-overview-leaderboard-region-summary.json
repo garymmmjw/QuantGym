@@ -1,0 +1,1146 @@
+{
+  "status": "pass",
+  "screenshots": [
+    "259-cdp-overview-leaderboard-initial-seeded.png",
+    "260-cdp-overview-leaderboard-country.png",
+    "261-cdp-overview-leaderboard-region-shanghai.png",
+    "262-cdp-overview-leaderboard-region-beijing.png",
+    "263-cdp-overview-leaderboard-region-us-california.png",
+    "264-cdp-overview-leaderboard-region-reload-persisted.png"
+  ],
+  "checks": {
+    "initial": {
+      "metric": "overall",
+      "metricOptionCount": 16,
+      "scope": "global",
+      "country": "china",
+      "region": "上海",
+      "countryHidden": true,
+      "regionHidden": true,
+      "countryDisabled": true,
+      "regionDisabled": true,
+      "regionOptions": [
+        {
+          "value": "北京",
+          "label": "北京"
+        },
+        {
+          "value": "天津",
+          "label": "天津"
+        },
+        {
+          "value": "上海",
+          "label": "上海"
+        },
+        {
+          "value": "重庆",
+          "label": "重庆"
+        },
+        {
+          "value": "河北",
+          "label": "河北"
+        },
+        {
+          "value": "山西",
+          "label": "山西"
+        },
+        {
+          "value": "辽宁",
+          "label": "辽宁"
+        },
+        {
+          "value": "吉林",
+          "label": "吉林"
+        },
+        {
+          "value": "黑龙江",
+          "label": "黑龙江"
+        },
+        {
+          "value": "江苏",
+          "label": "江苏"
+        },
+        {
+          "value": "浙江",
+          "label": "浙江"
+        },
+        {
+          "value": "安徽",
+          "label": "安徽"
+        },
+        {
+          "value": "福建",
+          "label": "福建"
+        },
+        {
+          "value": "江西",
+          "label": "江西"
+        },
+        {
+          "value": "山东",
+          "label": "山东"
+        },
+        {
+          "value": "河南",
+          "label": "河南"
+        },
+        {
+          "value": "湖北",
+          "label": "湖北"
+        },
+        {
+          "value": "湖南",
+          "label": "湖南"
+        },
+        {
+          "value": "广东",
+          "label": "广东"
+        },
+        {
+          "value": "海南",
+          "label": "海南"
+        },
+        {
+          "value": "四川",
+          "label": "四川"
+        },
+        {
+          "value": "贵州",
+          "label": "贵州"
+        },
+        {
+          "value": "云南",
+          "label": "云南"
+        },
+        {
+          "value": "陕西",
+          "label": "陕西"
+        },
+        {
+          "value": "甘肃",
+          "label": "甘肃"
+        },
+        {
+          "value": "青海",
+          "label": "青海"
+        },
+        {
+          "value": "台湾",
+          "label": "台湾"
+        },
+        {
+          "value": "内蒙古",
+          "label": "内蒙古"
+        },
+        {
+          "value": "广西",
+          "label": "广西"
+        },
+        {
+          "value": "西藏",
+          "label": "西藏"
+        },
+        {
+          "value": "宁夏",
+          "label": "宁夏"
+        },
+        {
+          "value": "新疆",
+          "label": "新疆"
+        },
+        {
+          "value": "香港",
+          "label": "香港"
+        },
+        {
+          "value": "澳门",
+          "label": "澳门"
+        }
+      ],
+      "summary": "总分 · 全部用户 · 4 位用户 · 仅本地账户；连接云端后可看到其他用户",
+      "rows": [
+        {
+          "text": "1SCShanghai Current QA · 你Analyst I · 中国 · 上海0.7积分·",
+          "current": true
+        },
+        {
+          "text": "2BPBeijing Peer QAAnalyst I · 中国 · 北京0.5积分·",
+          "current": false
+        },
+        {
+          "text": "3CPCalifornia Peer QAAnalyst I · 美国 · California0.5积分·",
+          "current": false
+        },
+        {
+          "text": "4SPShanghai Peer QAAnalyst I · 中国 · 上海0.5积分·",
+          "current": false
+        }
+      ],
+      "storedLeaderboard": {
+        "scope": "global",
+        "country": "china",
+        "region": "上海",
+        "metric": "overall"
+      }
+    },
+    "countryScope": {
+      "metric": "leetcode",
+      "metricOptionCount": 16,
+      "scope": "country",
+      "country": "china",
+      "region": "上海",
+      "countryHidden": false,
+      "regionHidden": true,
+      "countryDisabled": false,
+      "regionDisabled": true,
+      "regionOptions": [
+        {
+          "value": "北京",
+          "label": "北京"
+        },
+        {
+          "value": "天津",
+          "label": "天津"
+        },
+        {
+          "value": "上海",
+          "label": "上海"
+        },
+        {
+          "value": "重庆",
+          "label": "重庆"
+        },
+        {
+          "value": "河北",
+          "label": "河北"
+        },
+        {
+          "value": "山西",
+          "label": "山西"
+        },
+        {
+          "value": "辽宁",
+          "label": "辽宁"
+        },
+        {
+          "value": "吉林",
+          "label": "吉林"
+        },
+        {
+          "value": "黑龙江",
+          "label": "黑龙江"
+        },
+        {
+          "value": "江苏",
+          "label": "江苏"
+        },
+        {
+          "value": "浙江",
+          "label": "浙江"
+        },
+        {
+          "value": "安徽",
+          "label": "安徽"
+        },
+        {
+          "value": "福建",
+          "label": "福建"
+        },
+        {
+          "value": "江西",
+          "label": "江西"
+        },
+        {
+          "value": "山东",
+          "label": "山东"
+        },
+        {
+          "value": "河南",
+          "label": "河南"
+        },
+        {
+          "value": "湖北",
+          "label": "湖北"
+        },
+        {
+          "value": "湖南",
+          "label": "湖南"
+        },
+        {
+          "value": "广东",
+          "label": "广东"
+        },
+        {
+          "value": "海南",
+          "label": "海南"
+        },
+        {
+          "value": "四川",
+          "label": "四川"
+        },
+        {
+          "value": "贵州",
+          "label": "贵州"
+        },
+        {
+          "value": "云南",
+          "label": "云南"
+        },
+        {
+          "value": "陕西",
+          "label": "陕西"
+        },
+        {
+          "value": "甘肃",
+          "label": "甘肃"
+        },
+        {
+          "value": "青海",
+          "label": "青海"
+        },
+        {
+          "value": "台湾",
+          "label": "台湾"
+        },
+        {
+          "value": "内蒙古",
+          "label": "内蒙古"
+        },
+        {
+          "value": "广西",
+          "label": "广西"
+        },
+        {
+          "value": "西藏",
+          "label": "西藏"
+        },
+        {
+          "value": "宁夏",
+          "label": "宁夏"
+        },
+        {
+          "value": "新疆",
+          "label": "新疆"
+        },
+        {
+          "value": "香港",
+          "label": "香港"
+        },
+        {
+          "value": "澳门",
+          "label": "澳门"
+        }
+      ],
+      "summary": "LeetCode · 中国 · 3 位用户 · 仅本地账户；连接云端后可看到其他用户",
+      "rows": [
+        {
+          "text": "1BPBeijing Peer QALeetCode · 中国 · 北京5积分—",
+          "current": false
+        },
+        {
+          "text": "2SPShanghai Peer QALeetCode · 中国 · 上海4积分—",
+          "current": false
+        },
+        {
+          "text": "3SCShanghai Current QA · 你LeetCode · 中国 · 上海3积分—",
+          "current": true
+        }
+      ],
+      "storedLeaderboard": {
+        "scope": "country",
+        "country": "china",
+        "region": "上海",
+        "metric": "leetcode"
+      }
+    },
+    "regionScopeShanghai": {
+      "metric": "leetcode",
+      "metricOptionCount": 16,
+      "scope": "region",
+      "country": "china",
+      "region": "上海",
+      "countryHidden": false,
+      "regionHidden": false,
+      "countryDisabled": false,
+      "regionDisabled": false,
+      "regionOptions": [
+        {
+          "value": "北京",
+          "label": "北京"
+        },
+        {
+          "value": "天津",
+          "label": "天津"
+        },
+        {
+          "value": "上海",
+          "label": "上海"
+        },
+        {
+          "value": "重庆",
+          "label": "重庆"
+        },
+        {
+          "value": "河北",
+          "label": "河北"
+        },
+        {
+          "value": "山西",
+          "label": "山西"
+        },
+        {
+          "value": "辽宁",
+          "label": "辽宁"
+        },
+        {
+          "value": "吉林",
+          "label": "吉林"
+        },
+        {
+          "value": "黑龙江",
+          "label": "黑龙江"
+        },
+        {
+          "value": "江苏",
+          "label": "江苏"
+        },
+        {
+          "value": "浙江",
+          "label": "浙江"
+        },
+        {
+          "value": "安徽",
+          "label": "安徽"
+        },
+        {
+          "value": "福建",
+          "label": "福建"
+        },
+        {
+          "value": "江西",
+          "label": "江西"
+        },
+        {
+          "value": "山东",
+          "label": "山东"
+        },
+        {
+          "value": "河南",
+          "label": "河南"
+        },
+        {
+          "value": "湖北",
+          "label": "湖北"
+        },
+        {
+          "value": "湖南",
+          "label": "湖南"
+        },
+        {
+          "value": "广东",
+          "label": "广东"
+        },
+        {
+          "value": "海南",
+          "label": "海南"
+        },
+        {
+          "value": "四川",
+          "label": "四川"
+        },
+        {
+          "value": "贵州",
+          "label": "贵州"
+        },
+        {
+          "value": "云南",
+          "label": "云南"
+        },
+        {
+          "value": "陕西",
+          "label": "陕西"
+        },
+        {
+          "value": "甘肃",
+          "label": "甘肃"
+        },
+        {
+          "value": "青海",
+          "label": "青海"
+        },
+        {
+          "value": "台湾",
+          "label": "台湾"
+        },
+        {
+          "value": "内蒙古",
+          "label": "内蒙古"
+        },
+        {
+          "value": "广西",
+          "label": "广西"
+        },
+        {
+          "value": "西藏",
+          "label": "西藏"
+        },
+        {
+          "value": "宁夏",
+          "label": "宁夏"
+        },
+        {
+          "value": "新疆",
+          "label": "新疆"
+        },
+        {
+          "value": "香港",
+          "label": "香港"
+        },
+        {
+          "value": "澳门",
+          "label": "澳门"
+        }
+      ],
+      "summary": "LeetCode · 中国 · 上海 · 2 位用户 · 仅本地账户；连接云端后可看到其他用户",
+      "rows": [
+        {
+          "text": "1SPShanghai Peer QALeetCode · 中国 · 上海4积分—",
+          "current": false
+        },
+        {
+          "text": "2SCShanghai Current QA · 你LeetCode · 中国 · 上海3积分—",
+          "current": true
+        }
+      ],
+      "storedLeaderboard": {
+        "scope": "region",
+        "country": "china",
+        "region": "上海",
+        "metric": "leetcode"
+      }
+    },
+    "regionScopeBeijing": {
+      "metric": "leetcode",
+      "metricOptionCount": 16,
+      "scope": "region",
+      "country": "china",
+      "region": "北京",
+      "countryHidden": false,
+      "regionHidden": false,
+      "countryDisabled": false,
+      "regionDisabled": false,
+      "regionOptions": [
+        {
+          "value": "北京",
+          "label": "北京"
+        },
+        {
+          "value": "天津",
+          "label": "天津"
+        },
+        {
+          "value": "上海",
+          "label": "上海"
+        },
+        {
+          "value": "重庆",
+          "label": "重庆"
+        },
+        {
+          "value": "河北",
+          "label": "河北"
+        },
+        {
+          "value": "山西",
+          "label": "山西"
+        },
+        {
+          "value": "辽宁",
+          "label": "辽宁"
+        },
+        {
+          "value": "吉林",
+          "label": "吉林"
+        },
+        {
+          "value": "黑龙江",
+          "label": "黑龙江"
+        },
+        {
+          "value": "江苏",
+          "label": "江苏"
+        },
+        {
+          "value": "浙江",
+          "label": "浙江"
+        },
+        {
+          "value": "安徽",
+          "label": "安徽"
+        },
+        {
+          "value": "福建",
+          "label": "福建"
+        },
+        {
+          "value": "江西",
+          "label": "江西"
+        },
+        {
+          "value": "山东",
+          "label": "山东"
+        },
+        {
+          "value": "河南",
+          "label": "河南"
+        },
+        {
+          "value": "湖北",
+          "label": "湖北"
+        },
+        {
+          "value": "湖南",
+          "label": "湖南"
+        },
+        {
+          "value": "广东",
+          "label": "广东"
+        },
+        {
+          "value": "海南",
+          "label": "海南"
+        },
+        {
+          "value": "四川",
+          "label": "四川"
+        },
+        {
+          "value": "贵州",
+          "label": "贵州"
+        },
+        {
+          "value": "云南",
+          "label": "云南"
+        },
+        {
+          "value": "陕西",
+          "label": "陕西"
+        },
+        {
+          "value": "甘肃",
+          "label": "甘肃"
+        },
+        {
+          "value": "青海",
+          "label": "青海"
+        },
+        {
+          "value": "台湾",
+          "label": "台湾"
+        },
+        {
+          "value": "内蒙古",
+          "label": "内蒙古"
+        },
+        {
+          "value": "广西",
+          "label": "广西"
+        },
+        {
+          "value": "西藏",
+          "label": "西藏"
+        },
+        {
+          "value": "宁夏",
+          "label": "宁夏"
+        },
+        {
+          "value": "新疆",
+          "label": "新疆"
+        },
+        {
+          "value": "香港",
+          "label": "香港"
+        },
+        {
+          "value": "澳门",
+          "label": "澳门"
+        }
+      ],
+      "summary": "LeetCode · 中国 · 北京 · 1 位用户 · 仅本地账户；连接云端后可看到其他用户",
+      "rows": [
+        {
+          "text": "1BPBeijing Peer QALeetCode · 中国 · 北京5积分—",
+          "current": false
+        }
+      ],
+      "storedLeaderboard": {
+        "scope": "region",
+        "country": "china",
+        "region": "北京",
+        "metric": "leetcode"
+      }
+    },
+    "regionScopeUnitedStates": {
+      "metric": "leetcode",
+      "metricOptionCount": 16,
+      "scope": "region",
+      "country": "unitedStates",
+      "region": "California",
+      "countryHidden": false,
+      "regionHidden": false,
+      "countryDisabled": false,
+      "regionDisabled": false,
+      "regionOptions": [
+        {
+          "value": "Alabama",
+          "label": "Alabama"
+        },
+        {
+          "value": "Alaska",
+          "label": "Alaska"
+        },
+        {
+          "value": "Arizona",
+          "label": "Arizona"
+        },
+        {
+          "value": "Arkansas",
+          "label": "Arkansas"
+        },
+        {
+          "value": "California",
+          "label": "California"
+        },
+        {
+          "value": "Colorado",
+          "label": "Colorado"
+        },
+        {
+          "value": "Connecticut",
+          "label": "Connecticut"
+        },
+        {
+          "value": "Delaware",
+          "label": "Delaware"
+        },
+        {
+          "value": "District of Columbia",
+          "label": "District of Columbia"
+        },
+        {
+          "value": "Florida",
+          "label": "Florida"
+        },
+        {
+          "value": "Georgia",
+          "label": "Georgia"
+        },
+        {
+          "value": "Hawaii",
+          "label": "Hawaii"
+        },
+        {
+          "value": "Idaho",
+          "label": "Idaho"
+        },
+        {
+          "value": "Illinois",
+          "label": "Illinois"
+        },
+        {
+          "value": "Indiana",
+          "label": "Indiana"
+        },
+        {
+          "value": "Iowa",
+          "label": "Iowa"
+        },
+        {
+          "value": "Kansas",
+          "label": "Kansas"
+        },
+        {
+          "value": "Kentucky",
+          "label": "Kentucky"
+        },
+        {
+          "value": "Louisiana",
+          "label": "Louisiana"
+        },
+        {
+          "value": "Maine",
+          "label": "Maine"
+        },
+        {
+          "value": "Maryland",
+          "label": "Maryland"
+        },
+        {
+          "value": "Massachusetts",
+          "label": "Massachusetts"
+        },
+        {
+          "value": "Michigan",
+          "label": "Michigan"
+        },
+        {
+          "value": "Minnesota",
+          "label": "Minnesota"
+        },
+        {
+          "value": "Mississippi",
+          "label": "Mississippi"
+        },
+        {
+          "value": "Missouri",
+          "label": "Missouri"
+        },
+        {
+          "value": "Montana",
+          "label": "Montana"
+        },
+        {
+          "value": "Nebraska",
+          "label": "Nebraska"
+        },
+        {
+          "value": "Nevada",
+          "label": "Nevada"
+        },
+        {
+          "value": "New Hampshire",
+          "label": "New Hampshire"
+        },
+        {
+          "value": "New Jersey",
+          "label": "New Jersey"
+        },
+        {
+          "value": "New Mexico",
+          "label": "New Mexico"
+        },
+        {
+          "value": "New York",
+          "label": "New York"
+        },
+        {
+          "value": "North Carolina",
+          "label": "North Carolina"
+        },
+        {
+          "value": "North Dakota",
+          "label": "North Dakota"
+        },
+        {
+          "value": "Ohio",
+          "label": "Ohio"
+        },
+        {
+          "value": "Oklahoma",
+          "label": "Oklahoma"
+        },
+        {
+          "value": "Oregon",
+          "label": "Oregon"
+        },
+        {
+          "value": "Pennsylvania",
+          "label": "Pennsylvania"
+        },
+        {
+          "value": "Rhode Island",
+          "label": "Rhode Island"
+        },
+        {
+          "value": "South Carolina",
+          "label": "South Carolina"
+        },
+        {
+          "value": "South Dakota",
+          "label": "South Dakota"
+        },
+        {
+          "value": "Tennessee",
+          "label": "Tennessee"
+        },
+        {
+          "value": "Texas",
+          "label": "Texas"
+        },
+        {
+          "value": "Utah",
+          "label": "Utah"
+        },
+        {
+          "value": "Vermont",
+          "label": "Vermont"
+        },
+        {
+          "value": "Virginia",
+          "label": "Virginia"
+        },
+        {
+          "value": "Washington",
+          "label": "Washington"
+        },
+        {
+          "value": "West Virginia",
+          "label": "West Virginia"
+        },
+        {
+          "value": "Wisconsin",
+          "label": "Wisconsin"
+        },
+        {
+          "value": "Wyoming",
+          "label": "Wyoming"
+        }
+      ],
+      "summary": "LeetCode · 美国 · California · 1 位用户 · 仅本地账户；连接云端后可看到其他用户",
+      "rows": [
+        {
+          "text": "1CPCalifornia Peer QALeetCode · 美国 · California7积分—",
+          "current": false
+        }
+      ],
+      "storedLeaderboard": {
+        "scope": "region",
+        "country": "unitedStates",
+        "region": "California",
+        "metric": "leetcode"
+      }
+    },
+    "reloadPersistence": {
+      "metric": "leetcode",
+      "metricOptionCount": 16,
+      "scope": "region",
+      "country": "unitedStates",
+      "region": "California",
+      "countryHidden": false,
+      "regionHidden": false,
+      "countryDisabled": false,
+      "regionDisabled": false,
+      "regionOptions": [
+        {
+          "value": "Alabama",
+          "label": "Alabama"
+        },
+        {
+          "value": "Alaska",
+          "label": "Alaska"
+        },
+        {
+          "value": "Arizona",
+          "label": "Arizona"
+        },
+        {
+          "value": "Arkansas",
+          "label": "Arkansas"
+        },
+        {
+          "value": "California",
+          "label": "California"
+        },
+        {
+          "value": "Colorado",
+          "label": "Colorado"
+        },
+        {
+          "value": "Connecticut",
+          "label": "Connecticut"
+        },
+        {
+          "value": "Delaware",
+          "label": "Delaware"
+        },
+        {
+          "value": "District of Columbia",
+          "label": "District of Columbia"
+        },
+        {
+          "value": "Florida",
+          "label": "Florida"
+        },
+        {
+          "value": "Georgia",
+          "label": "Georgia"
+        },
+        {
+          "value": "Hawaii",
+          "label": "Hawaii"
+        },
+        {
+          "value": "Idaho",
+          "label": "Idaho"
+        },
+        {
+          "value": "Illinois",
+          "label": "Illinois"
+        },
+        {
+          "value": "Indiana",
+          "label": "Indiana"
+        },
+        {
+          "value": "Iowa",
+          "label": "Iowa"
+        },
+        {
+          "value": "Kansas",
+          "label": "Kansas"
+        },
+        {
+          "value": "Kentucky",
+          "label": "Kentucky"
+        },
+        {
+          "value": "Louisiana",
+          "label": "Louisiana"
+        },
+        {
+          "value": "Maine",
+          "label": "Maine"
+        },
+        {
+          "value": "Maryland",
+          "label": "Maryland"
+        },
+        {
+          "value": "Massachusetts",
+          "label": "Massachusetts"
+        },
+        {
+          "value": "Michigan",
+          "label": "Michigan"
+        },
+        {
+          "value": "Minnesota",
+          "label": "Minnesota"
+        },
+        {
+          "value": "Mississippi",
+          "label": "Mississippi"
+        },
+        {
+          "value": "Missouri",
+          "label": "Missouri"
+        },
+        {
+          "value": "Montana",
+          "label": "Montana"
+        },
+        {
+          "value": "Nebraska",
+          "label": "Nebraska"
+        },
+        {
+          "value": "Nevada",
+          "label": "Nevada"
+        },
+        {
+          "value": "New Hampshire",
+          "label": "New Hampshire"
+        },
+        {
+          "value": "New Jersey",
+          "label": "New Jersey"
+        },
+        {
+          "value": "New Mexico",
+          "label": "New Mexico"
+        },
+        {
+          "value": "New York",
+          "label": "New York"
+        },
+        {
+          "value": "North Carolina",
+          "label": "North Carolina"
+        },
+        {
+          "value": "North Dakota",
+          "label": "North Dakota"
+        },
+        {
+          "value": "Ohio",
+          "label": "Ohio"
+        },
+        {
+          "value": "Oklahoma",
+          "label": "Oklahoma"
+        },
+        {
+          "value": "Oregon",
+          "label": "Oregon"
+        },
+        {
+          "value": "Pennsylvania",
+          "label": "Pennsylvania"
+        },
+        {
+          "value": "Rhode Island",
+          "label": "Rhode Island"
+        },
+        {
+          "value": "South Carolina",
+          "label": "South Carolina"
+        },
+        {
+          "value": "South Dakota",
+          "label": "South Dakota"
+        },
+        {
+          "value": "Tennessee",
+          "label": "Tennessee"
+        },
+        {
+          "value": "Texas",
+          "label": "Texas"
+        },
+        {
+          "value": "Utah",
+          "label": "Utah"
+        },
+        {
+          "value": "Vermont",
+          "label": "Vermont"
+        },
+        {
+          "value": "Virginia",
+          "label": "Virginia"
+        },
+        {
+          "value": "Washington",
+          "label": "Washington"
+        },
+        {
+          "value": "West Virginia",
+          "label": "West Virginia"
+        },
+        {
+          "value": "Wisconsin",
+          "label": "Wisconsin"
+        },
+        {
+          "value": "Wyoming",
+          "label": "Wyoming"
+        }
+      ],
+      "summary": "LeetCode · 美国 · California · 1 位用户 · 仅本地账户；连接云端后可看到其他用户",
+      "rows": [
+        {
+          "text": "1CPCalifornia Peer QALeetCode · 美国 · California7积分—",
+          "current": false
+        }
+      ]
+    }
+  },
+  "errors": [
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  ]
+}

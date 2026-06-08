@@ -1,0 +1,476 @@
+{
+  "browser": "Google Chrome executable",
+  "headless": true,
+  "ignoredLogs": [
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:5179/favicon.ico"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    }
+  ],
+  "significantLogs": [],
+  "results": [
+    {
+      "label": "chrome-news-open-original",
+      "route": "/news",
+      "expectedHref": "https://m.investing.com/news/stock-market-news/jane-street-posts-big-jump-in-trading-revenue-for-first-quarter-with-161-billion-haul-sources-say-4673532?ampMode=1",
+      "expectedHost": "m.investing.com",
+      "selector": "a[href=\"https://m.investing.com/news/stock-market-news/jane-street-posts-big-jump-in-trading-revenue-for-first-quarter-with-161-billion-haul-sources-say-4673532?ampMode=1\"]",
+      "before": {
+        "headings": [
+          "Quant 新闻",
+          "Jane Street Q1 交易收入创纪录",
+          "Jane Street 2025 年交易收入刷新纪录",
+          "Jane Street 与 CoreWeave 签下 AI 云算力协议",
+          "Squarepoint 关联方启动电子做市业务"
+        ],
+        "anchors": [
+          {
+            "text": "打开原站",
+            "href": "https://m.investing.com/news/stock-market-news/jane-street-posts-big-jump-in-trading-revenue-for-first-quarter-with-161-billion-haul-sources-say-4673532?ampMode=1",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bloomberg.com/news/articles/2026-04-24/jane-street-snatches-wall-street-crown-with-record-39-6-billion-trading-haul?srnd=phx-industries-finance",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.datacenterdynamics.com/en/news/quantative-trading-firm-jane-street-signs-6bn-ai-cloud-deal-with-coreweave/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bloomberg.com/news/articles/2026-03-04/squarepoint-affiliate-starts-market-making-arm-to-rival-citadel",
+            "target": "_blank",
+            "rel": "noreferrer"
+          }
+        ],
+        "targetCount": 1,
+        "url": "http://127.0.0.1:5179/news",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "countBeforeClick": 1,
+      "localAfterClick": {
+        "headings": [
+          "Quant 新闻",
+          "Jane Street Q1 交易收入创纪录",
+          "Jane Street 2025 年交易收入刷新纪录",
+          "Jane Street 与 CoreWeave 签下 AI 云算力协议",
+          "Squarepoint 关联方启动电子做市业务"
+        ],
+        "anchors": [
+          {
+            "text": "打开原站",
+            "href": "https://m.investing.com/news/stock-market-news/jane-street-posts-big-jump-in-trading-revenue-for-first-quarter-with-161-billion-haul-sources-say-4673532?ampMode=1",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bloomberg.com/news/articles/2026-04-24/jane-street-snatches-wall-street-crown-with-record-39-6-billion-trading-haul?srnd=phx-industries-finance",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.datacenterdynamics.com/en/news/quantative-trading-firm-jane-street-signs-6bn-ai-cloud-deal-with-coreweave/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bloomberg.com/news/articles/2026-03-04/squarepoint-affiliate-starts-market-making-arm-to-rival-citadel",
+            "target": "_blank",
+            "rel": "noreferrer"
+          }
+        ],
+        "targetCount": 1,
+        "url": "http://127.0.0.1:5179/news",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/304-chrome-news-open-original-local-stable.png",
+      "popupInitialUrl": "https://m.investing.com/news/stock-market-news/jane-street-posts-big-jump-in-trading-revenue-for-first-quarter-with-161-billion-haul-sources-say-4673532?ampMode=1",
+      "popupResolvedUrl": "https://m.investing.com/news/stock-market-news/jane-street-posts-big-jump-in-trading-revenue-for-first-quarter-with-161-billion-haul-sources-say-4673532?ampMode=1",
+      "popupTitle": "请稍候…",
+      "popupOpened": true,
+      "popupHostMatches": true,
+      "status": "pass"
+    },
+    {
+      "label": "chrome-jobs-apply-now",
+      "route": "/jobs",
+      "expectedHref": "https://www.janestreet.com/join-jane-street/open-roles/",
+      "expectedHost": "www.janestreet.com",
+      "selector": "a[href=\"https://www.janestreet.com/join-jane-street/open-roles/\"]",
+      "before": {
+        "headings": [
+          "求职",
+          "Quantitative Trading / Research Internship",
+          "Quantitative Research Internship",
+          "Quantitative Trading Internship",
+          "Graduate Quant Trader / Researcher",
+          "Quantitative Researcher",
+          "Campus Quantitative Research / Trading"
+        ],
+        "anchors": [
+          {
+            "text": "打开申请",
+            "href": "https://www.janestreet.com/join-jane-street/open-roles/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开申请",
+            "href": "https://www.citadelsecurities.com/careers/open-opportunities/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开申请",
+            "href": "https://optiver.com/working-at-optiver/career-opportunities/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开申请",
+            "href": "https://www.imc.com/us/careers/jobs/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开申请",
+            "href": "https://drw.com/work-at-drw/listings/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开申请",
+            "href": "https://www.jumptrading.com/careers/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          }
+        ],
+        "targetCount": 1,
+        "url": "http://127.0.0.1:5179/jobs",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "countBeforeClick": 1,
+      "localAfterClick": {
+        "headings": [
+          "求职",
+          "Quantitative Trading / Research Internship",
+          "Quantitative Research Internship",
+          "Quantitative Trading Internship",
+          "Graduate Quant Trader / Researcher",
+          "Quantitative Researcher",
+          "Campus Quantitative Research / Trading"
+        ],
+        "anchors": [
+          {
+            "text": "打开申请",
+            "href": "https://www.janestreet.com/join-jane-street/open-roles/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开申请",
+            "href": "https://www.citadelsecurities.com/careers/open-opportunities/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开申请",
+            "href": "https://optiver.com/working-at-optiver/career-opportunities/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开申请",
+            "href": "https://www.imc.com/us/careers/jobs/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开申请",
+            "href": "https://drw.com/work-at-drw/listings/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开申请",
+            "href": "https://www.jumptrading.com/careers/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          }
+        ],
+        "targetCount": 1,
+        "url": "http://127.0.0.1:5179/jobs",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/305-chrome-jobs-apply-local-stable.png",
+      "popupInitialUrl": "https://www.janestreet.com/join-jane-street/open-roles/",
+      "popupResolvedUrl": "https://www.janestreet.com/join-jane-street/open-roles/",
+      "popupTitle": "Open Roles :: Jane Street",
+      "popupOpened": true,
+      "popupHostMatches": true,
+      "status": "pass"
+    },
+    {
+      "label": "chrome-companies-open-careers",
+      "route": "/companies",
+      "expectedHref": "https://www.janestreet.com/join-jane-street/open-roles/",
+      "expectedHost": "www.janestreet.com",
+      "selector": "button[data-company-careers=\"https://www.janestreet.com/join-jane-street/open-roles/\"]",
+      "before": {
+        "headings": [
+          "公司",
+          "Jane Street",
+          "Citadel Securities",
+          "HRT",
+          "Two Sigma",
+          "D. E. Shaw",
+          "SIG",
+          "Five Rings",
+          "Optiver",
+          "DRW",
+          "IMC",
+          "Virtu Financial"
+        ],
+        "anchors": [],
+        "targetCount": 1,
+        "url": "http://127.0.0.1:5179/companies",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "countBeforeClick": 1,
+      "localAfterClick": {
+        "headings": [
+          "公司",
+          "Jane Street",
+          "Citadel Securities",
+          "HRT",
+          "Two Sigma",
+          "D. E. Shaw",
+          "SIG",
+          "Five Rings",
+          "Optiver",
+          "DRW",
+          "IMC",
+          "Virtu Financial"
+        ],
+        "anchors": [],
+        "targetCount": 1,
+        "url": "http://127.0.0.1:5179/companies",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/306-chrome-companies-careers-local-stable.png",
+      "popupInitialUrl": "https://www.janestreet.com/join-jane-street/open-roles/",
+      "popupResolvedUrl": "https://www.janestreet.com/join-jane-street/open-roles/",
+      "popupTitle": "Open Roles :: Jane Street",
+      "popupOpened": true,
+      "popupHostMatches": true,
+      "status": "pass"
+    },
+    {
+      "label": "chrome-courses-open-original",
+      "route": "/courses",
+      "expectedHref": "https://www.youtube.com/@atypicalquant",
+      "expectedHost": "www.youtube.com",
+      "selector": "a[href=\"https://www.youtube.com/@atypicalquant\"]",
+      "before": {
+        "headings": [
+          "课程",
+          "学习路径",
+          "AtypicalQuant Quant Interview Questions",
+          "MIT Introduction to Probability: Stochastic Processes",
+          "StatQuest: Statistics and Machine Learning",
+          "哈佛通识概率课 Fat Chance",
+          "沃顿商学院量化建模基础",
+          "MIT 量化金融数学方法",
+          "量化面试绿皮书题解",
+          "Quant 面试知识点：CLT、Market Making、Monte Carlo"
+        ],
+        "anchors": [
+          {
+            "text": "打开原站",
+            "href": "https://www.youtube.com/@atypicalquant",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://ocw.mit.edu/courses/res-6-012-introduction-to-probability-spring-2018/resources/stochastic-processes/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.youtube.com/watch?v=oI3hZJqXJuc",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bilibili.com/video/BV1qs411A75n/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bilibili.com/video/BV18u4y1B7FE/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bilibili.com/list/ml505060308",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bilibili.com/video/BV1if421B7ta/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bilibili.com/video/BV1vK4y1Z7Wu/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          }
+        ],
+        "targetCount": 1,
+        "url": "http://127.0.0.1:5179/courses",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "countBeforeClick": 1,
+      "localAfterClick": {
+        "headings": [
+          "课程",
+          "学习路径",
+          "AtypicalQuant Quant Interview Questions",
+          "MIT Introduction to Probability: Stochastic Processes",
+          "StatQuest: Statistics and Machine Learning",
+          "哈佛通识概率课 Fat Chance",
+          "沃顿商学院量化建模基础",
+          "MIT 量化金融数学方法",
+          "量化面试绿皮书题解",
+          "Quant 面试知识点：CLT、Market Making、Monte Carlo"
+        ],
+        "anchors": [
+          {
+            "text": "打开原站",
+            "href": "https://www.youtube.com/@atypicalquant",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://ocw.mit.edu/courses/res-6-012-introduction-to-probability-spring-2018/resources/stochastic-processes/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.youtube.com/watch?v=oI3hZJqXJuc",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bilibili.com/video/BV1qs411A75n/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bilibili.com/video/BV18u4y1B7FE/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bilibili.com/list/ml505060308",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bilibili.com/video/BV1if421B7ta/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          },
+          {
+            "text": "打开原站",
+            "href": "https://www.bilibili.com/video/BV1vK4y1Z7Wu/",
+            "target": "_blank",
+            "rel": "noreferrer"
+          }
+        ],
+        "targetCount": 1,
+        "url": "http://127.0.0.1:5179/courses",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/307-chrome-courses-open-original-local-stable.png",
+      "popupInitialUrl": "https://www.youtube.com/@atypicalquant",
+      "popupResolvedUrl": "https://www.youtube.com/@atypicalquant",
+      "popupTitle": "atypicalquant - YouTube",
+      "popupOpened": true,
+      "popupHostMatches": true,
+      "status": "pass"
+    }
+  ]
+}

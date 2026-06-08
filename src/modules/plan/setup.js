@@ -25,6 +25,45 @@ export function readPrepPlanForm(form) {
   };
 }
 
+export function buildPrepPlanFromValues(values = {}, options = {}) {
+  const {
+    previousPrepPlan,
+    makeId,
+    localDateKey,
+    now = new Date()
+  } = options;
+
+  const track = values.track === "fulltime" ? "fulltime" : "internship";
+  const role = prepRoleDefs[values.role] ? values.role : "quantTrading";
+  const season = prepSeasonDefs[values.season] ? values.season : "2027-summer";
+  const weeklyHours = Number(values.weeklyHours || 8);
+  const wantsDiagnostic = values.diagnostic !== "skip" && values.wantsDiagnostic !== false;
+
+  const previous = normalizePrepPlan(previousPrepPlan, { makeId, localDateKey });
+  const sameTarget = previous
+    && previous.track === track
+    && previous.role === role
+    && previous.season === season;
+  const diagnosticStatus = wantsDiagnostic
+    ? sameTarget && previous.diagnosticStatus === "completed" ? "completed" : "pending"
+    : "skipped";
+
+  return normalizePrepPlan({
+    track,
+    role,
+    season,
+    weeklyHours,
+    diagnosticStatus,
+    diagnosticScore: diagnosticStatus === "completed" ? previous.diagnosticScore : 0,
+    diagnosticScores: diagnosticStatus === "completed" ? previous.diagnosticScores : {},
+    completedTasks: sameTarget ? previous.completedTasks : {},
+    taskOverrides: sameTarget ? previous.taskOverrides : {},
+    customTasks: sameTarget ? previous.customTasks : [],
+    createdAt: sameTarget ? previous.createdAt : getNowIso(now),
+    updatedAt: getNowIso(now)
+  }, { makeId, localDateKey });
+}
+
 export function buildPrepPlanFromForm(options = {}) {
   const {
     form,

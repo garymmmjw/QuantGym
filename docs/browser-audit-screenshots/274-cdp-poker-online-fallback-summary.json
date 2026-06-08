@@ -1,0 +1,425 @@
+{
+  "status": "pass",
+  "browser": "Google Chrome headless via Playwright",
+  "screenshots": [
+    "269-cdp-poker-online-fallback-initial.png",
+    "270-cdp-poker-online-create-fallback.png",
+    "271-cdp-poker-online-fallback-fill-demo.png",
+    "272-cdp-poker-online-fallback-start-hand.png",
+    "273-cdp-poker-online-fallback-local-action.png",
+    "274-cdp-poker-online-fallback-reload-persisted.png"
+  ],
+  "errors": [
+    "console:error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "requestfailed: http://127.0.0.1:8787/news net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8787/jobs net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8790/api/poker/rooms/QG-MAIN/join net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8790/api/sync net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8790/api/poker/rooms net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8787/news net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8787/jobs net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8790/api/poker/rooms/QG-MAIN/join net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8790/api/sync net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  ],
+  "networkErrors": [
+    "http://127.0.0.1:8787/news net::ERR_CONNECTION_REFUSED",
+    "http://127.0.0.1:8787/jobs net::ERR_CONNECTION_REFUSED",
+    "http://127.0.0.1:8790/api/poker/rooms/QG-MAIN/join net::ERR_CONNECTION_REFUSED",
+    "http://127.0.0.1:8790/api/sync net::ERR_CONNECTION_REFUSED",
+    "http://127.0.0.1:8790/api/poker/rooms net::ERR_CONNECTION_REFUSED",
+    "http://127.0.0.1:8787/news net::ERR_CONNECTION_REFUSED",
+    "http://127.0.0.1:8787/jobs net::ERR_CONNECTION_REFUSED",
+    "http://127.0.0.1:8790/api/poker/rooms/QG-MAIN/join net::ERR_CONNECTION_REFUSED",
+    "http://127.0.0.1:8790/api/sync net::ERR_CONNECTION_REFUSED"
+  ],
+  "pageErrors": [],
+  "checks": {
+    "initial": {
+      "url": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "pokerRoot": true,
+      "roomCode": "QG-MAIN",
+      "blindText": "10 / 20",
+      "hud": "LOCALLocal · Open room · hand #0 · 1 activeWaiting · pot 0 · current bet 0Seat at least two active players, then start the first cash hand.",
+      "feedback": "Failed to fetch. Local table is still available.",
+      "turnPrompt": "Room open. Seat players or add demo players.",
+      "lobbySummary": "Open room · avg 2000 · 100BB start",
+      "mode": "private",
+      "roomLink": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "seats": 10,
+      "occupiedSeats": 1,
+      "emptySeats": 9,
+      "playersLabel": "1/10",
+      "startDisabled": true,
+      "fillDisabled": false,
+      "addBotDisabled": false,
+      "activeButtons": [
+        {
+          "action": "call",
+          "disabled": true,
+          "text": "Check"
+        },
+        {
+          "action": "raise",
+          "disabled": true,
+          "text": "Bet"
+        },
+        {
+          "action": "allin",
+          "disabled": true,
+          "text": "All-in"
+        },
+        {
+          "action": "fold",
+          "disabled": true,
+          "text": "Fold"
+        }
+      ],
+      "quickBets": [
+        {
+          "size": "half",
+          "disabled": true
+        },
+        {
+          "size": "twothirds",
+          "disabled": true
+        },
+        {
+          "size": "pot",
+          "disabled": true
+        },
+        {
+          "size": "allin",
+          "disabled": true
+        }
+      ],
+      "overlay": false
+    },
+    "afterOnlineCreateFallback": {
+      "url": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "pokerRoot": true,
+      "roomCode": "QG-MAIN",
+      "blindText": "10 / 20",
+      "hud": "LOCALLocal · Open room · hand #0 · 1 activeWaiting · pot 0 · current bet 0Seat at least two active players, then start the first cash hand.",
+      "feedback": "Failed to fetch. Local table is still available.",
+      "turnPrompt": "Room open. Seat players or add demo players.",
+      "lobbySummary": "Open room · avg 2000 · 100BB start",
+      "mode": "private",
+      "roomLink": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "seats": 10,
+      "occupiedSeats": 1,
+      "emptySeats": 9,
+      "playersLabel": "1/10",
+      "startDisabled": true,
+      "fillDisabled": false,
+      "addBotDisabled": false,
+      "activeButtons": [
+        {
+          "action": "call",
+          "disabled": true,
+          "text": "Check"
+        },
+        {
+          "action": "raise",
+          "disabled": true,
+          "text": "Bet"
+        },
+        {
+          "action": "allin",
+          "disabled": true,
+          "text": "All-in"
+        },
+        {
+          "action": "fold",
+          "disabled": true,
+          "text": "Fold"
+        }
+      ],
+      "quickBets": [
+        {
+          "size": "half",
+          "disabled": true
+        },
+        {
+          "size": "twothirds",
+          "disabled": true
+        },
+        {
+          "size": "pot",
+          "disabled": true
+        },
+        {
+          "size": "allin",
+          "disabled": true
+        }
+      ],
+      "overlay": false
+    },
+    "afterFillBots": {
+      "url": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "pokerRoot": true,
+      "roomCode": "QG-MAIN",
+      "blindText": "10 / 20",
+      "hud": "LOCALLocal · Open room · hand #0 · 10 activeWaiting · pot 0 · current bet 0Seat at least two active players, then start the first cash hand.",
+      "feedback": "Added 9 demo players.",
+      "turnPrompt": "Room open. Seat players or add demo players.",
+      "lobbySummary": "Open room · avg 2000 · 100BB start",
+      "mode": "private",
+      "roomLink": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "seats": 10,
+      "occupiedSeats": 10,
+      "emptySeats": 0,
+      "playersLabel": "10/10",
+      "startDisabled": false,
+      "fillDisabled": true,
+      "addBotDisabled": true,
+      "activeButtons": [
+        {
+          "action": "call",
+          "disabled": true,
+          "text": "Check"
+        },
+        {
+          "action": "raise",
+          "disabled": true,
+          "text": "Bet"
+        },
+        {
+          "action": "allin",
+          "disabled": true,
+          "text": "All-in"
+        },
+        {
+          "action": "fold",
+          "disabled": true,
+          "text": "Fold"
+        }
+      ],
+      "quickBets": [
+        {
+          "size": "half",
+          "disabled": true
+        },
+        {
+          "size": "twothirds",
+          "disabled": true
+        },
+        {
+          "size": "pot",
+          "disabled": true
+        },
+        {
+          "size": "allin",
+          "disabled": true
+        }
+      ],
+      "overlay": false
+    },
+    "afterStartHand": {
+      "url": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "pokerRoot": true,
+      "roomCode": "QG-MAIN",
+      "blindText": "10 / 20",
+      "hud": "LOCALLocal · In hand · hand #1 · 10 activePreflop · pot 30 · current bet 20Action on QA Poker Fallback, call 20.100BB chart: 93o from Button -> Fold (0%).",
+      "feedback": "Luna Demo folds.",
+      "turnPrompt": "YOUR TURN",
+      "lobbySummary": "In hand · avg 1997 · 100BB start",
+      "mode": "private",
+      "roomLink": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "seats": 10,
+      "occupiedSeats": 10,
+      "emptySeats": 0,
+      "playersLabel": "10/10",
+      "startDisabled": true,
+      "fillDisabled": true,
+      "addBotDisabled": true,
+      "activeButtons": [
+        {
+          "action": "call",
+          "disabled": false,
+          "text": "Call 20"
+        },
+        {
+          "action": "raise",
+          "disabled": false,
+          "text": "Raise"
+        },
+        {
+          "action": "allin",
+          "disabled": false,
+          "text": "All-in"
+        },
+        {
+          "action": "fold",
+          "disabled": false,
+          "text": "Fold"
+        }
+      ],
+      "quickBets": [
+        {
+          "size": "half",
+          "disabled": false
+        },
+        {
+          "size": "twothirds",
+          "disabled": false
+        },
+        {
+          "size": "pot",
+          "disabled": false
+        },
+        {
+          "size": "allin",
+          "disabled": false
+        }
+      ],
+      "overlay": false
+    },
+    "firstEnabledActionBeforeClick": {
+      "action": "call",
+      "text": "Call 20"
+    },
+    "afterFirstAction": {
+      "url": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "pokerRoot": true,
+      "roomCode": "QG-MAIN",
+      "blindText": "10 / 20",
+      "hud": "LOCALLocal · In hand · hand #1 · 10 activeFlop · pot 60 · current bet 0Action on QA Poker Fallback, check is available.",
+      "feedback": "Max Demo checks.",
+      "turnPrompt": "YOUR TURN",
+      "lobbySummary": "In hand · avg 1994 · 100BB start",
+      "mode": "private",
+      "roomLink": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "seats": 10,
+      "occupiedSeats": 10,
+      "emptySeats": 0,
+      "playersLabel": "10/10",
+      "startDisabled": true,
+      "fillDisabled": true,
+      "addBotDisabled": true,
+      "activeButtons": [
+        {
+          "action": "call",
+          "disabled": false,
+          "text": "Check"
+        },
+        {
+          "action": "raise",
+          "disabled": false,
+          "text": "Bet"
+        },
+        {
+          "action": "allin",
+          "disabled": false,
+          "text": "All-in"
+        },
+        {
+          "action": "fold",
+          "disabled": false,
+          "text": "Fold"
+        }
+      ],
+      "quickBets": [
+        {
+          "size": "half",
+          "disabled": false
+        },
+        {
+          "size": "twothirds",
+          "disabled": false
+        },
+        {
+          "size": "pot",
+          "disabled": false
+        },
+        {
+          "size": "allin",
+          "disabled": false
+        }
+      ],
+      "overlay": false
+    },
+    "afterReload": {
+      "url": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "pokerRoot": true,
+      "roomCode": "QG-MAIN",
+      "blindText": "10 / 20",
+      "hud": "LOCALLocal · Open room · hand #0 · 1 activeWaiting · pot 0 · current bet 0Seat at least two active players, then start the first cash hand.",
+      "feedback": "Failed to fetch. Local table is still available.",
+      "turnPrompt": "Room open. Seat players or add demo players.",
+      "lobbySummary": "Open room · avg 2000 · 100BB start",
+      "mode": "private",
+      "roomLink": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN&qa=poker-online-fallback",
+      "seats": 10,
+      "occupiedSeats": 1,
+      "emptySeats": 9,
+      "playersLabel": "1/10",
+      "startDisabled": true,
+      "fillDisabled": false,
+      "addBotDisabled": false,
+      "activeButtons": [
+        {
+          "action": "call",
+          "disabled": true,
+          "text": "Check"
+        },
+        {
+          "action": "raise",
+          "disabled": true,
+          "text": "Bet"
+        },
+        {
+          "action": "allin",
+          "disabled": true,
+          "text": "All-in"
+        },
+        {
+          "action": "fold",
+          "disabled": true,
+          "text": "Fold"
+        }
+      ],
+      "quickBets": [
+        {
+          "size": "half",
+          "disabled": true
+        },
+        {
+          "size": "twothirds",
+          "disabled": true
+        },
+        {
+          "size": "pot",
+          "disabled": true
+        },
+        {
+          "size": "allin",
+          "disabled": true
+        }
+      ],
+      "overlay": false
+    }
+  },
+  "assertions": {
+    "pageRendered": true,
+    "cloudFailureObserved": true,
+    "fallbackMessage": true,
+    "localLabelAfterFallback": true,
+    "localButtonsEnabledAfterFallback": true,
+    "urlNormalizedAfterFallback": true,
+    "noOverlay": true,
+    "fillBotsWorked": true,
+    "startHandWorked": true,
+    "reloadKeepsStableLocalFallback": true,
+    "significantErrors": []
+  },
+  "failed": []
+}

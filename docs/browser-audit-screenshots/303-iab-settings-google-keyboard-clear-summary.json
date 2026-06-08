@@ -1,0 +1,8 @@
+{
+  "before": "codex-browser-smoke.apps.googleusercontent.com",
+  "afterKeyboardDom": "",
+  "afterSaveDom": "",
+  "afterReload": "",
+  "status": "pass",
+  "localOverlay": false
+}

@@ -1,0 +1,16 @@
+{
+  "inAppBrowserAttempt": {
+    "browserClient": "connected to iab and visibility/list-tab succeeded via node_repl",
+    "selectedUrlObserved": "http://127.0.0.1:5179/interview?qa=interview-deep-flow",
+    "screenshot": "tab.screenshot({ fullPage: false }) timed out at 30s and reset node client",
+    "domSnapshot": "tab.playwright.domSnapshot() timed out at 30s after reconnect"
+  },
+  "fallback": {
+    "browser": "Google Chrome headless via Chrome DevTools Protocol",
+    "url": "http://127.0.0.1:5179/login?qa=iab-tool-fallback-smoke",
+    "remoteDebuggingPort": 59971,
+    "profile": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-cdp-iab-fallback-gi4d7epk",
+    "chromeFlag": "--remote-allow-origins=*"
+  },
+  "steps": []
+}

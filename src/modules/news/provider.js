@@ -133,14 +133,25 @@ export function createNewsProvider(deps = {}) {
   }
 
   function focusItem(id, shouldSwitch = true) {
+    const targetId = String(id || "").trim();
+    if (!targetId) return;
+    windowRef.__quantgymPendingNewsFocusId = targetId;
     if (shouldSwitch) deps.switchModule?.("news");
+    const dispatchFocus = () => {
+      windowRef.dispatchEvent?.(new CustomEvent("quantgym:news-focus", {
+        detail: { id: targetId }
+      }));
+    };
+    windowRef.setTimeout?.(dispatchFocus, shouldSwitch ? 180 : 0);
+    if (shouldSwitch) windowRef.setTimeout?.(dispatchFocus, 700);
+    if (shouldSwitch) windowRef.setTimeout?.(dispatchFocus, 1400);
     windowRef.setTimeout?.(() => {
-      const card = documentRef.querySelector?.(`[data-news-id="${id}"]`);
+      const card = documentRef.querySelector?.(`[data-news-id="${targetId}"]`);
       if (!card) return;
       card.scrollIntoView?.({ behavior: "smooth", block: "center" });
       card.classList?.add?.("spotlight");
       windowRef.setTimeout?.(() => card.classList?.remove?.("spotlight"), 900);
-    }, 80);
+    }, shouldSwitch ? 260 : 80);
   }
 
   return {

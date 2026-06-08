@@ -26,49 +26,71 @@ export function createProblemCatalogMutationController(deps = {}) {
     getInterviewState().selectedProblemId = normalizeProblem(first).id;
   };
 
+  const addFromPayload = (payload = {}) => {
+    const problem = normalizeProblem({
+      titleEn: payload.titleEn,
+      titleZh: payload.titleZh,
+      category: payload.category,
+      difficulty: payload.difficulty,
+      tags: Array.isArray(payload.tags) ? payload.tags : deps.parseTags?.(payload.tags),
+      sourceUrl: payload.sourceUrl,
+      source: "manual",
+      promptEn: payload.promptEn,
+      promptZh: payload.promptZh,
+      answer: payload.answer,
+      explanation: payload.explanation,
+      createdAt: nowIso()
+    });
+
+    if (!problem.titleEn && !problem.titleZh) return null;
+    if (!problem.promptEn && !problem.promptZh) return null;
+
+    upsertProblems([problem]);
+    getInterviewState().selectedProblemId = problem.id;
+    deps.resetInterview?.();
+    deps.renderAll?.();
+    return problem;
+  };
+
   const addFromForm = () => {
     const els = getElements();
-    const problem = normalizeProblem({
+    const problem = addFromPayload({
       titleEn: els.problemTitleEn?.value,
       titleZh: els.problemTitleZh?.value,
       category: els.problemCategory?.value,
       difficulty: els.problemDifficulty?.value,
-      tags: deps.parseTags?.(els.problemTags?.value),
+      tags: els.problemTags?.value,
       sourceUrl: els.problemSourceUrl?.value,
-      source: "manual",
       promptEn: els.problemPromptEn?.value,
       promptZh: els.problemPromptZh?.value,
       answer: els.problemAnswer?.value,
-      explanation: els.problemExplanation?.value,
-      createdAt: nowIso()
+      explanation: els.problemExplanation?.value
     });
-
-    if (!problem.titleEn && !problem.titleZh) return;
-    if (!problem.promptEn && !problem.promptZh) return;
-
-    upsertProblems([problem]);
+    if (!problem) return;
     els.problemForm?.reset();
     els.problemForm?.classList.add("hidden");
-    getInterviewState().selectedProblemId = problem.id;
+  };
+
+  const importJsonText = (rawValue = "") => {
+    const raw = String(rawValue || "").trim();
+    if (!raw) return false;
+    const result = getProblemImportResult(raw);
+    if (result.status !== "ok") {
+      deps.windowRef?.alert?.("题目 JSON 无法读取。");
+      return false;
+    }
+    upsertProblems(result.problems);
+    selectFirstProblem(result.problems);
     deps.resetInterview?.();
     deps.renderAll?.();
+    return true;
   };
 
   const importJson = () => {
     const els = getElements();
-    const raw = String(els.problemJsonInput?.value || "").trim();
-    if (!raw) return;
-    const result = getProblemImportResult(raw);
-    if (result.status !== "ok") {
-      if (els.problemJsonInput) els.problemJsonInput.value = "";
-      deps.windowRef?.alert?.("题目 JSON 无法读取。");
-      return;
-    }
-    upsertProblems(result.problems);
-    selectFirstProblem(result.problems);
+    const ok = importJsonText(els.problemJsonInput?.value || "");
     if (els.problemJsonInput) els.problemJsonInput.value = "";
-    deps.resetInterview?.();
-    deps.renderAll?.();
+    return ok;
   };
 
   const deleteProblem = async (id) => {
@@ -93,27 +115,27 @@ export function createProblemCatalogMutationController(deps = {}) {
     const state = getState();
     const existingProblems = Array.isArray(state.problems) ? state.problems : [];
     const existingStates = Array.isArray(state.problemStates) ? state.problemStates : [];
-    const catalogItems = existingProblems.filter((problem) => (
-      deps.isCatalogProblem?.(problem) && !deps.isDisabledProblemSource?.(problem)
-    ));
+    const problems = existingProblems.filter((problem) => !deps.isDisabledProblemSource?.(problem));
     const problemStates = existingStates.filter((problemState) => (
       !deps.isDisabledProblemId?.(problemState.problemId)
     ));
 
-    if (catalogItems.length === existingProblems.length && problemStates.length === existingStates.length) {
+    if (problems.length === existingProblems.length && problemStates.length === existingStates.length) {
       return { changed: false, problems: existingProblems, problemStates: existingStates };
     }
 
-    state.problems = catalogItems;
+    state.problems = problems;
     state.problemStates = problemStates;
     deps.clearProblemLookupCaches?.();
     deps.saveState?.({ sync: false, checkIn: false });
-    return { changed: true, problems: catalogItems, problemStates };
+    return { changed: true, problems, problemStates };
   };
 
   return {
     addFromForm,
+    addFromPayload,
     importJson,
+    importJsonText,
     pruneCatalog,
     upsertProblems,
     deleteProblem

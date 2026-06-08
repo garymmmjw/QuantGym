@@ -63,6 +63,64 @@ export function createSettingsController(deps = {}) {
     });
   }
 
+  function applySettingsSaveResult(result = {}) {
+    const appState = getAppState();
+    const userState = getUserState();
+    const elements = getElements();
+    appState.appPrefs = result.appPrefs;
+    deps.saveAppPrefs?.();
+    deps.syncLanguageToUrl?.(appState.appPrefs.language);
+    deps.llmConfigRuntime?.set?.(result.llmConfig);
+    appState.auth = result.auth;
+    appState.cloudConfig = result.cloudConfig;
+    deps.saveLlmConfigToStorage?.();
+    deps.saveCloudConfig?.();
+    deps.saveAuth?.();
+    appState.currentUser = deps.getCurrentUser?.();
+    userState.leaderboard = result.leaderboard;
+    deps.saveState?.();
+    deps.syncStores?.();
+    deps.queueCloudSync?.("account", 0);
+    if (result.cloudEndpointChanged) deps.invalidateLeaderboardCloud?.({ clear: true, refresh: true });
+    deps.renderGoogleClientInput?.();
+    deps.renderAll?.();
+    deps.switchModule?.("settings");
+    if (elements.settingsMessage) {
+      elements.settingsMessage.textContent = `${deps.t?.("settingsSaved")} ${getCloudStatusText()}`;
+    }
+    return true;
+  }
+
+  function saveSettingsFromValues(values = {}) {
+    const appState = getAppState();
+    const userState = getUserState();
+    if (!appState.currentUser) return false;
+    const result = buildSettingsSaveResult({
+      values: {
+        language: values.language,
+        country: values.country,
+        region: values.region,
+        llmEndpoint: values.llmEndpoint,
+        llmModel: values.llmModel,
+        googleClientId: values.googleClientId,
+        cloudEndpoint: values.cloudApi || values.cloudEndpoint
+      },
+      currentUser: appState.currentUser,
+      appPrefs: appState.appPrefs,
+      auth: appState.auth,
+      cloudConfig: appState.cloudConfig,
+      leaderboard: userState.leaderboard,
+      defaultLlmEndpoint: deps.defaultLlmEndpoint,
+      defaultCloudEndpoint: deps.defaultCloudEndpoint,
+      normalizeLanguage: deps.normalizeLanguage,
+      normalizeCountry: deps.normalizeCountry,
+      normalizeRegionForCountry: deps.normalizeRegionForCountry,
+      normalizeLlmModel: deps.normalizeLlmModel,
+      normalizeLeaderboardSettings: deps.normalizeLeaderboardSettings
+    });
+    return applySettingsSaveResult(result);
+  }
+
   function saveSettings() {
     const appState = getAppState();
     const userState = getUserState();
@@ -87,27 +145,7 @@ export function createSettingsController(deps = {}) {
       normalizeLeaderboardSettings: deps.normalizeLeaderboardSettings
     });
 
-    appState.appPrefs = result.appPrefs;
-    deps.saveAppPrefs?.();
-    deps.syncLanguageToUrl?.(appState.appPrefs.language);
-    deps.llmConfigRuntime?.set?.(result.llmConfig);
-    appState.auth = result.auth;
-    appState.cloudConfig = result.cloudConfig;
-    deps.saveLlmConfigToStorage?.();
-    deps.saveCloudConfig?.();
-    deps.saveAuth?.();
-    appState.currentUser = deps.getCurrentUser?.();
-    userState.leaderboard = result.leaderboard;
-    deps.saveState?.();
-    deps.queueCloudSync?.("account", 0);
-    if (result.cloudEndpointChanged) deps.invalidateLeaderboardCloud?.({ clear: true, refresh: true });
-    deps.renderGoogleClientInput?.();
-    deps.renderAll?.();
-    deps.switchModule?.("settings");
-    if (elements.settingsMessage) {
-      elements.settingsMessage.textContent = `${deps.t?.("settingsSaved")} ${getCloudStatusText()}`;
-    }
-    return true;
+    return applySettingsSaveResult(result);
   }
 
   return {
@@ -115,6 +153,7 @@ export function createSettingsController(deps = {}) {
     renderCloudStatus,
     saveLlmConfig,
     saveSettings,
+    saveSettingsFromValues,
     syncCloudNow,
     updateLlmConfigFromControls
   };

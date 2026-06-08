@@ -63,7 +63,7 @@ export function createProblemFilterController(deps) {
     resetPagination();
     clearProblemSearch();
     switchModule("problems");
-    renderProblems();
+    renderProblems?.();
     spotlightCompany(company);
   }
 

@@ -1,6 +1,12 @@
 import { normalizeRouteSegment } from './lib/route.js';
+import {
+  getDefaultModuleId,
+  getStage2Path,
+  getManifestRouteModules,
+  getModuleDefinition
+} from './modules/manifest.js';
 
-export const DEFAULT_ROUTE_MODULE = "overview";
+export const DEFAULT_ROUTE_MODULE = getDefaultModuleId();
 
 const ROUTE_ALIASES = new Map([
   ["", DEFAULT_ROUTE_MODULE],
@@ -10,21 +16,31 @@ const ROUTE_ALIASES = new Map([
 ]);
 
 export function getAvailableRouteModules(root = document) {
-  return new Set(
+  const domModules = new Set(
     [...root.querySelectorAll("[data-module-view]")]
       .map((view) => normalizeRouteModule(view.dataset.moduleView))
       .filter(Boolean)
   );
+  const manifestModules = getManifestRouteModules();
+  return new Set([...domModules].filter((id) => manifestModules.has(id)));
 }
 
 export function getCurrentRouteModule(availableModules = getAvailableRouteModules()) {
   return resolveRouteModule(window.location.hash, availableModules);
 }
 
+export function getPathRouteModule(pathname = window.location.pathname) {
+  const normalized = normalizePathname(pathname);
+  const match = [...getManifestRouteModules()].find((id) => normalizePathname(getStage2Path(id)) === normalized);
+  return match || DEFAULT_ROUTE_MODULE;
+}
+
 export function resolveRouteModule(value = "", availableModules = getAvailableRouteModules()) {
   const normalized = normalizeRouteModule(value);
   const aliased = ROUTE_ALIASES.get(normalized) || normalized;
-  return availableModules.has(aliased) ? aliased : DEFAULT_ROUTE_MODULE;
+  if (availableModules.has(aliased)) return aliased;
+  if (getModuleDefinition(aliased)) return getDefaultModuleId();
+  return DEFAULT_ROUTE_MODULE;
 }
 
 export function writeRouteModule(moduleName, options = {}) {
@@ -58,4 +74,9 @@ export function initHashRouter(options = {}) {
 
 function normalizeRouteModule(value = "") {
   return normalizeRouteSegment(value);
+}
+
+function normalizePathname(pathname = "/") {
+  const normalized = String(pathname || "/").replace(/\/+$/, "") || "/";
+  return normalized.startsWith("/") ? normalized : `/${normalized}`;
 }

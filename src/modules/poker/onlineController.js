@@ -84,6 +84,7 @@ export function createPokerOnlineController(deps = {}) {
       if (state.game) {
         state.game.online = false;
         state.game.feedback = `${online.lastError}. Local table is still available.`;
+        setRoomUrl(state.game, "replace");
         renderGame();
       }
       return false;

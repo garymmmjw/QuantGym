@@ -1,0 +1,44 @@
+{
+  "status": "pass",
+  "screenshots": [
+    "254-cdp-news-before-form-submit.png",
+    "255-cdp-news-form-filled.png",
+    "256-cdp-news-after-submit-list.png",
+    "257-cdp-news-submit-detail.png",
+    "258-cdp-news-submit-reload-persisted.png"
+  ],
+  "checks": {
+    "initialContract": {
+      "idsMissing": [],
+      "cardCount": 4,
+      "title": "Quant 新闻"
+    },
+    "submitPersisted": {
+      "listVisible": true,
+      "storedTitle": "QA News Manual Submit 20260608",
+      "storedSourceType": "manual",
+      "storedSkills": [
+        "mentalMath"
+      ],
+      "totalNews": 5
+    },
+    "detailView": {
+      "title": "QA News Manual Submit 20260608",
+      "summary": "Manual form submission should render in the News list and persist after reload.",
+      "insight": "Manual news entries should update React state without legacy DOM rendering.",
+      "href": "https://example.com/quantgym-news-submit"
+    },
+    "reloadPersistence": {
+      "storedTitle": "QA News Manual Submit 20260608",
+      "readAt": "2026-06-08T08:06:41.521Z",
+      "totalNews": 5
+    }
+  },
+  "errors": [
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  ]
+}

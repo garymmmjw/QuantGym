@@ -1,0 +1,21 @@
+{
+  "id": 322,
+  "date": "2026-06-08",
+  "surface": "source contract gate",
+  "status": "pass",
+  "checks": {
+    "script": "npm run check:ui-contracts",
+    "routes": 21,
+    "shellContracts": 3,
+    "evidenceArtifacts": 11,
+    "imageArtifacts": 92,
+    "stage2StrictReactRoutes": 21,
+    "stage2StrictLegacyRoutes": 0,
+    "stage2StrictBridgeRoutes": 0
+  },
+  "notes": [
+    "The gate checks migrated React route files, route-critical DOM ids, shared App/Auth/Todo shell ids, key JSON audit artifacts including content-level evidence invariants, and non-empty screenshot artifacts.",
+    "Evidence invariants lock route smoke 21/21 pass, GitHub parity 21/21 pass with zero actionable issues, browser evidence manifest integrity, migration completion 9 pass / 1 Google-token pending, local production-boundary 4 pass / 1 Google-token skip, static build config safety, local readiness 8 pass / 2 partial, and Google token helper browser renderability.",
+    "It is intended to catch UI contract regressions before screenshot-based browser QA is regenerated."
+  ]
+}

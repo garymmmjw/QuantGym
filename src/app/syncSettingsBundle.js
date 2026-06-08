@@ -41,6 +41,7 @@ export function createSyncSettingsBundle(deps = {}) {
     saveLlmConfigToStorage,
     saveState,
     switchModule,
+    syncStores,
     syncLanguageToUrl,
     t,
     userState
@@ -105,6 +106,7 @@ export function createSyncSettingsBundle(deps = {}) {
     saveAuth,
     getCurrentUser,
     saveState,
+    syncStores,
     queueCloudSync,
     invalidateLeaderboardCloud,
     renderGoogleClientInput,
@@ -124,6 +126,7 @@ export function createSyncSettingsBundle(deps = {}) {
     renderCloudStatus: settingsController.renderCloudStatus,
     saveLlmConfig: settingsController.saveLlmConfig,
     saveSettings: settingsController.saveSettings,
+    saveSettingsFromValues: settingsController.saveSettingsFromValues,
     syncCloudNow: settingsController.syncCloudNow,
     updateLlmConfigFromControls: settingsController.updateLlmConfigFromControls
   };

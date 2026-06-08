@@ -1931,12 +1931,11 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         with db.connect() as conn:
             existing = conn.execute("SELECT * FROM users WHERE id = ?", (account["id"],)).fetchone()
             if not existing:
-                email_owner = conn.execute(
-                    "SELECT id FROM users WHERE email_norm = ? AND id != ?",
+                existing = conn.execute(
+                    "SELECT * FROM users WHERE email_norm = ? AND id != ?",
                     (account["email"], account["id"]),
                 ).fetchone()
-                if email_owner:
-                    raise HttpError(409, "Email already exists")
+            if not existing:
                 conn.execute(
                     """
                     INSERT INTO users
@@ -1957,21 +1956,43 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 db.upsert_problems(conn, data.get("problems"), visibility="user", owner_user_id=account["id"])
             else:
                 previous = parse_json(existing["account_json"], {})
-                next_account = {**previous, **account, "createdAt": previous.get("createdAt") or account["createdAt"]}
+                existing_id = existing["id"]
+                same_google_account = existing_id == account["id"]
+                if same_google_account:
+                    next_account = {**previous, **account, "createdAt": previous.get("createdAt") or account["createdAt"]}
+                    next_provider = account["provider"]
+                else:
+                    next_account = {
+                        **previous,
+                        "id": previous.get("id") or existing_id,
+                        "provider": previous.get("provider") or existing["provider"],
+                        "email": account["email"],
+                        "name": previous.get("name") or account.get("name"),
+                        "picture": previous.get("picture") or account.get("picture") or "",
+                        "country": previous.get("country") or account.get("country"),
+                        "region": previous.get("region") or account.get("region"),
+                        "createdAt": previous.get("createdAt") or existing["created_at"] or account["createdAt"],
+                        "updatedAt": now,
+                        "googleId": account["id"],
+                        "googleLinkedAt": previous.get("googleLinkedAt") or now,
+                        "googlePicture": account.get("picture") or previous.get("googlePicture") or "",
+                    }
+                    next_provider = existing["provider"]
                 email_owner = conn.execute(
                     "SELECT id FROM users WHERE email_norm = ? AND id != ?",
-                    (next_account["email"], account["id"]),
+                    (next_account["email"], existing_id),
                 ).fetchone()
                 if email_owner:
                     raise HttpError(409, "Email already exists")
                 conn.execute(
                     """
                     UPDATE users
-                    SET email_norm = ?, account_json = ?, updated_at = ?
+                    SET provider = ?, email_norm = ?, account_json = ?, updated_at = ?
                     WHERE id = ?
                     """,
-                    (next_account["email"], compact_json(next_account), now, account["id"]),
+                    (next_provider, next_account["email"], compact_json(next_account), now, existing_id),
                 )
+                account["id"] = existing_id
             if isinstance(data.get("community"), dict):
                 db.save_community(conn, data.get("community"), merge=True)
             token = db.create_session(conn, account["id"])

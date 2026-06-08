@@ -48,7 +48,6 @@ export function createAccountSessionController(deps = {}) {
     renderUserChip();
     deps.renderAll?.();
     deps.restoreRouteModule?.();
-    deps.getModuleLifecycle?.("tools")?.render?.();
     deps.refreshProblemCatalog?.();
     deps.refreshProblemSocial?.();
   }

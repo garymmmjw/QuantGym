@@ -6,7 +6,6 @@ export function createAppCommunityControllerBundle(deps = {}) {
     communityFilterState,
     elements: els,
     formatSharedExperienceText,
-    getModuleLifecycle,
     loadCommunity,
     makeId,
     messageSelectionState,
@@ -17,7 +16,8 @@ export function createAppCommunityControllerBundle(deps = {}) {
     saveState,
     switchModule,
     t,
-    userState
+    userState,
+    userStateRuntime
   } = deps;
 
   return createCommunityControllerBundle({
@@ -38,17 +38,25 @@ export function createAppCommunityControllerBundle(deps = {}) {
     getIntroText: () => t("networkConnectMessage"),
     selectThread: (threadId) => messageSelectionState.setSelected(threadId),
     switchModule,
-    renderMessages: () => getModuleLifecycle("messages")?.render?.(),
+    renderMessages: () => {},
     getExperienceRecords: () => userState.value.interviewExperiences,
-    setRecords(records) {
-      userState.value.interviewExperiences = records;
+    setExperienceRecords(records) {
+      const nextState = {
+        ...(userState.value || {}),
+        interviewExperiences: records
+      };
+      if (userStateRuntime?.setValue) {
+        userStateRuntime.setValue(nextState);
+      } else {
+        userState.value = nextState;
+      }
     },
     saveState,
     setCommunityFilter(value) {
       communityFilterState.setFilter(value);
     },
-    renderExperiences: () => getModuleLifecycle("experiences")?.render?.(),
-    renderCommunity: () => getModuleLifecycle("community")?.render?.(),
+    renderExperiences: () => {},
+    renderCommunity: () => {},
     formatExperienceText: formatSharedExperienceText,
     now: () => new Date().toISOString()
   });

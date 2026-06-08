@@ -49,9 +49,15 @@ export function createPokerActionController(deps = {}) {
   }
 
   function getMode() {
-    const value = elements.pokerModeSelect?.value || "private";
+    const value = state.formMode || elements.pokerModeSelect?.value || state.game?.mode || "private";
     if (value === "match" || value === "bots" || value === "local") return "demo";
     return ["private", "demo"].includes(value) ? value : "private";
+  }
+
+  function setMode(mode = "private") {
+    const normalized = mode === "match" || mode === "bots" || mode === "local" ? "demo" : mode;
+    state.formMode = ["private", "demo"].includes(normalized) ? normalized : "private";
+    if (elements.pokerModeSelect) elements.pokerModeSelect.value = state.formMode;
   }
 
   function createTournament(mode = "private") {
@@ -195,11 +201,9 @@ export function createPokerActionController(deps = {}) {
     }
   }
 
-  function handlePanelClick(event) {
-    const button = event.target.closest("[data-poker-player-action]");
-    if (!button || !state.game) return;
-    const action = button.dataset.pokerPlayerAction;
-    const playerId = button.dataset.playerId;
+  function handlePlayerAction(playerId, action, options = {}) {
+    if (!state.game || !playerId || !action) return;
+    const delta = Number(options.delta || 0);
     if (action === "remove") {
       removePlayer(playerId);
       return;
@@ -217,19 +221,28 @@ export function createPokerActionController(deps = {}) {
       return;
     }
     if (action === "addstack") {
-      adjustStack(playerId, Number(button.dataset.delta || state.game.startingStack), "Host add chips");
+      adjustStack(playerId, delta || state.game.startingStack, "Host add chips");
       return;
     }
     if (action === "removestack") {
-      adjustStack(playerId, -Number(button.dataset.delta || state.game.startingStack), "Host remove chips");
+      adjustStack(playerId, -(delta || state.game.startingStack), "Host remove chips");
     }
   }
 
-  function sendChat(form) {
+  function handlePanelClick(event) {
+    const button = event.target.closest("[data-poker-player-action]");
+    if (!button || !state.game) return;
+    handlePlayerAction(button.dataset.playerId, button.dataset.pokerPlayerAction, {
+      delta: Number(button.dataset.delta || 0)
+    });
+  }
+
+  function sendChat(formOrMessage) {
     const game = state.game;
     if (!game) return;
-    const input = form.elements?.message;
-    const message = String(input?.value || "").trim().slice(0, 360);
+    const isString = typeof formOrMessage === "string";
+    const input = isString ? null : formOrMessage.elements?.message;
+    const message = (isString ? formOrMessage : String(input?.value || "")).trim().slice(0, 360);
     if (!message) return;
     if (isOnlineRoom(game)) {
       if (input) input.value = "";
@@ -250,7 +263,7 @@ export function createPokerActionController(deps = {}) {
     renderGame();
   }
 
-  function applySettings(form) {
+  function applySettings(formOrValues) {
     const game = state.game;
     if (!game) return;
     if (!isHost(game)) {
@@ -263,7 +276,9 @@ export function createPokerActionController(deps = {}) {
       renderGame();
       return;
     }
-    const data = createFormData(form);
+    const data = formOrValues instanceof FormData || formOrValues?.elements
+      ? createFormData(formOrValues)
+      : createSettingsFormData(formOrValues || {});
     const occupiedMaxSeat = game.players.reduce((max, player) => Math.max(max, player.seat + 1), POKER_MIN_PLAYERS);
     const smallBlind = Math.max(1, Math.round(Number(data.get("smallBlind") || game.smallBlind)));
     const bigBlind = Math.max(smallBlind + 1, Math.round(Number(data.get("bigBlind") || game.bigBlind)));
@@ -420,10 +435,23 @@ export function createPokerActionController(deps = {}) {
         ? game.currentBet + Math.max(game.minRaise, potSized)
         : Math.max(game.bigBlind, potSized);
     }
+    const amount = Math.min(maxTotal, Math.max(minTotal, Math.round(target)));
+    state.raiseInput = amount;
     if (elements.pokerRaiseInput) {
-      elements.pokerRaiseInput.value = String(Math.min(maxTotal, Math.max(minTotal, Math.round(target))));
+      elements.pokerRaiseInput.value = String(amount);
       elements.pokerRaiseInput.focus();
     }
+  }
+
+  function setRaiseAmount(amount) {
+    const game = state.game;
+    const active = game ? getCurrentPlayer(game) : null;
+    if (!game || !active) return;
+    const maxTotal = active.currentBet + active.stack;
+    const minTotal = getMinimumRaiseTo(game, active);
+    const normalized = Math.min(maxTotal, Math.max(minTotal, Math.round(Number(amount || 0))));
+    state.raiseInput = normalized;
+    if (elements.pokerRaiseInput) elements.pokerRaiseInput.value = String(normalized);
   }
 
   function exportSession() {
@@ -547,6 +575,18 @@ export function createPokerActionController(deps = {}) {
     return new FormDataCtor(form);
   }
 
+  function createSettingsFormData(values = {}) {
+    const entries = Object.entries(values);
+    return {
+      get(name) {
+        if (name === "allowSpectators" || name === "spectatorChat" || name === "autoStartNextHand" || name === "autoIncreaseBlinds") {
+          return values[name] ? "on" : "off";
+        }
+        return values[name];
+      }
+    };
+  }
+
   function stopEvent(event) {
     event.preventDefault?.();
     event.stopPropagation?.();
@@ -568,6 +608,7 @@ export function createPokerActionController(deps = {}) {
     handleDocumentSubmit,
     handlePanelClick,
     handlePanelSubmit,
+    handlePlayerAction,
     makeGameRound,
     matchTournament,
     newGame,
@@ -575,7 +616,10 @@ export function createPokerActionController(deps = {}) {
     resetTournament,
     resumeGame,
     sendChat,
+    setMode,
     setPlayerSittingOut,
-    startTournament
+    setRaiseAmount,
+    startTournament,
+    submitAction: sendAction
   };
 }

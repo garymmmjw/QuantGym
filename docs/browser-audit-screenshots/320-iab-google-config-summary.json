@@ -1,0 +1,21 @@
+{
+  "id": 320,
+  "date": "2026-06-08",
+  "surface": "in-app Browser",
+  "url": "http://127.0.0.1:5179/",
+  "status": "partial",
+  "checks": {
+    "googleButtonIframeRendered": true,
+    "googleIframeUsesConfiguredClientId": true,
+    "originNotAllowedWarningPresent": false,
+    "cloudApiEndpointConfigured": true,
+    "llmEndpointConfigured": true,
+    "providerLoginCompleted": false
+  },
+  "notes": [
+    "The current in-app Browser session already has a local QA account, so /login redirects to /.",
+    "The hidden AuthShell still initializes Google Sign-In; the Google iframe is present and contains the configured client_id.",
+    "No console warning matching \"The given origin is not allowed for the given client ID\" was captured in this follow-up check.",
+    "Final Google provider sign-off still requires a real Google ID token/session."
+  ]
+}

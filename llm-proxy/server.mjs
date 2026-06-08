@@ -589,11 +589,58 @@ async function classifyLog(payload) {
 }
 
 async function createInterviewReply(payload) {
+  if (payload.task === "resume_review") return createResumeReview(payload);
   if (payload.task === "hint") return createInterviewHint(payload);
   if (payload.task === "converse") return createInterviewConverse(payload);
   if (payload.task === "generate_pdf_questions") return createPdfInterviewQuestions(payload);
   if (payload.task === "evaluate" || !payload.task) return createInterviewEvaluation(payload);
   throw new Error(`Unsupported interview task: ${payload.task}`);
+}
+
+async function createResumeReview(payload) {
+  const model = payload.model || DEFAULT_MODEL;
+  const language = payload.language === "en" ? "English" : "Chinese";
+  const resume = String(payload.resume || "").slice(0, 120_000);
+  if (!resume.trim()) throw new Error("Resume text is missing");
+
+  const instructions = [
+    "You are a concise quant recruiting resume reviewer.",
+    `Reply in ${language}.`,
+    "Return only compact JSON.",
+    "Schema: {\"items\":[\"short actionable resume edit\", ...]}.",
+    "Give 3 to 6 concrete, high-signal edits.",
+    "Prioritize measurable impact, technical stack clarity, quant relevance, action verbs, and recruiting positioning.",
+    "Do not rewrite the full resume and do not include generic encouragement."
+  ].join(" ");
+
+  const input = [
+    `Target role: ${payload.target || "quant internship / full-time"}`,
+    `Graduation term: ${payload.graduationTerm || "unknown"}`,
+    `Resume:\n${resume}`
+  ].join("\n\n");
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model,
+      instructions,
+      input,
+      ...modelOptions(model, 900)
+    })
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
+  }
+  const text = extractOutputText(data);
+  const items = extractResumeReviewItems(text);
+  if (!items.length) throw new Error("Resume review returned no suggestions");
+  return { items };
 }
 
 async function createInterviewEvaluation(payload) {
@@ -1043,6 +1090,64 @@ function parseJsonObject(text) {
     if (!match) throw new Error("Model did not return JSON");
     return JSON.parse(match[0]);
   }
+}
+
+function extractResumeReviewItems(text) {
+  try {
+    const parsed = parseJsonObject(text);
+    const value = parsed.items || parsed.review || parsed.suggestions || parsed.reply || "";
+    return normalizeReviewItems(value);
+  } catch {
+    return normalizeReviewItems(extractJsonLikeStringList(text)).length
+      ? normalizeReviewItems(extractJsonLikeStringList(text))
+      : normalizeReviewItems(text);
+  }
+}
+
+function normalizeReviewItems(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map(String)
+      .map(cleanReviewItem)
+      .filter(Boolean)
+      .slice(0, 8);
+  }
+  return splitReviewText(value)
+    .map(cleanReviewItem)
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function splitReviewText(value) {
+  return String(value || "")
+    .replace(/```(?:json)?/gi, "")
+    .replace(/```/g, "")
+    .replace(/^\s*\{?\s*"items"\s*:\s*\[?/i, "")
+    .replace(/\]\s*\}?\s*$/i, "")
+    .split(/\n+|,(?=\s*(?:"|[-*]|\d+[.)]))/);
+}
+
+function cleanReviewItem(value) {
+  return String(value || "")
+    .replace(/\\n/g, " ")
+    .replace(/\\"/g, '"')
+    .replace(/^["'\s,[\]{}]+|["'\s,[\]{}]+$/g, "")
+    .replace(/^[-*\d.)\s]+/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractJsonLikeStringList(text) {
+  const block = String(text || "").match(/"items"\s*:\s*\[([\s\S]*?)\]/i)?.[1] || String(text || "");
+  const values = [];
+  for (const match of block.matchAll(/"((?:\\.|[^"\\])*)"/g)) {
+    try {
+      values.push(JSON.parse(match[0]));
+    } catch {
+      values.push(match[1]);
+    }
+  }
+  return values;
 }
 
 function readBody(req) {

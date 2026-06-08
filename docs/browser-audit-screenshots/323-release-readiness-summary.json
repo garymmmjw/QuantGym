@@ -1,0 +1,363 @@
+{
+  "status": "pass",
+  "allowPartialProduction": true,
+  "passed": 10,
+  "partial": 0,
+  "failed": 0,
+  "results": [
+    {
+      "name": "git diff --check",
+      "status": "pass",
+      "durationMs": 62,
+      "exitCode": 0,
+      "data": []
+    },
+    {
+      "name": "Stage 1",
+      "status": "pass",
+      "durationMs": 300,
+      "exitCode": 0,
+      "data": [
+        "⚠ Missing module entry: src/modules/companies/index.js (React-owned module; registrar optional)",
+        "⚠ Missing module entry: src/modules/library/index.js (React-owned module; registrar optional)",
+        "⚠ Missing module entry: src/modules/courses/index.js (React-owned module; registrar optional)",
+        "⚠ Missing module entry: src/modules/memory/index.js (React-owned module; registrar optional)",
+        "⚠ Missing module entry: src/modules/settings/index.js (React-owned module; registrar optional)",
+        "⚠ Missing module entry: src/modules/account/index.js (React-owned module; registrar optional)",
+        "⚠ Missing module entry: src/modules/pk/index.js (React-owned module; registrar optional)",
+        "Stage 1 check passed."
+      ]
+    },
+    {
+      "name": "Stage 2 bridge",
+      "status": "pass",
+      "durationMs": 207,
+      "exitCode": 0,
+      "data": [
+        "> check:stage2",
+        "> node scripts/check-stage2.mjs --bridge",
+        "Stage 2 bridge check passed.",
+        "legacy routes: 0",
+        "bridge routes: 0",
+        "react routes: 21"
+      ]
+    },
+    {
+      "name": "Stage 2 full",
+      "status": "pass",
+      "durationMs": 283,
+      "exitCode": 0,
+      "data": [
+        "> check:stage2:full",
+        "> node scripts/check-stage2.mjs --full",
+        "Stage 2 full check passed.",
+        "legacy routes: 0",
+        "bridge routes: 0",
+        "react routes: 21"
+      ]
+    },
+    {
+      "name": "Stage 2 strict",
+      "status": "pass",
+      "durationMs": 269,
+      "exitCode": 0,
+      "data": [
+        "> check:stage2:strict",
+        "> node scripts/check-stage2.mjs --full --strict",
+        "Stage 2 full check passed.",
+        "legacy routes: 0",
+        "bridge routes: 0",
+        "react routes: 21"
+      ]
+    },
+    {
+      "name": "Browser evidence",
+      "status": "pass",
+      "durationMs": 238,
+      "exitCode": 0,
+      "data": {
+        "status": "pass",
+        "docsScanned": 2,
+        "totalBacktickFileRefs": 271,
+        "evidenceRefs": 263,
+        "imageRefs": 229,
+        "jsonRefs": 34,
+        "ignoredRefs": 8,
+        "missing": 0,
+        "smallFiles": 0,
+        "invalidJson": 0,
+        "checkedDir": "docs/browser-audit-screenshots",
+        "ignoredReasonCounts": {
+          "non-browser-evidence-file": 4,
+          "template-placeholder": 4
+        },
+        "failures": {
+          "missing": [],
+          "smallFiles": [],
+          "invalidJson": []
+        }
+      }
+    },
+    {
+      "name": "Migration completion audit",
+      "status": "pass",
+      "durationMs": 210,
+      "exitCode": 0,
+      "data": {
+        "id": 327,
+        "date": "2026-06-08",
+        "surface": "migration completion audit",
+        "status": "pass",
+        "completionPercent": 100,
+        "requirements": {
+          "total": 10,
+          "passed": 10,
+          "pending": 0,
+          "failed": 0
+        },
+        "remainingRequiredWork": [],
+        "checks": [
+          {
+            "id": "react-route-ownership",
+            "title": "All routeable modules are React-owned",
+            "status": "pass",
+            "evidence": {
+              "manifestRoutes": 21,
+              "reactRoutes": 21,
+              "bridgeRoutes": 0,
+              "missingReact": [],
+              "extraReact": []
+            }
+          },
+          {
+            "id": "migration-ledger-converted",
+            "title": "Migration ledger records all pages as converted",
+            "status": "pass",
+            "evidence": {
+              "ledgerPages": 21,
+              "convertedPages": 21,
+              "nonConverted": []
+            }
+          },
+          {
+            "id": "retired-route-bridge",
+            "title": "Retired route bridge symbols are absent from src",
+            "status": "pass",
+            "evidence": {
+              "checkedFiles": 450,
+              "hits": []
+            }
+          },
+          {
+            "id": "route-smoke-evidence",
+            "title": "All-route desktop/mobile smoke evidence passes",
+            "status": "pass",
+            "evidence": {
+              "desktopRoutes": 21,
+              "desktopPass": 21,
+              "mobileRoutes": 21,
+              "mobilePass": 21,
+              "significantLogs": 0
+            }
+          },
+          {
+            "id": "github-parity-evidence",
+            "title": "GitHub baseline parity has no actionable route issues",
+            "status": "pass",
+            "evidence": {
+              "status": "pass",
+              "routeCount": 21,
+              "pass": 21,
+              "total": 21,
+              "actionableIssues": 0,
+              "currentProblems": []
+            }
+          },
+          {
+            "id": "browser-evidence-manifest",
+            "title": "Referenced browser evidence files are present and valid",
+            "status": "pass",
+            "evidence": {
+              "status": "pass",
+              "evidenceRefs": 263,
+              "imageRefs": 229,
+              "jsonRefs": 34,
+              "missing": 0,
+              "smallFiles": 0,
+              "invalidJson": 0
+            }
+          },
+          {
+            "id": "static-build-config",
+            "title": "Static build runtime config is safe and populated",
+            "status": "pass",
+            "evidence": {
+              "npmRunBuildPassed": true,
+              "distConfigCloudApiEndpoint": "http://127.0.0.1:8790/api",
+              "distConfigLlmEndpoint": "http://127.0.0.1:8787/interview",
+              "distConfigLlmModel": "gpt-5-nano",
+              "distConfigGoogleClientIdSet": true,
+              "distConfigGoogleLoginEnabled": true,
+              "distConfigContainsOpenAiKey": false,
+              "strictModeRejectsLocalHttpEndpoints": true
+            }
+          },
+          {
+            "id": "local-service-boundaries",
+            "title": "Local cloud, Google, and LLM boundaries are verified",
+            "status": "pass",
+            "evidence": {
+              "status": "pass",
+              "passed": 5,
+              "skipped": 0,
+              "failed": 0,
+              "googleProviderLogin": {
+                "name": "google provider login",
+                "status": "pass",
+                "durationMs": 157,
+                "data": {
+                  "provider": "local",
+                  "googleLinked": true,
+                  "email": "mi***@gmail.com",
+                  "hasToken": true,
+                  "tokenAudienceMatchesClientId": true,
+                  "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
+                  "tokenEmail": "mi***@gmail.com"
+                }
+              },
+              "providerLoginCompleted": true,
+              "llmResumeReview": "pass",
+              "llmPdfQuestionGeneration": "pass"
+            }
+          },
+          {
+            "id": "google-token-helper",
+            "title": "Google ID token helper is generated safely and renderable",
+            "status": "pass",
+            "evidence": {
+              "helperStatus": "pass",
+              "browserStatus": "pass",
+              "artifactIgnoredByGit": true,
+              "tokenWrittenToDisk": false,
+              "verifierChecksTokenStructureAudienceAndExpiry": true,
+              "googleButtonVisible": true,
+              "verifierSanityTextVisible": true,
+              "statusText": "Ready."
+            }
+          },
+          {
+            "id": "google-provider-login",
+            "title": "Real Google provider account login is signed off",
+            "status": "pass",
+            "reason": "",
+            "nextStep": "",
+            "evidence": {
+              "googleButtonIframeRendered": true,
+              "googleIframeUsesConfiguredClientId": true,
+              "originNotAllowedWarningPresent": false,
+              "providerLoginCompleted": true,
+              "productionBoundaryStatus": "pass",
+              "googleLinked": true,
+              "tokenAudienceMatchesClientId": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UI contracts",
+      "status": "pass",
+      "durationMs": 181,
+      "exitCode": 0,
+      "data": [
+        "> node scripts/check-ui-contracts.mjs",
+        "{",
+        "\"status\": \"pass\",",
+        "\"routes\": 21,",
+        "\"shellContracts\": 3,",
+        "\"evidenceArtifacts\": 11,",
+        "\"imageArtifacts\": 92",
+        "}"
+      ]
+    },
+    {
+      "name": "Static build",
+      "status": "pass",
+      "durationMs": 2681,
+      "exitCode": 0,
+      "data": [
+        "dist/assets/ProblemsPage-uP12pxtG.js            27.79 kB │ gzip:   7.21 kB",
+        "dist/assets/index-Bhww-nxu.js                   35.72 kB │ gzip:   9.43 kB",
+        "dist/assets/data-CyLJE_4E.js                    36.11 kB │ gzip:  11.70 kB",
+        "dist/assets/vendor-router-e5SST-Jf.js           41.24 kB │ gzip:  14.71 kB",
+        "dist/assets/vendor-react-dom-B49trWfG.js       181.78 kB │ gzip:  57.19 kB",
+        "dist/assets/createAppServices-xI9xjQAX.js      734.38 kB │ gzip: 227.64 kB",
+        "✓ built in 712ms",
+        "Built static site in dist"
+      ]
+    },
+    {
+      "name": "Production boundaries",
+      "status": "pass",
+      "durationMs": 12712,
+      "exitCode": 0,
+      "data": {
+        "status": "pass",
+        "passed": 5,
+        "skipped": 0,
+        "failed": 0,
+        "results": [
+          {
+            "name": "cloud health",
+            "status": "pass",
+            "durationMs": 44,
+            "data": {
+              "ok": true
+            }
+          },
+          {
+            "name": "google provider config",
+            "status": "pass",
+            "durationMs": 9,
+            "data": {
+              "googleClientIdSet": true,
+              "endpointRequiresToken": true
+            }
+          },
+          {
+            "name": "google provider login",
+            "status": "pass",
+            "durationMs": 164,
+            "data": {
+              "provider": "local",
+              "googleLinked": true,
+              "email": "mi***@gmail.com",
+              "hasToken": true,
+              "tokenAudienceMatchesClientId": true,
+              "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
+              "tokenEmail": "mi***@gmail.com"
+            }
+          },
+          {
+            "name": "LLM resume review",
+            "status": "pass",
+            "durationMs": 2229,
+            "data": {
+              "itemCount": 6,
+              "firstItem": "Quantify impact with metrics: specify time or cost savings, e.g., reduced runtime from X to Y by Z%;"
+            }
+          },
+          {
+            "name": "LLM PDF question generation",
+            "status": "pass",
+            "durationMs": 10069,
+            "data": {
+              "questionCount": 1,
+              "firstTitle": "What is a production boundary in quantitative modeling and how do you validate numerical stability within it?"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

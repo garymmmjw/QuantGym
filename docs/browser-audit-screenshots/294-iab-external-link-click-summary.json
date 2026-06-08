@@ -1,0 +1,62 @@
+[
+  {
+    "label": "news-open-original",
+    "route": "/news",
+    "expectedHref": "https://m.investing.com/news/stock-market-news/jane-street-posts-big-jump-in-trading-revenue-for-first-quarter-with-161-billion-haul-sources-say-4673532?ampMode=1",
+    "kind": "anchor",
+    "countBeforeClick": 1,
+    "newTabs": [],
+    "openedExpected": false,
+    "localTabUrlAfter": "http://127.0.0.1:5179/news",
+    "localStillOnRoute": true,
+    "localOverlay": false,
+    "localOverflow": false,
+    "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/291-iab-news-open-original-click.png",
+    "status": "fail"
+  },
+  {
+    "label": "jobs-apply-now",
+    "route": "/jobs",
+    "expectedHref": "https://www.janestreet.com/join-jane-street/open-roles/",
+    "kind": "anchor",
+    "countBeforeClick": 1,
+    "newTabs": [],
+    "openedExpected": false,
+    "localTabUrlAfter": "http://127.0.0.1:5179/jobs",
+    "localStillOnRoute": true,
+    "localOverlay": false,
+    "localOverflow": false,
+    "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/292-iab-jobs-apply-click.png",
+    "status": "fail"
+  },
+  {
+    "label": "companies-open-careers",
+    "route": "/companies",
+    "expectedHref": "https://www.janestreet.com/join-jane-street/open-roles/",
+    "kind": "companyButton",
+    "countBeforeClick": 1,
+    "newTabs": [],
+    "openedExpected": false,
+    "localTabUrlAfter": "http://127.0.0.1:5179/companies",
+    "localStillOnRoute": true,
+    "localOverlay": false,
+    "localOverflow": false,
+    "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/293-iab-companies-careers-click.png",
+    "status": "fail"
+  },
+  {
+    "label": "courses-open-original",
+    "route": "/courses",
+    "expectedHref": "https://www.youtube.com/@atypicalquant",
+    "kind": "anchor",
+    "countBeforeClick": 1,
+    "newTabs": [],
+    "openedExpected": false,
+    "localTabUrlAfter": "http://127.0.0.1:5179/courses",
+    "localStillOnRoute": true,
+    "localOverlay": false,
+    "localOverflow": false,
+    "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/294-iab-courses-open-original-click.png",
+    "status": "fail"
+  }
+]

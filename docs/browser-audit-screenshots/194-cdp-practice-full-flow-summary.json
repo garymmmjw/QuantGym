@@ -1,0 +1,182 @@
+{
+  "clicks": [
+    {
+      "x": 762.4375,
+      "y": 401.625,
+      "text": "English",
+      "selector": "[data-interview-lang=\"en\"]"
+    },
+    {
+      "x": 907.9375,
+      "y": 401.625,
+      "text": "训练练习",
+      "selector": "[data-interview-mode=\"practice\"]"
+    },
+    {
+      "x": 835.1875,
+      "y": 611.625,
+      "text": "进入模拟面试",
+      "selector": "#startInterviewBtn"
+    },
+    {
+      "x": 539.0078125,
+      "y": 508.828125,
+      "text": "Probability & stats"
+    },
+    {
+      "x": 495.703125,
+      "y": 690.7510986328125,
+      "text": "Medium"
+    },
+    {
+      "x": 441.3125,
+      "y": 819.5562744140625,
+      "text": "3 questions"
+    },
+    {
+      "x": 428.7265625,
+      "y": 818.18408203125,
+      "text": "Friendly"
+    },
+    {
+      "x": 1018,
+      "y": 812,
+      "text": "Hint",
+      "selector": "#hintInterviewBtn"
+    },
+    {
+      "x": 1060,
+      "y": 812,
+      "text": "显示参考答案",
+      "selector": "#revealAnswerBtn"
+    },
+    {
+      "x": 1102,
+      "y": 812,
+      "text": "提交回答",
+      "selector": ".interview-send-button"
+    },
+    {
+      "x": 363,
+      "y": 820,
+      "text": "总结到收藏夹",
+      "selector": "#saveInterviewFavoriteBtn"
+    }
+  ],
+  "states": {
+    "q1": {
+      "label": "practice q1 ready",
+      "href": "http://127.0.0.1:5179/interview?qa=cdp-practice-full-flow",
+      "title": "Practice · Technical Interview",
+      "status": "Q1/3",
+      "phaseSession": true,
+      "setupVisible": false,
+      "hintVisible": true,
+      "revealVisible": true,
+      "answerDisabled": false,
+      "completeVisible": false,
+      "nextVisible": false,
+      "saveVisible": false,
+      "saveDisabled": true,
+      "favoriteSummary": "保存高价值题目复盘。",
+      "favorites": [],
+      "legacyFavorites": 0,
+      "problemStateFavorites": 0,
+      "transcriptTail": "oday?\n\nProbability & stats\nAI interviewer\n\nWhat difficulty should I use?\n\nMedium\nAI interviewer\n\nHow many questions, or should we run by time?\n\n3 questions\nAI interviewer\n\nWhat interviewer style do you want?\n\nFriendly\nAI interviewer\n\nSession setup: Practice, focus Probability & stats, di\n\nConfiguration is set. I will start with the first ques\n\nLet's \n\ni\nPrompt\nQ1/3\nTechnical Interview · probabilityExpectation · Medium\nTaxman\n\nWe start with the numbers $1-10$ on a board. You pick a number. The taxman then takes all the numbers that divide it evenly. We do this until there are no numbers left. However, you can only pick numbers that have at least one factor that hasn't been taken yet. If there are any unclaimed numbers at the end, the taxman takes them. Your score is the total of the numbers that you take. Following optimal strategy, what is your max possible score?\n\nAI interviewer\n\nStart ",
+      "chips": []
+    },
+    "hint": {
+      "label": "hint shown",
+      "href": "http://127.0.0.1:5179/interview?qa=cdp-practice-full-flow",
+      "title": "Practice · Technical Interview",
+      "status": "Q1/3",
+      "phaseSession": true,
+      "setupVisible": false,
+      "hintVisible": true,
+      "revealVisible": true,
+      "answerDisabled": false,
+      "completeVisible": false,
+      "nextVisible": false,
+      "saveVisible": false,
+      "saveDisabled": true,
+      "favoriteSummary": "保存高价值题目复盘。",
+      "favorites": [],
+      "legacyFavorites": 0,
+      "problemStateFavorites": 0,
+      "transcriptTail": "\n\nHow many questions, or should we run by time?\n\n3 questions\nAI interviewer\n\nWhat interviewer style do you want?\n\nFriendly\nAI interviewer\n\nSession setup: Practice, focus Probability & stats, difficulty Medium, 3 questio\n\nConfiguration is set. I will start with the first question.\n\nLet's begin — question 1 of 3\n\ni\nPrompt\nQ1/3\nTechnical Interview · probabilityExpectation · Medium\nTaxman\n\nWe start with the numbers \n1\n−\n10\n on a board. You pick a number. The taxman then takes all the numbers that divide it evenly. We do this until there are no numbers left. However, you can only pick numbers that have at least one factor that hasn't been taken yet. If there are any unclaimed numbers at the end, the taxman takes them. Your score is the total of the numbers that you take. Following optimal strategy, what is your max possible score?\n\nAI interviewer\n\nStart your answer. Explain your \n\nHint: Defin",
+      "chips": []
+    },
+    "reveal": {
+      "label": "reference shown",
+      "href": "http://127.0.0.1:5179/interview?qa=cdp-practice-full-flow",
+      "title": "Practice · Technical Interview",
+      "status": "Q1/3",
+      "phaseSession": true,
+      "setupVisible": false,
+      "hintVisible": true,
+      "revealVisible": true,
+      "answerDisabled": false,
+      "completeVisible": false,
+      "nextVisible": false,
+      "saveVisible": false,
+      "saveDisabled": true,
+      "favoriteSummary": "保存高价值题目复盘。",
+      "favorites": [],
+      "legacyFavorites": 0,
+      "problemStateFavorites": 0,
+      "transcriptTail": "ets choose $7$ (the largest prime on the board). The taxman then takes $1$ and the board becomes $2$, $3$, $4$, $5$, $6$, $8$, $9$, and $10$. We can't choose $2$, $3$, or $5$ since they are prime and don't have any more factors. We should never choose $4$ because we then can't take $8$ later. In this case, the best choice to take is $9$ since it is one of the larger numbers and only has one factor left ($3$). Now the board becomes $2$, $4$, $5$, $6$, $8$, and $10$. Out of this set, $6$ is the only number with only one factor so lets take it. Now the taxman takes $2$. The board is now $4$, $5$, $8$, and $10$. Now it doesn't matter what order we take $8$ and $10$, the taxman will get $4$ and $5$. Thus the numbers we have are $6$, $7$, $8$, $9$, and $10$ which gives you a score of $40$ and the taxman has $1$, $2$, $3$, $4$, $5$ which gives them a score of $15$. You win with a score of $40$!",
+      "chips": []
+    },
+    "submit": {
+      "label": "submitted complete actions",
+      "href": "http://127.0.0.1:5179/interview?qa=cdp-practice-full-flow",
+      "title": "Practice · Technical Interview",
+      "status": "Q1/3",
+      "phaseSession": true,
+      "setupVisible": false,
+      "hintVisible": true,
+      "revealVisible": true,
+      "answerDisabled": false,
+      "completeVisible": true,
+      "nextVisible": true,
+      "saveVisible": true,
+      "saveDisabled": false,
+      "favoriteSummary": "保存高价值题目复盘。",
+      "favorites": [],
+      "legacyFavorites": 0,
+      "problemStateFavorites": 0,
+      "transcriptTail": "2\n, \n4\n, \n5\n, \n6\n, \n8\n, and \n10\n. Out of this set, \n6\n is the only number with only one factor so lets take it. Now the taxman takes \n2\n. The board is now \n4\n, \n5\n, \n8\n, and \n10\n. Now it doesn't matter what order we take \n8\n and \n10\n, the taxman will get \n4\n and \n5\n. Thus the numbers we have are \n6\n, \n7\n, \n8\n, \n9\n, and \n10\n which gives you a score of \n40\n and the taxman has \n1\n, \n2\n, \n3\n, \n4\n, \n5\n which gives them a score of \n15\n. You win with a score of \n40\n!\n\nI would frame this as a probability/statistics problem: define the sample space, state the distributional assumption, compute the relevant probability, and then sanity-check the answer with the expected value and boundary cases.\nAI interviewer\n61\n/100\nCorrectness\n3/5\nReasoning\n3/5\nCommunication\n4/5\nKey feedback\n\nThe core direction is covered; make the edge cases and final conclusion sharper.\n\nMissing pieces\nNo major missing piece.",
+      "chips": []
+    },
+    "favorite": {
+      "label": "favorite saved",
+      "href": "http://127.0.0.1:5179/interview?qa=cdp-practice-full-flow",
+      "title": "Practice · Technical Interview",
+      "status": "Q1/3",
+      "phaseSession": true,
+      "setupVisible": false,
+      "hintVisible": true,
+      "revealVisible": true,
+      "answerDisabled": false,
+      "completeVisible": true,
+      "nextVisible": true,
+      "saveVisible": true,
+      "saveDisabled": false,
+      "favoriteSummary": "1 条复盘",
+      "favorites": [
+        "TaxmanprobabilityExpectation · 2026/06/07Taxman：Dimensions:"
+      ],
+      "legacyFavorites": 1,
+      "problemStateFavorites": 0,
+      "transcriptTail": "2\n, \n4\n, \n5\n, \n6\n, \n8\n, and \n10\n. Out of this set, \n6\n is the only number with only one factor so lets take it. Now the taxman takes \n2\n. The board is now \n4\n, \n5\n, \n8\n, and \n10\n. Now it doesn't matter what order we take \n8\n and \n10\n, the taxman will get \n4\n and \n5\n. Thus the numbers we have are \n6\n, \n7\n, \n8\n, \n9\n, and \n10\n which gives you a score of \n40\n and the taxman has \n1\n, \n2\n, \n3\n, \n4\n, \n5\n which gives them a score of \n15\n. You win with a score of \n40\n!\n\nI would frame this as a probability/statistics problem: define the sample space, state the distributional assumption, compute the relevant probability, and then sanity-check the answer with the expected value and boundary cases.\nAI interviewer\n61\n/100\nCorrectness\n3/5\nReasoning\n3/5\nCommunication\n4/5\nKey feedback\n\nThe core direction is covered; make the edge cases and final conclusion sharper.\n\nMissing pieces\nNo major missing piece.",
+      "chips": []
+    }
+  },
+  "screenshots": {
+    "q1": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/190-cdp-practice-q1-ready-after-submit-hook-fix.png",
+    "hint": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/191-cdp-practice-hint-after-submit-hook-fix.png",
+    "reveal": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/192-cdp-practice-reveal-after-submit-hook-fix.png",
+    "submit": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/193-cdp-practice-submit-complete-actions.png",
+    "favorite": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/194-cdp-practice-favorite-saved.png"
+  }
+}

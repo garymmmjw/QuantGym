@@ -25,11 +25,11 @@ export function createPokerControllerBundle(deps = {}) {
     escapeHtml,
     formatNumber,
     getCloudApiBase,
-    getModuleLifecycle,
     makeId,
     pokerState,
     randomInt,
     recordGameResult,
+    routingMode,
     refreshIcons,
     windowRef: window
   } = deps;
@@ -45,6 +45,7 @@ export function createPokerControllerBundle(deps = {}) {
     normalizePlayerName: normalizePokerPlayerName,
     normalizeRoomCode: normalizePokerRoomCode,
     renderGame: () => renderPokerGame(),
+    routingMode,
     state: pokerState,
     windowRef: window
   });
@@ -86,7 +87,6 @@ export function createPokerControllerBundle(deps = {}) {
   const pokerHandFlowController = createPokerHandFlowController({
     elements: els,
     getCurrentUser: () => appState.currentUser,
-    getModuleLifecycle,
     isOnlineRoom: (game) => isPokerOnlineRoom(game),
     makeId,
     recordGameResult,
@@ -113,7 +113,7 @@ export function createPokerControllerBundle(deps = {}) {
   const isPokerSpectator = pokerHandFlowController.isSpectator;
   const recordPokerLedger = pokerHandFlowController.recordLedger;
   const startNextPokerHand = pokerHandFlowController.startNextHand;
-  const submitPokerAction = pokerHandFlowController.submitAction;
+  const performPokerHandAction = pokerHandFlowController.submitAction;
 
   const pokerPanelView = createPokerPanelView({
     documentRef: document,
@@ -128,7 +128,8 @@ export function createPokerControllerBundle(deps = {}) {
     getSpectators: getPokerSpectators,
     isHost: isPokerHost,
     isRegistering: (game) => canPokerRegister(game),
-    isSpectator: isPokerSpectator
+    isSpectator: isPokerSpectator,
+    state: pokerState
   });
   const renderPokerPanelTabs = pokerPanelView.renderTabs;
   const renderPokerRightPanel = pokerPanelView.renderRightPanel;
@@ -240,7 +241,7 @@ export function createPokerControllerBundle(deps = {}) {
     setRoomUrl: (game, mode) => setPokerRoomUrl(game, mode),
     startNextHand: (game) => startNextPokerHand(game),
     state: pokerState,
-    submitAction: (action) => submitPokerAction(action),
+    submitAction: (action) => performPokerHandAction(action),
     takeSeat: (seat, renderAfter) => takePokerSeat(seat, renderAfter),
     windowRef: window
   });
@@ -249,15 +250,68 @@ export function createPokerControllerBundle(deps = {}) {
   const handlePokerDocumentSubmit = pokerActionController.handleDocumentSubmit;
   const resetPokerTournament = pokerActionController.resetTournament;
   const startPokerTournament = pokerActionController.startTournament;
+  const matchPokerTournament = pokerActionController.matchTournament;
+  const nextPokerHand = pokerActionController.newGame;
+  const pausePokerGame = pokerActionController.pauseGame;
+  const resumePokerGame = pokerActionController.resumeGame;
+  const exportPokerSession = pokerActionController.exportSession;
+  const submitPokerAction = pokerActionController.submitAction;
+  const applyPokerQuickBet = pokerActionController.applyQuickBet;
+  const setPokerRaiseAmount = pokerActionController.setRaiseAmount;
+  const sendPokerChat = pokerActionController.sendChat;
+  const applyPokerSettings = pokerActionController.applySettings;
+  const handlePokerPlayerAction = pokerActionController.handlePlayerAction;
+  const getPokerMode = pokerActionController.getMode;
+  const setPokerMode = pokerActionController.setMode;
 
   return {
+    addPokerBot,
+    addPokerBotAtSeat: (seat) => addPokerBot(true, seat),
+    applyPokerQuickBet,
+    applyPokerSettings,
+    canPokerRegister,
+    copyPokerRoomLink,
+    exportPokerSession,
+    fillPokerBots,
+    getPokerActivePlayers,
+    getPokerBlindSeats,
+    getCurrentPokerPlayer,
+    getDefaultPokerPlayerName,
+    getMinimumPokerRaiseTo,
+    getPokerHero,
+    getPokerHeroPreflopCoach,
+    getPokerInviteLink: getPokerInviteLink,
+    getPokerLedgerRows,
+    getPokerMode,
+    getPokerOnlineLabel: getPokerOnlineLabel,
+    getPokerSpectators,
+    getPokerStageLabel,
+    getPokerToCall,
+    getPokerViewerModeLabel,
+    getNextOpenPokerSeat,
     handlePokerDocumentClick,
     handlePokerDocumentSubmit,
+    handlePokerPlayerAction,
     handlePokerPreflopMatrixClick,
+    isPokerHost,
+    isPokerOnlineRoom,
+    isPokerSpectator,
     loadInitialPokerGame,
     makePokerGameRound,
+    matchPokerTournament,
+    nextPokerHand,
+    pausePokerGame,
+    removePokerPlayer,
     renderPokerGame,
     renderPokerPreflopChart,
-    resetPokerTournament
+    resetPokerTournament,
+    resumePokerGame,
+    sendPokerChat,
+    setPokerMode,
+    setPokerRaiseAmount,
+    sitPokerAtSeat: (seat, name) => takePokerSeat(seat, true, { name }),
+    startPokerTournament,
+    submitPokerAction,
+    takePokerSeat: (name) => takePokerSeat(null, true, { name })
   };
 }

@@ -1,0 +1,44 @@
+{
+  "live": {
+    "label": "live ready after typing",
+    "href": "http://127.0.0.1:5179/interview?qa=cdp-live-exit-resume-fixed",
+    "title": "Live mock · Technical Interview",
+    "status": "Q1/3",
+    "streaming": 0,
+    "setupHidden": true,
+    "consoleHidden": false,
+    "resumeHidden": true,
+    "hintHidden": true,
+    "revealHidden": true,
+    "overlay": false,
+    "transcript": "tice 5 - Poisson Distribution and Poisson Paradigm #11. Raindrops are falling at an average rate of 20 drops per square inch per minute.\nWhat would be a reasonable distribution to use for the number of raindrops\nhitting a particular region measuring 5 inches2 in t minutes? Why? Using your\nchosen distribution, compute the probability that the region has no rain drops\nin a given 3 second time interval.AI interviewerStart your answer. Walk me through your thinking; I will ask follow-ups from there."
+  },
+  "exited": {
+    "label": "exited",
+    "href": "http://127.0.0.1:5179/interview?qa=cdp-live-exit-resume-fixed",
+    "title": "",
+    "status": "",
+    "streaming": 0,
+    "setupHidden": false,
+    "consoleHidden": null,
+    "resumeHidden": false,
+    "hintHidden": null,
+    "revealHidden": null,
+    "overlay": false,
+    "transcript": ""
+  },
+  "resumed": {
+    "label": "resumed",
+    "href": "http://127.0.0.1:5179/interview?qa=cdp-live-exit-resume-fixed",
+    "title": "Live mock · Technical Interview",
+    "status": "Q1/3",
+    "streaming": 0,
+    "setupHidden": true,
+    "consoleHidden": false,
+    "resumeHidden": true,
+    "hintHidden": true,
+    "revealHidden": true,
+    "overlay": false,
+    "transcript": "tice 5 - Poisson Distribution and Poisson Paradigm #11. Raindrops are falling at an average rate of 20 drops per square inch per minute.\nWhat would be a reasonable distribution to use for the number of raindrops\nhitting a particular region measuring 5 inches2 in t minutes? Why? Using your\nchosen distribution, compute the probability that the region has no rain drops\nin a given 3 second time interval.AI interviewerStart your answer. Walk me through your thinking; I will ask follow-ups from there."
+  }
+}

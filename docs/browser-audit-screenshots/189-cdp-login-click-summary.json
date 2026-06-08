@@ -1,0 +1,25 @@
+{
+  "initial": {
+    "ready": "complete",
+    "url": "http://127.0.0.1:5179/login?qa=cdp-iab-fallback",
+    "title": "QuantGym",
+    "text": ""
+  },
+  "clicked": {
+    "text": "注册",
+    "x": 921,
+    "y": 480.03125,
+    "width": 28,
+    "height": 34
+  },
+  "after": {
+    "url": "http://127.0.0.1:5179/login?qa=cdp-iab-fallback",
+    "title": "QuantGym",
+    "text": "QuantGym\nQuant interview workspace\n把题库、模拟面试和简历复盘放进同一个训练台\n\n每天推进一组题、一次 mock、一版简历反馈。QuantGym 会记录你的薄弱点，让下一次练习更具体。\n\nToday\nProbability drills\n24 ready questions\nMock\nMarket making\nfollow-up prompts queued\nResume\n3 edits\nimpact bullets next\n2,000+\n高频题目\n500+\n面试复盘\n98%\n训练满意度\n登录或注册\n\n同步你的题库、模拟面试复盘、简历和训练进度。\n\nG\n使用 Google 账号继续\n暂未启用\n或\n登录\n注册\n名字\n电子邮件地址\n密码\n邮箱验证码\n发送验证码\n创建账户",
+    "active": "注册"
+  },
+  "screenshots": [
+    "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/188-cdp-login-before-click.png",
+    "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/189-cdp-login-register-click.png"
+  ]
+}

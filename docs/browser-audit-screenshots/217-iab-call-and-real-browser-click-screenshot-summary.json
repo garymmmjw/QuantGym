@@ -1,0 +1,41 @@
+{
+  "status": "pass",
+  "inAppBrowserAttempt": {
+    "browserClient": "connected to iab and visibility/list-tab succeeded via node_repl",
+    "selectedUrlObserved": "http://127.0.0.1:5179/interview?qa=interview-deep-flow",
+    "screenshot": "tab.screenshot({ fullPage: false }) timed out at 30s and reset node client",
+    "domSnapshot": "tab.playwright.domSnapshot() timed out at 30s after reconnect"
+  },
+  "cdpFinal": {
+    "browser": "Google Chrome headless",
+    "url": "http://127.0.0.1:5179/login?qa=iab-tool-cdp-final",
+    "port": 60575,
+    "profile": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-cdp-final-806aeuxu",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    }
+  },
+  "steps": [
+    {
+      "action": "screenshot before click",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/216-cdp-login-before-real-register-click.png"
+    },
+    {
+      "action": "real coordinate click register tab",
+      "targetRect": {
+        "x": 921,
+        "y": 477.515625,
+        "text": "注册",
+        "w": 28,
+        "h": 34
+      },
+      "stateAfterClick": {
+        "activeTab": "register",
+        "registerVisible": true,
+        "loginVisible": false
+      },
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/217-cdp-login-after-real-register-click.png"
+    }
+  ]
+}

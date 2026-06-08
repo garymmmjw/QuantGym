@@ -17,7 +17,6 @@ export function createPokerHandFlowController(deps = {}) {
   const {
     elements = {},
     getCurrentUser = () => null,
-    getModuleLifecycle = () => null,
     isOnlineRoom = () => false,
     makeId = () => `${Date.now()}`,
     recordGameResult = () => {},
@@ -95,7 +94,9 @@ export function createPokerHandFlowController(deps = {}) {
     const player = getCurrentPlayer(game);
     const hero = getHero(game);
     if (!player || player.type !== "human" || (!player.isHero && player.id !== hero?.id)) return;
-    const raiseTo = action === "raise" ? Number(elements.pokerRaiseInput?.value || 0) : 0;
+    const raiseTo = action === "raise"
+      ? Number(state.raiseInput ?? elements.pokerRaiseInput?.value ?? 0)
+      : 0;
     if (isOnlineRoom(game)) {
       sendOnlineCommand("action", { action, raiseTo });
       return;
@@ -103,7 +104,6 @@ export function createPokerHandFlowController(deps = {}) {
     performAction(game, game.actionIndex, action, raiseTo);
     continueHand(game);
     renderGame();
-    getModuleLifecycle("skills")?.render?.();
   }
 
   function continueHand(game) {

@@ -114,7 +114,7 @@ export function renderProblemPagination({
   return currentPage;
 }
 
-function getPaginationWindow(currentPage, totalPages) {
+export function getPaginationWindow(currentPage, totalPages) {
   const pages = new Set([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
   const visible = [...pages]
     .filter((item) => item >= 1 && item <= totalPages)

@@ -182,21 +182,28 @@ export function createInterviewSetupController(deps = {}) {
   }
 
   function getSetupLanguage() {
+    const language = getInterviewState().language;
+    if (language === "en" || language === "zh") return language;
     return getActiveInterviewLanguage(documentRef);
   }
 
   function getSetupMode() {
+    const runtimeMode = getRuntimeState().setupMode;
+    if (modeDefs[runtimeMode]) return runtimeMode;
     return getActiveInterviewMode(documentRef, modeDefs, "practice");
   }
 
-  function renderSetup() {
+  function renderSetup(options = {}) {
+    const useReactSetup = options.reactSetup !== false;
     if (!deps.hasRestoredSnapshot?.()) deps.restoreSessionSnapshot?.();
     const config = deps.getLlmConfig?.() || {};
     if (elements.llmEndpointInput) elements.llmEndpointInput.value = config.endpoint || "";
     if (elements.llmModelInput) elements.llmModelInput.value = config.model || "";
-    elements.resumeInterviewBtn?.classList.toggle("hidden", !deps.hasDurableInterview?.());
-    renderCategoryPicker();
-    updateSetupVisibility();
+    if (!useReactSetup) {
+      elements.resumeInterviewBtn?.classList.toggle("hidden", !deps.hasDurableInterview?.());
+      renderCategoryPicker();
+      updateSetupVisibility();
+    }
     updateAnswerMode();
     deps.updateStatus?.();
     deps.renderQuestionPanel?.();

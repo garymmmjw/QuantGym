@@ -43,12 +43,19 @@ export function createInterviewResultsController(deps = {}) {
     });
     if (!favorite) return;
 
-    deps.updateProblemState?.(problem.id, (current) => ({
-      ...current,
-      favorite: true,
-      lastFavoriteAt: favorite.createdAt,
-      favorites: [...(current.favorites || []), favorite].slice(-80)
-    }));
+    const userState = getUserState();
+    if (userState) {
+      const existingFavorites = Array.isArray(userState.interviewFavorites) ? userState.interviewFavorites : [];
+      userState.interviewFavorites = [...existingFavorites, favorite].slice(-80);
+    }
+    if (problem.id) {
+      deps.updateProblemState?.(problem.id, (current) => ({
+        ...current,
+        favorite: true,
+        lastFavoriteAt: favorite.createdAt,
+        favorites: [...(current.favorites || []), favorite].slice(-80)
+      }));
+    }
     deps.saveState?.();
     deps.renderFavorites?.();
     flashButtonLabel(

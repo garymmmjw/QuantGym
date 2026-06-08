@@ -29,11 +29,16 @@ export function createInterviewViewController(deps = {}) {
     return getInterviewState().language === "en" ? "en" : "zh";
   }
 
+  function useReactSession() {
+    return getRuntimeState().reactSession !== false;
+  }
+
   function scheduleMathTypeset(root) {
     deps.mathTypesetScheduler?.schedule(root);
   }
 
   function renderTranscript() {
+    if (useReactSession()) return;
     renderInterviewTranscript(elements.interviewTranscript, getInterviewState().messages, {
       language: getLanguage(),
       isCurrentOnboardingStep: deps.isCurrentOnboardingStep,
@@ -53,10 +58,12 @@ export function createInterviewViewController(deps = {}) {
 
   function updateLayout() {
     const showConsole = Boolean(getRuntimeState().preparing || getInterviewState().session);
-    elements.interviewSetup?.classList.toggle("hidden", showConsole);
-    elements.interviewConsole?.classList.toggle("hidden", !showConsole);
-    elements.interviewGrid?.classList.toggle("setup-only", !showConsole);
-    elements.interviewGrid?.classList.toggle("session-only", showConsole);
+    if (!useReactSession()) {
+      elements.interviewSetup?.classList.toggle("hidden", showConsole);
+      elements.interviewConsole?.classList.toggle("hidden", !showConsole);
+      elements.interviewGrid?.classList.toggle("setup-only", !showConsole);
+      elements.interviewGrid?.classList.toggle("session-only", showConsole);
+    }
     deps.documentRef?.body?.classList.toggle("interview-immersive", showConsole);
     if (showConsole) {
       deps.documentRef?.body?.classList.add("sidebar-collapsed");
@@ -66,6 +73,7 @@ export function createInterviewViewController(deps = {}) {
   }
 
   function renderQuestionPanel() {
+    if (useReactSession()) return;
     const runtimeState = getRuntimeState();
     renderInterviewQuestionPanel(elements.interviewQuestionPanel, {
       session: getInterviewState().session,
@@ -111,6 +119,7 @@ export function createInterviewViewController(deps = {}) {
   }
 
   function renderFavorites() {
+    if (useReactSession()) return;
     renderInterviewFavorites(elements.interviewFavoritesSummary, elements.interviewFavoritesList, getFavorites(), {
       formatCategory,
       formatDate: deps.formatDate
@@ -118,14 +127,27 @@ export function createInterviewViewController(deps = {}) {
   }
 
   function togglePanel() {
+    const runtimeState = getRuntimeState();
+    if (useReactSession()) {
+      runtimeState.panelVisible = !runtimeState.panelVisible;
+      return;
+    }
     if (!elements.interviewConsole) return;
     const active = elements.interviewConsole.classList.toggle("show-panel");
+    runtimeState.panelVisible = active;
     elements.toggleInterviewPanelBtn?.classList.toggle("is-active", active);
     elements.toggleInterviewPanelBtn?.setAttribute("aria-pressed", String(active));
     if (active) renderQuestionPanel();
   }
 
+  function setPanelExpandedIndex(index) {
+    const runtimeState = getRuntimeState();
+    runtimeState.panelExpandedIndex = index;
+    if (!useReactSession()) renderQuestionPanel();
+  }
+
   function updateActionPanel() {
+    if (useReactSession()) return;
     if (!elements.interviewCompleteActions) return;
     const viewModel = getInterviewActionPanelViewModel({
       session: getInterviewState().session,
@@ -161,6 +183,7 @@ export function createInterviewViewController(deps = {}) {
     scheduleMathTypeset,
     selectProblemForInterview,
     togglePanel,
+    setPanelExpandedIndex,
     updateActionPanel,
     updateLayout
   };

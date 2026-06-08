@@ -1,0 +1,27 @@
+{
+  "id": 325,
+  "date": "2026-06-08",
+  "surface": "google token helper browser smoke",
+  "status": "pass",
+  "url": "http://127.0.0.1:5179/artifacts/google-id-token-helper.html",
+  "browser": "Google Chrome headless",
+  "viewport": {
+    "width": 1280,
+    "height": 900
+  },
+  "screenshot": "325-google-token-helper-browser.png",
+  "checks": {
+    "httpStatus": 200,
+    "pageNonBlank": true,
+    "titleVisible": true,
+    "googleButtonVisible": true,
+    "tokenTextareaVisible": true,
+    "copyButtonVisible": true,
+    "verifierSanityTextVisible": true,
+    "statusText": "Ready."
+  },
+  "notes": [
+    "The helper page renders in a real browser on the same 127.0.0.1:5179 origin as the app.",
+    "Google Identity Services renders the sign-in button. Full provider-login sign-off still requires the user to complete Google sign-in and pass the short-lived ID token as QUANTGYM_GOOGLE_ID_TOKEN."
+  ]
+}

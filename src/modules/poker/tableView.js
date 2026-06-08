@@ -37,6 +37,12 @@ export function createPokerTableView(deps = {}) {
   } = deps;
 
   function renderGame() {
+    if (state.reactTable !== false) {
+      if (state.game && !state.game.online) persistRoom(state.game);
+      notifyReactPokerUpdate();
+      refreshIcons();
+      return;
+    }
     if (!elements.pokerGamePrompt) return;
     if (!state.game) state.game = makeGameRound();
     const game = state.game;
@@ -76,6 +82,13 @@ export function createPokerTableView(deps = {}) {
     if (elements.pokerGameFeedback) elements.pokerGameFeedback.textContent = game.feedback || "";
     if (!game.online) persistRoom(game);
     refreshIcons();
+  }
+
+  function notifyReactPokerUpdate() {
+    const windowRef = documentRef?.defaultView || globalThis.window;
+    const CustomEventCtor = windowRef?.CustomEvent || globalThis.CustomEvent;
+    if (!windowRef?.dispatchEvent || !CustomEventCtor) return;
+    windowRef.dispatchEvent(new CustomEventCtor("quantgym:poker-updated"));
   }
 
   function renderTournamentStats(game) {

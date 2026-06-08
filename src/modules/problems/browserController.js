@@ -71,9 +71,12 @@ export function createProblemBrowserController(deps = {}) {
     const state = getState();
     const filters = getFilters();
     const resultsOnly = Boolean(options.resultsOnly);
-    renderViewTabs();
+    const useReactChrome = options.reactChrome !== false;
+    if (!useReactChrome) {
+      renderViewTabs();
+    }
 
-    if (!resultsOnly) {
+    if (!resultsOnly && !useReactChrome) {
       deps.renderLeetcodeHot100?.();
       const scopes = getProblemFilterScopes(state.problems, {
         source: filters.source,
@@ -102,7 +105,9 @@ export function createProblemBrowserController(deps = {}) {
       deps.hidePagination?.();
       elements.problemRanking?.classList.add("hidden");
       elements.problemDetail?.classList.remove("hidden");
-      deps.renderProblemDetail?.(viewState.selected);
+      if (options.reactDetail === false) {
+        deps.renderProblemDetail?.(viewState.selected);
+      }
       return;
     }
 
@@ -113,13 +118,16 @@ export function createProblemBrowserController(deps = {}) {
       elements.problemList?.classList.add("hidden");
       deps.hidePagination?.();
       elements.problemRanking?.classList.remove("hidden");
-      renderRanking(problems);
+      if (options.reactRanking === false) {
+        renderRanking(problems);
+      }
       return;
     }
 
     elements.problemRanking?.classList.add("hidden");
     elements.problemList?.classList.remove("hidden");
-    const listPage = renderProblemListView(elements.problemList, problems, {
+    const useReactList = options.reactList !== false;
+    const listPage = renderProblemListView(useReactList ? null : elements.problemList, problems, {
       viewMode: filters.viewMode,
       page: deps.getPage?.(),
       pageSize: getPageSize(),
@@ -143,7 +151,9 @@ export function createProblemBrowserController(deps = {}) {
       deps.hidePagination?.();
       return;
     }
-    deps.renderPagination?.(listPage.totalProblems);
+    if (options.reactPagination === false) {
+      deps.renderPagination?.(listPage.totalProblems);
+    }
     deps.refreshIcons?.();
   }
 

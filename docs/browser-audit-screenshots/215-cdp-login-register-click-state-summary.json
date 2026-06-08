@@ -1,0 +1,64 @@
+{
+  "url": "http://127.0.0.1:5179/login?qa=cdp-click-state",
+  "port": 60428,
+  "profile": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/cdp-click-state-yodl1s1v",
+  "steps": [
+    {
+      "probe": 0,
+      "state": {
+        "href": "http://127.0.0.1:5179/login?qa=cdp-click-state",
+        "ready": "loading",
+        "hasTab": false,
+        "bodyLen": 0
+      }
+    },
+    {
+      "probe": 4,
+      "state": {
+        "href": "http://127.0.0.1:5179/login?qa=cdp-click-state",
+        "ready": "interactive",
+        "hasTab": true,
+        "bodyLen": 317
+      }
+    },
+    {
+      "probe": 5,
+      "state": {
+        "href": "http://127.0.0.1:5179/login?qa=cdp-click-state",
+        "ready": "interactive",
+        "hasTab": true,
+        "bodyLen": 379
+      }
+    },
+    {
+      "probe": 6,
+      "state": {
+        "href": "http://127.0.0.1:5179/login?qa=cdp-click-state",
+        "ready": "complete",
+        "hasTab": true,
+        "bodyLen": 379
+      }
+    }
+  ],
+  "targetBeforeNavigate": {
+    "id": "36ADB3EB1D24B7A4D120DC715BA1E284",
+    "type": "page",
+    "url": "about:blank",
+    "title": ""
+  },
+  "click": {
+    "targetRect": {
+      "x": 921,
+      "y": 459.046875,
+      "text": "注册",
+      "w": 28,
+      "h": 34
+    },
+    "stateAfterClick": {
+      "activeTab": "register",
+      "registerVisible": true,
+      "loginVisible": false
+    }
+  },
+  "status": "pass"
+}

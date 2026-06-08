@@ -1,0 +1,21 @@
+{
+  "id": 321,
+  "date": "2026-06-08",
+  "surface": "static build",
+  "status": "pass",
+  "checks": {
+    "npmRunBuildPassed": true,
+    "distConfigCloudApiEndpoint": "http://127.0.0.1:8790/api",
+    "distConfigLlmEndpoint": "http://127.0.0.1:8787/interview",
+    "distConfigLlmModel": "gpt-5-nano",
+    "distConfigGoogleClientIdSet": true,
+    "distConfigGoogleLoginEnabled": true,
+    "distConfigContainsOpenAiKey": false,
+    "strictModeRejectsLocalHttpEndpoints": true
+  },
+  "notes": [
+    "scripts/build-static-site.mjs now reads root .env and config.js as public-runtime fallbacks.",
+    "The local build carries configured public endpoints/client id into dist/config.js.",
+    "Strict mode still requires HTTPS endpoints for beta or production deploys."
+  ]
+}

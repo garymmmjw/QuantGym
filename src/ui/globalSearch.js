@@ -176,7 +176,13 @@ export function activateGlobalSearchResult(controller, index, actions = {}) {
   }
   if (result.type === "skill") {
     actions.switchModule?.("skills");
-    actions.setRadarHover?.(result.id);
+    windowRef?.setTimeout?.(() => {
+      actions.setRadarHover?.(result.id);
+      windowRef?.dispatchEvent?.(new CustomEvent("quantgym:skill-focus", {
+        detail: { skillKey: result.id }
+      }));
+      spotlight(`[data-skill-key="${cssEscape(result.id)}"]`);
+    }, actions.spotlightDelay ?? 120);
     return true;
   }
   if (result.type === "news") {

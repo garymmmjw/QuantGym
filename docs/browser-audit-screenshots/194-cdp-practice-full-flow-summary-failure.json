@@ -1,0 +1,53 @@
+{
+  "error": "Error: Timed out waiting for practice q1 ready; last=\"Uncaught\"\n    at waitFor ([stdin]:24:291)\n    at async [stdin]:34:2837",
+  "summary": {
+    "clicks": [
+      {
+        "x": 762.4375,
+        "y": 401.625,
+        "text": "English",
+        "selector": "[data-interview-lang=\"en\"]"
+      },
+      {
+        "x": 907.9375,
+        "y": 401.625,
+        "text": "训练练习",
+        "selector": "[data-interview-mode=\"practice\"]"
+      },
+      {
+        "x": 835.1875,
+        "y": 611.625,
+        "text": "进入模拟面试",
+        "selector": "#startInterviewBtn"
+      },
+      {
+        "x": 539.0078125,
+        "y": 508.828125,
+        "text": "Probability & stats"
+      },
+      {
+        "x": 495.703125,
+        "y": 690.7509765625,
+        "text": "Medium"
+      },
+      {
+        "x": 441.3125,
+        "y": 819.5809326171875,
+        "text": "3 questions"
+      },
+      {
+        "x": 428.7265625,
+        "y": 818.4371948242188,
+        "text": "Friendly"
+      }
+    ],
+    "states": {},
+    "screenshots": {
+      "q1": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/190-cdp-practice-q1-ready-after-submit-hook-fix.png",
+      "hint": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/191-cdp-practice-hint-after-submit-hook-fix.png",
+      "reveal": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/192-cdp-practice-reveal-after-submit-hook-fix.png",
+      "submit": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/193-cdp-practice-submit-complete-actions.png",
+      "favorite": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/194-cdp-practice-favorite-saved.png"
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "createdAt": "2026-06-08T16:58:57.451Z",
+  "status": "pass",
+  "requests": [
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/interview"
+    }
+  ],
+  "logs": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 ()"
+    },
+    {
+      "type": "error",
+      "text": "[GSI_LOGGER]: The given origin is not allowed for the given client ID."
+    },
+    {
+      "type": "warning",
+      "text": "[GSI_LOGGER]: google.accounts.id.initialize() is called multiple times. This could cause unexpected behavior and only the last initialized instance will be used."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 ()"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 ()"
+    },
+    {
+      "type": "error",
+      "text": "[GSI_LOGGER]: The given origin is not allowed for the given client ID."
+    }
+  ],
+  "state": {
+    "url": "http://127.0.0.1:5179/resume?qa=live-llm",
+    "overlay": false,
+    "horizontalOverflow": false,
+    "items": [
+      "Convert to measurable bullets: \"Built a Python market-making simulator processing 1.2M tick rows; reduced option risk-analysis scenario runtime by 38%\" -> \"Built a Python market-making simulator processing 1.2M tick rows, reducing option risk-analysis runtime by 38% (from X to Y)\" to include baseline and target.",
+      "Specify tech stack and libraries: include pandas, NumPy, PyTorch/GPy/Vectorized operations, and backtesting framework to signal technical depth.",
+      "Quant-specific impact: quantify statistical methods used (e.g., P&L distribution, VaR, Sharpe) and benchmark against baseline; add a line like \"validated strategies with backtested P&L, Sharpe 1.8+\".",
+      "Add collaboration and deployment: add note on teamwork with data engineers/arena and deployment steps (Git, Docker) to show workflow maturity.",
+      "Clarify role target and timing: explicitly mention \"Target: Quant internship Summer 2027; available for full-time 2027-09 or earlier\"."
+    ],
+    "buttonDisabled": false
+  }
+}

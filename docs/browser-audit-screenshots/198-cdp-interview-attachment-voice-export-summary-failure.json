@@ -1,0 +1,104 @@
+{
+  "error": "Error: Timed out waiting for complete actions visible; last=false\n    at waitFor ([stdin]:54:9)\n    at async submitCurrentQuestion ([stdin]:104:3)\n    at async [stdin]:147:5",
+  "summary": {
+    "clicks": [
+      {
+        "x": 762.4375,
+        "y": 401.625,
+        "text": "English",
+        "selector": "[data-interview-lang=\"en\"]"
+      },
+      {
+        "x": 907.9375,
+        "y": 401.625,
+        "text": "训练练习",
+        "selector": "[data-interview-mode=\"practice\"]"
+      },
+      {
+        "x": 835.1875,
+        "y": 611.625,
+        "text": "进入模拟面试",
+        "selector": "#startInterviewBtn"
+      },
+      {
+        "x": 539.0078125,
+        "y": 508.828125,
+        "text": "Probability & stats"
+      },
+      {
+        "x": 495.703125,
+        "y": 690.904296875,
+        "text": "Medium"
+      },
+      {
+        "x": 441.3125,
+        "y": 819.575439453125,
+        "text": "3 questions"
+      },
+      {
+        "x": 428.7265625,
+        "y": 818.4072265625,
+        "text": "Friendly"
+      },
+      {
+        "x": 976,
+        "y": 812,
+        "text": "语音作答",
+        "selector": "#voiceAnswerBtn"
+      },
+      {
+        "x": 231,
+        "y": 820,
+        "text": "下一题",
+        "selector": "#nextInterviewQuestionBtn"
+      },
+      {
+        "x": 231,
+        "y": 820,
+        "text": "下一题",
+        "selector": "#nextInterviewQuestionBtn"
+      }
+    ],
+    "states": {
+      "voice": {
+        "label": "voice fallback",
+        "href": "http://127.0.0.1:5179/interview?qa=cdp-interview-attachment-voice-export",
+        "title": "Practice · Technical Interview",
+        "status": "Q1/3",
+        "hintVisible": true,
+        "revealVisible": true,
+        "voiceVisible": true,
+        "answerFileVisible": true,
+        "attachmentPreview": "",
+        "completeVisible": false,
+        "nextVisible": false,
+        "restartVisible": false,
+        "exportVisible": false,
+        "transcriptTail": "AI interviewer\n\nGreat — this session is Practice in English. Let me ask a few quick settings.\n\nWhat should we focus on today?\n\nProbability & stats\nAI interviewer\n\nWhat difficulty should I use?\n\nMedium\nAI interviewer\n\nHow many questions, or should we run by time?\n\n3 questions\nAI interviewer\n\nWhat interviewer style do you want?\n\nFriendly\nAI interviewer\n\nSession setup: Practice, focus Probability & stats, diffic\n\nConfiguration is set. I will start with the first question\n\nLet's begin\n\ni\nPrompt\nQ1/3\nTechnical Interview · probabilityExpectation · Medium\nMedian Uniform\n\nLet $X_1,X_2,X_3 \\sim \\text{Unif}(0,3)$ IID. Find the probability that $X_{(2)}$, the median of the three random variables, is between $1$ and $2$.\n\nAI interviewer\n\nStart your "
+      },
+      "fileSubmit": {
+        "label": "answer file submitted",
+        "href": "http://127.0.0.1:5179/interview?qa=cdp-interview-attachment-voice-export",
+        "title": "Practice · Technical Interview",
+        "status": "Q1/3",
+        "hintVisible": true,
+        "revealVisible": true,
+        "voiceVisible": true,
+        "answerFileVisible": true,
+        "attachmentPreview": "",
+        "completeVisible": true,
+        "nextVisible": true,
+        "restartVisible": false,
+        "exportVisible": false,
+        "transcriptTail": "AI interviewer\n\nGreat — this session is Practice in English. Let me ask a few quick settings.\n\nWhat should we focus on today?\n\nProbability & stats\nAI interviewer\n\nWhat difficulty should I use?\n\nMedium\nAI interviewer\n\nHow many questions, or should we run by time?\n\n3 questions\nAI interviewer\n\nWhat interviewer style do you want?\n\nFriendly\nAI interviewer\n\nSession setup: Practice, focus Probability & stats, difficulty Medium, 3 questions, Friendly style\n\nConfiguration is set. I will start with the first question.\n\nLet's begin — question 1 of 3.\n\ni\nPrompt\nQ1/3\nTechnical Interview · probabilityExpectation · Medium\nMedian Uniform\n\nLet \n𝑋\n1\n,\n𝑋\n2\n,\n𝑋\n3\n∼\nUnif\n(\n0\n,\n3\n)\n IID. Find the probability that \n𝑋\n(\n2\n)\n, the median of the three random variables, is between \n1\n and \n2\n.\n\nAI interviewer\n\nStart your answer. Explain your approach first, then \n\nPlease evaluate the attached note together with this concise answer. [Attachment: qa-interview-note.txt]\nAI interviewer\n40\n/100\nCorrectness\n1/5\nReasoning\n2/5\nCommunication\n3/5\nKey feedback\n\nPrioritize random variable or conditioning structure.\n\nMissing pieces\nrandom variable or conditioning structure"
+      }
+    },
+    "screenshots": {
+      "voice": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/195-cdp-interview-voice-unsupported.png",
+      "fileSubmit": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/196-cdp-interview-answer-file-submit.png",
+      "completed": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/197-cdp-interview-completed-export-visible.png",
+      "report": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/198-cdp-interview-report-window.png"
+    },
+    "notePath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-interview-more-cdp-pji7F7/qa-interview-note.txt"
+  }
+}

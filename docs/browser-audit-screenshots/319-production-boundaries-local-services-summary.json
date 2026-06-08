@@ -1,0 +1,57 @@
+{
+  "status": "pass",
+  "passed": 5,
+  "skipped": 0,
+  "failed": 0,
+  "results": [
+    {
+      "name": "cloud health",
+      "status": "pass",
+      "durationMs": 31,
+      "data": {
+        "ok": true
+      }
+    },
+    {
+      "name": "google provider config",
+      "status": "pass",
+      "durationMs": 6,
+      "data": {
+        "googleClientIdSet": true,
+        "endpointRequiresToken": true
+      }
+    },
+    {
+      "name": "google provider login",
+      "status": "pass",
+      "durationMs": 157,
+      "data": {
+        "provider": "local",
+        "googleLinked": true,
+        "email": "mi***@gmail.com",
+        "hasToken": true,
+        "tokenAudienceMatchesClientId": true,
+        "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
+        "tokenEmail": "mi***@gmail.com"
+      }
+    },
+    {
+      "name": "LLM resume review",
+      "status": "pass",
+      "durationMs": 3327,
+      "data": {
+        "itemCount": 6,
+        "firstItem": "Quantify impact with explicit metrics: convert to annualized or project scope, e.g., \"Processed 1.2M rows of tick data; "
+      }
+    },
+    {
+      "name": "LLM PDF question generation",
+      "status": "pass",
+      "durationMs": 6748,
+      "data": {
+        "questionCount": 1,
+        "firstTitle": "Understanding Production Boundaries and Smoke Tests"
+      }
+    }
+  ]
+}

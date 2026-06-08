@@ -23,7 +23,6 @@ export function createAccountControllerBundle(deps = {}) {
     applyLanguage: deps.applyLanguage,
     renderAll: deps.renderAll,
     restoreRouteModule: deps.restoreRouteModule,
-    getModuleLifecycle: deps.getModuleLifecycle,
     refreshProblemCatalog: deps.refreshProblemCatalog,
     refreshProblemSocial: deps.refreshProblemSocial,
     t: deps.t
