@@ -1,0 +1,87 @@
+{
+  "clicks": [
+    {
+      "x": 762.4375,
+      "y": 401.625,
+      "text": "English",
+      "selector": "[data-interview-lang=\"en\"]"
+    },
+    {
+      "x": 907.9375,
+      "y": 401.625,
+      "text": "训练练习",
+      "selector": "[data-interview-mode=\"practice\"]"
+    },
+    {
+      "x": 835.1875,
+      "y": 545.625,
+      "text": "高级设置",
+      "selector": ".interview-advanced-config summary"
+    },
+    {
+      "x": 835.1875,
+      "y": 818.625,
+      "text": "进入模拟面试",
+      "selector": "#startInterviewBtn"
+    },
+    {
+      "x": 539.0078125,
+      "y": 456.8337097167969,
+      "text": "Probability & stats"
+    },
+    {
+      "x": 495.703125,
+      "y": 532.7244873046875,
+      "text": "Medium"
+    },
+    {
+      "x": 441.3125,
+      "y": 661.55322265625,
+      "text": "3 questions"
+    },
+    {
+      "x": 428.7265625,
+      "y": 660.4086303710938,
+      "text": "Friendly"
+    }
+  ],
+  "states": {
+    "upload": {
+      "label": "pdf uploaded",
+      "href": "http://127.0.0.1:5179/interview?qa=cdp-pdf-source",
+      "source": "pdf",
+      "pdfRowVisible": true,
+      "pdfMeta": "quantgym-pdf-fixture.pdf · 0 KB",
+      "endpoint": "http://127.0.0.1:8792/interview",
+      "title": "",
+      "status": "",
+      "transcriptTail": ""
+    },
+    "q1": {
+      "label": "pdf generated q1",
+      "href": "http://127.0.0.1:5179/interview?qa=cdp-pdf-source",
+      "source": "pdf",
+      "pdfRowVisible": false,
+      "pdfMeta": "quantgym-pdf-fixture.pdf · 0 KB",
+      "endpoint": "http://127.0.0.1:8792/interview",
+      "title": "Practice · Technical Interview",
+      "status": "Q1/3",
+      "transcriptTail": "AI interviewer\n\nGreat — this session is Practice in English. Let me ask a few quick settings.\n\nWhat should we focus on today?\n\nProbability & stats\nAI interviewer\n\nWhat difficulty should I use?\n\nMedium\nAI interviewer\n\nHow many questions, or should we run by time?\n\n3 questions\nAI interviewer\n\nWhat interviewer style do you want?\n\nFriendly\nAI interviewer\n\nSession setup: Practice, focus Probability & stats, di\n\nMock PDF summary: generated from uploaded PDF fixture.\n\nConfiguration is set. I will start with the first qu\n\nLet'\n\ni\nPrompt\nQ1/3\nTechnical Interview · probabilityExpectation · Medium\nPDF Fixture Question 1\n\nFrom the uploaded PDF, explain quantitative idea 1 and give one formula.\n\nAI interviewer\n\nStar"
+    }
+  },
+  "screenshots": {
+    "upload": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/199-cdp-interview-pdf-source-upload.png",
+    "q1": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/200-cdp-interview-pdf-generated-q1.png"
+  },
+  "pdfPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-pdf-cdp-xASXOF/quantgym-pdf-fixture.pdf",
+  "requests": [
+    {
+      "task": "generate_pdf_questions",
+      "fileName": "quantgym-pdf-fixture.pdf",
+      "fileType": "application/pdf",
+      "fileSize": 133,
+      "count": 3,
+      "interviewType": "technical"
+    }
+  ]
+}

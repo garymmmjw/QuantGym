@@ -1,0 +1,139 @@
+{
+  "status": "pass",
+  "browser": "Google Chrome headless via Playwright",
+  "apiBase": "http://127.0.0.1:8790/api",
+  "account": {
+    "id": "qa-library-reader-20260608",
+    "email": "qa-library-reader-20260608@example.com"
+  },
+  "screenshots": [
+    "275-cdp-library-cloud-reader-initial.png",
+    "276-cdp-library-cloud-reader-open.png",
+    "277-cdp-library-cloud-reader-closed.png",
+    "278-cdp-library-cloud-reader-reload.png"
+  ],
+  "responses": [
+    {
+      "url": "http://127.0.0.1:8790/api/library/reader-token/green-book",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8"
+    },
+    {
+      "url": "http://127.0.0.1:8790/api/library/pdfs/green-book?token=eyJhc3NldElkIjoiZ3JlZW4tYm9vayIsInVzZXJJZCI6InFhLWxpYnJhcnktcmVhZGVyLTIwMjYwNjA4IiwiZXhwIjoxNzgwOTA5MDY1fQ.phqL79lDwWGRYBa2NNlwjkETbNCo7cYYXICjx2duBfI",
+      "status": 206,
+      "contentType": "application/pdf"
+    },
+    {
+      "url": "http://127.0.0.1:8790/api/library/pdfs/green-book?token=eyJhc3NldElkIjoiZ3JlZW4tYm9vayIsInVzZXJJZCI6InFhLWxpYnJhcnktcmVhZGVyLTIwMjYwNjA4IiwiZXhwIjoxNzgwOTA5MDY1fQ.phqL79lDwWGRYBa2NNlwjkETbNCo7cYYXICjx2duBfI",
+      "status": 200,
+      "contentType": "application/pdf"
+    },
+    {
+      "url": "http://127.0.0.1:8790/api/library/pdfs/green-book?token=eyJhc3NldElkIjoiZ3JlZW4tYm9vayIsInVzZXJJZCI6InFhLWxpYnJhcnktcmVhZGVyLTIwMjYwNjA4IiwiZXhwIjoxNzgwOTA5MDY1fQ.phqL79lDwWGRYBa2NNlwjkETbNCo7cYYXICjx2duBfI",
+      "status": 200,
+      "contentType": ""
+    }
+  ],
+  "errors": [
+    "console:error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "requestfailed: http://127.0.0.1:8787/news net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8787/jobs net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "pageerror: Cannot read properties of null (reading 'setItem')",
+    "requestfailed: http://127.0.0.1:8787/news net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8787/jobs net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  ],
+  "ignoredErrors": [
+    "console:error: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "requestfailed: http://127.0.0.1:8787/news net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8787/jobs net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "pageerror: Cannot read properties of null (reading 'setItem')",
+    "requestfailed: http://127.0.0.1:8787/news net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "requestfailed: http://127.0.0.1:8787/jobs net::ERR_CONNECTION_REFUSED",
+    "console:error: Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  ],
+  "pageErrors": [
+    "Cannot read properties of null (reading 'setItem')"
+  ],
+  "checks": {
+    "initial": {
+      "url": "http://127.0.0.1:5179/library?qa=library-cloud-reader",
+      "libraryRoot": true,
+      "books": 26,
+      "greenBook": true,
+      "alert": "",
+      "overlayOpen": false,
+      "overlayOpening": false,
+      "title": "阅读",
+      "meta": "PDF",
+      "frameSrc": "about:blank",
+      "openNewHref": "http://127.0.0.1:5179/library?qa=library-cloud-reader#",
+      "bodyHasReaderClass": false,
+      "overlay": false
+    },
+    "readerOpen": {
+      "url": "http://127.0.0.1:5179/library?qa=library-cloud-reader",
+      "libraryRoot": true,
+      "books": 26,
+      "greenBook": true,
+      "alert": "",
+      "overlayOpen": true,
+      "overlayOpening": false,
+      "title": "绿皮书",
+      "meta": "安全 PDF · 书籍",
+      "frameSrc": "http://127.0.0.1:8790/api/library/pdfs/green-book?token=eyJhc3NldElkIjoiZ3JlZW4tYm9vayIsInVzZXJJZCI6InFhLWxpYnJhcnktcmVhZGVyLTIwMjYwNjA4IiwiZXhwIjoxNzgwOTA5MDY1fQ.phqL79lDwWGRYBa2NNlwjkETbNCo7cYYXICjx2duBfI#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+      "openNewHref": "http://127.0.0.1:8790/api/library/pdfs/green-book?token=eyJhc3NldElkIjoiZ3JlZW4tYm9vayIsInVzZXJJZCI6InFhLWxpYnJhcnktcmVhZGVyLTIwMjYwNjA4IiwiZXhwIjoxNzgwOTA5MDY1fQ.phqL79lDwWGRYBa2NNlwjkETbNCo7cYYXICjx2duBfI",
+      "bodyHasReaderClass": true,
+      "overlay": false
+    },
+    "readerClosed": {
+      "url": "http://127.0.0.1:5179/library?qa=library-cloud-reader",
+      "libraryRoot": true,
+      "books": 26,
+      "greenBook": true,
+      "alert": "",
+      "overlayOpen": false,
+      "overlayOpening": false,
+      "title": "阅读",
+      "meta": "PDF",
+      "frameSrc": "about:blank",
+      "openNewHref": "http://127.0.0.1:5179/library?qa=library-cloud-reader#",
+      "bodyHasReaderClass": false,
+      "overlay": false
+    },
+    "afterReload": {
+      "url": "http://127.0.0.1:5179/library?qa=library-cloud-reader",
+      "libraryRoot": true,
+      "books": 26,
+      "greenBook": true,
+      "alert": "",
+      "overlayOpen": false,
+      "overlayOpening": false,
+      "title": "阅读",
+      "meta": "PDF",
+      "frameSrc": "about:blank",
+      "openNewHref": "http://127.0.0.1:5179/library?qa=library-cloud-reader#",
+      "bodyHasReaderClass": false,
+      "overlay": false
+    }
+  },
+  "assertions": {
+    "cloudAuth": true,
+    "libraryRendered": true,
+    "tokenEndpoint200": true,
+    "pdfEndpointOk": true,
+    "readerOpened": true,
+    "openNewUrlSet": true,
+    "readerClosed": true,
+    "reloadStable": true,
+    "noOverlay": true,
+    "significantErrors": []
+  },
+  "failed": []
+}

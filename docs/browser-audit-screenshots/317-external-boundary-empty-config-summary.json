@@ -1,0 +1,91 @@
+{
+  "createdAt": "2026-06-08T10:09:58.772Z",
+  "config": {
+    "runtimeConfigEmpty": true,
+    "localServices": {
+      "llm8787": false,
+      "api8790": false
+    }
+  },
+  "login": {
+    "url": "http://127.0.0.1:5179/login?qa=external-boundary-noauth",
+    "overlay": false,
+    "horizontalOverflow": false,
+    "authShellVisible": true,
+    "appShellVisible": false,
+    "authMessage": "邮箱登录已可用；注册时先发送验证码。Google 登录入口已预留，暂未启用。",
+    "googleButtonText": "G\n使用 Google 账号继续\n暂未启用",
+    "resumeReviewItems": [],
+    "settingsMessage": "",
+    "llmEndpoint": "",
+    "cloudEndpoint": "",
+    "googleClientId": "",
+    "textLength": 379
+  },
+  "settings": {
+    "url": "http://127.0.0.1:5179/settings?qa=external-boundary",
+    "overlay": false,
+    "horizontalOverflow": false,
+    "authShellVisible": false,
+    "appShellVisible": true,
+    "authMessage": "",
+    "googleButtonText": "G使用 Google 账号继续暂未启用",
+    "resumeReviewItems": [],
+    "settingsMessage": "应用偏好和数据管理。",
+    "llmEndpoint": "http://127.0.0.1:8787/interview",
+    "cloudEndpoint": "http://127.0.0.1:8790/api",
+    "googleClientId": "",
+    "textLength": 443
+  },
+  "resume": {
+    "url": "http://127.0.0.1:5179/resume?qa=external-boundary",
+    "overlay": false,
+    "horizontalOverflow": false,
+    "authShellVisible": false,
+    "appShellVisible": true,
+    "authMessage": "",
+    "googleButtonText": "G使用 Google 账号继续暂未启用",
+    "resumeReviewItems": [
+      "至少给 3 条经历补上量化结果：延迟、准确率、PnL proxy、数据规模或速度提升。",
+      "教育经历里明确毕业时间 2027-09，并把求职状态放到更靠前的位置。"
+    ],
+    "settingsMessage": "",
+    "llmEndpoint": "",
+    "cloudEndpoint": "",
+    "googleClientId": "",
+    "textLength": 227
+  },
+  "checks": {
+    "loginPass": true,
+    "settingsPass": true,
+    "resumePass": true,
+    "noPageErrors": true
+  },
+  "logs": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    }
+  ],
+  "status": "pass"
+}

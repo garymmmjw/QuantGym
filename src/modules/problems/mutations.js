@@ -69,7 +69,7 @@ export function updateProblemStates(problemStates = [], problemId = "", update =
     problemId,
     updatedAt: nowIso()
   });
-  return mergeProblemStates(problemStates || [], [next]);
+  return mergeProblemStates([problemStates || [], [next]]);
 }
 
 export function getProblemSavedToggle(current = {}, options = {}) {

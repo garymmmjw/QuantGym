@@ -21,7 +21,7 @@ export function createCommunityControllerBundle(deps = {}) {
 
   const experienceShareController = createExperienceShareController({
     getRecords: deps.getExperienceRecords,
-    setRecords: deps.setExperienceRecords,
+    setRecords: deps.setExperienceRecords || deps.setRecords,
     loadCommunity: deps.loadCommunity,
     getCommunity: deps.getCommunity,
     setCommunity: deps.setCommunity,

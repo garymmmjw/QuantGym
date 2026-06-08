@@ -1,0 +1,21 @@
+{
+  "id": 324,
+  "date": "2026-06-08",
+  "surface": "google provider login handoff helper",
+  "status": "pass",
+  "checks": {
+    "script": "npm run google:token-helper",
+    "generatedPath": "artifacts/google-id-token-helper.html",
+    "localUrl": "http://127.0.0.1:5179/artifacts/google-id-token-helper.html",
+    "artifactIgnoredByGit": true,
+    "tokenWrittenToDisk": false,
+    "verifierChecksTokenStructureAudienceAndExpiry": true,
+    "clientIdSource": ".env QUANTGYM_GOOGLE_CLIENT_ID or config.js googleClientId"
+  },
+  "notes": [
+    "The helper page is generated into the ignored artifacts directory and is served by the existing Vite dev server.",
+    "It renders Google Identity Services on the same 127.0.0.1:5179 origin used by the app and displays the short-lived Google ID token locally after sign-in.",
+    "Use the copied token with QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries before it expires.",
+    "The production-boundary verifier decodes the JWT locally and fails fast for malformed, expired, wrong-issuer, or wrong-audience tokens before calling the provider login endpoint."
+  ]
+}

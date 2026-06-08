@@ -1,0 +1,428 @@
+{
+  "status": "pass",
+  "checks": {
+    "initialContract": true,
+    "mediaPreviewAndClear": true,
+    "publishMediaPost": true,
+    "likeRemotePost": true,
+    "commentRemotePost": true,
+    "deleteOwnPost": true,
+    "reloadPersistence": true
+  },
+  "screenshots": {
+    "initial": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/240-cdp-community-initial-seeded.png",
+    "mediaPreview": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/241-cdp-community-media-preview.png",
+    "afterPublish": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/242-cdp-community-publish-media.png",
+    "afterLike": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/243-cdp-community-like-clicked.png",
+    "afterComment": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/244-cdp-community-comment-persisted.png",
+    "afterDelete": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/245-cdp-community-delete-own-post.png",
+    "afterReload": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/246-cdp-community-reload-persisted.png"
+  },
+  "initial": {
+    "url": "http://127.0.0.1:5179/community?qa=community-deep",
+    "title": "社区",
+    "bodyRawKeys": [],
+    "mediaPreviewHidden": true,
+    "mediaPreviewHasImage": false,
+    "textareaValue": "",
+    "cards": [
+      {
+        "text": "BCBob Community美国 · California · 2026/06/08Remote seed post for like and comment smoke.赞 - 0私信0 评论",
+        "hasMedia": false,
+        "likeText": "赞 - 0",
+        "activeLike": false,
+        "commentCountText": "0 评论",
+        "comments": [],
+        "hasDelete": false
+      }
+    ],
+    "posts": [
+      {
+        "id": "post-community-remote-bob",
+        "kind": "update",
+        "authorId": "qa-peer-community-bob",
+        "authorName": "Bob Community",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "Remote seed post for like and comment smoke.",
+        "media": null,
+        "likes": [],
+        "comments": [],
+        "createdAt": "2026-06-08T07:30:00.000Z"
+      }
+    ]
+  },
+  "mediaPreview": {
+    "url": "http://127.0.0.1:5179/community?qa=community-deep",
+    "title": "社区",
+    "bodyRawKeys": [],
+    "mediaPreviewHidden": false,
+    "mediaPreviewHasImage": true,
+    "textareaValue": "",
+    "cards": [
+      {
+        "text": "BCBob Community美国 · California · 2026/06/08Remote seed post for like and comment smoke.赞 - 0私信0 评论",
+        "hasMedia": false,
+        "likeText": "赞 - 0",
+        "activeLike": false,
+        "commentCountText": "0 评论",
+        "comments": [],
+        "hasDelete": false
+      }
+    ],
+    "posts": [
+      {
+        "id": "post-community-remote-bob",
+        "kind": "update",
+        "authorId": "qa-peer-community-bob",
+        "authorName": "Bob Community",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "Remote seed post for like and comment smoke.",
+        "media": null,
+        "likes": [],
+        "comments": [],
+        "createdAt": "2026-06-08T07:30:00.000Z"
+      }
+    ]
+  },
+  "afterClearPreview": {
+    "url": "http://127.0.0.1:5179/community?qa=community-deep",
+    "title": "社区",
+    "bodyRawKeys": [],
+    "mediaPreviewHidden": true,
+    "mediaPreviewHasImage": false,
+    "textareaValue": "",
+    "cards": [
+      {
+        "text": "BCBob Community美国 · California · 2026/06/08Remote seed post for like and comment smoke.赞 - 0私信0 评论",
+        "hasMedia": false,
+        "likeText": "赞 - 0",
+        "activeLike": false,
+        "commentCountText": "0 评论",
+        "comments": [],
+        "hasDelete": false
+      }
+    ],
+    "posts": [
+      {
+        "id": "post-community-remote-bob",
+        "kind": "update",
+        "authorId": "qa-peer-community-bob",
+        "authorName": "Bob Community",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "Remote seed post for like and comment smoke.",
+        "media": null,
+        "likes": [],
+        "comments": [],
+        "createdAt": "2026-06-08T07:30:00.000Z"
+      }
+    ]
+  },
+  "afterPublish": {
+    "url": "http://127.0.0.1:5179/community?qa=community-deep",
+    "title": "社区",
+    "bodyRawKeys": [],
+    "mediaPreviewHidden": true,
+    "mediaPreviewHasImage": false,
+    "textareaValue": "",
+    "cards": [
+      {
+        "text": "CQCommunity QA美国 · California · 2026/06/08QA COMMUNITY POST WITH IMAGE 20260608赞 - 00 评论",
+        "hasMedia": true,
+        "likeText": "赞 - 0",
+        "activeLike": false,
+        "commentCountText": "0 评论",
+        "comments": [],
+        "hasDelete": true
+      },
+      {
+        "text": "BCBob Community美国 · California · 2026/06/08Remote seed post for like and comment smoke.赞 - 0私信0 评论",
+        "hasMedia": false,
+        "likeText": "赞 - 0",
+        "activeLike": false,
+        "commentCountText": "0 评论",
+        "comments": [],
+        "hasDelete": false
+      }
+    ],
+    "posts": [
+      {
+        "id": "a449f988-3cb3-4ef1-978a-84ce205991f9",
+        "kind": "update",
+        "experience": null,
+        "authorId": "qa-current-community",
+        "authorName": "Community QA",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "QA COMMUNITY POST WITH IMAGE 20260608",
+        "media": {
+          "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR42mP8z8Dwn4GBgYGJAQoAHgcCAlZ5fCIAAAAASUVORK5CYII=",
+          "type": "image",
+          "name": "quantgym-community-fixture.png"
+        },
+        "likes": [],
+        "comments": [],
+        "createdAt": "2026-06-08T07:45:17.748Z"
+      },
+      {
+        "id": "post-community-remote-bob",
+        "kind": "update",
+        "experience": null,
+        "authorId": "qa-peer-community-bob",
+        "authorName": "Bob Community",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "Remote seed post for like and comment smoke.",
+        "media": null,
+        "likes": [],
+        "comments": [],
+        "createdAt": "2026-06-08T07:30:00.000Z"
+      }
+    ]
+  },
+  "afterLike": {
+    "url": "http://127.0.0.1:5179/community?qa=community-deep",
+    "title": "社区",
+    "bodyRawKeys": [],
+    "mediaPreviewHidden": true,
+    "mediaPreviewHasImage": false,
+    "textareaValue": "",
+    "cards": [
+      {
+        "text": "CQCommunity QA美国 · California · 2026/06/08QA COMMUNITY POST WITH IMAGE 20260608赞 - 00 评论",
+        "hasMedia": true,
+        "likeText": "赞 - 0",
+        "activeLike": false,
+        "commentCountText": "0 评论",
+        "comments": [],
+        "hasDelete": true
+      },
+      {
+        "text": "BCBob Community美国 · California · 2026/06/08Remote seed post for like and comment smoke.已赞 - 1私信0 评论",
+        "hasMedia": false,
+        "likeText": "已赞 - 1",
+        "activeLike": true,
+        "commentCountText": "0 评论",
+        "comments": [],
+        "hasDelete": false
+      }
+    ],
+    "posts": [
+      {
+        "id": "a449f988-3cb3-4ef1-978a-84ce205991f9",
+        "kind": "update",
+        "experience": null,
+        "authorId": "qa-current-community",
+        "authorName": "Community QA",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "QA COMMUNITY POST WITH IMAGE 20260608",
+        "media": {
+          "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR42mP8z8Dwn4GBgYGJAQoAHgcCAlZ5fCIAAAAASUVORK5CYII=",
+          "type": "image",
+          "name": "quantgym-community-fixture.png"
+        },
+        "likes": [],
+        "comments": [],
+        "createdAt": "2026-06-08T07:45:17.748Z"
+      },
+      {
+        "id": "post-community-remote-bob",
+        "kind": "update",
+        "experience": null,
+        "authorId": "qa-peer-community-bob",
+        "authorName": "Bob Community",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "Remote seed post for like and comment smoke.",
+        "media": null,
+        "likes": [
+          "qa-current-community"
+        ],
+        "comments": [],
+        "createdAt": "2026-06-08T07:30:00.000Z"
+      }
+    ]
+  },
+  "afterComment": {
+    "url": "http://127.0.0.1:5179/community?qa=community-deep",
+    "title": "社区",
+    "bodyRawKeys": [],
+    "mediaPreviewHidden": true,
+    "mediaPreviewHasImage": false,
+    "textareaValue": "",
+    "cards": [
+      {
+        "text": "CQCommunity QA美国 · California · 2026/06/08QA COMMUNITY POST WITH IMAGE 20260608赞 - 00 评论",
+        "hasMedia": true,
+        "likeText": "赞 - 0",
+        "activeLike": false,
+        "commentCountText": "0 评论",
+        "comments": [],
+        "hasDelete": true
+      },
+      {
+        "text": "BCBob Community美国 · California · 2026/06/08Remote seed post for like and comment smoke.已赞 - 1私信1 评论Community QAQA community comment persists 20260608",
+        "hasMedia": false,
+        "likeText": "已赞 - 1",
+        "activeLike": true,
+        "commentCountText": "1 评论",
+        "comments": [
+          "Community QAQA community comment persists 20260608"
+        ],
+        "hasDelete": false
+      }
+    ],
+    "posts": [
+      {
+        "id": "a449f988-3cb3-4ef1-978a-84ce205991f9",
+        "kind": "update",
+        "experience": null,
+        "authorId": "qa-current-community",
+        "authorName": "Community QA",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "QA COMMUNITY POST WITH IMAGE 20260608",
+        "media": {
+          "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR42mP8z8Dwn4GBgYGJAQoAHgcCAlZ5fCIAAAAASUVORK5CYII=",
+          "type": "image",
+          "name": "quantgym-community-fixture.png"
+        },
+        "likes": [],
+        "comments": [],
+        "createdAt": "2026-06-08T07:45:17.748Z"
+      },
+      {
+        "id": "post-community-remote-bob",
+        "kind": "update",
+        "experience": null,
+        "authorId": "qa-peer-community-bob",
+        "authorName": "Bob Community",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "Remote seed post for like and comment smoke.",
+        "media": null,
+        "likes": [
+          "qa-current-community"
+        ],
+        "comments": [
+          {
+            "id": "9b9e58eb-15a8-42e2-ac0b-378a197cce1c",
+            "authorId": "qa-current-community",
+            "authorName": "Community QA",
+            "text": "QA community comment persists 20260608",
+            "createdAt": "2026-06-08T07:45:19.758Z"
+          }
+        ],
+        "createdAt": "2026-06-08T07:30:00.000Z"
+      }
+    ]
+  },
+  "afterDelete": {
+    "url": "http://127.0.0.1:5179/community?qa=community-deep",
+    "title": "社区",
+    "bodyRawKeys": [],
+    "mediaPreviewHidden": true,
+    "mediaPreviewHasImage": false,
+    "textareaValue": "",
+    "cards": [
+      {
+        "text": "BCBob Community美国 · California · 2026/06/08Remote seed post for like and comment smoke.已赞 - 1私信1 评论Community QAQA community comment persists 20260608",
+        "hasMedia": false,
+        "likeText": "已赞 - 1",
+        "activeLike": true,
+        "commentCountText": "1 评论",
+        "comments": [
+          "Community QAQA community comment persists 20260608"
+        ],
+        "hasDelete": false
+      }
+    ],
+    "posts": [
+      {
+        "id": "post-community-remote-bob",
+        "kind": "update",
+        "experience": null,
+        "authorId": "qa-peer-community-bob",
+        "authorName": "Bob Community",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "Remote seed post for like and comment smoke.",
+        "media": null,
+        "likes": [
+          "qa-current-community"
+        ],
+        "comments": [
+          {
+            "id": "9b9e58eb-15a8-42e2-ac0b-378a197cce1c",
+            "authorId": "qa-current-community",
+            "authorName": "Community QA",
+            "text": "QA community comment persists 20260608",
+            "createdAt": "2026-06-08T07:45:19.758Z"
+          }
+        ],
+        "createdAt": "2026-06-08T07:30:00.000Z"
+      }
+    ]
+  },
+  "afterReload": {
+    "url": "http://127.0.0.1:5179/community?qa=community-deep",
+    "title": "社区",
+    "bodyRawKeys": [],
+    "mediaPreviewHidden": true,
+    "mediaPreviewHasImage": false,
+    "textareaValue": "",
+    "cards": [
+      {
+        "text": "BCBob Community美国 · California · 2026/06/08Remote seed post for like and comment smoke.已赞 - 1私信1 评论Community QAQA community comment persists 20260608",
+        "hasMedia": false,
+        "likeText": "已赞 - 1",
+        "activeLike": true,
+        "commentCountText": "1 评论",
+        "comments": [
+          "Community QAQA community comment persists 20260608"
+        ],
+        "hasDelete": false
+      }
+    ],
+    "posts": [
+      {
+        "id": "post-community-remote-bob",
+        "kind": "update",
+        "experience": null,
+        "authorId": "qa-peer-community-bob",
+        "authorName": "Bob Community",
+        "authorAvatar": "",
+        "country": "unitedStates",
+        "region": "California",
+        "text": "Remote seed post for like and comment smoke.",
+        "media": null,
+        "likes": [
+          "qa-current-community"
+        ],
+        "comments": [
+          {
+            "id": "9b9e58eb-15a8-42e2-ac0b-378a197cce1c",
+            "authorId": "qa-current-community",
+            "authorName": "Community QA",
+            "text": "QA community comment persists 20260608",
+            "createdAt": "2026-06-08T07:45:19.758Z"
+          }
+        ],
+        "createdAt": "2026-06-08T07:30:00.000Z"
+      }
+    ]
+  }
+}

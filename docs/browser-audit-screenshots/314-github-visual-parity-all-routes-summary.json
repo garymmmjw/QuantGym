@@ -1,0 +1,2389 @@
+{
+  "createdAt": "2026-06-08T10:00:02.055Z",
+  "currentBase": "http://127.0.0.1:5179",
+  "baselineBase": "http://127.0.0.1:5180",
+  "routeCount": 21,
+  "routes": [
+    {
+      "route": "overview",
+      "selector": "#newsTickerTrack",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-overview.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-overview.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#overview",
+        "activeView": "overview",
+        "activeRect": {
+          "x": 43,
+          "y": 133,
+          "w": 1354,
+          "h": 1018
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 230,
+          "y": 185,
+          "w": 3180,
+          "h": 44,
+          "text": "Reuters / Investing.com Jane Street Q1 交易收入创纪录 Bloomberg Jane Street 2025 年交易收入刷新纪录 Data Center Dynamics Jane Street 与 CoreWeave 签下 AI 云算力协议 Bloomberg Squarepoint 关联方启动电子做市业务 Reuters / Investing.com Jane Street Q1 交易收入创纪录 Bloomberg Jane Str"
+        },
+        "textLength": 948,
+        "headings": [
+          "Sharpen",
+          "Problem completion",
+          "Experience rhythm",
+          "Contribution heatmap",
+          "排行榜"
+        ],
+        "images": [
+          {
+            "src": "assets/generated/shark-hero-clean.png?v=original-clean-1",
+            "alt": "",
+            "x": 592,
+            "y": 357,
+            "w": 299,
+            "h": 379
+          }
+        ],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "量化快讯 Reuters / Investing.com Jane Street Q1 交易收入创纪录 Bloomberg Jane Street 2025 年交易收入刷新纪录 Data Center Dynamics Jane Street 与 CoreWeave 签下 AI 云算力协议 Bloomberg Squarepoint 关联方启动电子做市业务 Reuters / Investing.com Jane Street Q1 交易收入创纪录 Bloomberg Jane Street 2025 年交易收入刷新纪录 Data Center Dynamics Jane Street 与 C"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/",
+        "activeView": "route",
+        "activeRect": {
+          "x": 43,
+          "y": 133,
+          "w": 1354,
+          "h": 1105
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 274,
+          "y": 188,
+          "w": 3180,
+          "h": 44,
+          "text": "Reuters / Investing.com Jane Street Q1 交易收入创纪录 Bloomberg Jane Street 2025 年交易收入刷新纪录 Data Center Dynamics Jane Street 与 CoreWeave 签下 AI 云算力协议 Bloomberg Squarepoint 关联方启动电子做市业务 Reuters / Investing.com Jane Street Q1 交易收入创纪录 Bloomberg Jane Str"
+        },
+        "textLength": 965,
+        "headings": [
+          "Sharpen your quant edge today.",
+          "Problem completion",
+          "Experience rhythm",
+          "Contribution heatmap",
+          "排行榜"
+        ],
+        "images": [
+          {
+            "src": "assets/generated/shark-hero-clean.png?v=original-clean-1",
+            "alt": "",
+            "x": 550,
+            "y": 328,
+            "w": 330,
+            "h": 418
+          }
+        ],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "量化快讯 Reuters / Investing.com Jane Street Q1 交易收入创纪录 Bloomberg Jane Street 2025 年交易收入刷新纪录 Data Center Dynamics Jane Street 与 CoreWeave 签下 AI 云算力协议 Bloomberg Squarepoint 关联方启动电子做市业务 Reuters / Investing.com Jane Street Q1 交易收入创纪录 Bloomberg Jane Street 2025 年交易收入刷新纪录 Data Center Dynamics Jane Street 与 C",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 44,
+        "keyY": 3,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": 17
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "plan",
+      "selector": "#prepPlanSetupForm, #prepPlanDashboard",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-plan.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-plan.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#plan",
+        "activeView": "plan",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 974
+        },
+        "key": {
+          "count": 2,
+          "visible": true,
+          "x": 50,
+          "y": 317,
+          "w": 980,
+          "h": 699,
+          "text": "建立你的备战路线 不同岗位和招聘季，需要不同的训练重点与节奏。 你要申请什么类型的岗位？ Internship 在校生暑期实习，围绕目标 summer 做倒排。 Full-time / New Grad 校招或毕业岗，增加项目表达与完整面试循环。 目标招聘季 2026 Summer 临近开工，按补录与即时面试冲刺。 2027 Summer 主申请周期，系统建设能力与申请材料。 2028 Summer 提前布局，先建立基础与项目经历。 目标方向 Quant Trading Qu"
+        },
+        "textLength": 468,
+        "headings": [
+          "Quant 面试备战计划"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "Quant 面试备战计划 以目标招聘季和岗位方向为起点，覆盖 assessment、技术面、behavioral 与 final day。 建立你的备战路线 不同岗位和招聘季，需要不同的训练重点与节奏。 你要申请什么类型的岗位？ Internship 在校生暑期实习，围绕目标 summer 做倒排。 Full-time / New Grad 校招或毕业岗，增加项目表达与完整面试循环。 目标招聘季 2026 Summer 临近开工，按补录与即时面试冲刺。 2027 Summer 主申请周期，系统建设能力与申请材料。 2028 Summer 提前布局，先建立基础与项目经历。 目标方向 Quant "
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/plan",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 974
+        },
+        "key": {
+          "count": 2,
+          "visible": true,
+          "x": 50,
+          "y": 317,
+          "w": 980,
+          "h": 699,
+          "text": "建立你的备战路线 不同岗位和招聘季，需要不同的训练重点与节奏。 你要申请什么类型的岗位？ Internship 在校生暑期实习，围绕目标 summer 做倒排。 Full-time / New Grad 校招或毕业岗，增加项目表达与完整面试循环。 目标招聘季 2026 Summer 临近开工，按补录与即时面试冲刺。 2027 Summer 主申请周期，系统建设能力与申请材料。 2028 Summer 提前布局，先建立基础与项目经历。 目标方向 Quant Trading Qu"
+        },
+        "textLength": 468,
+        "headings": [
+          "Quant 面试备战计划"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "Quant 面试备战计划 以目标招聘季和岗位方向为起点，覆盖 assessment、技术面、behavioral 与 final day。 建立你的备战路线 不同岗位和招聘季，需要不同的训练重点与节奏。 你要申请什么类型的岗位？ Internship 在校生暑期实习，围绕目标 summer 做倒排。 Full-time / New Grad 校招或毕业岗，增加项目表达与完整面试循环。 目标招聘季 2026 Summer 临近开工，按补录与即时面试冲刺。 2027 Summer 主申请周期，系统建设能力与申请材料。 2028 Summer 提前布局，先建立基础与项目经历。 目标方向 Quant ",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": 0
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "skills",
+      "selector": "#skillsPageTitle",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-skills.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-skills.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#skills",
+        "activeView": "skills",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 2472
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 185,
+          "w": 395,
+          "h": 23,
+          "text": "能力值"
+        },
+        "textLength": 1591,
+        "headings": [
+          "能力值",
+          "能力雷达"
+        ],
+        "images": [
+          {
+            "src": "assets/generated/mascot-teacher-chart.webp?v=premium-system-2",
+            "alt": "",
+            "x": 1253,
+            "y": 283,
+            "w": 115,
+            "h": 99
+          }
+        ],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "能力值 把训练记录、题目表现和面试反馈汇总成 quant readiness score。 0 /100 分数来自九个能力维度。继续刷题、模拟面试和记录训练，能力值会自动更新。 0 训练记录 - 平均得分 LC 优先补强 能力雷达 悬停到能力点或右侧分数，查看做题情况和平均得分。 LeetCode 0/100 C++ Programming 0/100 Pandas/NumPy 0/100 Probability/Expectation 0/100 Statistics 0/100 Calculus 0/100 Algebra 0/100 Linear Algebra 0/100 Optimi"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/skills",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 2472
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 185,
+          "w": 395,
+          "h": 23,
+          "text": "能力值"
+        },
+        "textLength": 1591,
+        "headings": [
+          "能力值",
+          "能力雷达"
+        ],
+        "images": [
+          {
+            "src": "assets/generated/mascot-teacher-chart.webp?v=premium-system-2",
+            "alt": "",
+            "x": 1253,
+            "y": 283,
+            "w": 115,
+            "h": 99
+          }
+        ],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "能力值 把训练记录、题目表现和面试反馈汇总成 quant readiness score。 0 /100 分数来自九个能力维度。继续刷题、模拟面试和记录训练，能力值会自动更新。 0 练习次数 - 平均得分 LC 优先补强 能力雷达 悬停到能力点或右侧分数，查看做题情况和平均得分。 LeetCode 0/100 C++ Programming 0/100 Pandas/NumPy 0/100 Probability/Expectation 0/100 Statistics 0/100 Calculus 0/100 Algebra 0/100 Linear Algebra 0/100 Optimi",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": 0
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "interview",
+      "selector": "#interviewSetup",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-interview.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-interview.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#interview",
+        "activeView": "interview",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 555,
+          "y": 244,
+          "w": 560,
+          "h": 408,
+          "text": "开始一场模拟面试 先选好语言、模型和模式，进入后由 AI 面试官用对话完成方向、难度、题量、风格等设置。 语言 中文 English 模式 训练练习 真实面试 模型 gpt-5-nano · 最便宜 gpt-5-mini · 更稳 gpt-5 · 更强 gpt-5.4-mini · 新 mini gpt-5.4 · 高质量 gpt-4o-mini · 旧版低价 gpt-4.1-nano · 旧版 nano 高级设置 进入模拟面试"
+        },
+        "textLength": 263,
+        "headings": [
+          "模拟面试"
+        ],
+        "images": [
+          {
+            "src": "assets/generated/shark-hero-clean.png?v=original-clean-1",
+            "alt": "",
+            "x": 324,
+            "y": 322,
+            "w": 188,
+            "h": 238
+          }
+        ],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "模拟面试 AI 面试官会通过对话配置 practice / live。题库抽题 · 随机主题 开始一场模拟面试 先选好语言、模型和模式，进入后由 AI 面试官用对话完成方向、难度、题量、风格等设置。 语言 中文 English 模式 训练练习 真实面试 模型 gpt-5-nano · 最便宜 gpt-5-mini · 更稳 gpt-5 · 更强 gpt-5.4-mini · 新 mini gpt-5.4 · 高质量 gpt-4o-mini · 旧版低价 gpt-4.1-nano · 旧版 nano 高级设置 进入模拟面试"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/interview",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 555,
+          "y": 244,
+          "w": 560,
+          "h": 408,
+          "text": "开始一场模拟面试 先选好语言、模型和模式，进入后由 AI 面试官用对话完成方向、难度、题量、风格等设置。 语言 中文 English 模式 训练练习 真实面试 模型 gpt-5-nano · 最便宜 gpt-5-mini · 更稳 gpt-5 · 更强 gpt-5.4-mini · 新 mini gpt-5.4 · 高质量 gpt-4o-mini · 旧版低价 gpt-4.1-nano · 旧版 nano 高级设置 进入模拟面试"
+        },
+        "textLength": 263,
+        "headings": [
+          "模拟面试"
+        ],
+        "images": [
+          {
+            "src": "assets/generated/shark-hero-clean.png?v=original-clean-1",
+            "alt": "",
+            "x": 322,
+            "y": 325,
+            "w": 191,
+            "h": 240
+          }
+        ],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "模拟面试 AI 面试官会通过对话配置 practice / live。题库抽题 · 随机主题 开始一场模拟面试 先选好语言、模型和模式，进入后由 AI 面试官用对话完成方向、难度、题量、风格等设置。 语言 中文 English 模式 训练练习 真实面试 模型 gpt-5-nano · 最便宜 gpt-5-mini · 更稳 gpt-5 · 更强 gpt-5.4-mini · 新 mini gpt-5.4 · 高质量 gpt-4o-mini · 旧版低价 gpt-4.1-nano · 旧版 nano 高级设置 进入模拟面试",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": 0
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "problems",
+      "selector": "#problemSearch",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-problems.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-problems.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#problems",
+        "activeView": "problems",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 5749
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 701,
+          "y": 210,
+          "w": 300,
+          "h": 42,
+          "text": ""
+        },
+        "textLength": 5803,
+        "headings": [
+          "题目",
+          "题单集合",
+          "题目完成进度",
+          "按公司刷题"
+        ],
+        "images": [
+          {
+            "src": "/assets/generated/mascot-calculator.webp?v=premium-system-2",
+            "alt": "",
+            "x": 621,
+            "y": 180,
+            "w": 64,
+            "h": 102
+          }
+        ],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "题目 系统练习概率、期望、博弈和 quant 面试基础题。 题单集合 从常刷集合直接进入题库；LeetCode 会展开原题清单并记录完成状态。 Featured list LeetCode Hot 100 官方 Top 100 liked 题单，跳转原题并记录完成。 0 / 100 完成进度 Source set QuantGuide 题库 1200+ 高频 quant 面试题，适合日常主线刷题。 0 / 1204 完成进度 Source set Stat 110 概率练习 Harvard 概率战略练习，按题单进入题库。 0 / 184 完成进度 Source set Hull 衍生品 期权、"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/problems",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 4459
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 701,
+          "y": 210,
+          "w": 300,
+          "h": 42,
+          "text": ""
+        },
+        "textLength": 2882,
+        "headings": [
+          "题目",
+          "题单集合",
+          "题目完成进度",
+          "按公司刷题"
+        ],
+        "images": [
+          {
+            "src": "/assets/generated/mascot-calculator.webp?v=premium-system-2",
+            "alt": "",
+            "x": 621,
+            "y": 180,
+            "w": 64,
+            "h": 102
+          }
+        ],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "题目 系统练习概率、期望、博弈和 quant 面试基础题。 题单集合 从常刷集合直接进入题库；LeetCode 会展开原题清单并记录完成状态。 Featured list LeetCode Hot 100 官方 Top 100 liked 题单，跳转原题并记录完成。 0 / 100 完成进度 Source set QuantGuide 题库 1200+ 高频 quant 面试题，适合日常主线刷题。 0 / 1204 完成进度 Source set Stat 110 概率练习 Harvard 概率战略练习，按题单进入题库。 0 / 184 完成进度 Source set Hull 衍生品 期权、",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": -2921
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "tools",
+      "selector": "#startDrillSessionBtn",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-tools.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-tools.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#tools",
+        "activeView": "tools",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 1443
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 1298,
+          "y": 357,
+          "w": 92,
+          "h": 42,
+          "text": "开始"
+        },
+        "textLength": 663,
+        "headings": [
+          "Mental Math",
+          "训练记录",
+          "排行榜"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "Mental Math 按 NumberLogic 的节奏练习：限时、多选、跳过不扣分，目标是在压力下保持准确率。 0 score 0% accuracy 25:00 time left Number Logic Arithmetic 百分比 平方 EV 题量 10 20 25 40 时间 5:00 10:00 25:00 开始 Question 1/20 Time left: 25:00 10 14 18 22 26 ? 14 38 30 24 22 Skip Next 点击开始进入限时训练。 训练记录 Best 0 No trend yet 还没有训练记录。 排行榜 local 1 Ari"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/tools",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 1413
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 1298,
+          "y": 357,
+          "w": 92,
+          "h": 42,
+          "text": "开始"
+        },
+        "textLength": 660,
+        "headings": [
+          "Mental Math",
+          "训练记录",
+          "排行榜"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "Mental Math 按 NumberLogic 的节奏练习：限时、多选、跳过不扣分，目标是在压力下保持准确率。 0 score 0% accuracy 25:00 time left Number Logic Arithmetic 百分比 平方 EV 题量 10 20 25 40 时间 5:00 10:00 25:00 开始 Question 1/20 Time left: 25:00 11 17 13 19 15 ? 13 37 5 27 21 Skip Next 点击开始进入限时训练。 训练记录 Best 0 No trend yet 还没有训练记录。 排行榜 local 1 Ari ",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": -3
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "poker",
+      "selector": "#pokerTable",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-poker.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-poker.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#poker",
+        "activeView": "poker",
+        "activeRect": {
+          "x": 386,
+          "y": 117,
+          "w": 1054,
+          "h": 2228
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 464,
+          "y": 359,
+          "w": 492,
+          "h": 490,
+          "text": "WAITING Pot 0 No Limit Texas Hold'em Quant Player ? ? 2000 Bet 0 Registered Remove 2 SIT SIT 3 SIT SIT 4 SIT SIT 5 SIT SIT 6 SIT SIT 7 SIT SIT 8 SIT SIT 9 SIT SIT 10 SIT SIT"
+        },
+        "textLength": 2358,
+        "headings": [],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "POKER GYM OWNER: GARY NLH ~ 10 / 20 QG-MAIN BLINDS 10 / 20 HAND #0 AVG STACK 2000 CHIP LEADER Quant · 2000 WAITING Pot 0 No Limit Texas Hold'em Quant Player ? ? 2000 Bet 0 Registered Remove 2 SIT SIT 3 SIT SIT 4 SIT SIT 5 SIT SIT 6 SIT SIT 7 SIT SIT 8 SIT SIT 9 SIT SIT 10 SIT SIT LOG / LEDGER Open r"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 2119
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 136,
+          "y": 419,
+          "w": 759,
+          "h": 500,
+          "text": "WAITING Pot 0 No Limit Texas Hold'em Quant Player ? ? 2000 Bet 0 Registered Remove 2 SIT SIT 3 SIT SIT 4 SIT SIT 5 SIT SIT 6 SIT SIT 7 SIT SIT 8 SIT SIT 9 SIT SIT 10 SIT SIT"
+        },
+        "textLength": 2358,
+        "headings": [],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "POKER GYM OWNER: GARY NLH ~ 10 / 20 QG-MAIN BLINDS 10 / 20 HAND #0 AVG STACK 2000 CHIP LEADER Quant · 2000 WAITING Pot 0 No Limit Texas Hold'em Quant Player ? ? 2000 Bet 0 Registered Remove 2 SIT SIT 3 SIT SIT 4 SIT SIT 5 SIT SIT 6 SIT SIT 7 SIT SIT 8 SIT SIT 9 SIT SIT 10 SIT SIT LOG / LEDGER Open r",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": -328,
+        "keyY": 60,
+        "keyW": 267,
+        "keyH": 10,
+        "textLength": 0
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "experiences",
+      "selector": "#newExperienceBtn",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-experiences.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-experiences.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#experiences",
+        "activeView": "experiences",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 1339
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 1232,
+          "y": 191,
+          "w": 124,
+          "h": 42,
+          "text": "新建记录"
+        },
+        "textLength": 559,
+        "headings": [
+          "面经记录",
+          "新建面经"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "INTERVIEW LOG 面经记录 按轮次沉淀面试过程、考察主题和复盘行动，建立自己的面试档案。 新建记录 新建面经 私有保存 公司 岗位方向 Quant Trading Quant Research Quant Developer 其他方向 轮次 OA / Assessment Recruiter / HR Screen Technical Interview Behavioral / Fit Final Day / Superday HR Close / Offer 目标季次 2026 Summer 2027 Summer 2028 Summer Off-cycle 面试日期 结果状态 "
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/experiences",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 1309
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 1232,
+          "y": 191,
+          "w": 124,
+          "h": 42,
+          "text": "新建面经"
+        },
+        "textLength": 558,
+        "headings": [
+          "面经记录",
+          "新建面经"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "INTERVIEW LOG 面经记录 按轮次沉淀面试过程、考察主题和复盘行动，建立自己的面试档案。 新建面经 新建面经 私有保存 公司 岗位方向 Quant Trading Quant Research Quant Developer 其他方向 轮次 OA / Assessment Recruiter / HR Screen Technical Interview Behavioral / Fit Final Day / Superday HR Close / Offer 目标季次 2026 Summer 2027 Summer 2028 Summer Off-cycle 面试日期 结果状态 ",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": -1
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "news",
+      "selector": "#newsList",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-news.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-news.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#news",
+        "activeView": "news",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 1345
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 491,
+          "w": 1339,
+          "h": 933,
+          "text": "2026/05/08 Reuters / Investing.com 新闻/RSS 可核验来源 Jane Street Q1 交易收入创纪录 Reuters 报道称，Jane Street 2026 年第一季度交易收入达到 161 亿美元，市场波动、机器辅助中频策略和 AI 公司持仓表现是关键词。 面试启发 面试启发：为什么波动率上升会利好做市和多资产交易？可以用 bid-ask spread、inventory risk、holding period 和模型定价来解释。 M"
+        },
+        "textLength": 1438,
+        "headings": [
+          "Quant 新闻",
+          "Jane Street Q1 交易收入创纪录",
+          "Jane Street 2025 年交易收入刷新纪录"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "Quant 新闻 收录 4 - 最近 2026/05/08 信息雷达 新闻/RSS 自动同步，LinkedIn 和小红书作为人工线索入口。 - Jane Street、做市、AI 算力与市场结构 4 收录 4 新闻/RSS 0 官方 0 社交线索 0 已读 全部 公司 市场结构 AI/算力 求职/社群 全部来源 新闻/RSS 官方 社交线索 LinkedIn / 小红书目前支持粘贴公开链接、摘要和启发；不做自动爬取，点击来源回原站核验。 2026/05/08 Reuters / Investing.com 新闻/RSS 可核验来源 Jane Street Q1 交易收入创纪录 Reuters "
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/news",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 1249
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 491,
+          "w": 1339,
+          "h": 837,
+          "text": "2026/05/08 Reuters / Investing.com 新闻/RSS 可核验来源 Jane Street Q1 交易收入创纪录 Reuters 报道称，Jane Street 2026 年第一季度交易收入达到 161 亿美元，市场波动、机器辅助中频策略和 AI 公司持仓表现是关键词。 面试启发 面试启发：为什么波动率上升会利好做市和多资产交易？可以用 bid-ask spread、inventory risk、holding period 和模型定价来解释。 M"
+        },
+        "textLength": 1410,
+        "headings": [
+          "Quant 新闻",
+          "Jane Street Q1 交易收入创纪录",
+          "Jane Street 2025 年交易收入刷新纪录"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "Quant 新闻 收录 4 - 最近 2026/05/08 信息雷达 新闻/RSS 自动同步，LinkedIn 和小红书作为人工线索入口。 4 收录 4 新闻/RSS 0 官方 0 社交线索 0 已读 全部 公司 市场结构 AI/算力 求职/社群 全部来源 新闻/RSS 官方 社交线索 LinkedIn / 小红书目前支持粘贴公开链接、摘要和启发；不做自动爬取，点击来源回原站核验。 2026/05/08 Reuters / Investing.com 新闻/RSS 可核验来源 Jane Street Q1 交易收入创纪录 Reuters 报道称，Jane Street 2026 年第一季度交易",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": -96,
+        "textLength": -28
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "community",
+      "selector": "#communityList",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-community.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-community.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#community",
+        "activeView": "community",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 525,
+          "w": 1339,
+          "h": 52,
+          "text": "还没有动态。"
+        },
+        "textLength": 53,
+        "headings": [
+          "论坛"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "论坛 像朋友圈一样分享训练动态，也可以点赞评论。 添加照片/视频 发布 全部动态 面经分享 还没有动态。"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/community",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 525,
+          "w": 1339,
+          "h": 22,
+          "text": "还没有动态。"
+        },
+        "textLength": 53,
+        "headings": [
+          "社区"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "社区 像朋友圈一样分享训练动态，也可以点赞评论。 添加照片/视频 发布 全部动态 面经分享 还没有动态。",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": -30,
+        "textLength": 0
+      },
+      "issues": [
+        "current text too sparse 53/53",
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "messages",
+      "selector": "#messageThreadList",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-messages.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-messages.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#messages",
+        "activeView": "messages",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 809
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 51,
+          "y": 269,
+          "w": 481,
+          "h": 618,
+          "text": "还没有聊天。可以从论坛动态里点“私信”。"
+        },
+        "textLength": 99,
+        "headings": [
+          "聊天"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "聊天 和论坛里的同学、校友或 recruiter 继续私聊。 还没有聊天。可以从论坛动态里点“私信”。 聊天 还没有聊天。可以从论坛动态里点“私信”。 还没有聊天。可以从论坛动态里点“私信”。"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/messages",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 809
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 51,
+          "y": 269,
+          "w": 481,
+          "h": 618,
+          "text": "还没有聊天。可以从论坛动态里点“私信”。"
+        },
+        "textLength": 96,
+        "headings": [
+          "聊天"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "聊天 和论坛里的同学、校友或 recruiter 继续私聊。 还没有聊天。可以从论坛动态里点“私信”。 聊天 还没有聊天。可以从论坛动态里点“私信”。 还没有聊天。可以从论坛动态里点“私信”。",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": -3
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "network",
+      "selector": "#networkList",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-network.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-network.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#network",
+        "activeView": "network",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 244,
+          "w": 1339,
+          "h": 52,
+          "text": "还没有联系人。先添加一个内推人、校友或 recruiter。"
+        },
+        "textLength": 50,
+        "headings": [
+          "人脉"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "人脉 记录联系人、公司和下一步跟进。 还没有联系人。先添加一个内推人、校友或 recruiter。"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/network",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 244,
+          "w": 1339,
+          "h": 22,
+          "text": "还没有联系人。先添加一个内推人、校友或 recruiter。"
+        },
+        "textLength": 49,
+        "headings": [
+          "人脉"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "人脉 记录联系人、公司和下一步跟进。 还没有联系人。先添加一个内推人、校友或 recruiter。",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": -30,
+        "textLength": -1
+      },
+      "issues": [
+        "current text too sparse 49/50",
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "resume",
+      "selector": "#resumeForm",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-resume.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-resume.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#resume",
+        "activeView": "resume",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 220,
+          "w": 723,
+          "h": 528,
+          "text": "简历内容 LLM 修改简历 保存简历"
+        },
+        "textLength": 107,
+        "headings": [
+          "简历模块",
+          "修改要点"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "简历模块 上传或粘贴简历，获取针对 quant internship / full-time 的修改建议。 简历内容 LLM 修改简历 保存简历 修改要点 点击 LLM 修改简历后，这里会显示针对岗位的修改要点。"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/resume",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 220,
+          "w": 723,
+          "h": 528,
+          "text": "简历内容 LLM 修改简历 保存简历"
+        },
+        "textLength": 107,
+        "headings": [
+          "简历模块",
+          "修改要点"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "简历模块 上传或粘贴简历，获取针对 quant internship / full-time 的修改建议。 简历内容 LLM 修改简历 保存简历 修改要点 点击 LLM 修改简历后，这里会显示针对岗位的修改要点。",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": 0
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "jobs",
+      "selector": "#jobsList",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-jobs.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-jobs.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#jobs",
+        "activeView": "jobs",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 1017
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 225,
+          "w": 1339,
+          "h": 871,
+          "text": "Quantitative Trading / Research Internship Internship Jane Street crawler-ready Jane Street · New York / London / Hong Kong trading probability market making 打开申请 Quantitative Research Internship Internship Citadel Securities crawler-ready "
+        },
+        "textLength": 912,
+        "headings": [
+          "求职",
+          "Quantitative Trading / Research Internship",
+          "Quantitative Research Internship",
+          "Quantitative Trading Internship",
+          "Graduate Quant Trader / Researcher",
+          "Quantitative Researcher",
+          "Campus Quantitative Research / Trading"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "求职 追踪 quant internship / full-time 岗位，点击链接跳转申请。 全部 Internship Full-time Quantitative Trading / Research Internship Internship Jane Street crawler-ready Jane Street · New York / London / Hong Kong trading probability market making 打开申请 Quantitative Research Internship Internship Citadel Securities cr"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/jobs",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 987
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 225,
+          "w": 1339,
+          "h": 841,
+          "text": "Quantitative Trading / Research Internship Internship Jane Street crawler-ready Jane Street · New York / London / Hong Kong trading probability market making 打开申请 Quantitative Research Internship Internship Citadel Securities crawler-ready "
+        },
+        "textLength": 912,
+        "headings": [
+          "求职",
+          "Quantitative Trading / Research Internship",
+          "Quantitative Research Internship",
+          "Quantitative Trading Internship",
+          "Graduate Quant Trader / Researcher",
+          "Quantitative Researcher",
+          "Campus Quantitative Research / Trading"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "求职 追踪 quant internship / full-time 岗位，点击链接跳转申请。 全部 Internship Full-time Quantitative Trading / Research Internship Internship Jane Street crawler-ready Jane Street · New York / London / Hong Kong trading probability market making 打开申请 Quantitative Research Internship Internship Citadel Securities cr",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": -30,
+        "textLength": 0
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "companies",
+      "selector": "#companyOverviewList",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-companies.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-companies.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#companies",
+        "activeView": "companies",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 3067
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 244,
+          "w": 1339,
+          "h": 2902,
+          "text": "JS JS Jane Street Tier S · Prop trading / market making 133 题 强概率、博弈和交易直觉，题目常要求把不确定性讲成清晰策略。 Probability Game theory Trading intuition OCaml / systems 0/133 完成进度 1 岗位入口 New York / London 常见地点 刷该公司题 打开官网 C C Citadel Securities Tier S · Market"
+        },
+        "textLength": 2358,
+        "headings": [
+          "公司",
+          "Jane Street",
+          "Citadel Securities",
+          "HRT",
+          "Two Sigma"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "公司 13 家公司 · 785 道标注题 · tier、考点和官网入口 全部公司 Tier S Tier A Tier B JS JS Jane Street Tier S · Prop trading / market making 133 题 强概率、博弈和交易直觉，题目常要求把不确定性讲成清晰策略。 Probability Game theory Trading intuition OCaml / systems 0/133 完成进度 1 岗位入口 New York / London 常见地点 刷该公司题 打开官网 C C Citadel Securities Tier S · Mark"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/companies",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 3067
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 244,
+          "w": 1339,
+          "h": 2902,
+          "text": "JS JS Jane Street Tier S · Prop trading / market making 133 题 强概率、博弈和交易直觉，题目常要求把不确定性讲成清晰策略。 Probability Game theory Trading intuition OCaml / systems 0/133 完成进度 1 岗位入口 New York / London 常见地点 刷该公司题 打开官网 C C Citadel Securities Tier S · Market"
+        },
+        "textLength": 2358,
+        "headings": [
+          "公司",
+          "Jane Street",
+          "Citadel Securities",
+          "HRT",
+          "Two Sigma"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "公司 13 家公司 · 785 道标注题 · tier、考点和官网入口 全部公司 Tier S Tier A Tier B JS JS Jane Street Tier S · Prop trading / market making 133 题 强概率、博弈和交易直觉，题目常要求把不确定性讲成清晰策略。 Probability Game theory Trading intuition OCaml / systems 0/133 完成进度 1 岗位入口 New York / London 常见地点 刷该公司题 打开官网 C C Citadel Securities Tier S · Mark",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": 0
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "library",
+      "selector": "#libraryBookGrid",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-library.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-library.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#library",
+        "activeView": "library",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 3192
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 84,
+          "y": 1239,
+          "w": 1271,
+          "h": 1417,
+          "text": "书籍 绿皮书 A Practical Guide to Quantitative Finance Interviews Quant Interview EN + ZH 183 题 阅读 练题 书籍 黄皮书 150 Most Frequently Asked Questions on Quant Interviews Quant Interview EN + ZH 153 题 阅读 练题 书籍 红宝书 Quant Job Interview Questions And Answ"
+        },
+        "textLength": 2373,
+        "headings": [
+          "继续阅读"
+        ],
+        "images": [
+          {
+            "src": "assets/library-covers/green-book.webp",
+            "alt": "绿皮书",
+            "x": 87,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/yellow-book.webp",
+            "alt": "黄皮书",
+            "x": 271,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/red-book.webp",
+            "alt": "红宝书",
+            "x": 455,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/hull-derivatives.webp",
+            "alt": "Hull 衍生品",
+            "x": 639,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/stefanica-fe-math.webp",
+            "alt": "金融工程数学入门",
+            "x": 823,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/dudeney-puzzles.webp",
+            "alt": "Dudeney 挑战谜题",
+            "x": 1007,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/linalg-primer.webp",
+            "alt": "金融工程线性代数入门",
+            "x": 1191,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          }
+        ],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "全部 书籍 题单 0 分钟 一 二 三 四 五 六 日 13 本书籍 6 份题单 2997 关联题目 继续阅读 书籍 绿皮书 A Practical Guide to Quantitative Finance Interviews Quant Interview EN + ZH 183 题 阅读 练题 书籍 黄皮书 150 Most Frequently Asked Questions on Quant Interviews Quant Interview EN + ZH 153 题 阅读 练题 书籍 红宝书 Quant Job Interview Questions And Answers "
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/library",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 3192
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 84,
+          "y": 1239,
+          "w": 1271,
+          "h": 1417,
+          "text": "书籍 绿皮书 A Practical Guide to Quantitative Finance Interviews Quant Interview EN + ZH 183 题 阅读 练题 书籍 黄皮书 150 Most Frequently Asked Questions on Quant Interviews Quant Interview EN + ZH 153 题 阅读 练题 书籍 红宝书 Quant Job Interview Questions And Answ"
+        },
+        "textLength": 2373,
+        "headings": [
+          "继续阅读"
+        ],
+        "images": [
+          {
+            "src": "assets/library-covers/green-book.webp",
+            "alt": "绿皮书",
+            "x": 87,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/yellow-book.webp",
+            "alt": "黄皮书",
+            "x": 271,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/red-book.webp",
+            "alt": "红宝书",
+            "x": 455,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/hull-derivatives.webp",
+            "alt": "Hull 衍生品",
+            "x": 639,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/stefanica-fe-math.webp",
+            "alt": "金融工程数学入门",
+            "x": 823,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/dudeney-puzzles.webp",
+            "alt": "Dudeney 挑战谜题",
+            "x": 1007,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          },
+          {
+            "src": "assets/library-covers/linalg-primer.webp",
+            "alt": "金融工程线性代数入门",
+            "x": 1191,
+            "y": 658,
+            "w": 162,
+            "h": 226
+          }
+        ],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "全部 书籍 题单 0 分钟 一 二 三 四 五 六 日 13 本书籍 6 份题单 2997 关联题目 继续阅读 书籍 绿皮书 A Practical Guide to Quantitative Finance Interviews Quant Interview EN + ZH 183 题 阅读 练题 书籍 黄皮书 150 Most Frequently Asked Questions on Quant Interviews Quant Interview EN + ZH 153 题 阅读 练题 书籍 红宝书 Quant Job Interview Questions And Answers ",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": 0
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "courses",
+      "selector": "#courseList",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-courses.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-courses.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#courses",
+        "activeView": "courses",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 3721
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 334,
+          "w": 1339,
+          "h": 3466,
+          "text": "AtypicalQuant Quant Interview Questions YouTube Quant Interview Interview AtypicalQuant · 可视化讲解 quant 面试题，覆盖概率、统计、算法和交易思维。 YouTube 该来源暂不支持站内预览，或可能受地区/权限限制。请切换备用来源或打开原站。 probability statistics interview brainteaser 收藏 加入路径 标记完成 学习笔记 打开原站 MIT"
+        },
+        "textLength": 1726,
+        "headings": [
+          "课程",
+          "学习路径",
+          "AtypicalQuant Quant Interview Questions",
+          "MIT Introduction to Probability: Stochastic Processes"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "课程 精选 YouTube / Bilibili 官方播放器资源，支持备用来源、收藏、笔记和学习路径。 学习路径 把课程加入路径后，会在这里形成你的资源学习顺序。 还没有学习路径。先把一个课程加入路径。 AtypicalQuant Quant Interview Questions YouTube Quant Interview Interview AtypicalQuant · 可视化讲解 quant 面试题，覆盖概率、统计、算法和交易思维。 YouTube 该来源暂不支持站内预览，或可能受地区/权限限制。请切换备用来源或打开原站。 probability statistics interv"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/courses",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 3517
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 334,
+          "w": 1339,
+          "h": 3262,
+          "text": "AtypicalQuant Quant Interview Questions YouTube Quant Interview Interview AtypicalQuant · 可视化讲解 quant 面试题，覆盖概率、统计、算法和交易思维。 YouTube 该来源暂不支持站内预览，或可能受地区/权限限制。请切换备用来源或打开原站。 收藏 加入路径 标记完成 学习笔记 打开原站 MIT Introduction to Probability: Stochastic Proc"
+        },
+        "textLength": 1359,
+        "headings": [
+          "课程",
+          "学习路径",
+          "AtypicalQuant Quant Interview Questions",
+          "MIT Introduction to Probability: Stochastic Processes"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "课程 精选 YouTube / Bilibili 官方播放器资源，支持备用来源、收藏、笔记和学习路径。 学习路径 把课程加入路径后，会在这里形成你的资源学习顺序。 还没有学习路径。先把一个课程加入路径。 AtypicalQuant Quant Interview Questions YouTube Quant Interview Interview AtypicalQuant · 可视化讲解 quant 面试题，覆盖概率、统计、算法和交易思维。 YouTube 该来源暂不支持站内预览，或可能受地区/权限限制。请切换备用来源或打开原站。 收藏 加入路径 标记完成 学习笔记 打开原站 MIT In",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": -204,
+        "textLength": -367
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "memory",
+      "selector": "#historyList",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-memory.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-memory.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#memory",
+        "activeView": "memory",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 401,
+          "w": 1339,
+          "h": 52,
+          "text": "还没有记录。"
+        },
+        "textLength": 25,
+        "headings": [
+          "资料",
+          "记忆"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "资料 资料会保存在这里。 记忆 还没有记录。"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/memory",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 371,
+          "w": 1339,
+          "h": 22,
+          "text": "还没有记录。"
+        },
+        "textLength": 22,
+        "headings": [
+          "资料",
+          "记忆"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "资料 资料会保存在这里。 记忆 还没有记录。",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": -30,
+        "keyW": 0,
+        "keyH": -30,
+        "textLength": -3
+      },
+      "issues": [
+        "current text too sparse 22/25",
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "settings",
+      "selector": "#settingsForm",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-settings.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-settings.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#settings",
+        "activeView": "settings",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 862
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 244,
+          "w": 763,
+          "h": 697,
+          "text": "偏好 语言 中文 English 默认国家 中国 美国 英国 新加坡 默认地区 北京 天津 上海 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆 香港 澳门 LLM Endpoint LLM Model gpt-5-nano · 最便宜 gpt-5-mini · 更稳 gpt-5 · 更强 gpt-5.4-mini · 新 mini gpt-5.4"
+        },
+        "textLength": 380,
+        "headings": [
+          "设置",
+          "偏好",
+          "数据"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "设置 云端未连接；本地记录仍可继续使用。 偏好 语言 中文 English 默认国家 中国 美国 英国 新加坡 默认地区 北京 天津 上海 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆 香港 澳门 LLM Endpoint LLM Model gpt-5-nano · 最便宜 gpt-5-mini · 更稳 gpt-5 · 更强 gpt-5.4-mini · 新 mini gpt-5.4 · 高质量 gpt-4o-mini · 旧版低价 gpt-4.1-nano "
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/settings",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 862
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 244,
+          "w": 763,
+          "h": 697,
+          "text": "偏好 语言 中文 English 默认国家 中国 美国 英国 新加坡 默认地区 北京 天津 上海 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆 香港 澳门 LLM Endpoint LLM Model gpt-5-nano · 最便宜 gpt-5-mini · 更稳 gpt-5 · 更强 gpt-5.4-mini · 新 mini gpt-5.4"
+        },
+        "textLength": 373,
+        "headings": [
+          "设置",
+          "偏好",
+          "数据"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "设置 应用偏好和数据管理。 偏好 语言 中文 English 默认国家 中国 美国 英国 新加坡 默认地区 北京 天津 上海 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆 香港 澳门 LLM Endpoint LLM Model gpt-5-nano · 最便宜 gpt-5-mini · 更稳 gpt-5 · 更强 gpt-5.4-mini · 新 mini gpt-5.4 · 高质量 gpt-4o-mini · 旧版低价 gpt-4.1-nano · 旧版 na",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": -7
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "account",
+      "selector": "#accountForm",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-account.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-account.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#account",
+        "activeView": "account",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 1010
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 244,
+          "w": 763,
+          "h": 845,
+          "text": "QU 上传头像 昵称 邮箱 国家 中国 美国 英国 新加坡 地区 北京 天津 上海 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆 香港 澳门 毕业时间 简历 上传 txt/md 简历可直接分析；PDF 会先保存文件名。 当前密码 保存账户"
+        },
+        "textLength": 262,
+        "headings": [
+          "账户信息",
+          "账户信息"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "账户信息 管理昵称、邮箱、头像和地区。 QU 上传头像 昵称 邮箱 国家 中国 美国 英国 新加坡 地区 北京 天津 上海 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆 香港 澳门 毕业时间 简历 上传 txt/md 简历可直接分析；PDF 会先保存文件名。 当前密码 保存账户 账户信息 登录方式 Local 账户创建 2026/06/08 当前排名 中国 · 上海 · Analyst I"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/account",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 1010
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 50,
+          "y": 244,
+          "w": 763,
+          "h": 845,
+          "text": "QU 上传头像 昵称 邮箱 国家 中国 美国 英国 新加坡 地区 北京 天津 上海 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆 香港 澳门 毕业时间 简历 上传 txt/md 简历可直接分析；PDF 会先保存文件名。 当前密码 保存账户"
+        },
+        "textLength": 267,
+        "headings": [
+          "账户信息",
+          "账户信息"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "账户信息 管理昵称、邮箱、头像和地区。 QU 上传头像 昵称 邮箱 国家 中国 美国 英国 新加坡 地区 北京 天津 上海 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆 香港 澳门 毕业时间 简历 上传 txt/md 简历可直接分析；PDF 会先保存文件名。 当前密码 保存账户 账户信息 登录方式 Local 账户创建 2026/06/08 当前排名 中国 · 上海 · Analyst I 退出登录",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": 5
+      },
+      "issues": [
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    },
+    {
+      "route": "pk",
+      "selector": "#pkForm",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-baseline-pk.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/314-parity-current-pk.png",
+      "baseline": {
+        "url": "http://127.0.0.1:5180/#pk",
+        "activeView": "pk",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 69,
+          "y": 602,
+          "w": 751,
+          "h": 204,
+          "text": "提交 PK"
+        },
+        "textLength": 46,
+        "headings": [
+          "PK"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "PK 匹配在线 Quant 你 0 Online Quant 0 点击匹配开始。 提交 PK"
+      },
+      "current": {
+        "url": "http://127.0.0.1:5179/pk",
+        "activeView": "route",
+        "activeRect": {
+          "x": 50,
+          "y": 133,
+          "w": 1339,
+          "h": 767
+        },
+        "key": {
+          "count": 1,
+          "visible": true,
+          "x": 69,
+          "y": 602,
+          "w": 751,
+          "h": 204,
+          "text": "提交 PK"
+        },
+        "textLength": 46,
+        "headings": [
+          "PK"
+        ],
+        "images": [],
+        "logs": [
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          },
+          {
+            "type": "error",
+            "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+          }
+        ],
+        "textSample": "PK 匹配在线 Quant 你 0 Online Quant 0 点击匹配开始。 提交 PK",
+        "overlay": false,
+        "horizontalOverflow": false
+      },
+      "deltas": {
+        "keyX": 0,
+        "keyY": 0,
+        "keyW": 0,
+        "keyH": 0,
+        "textLength": 0
+      },
+      "issues": [
+        "current text too sparse 46/46",
+        "current activeView route"
+      ],
+      "actionableIssues": []
+    }
+  ],
+  "status": "pass",
+  "pass": 21,
+  "total": 21,
+  "postprocessNote": "Expected React shell activeView=\"route\" and tiny-empty-state text lengths are not treated as regressions; actionableIssues only tracks missing current key selectors, invisible keys, overlay, horizontal overflow, page errors, or real content sparsity versus a substantial baseline."
+}

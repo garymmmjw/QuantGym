@@ -1,9 +1,11 @@
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 import path from "node:path";
 
 export default defineConfig({
   // index.html is the entry point; Vite resolves <script type="module"> tags from it.
   root: ".",
+  plugins: [react()],
   build: {
     outDir: process.env.QUANTGYM_WEB_DIST || "dist",
     emptyOutDir: true,
@@ -12,7 +14,19 @@ export default defineConfig({
       output: {
         entryFileNames: "assets/[name]-[hash].js",
         chunkFileNames: "assets/[name]-[hash].js",
-        assetFileNames: "assets/[name]-[hash][extname]"
+        assetFileNames: "assets/[name]-[hash][extname]",
+        manualChunks(id) {
+          if (id.includes("node_modules/react-router") || id.includes("node_modules/@remix-run/router")) {
+            return "vendor-router";
+          }
+          if (id.includes("node_modules/react-dom")) {
+            return "vendor-react-dom";
+          }
+          if (id.includes("node_modules/react/")) {
+            return "vendor-react";
+          }
+          return undefined;
+        }
       }
     }
   },

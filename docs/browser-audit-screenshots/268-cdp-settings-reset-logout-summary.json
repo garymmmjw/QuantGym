@@ -1,0 +1,127 @@
+{
+  "status": "pass",
+  "screenshots": [
+    "265-cdp-settings-reset-before.png",
+    "266-cdp-settings-reset-after.png",
+    "267-cdp-settings-reset-memory-cleared.png",
+    "268-cdp-settings-logout-auth-visible.png"
+  ],
+  "checks": {
+    "beforeReset": {
+      "authCurrentUserId": "local:qa-settings-reset-20260608",
+      "userState": {
+        "entries": 1,
+        "resources": 1,
+        "problemStates": 1,
+        "interviewExperiences": 1,
+        "news": 5,
+        "updatedAt": "2026-06-08T08:22:21.373Z"
+      },
+      "peerState": {
+        "entries": 1,
+        "resources": 1,
+        "problemStates": 0,
+        "interviewExperiences": 0,
+        "news": 0,
+        "updatedAt": "2026-06-08T08:22:15.284Z"
+      }
+    },
+    "afterReset": {
+      "authCurrentUserId": "local:qa-settings-reset-20260608",
+      "userState": {
+        "entries": 0,
+        "resources": 0,
+        "problemStates": 0,
+        "interviewExperiences": 0,
+        "news": 4,
+        "updatedAt": "2026-06-08T08:22:24.484Z"
+      },
+      "peerState": {
+        "entries": 1,
+        "resources": 1,
+        "problemStates": 0,
+        "interviewExperiences": 0,
+        "news": 0,
+        "updatedAt": "2026-06-08T08:22:15.284Z"
+      },
+      "dialogs": [
+        {
+          "type": "confirm",
+          "message": "清空当前账户的训练记录？已连接云端时也会同步为空。"
+        }
+      ]
+    },
+    "memoryAfterReset": {
+      "resourceCards": 0,
+      "containsResetResource": false
+    },
+    "logout": {
+      "auth": {
+        "accounts": [
+          {
+            "id": "local:qa-settings-reset-20260608",
+            "provider": "local",
+            "name": "QA Settings Reset",
+            "email": "qa-settings-reset@example.com",
+            "country": "china",
+            "region": "上海",
+            "graduationTerm": "2027-09",
+            "picture": "",
+            "createdAt": "2026-06-08T08:22:15.284Z",
+            "updatedAt": "2026-06-08T08:22:15.284Z"
+          },
+          {
+            "id": "local:qa-settings-peer-20260608",
+            "provider": "local",
+            "name": "QA Settings Peer",
+            "email": "qa-settings-peer@example.com",
+            "country": "china",
+            "region": "北京",
+            "graduationTerm": "2027-09",
+            "picture": "",
+            "createdAt": "2026-06-08T08:22:15.284Z",
+            "updatedAt": "2026-06-08T08:22:15.284Z"
+          }
+        ],
+        "currentUserId": "",
+        "googleClientId": "qa-client-before-reset.apps.googleusercontent.com"
+      },
+      "shellState": {
+        "url": "http://127.0.0.1:5179/login",
+        "authShellHidden": false,
+        "appShellHidden": null,
+        "loginVisible": true,
+        "currentUserChip": ""
+      },
+      "userStateAfterLogout": {
+        "entries": 0,
+        "resources": 0,
+        "problemStates": 0,
+        "interviewExperiences": 0,
+        "news": 4,
+        "updatedAt": "2026-06-08T08:22:24.484Z"
+      },
+      "peerStateAfterLogout": {
+        "entries": 1,
+        "resources": 1,
+        "problemStates": 0,
+        "interviewExperiences": 0,
+        "news": 0,
+        "updatedAt": "2026-06-08T08:22:15.284Z"
+      }
+    }
+  },
+  "errors": [
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "console: Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  ],
+  "dialogs": [
+    {
+      "type": "confirm",
+      "message": "清空当前账户的训练记录？已连接云端时也会同步为空。"
+    }
+  ]
+}

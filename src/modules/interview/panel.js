@@ -116,12 +116,10 @@ export function renderInterviewQuestionPanel(container, options = {}) {
   options.refreshIcons?.();
 }
 
-export function createInterviewPanelStats(options = {}) {
+export function getInterviewPanelStatsItems(options = {}) {
   const session = options.session || null;
   const language = options.language === "en" ? "en" : "zh";
   const useZh = language === "zh";
-  const stats = document.createElement("div");
-  stats.className = "interview-panel-stats";
   const results = session?.questionResults || [];
   const completed = results.filter(Boolean).length;
   const scored = results.filter((item) => Number.isFinite(Number(item?.score)));
@@ -129,7 +127,7 @@ export function createInterviewPanelStats(options = {}) {
     ? Math.round(scored.reduce((sum, item) => sum + Number(item.score || 0), 0) / scored.length)
     : null;
   const focus = options.focusDefs?.[session?.sessionConfig?.focusKey || "mixed"];
-  const items = options.live
+  return (options.live
     ? [
       [useZh ? "模式" : "Mode", useZh ? "真实面试" : "Live"],
       [useZh ? "进度" : "Progress", `${completed}/${session?.questions?.length || 0}`],
@@ -139,13 +137,32 @@ export function createInterviewPanelStats(options = {}) {
       [useZh ? "平均分" : "Average", average == null ? "--" : `${average}`],
       [useZh ? "已完成" : "Done", `${completed}/${session?.questions?.length || 0}`],
       [useZh ? "方向" : "Focus", useZh ? focus?.labelZh || "混合" : focus?.labelEn || "Mixed"]
-    ];
-  items.forEach(([label, value]) => {
+    ]).map(([label, value]) => ({ label, value }));
+}
+
+export function createInterviewPanelStats(options = {}) {
+  const stats = document.createElement("div");
+  stats.className = "interview-panel-stats";
+  getInterviewPanelStatsItems(options).forEach(({ label, value }) => {
     const item = document.createElement("span");
     item.innerHTML = `<small>${escapeHtml(label)}</small><strong>${escapeHtml(value)}</strong>`;
     stats.appendChild(item);
   });
   return stats;
+}
+
+export function getInterviewDimensionBarItems(dimensions = {}, options = {}) {
+  const useZh = options.language !== "en";
+  const labels = {
+    correctness: useZh ? "正确" : "Correct",
+    reasoning: useZh ? "推理" : "Reasoning",
+    communication: useZh ? "表达" : "Comms"
+  };
+  return Object.entries(labels).map(([key, label]) => ({
+    key,
+    label,
+    score: Math.round(clampNumber(dimensions?.[key]?.score ?? 0, 0, 5))
+  }));
 }
 
 export function createInterviewDimensionMiniBars(dimensions = {}, options = {}) {

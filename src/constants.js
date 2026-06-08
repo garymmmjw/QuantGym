@@ -1,3 +1,5 @@
+import leetcodeHot100Data from "../data/leetcode-hot-100.json" with { type: "json" };
+
 export const STORAGE_KEY = "quantMemoryBoard.v1";
 export const AUTH_KEY = "quantMemoryBoard.auth.v1";
 export const USER_STATE_PREFIX = "quantMemoryBoard.userState.v1";
@@ -8,7 +10,9 @@ export const COMMUNITY_KEY = "quantMemoryBoard.community.v1";
 export const CLOUD_CONFIG_KEY = "quantMemoryBoard.cloud.v1";
 export const SUPPORTED_LANGUAGES = ["zh", "en"];
 export const DEFAULT_LANGUAGE = "zh";
-export const RUNTIME_CONFIG = globalThis.QUANTGYM_CONFIG || {};
+const runtimeGlobal = typeof globalThis !== "undefined" ? globalThis : {};
+const runtimeWindow = runtimeGlobal.window || {};
+export const RUNTIME_CONFIG = runtimeGlobal.QUANTGYM_CONFIG || runtimeWindow.QUANTGYM_CONFIG || {};
 export const DEFAULT_LLM_ENDPOINT = String(RUNTIME_CONFIG.llmEndpoint || "http://127.0.0.1:8787/interview").trim();
 export const DEFAULT_LLM_MODEL = String(RUNTIME_CONFIG.llmModel || "gpt-5-nano").trim();
 export const DEFAULT_GOOGLE_CLIENT_ID = String(RUNTIME_CONFIG.googleClientId || "").trim();
@@ -106,7 +110,10 @@ export const POKER_HAND_NAMES = [
   "Straight flush"
 ];
 export const DEFAULT_GRADUATION_TERM = "2027-09";
-export const leetcodeHot100 = Array.isArray(globalThis.leetcodeHot100?.problems)
-  ? globalThis.leetcodeHot100.problems
+const runtimeLeetcodeHot100 = runtimeGlobal.leetcodeHot100 || runtimeWindow.leetcodeHot100;
+export const leetcodeHot100 = Array.isArray(runtimeLeetcodeHot100?.problems)
+  ? runtimeLeetcodeHot100.problems
+  : Array.isArray(leetcodeHot100Data?.problems)
+    ? leetcodeHot100Data.problems
   : [];
 // Runtime catalog loaded from global set by data/problem-catalog.js

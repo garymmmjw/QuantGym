@@ -37,7 +37,7 @@ export function createPokerPlayerController(deps = {}) {
     return null;
   }
 
-  function takeSeat(seat = null, renderAfter = true) {
+  function takeSeat(seat = null, renderAfter = true, options = {}) {
     const game = getGame();
     if (isOnlineRoom(game)) {
       if (getHero(game)) {
@@ -68,7 +68,7 @@ export function createPokerPlayerController(deps = {}) {
       return;
     }
     const isHero = !getHero(game);
-    const rawName = elements.pokerPlayerNameInput?.value || (isHero ? getDefaultPlayerName() : `Guest ${game.players.length + 1}`);
+    const rawName = options.name ?? elements.pokerPlayerNameInput?.value ?? (isHero ? getDefaultPlayerName() : `Guest ${game.players.length + 1}`);
     const name = uniqueName(game, rawName);
     addHumanToGame(game, { id: isHero ? "hero" : `human-${makeId()}`, name, seat: targetSeat, isHero });
     game.feedback = `${name} took seat ${targetSeat + 1}.`;

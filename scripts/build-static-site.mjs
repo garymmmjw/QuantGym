@@ -1,20 +1,27 @@
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 import { execSync } from "node:child_process";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDir, "..");
+loadEnvFromProjectRoot();
 const outputDir = path.resolve(projectRoot, process.env.QUANTGYM_WEB_DIST || "dist");
 const strict = process.argv.includes("--strict") || process.env.QUANTGYM_WEB_STRICT === "1";
+const runtimeConfig = loadRuntimeConfig();
 
 const webConfig = {
-  cloudApiEndpoint: value("QUANTGYM_WEB_API_ENDPOINT"),
-  llmEndpoint: value("QUANTGYM_WEB_LLM_ENDPOINT"),
-  llmModel: value("QUANTGYM_WEB_LLM_MODEL") || "gpt-5-nano",
-  googleClientId: value("QUANTGYM_WEB_GOOGLE_CLIENT_ID"),
-  googleLoginEnabled: boolValue("QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED", Boolean(value("QUANTGYM_WEB_GOOGLE_CLIENT_ID")))
+  cloudApiEndpoint: value("QUANTGYM_WEB_API_ENDPOINT", "QUANTGYM_CLOUD_API_ENDPOINT", "CLOUD_API_ENDPOINT") || clean(runtimeConfig.cloudApiEndpoint),
+  llmEndpoint: value("QUANTGYM_WEB_LLM_ENDPOINT", "QUANTGYM_LLM_ENDPOINT", "LLM_ENDPOINT") || clean(runtimeConfig.llmEndpoint),
+  llmModel: value("QUANTGYM_WEB_LLM_MODEL", "QUANTGYM_LLM_MODEL", "OPENAI_MODEL") || clean(runtimeConfig.llmModel) || "gpt-5-nano",
+  googleClientId: value("QUANTGYM_WEB_GOOGLE_CLIENT_ID", "QUANTGYM_GOOGLE_CLIENT_ID") || clean(runtimeConfig.googleClientId),
+  googleLoginEnabled: false
 };
+webConfig.googleLoginEnabled = boolValue(
+  "QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED",
+  runtimeConfig.googleLoginEnabled ?? Boolean(webConfig.googleClientId)
+);
 
 if (strict) {
   requireHttps("QUANTGYM_WEB_API_ENDPOINT", webConfig.cloudApiEndpoint);
@@ -45,14 +52,23 @@ copyRuntimeStaticFiles(outputDir);
 // Locale entry pages (/zh/ and /en/) are generated after Vite build because
 // they reference the hashed asset URLs already in dist/index.html.
 writeLocaleEntries(outputDir);
+writeSpaFallback(outputDir);
 
 console.log(`Built static site in ${path.relative(projectRoot, outputDir) || outputDir}`);
 if (!webConfig.cloudApiEndpoint || !webConfig.llmEndpoint) {
   console.warn("Warning: generated config.js has empty endpoints; will fall back to local dev URLs.");
 }
 
-function value(name) {
-  return String(process.env[name] || "").trim();
+function value(...names) {
+  for (const name of names) {
+    const current = clean(process.env[name]);
+    if (current) return current;
+  }
+  return "";
+}
+
+function clean(valueToClean) {
+  return String(valueToClean || "").trim();
 }
 
 function boolValue(name, fallback = false) {
@@ -107,6 +123,14 @@ function copyRuntimeStaticFiles(distDir) {
   }
 }
 
+function writeSpaFallback(distDir) {
+  const indexPath = path.join(distDir, "index.html");
+  if (!fs.existsSync(indexPath)) return;
+  const html = fs.readFileSync(indexPath, "utf8");
+  fs.writeFileSync(path.join(distDir, "404.html"), html);
+  fs.writeFileSync(path.join(distDir, "_redirects"), "/* /index.html 200\n");
+}
+
 function writeConfig(distDir) {
   fs.mkdirSync(distDir, { recursive: true });
   const configPath = path.join(distDir, "config.js");
@@ -116,4 +140,44 @@ function writeConfig(distDir) {
     ""
   ].join("\n");
   fs.writeFileSync(configPath, content);
+}
+
+function loadEnvFromProjectRoot() {
+  const envPath = path.join(projectRoot, ".env");
+  if (!fs.existsSync(envPath)) return;
+  const lines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const separatorIndex = trimmed.indexOf("=");
+    if (separatorIndex === -1) continue;
+    const key = trimmed.slice(0, separatorIndex).trim();
+    if (!key || process.env[key] !== undefined) continue;
+    process.env[key] = unquoteEnvValue(trimmed.slice(separatorIndex + 1).trim());
+  }
+}
+
+function unquoteEnvValue(valueToUnquote) {
+  if (
+    (valueToUnquote.startsWith('"') && valueToUnquote.endsWith('"'))
+    || (valueToUnquote.startsWith("'") && valueToUnquote.endsWith("'"))
+  ) {
+    return valueToUnquote.slice(1, -1);
+  }
+  return valueToUnquote;
+}
+
+function loadRuntimeConfig() {
+  const configPath = path.join(projectRoot, "config.js");
+  if (!fs.existsSync(configPath)) return {};
+  const context = { window: {} };
+  vm.createContext(context);
+  try {
+    vm.runInContext(fs.readFileSync(configPath, "utf8"), context, { filename: configPath });
+    return context.window.QUANTGYM_CONFIG || {};
+  } catch (error) {
+    if (strict) throw error;
+    console.warn(`Warning: could not read root config.js: ${error.message}`);
+    return {};
+  }
 }

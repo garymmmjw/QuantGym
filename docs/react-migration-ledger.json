@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "statuses": {
+    "converted": "uses usePageApi/useAppServices; no legacyApp.pageApi; no document-level page listeners; no module-partial-root",
+    "partial": "React UI with getViewModel but legacy DOM renderers or sync remain",
+    "island": "intentional legacy controller island (poker table DOM); check-stage2 accepts documented scope"
+  },
+  "pages": {
+    "overview": { "status": "converted", "behavior": "overviewPageApi via usePageApi" },
+    "plan": { "status": "converted", "behavior": "planPageApi.getViewModel" },
+    "skills": { "status": "converted", "behavior": "pageApi.skills via usePageApi" },
+    "interview": { "status": "converted", "behavior": "interviewPageApi.getViewModel session + React transcript/panel/favorites/console" },
+    "problems": { "status": "converted", "behavior": "problemsPageApi.getViewModel + React forms" },
+    "tools": { "status": "converted", "behavior": "toolsPageApi.getViewModel" },
+    "poker": {
+      "status": "converted",
+      "behavior": "pokerPageApi.getViewModel + React PokerTable/SeatGrid/LobbyPanel/ActionBar; reactTable sync skips tableView/panelView DOM"
+    },
+    "experiences": { "status": "converted", "behavior": "pageApi.experiences" },
+    "news": { "status": "converted", "behavior": "newsFacade via useAppServices" },
+    "community": { "status": "converted", "behavior": "communityPageApi" },
+    "messages": { "status": "converted", "behavior": "pageApi.messages" },
+    "network": { "status": "converted", "behavior": "pageApi.network" },
+    "resume": { "status": "converted", "behavior": "pageApi.resume" },
+    "jobs": { "status": "converted", "behavior": "pageApi.jobs" },
+    "companies": { "status": "converted", "behavior": "companyDefs via useAppServices" },
+    "library": { "status": "converted", "behavior": "libraryPageApi.getViewModel" },
+    "courses": { "status": "converted", "behavior": "pageApi.courses" },
+    "memory": { "status": "converted", "behavior": "pageApi.memory" },
+    "settings": { "status": "converted", "behavior": "save/sync via useAppServices" },
+    "account": { "status": "converted", "behavior": "accountPageApi" },
+    "pk": { "status": "converted", "behavior": "pageApi.pk.getView" }
+  },
+  "bundleBudget": {
+    "mainChunkRawKb": 800,
+    "mainChunkGzipKb": 400,
+    "note": "vendor-react/router/dom split; index chunk ~787KB raw / ~244KB gzip (2026-06-07)"
+  },
+  "retainedHelpers": {
+    "poker": "React route/table/lobby/action-bar with retained module helpers for room state, actions, online sync, and preflop matrix DOM rendering."
+  }
+}

@@ -1,0 +1,1665 @@
+{
+  "browser": "Google Chrome executable",
+  "viewports": {
+    "desktop": {
+      "width": 1440,
+      "height": 900
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "ignoredLogs": [
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:5179/favicon.ico"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "type": "console.error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8787/jobs"
+    }
+  ],
+  "significantLogs": [],
+  "desktop": [
+    {
+      "id": "overview",
+      "path": "/",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-overview.png",
+      "oldIdCount": 37,
+      "url": "http://127.0.0.1:5179/",
+      "title": "QuantGym",
+      "textLength": 1031,
+      "visibleHeadings": [
+        "Sharpen your quant edge today.",
+        "Problem completion",
+        "Experience rhythm",
+        "Contribution heatmap",
+        "排行榜"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "plan",
+      "path": "/plan",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-plan.png",
+      "oldIdCount": 5,
+      "url": "http://127.0.0.1:5179/plan",
+      "title": "QuantGym",
+      "textLength": 530,
+      "visibleHeadings": [
+        "Quant 面试备战计划"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "skills",
+      "path": "/skills",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-skills.png",
+      "oldIdCount": 17,
+      "url": "http://127.0.0.1:5179/skills",
+      "title": "QuantGym",
+      "textLength": 1653,
+      "visibleHeadings": [
+        "能力值",
+        "能力雷达",
+        "LeetCode",
+        "C++ Programming",
+        "Pandas/NumPy",
+        "Probability/Expectation",
+        "Statistics",
+        "Calculus",
+        "Algebra",
+        "Linear Algebra",
+        "Optimization",
+        "Complex Numbers"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "interview",
+      "path": "/interview",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-interview.png",
+      "oldIdCount": 43,
+      "url": "http://127.0.0.1:5179/interview",
+      "title": "QuantGym",
+      "textLength": 325,
+      "visibleHeadings": [
+        "模拟面试"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [
+        "interviewConsole",
+        "exitInterviewBtn",
+        "interviewSessionTitle",
+        "interviewQuestionStatus",
+        "toggleInterviewPanelBtn",
+        "interviewTimer",
+        "interviewTranscript",
+        "interviewQuestionPanel",
+        "interviewForm",
+        "interviewAnswerFileRow",
+        "interviewAnswerFile",
+        "interviewAnswerFileMeta",
+        "interviewAnswer",
+        "interviewAttachmentPreview",
+        "voiceAnswerBtn",
+        "hintInterviewBtn",
+        "revealAnswerBtn",
+        "interviewCompleteActions",
+        "nextInterviewQuestionBtn",
+        "saveInterviewFavoriteBtn",
+        "shareInterviewQuestionBtn",
+        "restartInterviewBtn",
+        "exportInterviewReportBtn",
+        "interviewFavoritesSummary",
+        "interviewFavoritesList"
+      ],
+      "rawI18nKeys": [],
+      "status": "review"
+    },
+    {
+      "id": "problems",
+      "path": "/problems",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-problems.png",
+      "oldIdCount": 34,
+      "url": "http://127.0.0.1:5179/problems",
+      "title": "QuantGym",
+      "textLength": 61,
+      "visibleHeadings": [],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [
+        "problemSearch",
+        "addProblemBtn",
+        "problemForm",
+        "problemTitleEn",
+        "problemTitleZh",
+        "problemCategory",
+        "problemDifficulty",
+        "problemTags",
+        "problemSourceUrl",
+        "problemPromptEn",
+        "problemPromptZh",
+        "problemAnswer",
+        "problemExplanation",
+        "problemImportForm",
+        "problemJsonInput",
+        "problemCollectionsTitle",
+        "problemCollectionGrid",
+        "leetcodeHotList",
+        "problemInteractionStatus",
+        "problemSourceFilterClearBtn",
+        "problemThemeSummary",
+        "problemThemeFilter",
+        "problemDifficultyFilter",
+        "problemRanking",
+        "problemRankingList",
+        "problemList",
+        "problemPagination",
+        "problemDetail",
+        "problemCompletionProgress",
+        "problemCompanyPanel",
+        "problemCompanyTitle",
+        "problemCompanySummary",
+        "problemCompanyClearBtn",
+        "problemCompanyList"
+      ],
+      "rawI18nKeys": [],
+      "status": "review"
+    },
+    {
+      "id": "tools",
+      "path": "/tools",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-tools.png",
+      "oldIdCount": 27,
+      "url": "http://127.0.0.1:5179/tools",
+      "title": "QuantGym",
+      "textLength": 732,
+      "visibleHeadings": [
+        "Mental Math",
+        "训练记录",
+        "排行榜",
+        "Game"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "poker",
+      "path": "/poker",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-poker.png",
+      "oldIdCount": 35,
+      "url": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN",
+      "title": "QuantGym",
+      "textLength": 2428,
+      "visibleHeadings": [
+        "100BB Preflop Solver Lite"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "experiences",
+      "path": "/experiences",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-experiences.png",
+      "oldIdCount": 20,
+      "url": "http://127.0.0.1:5179/experiences",
+      "title": "QuantGym",
+      "textLength": 620,
+      "visibleHeadings": [
+        "面经记录",
+        "新建面经",
+        "我的面经"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "news",
+      "path": "/news",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-news.png",
+      "oldIdCount": 32,
+      "url": "http://127.0.0.1:5179/news",
+      "title": "QuantGym",
+      "textLength": 1472,
+      "visibleHeadings": [
+        "Quant 新闻",
+        "Jane Street Q1 交易收入创纪录",
+        "Jane Street 2025 年交易收入刷新纪录",
+        "Jane Street 与 CoreWeave 签下 AI 云算力协议",
+        "Squarepoint 关联方启动电子做市业务"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [
+        "newsForm",
+        "newsTitle",
+        "newsSource",
+        "newsUrl",
+        "newsSourceType",
+        "newsPrimarySkill",
+        "newsTags",
+        "newsSummary",
+        "newsInsight",
+        "news-jane-street-q1-2026",
+        "news-jane-street-2025-haul",
+        "news-jane-street-coreweave-2026",
+        "news-squarepoint-stg-2026",
+        "newsDetail",
+        "newsBackBtn",
+        "newsDetailReadBadge",
+        "newsDetailMeta",
+        "newsDetailTitle",
+        "newsDetailSummary",
+        "newsDetailInsight",
+        "newsDetailPills",
+        "newsDetailLink"
+      ],
+      "rawI18nKeys": [],
+      "status": "review"
+    },
+    {
+      "id": "community",
+      "path": "/community",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-community.png",
+      "oldIdCount": 6,
+      "url": "http://127.0.0.1:5179/community",
+      "title": "QuantGym",
+      "textLength": 116,
+      "visibleHeadings": [
+        "社区"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "messages",
+      "path": "/messages",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-messages.png",
+      "oldIdCount": 7,
+      "url": "http://127.0.0.1:5179/messages",
+      "title": "QuantGym",
+      "textLength": 158,
+      "visibleHeadings": [
+        "聊天"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "network",
+      "path": "/network",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-network.png",
+      "oldIdCount": 11,
+      "url": "http://127.0.0.1:5179/network",
+      "title": "QuantGym",
+      "textLength": 111,
+      "visibleHeadings": [
+        "人脉"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "resume",
+      "path": "/resume",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-resume.png",
+      "oldIdCount": 6,
+      "url": "http://127.0.0.1:5179/resume",
+      "title": "QuantGym",
+      "textLength": 170,
+      "visibleHeadings": [
+        "简历模块",
+        "修改要点"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "jobs",
+      "path": "/jobs",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-jobs.png",
+      "oldIdCount": 3,
+      "url": "http://127.0.0.1:5179/jobs",
+      "title": "QuantGym",
+      "textLength": 974,
+      "visibleHeadings": [
+        "求职",
+        "Quantitative Trading / Research Internship",
+        "Quantitative Research Internship",
+        "Quantitative Trading Internship",
+        "Graduate Quant Trader / Researcher",
+        "Quantitative Researcher",
+        "Campus Quantitative Research / Trading"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "companies",
+      "path": "/companies",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-companies.png",
+      "oldIdCount": 4,
+      "url": "http://127.0.0.1:5179/companies",
+      "title": "QuantGym",
+      "textLength": 2420,
+      "visibleHeadings": [
+        "公司",
+        "Jane Street",
+        "Citadel Securities",
+        "HRT",
+        "Two Sigma",
+        "D. E. Shaw",
+        "SIG",
+        "Five Rings",
+        "Optiver",
+        "DRW",
+        "IMC",
+        "Virtu Financial"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "library",
+      "path": "/library",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-library.png",
+      "oldIdCount": 16,
+      "url": "http://127.0.0.1:5179/library",
+      "title": "QuantGym",
+      "textLength": 2435,
+      "visibleHeadings": [
+        "继续阅读",
+        "绿皮书",
+        "黄皮书",
+        "红宝书",
+        "Hull 衍生品",
+        "金融工程数学入门",
+        "Dudeney 挑战谜题",
+        "金融工程线性代数入门",
+        "书籍",
+        "绿皮书",
+        "黄皮书",
+        "红宝书"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "courses",
+      "path": "/courses",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-courses.png",
+      "oldIdCount": 5,
+      "url": "http://127.0.0.1:5179/courses",
+      "title": "QuantGym",
+      "textLength": 1421,
+      "visibleHeadings": [
+        "课程",
+        "学习路径",
+        "AtypicalQuant Quant Interview Questions",
+        "MIT Introduction to Probability: Stochastic Processes",
+        "StatQuest: Statistics and Machine Learning",
+        "哈佛通识概率课 Fat Chance",
+        "沃顿商学院量化建模基础",
+        "MIT 量化金融数学方法",
+        "量化面试绿皮书题解",
+        "Quant 面试知识点：CLT、Market Making、Monte Carlo"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "memory",
+      "path": "/memory",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-memory.png",
+      "oldIdCount": 10,
+      "url": "http://127.0.0.1:5179/memory",
+      "title": "QuantGym",
+      "textLength": 84,
+      "visibleHeadings": [
+        "资料",
+        "记忆"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "settings",
+      "path": "/settings",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-settings.png",
+      "oldIdCount": 14,
+      "url": "http://127.0.0.1:5179/settings",
+      "title": "QuantGym",
+      "textLength": 435,
+      "visibleHeadings": [
+        "设置",
+        "偏好",
+        "数据"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "account",
+      "path": "/account",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-account.png",
+      "oldIdCount": 17,
+      "url": "http://127.0.0.1:5179/account",
+      "title": "QuantGym",
+      "textLength": 329,
+      "visibleHeadings": [
+        "账户信息",
+        "账户信息"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "pk",
+      "path": "/pk",
+      "view": "desktop",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/308-chrome-visual-desktop-pk.png",
+      "oldIdCount": 9,
+      "url": "http://127.0.0.1:5179/pk",
+      "title": "QuantGym",
+      "textLength": 108,
+      "visibleHeadings": [
+        "PK"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    }
+  ],
+  "mobile": [
+    {
+      "id": "overview",
+      "path": "/",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-overview.png",
+      "oldIdCount": 37,
+      "url": "http://127.0.0.1:5179/",
+      "title": "QuantGym",
+      "textLength": 992,
+      "visibleHeadings": [
+        "Sharpen your quant edge today.",
+        "Problem completion",
+        "Experience rhythm",
+        "Contribution heatmap",
+        "排行榜"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "plan",
+      "path": "/plan",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-plan.png",
+      "oldIdCount": 5,
+      "url": "http://127.0.0.1:5179/plan",
+      "title": "QuantGym",
+      "textLength": 491,
+      "visibleHeadings": [
+        "Quant 面试备战计划"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "skills",
+      "path": "/skills",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-skills.png",
+      "oldIdCount": 17,
+      "url": "http://127.0.0.1:5179/skills",
+      "title": "QuantGym",
+      "textLength": 1614,
+      "visibleHeadings": [
+        "能力值",
+        "能力雷达",
+        "LeetCode",
+        "C++ Programming",
+        "Pandas/NumPy",
+        "Probability/Expectation",
+        "Statistics",
+        "Calculus",
+        "Algebra",
+        "Linear Algebra",
+        "Optimization",
+        "Complex Numbers"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "interview",
+      "path": "/interview",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-interview.png",
+      "oldIdCount": 43,
+      "url": "http://127.0.0.1:5179/interview",
+      "title": "QuantGym",
+      "textLength": 286,
+      "visibleHeadings": [
+        "模拟面试"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [
+        "interviewConsole",
+        "exitInterviewBtn",
+        "interviewSessionTitle",
+        "interviewQuestionStatus",
+        "toggleInterviewPanelBtn",
+        "interviewTimer",
+        "interviewTranscript",
+        "interviewQuestionPanel",
+        "interviewForm",
+        "interviewAnswerFileRow",
+        "interviewAnswerFile",
+        "interviewAnswerFileMeta",
+        "interviewAnswer",
+        "interviewAttachmentPreview",
+        "voiceAnswerBtn",
+        "hintInterviewBtn",
+        "revealAnswerBtn",
+        "interviewCompleteActions",
+        "nextInterviewQuestionBtn",
+        "saveInterviewFavoriteBtn",
+        "shareInterviewQuestionBtn",
+        "restartInterviewBtn",
+        "exportInterviewReportBtn",
+        "interviewFavoritesSummary",
+        "interviewFavoritesList"
+      ],
+      "rawI18nKeys": [],
+      "status": "review"
+    },
+    {
+      "id": "problems",
+      "path": "/problems",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-problems.png",
+      "oldIdCount": 34,
+      "url": "http://127.0.0.1:5179/problems",
+      "title": "QuantGym",
+      "textLength": 22,
+      "visibleHeadings": [],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [
+        "problemSearch",
+        "addProblemBtn",
+        "problemForm",
+        "problemTitleEn",
+        "problemTitleZh",
+        "problemCategory",
+        "problemDifficulty",
+        "problemTags",
+        "problemSourceUrl",
+        "problemPromptEn",
+        "problemPromptZh",
+        "problemAnswer",
+        "problemExplanation",
+        "problemImportForm",
+        "problemJsonInput",
+        "problemCollectionsTitle",
+        "problemCollectionGrid",
+        "leetcodeHotList",
+        "problemInteractionStatus",
+        "problemSourceFilterClearBtn",
+        "problemThemeSummary",
+        "problemThemeFilter",
+        "problemDifficultyFilter",
+        "problemRanking",
+        "problemRankingList",
+        "problemList",
+        "problemPagination",
+        "problemDetail",
+        "problemCompletionProgress",
+        "problemCompanyPanel",
+        "problemCompanyTitle",
+        "problemCompanySummary",
+        "problemCompanyClearBtn",
+        "problemCompanyList"
+      ],
+      "rawI18nKeys": [],
+      "status": "review"
+    },
+    {
+      "id": "tools",
+      "path": "/tools",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-tools.png",
+      "oldIdCount": 27,
+      "url": "http://127.0.0.1:5179/tools",
+      "title": "QuantGym",
+      "textLength": 701,
+      "visibleHeadings": [
+        "Mental Math",
+        "训练记录",
+        "排行榜",
+        "Game"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "poker",
+      "path": "/poker",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-poker.png",
+      "oldIdCount": 35,
+      "url": "http://127.0.0.1:5179/poker?pokerRoom=QG-MAIN",
+      "title": "QuantGym",
+      "textLength": 2281,
+      "visibleHeadings": [
+        "100BB Preflop Solver Lite"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "experiences",
+      "path": "/experiences",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-experiences.png",
+      "oldIdCount": 20,
+      "url": "http://127.0.0.1:5179/experiences",
+      "title": "QuantGym",
+      "textLength": 581,
+      "visibleHeadings": [
+        "面经记录",
+        "新建面经",
+        "我的面经"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "news",
+      "path": "/news",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-news.png",
+      "oldIdCount": 32,
+      "url": "http://127.0.0.1:5179/news",
+      "title": "QuantGym",
+      "textLength": 1433,
+      "visibleHeadings": [
+        "Quant 新闻",
+        "Jane Street Q1 交易收入创纪录",
+        "Jane Street 2025 年交易收入刷新纪录",
+        "Jane Street 与 CoreWeave 签下 AI 云算力协议",
+        "Squarepoint 关联方启动电子做市业务"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [
+        "newsForm",
+        "newsTitle",
+        "newsSource",
+        "newsUrl",
+        "newsSourceType",
+        "newsPrimarySkill",
+        "newsTags",
+        "newsSummary",
+        "newsInsight",
+        "news-jane-street-q1-2026",
+        "news-jane-street-2025-haul",
+        "news-jane-street-coreweave-2026",
+        "news-squarepoint-stg-2026",
+        "newsDetail",
+        "newsBackBtn",
+        "newsDetailReadBadge",
+        "newsDetailMeta",
+        "newsDetailTitle",
+        "newsDetailSummary",
+        "newsDetailInsight",
+        "newsDetailPills",
+        "newsDetailLink"
+      ],
+      "rawI18nKeys": [],
+      "status": "review"
+    },
+    {
+      "id": "community",
+      "path": "/community",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-community.png",
+      "oldIdCount": 6,
+      "url": "http://127.0.0.1:5179/community",
+      "title": "QuantGym",
+      "textLength": 77,
+      "visibleHeadings": [
+        "社区"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "review"
+    },
+    {
+      "id": "messages",
+      "path": "/messages",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-messages.png",
+      "oldIdCount": 7,
+      "url": "http://127.0.0.1:5179/messages",
+      "title": "QuantGym",
+      "textLength": 119,
+      "visibleHeadings": [
+        "聊天"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "network",
+      "path": "/network",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-network.png",
+      "oldIdCount": 11,
+      "url": "http://127.0.0.1:5179/network",
+      "title": "QuantGym",
+      "textLength": 72,
+      "visibleHeadings": [
+        "人脉"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "review"
+    },
+    {
+      "id": "resume",
+      "path": "/resume",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-resume.png",
+      "oldIdCount": 6,
+      "url": "http://127.0.0.1:5179/resume",
+      "title": "QuantGym",
+      "textLength": 131,
+      "visibleHeadings": [
+        "简历模块",
+        "修改要点"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "jobs",
+      "path": "/jobs",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-jobs.png",
+      "oldIdCount": 3,
+      "url": "http://127.0.0.1:5179/jobs",
+      "title": "QuantGym",
+      "textLength": 935,
+      "visibleHeadings": [
+        "求职",
+        "Quantitative Trading / Research Internship",
+        "Quantitative Research Internship",
+        "Quantitative Trading Internship",
+        "Graduate Quant Trader / Researcher",
+        "Quantitative Researcher",
+        "Campus Quantitative Research / Trading"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "companies",
+      "path": "/companies",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-companies.png",
+      "oldIdCount": 4,
+      "url": "http://127.0.0.1:5179/companies",
+      "title": "QuantGym",
+      "textLength": 2381,
+      "visibleHeadings": [
+        "公司",
+        "Jane Street",
+        "Citadel Securities",
+        "HRT",
+        "Two Sigma",
+        "D. E. Shaw",
+        "SIG",
+        "Five Rings",
+        "Optiver",
+        "DRW",
+        "IMC",
+        "Virtu Financial"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "library",
+      "path": "/library",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-library.png",
+      "oldIdCount": 16,
+      "url": "http://127.0.0.1:5179/library",
+      "title": "QuantGym",
+      "textLength": 2396,
+      "visibleHeadings": [
+        "继续阅读",
+        "绿皮书",
+        "黄皮书",
+        "红宝书",
+        "Hull 衍生品",
+        "金融工程数学入门",
+        "Dudeney 挑战谜题",
+        "金融工程线性代数入门",
+        "书籍",
+        "绿皮书",
+        "黄皮书",
+        "红宝书"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "courses",
+      "path": "/courses",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-courses.png",
+      "oldIdCount": 5,
+      "url": "http://127.0.0.1:5179/courses",
+      "title": "QuantGym",
+      "textLength": 1382,
+      "visibleHeadings": [
+        "课程",
+        "学习路径",
+        "AtypicalQuant Quant Interview Questions",
+        "MIT Introduction to Probability: Stochastic Processes",
+        "StatQuest: Statistics and Machine Learning",
+        "哈佛通识概率课 Fat Chance",
+        "沃顿商学院量化建模基础",
+        "MIT 量化金融数学方法",
+        "量化面试绿皮书题解",
+        "Quant 面试知识点：CLT、Market Making、Monte Carlo"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "memory",
+      "path": "/memory",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-memory.png",
+      "oldIdCount": 10,
+      "url": "http://127.0.0.1:5179/memory",
+      "title": "QuantGym",
+      "textLength": 45,
+      "visibleHeadings": [
+        "资料",
+        "记忆"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "review"
+    },
+    {
+      "id": "settings",
+      "path": "/settings",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-settings.png",
+      "oldIdCount": 14,
+      "url": "http://127.0.0.1:5179/settings",
+      "title": "QuantGym",
+      "textLength": 396,
+      "visibleHeadings": [
+        "设置",
+        "偏好",
+        "数据"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "account",
+      "path": "/account",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-account.png",
+      "oldIdCount": 17,
+      "url": "http://127.0.0.1:5179/account",
+      "title": "QuantGym",
+      "textLength": 290,
+      "visibleHeadings": [
+        "账户信息",
+        "账户信息"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "pass"
+    },
+    {
+      "id": "pk",
+      "path": "/pk",
+      "view": "mobile",
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/309-chrome-visual-mobile-pk.png",
+      "oldIdCount": 9,
+      "url": "http://127.0.0.1:5179/pk",
+      "title": "QuantGym",
+      "textLength": 69,
+      "visibleHeadings": [
+        "PK"
+      ],
+      "overlay": false,
+      "horizontalOverflow": false,
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "bodyClass": "is-authenticated",
+      "appShellVisible": false,
+      "missingOldIds": [],
+      "rawI18nKeys": [],
+      "status": "review"
+    }
+  ]
+}

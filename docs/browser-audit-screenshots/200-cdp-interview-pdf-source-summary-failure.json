@@ -1,0 +1,70 @@
+{
+  "error": "Error: Timed out waiting for pdf generated q1; last=false\n    at waitFor ([stdin]:7:1624)\n    at async [stdin]:8:4086",
+  "summary": {
+    "clicks": [
+      {
+        "x": 762.4375,
+        "y": 401.625,
+        "text": "English",
+        "selector": "[data-interview-lang=\"en\"]"
+      },
+      {
+        "x": 907.9375,
+        "y": 401.625,
+        "text": "训练练习",
+        "selector": "[data-interview-mode=\"practice\"]"
+      },
+      {
+        "x": 835.1875,
+        "y": 545.625,
+        "text": "高级设置",
+        "selector": ".interview-advanced-config summary"
+      },
+      {
+        "x": 835.1875,
+        "y": 818.625,
+        "text": "进入模拟面试",
+        "selector": "#startInterviewBtn"
+      },
+      {
+        "x": 539.0078125,
+        "y": 456.83349609375,
+        "text": "Probability & stats"
+      },
+      {
+        "x": 495.703125,
+        "y": 532.6946411132812,
+        "text": "Medium"
+      },
+      {
+        "x": 441.3125,
+        "y": 661.5826416015625,
+        "text": "3 questions"
+      },
+      {
+        "x": 428.7265625,
+        "y": 660.7373046875,
+        "text": "Friendly"
+      }
+    ],
+    "states": {
+      "upload": {
+        "label": "pdf uploaded",
+        "href": "http://127.0.0.1:5179/interview?qa=cdp-pdf-source",
+        "source": "pdf",
+        "pdfRowVisible": true,
+        "pdfMeta": "quantgym-pdf-fixture.pdf · 0 KB",
+        "endpoint": "http://127.0.0.1:8787/interview",
+        "title": "",
+        "status": "",
+        "transcriptTail": ""
+      }
+    },
+    "screenshots": {
+      "upload": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/199-cdp-interview-pdf-source-upload.png",
+      "q1": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/200-cdp-interview-pdf-generated-q1.png"
+    },
+    "pdfPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-pdf-cdp-imkh0R/quantgym-pdf-fixture.pdf",
+    "requests": []
+  }
+}

@@ -6,6 +6,10 @@ export function createInterviewRuntime(deps = {}) {
     session: null,
     preparing: false,
     panelExpandedIndex: 0,
+    panelVisible: false,
+    uiStatus: "",
+    reactSession: true,
+    setupMode: "practice",
     selectedProblemId: "",
     selectedCategories: new Set(["all"])
   };
@@ -69,6 +73,8 @@ export function createInterviewRuntime(deps = {}) {
     resetSessionUiState() {
       state.preparing = false;
       state.panelExpandedIndex = 0;
+      state.panelVisible = false;
+      state.uiStatus = "";
     },
     clearTimers() {
       clearPrepTimer();

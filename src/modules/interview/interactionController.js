@@ -18,13 +18,24 @@ export function createInterviewInteractionController(deps = {}) {
   const windowRef = deps.windowRef || globalThis;
   const typeDefs = deps.typeDefs || {};
   const getInterviewState = deps.getInterviewState || (() => ({}));
+  const getRuntimeState = deps.getRuntimeState || (() => ({}));
 
   function getLanguage() {
     return getInterviewState().language === "en" ? "en" : "zh";
   }
 
+  function useReactSession() {
+    return getRuntimeState().reactSession !== false;
+  }
+
   function updateStatus(status = "") {
+    const runtime = getRuntimeState();
+    runtime.uiStatus = status;
     deps.updateLayout?.();
+    if (useReactSession()) {
+      deps.updateActionPanel?.();
+      return;
+    }
     if (!elements.interviewSessionTitle || !elements.interviewQuestionStatus || !elements.interviewTimer) return;
     const viewModel = getInterviewStatusViewModel({
       session: getInterviewState().session,
@@ -38,6 +49,8 @@ export function createInterviewInteractionController(deps = {}) {
   }
 
   function setTimer(seconds) {
+    getRuntimeState().timerSeconds = seconds;
+    if (useReactSession()) return;
     renderInterviewTimer(elements.interviewTimer, seconds);
   }
 

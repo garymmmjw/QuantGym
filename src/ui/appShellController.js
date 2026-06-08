@@ -1,6 +1,7 @@
 import {
   getAvailableRouteModules,
   getCurrentRouteModule,
+  getPathRouteModule,
   writeRouteModule
 } from '../router.js';
 import {
@@ -23,6 +24,7 @@ export function createAppShellController(deps = {}) {
   const getAppState = () => deps.getAppState?.() || {};
   const getUserState = () => deps.getUserState?.() || {};
   const defaultRouteModule = deps.defaultRouteModule || "overview";
+  const useBrowserRouting = deps.routingMode === "browser";
 
   function applySidebarState() {
     applySidebarStateView({
@@ -84,6 +86,11 @@ export function createAppShellController(deps = {}) {
   }
 
   function restoreRouteModule() {
+    if (useBrowserRouting) {
+      const routeModule = getPathRouteModule(windowRef.location?.pathname || "/");
+      switchModule(routeModule, { updateRoute: false, scroll: false });
+      return;
+    }
     const routeModule = getCurrentRouteModule(getAvailableRouteModules(documentRef));
     const decision = getSessionRouteRestoreDecision(getAppState().currentUser, routeModule, {
       fallbackModule: defaultRouteModule
@@ -99,32 +106,25 @@ export function createAppShellController(deps = {}) {
       moduleName,
       fallbackModule: defaultRouteModule
     });
-    deps.runModuleLifecycle?.(targetModule);
     if (options.updateRoute !== false) {
-      writeRouteModule(targetModule, { replace: Boolean(options.replaceRoute) });
+      if (useBrowserRouting) {
+        windowRef.dispatchEvent?.(new CustomEvent("quantgym:navigate-module", {
+          detail: {
+            moduleId: targetModule,
+            replace: Boolean(options.replaceRoute)
+          }
+        }));
+      } else {
+        writeRouteModule(targetModule, { replace: Boolean(options.replaceRoute) });
+      }
     }
     scrollActiveModuleTab(activeTab, { windowRef });
     if (options.scroll !== false) windowRef.scrollTo?.({ top: 0, behavior: "smooth" });
   }
 
   function renderAll() {
-    deps.renderModules?.(["account", "overview"]);
     deps.consumePendingCapture?.();
-    deps.renderModules?.(["problems", "interview", "skills", "memory", "network", "plan"]);
     deps.renderTodoDock?.();
-    deps.renderModules?.([
-      "experiences",
-      "resume",
-      "jobs",
-      "companies",
-      "library",
-      "courses",
-      "community",
-      "messages",
-      "tools",
-      "settings",
-      "news"
-    ]);
     deps.maybeAutoRefreshNews?.();
     deps.maybeAutoRefreshJobs?.();
     deps.updatePreview?.();

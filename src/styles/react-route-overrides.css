@@ -1,0 +1,303 @@
+/*
+ * React-owned route overrides.
+ * These rules sit outside the legacy monolithic stylesheet so React route
+ * structure can match the shipped UI without depending on fragile legacy
+ * selector scope such as [data-module-view="overview"].
+ */
+
+body.is-authenticated .app-route-root .overview-route-page {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 30vw, 520px);
+  align-items: start;
+  gap: clamp(22px, 1.8vw, 34px);
+  width: 100%;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .news-ticker {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  width: 100%;
+  max-width: none;
+  min-height: 68px;
+  margin: 0;
+  grid-template-columns: clamp(190px, 16vw, 300px) minmax(0, 1fr);
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .quanty-hero {
+  container-type: normal;
+  grid-column: 1;
+  grid-row: 2;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) clamp(230px, 24vw, 330px);
+  align-items: center;
+  gap: clamp(14px, 2vw, 30px);
+  width: 100%;
+  min-height: clamp(430px, 28vw, 560px) !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: clamp(34px, 4vw, 64px) clamp(30px, 4vw, 58px) !important;
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .overview-route-page .quanty-hero-copy {
+  display: grid !important;
+  align-content: center;
+  gap: clamp(14px, 1.8vw, 22px);
+  height: auto !important;
+  max-width: min(100%, 640px);
+  padding: 0 !important;
+  transform: none !important;
+}
+
+body.is-authenticated .app-route-root .overview-route-page .quanty-hero h2 {
+  height: auto !important;
+  min-height: 0 !important;
+  max-width: min(15.5ch, 100%);
+  overflow: visible !important;
+  color: #111426;
+  font-size: clamp(3rem, 4.55vw, 4.85rem);
+  font-weight: 850;
+  line-height: 1.03;
+  letter-spacing: 0;
+}
+
+body.is-authenticated .app-route-root .overview-route-page .quanty-hero h2::after {
+  content: none !important;
+  display: none !important;
+  border: 0 !important;
+  animation: none !important;
+}
+
+body.is-authenticated .app-route-root .overview-route-page .quanty-hero .shark-stage {
+  position: relative !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 1;
+  display: grid !important;
+  place-items: center;
+  justify-self: end;
+  align-self: center;
+  width: clamp(230px, 24vw, 330px) !important;
+  height: clamp(285px, 28vw, 390px) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible;
+  transform: none !important;
+  pointer-events: none;
+}
+
+body.is-authenticated .app-route-root .overview-route-page .quanty-hero .shark-interactive {
+  display: grid !important;
+  place-items: center;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: auto;
+}
+
+body.is-authenticated .app-route-root .overview-route-page #heroShark {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+  align-content: stretch;
+  width: 100%;
+  min-height: clamp(430px, 28vw, 560px);
+  height: auto;
+  margin: 0 !important;
+  padding: clamp(28px, 3vw, 44px);
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .summary-copy {
+  align-content: start;
+  gap: clamp(16px, 2vw, 24px);
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .rank-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .rank-label {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #202436;
+  font-size: clamp(0.95rem, 1.15vw, 1.2rem);
+  font-weight: 850;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band #rankName {
+  color: #202436;
+  font-size: clamp(1.05rem, 1.35vw, 1.45rem);
+  font-weight: 900;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .total-xp {
+  display: grid;
+  gap: 8px;
+  align-items: start;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .total-xp span:first-child {
+  color: #5144c4;
+  font-size: clamp(4.4rem, 6vw, 6.25rem);
+  font-weight: 900;
+  line-height: 0.85;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .total-xp span:last-child {
+  color: #626a7d;
+  font-size: clamp(1rem, 1.3vw, 1.25rem);
+  font-weight: 850;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .summary-metrics {
+  align-self: end;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  min-width: 0;
+  border-top: 1px solid #e6eaf4;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .summary-metrics .metric-card {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 56px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid #edf0f7;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .summary-metrics .metric-card:last-child {
+  border-bottom: 0;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .summary-metrics .metric-card::before {
+  position: static;
+  grid-column: 1;
+  grid-row: 1;
+  width: 28px;
+  height: 28px;
+  transform: none;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .summary-metrics .metric-card small {
+  grid-column: 2;
+  grid-row: 1;
+  color: #646b7d;
+  font-size: clamp(0.9rem, 1vw, 1.05rem);
+  font-weight: 850;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .summary-band .summary-metrics .metric-card span {
+  grid-column: 3;
+  grid-row: 1;
+  color: #161a2a;
+  font-size: clamp(1.35rem, 1.7vw, 1.8rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .overview-effect-grid {
+  grid-column: 1;
+  grid-row: 3;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: clamp(18px, 1.6vw, 28px);
+  width: 100%;
+  margin: 0 !important;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .overview-ranking-grid {
+  grid-column: 2;
+  grid-row: 3;
+  width: 100%;
+  min-width: 0;
+  margin: 0 !important;
+}
+
+body.is-authenticated .app-route-root .overview-route-page > .overview-ranking-grid .leaderboard-panel {
+  width: 100%;
+  margin: 0;
+}
+
+@media (max-width: 1180px) {
+  body.is-authenticated .app-route-root .overview-route-page {
+    grid-template-columns: 1fr;
+  }
+
+  body.is-authenticated .app-route-root .overview-route-page > .news-ticker,
+  body.is-authenticated .app-route-root .overview-route-page > .quanty-hero,
+  body.is-authenticated .app-route-root .overview-route-page > .summary-band,
+  body.is-authenticated .app-route-root .overview-route-page > .overview-effect-grid,
+  body.is-authenticated .app-route-root .overview-route-page > .overview-ranking-grid {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  body.is-authenticated .app-route-root .overview-route-page > .quanty-hero,
+  body.is-authenticated .app-route-root .overview-route-page > .summary-band {
+    min-height: 0 !important;
+  }
+
+  body.is-authenticated .app-route-root .overview-route-page > .overview-effect-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .overview-route-page > .news-ticker {
+    grid-template-columns: 1fr;
+  }
+
+  body.is-authenticated .app-route-root .overview-route-page > .quanty-hero {
+    grid-template-columns: minmax(0, 1fr) clamp(130px, 34vw, 190px);
+    min-height: clamp(220px, 52vw, 320px) !important;
+    padding: clamp(20px, 5vw, 28px) !important;
+  }
+
+  body.is-authenticated .app-route-root .overview-route-page .quanty-hero h2 {
+    max-width: min(13ch, 100%);
+    font-size: clamp(2rem, 8.2vw, 3rem);
+    line-height: 1.02;
+  }
+
+  body.is-authenticated .app-route-root .overview-route-page .quanty-hero .shark-stage {
+    width: clamp(130px, 34vw, 190px) !important;
+    height: clamp(160px, 42vw, 240px) !important;
+  }
+
+  body.is-authenticated .app-route-root .overview-route-page > .overview-effect-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  body.is-authenticated .app-route-root .overview-route-page > .quanty-hero {
+    grid-template-columns: 1fr;
+  }
+
+  body.is-authenticated .app-route-root .overview-route-page .quanty-hero .shark-stage {
+    justify-self: end;
+    width: clamp(150px, 48vw, 210px) !important;
+    height: clamp(170px, 54vw, 240px) !important;
+  }
+}

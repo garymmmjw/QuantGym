@@ -21,7 +21,6 @@ export function createAppProblemControllerBundles(deps = {}) {
     getLanguage,
     getLibrarySourceLabel,
     getLocale,
-    getModuleLifecycle,
     getProblemBrowserMatches,
     getProblemCompanies,
     getProblemCompletionCount,
@@ -40,7 +39,7 @@ export function createAppProblemControllerBundles(deps = {}) {
     isLeetcodeHotExpanded,
     mergeProblems,
     normalizeCategory,
-    normalizeLeetcodeHot100Done,
+    normalizeLeetcodeHot100Done: normalizeLeetcodeHot100DoneValue,
     openProblemDetail,
     pageSize,
     problemDetailState,
@@ -122,7 +121,14 @@ export function createAppProblemControllerBundles(deps = {}) {
     getCompletionCount: getProblemCompletionCount,
     getLeetcodeHotCompletionStats,
     leetcodeHotItems: importLeetcodeHotItems,
-    normalizeLeetcodeHot100Done,
+    normalizeLeetcodeHot100Done: (doneIds) => {
+      if (typeof normalizeLeetcodeHot100DoneValue === "function") {
+        return normalizeLeetcodeHot100DoneValue(doneIds, importLeetcodeHotItems);
+      }
+      const valid = new Set((Array.isArray(importLeetcodeHotItems) ? importLeetcodeHotItems : []).map((item) => item.id));
+      return [...new Set(Array.isArray(doneIds) ? doneIds.map(String) : [])]
+        .filter((id) => valid.has(id));
+    },
     skillDefs,
     isCatalogProblem,
     matchesSource: problemMatchesSource,
@@ -134,7 +140,7 @@ export function createAppProblemControllerBundles(deps = {}) {
     renderLeetcodeHot100,
     saveState,
     renderSummary,
-    renderSkills: () => getModuleLifecycle("skills")?.render?.(),
+    renderSkills: () => {},
     refreshIcons,
     emptyBlock,
     getPersonalState: getProblemPersonalState,

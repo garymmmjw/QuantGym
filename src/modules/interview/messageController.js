@@ -53,7 +53,7 @@ export function createInterviewMessageController(deps = {}) {
       }
 
       const turn = findTurn();
-      const node = turn?.querySelector?.(".message");
+      const node = turn?.querySelector?.(".message > .rich-text") || turn?.querySelector?.(".message");
       if (node) {
         deps.renderRichText?.(node, nextState.displayText);
         if (elements.interviewTranscript) {

@@ -5,9 +5,10 @@ export function applyModuleShellState(options = {}) {
     fallbackModule = "overview"
   } = options;
   const views = [...(documentRef?.querySelectorAll?.("[data-module-view]") || [])];
-  const targetModule = views.some((view) => view.dataset.moduleView === moduleName)
+  const hasPerModuleViews = views.some((view) => view.dataset.moduleView && view.dataset.moduleView !== "route");
+  const targetModule = hasPerModuleViews && views.some((view) => view.dataset.moduleView === moduleName)
     ? moduleName
-    : fallbackModule;
+    : (hasPerModuleViews ? fallbackModule : moduleName);
   let activeTab = null;
 
   documentRef?.querySelectorAll?.("[data-module-tab]").forEach((button) => {
@@ -17,7 +18,8 @@ export function applyModuleShellState(options = {}) {
   });
 
   views.forEach((view) => {
-    view.classList.toggle("active", view.dataset.moduleView === targetModule);
+    const routeHost = view.dataset.moduleView === "route";
+    view.classList.toggle("active", routeHost || view.dataset.moduleView === targetModule);
   });
 
   documentRef?.body?.classList?.remove?.("is-poker-module");

@@ -12,16 +12,19 @@ export function createPokerPanelView(deps = {}) {
     getSpectators = () => [],
     isHost = () => false,
     isRegistering = () => false,
-    isSpectator = () => false
+    isSpectator = () => false,
+    state = {}
   } = deps;
 
   function renderTabs() {
+    if (state.reactTable !== false) return;
     documentRef.querySelectorAll?.("[data-poker-panel-tab]").forEach((button) => {
       button.classList.toggle("active", button.dataset.pokerPanelTab === getSelectedTab());
     });
   }
 
   function renderRightPanel(game) {
+    if (state.reactTable !== false) return;
     if (!elements.pokerPanelContent) return;
     const tab = getSelectedTab() || "chat";
     if (tab === "history") {

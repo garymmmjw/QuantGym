@@ -164,6 +164,11 @@ Generate a local static deployment directory:
 npm run build
 ```
 
+For local builds, the build script reads root `.env` and `config.js` as
+fallbacks for public runtime config, then writes the resolved values into
+`dist/config.js`. It never embeds server-side secrets such as
+`OPENAI_API_KEY`.
+
 For beta or production deploys, use strict mode and provide the public HTTPS service URLs:
 
 ```bash
@@ -179,6 +184,44 @@ Strict mode fails fast unless both `QUANTGYM_WEB_API_ENDPOINT` and `QUANTGYM_WEB
 The build script runs `vite build` internally, writes `dist/config.js`, copies runtime data scripts and generated image assets, and writes locale entry pages (`/zh/`, `/en/`) from the built `dist/index.html`. Publish only `dist/`. Do not publish the repository root as a static site.
 
 Cloudflare Pages build command: `npm install && node scripts/build-static-site.mjs --strict`
+
+Release-readiness checks:
+
+```bash
+npm run check:release-readiness
+```
+
+The strict readiness check fails if any production-boundary check is skipped.
+For local handoff before a real Google ID token is available, use:
+
+```bash
+npm run check:release-readiness:local
+```
+
+To inspect the current migration completion state without changing runtime
+code, use:
+
+```bash
+npm run check:migration-completion
+```
+
+To finish the Google provider login boundary locally, generate the temporary
+token helper and open the printed URL while the Vite dev server is running:
+
+```bash
+npm run google:token-helper
+```
+
+The helper writes `artifacts/google-id-token-helper.html`, which is ignored by
+Git. After Google sign-in, copy the short-lived ID token and run:
+
+```bash
+QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries
+```
+
+The verifier checks the token structure, issuer, expiration, and audience
+against the configured Google Client ID before it calls the provider login
+endpoint.
 
 ## Beta Deployment Configuration
 

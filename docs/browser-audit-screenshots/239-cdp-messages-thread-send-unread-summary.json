@@ -1,0 +1,310 @@
+{
+  "status": "pass",
+  "screenshots": {
+    "initial": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/234-cdp-messages-initial-seeded.png",
+    "afterRead": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/235-cdp-messages-after-bob-read.png",
+    "afterSend": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/236-cdp-messages-after-send.png",
+    "afterReload": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/237-cdp-messages-after-reload.png",
+    "communityEntry": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/238-cdp-community-private-entry.png",
+    "afterCommunityPrivate": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/239-cdp-messages-after-community-private.png"
+  },
+  "checks": {
+    "initialThreadsAndUnread": true,
+    "threadClickMarksRead": true,
+    "sendPersists": true,
+    "reloadPersists": true,
+    "communityPrivateEntryCreatesThread": true
+  },
+  "initial": {
+    "url": "http://127.0.0.1:5179/messages?qa=messages-deep",
+    "title": "QuantGym",
+    "pageTitle": "聊天",
+    "threadButtons": [
+      {
+        "id": "thread-qa-current-messages-qa-peer-carol",
+        "text": "CCarol ResearchCan you review this probability puzzle?1",
+        "active": true,
+        "unreadBadge": "1"
+      },
+      {
+        "id": "thread-qa-current-messages-qa-peer-bob",
+        "text": "BBob TraderSure, I can share my notes.1",
+        "active": false,
+        "unreadBadge": "1"
+      }
+    ],
+    "unreadBadge": "2",
+    "chatHasUnread": true,
+    "activeHeader": "CRCarol Research1 条消息",
+    "messages": [
+      {
+        "cls": "direct-message theirs",
+        "text": "Can you review this probability puzzle?"
+      }
+    ],
+    "composerHidden": false,
+    "composerDisabled": false,
+    "communityThreadIds": [
+      "thread-qa-current-messages-qa-peer-carol",
+      "thread-qa-current-messages-qa-peer-bob"
+    ],
+    "byThread": {
+      "thread-qa-current-messages-qa-peer-carol": {
+        "messageCount": 1,
+        "unreadForCurrent": 1,
+        "lastText": "Can you review this probability puzzle?",
+        "lastReadBy": []
+      },
+      "thread-qa-current-messages-qa-peer-bob": {
+        "messageCount": 2,
+        "unreadForCurrent": 1,
+        "lastText": "Sure, I can share my notes.",
+        "lastReadBy": [
+          "qa-current-messages"
+        ]
+      }
+    }
+  },
+  "afterRead": {
+    "url": "http://127.0.0.1:5179/messages?qa=messages-deep",
+    "title": "QuantGym",
+    "pageTitle": "聊天",
+    "threadButtons": [
+      {
+        "id": "thread-qa-current-messages-qa-peer-carol",
+        "text": "CCarol ResearchCan you review this probability puzzle?1",
+        "active": false,
+        "unreadBadge": "1"
+      },
+      {
+        "id": "thread-qa-current-messages-qa-peer-bob",
+        "text": "BBob TraderSure, I can share my notes.",
+        "active": true,
+        "unreadBadge": ""
+      }
+    ],
+    "unreadBadge": "1",
+    "chatHasUnread": true,
+    "activeHeader": "BTBob Trader2 条消息",
+    "messages": [
+      {
+        "cls": "direct-message theirs",
+        "text": "Let us sync on expected value drills."
+      },
+      {
+        "cls": "direct-message mine",
+        "text": "Sure, I can share my notes."
+      }
+    ],
+    "composerHidden": false,
+    "composerDisabled": false,
+    "communityThreadIds": [
+      "thread-qa-current-messages-qa-peer-carol",
+      "thread-qa-current-messages-qa-peer-bob"
+    ],
+    "byThread": {
+      "thread-qa-current-messages-qa-peer-carol": {
+        "messageCount": 1,
+        "unreadForCurrent": 1,
+        "lastText": "Can you review this probability puzzle?",
+        "lastReadBy": []
+      },
+      "thread-qa-current-messages-qa-peer-bob": {
+        "messageCount": 2,
+        "unreadForCurrent": 0,
+        "lastText": "Sure, I can share my notes.",
+        "lastReadBy": [
+          "qa-current-messages"
+        ]
+      }
+    }
+  },
+  "afterSend": {
+    "url": "http://127.0.0.1:5179/messages?qa=messages-deep",
+    "title": "QuantGym",
+    "pageTitle": "聊天",
+    "threadButtons": [
+      {
+        "id": "thread-qa-current-messages-qa-peer-bob",
+        "text": "BBob TraderThanks, let us compare notes tomorrow.",
+        "active": true,
+        "unreadBadge": ""
+      },
+      {
+        "id": "thread-qa-current-messages-qa-peer-carol",
+        "text": "CCarol ResearchCan you review this probability puzzle?1",
+        "active": false,
+        "unreadBadge": "1"
+      }
+    ],
+    "unreadBadge": "1",
+    "chatHasUnread": true,
+    "activeHeader": "BTBob Trader3 条消息",
+    "messages": [
+      {
+        "cls": "direct-message theirs",
+        "text": "Let us sync on expected value drills."
+      },
+      {
+        "cls": "direct-message mine",
+        "text": "Sure, I can share my notes."
+      },
+      {
+        "cls": "direct-message mine",
+        "text": "Thanks, let us compare notes tomorrow."
+      }
+    ],
+    "composerHidden": false,
+    "composerDisabled": false,
+    "communityThreadIds": [
+      "thread-qa-current-messages-qa-peer-carol",
+      "thread-qa-current-messages-qa-peer-bob"
+    ],
+    "byThread": {
+      "thread-qa-current-messages-qa-peer-carol": {
+        "messageCount": 1,
+        "unreadForCurrent": 1,
+        "lastText": "Can you review this probability puzzle?",
+        "lastReadBy": []
+      },
+      "thread-qa-current-messages-qa-peer-bob": {
+        "messageCount": 3,
+        "unreadForCurrent": 0,
+        "lastText": "Thanks, let us compare notes tomorrow.",
+        "lastReadBy": [
+          "qa-current-messages"
+        ]
+      }
+    }
+  },
+  "afterReload": {
+    "url": "http://127.0.0.1:5179/messages?qa=messages-deep",
+    "title": "QuantGym",
+    "pageTitle": "聊天",
+    "threadButtons": [
+      {
+        "id": "thread-qa-current-messages-qa-peer-bob",
+        "text": "BBob TraderThanks, let us compare notes tomorrow.",
+        "active": true,
+        "unreadBadge": ""
+      },
+      {
+        "id": "thread-qa-current-messages-qa-peer-carol",
+        "text": "CCarol ResearchCan you review this probability puzzle?1",
+        "active": false,
+        "unreadBadge": "1"
+      }
+    ],
+    "unreadBadge": "1",
+    "chatHasUnread": true,
+    "activeHeader": "BTBob Trader3 条消息",
+    "messages": [
+      {
+        "cls": "direct-message theirs",
+        "text": "Let us sync on expected value drills."
+      },
+      {
+        "cls": "direct-message mine",
+        "text": "Sure, I can share my notes."
+      },
+      {
+        "cls": "direct-message mine",
+        "text": "Thanks, let us compare notes tomorrow."
+      }
+    ],
+    "composerHidden": false,
+    "composerDisabled": false,
+    "communityThreadIds": [
+      "thread-qa-current-messages-qa-peer-carol",
+      "thread-qa-current-messages-qa-peer-bob"
+    ],
+    "byThread": {
+      "thread-qa-current-messages-qa-peer-carol": {
+        "messageCount": 1,
+        "unreadForCurrent": 1,
+        "lastText": "Can you review this probability puzzle?",
+        "lastReadBy": []
+      },
+      "thread-qa-current-messages-qa-peer-bob": {
+        "messageCount": 3,
+        "unreadForCurrent": 0,
+        "lastText": "Thanks, let us compare notes tomorrow.",
+        "lastReadBy": [
+          "qa-current-messages"
+        ]
+      }
+    }
+  },
+  "communityBefore": {
+    "url": "http://127.0.0.1:5179/community?qa=messages-deep",
+    "cards": [
+      "AMAlice Maker美国 · California · 2026/06/08Anyone comparing Jane Street market making prep notes?赞 - 0私信0 评论"
+    ],
+    "directButtons": 1
+  },
+  "afterCommunityPrivate": {
+    "url": "http://127.0.0.1:5179/messages?qa=messages-deep",
+    "title": "QuantGym",
+    "pageTitle": "聊天",
+    "threadButtons": [
+      {
+        "id": "thread-qa-current-messages-qa-peer-alice",
+        "text": "AAlice MakerAlice Maker 你好，我在论坛看到你的动态，想继续交流一下。",
+        "active": true,
+        "unreadBadge": ""
+      },
+      {
+        "id": "thread-qa-current-messages-qa-peer-bob",
+        "text": "BBob TraderThanks, let us compare notes tomorrow.",
+        "active": false,
+        "unreadBadge": ""
+      },
+      {
+        "id": "thread-qa-current-messages-qa-peer-carol",
+        "text": "CCarol ResearchCan you review this probability puzzle?1",
+        "active": false,
+        "unreadBadge": "1"
+      }
+    ],
+    "unreadBadge": "1",
+    "chatHasUnread": true,
+    "activeHeader": "AMAlice Maker1 条消息",
+    "messages": [
+      {
+        "cls": "direct-message mine",
+        "text": "Alice Maker 你好，我在论坛看到你的动态，想继续交流一下。"
+      }
+    ],
+    "composerHidden": false,
+    "composerDisabled": false,
+    "communityThreadIds": [
+      "thread-qa-current-messages-qa-peer-alice",
+      "thread-qa-current-messages-qa-peer-carol",
+      "thread-qa-current-messages-qa-peer-bob"
+    ],
+    "byThread": {
+      "thread-qa-current-messages-qa-peer-alice": {
+        "messageCount": 1,
+        "unreadForCurrent": 0,
+        "lastText": "Alice Maker 你好，我在论坛看到你的动态，想继续交流一下。",
+        "lastReadBy": [
+          "qa-current-messages"
+        ]
+      },
+      "thread-qa-current-messages-qa-peer-carol": {
+        "messageCount": 1,
+        "unreadForCurrent": 1,
+        "lastText": "Can you review this probability puzzle?",
+        "lastReadBy": []
+      },
+      "thread-qa-current-messages-qa-peer-bob": {
+        "messageCount": 3,
+        "unreadForCurrent": 0,
+        "lastText": "Thanks, let us compare notes tomorrow.",
+        "lastReadBy": [
+          "qa-current-messages"
+        ]
+      }
+    }
+  }
+}

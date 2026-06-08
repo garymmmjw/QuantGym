@@ -1,0 +1,160 @@
+{
+  "id": 327,
+  "date": "2026-06-08",
+  "surface": "migration completion audit",
+  "status": "pass",
+  "completionPercent": 100,
+  "requirements": {
+    "total": 10,
+    "passed": 10,
+    "pending": 0,
+    "failed": 0
+  },
+  "remainingRequiredWork": [],
+  "checks": [
+    {
+      "id": "react-route-ownership",
+      "title": "All routeable modules are React-owned",
+      "status": "pass",
+      "evidence": {
+        "manifestRoutes": 21,
+        "reactRoutes": 21,
+        "bridgeRoutes": 0,
+        "missingReact": [],
+        "extraReact": []
+      }
+    },
+    {
+      "id": "migration-ledger-converted",
+      "title": "Migration ledger records all pages as converted",
+      "status": "pass",
+      "evidence": {
+        "ledgerPages": 21,
+        "convertedPages": 21,
+        "nonConverted": []
+      }
+    },
+    {
+      "id": "retired-route-bridge",
+      "title": "Retired route bridge symbols are absent from src",
+      "status": "pass",
+      "evidence": {
+        "checkedFiles": 450,
+        "hits": []
+      }
+    },
+    {
+      "id": "route-smoke-evidence",
+      "title": "All-route desktop/mobile smoke evidence passes",
+      "status": "pass",
+      "evidence": {
+        "desktopRoutes": 21,
+        "desktopPass": 21,
+        "mobileRoutes": 21,
+        "mobilePass": 21,
+        "significantLogs": 0
+      }
+    },
+    {
+      "id": "github-parity-evidence",
+      "title": "GitHub baseline parity has no actionable route issues",
+      "status": "pass",
+      "evidence": {
+        "status": "pass",
+        "routeCount": 21,
+        "pass": 21,
+        "total": 21,
+        "actionableIssues": 0,
+        "currentProblems": []
+      }
+    },
+    {
+      "id": "browser-evidence-manifest",
+      "title": "Referenced browser evidence files are present and valid",
+      "status": "pass",
+      "evidence": {
+        "status": "pass",
+        "evidenceRefs": 263,
+        "imageRefs": 229,
+        "jsonRefs": 34,
+        "missing": 0,
+        "smallFiles": 0,
+        "invalidJson": 0
+      }
+    },
+    {
+      "id": "static-build-config",
+      "title": "Static build runtime config is safe and populated",
+      "status": "pass",
+      "evidence": {
+        "npmRunBuildPassed": true,
+        "distConfigCloudApiEndpoint": "http://127.0.0.1:8790/api",
+        "distConfigLlmEndpoint": "http://127.0.0.1:8787/interview",
+        "distConfigLlmModel": "gpt-5-nano",
+        "distConfigGoogleClientIdSet": true,
+        "distConfigGoogleLoginEnabled": true,
+        "distConfigContainsOpenAiKey": false,
+        "strictModeRejectsLocalHttpEndpoints": true
+      }
+    },
+    {
+      "id": "local-service-boundaries",
+      "title": "Local cloud, Google, and LLM boundaries are verified",
+      "status": "pass",
+      "evidence": {
+        "status": "pass",
+        "passed": 5,
+        "skipped": 0,
+        "failed": 0,
+        "googleProviderLogin": {
+          "name": "google provider login",
+          "status": "pass",
+          "durationMs": 157,
+          "data": {
+            "provider": "local",
+            "googleLinked": true,
+            "email": "mi***@gmail.com",
+            "hasToken": true,
+            "tokenAudienceMatchesClientId": true,
+            "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
+            "tokenEmail": "mi***@gmail.com"
+          }
+        },
+        "providerLoginCompleted": true,
+        "llmResumeReview": "pass",
+        "llmPdfQuestionGeneration": "pass"
+      }
+    },
+    {
+      "id": "google-token-helper",
+      "title": "Google ID token helper is generated safely and renderable",
+      "status": "pass",
+      "evidence": {
+        "helperStatus": "pass",
+        "browserStatus": "pass",
+        "artifactIgnoredByGit": true,
+        "tokenWrittenToDisk": false,
+        "verifierChecksTokenStructureAudienceAndExpiry": true,
+        "googleButtonVisible": true,
+        "verifierSanityTextVisible": true,
+        "statusText": "Ready."
+      }
+    },
+    {
+      "id": "google-provider-login",
+      "title": "Real Google provider account login is signed off",
+      "status": "pass",
+      "reason": "",
+      "nextStep": "",
+      "evidence": {
+        "googleButtonIframeRendered": true,
+        "googleIframeUsesConfiguredClientId": true,
+        "originNotAllowedWarningPresent": false,
+        "providerLoginCompleted": true,
+        "productionBoundaryStatus": "pass",
+        "googleLinked": true,
+        "tokenAudienceMatchesClientId": true
+      }
+    }
+  ]
+}

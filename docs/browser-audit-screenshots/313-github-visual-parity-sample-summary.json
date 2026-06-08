@@ -1,0 +1,1162 @@
+{
+  "createdAt": "2026-06-08T09:52:28.770Z",
+  "currentBase": "http://127.0.0.1:5179",
+  "baselineBase": "http://127.0.0.1:5180",
+  "routes": [
+    {
+      "route": "overview",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-baseline-overview.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-current-overview.png",
+      "baselineUrl": "http://127.0.0.1:5180/#overview",
+      "currentUrl": "http://127.0.0.1:5179/",
+      "baselineHeadings": [
+        "Sharpen you",
+        "Problem completion",
+        "Experience rhythm",
+        "Contribution heatmap",
+        "排行榜"
+      ],
+      "currentHeadings": [
+        "Sharpen your quant edge today.",
+        "Problem completion",
+        "Experience rhythm",
+        "Contribution heatmap",
+        "排行榜"
+      ],
+      "baselineImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        },
+        {
+          "src": "assets/generated/shark-hero-clean.png?v=original-clean-1",
+          "alt": "",
+          "x": 592,
+          "y": 355,
+          "w": 299,
+          "h": 379
+        }
+      ],
+      "currentImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        },
+        {
+          "src": "assets/generated/shark-hero-clean.png?v=original-clean-1",
+          "alt": "",
+          "x": 550,
+          "y": 326,
+          "w": 330,
+          "h": 418
+        }
+      ],
+      "selectorDiffs": [
+        {
+          "selector": "#newsTickerTrack",
+          "baseline": {
+            "selector": "#newsTickerTrack",
+            "count": 1,
+            "visible": true,
+            "x": 219,
+            "y": 185,
+            "w": 3180,
+            "h": 44,
+            "text": "Reuters / Investing.com Jane Street Q1 交易收入创纪录 Bloomberg Jane Street 2025 年交易收入刷新纪录 Data Center Dynamics Jane Street 与 CoreWeave 签下 AI 云算力协议 Bloomberg Squarepoi"
+          },
+          "current": {
+            "selector": "#newsTickerTrack",
+            "count": 1,
+            "visible": true,
+            "x": 264,
+            "y": 188,
+            "w": 3180,
+            "h": 44,
+            "text": "Reuters / Investing.com Jane Street Q1 交易收入创纪录 Bloomberg Jane Street 2025 年交易收入刷新纪录 Data Center Dynamics Jane Street 与 CoreWeave 签下 AI 云算力协议 Bloomberg Squarepoi"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 45,
+            "y": 3,
+            "w": 0,
+            "h": 0,
+            "count": 0
+          }
+        },
+        {
+          "selector": ".overview-hero",
+          "baseline": null,
+          "current": null,
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": null
+        },
+        {
+          "selector": ".leaderboard-panel",
+          "baseline": {
+            "selector": ".leaderboard-panel",
+            "count": 1,
+            "visible": true,
+            "x": 965,
+            "y": 716,
+            "w": 432,
+            "h": 381,
+            "text": "排行榜 指标 总分 LeetCode C++ Programming Pandas/NumPy Probability/Expectation Statistics Calculus Algebra Linear Algebra Optimization Complex Numbers Machine Learning"
+          },
+          "current": {
+            "selector": ".leaderboard-panel",
+            "count": 1,
+            "visible": true,
+            "x": 965,
+            "y": 803,
+            "w": 432,
+            "h": 381,
+            "text": "排行榜 指标 总分 LeetCode C++ Programming Pandas/NumPy Probability/Expectation Statistics Calculus Algebra Linear Algebra Optimization Complex Numbers Machine Learning"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 87,
+            "w": 0,
+            "h": 0,
+            "count": 0
+          }
+        },
+        {
+          "selector": "#leaderboardList",
+          "baseline": {
+            "selector": "#leaderboardList",
+            "count": 1,
+            "visible": true,
+            "x": 984,
+            "y": 890,
+            "w": 394,
+            "h": 72,
+            "text": "1 QU Quant · 你 Analyst I · 中国 · 上海 0 积分 —"
+          },
+          "current": {
+            "selector": "#leaderboardList",
+            "count": 1,
+            "visible": true,
+            "x": 984,
+            "y": 977,
+            "w": 394,
+            "h": 72,
+            "text": "1 QU Quant · 你 Analyst I · 中国 · 上海 0 积分 ·"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 87,
+            "w": 0,
+            "h": 0,
+            "count": 0
+          }
+        }
+      ],
+      "baselineLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        }
+      ],
+      "currentLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        }
+      ],
+      "issues": []
+    },
+    {
+      "route": "problems",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-baseline-problems.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-current-problems.png",
+      "baselineUrl": "http://127.0.0.1:5180/#problems",
+      "currentUrl": "http://127.0.0.1:5179/problems",
+      "baselineHeadings": [
+        "题目",
+        "题单集合",
+        "题目完成进度",
+        "按公司刷题"
+      ],
+      "currentHeadings": [
+        "题目",
+        "题单集合",
+        "题目完成进度",
+        "按公司刷题"
+      ],
+      "baselineImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        },
+        {
+          "src": "/assets/generated/mascot-calculator.webp?v=premium-system-2",
+          "alt": "",
+          "x": 621,
+          "y": 180,
+          "w": 64,
+          "h": 102
+        }
+      ],
+      "currentImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        },
+        {
+          "src": "/assets/generated/mascot-calculator.webp?v=premium-system-2",
+          "alt": "",
+          "x": 621,
+          "y": 180,
+          "w": 64,
+          "h": 102
+        }
+      ],
+      "selectorDiffs": [
+        {
+          "selector": "#problemSearch",
+          "baseline": {
+            "selector": "#problemSearch",
+            "count": 1,
+            "visible": true,
+            "x": 701,
+            "y": 210,
+            "w": 300,
+            "h": 42,
+            "text": ""
+          },
+          "current": {
+            "selector": "#problemSearch",
+            "count": 1,
+            "visible": true,
+            "x": 701,
+            "y": 210,
+            "w": 300,
+            "h": 42,
+            "text": ""
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "count": 0
+          }
+        },
+        {
+          "selector": "#problemList",
+          "baseline": {
+            "selector": "#problemList",
+            "count": 1,
+            "visible": true,
+            "x": 70,
+            "y": 1257,
+            "w": 951,
+            "h": 4427,
+            "text": "古怪的海盗 绿皮书 Mental Math Hard Problem Simplification Screwy pirates 五名海盗洗劫了满满一箱100金币。作为一群民主的海盗，他们同意以下分配战利品的方法：最资深的海盗将提议分配硬币。所有海盗，包括最资深的海盗，都会投票。如果至少 50% 的海盗（本例中为 3 "
+          },
+          "current": {
+            "selector": "#problemList",
+            "count": 1,
+            "visible": true,
+            "x": 70,
+            "y": 1257,
+            "w": 951,
+            "h": 3137,
+            "text": "古怪的海盗 绿皮书 mentalMath Hard Problem Simplification Screwy pirates 0 0 查看完整题目 虎与羊 绿皮书 mentalMath Medium Problem Simplification Tiger and sheep 0 0 查看完整题目 过河 绿皮书 me"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": -1290,
+            "count": 0
+          }
+        },
+        {
+          "selector": ".problem-card",
+          "baseline": {
+            "selector": ".problem-card",
+            "count": 42,
+            "visible": false,
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "text": "Quantitative Trading / Research InternshipInternshipJane Streetcrawler-readyJane Street · New York / London / Hong Kongtradingprobabilitymarket making打开申请"
+          },
+          "current": {
+            "selector": ".problem-card",
+            "count": 24,
+            "visible": true,
+            "x": 70,
+            "y": 1257,
+            "w": 464,
+            "h": 239,
+            "text": "古怪的海盗 绿皮书 mentalMath Hard Problem Simplification Screwy pirates 0 0 查看完整题目"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 70,
+            "y": 1257,
+            "w": 464,
+            "h": 239,
+            "count": -18
+          }
+        },
+        {
+          "selector": "#problemCollectionFilters",
+          "baseline": null,
+          "current": null,
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": null
+        }
+      ],
+      "baselineLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        }
+      ],
+      "currentLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        }
+      ],
+      "issues": [
+        ".problem-card y shift 1257",
+        ".problem-card width shift 464",
+        ".problem-card count changed -18"
+      ]
+    },
+    {
+      "route": "jobs",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-baseline-jobs.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-current-jobs.png",
+      "baselineUrl": "http://127.0.0.1:5180/#jobs",
+      "currentUrl": "http://127.0.0.1:5179/jobs",
+      "baselineHeadings": [
+        "求职",
+        "Quantitative Trading / Research Internship",
+        "Quantitative Research Internship",
+        "Quantitative Trading Internship",
+        "Graduate Quant Trader / Researcher",
+        "Quantitative Researcher",
+        "Campus Quantitative Research / Trading"
+      ],
+      "currentHeadings": [
+        "求职",
+        "Quantitative Trading / Research Internship",
+        "Quantitative Research Internship",
+        "Quantitative Trading Internship",
+        "Graduate Quant Trader / Researcher",
+        "Quantitative Researcher",
+        "Campus Quantitative Research / Trading"
+      ],
+      "baselineImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        }
+      ],
+      "currentImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        }
+      ],
+      "selectorDiffs": [
+        {
+          "selector": "#jobsList",
+          "baseline": {
+            "selector": "#jobsList",
+            "count": 1,
+            "visible": true,
+            "x": 50,
+            "y": 225,
+            "w": 1339,
+            "h": 871,
+            "text": "Quantitative Trading / Research Internship Internship Jane Street crawler-ready Jane Street · New York / London / Hong Kong trading probability market making 打开"
+          },
+          "current": {
+            "selector": "#jobsList",
+            "count": 1,
+            "visible": true,
+            "x": 50,
+            "y": 225,
+            "w": 1339,
+            "h": 841,
+            "text": "Quantitative Trading / Research Internship Internship Jane Street crawler-ready Jane Street · New York / London / Hong Kong trading probability market making 打开"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": -30,
+            "count": 0
+          }
+        },
+        {
+          "selector": ".job-card",
+          "baseline": {
+            "selector": ".job-card",
+            "count": 6,
+            "visible": true,
+            "x": 50,
+            "y": 225,
+            "w": 658,
+            "h": 274,
+            "text": "Quantitative Trading / Research Internship Internship Jane Street crawler-ready Jane Street · New York / London / Hong Kong trading probability market making 打开"
+          },
+          "current": {
+            "selector": ".job-card",
+            "count": 6,
+            "visible": true,
+            "x": 50,
+            "y": 225,
+            "w": 658,
+            "h": 264,
+            "text": "Quantitative Trading / Research Internship Internship Jane Street crawler-ready Jane Street · New York / London / Hong Kong trading probability market making 打开"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": -10,
+            "count": 0
+          }
+        },
+        {
+          "selector": "#jobTypeFilter",
+          "baseline": null,
+          "current": null,
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": null
+        }
+      ],
+      "baselineLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        }
+      ],
+      "currentLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        }
+      ],
+      "issues": []
+    },
+    {
+      "route": "companies",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-baseline-companies.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-current-companies.png",
+      "baselineUrl": "http://127.0.0.1:5180/#companies",
+      "currentUrl": "http://127.0.0.1:5179/companies",
+      "baselineHeadings": [
+        "公司",
+        "Jane Street",
+        "Citadel Securities",
+        "HRT",
+        "Two Sigma"
+      ],
+      "currentHeadings": [
+        "公司",
+        "Jane Street",
+        "Citadel Securities",
+        "HRT",
+        "Two Sigma"
+      ],
+      "baselineImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        }
+      ],
+      "currentImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        }
+      ],
+      "selectorDiffs": [
+        {
+          "selector": "#companyGrid",
+          "baseline": null,
+          "current": null,
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": null
+        },
+        {
+          "selector": ".company-overview-card",
+          "baseline": {
+            "selector": ".company-overview-card",
+            "count": 13,
+            "visible": true,
+            "x": 50,
+            "y": 244,
+            "w": 658,
+            "h": 394,
+            "text": "JS JS Jane Street Tier S · Prop trading / market making 133 题 强概率、博弈和交易直觉，题目常要求把不确定性讲成清晰策略。 Probability Game theory Trading intuition OCaml / systems 0/133 完成进度"
+          },
+          "current": {
+            "selector": ".company-overview-card",
+            "count": 13,
+            "visible": true,
+            "x": 50,
+            "y": 244,
+            "w": 658,
+            "h": 394,
+            "text": "JS JS Jane Street Tier S · Prop trading / market making 133 题 强概率、博弈和交易直觉，题目常要求把不确定性讲成清晰策略。 Probability Game theory Trading intuition OCaml / systems 0/133 完成进度"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "count": 0
+          }
+        },
+        {
+          "selector": "#companyTierFilter",
+          "baseline": {
+            "selector": "#companyTierFilter",
+            "count": 1,
+            "visible": true,
+            "x": 1063,
+            "y": 163,
+            "w": 326,
+            "h": 42,
+            "text": "全部公司 Tier S Tier A Tier B"
+          },
+          "current": {
+            "selector": "#companyTierFilter",
+            "count": 1,
+            "visible": true,
+            "x": 1063,
+            "y": 163,
+            "w": 326,
+            "h": 42,
+            "text": "全部公司 Tier S Tier A Tier B"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "count": 0
+          }
+        }
+      ],
+      "baselineLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "selector-timeout",
+          "text": "#companyGrid: locator.waitFor: Timeout 4000ms exceeded."
+        }
+      ],
+      "currentLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "selector-timeout",
+          "text": "#companyGrid: locator.waitFor: Timeout 4000ms exceeded."
+        }
+      ],
+      "issues": []
+    },
+    {
+      "route": "courses",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-baseline-courses.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-current-courses.png",
+      "baselineUrl": "http://127.0.0.1:5180/#courses",
+      "currentUrl": "http://127.0.0.1:5179/courses",
+      "baselineHeadings": [
+        "课程",
+        "学习路径",
+        "AtypicalQuant Quant Interview Questions",
+        "MIT Introduction to Probability: Stochastic Processes"
+      ],
+      "currentHeadings": [
+        "课程",
+        "学习路径",
+        "AtypicalQuant Quant Interview Questions",
+        "MIT Introduction to Probability: Stochastic Processes"
+      ],
+      "baselineImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        }
+      ],
+      "currentImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        }
+      ],
+      "selectorDiffs": [
+        {
+          "selector": "#courseGrid",
+          "baseline": null,
+          "current": null,
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": null
+        },
+        {
+          "selector": ".course-card",
+          "baseline": {
+            "selector": ".course-card",
+            "count": 8,
+            "visible": true,
+            "x": 50,
+            "y": 334,
+            "w": 658,
+            "h": 862,
+            "text": "AtypicalQuant Quant Interview Questions YouTube Quant Interview Interview AtypicalQuant · 可视化讲解 quant 面试题，覆盖概率、统计、算法和交易思维。 YouTube 该来源暂不支持站内预览，或可能受地区/权限限制。请切换备用"
+          },
+          "current": {
+            "selector": ".course-card",
+            "count": 8,
+            "visible": true,
+            "x": 50,
+            "y": 334,
+            "w": 658,
+            "h": 811,
+            "text": "AtypicalQuant Quant Interview Questions YouTube Quant Interview Interview AtypicalQuant · 可视化讲解 quant 面试题，覆盖概率、统计、算法和交易思维。 YouTube 该来源暂不支持站内预览，或可能受地区/权限限制。请切换备用"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": -51,
+            "count": 0
+          }
+        },
+        {
+          "selector": "#learningPathList",
+          "baseline": null,
+          "current": null,
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": null
+        }
+      ],
+      "baselineLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "selector-timeout",
+          "text": "#courseGrid: locator.waitFor: Timeout 4000ms exceeded."
+        },
+        {
+          "type": "error",
+          "text": "@bilibili/bili-user-fingerprint(report): report is not found"
+        },
+        {
+          "type": "error",
+          "text": "@bilibili/bili-user-fingerprint(report): report is not found"
+        },
+        {
+          "type": "error",
+          "text": "@bilibili/bili-user-fingerprint(report): report is not found"
+        },
+        {
+          "type": "error",
+          "text": "@bilibili/bili-user-fingerprint(report): report is not found"
+        }
+      ],
+      "currentLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "selector-timeout",
+          "text": "#courseGrid: locator.waitFor: Timeout 4000ms exceeded."
+        },
+        {
+          "type": "error",
+          "text": "@bilibili/bili-user-fingerprint(report): report is not found"
+        },
+        {
+          "type": "error",
+          "text": "@bilibili/bili-user-fingerprint(report): report is not found"
+        },
+        {
+          "type": "error",
+          "text": "@bilibili/bili-user-fingerprint(report): report is not found"
+        },
+        {
+          "type": "error",
+          "text": "@bilibili/bili-user-fingerprint(report): report is not found"
+        }
+      ],
+      "issues": []
+    },
+    {
+      "route": "settings",
+      "baselineScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-baseline-settings.png",
+      "currentScreenshot": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/313-parity-current-settings.png",
+      "baselineUrl": "http://127.0.0.1:5180/#settings",
+      "currentUrl": "http://127.0.0.1:5179/settings",
+      "baselineHeadings": [
+        "设置",
+        "偏好",
+        "数据"
+      ],
+      "currentHeadings": [
+        "设置",
+        "偏好",
+        "数据"
+      ],
+      "baselineImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        }
+      ],
+      "currentImages": [
+        {
+          "src": "assets/generated/brand-q-mark.webp?v=premium-system-2",
+          "alt": "",
+          "x": 313,
+          "y": 17,
+          "w": 34,
+          "h": 34
+        },
+        {
+          "src": "assets/generated/shark-avatar-happy.webp?v=premium-system-4",
+          "alt": "",
+          "x": 1227,
+          "y": 82,
+          "w": 38,
+          "h": 38
+        }
+      ],
+      "selectorDiffs": [
+        {
+          "selector": "#settingsForm",
+          "baseline": {
+            "selector": "#settingsForm",
+            "count": 1,
+            "visible": true,
+            "x": 50,
+            "y": 244,
+            "w": 763,
+            "h": 697,
+            "text": "偏好 语言 中文 English 默认国家 中国 美国 英国 新加坡 默认地区 北京 天津 上海 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆 香港 澳门 LLM Endpoint LLM"
+          },
+          "current": {
+            "selector": "#settingsForm",
+            "count": 1,
+            "visible": true,
+            "x": 50,
+            "y": 244,
+            "w": 763,
+            "h": 697,
+            "text": "偏好 语言 中文 English 默认国家 中国 美国 英国 新加坡 默认地区 北京 天津 上海 重庆 河北 山西 辽宁 吉林 黑龙江 江苏 浙江 安徽 福建 江西 山东 河南 湖北 湖南 广东 海南 四川 贵州 云南 陕西 甘肃 青海 台湾 内蒙古 广西 西藏 宁夏 新疆 香港 澳门 LLM Endpoint LLM"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "count": 0
+          }
+        },
+        {
+          "selector": "#languageSelect",
+          "baseline": {
+            "selector": "#languageSelect",
+            "count": 1,
+            "visible": false,
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "text": "中文 English"
+          },
+          "current": {
+            "selector": "#languageSelect",
+            "count": 1,
+            "visible": false,
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "text": "中文English"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "count": 0
+          }
+        },
+        {
+          "selector": "#settingsCountrySelect",
+          "baseline": {
+            "selector": "#settingsCountrySelect",
+            "count": 1,
+            "visible": true,
+            "x": 69,
+            "y": 409,
+            "w": 725,
+            "h": 42,
+            "text": "中国 美国 英国 新加坡"
+          },
+          "current": {
+            "selector": "#settingsCountrySelect",
+            "count": 1,
+            "visible": true,
+            "x": 69,
+            "y": 409,
+            "w": 725,
+            "h": 42,
+            "text": "中国 美国 英国 新加坡"
+          },
+          "missingInCurrent": false,
+          "missingInBaseline": false,
+          "delta": {
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "count": 0
+          }
+        },
+        {
+          "selector": "#llmEndpointInput",
+          "baseline": {
+            "selector": "#llmEndpointInput",
+            "count": 1,
+            "visible": false,
+            "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "text": ""
+          },
+          "current": null,
+          "missingInCurrent": true,
+          "missingInBaseline": false,
+          "delta": null
+        }
+      ],
+      "baselineLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        }
+      ],
+      "currentLogs": [
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+        }
+      ],
+      "issues": [
+        "missing current selector #llmEndpointInput"
+      ]
+    }
+  ]
+}

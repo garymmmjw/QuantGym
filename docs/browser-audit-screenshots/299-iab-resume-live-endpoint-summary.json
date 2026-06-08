@@ -1,0 +1,15 @@
+{
+  "endpoint": "http://127.0.0.1:8787/interview",
+  "endpointInputCount": 1,
+  "saveButtonCount": 1,
+  "settingsMessage": "设置已保存。",
+  "resumeInputCount": 1,
+  "reviewButtonCount": 1,
+  "reviewText": "Endpoint smoke: quantify impact in two bullets.\nEndpoint smoke: surface Python and probability keywords.\nEndpoint smoke: align resume with quant internship target.",
+  "endpointReviewRendered": true,
+  "localOverlay": false,
+  "localOverflow": false,
+  "currentUrl": "http://127.0.0.1:5179/resume",
+  "logs": [],
+  "status": "pass"
+}

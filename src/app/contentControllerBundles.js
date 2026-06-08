@@ -12,7 +12,6 @@ export function createContentControllerBundles(deps = {}) {
     getLanguage,
     getLlmConfig,
     getLlmRequestHeaders,
-    getModuleLifecycle,
     inferSource,
     JOBS_AUTO_REFRESH_MS,
     JOBS_RETRY_MS,
@@ -64,7 +63,7 @@ export function createContentControllerBundles(deps = {}) {
       : "简历文件太大，请控制在 5MB 以内。",
     getEmptyMetaLabel: () => t("resumeUploadHint"),
     saveState,
-    renderResume: () => getModuleLifecycle("resume")?.render?.()
+    renderResume: () => {}
   });
 
   const jobsControllerBundle = createJobsControllerBundle({
@@ -80,7 +79,9 @@ export function createContentControllerBundles(deps = {}) {
     saveState,
     autoRefreshMs: JOBS_AUTO_REFRESH_MS,
     retryMs: JOBS_RETRY_MS,
-    renderJobs: () => getModuleLifecycle("jobs")?.render?.(),
+    renderJobs: () => {
+      window.dispatchEvent(new CustomEvent("quantgym:jobs-updated"));
+    },
     refreshIcons,
     setStatusText: (text) => {
       if (els.jobsSummary) els.jobsSummary.textContent = text;
@@ -113,7 +114,9 @@ export function createContentControllerBundles(deps = {}) {
     getCurrentUser: () => appState.currentUser,
     autoRefreshMs: NEWS_AUTO_REFRESH_MS,
     retryMs: NEWS_RETRY_MS,
-    renderNews: () => getModuleLifecycle("news")?.render?.(),
+    renderNews: () => {
+      window.dispatchEvent(new CustomEvent("quantgym:news-updated"));
+    },
     refreshIcons,
     setStatusText: (text) => {
       if (els.newsUpdatedAt) els.newsUpdatedAt.textContent = text;

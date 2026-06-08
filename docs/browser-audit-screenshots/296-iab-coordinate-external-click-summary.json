@@ -1,0 +1,36 @@
+[
+  {
+    "label": "295-iab-jobs-coordinate-click",
+    "route": "/jobs",
+    "selector": "a[href=\"https://www.janestreet.com/join-jane-street/open-roles/\"]",
+    "box": {
+      "href": "https://www.janestreet.com/join-jane-street/open-roles/",
+      "tag": "A",
+      "text": "打开申请",
+      "x": 119,
+      "y": 445
+    },
+    "newTabs": [],
+    "currentUrl": "http://127.0.0.1:5179/jobs",
+    "userTabs": [],
+    "logs": [],
+    "status": "no-new-tab-observed"
+  },
+  {
+    "label": "296-iab-companies-coordinate-click",
+    "route": "/companies",
+    "selector": "button[data-company-careers=\"https://www.janestreet.com/join-jane-street/open-roles/\"]",
+    "box": {
+      "href": "https://www.janestreet.com/join-jane-street/open-roles/",
+      "tag": "BUTTON",
+      "text": "打开官网",
+      "x": 277,
+      "y": 450
+    },
+    "newTabs": [],
+    "currentUrl": "http://127.0.0.1:5179/companies",
+    "userTabs": [],
+    "logs": [],
+    "status": "no-new-tab-observed"
+  }
+]

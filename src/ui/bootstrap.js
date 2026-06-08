@@ -33,15 +33,22 @@ export async function runAppBootstrap(options = {}) {
   await loadPagePartials();
   bindElements();
   registerFeatureModules();
-  bindEvents();
+  const disposeEvents = bindEvents();
   setupButtonRipples();
   initRouter();
   renderSession();
   initGoogleLogin();
   if (shouldRenderTools) renderTools();
-  if (newsRefreshMs > 0) windowRef?.setInterval?.(refreshNews, newsRefreshMs);
-  if (jobsRefreshMs > 0) windowRef?.setInterval?.(refreshJobs, jobsRefreshMs);
+  const newsTimer = newsRefreshMs > 0 ? windowRef?.setInterval?.(refreshNews, newsRefreshMs) : 0;
+  const jobsTimer = jobsRefreshMs > 0 ? windowRef?.setInterval?.(refreshJobs, jobsRefreshMs) : 0;
   windowRef?.addEventListener?.("resize", updateGlobalSearchPlaceholder);
   refreshIcons();
   initHeroInteractions();
+
+  return () => {
+    if (typeof disposeEvents === "function") disposeEvents();
+    if (newsTimer) windowRef?.clearInterval?.(newsTimer);
+    if (jobsTimer) windowRef?.clearInterval?.(jobsTimer);
+    windowRef?.removeEventListener?.("resize", updateGlobalSearchPlaceholder);
+  };
 }

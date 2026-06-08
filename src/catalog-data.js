@@ -120,9 +120,18 @@ export const seedProblems = [
   }
 ];
 
-export const catalogProblems = Array.isArray(globalThis.quantProblemCatalog)
-  ? globalThis.quantProblemCatalog
+const runtimeGlobal = typeof globalThis !== "undefined" ? globalThis : {};
+const runtimeWindow = runtimeGlobal.window || {};
+const runtimeProblemCatalog = runtimeGlobal.quantProblemCatalog || runtimeWindow.quantProblemCatalog;
+
+export const catalogProblems = Array.isArray(runtimeProblemCatalog)
+  ? runtimeProblemCatalog
   : [];
+
+export function getRuntimeCatalogProblems() {
+  const value = runtimeGlobal.quantProblemCatalog || runtimeWindow.quantProblemCatalog;
+  return Array.isArray(value) ? value : catalogProblems;
+}
 export const disabledProblemSources = new Set(["question-bank"]);
 export const disabledProblemBookNames = new Set(["Archived Question Bank"]);
 
@@ -544,4 +553,3 @@ export const seedCourses = [
     tags: ["market-making", "monte-carlo", "clt", "interview"]
   }
 ];
-

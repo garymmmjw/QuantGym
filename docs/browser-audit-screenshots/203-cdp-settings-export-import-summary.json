@@ -1,0 +1,103 @@
+{
+  "account": {
+    "name": "QA Settings",
+    "email": "qa-settings-1780900016040@example.com",
+    "password": "quantgym123"
+  },
+  "clicks": {
+    "sendCodeClick": {
+      "x": 1161,
+      "y": 658.375,
+      "text": "发送验证码",
+      "selector": "#sendRegisterCodeBtn"
+    },
+    "createClick": {
+      "x": 1065,
+      "y": 723.546875,
+      "text": "创建账户",
+      "selector": "#registerForm .auth-submit"
+    },
+    "exportClick": {
+      "x": 982.796875,
+      "y": 338,
+      "text": "导出备份",
+      "selector": "#exportBtn"
+    }
+  },
+  "before": {
+    "href": "http://127.0.0.1:5179/settings?qa=settings-pass",
+    "message": "应用偏好和数据管理。",
+    "exportText": "导出备份",
+    "importExists": true,
+    "rawKeys": false
+  },
+  "download": {
+    "dir": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/qg-settings-pass-download-YOphd0",
+    "file": "quantgym-QA Settings-2026-06-08.json",
+    "path": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/qg-settings-pass-download-YOphd0/quantgym-QA Settings-2026-06-08.json",
+    "version": 2,
+    "user": {
+      "name": "QA Settings",
+      "email": "qa-settings-1780900016040@example.com",
+      "provider": "local"
+    },
+    "hasState": true,
+    "stateKeys": [
+      "checkIns",
+      "courseStates",
+      "courses",
+      "createdAt",
+      "entries",
+      "gameRecords",
+      "interviewExperiences",
+      "interviewFavorites",
+      "jobs",
+      "jobsFetchAttemptAt",
+      "jobsFetchedAt",
+      "jobsSyncError",
+      "leaderboard",
+      "leetcodeHot100Done",
+      "mentalMathRecords",
+      "network",
+      "news",
+      "newsFetchAttemptAt",
+      "newsFetchedAt",
+      "newsSyncError",
+      "prepPlan",
+      "problemStates",
+      "problems",
+      "resources",
+      "resume",
+      "skills",
+      "streakCount",
+      "studyPlan",
+      "updatedAt"
+    ]
+  },
+  "import": {
+    "path": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/qg-settings-pass-import-d0syha/settings-import.json",
+    "resourceTitle": "QA IMPORT BACKUP RESOURCE",
+    "afterImport": {
+      "href": "http://127.0.0.1:5179/memory?qa=settings-import-verify",
+      "importedVisible": true,
+      "resourceText": "QA IMPORT BACKUP RESOURCENOTEImported backup resource smoke test from Settings JSON.",
+      "consoleOverlay": false
+    }
+  },
+  "logs": [
+    "[vite] connecting...",
+    "[vite] connected.",
+    "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "[vite] connecting...",
+    "[vite] connected.",
+    "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold",
+    "[vite] connecting...",
+    "[vite] connected.",
+    "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+  ],
+  "screenshots": {
+    "before": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/201-cdp-settings-export-import-before.png",
+    "afterExport": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/202-cdp-settings-export-downloaded.png",
+    "afterImport": "/Users/miujiawei/Desktop/QuantGym/docs/browser-audit-screenshots/203-cdp-settings-import-memory-visible.png"
+  }
+}
