@@ -13,9 +13,23 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Outfit:wght@700;800&family=Space+Grotesk:wght@500;600;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="styles.css?direct&v=40">
+    <script>
+      (() => {
+        try {
+          const auth = JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "null");
+          const accounts = Array.isArray(auth?.accounts) ? auth.accounts : [];
+          const current = accounts.find((account) => account?.id && account.id === auth?.currentUserId);
+          const lastSeen = Date.parse(auth?.lastAuthenticatedAt || current?.updatedAt || current?.createdAt || "");
+          const recentWindow = 30 * 24 * 60 * 60 * 1000;
+          if (current && (!Number.isFinite(lastSeen) || Date.now() - lastSeen < recentWindow)) {
+            document.documentElement.classList.add("auth-session-hint");
+          }
+        } catch {}
+      })();
+    </script>
+    <link rel="stylesheet" href="styles.css?direct&v=49">
     <script>
       window.MathJax = {
         tex: {

@@ -100,6 +100,7 @@ export function wrapAuthMutations(handlers = {}, sync = () => {}) {
     registerLocal: wrap(handlers.registerLocal),
     saveAccount: wrap(handlers.saveAccount),
     saveAuth: wrap(handlers.saveAuth),
+    submitEmailAuth: wrap(handlers.submitEmailAuth),
     upsertLocalAccount: wrap(handlers.upsertLocalAccount)
   };
 }

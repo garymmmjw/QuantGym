@@ -12,6 +12,65 @@ export function createAccountAuthController(deps = {}) {
     ));
   }
 
+  function markAuthenticated(auth = {}) {
+    auth.lastAuthenticatedAt = nowIso();
+    return auth.lastAuthenticatedAt;
+  }
+
+  function getLoginEmail() {
+    const elements = getElements();
+    return deps.normalizeEmail?.(elements.loginEmail?.value) || "";
+  }
+
+  function setEmailAuthStep(step = "email", email = "") {
+    const elements = getElements();
+    const isPassword = step === "password";
+    const isRegister = step === "register";
+    elements.loginForm?.classList?.toggle?.("hidden", isRegister);
+    elements.registerForm?.classList?.toggle?.("hidden", !isRegister);
+    if (elements.loginForm) elements.loginForm.dataset.authStep = isPassword ? "password" : "email";
+    elements.loginPassword?.classList?.toggle?.("hidden", !isPassword);
+    if (elements.loginPassword) {
+      elements.loginPassword.required = isPassword;
+      if (!isPassword) elements.loginPassword.value = "";
+    }
+    if (email && elements.loginEmail) elements.loginEmail.value = email;
+    if (email && elements.registerEmail) elements.registerEmail.value = email;
+    if (!isRegister && elements.registerForm) {
+      elements.registerForm.reset();
+      delete elements.registerForm.dataset.verificationOptional;
+      if (email && elements.registerEmail) elements.registerEmail.value = email;
+    }
+    return step;
+  }
+
+  function resetEmailAuthFlow() {
+    setEmailAuthStep("email", getLoginEmail());
+    deps.showAuthMessage?.("");
+  }
+
+  function submitEmailAuth() {
+    const elements = getElements();
+    const email = getLoginEmail();
+    if (!email || !email.includes("@")) {
+      deps.showAuthMessage?.(text("authNeedEmail"));
+      return false;
+    }
+    if (elements.loginForm?.dataset.authStep === "password") {
+      return loginLocal();
+    }
+    if (findLocalAccount(email)) {
+      setEmailAuthStep("password", email);
+      deps.showAuthMessage?.("");
+      elements.loginPassword?.focus?.();
+      return true;
+    }
+    setEmailAuthStep("register", email);
+    deps.showAuthMessage?.("");
+    elements.registerName?.focus?.();
+    return true;
+  }
+
   async function sendRegisterVerificationCode() {
     const elements = getElements();
     const appState = getAppState();
@@ -97,6 +156,8 @@ export function createAccountAuthController(deps = {}) {
             localCommunity: appState.community,
             passwordHash: account.passwordHash
           });
+          markAuthenticated(appState.auth);
+          deps.saveAuth?.();
           elements.registerForm.reset();
           deps.showAuthMessage?.(text("authCreatedSynced"));
           deps.renderSession?.();
@@ -111,6 +172,7 @@ export function createAccountAuthController(deps = {}) {
       }
 
       deps.addLocalAccount?.(appState.auth, account);
+      markAuthenticated(appState.auth);
       deps.saveAuth?.();
       elements.registerForm.reset();
       deps.renderSession?.();
@@ -142,6 +204,8 @@ export function createAccountAuthController(deps = {}) {
           localCommunity: appState.community,
           ...localFields
         });
+        markAuthenticated(appState.auth);
+        deps.saveAuth?.();
         elements.loginForm.reset();
         deps.showAuthMessage?.("");
         deps.renderSession?.();
@@ -173,6 +237,7 @@ export function createAccountAuthController(deps = {}) {
       }
 
       deps.setCurrentUserId?.(appState.auth, account.id);
+      markAuthenticated(appState.auth);
       deps.saveAuth?.();
       deps.migrateLegacyState?.(account.id);
       const localState = deps.loadStateForUser?.(account.id);
@@ -199,10 +264,12 @@ export function createAccountAuthController(deps = {}) {
     const appState = getAppState();
     const userStateStore = getUserStateStore();
     deps.setCurrentUserId?.(appState.auth, "");
+    appState.auth.lastAuthenticatedAt = "";
     deps.saveAuth?.();
     appState.currentUser = null;
     if (userStateStore) userStateStore.value = deps.createBaseState?.();
     deps.renderSession?.();
+    setEmailAuthStep("email");
     deps.initGoogleLogin?.();
   }
 
@@ -236,6 +303,7 @@ export function createAccountAuthController(deps = {}) {
       deps.applyGoogleAccount?.(appState.auth, account, {
         nowIso: nowIso()
       });
+      markAuthenticated(appState.auth);
       deps.saveAuth?.();
       deps.migrateLegacyState?.(id);
       const localState = deps.loadStateForUser?.(id);
@@ -257,8 +325,10 @@ export function createAccountAuthController(deps = {}) {
     loginLocal,
     logout,
     registerLocal,
+    resetEmailAuthFlow,
     saveGoogleClientId,
-    sendRegisterVerificationCode
+    sendRegisterVerificationCode,
+    submitEmailAuth
   };
 }
 

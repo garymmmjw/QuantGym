@@ -9,6 +9,7 @@ export function applySessionShellState(elements = {}, currentUser = null, option
   const authenticated = Boolean(currentUser);
 
   documentRef?.body?.classList?.toggle?.("is-authenticated", authenticated);
+  documentRef?.documentElement?.classList?.remove?.("auth-session-hint");
   windowRef?.scrollTo?.(0, 0);
   elements.authShell?.classList?.toggle?.("hidden", authenticated);
   elements.appShell?.classList?.toggle?.("hidden", !authenticated);

@@ -127,7 +127,9 @@ export function createAccountControllerBundle(deps = {}) {
     registerLocal: accountAuthController.registerLocal,
     loginLocal: accountAuthController.loginLocal,
     logout: accountAuthController.logout,
+    resetEmailAuthFlow: accountAuthController.resetEmailAuthFlow,
     saveGoogleClientId: accountAuthController.saveGoogleClientId,
-    saveAccount: accountController.saveAccount
+    saveAccount: accountController.saveAccount,
+    submitEmailAuth: accountAuthController.submitEmailAuth
   };
 }
