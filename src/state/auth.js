@@ -6,7 +6,8 @@ export function normalizeAuth(raw = {}, options = {}) {
   return {
     accounts: Array.isArray(raw.accounts) ? raw.accounts.map(normalizeAccount) : [],
     currentUserId: raw.currentUserId || "",
-    googleClientId: raw.googleClientId || defaultGoogleClientId
+    googleClientId: raw.googleClientId || defaultGoogleClientId,
+    lastAuthenticatedAt: raw.lastAuthenticatedAt || ""
   };
 }
 

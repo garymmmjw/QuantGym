@@ -93,9 +93,9 @@ export function createAuthUiRuntime(deps = {}) {
     googleAccounts.renderButton(els.googleButton, {
       theme: "outline",
       size: "large",
-      shape: "rectangular",
-      text: "signin_with",
-      width: Math.min(420, els.googleButton.clientWidth || 420)
+      shape: "pill",
+      text: "continue_with",
+      width: Math.min(242, els.googleButton.clientWidth || 242)
     });
     deps.showAuthMessage?.(text("authGoogleEnabled"));
   }

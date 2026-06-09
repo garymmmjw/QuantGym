@@ -168,6 +168,7 @@ export function createAccountAuthBundle(deps = {}) {
     loginLocal: accountControllerBundle.loginLocal,
     logout: accountControllerBundle.logout,
     registerLocal: accountControllerBundle.registerLocal,
+    resetEmailAuthFlow: accountControllerBundle.resetEmailAuthFlow,
     renderGoogleClientInput: authUiRuntime.renderGoogleClientInput,
     renderGooglePlaceholder: authUiRuntime.renderGooglePlaceholder,
     renderSession: accountControllerBundle.renderSession,
@@ -175,6 +176,7 @@ export function createAccountAuthBundle(deps = {}) {
     saveAccount: accountControllerBundle.saveAccount,
     saveGoogleClientId: accountControllerBundle.saveGoogleClientId,
     sendRegisterVerificationCode: accountControllerBundle.sendRegisterVerificationCode,
+    submitEmailAuth: accountControllerBundle.submitEmailAuth,
     switchAuthTab: accountControllerBundle.switchAuthTab
   };
 }

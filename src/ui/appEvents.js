@@ -33,8 +33,11 @@ export function bindAppShellEvents(options = {}) {
 
   bind(elements.loginForm, "submit", (event) => {
     event.preventDefault();
-    handlers.loginLocal?.();
+    if (handlers.submitEmailAuth) handlers.submitEmailAuth();
+    else handlers.loginLocal?.();
   });
+
+  bind(elements.loginEmail, "input", () => handlers.resetEmailAuthFlow?.());
 
   bind(elements.registerForm, "submit", (event) => {
     event.preventDefault();
