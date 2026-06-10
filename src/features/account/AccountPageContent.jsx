@@ -10,8 +10,15 @@ export function AccountPageContent() {
     if (!model.currentUser) return;
     model.renderCountries?.(countryRef.current, model.form.country);
     model.renderRegions?.(regionRef.current, model.form.country, model.form.region);
-    model.refreshIcons?.();
-  }, [model, model.currentUser, model.form.country, model.form.region]);
+    model.refreshIcons?.({ root: document.querySelector(".account-section") || document });
+  }, [
+    model.currentUser,
+    model.form.country,
+    model.form.region,
+    model.renderCountries,
+    model.renderRegions,
+    model.refreshIcons
+  ]);
 
   const initials = model.getInitials?.(model.form.name || model.currentUser?.email || "Q") || "Q";
 

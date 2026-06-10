@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { usePlanPageModel } from "./planHooks.js";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 function PrepDiagnosticPanel({ model, plan }) {
   const { t, diagnosticAnswers, setDiagnosticAnswer, submitDiagnostic, diagnosticMessage, startDiagnostic, formatCategoryLabel } = model;
@@ -280,9 +281,7 @@ export function PlanPageContent() {
     if (showSetup && model.view.setupDefaults) model.resetSetupFromView();
   }, [showSetup, model.view.setupDefaults, model.resetSetupFromView]);
 
-  useEffect(() => {
-    model.refreshIcons?.();
-  });
+  useScopedRefreshIcons(model.refreshIcons, ".prep-plan-section", [model.view, showSetup, hasPlan]);
 
   return (
     <section className="prep-plan-section">

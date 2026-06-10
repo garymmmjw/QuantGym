@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useSkillsPageModel } from "./skillsHooks.js";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 export function SkillsPageContent() {
   const model = useSkillsPageModel();
@@ -7,8 +8,9 @@ export function SkillsPageContent() {
 
   useEffect(() => {
     model.bindRadar(canvasRef.current);
-    model.refreshIcons?.();
-  });
+  }, [model.bindRadar, model.summary, model.cards]);
+
+  useScopedRefreshIcons(model.refreshIcons, ".skills-section", [model.cards, model.summary]);
 
   return (
     <section className="skills-section">

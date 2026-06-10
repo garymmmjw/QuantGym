@@ -35,7 +35,6 @@ export function OverviewPageContent() {
   const model = useOverviewPageModel();
   const { leaderboard } = model;
   const settings = leaderboard.settings || {};
-  const scopeSummary = leaderboard.scopeSummary || {};
   const showCountry = settings.scope !== "global";
   const showRegion = settings.scope === "region";
   const updateLeaderboardMetric = (event) => model.updateLeaderboard({ metric: event.target.value });
@@ -426,9 +425,6 @@ export function OverviewPageContent() {
                 ))}
               </select>
             </label>
-          </div>
-          <div id="leaderboardScopeSummary" className="leaderboard-scope-summary">
-            {`${scopeSummary.metricLabel || ""} · ${scopeSummary.location || ""} · ${scopeSummary.rowCount || 0} ${scopeSummary.userLabel || ""} · ${scopeSummary.sourceText || ""}`}
           </div>
           <div id="leaderboardList" className="leaderboard-list">
             {leaderboard.rows.length ? leaderboard.rows.map((row) => (

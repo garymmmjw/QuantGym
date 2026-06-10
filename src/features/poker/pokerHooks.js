@@ -19,8 +19,8 @@ export function usePokerPageModel() {
   }, [api, bump]);
 
   useEffect(() => {
-    pageApi?.refreshIcons?.();
-  }, [pageApi, revision, view.revision]);
+    pageApi?.refreshIcons?.({ root: document.querySelector(".poker-room-section") || document });
+  }, [pageApi, view.revision]);
 
   useEffect(() => {
     window.addEventListener("quantgym:poker-updated", bump);

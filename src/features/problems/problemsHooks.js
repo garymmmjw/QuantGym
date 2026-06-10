@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 
@@ -27,8 +27,34 @@ export function useProblemsPageModel() {
   const [showImportForm, setShowImportForm] = useState(false);
   const [problemForm, setProblemForm] = useState(EMPTY_PROBLEM_FORM);
   const [importJson, setImportJson] = useState("");
+  const searchTimerRef = useRef(0);
+  const latestSearchQueryRef = useRef(searchQuery);
+  const iconTimerRef = useRef(0);
 
   const bump = useCallback(() => setRevision((value) => value + 1), []);
+
+  const clearSearchTimer = useCallback(() => {
+    if (!searchTimerRef.current) return;
+    window.clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = 0;
+  }, []);
+
+  const commitSearchQuery = useCallback((value, options = {}) => {
+    const nextValue = String(value || "");
+    latestSearchQueryRef.current = nextValue;
+    clearSearchTimer();
+    api?.setSearchQuery?.(nextValue);
+    if (options.bump !== false) bump();
+  }, [api, bump, clearSearchTimer]);
+
+  const refreshProblemIcons = useCallback(() => {
+    if (iconTimerRef.current || !pageApi?.refreshIcons) return;
+    iconTimerRef.current = window.setTimeout(() => {
+      iconTimerRef.current = 0;
+      const root = document.querySelector(".problem-section") || document.getElementById("appShell") || document;
+      pageApi.refreshIcons({ root });
+    }, 0);
+  }, [pageApi]);
 
   const view = useMemo(() => {
     void revision;
@@ -49,14 +75,84 @@ export function useProblemsPageModel() {
 
   useEffect(() => {
     api?.sync?.();
-    pageApi?.refreshIcons?.();
-  }, [api, pageApi, revision, userState.leetcodeHot100Done, userState.problems, userState.problemStates, userState.skills]);
+    refreshProblemIcons();
+  }, [api, refreshProblemIcons, revision, userState.leetcodeHot100Done, userState.problems, userState.problemStates, userState.skills]);
+
+  useEffect(() => () => {
+    clearSearchTimer();
+    if (iconTimerRef.current) window.clearTimeout(iconTimerRef.current);
+  }, [clearSearchTimer]);
+
+  useEffect(() => {
+    latestSearchQueryRef.current = api?.getSearchQuery?.() || "";
+    setSearchQueryState(latestSearchQueryRef.current);
+  }, [api]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer = 0;
+    let nextIndex = 0;
+
+    const schedule = (delay = 120) => {
+      timer = window.setTimeout(run, delay);
+    };
+
+    const run = () => {
+      if (cancelled) return;
+      const result = api?.prewarmSearchIndex?.({
+        startIndex: nextIndex,
+        budgetMs: 6,
+        maxItems: 220
+      });
+      if (!result || result.done) return;
+      nextIndex = result.nextIndex;
+      schedule(32);
+    };
+
+    schedule();
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [api, userState.problems]);
+
+  useEffect(() => {
+    const handleProblemOpen = (event) => {
+      const problemId = String(event?.detail?.problemId || "");
+      if (!problemId) return;
+      clearSearchTimer();
+      const nextQuery = api?.getSearchQuery?.() || "";
+      latestSearchQueryRef.current = nextQuery;
+      setSearchQueryState(nextQuery);
+      api?.openDetail?.(problemId);
+      bump();
+    };
+    window.addEventListener("quantgym:problem-open", handleProblemOpen);
+    return () => window.removeEventListener("quantgym:problem-open", handleProblemOpen);
+  }, [api, bump, clearSearchTimer]);
 
   const setSearchQuery = useCallback((value) => {
-    setSearchQueryState(value);
-    api?.setSearchQuery?.(value);
+    const nextValue = String(value || "");
+    setSearchQueryState(nextValue);
+    latestSearchQueryRef.current = nextValue;
+    clearSearchTimer();
+    const debounceMs = Math.max(0, Number(api?.getSearchDebounceMs?.() ?? 140));
+    if (!debounceMs) {
+      commitSearchQuery(nextValue);
+      return;
+    }
+    searchTimerRef.current = window.setTimeout(() => {
+      searchTimerRef.current = 0;
+      commitSearchQuery(latestSearchQueryRef.current);
+    }, debounceMs);
+  }, [api, clearSearchTimer, commitSearchQuery]);
+
+  const handleSearchKeydown = useCallback((event) => {
+    if (event?.key !== "Enter") return;
+    commitSearchQuery(latestSearchQueryRef.current, { bump: false });
+    api?.handleSearchKeydown?.(event);
     bump();
-  }, [api, bump]);
+  }, [api, bump, commitSearchQuery]);
 
   const applyFilter = useCallback((action) => {
     api?.applyFilterAction?.(action);
@@ -75,7 +171,7 @@ export function useProblemsPageModel() {
     setProblemForm,
     importJson,
     setImportJson,
-    handleSearchKeydown: (event) => { api?.handleSearchKeydown?.(event); bump(); },
+    handleSearchKeydown,
     applyFilter,
     handleCollectionClick: (event) => { api?.handleCollectionClick?.(event); bump(); },
     handlePagination: (event) => { api?.handlePagination?.(event); bump(); },

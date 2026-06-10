@@ -1,8 +1,7 @@
 import { useCallback, useState } from "react";
-import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
+import { usePageApi } from "../../stores/usePageApi.js";
 
 export function usePkPageModel() {
-  const appServices = useAppServices();
   const pageApi = usePageApi();
   const api = usePageApi("pk");
   const [view, setView] = useState(() => api?.getView?.() || {
@@ -21,14 +20,14 @@ export function usePkPageModel() {
 
   const start = useCallback(() => {
     sync(api?.start?.());
-    pageApi?.refreshIcons?.();
-  }, [api, appServices, sync]);
+    pageApi?.refreshIcons?.({ root: document.querySelector(".pk-section") || document });
+  }, [api, pageApi, sync]);
 
   const submit = useCallback((event) => {
     event?.preventDefault?.();
     sync(api?.submit?.(view.answer));
-    pageApi?.refreshIcons?.();
-  }, [api, appServices, sync, view.answer]);
+    pageApi?.refreshIcons?.({ root: document.querySelector(".pk-section") || document });
+  }, [api, pageApi, sync, view.answer]);
 
   const reveal = useCallback(() => {
     sync(api?.reveal?.());

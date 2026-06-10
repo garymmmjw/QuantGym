@@ -42,11 +42,8 @@ function loadRuntimeScript(src) {
 }
 
 async function ensureRuntimeData() {
-  for (const item of runtimeDataScripts) {
-    if (!item.isReady(getRuntimeGlobal(item.key))) {
-      await loadRuntimeScript(item.src);
-    }
-  }
+  const missing = runtimeDataScripts.filter((item) => !item.isReady(getRuntimeGlobal(item.key)));
+  await Promise.all(missing.map((item) => loadRuntimeScript(item.src)));
 }
 
 async function mountApp() {

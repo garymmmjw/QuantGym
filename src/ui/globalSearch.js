@@ -146,6 +146,13 @@ export function activateGlobalSearchResult(controller, index, actions = {}) {
   const scheduleSpotlight = (selector) => {
     windowRef?.setTimeout?.(() => spotlight(selector), actions.spotlightDelay ?? 80);
   };
+  const dispatchProblemOpen = (problemId) => {
+    const CustomEventCtor = windowRef?.CustomEvent || globalThis.CustomEvent;
+    if (!windowRef?.dispatchEvent || !CustomEventCtor || !problemId) return;
+    windowRef.dispatchEvent(new CustomEventCtor("quantgym:problem-open", {
+      detail: { problemId, source: "global-search" }
+    }));
+  };
 
   actions.clear?.();
 
@@ -155,7 +162,9 @@ export function activateGlobalSearchResult(controller, index, actions = {}) {
   }
   if (result.type === "problem") {
     actions.switchModule?.("problems");
+    dispatchProblemOpen(result.id);
     actions.openProblem?.(result.id);
+    windowRef?.setTimeout?.(() => dispatchProblemOpen(result.id), actions.spotlightDelay ?? 120);
     return true;
   }
   if (result.type === "job") {

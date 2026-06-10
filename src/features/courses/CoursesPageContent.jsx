@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { Tag } from "../../components/common/Tag.jsx";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 export function CoursesPageContent() {
   const appServices = useAppServices();
@@ -21,9 +22,7 @@ export function CoursesPageContent() {
       .map((item) => ({ item, course: byId.get(item.courseId) }));
   }, [courses, api]);
 
-  useEffect(() => {
-    pageApi.refreshIcons?.();
-  });
+  useScopedRefreshIcons(pageApi.refreshIcons, ".courses-section", [pathItems, userState.courseStates]);
 
   const handleAction = (courseId, action, extra = {}) => {
     const state = api.getCourseState(courseId);

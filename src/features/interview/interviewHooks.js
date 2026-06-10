@@ -36,8 +36,11 @@ export function useInterviewPageModel() {
 
   useEffect(() => {
     api?.sync?.();
-    pageApi?.refreshIcons?.();
-  }, [api, pageApi, revision, userState.problems, userState.problemStates]);
+  }, [api, revision, userState.problems, userState.problemStates]);
+
+  useEffect(() => {
+    pageApi?.refreshIcons?.({ root: document.querySelector(".interview-section") || document });
+  }, [pageApi, userState.problems, userState.problemStates, view.phase]);
 
   useEffect(() => {
     if (!interviewLive.session || interviewLive.session.completed) return undefined;

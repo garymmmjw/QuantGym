@@ -1,20 +1,23 @@
-import { useEffect } from "react";
 import { useNewsPageModel } from "./newsHooks.js";
 import { buildNewsStats } from "./newsViewModel.js";
 import { NewsFilters } from "./NewsFilters.jsx";
 import { NewsForm } from "./NewsForm.jsx";
 import { NewsList } from "./NewsList.jsx";
 import { NewsDetail } from "./NewsDetail.jsx";
-import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
+import { useAppServices } from "../../stores/usePageApi.js";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 export function NewsPageContent() {
   const model = useNewsPageModel();
   const appServices = useAppServices();
-  const pageApi = usePageApi();
 
-  useEffect(() => {
-    appServices.services?.refreshIcons?.();
-  });
+  useScopedRefreshIcons(appServices.services?.refreshIcons, ".news-section", [
+    model.filteredNews,
+    model.detailItem,
+    model.showForm,
+    model.topicFilter,
+    model.sourceFilter
+  ]);
 
   const stats = buildNewsStats(model.allNews, {
     saved: model.t("newsSavedCount"),
@@ -39,7 +42,6 @@ export function NewsPageContent() {
 
   const handleAdd = (item) => {
     model.addFromForm(item);
-    appServices.services?.refreshIcons?.();
   };
 
   return (

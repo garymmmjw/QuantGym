@@ -8,6 +8,7 @@ export function assemblePageApiSliceImpl(shared, ctx) {
   LLM,
   NEWS_AUTO_REFRESH_MS,
   PROBLEM_PAGE_SIZE,
+  PROBLEM_SEARCH_DEBOUNCE_MS,
   Queued,
   Remove,
   Run,

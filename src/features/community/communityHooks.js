@@ -38,7 +38,7 @@ export function useCommunityPageModel() {
     }
     setText("");
     setMediaPreview(null);
-    appServices.services?.refreshIcons?.();
+    appServices.services?.refreshIcons?.({ root: document.querySelector(".community-section") || document });
   }, [api, text, mediaPreview, appServices, t]);
 
   const attachMedia = useCallback(async (file) => {

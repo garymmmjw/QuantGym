@@ -32,7 +32,7 @@ export function createPageApi(deps = {}) {
     skillDefs: deps.skillDefs,
     getCurrentUser: () => deps.appState?.currentUser || null,
     saveState: (options) => deps.saveState?.(options),
-    refreshIcons: () => deps.refreshIcons?.(),
+    refreshIcons: (options) => deps.refreshIcons?.(options),
     safeExternalUrl: deps.safeExternalUrl,
     openExternalUrl: deps.openExternalUrl,
     inferSource: deps.inferSource,

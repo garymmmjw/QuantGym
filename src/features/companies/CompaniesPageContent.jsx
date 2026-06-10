@@ -1,16 +1,14 @@
-import { useEffect } from "react";
 import { useCompaniesPageModel } from "./companiesHooks.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { CompanyMark } from "../../components/common/CompanyMark.jsx";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 const TIERS = ["all", "s", "a", "b"];
 
 export function CompaniesPageContent() {
   const model = useCompaniesPageModel();
 
-  useEffect(() => {
-    model.refreshIcons?.();
-  });
+  useScopedRefreshIcons(model.refreshIcons, ".companies-section", [model.entries, model.tierFilter]);
 
   return (
     <section className="companies-section">

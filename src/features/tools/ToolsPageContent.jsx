@@ -1,5 +1,5 @@
-import { useEffect } from "react";
 import { useToolsPageModel } from "./toolsHooks.js";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 function MentalSparkline({ values = [] }) {
   if (values.length < 2) {
@@ -34,9 +34,13 @@ export function ToolsPageContent() {
   const model = useToolsPageModel();
   const { drill, records, leaderboard, market } = model.view;
 
-  useEffect(() => {
-    model.refreshIcons?.();
-  });
+  useScopedRefreshIcons(model.refreshIcons, ".mental-math-section", [
+    drill.mode,
+    drill.question?.id,
+    records.items,
+    leaderboard,
+    market.prompt
+  ]);
 
   return (
     <section className="mental-math-section">

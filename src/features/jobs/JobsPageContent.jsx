@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { Tag } from "../../components/common/Tag.jsx";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 const FILTERS = ["all", "internship", "fulltime"];
 
@@ -19,16 +20,14 @@ export function JobsPageContent() {
     return () => window.removeEventListener("quantgym:jobs-updated", onJobsUpdated);
   }, []);
 
-  useEffect(() => {
-    pageApi.refreshIcons?.();
-  });
-
   const jobs = useMemo(() => {
     const jobTime = (job) => new Date(job?.postedAt || job?.createdAt || 0).getTime();
     return api.getJobs()
       .filter((job) => filter === "all" || job.type === filter)
       .sort((a, b) => jobTime(b) - jobTime(a));
   }, [api, filter, revision]);
+
+  useScopedRefreshIcons(pageApi.refreshIcons, ".jobs-section", [jobs, filter]);
 
   return (
     <section className="jobs-section">

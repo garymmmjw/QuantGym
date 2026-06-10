@@ -301,3 +301,81 @@ body.is-authenticated .app-route-root .overview-route-page > .overview-ranking-g
     height: clamp(170px, 54vw, 240px) !important;
   }
 }
+
+/* React shell interaction repairs: keep search bindings visible and animated
+   after the legacy shell layer is re-mounted. */
+body.is-authenticated .app-command-bar {
+  transition: grid-template-columns 320ms cubic-bezier(.2, .75, .2, 1);
+}
+
+body.is-authenticated .app-search {
+  transform-origin: left center;
+  transition:
+    width 360ms cubic-bezier(.2, 1.2, .24, 1),
+    max-width 360ms cubic-bezier(.2, 1.2, .24, 1),
+    transform 220ms ease;
+}
+
+body.is-authenticated .app-search:focus-within {
+  width: min(620px, 100%);
+  max-width: min(620px, 100%);
+  transform: translateY(-1px) scaleX(1.02);
+}
+
+body.is-authenticated .app-command-bar:has(.app-search:focus-within) {
+  grid-template-columns: minmax(360px, min(620px, 52vw)) minmax(0, 1fr);
+}
+
+body.is-authenticated .app-search input {
+  pointer-events: auto;
+}
+
+body.is-authenticated .app-search .global-search-results {
+  pointer-events: auto;
+}
+
+body.is-authenticated .problem-workspace-grid .problem-page-header {
+  transition: grid-template-columns 320ms cubic-bezier(.2, .75, .2, 1);
+}
+
+body.is-authenticated .problem-workspace-grid .problem-page-header:has(.problem-actions:focus-within) {
+  grid-template-columns: minmax(140px, 1fr) 64px minmax(360px, 480px);
+}
+
+body.is-authenticated .problem-workspace-grid .problem-page-header .problem-actions {
+  justify-self: stretch;
+  min-width: 0;
+  transform-origin: right center;
+  transition:
+    width 360ms cubic-bezier(.2, 1.2, .24, 1),
+    transform 220ms ease;
+}
+
+body.is-authenticated .problem-workspace-grid .problem-page-header .problem-actions:focus-within {
+  width: 100%;
+  transform: translateY(-1px) scaleX(1.015);
+}
+
+body.is-authenticated .problem-workspace-grid .problem-page-header .problem-actions input {
+  pointer-events: auto;
+}
+
+@media (max-width: 980px) {
+  body.is-authenticated .app-command-bar:has(.app-search:focus-within) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  body.is-authenticated .app-search:focus-within {
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 860px) {
+  body.is-authenticated .problem-workspace-grid .problem-page-header:has(.problem-actions:focus-within) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.is-authenticated .problem-workspace-grid .problem-page-header .problem-actions:focus-within {
+    transform: translateY(-1px);
+  }
+}

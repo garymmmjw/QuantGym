@@ -1,13 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCommunityPageModel } from "./communityHooks.js";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 export function CommunityPageContent() {
   const model = useCommunityPageModel();
   const [commentDrafts, setCommentDrafts] = useState({});
 
-  useEffect(() => {
-    model.refreshIcons?.();
-  });
+  useScopedRefreshIcons(model.refreshIcons, ".community-section", [model.posts, model.mediaPreview, model.filter]);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -160,7 +159,6 @@ export function CommunityPageContent() {
                     const value = commentDrafts[post.id] || "";
                     model.addComment(post.id, value);
                     setCommentDrafts((prev) => ({ ...prev, [post.id]: "" }));
-                    model.refreshIcons?.();
                   }}
                 >
                   <input

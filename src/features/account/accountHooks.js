@@ -64,7 +64,7 @@ export function useAccountPageModel() {
       return result;
     }
     setMessage(result.message || t("accountUpdated") || "账户已更新。");
-    appServices.services?.refreshIcons?.();
+    appServices.services?.refreshIcons?.({ root: document.querySelector(".account-section") || document });
     return result;
   }, [accountApi, form, appServices, t]);
 
@@ -107,7 +107,7 @@ export function useAccountPageModel() {
       return;
     }
     setResumeMeta(result.meta || "");
-    appServices.services?.refreshIcons?.();
+    appServices.services?.refreshIcons?.({ root: document.querySelector(".account-section") || document });
   }, [accountApi, appServices, t]);
 
   const logout = useCallback(() => {
