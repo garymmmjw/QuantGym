@@ -2,6 +2,7 @@ import {
   loginCloudAccount,
   loginCloudGoogle,
   registerCloudAccount,
+  requestCloudAccountStatus,
   sendCloudVerificationCode
 } from './auth.js';
 
@@ -11,6 +12,13 @@ export function createAuthCloudClient(deps = {}) {
   const getUserCatalogProblems = (problems) => deps.getUserCatalogProblems?.(problems) || problems || [];
 
   return {
+    accountStatus(email) {
+      return requestCloudAccountStatus({
+        cloudApi,
+        email
+      });
+    },
+
     sendVerificationCode(email, purpose = "register") {
       return sendCloudVerificationCode({
         cloudApi,

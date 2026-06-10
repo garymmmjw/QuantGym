@@ -1528,6 +1528,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.send_json(200, {"ok": True})
             if path == "/api/auth/verification-code" and self.command == "POST":
                 return self.send_verification_code()
+            if path == "/api/auth/account-status" and self.command == "GET":
+                return self.get_account_status()
             if path == "/api/auth/register" and self.command == "POST":
                 return self.register()
             if path == "/api/auth/login" and self.command == "POST":
@@ -1807,6 +1809,24 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         if delivery == "dev" and EMAIL_DEV_CODE_RESPONSE:
             payload["devCode"] = code
         self.send_json(200, payload)
+
+    def get_account_status(self):
+        query = parse_qs(urlparse(self.path).query)
+        email = normalize_email((query.get("email") or [""])[0])
+        if not email:
+            raise HttpError(400, "Email is required")
+        ensure_valid_email(email)
+        ensure_email_allowed(email)
+        with db.connect() as conn:
+            user = conn.execute(
+                "SELECT provider FROM users WHERE email_norm = ?",
+                (email,),
+            ).fetchone()
+        self.send_json(200, {
+            "email": email,
+            "exists": bool(user),
+            "provider": user["provider"] if user else "",
+        })
 
     def consume_verification_code(self, conn: sqlite3.Connection, email: str, purpose: str, code: str) -> None:
         code_value = str(code or "").strip()

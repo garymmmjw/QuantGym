@@ -13,6 +13,16 @@ export function sendCloudVerificationCode(options = {}) {
   });
 }
 
+export function requestCloudAccountStatus(options = {}) {
+  const {
+    cloudApi = async () => ({}),
+    email = ""
+  } = options;
+  return cloudApi(`/auth/account-status?email=${encodeURIComponent(email)}`, {
+    auth: false
+  });
+}
+
 export function registerCloudAccount(options = {}) {
   const {
     cloudApi = async () => ({}),

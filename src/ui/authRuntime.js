@@ -6,6 +6,8 @@ import {
 
 export function createAuthUiRuntime(deps = {}) {
   let googleInitRetries = 0;
+  let initializedGoogleClientId = "";
+  let initializedGoogleCallback = null;
   let registerCodeTimer = null;
 
   const windowRef = deps.windowRef || globalThis;
@@ -62,12 +64,16 @@ export function createAuthUiRuntime(deps = {}) {
 
     if (!deps.googleLoginEnabled) {
       resetGoogleRetries();
+      initializedGoogleClientId = "";
+      initializedGoogleCallback = null;
       renderGooglePlaceholder();
       return;
     }
 
     if (!googleClientId) {
       resetGoogleRetries();
+      initializedGoogleClientId = "";
+      initializedGoogleCallback = null;
       renderGooglePlaceholder();
       return;
     }
@@ -85,11 +91,18 @@ export function createAuthUiRuntime(deps = {}) {
     }
 
     resetGoogleRetries();
-    googleAccounts.initialize({
-      client_id: googleClientId,
-      callback: deps.handleGoogleCredential,
-      auto_select: false
-    });
+    if (
+      initializedGoogleClientId !== googleClientId
+      || initializedGoogleCallback !== deps.handleGoogleCredential
+    ) {
+      googleAccounts.initialize({
+        client_id: googleClientId,
+        callback: deps.handleGoogleCredential,
+        auto_select: false
+      });
+      initializedGoogleClientId = googleClientId;
+      initializedGoogleCallback = deps.handleGoogleCredential;
+    }
     googleAccounts.renderButton(els.googleButton, {
       theme: "outline",
       size: "large",
