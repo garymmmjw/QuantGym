@@ -1,0 +1,59 @@
+{
+  "checkedAt": "2026-06-08T22:31:41Z",
+  "results": [
+    {
+      "url": "https://beta.quantgym.app/plan",
+      "text": "QuantGym 总览 成长 刷题 社群 求职 资源 设置 0 火焰日历 0 聊天 Gary 账号 Quant 面试备战计划 以目标招聘季和岗位方向为起点，覆盖 assessment、技术面、behavioral 与 final day。 建立你的备战路线 不同岗位和招聘季，需要不同的训练重点与节奏。 你要申请什么类型的岗位？ Internship 在校生暑期实习，围绕目标 summer 做倒排。 Full-time / New Grad 校招或毕业岗，增加项目表达与完整面试循环。 目标招聘季 2026 Summer 临近开工，按补录与即时面试冲刺。 2027 Summer 主申请周期，系统建设能力与申请材料。 2028 Summer 提前布局，先建立基础与项目经历。 目标方向 Quant Trading Quant Research Quant Developer 每周可投入 5 小时 / 周 8 小时 / 周 12 小时 / 周 16+ 小时 / 周 是否先做水平测试？ 先做 baseline 测评 8 道短题，识别概率、速算、代码和市场基础的优先级。 暂不测试 直接按岗位常见要求开始，之后可补做测评。 制定计划 今日待办 0",
+      "headings": [
+        "QuantGym",
+        "把题库、模拟面试和简历复盘放进同一个训练台",
+        "登录或注册",
+        "Quant 面试备战计划",
+        "To-do list",
+        ""
+      ],
+      "scrollHeight": 1107,
+      "overflow": false,
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/online-audit-screenshots/027-prod-auth-plan-desktop.png",
+      "route": "/plan"
+    },
+    {
+      "url": "https://beta.quantgym.app/pk",
+      "text": "QuantGym 总览 成长 刷题 社群 求职 资源 设置 0 火焰日历 0 聊天 Gary 账号 PK 匹配在线 Quant 你 0 Online Quant 0 点击匹配开始。 提交 PK 今日待办 0",
+      "headings": [
+        "QuantGym",
+        "把题库、模拟面试和简历复盘放进同一个训练台",
+        "登录或注册",
+        "PK",
+        "To-do list",
+        ""
+      ],
+      "scrollHeight": 900,
+      "overflow": false,
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/online-audit-screenshots/028-prod-auth-pk-desktop.png",
+      "route": "/pk"
+    },
+    {
+      "url": "https://beta.quantgym.app/",
+      "text": "QuantGym 总览 成长 刷题 社群 求职 资源 设置 0 火焰日历 0 聊天 Gary 账号 量化快讯 AD HOC NEWS Ladder Capital Corp stock (US5057431042): Options volatility jumps as mortgage REIT trades near $8 MLQ.ai Jane Street Plans to Build and Self-Finance 100-200MW Data Center CryptoRank Bitcoin Options Market Signals Growing Volatility Premium, Glassnode Data Shows Data Center Dynamics Quant trading firm Jane Street plans data center - report Crypto Briefing Jane Street plans to build and finance its own data center as compute demand surges eFinancialCareers Hedge fund Qube Research hired an ex-Citadel Securities trader as its US COO AD HOC NEWS Cboe Global Markets stock (US12514G1085): shares under pressure as Chicago exchange operator tracks Crypto Briefing Citadel Securities seeks to reshape $4B of existing debt after record trading quarter AD HOC NEWS Ladder Capital Corp stock (US5057431042): Options volatility jumps as mortgage REIT trades near $8 MLQ.ai Jane Street Plans to Build and Self-Finance 100-200MW Data Cente",
+      "headings": [
+        "QuantGym",
+        "把题库、模拟面试和简历复盘放进同一个训练台",
+        "登录或注册",
+        "Sharpen your quant edge today.",
+        "Problem completion",
+        "Experience rhythm",
+        "Contribution heatmap",
+        "今日记录",
+        "排行榜",
+        "社区",
+        "To-do list",
+        ""
+      ],
+      "scrollHeight": 1238,
+      "overflow": false,
+      "screenshot": "/Users/miujiawei/Desktop/QuantGym/docs/online-audit-screenshots/029-prod-auth-overview-recheck.png",
+      "route": "/"
+    }
+  ]
+}

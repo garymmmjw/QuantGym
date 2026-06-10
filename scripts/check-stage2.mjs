@@ -332,8 +332,11 @@ function checkBridgeMode() {
   if (!appSource.includes("BrowserRouter")) fail("App.jsx must use BrowserRouter for path routing.");
 
   const buildScript = read(path.join(root, "scripts", "build-static-site.mjs"));
-  if (!buildScript.includes("404.html") || !buildScript.includes("_redirects")) {
-    fail("build-static-site.mjs must emit SPA fallback files.");
+  if (!buildScript.includes("_redirects")) {
+    fail("build-static-site.mjs must emit Cloudflare Pages SPA rewrite rules.");
+  }
+  if (buildScript.includes('path.join(distDir, "404.html")')) {
+    fail("build-static-site.mjs must not emit a top-level 404.html; Cloudflare Pages uses that for real 404 responses.");
   }
 
   const reactIds = parseSetFromRouteConfig("REACT_PAGE_IDS");

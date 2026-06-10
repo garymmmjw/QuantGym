@@ -452,6 +452,11 @@ body:not(.is-authenticated) .auth-cover-mascot {
   display: block;
   width: 100% !important;
   max-height: none !important;
+  filter: none !important;
+}
+
+body:not(.is-authenticated) .auth-cover-shark-glow {
+  display: none;
 }
 
 body:not(.is-authenticated) .auth-brand-stats,

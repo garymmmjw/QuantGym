@@ -52,7 +52,7 @@ copyRuntimeStaticFiles(outputDir);
 // Locale entry pages (/zh/ and /en/) are generated after Vite build because
 // they reference the hashed asset URLs already in dist/index.html.
 writeLocaleEntries(outputDir);
-writeSpaFallback(outputDir);
+writeSpaFallbackRules(outputDir);
 
 console.log(`Built static site in ${path.relative(projectRoot, outputDir) || outputDir}`);
 if (!webConfig.cloudApiEndpoint || !webConfig.llmEndpoint) {
@@ -123,11 +123,12 @@ function copyRuntimeStaticFiles(distDir) {
   }
 }
 
-function writeSpaFallback(distDir) {
+function writeSpaFallbackRules(distDir) {
   const indexPath = path.join(distDir, "index.html");
   if (!fs.existsSync(indexPath)) return;
-  const html = fs.readFileSync(indexPath, "utf8");
-  fs.writeFileSync(path.join(distDir, "404.html"), html);
+  // Cloudflare Pages serves unknown paths with 200 SPA fallback only when no
+  // top-level 404.html exists. Keep the explicit rewrite rule, but do not emit
+  // a custom 404 page that would turn valid React routes into HTTP 404s.
   fs.writeFileSync(path.join(distDir, "_redirects"), "/* /index.html 200\n");
 }
 

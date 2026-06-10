@@ -119,7 +119,7 @@ export function AuthShell() {
                   onClick={pokeAuthShark}
                 >
                   <span className="auth-cover-shark-glow" aria-hidden="true" />
-                  <img className="auth-cover-mascot" src="assets/generated/mascot-laptop.webp?v=premium-system-2" alt="" draggable="false" />
+                  <img className="auth-cover-mascot" src="assets/generated/shark-hero-clean.png?v=premium-system-2" alt="" draggable="false" />
                 </button>
               </div>
             </div>
