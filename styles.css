@@ -24702,3 +24702,113 @@ body:not(.is-authenticated) .google-button iframe {
     justify-content: center;
   }
 }
+
+/* Final auth mascot top lock: keep Quanty in-flow and away from crop edges. */
+body:not(.is-authenticated) .auth-brand {
+  justify-content: flex-start;
+  gap: clamp(14px, 2vh, 26px) !important;
+  overflow: hidden;
+}
+
+body:not(.is-authenticated) .auth-brand-logo {
+  order: 0;
+  flex: 0 0 auto;
+}
+
+body:not(.is-authenticated) .auth-cover-visual {
+  order: 1;
+  position: relative !important;
+  z-index: 2;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-end !important;
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: clamp(128px, 21vh, 205px) !important;
+  margin: clamp(2px, 0.6vh, 8px) 0 0 !important;
+  padding: clamp(10px, 1.2vw, 18px) clamp(12px, 1.7vw, 24px) 0 0;
+  overflow: visible !important;
+}
+
+body:not(.is-authenticated) .auth-cover-shark-stage {
+  position: relative !important;
+  inset: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: clamp(130px, 27%, 205px) !important;
+  max-width: calc(100% - clamp(28px, 4vw, 48px)) !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 0 0 0 auto !important;
+  padding: 0;
+}
+
+body:not(.is-authenticated) .auth-cover-shark-button {
+  overflow: visible;
+  transform-origin: 50% 62%;
+}
+
+body:not(.is-authenticated) .auth-cover-mascot {
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  object-fit: contain;
+  object-position: center;
+}
+
+body:not(.is-authenticated) .auth-brand-body {
+  order: 2;
+  margin-top: 0 !important;
+}
+
+body:not(.is-authenticated) .auth-brand-stats {
+  order: 3;
+  margin-top: auto;
+}
+
+@media (min-width: 1081px) and (max-width: 1120px) {
+  body:not(.is-authenticated) .auth-brand {
+    gap: 12px !important;
+  }
+
+  body:not(.is-authenticated) .auth-cover-visual {
+    min-height: clamp(110px, 18vh, 155px) !important;
+    padding-top: 8px;
+  }
+
+  body:not(.is-authenticated) .auth-cover-shark-stage {
+    width: clamp(112px, 24%, 160px) !important;
+  }
+}
+
+@media (min-width: 1081px) and (max-height: 680px) {
+  body:not(.is-authenticated) .auth-brand {
+    gap: 10px !important;
+    padding-block: clamp(22px, 3.8vh, 34px) !important;
+  }
+
+  body:not(.is-authenticated) .auth-cover-visual {
+    min-height: clamp(102px, 17vh, 145px) !important;
+    margin-top: 0 !important;
+    padding-top: 8px;
+  }
+
+  body:not(.is-authenticated) .auth-cover-shark-stage {
+    width: clamp(108px, 23%, 150px) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body:not(.is-authenticated) .auth-provider-stack,
+  body:not(.is-authenticated) .auth-form,
+  body:not(.is-authenticated) .google-button {
+    width: calc(100vw - 40px) !important;
+    max-width: 400px !important;
+  }
+
+  body:not(.is-authenticated) .google-button > div,
+  body:not(.is-authenticated) .google-button iframe {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
