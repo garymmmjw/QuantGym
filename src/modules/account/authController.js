@@ -49,7 +49,34 @@ export function createAccountAuthController(deps = {}) {
     deps.showAuthMessage?.("");
   }
 
-  function submitEmailAuth() {
+  async function getCloudAccountExists(email) {
+    if (!deps.checkCloudAccountStatus) return null;
+    try {
+      const result = await deps.checkCloudAccountStatus(email);
+      return typeof result?.exists === "boolean" ? result.exists : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function showPasswordStep(email, status = "unknown") {
+    const elements = getElements();
+    setEmailAuthStep("password", email);
+    if (elements.loginForm) elements.loginForm.dataset.cloudAccountStatus = status;
+    deps.showAuthMessage?.("");
+    elements.loginPassword?.focus?.();
+    return true;
+  }
+
+  function showRegisterStep(email) {
+    const elements = getElements();
+    setEmailAuthStep("register", email);
+    deps.showAuthMessage?.("");
+    elements.registerName?.focus?.();
+    return true;
+  }
+
+  async function submitEmailAuth() {
     const elements = getElements();
     const email = getLoginEmail();
     if (!email || !email.includes("@")) {
@@ -60,15 +87,12 @@ export function createAccountAuthController(deps = {}) {
       return loginLocal();
     }
     if (findLocalAccount(email)) {
-      setEmailAuthStep("password", email);
-      deps.showAuthMessage?.("");
-      elements.loginPassword?.focus?.();
-      return true;
+      return showPasswordStep(email, "local");
     }
-    setEmailAuthStep("register", email);
-    deps.showAuthMessage?.("");
-    elements.registerName?.focus?.();
-    return true;
+
+    const cloudExists = await getCloudAccountExists(email);
+    if (cloudExists === false) return showRegisterStep(email);
+    return showPasswordStep(email, cloudExists === true ? "cloud" : "unknown");
   }
 
   async function sendRegisterVerificationCode() {

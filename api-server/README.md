@@ -56,6 +56,7 @@ Email verification is required for local-account cloud registration by default. 
 
 - `GET /api/health`
 - `POST /api/auth/verification-code`
+- `GET /api/auth/account-status`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/google`

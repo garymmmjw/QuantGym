@@ -82,6 +82,7 @@ export function createAccountControllerBundle(deps = {}) {
     migrateLegacyState: deps.migrateLegacyState,
     loadStateForUser: deps.loadStateForUser,
     sendCloudVerificationCode: authCloudClient.sendVerificationCode,
+    checkCloudAccountStatus: authCloudClient.accountStatus,
     registerCloudAccount: authCloudClient.registerAccount,
     loginCloudAccount: authCloudClient.loginAccount,
     loginCloudGoogle: authCloudClient.loginGoogle,
