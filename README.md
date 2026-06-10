@@ -181,7 +181,7 @@ node scripts/build-static-site.mjs --strict
 
 Strict mode fails fast unless both `QUANTGYM_WEB_API_ENDPOINT` and `QUANTGYM_WEB_LLM_ENDPOINT` are set and start with `https://`.
 
-The build script runs `vite build` internally, writes `dist/config.js`, copies runtime data scripts and generated image assets, and writes locale entry pages (`/zh/`, `/en/`) from the built `dist/index.html`. Publish only `dist/`. Do not publish the repository root as a static site.
+The build script runs `vite build` internally, writes `dist/config.js`, copies runtime data scripts and generated image assets, writes locale entry pages (`/zh/`, `/en/`) from the built `dist/index.html`, and emits `dist/_redirects` for SPA rewrites. It intentionally does not emit a top-level `dist/404.html`, because Cloudflare Pages uses the absence of that file to serve unknown React routes through the SPA with HTTP 200. Publish only `dist/`. Do not publish the repository root as a static site.
 
 Cloudflare Pages build command: `npm install && node scripts/build-static-site.mjs --strict`
 
