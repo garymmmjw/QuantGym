@@ -1,0 +1,360 @@
+{
+  "checkedAt": "2026-06-08T22:09:00Z",
+  "routeResults": [
+    {
+      "path": "/",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/login",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/plan",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/skills",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/interview",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/problems",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/tools",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/poker",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/experiences",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/news",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/community",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/messages",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/network",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/resume",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/jobs",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/companies",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/library",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/courses",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/memory",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/settings",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/account",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/pk",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    },
+    {
+      "path": "/overview",
+      "status": 404,
+      "contentType": "text/html; charset=utf-8",
+      "hasAppHtml": true,
+      "title": "QuantGym"
+    }
+  ],
+  "assetResults": [
+    {
+      "asset": "/assets/AccountPage-CUAmoziZ.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/CommunityPage-XpMkMF_4.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/CompaniesPage-BL9OaQTv.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/CoursesPage-BIWqvjpc.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/EmptyState-dibNs7tG.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/ExperiencesPage-CGU9yrE5.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/InterviewPage-CadN06tZ.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/JobsPage-CQeLIOa0.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/LibraryPage-BHq2vrEc.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/MemoryPage-DwmD6Ydt.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/MessagesPage-NaF5R5J4.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/NetworkPage-B7X_6RXl.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/NewsPage-i8GE1jZj.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/OverviewPage-C7OdLueW.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/PkPage-Ch04N-tv.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/PlanPage-Dt8THwPL.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/PokerPage-BGXbUSxB.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/ProblemsPage-uP12pxtG.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/ResumePage-B723Try8.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/SettingsPage-DSOmKa5B.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/SkillsPage-02133pwX.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/Tag-8cvSLAfL.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/ToolsPage-DbnCBBcx.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/createAppServices-xI9xjQAX.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/data-CyLJE_4E.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/data-DJwdpSOe.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/files-D_YbiLdB.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/format-DH9D43GX.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/index-Bhww-nxu.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/index-QEGU0sn-.css",
+      "status": 200,
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "asset": "/assets/pagination-BDvBupIq.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/rolldown-runtime-QTnfLwEv.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/text-BNDoJ1Lb.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/useSyncModuleRoute-TZ3Z_AEZ.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/vendor-react-CIxEorsV.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/vendor-react-dom-B49trWfG.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "asset": "/assets/vendor-router-e5SST-Jf.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    }
+  ],
+  "routeStatusCounts": {
+    "200": 1,
+    "404": 22
+  },
+  "assetStatusCounts": {
+    "200": 37
+  }
+}

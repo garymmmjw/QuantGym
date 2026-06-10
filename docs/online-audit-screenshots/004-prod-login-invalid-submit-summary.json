@@ -1,0 +1,126 @@
+{
+  "checkedAt": "2026-06-08T22:03:15.377Z",
+  "counts": {
+    "email": 1,
+    "password": 1,
+    "continue": 1
+  },
+  "invalidSummary": {
+    "label": "login-invalid-submit",
+    "bodyClass": "",
+    "buttons": [
+      {
+        "disabled": false,
+        "text": "登录"
+      },
+      {
+        "disabled": false,
+        "text": "注册"
+      },
+      {
+        "disabled": false,
+        "text": "继续"
+      },
+      {
+        "disabled": false,
+        "text": "发送验证码"
+      },
+      {
+        "disabled": false,
+        "text": "创建账户"
+      },
+      {
+        "disabled": false,
+        "text": "保存"
+      }
+    ],
+    "config": null,
+    "inputs": [
+      {
+        "id": "loginEmail",
+        "name": null,
+        "placeholder": "电子邮件地址",
+        "tag": "INPUT",
+        "type": "email",
+        "value": "codex-audit-invalid@example.com"
+      },
+      {
+        "id": "loginPassword",
+        "name": null,
+        "placeholder": "密码",
+        "tag": "INPUT",
+        "type": "password",
+        "value": "invalid-password"
+      },
+      {
+        "id": "registerName",
+        "name": null,
+        "placeholder": "名字",
+        "tag": "INPUT",
+        "type": "text",
+        "value": ""
+      },
+      {
+        "id": "registerEmail",
+        "name": null,
+        "placeholder": "电子邮件地址",
+        "tag": "INPUT",
+        "type": "email",
+        "value": ""
+      },
+      {
+        "id": "registerPassword",
+        "name": null,
+        "placeholder": "设置密码，至少 6 位",
+        "tag": "INPUT",
+        "type": "password",
+        "value": ""
+      },
+      {
+        "id": "registerVerificationCode",
+        "name": null,
+        "placeholder": "邮箱验证码",
+        "tag": "INPUT",
+        "type": "text",
+        "value": ""
+      },
+      {
+        "id": "googleClientIdInput",
+        "name": null,
+        "placeholder": "xxxx.apps.googleusercontent.com",
+        "tag": "INPUT",
+        "type": "text",
+        "value": "539256360065-3297isnu2o7dgpvptq4lr77eh0sf43r4.apps.googleusercontent.com"
+      }
+    ],
+    "links": [],
+    "rootChildren": [
+      {
+        "cls": "",
+        "id": "react-root",
+        "tag": "DIV"
+      },
+      {
+        "cls": "",
+        "id": "",
+        "tag": "SCRIPT"
+      }
+    ],
+    "scriptAssets": [
+      "https://beta.quantgym.app/assets/index-Bhww-nxu.js"
+    ],
+    "textIncludes": {
+      "google": false,
+      "login": true,
+      "overview": false,
+      "problems": true,
+      "quantgym": true,
+      "shark": false
+    },
+    "textStart": "QuantGym Quant interview workspace 把题库、模拟面试和简历复盘放进同一个训练台 每天推进一组题、一次 mock、一版简历反馈。QuantGym 会记录你的薄弱点，让下一次练习更具体。 Today Probability drills 24 ready questions Mock Market making follow-up prompts queued Resume 3 edits impact bullets next 2,000+ 高频题目 500+ 面试复盘 98% 训练满意度 登录或注册 同步你的题库、模拟面试复盘、简历和训练进度。 或 登录 注册 电子邮件地址 密码 继续 云端暂时连不上；这台浏览器里也没有这个本地账户。",
+    "title": "QuantGym",
+    "url": "https://beta.quantgym.app/login"
+  },
+  "invalidShot": "/Users/miujiawei/Desktop/QuantGym/docs/online-audit-screenshots/004-prod-login-invalid-submit-desktop.png",
+  "invalidLogs": []
+}
