@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 export function MessagesPageContent() {
   const appServices = useAppServices();
@@ -18,8 +19,9 @@ export function MessagesPageContent() {
   useEffect(() => {
     if (selected && storedSelected !== selected) api.setSelected(selected);
     api.updateUnreadBadge?.();
-    pageApi.refreshIcons?.();
-  }, [api, pageApi, selected, storedSelected, revision]);
+  }, [api, selected, storedSelected, revision]);
+
+  useScopedRefreshIcons(pageApi.refreshIcons, ".messages-section", [threads, selected, revision]);
 
   const activeThread = threads.find((thread) => thread.id === selected);
   const currentId = currentUser?.id || "";

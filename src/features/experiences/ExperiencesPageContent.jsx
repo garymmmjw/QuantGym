@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 const EMPTY_FORM = {
   id: "",
@@ -60,14 +61,18 @@ export function ExperiencesPageContent() {
     [userState.interviewExperiences, api]
   );
 
-  const visible = filter === "all" ? records : records.filter((item) => item.stage === filter);
+  const visible = useMemo(
+    () => (filter === "all" ? records : records.filter((item) => item.stage === filter)),
+    [filter, records]
+  );
   const sharedCount = records.filter((record) => record.sharedPostId).length;
   const labels = api.labels || {};
 
   useEffect(() => {
-    pageApi.refreshIcons?.();
     if (!form.date) setForm((prev) => ({ ...prev, date: pageApi.localDateKey?.() || "" }));
-  });
+  }, [form.date, pageApi]);
+
+  useScopedRefreshIcons(pageApi.refreshIcons, ".experiences-section", [visible, filter, pendingShareId, form.id]);
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 

@@ -129,7 +129,7 @@ export function AppShellMain() {
               </button>
             </div>
             <aside className="sidebar-helper hidden" aria-label="Today guide">
-              <img src="assets/generated/quanty-side-coach.webp?v=premium-system-2" alt="" />
+              <img src="assets/generated/quanty-side-coach.webp?v=premium-system-2" alt="" loading="lazy" decoding="async" />
               <strong>今日向导</strong>
               <span>3 个任务待完成</span>
             </aside>

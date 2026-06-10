@@ -565,7 +565,8 @@ export function initDomainSliceImpl(shared, ctx) {
     syncStores: () => domainStores.syncAll(),
     syncLanguageToUrl,
     t,
-    userState
+    userState,
+    windowRef: window
   });
   leaderboardCloudController = syncSettingsBundle.leaderboardCloudController;
   sliceRefs.leaderboardCloudController = leaderboardCloudController;

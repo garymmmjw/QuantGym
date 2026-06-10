@@ -20,12 +20,16 @@ import {
   compareProblemsByPopularity,
   getProblemPopularityScore
 } from "../../modules/problems/ranking.js";
-import { getProblemBrowserMatches as getProblemBrowserMatchesForState } from "../../modules/problems/search.js";
+import {
+  createProblemSearchRecord,
+  getProblemBrowserMatches as getProblemBrowserMatchesForState
+} from "../../modules/problems/search.js";
 import { getProblemBrowserViewState } from "../../modules/problems/viewState.js";
 
 export function createProblemsPageApi(deps = {}) {
   let searchQuery = "";
   let leetcodeHotExpanded = Boolean(deps.isLeetcodeHotExpanded?.());
+  let chromeCache = null;
 
   function getState() {
     return deps.getState?.() || deps.userState?.value || {};
@@ -63,7 +67,51 @@ export function createProblemsPageApi(deps = {}) {
   function setLeetcodeHotExpanded(value) {
     leetcodeHotExpanded = Boolean(value);
     deps.setLeetcodeHotExpanded?.(leetcodeHotExpanded);
+    chromeCache = null;
     return leetcodeHotExpanded;
+  }
+
+  function getSearchOptions() {
+    return {
+      cache: deps.problemSearchRecordCache,
+      tagLabels: deps.problemTagLabels,
+      getCompanies: deps.getProblemCompanies,
+      getCompanyAliases: deps.getCompanyAliases,
+      getDisplayTitle: getProblemTitle
+    };
+  }
+
+  function nowMs() {
+    return deps.windowRef?.performance?.now?.()
+      || globalThis.performance?.now?.()
+      || Date.now();
+  }
+
+  function prewarmSearchIndex(options = {}) {
+    const problems = getProblems();
+    const total = problems.length;
+    const budgetMs = Math.max(1, Number(options.budgetMs || 6));
+    const maxItems = Math.max(1, Number(options.maxItems || 180));
+    const startedAt = nowMs();
+    const searchOptions = getSearchOptions();
+    let index = Math.max(0, Number(options.startIndex || 0));
+    let processed = 0;
+
+    while (index < total && processed < maxItems && nowMs() - startedAt < budgetMs) {
+      const problem = problems[index];
+      index += 1;
+      if (deps.isCatalogProblem?.(problem) ?? true) {
+        createProblemSearchRecord(problem, searchOptions);
+      }
+      processed += 1;
+    }
+
+    return {
+      done: index >= total,
+      nextIndex: index,
+      processed,
+      total
+    };
   }
 
   function getMatches(options = {}) {
@@ -89,13 +137,7 @@ export function createProblemsPageApi(deps = {}) {
       getPersonalState: deps.getProblemPersonalState,
       isEnglish: deps.getLanguage?.() === "en",
       locale: deps.getLocale?.(),
-      searchOptions: {
-        cache: deps.problemSearchRecordCache,
-        tagLabels: deps.problemTagLabels,
-        getCompanies: deps.getProblemCompanies,
-        getCompanyAliases: deps.getCompanyAliases,
-        getDisplayTitle: getProblemTitle
-      }
+      searchOptions: getSearchOptions()
     });
   }
 
@@ -256,8 +298,56 @@ export function createProblemsPageApi(deps = {}) {
     };
   }
 
-  function withChrome(view, filters, isEnglish, t) {
+  function getChromeSignature(filters = {}, isEnglish = false, t = null) {
+    const state = getState();
+    return {
+      problems: getProblems(),
+      problemStates: state.problemStates,
+      leetcodeHot100Done: state.leetcodeHot100Done,
+      hotItems: getLeetcodeHotItems(),
+      companyDefs: deps.companyDefs,
+      skillDefs: deps.skillDefs,
+      source: filters.source || "all",
+      company: filters.company || "all",
+      theme: filters.theme || "all",
+      difficulty: filters.difficulty || "all",
+      leetcodeExpanded: isLeetcodeHotExpanded(),
+      socialNotice: deps.getProblemSocialNotice?.() || "",
+      isEnglish,
+      t
+    };
+  }
+
+  function isSameChromeSignature(left, right) {
+    return Boolean(left && right)
+      && left.problems === right.problems
+      && left.problemStates === right.problemStates
+      && left.leetcodeHot100Done === right.leetcodeHot100Done
+      && left.hotItems === right.hotItems
+      && left.companyDefs === right.companyDefs
+      && left.skillDefs === right.skillDefs
+      && left.source === right.source
+      && left.company === right.company
+      && left.theme === right.theme
+      && left.difficulty === right.difficulty
+      && left.leetcodeExpanded === right.leetcodeExpanded
+      && left.socialNotice === right.socialNotice
+      && left.isEnglish === right.isEnglish
+      && left.t === right.t;
+  }
+
+  function getChrome(filters, isEnglish, t) {
+    const signature = getChromeSignature(filters, isEnglish, t);
+    if (chromeCache && isSameChromeSignature(chromeCache.signature, signature)) {
+      return chromeCache.chrome;
+    }
     const chrome = buildChrome(filters, isEnglish, t);
+    chromeCache = { signature, chrome };
+    return chrome;
+  }
+
+  function withChrome(view, filters, isEnglish, t) {
+    const chrome = getChrome(filters, isEnglish, t);
     if (view.mode === "list" && view.list) {
       const { totalProblems, totalPages, page, pageSize } = view.list;
       view.list.pagination = {
@@ -458,7 +548,9 @@ export function createProblemsPageApi(deps = {}) {
 
   return {
     getSearchQuery: () => searchQuery,
+    getSearchDebounceMs: () => Math.max(0, Number(deps.searchDebounceMs ?? 140)),
     getViewModel,
+    prewarmSearchIndex,
 
     mountRichText(node, text) {
       deps.renderRichText?.(node, text);

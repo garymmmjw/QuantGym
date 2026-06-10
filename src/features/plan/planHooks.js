@@ -83,9 +83,9 @@ export function usePlanPageModel() {
     bump();
   }, [api, bump, diagnosticAnswers]);
 
-  const refreshIcons = useCallback(() => {
-    pageApi?.refreshIcons?.();
-  }, [appServices]);
+  const refreshIcons = useCallback((options) => {
+    pageApi?.refreshIcons?.(options);
+  }, [pageApi]);
 
   return {
     t,

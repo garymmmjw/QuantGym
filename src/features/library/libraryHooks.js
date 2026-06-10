@@ -60,19 +60,15 @@ export function useLibraryPageModel() {
     return result;
   }, [api, bump]);
 
-  const refreshIcons = useCallback(() => {
-    pageApi?.refreshIcons?.();
-  }, [appServices]);
+  const refreshIcons = useCallback((options) => {
+    pageApi?.refreshIcons?.(options);
+  }, [pageApi]);
 
   useEffect(() => {
     if (!alertMessage) return undefined;
     const timer = window.setTimeout(() => setAlertMessage(""), 4000);
     return () => window.clearTimeout(timer);
   }, [alertMessage]);
-
-  useEffect(() => {
-    refreshIcons();
-  });
 
   return {
     view,

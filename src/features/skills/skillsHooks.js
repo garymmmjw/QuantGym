@@ -63,14 +63,14 @@ export function useSkillsPageModel() {
     return () => window.removeEventListener("quantgym:skill-focus", handleSkillFocus);
   }, [setHover]);
 
-  const refreshIcons = useCallback(() => {
-    pageApi?.refreshIcons?.();
-  }, [appServices]);
+  const refreshIcons = useCallback((options) => {
+    pageApi?.refreshIcons?.(options);
+  }, [pageApi]);
 
   useEffect(() => {
     api?.bindRadar?.();
     api?.drawRadar?.("");
-  });
+  }, [api]);
 
   return {
     t,

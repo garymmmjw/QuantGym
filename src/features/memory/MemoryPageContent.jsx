@@ -3,6 +3,7 @@ import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { readFileAsDataUrl, readFileAsText } from "../../lib/files.js";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 const EMPTY_RESOURCE_FORM = {
   title: "",
@@ -26,9 +27,7 @@ export function MemoryPageContent() {
   const entries = useMemo(() => (userState.entries || []).slice().reverse().slice(0, 12), [userState.entries]);
   const resources = useMemo(() => api.getResources(), [userState.resources, api]);
 
-  useEffect(() => {
-    pageApi.refreshIcons?.();
-  });
+  useScopedRefreshIcons(pageApi.refreshIcons, ".memory-section", [entries, resources, showForm]);
 
   useEffect(() => {
     if (showForm) resourceTitleRef.current?.focus();

@@ -124,15 +124,35 @@ export function useOverviewPageModel() {
     api?.switchModule?.("news");
   }, [api]);
 
-  const refreshIcons = useCallback(() => {
-    pageApi?.refreshIcons?.();
-  }, [appServices]);
+  const refreshIcons = useCallback((options) => {
+    pageApi?.refreshIcons?.(options);
+  }, [pageApi]);
 
   useEffect(() => {
     api?.startHeroTypewriter?.();
     api?.initHeroInteractions?.();
-    refreshIcons();
+    refreshIcons({ root: document.querySelector(".overview-page") || document });
   }, [api, refreshIcons]);
+
+  useEffect(() => {
+    const handleLeaderboardUpdate = () => bump();
+    window.addEventListener("quantgym:leaderboard-updated", handleLeaderboardUpdate);
+    return () => window.removeEventListener("quantgym:leaderboard-updated", handleLeaderboardUpdate);
+  }, [bump]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve(api?.refreshLeaderboard?.(false))
+      .then(() => {
+        if (!cancelled) bump();
+      })
+      .catch(() => {
+        if (!cancelled) bump();
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [api, bump]);
 
   return {
     t: api?.t || appServices.t || ((key) => key),

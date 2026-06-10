@@ -4,6 +4,7 @@ import { createGlobalSearchRuntime } from './globalSearchRuntime.js';
 export function createGlobalSearchBundle(deps = {}) {
   const provider = createGlobalSearchProvider({
     getState: deps.getState,
+    windowRef: deps.windowRef,
     t: deps.t,
     getLanguage: deps.getLanguage,
     isCatalogProblem: deps.isCatalogProblem,
@@ -33,6 +34,24 @@ export function createGlobalSearchBundle(deps = {}) {
     setRadarHover: deps.setRadarHover,
     focusNews: deps.focusNews
   });
+  let prewarmTimer = 0;
+  let prewarmIndex = 0;
+  const windowRef = deps.windowRef || globalThis.window;
+  const schedulePrewarm = (delay = 160) => {
+    if (!windowRef?.setTimeout) return;
+    prewarmTimer = windowRef.setTimeout(() => {
+      prewarmTimer = 0;
+      const result = provider.prewarmProblemRecords({
+        startIndex: prewarmIndex,
+        budgetMs: 5,
+        maxItems: 220
+      });
+      if (!result || result.done) return;
+      prewarmIndex = result.nextIndex;
+      schedulePrewarm(36);
+    }, delay);
+  };
+  schedulePrewarm();
 
   return {
     clear: runtime.clear,
@@ -42,6 +61,11 @@ export function createGlobalSearchBundle(deps = {}) {
     render: runtime.render,
     runtime,
     schedule: runtime.schedule,
+    cancelPrewarm() {
+      if (!prewarmTimer) return;
+      windowRef?.clearTimeout?.(prewarmTimer);
+      prewarmTimer = 0;
+    },
     setComposing: runtime.setComposing
   };
 }

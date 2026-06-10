@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 export function ResumePageContent() {
   const appServices = useAppServices();
@@ -14,9 +15,10 @@ export function ResumePageContent() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    pageApi.refreshIcons?.();
     api.renderAccountResumeMeta?.();
-  });
+  }, [api, userState.resume]);
+
+  useScopedRefreshIcons(pageApi.refreshIcons, ".resume-section", [review, busy]);
 
   const save = () => {
     api.saveText(text);
@@ -33,7 +35,6 @@ export function ResumePageContent() {
       pageApi.saveState?.();
     } finally {
       setBusy(false);
-      pageApi.refreshIcons?.();
     }
   };
 

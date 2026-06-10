@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 const EMPTY_FORM = {
   id: "",
@@ -31,9 +32,7 @@ export function NetworkPageContent() {
     ));
   }, [userState.network]);
 
-  useEffect(() => {
-    pageApi.refreshIcons?.();
-  });
+  useScopedRefreshIcons(pageApi.refreshIcons, ".network-section", [contacts, showForm]);
 
   const submit = (event) => {
     event.preventDefault();

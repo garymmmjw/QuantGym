@@ -63,7 +63,7 @@ export function useToolsPageModel() {
 
   const submitMarket = useCallback(() => {
     refreshView(api?.submitMarketQuote?.());
-    pageApi?.refreshIcons?.();
+    pageApi?.refreshIcons?.({ root: document.querySelector(".mental-math-section") || document });
   }, [api, pageApi, refreshView]);
 
   const newMarket = useCallback(() => {
@@ -90,6 +90,6 @@ export function useToolsPageModel() {
     setMarketField,
     openPoker: () => api?.openPoker?.(),
     t: api?.t || appServices.t || ((key) => key),
-    refreshIcons: () => pageApi?.refreshIcons?.()
+    refreshIcons: (options) => pageApi?.refreshIcons?.(options)
   };
 }

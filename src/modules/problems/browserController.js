@@ -57,10 +57,17 @@ export function createProblemBrowserController(deps = {}) {
     const route = getProblemSearchNavigation(problemId);
     if (!route.ok) return route;
     deps.applyNavigationFilters?.(route.filters);
+    deps.setSelectedDetailId?.(problemId);
     deps.resetPagination?.();
     const elements = getElements();
     if (elements.problemSearch) elements.problemSearch.value = "";
     render();
+    const CustomEventCtor = windowRef?.CustomEvent || globalThis.CustomEvent;
+    if (windowRef?.dispatchEvent && CustomEventCtor) {
+      windowRef.dispatchEvent(new CustomEventCtor("quantgym:problem-open", {
+        detail: { problemId, source: "search" }
+      }));
+    }
     windowRef.setTimeout?.(() => deps.openProblemDetail?.(problemId), 40);
     return route;
   }

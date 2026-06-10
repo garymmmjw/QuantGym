@@ -131,7 +131,7 @@ export function initOverviewSliceImpl(shared, ctx) {
   }
 
   function bindEvents() {
-    bindShellEvents({
+    return bindShellEvents({
       documentRef: document,
       elements: els,
       handlers: {
@@ -267,8 +267,8 @@ sliceRefs.overviewSummaryController = overviewSummaryController;
     return createEmptyBlockView(text, { documentRef: document });
   }
 
-  function refreshIcons() {
-    refreshIconsView({ windowRef: window });
+  function refreshIcons(options = {}) {
+    refreshIconsView({ ...options, windowRef: window });
   }
 
   function rebindElements() {

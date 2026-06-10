@@ -10,6 +10,14 @@ export function createLeaderboardCloudController(deps = {}) {
   let error = "";
   let refreshPromise = null;
   const nowIso = () => deps.nowIso?.() || new Date().toISOString();
+  const dispatchUpdate = (status = "settled") => {
+    const windowRef = deps.windowRef || globalThis.window;
+    const CustomEventCtor = windowRef?.CustomEvent || globalThis.CustomEvent;
+    if (!windowRef?.dispatchEvent || !CustomEventCtor) return;
+    windowRef.dispatchEvent(new CustomEventCtor("quantgym:leaderboard-updated", {
+      detail: { status, snapshot: getSnapshot() }
+    }));
+  };
 
   const getSnapshot = () => ({
     rows,
@@ -20,7 +28,7 @@ export function createLeaderboardCloudController(deps = {}) {
   });
 
   const refresh = async (force = false) => {
-    if (loading) return refreshPromise;
+    if (loading) return refreshPromise || Promise.resolve(rows);
     if (!shouldRefreshCloudLeaderboard({
       force,
       loadedAt,
@@ -32,6 +40,7 @@ export function createLeaderboardCloudController(deps = {}) {
     loading = true;
     error = "";
     deps.renderLoading?.(getSnapshot());
+    dispatchUpdate("loading");
 
     refreshPromise = requestCloudLeaderboard({
       cloudApi: deps.cloudApi,
@@ -53,6 +62,7 @@ export function createLeaderboardCloudController(deps = {}) {
         loading = false;
         refreshPromise = null;
         deps.onSettled?.(getSnapshot());
+        dispatchUpdate("settled");
       });
 
     return refreshPromise;
@@ -62,6 +72,7 @@ export function createLeaderboardCloudController(deps = {}) {
     loadedAt = "";
     error = "";
     if (options.clear) rows = [];
+    dispatchUpdate("invalidated");
     if (options.refresh) refresh(true);
   };
 

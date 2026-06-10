@@ -44,7 +44,8 @@ export function createSyncSettingsBundle(deps = {}) {
     syncStores,
     syncLanguageToUrl,
     t,
-    userState
+    userState,
+    windowRef = globalThis.window
   } = deps;
 
   let settingsController = null;
@@ -54,7 +55,8 @@ export function createSyncSettingsBundle(deps = {}) {
     normalizeRows: normalizeCloudLeaderboardRows,
     refreshMs: LEADERBOARD_CLOUD_REFRESH_MS,
     renderLoading: renderLeaderboardLoading,
-    onSettled: renderLeaderboardSettled
+    onSettled: renderLeaderboardSettled,
+    windowRef
   });
 
   const cloudSyncController = createCloudSyncController({

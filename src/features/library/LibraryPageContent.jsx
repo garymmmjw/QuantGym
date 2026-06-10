@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLibraryPageModel } from "./libraryHooks.js";
+import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
 function LibraryCard({ entry, labels, onAction }) {
   const handleKeyDown = (event) => {
@@ -60,6 +61,7 @@ export function LibraryPageContent() {
   const model = useLibraryPageModel();
   const { view } = model;
   const { labels, reader } = view;
+  const { closeReader } = model;
 
   useEffect(() => {
     if (reader.open) {
@@ -72,11 +74,13 @@ export function LibraryPageContent() {
 
   useEffect(() => {
     const onKeyDown = (event) => {
-      if (event.key === "Escape" && reader.open) model.closeReader();
+      if (event.key === "Escape" && reader.open) closeReader();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [model, reader.open]);
+  }, [closeReader, reader.open]);
+
+  useScopedRefreshIcons(model.refreshIcons, ".library-section", [view]);
 
   return (
     <>
