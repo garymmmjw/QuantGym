@@ -103,12 +103,13 @@ export function createAuthUiRuntime(deps = {}) {
       initializedGoogleClientId = googleClientId;
       initializedGoogleCallback = deps.handleGoogleCredential;
     }
+    const buttonWidth = Math.min(400, Math.max(240, Math.floor(els.googleButton.clientWidth || 400)));
     googleAccounts.renderButton(els.googleButton, {
       theme: "outline",
       size: "large",
       shape: "pill",
       text: "continue_with",
-      width: Math.min(242, els.googleButton.clientWidth || 242)
+      width: buttonWidth
     });
     deps.showAuthMessage?.(text("authGoogleEnabled"));
   }
