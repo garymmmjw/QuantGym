@@ -52,6 +52,27 @@ const REACT_PAGES = {
   pk: PkPage
 };
 
+function RouteLoadingFallback() {
+  return (
+    <div className="app-route-loading" aria-busy="true" role="status">
+      <span className="sr-only">加载中</span>
+      <div className="route-loading-grid" aria-hidden="true">
+        <div className="route-loading-main">
+          <span className="route-loading-pill" />
+          <span className="route-loading-title" />
+          <span className="route-loading-line wide" />
+          <span className="route-loading-line" />
+        </div>
+        <div className="route-loading-side">
+          <span />
+          <span />
+          <span />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AppRouteElements() {
   return routeConfig.map((route) => {
     const Page = REACT_PAGES[route.id];
@@ -63,7 +84,7 @@ function AppRouteElements() {
         key={route.id}
         path={route.path}
         element={(
-          <Suspense fallback={<div className="app-route-loading" aria-busy="true" />}>
+          <Suspense fallback={<RouteLoadingFallback />}>
             <Page />
           </Suspense>
         )}
