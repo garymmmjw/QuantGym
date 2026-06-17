@@ -564,11 +564,25 @@ function validateEvidenceContract(artifact, artifactPath, data) {
         && Number(data.passed || 0) === 10
         && Number(data.partial || 0) === 0
         && Number(data.failed || 0) === 0;
+      const productionBoundaries = findResult(data.results, "Production boundaries");
+      const productionOnlyHandoff = data.status === "partial"
+        && Number(data.passed || 0) >= 9
+        && Number(data.partial || 0) === 1
+        && Number(data.failed || 0) === 0
+        && productionBoundaries?.status === "partial"
+        && data.results?.every((result) => (
+          result.name === "Production boundaries"
+            ? result.status === "partial"
+            : result.status === "pass"
+        ));
       const interimRelease = data.status === "partial"
         && Number(data.passed || 0) >= 8
         && Number(data.partial || 0) === 2
         && Number(data.failed || 0) === 0;
-      expect(finalRelease || interimRelease, "local release-readiness must be either final pass or two-partial local handoff");
+      expect(
+        finalRelease || productionOnlyHandoff || interimRelease,
+        "local release-readiness must be final pass, production-token-only partial, or two-partial local handoff"
+      );
       const migrationCompletion = findResult(data.results, "Migration completion audit");
       if (migrationCompletion?.data?.requirements) {
         expect(
@@ -586,7 +600,7 @@ function validateEvidenceContract(artifact, artifactPath, data) {
         "UI contracts nested output must report evidence artifact count"
       );
       expect(summaryLinesContain(uiContracts?.data, "\"imageArtifacts\": 92"), "UI contracts nested output must report 92 image artifacts");
-      validateProductionBoundarySummary(findResult(data.results, "Production boundaries")?.data || {}, expect, "nested production boundary smoke");
+      validateProductionBoundarySummary(productionBoundaries?.data || {}, expect, "nested production boundary smoke");
       break;
     }
     case "324-google-token-helper-summary.json":

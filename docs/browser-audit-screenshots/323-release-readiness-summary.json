@@ -8,14 +8,14 @@
     {
       "name": "git diff --check",
       "status": "pass",
-      "durationMs": 62,
+      "durationMs": 27,
       "exitCode": 0,
       "data": []
     },
     {
       "name": "Stage 1",
       "status": "pass",
-      "durationMs": 300,
+      "durationMs": 213,
       "exitCode": 0,
       "data": [
         "⚠ Missing module entry: src/modules/companies/index.js (React-owned module; registrar optional)",
@@ -31,7 +31,7 @@
     {
       "name": "Stage 2 bridge",
       "status": "pass",
-      "durationMs": 207,
+      "durationMs": 140,
       "exitCode": 0,
       "data": [
         "> check:stage2",
@@ -45,7 +45,7 @@
     {
       "name": "Stage 2 full",
       "status": "pass",
-      "durationMs": 283,
+      "durationMs": 256,
       "exitCode": 0,
       "data": [
         "> check:stage2:full",
@@ -59,7 +59,7 @@
     {
       "name": "Stage 2 strict",
       "status": "pass",
-      "durationMs": 269,
+      "durationMs": 248,
       "exitCode": 0,
       "data": [
         "> check:stage2:strict",
@@ -73,7 +73,7 @@
     {
       "name": "Browser evidence",
       "status": "pass",
-      "durationMs": 238,
+      "durationMs": 179,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -101,7 +101,7 @@
     {
       "name": "Migration completion audit",
       "status": "pass",
-      "durationMs": 210,
+      "durationMs": 186,
       "exitCode": 0,
       "data": {
         "id": 327,
@@ -144,7 +144,7 @@
             "title": "Retired route bridge symbols are absent from src",
             "status": "pass",
             "evidence": {
-              "checkedFiles": 450,
+              "checkedFiles": 451,
               "hits": []
             }
           },
@@ -267,7 +267,7 @@
     {
       "name": "UI contracts",
       "status": "pass",
-      "durationMs": 181,
+      "durationMs": 153,
       "exitCode": 0,
       "data": [
         "> node scripts/check-ui-contracts.mjs",
@@ -283,23 +283,23 @@
     {
       "name": "Static build",
       "status": "pass",
-      "durationMs": 2681,
+      "durationMs": 2676,
       "exitCode": 0,
       "data": [
-        "dist/assets/ProblemsPage-uP12pxtG.js            27.79 kB │ gzip:   7.21 kB",
-        "dist/assets/index-Bhww-nxu.js                   35.72 kB │ gzip:   9.43 kB",
+        "dist/assets/ProblemsPage-CLWucLYr.js            29.18 kB │ gzip:   7.74 kB",
         "dist/assets/data-CyLJE_4E.js                    36.11 kB │ gzip:  11.70 kB",
+        "dist/assets/index-B--SP5m6.js                   37.22 kB │ gzip:   9.83 kB",
         "dist/assets/vendor-router-e5SST-Jf.js           41.24 kB │ gzip:  14.71 kB",
         "dist/assets/vendor-react-dom-B49trWfG.js       181.78 kB │ gzip:  57.19 kB",
-        "dist/assets/createAppServices-xI9xjQAX.js      734.38 kB │ gzip: 227.64 kB",
-        "✓ built in 712ms",
+        "dist/assets/createAppServices-DrRaAehm.js      742.41 kB │ gzip: 230.03 kB",
+        "✓ built in 666ms",
         "Built static site in dist"
       ]
     },
     {
       "name": "Production boundaries",
       "status": "pass",
-      "durationMs": 12712,
+      "durationMs": 14601,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -310,7 +310,7 @@
           {
             "name": "cloud health",
             "status": "pass",
-            "durationMs": 44,
+            "durationMs": 56,
             "data": {
               "ok": true
             }
@@ -318,7 +318,7 @@
           {
             "name": "google provider config",
             "status": "pass",
-            "durationMs": 9,
+            "durationMs": 6,
             "data": {
               "googleClientIdSet": true,
               "endpointRequiresToken": true
@@ -327,33 +327,33 @@
           {
             "name": "google provider login",
             "status": "pass",
-            "durationMs": 164,
+            "durationMs": 155,
             "data": {
               "provider": "local",
               "googleLinked": true,
               "email": "mi***@gmail.com",
               "hasToken": true,
               "tokenAudienceMatchesClientId": true,
-              "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
+              "tokenExpiresAt": "2026-06-17T07:43:57.000Z",
               "tokenEmail": "mi***@gmail.com"
             }
           },
           {
             "name": "LLM resume review",
             "status": "pass",
-            "durationMs": 2229,
+            "durationMs": 3427,
             "data": {
               "itemCount": 6,
-              "firstItem": "Quantify impact with metrics: specify time or cost savings, e.g., reduced runtime from X to Y by Z%;"
+              "firstItem": "Specify technical stack and libraries: include numpy/pandas, scipy, and Python backtesting framework used; e.g., \"Python"
             }
           },
           {
             "name": "LLM PDF question generation",
             "status": "pass",
-            "durationMs": 10069,
+            "durationMs": 10724,
             "data": {
               "questionCount": 1,
-              "firstTitle": "What is a production boundary in quantitative modeling and how do you validate numerical stability within it?"
+              "firstTitle": "Explain how to deploy a time-series model in a production environment with data drift considerations."
             }
           }
         ]
