@@ -835,7 +835,7 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(Number(data.routes?.checked || 0) === routeIds.length, `${label} must check all routes`);
   expect(Number(data.routes?.passed || 0) === routeIds.length, `${label} route pass count must match all routes`);
   expect(Number(data.routes?.failed || 0) === 0, `${label} must have zero route failures`);
-  expect(Number(data.interactions?.checked || 0) >= 55, `${label} must check key interactions`);
+  expect(Number(data.interactions?.checked || 0) >= 57, `${label} must check key interactions`);
   expect(Number(data.interactions?.failed || 0) === 0, `${label} must have zero interaction failures`);
   const planInteraction = findResult(data.interactions?.results, "plan create, edit, task persistence, and navigation");
   expect(planInteraction?.status === "pass", `${label} must verify Plan create, edit, task persistence, and navigation`);
@@ -891,6 +891,14 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(shellGlobalControls?.chatShortcut === true, `${label} must verify shell chat shortcut navigation`);
   expect(shellGlobalControls?.accountShortcut === true, `${label} must verify shell account shortcut navigation`);
   expect(shellGlobalControls?.settingsShortcut === true, `${label} must verify shell settings shortcut navigation`);
+  const hashCompatDeepLink = findResult(data.interactions?.results, "hash compat deep links redirect without losing query state");
+  expect(hashCompatDeepLink?.status === "pass", `${label} must verify hash-compatible deep links redirect`);
+  expect(hashCompatDeepLink?.jobsPathname === "/jobs", `${label} must verify #jobs reaches the Jobs route`);
+  expect(hashCompatDeepLink?.overviewAliasPathname === "/", `${label} must verify #dashboard alias reaches Overview`);
+  expect(hashCompatDeepLink?.queryPreserved === true, `${label} must preserve query state during hash redirects`);
+  expect(hashCompatDeepLink?.hashCleared === true, `${label} must clear legacy hashes after redirect`);
+  expect(hashCompatDeepLink?.jobsRendered === true, `${label} must render Jobs after hash redirect`);
+  expect(hashCompatDeepLink?.overviewRendered === true, `${label} must render Overview after hash alias redirect`);
   const mobileShellControls = findResult(data.interactions?.results, "mobile shell sidebar, search, and settings controls avoid overflow");
   expect(mobileShellControls?.status === "pass", `${label} must verify mobile shell controls avoid overflow`);
   expect(mobileShellControls?.mobileViewport === true, `${label} must verify mobile shell viewport`);
@@ -1691,6 +1699,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.browserOverviewLeaderboardPass === true, `${label} must verify the Overview leaderboard browser journey remains pass`);
   expect(data.checks?.browserStreakCheckInCalendarPass === true, `${label} must verify the streak check-in calendar browser journey remains pass`);
   expect(data.checks?.browserShellGlobalControlsPass === true, `${label} must verify the shell global controls browser journey remains pass`);
+  expect(data.checks?.browserHashCompatDeepLinkPass === true, `${label} must verify the hash-compatible deep-link browser journey remains pass`);
   expect(data.checks?.browserSettingsRuntimeConfigPass === true, `${label} must verify the Settings runtime config browser journey remains pass`);
   expect(data.checks?.browserSettingsGoogleClientClearPass === true, `${label} must verify the Settings Google Client ID clear browser journey remains pass`);
   expect(data.checks?.browserSettingsBackupPass === true, `${label} must verify the Settings backup browser journey remains pass`);
@@ -1760,7 +1769,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include question-bank evidence URL query rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
-  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 56, `${label} must reference the 56-interaction browser route smoke`);
+  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 57, `${label} must reference the 57-interaction browser route smoke`);
   expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
   expect(Number(browser?.localCoverage?.deployedBetaRoutesChecked || 0) >= 8, `${label} must include the eight-route deployed beta smoke`);
   expect(browser?.localCoverage?.deployedBetaRoutesPass === true, `${label} must include deployed beta route sweep coverage`);
@@ -1792,6 +1801,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.overviewLeaderboardPass === true, `${label} must include Overview leaderboard browser coverage`);
   expect(browser?.localCoverage?.streakCheckInCalendarPass === true, `${label} must include streak check-in calendar browser coverage`);
   expect(browser?.localCoverage?.shellGlobalControlsPass === true, `${label} must include shell global controls browser coverage`);
+  expect(browser?.localCoverage?.hashCompatDeepLinkPass === true, `${label} must include hash-compatible deep-link browser coverage`);
   expect(browser?.localCoverage?.mobileShellControlsPass === true, `${label} must include mobile shell controls browser coverage`);
   expect(browser?.localCoverage?.mobileModuleNavPass === true, `${label} must include mobile module nav browser coverage`);
   expect(browser?.localCoverage?.settingsRuntimeConfigPass === true, `${label} must include Settings runtime config browser coverage`);
