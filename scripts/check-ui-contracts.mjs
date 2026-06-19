@@ -1663,6 +1663,10 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
     `${label} must verify release-readiness includes the external blocker gate`
   );
   expect(data.checks?.requireClearWouldFail === true, `${label} must prove --require-clear would fail while blockers remain`);
+  expect(data.checks?.browserDeployedBetaSmokePass === true, `${label} must verify the deployed beta smoke remains pass`);
+  expect(data.checks?.browserDeployedBetaLoginPass === true, `${label} must verify the deployed beta smoke login remains pass`);
+  expect(data.checks?.browserDeployedBetaRouteSweepPass === true, `${label} must verify the deployed beta smoke route sweep remains pass`);
+  expect(data.checks?.browserDeployedBetaErrorSweepPass === true, `${label} must verify the deployed beta smoke error sweep remains pass`);
   expect(data.checks?.browserAuthPasswordResetPass === true, `${label} must verify the Auth password reset browser journey remains pass`);
   expect(data.checks?.browserCrossModuleJourneyPass === true, `${label} must verify the cross-module browser journey remains pass`);
   expect(data.checks?.browserPlanBaselineDiagnosticPass === true, `${label} must verify the Plan baseline diagnostic browser journey remains pass`);
@@ -1757,6 +1761,13 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
   expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 56, `${label} must reference the 56-interaction browser route smoke`);
+  expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
+  expect(Number(browser?.localCoverage?.deployedBetaRoutesChecked || 0) >= 8, `${label} must include the eight-route deployed beta smoke`);
+  expect(browser?.localCoverage?.deployedBetaRoutesPass === true, `${label} must include deployed beta route sweep coverage`);
+  expect(browser?.localCoverage?.deployedBetaLoginPass === true, `${label} must include deployed beta login coverage`);
+  expect(browser?.localCoverage?.deployedBetaProductionEndpointPass === true, `${label} must include deployed beta production endpoint coverage`);
+  expect(browser?.localCoverage?.deployedBetaErrorSweepPass === true, `${label} must include deployed beta error sweep coverage`);
+  expect(browser?.localCoverage?.deployedBetaSummaryRedactedPass === true, `${label} must include deployed beta summary redaction coverage`);
   expect(browser?.localCoverage?.authPasswordResetPass === true, `${label} must include Auth password reset browser coverage`);
   expect(browser?.localCoverage?.planBaselineDiagnosticPass === true, `${label} must include Plan baseline diagnostic browser coverage`);
   expect(browser?.localCoverage?.todoDockLifecyclePass === true, `${label} must include Todo dock lifecycle browser coverage`);

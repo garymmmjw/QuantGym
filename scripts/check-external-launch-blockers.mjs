@@ -38,6 +38,7 @@ const evidence = {
   rightsBlockers: readJson("docs/browser-audit-screenshots/340-question-bank-rights-release-blockers-summary.json", "question-bank rights release blockers"),
   rightsPacket: readJson("docs/browser-audit-screenshots/345-question-bank-rights-packet-summary.json", "question-bank rights approval packet"),
   browserRouteSmoke: readJson("docs/browser-audit-screenshots/328-browser-route-smoke-summary.json", "browser route smoke"),
+  deployedBetaSmoke: readJson("docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json", "deployed beta smoke"),
   releaseReadiness: skipReleaseSummaryContent
     ? { results: [] }
     : readJson("docs/browser-audit-screenshots/323-release-readiness-summary.json", "release readiness")
@@ -58,7 +59,8 @@ const requiredScripts = [
   "check:question-bank-rights:public",
   "check:question-bank-rights:commercial",
   "build:question-bank-rights-packet",
-  "check:browser-route-smoke"
+  "check:browser-route-smoke",
+  "check:deployed-beta-smoke"
 ];
 
 for (const name of requiredScripts) {
@@ -242,6 +244,22 @@ const blockers = [
       browserRouteSmokePass: evidence.browserRouteSmoke.status === "pass",
       routesChecked: evidence.browserRouteSmoke.routes?.checked || 0,
       interactionsChecked: evidence.browserRouteSmoke.interactions?.checked || 0,
+      deployedBetaSmokePass: evidence.deployedBetaSmoke.status === "pass",
+      deployedBetaRoutesChecked: evidence.deployedBetaSmoke.routeSummary?.checked || 0,
+      deployedBetaRoutesPass: Number(evidence.deployedBetaSmoke.routeSummary?.checked || 0) === 8
+        && Number(evidence.deployedBetaSmoke.routeSummary?.passed || 0) === 8
+        && Number(evidence.deployedBetaSmoke.routeSummary?.failed || 0) === 0,
+      deployedBetaLoginPass: evidence.deployedBetaSmoke.checks?.loginPass === true
+        && evidence.deployedBetaSmoke.checks?.loginEmailMatched === true
+        && evidence.deployedBetaSmoke.checks?.cloudTokenPresent === true,
+      deployedBetaProductionEndpointPass: evidence.deployedBetaSmoke.checks?.cloudEndpointIsProduction === true
+        && evidence.deployedBetaSmoke.checks?.llmEndpointIsProduction === true
+        && evidence.deployedBetaSmoke.checks?.googleLoginEnabled === true,
+      deployedBetaErrorSweepPass: evidence.deployedBetaSmoke.checks?.noMaterialConsoleErrors === true
+        && evidence.deployedBetaSmoke.checks?.noPageErrors === true
+        && evidence.deployedBetaSmoke.checks?.noRequestFailures === true
+        && evidence.deployedBetaSmoke.checks?.noHttpErrors === true,
+      deployedBetaSummaryRedactedPass: evidence.deployedBetaSmoke.checks?.summaryRedacted === true,
       authPasswordResetPass: evidence.browserRouteSmoke.unauthenticated?.localEmailAuth?.resetNewPasswordLoginSucceeded === true,
       crossModuleJourneyPass: findResult(
         evidence.browserRouteSmoke.interactions?.results,
@@ -579,6 +597,10 @@ const summary = {
     releaseReadinessIncludesExternalBlockerGate: skipReleaseSummaryContent ? "skipped" : true,
     skippedReleaseSummaryContent: skipReleaseSummaryContent,
     requireClearWouldFail: blocking.length > 0,
+    browserDeployedBetaSmokePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaSmokePass === true,
+    browserDeployedBetaLoginPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaLoginPass === true,
+    browserDeployedBetaRouteSweepPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaRoutesPass === true,
+    browserDeployedBetaErrorSweepPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaErrorSweepPass === true,
     browserAuthPasswordResetPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.authPasswordResetPass === true,
     browserCrossModuleJourneyPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.crossModuleJourneyPass === true,
     browserPlanBaselineDiagnosticPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.planBaselineDiagnosticPass === true,
