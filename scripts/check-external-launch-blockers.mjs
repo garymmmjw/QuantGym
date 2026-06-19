@@ -248,8 +248,8 @@ const blockers = [
       interactionsChecked: evidence.browserRouteSmoke.interactions?.checked || 0,
       deployedBetaSmokePass: evidence.deployedBetaSmoke.status === "pass",
       deployedBetaRoutesChecked: evidence.deployedBetaSmoke.routeSummary?.checked || 0,
-      deployedBetaRoutesPass: Number(evidence.deployedBetaSmoke.routeSummary?.checked || 0) === 8
-        && Number(evidence.deployedBetaSmoke.routeSummary?.passed || 0) === 8
+      deployedBetaRoutesPass: Number(evidence.deployedBetaSmoke.routeSummary?.checked || 0) === 21
+        && Number(evidence.deployedBetaSmoke.routeSummary?.passed || 0) === 21
         && Number(evidence.deployedBetaSmoke.routeSummary?.failed || 0) === 0,
       deployedBetaLoginPass: evidence.deployedBetaSmoke.checks?.loginPass === true
         && evidence.deployedBetaSmoke.checks?.loginEmailMatched === true

@@ -24,9 +24,15 @@ const routeChecks = [
     minText: 60
   },
   {
-    name: "problems",
-    path: "/problems",
-    selectors: ["#problemSearch", "#problemList"],
+    name: "plan",
+    path: "/plan",
+    selectors: ["#prepPlanSetupForm"],
+    minText: 120
+  },
+  {
+    name: "skills",
+    path: "/skills",
+    selectors: ["#skillsPageTitle", "#skillRadar"],
     minText: 300
   },
   {
@@ -34,6 +40,54 @@ const routeChecks = [
     path: "/interview",
     selectors: ["#interviewSetup", "#startInterviewBtn"],
     minText: 120
+  },
+  {
+    name: "problems",
+    path: "/problems",
+    selectors: ["#problemSearch", "#problemList"],
+    minText: 300
+  },
+  {
+    name: "tools",
+    path: "/tools",
+    selectors: ["#startDrillSessionBtn", "#drillQuestion"],
+    minText: 300
+  },
+  {
+    name: "poker",
+    path: "/poker",
+    selectors: ["#pokerLobbySummary", "#pokerTable"],
+    minText: 300
+  },
+  {
+    name: "experiences",
+    path: "/experiences",
+    selectors: ["#newExperienceBtn", "#experienceForm"],
+    minText: 250
+  },
+  {
+    name: "news",
+    path: "/news",
+    selectors: ["#newsTopicFilter", "#newsList"],
+    minText: 300
+  },
+  {
+    name: "community",
+    path: "/community",
+    selectors: ["#communityForm", "#communityText"],
+    minText: 60
+  },
+  {
+    name: "messages",
+    path: "/messages",
+    selectors: ["#messageThreadList"],
+    minText: 60
+  },
+  {
+    name: "network",
+    path: "/network",
+    selectors: ["#addNetworkBtn"],
+    minText: 60
   },
   {
     name: "resume",
@@ -48,10 +102,28 @@ const routeChecks = [
     minText: 300
   },
   {
+    name: "companies",
+    path: "/companies",
+    selectors: ["#companiesPageTitle", "#companyTierFilter"],
+    minText: 300
+  },
+  {
     name: "library",
     path: "/library",
     selectors: ["#librarySearch", "#libraryBookGrid"],
     minText: 300
+  },
+  {
+    name: "courses",
+    path: "/courses",
+    selectors: ["#learningPathTitle", "#courseList"],
+    minText: 300
+  },
+  {
+    name: "memory",
+    path: "/memory",
+    selectors: ["#addResourceBtn"],
+    minText: 60
   },
   {
     name: "settings",
@@ -64,6 +136,12 @@ const routeChecks = [
     path: "/account",
     selectors: ["#accountForm", "#accountNameInput"],
     minText: 150
+  },
+  {
+    name: "pk",
+    path: "/pk",
+    selectors: ["#startPkBtn", "#pkProblem"],
+    minText: 80
   }
 ];
 
@@ -140,6 +218,24 @@ function attachCollectors(page) {
     const failure = request.failure()?.errorText || "";
     if (/\/cdn-cgi\/rum/i.test(url)) {
       summary.errors.ignored.push({ type: "requestfailed", url: sanitizeUrl(url), failure });
+      return;
+    }
+    if (/\/api\/sync($|\?)/i.test(url) && failure === "net::ERR_ABORTED") {
+      summary.errors.ignored.push({
+        type: "requestfailed",
+        url: sanitizeUrl(url),
+        failure,
+        reason: "navigation-aborted background sync"
+      });
+      return;
+    }
+    if (failure === "net::ERR_ABORTED" && isNavigationAbortedStaticAsset(url)) {
+      summary.errors.ignored.push({
+        type: "requestfailed",
+        url: sanitizeUrl(url),
+        failure,
+        reason: "navigation-aborted static asset"
+      });
       return;
     }
     summary.errors.requestFailures.push({ url: sanitizeUrl(url), failure });
@@ -338,7 +434,20 @@ function isOwnUrl(value) {
 }
 
 function isIgnoredConsole(text) {
+  if (/Framing 'https:\/\/accounts\.google\.com\/' violates the following report-only Content Security Policy directive/i.test(text)) {
+    return true;
+  }
   return /compute-pressure|Permissions-Policy|Failed to load resource: the server responded with a status of 403/i.test(text);
+}
+
+function isNavigationAbortedStaticAsset(value) {
+  try {
+    const url = new URL(value);
+    const expected = new URL(baseUrl);
+    return url.origin === expected.origin && /^\/assets\/.+\.(png|jpe?g|webp|svg|gif|avif|woff2?)$/i.test(url.pathname);
+  } catch {
+    return false;
+  }
 }
 
 function isSummaryRedacted(data) {

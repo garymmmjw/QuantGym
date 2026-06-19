@@ -180,7 +180,7 @@
         "routesChecked": 21,
         "interactionsChecked": 61,
         "deployedBetaSmokePass": true,
-        "deployedBetaRoutesChecked": 8,
+        "deployedBetaRoutesChecked": 21,
         "deployedBetaRoutesPass": true,
         "deployedBetaLoginPass": true,
         "deployedBetaProductionEndpointPass": true,
