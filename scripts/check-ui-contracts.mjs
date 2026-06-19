@@ -332,6 +332,7 @@ const evidenceArtifacts = [
   "331-postgres-cutover-export-smoke-summary.json",
   "332-browser-extension-runtime-smoke-summary.json",
   "333-production-boundaries-deployed-services-summary.json",
+  "351-deployed-beta-smoke-summary.json",
   "334-ops-alert-runtime-smoke-summary.json",
   "335-question-bank-rights-public-smoke-summary.json",
   "336-ops-alert-production-fixture-summary.json",
@@ -796,6 +797,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       break;
     case "333-production-boundaries-deployed-services-summary.json":
       validateDeployedProductionBoundarySummary(data, expect, "deployed production service boundary smoke");
+      break;
+    case "351-deployed-beta-smoke-summary.json":
+      validateDeployedBetaSmokeSummary(data, expect, "deployed beta smoke");
       break;
     case "334-ops-alert-runtime-smoke-summary.json":
       validateOpsAlertRuntimeSmokeSummary(data, expect, "ops alert runtime smoke");
@@ -1537,6 +1541,51 @@ function validateDeployedProductionBoundarySummary(data, expect, label) {
   }
   expect(resumeReview?.status === "pass" && Number(resumeReview?.data?.itemCount || 0) > 0, `${label} must pass deployed LLM resume review`);
   expect(pdfGeneration?.status === "pass" && Number(pdfGeneration?.data?.questionCount || 0) > 0, `${label} must pass deployed LLM PDF question generation`);
+}
+
+function validateDeployedBetaSmokeSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.baseUrl === "https://beta.quantgym.app", `${label} must target beta.quantgym.app`);
+  expect(/^\S{2}\*\*\*@[^@\s]+$/.test(String(data.email || "")), `${label} must redact the beta account email`);
+  const raw = JSON.stringify(data);
+  expect(!/"password"\s*:/i.test(raw), `${label} must not include password fields`);
+  expect(!/[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/.test(raw), `${label} must not include raw JWT/session tokens`);
+
+  expect(data.login?.status === "pass", `${label} login must pass`);
+  expect(data.login?.emailMatched === true, `${label} login must match the requested account`);
+  expect(data.login?.hasCloudToken === true, `${label} login must establish a cloud token`);
+  expect(data.login?.cloudUserIdSet === true, `${label} login must establish a cloud user id`);
+  expect(data.login?.cloudEndpoint === "https://api.quantgym.app/api", `${label} login must use production API endpoint`);
+  expect(["local", "google"].includes(String(data.login?.provider || "")), `${label} login provider must be local or google`);
+
+  expect(data.config?.cloudApiEndpoint === "https://api.quantgym.app/api", `${label} runtime config must use production API endpoint`);
+  expect(data.config?.llmEndpoint === "https://llm.quantgym.app/interview", `${label} runtime config must use production LLM endpoint`);
+  expect(data.config?.googleLoginEnabled === true, `${label} runtime config must enable Google login`);
+  expect(data.config?.googleClientIdSet === true, `${label} runtime config must include Google client id`);
+
+  expect(Number(data.routeSummary?.checked || 0) === 8, `${label} must check eight deployed routes`);
+  expect(Number(data.routeSummary?.passed || 0) === 8, `${label} must pass all deployed routes`);
+  expect(Number(data.routeSummary?.failed || 0) === 0, `${label} must have zero route failures`);
+  const expectedRoutes = new Set(["overview", "problems", "interview", "resume", "jobs", "library", "settings", "account"]);
+  for (const route of data.routes || []) {
+    expect(expectedRoutes.has(route.name), `${label} contains unexpected route ${route.name}`);
+    expect(route.status === "pass", `${label} route ${route.name} must pass`);
+    expect(route.health?.appShellVisible === true, `${label} route ${route.name} must show app shell`);
+    expect(route.health?.authShellVisible === false, `${label} route ${route.name} must not show auth shell`);
+    expect(Number(route.health?.bodyTextLength || 0) > 0, `${label} route ${route.name} must render text`);
+    expect(Number(route.health?.horizontalOverflowPx || 0) <= 2, `${label} route ${route.name} must avoid horizontal overflow`);
+    expect(Object.values(route.selectors || {}).every((value) => value === true), `${label} route ${route.name} selectors must be visible`);
+  }
+  expect((data.routes || []).length === expectedRoutes.size, `${label} route result count must match expected routes`);
+
+  expect(Array.isArray(data.errors?.consoleErrors) && data.errors.consoleErrors.length === 0, `${label} must have no material console errors`);
+  expect(Array.isArray(data.errors?.pageErrors) && data.errors.pageErrors.length === 0, `${label} must have no page errors`);
+  expect(Array.isArray(data.errors?.requestFailures) && data.errors.requestFailures.length === 0, `${label} must have no material request failures`);
+  expect(Array.isArray(data.errors?.httpErrors) && data.errors.httpErrors.length === 0, `${label} must have no material HTTP errors`);
+  expect(data.checks?.loginPass === true, `${label} loginPass check must pass`);
+  expect(data.checks?.summaryRedacted === true, `${label} summaryRedacted check must pass`);
+  expect(data.checks?.routeCountPass === true, `${label} routeCountPass check must pass`);
+  expect(data.checks?.noHttpErrors === true, `${label} noHttpErrors check must pass`);
 }
 
 function expectCountForProductionBoundary(data, expect, field, expected, label) {

@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 4418,
+  "durationMs": 4389,
   "externalPublicationRequired": true,
   "finalSignoffCommand": "npm run check:chrome-store-publication:published",
   "submissionHandoff": {
@@ -13,7 +13,7 @@
     "name": "QuantGym Collector",
     "version": "0.2.0",
     "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.2.0.zip",
-    "uploadSha256": "55f09a90f64ef9ebe363dde202b2c6032495ee60975ac31d50bd052941111212",
+    "uploadSha256": "9d1865c1652f4c907ee30405d4d6d198a809e1d4ddf19d27eef9590fd82ff20c",
     "uploadBytes": 38073,
     "uploadFileCount": 9,
     "listingCategory": "Productivity",
@@ -34,7 +34,7 @@
     "name": "QuantGym Collector",
     "version": "0.2.0",
     "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.2.0.zip",
-    "uploadSha256": "55f09a90f64ef9ebe363dde202b2c6032495ee60975ac31d50bd052941111212",
+    "uploadSha256": "9d1865c1652f4c907ee30405d4d6d198a809e1d4ddf19d27eef9590fd82ff20c",
     "uploadBytes": 38073,
     "uploadFileCount": 9,
     "listingCategory": "Productivity",

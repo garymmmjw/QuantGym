@@ -17,6 +17,7 @@
     "check:route-interactions": "node scripts/check-route-interactions.mjs",
     "check:module-ownership": "node scripts/check-module-ownership.mjs",
     "check:browser-route-smoke": "node scripts/check-browser-route-smoke.mjs",
+    "check:deployed-beta-smoke": "node scripts/check-deployed-beta-smoke.mjs",
     "check:browser-extension": "node scripts/check-browser-extension.mjs",
     "check:browser-extension:runtime-smoke": "node scripts/check-browser-extension-runtime-smoke.mjs",
     "check:chrome-store-readiness": "node scripts/check-chrome-store-readiness.mjs",

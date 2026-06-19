@@ -273,6 +273,23 @@ structure, issuer, expiration, and audience against the configured Google Client
 ID before it calls the provider login endpoint; when that login succeeds, the
 returned QuantGym cloud session is reused for deployed LLM checks.
 
+After a `main` deployment finishes, run a real browser smoke against the beta
+site with an existing beta account:
+
+```bash
+read -rsp "QuantGym password: " QUANTGYM_BETA_SMOKE_PASSWORD; echo
+printf '%s\n' "$QUANTGYM_BETA_SMOKE_PASSWORD" \
+  | QUANTGYM_BETA_SMOKE_EMAIL="you@example.com" npm run check:deployed-beta-smoke -- --password-stdin
+unset QUANTGYM_BETA_SMOKE_PASSWORD
+```
+
+The deployed beta smoke opens `https://beta.quantgym.app`, signs in through the
+production API, verifies production API/LLM runtime config, checks Overview,
+Problems, Interview, Resume, Jobs, Library, Settings, and Account in Chrome, and
+writes the redacted evidence summary to
+`docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json`. The
+summary must not contain raw passwords, session tokens, or full account data.
+
 ## Beta Deployment Configuration
 
 Keep real secrets in Render, Cloudflare, or Resend. Do not commit `.env`, real API keys, GitHub tokens, Resend keys, or the real beta email list.

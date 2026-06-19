@@ -1,0 +1,245 @@
+{
+  "status": "pass",
+  "surface": "deployed beta smoke",
+  "baseUrl": "https://beta.quantgym.app",
+  "email": "mi***@gmail.com",
+  "login": {
+    "status": "pass",
+    "emailMatched": true,
+    "provider": "local",
+    "cloudEndpoint": "https://api.quantgym.app/api",
+    "hasCloudToken": true,
+    "cloudUserIdSet": true,
+    "pathAfterLogin": "/"
+  },
+  "config": {
+    "cloudApiEndpoint": "https://api.quantgym.app/api",
+    "llmEndpoint": "https://llm.quantgym.app/interview",
+    "googleLoginEnabled": true,
+    "googleClientIdSet": true
+  },
+  "routes": [
+    {
+      "name": "overview",
+      "path": "/",
+      "status": "pass",
+      "selectors": {
+        "#heroTypewriter": true,
+        "#overviewProblemProgress": true,
+        "#leaderboardMetricSelect": true
+      },
+      "health": {
+        "pathname": "/",
+        "bodyTextLength": 2013,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "problems",
+      "path": "/problems",
+      "status": "pass",
+      "selectors": {
+        "#problemSearch": true,
+        "#problemList": true
+      },
+      "health": {
+        "pathname": "/problems",
+        "bodyTextLength": 2946,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "interview",
+      "path": "/interview",
+      "status": "pass",
+      "selectors": {
+        "#interviewSetup": true,
+        "#startInterviewBtn": true
+      },
+      "health": {
+        "pathname": "/interview",
+        "bodyTextLength": 327,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "resume",
+      "path": "/resume",
+      "status": "pass",
+      "selectors": {
+        "#resumeForm": true,
+        "#resumeText": true
+      },
+      "health": {
+        "pathname": "/resume",
+        "bodyTextLength": 172,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "jobs",
+      "path": "/jobs",
+      "status": "pass",
+      "selectors": {
+        "#jobsSummary": true,
+        "#jobsList": true
+      },
+      "health": {
+        "pathname": "/jobs",
+        "bodyTextLength": 4174,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "library",
+      "path": "/library",
+      "status": "pass",
+      "selectors": {
+        "#librarySearch": true,
+        "#libraryBookGrid": true
+      },
+      "health": {
+        "pathname": "/library",
+        "bodyTextLength": 2437,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "settings",
+      "path": "/settings",
+      "status": "pass",
+      "selectors": {
+        "#settingsForm": true,
+        "#settingsLanguageSelect": true
+      },
+      "health": {
+        "pathname": "/settings",
+        "bodyTextLength": 437,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "account",
+      "path": "/account",
+      "status": "pass",
+      "selectors": {
+        "#accountForm": true,
+        "#accountNameInput": true
+      },
+      "health": {
+        "pathname": "/account",
+        "bodyTextLength": 328,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    }
+  ],
+  "routeSummary": {
+    "checked": 8,
+    "passed": 8,
+    "failed": 0
+  },
+  "errors": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "requestFailures": [],
+    "httpErrors": [],
+    "ignored": [
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "http",
+        "status": 403,
+        "url": "https://api.quantgym.app/api/admin/metrics",
+        "reason": "non-admin account admin endpoint guard"
+      },
+      {
+        "type": "console",
+        "text": "Failed to load resource: the server responded with a status of 403 ()"
+      },
+      {
+        "type": "http",
+        "status": 403,
+        "url": "https://api.quantgym.app/api/admin/audit-events",
+        "reason": "non-admin account admin endpoint guard"
+      },
+      {
+        "type": "console",
+        "text": "Failed to load resource: the server responded with a status of 403 ()"
+      }
+    ]
+  },
+  "checks": {
+    "loginPass": true,
+    "loginEmailMatched": true,
+    "cloudTokenPresent": true,
+    "cloudEndpointIsProduction": true,
+    "llmEndpointIsProduction": true,
+    "googleLoginEnabled": true,
+    "routeCountPass": true,
+    "noMaterialConsoleErrors": true,
+    "noPageErrors": true,
+    "noRequestFailures": true,
+    "noHttpErrors": true,
+    "summaryRedacted": true
+  },
+  "durationMs": 27806
+}
