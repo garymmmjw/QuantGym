@@ -1612,10 +1612,10 @@ function validateDeployedBetaSmokeSummary(data, expect, label) {
   expect(data.config?.googleLoginEnabled === true, `${label} runtime config must enable Google login`);
   expect(data.config?.googleClientIdSet === true, `${label} runtime config must include Google client id`);
 
-  expect(Number(data.routeSummary?.checked || 0) === 8, `${label} must check eight deployed routes`);
-  expect(Number(data.routeSummary?.passed || 0) === 8, `${label} must pass all deployed routes`);
+  expect(Number(data.routeSummary?.checked || 0) === routeIds.length, `${label} must check all deployed routes`);
+  expect(Number(data.routeSummary?.passed || 0) === routeIds.length, `${label} must pass all deployed routes`);
   expect(Number(data.routeSummary?.failed || 0) === 0, `${label} must have zero route failures`);
-  const expectedRoutes = new Set(["overview", "problems", "interview", "resume", "jobs", "library", "settings", "account"]);
+  const expectedRoutes = new Set(routeIds);
   for (const route of data.routes || []) {
     expect(expectedRoutes.has(route.name), `${label} contains unexpected route ${route.name}`);
     expect(route.status === "pass", `${label} route ${route.name} must pass`);
@@ -1885,7 +1885,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
   expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 61, `${label} must reference the 61-interaction browser route smoke`);
   expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
-  expect(Number(browser?.localCoverage?.deployedBetaRoutesChecked || 0) >= 8, `${label} must include the eight-route deployed beta smoke`);
+  expect(Number(browser?.localCoverage?.deployedBetaRoutesChecked || 0) >= routeIds.length, `${label} must include the all-route deployed beta smoke`);
   expect(browser?.localCoverage?.deployedBetaRoutesPass === true, `${label} must include deployed beta route sweep coverage`);
   expect(browser?.localCoverage?.deployedBetaLoginPass === true, `${label} must include deployed beta login coverage`);
   expect(browser?.localCoverage?.deployedBetaProductionEndpointPass === true, `${label} must include deployed beta production endpoint coverage`);

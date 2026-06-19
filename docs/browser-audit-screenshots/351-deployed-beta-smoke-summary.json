@@ -30,7 +30,54 @@
       },
       "health": {
         "pathname": "/",
-        "bodyTextLength": 2013,
+        "bodyTextLength": 2005,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "plan",
+      "path": "/plan",
+      "status": "pass",
+      "selectors": {
+        "#prepPlanSetupForm": true
+      },
+      "health": {
+        "pathname": "/plan",
+        "bodyTextLength": 532,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "skills",
+      "path": "/skills",
+      "status": "pass",
+      "selectors": {
+        "#skillsPageTitle": true,
+        "#skillRadar": true
+      },
+      "health": {
+        "pathname": "/skills",
+        "bodyTextLength": 1657,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "interview",
+      "path": "/interview",
+      "status": "pass",
+      "selectors": {
+        "#interviewSetup": true,
+        "#startInterviewBtn": true
+      },
+      "health": {
+        "pathname": "/interview",
+        "bodyTextLength": 327,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -53,16 +100,110 @@
       }
     },
     {
-      "name": "interview",
-      "path": "/interview",
+      "name": "tools",
+      "path": "/tools",
       "status": "pass",
       "selectors": {
-        "#interviewSetup": true,
-        "#startInterviewBtn": true
+        "#startDrillSessionBtn": true,
+        "#drillQuestion": true
       },
       "health": {
-        "pathname": "/interview",
-        "bodyTextLength": 327,
+        "pathname": "/tools",
+        "bodyTextLength": 736,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "poker",
+      "path": "/poker",
+      "status": "pass",
+      "selectors": {
+        "#pokerLobbySummary": true,
+        "#pokerTable": true
+      },
+      "health": {
+        "pathname": "/poker",
+        "bodyTextLength": 2449,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "experiences",
+      "path": "/experiences",
+      "status": "pass",
+      "selectors": {
+        "#newExperienceBtn": true,
+        "#experienceForm": true
+      },
+      "health": {
+        "pathname": "/experiences",
+        "bodyTextLength": 622,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "news",
+      "path": "/news",
+      "status": "pass",
+      "selectors": {
+        "#newsTopicFilter": true,
+        "#newsList": true
+      },
+      "health": {
+        "pathname": "/news",
+        "bodyTextLength": 10368,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "community",
+      "path": "/community",
+      "status": "pass",
+      "selectors": {
+        "#communityForm": true,
+        "#communityText": true
+      },
+      "health": {
+        "pathname": "/community",
+        "bodyTextLength": 118,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "messages",
+      "path": "/messages",
+      "status": "pass",
+      "selectors": {
+        "#messageThreadList": true
+      },
+      "health": {
+        "pathname": "/messages",
+        "bodyTextLength": 160,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "network",
+      "path": "/network",
+      "status": "pass",
+      "selectors": {
+        "#addNetworkBtn": true
+      },
+      "health": {
+        "pathname": "/network",
+        "bodyTextLength": 113,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -101,6 +242,22 @@
       }
     },
     {
+      "name": "companies",
+      "path": "/companies",
+      "status": "pass",
+      "selectors": {
+        "#companiesPageTitle": true,
+        "#companyTierFilter": true
+      },
+      "health": {
+        "pathname": "/companies",
+        "bodyTextLength": 2423,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
       "name": "library",
       "path": "/library",
       "status": "pass",
@@ -111,6 +268,37 @@
       "health": {
         "pathname": "/library",
         "bodyTextLength": 2437,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "courses",
+      "path": "/courses",
+      "status": "pass",
+      "selectors": {
+        "#learningPathTitle": true,
+        "#courseList": true
+      },
+      "health": {
+        "pathname": "/courses",
+        "bodyTextLength": 1423,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "name": "memory",
+      "path": "/memory",
+      "status": "pass",
+      "selectors": {
+        "#addResourceBtn": true
+      },
+      "health": {
+        "pathname": "/memory",
+        "bodyTextLength": 86,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -147,11 +335,27 @@
         "authShellVisible": false,
         "horizontalOverflowPx": 0
       }
+    },
+    {
+      "name": "pk",
+      "path": "/pk",
+      "status": "pass",
+      "selectors": {
+        "#startPkBtn": true,
+        "#pkProblem": true
+      },
+      "health": {
+        "pathname": "/pk",
+        "bodyTextLength": 110,
+        "appShellVisible": true,
+        "authShellVisible": false,
+        "horizontalOverflowPx": 0
+      }
     }
   ],
   "routeSummary": {
-    "checked": 8,
-    "passed": 8,
+    "checked": 21,
+    "passed": 21,
     "failed": 0
   },
   "errors": {
@@ -160,6 +364,66 @@
     "requestFailures": [],
     "httpErrors": [],
     "ignored": [
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
       {
         "type": "requestfailed",
         "url": "https://beta.quantgym.app/cdn-cgi/rum",
@@ -224,6 +488,11 @@
       {
         "type": "console",
         "text": "Failed to load resource: the server responded with a status of 403 ()"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
       }
     ]
   },
@@ -241,5 +510,5 @@
     "noHttpErrors": true,
     "summaryRedacted": true
   },
-  "durationMs": 27806
+  "durationMs": 57099
 }
