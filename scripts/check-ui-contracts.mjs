@@ -1707,7 +1707,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include question-bank evidence URL query rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
-  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 55, `${label} must reference the 55-interaction browser route smoke`);
+  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 56, `${label} must reference the 56-interaction browser route smoke`);
   expect(browser?.localCoverage?.authPasswordResetPass === true, `${label} must include Auth password reset browser coverage`);
   expect(browser?.localCoverage?.planBaselineDiagnosticPass === true, `${label} must include Plan baseline diagnostic browser coverage`);
   expect(browser?.localCoverage?.todoDockLifecyclePass === true, `${label} must include Todo dock lifecycle browser coverage`);
@@ -1737,6 +1737,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.settingsRuntimeConfigPass === true, `${label} must include Settings runtime config browser coverage`);
   expect(browser?.localCoverage?.settingsGoogleClientClearPass === true, `${label} must include Settings Google Client ID clear browser coverage`);
   expect(browser?.localCoverage?.settingsBackupPass === true, `${label} must include Settings backup browser coverage`);
+  expect(browser?.localCoverage?.settingsInvalidBackupGuardPass === true, `${label} must include Settings invalid-backup guard browser coverage`);
   expect(browser?.localCoverage?.mobileSettingsControlsPass === true, `${label} must include mobile Settings controls browser coverage`);
   expect(browser?.localCoverage?.libraryCloudPdfReaderPass === true, `${label} must include Library cloud PDF reader browser coverage`);
   expect(browser?.localCoverage?.problemsSocialGuardPass === true, `${label} must include Problems social no-cloud browser coverage`);

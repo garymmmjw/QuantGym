@@ -1,0 +1,62 @@
+{
+  "status": "pass",
+  "generatedAt": "2026-06-19T05:30:08.239Z",
+  "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/postgres-cutover/readiness-packet",
+  "filesWritten": [
+    "artifacts/postgres-cutover/readiness-packet/README.md",
+    "artifacts/postgres-cutover/readiness-packet/secure-export-runbook.md",
+    "artifacts/postgres-cutover/readiness-packet/postgres-import-runbook.md",
+    "artifacts/postgres-cutover/readiness-packet/cutover-signoff-env-template.txt",
+    "artifacts/postgres-cutover/readiness-packet/rollback-and-backup-checklist.md",
+    "artifacts/postgres-cutover/readiness-packet/live-cutover-checklist.csv"
+  ],
+  "evidence": {
+    "exportSmokePass": true,
+    "tableCount": 12,
+    "rowTables": 9,
+    "smokeRowCount": 12,
+    "postgresImportSqlGenerated": true,
+    "completeSignoffNegativeFixtureCount": 17
+  },
+  "requiredEnv": [
+    "QUANTGYM_POSTGRES_CUTOVER_STATUS",
+    "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST",
+    "QUANTGYM_POSTGRES_CUTOVER_DATABASE",
+    "QUANTGYM_POSTGRES_CUTOVER_COMPLETED_AT",
+    "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL",
+    "QUANTGYM_POSTGRES_CUTOVER_SOURCE_DB_SHA256",
+    "QUANTGYM_POSTGRES_CUTOVER_EXPORT_SHA256",
+    "QUANTGYM_POSTGRES_CUTOVER_TARGET_ROW_COUNT",
+    "QUANTGYM_POSTGRES_CUTOVER_APP_DATABASE_ACTIVE",
+    "QUANTGYM_POSTGRES_CUTOVER_BACKUP_CONFIRMED"
+  ],
+  "migrationInputs": {
+    "sqliteDbPath": "$QUANTGYM_DB",
+    "secureExportPath": "/secure/quantgym-sqlite-export.json",
+    "postgresImportSqlPath": "/secure/quantgym-postgres-import.sql",
+    "schemaPath": "api-server/postgres/schema.sql",
+    "smokeTableCount": 12,
+    "smokeRowCount": 12
+  },
+  "signoffCommand": "npm run check:postgres-cutover:complete -- --db \"$QUANTGYM_DB\" --export /secure/quantgym-sqlite-export.json",
+  "checks": {
+    "expectedFilesWritten": true,
+    "includesSecureExportRunbook": true,
+    "includesPostgresImportRunbook": true,
+    "includesSignoffEnvTemplate": true,
+    "includesRollbackBackupChecklist": true,
+    "includesLiveCutoverChecklist": true,
+    "usesPlaceholdersOnlyForSensitivePaths": true,
+    "noCredentialUrlExamples": true,
+    "exportSmokePass": true,
+    "includeSensitiveAccepted": true,
+    "importSqlGenerated": true,
+    "importSqlContainsTransaction": true,
+    "rejectsUnsafeExports": true,
+    "completeSignoffFixturePass": true,
+    "completeSignoffNegativeFixturesRejected": true,
+    "completeSignoffRejectsUnsafeEvidence": true
+  },
+  "failures": [],
+  "warnings": []
+}

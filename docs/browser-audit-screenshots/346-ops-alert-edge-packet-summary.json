@@ -1,0 +1,63 @@
+{
+  "status": "pass",
+  "generatedAt": "2026-06-19T04:22:54.381Z",
+  "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/ops-alert-edge/readiness-packet",
+  "filesWritten": [
+    "artifacts/ops-alert-edge/readiness-packet/README.md",
+    "artifacts/ops-alert-edge/readiness-packet/render-api-env-template.txt",
+    "artifacts/ops-alert-edge/readiness-packet/cloudflare-rate-limit-rule.md",
+    "artifacts/ops-alert-edge/readiness-packet/webhook-contract.md",
+    "artifacts/ops-alert-edge/readiness-packet/smoke-payload.sample.json",
+    "artifacts/ops-alert-edge/readiness-packet/signoff-checklist.csv"
+  ],
+  "evidence": {
+    "runtimeSmokePass": true,
+    "productionFixturePass": true,
+    "runtimeAlertCount": 7,
+    "productionNegativeFixtureCount": 15
+  },
+  "requiredEnv": [
+    "QUANTGYM_ALERT_WEBHOOK_URL",
+    "QUANTGYM_ALERT_WEBHOOK_TOKEN",
+    "QUANTGYM_ALERT_MIN_STATUS_CODE",
+    "QUANTGYM_ALERT_WEBHOOK_TIMEOUT_SECONDS",
+    "QUANTGYM_RATE_LIMIT_WINDOW_SECONDS",
+    "QUANTGYM_AUTH_RATE_LIMIT_MAX",
+    "QUANTGYM_AUTH_VERIFICATION_RATE_LIMIT_MAX",
+    "QUANTGYM_AUTH_REGISTER_RATE_LIMIT_MAX",
+    "QUANTGYM_AUTH_LOGIN_RATE_LIMIT_MAX",
+    "QUANTGYM_AUTH_GOOGLE_RATE_LIMIT_MAX",
+    "QUANTGYM_AUTH_PASSWORD_RESET_RATE_LIMIT_MAX",
+    "QUANTGYM_TRUST_PROXY_HEADERS",
+    "QUANTGYM_TRUSTED_PROXY_CIDRS",
+    "QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED",
+    "QUANTGYM_EDGE_RATE_LIMIT_PROVIDER",
+    "QUANTGYM_EDGE_RATE_LIMIT_NOTES",
+    "QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL"
+  ],
+  "edgeRule": {
+    "provider": "cloudflare",
+    "expression": "(http.host in {\"api.quantgym.app\"} and starts_with(http.request.uri.path, \"/api/auth/\"))",
+    "characteristic": "client IP",
+    "windowSeconds": 60,
+    "threshold": "20 to 30 requests per IP per window",
+    "action": "managed challenge or block",
+    "evidenceUrlShape": "https://dash.cloudflare.com/account/rulesets/rule-id"
+  },
+  "signoffCommand": "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke",
+  "checks": {
+    "expectedFilesWritten": true,
+    "includesProductionEnvTemplate": true,
+    "includesWebhookContract": true,
+    "includesCloudflareRuleRunbook": true,
+    "includesSignoffChecklist": true,
+    "usesPlaceholderOnlyForToken": true,
+    "noDashboardQueryOrFragmentExamples": true,
+    "runtimeSmokePass": true,
+    "productionFixturePass": true,
+    "fixtureRejectsUnsafeInputs": true,
+    "fixtureOutputRedactsSecrets": true
+  },
+  "failures": [],
+  "warnings": []
+}

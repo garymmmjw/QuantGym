@@ -23,14 +23,20 @@ const productStatusText = readText("docs/product-status.md", "product status");
 const evidence = {
   opsRuntime: readJson("docs/browser-audit-screenshots/334-ops-alert-runtime-smoke-summary.json", "ops alert runtime smoke"),
   opsFixture: readJson("docs/browser-audit-screenshots/336-ops-alert-production-fixture-summary.json", "ops alert production fixture"),
+  opsPacket: readJson("docs/browser-audit-screenshots/346-ops-alert-edge-packet-summary.json", "ops alert edge packet"),
   mediaRuntime: readJson("docs/browser-audit-screenshots/329-media-storage-runtime-smoke-summary.json", "media storage runtime smoke"),
   mediaFixture: readJson("docs/browser-audit-screenshots/337-media-storage-production-fixture-summary.json", "media storage production fixture"),
+  mediaPacket: readJson("docs/browser-audit-screenshots/347-media-storage-packet-summary.json", "media storage readiness packet"),
   jobsRuntime: readJson("docs/browser-audit-screenshots/330-jobs-source-runtime-smoke-summary.json", "jobs source runtime smoke"),
   jobsFixture: readJson("docs/browser-audit-screenshots/338-jobs-source-production-fixture-summary.json", "jobs source production fixture"),
+  jobsPacket: readJson("docs/browser-audit-screenshots/349-jobs-feed-publication-packet-summary.json", "jobs feed publication packet"),
   chromeFixture: readJson("docs/browser-audit-screenshots/339-chrome-store-publication-fixture-summary.json", "Chrome store publication fixture"),
+  chromePacket: readJson("docs/browser-audit-screenshots/348-chrome-store-publication-packet-summary.json", "Chrome store publication packet"),
   postgresExport: readJson("docs/browser-audit-screenshots/331-postgres-cutover-export-smoke-summary.json", "Postgres cutover export smoke"),
+  postgresPacket: readJson("docs/browser-audit-screenshots/350-postgres-cutover-packet-summary.json", "Postgres cutover readiness packet"),
   rightsPublicSmoke: readJson("docs/browser-audit-screenshots/335-question-bank-rights-public-smoke-summary.json", "question-bank rights public smoke"),
   rightsBlockers: readJson("docs/browser-audit-screenshots/340-question-bank-rights-release-blockers-summary.json", "question-bank rights release blockers"),
+  rightsPacket: readJson("docs/browser-audit-screenshots/345-question-bank-rights-packet-summary.json", "question-bank rights approval packet"),
   browserRouteSmoke: readJson("docs/browser-audit-screenshots/328-browser-route-smoke-summary.json", "browser route smoke"),
   releaseReadiness: skipReleaseSummaryContent
     ? { results: [] }
@@ -40,12 +46,18 @@ const evidence = {
 const scripts = packageJson.scripts || {};
 const requiredScripts = [
   "check:ops-alerts:production",
+  "build:ops-alert-edge-packet",
   "check:media-storage:production",
+  "build:media-storage-packet",
   "check:jobs-source:production",
+  "build:jobs-feed:publication-packet",
   "check:chrome-store-publication:published",
+  "build:chrome-store-publication-packet",
   "check:postgres-cutover:complete",
+  "build:postgres-cutover-packet",
   "check:question-bank-rights:public",
   "check:question-bank-rights:commercial",
+  "build:question-bank-rights-packet",
   "check:browser-route-smoke"
 ];
 
@@ -78,6 +90,12 @@ const blockers = [
     localCoverage: {
       runtimeSmokePass: evidence.opsRuntime.status === "pass",
       productionFixturePass: evidence.opsFixture.status === "pass",
+      readinessPacketGenerated: evidence.opsPacket.status === "pass",
+      packetIncludesProductionEnvTemplate: evidence.opsPacket.checks?.includesProductionEnvTemplate === true,
+      packetIncludesWebhookContract: evidence.opsPacket.checks?.includesWebhookContract === true,
+      packetIncludesCloudflareRuleRunbook: evidence.opsPacket.checks?.includesCloudflareRuleRunbook === true,
+      packetIncludesSignoffChecklist: evidence.opsPacket.checks?.includesSignoffChecklist === true,
+      packetUsesPlaceholderOnlyForToken: evidence.opsPacket.checks?.usesPlaceholderOnlyForToken === true,
       localWebhookSmokeDelivered: evidence.opsFixture.checks?.localWebhookSmokeDelivered === true,
       shortWebhookTokenRejected: evidence.opsFixture.checks?.shortWebhookTokenRejected === true,
       placeholderWebhookTokenRejected: evidence.opsFixture.checks?.placeholderWebhookTokenRejected === true,
@@ -94,6 +112,12 @@ const blockers = [
     localCoverage: {
       runtimeSmokePass: evidence.mediaRuntime.status === "pass",
       productionFixturePass: evidence.mediaFixture.status === "pass",
+      readinessPacketGenerated: evidence.mediaPacket.status === "pass",
+      packetIncludesProductionEnvTemplate: evidence.mediaPacket.checks?.includesProductionEnvTemplate === true,
+      packetIncludesBucketCdnRunbook: evidence.mediaPacket.checks?.includesBucketCdnRunbook === true,
+      packetIncludesObjectStorageContract: evidence.mediaPacket.checks?.includesObjectStorageContract === true,
+      packetIncludesLiveSmokeChecklist: evidence.mediaPacket.checks?.includesLiveSmokeChecklist === true,
+      packetUsesPlaceholderOnlyForSecrets: evidence.mediaPacket.checks?.usesPlaceholderOnlyForSecrets === true,
       privateObjectEndpointRejected: findResult(evidence.mediaFixture.negativeFixtures, "private object endpoint rejected")?.rejected === true,
       privatePublicBaseRejected: findResult(evidence.mediaFixture.negativeFixtures, "private public base rejected")?.rejected === true,
       endpointEmbeddedCredentialsRejected: evidence.mediaFixture.checks?.endpointEmbeddedCredentialsRejected === true,
@@ -115,6 +139,14 @@ const blockers = [
     localCoverage: {
       runtimeSmokePass: evidence.jobsRuntime.status === "pass",
       productionFixturePass: evidence.jobsFixture.status === "pass",
+      readinessPacketGenerated: evidence.jobsPacket.status === "pass",
+      packetGeneratedFeedSnapshot: evidence.jobsPacket.checks?.generatedFeedSnapshotWritten === true,
+      packetGeneratedFeedShaMatches: evidence.jobsPacket.checks?.generatedFeedShaMatches === true,
+      packetGeneratedFeedIncludesInternshipAndFulltime: evidence.jobsPacket.checks?.generatedFeedIncludesInternshipAndFulltime === true,
+      packetGeneratedFeedHasRealMetadata: evidence.jobsPacket.checks?.generatedFeedHasRealMetadata === true,
+      packetIncludesProductionEnvTemplate: evidence.jobsPacket.checks?.includesProductionEnvTemplate === true,
+      packetIncludesHostingRunbook: evidence.jobsPacket.checks?.includesHostingRunbook === true,
+      packetIncludesLiveSignoffChecklist: evidence.jobsPacket.checks?.includesLiveSignoffChecklist === true,
       privateSourceUrlRejected: findResult(evidence.jobsFixture.negativeFixtures, "private source URL rejected")?.rejected === true,
       sourceUrlEmbeddedCredentialsRejected: evidence.jobsFixture.checks?.sourceUrlEmbeddedCredentialsRejected === true,
       sourceUrlQueryRejected: evidence.jobsFixture.checks?.sourceUrlQueryRejected === true,
@@ -132,6 +164,13 @@ const blockers = [
     signoffCommand: "npm run check:chrome-store-publication:published",
     localCoverage: {
       publicationFixturePass: evidence.chromeFixture.status === "pass",
+      readinessPacketGenerated: evidence.chromePacket.status === "pass",
+      packetIncludesDeveloperDashboardChecklist: evidence.chromePacket.checks?.includesDeveloperDashboardChecklist === true,
+      packetIncludesReleasePackageSha: evidence.chromePacket.checks?.includesReleasePackageSha === true,
+      packetIncludesPublishedSignoffEnvTemplate: evidence.chromePacket.checks?.includesPublishedSignoffEnvTemplate === true,
+      packetIncludesListingSnapshot: evidence.chromePacket.checks?.includesListingSnapshot === true,
+      packetIncludesFinalSignoffChecklist: evidence.chromePacket.checks?.includesFinalSignoffChecklist === true,
+      packetUsesPlaceholdersForPublishedIds: evidence.chromePacket.checks?.usesPlaceholdersForPublishedIds === true,
       externalPublicationStillRequired: evidence.chromeFixture.checks?.externalPublicationStillRequired === true,
       privateEvidenceUrlRejected: findResult(evidence.chromeFixture.negativeFixtures, "private evidence URL rejected")?.rejected === true,
       placeholderItemIdRejected: evidence.chromeFixture.checks?.placeholderItemIdRejected === true,
@@ -152,6 +191,16 @@ const blockers = [
     localCoverage: {
       exportSmokePass: evidence.postgresExport.status === "pass",
       includeSensitiveAccepted: evidence.postgresExport.cutoverChecks?.includeSensitiveAccepted === true,
+      postgresImportSqlGenerated: evidence.postgresExport.cutoverChecks?.postgresImportSqlGenerated === true,
+      postgresImportSqlContainsTransaction: evidence.postgresExport.cutoverChecks?.postgresImportSqlContainsTransaction === true,
+      postgresImportRejectsRedactedExport: evidence.postgresExport.cutoverChecks?.postgresImportRejectsRedactedExport === true,
+      postgresImportRejectsTruncatedExport: evidence.postgresExport.cutoverChecks?.postgresImportRejectsTruncatedExport === true,
+      readinessPacketGenerated: evidence.postgresPacket.status === "pass",
+      packetIncludesSecureExportRunbook: evidence.postgresPacket.checks?.includesSecureExportRunbook === true,
+      packetIncludesPostgresImportRunbook: evidence.postgresPacket.checks?.includesPostgresImportRunbook === true,
+      packetIncludesSignoffEnvTemplate: evidence.postgresPacket.checks?.includesSignoffEnvTemplate === true,
+      packetIncludesRollbackBackupChecklist: evidence.postgresPacket.checks?.includesRollbackBackupChecklist === true,
+      packetIncludesLiveCutoverChecklist: evidence.postgresPacket.checks?.includesLiveCutoverChecklist === true,
       completeSignoffPositiveFixturePass: evidence.postgresExport.cutoverChecks?.completeSignoffAccepted === true,
       completeSignoffNegativeFixturesRejected: evidence.postgresExport.cutoverChecks?.completeSignoffNegativeFixturesRejected === true,
       privateTargetHostRejected: evidence.postgresExport.cutoverChecks?.privateTargetHostRejected === true,
@@ -173,6 +222,9 @@ const blockers = [
       releaseBlocked: evidence.rightsBlockers.releaseBlocked === true,
       publicBlockerCount: evidence.rightsBlockers.blockerSlugs?.public?.length || 0,
       commercialBlockerCount: evidence.rightsBlockers.blockerSlugs?.commercial?.length || 0,
+      approvalPacketGenerated: evidence.rightsPacket.status === "pass",
+      approvalPacketCoversActiveSources: evidence.rightsPacket.checks?.allActiveSourcesHavePackets === true,
+      approvalPacketIncludesCommercialScope: evidence.rightsPacket.checks?.includesCommercialUseScope === true,
       publicSmokePass: evidence.rightsPublicSmoke.status === "pass",
       privateEvidenceRejected: evidence.rightsPublicSmoke.checks?.privateEvidenceRejected === true,
       evidenceUrlEmbeddedCredentialsRejected: evidence.rightsPublicSmoke.checks?.evidenceUrlEmbeddedCredentialsRejected === true,
@@ -408,6 +460,16 @@ const blockers = [
         evidence.browserRouteSmoke.interactions?.results,
         "settings backup export, import, and reset state"
       )?.status === "pass",
+      settingsInvalidBackupGuardPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "settings rejects invalid backup files without changing state"
+        );
+        return item?.status === "pass"
+          && item.malformedJsonRejected === true
+          && item.nonObjectJsonRejected === true
+          && item.statePreserved === true;
+      })(),
       mobileSettingsControlsPass: (() => {
         const item = findResult(
           evidence.browserRouteSmoke.interactions?.results,
@@ -547,6 +609,7 @@ const summary = {
     browserSettingsRuntimeConfigPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsRuntimeConfigPass === true,
     browserSettingsGoogleClientClearPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsGoogleClientClearPass === true,
     browserSettingsBackupPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsBackupPass === true,
+    browserSettingsInvalidBackupGuardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsInvalidBackupGuardPass === true,
     browserMobileSettingsControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileSettingsControlsPass === true,
     browserLibraryCloudPdfReaderPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.libraryCloudPdfReaderPass === true,
     browserProblemsSocialGuardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.problemsSocialGuardPass === true,

@@ -32,7 +32,16 @@ export function createBackupDownload(options = {}) {
 
 export function parseBackupState(raw) {
   const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
-  return parsed.state || parsed;
+  if (!isPlainObject(parsed)) {
+    throw new Error("Backup payload must be a JSON object.");
+  }
+  if (Object.prototype.hasOwnProperty.call(parsed, "state")) {
+    if (!isPlainObject(parsed.state)) {
+      throw new Error("Backup state must be a JSON object.");
+    }
+    return parsed.state;
+  }
+  return parsed;
 }
 
 export async function mergeBackupFile(file, currentState = {}, deps = {}) {
@@ -85,4 +94,8 @@ export function mergeImportedState(currentState = {}, importedRaw = {}, deps = {
 
 function passthroughArray(value = []) {
   return Array.isArray(value) ? value : [];
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }

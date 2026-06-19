@@ -19,6 +19,9 @@ const tempProblemCatalog = path.join(tempDir, "empty-problem-catalog.json");
 const redactedExportPath = path.join(tempDir, "quantgym-cutover-redacted.json");
 const sensitiveExportPath = path.join(tempDir, "quantgym-cutover-sensitive.json");
 const truncatedSensitiveExportPath = path.join(tempDir, "quantgym-cutover-sensitive-truncated.json");
+const postgresImportSqlPath = path.join(tempDir, "quantgym-postgres-import.sql");
+const redactedImportSqlPath = path.join(tempDir, "quantgym-postgres-import-redacted.sql");
+const truncatedImportSqlPath = path.join(tempDir, "quantgym-postgres-import-truncated.sql");
 const failures = [];
 const warnings = [];
 let apiProcess;
@@ -70,6 +73,18 @@ try {
   const sensitiveCutover = parseLastJson(sensitiveCutoverRun.stdout, "include-sensitive cutover check");
   validateSensitiveCutoverCheck(sensitiveCutover);
 
+  const postgresImportRun = runPython([
+    "scripts/import-api-sqlite-export-to-postgres.py",
+    "--export",
+    sensitiveExportPath,
+    "--out",
+    postgresImportSqlPath,
+    "--replace"
+  ]);
+  assertRun(postgresImportRun, "Postgres import SQL generation with include-sensitive export");
+  const postgresImport = parseLastJson(postgresImportRun.stdout, "Postgres import SQL generation");
+  validatePostgresImportSql(postgresImport, postgresImportSqlPath, sensitiveCutover?.exportCheck?.importPlan);
+
   const completeSignoffEnv = buildCompleteSignoffEnv(
     tempDb,
     sensitiveExportPath,
@@ -107,6 +122,14 @@ try {
     "--require-sensitive-export"
   ]);
   validateRedactedExportRejected(redactedCutoverRun);
+  const redactedPostgresImportRun = runPython([
+    "scripts/import-api-sqlite-export-to-postgres.py",
+    "--export",
+    redactedExportPath,
+    "--out",
+    redactedImportSqlPath
+  ]);
+  validatePostgresImportRejected(redactedPostgresImportRun, "include-sensitive");
 
   const truncatedSensitiveRun = runPython([
     "scripts/export-api-sqlite.py",
@@ -131,6 +154,14 @@ try {
     "--require-sensitive-export"
   ]);
   validateTruncatedSensitiveExportRejected(truncatedSensitiveCutoverRun);
+  const truncatedPostgresImportRun = runPython([
+    "scripts/import-api-sqlite-export-to-postgres.py",
+    "--export",
+    truncatedSensitiveExportPath,
+    "--out",
+    truncatedImportSqlPath
+  ]);
+  validatePostgresImportRejected(truncatedPostgresImportRun, "full export");
 
   const summary = {
     status: failures.length ? "fail" : "pass",
@@ -167,6 +198,10 @@ try {
     },
     cutoverChecks: {
       includeSensitiveAccepted: sensitiveCutoverRun.status === 0 && sensitiveCutover.status === "pass",
+      postgresImportSqlGenerated: postgresImportRun.status === 0 && postgresImport.status === "pass",
+      postgresImportSqlContainsTransaction: postgresImportSqlContainsTransaction(postgresImportSqlPath),
+      postgresImportRejectsRedactedExport: redactedPostgresImportRun.status !== 0,
+      postgresImportRejectsTruncatedExport: truncatedPostgresImportRun.status !== 0,
       redactedRejected: redactedCutoverRun.status !== 0,
       redactedRejectsIncludeSensitiveRequirement: redactedRejectsIncludeSensitiveRequirement(redactedCutoverRun),
       truncatedSensitiveRejected: truncatedSensitiveCutoverRun.status !== 0,
@@ -187,6 +222,7 @@ try {
       evidenceUrlQueryRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "evidence URL query rejected" && fixture.rejected === true)
     },
     importPlan: summarizeImportPlan(sensitiveCutover?.exportCheck?.importPlan),
+    postgresImport: summarizePostgresImport(postgresImport),
     cutoverSignoff: summarizeCutoverSignoff(completeSignoff?.cutoverSignoff),
     completeSignoffNegativeFixtures,
     failures,
@@ -462,6 +498,27 @@ function validateSensitiveCutoverCheck(payload) {
   expect(payload.dataChecks?.foreignKeyOk === true, "Cutover check must pass SQLite foreign keys.");
 }
 
+function validatePostgresImportSql(payload, sqlPath, importPlan = {}) {
+  expect(payload.status === "pass", "Postgres import SQL generation must pass.");
+  expect(payload.sqlWritten === true, "Postgres import must write a SQL file.");
+  expect(payload.replace === true, "Postgres import smoke must exercise --replace SQL generation.");
+  expect(payload.containsSensitiveRows === true, "Postgres import summary must mark output as sensitive.");
+  expect(payload.execution?.requested === false, "Postgres import smoke must not execute against a database.");
+  expect(payload.importPlan?.columnShapeOk === true, "Postgres import must validate row column shapes.");
+  expect(payload.importPlan?.referencedTablesFirst === true, "Postgres import must use dependency-safe table order.");
+  expect(Number(payload.importPlan?.rowCount || 0) === Number(importPlan?.rowCount || 0), "Postgres import row count must match cutover import plan.");
+  expect(Number(payload.importPlan?.jsonValuesChecked || 0) > 0, "Postgres import must validate JSON values.");
+  expect(Number(payload.importPlan?.timestampValuesChecked || 0) > 0, "Postgres import must validate timestamp values.");
+  expect(Array.isArray(payload.failures) && payload.failures.length === 0, "Postgres import summary must have no failures.");
+  const sql = fs.readFileSync(sqlPath, "utf8");
+  expect(sql.includes("BEGIN;") && sql.includes("COMMIT;"), "Postgres import SQL must be transactional.");
+  expect(sql.includes("TRUNCATE") && sql.includes("RESTART IDENTITY CASCADE"), "Postgres import SQL must include replace TRUNCATE when requested.");
+  expect(sql.includes("INSERT INTO \"users\""), "Postgres import SQL must insert users.");
+  expect(sql.includes("INSERT INTO \"problems\""), "Postgres import SQL must insert problems.");
+  expect(sql.includes("::jsonb"), "Postgres import SQL must cast JSON values to jsonb.");
+  expect(sql.includes("::timestamptz"), "Postgres import SQL must cast timestamps to timestamptz.");
+}
+
 function validateCompleteCutoverSignoff(payload, env) {
   expect(payload.status === "pass", "Complete cutover signoff check must pass.");
   const signoff = payload.cutoverSignoff || {};
@@ -615,6 +672,14 @@ function validateRedactedExportRejected(run) {
   expect(/include-sensitive/i.test(failuresText), "Redacted export rejection must mention --include-sensitive.");
 }
 
+function validatePostgresImportRejected(run, expectedPattern) {
+  expect(run.status !== 0, "Postgres import must reject unsafe migration input.");
+  const payload = parseLastJson(run.stdout, "Postgres import rejection");
+  const failuresText = JSON.stringify(payload.failures || []);
+  expect(payload.status === "fail", "Postgres import rejection status must be fail.");
+  expect(new RegExp(expectedPattern, "i").test(failuresText), `Postgres import rejection must mention ${expectedPattern}.`);
+}
+
 function validateTruncatedSensitiveExport(payload) {
   expect(payload.status === "pass", "Truncated include-sensitive export should still pass SQLite health checks.");
   expect(payload.includeSensitive === true, "Truncated export fixture must still be include-sensitive.");
@@ -702,6 +767,15 @@ function truncatedRejectsFullExportRequirement(run) {
   }
 }
 
+function postgresImportSqlContainsTransaction(sqlPath) {
+  try {
+    const sql = fs.readFileSync(sqlPath, "utf8");
+    return sql.includes("BEGIN;") && sql.includes("COMMIT;");
+  } catch {
+    return false;
+  }
+}
+
 function firstFailureText(run, payload = null) {
   const parsed = payload || parseLastJson(run.stdout, "cutover check failure");
   const failuresText = Array.isArray(parsed?.failures) ? parsed.failures.join("\n").trim() : "";
@@ -725,6 +799,21 @@ function summarizeImportPlan(plan = {}) {
     timestampValuesChecked: Number(plan.timestampValuesChecked || 0),
     columnShapeOk: plan.columnShapeOk === true,
     referencedTablesFirst: plan.referencedTablesFirst === true
+  };
+}
+
+function summarizePostgresImport(importSummary = {}) {
+  return {
+    status: String(importSummary.status || ""),
+    sqlWritten: importSummary.sqlWritten === true,
+    sqlBytes: Number(importSummary.sqlBytes || 0),
+    replace: importSummary.replace === true,
+    containsSensitiveRows: importSummary.containsSensitiveRows === true,
+    executionRequested: importSummary.execution?.requested === true,
+    tableCount: Number(importSummary.importPlan?.tableCount || 0),
+    rowCount: Number(importSummary.importPlan?.rowCount || 0),
+    columnShapeOk: importSummary.importPlan?.columnShapeOk === true,
+    referencedTablesFirst: importSummary.importPlan?.referencedTablesFirst === true
   };
 }
 

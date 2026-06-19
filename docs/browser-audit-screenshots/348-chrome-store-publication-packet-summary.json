@@ -1,0 +1,50 @@
+{
+  "status": "pass",
+  "generatedAt": "2026-06-19T04:44:35.671Z",
+  "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/chrome-store-publication/readiness-packet",
+  "filesWritten": [
+    "artifacts/chrome-store-publication/readiness-packet/README.md",
+    "artifacts/chrome-store-publication/readiness-packet/developer-dashboard-submission.md",
+    "artifacts/chrome-store-publication/readiness-packet/listing-fields.md",
+    "artifacts/chrome-store-publication/readiness-packet/published-signoff-env-template.txt",
+    "artifacts/chrome-store-publication/readiness-packet/release-package-evidence.json",
+    "artifacts/chrome-store-publication/readiness-packet/signoff-checklist.csv"
+  ],
+  "releasePackage": {
+    "name": "QuantGym Collector",
+    "version": "0.2.0",
+    "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.2.0.zip",
+    "uploadSha256": "55f09a90f64ef9ebe363dde202b2c6032495ee60975ac31d50bd052941111212",
+    "uploadBytes": 38073,
+    "uploadFileCount": 9,
+    "generatedBy": "scripts/check-chrome-store-publication.mjs"
+  },
+  "listing": {
+    "name": "QuantGym Collector",
+    "version": "0.2.0",
+    "category": "Productivity",
+    "language": "en-US",
+    "screenshots": 1,
+    "reviewerNotes": 3
+  },
+  "signoffCommand": "npm run check:chrome-store-publication:published",
+  "checks": {
+    "expectedFilesWritten": true,
+    "includesDeveloperDashboardChecklist": true,
+    "includesReleasePackageSha": true,
+    "includesPublishedSignoffEnvTemplate": true,
+    "includesListingSnapshot": true,
+    "includesFinalSignoffChecklist": true,
+    "usesPlaceholdersForPublishedIds": true,
+    "releasePackageExists": true,
+    "releasePackageShaMatches": true,
+    "publicationFixturePass": true,
+    "submissionHandoffPass": true,
+    "publishedFixturePass": true,
+    "negativeFixturesRejected": true,
+    "finalSignoffCommandRecorded": true,
+    "externalPublicationStillRequired": true
+  },
+  "failures": [],
+  "warnings": []
+}

@@ -1,0 +1,57 @@
+{
+  "status": "pass",
+  "durationMs": 426,
+  "sources": [
+    {
+      "id": "jane-street",
+      "provider": "greenhouse",
+      "company": "Jane Street",
+      "status": "pass",
+      "fetched": 209,
+      "kept": 103,
+      "internships": 11,
+      "fulltime": 92
+    },
+    {
+      "id": "imc",
+      "provider": "greenhouse",
+      "company": "IMC",
+      "status": "pass",
+      "fetched": 132,
+      "kept": 80,
+      "internships": 2,
+      "fulltime": 78
+    },
+    {
+      "id": "hudson-river-trading",
+      "provider": "greenhouse",
+      "company": "Hudson River Trading",
+      "status": "pass",
+      "fetched": 73,
+      "kept": 44,
+      "internships": 0,
+      "fulltime": 44
+    },
+    {
+      "id": "jump-trading",
+      "provider": "greenhouse",
+      "company": "Jump Trading",
+      "status": "pass",
+      "fetched": 61,
+      "kept": 41,
+      "internships": 2,
+      "fulltime": 39
+    }
+  ],
+  "output": {
+    "path": "/tmp/quantgym-jobs-feed.json",
+    "written": true,
+    "count": 160,
+    "internships": 6,
+    "fulltime": 154,
+    "firstId": "hudson-river-trading-1229082",
+    "firstPostedAt": "2026-06-18T05:04:23.000Z"
+  },
+  "warnings": [],
+  "failures": []
+}

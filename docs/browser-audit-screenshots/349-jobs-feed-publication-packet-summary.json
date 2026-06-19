@@ -1,0 +1,93 @@
+{
+  "status": "pass",
+  "generatedAt": "2026-06-19T04:56:09.853Z",
+  "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/jobs-feed/publication-packet",
+  "filesWritten": [
+    "artifacts/jobs-feed/publication-packet/README.md",
+    "artifacts/jobs-feed/publication-packet/feed-hosting-runbook.md",
+    "artifacts/jobs-feed/publication-packet/render-api-env-template.txt",
+    "artifacts/jobs-feed/publication-packet/source-list.md",
+    "artifacts/jobs-feed/publication-packet/generated-feed-manifest.json",
+    "artifacts/jobs-feed/publication-packet/live-signoff-checklist.csv",
+    "artifacts/jobs-feed/publication-packet/public-ats-feed.json"
+  ],
+  "feed": {
+    "generatedAt": "2026-06-19T04:56:10.629Z",
+    "generatedBy": "scripts/build-public-ats-jobs-feed.mjs",
+    "source": "public-ats-greenhouse",
+    "feedPath": "artifacts/jobs-feed/publication-packet/public-ats-feed.json",
+    "feedSha256": "d53b26c2215859c0da4a403a6f7d3baf21f15e80094158a41a3a472c2125b89b",
+    "count": 160,
+    "internships": 6,
+    "fulltime": 154,
+    "firstId": "hudson-river-trading-1229082",
+    "firstPostedAt": "2026-06-18T05:04:23.000Z"
+  },
+  "sources": [
+    {
+      "id": "jane-street",
+      "provider": "greenhouse",
+      "company": "Jane Street",
+      "boardToken": "janestreet",
+      "url": "https://boards-api.greenhouse.io/v1/boards/janestreet/jobs?content=true",
+      "fetched": 209,
+      "kept": 103,
+      "internships": 11,
+      "fulltime": 92,
+      "status": "pass"
+    },
+    {
+      "id": "imc",
+      "provider": "greenhouse",
+      "company": "IMC",
+      "boardToken": "imc",
+      "url": "https://boards-api.greenhouse.io/v1/boards/imc/jobs?content=true",
+      "fetched": 132,
+      "kept": 80,
+      "internships": 2,
+      "fulltime": 78,
+      "status": "pass"
+    },
+    {
+      "id": "hudson-river-trading",
+      "provider": "greenhouse",
+      "company": "Hudson River Trading",
+      "boardToken": "wehrtyou",
+      "url": "https://boards-api.greenhouse.io/v1/boards/wehrtyou/jobs?content=true",
+      "fetched": 73,
+      "kept": 44,
+      "internships": 0,
+      "fulltime": 44,
+      "status": "pass"
+    },
+    {
+      "id": "jump-trading",
+      "provider": "greenhouse",
+      "company": "Jump Trading",
+      "boardToken": "jumptrading",
+      "url": "https://boards-api.greenhouse.io/v1/boards/jumptrading/jobs?content=true",
+      "fetched": 61,
+      "kept": 41,
+      "internships": 2,
+      "fulltime": 39,
+      "status": "pass"
+    }
+  ],
+  "signoffCommand": "npm run check:jobs-source:production -- --live",
+  "checks": {
+    "expectedFilesWritten": true,
+    "generatorPass": true,
+    "generatedFeedSnapshotWritten": true,
+    "generatedFeedShaMatches": true,
+    "generatedFeedIncludesInternshipAndFulltime": true,
+    "generatedFeedHasRealMetadata": true,
+    "includesProductionEnvTemplate": true,
+    "includesHostingRunbook": true,
+    "includesSourceList": true,
+    "includesLiveSignoffChecklist": true,
+    "usesPlaceholderOnlyForOptionalToken": true,
+    "noCredentialUrlExamples": true
+  },
+  "failures": [],
+  "warnings": []
+}

@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1280,
+  "durationMs": 1389,
   "fixture": {
     "tablesSeeded": [
       "audit_events",
@@ -13,7 +13,7 @@
       "user_states",
       "users"
     ],
-    "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-VTxDKJ/quantgym-cutover-smoke.sqlite3"
+    "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-0XTQ4I/quantgym-cutover-smoke.sqlite3"
   },
   "redactedExport": {
     "status": "pass",
@@ -54,6 +54,10 @@
   },
   "cutoverChecks": {
     "includeSensitiveAccepted": true,
+    "postgresImportSqlGenerated": true,
+    "postgresImportSqlContainsTransaction": true,
+    "postgresImportRejectsRedactedExport": true,
+    "postgresImportRejectsTruncatedExport": true,
     "redactedRejected": true,
     "redactedRejectsIncludeSensitiveRequirement": true,
     "truncatedSensitiveRejected": true,
@@ -92,16 +96,28 @@
     "columnShapeOk": true,
     "referencedTablesFirst": true
   },
+  "postgresImport": {
+    "status": "pass",
+    "sqlWritten": true,
+    "sqlBytes": 6410,
+    "replace": true,
+    "containsSensitiveRows": true,
+    "executionRequested": false,
+    "tableCount": 12,
+    "rowCount": 12,
+    "columnShapeOk": true,
+    "referencedTablesFirst": true
+  },
   "cutoverSignoff": {
     "required": true,
     "targetHost": "postgres.quantgym.internal",
     "database": "quantgym",
-    "completedAt": "2026-06-19T03:00:25Z",
+    "completedAt": "2026-06-19T05:59:51Z",
     "evidenceHost": "render.com",
     "appDatabaseActive": true,
     "backupConfirmed": true,
-    "sourceDbSha256Prefix": "07d2fcfe6bc5",
-    "exportSha256Prefix": "b25ff471f152",
+    "sourceDbSha256Prefix": "3dc663341873",
+    "exportSha256Prefix": "4d155a628f07",
     "importPlanRowCount": 12,
     "targetRowCount": 12
   },
@@ -202,7 +218,7 @@
       "rejected": true,
       "expectedErrorObserved": true,
       "failed": 2,
-      "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-VTxDKJ\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
+      "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-0XTQ4I\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
     },
     {
       "name": "target row count mismatch rejected",

@@ -1,0 +1,63 @@
+{
+  "status": "pass",
+  "generatedAt": "2026-06-19T04:33:25.490Z",
+  "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/media-storage/readiness-packet",
+  "filesWritten": [
+    "artifacts/media-storage/readiness-packet/README.md",
+    "artifacts/media-storage/readiness-packet/render-api-env-template.txt",
+    "artifacts/media-storage/readiness-packet/r2-bucket-cdn-runbook.md",
+    "artifacts/media-storage/readiness-packet/object-storage-contract.md",
+    "artifacts/media-storage/readiness-packet/live-smoke-checklist.csv"
+  ],
+  "evidence": {
+    "runtimeSmokePass": true,
+    "productionFixturePass": true,
+    "productionNegativeFixtureCount": 18,
+    "liveFixtureStatus": "pass",
+    "liveFailureRejected": true
+  },
+  "requiredEnv": [
+    "QUANTGYM_MEDIA_STORAGE",
+    "QUANTGYM_MEDIA_MAX_BYTES",
+    "QUANTGYM_MAX_BODY_BYTES",
+    "QUANTGYM_MEDIA_S3_ENDPOINT",
+    "QUANTGYM_MEDIA_S3_BUCKET",
+    "QUANTGYM_MEDIA_S3_REGION",
+    "QUANTGYM_MEDIA_S3_ACCESS_KEY_ID",
+    "QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY",
+    "QUANTGYM_MEDIA_S3_PREFIX",
+    "QUANTGYM_MEDIA_PUBLIC_BASE_URL",
+    "QUANTGYM_MEDIA_S3_TIMEOUT_SECONDS"
+  ],
+  "storagePlan": {
+    "provider": "cloudflare-r2-or-s3",
+    "bucketNameShape": "quantgym-media-production",
+    "prefix": "media",
+    "publicBaseUrlShape": "https://media.quantgym.app",
+    "liveSmokePrefix": "readiness-smoke/",
+    "requiredOperations": [
+      "signed PUT",
+      "signed GET",
+      "public CDN GET",
+      "signed DELETE"
+    ]
+  },
+  "signoffCommand": "npm run check:media-storage:production && npm run check:media-storage:production -- --live",
+  "checks": {
+    "expectedFilesWritten": true,
+    "includesProductionEnvTemplate": true,
+    "includesBucketCdnRunbook": true,
+    "includesObjectStorageContract": true,
+    "includesLiveSmokeChecklist": true,
+    "usesPlaceholderOnlyForSecrets": true,
+    "noCredentialUrlExamples": true,
+    "runtimeSmokePass": true,
+    "productionFixturePass": true,
+    "fixtureRejectsUnsafeInputs": true,
+    "fixtureOutputRedactsSecrets": true,
+    "liveFixtureCoversPutGetPublicDelete": true,
+    "liveFixtureCleansUp": true
+  },
+  "failures": [],
+  "warnings": []
+}
