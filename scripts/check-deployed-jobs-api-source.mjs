@@ -13,6 +13,7 @@ const summaryPath = getArgValue("--summary") || "docs/browser-audit-screenshots/
 const failures = [];
 const warnings = [];
 const parsedApiUrl = parseUrl(apiUrl);
+const localCatalogIds = new Set(readLocalCatalogIds());
 
 assert(parsedApiUrl?.protocol === "https:", "Deployed jobs API smoke must use HTTPS.");
 assert(parsedApiUrl?.hostname === "api.quantgym.app", "Deployed jobs API smoke must target api.quantgym.app by default.");
@@ -35,10 +36,12 @@ if (failures.length === 0) {
 }
 
 const jobs = extractJobsPayload(response.payload).map(normalizeJobItem).filter(Boolean);
+const sourceJobs = jobs.filter((job) => !localCatalogIds.has(job.id));
+const fallbackJobs = jobs.filter((job) => localCatalogIds.has(job.id));
 const duplicateIds = findDuplicates(jobs.map((job) => job.id));
 const invalidUrls = jobs.filter((job) => !isHttpUrl(job.url)).map((job) => job.id);
-const invalidPostedAt = jobs.filter((job) => !isValidPostedAt(job.postedAt)).map((job) => job.id);
-const defaultedMetadata = jobs.filter((job) => (
+const invalidSourcePostedAt = sourceJobs.filter((job) => !isValidPostedAt(job.postedAt)).map((job) => job.id);
+const defaultedSourceMetadata = sourceJobs.filter((job) => (
   job.company === "Quant Firm"
   || job.title === "Quant Role"
   || job.postedAt === "crawler-ready"
@@ -49,13 +52,14 @@ assert(String(response.contentType).toLowerCase().includes("application/json"), 
 assert(response.payload?.source === "catalog+source", `Deployed jobs API source must be catalog+source, got ${response.payload?.source || "(missing)"}.`);
 assert(response.payload?.sourceStatus === "ok", `Deployed jobs API sourceStatus must be ok, got ${response.payload?.sourceStatus || "(missing)"}.`);
 assert(jobs.length >= 150, `Deployed jobs API must return the public ATS feed, expected at least 150 jobs and got ${jobs.length}.`);
-assert(jobs.some((job) => job.type === "internship"), "Deployed jobs API must include internship roles.");
-assert(jobs.some((job) => job.type === "fulltime"), "Deployed jobs API must include fulltime roles.");
+assert(sourceJobs.length >= 150, `Deployed jobs API must include at least 150 source jobs, got ${sourceJobs.length}.`);
+assert(sourceJobs.some((job) => job.type === "internship"), "Deployed jobs API source jobs must include internship roles.");
+assert(sourceJobs.some((job) => job.type === "fulltime"), "Deployed jobs API source jobs must include fulltime roles.");
 assert(duplicateIds.length === 0, `Deployed jobs API contains duplicate ids: ${duplicateIds.join(", ")}`);
 assert(invalidUrls.length === 0, `Deployed jobs API contains invalid URLs: ${invalidUrls.join(", ")}`);
-assert(invalidPostedAt.length === 0, `Deployed jobs API contains invalid postedAt values: ${invalidPostedAt.join(", ")}`);
-assert(defaultedMetadata.length === 0, `Deployed jobs API still contains defaulted source metadata: ${defaultedMetadata.join(", ")}`);
-assert(jobs[0]?.id === "hudson-river-trading-1229082", `Deployed jobs API first source job changed unexpectedly: ${jobs[0]?.id || "(missing)"}`);
+assert(invalidSourcePostedAt.length === 0, `Deployed jobs API source jobs contain invalid postedAt values: ${invalidSourcePostedAt.join(", ")}`);
+assert(defaultedSourceMetadata.length === 0, `Deployed jobs API source jobs still contain defaulted metadata: ${defaultedSourceMetadata.join(", ")}`);
+assert(sourceJobs[0]?.id === "hudson-river-trading-1229082", `Deployed jobs API first source job changed unexpectedly: ${sourceJobs[0]?.id || "(missing)"}`);
 
 const summary = {
   id: 354,
@@ -71,10 +75,12 @@ const summary = {
   source: response.payload?.source || "",
   sourceStatus: response.payload?.sourceStatus || "",
   count: jobs.length,
-  internships: jobs.filter((job) => job.type === "internship").length,
-  fulltime: jobs.filter((job) => job.type === "fulltime").length,
-  firstId: jobs[0]?.id || "",
-  firstPostedAt: jobs[0]?.postedAt || "",
+  sourceCount: sourceJobs.length,
+  fallbackCount: fallbackJobs.length,
+  internships: sourceJobs.filter((job) => job.type === "internship").length,
+  fulltime: sourceJobs.filter((job) => job.type === "fulltime").length,
+  firstId: sourceJobs[0]?.id || "",
+  firstPostedAt: sourceJobs[0]?.postedAt || "",
   checks: {
     apiHttps: parsedApiUrl?.protocol === "https:",
     apiHostProduction: parsedApiUrl?.hostname === "api.quantgym.app",
@@ -84,13 +90,15 @@ const summary = {
     sourceMerged: response.payload?.source === "catalog+source",
     sourceStatusOk: response.payload?.sourceStatus === "ok",
     countLooksLikePublicAtsFeed: jobs.length >= 150,
-    includesInternshipAndFulltime: jobs.some((job) => job.type === "internship")
-      && jobs.some((job) => job.type === "fulltime"),
+    sourceCountLooksLikePublicAtsFeed: sourceJobs.length >= 150,
+    includesInternshipAndFulltime: sourceJobs.some((job) => job.type === "internship")
+      && sourceJobs.some((job) => job.type === "fulltime"),
     uniqueIds: duplicateIds.length === 0,
     validUrls: invalidUrls.length === 0,
-    validPostedAt: invalidPostedAt.length === 0,
-    realMetadata: defaultedMetadata.length === 0,
-    firstSourceJobMatchesStaticFeed: jobs[0]?.id === "hudson-river-trading-1229082"
+    sourceValidPostedAt: invalidSourcePostedAt.length === 0,
+    sourceRealMetadata: defaultedSourceMetadata.length === 0,
+    fallbackCatalogMerged: fallbackJobs.length >= 1,
+    firstSourceJobMatchesStaticFeed: sourceJobs[0]?.id === "hudson-river-trading-1229082"
   },
   failures,
   warnings
@@ -182,6 +190,15 @@ function normalizeJobItem(raw) {
     url: clean(raw.url),
     postedAt: clean(raw.postedAt || raw.createdAt || "crawler-ready")
   };
+}
+
+function readLocalCatalogIds() {
+  try {
+    const payload = JSON.parse(fs.readFileSync(path.join(root, "data", "jobs-catalog.json"), "utf8"));
+    return extractJobsPayload(payload).map((job) => clean(job?.id)).filter(Boolean);
+  } catch {
+    return [];
+  }
 }
 
 function assert(condition, message) {
