@@ -13,9 +13,18 @@
       "title": "Apex/WWW domain SSL or redirect",
       "status": "blocked",
       "ownerAction": "Fix Cloudflare/origin SSL handshakes or intentionally redirect quantgym.app and www.quantgym.app before promoting those domains.",
-      "signoffCommand": "",
+      "signoffCommand": "npm run check:apex-www-domain -- --require-clear",
       "localCoverage": {
-        "trackedInProductStatus": true
+        "trackedInProductStatus": true,
+        "liveDiagnosisPass": true,
+        "betaEntrypointHealthy": true,
+        "apexDnsResolved": true,
+        "wwwDnsResolved": true,
+        "currentBlockedStateClassified": true,
+        "apexCloudflare525Observed": true,
+        "wwwCloudflare525Observed": true,
+        "requireClearModeAvailable": true,
+        "requireClearWouldFail": true
       }
     },
     {

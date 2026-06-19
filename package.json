@@ -52,6 +52,7 @@
     "check:question-bank-rights:public-smoke": "node scripts/check-question-bank-rights-public-smoke.mjs",
     "check:question-bank-rights:release-blockers": "node scripts/check-question-bank-rights-release-blockers.mjs",
     "build:question-bank-rights-packet": "node scripts/build-question-bank-rights-packet.mjs",
+    "check:apex-www-domain": "node scripts/check-apex-www-domain.mjs",
     "check:external-launch-blockers": "node scripts/check-external-launch-blockers.mjs",
     "export:api-sqlite": "python3 scripts/export-api-sqlite.py",
     "import:api-sqlite-export:postgres": "python3 scripts/import-api-sqlite-export-to-postgres.py",

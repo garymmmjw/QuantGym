@@ -44,6 +44,7 @@ const gates = [
   { name: "Question-bank rights", command: "npm", args: ["run", "check:question-bank-rights"], parseJson: true },
   { name: "Question-bank rights public smoke", command: "npm", args: ["run", "check:question-bank-rights:public-smoke"], parseJson: true },
   { name: "Question-bank rights release blockers", command: "npm", args: ["run", "check:question-bank-rights:release-blockers"], parseJson: true },
+  { name: "Apex/WWW domain", command: "npm", args: ["run", "check:apex-www-domain"], parseJson: true },
   {
     name: "External launch blockers",
     command: "npm",
