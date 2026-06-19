@@ -149,7 +149,7 @@
       },
       "health": {
         "pathname": "/tools",
-        "bodyTextLength": 733,
+        "bodyTextLength": 737,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -165,7 +165,7 @@
       },
       "health": {
         "pathname": "/poker",
-        "bodyTextLength": 2449,
+        "bodyTextLength": 2458,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -495,10 +495,6 @@
         "failure": "net::ERR_ABORTED"
       },
       {
-        "type": "console",
-        "text": "Framing 'https://accounts.google.com/' violates the following report-only Content Security Policy directive: \"frame-ancestors 'self'\". The violation has been logged, but no further action has been taken.\n"
-      },
-      {
         "type": "requestfailed",
         "url": "https://beta.quantgym.app/cdn-cgi/rum",
         "failure": "net::ERR_ABORTED"
@@ -555,5 +551,5 @@
     "noHttpErrors": true,
     "summaryRedacted": true
   },
-  "durationMs": 57004
+  "durationMs": 56121
 }
