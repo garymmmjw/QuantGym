@@ -121,9 +121,11 @@ async function runMobileContentFlow(page) {
   await page.waitForSelector(`[data-experience-id="${recordId}"] .experience-share-confirm`, { timeout: 10000 });
   await expectMobile(page, "experiences-share-confirm", [".experience-share-confirm"]);
   await page.locator(`[data-experience-id="${recordId}"] .experience-share-confirm .primary-button`).click({ timeout: 10000 });
-  await page.waitForFunction((firm) => (
-    location.pathname === "/community" && document.body.textContent.includes(firm)
-  ), experience.firm, { timeout: 15000 });
+  await page.waitForURL(/\/community$/, { timeout: 15000 });
+  await waitForShell(page);
+  await page.waitForSelector("#communityForm", { state: "visible", timeout: 15000 });
+  await page.waitForSelector("#communityList", { state: "visible", timeout: 15000 });
+  await page.waitForFunction((firm) => document.body.textContent.includes(firm), experience.firm, { timeout: 15000 });
   await expectMobile(page, "community-after-share", ["#communityForm", "#communityList"]);
 
   await page.goto(`${baseUrl}/news`, { waitUntil: "domcontentloaded", timeout: 30000 });
