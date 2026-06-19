@@ -1857,7 +1857,7 @@ function validateChromeStorePublicationFixtureSummary(data, expect, label) {
   expect(published.submittedVersion === submission.version, `${label} published fixture version must match submission handoff`);
   expect(published.uploadSha256 === submission.uploadSha256, `${label} published fixture upload SHA-256 must match submission handoff`);
 
-  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= 16, `${label} must include negative publication fixtures`);
+  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= 17, `${label} must include negative publication fixtures`);
   expect(data.checks?.submissionHandoffPass === true, `${label} submission handoff check must pass`);
   expect(data.checks?.submissionHandoffManualSubmissionRequired === true, `${label} must preserve manual submission handoff semantics`);
   expect(data.checks?.publishedFixturePass === true, `${label} published fixture check must pass`);
@@ -1870,6 +1870,7 @@ function validateChromeStorePublicationFixtureSummary(data, expect, label) {
   expect(data.checks?.listingUrlEmbeddedCredentialsRejected === true, `${label} must reject listing URLs with embedded credentials`);
   expect(data.checks?.listingUrlQueryRejected === true, `${label} must reject listing URLs with query strings`);
   expect(data.checks?.listingUrlDetailPathRejected === true, `${label} must reject non-detail Chrome Web Store listing URLs`);
+  expect(data.checks?.listingUrlExtraPathRejected === true, `${label} must reject Chrome Web Store listing URLs with extra path after the item id`);
   expect(data.checks?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} must reject evidence URLs with embedded credentials`);
   expect(data.checks?.evidenceUrlQueryRejected === true, `${label} must reject evidence URLs with query strings`);
   expect(data.checks?.externalPublicationStillRequired === true, `${label} must not mark real Chrome publication complete`);
@@ -2044,6 +2045,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(chrome?.localCoverage?.placeholderItemIdRejected === true, `${label} must include Chrome placeholder item-id rejection`);
   expect(chrome?.localCoverage?.listingUrlEmbeddedCredentialsRejected === true, `${label} must include Chrome listing URL credential rejection`);
   expect(chrome?.localCoverage?.listingUrlQueryRejected === true, `${label} must include Chrome listing URL query rejection`);
+  expect(chrome?.localCoverage?.listingUrlExtraPathRejected === true, `${label} must include Chrome listing URL extra-path rejection`);
   expect(chrome?.localCoverage?.listingUrlDetailPathRejected === true, `${label} must include Chrome non-detail listing rejection`);
   expect(chrome?.localCoverage?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} must include Chrome evidence URL credential rejection`);
   expect(chrome?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include Chrome evidence URL query rejection`);
