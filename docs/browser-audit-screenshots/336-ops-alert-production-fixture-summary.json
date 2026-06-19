@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 629,
+  "durationMs": 779,
   "productionFixture": {
     "status": "pass",
     "passed": 4,
@@ -53,6 +53,20 @@
       "expectedErrorObserved": true,
       "failed": 1,
       "error": "Production alert webhook URL must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "webhook embedded credentials rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production alert webhook URL must not include embedded credentials."
+    },
+    {
+      "name": "webhook query rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production alert webhook URL must not include query strings or fragments."
     },
     {
       "name": "http webhook rejected",
@@ -111,6 +125,20 @@
       "error": "Production edge rate-limit evidence URL must not point to localhost, loopback, or a private network address."
     },
     {
+      "name": "edge evidence embedded credentials rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production edge rate-limit evidence URL must not include embedded credentials."
+    },
+    {
+      "name": "edge evidence query rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production edge rate-limit evidence URL must not include query strings or fragments."
+    },
+    {
       "name": "short edge notes rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -152,6 +180,10 @@
     "negativeFixturesMentionExpectedErrors": true,
     "shortWebhookTokenRejected": true,
     "placeholderWebhookTokenRejected": true,
+    "webhookUrlEmbeddedCredentialsRejected": true,
+    "webhookUrlQueryRejected": true,
+    "edgeEvidenceUrlEmbeddedCredentialsRejected": true,
+    "edgeEvidenceUrlQueryRejected": true,
     "localWebhookSmokeDelivered": true,
     "localWebhookSmokeAuthorized": true,
     "localWebhookSmokePayloadSafe": true

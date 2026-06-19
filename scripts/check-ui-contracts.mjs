@@ -1264,11 +1264,15 @@ function validateOpsAlertProductionFixtureSummary(data, expect, label) {
   expect(data.checks?.validProductionWebhookUrlRedacted === true, `${label} must redact full webhook URL from output`);
   expect(data.checks?.validProductionEdgeEvidenceUrlRedacted === true, `${label} must redact full edge evidence URL from output`);
   expect(data.checks?.validProductionEdgeNotesRedacted === true, `${label} must redact edge notes from output`);
-  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= 13, `${label} must include negative production fixtures`);
+  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= 19, `${label} must include negative production fixtures`);
   expect(data.checks?.negativeFixturesRejected === true, `${label} negative fixtures must be rejected`);
   expect(data.checks?.negativeFixturesMentionExpectedErrors === true, `${label} negative fixtures must mention expected errors`);
   expect(data.checks?.shortWebhookTokenRejected === true, `${label} must reject short production webhook tokens`);
   expect(data.checks?.placeholderWebhookTokenRejected === true, `${label} must reject placeholder production webhook tokens`);
+  expect(data.checks?.webhookUrlEmbeddedCredentialsRejected === true, `${label} must reject webhook URLs with embedded credentials`);
+  expect(data.checks?.webhookUrlQueryRejected === true, `${label} must reject webhook URLs with query strings or fragments`);
+  expect(data.checks?.edgeEvidenceUrlEmbeddedCredentialsRejected === true, `${label} must reject edge evidence URLs with embedded credentials`);
+  expect(data.checks?.edgeEvidenceUrlQueryRejected === true, `${label} must reject edge evidence URLs with query strings or fragments`);
   for (const fixture of data.negativeFixtures || []) {
     expect(fixture.rejected === true, `${label} negative fixture ${fixture.name} must be rejected`);
     expect(fixture.expectedErrorObserved === true, `${label} negative fixture ${fixture.name} must report expected error`);
@@ -2000,6 +2004,10 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(ops?.localCoverage?.productionFixturePass === true, `${label} must include ops production fixture coverage`);
   expect(ops?.localCoverage?.shortWebhookTokenRejected === true, `${label} must include ops short webhook-token rejection`);
   expect(ops?.localCoverage?.placeholderWebhookTokenRejected === true, `${label} must include ops placeholder webhook-token rejection`);
+  expect(ops?.localCoverage?.webhookUrlEmbeddedCredentialsRejected === true, `${label} must include ops webhook URL credential rejection`);
+  expect(ops?.localCoverage?.webhookUrlQueryRejected === true, `${label} must include ops webhook URL query rejection`);
+  expect(ops?.localCoverage?.edgeEvidenceUrlEmbeddedCredentialsRejected === true, `${label} must include ops edge evidence URL credential rejection`);
+  expect(ops?.localCoverage?.edgeEvidenceUrlQueryRejected === true, `${label} must include ops edge evidence URL query rejection`);
   const media = findBlocker(data.blockers, "media-bucket-cdn");
   expect(media?.localCoverage?.liveFixturePass === true, `${label} must include media live fixture coverage`);
   expect(media?.localCoverage?.endpointEmbeddedCredentialsRejected === true, `${label} must include media endpoint credential rejection`);

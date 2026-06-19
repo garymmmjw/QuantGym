@@ -60,6 +60,16 @@ const negativeCases = [
     expectedError: "private network address"
   },
   {
+    name: "webhook embedded credentials rejected",
+    env: { QUANTGYM_ALERT_WEBHOOK_URL: "https://alert-user:secret@alerts.quantgym.test/readiness-webhook" },
+    expectedError: "embedded credentials"
+  },
+  {
+    name: "webhook query rejected",
+    env: { QUANTGYM_ALERT_WEBHOOK_URL: "https://alerts.quantgym.test/readiness-webhook?token=leaky" },
+    expectedError: "query strings or fragments"
+  },
+  {
     name: "http webhook rejected",
     env: { QUANTGYM_ALERT_WEBHOOK_URL: "http://alerts.quantgym.test/readiness-webhook" },
     expectedError: "must use HTTPS"
@@ -98,6 +108,16 @@ const negativeCases = [
     name: "private edge evidence rejected",
     env: { QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL: "https://192.168.10.20/rulesets/quantgym-auth-rate-limit" },
     expectedError: "private network address"
+  },
+  {
+    name: "edge evidence embedded credentials rejected",
+    env: { QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL: "https://reviewer:secret@dash.cloudflare.com/readiness/rulesets/quantgym-auth-rate-limit" },
+    expectedError: "embedded credentials"
+  },
+  {
+    name: "edge evidence query rejected",
+    env: { QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL: "https://dash.cloudflare.com/readiness/rulesets/quantgym-auth-rate-limit?token=leaky" },
+    expectedError: "query strings or fragments"
   },
   {
     name: "short edge notes rejected",
@@ -144,6 +164,10 @@ try {
     negativeFixturesMentionExpectedErrors: negativeFixtures.every((fixture) => fixture.expectedErrorObserved),
     shortWebhookTokenRejected: negativeFixtures.some((fixture) => fixture.name === "short webhook token rejected" && fixture.rejected === true),
     placeholderWebhookTokenRejected: negativeFixtures.some((fixture) => fixture.name === "placeholder webhook token rejected" && fixture.rejected === true),
+    webhookUrlEmbeddedCredentialsRejected: negativeFixtures.some((fixture) => fixture.name === "webhook embedded credentials rejected" && fixture.rejected === true),
+    webhookUrlQueryRejected: negativeFixtures.some((fixture) => fixture.name === "webhook query rejected" && fixture.rejected === true),
+    edgeEvidenceUrlEmbeddedCredentialsRejected: negativeFixtures.some((fixture) => fixture.name === "edge evidence embedded credentials rejected" && fixture.rejected === true),
+    edgeEvidenceUrlQueryRejected: negativeFixtures.some((fixture) => fixture.name === "edge evidence query rejected" && fixture.rejected === true),
     localWebhookSmokeDelivered: localWebhookSmoke.delivered,
     localWebhookSmokeAuthorized: localWebhookSmoke.tokenAccepted,
     localWebhookSmokePayloadSafe: localWebhookSmoke.payloadSanitized

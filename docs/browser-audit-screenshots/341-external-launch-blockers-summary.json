@@ -45,6 +45,10 @@
         "localWebhookSmokeDelivered": true,
         "shortWebhookTokenRejected": true,
         "placeholderWebhookTokenRejected": true,
+        "webhookUrlEmbeddedCredentialsRejected": true,
+        "webhookUrlQueryRejected": true,
+        "edgeEvidenceUrlEmbeddedCredentialsRejected": true,
+        "edgeEvidenceUrlQueryRejected": true,
         "privateWebhookRejected": true,
         "privateEdgeEvidenceRejected": true
       }
