@@ -53,6 +53,7 @@ copyRuntimeStaticFiles(outputDir);
 // they reference the hashed asset URLs already in dist/index.html.
 writeLocaleEntries(outputDir);
 writeSpaFallbackRules(outputDir);
+writeAssetNotFoundPage(outputDir);
 
 console.log(`Built static site in ${path.relative(projectRoot, outputDir) || outputDir}`);
 if (!webConfig.cloudApiEndpoint || !webConfig.llmEndpoint) {
@@ -130,6 +131,17 @@ function writeSpaFallbackRules(distDir) {
   // top-level 404.html exists. Keep the explicit rewrite rule, but do not emit
   // a custom 404 page that would turn valid React routes into HTTP 404s.
   fs.writeFileSync(path.join(distDir, "_redirects"), "/* /index.html 200\n");
+}
+
+function writeAssetNotFoundPage(distDir) {
+  const assetsDir = path.join(distDir, "assets");
+  if (!fs.existsSync(assetsDir)) return;
+  // Keep the SPA fallback for application routes, but let missing hashed chunks
+  // under /assets fail as 404s instead of returning index.html as text/html.
+  fs.writeFileSync(
+    path.join(assetsDir, "404.html"),
+    "<!doctype html><meta charset=\"utf-8\"><title>Asset not found</title><p>Asset not found.</p>\n"
+  );
 }
 
 function writeConfig(distDir) {

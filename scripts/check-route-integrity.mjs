@@ -22,6 +22,7 @@ const {
 } = await import(pathToFileURL(path.join(src, "routes", "routeConfig.js")));
 
 const routesText = read("src/routes/routes.jsx");
+const buildScriptText = read("scripts/build-static-site.mjs");
 const manifestIds = MODULE_MANIFEST.map((entry) => entry.id);
 const reactIds = [...REACT_PAGE_IDS];
 const bridgeIds = [...BRIDGE_PAGE_IDS];
@@ -32,6 +33,7 @@ checkRouteConfigSync();
 checkRoutesJsx();
 checkPageWrappers();
 checkPublicFallbackPages();
+checkStaticBuildFallbacks();
 
 const summary = {
   status: failures.length ? "fail" : "pass",
@@ -127,6 +129,21 @@ function checkPublicFallbackPages() {
     const htmlPath = path.join(root, "public", "pages", `${id}.html`);
     expectFile(htmlPath, `public fallback page for ${id}`);
   }
+}
+
+function checkStaticBuildFallbacks() {
+  expect(
+    buildScriptText.includes("writeAssetNotFoundPage(outputDir)"),
+    "build-static-site.mjs must write an assets-level 404 page."
+  );
+  expect(
+    buildScriptText.includes('path.join(assetsDir, "404.html")'),
+    "build-static-site.mjs must write dist/assets/404.html for missing hashed assets."
+  );
+  expect(
+    !/path\.join\(distDir,\s*["']404\.html["']\)/.test(buildScriptText),
+    "build-static-site.mjs must not emit a top-level dist/404.html because that disables Cloudflare Pages SPA fallback."
+  );
 }
 
 function pageComponentName(id) {
