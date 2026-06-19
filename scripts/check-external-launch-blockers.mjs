@@ -265,6 +265,10 @@ const blockers = [
         && item.methodPass === true
         && item.headersPass === true
       )),
+      deployedBetaStaticAssetFallbackPass: evidence.deployedBetaSmoke.checks?.staticAssetFallbackPass === true
+        && evidence.deployedBetaSmoke.staticAssetFallback?.status === 404
+        && evidence.deployedBetaSmoke.staticAssetFallback?.notHtml200Pass === true
+        && evidence.deployedBetaSmoke.staticAssetFallback?.noStorePass === true,
       deployedBetaErrorSweepPass: evidence.deployedBetaSmoke.checks?.noMaterialConsoleErrors === true
         && evidence.deployedBetaSmoke.checks?.noPageErrors === true
         && evidence.deployedBetaSmoke.checks?.noRequestFailures === true
@@ -706,6 +710,7 @@ const summary = {
     browserDeployedBetaLoginPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaLoginPass === true,
     browserDeployedBetaRouteSweepPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaRoutesPass === true,
     browserDeployedBetaErrorSweepPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaErrorSweepPass === true,
+    browserDeployedBetaStaticAssetFallbackPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaStaticAssetFallbackPass === true,
     browserDeployedBetaMobileContentPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentPass === true,
     browserDeployedBetaMobileContentCheckpointPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentCheckpointPass === true,
     browserDeployedBetaMobileContentExperiencePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentExperiencePass === true,
