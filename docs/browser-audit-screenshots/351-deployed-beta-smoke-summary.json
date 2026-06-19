@@ -18,6 +18,46 @@
     "googleLoginEnabled": true,
     "googleClientIdSet": true
   },
+  "corsPreflights": [
+    {
+      "name": "cloud sync preflight",
+      "url": "https://api.quantgym.app/api/sync",
+      "method": "POST",
+      "requestHeaders": [
+        "content-type",
+        "authorization"
+      ],
+      "status": 204,
+      "allowOrigin": "https://beta.quantgym.app",
+      "allowMethods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+      "allowHeaders": "Content-Type, Authorization, Range",
+      "statusPass": true,
+      "originPass": true,
+      "methodPass": true,
+      "headersPass": true,
+      "statusText": "No Content",
+      "pass": true
+    },
+    {
+      "name": "poker join preflight",
+      "url": "https://api.quantgym.app/api/poker/rooms/QG-MAIN/join",
+      "method": "POST",
+      "requestHeaders": [
+        "content-type",
+        "authorization"
+      ],
+      "status": 204,
+      "allowOrigin": "https://beta.quantgym.app",
+      "allowMethods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+      "allowHeaders": "Content-Type, Authorization, Range",
+      "statusPass": true,
+      "originPass": true,
+      "methodPass": true,
+      "headersPass": true,
+      "statusText": "No Content",
+      "pass": true
+    }
+  ],
   "routes": [
     {
       "name": "overview",
@@ -109,7 +149,7 @@
       },
       "health": {
         "pathname": "/tools",
-        "bodyTextLength": 736,
+        "bodyTextLength": 733,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -455,6 +495,10 @@
         "failure": "net::ERR_ABORTED"
       },
       {
+        "type": "console",
+        "text": "Framing 'https://accounts.google.com/' violates the following report-only Content Security Policy directive: \"frame-ancestors 'self'\". The violation has been logged, but no further action has been taken.\n"
+      },
+      {
         "type": "requestfailed",
         "url": "https://beta.quantgym.app/cdn-cgi/rum",
         "failure": "net::ERR_ABORTED"
@@ -472,7 +516,7 @@
       {
         "type": "http",
         "status": 403,
-        "url": "https://api.quantgym.app/api/admin/metrics",
+        "url": "https://api.quantgym.app/api/admin/audit-events",
         "reason": "non-admin account admin endpoint guard"
       },
       {
@@ -482,7 +526,7 @@
       {
         "type": "http",
         "status": 403,
-        "url": "https://api.quantgym.app/api/admin/audit-events",
+        "url": "https://api.quantgym.app/api/admin/metrics",
         "reason": "non-admin account admin endpoint guard"
       },
       {
@@ -503,6 +547,7 @@
     "cloudEndpointIsProduction": true,
     "llmEndpointIsProduction": true,
     "googleLoginEnabled": true,
+    "corsPreflightPass": true,
     "routeCountPass": true,
     "noMaterialConsoleErrors": true,
     "noPageErrors": true,
@@ -510,5 +555,5 @@
     "noHttpErrors": true,
     "summaryRedacted": true
   },
-  "durationMs": 57099
+  "durationMs": 57004
 }

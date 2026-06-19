@@ -257,6 +257,14 @@ const blockers = [
       deployedBetaProductionEndpointPass: evidence.deployedBetaSmoke.checks?.cloudEndpointIsProduction === true
         && evidence.deployedBetaSmoke.checks?.llmEndpointIsProduction === true
         && evidence.deployedBetaSmoke.checks?.googleLoginEnabled === true,
+      deployedBetaCorsPreflightPass: evidence.deployedBetaSmoke.checks?.corsPreflightPass === true,
+      deployedBetaPokerCorsPreflightPass: (evidence.deployedBetaSmoke.corsPreflights || []).some((item) => (
+        item.name === "poker join preflight"
+        && item.pass === true
+        && item.originPass === true
+        && item.methodPass === true
+        && item.headersPass === true
+      )),
       deployedBetaErrorSweepPass: evidence.deployedBetaSmoke.checks?.noMaterialConsoleErrors === true
         && evidence.deployedBetaSmoke.checks?.noPageErrors === true
         && evidence.deployedBetaSmoke.checks?.noRequestFailures === true

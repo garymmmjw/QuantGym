@@ -1612,6 +1612,19 @@ function validateDeployedBetaSmokeSummary(data, expect, label) {
   expect(data.config?.googleLoginEnabled === true, `${label} runtime config must enable Google login`);
   expect(data.config?.googleClientIdSet === true, `${label} runtime config must include Google client id`);
 
+  const expectedPreflights = new Set(["cloud sync preflight", "poker join preflight"]);
+  expect(Array.isArray(data.corsPreflights), `${label} must include deployed API CORS preflight checks`);
+  expect((data.corsPreflights || []).length === expectedPreflights.size, `${label} must check all deployed API CORS preflights`);
+  for (const preflight of data.corsPreflights || []) {
+    expect(expectedPreflights.has(preflight.name), `${label} contains unexpected CORS preflight ${preflight.name}`);
+    expect(preflight.pass === true, `${label} CORS preflight ${preflight.name} must pass`);
+    expect(preflight.statusPass === true, `${label} CORS preflight ${preflight.name} must return an allowed status`);
+    expect(preflight.originPass === true, `${label} CORS preflight ${preflight.name} must allow beta origin`);
+    expect(preflight.methodPass === true, `${label} CORS preflight ${preflight.name} must allow requested method`);
+    expect(preflight.headersPass === true, `${label} CORS preflight ${preflight.name} must allow requested headers`);
+    expect(preflight.allowOrigin === "https://beta.quantgym.app", `${label} CORS preflight ${preflight.name} must allow beta.quantgym.app exactly`);
+  }
+
   expect(Number(data.routeSummary?.checked || 0) === routeIds.length, `${label} must check all deployed routes`);
   expect(Number(data.routeSummary?.passed || 0) === routeIds.length, `${label} must pass all deployed routes`);
   expect(Number(data.routeSummary?.failed || 0) === 0, `${label} must have zero route failures`);
@@ -1633,6 +1646,7 @@ function validateDeployedBetaSmokeSummary(data, expect, label) {
   expect(Array.isArray(data.errors?.httpErrors) && data.errors.httpErrors.length === 0, `${label} must have no material HTTP errors`);
   expect(data.checks?.loginPass === true, `${label} loginPass check must pass`);
   expect(data.checks?.summaryRedacted === true, `${label} summaryRedacted check must pass`);
+  expect(data.checks?.corsPreflightPass === true, `${label} corsPreflightPass check must pass`);
   expect(data.checks?.routeCountPass === true, `${label} routeCountPass check must pass`);
   expect(data.checks?.noHttpErrors === true, `${label} noHttpErrors check must pass`);
 }
@@ -1889,6 +1903,8 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.deployedBetaRoutesPass === true, `${label} must include deployed beta route sweep coverage`);
   expect(browser?.localCoverage?.deployedBetaLoginPass === true, `${label} must include deployed beta login coverage`);
   expect(browser?.localCoverage?.deployedBetaProductionEndpointPass === true, `${label} must include deployed beta production endpoint coverage`);
+  expect(browser?.localCoverage?.deployedBetaCorsPreflightPass === true, `${label} must include deployed beta API CORS preflight coverage`);
+  expect(browser?.localCoverage?.deployedBetaPokerCorsPreflightPass === true, `${label} must include deployed beta Poker join CORS preflight coverage`);
   expect(browser?.localCoverage?.deployedBetaErrorSweepPass === true, `${label} must include deployed beta error sweep coverage`);
   expect(browser?.localCoverage?.deployedBetaSummaryRedactedPass === true, `${label} must include deployed beta summary redaction coverage`);
   expect(browser?.localCoverage?.deployedBetaMobileContentPass === true, `${label} must include deployed beta mobile content coverage`);
