@@ -457,6 +457,15 @@ const blockers = [
         evidence.browserRouteSmoke.interactions?.results,
         "tools market game rejects crossed quote, scores valid quote, and persists record"
       )?.status === "pass",
+      pokerDefaultLocalNoAutoJoinPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "poker default route stays local until online action"
+        );
+        return item?.status === "pass"
+          && item.joinRequests === 0
+          && item.search === "";
+      })(),
       pokerPreflopPass: findResult(
         evidence.browserRouteSmoke.interactions?.results,
         "poker preflop matrix position, hand selection, and leave-table navigation"
@@ -725,6 +734,7 @@ const summary = {
     browserMemoryImageUploadPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.memoryImageUploadPass === true,
     browserToolsMentalMathCompletionPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.toolsMentalMathCompletionPass === true,
     browserToolsMarketGamePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.toolsMarketGamePass === true,
+    browserPokerDefaultLocalNoAutoJoinPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.pokerDefaultLocalNoAutoJoinPass === true,
     browserPokerPreflopPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.pokerPreflopPass === true,
     browserPokerLeaveTablePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.pokerLeaveTablePass === true,
     browserOverviewLeaderboardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.overviewLeaderboardPass === true,
