@@ -30,6 +30,7 @@ const evidence = {
   jobsRuntime: readJson("docs/browser-audit-screenshots/330-jobs-source-runtime-smoke-summary.json", "jobs source runtime smoke"),
   jobsFixture: readJson("docs/browser-audit-screenshots/338-jobs-source-production-fixture-summary.json", "jobs source production fixture"),
   jobsPacket: readJson("docs/browser-audit-screenshots/349-jobs-feed-publication-packet-summary.json", "jobs feed publication packet"),
+  jobsStaticFeed: readJson("docs/browser-audit-screenshots/353-jobs-public-ats-static-feed-summary.json", "jobs public ATS static feed"),
   chromeFixture: readJson("docs/browser-audit-screenshots/339-chrome-store-publication-fixture-summary.json", "Chrome store publication fixture"),
   chromePacket: readJson("docs/browser-audit-screenshots/348-chrome-store-publication-packet-summary.json", "Chrome store publication packet"),
   postgresExport: readJson("docs/browser-audit-screenshots/331-postgres-cutover-export-smoke-summary.json", "Postgres cutover export smoke"),
@@ -52,6 +53,7 @@ const requiredScripts = [
   "check:media-storage:production",
   "build:media-storage-packet",
   "check:jobs-source:production",
+  "check:jobs-feed:static",
   "build:jobs-feed:publication-packet",
   "check:chrome-store-publication:published",
   "build:chrome-store-publication-packet",
@@ -148,6 +150,14 @@ const blockers = [
       packetGeneratedFeedShaMatches: evidence.jobsPacket.checks?.generatedFeedShaMatches === true,
       packetGeneratedFeedIncludesInternshipAndFulltime: evidence.jobsPacket.checks?.generatedFeedIncludesInternshipAndFulltime === true,
       packetGeneratedFeedHasRealMetadata: evidence.jobsPacket.checks?.generatedFeedHasRealMetadata === true,
+      staticFeedPass: evidence.jobsStaticFeed.status === "pass",
+      staticFeedPublicUrlReady: evidence.jobsStaticFeed.checks?.publicUrlHttps === true
+        && evidence.jobsStaticFeed.checks?.publicUrlStablePath === true,
+      staticFeedIncludesInternshipAndFulltime: evidence.jobsStaticFeed.checks?.includesInternshipAndFulltime === true,
+      staticFeedHasRealMetadata: evidence.jobsStaticFeed.checks?.realMetadata === true
+        && evidence.jobsStaticFeed.checks?.validUrls === true
+        && evidence.jobsStaticFeed.checks?.validPostedAt === true,
+      staticFeedShaSet: evidence.jobsStaticFeed.checks?.feedSha256Set === true,
       packetIncludesProductionEnvTemplate: evidence.jobsPacket.checks?.includesProductionEnvTemplate === true,
       packetIncludesHostingRunbook: evidence.jobsPacket.checks?.includesHostingRunbook === true,
       packetIncludesLiveSignoffChecklist: evidence.jobsPacket.checks?.includesLiveSignoffChecklist === true,

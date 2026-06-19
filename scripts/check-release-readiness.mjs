@@ -40,6 +40,7 @@ const gates = [
   { name: "Ops alert production fixture", command: "npm", args: ["run", "check:ops-alerts:production-fixture"], parseJson: true },
   { name: "Jobs source runtime smoke", command: "npm", args: ["run", "check:jobs-source:runtime-smoke"], parseJson: true },
   { name: "Jobs source production fixture", command: "npm", args: ["run", "check:jobs-source:production-fixture"], parseJson: true },
+  { name: "Jobs public ATS static feed", command: "npm", args: ["run", "check:jobs-feed:static"], parseJson: true },
   { name: "Question-bank rights", command: "npm", args: ["run", "check:question-bank-rights"], parseJson: true },
   { name: "Question-bank rights public smoke", command: "npm", args: ["run", "check:question-bank-rights:public-smoke"], parseJson: true },
   { name: "Question-bank rights release blockers", command: "npm", args: ["run", "check:question-bank-rights:release-blockers"], parseJson: true },

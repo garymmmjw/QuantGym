@@ -43,6 +43,7 @@
     "check:jobs-source:production-fixture": "node scripts/check-jobs-source-production-fixture.mjs",
     "check:jobs-source:production": "node scripts/check-jobs-source-config.mjs --production",
     "build:jobs-feed:public-ats": "node scripts/build-public-ats-jobs-feed.mjs",
+    "check:jobs-feed:static": "node scripts/check-jobs-public-ats-static-feed.mjs",
     "build:jobs-feed:publication-packet": "node scripts/build-jobs-feed-publication-packet.mjs",
     "check:question-bank-rights": "node scripts/check-question-bank-rights.mjs",
     "check:question-bank-rights:public": "node scripts/check-question-bank-rights.mjs --mode public",
