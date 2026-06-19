@@ -45,6 +45,8 @@ export function usePokerPageModel() {
 
   const actions = useMemo(() => ({
     setPanelTab: wrap((tab) => api?.setPanelTab?.(tab)),
+    setPreflopHand: wrap((handKey) => api?.setPreflopHand?.(handKey)),
+    setPreflopPosition: wrap((position) => api?.setPreflopPosition?.(position)),
     setPlayerName: wrap((name) => api?.setPlayerName?.(name)),
     setMode: wrap((mode) => api?.setMode?.(mode)),
     setRaiseAmount: wrap((amount) => api?.setRaiseAmount?.(amount)),
@@ -72,7 +74,6 @@ export function usePokerPageModel() {
   return {
     view,
     actions,
-    openModule: (moduleId) => api?.switchModule?.(moduleId),
-    handlePreflopClick: wrap((event) => api?.handlePreflopMatrixClick?.(event))
+    openModule: (moduleId) => api?.switchModule?.(moduleId)
   };
 }

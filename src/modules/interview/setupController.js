@@ -36,10 +36,14 @@ export function createInterviewSetupController(deps = {}) {
   }
 
   function getType() {
+    const runtimeType = getRuntimeState().setupType;
+    if (typeDefs[runtimeType]) return runtimeType;
     return typeDefs[elements.interviewTypeSelect?.value] ? elements.interviewTypeSelect.value : "oa";
   }
 
   function getSource() {
+    const runtimeSource = getRuntimeState().setupSource;
+    if (runtimeSource === "pdf" || runtimeSource === "full") return runtimeSource;
     return elements.interviewSourceSelect?.value === "pdf" ? "pdf" : "full";
   }
 
@@ -197,6 +201,8 @@ export function createInterviewSetupController(deps = {}) {
     const useReactSetup = options.reactSetup !== false;
     if (!deps.hasRestoredSnapshot?.()) deps.restoreSessionSnapshot?.();
     const config = deps.getLlmConfig?.() || {};
+    if (elements.interviewTypeSelect) elements.interviewTypeSelect.value = getType();
+    if (elements.interviewSourceSelect) elements.interviewSourceSelect.value = getSource();
     if (elements.llmEndpointInput) elements.llmEndpointInput.value = config.endpoint || "";
     if (elements.llmModelInput) elements.llmModelInput.value = config.model || "";
     if (!useReactSetup) {

@@ -1,0 +1,262 @@
+{
+  "status": "pass",
+  "durationMs": 904,
+  "productionFixture": {
+    "status": "pass",
+    "mode": "production",
+    "storage": "r2",
+    "passed": 5,
+    "failed": 0,
+    "objectStorage": true,
+    "mediaMaxBytes": 5242880,
+    "estimatedJsonBodyBytes": 7186842,
+    "endpointHost": "r2.quantgym.test",
+    "endpointProtocol": "https",
+    "bucket": "qu***re",
+    "region": "auto",
+    "prefix": "media",
+    "accessKeyIdSet": true,
+    "secretAccessKeySet": true,
+    "publicHost": "media.quantgym.test",
+    "publicProtocol": "https"
+  },
+  "negativeFixtures": [
+    {
+      "name": "local storage rejected in production",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 2,
+      "error": "Production media storage must use s3/r2/object/object-storage."
+    },
+    {
+      "name": "http object endpoint rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production object storage endpoint must use HTTPS."
+    },
+    {
+      "name": "local object endpoint rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production object storage endpoint must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "private object endpoint rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production object storage endpoint must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "endpoint embedded credentials rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_S3_ENDPOINT must not include embedded credentials."
+    },
+    {
+      "name": "missing public base rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production media storage must set QUANTGYM_MEDIA_PUBLIC_BASE_URL for CDN/public object delivery."
+    },
+    {
+      "name": "http public base rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production public media URL must use HTTPS."
+    },
+    {
+      "name": "private public base rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production public media URL must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "public base query rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_PUBLIC_BASE_URL must not include query strings or fragments."
+    },
+    {
+      "name": "raw endpoint public base rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production public media URL should be a CDN/custom public origin, not the raw object storage endpoint."
+    },
+    {
+      "name": "placeholder endpoint rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 2,
+      "error": "QUANTGYM_MEDIA_S3_ENDPOINT still contains placeholder brackets."
+    },
+    {
+      "name": "placeholder secret rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY still contains a placeholder ellipsis."
+    },
+    {
+      "name": "placeholder access key rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_S3_ACCESS_KEY_ID still contains a placeholder value."
+    },
+    {
+      "name": "short secret key rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY must be at least 24 characters in production."
+    },
+    {
+      "name": "unsafe bucket name rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_S3_BUCKET must be a DNS-safe lowercase bucket name."
+    },
+    {
+      "name": "unsafe object prefix rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_S3_PREFIX must not contain empty, current-directory, or parent-directory segments."
+    },
+    {
+      "name": "oversized media envelope rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_MAX_BYTES is too high for QUANTGYM_MAX_BODY_BYTES after base64 JSON expansion."
+    },
+    {
+      "name": "excessive timeout rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_S3_TIMEOUT_SECONDS must be between 0 and 60 seconds."
+    }
+  ],
+  "liveFixture": {
+    "status": "pass",
+    "childExitCode": 0,
+    "rejected": false,
+    "expectedErrorObserved": false,
+    "error": "",
+    "putStatus": 200,
+    "signedGetStatus": 200,
+    "publicGetStatus": 200,
+    "deleteStatus": 204,
+    "bytes": 51,
+    "cleanedUp": true,
+    "putSigned": true,
+    "signedGetSigned": true,
+    "deleteSigned": true,
+    "deleteObserved": true,
+    "publicGetOk": true,
+    "publicGetFailureObserved": false,
+    "s3Requests": [
+      {
+        "method": "PUT",
+        "signed": true,
+        "statusCode": 200
+      },
+      {
+        "method": "GET",
+        "signed": true,
+        "statusCode": 200
+      },
+      {
+        "method": "DELETE",
+        "signed": true,
+        "statusCode": 204
+      }
+    ],
+    "cdnRequests": [
+      {
+        "method": "GET",
+        "signed": false,
+        "statusCode": 200
+      }
+    ],
+    "objectsRemaining": 0
+  },
+  "livePublicFailureFixture": {
+    "status": "fail",
+    "childExitCode": 1,
+    "rejected": true,
+    "expectedErrorObserved": true,
+    "error": "Public media live GET returned HTTP 502.",
+    "putStatus": 0,
+    "signedGetStatus": 0,
+    "publicGetStatus": 0,
+    "deleteStatus": 0,
+    "bytes": 0,
+    "cleanedUp": false,
+    "putSigned": true,
+    "signedGetSigned": true,
+    "deleteSigned": true,
+    "deleteObserved": true,
+    "publicGetOk": false,
+    "publicGetFailureObserved": true,
+    "s3Requests": [
+      {
+        "method": "PUT",
+        "signed": true,
+        "statusCode": 200
+      },
+      {
+        "method": "GET",
+        "signed": true,
+        "statusCode": 200
+      },
+      {
+        "method": "DELETE",
+        "signed": true,
+        "statusCode": 204
+      }
+    ],
+    "cdnRequests": [
+      {
+        "method": "GET",
+        "signed": false,
+        "statusCode": 502
+      }
+    ],
+    "objectsRemaining": 0
+  },
+  "checks": {
+    "validProductionPass": true,
+    "validProductionHasAllChecks": true,
+    "validProductionAccessKeyRedacted": true,
+    "validProductionSecretRedacted": true,
+    "validProductionBucketRedacted": true,
+    "validProductionEndpointUrlRedacted": true,
+    "validProductionPublicBaseUrlRedacted": true,
+    "negativeFixturesRejected": true,
+    "negativeFixturesMentionExpectedErrors": true,
+    "endpointEmbeddedCredentialsRejected": true,
+    "publicBaseQueryRejected": true,
+    "placeholderAccessKeyRejected": true,
+    "shortSecretKeyRejected": true,
+    "unsafeBucketNameRejected": true,
+    "unsafeObjectPrefixRejected": true,
+    "liveFixturePassed": true,
+    "liveFixturePutGetPublicDelete": true,
+    "liveFailureRejected": true,
+    "liveFailureCleanedUp": true
+  },
+  "failures": [],
+  "warnings": []
+}

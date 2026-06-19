@@ -2,9 +2,10 @@ import {
   normalizePrepPlan,
   normalizeStudyPlan
 } from './data.js';
+import { isoOrNow } from '../../lib/date.js';
 
 function getNowIso(now = new Date()) {
-  return now instanceof Date ? now.toISOString() : new Date(now).toISOString();
+  return isoOrNow(now);
 }
 
 function getDateKey(localDateKey) {
@@ -32,7 +33,10 @@ export function buildTodoDockPlan(options = {}) {
     return {
       type: "prep",
       summary: todayPlan?.summary || "",
-      items: Array.isArray(todayPlan?.items) ? todayPlan.items : []
+      items: Array.isArray(todayPlan?.items) ? todayPlan.items.map((item) => ({
+        ...item,
+        deletable: Boolean(item.deletable)
+      })) : []
     };
   }
   const normalizedStudyPlan = normalizeStudyPlan(studyPlan, { makeId });
@@ -40,7 +44,10 @@ export function buildTodoDockPlan(options = {}) {
   return {
     type: "study",
     summary: normalizedStudyPlan.summary || fallbackSummary,
-    items: normalizedStudyPlan.items
+    items: normalizedStudyPlan.items.map((item) => ({
+      ...item,
+      deletable: true
+    }))
   };
 }
 
@@ -151,6 +158,58 @@ export function togglePrepTaskCompletion(options = {}) {
       completedTasks,
       updatedAt: getNowIso(now)
     }
+  };
+}
+
+export function removeTodoTaskFromPlans(options = {}) {
+  const {
+    prepPlan,
+    studyPlan,
+    taskId,
+    makeId,
+    localDateKey,
+    now = new Date()
+  } = options;
+  if (!taskId) return { changed: false };
+
+  const normalizedPrepPlan = normalizePrepPlan(prepPlan, { makeId, localDateKey });
+  if (normalizedPrepPlan) {
+    const dateKey = getDateKey(localDateKey);
+    let removed = false;
+    const customTasks = (normalizedPrepPlan.customTasks || []).filter((task) => {
+      const shouldRemove = task.date === dateKey && task.id === taskId;
+      if (shouldRemove) removed = true;
+      return !shouldRemove;
+    });
+    if (!removed) return { changed: false };
+    const completedTasks = { ...(normalizedPrepPlan.completedTasks || {}) };
+    delete completedTasks[`${dateKey}:${taskId}`];
+    const taskOverrides = { ...(normalizedPrepPlan.taskOverrides || {}) };
+    delete taskOverrides[`${dateKey}:${taskId}`];
+    return {
+      changed: true,
+      mode: "prep",
+      prepPlan: {
+        ...normalizedPrepPlan,
+        completedTasks,
+        customTasks,
+        taskOverrides,
+        updatedAt: getNowIso(now)
+      }
+    };
+  }
+
+  const normalizedStudyPlan = normalizeStudyPlan(studyPlan, { makeId });
+  if (!normalizedStudyPlan) return { changed: false };
+  const items = normalizedStudyPlan.items.filter((item) => item.id !== taskId);
+  if (items.length === normalizedStudyPlan.items.length) return { changed: false };
+  return {
+    changed: true,
+    mode: "study",
+    studyPlan: items.length ? {
+      ...normalizedStudyPlan,
+      items
+    } : null
   };
 }
 

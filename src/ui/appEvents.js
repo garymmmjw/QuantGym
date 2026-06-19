@@ -38,6 +38,7 @@ export function bindAppShellEvents(options = {}) {
   });
 
   bind(elements.loginEmail, "input", () => handlers.resetEmailAuthFlow?.());
+  bind(elements.forgotPasswordBtn, "click", () => handlers.startPasswordReset?.());
 
   bind(elements.registerForm, "submit", (event) => {
     event.preventDefault();
@@ -45,12 +46,20 @@ export function bindAppShellEvents(options = {}) {
   });
 
   bind(elements.sendRegisterCodeBtn, "click", () => handlers.sendRegisterVerificationCode?.());
+  bind(elements.resetPasswordForm, "submit", (event) => {
+    event.preventDefault();
+    handlers.resetPassword?.();
+  });
+  bind(elements.sendResetPasswordCodeBtn, "click", () => handlers.sendPasswordResetCode?.());
+  bind(elements.cancelResetPasswordBtn, "click", () => handlers.cancelPasswordReset?.());
   bind(elements.saveGoogleClientBtn, "click", () => handlers.saveGoogleClientId?.());
   bind(elements.userChip, "click", () => handlers.switchModule?.("account"));
   bind(elements.languageSelect, "change", () => handlers.setLanguage?.(elements.languageSelect.value));
   bind(elements.settingsBtn, "click", () => handlers.switchModule?.("settings"));
   bind(elements.logoutBtn, "click", () => handlers.logout?.());
-  bind(elements.checkInPill, "click", () => handlers.toggleStreakPanel?.());
+  if (elements.checkInPill?.dataset?.streakReactHandler !== "true") {
+    bind(elements.checkInPill, "click", () => handlers.toggleStreakPanel?.());
+  }
 
   bind(documentRef, "click", (event) => {
     if (!event.target?.closest?.(".streak-widget")) handlers.setStreakPanelOpen?.(false);
@@ -82,14 +91,16 @@ export function bindAppShellEvents(options = {}) {
   bind(elements.durationInput, "input", () => handlers.updatePreview?.());
   bind(elements.difficultyInput, "change", () => handlers.updatePreview?.());
   bind(elements.sampleBtn, "click", () => handlers.fillSampleEntry?.());
-  bind(elements.todoDockButton, "click", () => handlers.toggleTodoDock?.());
-  bind(elements.todoDockCloseBtn, "click", () => handlers.closeTodoDock?.());
-  bind(elements.todoDockPanel, "click", (event) => handlers.handleTodoDockClick?.(event));
-  bind(elements.todoDockPanel, "change", (event) => handlers.handleTodoDockEdit?.(event));
-  bind(elements.todoDockAddForm, "submit", (event) => {
-    event.preventDefault();
-    handlers.addTodoTask?.();
-  });
+  if (!String(elements.todoDockButton?.dataset?.todoHandler || "").startsWith("react-native")) {
+    bind(elements.todoDockButton, "click", () => handlers.toggleTodoDock?.());
+    bind(elements.todoDockCloseBtn, "click", () => handlers.closeTodoDock?.());
+    bind(elements.todoDockPanel, "click", (event) => handlers.handleTodoDockClick?.(event));
+    bind(elements.todoDockPanel, "change", (event) => handlers.handleTodoDockEdit?.(event));
+    bind(elements.todoDockAddForm, "submit", (event) => {
+      event.preventDefault();
+      handlers.addTodoTask?.();
+    });
+  }
 
   return () => {
     disposers.splice(0).forEach((dispose) => dispose());

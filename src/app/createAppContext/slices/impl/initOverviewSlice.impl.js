@@ -9,6 +9,7 @@ export function initOverviewSliceImpl(shared, ctx) {
   bindAppElements,
   bindShellEvents,
   calculateQuantScore,
+  cancelPasswordReset,
   canUseCloud,
   careers,
   clearGlobalSearch,
@@ -76,6 +77,7 @@ export function initOverviewSliceImpl(shared, ctx) {
   refreshLeaderboardFromCloud,
   registerAppFeatureModules,
   registerLocal,
+  resetPassword,
   resetEmailAuthFlow,
   renderCountryOptions,
   renderGlobalSearchResults,
@@ -87,6 +89,7 @@ export function initOverviewSliceImpl(shared, ctx) {
   saveState,
   scheduleClassificationPreview,
   scheduleGlobalSearchResults,
+  sendPasswordResetCode,
   sendRegisterVerificationCode,
   setGlobalSearchComposing,
   setLanguage,
@@ -94,6 +97,7 @@ export function initOverviewSliceImpl(shared, ctx) {
   skillDefs,
   summaryController,
   submitEmailAuth,
+  startPasswordReset,
   switchAuthTab,
   switchModule,
   t,
@@ -142,7 +146,11 @@ export function initOverviewSliceImpl(shared, ctx) {
         loginLocal,
         submitEmailAuth,
         resetEmailAuthFlow,
+        startPasswordReset,
+        cancelPasswordReset,
+        resetPassword,
         registerLocal,
+        sendPasswordResetCode,
         sendRegisterVerificationCode,
         saveGoogleClientId,
         setLanguage,
@@ -255,11 +263,9 @@ sliceRefs.overviewSummaryController = overviewSummaryController;
   let {
     handlePokerDocumentClick,
     handlePokerDocumentSubmit,
-    handlePokerPreflopMatrixClick,
     loadInitialPokerGame,
     makePokerGameRound,
     renderPokerGame,
-    renderPokerPreflopChart,
     resetPokerTournament
   } = pokerControllerBundle;
 
@@ -270,6 +276,7 @@ sliceRefs.overviewSummaryController = overviewSummaryController;
   function refreshIcons(options = {}) {
     refreshIconsView({ ...options, windowRef: window });
   }
+  sliceRefs.refreshIcons = refreshIcons;
 
   function rebindElements() {
     bindElements(els, document);

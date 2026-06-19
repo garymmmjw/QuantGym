@@ -21,6 +21,7 @@ export function createInterviewSessionFlowController(deps) {
     renderSetup,
     updateAnswerFileMeta,
     updateStatus,
+    updateActionPanel,
     renderTranscript,
     renderQuestionPanel,
     normalizeSessionConfig,
@@ -198,6 +199,7 @@ export function createInterviewSessionFlowController(deps) {
       }
     }, 1000));
     renderQuestionPanel();
+    updateActionPanel?.();
     persistSnapshot();
     elements.interviewAnswer?.focus();
   }

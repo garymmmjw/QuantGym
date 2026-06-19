@@ -1,0 +1,161 @@
+{
+  "status": "pass",
+  "durationMs": 635,
+  "productionFixture": {
+    "status": "pass",
+    "passed": 4,
+    "failed": 0,
+    "alertWebhookHost": "alerts.quantgym.test",
+    "alertWebhookProtocol": "https",
+    "alertWebhookTokenSet": true,
+    "alertMinStatusCode": 500,
+    "rateLimitDisabled": false,
+    "authRateLimitMax": 30,
+    "passwordResetRateLimitMax": 5,
+    "proxyHeaderTrustEnabled": true,
+    "trustedProxyCidrCount": 2,
+    "edgeProvider": "cloudflare",
+    "edgeNotesLength": 74,
+    "edgeEvidenceHost": "dash.cloudflare.com"
+  },
+  "negativeFixtures": [
+    {
+      "name": "missing webhook token",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production alert webhook should set QUANTGYM_ALERT_WEBHOOK_TOKEN."
+    },
+    {
+      "name": "short webhook token rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_ALERT_WEBHOOK_TOKEN must be at least 24 characters in production."
+    },
+    {
+      "name": "placeholder webhook token rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_ALERT_WEBHOOK_TOKEN still contains a placeholder value."
+    },
+    {
+      "name": "local webhook rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production alert webhook URL must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "private webhook rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production alert webhook URL must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "http webhook rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production alert webhook URL must use HTTPS."
+    },
+    {
+      "name": "disabled in-process limiter rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production must not set QUANTGYM_RATE_LIMIT_DISABLED=1."
+    },
+    {
+      "name": "excessive auth limiter rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production QUANTGYM_AUTH_RATE_LIMIT_MAX should be no more than 120 per window."
+    },
+    {
+      "name": "trusted proxy without CIDR rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_TRUSTED_PROXY_CIDRS is required when QUANTGYM_TRUST_PROXY_HEADERS=1."
+    },
+    {
+      "name": "trusted proxy wildcard CIDR rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_TRUSTED_PROXY_CIDRS must not trust every source address."
+    },
+    {
+      "name": "missing edge provider rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_EDGE_RATE_LIMIT_PROVIDER is required for production edge rate-limit signoff."
+    },
+    {
+      "name": "placeholder edge evidence rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL still contains placeholder brackets."
+    },
+    {
+      "name": "private edge evidence rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production edge rate-limit evidence URL must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "short edge notes rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_EDGE_RATE_LIMIT_NOTES must briefly describe the configured edge rule."
+    },
+    {
+      "name": "unconfirmed edge limiter rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Set QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED=1 only after Cloudflare/Render/reverse-proxy edge rate limits are configured."
+    }
+  ],
+  "localWebhookSmoke": {
+    "status": "pass",
+    "childExitCode": 0,
+    "delivered": true,
+    "tokenAccepted": true,
+    "contentTypeJson": true,
+    "payload": {
+      "eventType": "ops.readiness.smoke",
+      "statusCode": 500,
+      "method": "POST",
+      "path": "/ops/readiness-smoke",
+      "hasOccurredAt": true
+    },
+    "payloadSanitized": true,
+    "childPassed": true
+  },
+  "checks": {
+    "validProductionPass": true,
+    "validProductionHasAllChecks": true,
+    "validProductionWebhookTokenRedacted": true,
+    "validProductionWebhookUrlRedacted": true,
+    "validProductionEdgeEvidenceUrlRedacted": true,
+    "validProductionEdgeNotesRedacted": true,
+    "negativeFixturesRejected": true,
+    "negativeFixturesMentionExpectedErrors": true,
+    "shortWebhookTokenRejected": true,
+    "placeholderWebhookTokenRejected": true,
+    "localWebhookSmokeDelivered": true,
+    "localWebhookSmokeAuthorized": true,
+    "localWebhookSmokePayloadSafe": true
+  },
+  "failures": [],
+  "warnings": []
+}

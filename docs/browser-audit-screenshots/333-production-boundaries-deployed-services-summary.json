@@ -1,0 +1,47 @@
+{
+  "status": "partial",
+  "scope": "deployed production service URLs from beta.quantgym.app config.js",
+  "cloudApiEndpoint": "https://api.quantgym.app/api",
+  "llmEndpoint": "https://llm.quantgym.app/interview",
+  "passed": 4,
+  "skipped": 1,
+  "failed": 0,
+  "results": [
+    {
+      "name": "cloud health",
+      "status": "pass",
+      "data": {
+        "ok": true
+      }
+    },
+    {
+      "name": "google provider config",
+      "status": "pass",
+      "data": {
+        "googleClientIdSet": true,
+        "endpointRequiresToken": true
+      }
+    },
+    {
+      "name": "google provider login",
+      "status": "skip",
+      "reason": "Set QUANTGYM_GOOGLE_ID_TOKEN."
+    },
+    {
+      "name": "LLM resume review",
+      "status": "pass",
+      "data": {
+        "itemCount": 6,
+        "firstItem": "Quantify impact with metrics: specify absolute runtime and data scale."
+      }
+    },
+    {
+      "name": "LLM PDF question generation",
+      "status": "pass",
+      "data": {
+        "questionCount": 1,
+        "firstTitle": "Understanding Production Boundaries and Validation"
+      }
+    }
+  ]
+}

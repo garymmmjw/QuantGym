@@ -39,7 +39,7 @@
       "title": "Retired route bridge symbols are absent from src",
       "status": "pass",
       "evidence": {
-        "checkedFiles": 451,
+        "checkedFiles": 453,
         "hits": []
       }
     },
@@ -74,9 +74,9 @@
       "status": "pass",
       "evidence": {
         "status": "pass",
-        "evidenceRefs": 263,
+        "evidenceRefs": 277,
         "imageRefs": 229,
-        "jsonRefs": 34,
+        "jsonRefs": 48,
         "missing": 0,
         "smallFiles": 0,
         "invalidJson": 0

@@ -5,6 +5,7 @@ export function createJobsControllerBundle(deps = {}) {
   const provider = createJobsProvider({
     getState: deps.getState,
     getEndpointBase: deps.getEndpointBase,
+    cloudApi: deps.cloudApi,
     seedJobs: deps.seedJobs,
     parseTags: deps.parseTags,
     stableId: deps.stableId,

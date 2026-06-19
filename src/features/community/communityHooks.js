@@ -31,7 +31,7 @@ export function useCommunityPageModel() {
   }, [api]);
 
   const submitPost = useCallback(async () => {
-    const result = api?.addPost?.({ text, media: mediaPreview });
+    const result = await api?.addPost?.({ text, media: mediaPreview });
     if (!result?.ok) {
       if (result?.code === "empty") window.alert(t("writeSomething") || "写点什么或添加媒体。");
       return;

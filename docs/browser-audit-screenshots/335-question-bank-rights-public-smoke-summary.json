@@ -1,0 +1,200 @@
+{
+  "status": "pass",
+  "durationMs": 389,
+  "checks": {
+    "validPublicPass": true,
+    "validCommercialPass": true,
+    "publicOnlyPassesPublic": true,
+    "publicOnlyRejectedCommercial": true,
+    "publicOnlyCommercialMentionsScope": true,
+    "placeholderEvidenceRejected": true,
+    "privateEvidenceRejected": true,
+    "privateEvidenceMentionsPrivateNetwork": true,
+    "evidenceUrlEmbeddedCredentialsRejected": true,
+    "evidenceUrlQueryRejected": true,
+    "staleApprovalRejected": true,
+    "missingGrantorRejected": true,
+    "unsupportedScopeRejected": true
+  },
+  "validApproval": {
+    "mode": "commercial",
+    "status": "pass",
+    "reportedStatus": "pass",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": []
+  },
+  "publicOnlyCommercialFailure": {
+    "mode": "commercial",
+    "status": "fail",
+    "reportedStatus": "fail",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": [
+      "approved-source.publicCommercial.redistributionScope missing required commercial scopes: commercial-use."
+    ]
+  },
+  "placeholderEvidenceFailure": {
+    "mode": "public",
+    "status": "fail",
+    "reportedStatus": "fail",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": [
+      "approved-source.publicCommercial.evidenceUrl must not contain placeholder text.",
+      "approved-source.publicCommercial.evidenceUrl must not point at placeholder hosts."
+    ]
+  },
+  "privateEvidenceFailure": {
+    "mode": "public",
+    "status": "fail",
+    "reportedStatus": "fail",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": [
+      "approved-source.publicCommercial.evidenceUrl must not point at localhost, loopback, or private-network hosts."
+    ]
+  },
+  "embeddedCredentialEvidenceFailure": {
+    "mode": "public",
+    "status": "fail",
+    "reportedStatus": "fail",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": [
+      "approved-source.publicCommercial.evidenceUrl must not include embedded credentials."
+    ]
+  },
+  "queryEvidenceFailure": {
+    "mode": "public",
+    "status": "fail",
+    "reportedStatus": "fail",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": [
+      "approved-source.publicCommercial.evidenceUrl must not include query strings or fragments."
+    ]
+  },
+  "staleApprovalFailure": {
+    "mode": "public",
+    "status": "fail",
+    "reportedStatus": "fail",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": [
+      "approved-source.publicCommercial.reviewedAt is older than 366 days; refresh public/commercial approval evidence."
+    ]
+  },
+  "missingGrantorFailure": {
+    "mode": "public",
+    "status": "fail",
+    "reportedStatus": "fail",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": [
+      "approved-source.publicCommercial.permissionGrantor is required for direct permission."
+    ]
+  },
+  "unsupportedScopeFailure": {
+    "mode": "public",
+    "status": "fail",
+    "reportedStatus": "fail",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": [
+      "approved-source.publicCommercial.redistributionScope contains unsupported scope \"print-resale\"."
+    ]
+  },
+  "failures": [],
+  "warnings": []
+}

@@ -15,6 +15,7 @@ import {
   renderRichText
 } from './richText.js';
 import { renderInterviewTranscript } from './transcript.js';
+import { timestampOrZero } from '../../lib/date.js';
 
 export function createInterviewViewController(deps = {}) {
   const elements = deps.elements || {};
@@ -23,6 +24,7 @@ export function createInterviewViewController(deps = {}) {
   const getRuntimeState = deps.getRuntimeState || (() => ({}));
   const getUserState = deps.getUserState || (() => ({}));
   const getProblems = deps.getProblems || (() => []);
+  const typeDefs = deps.typeDefs || {};
   const formatCategory = deps.formatCategory || ((category) => category || "");
 
   function getLanguage() {
@@ -115,7 +117,7 @@ export function createInterviewViewController(deps = {}) {
     ));
     const merge = deps.mergeRecordsById || ((...lists) => lists.flat().filter(Boolean));
     return merge(legacy, problemFavorites)
-      .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+      .sort((a, b) => timestampOrZero(a.createdAt) - timestampOrZero(b.createdAt));
   }
 
   function renderFavorites() {
@@ -146,6 +148,16 @@ export function createInterviewViewController(deps = {}) {
     if (!useReactSession()) renderQuestionPanel();
   }
 
+  function getTypeForCategory(category) {
+    const normalizedCategory = deps.normalizeCategory?.(category) || category;
+    const currentType = getRuntimeState().setupType || elements.interviewTypeSelect?.value || "";
+    if (typeDefs[currentType]?.categories?.includes(normalizedCategory)) return currentType;
+    const preferredTypes = ["technical", "oa", "behavioral"];
+    return preferredTypes.find((type) => typeDefs[type]?.categories?.includes(normalizedCategory))
+      || Object.keys(typeDefs).find((type) => typeDefs[type]?.categories?.includes(normalizedCategory))
+      || currentType;
+  }
+
   function updateActionPanel() {
     if (useReactSession()) return;
     if (!elements.interviewCompleteActions) return;
@@ -162,7 +174,18 @@ export function createInterviewViewController(deps = {}) {
     const runtimeState = getRuntimeState();
     runtimeState.selectedProblemId = id;
     const problem = getProblems().find((item) => item.id === id);
-    if (problem) runtimeState.selectedCategories = new Set([deps.normalizeCategory?.(problem.category) || problem.category]);
+    if (problem) {
+      const category = deps.normalizeCategory?.(problem.category) || problem.category;
+      runtimeState.selectedCategories = new Set([category]);
+      const type = getTypeForCategory(category);
+      if (type) {
+        runtimeState.setupType = type;
+        if (elements.interviewTypeSelect && elements.interviewTypeSelect.value !== type) {
+          elements.interviewTypeSelect.value = type;
+        }
+      }
+    }
+    runtimeState.setupSource = "full";
     if (elements.interviewSourceSelect) elements.interviewSourceSelect.value = "full";
     deps.renderSetup?.();
     deps.resetInterview?.();

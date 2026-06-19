@@ -1,0 +1,924 @@
+{
+  "status": "pass",
+  "durationMs": 383392,
+  "browser": "Google Chrome via playwright-core",
+  "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "baseUrl": "http://127.0.0.1:55049",
+  "routes": {
+    "checked": 21,
+    "passed": 21,
+    "failed": 0,
+    "results": [
+      {
+        "id": "overview",
+        "path": "/",
+        "status": "pass",
+        "selectors": [
+          "#heroTypewriter",
+          "#overviewProblemProgress",
+          "#leaderboardMetricSelect"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1012,
+          "horizontalOverflowPx": 0,
+          "pathname": "/"
+        }
+      },
+      {
+        "id": "plan",
+        "path": "/plan",
+        "status": "pass",
+        "selectors": [
+          "#prepPlanSetupForm",
+          "#prepPlanDashboard"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 540,
+          "horizontalOverflowPx": 0,
+          "pathname": "/plan"
+        }
+      },
+      {
+        "id": "skills",
+        "path": "/skills",
+        "status": "pass",
+        "selectors": [
+          "#skillsPageTitle",
+          "#skillRadar"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1663,
+          "horizontalOverflowPx": 0,
+          "pathname": "/skills"
+        }
+      },
+      {
+        "id": "interview",
+        "path": "/interview",
+        "status": "pass",
+        "selectors": [
+          "#interviewSetup",
+          "#startInterviewBtn"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 335,
+          "horizontalOverflowPx": 0,
+          "pathname": "/interview"
+        }
+      },
+      {
+        "id": "problems",
+        "path": "/problems",
+        "status": "pass",
+        "selectors": [
+          "#problemSearch",
+          "#problemList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 2954,
+          "horizontalOverflowPx": 0,
+          "pathname": "/problems"
+        }
+      },
+      {
+        "id": "tools",
+        "path": "/tools",
+        "status": "pass",
+        "selectors": [
+          "#startDrillSessionBtn",
+          "#drillQuestion"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 749,
+          "horizontalOverflowPx": 0,
+          "pathname": "/tools"
+        }
+      },
+      {
+        "id": "poker",
+        "path": "/poker",
+        "status": "pass",
+        "selectors": [
+          "#pokerLobbySummary",
+          "#pokerTable"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 2480,
+          "horizontalOverflowPx": 0,
+          "pathname": "/poker"
+        }
+      },
+      {
+        "id": "experiences",
+        "path": "/experiences",
+        "status": "pass",
+        "selectors": [
+          "#newExperienceBtn",
+          "#experienceForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 630,
+          "horizontalOverflowPx": 0,
+          "pathname": "/experiences"
+        }
+      },
+      {
+        "id": "news",
+        "path": "/news",
+        "status": "pass",
+        "selectors": [
+          "#newsTopicFilter",
+          "#newsList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1493,
+          "horizontalOverflowPx": 0,
+          "pathname": "/news"
+        }
+      },
+      {
+        "id": "community",
+        "path": "/community",
+        "status": "pass",
+        "selectors": [
+          "#communityForm",
+          "#communityText"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 126,
+          "horizontalOverflowPx": 0,
+          "pathname": "/community"
+        }
+      },
+      {
+        "id": "messages",
+        "path": "/messages",
+        "status": "pass",
+        "selectors": [
+          "#messageThreadList",
+          "#messageComposerForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 168,
+          "horizontalOverflowPx": 0,
+          "pathname": "/messages"
+        }
+      },
+      {
+        "id": "network",
+        "path": "/network",
+        "status": "pass",
+        "selectors": [
+          "#addNetworkBtn",
+          "#networkForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 121,
+          "horizontalOverflowPx": 0,
+          "pathname": "/network"
+        }
+      },
+      {
+        "id": "resume",
+        "path": "/resume",
+        "status": "pass",
+        "selectors": [
+          "#resumeForm",
+          "#resumeText"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 180,
+          "horizontalOverflowPx": 0,
+          "pathname": "/resume"
+        }
+      },
+      {
+        "id": "jobs",
+        "path": "/jobs",
+        "status": "pass",
+        "selectors": [
+          "#jobsSummary",
+          "#jobsList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 984,
+          "horizontalOverflowPx": 0,
+          "pathname": "/jobs"
+        }
+      },
+      {
+        "id": "companies",
+        "path": "/companies",
+        "status": "pass",
+        "selectors": [
+          "#companiesPageTitle",
+          "#companyTierFilter"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 2430,
+          "horizontalOverflowPx": 0,
+          "pathname": "/companies"
+        }
+      },
+      {
+        "id": "library",
+        "path": "/library",
+        "status": "pass",
+        "selectors": [
+          "#librarySearch",
+          "#libraryBookGrid"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 2445,
+          "horizontalOverflowPx": 0,
+          "pathname": "/library"
+        }
+      },
+      {
+        "id": "courses",
+        "path": "/courses",
+        "status": "pass",
+        "selectors": [
+          "#learningPathTitle",
+          "#courseList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1431,
+          "horizontalOverflowPx": 0,
+          "pathname": "/courses"
+        }
+      },
+      {
+        "id": "memory",
+        "path": "/memory",
+        "status": "pass",
+        "selectors": [
+          "#addResourceBtn",
+          "#resourceForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 94,
+          "horizontalOverflowPx": 0,
+          "pathname": "/memory"
+        }
+      },
+      {
+        "id": "settings",
+        "path": "/settings",
+        "status": "pass",
+        "selectors": [
+          "#settingsForm",
+          "#settingsLanguageSelect"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 445,
+          "horizontalOverflowPx": 0,
+          "pathname": "/settings"
+        }
+      },
+      {
+        "id": "account",
+        "path": "/account",
+        "status": "pass",
+        "selectors": [
+          "#accountForm",
+          "#accountNameInput"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 339,
+          "horizontalOverflowPx": 0,
+          "pathname": "/account"
+        }
+      },
+      {
+        "id": "pk",
+        "path": "/pk",
+        "status": "pass",
+        "selectors": [
+          "#startPkBtn",
+          "#pkProblem"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 118,
+          "horizontalOverflowPx": 0,
+          "pathname": "/pk"
+        }
+      }
+    ]
+  },
+  "interactions": {
+    "checked": 55,
+    "passed": 55,
+    "failed": 0,
+    "results": [
+      {
+        "name": "overview CTA opens problems",
+        "status": "pass",
+        "path": "/problems"
+      },
+      {
+        "name": "overview leaderboard controls and news ticker navigation",
+        "status": "pass",
+        "metric": "leetcode",
+        "scope": "region",
+        "country": "unitedStates",
+        "region": "California",
+        "newsId": "news-jane-street-q1-2026",
+        "newsTitle": "Jane Street Q1 交易收入创纪录",
+        "reloaded": true
+      },
+      {
+        "name": "streak check-in calendar opens and persists activity",
+        "status": "pass",
+        "checkedIn": true,
+        "calendarOpened": true,
+        "todayLit": true,
+        "reloaded": true,
+        "persisted": true
+      },
+      {
+        "name": "shell sidebar and command shortcuts persist navigation state",
+        "status": "pass",
+        "sidebarCollapsed": true,
+        "reloadPersisted": true,
+        "sidebarExpanded": true,
+        "chatShortcut": true,
+        "accountShortcut": true,
+        "settingsShortcut": true
+      },
+      {
+        "name": "mobile shell sidebar, search, and settings controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "noHorizontalOverflow": true,
+        "searchUsable": true,
+        "compactActions": true,
+        "sidebarCollapsed": true,
+        "reloadPersisted": true,
+        "settingsShortcut": true
+      },
+      {
+        "name": "mobile module nav groups open problems and library routes",
+        "status": "pass",
+        "mobileViewport": true,
+        "trainingMenuOpened": true,
+        "problemsRoute": true,
+        "resourcesMenuOpened": true,
+        "libraryRoute": true,
+        "noHorizontalOverflow": true
+      },
+      {
+        "name": "skills radar hover and global search spotlight",
+        "status": "pass",
+        "legendRows": 15,
+        "skillCards": 15,
+        "searchSkill": "complexNumbers"
+      },
+      {
+        "name": "global search module, problem, job, company, course, and news navigation",
+        "status": "pass",
+        "coveredTypes": [
+          "module",
+          "company",
+          "job",
+          "course",
+          "news",
+          "problem"
+        ],
+        "news": "CoreWeave",
+        "problem": "0DTE"
+      },
+      {
+        "name": "problems search, detail, reveal, and save",
+        "status": "pass",
+        "firstProblemId": "quantguide-0dte-option",
+        "saveToggled": true
+      },
+      {
+        "name": "problems pagination, collection filter, and mock interview handoff",
+        "status": "pass",
+        "page1FirstId": "green-book-problem-001",
+        "page2FirstId": "green-book-problem-025",
+        "collectionId": "quantguide",
+        "filteredProblemId": "quantguide-place-or-take",
+        "detailCategory": "probabilityExpectation",
+        "paginationNavigated": true,
+        "collectionFilterActive": true,
+        "interviewHandoff": true
+      },
+      {
+        "name": "mobile problems detail actions and mock handoff avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "problemId": "quantguide-0dte-option",
+        "detailOpened": true,
+        "answerRevealed": true,
+        "saveToggled": true,
+        "interviewHandoff": true,
+        "noHorizontalOverflow": true
+      },
+      {
+        "name": "problems ranking view opens ranked detail and preserves ranking navigation",
+        "status": "pass",
+        "firstProblemId": "quantguide-zero-appearance",
+        "secondProblemId": "quantguide-0dte-option",
+        "rowCount": 50,
+        "topScore": 0,
+        "scoresDescending": true,
+        "rankingDetailPositionPass": true,
+        "returnedToRanking": true
+      },
+      {
+        "name": "problems social like/comment no-cloud guard",
+        "status": "pass",
+        "problemId": "quantguide-0dte-option",
+        "likeCount": 0,
+        "liked": false,
+        "commentDraftPreserved": true,
+        "socialRequests": 0,
+        "reloaded": true
+      },
+      {
+        "name": "problems LeetCode Hot 100 tracking persistence",
+        "status": "pass",
+        "hotId": "leetcode-1",
+        "title": "1. Two Sum",
+        "markedDone": true,
+        "unmarkedDone": true,
+        "reloaded": true
+      },
+      {
+        "name": "tools drill starts and accepts an answer",
+        "status": "pass",
+        "question": "3 6 9 12 15 ?"
+      },
+      {
+        "name": "tools mental math completes session and persists records",
+        "status": "pass",
+        "recordsBefore": 0,
+        "recordsAfter": 1,
+        "recordsReloaded": 1,
+        "latestScore": 0,
+        "latestSkipped": 10,
+        "bestScore": 0,
+        "recordPersisted": true,
+        "entryPersisted": true,
+        "reloaded": true
+      },
+      {
+        "name": "tools market game rejects crossed quote, scores valid quote, and persists record",
+        "status": "pass",
+        "fairValue": 100,
+        "feedback": "Round +22. Mid 100, width 2, fair 100.",
+        "score": 22,
+        "recordsBefore": 0,
+        "recordsAfter": 1,
+        "marketSkill": 22,
+        "reloaded": true
+      },
+      {
+        "name": "poker demo table starts, acts, and persists room state",
+        "status": "pass",
+        "roomCode": "QG-MAIN",
+        "handNumber": 1,
+        "playerCount": 6,
+        "actionLabel": "Call 40",
+        "currentHandLogCount": 10,
+        "persisted": true
+      },
+      {
+        "name": "poker preflop matrix position, hand selection, and leave-table navigation",
+        "status": "pass",
+        "position": "co",
+        "hand": "QQ",
+        "selected": true,
+        "leaveTableNavigated": true
+      },
+      {
+        "name": "pk match, submit, reveal, and record persistence",
+        "status": "pass",
+        "opponentName": "Vol Arb Intern",
+        "problemPreview": "问题2 - 如果 X 和 Y 是均值分别为 6 和 8 的独立指数随机变量，则 Y 大于 X 的概率是多少\n\n如果 X 和 Y 是均值分别为 6 和 8 的独立指数随机变量，则 Y 大于 X 的概率是多少？",
+        "recordPersisted": true,
+        "revealed": true
+      },
+      {
+        "name": "plan create, edit, task persistence, and navigation",
+        "status": "pass",
+        "role": "quantDeveloper",
+        "weeklyHours": 12,
+        "completedTaskId": "core",
+        "problemQuery": "leetcode",
+        "reloaded": true
+      },
+      {
+        "name": "plan baseline diagnostic completion and reload persistence",
+        "status": "pass",
+        "questionCount": 8,
+        "score": 0,
+        "scoreRowCount": 7,
+        "diagnosticCompleted": true,
+        "reloaded": true
+      },
+      {
+        "name": "mobile interview advanced setup controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "advancedOpened": true,
+        "technicalTypeSelected": true,
+        "optionCategorySelected": true,
+        "pdfSourceVisible": true,
+        "fullSourceRestored": true,
+        "noHorizontalOverflow": true
+      },
+      {
+        "name": "interview onboarding, practice answer, favorite, exit, and resume",
+        "status": "pass",
+        "questionStatus": "Q1/2",
+        "favoritePersisted": true,
+        "durableResume": true
+      },
+      {
+        "name": "interview attachment upload preview, transcript, and request payload",
+        "status": "pass",
+        "fileName": "browser-smoke-interview-attachment-1781837835209.png",
+        "previewRendered": true,
+        "transcriptAttachmentRendered": true,
+        "requestAttachmentSent": true,
+        "completedSession": true
+      },
+      {
+        "name": "interview PDF source upload generates questions and starts session",
+        "status": "pass",
+        "fileName": "browser-smoke-interview-source-1781837835455.pdf",
+        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1781837835455",
+        "requestCount": 1,
+        "requestPdfPayloadSent": true,
+        "generatedQuestionRendered": true
+      },
+      {
+        "name": "todo dock opens and adds a task",
+        "status": "pass",
+        "taskAdded": true
+      },
+      {
+        "name": "todo dock edit, complete, delete, and reload persistence",
+        "status": "pass",
+        "taskId": "custom-8cb3bccc-dfbd-4ac2-a248-d976da5ac90e",
+        "edited": true,
+        "completed": true,
+        "reopened": true,
+        "reloaded": true,
+        "deleted": true,
+        "deletePersisted": true
+      },
+      {
+        "name": "community post, like, comment, and reload persistence",
+        "status": "pass",
+        "postText": "Browser smoke community post 1781837862989",
+        "commentText": "Browser smoke comment 1781837862989",
+        "reloaded": true
+      },
+      {
+        "name": "community image post fallback and reload persistence",
+        "status": "pass",
+        "postText": "Browser smoke community image post 1781837866128",
+        "fileName": "browser-smoke-community-1781837866128.png",
+        "dataUrlFallback": true,
+        "reloaded": true
+      },
+      {
+        "name": "community video post fallback and reload persistence",
+        "status": "pass",
+        "postText": "Browser smoke community video post 1781837869254",
+        "fileName": "browser-smoke-community-1781837869254.webm",
+        "dataUrlFallback": true,
+        "reloaded": true
+      },
+      {
+        "name": "community direct message from post opens messages thread",
+        "status": "pass",
+        "authorName": "Community Mentor 1781837872370",
+        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1781837872370",
+        "openedMessages": true,
+        "threadPersisted": true,
+        "replyPersisted": true
+      },
+      {
+        "name": "messages thread read, send, and reload persistence",
+        "status": "pass",
+        "threadId": "thread-browser-route-smoke-1781837877056",
+        "mentorName": "Smoke Mentor 1781837877056",
+        "replied": true,
+        "reloaded": true
+      },
+      {
+        "name": "messages multi-thread unread badges clear and persist read state",
+        "status": "pass",
+        "threadCount": 2,
+        "initialUnreadBadges": true,
+        "switchClearedBadges": true,
+        "readStatePersisted": true,
+        "repliesPersisted": true,
+        "reloaded": true
+      },
+      {
+        "name": "experiences create, edit, share, delete, and reload persistence",
+        "status": "pass",
+        "recordId": "ac0d72e2-d8b4-4c6b-81a2-b161e730adc3",
+        "sharedPostId": "184f0569-946d-4321-bf8a-2f65045ec5fc",
+        "deleted": true,
+        "reloaded": true
+      },
+      {
+        "name": "news manual submit, filter, detail, and reload persistence",
+        "status": "pass",
+        "newsId": "news-browser-smoke-jane-street-official-update-1781837894525-https-www-janestreet-com-join-jane",
+        "sourceType": "official",
+        "reloaded": true,
+        "readPersisted": true
+      },
+      {
+        "name": "memory resource add, source link, and reload persistence",
+        "status": "pass",
+        "title": "Browser Smoke Resource 1781837899009",
+        "sourceUrl": "https://www.youtube.com/@atypicalquant",
+        "reloaded": true
+      },
+      {
+        "name": "memory image resource upload fallback and reload persistence",
+        "status": "pass",
+        "title": "Browser Smoke Image Resource 1781837902508",
+        "fileName": "browser-smoke-memory-1781837902508.png",
+        "dataUrlFallback": true,
+        "reloaded": true
+      },
+      {
+        "name": "network contact add, edit, delete, and reload persistence",
+        "status": "pass",
+        "contactName": "Browser Smoke Contact 1781837906038",
+        "edited": true,
+        "deleted": true
+      },
+      {
+        "name": "resume text save and reload persistence",
+        "status": "pass",
+        "textLength": 195,
+        "reloaded": true
+      },
+      {
+        "name": "resume LLM review request, render, and reload persistence",
+        "status": "pass",
+        "reviewCount": 3,
+        "requestCount": 1,
+        "reloaded": true
+      },
+      {
+        "name": "mobile resume review controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "textareaUsable": true,
+        "reviewButtonsVisible": true,
+        "reviewRendered": true,
+        "requestPayloadSent": true,
+        "reviewPersisted": true,
+        "noHorizontalOverflow": true,
+        "reloaded": true,
+        "reviewCount": 3,
+        "requestCount": 1
+      },
+      {
+        "name": "jobs filter and apply link behavior",
+        "status": "pass",
+        "allCount": 6,
+        "seedJobCount": 6,
+        "fallbackPostedAtCount": 6,
+        "internshipSeedCount": 3,
+        "fulltimeSeedCount": 3,
+        "openedUrl": "https://www.imc.com/us/careers/jobs/"
+      },
+      {
+        "name": "companies tier filter, practice navigation, and careers link behavior",
+        "status": "pass",
+        "sTierCount": 5,
+        "aTierCount": 7,
+        "bTierCount": 1,
+        "openedUrl": "https://www.janestreet.com/join-jane-street/open-roles/",
+        "practicePath": "/problems",
+        "practiceCompany": "jane-street"
+      },
+      {
+        "name": "library search, kind filter, practice navigation, and reader guard",
+        "status": "pass",
+        "practiceSource": "quantguide",
+        "readerGuarded": true,
+        "searchQuery": "QuantGuide"
+      },
+      {
+        "name": "library cloud PDF reader opens, exposes links, and closes",
+        "status": "pass",
+        "readerTokenRequests": 2,
+        "pdfRequests": 4,
+        "readerOpened": true,
+        "openNewHref": "http://127.0.0.1:55049/api/library-reader-smoke/green-book.pdf",
+        "embedUrl": "http://127.0.0.1:55049/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+        "closedByButton": true,
+        "closedByEscape": true
+      },
+      {
+        "name": "cross-module prep journey persists library, problem, todo, resume, and settings state",
+        "status": "pass",
+        "problemId": "quantguide-place-or-take",
+        "problemTitle": "放置或取出",
+        "todoTitle": "Cross-module QuantGuide review 1781837937738: 放置或取出",
+        "resumeTextLength": 237,
+        "settings": {
+          "llmEndpoint": "http://127.0.0.1:8789/interview",
+          "llmModel": "gpt-5-mini",
+          "cloudEndpoint": "http://127.0.0.1:8799/api",
+          "googleClientId": "cross-module-browser-smoke.apps.googleusercontent.com"
+        },
+        "reloaded": true
+      },
+      {
+        "name": "courses path, source switch, note, and reload persistence",
+        "status": "pass",
+        "courseId": "course-statquest-ml-stats",
+        "selectedSourceId": "course-statquest-video-index-1-https-statquest-org-video-index",
+        "reloaded": true,
+        "notePersisted": true,
+        "pathDonePersisted": true
+      },
+      {
+        "name": "account profile save and reload persistence",
+        "status": "pass",
+        "profileName": "Browser Smoke 1781837959635",
+        "country": "unitedStates",
+        "region": "California",
+        "graduationTerm": "2028-05",
+        "reloaded": true
+      },
+      {
+        "name": "account local email change requires password and reauthenticates",
+        "status": "pass",
+        "wrongPasswordRejected": true,
+        "oldEmailRejected": true,
+        "oldEmail": "browser-route-smoke@quantgym.local",
+        "newEmail": "browser-route-smoke+email-1781837964164@quantgym.local",
+        "passwordHashRotated": true,
+        "reloginSucceeded": true,
+        "reloginPath": "/"
+      },
+      {
+        "name": "account avatar upload, clear, and resume file persistence",
+        "status": "pass",
+        "avatarDataUrl": true,
+        "avatarCleared": true,
+        "resumeFileName": "browser-smoke-resume-1781837974416.txt",
+        "resumeTextLength": 215,
+        "reloaded": true
+      },
+      {
+        "name": "mobile account profile and upload controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "formControlsVisible": true,
+        "securityFieldVisible": true,
+        "uploadControlsVisible": true,
+        "profilePersisted": true,
+        "resumeUploadPersisted": true,
+        "noHorizontalOverflow": true,
+        "reloaded": true,
+        "profileName": "Mobile Account 1781837983995",
+        "resumeFileName": "mobile-account-resume-1781837983995.txt"
+      },
+      {
+        "name": "settings saves runtime config, clears Google Client ID, and reloads",
+        "status": "pass",
+        "persisted": {
+          "llmEndpoint": "http://127.0.0.1:8788/interview?browser-smoke=settings",
+          "llmModel": "gpt-5-mini",
+          "cloudEndpoint": "http://127.0.0.1:8798/api",
+          "googleClientId": "browser-route-smoke.apps.googleusercontent.com"
+        },
+        "googleClientIdCleared": true
+      },
+      {
+        "name": "mobile settings config and backup controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "formControlsVisible": true,
+        "dataActionsVisible": true,
+        "longConfigPersisted": true,
+        "exportDownloadWorks": true,
+        "noHorizontalOverflow": true,
+        "reloaded": true,
+        "exportedFilename": "quantgym-Mobile Account 1781837983995-2026-06-19.json"
+      },
+      {
+        "name": "settings backup export, import, and reset state",
+        "status": "pass",
+        "resetPrompt": "清空当前账户的训练记录？已连接云端时也会同步为空。",
+        "exportedFilename": "quantgym-Mobile Account 1781837983995-2026-06-19.json",
+        "importedResumeFile": "settings-imported-resume-1781838001103.txt",
+        "importedResourceId": "settings-imported-resource-1781838001103",
+        "importedCourseId": "settings-imported-course-1781838001103",
+        "resetClearedImport": true
+      }
+    ]
+  },
+  "unauthenticated": {
+    "name": "protected route redirects to auth and local email auth works",
+    "status": "pass",
+    "localEmailAuth": {
+      "email": "browser-auth-1781837629253-pm6w4t@quantgym.local",
+      "redirectedToLogin": true,
+      "accountStatusChecked": true,
+      "registrationFormShown": true,
+      "verificationOptional": true,
+      "registered": true,
+      "accountPersisted": true,
+      "logoutReturnedToAuth": true,
+      "passwordStepShown": true,
+      "reloginSucceeded": true,
+      "resetFormShown": true,
+      "resetCodeSent": true,
+      "resetSucceeded": true,
+      "resetOldPasswordRejected": true,
+      "resetNewPasswordLoginSucceeded": true,
+      "accountId": "ae05632b-e6ad-4c61-8667-da59349348f3",
+      "reloginPath": "/"
+    },
+    "path": "/login",
+    "redirectPath": "/login"
+  },
+  "consoleErrors": [],
+  "ignoredConsoleErrors": [],
+  "pageErrors": [],
+  "responseErrors": [],
+  "warnings": [],
+  "failures": []
+}

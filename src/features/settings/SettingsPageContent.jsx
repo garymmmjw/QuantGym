@@ -63,7 +63,9 @@ export function SettingsPageContent() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    const saved = model.save(form);
+    const nextForm = readCurrentSettingsForm(event.currentTarget, form);
+    setForm(nextForm);
+    const saved = model.save(nextForm);
     if (saved) setStatusMessage(text("settingsSaved", "设置已保存。"));
   };
 
@@ -198,4 +200,18 @@ export function SettingsPageContent() {
       </div>
     </section>
   );
+}
+
+function readCurrentSettingsForm(formNode, fallback = {}) {
+  const value = (selector, defaultValue = "") => formNode.querySelector(selector)?.value ?? defaultValue;
+  return {
+    ...fallback,
+    language: value("#settingsLanguageSelect", fallback.language || "zh"),
+    country: value("#settingsCountrySelect", fallback.country || "china"),
+    region: value("#settingsRegionSelect", fallback.region || ""),
+    llmEndpoint: value("#settingsLlmEndpointInput", fallback.llmEndpoint || ""),
+    llmModel: value("#settingsLlmModelInput", fallback.llmModel || "gpt-5-nano"),
+    cloudApi: value("#settingsCloudApiInput", fallback.cloudApi || ""),
+    googleClientId: value("#settingsGoogleClientIdInput", fallback.googleClientId || "")
+  };
 }

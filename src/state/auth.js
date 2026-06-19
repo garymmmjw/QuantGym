@@ -3,10 +3,11 @@ import { normalizeEmail } from "../lib/text.js";
 export function normalizeAuth(raw = {}, options = {}) {
   const defaultGoogleClientId = options.defaultGoogleClientId || "";
   const normalizeAccount = options.normalizeAccount || ((account) => account || {});
+  const hasGoogleClientId = Object.prototype.hasOwnProperty.call(raw, "googleClientId");
   return {
     accounts: Array.isArray(raw.accounts) ? raw.accounts.map(normalizeAccount) : [],
     currentUserId: raw.currentUserId || "",
-    googleClientId: raw.googleClientId || defaultGoogleClientId,
+    googleClientId: hasGoogleClientId ? String(raw.googleClientId || "").trim() : defaultGoogleClientId,
     lastAuthenticatedAt: raw.lastAuthenticatedAt || ""
   };
 }

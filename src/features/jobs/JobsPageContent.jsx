@@ -3,6 +3,7 @@ import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { Tag } from "../../components/common/Tag.jsx";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
+import { getJobTimestamp } from "./jobDates.js";
 
 const FILTERS = ["all", "internship", "fulltime"];
 
@@ -21,10 +22,9 @@ export function JobsPageContent() {
   }, []);
 
   const jobs = useMemo(() => {
-    const jobTime = (job) => new Date(job?.postedAt || job?.createdAt || 0).getTime();
     return api.getJobs()
       .filter((job) => filter === "all" || job.type === filter)
-      .sort((a, b) => jobTime(b) - jobTime(a));
+      .sort((a, b) => getJobTimestamp(b) - getJobTimestamp(a));
   }, [api, filter, revision]);
 
   useScopedRefreshIcons(pageApi.refreshIcons, ".jobs-section", [jobs, filter]);

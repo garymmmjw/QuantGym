@@ -1,0 +1,64 @@
+{
+  "jobs": [
+    {
+      "id": "job-jane-street-quant-intern",
+      "company": "Jane Street",
+      "title": "Quantitative Trading / Research Internship",
+      "type": "internship",
+      "location": "New York / London / Hong Kong",
+      "url": "https://www.janestreet.com/join-jane-street/open-roles/",
+      "postedAt": "crawler-ready",
+      "tags": ["trading", "probability", "market making"]
+    },
+    {
+      "id": "job-citadel-securities-intern",
+      "company": "Citadel Securities",
+      "title": "Quantitative Research Internship",
+      "type": "internship",
+      "location": "New York / Chicago",
+      "url": "https://www.citadelsecurities.com/careers/open-opportunities/",
+      "postedAt": "crawler-ready",
+      "tags": ["research", "statistics", "market"]
+    },
+    {
+      "id": "job-optiver-trading-intern",
+      "company": "Optiver",
+      "title": "Quantitative Trading Internship",
+      "type": "internship",
+      "location": "Chicago / Amsterdam / Sydney",
+      "url": "https://optiver.com/working-at-optiver/career-opportunities/",
+      "postedAt": "crawler-ready",
+      "tags": ["mental math", "options", "trading"]
+    },
+    {
+      "id": "job-imc-quant-trader",
+      "company": "IMC",
+      "title": "Graduate Quant Trader / Researcher",
+      "type": "fulltime",
+      "location": "Chicago / Amsterdam / Sydney",
+      "url": "https://www.imc.com/us/careers/jobs/",
+      "postedAt": "crawler-ready",
+      "tags": ["full-time", "trading", "coding"]
+    },
+    {
+      "id": "job-drw-researcher",
+      "company": "DRW",
+      "title": "Quantitative Researcher",
+      "type": "fulltime",
+      "location": "Chicago / New York / London",
+      "url": "https://drw.com/work-at-drw/listings/",
+      "postedAt": "crawler-ready",
+      "tags": ["research", "data", "markets"]
+    },
+    {
+      "id": "job-jump-trading-campus",
+      "company": "Jump Trading",
+      "title": "Campus Quantitative Research / Trading",
+      "type": "fulltime",
+      "location": "Chicago / New York / London",
+      "url": "https://www.jumptrading.com/careers/",
+      "postedAt": "crawler-ready",
+      "tags": ["campus", "systems", "probability"]
+    }
+  ]
+}

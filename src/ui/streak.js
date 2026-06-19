@@ -53,6 +53,7 @@ export function updateCheckInPill(elements = {}, options = {}) {
   const {
     checked = false,
     open = false,
+    streak,
     text = (key) => key,
     renderCalendar = () => {}
   } = options;
@@ -65,6 +66,9 @@ export function updateCheckInPill(elements = {}, options = {}) {
   pill.setAttribute("title", text(open ? "closeStreakCalendar" : "openStreakCalendar"));
   const label = pill.querySelector("small");
   if (label) label.textContent = checked ? text("checkInDone") : text("commandStreakLabel");
+  if (elements.commandStreakCount && streak !== undefined) {
+    elements.commandStreakCount.textContent = String(Math.max(0, Number(streak || 0)));
+  }
   renderCalendar();
 }
 

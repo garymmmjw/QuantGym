@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useAuthStore } from "../../stores/AppServicesContext.jsx";
+import { useAppStore, useAuthStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 
 export function useAccountPageModel() {
@@ -7,10 +7,17 @@ export function useAccountPageModel() {
   const pageApi = usePageApi();
   const accountApi = usePageApi("account");
   const auth = useAuthStore((state) => state);
+  const cloudConfig = useAppStore((state) => state.cloudConfig || appServices.appState?.cloudConfig || {});
   const currentUser = auth.currentUser;
   const t = appServices.t || ((key) => key);
   const [message, setMessage] = useState("");
   const [resumeMeta, setResumeMeta] = useState(() => accountApi?.getResumeMeta?.() || "");
+  const [adminOverview, setAdminOverview] = useState({
+    status: "idle",
+    metrics: null,
+    events: [],
+    message: ""
+  });
 
   const initialForm = useMemo(() => ({
     name: currentUser?.name || "",
@@ -83,13 +90,20 @@ export function useAccountPageModel() {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+    const uploadResult = await accountApi?.uploadAvatarMedia?.({
+      dataUrl,
+      name: file.name || "avatar"
+    });
+    const uploadedAvatar = uploadResult?.ok
+      ? uploadResult.media?.dataUrl || uploadResult.media?.url || ""
+      : "";
     setForm((prev) => ({
       ...prev,
-      avatarData: dataUrl,
+      avatarData: uploadedAvatar ? "" : dataUrl,
       avatarCleared: false,
-      avatarUrl: ""
+      avatarUrl: uploadedAvatar
     }));
-  }, [t]);
+  }, [accountApi, t]);
 
   const clearAvatar = useCallback(() => {
     setForm((prev) => ({
@@ -114,6 +128,53 @@ export function useAccountPageModel() {
     accountApi?.logout?.();
   }, [accountApi]);
 
+  const canRequestAdminOverview = Boolean(
+    currentUser?.id
+      && cloudConfig?.token
+      && cloudConfig?.userId === currentUser.id
+  );
+
+  const refreshAdminOverview = useCallback(async () => {
+    if (!canRequestAdminOverview || !accountApi?.fetchAdminOverview) {
+      setAdminOverview({ status: "idle", metrics: null, events: [], message: "" });
+      return null;
+    }
+    setAdminOverview((prev) => ({
+      ...prev,
+      status: prev.metrics ? "refreshing" : "loading",
+      message: ""
+    }));
+    const result = await accountApi.fetchAdminOverview(24);
+    if (result?.ok) {
+      setAdminOverview({
+        status: "ready",
+        metrics: result.metrics || {},
+        events: result.events || [],
+        message: ""
+      });
+      appServices.services?.refreshIcons?.({ root: document.querySelector(".account-section") || document });
+      return result;
+    }
+    if (result?.code === "forbidden") {
+      setAdminOverview({ status: "hidden", metrics: null, events: [], message: "" });
+      return result;
+    }
+    setAdminOverview((prev) => (
+      prev.metrics
+        ? {
+          ...prev,
+          status: "error",
+          message: result?.message || t("adminOverviewUnavailable") || "运维概览暂不可用。"
+        }
+        : { status: "hidden", metrics: null, events: [], message: "" }
+    ));
+    return result;
+  }, [accountApi, appServices, canRequestAdminOverview, t]);
+
+  useEffect(() => {
+    refreshAdminOverview();
+  }, [refreshAdminOverview]);
+
   const avatarPreview = form.avatarCleared
     ? ""
     : form.avatarData || form.avatarUrl || currentUser?.picture || "";
@@ -130,6 +191,8 @@ export function useAccountPageModel() {
     clearAvatar,
     uploadResume,
     logout,
+    adminOverview,
+    refreshAdminOverview,
     avatarPreview,
     getInitials: pageApi?.getInitials,
     renderCountries: appServices.renderCountryOptions,

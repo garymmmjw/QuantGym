@@ -10,6 +10,24 @@ export function createCommunityPageApi(deps = {}) {
     window.dispatchEvent(new CustomEvent("quantgym:community-updated"));
   };
 
+  async function uploadMedia(media = null) {
+    if (!media?.dataUrl || !deps.cloudApi || (deps.canUseCloud && !deps.canUseCloud())) return media;
+    try {
+      const payload = await deps.cloudApi("/media", {
+        method: "POST",
+        body: {
+          dataUrl: media.dataUrl,
+          name: media.name || "community-media",
+          type: media.type || "",
+          context: "community"
+        }
+      });
+      return payload?.media || media;
+    } catch {
+      return media;
+    }
+  }
+
   return {
     getPosts() {
       return loadStore().posts || [];
@@ -30,11 +48,12 @@ export function createCommunityPageApi(deps = {}) {
       return posts;
     },
 
-    addPost({ text = "", media = null } = {}) {
+    async addPost({ text = "", media = null } = {}) {
       const currentUser = deps.appState?.currentUser;
       if (!currentUser) return { ok: false };
       const body = String(text || "").trim();
       if (!body && !media) return { ok: false, code: "empty" };
+      const postMedia = await uploadMedia(media);
 
       const store = loadStore();
       store.posts.unshift(deps.normalizeCommunityPost?.({
@@ -44,7 +63,7 @@ export function createCommunityPageApi(deps = {}) {
         country: currentUser.country,
         region: currentUser.region,
         text: body,
-        media,
+        media: postMedia,
         likes: [],
         comments: [],
         createdAt: new Date().toISOString()

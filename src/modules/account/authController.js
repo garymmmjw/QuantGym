@@ -22,12 +22,19 @@ export function createAccountAuthController(deps = {}) {
     return deps.normalizeEmail?.(elements.loginEmail?.value) || "";
   }
 
+  function getResetPasswordEmail() {
+    const elements = getElements();
+    return deps.normalizeEmail?.(elements.resetPasswordEmail?.value || elements.loginEmail?.value) || "";
+  }
+
   function setEmailAuthStep(step = "email", email = "") {
     const elements = getElements();
     const isPassword = step === "password";
     const isRegister = step === "register";
-    elements.loginForm?.classList?.toggle?.("hidden", isRegister);
+    const isReset = step === "reset";
+    elements.loginForm?.classList?.toggle?.("hidden", isRegister || isReset);
     elements.registerForm?.classList?.toggle?.("hidden", !isRegister);
+    elements.resetPasswordForm?.classList?.toggle?.("hidden", !isReset);
     if (elements.loginForm) elements.loginForm.dataset.authStep = isPassword ? "password" : "email";
     elements.loginPassword?.classList?.toggle?.("hidden", !isPassword);
     if (elements.loginPassword) {
@@ -36,10 +43,15 @@ export function createAccountAuthController(deps = {}) {
     }
     if (email && elements.loginEmail) elements.loginEmail.value = email;
     if (email && elements.registerEmail) elements.registerEmail.value = email;
+    if (email && elements.resetPasswordEmail) elements.resetPasswordEmail.value = email;
     if (!isRegister && elements.registerForm) {
       elements.registerForm.reset();
       delete elements.registerForm.dataset.verificationOptional;
       if (email && elements.registerEmail) elements.registerEmail.value = email;
+    }
+    if (!isReset && elements.resetPasswordForm) {
+      elements.resetPasswordForm.reset();
+      if (email && elements.resetPasswordEmail) elements.resetPasswordEmail.value = email;
     }
     return step;
   }
@@ -73,6 +85,26 @@ export function createAccountAuthController(deps = {}) {
     setEmailAuthStep("register", email);
     deps.showAuthMessage?.("");
     elements.registerName?.focus?.();
+    return true;
+  }
+
+  function startPasswordReset() {
+    const elements = getElements();
+    const email = getLoginEmail();
+    if (!email || !email.includes("@")) {
+      deps.showAuthMessage?.(text("authNeedEmail"));
+      return false;
+    }
+    setEmailAuthStep("reset", email);
+    deps.showAuthMessage?.("");
+    elements.resetPasswordVerificationCode?.focus?.();
+    return true;
+  }
+
+  function cancelPasswordReset() {
+    const email = getResetPasswordEmail();
+    setEmailAuthStep(email ? "password" : "email", email);
+    deps.showAuthMessage?.("");
     return true;
   }
 
@@ -124,6 +156,30 @@ export function createAccountAuthController(deps = {}) {
         deps.showAuthMessage?.(deps.getVerificationErrorMessage?.(error));
       }
       deps.setRegisterCodeButtonBusy?.(false);
+    }
+  }
+
+  async function sendPasswordResetCode() {
+    const email = getResetPasswordEmail();
+    if (!email || !email.includes("@")) {
+      deps.showAuthMessage?.(text("authNeedEmail"));
+      return;
+    }
+
+    deps.setResetPasswordCodeButtonBusy?.(true, text("sending"));
+    try {
+      const result = await deps.sendCloudVerificationCode?.(email, "password_reset");
+      deps.startResetPasswordCodeCooldown?.(Number(result?.cooldownSeconds || 60));
+      const devCode = result?.devCode ? text("authDevCode", { code: result.devCode }) : "";
+      const delivery = result?.delivery === "dev" ? text("authDeliveryDev") : text("authDeliveryEmail");
+      deps.showAuthMessage?.(text("authPasswordResetCodeSent", { email, delivery, devCode }));
+    } catch (error) {
+      if (!error?.status) {
+        deps.showAuthMessage?.(text("authResetCloudUnavailable"));
+      } else {
+        deps.showAuthMessage?.(getPasswordResetErrorMessage(error, deps));
+      }
+      deps.setResetPasswordCodeButtonBusy?.(false);
     }
   }
 
@@ -284,6 +340,40 @@ export function createAccountAuthController(deps = {}) {
     }
   }
 
+  async function resetPassword() {
+    const elements = getElements();
+    const appState = getAppState();
+    try {
+      const email = getResetPasswordEmail();
+      const password = elements.resetPasswordNewPassword?.value || "";
+      const verificationCode = elements.resetPasswordVerificationCode?.value?.trim() || "";
+      if (!email || !email.includes("@") || password.length < 6 || !verificationCode) {
+        deps.showAuthMessage?.(text("authResetMissingFields"));
+        return;
+      }
+
+      const cloudSession = await deps.resetCloudPassword?.(email, password, verificationCode);
+      const remoteAccount = deps.normalizeAccount?.(cloudSession.account || {}) || {};
+      const localAccount = appState.auth.accounts.find((item) => (
+        item.id === remoteAccount.id || deps.normalizeEmail?.(item.email) === email
+      ));
+      const localState = localAccount ? deps.loadStateForUser?.(localAccount.id) : deps.createBaseState?.();
+      const passwordHash = await deps.hashPassword?.(email, password);
+      deps.applyCloudSession?.(cloudSession, {
+        localState,
+        localCommunity: appState.community,
+        passwordHash
+      });
+      markAuthenticated(appState.auth);
+      deps.saveAuth?.();
+      elements.resetPasswordForm?.reset();
+      deps.showAuthMessage?.(text("authPasswordResetSynced"));
+      deps.renderSession?.();
+    } catch (error) {
+      deps.showAuthMessage?.(getPasswordResetErrorMessage(error, deps));
+    }
+  }
+
   function logout() {
     const appState = getAppState();
     const userStateStore = getUserStateStore();
@@ -345,17 +435,31 @@ export function createAccountAuthController(deps = {}) {
   }
 
   return {
+    cancelPasswordReset,
     handleGoogleCredential,
     loginLocal,
     logout,
     registerLocal,
     resetEmailAuthFlow,
+    resetPassword,
     saveGoogleClientId,
+    sendPasswordResetCode,
     sendRegisterVerificationCode,
+    startPasswordReset,
     submitEmailAuth
   };
 }
 
 function isBlockingCloudAuthError(error) {
   return Boolean(error?.status && error.status >= 400 && error.status < 500 && error.status !== 401);
+}
+
+function getPasswordResetErrorMessage(error, deps = {}) {
+  const text = (key) => deps.t?.(key) || key;
+  const raw = String(error?.message || "");
+  if (error?.status === 404) return text("authResetNoLocalAccount");
+  if (/Only local/i.test(raw)) return text("authResetGoogleAccount");
+  if (/verification|code/i.test(raw)) return deps.getVerificationErrorMessage?.(error) || text("verificationInvalid");
+  if (!error?.status) return text("authResetCloudUnavailable");
+  return deps.getAuthErrorMessage?.(error) || text("authOperationFailed");
 }

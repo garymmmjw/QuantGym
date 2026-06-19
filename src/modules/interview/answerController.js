@@ -3,6 +3,36 @@ import {
   readFilePayload
 } from '../../lib/files.js';
 
+export function prepareUploadedInterviewAttachment(attachment = {}, media = null) {
+  const mediaUrl = media?.dataUrl || media?.url || "";
+  if (!attachment?.dataUrl || !mediaUrl) {
+    return {
+      attachment,
+      requestAttachment: attachment
+    };
+  }
+  const displayAttachment = {
+    ...attachment,
+    dataUrl: mediaUrl,
+    url: media?.url || mediaUrl,
+    path: media?.path || "",
+    storage: media?.storage || "api-media",
+    contentType: media?.contentType || attachment.type || ""
+  };
+  const requestAttachment = {
+    ...attachment,
+    mediaUrl,
+    url: media?.url || mediaUrl,
+    path: media?.path || "",
+    storage: media?.storage || "api-media",
+    contentType: media?.contentType || attachment.type || ""
+  };
+  return {
+    attachment: displayAttachment,
+    requestAttachment
+  };
+}
+
 export function createInterviewAnswerController(deps = {}) {
   const elements = deps.elements || {};
   const getInterviewState = deps.getInterviewState || (() => ({}));
@@ -88,7 +118,11 @@ export function createInterviewAnswerController(deps = {}) {
     let feedback;
 
     try {
-      const reply = await deps.requestFeedback?.(problem, answerPayload.text, answerPayload.attachment);
+      const reply = await deps.requestFeedback?.(
+        problem,
+        answerPayload.text,
+        answerPayload.requestAttachment || answerPayload.attachment
+      );
       feedback = deps.normalizeFeedback?.(reply, problem, answerPayload.text);
     } catch {
       feedback = deps.normalizeFeedback?.(
@@ -130,7 +164,10 @@ export function createInterviewAnswerController(deps = {}) {
     const thinkingId = deps.appendMessage?.("coach", "", { thinking: true });
 
     try {
-      const reply = await deps.requestConverse?.(problem, answerPayload, conversation);
+      const reply = await deps.requestConverse?.(problem, {
+        ...answerPayload,
+        attachment: answerPayload.requestAttachment || answerPayload.attachment
+      }, conversation);
       const normalized = deps.normalizeConverseReply?.(reply, problem, conversation);
       applyLiveCoachReply({
         problem,
@@ -185,7 +222,13 @@ export function createInterviewAnswerController(deps = {}) {
     const file = elements.interviewAnswerFile?.files?.[0];
     if (!file) return { text, attachment: null };
     const attachment = await readFilePayload(file, { preferDataUrl: isBinaryInterviewAttachment(file) });
-    return { text, attachment };
+    if (!attachment.dataUrl) return { text, attachment, requestAttachment: attachment };
+    const uploadResult = await deps.uploadAttachmentMedia?.(attachment);
+    if (!uploadResult?.ok) return { text, attachment, requestAttachment: attachment };
+    return {
+      text,
+      ...prepareUploadedInterviewAttachment(attachment, uploadResult.media)
+    };
   }
 
   async function requestHint() {

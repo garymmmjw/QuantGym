@@ -1,6 +1,56 @@
+import { useEffect, useRef } from "react";
 import { Outlet } from "react-router-dom";
+import { useAppServices } from "../../stores/usePageApi.js";
+import { setStreakPanelOpen as setStreakPanelOpenView } from "../../ui/streak.js";
 
 export function AppShellMain() {
+  const appServices = useAppServices();
+  const shellServices = appServices.services || {};
+  const shellServicesRef = useRef(shellServices);
+
+  useEffect(() => {
+    shellServicesRef.current = shellServices;
+  }, [shellServices]);
+
+  const getShellServices = () => {
+    shellServicesRef.current.rebindElements?.();
+    return shellServicesRef.current;
+  };
+
+  const applyStreakPanelOpen = (open) => {
+    const text = appServices.t || ((key) => key);
+    setStreakPanelOpenView({
+      streakWidget: document.getElementById("streakWidget"),
+      checkInPill: document.getElementById("checkInPill"),
+      streakCalendarPanel: document.getElementById("streakCalendarPanel")
+    }, open, { text });
+  };
+
+  const toggleStreakPanel = (event) => {
+    event.stopPropagation();
+    const shell = getShellServices();
+    const panel = document.getElementById("streakCalendarPanel");
+    const nextOpen = Boolean(panel?.hidden);
+    shell.setStreakPanelOpen?.(nextOpen);
+    if (panel && panel.hidden === nextOpen) applyStreakPanelOpen(nextOpen);
+    if (nextOpen) {
+      window.setTimeout(() => {
+        if (document.getElementById("streakCalendarPanel")?.hidden) applyStreakPanelOpen(true);
+      }, 0);
+    }
+  };
+
+  useEffect(() => {
+    const closeStreakPanel = (event) => {
+      if (event.target?.closest?.(".streak-widget")) return;
+      const shell = getShellServices();
+      shell.setStreakPanelOpen?.(false);
+      if (!document.getElementById("streakCalendarPanel")?.hidden) applyStreakPanelOpen(false);
+    };
+    document.addEventListener("click", closeStreakPanel);
+    return () => document.removeEventListener("click", closeStreakPanel);
+  }, []);
+
   return (
     <main id="appShell" className="hidden">
           <nav className="module-nav" id="moduleNav" aria-label="模块导航" data-i18n-aria-label="moduleNavLabel">
@@ -146,7 +196,7 @@ export function AppShellMain() {
             </div>
             <div className="app-command-actions">
               <div className="streak-widget" id="streakWidget">
-                <button className="app-stat-pill streak-pill" id="checkInPill" type="button" aria-expanded="false" aria-controls="streakCalendarPanel">
+                <button className="app-stat-pill streak-pill" id="checkInPill" type="button" aria-expanded="false" aria-controls="streakCalendarPanel" data-streak-react-handler="true" onClick={toggleStreakPanel}>
                   <span className="stat-art stat-art-fire" aria-hidden="true"></span>
                   <strong id="commandStreakCount" className="sr-only">0</strong>
                   <small className="sr-only">day streak</small>

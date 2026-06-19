@@ -1,0 +1,231 @@
+{
+  "status": "pass",
+  "durationMs": 1280,
+  "fixture": {
+    "tablesSeeded": [
+      "audit_events",
+      "community",
+      "email_verification_codes",
+      "media_objects",
+      "problems",
+      "sessions",
+      "user_problem_states",
+      "user_states",
+      "users"
+    ],
+    "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-VTxDKJ/quantgym-cutover-smoke.sqlite3"
+  },
+  "redactedExport": {
+    "status": "pass",
+    "includeSensitive": false,
+    "summaryOnly": false,
+    "tableCount": 12,
+    "rowTables": 9,
+    "secretsRedacted": true,
+    "redactionChecks": {
+      "usersPasswordHash": true,
+      "sessionsTokenHash": true,
+      "emailCodeHash": true,
+      "stateJson": true,
+      "communityJson": true,
+      "problemText": true,
+      "mediaStoragePath": true,
+      "auditMetadata": true
+    }
+  },
+  "sensitiveExport": {
+    "status": "pass",
+    "includeSensitive": true,
+    "summaryOnly": false,
+    "tableCount": 12,
+    "rowTables": 9,
+    "fullRowsPresent": true,
+    "secretMarkersPresent": true
+  },
+  "truncatedSensitiveExport": {
+    "status": "pass",
+    "includeSensitive": true,
+    "summaryOnly": false,
+    "maxRowsPerTable": 1,
+    "truncatedTables": [
+      "audit_events"
+    ],
+    "secretMarkersPresent": true
+  },
+  "cutoverChecks": {
+    "includeSensitiveAccepted": true,
+    "redactedRejected": true,
+    "redactedRejectsIncludeSensitiveRequirement": true,
+    "truncatedSensitiveRejected": true,
+    "truncatedRejectsFullExportRequirement": true,
+    "includeSensitiveImportPlanValid": true,
+    "completeSignoffAccepted": true,
+    "completeSignoffNegativeFixturesRejected": true,
+    "completeSignoffNegativeFixturesMentionExpectedErrors": true,
+    "privateTargetHostRejected": true,
+    "privateEvidenceUrlRejected": true,
+    "targetHostWhitespaceRejected": true,
+    "databaseUnsafeCharactersRejected": true,
+    "evidenceUrlEmbeddedCredentialsRejected": true,
+    "evidenceUrlQueryRejected": true
+  },
+  "importPlan": {
+    "tableCount": 12,
+    "rowTables": 9,
+    "rowCount": 12,
+    "copyOrder": [
+      "community",
+      "email_verification_codes",
+      "poker_rooms",
+      "users",
+      "audit_events",
+      "media_objects",
+      "problems",
+      "sessions",
+      "user_problem_states",
+      "user_states",
+      "problem_comments",
+      "problem_likes"
+    ],
+    "jsonValuesChecked": 10,
+    "timestampValuesChecked": 18,
+    "columnShapeOk": true,
+    "referencedTablesFirst": true
+  },
+  "cutoverSignoff": {
+    "required": true,
+    "targetHost": "postgres.quantgym.internal",
+    "database": "quantgym",
+    "completedAt": "2026-06-19T03:00:25Z",
+    "evidenceHost": "render.com",
+    "appDatabaseActive": true,
+    "backupConfirmed": true,
+    "sourceDbSha256Prefix": "07d2fcfe6bc5",
+    "exportSha256Prefix": "b25ff471f152",
+    "importPlanRowCount": 12,
+    "targetRowCount": 12
+  },
+  "completeSignoffNegativeFixtures": [
+    {
+      "name": "pending status rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_STATUS must be complete."
+    },
+    {
+      "name": "localhost target host rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must not point at localhost, loopback, or a private network address."
+    },
+    {
+      "name": "private target host rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must not point at localhost, loopback, or a private network address."
+    },
+    {
+      "name": "target host whitespace rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must be a plain DNS hostname or IP address."
+    },
+    {
+      "name": "database DSN rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_DATABASE must be a plain non-placeholder database name."
+    },
+    {
+      "name": "database unsafe characters rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_DATABASE must be a plain non-placeholder database name."
+    },
+    {
+      "name": "future completed timestamp rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_COMPLETED_AT must not be in the future."
+    },
+    {
+      "name": "placeholder evidence URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 2,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must not be a placeholder value.\nQUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must not be a placeholder URL."
+    },
+    {
+      "name": "private evidence URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must not point at localhost, loopback, or a private network address."
+    },
+    {
+      "name": "evidence URL embedded credentials rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must not include embedded credentials."
+    },
+    {
+      "name": "evidence URL query rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must not include query strings or fragments."
+    },
+    {
+      "name": "export SHA mismatch rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_EXPORT_SHA256 does not match the provided --export file."
+    },
+    {
+      "name": "source DB SHA mismatch rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_SOURCE_DB_SHA256 does not match the provided --db file."
+    },
+    {
+      "name": "database directory path rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 2,
+      "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-VTxDKJ\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
+    },
+    {
+      "name": "target row count mismatch rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_ROW_COUNT must match the include-sensitive export import-plan row count."
+    },
+    {
+      "name": "inactive app database rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_APP_DATABASE_ACTIVE must be one of 1, true, yes, or confirmed."
+    },
+    {
+      "name": "missing backup confirmation rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_BACKUP_CONFIRMED is required for --cutover-complete."
+    }
+  ],
+  "failures": [],
+  "warnings": []
+}

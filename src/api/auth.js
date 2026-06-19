@@ -62,6 +62,20 @@ export function loginCloudAccount(options = {}) {
   });
 }
 
+export function resetCloudPassword(options = {}) {
+  const {
+    cloudApi = async () => ({}),
+    email = "",
+    password = "",
+    verificationCode = ""
+  } = options;
+  return cloudApi("/auth/reset-password", {
+    method: "POST",
+    auth: false,
+    body: { email, password, verificationCode }
+  });
+}
+
 export function loginCloudGoogle(options = {}) {
   const {
     cloudApi = async () => ({}),

@@ -68,16 +68,47 @@ UI contract follow-up: `npm run check:ui-contracts` now locks the React route
 surface against the most important migrated DOM contracts. It checks all 21
 manifest routes, shared app/auth/todo shell ids, key browser-audit JSON
 artifacts, and 92 non-empty screenshot artifacts. The JSON evidence check is
-content-level: route smoke must stay 21/21 pass for desktop and mobile, GitHub
-baseline parity must stay 21/21 pass with zero actionable issues, browser
-evidence manifest must report zero missing/invalid artifacts, migration
-completion must stay 10 pass / 0 pending / 0 fail, production boundary evidence
-must stay 5 pass / 0 skip / 0 fail, local readiness must stay 10 pass / 0
-partial / 0 fail, static build config must not embed the
-OpenAI key, and the Google token helper browser smoke must stay renderable. This
-is not a replacement for screenshot review, but it catches accidental removal of
+content-level: route smoke must stay 21/21 pass for desktop and mobile, browser
+route smoke must cover all routes and key interactions, deployed LLM/PDF
+endpoint evidence must pass with a cloud session token, Chrome extension popup
+runtime capture/copy/open/fallback behavior must pass, GitHub baseline parity
+must stay 21/21 pass with zero actionable issues, browser evidence manifest must
+report zero missing/invalid artifacts, migration completion must stay
+10 pass / 0 pending / 0 fail, production boundary evidence must stay
+5 pass / 0 skip / 0 fail, local readiness must stay final-pass or an explicit
+production-token-only partial, static build config must not embed the OpenAI
+key, and the Google token helper browser smoke must stay renderable. This is not
+a replacement for screenshot review, but it catches accidental removal of
 route-critical ids such as `problemSearch`, `leaderboardMetricSelect`,
 `resumeReview`, `settingsGoogleClientIdInput`, and `todoDockButton`.
+
+Route interaction contract follow-up: `npm run check:route-interactions`
+statically verifies key user-interaction wiring across all 21 routes. It covers
+forms, buttons, selects, file inputs, safe external links, route jumps,
+state-saving handlers, and critical model/API delegation paths. It is not a
+replacement for real browser clicks, but it prevents route screens from keeping
+their DOM ids while losing the handlers that make them usable.
+
+Ops alert runtime follow-up: `npm run check:ops-alerts:runtime-smoke` starts a
+temporary local webhook and API database, triggers a 404 through the actual API
+server, then triggers two failed auth logins, one auth rate-limit response, and
+three Google-login attempts with spoofed `X-Forwarded-For` values. It now
+verifies that the first four webhook payloads arrive with the expected bearer
+token, status sequence `404,401,401,429`, ISO timestamps, and no request bodies,
+credentials, auth tokens, synced state, community payloads, or problem payloads;
+it also verifies spoofed forwarded-IP headers cannot bypass the Google-login
+rate limit and that the resulting Google 429 alert is delivered.
+The API sanitizes `/api/auth/*` webhook messages before sending them to the
+external alert receiver, so auth failure details do not leak into alert systems.
+The production config gate now also requires a non-placeholder HTTPS alert
+webhook, a 24+ character webhook bearer token, an explicit edge rate-limit
+provider, a rule note, and a non-placeholder HTTPS evidence URL before
+`QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED=1` can count as a production signoff.
+`npm run check:ops-alerts:production-fixture` runs an isolated production
+fixture that proves the gate accepts the hardened shape, rejects placeholder,
+localhost, HTTP, disabled-limiter, excessive-limiter, wildcard proxy trust, and
+incomplete edge signoff inputs, and keeps raw tokens/full dashboard URLs out of
+output.
 
 Production-boundary diagnostic follow-up: the verification script now reports
 the exact missing item for skipped checks, and the final real-token run is
@@ -95,13 +126,25 @@ Release-readiness follow-up: `npm run check:release-readiness` is the strict
 final gate and requires production-boundary checks to have no skips. For local
 handoff, `npm run check:release-readiness:local` runs the same gate chain with
 partial production boundaries allowed and writes
-`323-release-readiness-summary.json`. Current strict and local status is `pass`:
-10 gates pass, 0 gates are partial, and 0 gates fail.
+`323-release-readiness-summary.json`. The gate chain now includes media storage
+runtime upload/download and production-fixture coverage, Chrome store readiness,
+Chrome store publication fixture, popup runtime coverage, jobs source
+ingest/cache/fallback and production-fixture coverage, ops alert runtime and
+production-fixture coverage, question-bank rights manifest coverage, current
+question-bank release blockers, external launch blocker tracking, and Postgres
+cutover schema/export/signoff-shape readiness through
+`npm run check:postgres-cutover` and `npm run check:postgres-cutover:export-smoke`;
+a strict final run still requires a fresh Google provider token when that
+boundary is checked. When `check:ui-contracts` is invoked from inside this gate,
+it runs after the route/runtime evidence refresh and skips only the content
+validation for the prior `323-release-readiness-summary.json` to avoid a stale
+self-reference; standalone `npm run check:ui-contracts` still validates the
+refreshed release summary, including the nested external launch blocker gate.
 
 Browser evidence manifest follow-up: `npm run check:browser-evidence` scans
 `docs/ui-function-regression-audit-2026-06-07.md` and this smoke checklist for
-browser-audit screenshot/JSON references. It currently verifies 263 evidence
-references: 229 image files and 34 JSON files, with 0 missing, 0 undersized
+browser-audit screenshot/JSON references. It currently verifies 276 evidence
+references: 229 image files and 47 JSON files, with 0 missing, 0 undersized
 images, and 0 invalid JSON files. Evidence:
 `326-browser-evidence-manifest-summary.json`.
 
@@ -122,6 +165,11 @@ Google token handoff helper: `npm run google:token-helper` creates
 server is running. The generated helper is ignored by Git and does not write the
 short-lived Google ID token to disk. After signing in, copy the token and run
 `QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries`.
+For a no-echo interactive handoff, run
+`npm run verify:production-boundaries:paste-token` or
+`npm run check:release-readiness:local:paste-token` and paste the token at the
+prompt; the wrapper passes it only to the child process environment and does not
+write it to disk.
 The production-boundary verifier now decodes the token locally and fails fast
 for malformed, expired, wrong-issuer, or wrong-audience tokens before it calls
 the provider login endpoint.
@@ -285,20 +333,186 @@ Browser/CDP deep flows now recorded in
 - [x] Static build runtime config carries local public endpoints/client id into
   `dist/config.js` while strict production mode rejects non-HTTPS endpoints.
 - [x] UI contract gate: `npm run check:ui-contracts` passes for 21 React routes,
-  shell ids, 11 key JSON evidence artifacts, and 92 non-empty screenshot
+  shell ids, 25 key JSON evidence artifacts, and 92 non-empty screenshot
   artifacts.
+- [x] Route interaction contract gate: `npm run check:route-interactions`
+  covers all 21 React routes and their key form/button/select/file/link
+  interactions.
+- [x] Browser route smoke: `npm run check:browser-route-smoke` builds a
+  temporary static site, drives local Google Chrome, checks all 21 authenticated
+  routes for runtime health, verifies logged-out protected-route redirect plus
+  local email registration, logout, password-step, and relogin behavior, and
+  clicks key Overview, Skills radar/global-search spotlight, Global search
+  module/problem/job/company/course/news navigation, Problems, Tools, Poker demo table start/action/persisted room state, PK match/submit/reveal/record persistence,
+  Plan create/edit/task persistence/navigation, Interview
+  onboarding/practice answer/favorite/exit/resume, Todo, Community post
+  persistence, Messages thread persistence, Experiences
+  create/edit/share/delete persistence, News manual
+  submit/filter/detail/read/reload persistence, Memory resource persistence,
+  Network contact persistence, Resume text persistence, Jobs filter/apply-link
+  behavior, Companies tier/practice/careers-link behavior, Library
+  search/kind/practice/reader-guard behavior, cross-module Library to Problems
+  to Todo to Resume to Settings persistence, Courses path/source/note
+  persistence, Account profile persistence, and Settings runtime config
+  persistence flows. Known third-party Bilibili `reporter-pb` network-reporting
+  errors and exact Chrome `compute-pressure` permissions-policy noise are
+  recorded as ignored external console noise instead of failing the app route
+  smoke.
+- [x] Module ownership gate: `npm run check:module-ownership` verifies all 21
+  route modules have an owner group, matching nav group, page file, feature
+  entry, state-domain list, and a mapped browser-route-smoke interaction before
+  local release-readiness can pass.
+- [x] Media storage runtime smoke: `npm run check:media-storage:runtime-smoke`
+  starts a temporary API, registers a local account, uploads and downloads a
+  tiny image through `/api/media`, verifies local file/database/audit
+  persistence, checks unauthenticated, unsupported-type, and oversize failures,
+  verifies MIME-derived object extensions when a filename extension disagrees
+  with the payload type, verifies direct-client spoofed `X-Forwarded-Host` and
+  `X-Forwarded-Proto` headers cannot control returned media URLs, and exercises
+  the S3/R2-compatible code path against a temporary fake object store. The
+  object-storage branch verifies signed PUT, API read-through signed GET, `s3:`
+  database storage paths, and public CDN URL redirect behavior.
+- [x] Media storage production fixture: `npm run check:media-storage:production-fixture`
+  proves the production gate accepts only object storage with HTTPS endpoint,
+  redacted credentials, CDN/public URL, sane upload envelope, and safe timeout;
+  it rejects local/HTTP/localhost/private-network/placeholder/raw-endpoint
+  cases, embedded endpoint credentials, query-bearing public base URLs,
+  placeholder or short credentials, unsafe bucket names, and unsafe object
+  prefixes, then runs the live smoke against fake S3/CDN servers, including
+  cleanup after a simulated public CDN failure.
+- [x] Media storage live-production handoff: `npm run check:media-storage:production -- --live`
+  is required for final real bucket/CDN signoff. It is opt-in, writes one tiny
+  `readiness-smoke/` object through signed S3/R2 PUT, verifies signed GET,
+  verifies the public media base URL returns the same bytes, and deletes the
+  object. The default production check remains shape-only and does not write to
+  production storage; local/disk media intentionally stays a private-beta-only
+  path and fails the production gate.
+- [x] Ops alert runtime smoke: `npm run check:ops-alerts:runtime-smoke`
+  triggers a local API HTTP error, two auth failures, and one auth rate-limit
+  response, then verifies all four webhook payloads are delivered and sanitized.
+- [x] Ops alert production fixture: `npm run check:ops-alerts:production-fixture`
+  proves the production signoff gate passes only with HTTPS webhook, token,
+  sane auth limits, and complete edge-rate-limit evidence, while rejecting
+  placeholder/local/incomplete inputs without exposing raw secrets.
+- [x] Jobs source runtime smoke: `npm run check:jobs-source:runtime-smoke`
+  starts a temporary jobs feed and API, verifies bearer-token source fetch,
+  source/local catalog merge, duplicate-id source precedence, cache behavior,
+  unsafe source URL sanitization, unknown source type defaulting, invalid
+  source `postedAt` sanitization, POST type filtering, and local catalog
+  fallback when the feed returns HTTP errors, invalid JSON, or an oversized
+  payload.
+- [x] Jobs front-end fallback sorting: `npm run check:route-interactions`
+  locks Jobs sorting to a finite timestamp helper, and
+  `npm run check:browser-route-smoke` verifies the `crawler-ready` fallback
+  labels render while Jobs filtering and apply links continue to pass.
+- [x] Jobs source production fixture: `npm run check:jobs-source:production-fixture`
+  proves the production gate rejects missing/HTTP/localhost/private-network,
+  credential-bearing, query-bearing, or placeholder source URLs, bad
+  cache/timeout/size settings, placeholder or short source tokens, incomplete
+  fallback catalogs, and duplicate catalog ids; it also runs `--live` against
+  fake feeds and rejects internship-only, duplicate-id, invalid-URL,
+  defaulted-metadata, invalid/future `postedAt`, invalid JSON, oversized, and
+  missing-token responses.
+- [x] Jobs source live-production handoff: `npm run check:jobs-source:production -- --live`
+  is required for final real feed signoff. It fetches the configured
+  HTTPS crawler/vendor feed and now requires both internship and fulltime roles,
+  unique ids, HTTP(S) job URLs, and real company/title/postedAt fields with
+  valid, non-future dates rather than default placeholders.
+- [x] Question-bank rights gate: `npm run check:question-bank-rights`
+  verifies every catalog source has a rights manifest entry, source and compiled
+  counts match, disabled sources are absent from the compiled catalog, private
+  beta status allows each active source, public/commercial status remains
+  explicit, and any future approved public/commercial source has a valid recent
+  review date, non-placeholder HTTPS evidence URL without embedded credentials,
+  query strings, or fragments, approval type, evidence summary, and redistribution scopes. `npm run check:question-bank-rights:public-smoke`
+  verifies the schema with positive and negative fixtures, including missing
+  `commercial-use`, placeholder evidence, stale reviews, missing direct-permission
+  grantors, unsupported scopes, private-network evidence, and credential/query-bearing evidence URLs. The stricter
+  `npm run check:question-bank-rights:public` and
+  `npm run check:question-bank-rights:commercial` remain expected to fail until
+  all active sources are approved or removed/replaced for public/commercial
+  distribution.
+- [x] Question-bank rights release blockers:
+  `npm run check:question-bank-rights:release-blockers` verifies that the
+  current private-beta catalog still passes, while real public and commercial
+  release gates fail for all 15 active sources with
+  `publicCommercial.status="needs-review"` and zero active approvals. Evidence:
+  `340-question-bank-rights-release-blockers-summary.json`.
+- [x] Postgres cutover export smoke:
+  `npm run check:postgres-cutover:export-smoke` starts a temporary API
+  database, generates redacted and include-sensitive SQLite exports, verifies
+  default export redaction for auth/session/code hashes, JSON payloads, problem
+  text, audit PII, and media storage paths, and verifies only the
+  include-sensitive export passes `--require-sensitive-export`. The cutover
+  check also builds an offline Postgres import plan from the include-sensitive
+  export, validating row columns against `schema.sql`, JSON/timestamp values,
+  dependency-safe COPY table order, and rejection of row-limited/truncated
+  include-sensitive exports as migration input. The same smoke now exercises the
+  final `--cutover-complete` signoff shape, binding source DB/export SHA-256
+  prefixes, target row count, app-DB-active confirmation, backup confirmation,
+  and a sanitized HTTPS evidence host, and rejects pending status, localhost
+  or private-network target hosts, malformed target hosts, database DSNs or
+  unsafe database names, future timestamps, placeholder/private-network
+  evidence URLs, evidence URLs with embedded credentials or query strings, SHA
+  mismatches, row-count mismatches, inactive app database confirmation, and
+  missing backup confirmation.
+- [x] Chrome Collector store readiness: `npm run check:chrome-store-readiness`
+  validates Manifest V3 metadata, minimal permissions, store listing text,
+  privacy disclosures, store screenshots/promotional images, and the generated
+  upload zip. The popup runtime smoke also verifies insecure remote Board URLs
+  fall back to `https://beta.quantgym.app/` while loopback HTTP remains allowed
+  for local development. The package script now emits a zip SHA-256 and per-file
+  SHA-256 digests, and the readiness check verifies each zip entry matches the
+  source bytes before the package is submitted.
+- [x] Chrome Collector publication handoff:
+  `npm run check:chrome-store-publication` verifies the upload ZIP, listing,
+  privacy policy, screenshots, reviewer notes, and SHA-256 evidence for manual
+  Chrome Web Store submission. `npm run check:chrome-store-publication:fixture`
+  verifies the published-signoff contract with a controlled fixture, including
+  item id, listing URL, published status, submitted version, upload SHA-256, and
+  negative cases for malformed or placeholder evidence, placeholder-looking item
+  ids, non-detail listing URLs, private-network evidence URLs, and
+  credential/query-bearing listing or evidence URLs. Evidence:
+  `339-chrome-store-publication-fixture-summary.json`. Final external
+  publication still requires
+  `npm run check:chrome-store-publication:published` with the item id, public
+  listing URL, `published` status, submitted version, and matching upload ZIP
+  SHA-256 from the developer-account submission.
 - [x] Browser evidence manifest: `npm run check:browser-evidence` validates all
   numbered browser-audit screenshot/JSON references in the audit and smoke docs.
 - [x] Migration completion audit: `npm run check:migration-completion` reports
   10 passed requirements, 0 pending requirements, and 0 failed requirements.
 - [x] Local release-readiness gate: `npm run check:release-readiness:local`
-  passes with status `pass`: 10 pass / 0 partial / 0 fail.
+  passes final readiness when a fresh Google provider token is present, and
+  otherwise may report the documented production-token-only partial.
+- [x] External launch blockers summary: `npm run check:external-launch-blockers`
+  writes `341-external-launch-blockers-summary.json`, keeps public launch
+  marked `blocked` while the seven external signoffs remain, and supports
+  `-- --require-clear` for final public-launch clearing. The same check is also
+  included inside `npm run check:release-readiness:local` without overwriting
+  the standalone `341` summary.
 - [x] Google ID token helper handoff: `npm run google:token-helper` creates an
   ignored local helper page for obtaining the short-lived token needed by the
   final provider login boundary.
 - [x] Google ID token helper browser smoke: real Chrome renders the helper page
   and Google sign-in button at the local 127.0.0.1 origin.
-- [ ] Production LLM/PDF endpoint sign-off against deployed service URL.
+- [x] Production LLM/PDF endpoint sign-off against deployed service URL:
+  `https://llm.quantgym.app/interview` passes resume review and PDF question
+  generation when called with a live QuantGym cloud session token. Use
+  `npm run verify:production-boundaries:deployed` to inspect the deployed
+  `beta.quantgym.app/config.js` endpoints without touching the local
+  `config.js` fallback; use
+  `npm run verify:production-boundaries:deployed:paste-token` to paste a fresh
+  Google ID token hidden, reuse the returned QuantGym cloud session for deployed
+  LLM checks, and refresh
+  `333-production-boundaries-deployed-services-summary.json` only after the
+  deployed LLM checks pass.
+- [ ] Apex/WWW domain SSL or redirect sign-off: fix or intentionally redirect
+  `quantgym.app` and `www.quantgym.app` so they no longer return Cloudflare 525
+  SSL handshake errors; keep `beta.quantgym.app` as the current beta entrypoint
+  until this separate domain/SSL follow-up is complete. Deferred by the
+  2026-06-17 handoff decision and reaffirmed by the 2026-06-18 user decision
+  to leave this item in the unresolved backlog for now.
 - [ ] Real Google provider account sign-off with a real Google ID token/session;
   keep the local and production web origins authorized in the OAuth Client.
 

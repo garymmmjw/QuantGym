@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import base64
+import ipaddress
 import json
 import math
 import os
@@ -26,8 +27,8 @@ from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qs, quote, urlencode, unquote, urlparse
-from urllib.request import urlopen
+from urllib.parse import parse_qs, quote, unquote, urlparse
+from urllib.request import Request, urlopen
 
 from poker_engine import (
     PokerError,
@@ -49,6 +50,31 @@ def env_bool(name: str, default: bool = False) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def parse_ip_networks(value: str) -> list[ipaddress._BaseNetwork]:
+    networks = []
+    for raw_item in str(value or "").split(","):
+        item = raw_item.strip()
+        if not item:
+            continue
+        try:
+            networks.append(ipaddress.ip_network(item, strict=False))
+        except ValueError as error:
+            raise ValueError(f"Invalid QUANTGYM_TRUSTED_PROXY_CIDRS entry: {item}") from error
+    return networks
+
+
+def parse_origin_base_url(name: str, value: str) -> str:
+    cleaned = str(value or "").strip().rstrip("/")
+    if not cleaned:
+        return ""
+    parsed = urlparse(cleaned)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError(f"{name} must be an http(s) origin")
+    if parsed.params or parsed.query or parsed.fragment or parsed.path not in {"", "/"}:
+        raise ValueError(f"{name} must not include a path, query, or fragment")
+    return cleaned
+
+
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
 DATA_DIR = BASE_DIR / "data"
@@ -56,8 +82,29 @@ DB_PATH = Path(os.environ.get("QUANTGYM_DB", DATA_DIR / "quantgym.sqlite3"))
 PROBLEM_CATALOG_PATH = Path(
     os.environ.get("QUANTGYM_PROBLEM_CATALOG", PROJECT_ROOT / "data" / "problem-catalog.json")
 )
+JOBS_CATALOG_PATH = Path(os.environ.get("QUANTGYM_JOBS_CATALOG", PROJECT_ROOT / "data" / "jobs-catalog.json"))
+JOBS_SOURCE_URL = os.environ.get("QUANTGYM_JOBS_SOURCE_URL", "").strip()
+JOBS_SOURCE_TOKEN = os.environ.get("QUANTGYM_JOBS_SOURCE_TOKEN", "").strip()
+JOBS_SOURCE_CACHE_SECONDS = int(os.environ.get("QUANTGYM_JOBS_SOURCE_CACHE_SECONDS", "300"))
+JOBS_SOURCE_TIMEOUT_SECONDS = float(os.environ.get("QUANTGYM_JOBS_SOURCE_TIMEOUT_SECONDS", "5"))
+JOBS_SOURCE_MAX_BYTES = int(os.environ.get("QUANTGYM_JOBS_SOURCE_MAX_BYTES", str(1024 * 1024)))
 LIBRARY_ASSETS_PATH = Path(os.environ.get("QUANTGYM_LIBRARY_ASSETS", BASE_DIR / "library-assets.json"))
 LIBRARY_PDF_ROOT = Path(os.environ.get("QUANTGYM_LIBRARY_PDF_ROOT", PROJECT_ROOT)).expanduser()
+MEDIA_ROOT = Path(os.environ.get("QUANTGYM_MEDIA_ROOT", DATA_DIR / "media")).expanduser()
+MEDIA_MAX_BYTES = int(os.environ.get("QUANTGYM_MEDIA_MAX_BYTES", str(5 * 1024 * 1024)))
+MEDIA_STORAGE = os.environ.get("QUANTGYM_MEDIA_STORAGE", "local").strip().lower() or "local"
+MEDIA_PUBLIC_BASE_URL = os.environ.get("QUANTGYM_MEDIA_PUBLIC_BASE_URL", "").strip().rstrip("/")
+MEDIA_S3_ENDPOINT = os.environ.get("QUANTGYM_MEDIA_S3_ENDPOINT", "").strip().rstrip("/")
+MEDIA_S3_BUCKET = os.environ.get("QUANTGYM_MEDIA_S3_BUCKET", "").strip()
+MEDIA_S3_REGION = os.environ.get("QUANTGYM_MEDIA_S3_REGION", "us-east-1").strip() or "us-east-1"
+MEDIA_S3_ACCESS_KEY_ID = os.environ.get("QUANTGYM_MEDIA_S3_ACCESS_KEY_ID", "").strip()
+MEDIA_S3_SECRET_ACCESS_KEY = os.environ.get("QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY", "")
+MEDIA_S3_PREFIX = os.environ.get("QUANTGYM_MEDIA_S3_PREFIX", "media").strip().strip("/")
+MEDIA_S3_TIMEOUT_SECONDS = float(os.environ.get("QUANTGYM_MEDIA_S3_TIMEOUT_SECONDS", "10"))
+PUBLIC_API_BASE_URL = parse_origin_base_url(
+    "QUANTGYM_PUBLIC_API_BASE_URL",
+    os.environ.get("QUANTGYM_PUBLIC_API_BASE_URL", ""),
+)
 LIBRARY_TOKEN_SECRET = os.environ.get(
     "QUANTGYM_LIBRARY_TOKEN_SECRET",
     os.environ.get("QUANTGYM_APP_SECRET", "quantgym-local-library-dev-secret"),
@@ -69,7 +116,19 @@ PBKDF2_ROUNDS = int(os.environ.get("QUANTGYM_PBKDF2_ROUNDS", "120000"))
 SESSION_DAYS = int(os.environ.get("QUANTGYM_SESSION_DAYS", "30"))
 MAX_BODY_BYTES = int(os.environ.get("QUANTGYM_MAX_BODY_BYTES", str(25 * 1024 * 1024)))
 GOOGLE_CLIENT_ID = os.environ.get("QUANTGYM_GOOGLE_CLIENT_ID", "").strip()
-GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo"
+GOOGLE_JWKS_URL = os.environ.get("QUANTGYM_GOOGLE_JWKS_URL", "https://www.googleapis.com/oauth2/v3/certs").strip()
+GOOGLE_ID_TOKEN_CLOCK_SKEW_SECONDS = int(os.environ.get("QUANTGYM_GOOGLE_ID_TOKEN_CLOCK_SKEW_SECONDS", "300"))
+RATE_LIMIT_DISABLED = env_bool("QUANTGYM_RATE_LIMIT_DISABLED", False)
+RATE_LIMIT_WINDOW_SECONDS = int(os.environ.get("QUANTGYM_RATE_LIMIT_WINDOW_SECONDS", "60"))
+AUTH_RATE_LIMIT_MAX = int(os.environ.get("QUANTGYM_AUTH_RATE_LIMIT_MAX", "30"))
+AUTH_VERIFICATION_RATE_LIMIT_MAX = int(os.environ.get("QUANTGYM_AUTH_VERIFICATION_RATE_LIMIT_MAX", "5"))
+AUTH_REGISTER_RATE_LIMIT_MAX = int(os.environ.get("QUANTGYM_AUTH_REGISTER_RATE_LIMIT_MAX", str(AUTH_RATE_LIMIT_MAX)))
+AUTH_LOGIN_RATE_LIMIT_MAX = int(os.environ.get("QUANTGYM_AUTH_LOGIN_RATE_LIMIT_MAX", str(AUTH_RATE_LIMIT_MAX)))
+AUTH_GOOGLE_RATE_LIMIT_MAX = int(os.environ.get("QUANTGYM_AUTH_GOOGLE_RATE_LIMIT_MAX", str(AUTH_RATE_LIMIT_MAX)))
+AUTH_PASSWORD_RESET_RATE_LIMIT_MAX = int(
+    os.environ.get("QUANTGYM_AUTH_PASSWORD_RESET_RATE_LIMIT_MAX", str(AUTH_VERIFICATION_RATE_LIMIT_MAX))
+)
+EMAIL_VERIFICATION_PURPOSES = {"register", "password_reset"}
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 EMAIL_VERIFICATION_REQUIRED = env_bool("QUANTGYM_REQUIRE_EMAIL_VERIFICATION", True)
 EMAIL_CODE_TTL_MINUTES = int(os.environ.get("QUANTGYM_EMAIL_CODE_TTL_MINUTES", "10"))
@@ -83,9 +142,20 @@ SMTP_SSL = env_bool("QUANTGYM_SMTP_SSL", False)
 SMTP_STARTTLS = env_bool("QUANTGYM_SMTP_STARTTLS", True)
 SMTP_PORT = int(os.environ.get("QUANTGYM_SMTP_PORT", "465" if SMTP_SSL else "587"))
 SMTP_FROM = os.environ.get("QUANTGYM_SMTP_FROM", SMTP_USERNAME or "QuantGym <no-reply@quantgym.local>").strip()
+ALERT_WEBHOOK_URL = os.environ.get("QUANTGYM_ALERT_WEBHOOK_URL", "").strip()
+ALERT_WEBHOOK_TOKEN = os.environ.get("QUANTGYM_ALERT_WEBHOOK_TOKEN", "").strip()
+ALERT_MIN_STATUS_CODE = int(os.environ.get("QUANTGYM_ALERT_MIN_STATUS_CODE", "500"))
+ALERT_WEBHOOK_TIMEOUT_SECONDS = float(os.environ.get("QUANTGYM_ALERT_WEBHOOK_TIMEOUT_SECONDS", "3"))
+TRUST_PROXY_HEADERS = env_bool("QUANTGYM_TRUST_PROXY_HEADERS", False)
+TRUSTED_PROXY_CIDRS = parse_ip_networks(os.environ.get("QUANTGYM_TRUSTED_PROXY_CIDRS", ""))
 BETA_EMAIL_ALLOWLIST = {
     item.strip().lower()
     for item in os.environ.get("QUANTGYM_BETA_EMAIL_ALLOWLIST", "").split(",")
+    if item.strip()
+}
+ADMIN_EMAILS = {
+    item.strip().lower()
+    for item in os.environ.get("QUANTGYM_ADMIN_EMAILS", "").split(",")
     if item.strip()
 }
 ALLOWED_ORIGINS = [
@@ -116,11 +186,36 @@ SUBSCRIPTION_TIER_ORDER = {
 POKER_WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 POKER_WS_MAX_MESSAGE_BYTES = int(os.environ.get("QUANTGYM_POKER_WS_MAX_MESSAGE_BYTES", str(512 * 1024)))
 POKER_SINGLE_TABLE_CODE = poker_normalize_room_code(os.environ.get("QUANTGYM_POKER_ROOM_CODE", "QG-MAIN")) or "QG-MAIN"
+MEDIA_CONTENT_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/gif": ".gif",
+    "image/webp": ".webp",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/quicktime": ".mov",
+    "application/pdf": ".pdf",
+}
 
 _LIBRARY_ASSET_CACHE = {
     "mtime": None,
     "assets": {},
 }
+_JOBS_CATALOG_CACHE = {
+    "mtime": None,
+    "jobs": [],
+}
+_JOBS_SOURCE_CACHE = {
+    "fetched_at": 0.0,
+    "jobs": [],
+    "status": "disabled",
+    "error": "",
+}
+_GOOGLE_JWKS_CACHE = {
+    "expires_at": 0.0,
+    "keys": {},
+}
+_GOOGLE_JWKS_LOCK = threading.Lock()
 
 
 class HttpError(Exception):
@@ -128,6 +223,41 @@ class HttpError(Exception):
         super().__init__(message)
         self.status = status
         self.message = message
+
+
+class RateLimiter:
+    def __init__(self, max_buckets: int = 10000):
+        self.max_buckets = max_buckets
+        self._hits: dict[tuple[str, str], list[float]] = {}
+        self._lock = threading.Lock()
+
+    def check(self, scope: str, key: str, max_requests: int, window_seconds: int) -> None:
+        if RATE_LIMIT_DISABLED or max_requests <= 0 or window_seconds <= 0:
+            return
+        now = time.monotonic()
+        cutoff = now - window_seconds
+        bucket_key = (scope, key or "anonymous")
+        with self._lock:
+            hits = [item for item in self._hits.get(bucket_key, []) if item > cutoff]
+            if len(hits) >= max_requests:
+                retry_after = max(1, math.ceil(window_seconds - (now - hits[0])))
+                self._hits[bucket_key] = hits
+                raise HttpError(429, f"Too many requests. Try again in {retry_after} seconds.")
+            hits.append(now)
+            self._hits[bucket_key] = hits
+            if len(self._hits) > self.max_buckets:
+                self._prune_locked(cutoff)
+
+    def _prune_locked(self, cutoff: float) -> None:
+        for bucket_key, hits in list(self._hits.items()):
+            fresh = [item for item in hits if item > cutoff]
+            if fresh:
+                self._hits[bucket_key] = fresh
+            else:
+                self._hits.pop(bucket_key, None)
+
+
+rate_limiter = RateLimiter()
 
 
 def utc_now() -> str:
@@ -139,6 +269,14 @@ def parse_utc(value: str | None) -> datetime:
         return datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
     except ValueError:
         return datetime.fromtimestamp(0, timezone.utc)
+
+
+def is_valid_timestamp(value: str | None) -> bool:
+    try:
+        datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+        return True
+    except ValueError:
+        return False
 
 
 def normalize_email(email: str | None) -> str:
@@ -214,6 +352,112 @@ def compact_json(value) -> str:
     return json.dumps(value or {}, ensure_ascii=False, separators=(",", ":"))
 
 
+def sanitize_alert_message(status: int, path: str, message: str) -> str:
+    if path.startswith("/api/auth/"):
+        if status == 429:
+            return "Too many requests."
+        return "Authentication request failed."
+    return str(message or "")[:180]
+
+
+def normalize_ip_literal(value: str) -> str:
+    try:
+        return str(ipaddress.ip_address(str(value or "").strip()))
+    except ValueError:
+        return ""
+
+
+def peer_is_trusted_proxy(peer_ip: str) -> bool:
+    if not TRUST_PROXY_HEADERS:
+        return False
+    normalized = normalize_ip_literal(peer_ip)
+    if not normalized:
+        return False
+    address = ipaddress.ip_address(normalized)
+    if TRUSTED_PROXY_CIDRS:
+        return any(address in network for network in TRUSTED_PROXY_CIDRS)
+    return address.is_loopback
+
+
+def forwarded_client_ip(headers) -> str:
+    for header in ("CF-Connecting-IP", "X-Real-IP", "X-Forwarded-For"):
+        value = headers.get(header, "")
+        if not value:
+            continue
+        for candidate in str(value).split(","):
+            normalized = normalize_ip_literal(candidate)
+            if normalized:
+                return normalized
+    return ""
+
+
+def first_header_value(headers, name: str) -> str:
+    return str(headers.get(name, "") or "").split(",", 1)[0].strip()
+
+
+def clean_host_header(value: str) -> str:
+    candidate = str(value or "").strip()
+    if not candidate or len(candidate) > 255:
+        return ""
+    if re.search(r"[\s/@?#\\]", candidate):
+        return ""
+    return candidate
+
+
+def forwarded_request_proto(headers) -> str:
+    proto = first_header_value(headers, "X-Forwarded-Proto").lower()
+    if proto in {"http", "https"}:
+        return proto
+    if first_header_value(headers, "X-Forwarded-Ssl").lower() == "on":
+        return "https"
+    return ""
+
+
+def send_alert_webhook(payload: dict) -> bool:
+    if not ALERT_WEBHOOK_URL:
+        return False
+    body = compact_json(payload).encode("utf-8")
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "QuantGymAPI/0.1",
+    }
+    if ALERT_WEBHOOK_TOKEN:
+        headers["Authorization"] = f"Bearer {ALERT_WEBHOOK_TOKEN}"
+    request = Request(ALERT_WEBHOOK_URL, data=body, headers=headers, method="POST")
+    try:
+        with urlopen(request, timeout=ALERT_WEBHOOK_TIMEOUT_SECONDS) as response:
+            return 200 <= int(response.status) < 300
+    except (HTTPError, URLError, OSError) as error:
+        print(f"[alert-webhook] delivery failed: {error}", file=sys.stderr)
+        return False
+
+
+def sanitize_audit_metadata(metadata: dict | None) -> dict:
+    if not isinstance(metadata, dict):
+        return {}
+    blocked = {"password", "token", "credential", "authorization", "state", "community", "problems"}
+    cleaned = {}
+    for key, value in metadata.items():
+        name = str(key)
+        if name.lower() in blocked:
+            continue
+        if isinstance(value, bool) or value is None:
+            cleaned[name] = value
+        elif isinstance(value, (int, float)):
+            cleaned[name] = value
+        elif isinstance(value, (list, tuple)):
+            cleaned[name] = [str(item)[:160] for item in value[:20]]
+        elif isinstance(value, dict):
+            cleaned[name] = {
+                str(child_key)[:80]: str(child_value)[:160]
+                for child_key, child_value in list(value.items())[:20]
+                if str(child_key).lower() not in blocked
+            }
+        else:
+            cleaned[name] = str(value)[:240]
+    return cleaned
+
+
 def parse_json(raw: str, fallback):
     if not raw:
         return fallback
@@ -257,6 +501,322 @@ def get_library_asset(asset_id: str) -> dict:
     if str(asset.get("id") or "") == "question-bank":
         raise HttpError(404, "Library asset not found")
     return asset
+
+
+def safe_job_url(value: str | None) -> str:
+    text = str(value or "").strip()[:600]
+    try:
+        parsed = urlparse(text)
+    except ValueError:
+        return "#"
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return "#"
+    return text
+
+
+def safe_job_posted_at(value: str | None) -> str:
+    text = str(value or "").strip()[:80]
+    if not text:
+        return "crawler-ready"
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return "crawler-ready"
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    else:
+        parsed = parsed.astimezone(timezone.utc)
+    if parsed > datetime.now(timezone.utc) + timedelta(days=1):
+        return "crawler-ready"
+    return text
+
+
+def normalize_job_item(raw: dict | None) -> dict:
+    item = raw if isinstance(raw, dict) else {}
+    job_id = str(item.get("id") or "").strip()
+    company = str(item.get("company") or "Quant Firm").strip()[:120] or "Quant Firm"
+    title = str(item.get("title") or "Quant Role").strip()[:180] or "Quant Role"
+    if not job_id:
+        digest = hashlib.sha1(f"{company}:{title}".encode("utf-8")).hexdigest()[:12]
+        job_id = f"job-{digest}"
+    job_type = str(item.get("type") or "internship").strip().lower()
+    if job_type not in {"internship", "fulltime"}:
+        job_type = "internship"
+    tags = item.get("tags")
+    if isinstance(tags, str):
+        tags = [part.strip() for part in re.split(r"[,，#/|]", tags) if part.strip()]
+    elif isinstance(tags, list):
+        tags = [str(part).strip() for part in tags if str(part).strip()]
+    else:
+        tags = []
+    return {
+        "id": job_id[:160],
+        "company": company,
+        "title": title,
+        "type": job_type,
+        "location": str(item.get("location") or "Global").strip()[:180] or "Global",
+        "url": safe_job_url(item.get("url")),
+        "postedAt": safe_job_posted_at(item.get("postedAt") or item.get("createdAt")),
+        "tags": tags[:12],
+    }
+
+
+def extract_jobs_payload(payload) -> list:
+    if isinstance(payload, list):
+        return payload
+    if not isinstance(payload, dict):
+        return []
+    for key in ("jobs", "items", "results", "data"):
+        value = payload.get(key)
+        if isinstance(value, list):
+            return value
+        if isinstance(value, dict):
+            nested = extract_jobs_payload(value)
+            if nested:
+                return nested
+    return []
+
+
+def load_local_jobs_catalog() -> list[dict]:
+    try:
+        mtime = JOBS_CATALOG_PATH.stat().st_mtime
+    except FileNotFoundError:
+        return []
+    if _JOBS_CATALOG_CACHE["mtime"] == mtime:
+        return _JOBS_CATALOG_CACHE["jobs"]
+    payload = parse_json(JOBS_CATALOG_PATH.read_text(encoding="utf-8"), {"jobs": []})
+    raw_jobs = payload.get("jobs") if isinstance(payload, dict) else payload
+    jobs = [normalize_job_item(item) for item in raw_jobs if isinstance(item, dict)] if isinstance(raw_jobs, list) else []
+    _JOBS_CATALOG_CACHE["mtime"] = mtime
+    _JOBS_CATALOG_CACHE["jobs"] = jobs
+    return jobs
+
+
+def load_jobs_source() -> list[dict]:
+    if not JOBS_SOURCE_URL:
+        _JOBS_SOURCE_CACHE.update({"status": "disabled", "error": ""})
+        return []
+    now = time.time()
+    if now - float(_JOBS_SOURCE_CACHE.get("fetched_at") or 0) < JOBS_SOURCE_CACHE_SECONDS:
+        return list(_JOBS_SOURCE_CACHE.get("jobs") or [])
+    headers = {"Accept": "application/json", "User-Agent": "QuantGymAPI/0.1"}
+    if JOBS_SOURCE_TOKEN:
+        headers["Authorization"] = f"Bearer {JOBS_SOURCE_TOKEN}"
+    request = Request(JOBS_SOURCE_URL, headers=headers, method="GET")
+    try:
+        with urlopen(request, timeout=JOBS_SOURCE_TIMEOUT_SECONDS) as response:
+            raw = response.read(JOBS_SOURCE_MAX_BYTES + 1)
+        if len(raw) > JOBS_SOURCE_MAX_BYTES:
+            raise ValueError("jobs source payload is too large")
+        payload = json.loads(raw.decode("utf-8"))
+        jobs = [normalize_job_item(item) for item in extract_jobs_payload(payload) if isinstance(item, dict)]
+        _JOBS_SOURCE_CACHE.update({
+            "fetched_at": now,
+            "jobs": jobs,
+            "status": "ok",
+            "error": "",
+        })
+        return jobs
+    except (HTTPError, URLError, OSError, ValueError, UnicodeDecodeError) as error:
+        print(f"[jobs-source] refresh failed: {error}", file=sys.stderr)
+        _JOBS_SOURCE_CACHE.update({
+            "fetched_at": now,
+            "jobs": [],
+            "status": "error",
+            "error": error.__class__.__name__,
+        })
+        return []
+
+
+def merge_jobs_catalog(source_jobs: list[dict], local_jobs: list[dict]) -> list[dict]:
+    merged = {}
+    order = []
+    for job in list(source_jobs or []) + list(local_jobs or []):
+        job_id = str(job.get("id") or "")
+        if not job_id:
+            continue
+        if job_id not in merged:
+            order.append(job_id)
+            merged[job_id] = job
+        else:
+            merged[job_id] = {**job, **merged[job_id]}
+    return [merged[job_id] for job_id in order]
+
+
+def load_jobs_catalog() -> list[dict]:
+    local_jobs = load_local_jobs_catalog()
+    source_jobs = load_jobs_source()
+    if source_jobs:
+        return merge_jobs_catalog(source_jobs, local_jobs)
+    return local_jobs
+
+
+def decode_media_data_url(data_url: str) -> tuple[str, bytes]:
+    match = re.fullmatch(r"data:([^;,]+);base64,(.+)", str(data_url or ""), flags=re.DOTALL)
+    if not match:
+        raise HttpError(400, "Media dataUrl must be a base64 data URL")
+    content_type = match.group(1).strip().lower()
+    if content_type not in MEDIA_CONTENT_TYPES:
+        raise HttpError(415, "Unsupported media type")
+    try:
+        payload = base64.b64decode(match.group(2), validate=True)
+    except ValueError:
+        raise HttpError(400, "Invalid media data")
+    if not payload:
+        raise HttpError(400, "Media file is empty")
+    if len(payload) > MEDIA_MAX_BYTES:
+        raise HttpError(413, "Media file is too large")
+    return content_type, payload
+
+
+def media_extension(content_type: str, filename: str = "") -> str:
+    return MEDIA_CONTENT_TYPES.get(content_type, ".bin")
+
+
+def media_file_path(storage_path: str) -> Path:
+    root = MEDIA_ROOT.resolve()
+    path = (MEDIA_ROOT / str(storage_path or "")).resolve()
+    if not path_is_relative_to(path, root):
+        raise HttpError(403, "Media path is not allowed")
+    return path
+
+
+def media_uses_object_storage() -> bool:
+    return MEDIA_STORAGE in {"s3", "r2", "object", "object-storage"}
+
+
+def media_storage_label(storage_path: str = "") -> str:
+    return "s3-media" if str(storage_path or "").startswith("s3:") else "api-media"
+
+
+def require_media_s3_config() -> None:
+    if not (MEDIA_S3_ENDPOINT and MEDIA_S3_BUCKET and MEDIA_S3_ACCESS_KEY_ID and MEDIA_S3_SECRET_ACCESS_KEY):
+        raise HttpError(503, "Media object storage is not configured")
+
+
+def media_s3_key(storage_path: str) -> str:
+    raw = str(storage_path or "")
+    if raw.startswith("s3:"):
+        return raw.removeprefix("s3:").lstrip("/")
+    safe_name = Path(raw).name
+    return "/".join(part for part in [MEDIA_S3_PREFIX, safe_name] if part)
+
+
+def media_s3_storage_path(storage_path: str) -> str:
+    return f"s3:{media_s3_key(storage_path)}"
+
+
+def media_s3_url(key: str) -> str:
+    require_media_s3_config()
+    return f"{MEDIA_S3_ENDPOINT}/{quote(MEDIA_S3_BUCKET, safe='')}/{quote(key, safe='/')}"
+
+
+def media_public_url(storage_path: str) -> str:
+    if not MEDIA_PUBLIC_BASE_URL or not str(storage_path or "").startswith("s3:"):
+        return ""
+    return f"{MEDIA_PUBLIC_BASE_URL}/{quote(media_s3_key(storage_path), safe='/')}"
+
+
+def aws_sigv4_headers(method: str, url: str, payload: bytes, content_type: str = "") -> dict:
+    require_media_s3_config()
+    now = datetime.now(timezone.utc)
+    amz_date = now.strftime("%Y%m%dT%H%M%SZ")
+    date_stamp = now.strftime("%Y%m%d")
+    parsed = urlparse(url)
+    payload_hash = hashlib.sha256(payload or b"").hexdigest()
+    canonical_headers = (
+        f"host:{parsed.netloc}\n"
+        f"x-amz-content-sha256:{payload_hash}\n"
+        f"x-amz-date:{amz_date}\n"
+    )
+    signed_headers = "host;x-amz-content-sha256;x-amz-date"
+    canonical_request = "\n".join([
+        method.upper(),
+        parsed.path or "/",
+        parsed.query or "",
+        canonical_headers,
+        signed_headers,
+        payload_hash,
+    ])
+    credential_scope = f"{date_stamp}/{MEDIA_S3_REGION}/s3/aws4_request"
+    string_to_sign = "\n".join([
+        "AWS4-HMAC-SHA256",
+        amz_date,
+        credential_scope,
+        hashlib.sha256(canonical_request.encode("utf-8")).hexdigest(),
+    ])
+    signing_key = hmac.new(
+        hmac.new(
+            hmac.new(
+                hmac.new(f"AWS4{MEDIA_S3_SECRET_ACCESS_KEY}".encode("utf-8"), date_stamp.encode("utf-8"), hashlib.sha256).digest(),
+                MEDIA_S3_REGION.encode("utf-8"),
+                hashlib.sha256,
+            ).digest(),
+            b"s3",
+            hashlib.sha256,
+        ).digest(),
+        b"aws4_request",
+        hashlib.sha256,
+    ).digest()
+    signature = hmac.new(signing_key, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
+    headers = {
+        "Authorization": (
+            "AWS4-HMAC-SHA256 "
+            f"Credential={MEDIA_S3_ACCESS_KEY_ID}/{credential_scope}, "
+            f"SignedHeaders={signed_headers}, Signature={signature}"
+        ),
+        "Host": parsed.netloc,
+        "X-Amz-Content-Sha256": payload_hash,
+        "X-Amz-Date": amz_date,
+    }
+    if content_type:
+        headers["Content-Type"] = content_type
+    return headers
+
+
+def put_s3_media_object(storage_path: str, content_type: str, payload: bytes) -> str:
+    key = media_s3_key(storage_path)
+    url = media_s3_url(key)
+    request = Request(
+        url,
+        data=payload,
+        headers=aws_sigv4_headers("PUT", url, payload, content_type),
+        method="PUT",
+    )
+    try:
+        with urlopen(request, timeout=MEDIA_S3_TIMEOUT_SECONDS):
+            return media_s3_storage_path(storage_path)
+    except (HTTPError, URLError, OSError) as error:
+        print(f"[media-s3] upload failed: {error}", file=sys.stderr)
+        raise HttpError(502, "Could not store media object")
+
+
+def read_s3_media_object(storage_path: str) -> bytes:
+    key = media_s3_key(storage_path)
+    url = media_s3_url(key)
+    request = Request(url, headers=aws_sigv4_headers("GET", url, b""), method="GET")
+    try:
+        with urlopen(request, timeout=MEDIA_S3_TIMEOUT_SECONDS) as response:
+            return response.read()
+    except HTTPError as error:
+        if error.code == 404:
+            raise HttpError(404, "Media object not found")
+        print(f"[media-s3] read failed: {error}", file=sys.stderr)
+        raise HttpError(502, "Could not read media object")
+    except (URLError, OSError) as error:
+        print(f"[media-s3] read failed: {error}", file=sys.stderr)
+        raise HttpError(502, "Could not read media object")
+
+
+def store_media_payload(storage_path: str, content_type: str, payload: bytes) -> str:
+    if media_uses_object_storage():
+        return put_s3_media_object(storage_path, content_type, payload)
+    if MEDIA_STORAGE not in {"", "local", "disk"}:
+        raise HttpError(503, "Unsupported media storage backend")
+    file_path = media_file_path(storage_path)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_bytes(payload)
+    return storage_path
 
 
 def resolve_library_asset_path(asset: dict) -> Path:
@@ -366,30 +926,126 @@ def is_true(value) -> bool:
     return value is True or str(value or "").lower() == "true"
 
 
+def parse_jwt_parts(token: str) -> tuple[dict, dict, str, bytes]:
+    try:
+        header_part, payload_part, signature_part = str(token or "").split(".")
+        header = json.loads(b64url_decode(header_part).decode("utf-8"))
+        payload = json.loads(b64url_decode(payload_part).decode("utf-8"))
+        signature = b64url_decode(signature_part)
+    except (ValueError, json.JSONDecodeError, UnicodeDecodeError, base64.binascii.Error):
+        raise HttpError(401, "Invalid Google ID token")
+    return header, payload, f"{header_part}.{payload_part}", signature
+
+
+def parse_cache_control_max_age(value: str | None) -> int | None:
+    match = re.search(r"(?:^|,\s*)max-age=(\d+)", str(value or ""), flags=re.IGNORECASE)
+    return int(match.group(1)) if match else None
+
+
+def load_google_jwks(force_refresh: bool = False) -> dict:
+    now = time.time()
+    with _GOOGLE_JWKS_LOCK:
+        if not force_refresh and _GOOGLE_JWKS_CACHE["keys"] and _GOOGLE_JWKS_CACHE["expires_at"] > now:
+            return _GOOGLE_JWKS_CACHE["keys"]
+        try:
+            with urlopen(GOOGLE_JWKS_URL, timeout=5) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+                max_age = parse_cache_control_max_age(response.headers.get("Cache-Control"))
+        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError, OSError):
+            raise HttpError(503, "Google JWKS verification keys are unavailable")
+
+        keys = {}
+        for key in payload.get("keys", []):
+            if not isinstance(key, dict):
+                continue
+            kid = str(key.get("kid") or "")
+            if key.get("kty") == "RSA" and kid and key.get("n") and key.get("e"):
+                keys[kid] = key
+        if not keys:
+            raise HttpError(503, "Google JWKS verification keys are unavailable")
+
+        _GOOGLE_JWKS_CACHE["keys"] = keys
+        _GOOGLE_JWKS_CACHE["expires_at"] = now + max(60, int(max_age or 3600))
+        return keys
+
+
+def verify_rs256_signature(signing_input: str, signature: bytes, key: dict) -> bool:
+    try:
+        modulus = int.from_bytes(b64url_decode(str(key["n"])), "big")
+        exponent = int.from_bytes(b64url_decode(str(key["e"])), "big")
+    except (KeyError, ValueError, base64.binascii.Error):
+        return False
+    key_size = (modulus.bit_length() + 7) // 8
+    if key_size <= 0 or len(signature) != key_size:
+        return False
+
+    digest_info = bytes.fromhex("3031300d060960864801650304020105000420") + hashlib.sha256(
+        signing_input.encode("ascii")
+    ).digest()
+    padding_length = key_size - len(digest_info) - 3
+    if padding_length < 8:
+        return False
+
+    signature_value = int.from_bytes(signature, "big")
+    encoded = pow(signature_value, exponent, modulus).to_bytes(key_size, "big")
+    expected = b"\x00\x01" + (b"\xff" * padding_length) + b"\x00" + digest_info
+    return hmac.compare_digest(encoded, expected)
+
+
+def validate_google_claims(claims: dict) -> dict:
+    issuer = str(claims.get("iss") or "")
+    if issuer not in {"accounts.google.com", "https://accounts.google.com"}:
+        raise HttpError(401, "Google ID token issuer mismatch")
+
+    audience = claims.get("aud")
+    audience_matches = audience == GOOGLE_CLIENT_ID
+    if isinstance(audience, list):
+        audience_matches = GOOGLE_CLIENT_ID in audience
+        if len(audience) > 1 and str(claims.get("azp") or "") != GOOGLE_CLIENT_ID:
+            audience_matches = False
+    if not audience_matches:
+        raise HttpError(401, "Google ID token audience mismatch")
+
+    now_seconds = int(time.time())
+    try:
+        expires_at = int(claims.get("exp") or 0)
+        not_before = int(claims.get("nbf") or 0)
+        issued_at = int(claims.get("iat") or 0)
+    except (TypeError, ValueError):
+        raise HttpError(401, "Google ID token time claims are invalid")
+    if expires_at <= 0 or expires_at < now_seconds - GOOGLE_ID_TOKEN_CLOCK_SKEW_SECONDS:
+        raise HttpError(401, "Google ID token is expired")
+    if not_before and not_before > now_seconds + GOOGLE_ID_TOKEN_CLOCK_SKEW_SECONDS:
+        raise HttpError(401, "Google ID token is not valid yet")
+    if issued_at and issued_at > now_seconds + GOOGLE_ID_TOKEN_CLOCK_SKEW_SECONDS:
+        raise HttpError(401, "Google ID token issue time is invalid")
+
+    email = normalize_email(claims.get("email"))
+    if not str(claims.get("sub") or "").strip() or not email or not is_true(claims.get("email_verified")):
+        raise HttpError(401, "Google account email is not verified")
+    ensure_valid_email(email)
+    return {**claims, "email": email}
+
+
 def verify_google_id_token(credential: str) -> dict:
     if not GOOGLE_CLIENT_ID:
         raise HttpError(503, "Google login is not configured on the API")
     if not credential:
         raise HttpError(400, "Google ID token is required")
 
-    request_url = f"{GOOGLE_TOKENINFO_URL}?{urlencode({'id_token': credential})}"
-    try:
-        with urlopen(request_url, timeout=5) as response:
-            claims = json.loads(response.read().decode("utf-8"))
-    except HTTPError:
+    header, claims, signing_input, signature = parse_jwt_parts(credential)
+    if header.get("alg") != "RS256" or not str(header.get("kid") or ""):
         raise HttpError(401, "Invalid Google ID token")
-    except (URLError, TimeoutError, json.JSONDecodeError):
-        raise HttpError(503, "Google token verification is unavailable")
 
-    issuer = str(claims.get("iss") or "")
-    email = normalize_email(claims.get("email"))
-    if str(claims.get("aud") or "") != GOOGLE_CLIENT_ID:
-        raise HttpError(401, "Google ID token audience mismatch")
-    if issuer not in {"accounts.google.com", "https://accounts.google.com"}:
-        raise HttpError(401, "Google ID token issuer mismatch")
-    if not str(claims.get("sub") or "").strip() or not email or not is_true(claims.get("email_verified")):
-        raise HttpError(401, "Google account email is not verified")
-    return {**claims, "email": email}
+    kid = str(header["kid"])
+    keys = load_google_jwks()
+    key = keys.get(kid)
+    if not key:
+        key = load_google_jwks(force_refresh=True).get(kid)
+    if not key or not verify_rs256_signature(signing_input, signature, key):
+        raise HttpError(401, "Invalid Google ID token signature")
+
+    return validate_google_claims(claims)
 
 
 def verified_google_account(credential: str, requested_account: dict | None) -> dict:
@@ -558,6 +1214,20 @@ class Database:
                   updated_at TEXT NOT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS media_objects (
+                  id TEXT PRIMARY KEY,
+                  owner_user_id TEXT NOT NULL,
+                  filename TEXT NOT NULL,
+                  content_type TEXT NOT NULL,
+                  byte_size INTEGER NOT NULL,
+                  storage_path TEXT NOT NULL,
+                  created_at TEXT NOT NULL,
+                  FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_media_objects_owner_created
+                ON media_objects (owner_user_id, created_at);
+
                 CREATE TABLE IF NOT EXISTS sessions (
                   token_hash TEXT PRIMARY KEY,
                   user_id TEXT NOT NULL,
@@ -582,6 +1252,25 @@ class Database:
 
                 CREATE INDEX IF NOT EXISTS idx_email_verification_expires
                 ON email_verification_codes (expires_at);
+
+                CREATE TABLE IF NOT EXISTS audit_events (
+                  id TEXT PRIMARY KEY,
+                  event_type TEXT NOT NULL,
+                  actor_user_id TEXT,
+                  email_norm TEXT,
+                  ip TEXT,
+                  user_agent TEXT,
+                  status TEXT NOT NULL,
+                  metadata_json TEXT NOT NULL,
+                  created_at TEXT NOT NULL,
+                  FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_audit_events_created
+                ON audit_events (created_at DESC);
+
+                CREATE INDEX IF NOT EXISTS idx_audit_events_type_created
+                ON audit_events (event_type, created_at DESC);
 
                 CREATE TABLE IF NOT EXISTS problems (
                   id TEXT PRIMARY KEY,
@@ -689,6 +1378,225 @@ class Database:
                 (hashed, now),
             ).fetchone()
             return dict(row) if row else None
+
+    def insert_audit_event(
+        self,
+        conn: sqlite3.Connection,
+        event_type: str,
+        *,
+        actor_user_id: str | None = None,
+        email: str | None = None,
+        ip: str = "",
+        user_agent: str = "",
+        status: str = "success",
+        metadata: dict | None = None,
+    ) -> dict:
+        event = {
+            "id": secrets.token_urlsafe(14),
+            "eventType": str(event_type or "unknown"),
+            "actorUserId": str(actor_user_id or ""),
+            "email": normalize_email(email),
+            "ip": str(ip or "")[:128],
+            "userAgent": str(user_agent or "")[:240],
+            "status": str(status or "success"),
+            "metadata": sanitize_audit_metadata(metadata),
+            "createdAt": utc_now(),
+        }
+        conn.execute(
+            """
+            INSERT INTO audit_events
+              (id, event_type, actor_user_id, email_norm, ip, user_agent, status, metadata_json, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                event["id"],
+                event["eventType"],
+                event["actorUserId"] or None,
+                event["email"],
+                event["ip"],
+                event["userAgent"],
+                event["status"],
+                compact_json(event["metadata"]),
+                event["createdAt"],
+            ),
+        )
+        return event
+
+    def record_audit_event(self, *args, **kwargs) -> dict | None:
+        with self.connect() as conn:
+            return self.insert_audit_event(conn, *args, **kwargs)
+
+    def get_admin_metrics(self, conn: sqlite3.Connection) -> dict:
+        now = utc_now()
+        since_24h = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat(timespec="seconds").replace("+00:00", "Z")
+        user_rows = conn.execute(
+            "SELECT provider, COUNT(*) AS count FROM users GROUP BY provider"
+        ).fetchall()
+        problem_rows = conn.execute(
+            "SELECT visibility, COUNT(*) AS count FROM problems GROUP BY visibility"
+        ).fetchall()
+        audit_rows = conn.execute(
+            "SELECT status, COUNT(*) AS count FROM audit_events GROUP BY status"
+        ).fetchall()
+        auth_rows = conn.execute(
+            """
+            SELECT event_type, status, COUNT(*) AS count
+            FROM audit_events
+            WHERE event_type LIKE 'auth.%' AND created_at >= ?
+            GROUP BY event_type, status
+            """,
+            (since_24h,),
+        ).fetchall()
+        http_error_rows = conn.execute(
+            """
+            SELECT event_type, status, COUNT(*) AS count
+            FROM audit_events
+            WHERE event_type LIKE 'http.error.%' AND created_at >= ?
+            GROUP BY event_type, status
+            """,
+            (since_24h,),
+        ).fetchall()
+        http_error_items = []
+        for row in http_error_rows:
+            try:
+                status_code = int(str(row["event_type"] or "").rsplit(".", 1)[-1])
+            except ValueError:
+                status_code = 0
+            http_error_items.append({
+                "statusCode": status_code,
+                "status": row["status"],
+                "count": int(row["count"]),
+            })
+        http_error_total = sum(item["count"] for item in http_error_items)
+        scalar = lambda query, params=(): int(conn.execute(query, params).fetchone()[0] or 0)
+        return {
+            "generatedAt": now,
+            "users": {
+                "total": scalar("SELECT COUNT(*) FROM users"),
+                "byProvider": {row["provider"] or "unknown": int(row["count"]) for row in user_rows},
+            },
+            "sessions": {
+                "active": scalar("SELECT COUNT(*) FROM sessions WHERE expires_at > ?", (now,)),
+                "expired": scalar("SELECT COUNT(*) FROM sessions WHERE expires_at <= ?", (now,)),
+            },
+            "problems": {
+                "byVisibility": {row["visibility"] or "unknown": int(row["count"]) for row in problem_rows},
+                "likes": scalar("SELECT COUNT(*) FROM problem_likes"),
+                "comments": scalar("SELECT COUNT(*) FROM problem_comments"),
+            },
+            "community": {
+                "posts": len(self.get_community(conn).get("posts", [])),
+            },
+            "poker": {
+                "rooms": scalar("SELECT COUNT(*) FROM poker_rooms WHERE archived_at IS NULL"),
+            },
+            "emailVerification": {
+                "activeCodes": scalar(
+                    "SELECT COUNT(*) FROM email_verification_codes WHERE consumed_at IS NULL AND expires_at > ?",
+                    (now,),
+                ),
+            },
+            "audit": {
+                "events": scalar("SELECT COUNT(*) FROM audit_events"),
+                "byStatus": {row["status"] or "unknown": int(row["count"]) for row in audit_rows},
+                "authEvents24h": [
+                    {
+                        "eventType": row["event_type"],
+                        "status": row["status"],
+                        "count": int(row["count"]),
+                    }
+                    for row in auth_rows
+                ],
+                "httpErrors24h": {
+                    "total": http_error_total,
+                    "clientErrors": sum(item["count"] for item in http_error_items if 400 <= item["statusCode"] < 500),
+                    "serverErrors": sum(item["count"] for item in http_error_items if item["statusCode"] >= 500),
+                    "byStatusCode": {
+                        str(item["statusCode"]): item["count"]
+                        for item in http_error_items
+                        if item["statusCode"]
+                    },
+                    "items": sorted(http_error_items, key=lambda item: item["statusCode"]),
+                },
+            },
+        }
+
+    def get_audit_events(self, conn: sqlite3.Connection, limit: int = 50) -> list[dict]:
+        safe_limit = max(1, min(200, int(limit or 50)))
+        rows = conn.execute(
+            """
+            SELECT id, event_type, actor_user_id, email_norm, ip, user_agent, status, metadata_json, created_at
+            FROM audit_events
+            ORDER BY created_at DESC
+            LIMIT ?
+            """,
+            (safe_limit,),
+        ).fetchall()
+        return [
+            {
+                "id": row["id"],
+                "eventType": row["event_type"],
+                "actorUserId": row["actor_user_id"] or "",
+                "email": row["email_norm"] or "",
+                "ip": row["ip"] or "",
+                "userAgent": row["user_agent"] or "",
+                "status": row["status"],
+                "metadata": parse_json(row["metadata_json"], {}),
+                "createdAt": row["created_at"],
+            }
+            for row in rows
+        ]
+
+    def save_media_object(
+        self,
+        conn: sqlite3.Connection,
+        *,
+        media_id: str,
+        owner_user_id: str,
+        filename: str,
+        content_type: str,
+        byte_size: int,
+        storage_path: str,
+    ) -> dict:
+        created_at = utc_now()
+        conn.execute(
+            """
+            INSERT INTO media_objects
+              (id, owner_user_id, filename, content_type, byte_size, storage_path, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (media_id, owner_user_id, filename, content_type, int(byte_size), storage_path, created_at),
+        )
+        return {
+            "id": media_id,
+            "ownerUserId": owner_user_id,
+            "filename": filename,
+            "contentType": content_type,
+            "byteSize": int(byte_size),
+            "storagePath": storage_path,
+            "createdAt": created_at,
+        }
+
+    def get_media_object(self, conn: sqlite3.Connection, media_id: str) -> dict | None:
+        row = conn.execute(
+            """
+            SELECT id, owner_user_id, filename, content_type, byte_size, storage_path, created_at
+            FROM media_objects
+            WHERE id = ?
+            """,
+            (media_id,),
+        ).fetchone()
+        if not row:
+            return None
+        return {
+            "id": row["id"],
+            "ownerUserId": row["owner_user_id"],
+            "filename": row["filename"],
+            "contentType": row["content_type"],
+            "byteSize": int(row["byte_size"] or 0),
+            "storagePath": row["storage_path"],
+            "createdAt": row["created_at"],
+        }
 
     def get_state(self, conn: sqlite3.Connection, user_id: str) -> dict:
         row = conn.execute("SELECT state_json FROM user_states WHERE user_id = ?", (user_id,)).fetchone()
@@ -811,7 +1719,10 @@ class Database:
                 continue
             if previous and visibility == "public" and previous["visibility"] != "public":
                 continue
-            created_at = previous["created_at"] if previous else problem["createdAt"]
+            previous_created_at = previous["created_at"] if previous else ""
+            created_at = previous_created_at if is_valid_timestamp(previous_created_at) else problem["createdAt"]
+            if not is_valid_timestamp(created_at):
+                created_at = utc_now()
             updated_at = utc_now()
             problem["createdAt"] = created_at
             problem["updatedAt"] = updated_at
@@ -1534,12 +2445,23 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.register()
             if path == "/api/auth/login" and self.command == "POST":
                 return self.login()
+            if path == "/api/auth/reset-password" and self.command == "POST":
+                return self.reset_password()
             if path == "/api/auth/google" and self.command == "POST":
                 return self.google_login()
             if path == "/api/account" and self.command == "GET":
                 return self.get_account()
             if path == "/api/account" and self.command == "PATCH":
                 return self.patch_account()
+            if path == "/api/admin/metrics" and self.command == "GET":
+                return self.get_admin_metrics()
+            if path == "/api/admin/audit-events" and self.command == "GET":
+                return self.get_admin_audit_events()
+            if path == "/api/media" and self.command == "POST":
+                return self.post_media()
+            media_match = re.fullmatch(r"/api/media/([^/]+)", path)
+            if media_match and self.command == "GET":
+                return self.get_media(unquote(media_match.group(1)))
             if path == "/api/leaderboard" and self.command == "GET":
                 return self.get_leaderboard()
             if path == "/api/state" and self.command == "GET":
@@ -1550,6 +2472,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.get_problems()
             if path == "/api/problems" and self.command == "PUT":
                 return self.put_problems()
+            if path == "/api/jobs" and self.command in {"GET", "POST"}:
+                return self.get_jobs()
             if path.startswith("/api/problems/") and self.command == "DELETE":
                 return self.delete_problem(unquote(path.removeprefix("/api/problems/")))
             if path == "/api/problem-states" and self.command == "GET":
@@ -1601,11 +2525,14 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             library_pdf_match = re.fullmatch(r"/api/library/pdfs/([^/]+)", path)
             if library_pdf_match and self.command == "GET":
                 return self.serve_library_pdf(unquote(library_pdf_match.group(1)))
+            self.record_http_error(404, "Not found")
             return self.send_json(404, {"error": "Not found"})
         except HttpError as error:
+            self.record_http_error(error.status, error.message)
             return self.send_json(error.status, {"error": error.message})
         except Exception as error:  # pragma: no cover - defensive server boundary
             self.log_message("Unhandled error: %s", error)
+            self.record_http_error(500, "Internal server error", error=error)
             return self.send_json(500, {"error": "Internal server error"})
 
     def read_json(self) -> dict:
@@ -1624,11 +2551,102 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             raise HttpError(400, "JSON body must be an object")
         return data
 
+    def client_rate_key(self) -> str:
+        peer_ip = self.client_address[0]
+        if peer_is_trusted_proxy(peer_ip):
+            forwarded_ip = forwarded_client_ip(self.headers)
+            if forwarded_ip:
+                return forwarded_ip
+        return normalize_ip_literal(peer_ip) or peer_ip
+
+    def enforce_rate_limit(self, scope: str, max_requests: int, identity: str | None = None) -> None:
+        rate_limiter.check(f"{scope}:ip", self.client_rate_key(), max_requests, RATE_LIMIT_WINDOW_SECONDS)
+        if identity:
+            rate_limiter.check(f"{scope}:identity", identity, max_requests, RATE_LIMIT_WINDOW_SECONDS)
+
+    def audit_event(
+        self,
+        event_type: str,
+        *,
+        user: dict | None = None,
+        email: str | None = None,
+        status: str = "success",
+        metadata: dict | None = None,
+        conn: sqlite3.Connection | None = None,
+    ) -> None:
+        actor_id = user.get("id") if isinstance(user, dict) else None
+        email_value = email or (user.get("email_norm") if isinstance(user, dict) else "")
+        try:
+            if conn is not None:
+                db.insert_audit_event(
+                    conn,
+                    event_type,
+                    actor_user_id=actor_id,
+                    email=email_value,
+                    ip=self.client_rate_key(),
+                    user_agent=self.headers.get("User-Agent", ""),
+                    status=status,
+                    metadata=metadata,
+                )
+            else:
+                db.record_audit_event(
+                    event_type,
+                    actor_user_id=actor_id,
+                    email=email_value,
+                    ip=self.client_rate_key(),
+                    user_agent=self.headers.get("User-Agent", ""),
+                    status=status,
+                    metadata=metadata,
+                )
+        except Exception as error:  # pragma: no cover - audit must not break auth paths
+            self.log_message("Audit log failed: %s", error)
+
+    def record_http_error(self, status_code: int, message: str = "", *, error: Exception | None = None) -> None:
+        try:
+            status = int(status_code)
+        except (TypeError, ValueError):
+            status = 500
+        if status < 400:
+            return
+        path = urlparse(self.path).path or "/"
+        metadata = {
+            "method": self.command,
+            "path": path[:240],
+            "statusCode": status,
+            "message": str(message or "")[:180],
+        }
+        if error is not None:
+            metadata["errorClass"] = error.__class__.__name__
+        self.audit_event(
+            f"http.error.{status}",
+            status="error" if status >= 500 else "fail",
+            metadata=metadata,
+        )
+        if ALERT_WEBHOOK_URL and status >= ALERT_MIN_STATUS_CODE:
+            alert_message = sanitize_alert_message(status, metadata["path"], metadata["message"])
+            payload = {
+                "service": "quantgym-api",
+                "eventType": f"http.error.{status}",
+                "status": "error" if status >= 500 else "fail",
+                "statusCode": status,
+                "method": metadata["method"],
+                "path": metadata["path"],
+                "message": alert_message,
+                "occurredAt": utc_now(),
+            }
+            if "errorClass" in metadata:
+                payload["errorClass"] = metadata["errorClass"]
+            threading.Thread(target=send_alert_webhook, args=(payload,), daemon=True).start()
+
     def send_json(self, status: int, payload: dict):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        if status >= 400:
+            self.close_connection = True
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        if self.close_connection:
+            self.send_header("Connection", "close")
         self.end_headers()
         self.wfile.write(body)
 
@@ -1642,6 +2660,13 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             raise HttpError(401, "Invalid or expired token")
         ensure_email_allowed(user.get("email_norm"))
         return user
+
+    def require_admin_user(self) -> dict:
+        user = self.require_user()
+        email = normalize_email(user.get("email_norm"))
+        if email in ADMIN_EMAILS or account_subscription_tier(user) == "admin":
+            return user
+        raise HttpError(403, "Admin access is required")
 
     def optional_user(self) -> dict | None:
         header = self.headers.get("Authorization", "")
@@ -1663,10 +2688,125 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             "community": db.get_community(conn),
         }
 
+    def get_admin_metrics(self):
+        user = self.require_admin_user()
+        with db.connect() as conn:
+            metrics = db.get_admin_metrics(conn)
+            self.audit_event("admin.metrics.view", user=user, metadata={"endpoint": "/api/admin/metrics"}, conn=conn)
+            self.send_json(200, {"metrics": metrics})
+
+    def get_admin_audit_events(self):
+        user = self.require_admin_user()
+        query = parse_qs(urlparse(self.path).query)
+        try:
+            limit = int((query.get("limit") or ["50"])[0])
+        except ValueError:
+            raise HttpError(400, "Invalid audit event limit")
+        with db.connect() as conn:
+            events = db.get_audit_events(conn, limit)
+            self.audit_event(
+                "admin.audit_events.view",
+                user=user,
+                metadata={"endpoint": "/api/admin/audit-events", "limit": max(1, min(200, limit))},
+                conn=conn,
+            )
+            self.send_json(200, {"events": events})
+
     def absolute_api_url(self, path: str) -> str:
-        proto = self.headers.get("X-Forwarded-Proto") or ("https" if self.headers.get("X-Forwarded-Ssl") == "on" else "http")
-        host = self.headers.get("X-Forwarded-Host") or self.headers.get("Host") or f"{HOST}:{PORT}"
+        if PUBLIC_API_BASE_URL:
+            return f"{PUBLIC_API_BASE_URL}{path}"
+        trusted_proxy = peer_is_trusted_proxy(self.client_address[0])
+        proto = forwarded_request_proto(self.headers) if trusted_proxy else ""
+        host = clean_host_header(first_header_value(self.headers, "X-Forwarded-Host")) if trusted_proxy else ""
+        if not host:
+            configured_host = HOST if HOST not in {"", "0.0.0.0", "::"} else "127.0.0.1"
+            host = clean_host_header(f"{configured_host}:{PORT}") or f"127.0.0.1:{PORT}"
+        if not proto:
+            proto = "http"
         return f"{proto}://{host}{path}"
+
+    def post_media(self):
+        user = self.require_user()
+        data = self.read_json()
+        content_type, payload = decode_media_data_url(str(data.get("dataUrl") or ""))
+        original_name = str(data.get("name") or "upload").strip()[:180] or "upload"
+        media_id = secrets.token_urlsafe(18)
+        extension = media_extension(content_type, original_name)
+        storage_path = f"{media_id}{extension}"
+        stored_path = store_media_payload(storage_path, content_type, payload)
+        with db.connect() as conn:
+            media = db.save_media_object(
+                conn,
+                media_id=media_id,
+                owner_user_id=user["id"],
+                filename=original_name,
+                content_type=content_type,
+                byte_size=len(payload),
+                storage_path=stored_path,
+            )
+            self.audit_event(
+                "media.upload",
+                user=user,
+                metadata={
+                    "mediaId": media_id,
+                    "contentType": content_type,
+                    "byteSize": len(payload),
+                    "context": str(data.get("context") or "")[:80],
+                    "storage": media_storage_label(stored_path),
+                },
+                conn=conn,
+            )
+        path = f"/api/media/{quote(media_id)}"
+        media_url = media_public_url(media["storagePath"]) or self.absolute_api_url(path)
+        media_type = (
+            "video" if content_type.startswith("video/")
+            else "image" if content_type.startswith("image/")
+            else "file"
+        )
+        self.send_json(201, {
+            "media": {
+                "id": media["id"],
+                "url": media_url,
+                "path": path,
+                "dataUrl": media_url,
+                "type": media_type,
+                "name": media["filename"],
+                "contentType": media["contentType"],
+                "byteSize": media["byteSize"],
+                "createdAt": media["createdAt"],
+                "storage": media_storage_label(media["storagePath"]),
+            }
+        })
+
+    def get_media(self, media_id: str):
+        if not media_id:
+            raise HttpError(400, "Media id is required")
+        with db.connect() as conn:
+            media = db.get_media_object(conn, media_id)
+        if not media:
+            raise HttpError(404, "Media not found")
+        public_url = media_public_url(media["storagePath"])
+        if public_url:
+            self.send_response(302)
+            self.send_header("Location", public_url)
+            self.send_header("Cache-Control", "public, max-age=86400")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        if str(media["storagePath"] or "").startswith("s3:"):
+            body = read_s3_media_object(media["storagePath"])
+        else:
+            file_path = media_file_path(media["storagePath"])
+            if not file_path.exists() or not file_path.is_file():
+                raise HttpError(404, "Media file not found")
+            body = file_path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", media["contentType"])
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "public, max-age=86400")
+        self.send_header("Content-Disposition", f"inline; filename*=UTF-8''{quote(media['filename'])}")
+        self.end_headers()
+        self.wfile.write(body)
 
     def issue_library_reader_token(self, asset_id: str):
         user = self.require_user()
@@ -1745,15 +2885,21 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         data = self.read_json()
         email = normalize_email(data.get("email"))
         purpose = str(data.get("purpose") or "register").strip().lower()
-        if purpose != "register":
+        if purpose not in EMAIL_VERIFICATION_PURPOSES:
             raise HttpError(400, "Unsupported verification purpose")
         ensure_valid_email(email)
         ensure_email_allowed(email)
+        self.enforce_rate_limit("auth:verification-code", AUTH_VERIFICATION_RATE_LIMIT_MAX, email)
 
         with db.connect() as conn:
-            existing = conn.execute("SELECT id FROM users WHERE email_norm = ?", (email,)).fetchone()
-            if existing:
+            existing = conn.execute("SELECT id, provider FROM users WHERE email_norm = ?", (email,)).fetchone()
+            if purpose == "register" and existing:
                 raise HttpError(409, "Email already exists")
+            if purpose == "password_reset":
+                if not existing:
+                    raise HttpError(404, "No local account exists for this email")
+                if existing["provider"] != "local":
+                    raise HttpError(400, "Only local email accounts can reset password")
 
             previous = conn.execute(
                 """
@@ -1796,6 +2942,12 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                   consumed_at = NULL
                 """,
                 (secrets.token_urlsafe(16), email, purpose, salt_hex, code_hash, now, now, expires_at),
+            )
+            self.audit_event(
+                "auth.verification_code.sent",
+                email=email,
+                metadata={"purpose": purpose, "delivery": delivery},
+                conn=conn,
             )
 
         payload = {
@@ -1855,6 +3007,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 """,
                 (email, purpose),
             )
+            conn.commit()
             raise HttpError(400, "Invalid or expired email verification code")
 
         conn.execute(
@@ -1879,6 +3032,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         if len(password) < 6:
             raise HttpError(400, "Password must be at least 6 characters")
         ensure_email_allowed(email)
+        self.enforce_rate_limit("auth:register", AUTH_REGISTER_RATE_LIMIT_MAX, email)
 
         salt_hex, password_hash = make_password_hash(email, password)
         now = utc_now()
@@ -1917,6 +3071,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 db.save_community(conn, data.get("community"), merge=True)
             token = db.create_session(conn, account["id"])
             user = conn.execute("SELECT * FROM users WHERE id = ?", (account["id"],)).fetchone()
+            self.audit_event("auth.register", user=dict(user), status="success", metadata={"provider": "local"}, conn=conn)
             self.send_json(201, self.auth_response(conn, dict(user), token))
 
     def login(self):
@@ -1927,21 +3082,69 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             raise HttpError(400, "Email and password are required")
         ensure_valid_email(email)
         ensure_email_allowed(email)
+        self.enforce_rate_limit("auth:login", AUTH_LOGIN_RATE_LIMIT_MAX, email)
         with db.connect() as conn:
             user = conn.execute(
                 "SELECT * FROM users WHERE provider = 'local' AND email_norm = ?",
                 (email,),
             ).fetchone()
             if not user:
+                self.audit_event("auth.login", email=email, status="fail", metadata={"reason": "not_found"})
                 raise HttpError(401, "Invalid email or password")
             user_dict = dict(user)
             if not verify_password(email, password, user_dict["password_salt"], user_dict["password_hash"]):
+                self.audit_event("auth.login", user=user_dict, status="fail", metadata={"reason": "bad_password"})
                 raise HttpError(401, "Invalid email or password")
             token = db.create_session(conn, user_dict["id"])
+            self.audit_event("auth.login", user=user_dict, status="success", metadata={"provider": "local"}, conn=conn)
             self.send_json(200, self.auth_response(conn, user_dict, token))
+
+    def reset_password(self):
+        data = self.read_json()
+        email = normalize_email(data.get("email"))
+        password = str(data.get("password") or "")
+        verification_code = str(data.get("verificationCode") or "")
+        if not email or not password:
+            raise HttpError(400, "Email and password are required")
+        ensure_valid_email(email)
+        ensure_email_allowed(email)
+        if len(password) < 6:
+            raise HttpError(400, "Password must be at least 6 characters")
+        self.enforce_rate_limit("auth:password-reset", AUTH_PASSWORD_RESET_RATE_LIMIT_MAX, email)
+
+        salt_hex, password_hash = make_password_hash(email, password)
+        now = utc_now()
+        with db.connect() as conn:
+            user = conn.execute(
+                "SELECT * FROM users WHERE provider = 'local' AND email_norm = ?",
+                (email,),
+            ).fetchone()
+            if not user:
+                self.audit_event("auth.password_reset", email=email, status="fail", metadata={"reason": "not_found"})
+                raise HttpError(404, "No local account exists for this email")
+            self.consume_verification_code(conn, email, "password_reset", verification_code)
+            user_dict = dict(user)
+            account = sanitize_account(parse_json(user_dict["account_json"], {}), user_dict["id"])
+            account["email"] = email
+            account["provider"] = "local"
+            account["updatedAt"] = now
+            conn.execute(
+                """
+                UPDATE users
+                SET password_salt = ?, password_hash = ?, account_json = ?, updated_at = ?
+                WHERE id = ?
+                """,
+                (salt_hex, password_hash, compact_json(account), now, user_dict["id"]),
+            )
+            conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_dict["id"],))
+            token = db.create_session(conn, user_dict["id"])
+            refreshed = conn.execute("SELECT * FROM users WHERE id = ?", (user_dict["id"],)).fetchone()
+            self.audit_event("auth.password_reset", user=dict(refreshed), status="success", conn=conn)
+            self.send_json(200, self.auth_response(conn, dict(refreshed), token))
 
     def google_login(self):
         data = self.read_json()
+        self.enforce_rate_limit("auth:google", AUTH_GOOGLE_RATE_LIMIT_MAX)
         account = verified_google_account(
             str(data.get("credential") or ""),
             data.get("account") if isinstance(data.get("account"), dict) else {},
@@ -2022,6 +3225,13 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 db.save_community(conn, data.get("community"), merge=True)
             token = db.create_session(conn, account["id"])
             user = conn.execute("SELECT * FROM users WHERE id = ?", (account["id"],)).fetchone()
+            self.audit_event(
+                "auth.google_login",
+                user=dict(user),
+                status="success",
+                metadata={"linkedExistingAccount": bool(existing)},
+                conn=conn,
+            )
             self.send_json(200, self.auth_response(conn, dict(user), token))
 
     def get_account(self):
@@ -2047,6 +3257,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 "UPDATE users SET email_norm = ?, account_json = ?, updated_at = ? WHERE id = ?",
                 (email, compact_json(updates), updates["updatedAt"], user["id"]),
             )
+            self.audit_event("account.update", user=user, metadata={"emailChanged": email != normalize_email(user.get("email_norm"))}, conn=conn)
             self.send_json(200, {"account": updates})
 
     def get_state(self):
@@ -2079,6 +3290,33 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         with db.connect() as conn:
             saved = db.upsert_problems(conn, problems, visibility="user", owner_user_id=user["id"])
             self.send_json(200, {"problems": saved})
+
+    def get_jobs(self):
+        query = parse_qs(urlparse(self.path).query)
+        data = self.read_json() if self.command == "POST" else {}
+        raw_max = data.get("max") if isinstance(data, dict) and data.get("max") is not None else (query.get("max") or ["100"])[0]
+        try:
+            limit = max(1, min(200, int(raw_max)))
+        except (TypeError, ValueError):
+            raise HttpError(400, "Invalid jobs limit")
+        job_type = str(
+            data.get("type") if isinstance(data, dict) and data.get("type") is not None else (query.get("type") or [""])[0]
+        ).strip().lower()
+        jobs = load_jobs_catalog()
+        if job_type in {"internship", "fulltime"}:
+            jobs = [job for job in jobs if job["type"] == job_type]
+        selected = jobs[:limit]
+        source_status = str(_JOBS_SOURCE_CACHE.get("status") or "disabled")
+        source_label = "catalog"
+        if JOBS_SOURCE_URL:
+            source_label = "catalog+source" if source_status == "ok" else "catalog-fallback"
+        self.send_json(200, {
+            "jobs": selected,
+            "items": selected,
+            "source": source_label,
+            "sourceStatus": source_status,
+            "updatedAt": utc_now(),
+        })
 
     def delete_problem(self, problem_id: str):
         user = self.require_user()

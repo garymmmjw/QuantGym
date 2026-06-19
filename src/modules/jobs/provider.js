@@ -19,11 +19,29 @@ export function createJobsProvider(deps = {}) {
     });
   }
 
+  async function requestFromCloudApi() {
+    if (!deps.cloudApi) return [];
+    const data = await deps.cloudApi("/jobs", { auth: false });
+    const items = Array.isArray(data) ? data : data.items || data.jobs || [];
+    return items.map(normalizeItem);
+  }
+
   async function requestFromApi() {
-    return requestJobsFromApi({
-      endpoint: getEndpoint(),
-      normalizeItem
-    });
+    let cloudError = null;
+    try {
+      const items = await requestFromCloudApi();
+      if (items.length) return items;
+    } catch (error) {
+      cloudError = error;
+    }
+    try {
+      return await requestJobsFromApi({
+        endpoint: getEndpoint(),
+        normalizeItem
+      });
+    } catch (error) {
+      throw cloudError || error;
+    }
   }
 
   function upsert(items, options = {}) {
@@ -40,6 +58,7 @@ export function createJobsProvider(deps = {}) {
   return {
     getEndpoint,
     normalizeItem,
+    requestFromCloudApi,
     requestFromApi,
     upsert
   };

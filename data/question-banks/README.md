@@ -13,11 +13,26 @@ data/question-banks/
 ```
 
 - `catalog-manifest.json` lists imported sources and whether each source is active.
+- `source-rights-manifest.json` records private-beta and public/commercial release status for each source.
 - `<source-slug>/metadata.json` stores source statistics and generated-file names.
 - `<source-slug>/problems.json` is the canonical normalized source package.
 - `data/problem-catalog.json` and `data/problem-catalog.js` are compiled outputs consumed by the API and browser.
 
-Raw exports, OCR pages, PDFs, and private account dumps should stay local and ignored. Commit normalized catalogs only when distribution rights are clear.
+Raw exports, OCR pages, PDFs, and private account dumps should stay local and ignored. Commit normalized catalogs only when distribution rights are clear for the current release mode.
+
+Run the rights gate before beta release changes:
+
+```bash
+npm run check:question-bank-rights
+```
+
+Before public or commercial distribution, every active source must be explicitly approved in `source-rights-manifest.json` and this stricter gate must pass. `publicCommercial.status: "approved"` must include `basis`, `reviewedBy`, a recent valid `reviewedAt` date, a non-placeholder HTTPS `evidenceUrl`, `approvalType`, `redistributionScope`, and `evidenceSummary`. Commercial release additionally requires `redistributionScope` to include `commercial-use`. Run the fixture smoke to verify the approval schema itself:
+
+```bash
+npm run check:question-bank-rights:public-smoke
+npm run check:question-bank-rights:public
+npm run check:question-bank-rights:commercial
+```
 
 ## Current Catalog
 

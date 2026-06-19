@@ -3,6 +3,7 @@ import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
+import { timestampOrZero } from "../../lib/date.js";
 
 const EMPTY_FORM = {
   id: "",
@@ -57,7 +58,7 @@ export function ExperiencesPageContent() {
   const records = useMemo(
     () => [...(userState.interviewExperiences || [])]
       .map((record) => api.normalize?.(record) || record)
-      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)),
+      .sort((a, b) => timestampOrZero(b.updatedAt) - timestampOrZero(a.updatedAt)),
     [userState.interviewExperiences, api]
   );
 

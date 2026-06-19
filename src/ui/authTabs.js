@@ -1,11 +1,12 @@
 export function applyAuthTabState(elements = {}, tab = "login", options = {}) {
   const root = options.root || globalThis.document;
-  const activeTab = tab === "register" ? "register" : "login";
+  const activeTab = ["register", "reset"].includes(tab) ? tab : "login";
   root?.querySelectorAll?.("[data-auth-tab]").forEach((button) => {
     button.classList?.toggle?.("active", button.dataset.authTab === activeTab);
   });
   elements.loginForm?.classList?.toggle?.("hidden", activeTab !== "login");
   elements.registerForm?.classList?.toggle?.("hidden", activeTab !== "register");
+  elements.resetPasswordForm?.classList?.toggle?.("hidden", activeTab !== "reset");
   if (elements.authMessage) elements.authMessage.textContent = "";
   return activeTab;
 }

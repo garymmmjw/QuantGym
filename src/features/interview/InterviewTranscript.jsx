@@ -3,6 +3,10 @@ import {
   getInterviewMessageAvatar,
   getInterviewMessageLabel
 } from "../../modules/interview/format.js";
+import {
+  isImageAttachment,
+  isSafeRichMediaUrl
+} from "../../modules/interview/richText.js";
 import { InterviewRichText } from "./InterviewRichText.jsx";
 
 const COACH_AVATAR_SRC = "assets/generated/shark-avatar-happy.webp?v=premium-system-4";
@@ -64,6 +68,7 @@ function InterviewTranscriptTurn({ message, language, renderRichText, onActionVa
         <div className="message-stack">
           <div className={`message ${role}${message.compact ? " message-short" : ""}${message.variant ? ` message-${message.variant}` : ""}${message.typing ? " is-streaming" : ""}`}>
             {message.text}
+            <InterviewMessageAttachments attachments={message.attachments} language={language} />
           </div>
         </div>
       </article>
@@ -79,6 +84,7 @@ function InterviewTranscriptTurn({ message, language, renderRichText, onActionVa
         {!message.grouped ? <div className="message-meta">{getInterviewMessageLabel(role, language)}</div> : null}
         <div className={`message ${role}${message.variant ? ` message-${message.variant}` : ""}${message.typing ? " is-streaming" : ""}`}>
           <InterviewRichText content={message.text} renderInto={renderRichText} />
+          <InterviewMessageAttachments attachments={message.attachments} language={language} />
           {message.actions?.length ? (
             <div className="interview-action-tray">
               {message.actions.map((action) => (
@@ -102,6 +108,34 @@ function InterviewTranscriptTurn({ message, language, renderRichText, onActionVa
         </div>
       </div>
     </article>
+  );
+}
+
+function InterviewMessageAttachments({ attachments = [], language = "zh" }) {
+  const safeAttachments = Array.isArray(attachments) ? attachments.filter(Boolean) : [];
+  if (!safeAttachments.length) return null;
+  const fallbackName = language === "en" ? "Attachment" : "附件";
+
+  return (
+    <div className="message-attachments">
+      {safeAttachments.map((attachment, index) => {
+        const src = attachment.dataUrl || attachment.url || "";
+        const showImage = isImageAttachment(attachment) && src && isSafeRichMediaUrl(src);
+        const size = attachment.size ? `${Math.max(1, Math.round(Number(attachment.size) / 1024))} KB` : "";
+        const label = [
+          attachment.name || fallbackName,
+          size
+        ].filter(Boolean).join(" · ");
+        return (
+          <div className="message-attachment" key={`${attachment.name || "attachment"}-${attachment.size || 0}-${index}`}>
+            {showImage ? (
+              <img className="rich-media" src={src} alt={attachment.name || "Uploaded image"} loading="lazy" />
+            ) : null}
+            <span>{label}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

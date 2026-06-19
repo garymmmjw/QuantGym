@@ -5,6 +5,7 @@ import { createResumeControllerBundle } from '../modules/resume/controllerBundle
 export function createContentControllerBundles(deps = {}) {
   const {
     appState,
+    cloudApi,
     DEFAULT_GRADUATION_TERM,
     DEFAULT_LLM_ENDPOINT,
     documentRef: document,
@@ -70,6 +71,7 @@ export function createContentControllerBundles(deps = {}) {
     getState: () => userState.value,
     getCurrentUser: () => appState.currentUser,
     getEndpointBase: () => getLlmConfig().endpoint || DEFAULT_LLM_ENDPOINT,
+    cloudApi,
     seedJobs,
     parseTags,
     stableId: stableProblemId,

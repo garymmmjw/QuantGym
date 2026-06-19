@@ -159,6 +159,15 @@ export function useProblemsPageModel() {
     bump();
   }, [api, bump]);
 
+  const bumpAfter = useCallback((result) => {
+    if (result && typeof result.finally === "function") {
+      result.finally(bump);
+    } else {
+      bump();
+    }
+    return result;
+  }, [bump]);
+
   return {
     view,
     searchQuery,
@@ -194,9 +203,9 @@ export function useProblemsPageModel() {
     toggleCompleted: (problemId) => { api?.toggleCompleted?.(problemId); bump(); },
     toggleSaved: (problemId) => { api?.toggleSaved?.(problemId); bump(); },
     revealBlock: (problemId, blockKey) => { api?.revealBlock?.(problemId, blockKey); bump(); },
-    toggleLike: (problemId) => { api?.toggleLike?.(problemId); bump(); },
-    postComment: (problemId, text) => { api?.postComment?.(problemId, text); bump(); },
-    deleteComment: (problemId, commentId) => { api?.deleteComment?.(problemId, commentId); bump(); },
+    toggleLike: (problemId) => bumpAfter(api?.toggleLike?.(problemId)),
+    postComment: (problemId, text) => bumpAfter(api?.postComment?.(problemId, text)),
+    deleteComment: (problemId, commentId) => bumpAfter(api?.deleteComment?.(problemId, commentId)),
     selectForInterview: (problemId) => { api?.selectForInterview?.(problemId); bump(); },
     toggleLeetcodeHotDone: (problemId) => { api?.toggleLeetcodeHotDone?.(problemId); bump(); },
     mountRichText: (node, text) => api?.mountRichText?.(node, text),

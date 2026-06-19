@@ -53,7 +53,10 @@ export function createPageApi(deps = {}) {
 
     account: createAccountPageApi(deps),
     community: createCommunityPageApi(deps),
-    library: createLibraryPageApi(deps),
+    library: createLibraryPageApi({
+      ...deps,
+      setProblemSearchQuery: problems.setSearchQuery
+    }),
     overview: createOverviewPageApi(deps),
     plan,
     skills: createSkillsPageApi(deps),

@@ -59,6 +59,10 @@ export function createProblemDetailController(deps = {}) {
   } = deps;
   const revealState = new Set();
 
+  function renderProblemBrowser() {
+    if (typeof renderProblems === "function") renderProblems();
+  }
+
   function resetReveals() {
     resetProblemDetailReveals(revealState);
   }
@@ -139,7 +143,7 @@ export function createProblemDetailController(deps = {}) {
     if (nextState.resetReveals) resetReveals();
     elements.problemDetail.classList.add("hidden");
     elements.problemList.classList.remove("hidden");
-    renderProblems();
+    renderProblemBrowser();
   }
 
   function isBlockRevealed(problemId, blockKey) {
@@ -160,7 +164,8 @@ export function createProblemDetailController(deps = {}) {
     });
     socialState.setSocial(result.social);
     socialState.setNotice(result.notice);
-    renderProblems();
+    renderProblemBrowser();
+    return result;
   }
 
   async function postComment(problemId, text) {
@@ -174,7 +179,8 @@ export function createProblemDetailController(deps = {}) {
     });
     socialState.setSocial(result.social);
     socialState.setNotice(result.notice);
-    renderProblems();
+    renderProblemBrowser();
+    return result;
   }
 
   async function deleteComment(problemId, commentId) {
@@ -189,7 +195,8 @@ export function createProblemDetailController(deps = {}) {
     });
     socialState.setSocial(result.social);
     socialState.setNotice(result.notice);
-    renderProblems();
+    renderProblemBrowser();
+    return result;
   }
 
   return {

@@ -1,3 +1,5 @@
+import { timestampOrZero } from './date.js';
+
 export function shouldAutoRefresh(options = {}) {
   const {
     enabled = true,
@@ -9,9 +11,10 @@ export function shouldAutoRefresh(options = {}) {
     retryMs = 0
   } = options;
   if (!enabled || inFlight) return false;
-  const lastFetch = new Date(lastFetchAt || 0).getTime();
-  const lastAttempt = new Date(lastAttemptAt || 0).getTime();
-  const fetchDue = !lastFetch || now - lastFetch > autoRefreshMs;
-  const retryDue = !lastAttempt || now - lastAttempt > retryMs;
+  const current = timestampOrZero(now);
+  const lastFetch = timestampOrZero(lastFetchAt);
+  const lastAttempt = timestampOrZero(lastAttemptAt);
+  const fetchDue = !lastFetch || current - lastFetch > autoRefreshMs;
+  const retryDue = !lastAttempt || current - lastAttempt > retryMs;
   return fetchDue && retryDue;
 }

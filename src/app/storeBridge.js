@@ -98,6 +98,7 @@ export function wrapAuthMutations(handlers = {}, sync = () => {}) {
     loginLocal: wrap(handlers.loginLocal),
     logout: wrap(handlers.logout),
     registerLocal: wrap(handlers.registerLocal),
+    resetPassword: wrap(handlers.resetPassword),
     saveAccount: wrap(handlers.saveAccount),
     saveAuth: wrap(handlers.saveAuth),
     submitEmailAuth: wrap(handlers.submitEmailAuth),

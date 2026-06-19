@@ -436,9 +436,18 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     setPrefs(prefs) {
       appState.appPrefs = prefs;
     },
-    applySidebarState: () => applySidebarState(),
-    applyLanguage: () => applyLanguage(),
-    renderAll: () => renderAll()
+    applySidebarState: () => {
+      const apply = typeof sliceRefs.applySidebarState === "function" ? sliceRefs.applySidebarState : applySidebarState;
+      if (typeof apply === "function") apply();
+    },
+    applyLanguage: () => {
+      const apply = typeof sliceRefs.applyLanguage === "function" ? sliceRefs.applyLanguage : applyLanguage;
+      if (typeof apply === "function") apply();
+    },
+    renderAll: () => {
+      const render = typeof sliceRefs.renderAll === "function" ? sliceRefs.renderAll : renderAll;
+      if (typeof render === "function") render();
+    }
   });
   const appRuntime = createAppRuntime({
     appPrefs: preferencesRuntime.load(),

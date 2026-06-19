@@ -2,6 +2,7 @@ import { applyPlanUpdateResult } from './state.js';
 import {
   addTodoTaskToPlans,
   buildTodoDockPlan,
+  removeTodoTaskFromPlans,
   toggleStudyTodoTask,
   updateTodoTaskInPlans
 } from './todo.js';
@@ -95,6 +96,18 @@ export function createTodoDockController(deps = {}) {
     }), { renderPrep: false });
   }
 
+  function deleteTask(taskId) {
+    if (!taskId) return;
+    const state = getState();
+    applyResult(removeTodoTaskFromPlans({
+      prepPlan: state.prepPlan,
+      studyPlan: state.studyPlan,
+      taskId,
+      makeId,
+      localDateKey
+    }));
+  }
+
   function updateTask(taskId, field, rawValue) {
     const state = getState();
     applyResult(updateTodoTaskInPlans({
@@ -120,6 +133,11 @@ export function createTodoDockController(deps = {}) {
       render();
     },
     handleClick(event) {
+      const deleteButton = event.target.closest("[data-todo-delete]");
+      if (deleteButton) {
+        deleteTask(deleteButton.dataset.todoDelete);
+        return;
+      }
       const toggle = event.target.closest("[data-todo-toggle]");
       if (!toggle) return;
       toggleTask(toggle.dataset.todoToggle);
@@ -131,6 +149,7 @@ export function createTodoDockController(deps = {}) {
       updateTask(taskId, field, event.target.value);
     },
     addTask,
+    deleteTask,
     toggleTask,
     updateTask
   };

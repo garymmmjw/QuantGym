@@ -1,0 +1,154 @@
+{
+  "status": "pass",
+  "durationMs": 419,
+  "releaseBlocked": true,
+  "privateBeta": {
+    "mode": "private-beta",
+    "exitCode": 0,
+    "status": "pass",
+    "activeSources": 15,
+    "compiledProblems": 2997,
+    "rightsSources": 16,
+    "rightsStatus": {
+      "privateBeta": {
+        "blocked": 1,
+        "allowed": 15
+      },
+      "publicCommercial": {
+        "blocked": 1,
+        "needs-review": 15
+      },
+      "activePublicCommercial": {
+        "needs-review": 15
+      }
+    },
+    "failureCount": 0,
+    "failures": []
+  },
+  "publicRelease": {
+    "mode": "public",
+    "exitCode": 1,
+    "status": "fail",
+    "activeSources": 15,
+    "compiledProblems": 2997,
+    "rightsSources": 16,
+    "rightsStatus": {
+      "privateBeta": {
+        "blocked": 1,
+        "allowed": 15
+      },
+      "publicCommercial": {
+        "blocked": 1,
+        "needs-review": 15
+      },
+      "activePublicCommercial": {
+        "needs-review": 15
+      }
+    },
+    "failureCount": 15,
+    "failures": [
+      "green-book blocks public release: publicCommercial.status is \"needs-review\".",
+      "yellow-book blocks public release: publicCommercial.status is \"needs-review\".",
+      "red-book blocks public release: publicCommercial.status is \"needs-review\".",
+      "hull-derivatives blocks public release: publicCommercial.status is \"needs-review\".",
+      "stefanica-fe-math blocks public release: publicCommercial.status is \"needs-review\".",
+      "quantitative-primer blocks public release: publicCommercial.status is \"needs-review\".",
+      "dudeney-puzzles blocks public release: publicCommercial.status is \"needs-review\".",
+      "linalg-primer blocks public release: publicCommercial.status is \"needs-review\".",
+      "probability-stochastic-10 blocks public release: publicCommercial.status is \"needs-review\".",
+      "quantguide blocks public release: publicCommercial.status is \"needs-review\".",
+      "stat110-strategic-practice blocks public release: publicCommercial.status is \"needs-review\".",
+      "stanford-msande214-hw3 blocks public release: publicCommercial.status is \"needs-review\".",
+      "probabilitycourse-solved-samples blocks public release: publicCommercial.status is \"needs-review\".",
+      "boyd-cvxbook-additional-exercises blocks public release: publicCommercial.status is \"needs-review\".",
+      "etheridge-finmath-problem-sheets blocks public release: publicCommercial.status is \"needs-review\"."
+    ]
+  },
+  "commercialRelease": {
+    "mode": "commercial",
+    "exitCode": 1,
+    "status": "fail",
+    "activeSources": 15,
+    "compiledProblems": 2997,
+    "rightsSources": 16,
+    "rightsStatus": {
+      "privateBeta": {
+        "blocked": 1,
+        "allowed": 15
+      },
+      "publicCommercial": {
+        "blocked": 1,
+        "needs-review": 15
+      },
+      "activePublicCommercial": {
+        "needs-review": 15
+      }
+    },
+    "failureCount": 15,
+    "failures": [
+      "green-book blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "yellow-book blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "red-book blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "hull-derivatives blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "stefanica-fe-math blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "quantitative-primer blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "dudeney-puzzles blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "linalg-primer blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "probability-stochastic-10 blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "quantguide blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "stat110-strategic-practice blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "stanford-msande214-hw3 blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "probabilitycourse-solved-samples blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "boyd-cvxbook-additional-exercises blocks commercial release: publicCommercial.status is \"needs-review\".",
+      "etheridge-finmath-problem-sheets blocks commercial release: publicCommercial.status is \"needs-review\"."
+    ]
+  },
+  "blockerSlugs": {
+    "public": [
+      "boyd-cvxbook-additional-exercises",
+      "dudeney-puzzles",
+      "etheridge-finmath-problem-sheets",
+      "green-book",
+      "hull-derivatives",
+      "linalg-primer",
+      "probability-stochastic-10",
+      "probabilitycourse-solved-samples",
+      "quantguide",
+      "quantitative-primer",
+      "red-book",
+      "stanford-msande214-hw3",
+      "stat110-strategic-practice",
+      "stefanica-fe-math",
+      "yellow-book"
+    ],
+    "commercial": [
+      "boyd-cvxbook-additional-exercises",
+      "dudeney-puzzles",
+      "etheridge-finmath-problem-sheets",
+      "green-book",
+      "hull-derivatives",
+      "linalg-primer",
+      "probability-stochastic-10",
+      "probabilitycourse-solved-samples",
+      "quantguide",
+      "quantitative-primer",
+      "red-book",
+      "stanford-msande214-hw3",
+      "stat110-strategic-practice",
+      "stefanica-fe-math",
+      "yellow-book"
+    ]
+  },
+  "checks": {
+    "privateBetaPass": true,
+    "publicReleaseRejected": true,
+    "commercialReleaseRejected": true,
+    "publicRejectedForAllActiveSources": true,
+    "commercialRejectedForAllActiveSources": true,
+    "activePublicCommercialNeedsReview": true,
+    "noActivePublicCommercialApprovals": true,
+    "quantguideStillPrivateAndBlocked": true
+  },
+  "failures": [],
+  "warnings": []
+}

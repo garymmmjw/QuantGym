@@ -5,6 +5,12 @@ import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 
+const args = process.argv.slice(2);
+const deployedMode = args.includes("--deployed");
+const requireLlmPass = args.includes("--require-llm-pass");
+const summaryPath = getArgValue("--summary");
+const deployedConfigUrl = clean(getArgValue("--deployed-config")) || "https://beta.quantgym.app/config.js";
+
 const DEFAULT_RESUME = [
   "Built a Python market making simulator for option risk analysis.",
   "Processed 1.2M rows of tick data and reduced scenario runtime by 38%.",
@@ -13,17 +19,24 @@ const DEFAULT_RESUME = [
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 loadEnvFromProjectRoot();
-const runtimeConfig = loadRuntimeConfig();
+const runtimeConfig = await loadRuntimeConfig();
 
 const env = process.env;
 const llmEndpoint = clean(env.QUANTGYM_LLM_ENDPOINT || env.LLM_ENDPOINT || runtimeConfig.llmEndpoint);
 const cloudApiEndpoint = clean(env.QUANTGYM_CLOUD_API_ENDPOINT || env.CLOUD_API_ENDPOINT || runtimeConfig.cloudApiEndpoint);
 const googleIdToken = clean(env.QUANTGYM_GOOGLE_ID_TOKEN || env.GOOGLE_ID_TOKEN);
-const llmBearerToken = clean(env.QUANTGYM_LLM_BEARER_TOKEN || env.LLM_BEARER_TOKEN);
+let llmBearerToken = clean(env.QUANTGYM_LLM_BEARER_TOKEN || env.LLM_BEARER_TOKEN);
 const googleClientId = clean(env.QUANTGYM_GOOGLE_CLIENT_ID || runtimeConfig.googleClientId);
 const model = clean(env.QUANTGYM_LLM_MODEL || env.OPENAI_MODEL || runtimeConfig.llmModel) || "gpt-5-nano";
 
 const results = [];
+
+class SkipCheck extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "SkipCheck";
+  }
+}
 
 await check("cloud health", Boolean(cloudApiEndpoint), async () => {
   const data = await requestJson(`${cloudApiEndpoint.replace(/\/+$/, "")}/health`, { method: "GET" });
@@ -61,6 +74,9 @@ await check("google provider login", Boolean(cloudApiEndpoint && googleIdToken),
   const provider = data.account?.provider || "";
   const googleLinked = provider === "google" || String(data.account?.googleId || "").startsWith("google:");
   assert(googleLinked, "Google login response is not a Google account or linked account");
+  if (!llmBearerToken && data.token) {
+    llmBearerToken = String(data.token);
+  }
   return {
     provider,
     googleLinked,
@@ -73,17 +89,13 @@ await check("google provider login", Boolean(cloudApiEndpoint && googleIdToken),
 });
 
 await check("LLM resume review", Boolean(llmEndpoint), async () => {
-  const data = await requestJson(llmEndpoint, {
-    method: "POST",
-    headers: llmHeaders(),
-    body: {
-      task: "resume_review",
-      model,
-      language: "zh",
-      graduationTerm: "2027 Summer",
-      target: "quant internship",
-      resume: DEFAULT_RESUME
-    }
+  const data = await requestLlmJson({
+    task: "resume_review",
+    model,
+    language: "zh",
+    graduationTerm: "2027 Summer",
+    target: "quant internship",
+    resume: DEFAULT_RESUME
   });
   const items = extractReviewItems(data);
   assert(items.length > 0, "LLM resume review returned no suggestions");
@@ -91,19 +103,15 @@ await check("LLM resume review", Boolean(llmEndpoint), async () => {
 });
 
 await check("LLM PDF question generation", Boolean(llmEndpoint), async () => {
-  const data = await requestJson(llmEndpoint, {
-    method: "POST",
-    headers: llmHeaders(),
-    body: {
-      task: "generate_pdf_questions",
-      model,
-      language: "zh",
-      interviewType: "technical",
-      count: 1,
-      file: {
-        name: "quantgym-production-boundary-smoke.pdf",
-        dataUrl: minimalPdfDataUrl()
-      }
+  const data = await requestLlmJson({
+    task: "generate_pdf_questions",
+    model,
+    language: "zh",
+    interviewType: "technical",
+    count: 1,
+    file: {
+      name: "quantgym-production-boundary-smoke.pdf",
+      dataUrl: minimalPdfDataUrl()
     }
   });
   assert(Array.isArray(data.questions), "PDF generation response is missing questions array");
@@ -114,17 +122,43 @@ await check("LLM PDF question generation", Boolean(llmEndpoint), async () => {
   };
 });
 
+if (requireLlmPass) {
+  const resumeReview = findResult("LLM resume review");
+  const pdfGeneration = findResult("LLM PDF question generation");
+  if (resumeReview?.status !== "pass" || pdfGeneration?.status !== "pass") {
+    results.push({
+      name: "deployed LLM auth requirement",
+      status: "fail",
+      error: "Deployed LLM checks must pass. Set QUANTGYM_GOOGLE_ID_TOKEN or QUANTGYM_LLM_BEARER_TOKEN."
+    });
+  }
+}
+
 const failed = results.filter((item) => item.status === "fail");
 const skipped = results.filter((item) => item.status === "skip");
 const passed = results.filter((item) => item.status === "pass");
 
-console.log(JSON.stringify({
+const summary = {
   status: failed.length ? "fail" : skipped.length ? "partial" : "pass",
+  scope: deployedMode
+    ? "deployed production service URLs from beta.quantgym.app config.js"
+    : "configured production boundary service URLs",
+  endpointSource: runtimeConfig.__source || "local config.js/env",
+  cloudApiEndpoint,
+  llmEndpoint,
   passed: passed.length,
   skipped: skipped.length,
   failed: failed.length,
   results
-}, null, 2));
+};
+
+const output = `${JSON.stringify(summary, null, 2)}\n`;
+if (summaryPath) {
+  const absoluteSummaryPath = path.resolve(projectRoot, summaryPath);
+  fs.mkdirSync(path.dirname(absoluteSummaryPath), { recursive: true });
+  fs.writeFileSync(absoluteSummaryPath, output);
+}
+console.log(output.trimEnd());
 
 if (failed.length) process.exitCode = 1;
 
@@ -147,6 +181,15 @@ async function check(name, enabled, fn) {
       data
     });
   } catch (error) {
+    if (error instanceof SkipCheck) {
+      results.push({
+        name,
+        status: "skip",
+        durationMs: Date.now() - start,
+        reason: error.message
+      });
+      return;
+    }
     results.push({
       name,
       status: "fail",
@@ -169,13 +212,36 @@ async function requestJson(url, options = {}) {
   const data = await response.json().catch(() => ({}));
   const allowStatus = Array.isArray(options.allowStatus) ? options.allowStatus : [];
   if (!response.ok && !allowStatus.includes(response.status)) {
-    throw new Error(data.error || data.message || `HTTP ${response.status}`);
+    const error = new Error(data.error || data.message || `HTTP ${response.status}`);
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
   return data;
 }
 
+async function requestLlmJson(body) {
+  try {
+    return await requestJson(llmEndpoint, {
+      method: "POST",
+      headers: llmHeaders(),
+      body
+    });
+  } catch (error) {
+    if (!llmBearerToken && isLlmAuthRequired(error)) {
+      throw new SkipCheck("Set QUANTGYM_LLM_BEARER_TOKEN or QUANTGYM_GOOGLE_ID_TOKEN for deployed LLM checks.");
+    }
+    throw error;
+  }
+}
+
 function llmHeaders() {
   return llmBearerToken ? { Authorization: `Bearer ${llmBearerToken}` } : {};
+}
+
+function isLlmAuthRequired(error) {
+  const message = String(error?.message || error?.data?.error || error?.data?.message || "");
+  return [401, 403].includes(Number(error?.status || 0)) || /cloud login is required|missing bearer|unauthorized|forbidden/i.test(message);
 }
 
 function extractReviewItems(data = {}) {
@@ -312,13 +378,42 @@ function loadEnvFromProjectRoot() {
   }
 }
 
-function loadRuntimeConfig() {
+async function loadRuntimeConfig() {
+  if (deployedMode) {
+    const config = await loadConfigFromUrl(deployedConfigUrl);
+    if (config) return config;
+  }
   const configPath = path.join(projectRoot, "config.js");
   if (!fs.existsSync(configPath)) return {};
+  return parseRuntimeConfig(fs.readFileSync(configPath, "utf8"), configPath, "local config.js");
+}
+
+async function loadConfigFromUrl(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return {};
+    return parseRuntimeConfig(await response.text(), url, url);
+  } catch {
+    return {};
+  }
+}
+
+function parseRuntimeConfig(source, filename, sourceLabel) {
   const sandbox = { window: {} };
-  vm.runInNewContext(fs.readFileSync(configPath, "utf8"), sandbox, {
-    filename: configPath,
+  vm.runInNewContext(source, sandbox, {
+    filename,
     timeout: 1000
   });
-  return sandbox.window.QUANTGYM_CONFIG || {};
+  const config = sandbox.window.QUANTGYM_CONFIG || {};
+  return { ...config, __source: sourceLabel };
+}
+
+function findResult(name) {
+  return results.find((item) => item.name === name);
+}
+
+function getArgValue(name) {
+  const index = args.indexOf(name);
+  if (index === -1) return "";
+  return args[index + 1] || "";
 }

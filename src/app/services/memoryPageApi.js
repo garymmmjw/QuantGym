@@ -1,5 +1,31 @@
 export function createMemoryPageApi(deps = {}, userStateApi = {}) {
   const { getUserState, setUserPatch } = userStateApi;
+  async function uploadResourceMedia({ dataUrl = "", name = "memory-resource", type = "" } = {}) {
+    if (!dataUrl || !deps.cloudApi || (deps.canUseCloud && !deps.canUseCloud())) return { ok: false, code: "unavailable" };
+    try {
+      const payload = await deps.cloudApi("/media", {
+        method: "POST",
+        body: {
+          dataUrl,
+          name,
+          type,
+          context: "memory-resource"
+        }
+      });
+      const media = payload?.media || null;
+      if (!media?.url && !media?.dataUrl) {
+        return { ok: false, code: "invalidMedia" };
+      }
+      return { ok: true, media };
+    } catch (error) {
+      return {
+        ok: false,
+        code: "uploadFailed",
+        message: error?.message || "Could not upload memory media"
+      };
+    }
+  }
+
   const undoLatestEntry = () => {
     const state = getUserState();
     const entries = Array.isArray(state.entries) ? state.entries : [];
@@ -27,6 +53,7 @@ export function createMemoryPageApi(deps = {}, userStateApi = {}) {
     },
     normalizeResources: deps.normalizeResources,
     normalizeContentSources: deps.normalizeContentSources,
+    uploadResourceMedia,
     undoLatestEntry
   };
 }

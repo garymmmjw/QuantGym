@@ -53,8 +53,8 @@ Current facts to preserve:
   been retired.
 - `docs/react-migration-ledger.json` documents page status. Current state:
   21 converted React routes. Poker table/lobby/action-bar rendering is React
-  owned through `pokerPageApi.getViewModel`; the preflop matrix still uses a
-  local DOM helper inside the React page.
+  owned through `pokerPageApi.getViewModel`; the preflop matrix is now a React
+  component backed by the shared poker engine strategy functions.
 
 The important implication: future agents should not redo Stage 0, redo Stage 1,
 or recreate the Stage 2 bridge from scratch. The next work is release-readiness
@@ -451,14 +451,15 @@ What is now correctly completed:
 38. UI contract checks are now code-enforced. Run
     `npm run check:ui-contracts` after route, shell, or page UI edits. The
     script verifies all 21 React route files, route-critical migrated DOM ids,
-    shared app/auth/todo shell ids, 11 key JSON evidence artifacts, and 92
+    shared app/auth/todo shell ids, 25 key JSON evidence artifacts, and 92
     non-empty screenshot artifacts. It now validates content-level evidence
     invariants too: route smoke must stay 21/21 pass for desktop and mobile,
+    browser route smoke and Chrome extension popup runtime smoke must pass,
     GitHub parity must stay 21/21 pass with zero actionable issues, browser
     evidence manifest integrity must stay clean, migration completion must stay
     10 pass / 0 pending / 0 fail, production boundary evidence must remain
-    5 pass / 0 skip / 0 fail, local readiness must stay 10 pass / 0 partial /
-    0 fail, static build config must not embed the OpenAI
+    5 pass / 0 skip / 0 fail, local readiness must stay final-pass or an
+    explicit production-token-only partial, static build config must not embed the OpenAI
     key, and the Google token helper browser smoke must stay
     renderable. It exists to catch regressions like missing problem
     search/cards, empty Overview leaderboard selectors, missing Resume review
@@ -485,10 +486,18 @@ What is now correctly completed:
     `npm run check:release-readiness:local` for handoff while the real Google
     token/session is unavailable. Current local summary is written to
     `323-release-readiness-summary.json`: git diff check, Stage 1, Stage 2
-    bridge/full/strict, Browser evidence, Migration completion audit, UI
-    contracts, static build, and Production boundaries all pass. Strict
-    release readiness has been run with the short-lived Google ID token and
-    reports 10 pass / 0 partial / 0 fail.
+    bridge/full/strict, Browser evidence, Migration completion audit, route
+    integrity, route interactions, browser route smoke, Module ownership,
+    Chrome store readiness, Chrome store publication fixture, browser extension
+    runtime smoke, media storage runtime smoke, media storage production fixture,
+    ops alert runtime smoke, ops alert production fixture, jobs source runtime
+    smoke, jobs source production fixture, question-bank rights, question-bank
+    rights public smoke, question-bank rights release blockers, external launch
+    blockers, Postgres cutover export smoke, Postgres cutover readiness, static
+    build, Production boundaries, and UI contracts all pass when the required
+    live credentials are present.
+    Strict release readiness requires a
+    fresh short-lived Google ID token for the provider-login boundary.
 
 42. Browser evidence references are now code-enforced. Run
     `npm run check:browser-evidence` after adding, renaming, or deleting
@@ -498,7 +507,7 @@ What is now correctly completed:
     `docs/browser-audit-screenshots` references, ignores route template
     placeholders and non-browser fixture/export filenames, and writes
     `326-browser-evidence-manifest-summary.json`. Current evidence integrity:
-    263 refs, 229 images, 34 JSON files, 0 missing, 0 undersized images, and
+    268 refs, 229 images, 39 JSON files, 0 missing, 0 undersized images, and
     0 invalid JSON.
 
 43. Migration completion is now summarized explicitly. Run
@@ -533,43 +542,39 @@ What is now correctly completed:
     textarea, copy button, and `Ready.` status. Evidence:
     `325-google-token-helper-browser.png` and
     `325-google-token-helper-browser-summary.json`. This proves helper
-    renderability, not account sign-in; final provider login still requires a
-    short-lived token from an actual Google sign-in.
+    renderability; the final provider login boundary is signed off separately by
+    `323-release-readiness-summary.json` and
+    `327-migration-completion-audit-summary.json`.
 
 Remaining work before final sign-off:
 
-1. Complete any remaining external-service/browser gaps from
-   `docs/ui-function-regression-audit-2026-06-07.md`: real Google provider
-   account login. The API has Google provider config and the latest in-app
-   Browser check renders the Google iframe without the previous origin warning.
-   Keep `http://127.0.0.1:5179` and the production web origin in the OAuth
-   Client's Authorized JavaScript origins, then use `npm run google:token-helper`
-   to obtain a short-lived ID token and run
-   `QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries`.
-   Problems, Interview, Poker local actions, Poker online fallback, Settings
-   export/import/reset/logout, Account local profile flows, Memory file/history
-   flows, Community CRUD/media flows, Messages thread/send/unread/private-entry
-   flows, Experiences CRUD/share flows, News manual form submit, Overview
-   leaderboard region scope, Resume endpoint review, Settings Google Client ID
-   save/clear, external-link new-tab behavior, Library real cloud reader iframe,
-   all-route desktop/mobile visual smoke, and all-route GitHub baseline parity
-   already have browser/CDP/Chrome evidence.
+1. Keep bundle tracking in place. The current manual chunks keep JavaScript
+   chunks below Vite's 500 KB warning threshold; future large feature imports
+   should preserve those stable boundaries.
 
-2. Decide whether retained local DOM helpers should be converted now or later.
-   Known examples include the Poker preflop matrix helper and rich-text/embed
-   helpers that intentionally render sanitized content.
-
-3. Decide whether stale CSS selectors for the retired `.module-partial-root`
-   should be deleted now. This is style debt only; the React shell no longer
-   renders `.module-partial-root`, and strict route checks pass.
-
-4. Keep bundle tracking in place. The current main chunk is inside the ledger
-   budget but still above Vite's 500 KB warning threshold.
-
-5. Keep auditing split-slice dependencies. Any function created in a later
+2. Keep auditing split-slice dependencies. Any function created in a later
    slice and consumed by an earlier slice must go through `ctx.__sliceRefs` or a
    stable facade; direct closure references can pass build checks but fail only
    in browser smoke.
+
+Resolved cleanup:
+
+- 2026-06-17: Retired `.module-partial-root` has no remaining runtime source or
+  stylesheet references under `src/`. The only remaining mentions are historical
+  documentation and guard patterns in `check-stage2` / migration-completion
+  scripts.
+- 2026-06-17: Vite manual chunks now split static app data, state/API, UI, and
+  feature cores. Local build no longer emits the >500 KB JS chunk warning; the
+  largest JavaScript chunk in the verified build is `createAppServices` at about
+  184 KB minified.
+- 2026-06-17: Real Google provider account login is no longer remaining work.
+  Release readiness evidence reports final pass when a fresh token is present, and the
+  production-boundary Google provider login check passes with a Google-linked
+  account and matching token audience.
+- 2026-06-17: Poker preflop matrix DOM rendering is retired. The solver panel is
+  React-owned via `PokerPreflopMatrix`, while rich-text and iframe/embed helpers
+  remain intentionally controlled rendering boundaries rather than migration
+  blockers.
 
 ## 1. Non-Negotiable Agent Rules
 
@@ -2251,12 +2256,11 @@ Steps:
    - keep hash compatibility behavior under `HashCompatRedirect` unless the
      product explicitly drops old hash URLs
 
-3. When retiring retained Poker helpers:
+3. When touching retained Poker helpers:
 
-   - replace remaining local DOM helper rendering, such as the preflop matrix,
-     with React components
+   - keep the preflop matrix React-owned through `PokerPreflopMatrix`
    - keep room state, online sync, and actions behind `pokerPageApi`
-   - update the ledger `retainedHelpers` note after the helper is removed
+   - update the ledger `retainedHelpers` note if another helper boundary changes
 
 4. When no compatibility aliases or islands remain:
 

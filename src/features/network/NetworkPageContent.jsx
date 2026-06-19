@@ -3,6 +3,7 @@ import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
+import { timestampOrZero } from "../../lib/date.js";
 
 const EMPTY_FORM = {
   id: "",
@@ -28,7 +29,7 @@ export function NetworkPageContent() {
     const weight = (status) => ({ "Follow-up": 0, "To reach out": 1, Contacted: 2, Warm: 3, Archived: 4 })[status] ?? 5;
     return (userState.network || []).slice().sort((a, b) => (
       weight(a.status) - weight(b.status)
-      || new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0)
+      || timestampOrZero(b.updatedAt || b.createdAt) - timestampOrZero(a.updatedAt || a.createdAt)
     ));
   }, [userState.network]);
 

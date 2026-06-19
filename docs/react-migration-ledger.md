@@ -23,8 +23,8 @@ manual smoke remains open for Problems, Interview, Poker, and Settings/language
 persistence.
 
 Retained local helpers: Poker still uses module helpers for room state, actions,
-online sync, and the preflop matrix DOM helper, but the route and table/lobby UI
-are React-owned.
+and online sync behind `pokerPageApi`; the route, table/lobby/action-bar, and
+preflop matrix UI are React-owned.
 
 Current app adapters: `createAppServices`, `AppServicesProvider`,
 `bootstrapApp`, `AppEffects`, `HashCompatRedirect`.

@@ -29,7 +29,7 @@ console.log(JSON.stringify({
     "Keep the Vite dev server running on http://127.0.0.1:5179.",
     `Open ${localUrl} in the browser.`,
     "Sign in with Google and copy the generated ID token.",
-    "Run QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries before the token expires. The verifier checks token structure, audience, and expiry before calling the provider login endpoint."
+    "Run npm run verify:production-boundaries:paste-token or npm run check:release-readiness:local:paste-token before the token expires. The verifier checks token structure, audience, and expiry before calling the provider login endpoint."
   ]
 }, null, 2));
 
@@ -113,7 +113,7 @@ function helperHtml(googleClientId) {
         <li>Use this page only from <code>http://127.0.0.1:5179</code>.</li>
         <li>Click the Google sign-in button below.</li>
         <li>Copy the token into your shell as <code>QUANTGYM_GOOGLE_ID_TOKEN</code>.</li>
-        <li>Run <code>npm run verify:production-boundaries</code> or <code>npm run check:release-readiness</code> before the token expires. The verifier checks token structure, audience, and expiry first.</li>
+        <li>Run <code>npm run verify:production-boundaries:paste-token</code> or <code>npm run check:release-readiness:local:paste-token</code> before the token expires. The wrapper hides the pasted token and passes it only to the child process.</li>
       </ol>
       <div id="googleButton"></div>
       <textarea id="tokenOutput" spellcheck="false" placeholder="Google ID token will appear here after sign-in." readonly></textarea>
@@ -167,7 +167,7 @@ function helperHtml(googleClientId) {
 
       copyButton.addEventListener("click", async () => {
         await navigator.clipboard.writeText(tokenOutput.value);
-        status.textContent = "Copied. Run: QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries";
+        status.textContent = "Copied. Run: npm run verify:production-boundaries:paste-token";
       });
 
       window.addEventListener("load", initGoogle);

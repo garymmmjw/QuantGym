@@ -2,6 +2,7 @@ import { requestJson } from '../../api/client.js';
 import { stableSlugId } from '../../lib/id.js';
 import { parseTags as parseTagsValue } from '../../lib/text.js';
 import { inferSourceFromUrl } from '../../lib/url.js';
+import { timestampOrZero } from '../../lib/date.js';
 
 export function normalizeNewsItem(raw, options = {}) {
   const sourceUrl = String(raw?.sourceUrl || raw?.url || "").trim();
@@ -178,8 +179,7 @@ export function sortNews(news = []) {
 }
 
 export function newsTime(item) {
-  const value = new Date(item?.publishedAt || item?.createdAt || 0).getTime();
-  return Number.isNaN(value) ? 0 : value;
+  return timestampOrZero(item?.publishedAt || item?.createdAt);
 }
 
 export function normalizeNewsTopicFilter(value, topicPacks = {}) {
