@@ -835,7 +835,7 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(Number(data.routes?.checked || 0) === routeIds.length, `${label} must check all routes`);
   expect(Number(data.routes?.passed || 0) === routeIds.length, `${label} route pass count must match all routes`);
   expect(Number(data.routes?.failed || 0) === 0, `${label} must have zero route failures`);
-  expect(Number(data.interactions?.checked || 0) >= 57, `${label} must check key interactions`);
+  expect(Number(data.interactions?.checked || 0) >= 58, `${label} must check key interactions`);
   expect(Number(data.interactions?.failed || 0) === 0, `${label} must have zero interaction failures`);
   const planInteraction = findResult(data.interactions?.results, "plan create, edit, task persistence, and navigation");
   expect(planInteraction?.status === "pass", `${label} must verify Plan create, edit, task persistence, and navigation`);
@@ -948,6 +948,15 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   const settingsPersistence = findResult(data.interactions?.results, "settings saves runtime config, clears Google Client ID, and reloads");
   expect(settingsPersistence?.status === "pass", `${label} must verify Settings runtime config persistence`);
   expect(settingsPersistence?.googleClientIdCleared === true, `${label} must verify Settings can clear Google Client ID`);
+  const settingsLanguageSwitch = findResult(data.interactions?.results, "settings language switch syncs URL and persists reload");
+  expect(settingsLanguageSwitch?.status === "pass", `${label} must verify Settings language switching`);
+  expect(settingsLanguageSwitch?.englishSelected === true, `${label} must verify Settings English selection`);
+  expect(settingsLanguageSwitch?.englishUrlSynced === true, `${label} must verify Settings language URL sync`);
+  expect(settingsLanguageSwitch?.queryPreserved === true, `${label} must verify Settings language switching preserves query state`);
+  expect(settingsLanguageSwitch?.englishReloadPersisted === true, `${label} must verify Settings English reload persistence`);
+  expect(settingsLanguageSwitch?.zhRestored === true, `${label} must verify Settings Chinese restoration`);
+  expect(settingsLanguageSwitch?.statusMessageTranslated === true, `${label} must verify Settings language switching translates the default status message`);
+  expect(settingsLanguageSwitch?.appShellVisible === true, `${label} must verify Settings language switching keeps the app shell visible`);
   const settingsBackup = findResult(data.interactions?.results, "settings backup export, import, and reset state");
   expect(settingsBackup?.status === "pass", `${label} must verify Settings backup export, import, and reset state`);
   const mobileSettingsControls = findResult(data.interactions?.results, "mobile settings config and backup controls avoid overflow");
@@ -1701,6 +1710,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.browserShellGlobalControlsPass === true, `${label} must verify the shell global controls browser journey remains pass`);
   expect(data.checks?.browserHashCompatDeepLinkPass === true, `${label} must verify the hash-compatible deep-link browser journey remains pass`);
   expect(data.checks?.browserSettingsRuntimeConfigPass === true, `${label} must verify the Settings runtime config browser journey remains pass`);
+  expect(data.checks?.browserSettingsLanguageSwitchPass === true, `${label} must verify the Settings language-switch browser journey remains pass`);
   expect(data.checks?.browserSettingsGoogleClientClearPass === true, `${label} must verify the Settings Google Client ID clear browser journey remains pass`);
   expect(data.checks?.browserSettingsBackupPass === true, `${label} must verify the Settings backup browser journey remains pass`);
   expect(data.checks?.browserMobileSettingsControlsPass === true, `${label} must verify the mobile Settings controls browser journey remains pass`);
@@ -1769,7 +1779,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include question-bank evidence URL query rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
-  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 57, `${label} must reference the 57-interaction browser route smoke`);
+  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 58, `${label} must reference the 58-interaction browser route smoke`);
   expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
   expect(Number(browser?.localCoverage?.deployedBetaRoutesChecked || 0) >= 8, `${label} must include the eight-route deployed beta smoke`);
   expect(browser?.localCoverage?.deployedBetaRoutesPass === true, `${label} must include deployed beta route sweep coverage`);
@@ -1805,6 +1815,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.mobileShellControlsPass === true, `${label} must include mobile shell controls browser coverage`);
   expect(browser?.localCoverage?.mobileModuleNavPass === true, `${label} must include mobile module nav browser coverage`);
   expect(browser?.localCoverage?.settingsRuntimeConfigPass === true, `${label} must include Settings runtime config browser coverage`);
+  expect(browser?.localCoverage?.settingsLanguageSwitchPass === true, `${label} must include Settings language-switch browser coverage`);
   expect(browser?.localCoverage?.settingsGoogleClientClearPass === true, `${label} must include Settings Google Client ID clear browser coverage`);
   expect(browser?.localCoverage?.settingsBackupPass === true, `${label} must include Settings backup browser coverage`);
   expect(browser?.localCoverage?.settingsInvalidBackupGuardPass === true, `${label} must include Settings invalid-backup guard browser coverage`);
