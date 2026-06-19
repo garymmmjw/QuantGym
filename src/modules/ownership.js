@@ -102,7 +102,10 @@ export const MODULE_OWNERSHIP = [
     page: "src/pages/ExperiencesPage.jsx",
     featureEntry: "src/features/experiences/ExperiencesPageContent.jsx",
     stateDomains: ["userState", "experiences", "community"],
-    browserSmokeInteractions: ["experiences create, edit, share, delete, and reload persistence"]
+    browserSmokeInteractions: [
+      "experiences create, edit, share, delete, and reload persistence",
+      "mobile news and experiences controls avoid overflow"
+    ]
   },
   {
     id: "news",
@@ -111,7 +114,10 @@ export const MODULE_OWNERSHIP = [
     page: "src/pages/NewsPage.jsx",
     featureEntry: "src/features/news/NewsPageContent.jsx",
     stateDomains: ["news", "userState"],
-    browserSmokeInteractions: ["news manual submit, filter, detail, and reload persistence"]
+    browserSmokeInteractions: [
+      "news manual submit, filter, detail, and reload persistence",
+      "mobile news and experiences controls avoid overflow"
+    ]
   },
   {
     id: "community",

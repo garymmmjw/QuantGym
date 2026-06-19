@@ -835,7 +835,7 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(Number(data.routes?.checked || 0) === routeIds.length, `${label} must check all routes`);
   expect(Number(data.routes?.passed || 0) === routeIds.length, `${label} route pass count must match all routes`);
   expect(Number(data.routes?.failed || 0) === 0, `${label} must have zero route failures`);
-  expect(Number(data.interactions?.checked || 0) >= 60, `${label} must check key interactions`);
+  expect(Number(data.interactions?.checked || 0) >= 61, `${label} must check key interactions`);
   expect(Number(data.interactions?.failed || 0) === 0, `${label} must have zero interaction failures`);
   const planInteraction = findResult(data.interactions?.results, "plan create, edit, task persistence, and navigation");
   expect(planInteraction?.status === "pass", `${label} must verify Plan create, edit, task persistence, and navigation`);
@@ -997,6 +997,16 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(experiencesPersistence?.status === "pass", `${label} must verify Experiences record persistence`);
   const newsPersistence = findResult(data.interactions?.results, "news manual submit, filter, detail, and reload persistence");
   expect(newsPersistence?.status === "pass", `${label} must verify News manual submit and read persistence`);
+  const mobileContent = findResult(data.interactions?.results, "mobile news and experiences controls avoid overflow");
+  expect(mobileContent?.status === "pass", `${label} must verify mobile News and Experiences controls`);
+  expect(mobileContent?.mobileViewport === true, `${label} must verify mobile content viewport`);
+  expect(mobileContent?.experienceSaved === true, `${label} must verify mobile Experiences save`);
+  expect(mobileContent?.experienceFilterUsable === true, `${label} must verify mobile Experiences filter`);
+  expect(mobileContent?.experienceShared === true, `${label} must verify mobile Experiences community share`);
+  expect(mobileContent?.newsSubmitted === true, `${label} must verify mobile News submit`);
+  expect(mobileContent?.newsFiltersUsable === true, `${label} must verify mobile News filters`);
+  expect(mobileContent?.newsDetailReadPersisted === true, `${label} must verify mobile News detail read persistence`);
+  expect(mobileContent?.noHorizontalOverflow === true, `${label} must verify mobile content flow has no horizontal overflow`);
   const jobsInteraction = findResult(data.interactions?.results, "jobs filter and apply link behavior");
   expect(jobsInteraction?.status === "pass", `${label} must verify Jobs filter and apply link behavior`);
   const companiesInteraction = findResult(data.interactions?.results, "companies tier filter, practice navigation, and careers link behavior");
@@ -1799,7 +1809,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include question-bank evidence URL query rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
-  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 60, `${label} must reference the 60-interaction browser route smoke`);
+  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 61, `${label} must reference the 61-interaction browser route smoke`);
   expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
   expect(Number(browser?.localCoverage?.deployedBetaRoutesChecked || 0) >= 8, `${label} must include the eight-route deployed beta smoke`);
   expect(browser?.localCoverage?.deployedBetaRoutesPass === true, `${label} must include deployed beta route sweep coverage`);
@@ -1824,6 +1834,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.communityDirectMessagePass === true, `${label} must include Community direct-message browser coverage`);
   expect(browser?.localCoverage?.mobileSocialControlsPass === true, `${label} must include mobile social browser coverage`);
   expect(browser?.localCoverage?.messagesMultiThreadUnreadPass === true, `${label} must include Messages multi-thread unread browser coverage`);
+  expect(browser?.localCoverage?.mobileContentControlsPass === true, `${label} must include mobile News/Experiences browser coverage`);
   expect(browser?.localCoverage?.memoryImageUploadPass === true, `${label} must include Memory image upload browser coverage`);
   expect(browser?.localCoverage?.toolsMentalMathCompletionPass === true, `${label} must include Tools mental math completion browser coverage`);
   expect(browser?.localCoverage?.toolsMarketGamePass === true, `${label} must include Tools market game browser coverage`);

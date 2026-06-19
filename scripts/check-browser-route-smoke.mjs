@@ -158,6 +158,7 @@ try {
     ["messages multi-thread unread badges clear and persist read state", runMessagesMultiThreadUnreadFlow],
     ["experiences create, edit, share, delete, and reload persistence", runExperiencesRecordFlow],
     ["news manual submit, filter, detail, and reload persistence", runNewsManualSubmitFlow],
+    ["mobile news and experiences controls avoid overflow", runMobileNewsExperiencesFlow],
     ["memory resource add, source link, and reload persistence", runMemoryResourceFlow],
     ["memory image resource upload fallback and reload persistence", runMemoryImageResourceUploadFlow],
     ["network contact add, edit, delete, and reload persistence", runNetworkContactFlow],
@@ -5445,6 +5446,299 @@ async function expectStoredNews(page, expected) {
       return false;
     }
   }, expected, { timeout: 10000 });
+}
+
+async function runMobileNewsExperiencesFlow(page, baseUrl) {
+  const result = { name: "mobile news and experiences controls avoid overflow", status: "pass" };
+  const desktopViewport = { width: 1365, height: 900 };
+  const timestamp = Date.now();
+  const experience = {
+    firm: `Mobile Smoke Firm ${timestamp}`,
+    role: "Quant Developer",
+    stage: "Technical Interview",
+    season: "2028 Summer",
+    date: "2026-06-19",
+    outcome: "Advanced",
+    tags: "mobile, systems, market-making",
+    summary: `Mobile experience summary ${timestamp}`,
+    topics: `Mobile systems design and market data pipeline ${timestamp}`,
+    reflection: `Practice concise tradeoff framing on mobile ${timestamp}`
+  };
+  const news = {
+    title: `Mobile Smoke official recruiting update ${timestamp}`,
+    source: "Jane Street Careers",
+    sourceType: "official",
+    sourceUrl: "https://www.janestreet.com/join-jane-street/open-roles/",
+    primarySkill: "market",
+    tags: ["mobile-smoke", "official", "recruiting"],
+    summary: `Mobile news official summary ${timestamp}`,
+    insight: `Mobile news interview prep insight ${timestamp}`
+  };
+
+  try {
+    result.step = "open mobile experiences";
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/experiences`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#experienceForm", { timeout: 10000 });
+    await expectMobileContentState(page, { section: "experiences", minCards: 0 });
+
+    result.step = "save mobile experience";
+    await fillExperienceForm(page, experience);
+    await page.locator("#experienceForm").evaluate((form) => form.requestSubmit());
+    const experienceCard = page.locator(".experience-card", { hasText: experience.firm }).first();
+    await experienceCard.waitFor({ state: "visible", timeout: 10000 });
+    const recordId = await experienceCard.getAttribute("data-experience-id");
+    if (!recordId) throw new Error("Mobile saved experience did not expose data-experience-id.");
+    await expectStoredExperience(page, { id: recordId, ...experience });
+    await expectMobileContentState(page, { section: "experiences", minCards: 1 });
+
+    result.step = "filter and share mobile experience";
+    await page.locator("#experienceFilter").selectOption(experience.stage);
+    await expectExperienceFilter(page, { includeId: recordId, stage: experience.stage });
+    await expectMobileContentState(page, { section: "experiences", minCards: 1 });
+    await page.locator(`[data-experience-id="${recordId}"] .experience-share-row button`).click({ timeout: 10000 });
+    const confirmSelector = `[data-experience-id="${recordId}"] .experience-share-confirm`;
+    const shareConfirmVisible = await page.waitForSelector(confirmSelector, { timeout: 3000 })
+      .then(() => true)
+      .catch(() => false);
+    if (shareConfirmVisible) {
+      await expectMobileContentState(page, { section: "experiences", minCards: 1, shareConfirmVisible: true });
+      await page.locator(`${confirmSelector} .primary-button`).click({ timeout: 10000 });
+    }
+    const shared = await waitForSharedExperience(page, { id: recordId, firm: experience.firm, summary: experience.summary });
+    const sharePath = new URL(page.url()).pathname;
+    if (sharePath !== "/community" && shareConfirmVisible !== true) {
+      throw new Error(`Mobile experience share neither showed confirmation nor navigated to Community: ${sharePath}`);
+    }
+
+    result.step = "open mobile news";
+    await page.goto(`${baseUrl}/news`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#newsList", { timeout: 10000 });
+    await expectMobileContentState(page, { section: "news", minCards: 1 });
+
+    result.step = "submit mobile news";
+    await page.locator("#addNewsBtn").click({ timeout: 10000 });
+    await page.waitForSelector("#newsForm", { timeout: 10000 });
+    await expectMobileContentState(page, { section: "newsForm", minCards: 1 });
+    await page.locator("#newsTitle").fill(news.title);
+    await page.locator("#newsSource").fill(news.source);
+    await page.locator("#newsUrl").fill(news.sourceUrl);
+    await page.locator("#newsSourceType").selectOption(news.sourceType);
+    await page.locator("#newsPrimarySkill").selectOption(news.primarySkill);
+    await page.locator("#newsTags").fill(news.tags.join(", "));
+    await page.locator("#newsSummary").fill(news.summary);
+    await page.locator("#newsInsight").fill(news.insight);
+    await page.locator("#newsForm").evaluate((form) => form.requestSubmit());
+    await page.waitForFunction(() => !document.querySelector("#newsForm"), null, { timeout: 10000 });
+    const newsCard = page.locator(".news-card", { hasText: news.title }).first();
+    await newsCard.waitFor({ state: "visible", timeout: 10000 });
+    const newsId = await newsCard.getAttribute("data-news-id");
+    if (!newsId) throw new Error("Mobile saved news card did not expose data-news-id.");
+    await expectStoredNews(page, { ...news, id: newsId, read: false });
+    await expectMobileContentState(page, { section: "news", minCards: 1 });
+
+    result.step = "filter and read mobile news";
+    await page.locator('[data-news-source-filter="official"]').click({ timeout: 10000 });
+    await expectNewsFilterResult(page, { id: newsId, sourceType: news.sourceType });
+    await page.locator('[data-news-topic="quantFirms"]').click({ timeout: 10000 });
+    await expectNewsFilterResult(page, { id: newsId, sourceType: news.sourceType });
+    await expectMobileContentState(page, { section: "news", minCards: 1 });
+    await page.locator(`[data-news-id="${newsId}"]`).click({ timeout: 10000 });
+    await expectNewsDetail(page, { ...news, id: newsId });
+    await expectMobileContentState(page, { section: "newsDetail", minCards: 0 });
+    await page.locator("#newsBackBtn").click({ timeout: 10000 });
+    await page.waitForFunction((id) => {
+      const card = document.querySelector(`[data-news-id="${id}"]`);
+      return card?.classList.contains("read") && /已读|Read/i.test(card.textContent || "");
+    }, newsId, { timeout: 10000 });
+    await expectStoredNews(page, { ...news, id: newsId, read: true });
+
+    result.step = "reload mobile content";
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector(`[data-news-id="${newsId}"]`, { timeout: 10000 });
+    await expectNewsCard(page, { ...news, id: newsId, read: true });
+    await expectStoredNews(page, { ...news, id: newsId, read: true });
+    await expectMobileContentState(page, { section: "news", minCards: 1 });
+
+    delete result.step;
+    result.mobileViewport = true;
+    result.experienceSaved = true;
+    result.experienceFilterUsable = true;
+    result.experienceShared = true;
+    result.newsSubmitted = true;
+    result.newsFiltersUsable = true;
+    result.newsDetailReadPersisted = true;
+    result.noHorizontalOverflow = true;
+    result.recordId = recordId;
+    result.sharedPostId = shared.postId;
+    result.newsId = newsId;
+    result.finalPath = new URL(page.url()).pathname;
+  } catch (error) {
+    result.status = "fail";
+    result.error = result.step ? `${result.step}: ${error.message}` : error.message;
+    result.diagnostics = await collectMobileContentDiagnostics(page).catch((diagnosticError) => ({
+      error: diagnosticError?.message || String(diagnosticError)
+    }));
+    fail(`${result.name} failed: ${error.message}`);
+  } finally {
+    await page.setViewportSize(desktopViewport).catch(() => {});
+  }
+  return result;
+}
+
+async function expectMobileContentState(page, expected = {}) {
+  await page.waitForFunction((values) => {
+    const rectFor = (node) => {
+      if (!node) return null;
+      const rect = node.getBoundingClientRect();
+      return {
+        left: rect.left,
+        right: rect.right,
+        width: rect.width,
+        height: rect.height
+      };
+    };
+    const visible = (node) => {
+      const rect = rectFor(node);
+      if (!rect) return false;
+      const style = window.getComputedStyle(node);
+      return style.display !== "none"
+        && style.visibility !== "hidden"
+        && Number(style.opacity || 1) !== 0
+        && rect.width > 0
+        && rect.height > 0
+        && rect.left >= -1
+        && rect.right <= window.innerWidth + 4;
+    };
+    const overflow = Math.max(
+      0,
+      document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      document.body.scrollWidth - document.documentElement.clientWidth
+    );
+    if (window.innerWidth > 430 || overflow > 4) return false;
+
+    if (values.section === "experiences") {
+      const controls = [
+        ".experience-header",
+        "#newExperienceBtn",
+        "#experienceForm",
+        "#experienceFirm",
+        "#experienceRole",
+        "#experienceStage",
+        "#experienceSeason",
+        "#experienceDate",
+        "#experienceOutcome",
+        "#experienceTags",
+        "#experienceSummaryInput",
+        "#experienceTopics",
+        "#experienceReflection",
+        ".experience-form-actions .primary-button",
+        "#experienceCount",
+        "#sharedExperienceCount",
+        "#openCommunityExperiencesBtn",
+        "#experienceFilter",
+        "#experienceList"
+      ].map((selector) => document.querySelector(selector));
+      const cards = [...document.querySelectorAll("#experienceList .experience-card")];
+      const shareConfirm = values.shareConfirmVisible
+        ? visible(document.querySelector(".experience-share-confirm"))
+        : true;
+      return controls.every(visible)
+        && cards.length >= values.minCards
+        && cards.slice(0, Math.min(cards.length, 3)).every(visible)
+        && shareConfirm;
+    }
+
+    if (values.section === "news" || values.section === "newsForm") {
+      const controls = [
+        "#newsUpdatedAt",
+        "#addNewsBtn",
+        "#refreshNewsBtn",
+        "#newsIntelTitle",
+        "#newsIntelStats",
+        "#newsTopicFilter",
+        "#newsSourceFilter",
+        '[data-news-topic="all"]',
+        '[data-news-topic="quantFirms"]',
+        '[data-news-source-filter="all"]',
+        '[data-news-source-filter="official"]',
+        "#newsList"
+      ].map((selector) => document.querySelector(selector));
+      const formControls = values.section === "newsForm"
+        ? [
+          "#newsForm",
+          "#newsTitle",
+          "#newsSource",
+          "#newsUrl",
+          "#newsSourceType",
+          "#newsPrimarySkill",
+          "#newsTags",
+          "#newsSummary",
+          "#newsInsight",
+          "#newsForm .secondary-button",
+          "#newsForm .ghost-button"
+        ].map((selector) => document.querySelector(selector)).every(visible)
+        : true;
+      const cards = [...document.querySelectorAll("#newsList .news-card")];
+      return controls.every(visible)
+        && formControls
+        && cards.length >= values.minCards
+        && cards.slice(0, Math.min(cards.length, 3)).every(visible);
+    }
+
+    if (values.section === "newsDetail") {
+      const controls = [
+        "#newsDetail",
+        "#newsBackBtn",
+        "#newsDetailMeta",
+        "#newsDetailTitle",
+        "#newsDetailSummary",
+        "#newsDetailInsight",
+        "#newsDetailPills",
+        "#newsDetailLink"
+      ].map((selector) => document.querySelector(selector));
+      return controls.every(visible);
+    }
+
+    return false;
+  }, expected, { timeout: 10000 });
+}
+
+async function collectMobileContentDiagnostics(page) {
+  return page.evaluate(() => {
+    const rectFor = (selector) => {
+      const node = document.querySelector(selector);
+      if (!node) return null;
+      const rect = node.getBoundingClientRect();
+      return {
+        left: Math.round(rect.left),
+        right: Math.round(rect.right),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        text: (node.textContent || node.value || "").replace(/\s+/g, " ").trim().slice(0, 160)
+      };
+    };
+    return {
+      pathname: window.location.pathname,
+      width: window.innerWidth,
+      horizontalOverflowPx: Math.max(
+        0,
+        document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        document.body.scrollWidth - document.documentElement.clientWidth
+      ),
+      experienceForm: rectFor("#experienceForm"),
+      experienceList: rectFor("#experienceList"),
+      experienceFirstCard: rectFor("#experienceList .experience-card"),
+      newsIntel: rectFor(".news-intel-board"),
+      newsForm: rectFor("#newsForm"),
+      newsList: rectFor("#newsList"),
+      newsFirstCard: rectFor("#newsList .news-card"),
+      newsDetail: rectFor("#newsDetail")
+    };
+  });
 }
 
 async function runMemoryResourceFlow(page, baseUrl) {
