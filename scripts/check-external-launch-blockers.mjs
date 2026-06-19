@@ -31,6 +31,7 @@ const evidence = {
   jobsFixture: readJson("docs/browser-audit-screenshots/338-jobs-source-production-fixture-summary.json", "jobs source production fixture"),
   jobsPacket: readJson("docs/browser-audit-screenshots/349-jobs-feed-publication-packet-summary.json", "jobs feed publication packet"),
   jobsStaticFeed: readJson("docs/browser-audit-screenshots/353-jobs-public-ats-static-feed-summary.json", "jobs public ATS static feed"),
+  jobsDeployedApiSource: readJson("docs/browser-audit-screenshots/354-deployed-jobs-api-source-summary.json", "deployed jobs API source smoke"),
   chromeFixture: readJson("docs/browser-audit-screenshots/339-chrome-store-publication-fixture-summary.json", "Chrome store publication fixture"),
   chromePacket: readJson("docs/browser-audit-screenshots/348-chrome-store-publication-packet-summary.json", "Chrome store publication packet"),
   postgresExport: readJson("docs/browser-audit-screenshots/331-postgres-cutover-export-smoke-summary.json", "Postgres cutover export smoke"),
@@ -54,6 +55,7 @@ const requiredScripts = [
   "build:media-storage-packet",
   "check:jobs-source:production",
   "check:jobs-feed:static",
+  "check:jobs-api:deployed-source",
   "build:jobs-feed:publication-packet",
   "check:chrome-store-publication:published",
   "build:chrome-store-publication-packet",
@@ -75,6 +77,15 @@ const outstandingItems = extractOutstandingItems(productStatusText);
 for (let index = 1; index <= 8; index += 1) {
   expect(outstandingItems.some((item) => item.index === index), `docs/product-status.md is missing Outstanding Item ${index}.`);
 }
+
+const jobsFeedCleared = evidence.jobsDeployedApiSource.status === "pass"
+  && evidence.jobsDeployedApiSource.checks?.sourceMerged === true
+  && evidence.jobsDeployedApiSource.checks?.sourceStatusOk === true
+  && evidence.jobsDeployedApiSource.checks?.sourceCountLooksLikePublicAtsFeed === true
+  && evidence.jobsDeployedApiSource.checks?.includesInternshipAndFulltime === true
+  && evidence.jobsDeployedApiSource.checks?.sourceValidPostedAt === true
+  && evidence.jobsDeployedApiSource.checks?.sourceRealMetadata === true
+  && evidence.jobsDeployedApiSource.checks?.firstSourceJobMatchesStaticFeed === true;
 
 const blockers = [
   {
@@ -139,9 +150,11 @@ const blockers = [
   {
     id: "jobs-real-feed",
     title: "Real internship/full-time jobs feed",
-    status: "blocked",
-    ownerAction: "Configure and operate a real crawler or vendor feed, then run the live jobs-source signoff.",
-    signoffCommand: "npm run check:jobs-source:production -- --live",
+    status: jobsFeedCleared ? "pass" : "blocked",
+    ownerAction: jobsFeedCleared
+      ? "Deployed API source feed is live and signed off; keep the public ATS refresh cadence monitored."
+      : "Configure and operate a real crawler or vendor feed, then run the live deployed jobs API source signoff.",
+    signoffCommand: "npm run check:jobs-api:deployed-source",
     localCoverage: {
       runtimeSmokePass: evidence.jobsRuntime.status === "pass",
       productionFixturePass: evidence.jobsFixture.status === "pass",
@@ -158,6 +171,13 @@ const blockers = [
         && evidence.jobsStaticFeed.checks?.validUrls === true
         && evidence.jobsStaticFeed.checks?.validPostedAt === true,
       staticFeedShaSet: evidence.jobsStaticFeed.checks?.feedSha256Set === true,
+      deployedApiSourcePass: evidence.jobsDeployedApiSource.status === "pass",
+      deployedApiSourceMerged: evidence.jobsDeployedApiSource.checks?.sourceMerged === true,
+      deployedApiSourceStatusOk: evidence.jobsDeployedApiSource.checks?.sourceStatusOk === true,
+      deployedApiSourceCountLooksLikePublicAtsFeed: evidence.jobsDeployedApiSource.checks?.sourceCountLooksLikePublicAtsFeed === true,
+      deployedApiSourceHasRealMetadata: evidence.jobsDeployedApiSource.checks?.sourceRealMetadata === true
+        && evidence.jobsDeployedApiSource.checks?.sourceValidPostedAt === true,
+      deployedApiFallbackCatalogMerged: evidence.jobsDeployedApiSource.checks?.fallbackCatalogMerged === true,
       packetIncludesProductionEnvTemplate: evidence.jobsPacket.checks?.includesProductionEnvTemplate === true,
       packetIncludesHostingRunbook: evidence.jobsPacket.checks?.includesHostingRunbook === true,
       packetIncludesLiveSignoffChecklist: evidence.jobsPacket.checks?.includesLiveSignoffChecklist === true,
@@ -701,7 +721,7 @@ if (requireClear && blocking.length) {
 
 const summary = {
   id: 341,
-  date: "2026-06-18",
+  date: "2026-06-19",
   surface: "external launch blockers",
   status: failures.length ? "fail" : "pass",
   launchReadiness: blocking.length ? "blocked" : "pass",

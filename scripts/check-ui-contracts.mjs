@@ -330,6 +330,7 @@ const evidenceArtifacts = [
   "329-media-storage-runtime-smoke-summary.json",
   "330-jobs-source-runtime-smoke-summary.json",
   "353-jobs-public-ats-static-feed-summary.json",
+  "354-deployed-jobs-api-source-summary.json",
   "331-postgres-cutover-export-smoke-summary.json",
   "332-browser-extension-runtime-smoke-summary.json",
   "333-production-boundaries-deployed-services-summary.json",
@@ -793,6 +794,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       break;
     case "353-jobs-public-ats-static-feed-summary.json":
       validateJobsPublicAtsStaticFeedSummary(data, expect, "jobs public ATS static feed");
+      break;
+    case "354-deployed-jobs-api-source-summary.json":
+      validateDeployedJobsApiSourceSummary(data, expect, "deployed jobs API source smoke");
       break;
     case "331-postgres-cutover-export-smoke-summary.json":
       validatePostgresCutoverExportSmokeSummary(data, expect, "Postgres cutover export smoke");
@@ -1342,6 +1346,42 @@ function validateJobsPublicAtsStaticFeedSummary(data, expect, label) {
   expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
 }
 
+function validateDeployedJobsApiSourceSummary(data, expect, label) {
+  expect(Number(data.id || 0) === 354, `${label} id must be 354`);
+  expect(data.surface === "deployed jobs API source smoke", `${label} surface must match`);
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.apiHost === "api.quantgym.app", `${label} must target api.quantgym.app`);
+  expect(data.apiPath === "/api/jobs", `${label} must target /api/jobs`);
+  expect(Number(data.statusCode || 0) === 200, `${label} must return HTTP 200`);
+  expect(String(data.contentType || "").toLowerCase().includes("application/json"), `${label} must return JSON`);
+  expect(data.source === "catalog+source", `${label} must merge catalog and source jobs`);
+  expect(data.sourceStatus === "ok", `${label} sourceStatus must be ok`);
+  expect(Number(data.count || 0) >= 150, `${label} must return public ATS scale job count`);
+  expect(Number(data.sourceCount || 0) >= 150, `${label} must include public ATS source jobs`);
+  expect(Number(data.fallbackCount || 0) >= 1, `${label} must keep fallback catalog jobs merged`);
+  expect(Number(data.internships || 0) > 0, `${label} must include internship roles`);
+  expect(Number(data.fulltime || 0) > 0, `${label} must include full-time roles`);
+  expect(data.firstId === "hudson-river-trading-1229082", `${label} first source job must match the static feed`);
+  expect(!Number.isNaN(Date.parse(String(data.firstPostedAt || ""))), `${label} first source postedAt must be parseable`);
+  expect(data.checks?.apiHttps === true, `${label} must use HTTPS`);
+  expect(data.checks?.apiHostProduction === true, `${label} must use the production API host`);
+  expect(data.checks?.apiPathJobs === true, `${label} must use the jobs API path`);
+  expect(data.checks?.httpOk === true, `${label} HTTP check must pass`);
+  expect(data.checks?.jsonContentType === true, `${label} JSON content-type check must pass`);
+  expect(data.checks?.sourceMerged === true, `${label} source merge check must pass`);
+  expect(data.checks?.sourceStatusOk === true, `${label} sourceStatus check must pass`);
+  expect(data.checks?.countLooksLikePublicAtsFeed === true, `${label} total count check must pass`);
+  expect(data.checks?.sourceCountLooksLikePublicAtsFeed === true, `${label} source count check must pass`);
+  expect(data.checks?.includesInternshipAndFulltime === true, `${label} role-type check must pass`);
+  expect(data.checks?.uniqueIds === true, `${label} unique id check must pass`);
+  expect(data.checks?.validUrls === true, `${label} URL check must pass`);
+  expect(data.checks?.sourceValidPostedAt === true, `${label} source postedAt check must pass`);
+  expect(data.checks?.sourceRealMetadata === true, `${label} source metadata check must pass`);
+  expect(data.checks?.fallbackCatalogMerged === true, `${label} fallback catalog merge check must pass`);
+  expect(data.checks?.firstSourceJobMatchesStaticFeed === true, `${label} first source job check must pass`);
+  expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
+}
+
 function validateJobsSourceProductionFixtureSummary(data, expect, label) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.productionFixture?.status === "pass", `${label} valid production fixture must pass`);
@@ -1820,7 +1860,7 @@ function validateChromeStorePublicationFixtureSummary(data, expect, label) {
 function validateExternalLaunchBlockersSummary(data, expect, label, options = {}) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.launchReadiness === "blocked", `${label} must keep public launch marked blocked until external signoffs clear`);
-  expect(Number(data.blockerCount || 0) === 7, `${label} must track seven external blockers`);
+  expect(Number(data.blockerCount || 0) === 6, `${label} must track six remaining external blockers after jobs feed clears`);
   expect(Number(data.trackedCount || 0) === 1, `${label} must track one continuing browser-journey expansion item`);
   expect(data.checks?.requiredScriptsPresent === true, `${label} must verify required signoff scripts exist`);
   expect(data.checks?.outstandingItemsTracked === true, `${label} must verify product-status outstanding items are tracked`);
@@ -1891,7 +1931,6 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
     "apex-www-ssl",
     "ops-alerts-edge-rate-limit",
     "media-bucket-cdn",
-    "jobs-real-feed",
     "chrome-web-store-publication",
     "postgres-managed-cutover",
     "question-bank-public-commercial-rights"
@@ -1915,6 +1954,8 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(media?.localCoverage?.unsafeBucketNameRejected === true, `${label} must include media unsafe bucket-name rejection`);
   expect(media?.localCoverage?.unsafeObjectPrefixRejected === true, `${label} must include media unsafe object-prefix rejection`);
   const jobs = findBlocker(data.blockers, "jobs-real-feed");
+  expect(jobs?.status === "pass", `${label} must mark jobs real feed pass after deployed API source smoke`);
+  expect(typeof jobs?.ownerAction === "string" && jobs.ownerAction.includes("Deployed API source feed is live"), `${label} jobs owner action must record deployed source signoff`);
   expect(jobs?.localCoverage?.liveValidFixturePass === true, `${label} must include jobs live fixture coverage`);
   expect(jobs?.localCoverage?.sourceUrlEmbeddedCredentialsRejected === true, `${label} must include jobs source URL credential rejection`);
   expect(jobs?.localCoverage?.sourceUrlQueryRejected === true, `${label} must include jobs source URL query rejection`);
@@ -1925,6 +1966,12 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(jobs?.localCoverage?.staticFeedIncludesInternshipAndFulltime === true, `${label} must include jobs static internship/full-time coverage`);
   expect(jobs?.localCoverage?.staticFeedHasRealMetadata === true, `${label} must include jobs static real metadata coverage`);
   expect(jobs?.localCoverage?.staticFeedShaSet === true, `${label} must include jobs static feed SHA coverage`);
+  expect(jobs?.localCoverage?.deployedApiSourcePass === true, `${label} must include deployed jobs API source smoke coverage`);
+  expect(jobs?.localCoverage?.deployedApiSourceMerged === true, `${label} must include deployed jobs API source merge coverage`);
+  expect(jobs?.localCoverage?.deployedApiSourceStatusOk === true, `${label} must include deployed jobs API sourceStatus coverage`);
+  expect(jobs?.localCoverage?.deployedApiSourceCountLooksLikePublicAtsFeed === true, `${label} must include deployed jobs API public ATS count coverage`);
+  expect(jobs?.localCoverage?.deployedApiSourceHasRealMetadata === true, `${label} must include deployed jobs API metadata coverage`);
+  expect(jobs?.localCoverage?.deployedApiFallbackCatalogMerged === true, `${label} must include deployed jobs API fallback-catalog merge coverage`);
   const chrome = findBlocker(data.blockers, "chrome-web-store-publication");
   expect(chrome?.localCoverage?.externalPublicationStillRequired === true, `${label} must preserve Chrome external publication requirement`);
   expect(chrome?.localCoverage?.placeholderItemIdRejected === true, `${label} must include Chrome placeholder item-id rejection`);

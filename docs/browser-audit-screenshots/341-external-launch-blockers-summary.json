@@ -1,11 +1,11 @@
 {
   "id": 341,
-  "date": "2026-06-18",
+  "date": "2026-06-19",
   "surface": "external launch blockers",
   "status": "pass",
   "launchReadiness": "blocked",
   "requireClear": false,
-  "blockerCount": 7,
+  "blockerCount": 6,
   "trackedCount": 1,
   "blockers": [
     {
@@ -70,9 +70,9 @@
     {
       "id": "jobs-real-feed",
       "title": "Real internship/full-time jobs feed",
-      "status": "blocked",
-      "ownerAction": "Configure and operate a real crawler or vendor feed, then run the live jobs-source signoff.",
-      "signoffCommand": "npm run check:jobs-source:production -- --live",
+      "status": "pass",
+      "ownerAction": "Deployed API source feed is live and signed off; keep the public ATS refresh cadence monitored.",
+      "signoffCommand": "npm run check:jobs-api:deployed-source",
       "localCoverage": {
         "runtimeSmokePass": true,
         "productionFixturePass": true,
@@ -86,6 +86,12 @@
         "staticFeedIncludesInternshipAndFulltime": true,
         "staticFeedHasRealMetadata": true,
         "staticFeedShaSet": true,
+        "deployedApiSourcePass": true,
+        "deployedApiSourceMerged": true,
+        "deployedApiSourceStatusOk": true,
+        "deployedApiSourceCountLooksLikePublicAtsFeed": true,
+        "deployedApiSourceHasRealMetadata": true,
+        "deployedApiFallbackCatalogMerged": true,
         "packetIncludesProductionEnvTemplate": true,
         "packetIncludesHostingRunbook": true,
         "packetIncludesLiveSignoffChecklist": true,
