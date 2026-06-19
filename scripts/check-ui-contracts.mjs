@@ -2067,6 +2067,8 @@ function validateChromeStoreReadinessSummary(data, expect, label) {
   const zipData = uploadZip?.data || {};
   expect(/^artifacts\/browser-extension\/quantgym-collector-v\d+\.\d+\.\d+\.zip$/.test(String(zipData.output || "")), `${label} upload zip path must be versioned`);
   expect(/^[0-9a-f]{64}$/i.test(String(zipData.sha256 || "")), `${label} upload zip must report SHA-256`);
+  expect(zipData.deterministic === true, `${label} upload zip must prove deterministic packaging`);
+  expect(!Number.isNaN(Date.parse(String(zipData.deterministicTimestamp || ""))), `${label} upload zip must report deterministic timestamp`);
   expect(Array.isArray(zipData.files) && zipData.files.includes("manifest.json"), `${label} upload zip must include manifest.json`);
   expect(Array.isArray(zipData.hashedFiles), `${label} upload zip must report hashedFiles`);
   expect(zipData.hashedFiles?.length === zipData.files?.length, `${label} upload zip must hash every packaged file`);

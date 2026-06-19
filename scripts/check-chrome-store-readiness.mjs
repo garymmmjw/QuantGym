@@ -160,16 +160,11 @@ check("store image assets", () => {
 
 check("upload zip", () => {
   if (skipPackage) return { skipped: true };
-  const packaged = spawnSync(process.execPath, [
-    path.join(defaultRoot, "scripts", "package-browser-extension.mjs"),
-    "--root",
-    projectRoot
-  ], {
-    cwd: projectRoot,
-    encoding: "utf8"
-  });
-  assert(packaged.status === 0, clean(packaged.stderr || packaged.stdout || "browser extension packaging failed"));
-  const packageResult = parseJsonOutput(packaged.stdout, "browser extension package");
+  const packageResult = runPackage();
+  const repeatPackageResult = runPackage();
+  assert(packageResult.output === repeatPackageResult.output, "repeated package output path must be stable.");
+  assert(packageResult.sha256 === repeatPackageResult.sha256, "repeated package SHA-256 must be deterministic.");
+  assert(packageResult.bytes === repeatPackageResult.bytes, "repeated package byte size must be deterministic.");
   const zipPath = path.resolve(projectRoot, packageResult.output || "");
   assert(fs.existsSync(zipPath), `package zip is missing: ${packageResult.output}`);
   assertSha256(packageResult.sha256, "upload zip sha256");
@@ -189,6 +184,8 @@ check("upload zip", () => {
     output: path.relative(projectRoot, zipPath),
     sha256: packageResult.sha256,
     bytes: fs.statSync(zipPath).size,
+    deterministic: true,
+    deterministicTimestamp: packageResult.deterministicTimestamp || "",
     files: entries,
     hashedFiles: Object.keys(packageResult.fileHashes || {}).sort()
   };
@@ -212,6 +209,19 @@ function check(name, fn) {
   } catch (error) {
     results.push({ name, status: "fail", error: error.message || String(error) });
   }
+}
+
+function runPackage() {
+  const packaged = spawnSync(process.execPath, [
+    path.join(defaultRoot, "scripts", "package-browser-extension.mjs"),
+    "--root",
+    projectRoot
+  ], {
+    cwd: projectRoot,
+    encoding: "utf8"
+  });
+  assert(packaged.status === 0, clean(packaged.stderr || packaged.stdout || "browser extension packaging failed"));
+  return parseJsonOutput(packaged.stdout, "browser extension package");
 }
 
 function readJson(filePath, label) {
