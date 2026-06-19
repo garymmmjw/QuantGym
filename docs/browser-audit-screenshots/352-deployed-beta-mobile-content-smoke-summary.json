@@ -1,0 +1,126 @@
+{
+  "status": "pass",
+  "surface": "deployed beta mobile content smoke",
+  "baseUrl": "https://beta.quantgym.app",
+  "authMode": "isolated local browser state",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "config": {
+    "cloudApiEndpoint": "https://api.quantgym.app/api",
+    "llmEndpoint": "https://llm.quantgym.app/interview",
+    "googleLoginEnabled": true,
+    "googleClientIdSet": true
+  },
+  "checkpoints": [
+    {
+      "label": "experiences-open",
+      "width": 390,
+      "overflow": 0,
+      "missing": [],
+      "path": "/experiences"
+    },
+    {
+      "label": "experiences-filtered",
+      "width": 390,
+      "overflow": 0,
+      "missing": [],
+      "path": "/experiences"
+    },
+    {
+      "label": "experiences-share-confirm",
+      "width": 390,
+      "overflow": 0,
+      "missing": [],
+      "path": "/experiences"
+    },
+    {
+      "label": "community-after-share",
+      "width": 390,
+      "overflow": 0,
+      "missing": [],
+      "path": "/community"
+    },
+    {
+      "label": "news-open",
+      "width": 390,
+      "overflow": 0,
+      "missing": [],
+      "path": "/news"
+    },
+    {
+      "label": "news-form",
+      "width": 390,
+      "overflow": 0,
+      "missing": [],
+      "path": "/news"
+    },
+    {
+      "label": "news-filtered",
+      "width": 390,
+      "overflow": 0,
+      "missing": [],
+      "path": "/news"
+    },
+    {
+      "label": "news-detail",
+      "width": 390,
+      "overflow": 0,
+      "missing": [],
+      "path": "/news"
+    },
+    {
+      "label": "news-reload-read",
+      "width": 390,
+      "overflow": 0,
+      "missing": [],
+      "path": "/news"
+    }
+  ],
+  "checks": {
+    "appShellVisible": true,
+    "configUsesProductionEndpoints": true,
+    "checkpointCountPass": true,
+    "allExpectedCheckpointsPresent": true,
+    "experienceSaved": true,
+    "experienceFilterUsable": true,
+    "experienceSharedToCommunity": true,
+    "newsSubmitted": true,
+    "newsFiltersUsable": true,
+    "newsDetailReadPersisted": true,
+    "noHorizontalOverflow": true,
+    "noMaterialConsoleErrors": true,
+    "noPageErrors": true,
+    "noRequestFailures": true,
+    "noHttpErrors": true,
+    "summaryRedacted": true
+  },
+  "errors": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "requestFailures": [],
+    "httpErrors": [],
+    "ignored": [
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      }
+    ]
+  },
+  "durationMs": 10299,
+  "recordId": "d5f988be-bb0e-4700-b188-9934f12e5d46",
+  "newsId": "news-mobile-live-smoke-official-update-1781861583827-https-www-janestreet-com-join-jane-street-",
+  "finalPath": "/news"
+}
