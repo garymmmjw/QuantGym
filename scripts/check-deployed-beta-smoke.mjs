@@ -168,6 +168,7 @@ const summary = {
   login: { status: "pending" },
   config: {},
   corsPreflights: [],
+  staticAssetFallback: {},
   routes: [],
   routeSummary: { checked: 0, passed: 0, failed: 0 },
   errors: {
@@ -203,6 +204,7 @@ try {
   await signIn(page);
   summary.config = await readRuntimeConfig(page);
   await checkCorsPreflights();
+  await checkStaticAssetFallback();
   await checkRoutes(page);
   finalizeChecks();
 } catch (error) {
@@ -449,6 +451,43 @@ async function checkCorsPreflights() {
   }
 }
 
+async function checkStaticAssetFallback() {
+  const probePath = `/assets/__quantgym_missing_asset_probe_${Date.now()}.js`;
+  const result = {
+    name: "missing hashed asset fallback",
+    url: sanitizeUrl(`${baseUrl}${probePath}`),
+    status: 0,
+    contentType: "",
+    cacheControl: "",
+    statusPass: false,
+    notHtml200Pass: false,
+    noStorePass: false,
+    pass: false
+  };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(`${baseUrl}${probePath}`, {
+      headers: {
+        Accept: "application/javascript,*/*;q=0.8"
+      },
+      signal: controller.signal
+    });
+    result.status = response.status;
+    result.contentType = response.headers.get("content-type") || "";
+    result.cacheControl = response.headers.get("cache-control") || "";
+    result.statusPass = response.status === 404;
+    result.notHtml200Pass = !(response.status === 200 && /text\/html/i.test(result.contentType));
+    result.noStorePass = /no-store/i.test(result.cacheControl);
+  } catch (error) {
+    result.error = String(error?.message || error).slice(0, 300);
+  } finally {
+    clearTimeout(timeout);
+  }
+  result.pass = result.statusPass && result.notHtml200Pass && result.noStorePass;
+  summary.staticAssetFallback = result;
+}
+
 function finalizeChecks() {
   summary.checks = {
     loginPass: summary.login.status === "pass",
@@ -460,6 +499,7 @@ function finalizeChecks() {
     googleLoginEnabled: summary.config.googleLoginEnabled === true && summary.config.googleClientIdSet === true,
     corsPreflightPass: summary.corsPreflights.length === corsPreflightChecks.length
       && summary.corsPreflights.every((result) => result.pass === true),
+    staticAssetFallbackPass: summary.staticAssetFallback?.pass === true,
     routeCountPass: Number(summary.routeSummary.checked) === routeChecks.length
       && Number(summary.routeSummary.failed) === 0,
     noMaterialConsoleErrors: summary.errors.consoleErrors.length === 0,

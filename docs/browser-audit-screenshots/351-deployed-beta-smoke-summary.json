@@ -58,6 +58,17 @@
       "pass": true
     }
   ],
+  "staticAssetFallback": {
+    "name": "missing hashed asset fallback",
+    "url": "https://beta.quantgym.app/assets/__quantgym_missing_asset_probe_1781868368838.js",
+    "status": 404,
+    "contentType": "text/html; charset=utf-8",
+    "cacheControl": "no-store",
+    "statusPass": true,
+    "notHtml200Pass": true,
+    "noStorePass": true,
+    "pass": true
+  },
   "routes": [
     {
       "name": "overview",
@@ -149,7 +160,7 @@
       },
       "health": {
         "pathname": "/tools",
-        "bodyTextLength": 737,
+        "bodyTextLength": 733,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -406,6 +417,12 @@
     "ignored": [
       {
         "type": "requestfailed",
+        "url": "https://api.quantgym.app/api/sync",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted background sync"
+      },
+      {
+        "type": "requestfailed",
         "url": "https://beta.quantgym.app/cdn-cgi/rum",
         "failure": "net::ERR_ABORTED"
       },
@@ -544,6 +561,7 @@
     "llmEndpointIsProduction": true,
     "googleLoginEnabled": true,
     "corsPreflightPass": true,
+    "staticAssetFallbackPass": true,
     "routeCountPass": true,
     "noMaterialConsoleErrors": true,
     "noPageErrors": true,
@@ -551,5 +569,5 @@
     "noHttpErrors": true,
     "summaryRedacted": true
   },
-  "durationMs": 56121
+  "durationMs": 59324
 }
