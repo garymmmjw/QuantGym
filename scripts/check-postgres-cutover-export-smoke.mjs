@@ -612,6 +612,20 @@ function runCompleteSignoffNegativeFixtures({ tempDb, sensitiveExportPath, valid
       expectedError: "SOURCE_DB_SHA256 does not match"
     },
     {
+      name: "empty database path rejected",
+      args: [
+        "scripts/check-postgres-cutover.py",
+        "--db",
+        "",
+        "--export",
+        sensitiveExportPath,
+        "--require-sensitive-export",
+        "--cutover-complete"
+      ],
+      env: {},
+      expectedError: "SQLite DB path is empty"
+    },
+    {
       name: "database directory path rejected",
       args: [
         "scripts/check-postgres-cutover.py",

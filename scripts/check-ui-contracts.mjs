@@ -1489,7 +1489,15 @@ function validatePostgresCutoverExportSmokeSummary(data, expect, label) {
   expect(typeof data.cutoverSignoff?.sourceDbSha256Prefix === "string" && data.cutoverSignoff.sourceDbSha256Prefix.length === 12, `${label} complete cutover signoff must bind the source DB hash prefix`);
   expect(typeof data.cutoverSignoff?.exportSha256Prefix === "string" && data.cutoverSignoff.exportSha256Prefix.length === 12, `${label} complete cutover signoff must bind the export hash prefix`);
   expect(Number(data.cutoverSignoff?.targetRowCount || 0) === Number(data.importPlan?.rowCount || -1), `${label} complete cutover signoff target row count must match the import plan`);
-  expect(Array.isArray(data.completeSignoffNegativeFixtures) && data.completeSignoffNegativeFixtures.length >= 16, `${label} must include complete signoff negative fixtures`);
+  expect(Array.isArray(data.completeSignoffNegativeFixtures) && data.completeSignoffNegativeFixtures.length >= 18, `${label} must include complete signoff negative fixtures`);
+  expect(
+    (data.completeSignoffNegativeFixtures || []).some((fixture) => (
+      fixture.name === "empty database path rejected"
+      && fixture.rejected === true
+      && fixture.expectedErrorObserved === true
+    )),
+    `${label} must reject empty SQLite DB path in complete signoff`
+  );
   for (const fixture of data.completeSignoffNegativeFixtures || []) {
     expect(fixture.rejected === true, `${label} complete signoff negative fixture ${fixture.name} must be rejected`);
     expect(fixture.expectedErrorObserved === true, `${label} complete signoff negative fixture ${fixture.name} must report expected error`);
