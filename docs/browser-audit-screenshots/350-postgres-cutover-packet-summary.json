@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-19T05:30:08.239Z",
+  "generatedAt": "2026-06-19T12:58:40.548Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/postgres-cutover/readiness-packet",
   "filesWritten": [
     "artifacts/postgres-cutover/readiness-packet/README.md",
@@ -16,7 +16,7 @@
     "rowTables": 9,
     "smokeRowCount": 12,
     "postgresImportSqlGenerated": true,
-    "completeSignoffNegativeFixtureCount": 17
+    "completeSignoffNegativeFixtureCount": 18
   },
   "requiredEnv": [
     "QUANTGYM_POSTGRES_CUTOVER_STATUS",

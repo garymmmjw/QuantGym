@@ -67,17 +67,24 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    db_path = Path(args.db).expanduser()
-    schema_path = Path(args.schema).expanduser()
     failures: list[str] = []
     warnings: list[str] = []
+    db_path_text = str(args.db or "").strip()
+    db_path_empty = not db_path_text
+    if db_path_empty:
+        failures.append("SQLite DB path is empty; set --db or QUANTGYM_DB to the exact source SQLite file.")
+        db_path_text = "__missing_sqlite_db_path__"
+    db_path = Path(db_path_text).expanduser()
+    schema_path = Path(args.schema).expanduser()
     data_checks: dict[str, Any] = {}
 
     schema_sql = read_text(schema_path, "Postgres schema", failures)
     pg_schema = parse_postgres_schema(schema_sql)
     check_postgres_schema_text(schema_sql, pg_schema, failures)
 
-    if db_path.exists() and db_path.is_file():
+    if db_path_empty:
+        pass
+    elif db_path.exists() and db_path.is_file():
         try:
             with sqlite3.connect(f"file:{db_path.resolve()}?mode=ro", uri=True) as conn:
                 conn.row_factory = sqlite3.Row
@@ -104,8 +111,8 @@ def main() -> int:
 
     summary = {
         "status": "fail" if failures else "pass",
-        "dbPath": str(db_path),
-        "dbPresent": db_path.exists(),
+        "dbPath": "" if db_path_empty else str(db_path),
+        "dbPresent": False if db_path_empty else db_path.exists(),
         "schemaPath": str(schema_path),
         "postgresTables": sorted(pg_schema["tables"].keys()),
         "postgresIndexes": sorted(pg_schema["indexes"].keys()),
