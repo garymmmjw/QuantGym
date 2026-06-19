@@ -12,6 +12,7 @@ export function SettingsPageContent() {
     const value = model.t(key);
     return value && value !== key ? value : fallback;
   };
+  const settingsMessageDefault = text("settingsMessageDefault", "应用偏好和数据管理。");
   const [form, setForm] = useState({
     language: model.currentLanguage || model.getLanguage?.() || "zh",
     country: model.currentUser?.country || "china",
@@ -21,7 +22,7 @@ export function SettingsPageContent() {
     cloudApi: cloudConfig.endpoint || model.defaultCloudApiEndpoint || "",
     googleClientId: authConfig.googleClientId || ""
   });
-  const [statusMessage, setStatusMessage] = useState(() => text("settingsMessageDefault", "应用偏好和数据管理。"));
+  const [statusMessage, setStatusMessage] = useState(() => settingsMessageDefault);
 
   useEffect(() => {
     if (!model.currentUser) return;
@@ -33,6 +34,14 @@ export function SettingsPageContent() {
   useEffect(() => {
     setForm((prev) => ({ ...prev, language: model.currentLanguage || model.getLanguage?.() || "zh" }));
   }, [model.currentLanguage]);
+
+  useEffect(() => {
+    const defaultMessages = new Set([
+      "应用偏好和数据管理。",
+      "App preferences and data management."
+    ]);
+    setStatusMessage((current) => (defaultMessages.has(current) ? settingsMessageDefault : current));
+  }, [model.currentLanguage, settingsMessageDefault]);
 
   useEffect(() => {
     if (!model.currentUser) return;

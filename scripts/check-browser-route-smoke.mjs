@@ -173,6 +173,7 @@ try {
     ["account local email change requires password and reauthenticates", runAccountEmailChangeReauthFlow],
     ["account avatar upload, clear, and resume file persistence", runAccountAvatarAndResumeUploadFlow],
     ["mobile account profile and upload controls avoid overflow", runMobileAccountProfileUploadFlow],
+    ["settings language switch syncs URL and persists reload", runSettingsLanguageSwitchFlow],
     ["settings saves runtime config, clears Google Client ID, and reloads", runSettingsPersistenceFlow],
     ["mobile settings config and backup controls avoid overflow", runMobileSettingsConfigBackupControlsFlow],
     ["settings rejects invalid backup files without changing state", runSettingsInvalidBackupGuardFlow],
@@ -7082,6 +7083,94 @@ async function expectStoredResumeUpload(page, expected) {
   }, expected, { timeout: 10000 });
 }
 
+async function runSettingsLanguageSwitchFlow(page, baseUrl) {
+  const result = { name: "settings language switch syncs URL and persists reload", status: "pass" };
+  try {
+    result.step = "open settings in Chinese";
+    await page.goto(`${baseUrl}/settings?source=browser-smoke&lang=zh`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.evaluate(() => {
+      const current = JSON.parse(localStorage.getItem("quantMemoryBoard.preferences.v1") || "{}");
+      localStorage.setItem("quantMemoryBoard.preferences.v1", JSON.stringify({
+        ...current,
+        language: "zh",
+        sidebarCollapsed: false
+      }));
+    });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+    await expectSettingsLanguageState(page, {
+      language: "zh",
+      documentLang: "zh-CN",
+      heading: "设置",
+      saveButtonText: "保存设置",
+      messageText: "应用偏好和数据管理。"
+    });
+
+    result.step = "switch settings to English";
+    await page.locator("#settingsLanguageSelect").selectOption("en");
+    await expectSettingsLanguageState(page, {
+      language: "en",
+      documentLang: "en",
+      heading: "Settings",
+      saveButtonText: "Save Settings",
+      messageText: "App preferences and data management."
+    });
+    const englishSnapshot = await readSettingsLanguageSnapshot(page);
+    if (englishSnapshot.selectedLanguage !== "en") throw new Error(`English select value was ${englishSnapshot.selectedLanguage}`);
+    if (englishSnapshot.storedLanguage !== "en") throw new Error(`English language was not stored: ${englishSnapshot.storedLanguage}`);
+    if (englishSnapshot.langParam !== "en") throw new Error(`English URL lang was not synced: ${englishSnapshot.langParam}`);
+    if (englishSnapshot.sourceParam !== "browser-smoke") throw new Error(`Language URL sync dropped query state: ${englishSnapshot.sourceParam}`);
+
+    result.step = "reload English settings";
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+    await expectSettingsLanguageState(page, {
+      language: "en",
+      documentLang: "en",
+      heading: "Settings",
+      saveButtonText: "Save Settings",
+      messageText: "App preferences and data management."
+    });
+
+    result.step = "switch settings back to Chinese";
+    await page.locator("#settingsLanguageSelect").selectOption("zh");
+    await expectSettingsLanguageState(page, {
+      language: "zh",
+      documentLang: "zh-CN",
+      heading: "设置",
+      saveButtonText: "保存设置",
+      messageText: "应用偏好和数据管理。"
+    });
+    const chineseSnapshot = await readSettingsLanguageSnapshot(page);
+    if (chineseSnapshot.langParam !== "zh") throw new Error(`Chinese URL lang was not restored: ${chineseSnapshot.langParam}`);
+    if (chineseSnapshot.storedLanguage !== "zh") throw new Error(`Chinese language was not stored: ${chineseSnapshot.storedLanguage}`);
+
+    delete result.step;
+    result.englishSelected = true;
+    result.englishUrlSynced = true;
+    result.queryPreserved = true;
+    result.englishReloadPersisted = true;
+    result.zhRestored = true;
+    result.statusMessageTranslated = true;
+    result.appShellVisible = true;
+    result.snapshots = {
+      english: englishSnapshot,
+      chinese: chineseSnapshot
+    };
+  } catch (error) {
+    result.status = "fail";
+    result.error = result.step ? `${result.step}: ${error.message}` : error.message;
+    result.diagnostics = await collectSettingsLanguageDiagnostics(page).catch((diagnosticError) => ({
+      error: diagnosticError?.message || String(diagnosticError)
+    }));
+    fail(`${result.name} failed: ${error.message}`);
+  }
+  return result;
+}
+
 async function runSettingsPersistenceFlow(page, baseUrl) {
   const result = { name: "settings saves runtime config, clears Google Client ID, and reloads", status: "pass" };
   const llmEndpoint = "http://127.0.0.1:8788/interview?browser-smoke=settings";
@@ -7437,6 +7526,67 @@ async function readSettingsPersistenceValues(page) {
     storedCloud: JSON.parse(localStorage.getItem("quantMemoryBoard.cloud.v1") || "{}"),
     storedAuth: JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}")
   }));
+}
+
+async function expectSettingsLanguageState(page, expected) {
+  await page.waitForFunction((values) => {
+    const readPrefs = () => {
+      try {
+        return JSON.parse(localStorage.getItem("quantMemoryBoard.preferences.v1") || "{}");
+      } catch {
+        return {};
+      }
+    };
+    const url = new URL(window.location.href);
+    const saveText = document.querySelector("#settingsForm .primary-button")?.textContent || "";
+    const heading = document.querySelector(".settings-section h2")?.textContent || "";
+    const messageText = document.querySelector("#settingsMessage")?.textContent || "";
+    const appShell = document.querySelector("#appShell");
+    const authShell = document.querySelector("#authShell");
+    return document.querySelector("#settingsLanguageSelect")?.value === values.language
+      && readPrefs().language === values.language
+      && url.pathname === "/settings"
+      && url.searchParams.get("lang") === values.language
+      && url.searchParams.get("source") === "browser-smoke"
+      && document.documentElement.lang === values.documentLang
+      && heading.includes(values.heading)
+      && saveText.includes(values.saveButtonText)
+      && messageText.includes(values.messageText)
+      && Boolean(appShell && !appShell.classList.contains("hidden"))
+      && !Boolean(authShell && !authShell.classList.contains("hidden"));
+  }, expected, { timeout: 10000 });
+}
+
+async function readSettingsLanguageSnapshot(page) {
+  return page.evaluate(() => {
+    let prefs = {};
+    try {
+      prefs = JSON.parse(localStorage.getItem("quantMemoryBoard.preferences.v1") || "{}");
+    } catch {
+      prefs = {};
+    }
+    const url = new URL(window.location.href);
+    const appShell = document.querySelector("#appShell");
+    const authShell = document.querySelector("#authShell");
+    return {
+      pathname: url.pathname,
+      langParam: url.searchParams.get("lang") || "",
+      sourceParam: url.searchParams.get("source") || "",
+      selectedLanguage: document.querySelector("#settingsLanguageSelect")?.value || "",
+      storedLanguage: prefs.language || "",
+      documentLang: document.documentElement.lang || "",
+      heading: (document.querySelector(".settings-section h2")?.textContent || "").trim(),
+      saveButtonText: (document.querySelector("#settingsForm .primary-button")?.textContent || "").replace(/\s+/g, " ").trim(),
+      settingsMessage: (document.querySelector("#settingsMessage")?.textContent || "").trim(),
+      appShellVisible: Boolean(appShell && !appShell.classList.contains("hidden")),
+      authShellVisible: Boolean(authShell && !authShell.classList.contains("hidden")),
+      horizontalOverflowPx: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    };
+  });
+}
+
+async function collectSettingsLanguageDiagnostics(page) {
+  return readSettingsLanguageSnapshot(page);
 }
 
 async function expectMobileSettingsState(page, expected = {}) {

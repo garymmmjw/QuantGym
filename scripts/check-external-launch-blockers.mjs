@@ -483,6 +483,20 @@ const blockers = [
         evidence.browserRouteSmoke.interactions?.results,
         "settings saves runtime config, clears Google Client ID, and reloads"
       )?.status === "pass",
+      settingsLanguageSwitchPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "settings language switch syncs URL and persists reload"
+        );
+        return item?.status === "pass"
+          && item.englishSelected === true
+          && item.englishUrlSynced === true
+          && item.queryPreserved === true
+          && item.englishReloadPersisted === true
+          && item.zhRestored === true
+          && item.statusMessageTranslated === true
+          && item.appShellVisible === true;
+      })(),
       settingsGoogleClientClearPass: findResult(
         evidence.browserRouteSmoke.interactions?.results,
         "settings saves runtime config, clears Google Client ID, and reloads"
@@ -643,6 +657,7 @@ const summary = {
     browserMobileShellControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileShellControlsPass === true,
     browserMobileModuleNavPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileModuleNavPass === true,
     browserSettingsRuntimeConfigPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsRuntimeConfigPass === true,
+    browserSettingsLanguageSwitchPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsLanguageSwitchPass === true,
     browserSettingsGoogleClientClearPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsGoogleClientClearPass === true,
     browserSettingsBackupPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsBackupPass === true,
     browserSettingsInvalidBackupGuardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsInvalidBackupGuardPass === true,

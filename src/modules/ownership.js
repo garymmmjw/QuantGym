@@ -220,6 +220,7 @@ export const MODULE_OWNERSHIP = [
     featureEntry: "src/features/settings/SettingsPageContent.jsx",
     stateDomains: ["settings", "runtimeConfig", "cloud"],
     browserSmokeInteractions: [
+      "settings language switch syncs URL and persists reload",
       "settings saves runtime config, clears Google Client ID, and reloads",
       "mobile settings config and backup controls avoid overflow",
       "settings rejects invalid backup files without changing state",
