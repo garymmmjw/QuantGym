@@ -48,8 +48,7 @@ export function createPokerRoomController(deps = {}) {
     if (!game) return null;
     if (game.mode !== "demo") game.roomCode = POKER_SINGLE_TABLE_CODE;
     state.game = game;
-    setRoomUrl(game, "replace");
-    if (!fromUrl && canUseOnline() && game.mode !== "demo") ensureOnlineRoom({ force: true });
+    if (fromUrl || game.online) setRoomUrl(game, "replace");
     return game;
   }
 

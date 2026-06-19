@@ -138,6 +138,7 @@ try {
     ["tools drill starts and accepts an answer", runToolsDrillFlow],
     ["tools mental math completes session and persists records", runToolsMentalMathCompletionFlow],
     ["tools market game rejects crossed quote, scores valid quote, and persists record", runToolsMarketGameFlow],
+    ["poker default route stays local until online action", runPokerDefaultLocalRouteFlow],
     ["poker demo table starts, acts, and persists room state", runPokerDemoTableActionFlow],
     ["poker preflop matrix position, hand selection, and leave-table navigation", runPokerPreflopMatrixFlow],
     ["pk match, submit, reveal, and record persistence", runPkMatchSubmitRevealFlow],
@@ -2538,6 +2539,71 @@ async function collectToolsMarketGameDiagnostics(page) {
       skills: state.skills || {}
     };
   });
+}
+
+async function runPokerDefaultLocalRouteFlow(page, baseUrl) {
+  const result = { name: "poker default route stays local until online action", status: "pass" };
+  const joinRequests = [];
+  const onRequest = (request) => {
+    try {
+      const url = new URL(request.url());
+      if (/\/api\/poker\/rooms\/[^/]+\/join$/i.test(url.pathname)) {
+        joinRequests.push({ method: request.method(), url: url.toString() });
+      }
+    } catch {
+      // Keep the smoke focused on valid API URLs.
+    }
+  };
+  page.on("request", onRequest);
+  try {
+    result.step = "open poker route";
+    await page.goto(`${baseUrl}/poker`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#pokerTable", { timeout: 10000 });
+    await page.waitForSelector("#pokerLobbySummary", { timeout: 10000 });
+    await page.waitForTimeout(1200);
+
+    const snapshot = await page.evaluate(() => {
+      const code = localStorage.getItem("quantgym.pokerRoom.last.v1") || "QG-MAIN";
+      let room = {};
+      try {
+        room = JSON.parse(localStorage.getItem(`quantgym.pokerRoom.v1.${code}`) || "{}");
+      } catch {
+        room = {};
+      }
+      return {
+        pathname: window.location.pathname,
+        search: window.location.search,
+        prompt: document.querySelector("#pokerGamePrompt")?.textContent?.replace(/\s+/g, " ").trim() || "",
+        feedback: document.querySelector("#pokerGameFeedback")?.textContent?.replace(/\s+/g, " ").trim() || "",
+        roomCode: document.querySelector("#pokerRoomCode")?.textContent?.trim() || "",
+        storedRoomOnline: room.online === true,
+        storedRoomMode: room.mode || ""
+      };
+    });
+
+    if (joinRequests.length) throw new Error(`Default Poker route made ${joinRequests.length} join request(s).`);
+    if (/\bpokerRoom=/i.test(snapshot.search)) throw new Error(`Default Poker route wrote pokerRoom query: ${snapshot.search}`);
+    if (!/local/i.test(snapshot.prompt)) throw new Error(`Default Poker route did not stay local: ${snapshot.prompt}`);
+    if (snapshot.storedRoomOnline) throw new Error("Default Poker route persisted an online room before an online action.");
+
+    result.roomCode = snapshot.roomCode;
+    result.search = snapshot.search;
+    result.prompt = snapshot.prompt;
+    result.joinRequests = joinRequests.length;
+    delete result.step;
+  } catch (error) {
+    result.status = "fail";
+    result.error = error.message;
+    result.joinRequests = joinRequests;
+    result.diagnostics = await collectPokerDiagnostics(page).catch((diagnosticError) => ({
+      error: diagnosticError.message
+    }));
+    fail(`${result.name} failed: ${error.message}`);
+  } finally {
+    page.off("request", onRequest);
+  }
+  return result;
 }
 
 async function runPokerDemoTableActionFlow(page, baseUrl) {

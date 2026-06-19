@@ -91,6 +91,7 @@ export const MODULE_OWNERSHIP = [
     featureEntry: "src/features/poker/PokerPageContent.jsx",
     stateDomains: ["poker", "cloud"],
     browserSmokeInteractions: [
+      "poker default route stays local until online action",
       "poker demo table starts, acts, and persists room state",
       "poker preflop matrix position, hand selection, and leave-table navigation"
     ]
