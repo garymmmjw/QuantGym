@@ -167,6 +167,8 @@ const blockers = [
       privateObjectEndpointRejected: findResult(evidence.mediaFixture.negativeFixtures, "private object endpoint rejected")?.rejected === true,
       privatePublicBaseRejected: findResult(evidence.mediaFixture.negativeFixtures, "private public base rejected")?.rejected === true,
       endpointEmbeddedCredentialsRejected: evidence.mediaFixture.checks?.endpointEmbeddedCredentialsRejected === true,
+      endpointQueryRejected: evidence.mediaFixture.checks?.endpointQueryRejected === true,
+      publicBaseEmbeddedCredentialsRejected: evidence.mediaFixture.checks?.publicBaseEmbeddedCredentialsRejected === true,
       publicBaseQueryRejected: evidence.mediaFixture.checks?.publicBaseQueryRejected === true,
       placeholderAccessKeyRejected: evidence.mediaFixture.checks?.placeholderAccessKeyRejected === true,
       shortSecretKeyRejected: evidence.mediaFixture.checks?.shortSecretKeyRejected === true,

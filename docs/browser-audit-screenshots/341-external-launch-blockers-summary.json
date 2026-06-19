@@ -71,6 +71,8 @@
         "privateObjectEndpointRejected": true,
         "privatePublicBaseRejected": true,
         "endpointEmbeddedCredentialsRejected": true,
+        "endpointQueryRejected": true,
+        "publicBaseEmbeddedCredentialsRejected": true,
         "publicBaseQueryRejected": true,
         "placeholderAccessKeyRejected": true,
         "shortSecretKeyRejected": true,
