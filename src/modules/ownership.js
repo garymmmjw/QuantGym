@@ -124,7 +124,8 @@ export const MODULE_OWNERSHIP = [
       "community post, like, comment, and reload persistence",
       "community image post fallback and reload persistence",
       "community video post fallback and reload persistence",
-      "community direct message from post opens messages thread"
+      "community direct message from post opens messages thread",
+      "mobile community posting and messages controls avoid overflow"
     ]
   },
   {
@@ -136,7 +137,8 @@ export const MODULE_OWNERSHIP = [
     stateDomains: ["community", "messages"],
     browserSmokeInteractions: [
       "messages thread read, send, and reload persistence",
-      "messages multi-thread unread badges clear and persist read state"
+      "messages multi-thread unread badges clear and persist read state",
+      "mobile community posting and messages controls avoid overflow"
     ]
   },
   {
