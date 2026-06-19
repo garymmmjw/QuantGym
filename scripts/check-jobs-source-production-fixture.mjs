@@ -53,11 +53,6 @@ const validProductionEnv = {
 
 const negativeCases = [
   {
-    name: "missing source URL rejected",
-    env: { QUANTGYM_JOBS_SOURCE_URL: "" },
-    expectedError: "QUANTGYM_JOBS_SOURCE_URL"
-  },
-  {
     name: "http source URL rejected",
     env: { QUANTGYM_JOBS_SOURCE_URL: "http://jobs.quantgym.test/feed.json" },
     expectedError: "Production jobs source URL must use HTTPS"
@@ -131,6 +126,14 @@ try {
   const productionFixture = summarizeProductionFixture(validProduction);
   validateValidProductionFixture(validProduction, productionFixture);
 
+  const defaultProduction = await runConfig(["--production", "--no-dotenv"], {
+    ...validProductionEnv,
+    QUANTGYM_JOBS_SOURCE_URL: "",
+    QUANTGYM_JOBS_SOURCE_TOKEN: ""
+  });
+  const defaultProductionFixture = summarizeProductionFixture(defaultProduction);
+  validateDefaultProductionFixture(defaultProduction, defaultProductionFixture);
+
   const negativeFixtures = [];
   for (const fixture of negativeCases) {
     const result = await runConfig(["--production", "--no-dotenv"], {
@@ -171,6 +174,10 @@ try {
     validProductionHasAllChecks: productionFixture.passed === 2 && productionFixture.failed === 0,
     validProductionSourceTokenRedacted: !validProduction.combinedOutput.includes(feedToken),
     validProductionSourceUrlRedacted: !validProduction.combinedOutput.includes(validProductionEnv.QUANTGYM_JOBS_SOURCE_URL),
+    defaultProductionPass: defaultProductionFixture.status === "pass",
+    defaultProductionUsesPublicAtsFeed: defaultProductionFixture.sourceDefaulted === true
+      && defaultProductionFixture.sourceHost === "beta.quantgym.app",
+    defaultProductionTokenOptional: defaultProductionFixture.sourceTokenSet === false,
     negativeFixturesRejected: negativeFixtures.every((fixture) => fixture.rejected),
     negativeFixturesMentionExpectedErrors: negativeFixtures.every((fixture) => fixture.expectedErrorObserved),
     sourceUrlEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "source URL embedded credentials rejected")?.rejected === true,
@@ -207,6 +214,7 @@ try {
     status: failures.length ? "fail" : "pass",
     durationMs: Date.now() - startedAt,
     productionFixture,
+    defaultProductionFixture,
     negativeFixtures,
     liveFixtures,
     checks,
@@ -252,6 +260,16 @@ function validateValidProductionFixture(result, summary) {
   if (!summary.sourceTokenSet) fail("Valid production jobs fixture should require a source token.");
   if (result.combinedOutput.includes(feedToken)) fail("Valid production jobs fixture output leaked the source token.");
   if (result.combinedOutput.includes(validProductionEnv.QUANTGYM_JOBS_SOURCE_URL)) fail("Valid production jobs fixture output leaked the full source URL.");
+}
+
+function validateDefaultProductionFixture(result, summary) {
+  if (result.exitCode !== 0) fail(`Default production jobs fixture exited ${result.exitCode}: ${firstFailure(result)}`);
+  if (summary.status !== "pass") fail("Default production jobs fixture did not report pass.");
+  if (summary.passed !== 2 || summary.failed !== 0) fail(`Default production jobs fixture expected 2 pass / 0 fail, got ${summary.passed} / ${summary.failed}.`);
+  if (!summary.sourceDefaulted) fail("Default production jobs fixture should report a defaulted source URL.");
+  if (summary.sourceProtocol !== "https") fail(`Default production jobs fixture expected HTTPS source protocol, got ${summary.sourceProtocol}.`);
+  if (summary.sourceHost !== "beta.quantgym.app") fail(`Default production jobs fixture source host mismatch: ${summary.sourceHost}.`);
+  if (summary.sourceTokenSet) fail("Default production jobs fixture should not require a token for the public ATS feed.");
 }
 
 function validateLiveFixtures(liveFixtures) {
@@ -514,6 +532,7 @@ function summarizeProductionFixture(result) {
     sourceConfigured: source.configured === true,
     sourceHost: source.host || "",
     sourceProtocol: source.protocol || "",
+    sourceDefaulted: source.defaulted === true,
     sourceTokenSet: source.tokenSet === true,
     cacheSeconds: Number(source.cacheSeconds || 0),
     timeoutSeconds: Number(source.timeoutSeconds || 0),

@@ -371,7 +371,7 @@ npm run check:jobs-feed:static
 npm run build:jobs-feed:publication-packet
 ```
 
-The checked-in static feed is copied into the Vite build as `/data/jobs/public-ats-feed.json`, with the beta URL expected at `https://beta.quantgym.app/data/jobs/public-ats-feed.json`. The publication packet is written under `artifacts/jobs-feed/publication-packet/` and includes a generated feed snapshot, feed SHA-256, source list, stable HTTPS hosting runbook, production env template, and live-signoff checklist. Set production `QUANTGYM_JOBS_SOURCE_URL` to the deployed beta/static feed URL or another stable HTTPS vendor feed, then run `npm run check:jobs-source:production -- --live`. The generator removes obvious non-role listings, preserves real posting URLs and published timestamps, and fails if the output lacks both internship and full-time roles.
+The checked-in static feed is copied into the Vite build as `/data/jobs/public-ats-feed.json`, with the beta URL expected at `https://beta.quantgym.app/data/jobs/public-ats-feed.json`. Production-like API deployments default to that public ATS feed when `QUANTGYM_JOBS_SOURCE_URL` is unset; set `QUANTGYM_JOBS_SOURCE_URL` only to override it with another stable HTTPS vendor feed. The publication packet is written under `artifacts/jobs-feed/publication-packet/` and includes a generated feed snapshot, feed SHA-256, source list, stable HTTPS hosting runbook, production env template, and live-signoff checklist. Run `npm run check:jobs-source:production -- --live` before deploy and `npm run check:jobs-api:deployed-source` after deploy. The generator removes obvious non-role listings, preserves real posting URLs and published timestamps, and fails if the output lacks both internship and full-time roles.
 
 When production alerting and edge rate limits are configured, validate that shape too:
 
@@ -504,6 +504,7 @@ npm run check:jobs-source
 npm run check:jobs-source:runtime-smoke
 npm run check:jobs-source:production-fixture
 npm run check:jobs-feed:static
+npm run check:jobs-api:deployed-source
 npm run build:jobs-feed:publication-packet
 npm run check:media-storage
 npm run check:media-storage:runtime-smoke
@@ -527,6 +528,7 @@ npm run check:jobs-source:production -- --live
 npm run check:jobs-source:runtime-smoke
 npm run check:jobs-source:production-fixture
 npm run check:jobs-feed:static
+npm run check:jobs-api:deployed-source
 npm run build:jobs-feed:publication-packet
 npm run check:media-storage:production-fixture
 npm run build:media-storage-packet

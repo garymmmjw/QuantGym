@@ -83,7 +83,40 @@ PROBLEM_CATALOG_PATH = Path(
     os.environ.get("QUANTGYM_PROBLEM_CATALOG", PROJECT_ROOT / "data" / "problem-catalog.json")
 )
 JOBS_CATALOG_PATH = Path(os.environ.get("QUANTGYM_JOBS_CATALOG", PROJECT_ROOT / "data" / "jobs-catalog.json"))
-JOBS_SOURCE_URL = os.environ.get("QUANTGYM_JOBS_SOURCE_URL", "").strip()
+DEFAULT_PUBLIC_ATS_JOBS_SOURCE_URL = "https://beta.quantgym.app/data/jobs/public-ats-feed.json"
+
+
+def is_truthy_env(value: str) -> bool:
+    return str(value or "").strip().lower() in {"1", "true", "yes", "on", "confirmed"}
+
+
+def is_disabled_env(value: str) -> bool:
+    return str(value or "").strip().lower() in {"0", "false", "off", "disabled", "none", "no"}
+
+
+def is_production_like_jobs_deployment() -> bool:
+    public_api_base = os.environ.get("QUANTGYM_PUBLIC_API_BASE_URL", "").strip().lower()
+    allowed_origins = os.environ.get("QUANTGYM_ALLOWED_ORIGINS", "").strip().lower()
+    return (
+        is_truthy_env(os.environ.get("QUANTGYM_JOBS_USE_DEFAULT_SOURCE", ""))
+        or is_truthy_env(os.environ.get("RENDER", ""))
+        or "https://api.quantgym.app" in public_api_base
+        or "https://beta.quantgym.app" in allowed_origins
+    )
+
+
+def resolve_jobs_source_url() -> str:
+    raw = os.environ.get("QUANTGYM_JOBS_SOURCE_URL")
+    if raw is not None:
+        value = raw.strip()
+        if is_disabled_env(value):
+            return ""
+        if value:
+            return value
+    return DEFAULT_PUBLIC_ATS_JOBS_SOURCE_URL if is_production_like_jobs_deployment() else ""
+
+
+JOBS_SOURCE_URL = resolve_jobs_source_url()
 JOBS_SOURCE_TOKEN = os.environ.get("QUANTGYM_JOBS_SOURCE_TOKEN", "").strip()
 JOBS_SOURCE_CACHE_SECONDS = int(os.environ.get("QUANTGYM_JOBS_SOURCE_CACHE_SECONDS", "300"))
 JOBS_SOURCE_TIMEOUT_SECONDS = float(os.environ.get("QUANTGYM_JOBS_SOURCE_TIMEOUT_SECONDS", "5"))
