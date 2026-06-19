@@ -1196,11 +1196,13 @@ function validateMediaStorageProductionFixtureSummary(data, expect, label) {
   expect(data.checks?.validProductionBucketRedacted === true, `${label} must redact bucket name from output`);
   expect(data.checks?.validProductionEndpointUrlRedacted === true, `${label} must redact full object endpoint URL from output`);
   expect(data.checks?.validProductionPublicBaseUrlRedacted === true, `${label} must redact full public base URL from output`);
-  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= 18, `${label} must include negative production fixtures`);
+  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= 20, `${label} must include negative production fixtures`);
   expect(data.checks?.negativeFixturesRejected === true, `${label} negative production fixtures must be rejected`);
   expect(data.checks?.negativeFixturesMentionExpectedErrors === true, `${label} negative fixtures must mention expected errors`);
   expect(data.checks?.endpointEmbeddedCredentialsRejected === true, `${label} must reject object endpoint URLs with embedded credentials`);
-  expect(data.checks?.publicBaseQueryRejected === true, `${label} must reject public media base URLs with query strings`);
+  expect(data.checks?.endpointQueryRejected === true, `${label} must reject object endpoint URLs with query strings or fragments`);
+  expect(data.checks?.publicBaseEmbeddedCredentialsRejected === true, `${label} must reject public media base URLs with embedded credentials`);
+  expect(data.checks?.publicBaseQueryRejected === true, `${label} must reject public media base URLs with query strings or fragments`);
   expect(data.checks?.placeholderAccessKeyRejected === true, `${label} must reject placeholder media access keys`);
   expect(data.checks?.shortSecretKeyRejected === true, `${label} must reject short media secret keys`);
   expect(data.checks?.unsafeBucketNameRejected === true, `${label} must reject unsafe media bucket names`);
@@ -2011,6 +2013,8 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   const media = findBlocker(data.blockers, "media-bucket-cdn");
   expect(media?.localCoverage?.liveFixturePass === true, `${label} must include media live fixture coverage`);
   expect(media?.localCoverage?.endpointEmbeddedCredentialsRejected === true, `${label} must include media endpoint credential rejection`);
+  expect(media?.localCoverage?.endpointQueryRejected === true, `${label} must include media endpoint query rejection`);
+  expect(media?.localCoverage?.publicBaseEmbeddedCredentialsRejected === true, `${label} must include media public-base credential rejection`);
   expect(media?.localCoverage?.publicBaseQueryRejected === true, `${label} must include media public-base query rejection`);
   expect(media?.localCoverage?.placeholderAccessKeyRejected === true, `${label} must include media placeholder access-key rejection`);
   expect(media?.localCoverage?.shortSecretKeyRejected === true, `${label} must include media short secret-key rejection`);

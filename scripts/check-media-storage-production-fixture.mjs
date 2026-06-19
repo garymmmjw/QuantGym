@@ -54,6 +54,11 @@ const negativeCases = [
     expectedError: "embedded credentials"
   },
   {
+    name: "endpoint query rejected",
+    env: { QUANTGYM_MEDIA_S3_ENDPOINT: "https://r2.quantgym.test?token=leaky" },
+    expectedError: "query strings or fragments"
+  },
+  {
     name: "missing public base rejected",
     env: { QUANTGYM_MEDIA_PUBLIC_BASE_URL: "" },
     expectedError: "QUANTGYM_MEDIA_PUBLIC_BASE_URL"
@@ -67,6 +72,11 @@ const negativeCases = [
     name: "private public base rejected",
     env: { QUANTGYM_MEDIA_PUBLIC_BASE_URL: "https://192.168.12.12/media" },
     expectedError: "private network address"
+  },
+  {
+    name: "public base embedded credentials rejected",
+    env: { QUANTGYM_MEDIA_PUBLIC_BASE_URL: "https://cdn:secret@media.quantgym.test/assets" },
+    expectedError: "embedded credentials"
   },
   {
     name: "public base query rejected",
@@ -158,6 +168,8 @@ try {
     negativeFixturesRejected: negativeFixtures.every((fixture) => fixture.rejected),
     negativeFixturesMentionExpectedErrors: negativeFixtures.every((fixture) => fixture.expectedErrorObserved),
     endpointEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "endpoint embedded credentials rejected")?.rejected === true,
+    endpointQueryRejected: findNegativeFixture(negativeFixtures, "endpoint query rejected")?.rejected === true,
+    publicBaseEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "public base embedded credentials rejected")?.rejected === true,
     publicBaseQueryRejected: findNegativeFixture(negativeFixtures, "public base query rejected")?.rejected === true,
     placeholderAccessKeyRejected: findNegativeFixture(negativeFixtures, "placeholder access key rejected")?.rejected === true,
     shortSecretKeyRejected: findNegativeFixture(negativeFixtures, "short secret key rejected")?.rejected === true,

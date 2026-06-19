@@ -376,7 +376,7 @@ Browser/CDP deep flows now recorded in
   proves the production gate accepts only object storage with HTTPS endpoint,
   redacted credentials, CDN/public URL, sane upload envelope, and safe timeout;
   it rejects local/HTTP/localhost/private-network/placeholder/raw-endpoint
-  cases, embedded endpoint credentials, query-bearing public base URLs,
+  cases, credential-bearing or query/fragment-bearing endpoint/public-base URLs,
   placeholder or short credentials, unsafe bucket names, and unsafe object
   prefixes, then runs the live smoke against fake S3/CDN servers, including
   cleanup after a simulated public CDN failure.

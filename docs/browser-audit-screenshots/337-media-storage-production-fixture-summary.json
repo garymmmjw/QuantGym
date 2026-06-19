@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 901,
+  "durationMs": 962,
   "productionFixture": {
     "status": "pass",
     "mode": "production",
@@ -57,6 +57,13 @@
       "error": "QUANTGYM_MEDIA_S3_ENDPOINT must not include embedded credentials."
     },
     {
+      "name": "endpoint query rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_S3_ENDPOINT must not include query strings or fragments."
+    },
+    {
       "name": "missing public base rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -76,6 +83,13 @@
       "expectedErrorObserved": true,
       "failed": 1,
       "error": "Production public media URL must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "public base embedded credentials rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_PUBLIC_BASE_URL must not include embedded credentials."
     },
     {
       "name": "public base query rejected",
@@ -247,6 +261,8 @@
     "negativeFixturesRejected": true,
     "negativeFixturesMentionExpectedErrors": true,
     "endpointEmbeddedCredentialsRejected": true,
+    "endpointQueryRejected": true,
+    "publicBaseEmbeddedCredentialsRejected": true,
     "publicBaseQueryRejected": true,
     "placeholderAccessKeyRejected": true,
     "shortSecretKeyRejected": true,
