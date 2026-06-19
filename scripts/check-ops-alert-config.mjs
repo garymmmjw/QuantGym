@@ -49,6 +49,7 @@ check("alert webhook shape", () => {
   const url = parseHttpUrl(config.alertWebhookUrl, "QUANTGYM_ALERT_WEBHOOK_URL");
   if (productionMode) {
     assert(url.protocol === "https:", "Production alert webhook URL must use HTTPS.");
+    assertNoUrlSecretParts("Production alert webhook URL", url);
     assert(!isLocalOrPrivateHost(url.hostname), "Production alert webhook URL must not point to localhost, loopback, or a private network address.");
     assert(config.alertWebhookToken, "Production alert webhook should set QUANTGYM_ALERT_WEBHOOK_TOKEN.");
     assertNoPlaceholder("QUANTGYM_ALERT_WEBHOOK_TOKEN", config.alertWebhookToken);
@@ -140,6 +141,7 @@ check("edge rate-limit signoff", () => {
   assertNoPlaceholder("QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL", config.edgeRateLimitEvidenceUrl);
   const evidenceUrl = parseHttpUrl(config.edgeRateLimitEvidenceUrl, "QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL");
   assert(evidenceUrl.protocol === "https:", "Production edge rate-limit evidence URL must use HTTPS.");
+  assertNoUrlSecretParts("Production edge rate-limit evidence URL", evidenceUrl);
   assert(!isLocalOrPrivateHost(evidenceUrl.hostname), "Production edge rate-limit evidence URL must not point to localhost, loopback, or a private network address.");
   return {
     required: true,
@@ -235,6 +237,11 @@ function assertStrongProductionToken(name, value) {
     text.length >= MIN_PRODUCTION_WEBHOOK_TOKEN_LENGTH,
     `${name} must be at least ${MIN_PRODUCTION_WEBHOOK_TOKEN_LENGTH} characters in production.`
   );
+}
+
+function assertNoUrlSecretParts(label, url) {
+  assert(!url.username && !url.password, `${label} must not include embedded credentials.`);
+  assert(!url.search && !url.hash, `${label} must not include query strings or fragments.`);
 }
 
 function parseHttpUrl(value, name) {
