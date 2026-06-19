@@ -153,6 +153,7 @@ try {
     ["community image post fallback and reload persistence", runCommunityMediaPostFlow],
     ["community video post fallback and reload persistence", runCommunityVideoPostFlow],
     ["community direct message from post opens messages thread", runCommunityDirectMessageFromPostFlow],
+    ["mobile community posting and messages controls avoid overflow", runMobileCommunityMessagesFlow],
     ["messages thread read, send, and reload persistence", runMessagesThreadFlow],
     ["messages multi-thread unread badges clear and persist read state", runMessagesMultiThreadUnreadFlow],
     ["experiences create, edit, share, delete, and reload persistence", runExperiencesRecordFlow],
@@ -4547,6 +4548,255 @@ async function expectCommunityDirectMessageThread(page, expected) {
       return false;
     }
   }, expected, { timeout: 10000 });
+}
+
+async function runMobileCommunityMessagesFlow(page, baseUrl) {
+  const result = { name: "mobile community posting and messages controls avoid overflow", status: "pass" };
+  const desktopViewport = { width: 1365, height: 900 };
+  const timestamp = Date.now();
+  const currentUserId = "local:browser-route-smoke";
+  const mentorId = `mentor:mobile-social-${timestamp}`;
+  const mentorName = `Mobile Social Mentor ${timestamp}`;
+  const mentorPostText = `Mobile social mentor post ${timestamp}`;
+  const selfPostText = `Mobile community post ${timestamp}`;
+  const commentText = `Mobile community comment ${timestamp}`;
+  const replyText = `Mobile message reply ${timestamp}`;
+  const introText = `${mentorName} 你好，我在论坛看到你的动态，想继续交流一下。`;
+  const threadId = `thread-${currentUserId}-${mentorId}`;
+
+  try {
+    result.step = "seed mobile community";
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/community`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#communityForm", { timeout: 10000 });
+    await page.evaluate(({ mentorId, mentorName, mentorPostText }) => {
+      const now = new Date().toISOString();
+      localStorage.setItem("quantMemoryBoard.community.v1", JSON.stringify({
+        posts: [{
+          id: `post:${mentorId}`,
+          kind: "update",
+          authorId: mentorId,
+          authorName: mentorName,
+          authorAvatar: "",
+          country: "unitedStates",
+          region: "New York",
+          text: mentorPostText,
+          media: null,
+          likes: [],
+          comments: [],
+          createdAt: now
+        }],
+        threads: []
+      }));
+    }, { mentorId, mentorName, mentorPostText });
+
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#communityList", { timeout: 10000 });
+    await expectMobileSocialState(page, { section: "community", minCards: 1 });
+
+    result.step = "post, like, and comment from mobile community";
+    await page.locator("#communityText").fill(selfPostText);
+    await page.locator("#communityForm").evaluate((form) => form.requestSubmit());
+    await page.waitForFunction((text) => {
+      const card = [...document.querySelectorAll(".community-card")]
+        .find((node) => node.textContent.includes(text));
+      return card && document.querySelector("#communityText")?.value === "";
+    }, selfPostText, { timeout: 10000 });
+    await expectMobileSocialState(page, { section: "community", minCards: 2 });
+
+    const selfCard = page.locator(".community-card", { hasText: selfPostText }).first();
+    await selfCard.locator(".community-actions button").filter({ hasText: /赞|Like|like/i }).first().click({ timeout: 10000 });
+    await selfCard.locator(".community-comment-form input").fill(commentText);
+    await selfCard.locator(".community-comment-form").evaluate((form) => form.requestSubmit());
+    await page.waitForFunction(({ selfPostText, commentText, currentUserId }) => {
+      try {
+        const card = [...document.querySelectorAll(".community-card")]
+          .find((node) => node.textContent.includes(selfPostText));
+        const cardText = card?.textContent || "";
+        const community = JSON.parse(localStorage.getItem("quantMemoryBoard.community.v1") || "{}");
+        const storedPost = Array.isArray(community.posts)
+          ? community.posts.find((item) => item.text === selfPostText)
+          : null;
+        return cardText.includes(commentText)
+          && /已赞|取消赞|Liked|Unlike/i.test(cardText)
+          && /-\s*1/.test(cardText)
+          && storedPost?.likes?.includes(currentUserId)
+          && storedPost?.comments?.some((comment) => comment.text === commentText);
+      } catch {
+        return false;
+      }
+    }, { selfPostText, commentText, currentUserId }, { timeout: 10000 });
+    await expectMobileSocialState(page, { section: "community", minCards: 2 });
+
+    result.step = "open mobile direct message";
+    const mentorCard = page.locator(".community-card", { hasText: mentorPostText }).first();
+    await mentorCard.waitFor({ state: "visible", timeout: 10000 });
+    await mentorCard.locator("button", { hasText: /私信|Message/i }).click({ timeout: 10000 });
+    await page.waitForURL(/\/messages$/, { timeout: 10000 });
+    await expectMobileSocialState(page, { section: "messages", minThreads: 1 });
+    await expectCommunityDirectMessageThread(page, {
+      authorName: mentorName,
+      introText,
+      replyText: "",
+      threadId,
+      unreadCleared: true
+    });
+
+    result.step = "reply and reload mobile messages";
+    await page.locator("#messageComposerInput").fill(replyText);
+    await page.locator("#messageComposerForm").evaluate((form) => form.requestSubmit());
+    await expectCommunityDirectMessageThread(page, {
+      authorName: mentorName,
+      introText,
+      replyText,
+      threadId,
+      unreadCleared: true
+    });
+    await expectMobileSocialState(page, { section: "messages", minThreads: 1 });
+
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#messageThreadList", { timeout: 10000 });
+    await expectCommunityDirectMessageThread(page, {
+      authorName: mentorName,
+      introText,
+      replyText,
+      threadId,
+      unreadCleared: true
+    });
+    await expectMobileSocialState(page, { section: "messages", minThreads: 1 });
+
+    delete result.step;
+    result.mobileViewport = true;
+    result.communityComposerUsable = true;
+    result.postLikeCommentPersisted = true;
+    result.directMessageNavigated = true;
+    result.messageReplyPersisted = true;
+    result.messageReloadPersisted = true;
+    result.noHorizontalOverflow = true;
+    result.threadId = threadId;
+    result.finalPath = new URL(page.url()).pathname;
+  } catch (error) {
+    result.status = "fail";
+    result.error = result.step ? `${result.step}: ${error.message}` : error.message;
+    result.diagnostics = await collectMobileSocialDiagnostics(page).catch((diagnosticError) => ({
+      error: diagnosticError?.message || String(diagnosticError)
+    }));
+    fail(`${result.name} failed: ${error.message}`);
+  } finally {
+    await page.setViewportSize(desktopViewport).catch(() => {});
+  }
+  return result;
+}
+
+async function expectMobileSocialState(page, expected = {}) {
+  await page.waitForFunction((values) => {
+    const rectFor = (node) => {
+      if (!node) return null;
+      const rect = node.getBoundingClientRect();
+      return {
+        left: rect.left,
+        right: rect.right,
+        width: rect.width,
+        height: rect.height
+      };
+    };
+    const visible = (node) => {
+      const rect = rectFor(node);
+      if (!rect) return false;
+      const style = window.getComputedStyle(node);
+      return style.display !== "none"
+        && style.visibility !== "hidden"
+        && Number(style.opacity || 1) !== 0
+        && rect.width > 0
+        && rect.height > 0
+        && rect.left >= -1
+        && rect.right <= window.innerWidth + 4;
+    };
+    const overflow = Math.max(
+      0,
+      document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      document.body.scrollWidth - document.documentElement.clientWidth
+    );
+    if (window.innerWidth > 430 || overflow > 4) return false;
+
+    if (values.section === "community") {
+      const controls = [
+        "#communitySummary",
+        "#communityForm",
+        "#communityText",
+        ".community-compose-actions .file-button",
+        ".community-compose-actions .primary-button",
+        '[data-community-filter="all"]',
+        '[data-community-filter="experience"]',
+        "#communityList"
+      ].map((selector) => document.querySelector(selector));
+      const cards = [...document.querySelectorAll("#communityList .community-card")];
+      return controls.every(visible)
+        && cards.length >= values.minCards
+        && cards.slice(0, Math.min(cards.length, 3)).every(visible)
+        && cards.slice(0, Math.min(cards.length, 3)).every((card) => (
+          visible(card.querySelector(".community-actions"))
+          && visible(card.querySelector(".community-comment-form"))
+        ));
+    }
+
+    if (values.section === "messages") {
+      const controls = [
+        "#messagesPageTitle",
+        "#messagesSummary",
+        "#messageThreadList",
+        ".message-thread-item",
+        "#messageConversationHeader",
+        "#messageConversationBody",
+        "#messageComposerForm",
+        "#messageComposerInput",
+        "#messageComposerForm button[type='submit']"
+      ].map((selector) => document.querySelector(selector));
+      const threads = [...document.querySelectorAll("#messageThreadList .message-thread-item")];
+      return controls.every(visible)
+        && threads.length >= values.minThreads
+        && threads.slice(0, Math.min(threads.length, 3)).every(visible);
+    }
+
+    return false;
+  }, expected, { timeout: 10000 });
+}
+
+async function collectMobileSocialDiagnostics(page) {
+  return page.evaluate(() => {
+    const rectFor = (selector) => {
+      const node = document.querySelector(selector);
+      if (!node) return null;
+      const rect = node.getBoundingClientRect();
+      return {
+        left: Math.round(rect.left),
+        right: Math.round(rect.right),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        text: (node.textContent || node.value || "").replace(/\s+/g, " ").trim().slice(0, 160)
+      };
+    };
+    return {
+      pathname: window.location.pathname,
+      width: window.innerWidth,
+      horizontalOverflowPx: Math.max(
+        0,
+        document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        document.body.scrollWidth - document.documentElement.clientWidth
+      ),
+      communityForm: rectFor("#communityForm"),
+      communityActions: rectFor(".community-compose-actions"),
+      communityFirstCard: rectFor("#communityList .community-card"),
+      messageLayout: rectFor(".messages-layout"),
+      messageThreadList: rectFor("#messageThreadList"),
+      messageFirstThread: rectFor("#messageThreadList .message-thread-item"),
+      messageConversation: rectFor(".message-conversation"),
+      messageComposer: rectFor("#messageComposerForm")
+    };
+  });
 }
 
 async function runMessagesThreadFlow(page, baseUrl) {

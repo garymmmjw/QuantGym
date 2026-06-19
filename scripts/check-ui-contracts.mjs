@@ -835,7 +835,7 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(Number(data.routes?.checked || 0) === routeIds.length, `${label} must check all routes`);
   expect(Number(data.routes?.passed || 0) === routeIds.length, `${label} route pass count must match all routes`);
   expect(Number(data.routes?.failed || 0) === 0, `${label} must have zero route failures`);
-  expect(Number(data.interactions?.checked || 0) >= 59, `${label} must check key interactions`);
+  expect(Number(data.interactions?.checked || 0) >= 60, `${label} must check key interactions`);
   expect(Number(data.interactions?.failed || 0) === 0, `${label} must have zero interaction failures`);
   const planInteraction = findResult(data.interactions?.results, "plan create, edit, task persistence, and navigation");
   expect(planInteraction?.status === "pass", `${label} must verify Plan create, edit, task persistence, and navigation`);
@@ -1051,6 +1051,15 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(communityDirectMessage?.openedMessages === true, `${label} must verify Community direct message navigates to Messages`);
   expect(communityDirectMessage?.threadPersisted === true, `${label} must verify Community direct message thread persistence`);
   expect(communityDirectMessage?.replyPersisted === true, `${label} must verify Community direct message reply persistence`);
+  const mobileSocial = findResult(data.interactions?.results, "mobile community posting and messages controls avoid overflow");
+  expect(mobileSocial?.status === "pass", `${label} must verify mobile Community and Messages controls`);
+  expect(mobileSocial?.mobileViewport === true, `${label} must verify mobile social viewport`);
+  expect(mobileSocial?.communityComposerUsable === true, `${label} must verify mobile Community composer usability`);
+  expect(mobileSocial?.postLikeCommentPersisted === true, `${label} must verify mobile Community post, like, and comment persistence`);
+  expect(mobileSocial?.directMessageNavigated === true, `${label} must verify mobile direct-message navigation`);
+  expect(mobileSocial?.messageReplyPersisted === true, `${label} must verify mobile Messages reply persistence`);
+  expect(mobileSocial?.messageReloadPersisted === true, `${label} must verify mobile Messages reload persistence`);
+  expect(mobileSocial?.noHorizontalOverflow === true, `${label} must verify mobile social flow has no horizontal overflow`);
   const messagesPersistence = findResult(data.interactions?.results, "messages thread read, send, and reload persistence");
   expect(messagesPersistence?.status === "pass", `${label} must verify Messages thread persistence`);
   const messagesMultiThreadUnread = findResult(data.interactions?.results, "messages multi-thread unread badges clear and persist read state");
@@ -1709,6 +1718,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.browserCommunityMediaPostPass === true, `${label} must verify the Community media post browser journey remains pass`);
   expect(data.checks?.browserCommunityVideoPostPass === true, `${label} must verify the Community video post browser journey remains pass`);
   expect(data.checks?.browserCommunityDirectMessagePass === true, `${label} must verify the Community direct-message browser journey remains pass`);
+  expect(data.checks?.browserMobileSocialControlsPass === true, `${label} must verify the mobile social browser journey remains pass`);
   expect(data.checks?.browserMemoryImageUploadPass === true, `${label} must verify the Memory image upload browser journey remains pass`);
   expect(data.checks?.browserToolsMentalMathCompletionPass === true, `${label} must verify the Tools mental math completion browser journey remains pass`);
   expect(data.checks?.browserToolsMarketGamePass === true, `${label} must verify the Tools market game browser journey remains pass`);
@@ -1789,7 +1799,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include question-bank evidence URL query rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
-  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 59, `${label} must reference the 59-interaction browser route smoke`);
+  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 60, `${label} must reference the 60-interaction browser route smoke`);
   expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
   expect(Number(browser?.localCoverage?.deployedBetaRoutesChecked || 0) >= 8, `${label} must include the eight-route deployed beta smoke`);
   expect(browser?.localCoverage?.deployedBetaRoutesPass === true, `${label} must include deployed beta route sweep coverage`);
@@ -1812,6 +1822,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.communityMediaPostPass === true, `${label} must include Community media post browser coverage`);
   expect(browser?.localCoverage?.communityVideoPostPass === true, `${label} must include Community video post browser coverage`);
   expect(browser?.localCoverage?.communityDirectMessagePass === true, `${label} must include Community direct-message browser coverage`);
+  expect(browser?.localCoverage?.mobileSocialControlsPass === true, `${label} must include mobile social browser coverage`);
   expect(browser?.localCoverage?.messagesMultiThreadUnreadPass === true, `${label} must include Messages multi-thread unread browser coverage`);
   expect(browser?.localCoverage?.memoryImageUploadPass === true, `${label} must include Memory image upload browser coverage`);
   expect(browser?.localCoverage?.toolsMentalMathCompletionPass === true, `${label} must include Tools mental math completion browser coverage`);

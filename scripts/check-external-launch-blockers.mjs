@@ -377,6 +377,20 @@ const blockers = [
         evidence.browserRouteSmoke.interactions?.results,
         "community direct message from post opens messages thread"
       )?.status === "pass",
+      mobileSocialControlsPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "mobile community posting and messages controls avoid overflow"
+        );
+        return item?.status === "pass"
+          && item.mobileViewport === true
+          && item.communityComposerUsable === true
+          && item.postLikeCommentPersisted === true
+          && item.directMessageNavigated === true
+          && item.messageReplyPersisted === true
+          && item.messageReloadPersisted === true
+          && item.noHorizontalOverflow === true;
+      })(),
       messagesMultiThreadUnreadPass: (() => {
         const item = findResult(
           evidence.browserRouteSmoke.interactions?.results,
@@ -658,6 +672,7 @@ const summary = {
     browserCommunityMediaPostPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.communityMediaPostPass === true,
     browserCommunityVideoPostPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.communityVideoPostPass === true,
     browserCommunityDirectMessagePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.communityDirectMessagePass === true,
+    browserMobileSocialControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileSocialControlsPass === true,
     browserMessagesMultiThreadUnreadPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.messagesMultiThreadUnreadPass === true,
     browserMemoryImageUploadPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.memoryImageUploadPass === true,
     browserToolsMentalMathCompletionPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.toolsMentalMathCompletionPass === true,
