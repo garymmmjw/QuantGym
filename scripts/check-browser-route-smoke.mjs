@@ -124,6 +124,7 @@ try {
     ["overview leaderboard controls and news ticker navigation", runOverviewLeaderboardAndTickerFlow],
     ["streak check-in calendar opens and persists activity", runStreakCheckInCalendarFlow],
     ["shell sidebar and command shortcuts persist navigation state", runShellSidebarAndCommandShortcutsFlow],
+    ["hash compat deep links redirect without losing query state", runHashCompatDeepLinkFlow],
     ["mobile shell sidebar, search, and settings controls avoid overflow", runMobileShellSidebarSearchAndSettingsFlow],
     ["mobile module nav groups open problems and library routes", runMobileModuleNavGroupRoutingFlow],
     ["skills radar hover and global search spotlight", runSkillsRadarAndGlobalSearchFlow],
@@ -846,6 +847,58 @@ async function runShellSidebarAndCommandShortcutsFlow(page, baseUrl) {
   return result;
 }
 
+async function runHashCompatDeepLinkFlow(page, baseUrl) {
+  const result = { name: "hash compat deep links redirect without losing query state", status: "pass" };
+  try {
+    result.step = "open legacy hash jobs deep link";
+    await page.goto(`${baseUrl}/?utm=browser-smoke#jobs`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForURL((url) => (
+      url.pathname === "/jobs"
+        && url.searchParams.get("utm") === "browser-smoke"
+        && !url.hash
+    ), { timeout: 10000 });
+    await page.waitForSelector("#jobsList .job-card", { timeout: 10000 });
+    const jobsHealth = await getRouteHealth(page);
+    if (jobsHealth.pathname !== "/jobs") throw new Error(`Hash jobs link landed on ${jobsHealth.pathname}`);
+    if (jobsHealth.authShellVisible || !jobsHealth.appShellVisible) {
+      throw new Error(`Hash jobs link shell visibility was wrong: ${JSON.stringify(jobsHealth)}`);
+    }
+
+    result.step = "switch legacy hash alias to overview";
+    await page.evaluate(() => {
+      window.location.hash = "dashboard";
+    });
+    await page.waitForURL((url) => (
+      url.pathname === "/"
+        && url.searchParams.get("utm") === "browser-smoke"
+        && !url.hash
+    ), { timeout: 10000 });
+    await page.waitForSelector("#heroTypewriter", { timeout: 10000 });
+    const overviewHealth = await getRouteHealth(page);
+    if (overviewHealth.pathname !== "/") throw new Error(`Hash dashboard alias landed on ${overviewHealth.pathname}`);
+    if (overviewHealth.authShellVisible || !overviewHealth.appShellVisible) {
+      throw new Error(`Hash dashboard alias shell visibility was wrong: ${JSON.stringify(overviewHealth)}`);
+    }
+
+    delete result.step;
+    result.jobsPathname = "/jobs";
+    result.overviewAliasPathname = "/";
+    result.queryPreserved = true;
+    result.hashCleared = true;
+    result.jobsRendered = true;
+    result.overviewRendered = true;
+  } catch (error) {
+    result.status = "fail";
+    result.error = error.message;
+    result.diagnostics = await collectHashCompatDiagnostics(page).catch((diagnosticError) => ({
+      error: diagnosticError.message
+    }));
+    fail(`${result.name} failed: ${error.message}`);
+  }
+  return result;
+}
+
 async function runMobileShellSidebarSearchAndSettingsFlow(page, baseUrl) {
   const result = { name: "mobile shell sidebar, search, and settings controls avoid overflow", status: "pass" };
   const desktopViewport = { width: 1365, height: 900 };
@@ -1099,6 +1152,20 @@ async function collectShellDiagnostics(page) {
       prefs
     };
   });
+}
+
+async function collectHashCompatDiagnostics(page) {
+  return page.evaluate(() => ({
+    href: window.location.href,
+    pathname: window.location.pathname,
+    search: window.location.search,
+    hash: window.location.hash,
+    appShellVisible: Boolean(document.querySelector("#appShell:not(.hidden)")),
+    authShellVisible: Boolean(document.querySelector("#authShell:not(.hidden)")),
+    jobsListVisible: Boolean(document.querySelector("#jobsList")),
+    overviewVisible: Boolean(document.querySelector("#heroTypewriter")),
+    bodyTextLength: (document.body?.innerText || "").trim().length
+  }));
 }
 
 async function resetStreakAndTodoState(page) {

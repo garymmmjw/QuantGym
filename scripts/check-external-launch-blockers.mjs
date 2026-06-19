@@ -439,6 +439,19 @@ const blockers = [
           && item.accountShortcut === true
           && item.settingsShortcut === true;
       })(),
+      hashCompatDeepLinkPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "hash compat deep links redirect without losing query state"
+        );
+        return item?.status === "pass"
+          && item.jobsPathname === "/jobs"
+          && item.overviewAliasPathname === "/"
+          && item.queryPreserved === true
+          && item.hashCleared === true
+          && item.jobsRendered === true
+          && item.overviewRendered === true;
+      })(),
       mobileShellControlsPass: (() => {
         const item = findResult(
           evidence.browserRouteSmoke.interactions?.results,
@@ -626,6 +639,7 @@ const summary = {
     browserOverviewLeaderboardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.overviewLeaderboardPass === true,
     browserStreakCheckInCalendarPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.streakCheckInCalendarPass === true,
     browserShellGlobalControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.shellGlobalControlsPass === true,
+    browserHashCompatDeepLinkPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.hashCompatDeepLinkPass === true,
     browserMobileShellControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileShellControlsPass === true,
     browserMobileModuleNavPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileModuleNavPass === true,
     browserSettingsRuntimeConfigPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsRuntimeConfigPass === true,
