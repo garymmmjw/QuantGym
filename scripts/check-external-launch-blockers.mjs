@@ -39,6 +39,7 @@ const evidence = {
   rightsPacket: readJson("docs/browser-audit-screenshots/345-question-bank-rights-packet-summary.json", "question-bank rights approval packet"),
   browserRouteSmoke: readJson("docs/browser-audit-screenshots/328-browser-route-smoke-summary.json", "browser route smoke"),
   deployedBetaSmoke: readJson("docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json", "deployed beta smoke"),
+  deployedBetaMobileContentSmoke: readJson("docs/browser-audit-screenshots/352-deployed-beta-mobile-content-smoke-summary.json", "deployed beta mobile content smoke"),
   releaseReadiness: skipReleaseSummaryContent
     ? { results: [] }
     : readJson("docs/browser-audit-screenshots/323-release-readiness-summary.json", "release readiness")
@@ -60,7 +61,8 @@ const requiredScripts = [
   "check:question-bank-rights:commercial",
   "build:question-bank-rights-packet",
   "check:browser-route-smoke",
-  "check:deployed-beta-smoke"
+  "check:deployed-beta-smoke",
+  "check:deployed-beta-mobile-content-smoke"
 ];
 
 for (const name of requiredScripts) {
@@ -260,6 +262,22 @@ const blockers = [
         && evidence.deployedBetaSmoke.checks?.noRequestFailures === true
         && evidence.deployedBetaSmoke.checks?.noHttpErrors === true,
       deployedBetaSummaryRedactedPass: evidence.deployedBetaSmoke.checks?.summaryRedacted === true,
+      deployedBetaMobileContentPass: evidence.deployedBetaMobileContentSmoke.status === "pass",
+      deployedBetaMobileContentCheckpointPass: Number(evidence.deployedBetaMobileContentSmoke.checkpoints?.length || 0) === 9
+        && evidence.deployedBetaMobileContentSmoke.checks?.checkpointCountPass === true
+        && evidence.deployedBetaMobileContentSmoke.checks?.allExpectedCheckpointsPresent === true,
+      deployedBetaMobileContentExperiencePass: evidence.deployedBetaMobileContentSmoke.checks?.experienceSaved === true
+        && evidence.deployedBetaMobileContentSmoke.checks?.experienceFilterUsable === true
+        && evidence.deployedBetaMobileContentSmoke.checks?.experienceSharedToCommunity === true,
+      deployedBetaMobileContentNewsPass: evidence.deployedBetaMobileContentSmoke.checks?.newsSubmitted === true
+        && evidence.deployedBetaMobileContentSmoke.checks?.newsFiltersUsable === true
+        && evidence.deployedBetaMobileContentSmoke.checks?.newsDetailReadPersisted === true,
+      deployedBetaMobileContentErrorSweepPass: evidence.deployedBetaMobileContentSmoke.checks?.noMaterialConsoleErrors === true
+        && evidence.deployedBetaMobileContentSmoke.checks?.noPageErrors === true
+        && evidence.deployedBetaMobileContentSmoke.checks?.noRequestFailures === true
+        && evidence.deployedBetaMobileContentSmoke.checks?.noHttpErrors === true
+        && evidence.deployedBetaMobileContentSmoke.checks?.noHorizontalOverflow === true,
+      deployedBetaMobileContentSummaryRedactedPass: evidence.deployedBetaMobileContentSmoke.checks?.summaryRedacted === true,
       authPasswordResetPass: evidence.browserRouteSmoke.unauthenticated?.localEmailAuth?.resetNewPasswordLoginSucceeded === true,
       crossModuleJourneyPass: findResult(
         evidence.browserRouteSmoke.interactions?.results,
@@ -671,6 +689,12 @@ const summary = {
     browserDeployedBetaLoginPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaLoginPass === true,
     browserDeployedBetaRouteSweepPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaRoutesPass === true,
     browserDeployedBetaErrorSweepPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaErrorSweepPass === true,
+    browserDeployedBetaMobileContentPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentPass === true,
+    browserDeployedBetaMobileContentCheckpointPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentCheckpointPass === true,
+    browserDeployedBetaMobileContentExperiencePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentExperiencePass === true,
+    browserDeployedBetaMobileContentNewsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentNewsPass === true,
+    browserDeployedBetaMobileContentErrorSweepPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentErrorSweepPass === true,
+    browserDeployedBetaMobileContentSummaryRedactedPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentSummaryRedactedPass === true,
     browserAuthPasswordResetPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.authPasswordResetPass === true,
     browserCrossModuleJourneyPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.crossModuleJourneyPass === true,
     browserPlanBaselineDiagnosticPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.planBaselineDiagnosticPass === true,

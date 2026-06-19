@@ -333,6 +333,7 @@ const evidenceArtifacts = [
   "332-browser-extension-runtime-smoke-summary.json",
   "333-production-boundaries-deployed-services-summary.json",
   "351-deployed-beta-smoke-summary.json",
+  "352-deployed-beta-mobile-content-smoke-summary.json",
   "334-ops-alert-runtime-smoke-summary.json",
   "335-question-bank-rights-public-smoke-summary.json",
   "336-ops-alert-production-fixture-summary.json",
@@ -800,6 +801,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       break;
     case "351-deployed-beta-smoke-summary.json":
       validateDeployedBetaSmokeSummary(data, expect, "deployed beta smoke");
+      break;
+    case "352-deployed-beta-mobile-content-smoke-summary.json":
+      validateDeployedBetaMobileContentSmokeSummary(data, expect, "deployed beta mobile content smoke");
       break;
     case "334-ops-alert-runtime-smoke-summary.json":
       validateOpsAlertRuntimeSmokeSummary(data, expect, "ops alert runtime smoke");
@@ -1633,6 +1637,70 @@ function validateDeployedBetaSmokeSummary(data, expect, label) {
   expect(data.checks?.noHttpErrors === true, `${label} noHttpErrors check must pass`);
 }
 
+function validateDeployedBetaMobileContentSmokeSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.surface === "deployed beta mobile content smoke", `${label} surface must match`);
+  expect(data.baseUrl === "https://beta.quantgym.app", `${label} must target beta.quantgym.app`);
+  expect(data.authMode === "isolated local browser state", `${label} must avoid mutating a real beta account`);
+  expect(Number(data.viewport?.width || 0) <= 430, `${label} must run in a mobile viewport`);
+  expect(Number(data.viewport?.height || 0) >= 700, `${label} must use a realistic mobile viewport height`);
+  const raw = JSON.stringify(data);
+  expect(!/"password"\s*:/i.test(raw), `${label} must not include password fields`);
+  expect(!/[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/.test(raw), `${label} must not include raw JWT/session tokens`);
+
+  expect(data.config?.cloudApiEndpoint === "https://api.quantgym.app/api", `${label} runtime config must use production API endpoint`);
+  expect(data.config?.llmEndpoint === "https://llm.quantgym.app/interview", `${label} runtime config must use production LLM endpoint`);
+  expect(data.config?.googleLoginEnabled === true, `${label} runtime config must enable Google login`);
+  expect(data.config?.googleClientIdSet === true, `${label} runtime config must include Google client id`);
+
+  const expectedLabels = [
+    "experiences-open",
+    "experiences-filtered",
+    "experiences-share-confirm",
+    "community-after-share",
+    "news-open",
+    "news-form",
+    "news-filtered",
+    "news-detail",
+    "news-reload-read"
+  ];
+  expect(Array.isArray(data.checkpoints) && data.checkpoints.length === expectedLabels.length, `${label} must record nine mobile checkpoints`);
+  for (const checkpoint of data.checkpoints || []) {
+    expect(expectedLabels.includes(checkpoint.label), `${label} contains unexpected checkpoint ${checkpoint.label}`);
+    expect(Number(checkpoint.width || 0) <= 430, `${label} checkpoint ${checkpoint.label} must use mobile width`);
+    expect(Number(checkpoint.overflow || 0) <= 4, `${label} checkpoint ${checkpoint.label} must avoid horizontal overflow`);
+    expect(Array.isArray(checkpoint.missing) && checkpoint.missing.length === 0, `${label} checkpoint ${checkpoint.label} must have no missing selectors`);
+    expect(typeof checkpoint.path === "string" && checkpoint.path.startsWith("/"), `${label} checkpoint ${checkpoint.label} must record a path`);
+  }
+  for (const expectedLabel of expectedLabels) {
+    expect((data.checkpoints || []).some((checkpoint) => checkpoint.label === expectedLabel), `${label} must include checkpoint ${expectedLabel}`);
+  }
+
+  expect(Boolean(data.recordId), `${label} must record the saved mobile experience id`);
+  expect(Boolean(data.newsId), `${label} must record the saved mobile news id`);
+  expect(data.finalPath === "/news", `${label} final path must return to News after reload persistence`);
+  expect(data.checks?.appShellVisible === true, `${label} app shell check must pass`);
+  expect(data.checks?.configUsesProductionEndpoints === true, `${label} production runtime config check must pass`);
+  expect(data.checks?.checkpointCountPass === true, `${label} checkpoint count check must pass`);
+  expect(data.checks?.allExpectedCheckpointsPresent === true, `${label} all expected checkpoint check must pass`);
+  expect(data.checks?.experienceSaved === true, `${label} must verify mobile Experiences save`);
+  expect(data.checks?.experienceFilterUsable === true, `${label} must verify mobile Experiences filter`);
+  expect(data.checks?.experienceSharedToCommunity === true, `${label} must verify mobile Experiences community share`);
+  expect(data.checks?.newsSubmitted === true, `${label} must verify mobile News submit`);
+  expect(data.checks?.newsFiltersUsable === true, `${label} must verify mobile News filters`);
+  expect(data.checks?.newsDetailReadPersisted === true, `${label} must verify mobile News detail read persistence`);
+  expect(data.checks?.noHorizontalOverflow === true, `${label} no-horizontal-overflow check must pass`);
+  expect(data.checks?.noMaterialConsoleErrors === true, `${label} must have no material console errors`);
+  expect(data.checks?.noPageErrors === true, `${label} must have no page errors`);
+  expect(data.checks?.noRequestFailures === true, `${label} must have no material request failures`);
+  expect(data.checks?.noHttpErrors === true, `${label} must have no material HTTP errors`);
+  expect(data.checks?.summaryRedacted === true, `${label} summaryRedacted check must pass`);
+  expect(Array.isArray(data.errors?.consoleErrors) && data.errors.consoleErrors.length === 0, `${label} console errors must be empty`);
+  expect(Array.isArray(data.errors?.pageErrors) && data.errors.pageErrors.length === 0, `${label} page errors must be empty`);
+  expect(Array.isArray(data.errors?.requestFailures) && data.errors.requestFailures.length === 0, `${label} request failures must be empty`);
+  expect(Array.isArray(data.errors?.httpErrors) && data.errors.httpErrors.length === 0, `${label} HTTP errors must be empty`);
+}
+
 function expectCountForProductionBoundary(data, expect, field, expected, label) {
   expect(Number(data[field]) === expected, `${label} ${field} count expected ${expected}, got ${data[field]}`);
 }
@@ -1712,6 +1780,12 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.browserDeployedBetaLoginPass === true, `${label} must verify the deployed beta smoke login remains pass`);
   expect(data.checks?.browserDeployedBetaRouteSweepPass === true, `${label} must verify the deployed beta smoke route sweep remains pass`);
   expect(data.checks?.browserDeployedBetaErrorSweepPass === true, `${label} must verify the deployed beta smoke error sweep remains pass`);
+  expect(data.checks?.browserDeployedBetaMobileContentPass === true, `${label} must verify the deployed beta mobile content smoke remains pass`);
+  expect(data.checks?.browserDeployedBetaMobileContentCheckpointPass === true, `${label} must verify the deployed beta mobile content checkpoints`);
+  expect(data.checks?.browserDeployedBetaMobileContentExperiencePass === true, `${label} must verify the deployed beta mobile Experiences flow`);
+  expect(data.checks?.browserDeployedBetaMobileContentNewsPass === true, `${label} must verify the deployed beta mobile News flow`);
+  expect(data.checks?.browserDeployedBetaMobileContentErrorSweepPass === true, `${label} must verify the deployed beta mobile content error sweep`);
+  expect(data.checks?.browserDeployedBetaMobileContentSummaryRedactedPass === true, `${label} must verify the deployed beta mobile content summary is redacted`);
   expect(data.checks?.browserAuthPasswordResetPass === true, `${label} must verify the Auth password reset browser journey remains pass`);
   expect(data.checks?.browserCrossModuleJourneyPass === true, `${label} must verify the cross-module browser journey remains pass`);
   expect(data.checks?.browserPlanBaselineDiagnosticPass === true, `${label} must verify the Plan baseline diagnostic browser journey remains pass`);
@@ -1817,6 +1891,12 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.deployedBetaProductionEndpointPass === true, `${label} must include deployed beta production endpoint coverage`);
   expect(browser?.localCoverage?.deployedBetaErrorSweepPass === true, `${label} must include deployed beta error sweep coverage`);
   expect(browser?.localCoverage?.deployedBetaSummaryRedactedPass === true, `${label} must include deployed beta summary redaction coverage`);
+  expect(browser?.localCoverage?.deployedBetaMobileContentPass === true, `${label} must include deployed beta mobile content coverage`);
+  expect(browser?.localCoverage?.deployedBetaMobileContentCheckpointPass === true, `${label} must include deployed beta mobile content checkpoint coverage`);
+  expect(browser?.localCoverage?.deployedBetaMobileContentExperiencePass === true, `${label} must include deployed beta mobile Experiences coverage`);
+  expect(browser?.localCoverage?.deployedBetaMobileContentNewsPass === true, `${label} must include deployed beta mobile News coverage`);
+  expect(browser?.localCoverage?.deployedBetaMobileContentErrorSweepPass === true, `${label} must include deployed beta mobile content error sweep coverage`);
+  expect(browser?.localCoverage?.deployedBetaMobileContentSummaryRedactedPass === true, `${label} must include deployed beta mobile content redaction coverage`);
   expect(browser?.localCoverage?.authPasswordResetPass === true, `${label} must include Auth password reset browser coverage`);
   expect(browser?.localCoverage?.planBaselineDiagnosticPass === true, `${label} must include Plan baseline diagnostic browser coverage`);
   expect(browser?.localCoverage?.todoDockLifecyclePass === true, `${label} must include Todo dock lifecycle browser coverage`);
