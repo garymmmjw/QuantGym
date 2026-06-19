@@ -165,6 +165,7 @@ try {
     ["mobile resume review controls avoid overflow", runMobileResumeReviewFlow],
     ["jobs filter and apply link behavior", runJobsFilterAndLinkFlow],
     ["companies tier filter, practice navigation, and careers link behavior", runCompaniesTierPracticeAndCareersFlow],
+    ["mobile career jobs and companies controls avoid overflow", runMobileCareerJobsCompaniesFlow],
     ["library search, kind filter, practice navigation, and reader guard", runLibrarySearchPracticeAndReaderGuardFlow],
     ["library cloud PDF reader opens, exposes links, and closes", runLibraryCloudPdfReaderFlow],
     ["cross-module prep journey persists library, problem, todo, resume, and settings state", runCrossModulePrepJourneyFlow],
@@ -5911,6 +5912,149 @@ async function runCompaniesTierPracticeAndCareersFlow(page, baseUrl) {
   return result;
 }
 
+async function runMobileCareerJobsCompaniesFlow(page, baseUrl) {
+  const result = { name: "mobile career jobs and companies controls avoid overflow", status: "pass" };
+  const desktopViewport = { width: 1365, height: 900 };
+  const internshipIds = [
+    "job-jane-street-quant-intern",
+    "job-citadel-securities-intern",
+    "job-optiver-trading-intern"
+  ];
+  const fulltimeIds = [
+    "job-imc-quant-trader",
+    "job-drw-researcher",
+    "job-jump-trading-campus"
+  ];
+  const sTierIds = ["jane-street", "citadel", "hrt", "two-sigma", "de-shaw"];
+  const aTierIds = ["optiver", "imc", "drw", "jump-trading", "virtu", "sig", "five-rings"];
+  const bTierIds = ["akuna"];
+
+  try {
+    result.step = "open mobile jobs";
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${baseUrl}/jobs`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#jobsList .job-card", { timeout: 10000 });
+    await expectMobileCareerState(page, { section: "jobs", minCards: internshipIds.length + fulltimeIds.length });
+    await expectJobCardsContaining(page, [...internshipIds, ...fulltimeIds]);
+
+    result.step = "filter mobile internship jobs";
+    await page.locator('[data-job-filter="internship"]').click({ timeout: 10000 });
+    await expectJobFilterSelected(page, "internship");
+    await expectJobFilterResult(page, {
+      includeIds: internshipIds,
+      excludeIds: fulltimeIds,
+      typePattern: /实习|Internship/i
+    });
+    await expectMobileCareerState(page, { section: "jobs", minCards: internshipIds.length });
+
+    result.step = "filter mobile full-time jobs";
+    await page.locator('[data-job-filter="fulltime"]').click({ timeout: 10000 });
+    await expectJobFilterSelected(page, "fulltime");
+    await expectJobFilterResult(page, {
+      includeIds: fulltimeIds,
+      excludeIds: internshipIds,
+      typePattern: /全职|Full-?time/i
+    });
+    await expectMobileCareerState(page, { section: "jobs", minCards: fulltimeIds.length });
+
+    result.step = "open mobile job apply link";
+    const firstFulltimeId = fulltimeIds[0];
+    const applyLink = page.locator(`[data-job-id="${firstFulltimeId}"] .content-card-link`).first();
+    const linkAttrs = await applyLink.evaluate((link) => ({
+      href: link.getAttribute("href") || "",
+      target: link.getAttribute("target") || "",
+      rel: link.getAttribute("rel") || ""
+    }));
+    if (!/^https:\/\/www\.imc\.com\/us\/careers\/jobs\/?$/.test(linkAttrs.href)) {
+      throw new Error(`Unexpected mobile apply link href: ${linkAttrs.href}`);
+    }
+    if (linkAttrs.target !== "_blank") throw new Error(`Mobile apply link target is not _blank: ${linkAttrs.target}`);
+    if (linkAttrs.rel !== "noreferrer") throw new Error(`Mobile apply link rel is not noreferrer: ${linkAttrs.rel}`);
+    await page.evaluate(() => {
+      window.__quantgymOpenedUrls = [];
+      window.open = (url, target, features) => {
+        window.__quantgymOpenedUrls.push({ url: String(url || ""), target: String(target || ""), features: String(features || "") });
+        return null;
+      };
+    });
+    await page.locator(`[data-job-id="${firstFulltimeId}"] h3`).click({ timeout: 10000 });
+    const openedJob = await page.waitForFunction(() => window.__quantgymOpenedUrls?.length > 0, null, { timeout: 10000 })
+      .then((handle) => handle.evaluate(() => window.__quantgymOpenedUrls[0]));
+    if (openedJob.url !== linkAttrs.href) throw new Error(`Mobile job card opened ${openedJob.url} instead of ${linkAttrs.href}`);
+    if (openedJob.target !== "_blank") throw new Error(`Mobile job card target is not _blank: ${openedJob.target}`);
+    if (!openedJob.features.includes("noopener") || !openedJob.features.includes("noreferrer")) {
+      throw new Error(`Mobile job card open features are unsafe: ${openedJob.features}`);
+    }
+
+    result.step = "open mobile companies";
+    await page.goto(`${baseUrl}/companies`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#companyOverviewList .company-overview-card", { timeout: 10000 });
+    await expectMobileCareerState(page, { section: "companies", minCards: sTierIds.length + aTierIds.length + bTierIds.length });
+    await expectCompanyCardsContaining(page, [...sTierIds, ...aTierIds, ...bTierIds]);
+    await expectCompanyTierSelected(page, "all");
+
+    result.step = "filter mobile Tier S companies";
+    await page.locator('[data-company-tier="s"]').click({ timeout: 10000 });
+    await expectCompanyTierSelected(page, "s");
+    await expectCompanyFilterResult(page, { includeIds: sTierIds, excludeIds: [...aTierIds, ...bTierIds] });
+    await expectMobileCareerState(page, { section: "companies", minCards: sTierIds.length });
+
+    result.step = "open mobile company careers";
+    const careersButton = page.locator('[data-company-card="jane-street"] [data-company-careers]').first();
+    const careersUrl = await careersButton.getAttribute("data-company-careers");
+    if (!/^https:\/\/www\.janestreet\.com\/join-jane-street\/open-roles\/?$/.test(careersUrl || "")) {
+      throw new Error(`Unexpected mobile Jane Street careers URL: ${careersUrl}`);
+    }
+    await page.evaluate(() => {
+      window.__quantgymOpenedUrls = [];
+      window.open = (url, target, features) => {
+        window.__quantgymOpenedUrls.push({ url: String(url || ""), target: String(target || ""), features: String(features || "") });
+        return null;
+      };
+    });
+    await careersButton.click({ timeout: 10000 });
+    const openedCareers = await page.waitForFunction(() => window.__quantgymOpenedUrls?.length > 0, null, { timeout: 10000 })
+      .then((handle) => handle.evaluate(() => window.__quantgymOpenedUrls[0]));
+    if (openedCareers.url !== careersUrl) throw new Error(`Mobile careers button opened ${openedCareers.url} instead of ${careersUrl}`);
+    if (openedCareers.target !== "_blank") throw new Error(`Mobile careers button target is not _blank: ${openedCareers.target}`);
+    if (!openedCareers.features.includes("noopener") || !openedCareers.features.includes("noreferrer")) {
+      throw new Error(`Mobile careers open features are unsafe: ${openedCareers.features}`);
+    }
+
+    result.step = "mobile company practice navigation";
+    await page.locator('[data-company-card="jane-street"] [data-company-practice="jane-street"]').click({ timeout: 10000 });
+    await page.waitForURL(/\/problems$/, { timeout: 10000 });
+    await page.waitForSelector('#problemCompanyList [data-problem-company="jane-street"]', { timeout: 10000 });
+    await expectCompanyPracticeFilter(page, "jane-street", "Jane Street");
+    await expectMobileCareerState(page, { section: "problems", minCards: 1 });
+
+    delete result.step;
+    result.mobileViewport = true;
+    result.jobsFilterUsable = true;
+    result.jobApplyLinkSafe = true;
+    result.companiesFilterUsable = true;
+    result.companyCareersLinkSafe = true;
+    result.companyPracticeNavigated = true;
+    result.noHorizontalOverflow = true;
+    result.openedJobUrl = openedJob.url;
+    result.openedCareersUrl = openedCareers.url;
+    result.practicePath = new URL(page.url()).pathname;
+    result.practiceCompany = "jane-street";
+  } catch (error) {
+    result.status = "fail";
+    result.error = result.step ? `${result.step}: ${error.message}` : error.message;
+    result.diagnostics = await collectMobileCareerDiagnostics(page).catch((diagnosticError) => ({
+      error: diagnosticError?.message || String(diagnosticError)
+    }));
+    fail(`${result.name} failed: ${error.message}`);
+  } finally {
+    await page.setViewportSize(desktopViewport).catch(() => {});
+  }
+  return result;
+}
+
 async function expectCompanyCardsContaining(page, expectedIds) {
   await page.waitForFunction((ids) => {
     const actual = [...document.querySelectorAll("#companyOverviewList [data-company-card]")]
@@ -5953,6 +6097,120 @@ async function expectCompanyPracticeFilter(page, companySlug, companyName) {
       && cards.length > 0
     && cardsWithCompany.length >= Math.max(1, Math.floor(cards.length * 0.8));
   }, { slug: companySlug, name: companyName }, { timeout: 10000 });
+}
+
+async function expectMobileCareerState(page, expected = {}) {
+  await page.waitForFunction((values) => {
+    const rectFor = (node) => {
+      if (!node) return null;
+      const rect = node.getBoundingClientRect();
+      return {
+        left: rect.left,
+        right: rect.right,
+        width: rect.width,
+        height: rect.height,
+        top: rect.top,
+        bottom: rect.bottom
+      };
+    };
+    const visible = (node) => {
+      const rect = rectFor(node);
+      if (!rect) return false;
+      const style = window.getComputedStyle(node);
+      return style.display !== "none"
+        && style.visibility !== "hidden"
+        && Number(style.opacity || 1) !== 0
+        && rect.width > 0
+        && rect.height > 0
+        && rect.left >= -1
+        && rect.right <= window.innerWidth + 4;
+    };
+    const documentElement = document.documentElement;
+    const overflow = Math.max(0, documentElement.scrollWidth - documentElement.clientWidth);
+    if (window.innerWidth > 430 || overflow > 4) return false;
+
+    if (values.section === "jobs") {
+      const controls = [
+        "#jobsSummary",
+        '[data-job-filter="all"]',
+        '[data-job-filter="internship"]',
+        '[data-job-filter="fulltime"]',
+        "#refreshJobsBtn"
+      ].map((selector) => document.querySelector(selector));
+      const cards = [...document.querySelectorAll("#jobsList .job-card")];
+      return controls.every(visible)
+        && cards.length >= values.minCards
+        && cards.slice(0, Math.min(cards.length, 4)).every(visible)
+        && cards.slice(0, Math.min(cards.length, 4)).every((card) => visible(card.querySelector(".content-card-link")));
+    }
+
+    if (values.section === "companies") {
+      const controls = [
+        "#companiesPageTitle",
+        "#companiesSummary",
+        '[data-company-tier="all"]',
+        '[data-company-tier="s"]',
+        '[data-company-tier="a"]',
+        '[data-company-tier="b"]'
+      ].map((selector) => document.querySelector(selector));
+      const cards = [...document.querySelectorAll("#companyOverviewList [data-company-card]")];
+      const firstCard = cards[0];
+      return controls.every(visible)
+        && cards.length >= values.minCards
+        && cards.slice(0, Math.min(cards.length, 4)).every(visible)
+        && (!firstCard || (
+          visible(firstCard.querySelector("[data-company-practice]"))
+          && visible(firstCard.querySelector("[data-company-careers]"))
+        ));
+    }
+
+    if (values.section === "problems") {
+      const controls = [
+        "#problemSearch",
+        "#problemCompanyList",
+        '[data-problem-company="jane-street"]',
+        "#problemCompanyClearBtn"
+      ].map((selector) => document.querySelector(selector));
+      const cards = [...document.querySelectorAll("#problemList .problem-card")];
+      return controls.every(visible)
+        && cards.length >= values.minCards
+        && cards.slice(0, Math.min(cards.length, 4)).every(visible);
+    }
+
+    return false;
+  }, expected, { timeout: 10000 });
+}
+
+async function collectMobileCareerDiagnostics(page) {
+  return page.evaluate(() => {
+    const rectFor = (selector) => {
+      const node = document.querySelector(selector);
+      if (!node) return null;
+      const rect = node.getBoundingClientRect();
+      return {
+        left: Math.round(rect.left),
+        right: Math.round(rect.right),
+        width: Math.round(rect.width),
+        height: Math.round(rect.height),
+        text: (node.textContent || node.value || "").replace(/\s+/g, " ").trim().slice(0, 160)
+      };
+    };
+    return {
+      pathname: window.location.pathname,
+      url: window.location.href,
+      width: window.innerWidth,
+      horizontalOverflowPx: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      jobCards: document.querySelectorAll("#jobsList .job-card").length,
+      companyCards: document.querySelectorAll("#companyOverviewList [data-company-card]").length,
+      problemCards: document.querySelectorAll("#problemList .problem-card").length,
+      jobsSummary: rectFor("#jobsSummary"),
+      jobFilters: rectFor(".view-tabs"),
+      jobsList: rectFor("#jobsList"),
+      companyTierFilter: rectFor("#companyTierFilter"),
+      companyList: rectFor("#companyOverviewList"),
+      problemCompanyList: rectFor("#problemCompanyList")
+    };
+  });
 }
 
 async function runLibrarySearchPracticeAndReaderGuardFlow(page, baseUrl) {

@@ -178,7 +178,7 @@
       "localCoverage": {
         "browserRouteSmokePass": true,
         "routesChecked": 21,
-        "interactionsChecked": 58,
+        "interactionsChecked": 59,
         "deployedBetaSmokePass": true,
         "deployedBetaRoutesChecked": 8,
         "deployedBetaRoutesPass": true,
@@ -225,7 +225,8 @@
         "problemsPaginationInterviewHandoffPass": true,
         "mobileProblemsDetailHandoffPass": true,
         "problemsRankingNavigationPass": true,
-        "leetcodeHotTrackingPass": true
+        "leetcodeHotTrackingPass": true,
+        "mobileCareerControlsPass": true
       }
     }
   ],
@@ -279,7 +280,8 @@
     "browserProblemsPaginationInterviewHandoffPass": true,
     "browserMobileProblemsDetailHandoffPass": true,
     "browserProblemsRankingNavigationPass": true,
-    "browserLeetcodeHotTrackingPass": true
+    "browserLeetcodeHotTrackingPass": true,
+    "browserMobileCareerControlsPass": true
   },
   "failures": [],
   "warnings": []

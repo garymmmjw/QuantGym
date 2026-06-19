@@ -574,7 +574,21 @@ const blockers = [
       leetcodeHotTrackingPass: findResult(
         evidence.browserRouteSmoke.interactions?.results,
         "problems LeetCode Hot 100 tracking persistence"
-      )?.status === "pass"
+      )?.status === "pass",
+      mobileCareerControlsPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "mobile career jobs and companies controls avoid overflow"
+        );
+        return item?.status === "pass"
+          && item.mobileViewport === true
+          && item.jobsFilterUsable === true
+          && item.jobApplyLinkSafe === true
+          && item.companiesFilterUsable === true
+          && item.companyCareersLinkSafe === true
+          && item.companyPracticeNavigated === true
+          && item.noHorizontalOverflow === true;
+      })()
     }
   }
 ];
@@ -667,7 +681,8 @@ const summary = {
     browserProblemsPaginationInterviewHandoffPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.problemsPaginationInterviewHandoffPass === true,
     browserMobileProblemsDetailHandoffPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileProblemsDetailHandoffPass === true,
     browserProblemsRankingNavigationPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.problemsRankingNavigationPass === true,
-    browserLeetcodeHotTrackingPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.leetcodeHotTrackingPass === true
+    browserLeetcodeHotTrackingPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.leetcodeHotTrackingPass === true,
+    browserMobileCareerControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileCareerControlsPass === true
   },
   failures,
   warnings
