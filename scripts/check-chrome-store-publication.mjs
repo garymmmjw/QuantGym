@@ -214,6 +214,7 @@ function assertChromeStoreListingUrl(url, itemId) {
   const detailIndex = segments.indexOf("detail");
   assert(detailIndex >= 0, "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must point to a Chrome Web Store detail listing.");
   assert(segments.slice(detailIndex + 1).includes(itemId), "Chrome Web Store listing URL must include the item id.");
+  assert(segments.at(-1) === itemId, "Chrome Web Store listing URL must end with the item id.");
 }
 
 function assert(condition, message) {

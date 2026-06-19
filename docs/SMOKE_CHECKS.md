@@ -472,7 +472,7 @@ Browser/CDP deep flows now recorded in
   verifies the published-signoff contract with a controlled fixture, including
   item id, listing URL, published status, submitted version, upload SHA-256, and
   negative cases for malformed or placeholder evidence, placeholder-looking item
-  ids, non-detail listing URLs, private-network evidence URLs, and
+  ids, non-detail or child-path listing URLs, private-network evidence URLs, and
   credential/query-bearing listing or evidence URLs. Evidence:
   `339-chrome-store-publication-fixture-summary.json`. Final external
   publication still requires

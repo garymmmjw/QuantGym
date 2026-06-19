@@ -140,6 +140,7 @@
         "listingUrlEmbeddedCredentialsRejected": true,
         "listingUrlQueryRejected": true,
         "listingUrlDetailPathRejected": true,
+        "listingUrlExtraPathRejected": true,
         "evidenceUrlEmbeddedCredentialsRejected": true,
         "evidenceUrlQueryRejected": true,
         "finalSignoffCommandRecorded": true

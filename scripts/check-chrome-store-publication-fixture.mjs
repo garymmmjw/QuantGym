@@ -78,6 +78,11 @@ try {
       expectedError: "must include the item id"
     },
     {
+      name: "listing URL extra path rejected",
+      env: { QUANTGYM_CHROME_WEB_STORE_LISTING_URL: `https://chromewebstore.google.com/detail/quantgym-collector/${fixtureItemId}/reviews` },
+      expectedError: "must end with the item id"
+    },
+    {
       name: "draft status rejected",
       env: { QUANTGYM_CHROME_WEB_STORE_STATUS: "draft" },
       expectedError: "must be published"
@@ -141,6 +146,7 @@ try {
     listingUrlEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "listing URL embedded credentials rejected")?.rejected === true,
     listingUrlQueryRejected: findNegativeFixture(negativeFixtures, "listing URL query rejected")?.rejected === true,
     listingUrlDetailPathRejected: findNegativeFixture(negativeFixtures, "non-detail listing URL rejected")?.rejected === true,
+    listingUrlExtraPathRejected: findNegativeFixture(negativeFixtures, "listing URL extra path rejected")?.rejected === true,
     evidenceUrlEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "evidence URL embedded credentials rejected")?.rejected === true,
     evidenceUrlQueryRejected: findNegativeFixture(negativeFixtures, "evidence URL query rejected")?.rejected === true,
     externalPublicationStillRequired: true

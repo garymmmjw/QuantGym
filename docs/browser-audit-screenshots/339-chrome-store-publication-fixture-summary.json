@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 6108,
+  "durationMs": 6624,
   "externalPublicationRequired": true,
   "finalSignoffCommand": "npm run check:chrome-store-publication:published",
   "submissionHandoff": {
@@ -114,6 +114,13 @@
       "error": "Chrome Web Store listing URL must include the item id."
     },
     {
+      "name": "listing URL extra path rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Chrome Web Store listing URL must end with the item id."
+    },
+    {
       "name": "draft status rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -176,6 +183,7 @@
     "listingUrlEmbeddedCredentialsRejected": true,
     "listingUrlQueryRejected": true,
     "listingUrlDetailPathRejected": true,
+    "listingUrlExtraPathRejected": true,
     "evidenceUrlEmbeddedCredentialsRejected": true,
     "evidenceUrlQueryRejected": true,
     "externalPublicationStillRequired": true
