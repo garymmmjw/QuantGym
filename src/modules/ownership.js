@@ -168,7 +168,10 @@ export const MODULE_OWNERSHIP = [
     page: "src/pages/JobsPage.jsx",
     featureEntry: "src/features/jobs/JobsPageContent.jsx",
     stateDomains: ["jobsCatalog", "cloud"],
-    browserSmokeInteractions: ["jobs filter and apply link behavior"]
+    browserSmokeInteractions: [
+      "jobs filter and apply link behavior",
+      "mobile career jobs and companies controls avoid overflow"
+    ]
   },
   {
     id: "companies",
@@ -177,7 +180,10 @@ export const MODULE_OWNERSHIP = [
     page: "src/pages/CompaniesPage.jsx",
     featureEntry: "src/features/companies/CompaniesPageContent.jsx",
     stateDomains: ["companies", "problemBank"],
-    browserSmokeInteractions: ["companies tier filter, practice navigation, and careers link behavior"]
+    browserSmokeInteractions: [
+      "companies tier filter, practice navigation, and careers link behavior",
+      "mobile career jobs and companies controls avoid overflow"
+    ]
   },
   {
     id: "library",

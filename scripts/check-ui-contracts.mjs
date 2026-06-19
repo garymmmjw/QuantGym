@@ -835,7 +835,7 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(Number(data.routes?.checked || 0) === routeIds.length, `${label} must check all routes`);
   expect(Number(data.routes?.passed || 0) === routeIds.length, `${label} route pass count must match all routes`);
   expect(Number(data.routes?.failed || 0) === 0, `${label} must have zero route failures`);
-  expect(Number(data.interactions?.checked || 0) >= 58, `${label} must check key interactions`);
+  expect(Number(data.interactions?.checked || 0) >= 59, `${label} must check key interactions`);
   expect(Number(data.interactions?.failed || 0) === 0, `${label} must have zero interaction failures`);
   const planInteraction = findResult(data.interactions?.results, "plan create, edit, task persistence, and navigation");
   expect(planInteraction?.status === "pass", `${label} must verify Plan create, edit, task persistence, and navigation`);
@@ -1001,6 +1001,15 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(jobsInteraction?.status === "pass", `${label} must verify Jobs filter and apply link behavior`);
   const companiesInteraction = findResult(data.interactions?.results, "companies tier filter, practice navigation, and careers link behavior");
   expect(companiesInteraction?.status === "pass", `${label} must verify Companies tier, practice, and careers behavior`);
+  const mobileCareerInteraction = findResult(data.interactions?.results, "mobile career jobs and companies controls avoid overflow");
+  expect(mobileCareerInteraction?.status === "pass", `${label} must verify mobile career Jobs and Companies controls`);
+  expect(mobileCareerInteraction?.mobileViewport === true, `${label} must verify mobile career viewport`);
+  expect(mobileCareerInteraction?.jobsFilterUsable === true, `${label} must verify mobile Jobs filters`);
+  expect(mobileCareerInteraction?.jobApplyLinkSafe === true, `${label} must verify mobile Jobs apply link safety`);
+  expect(mobileCareerInteraction?.companiesFilterUsable === true, `${label} must verify mobile Companies tier filters`);
+  expect(mobileCareerInteraction?.companyCareersLinkSafe === true, `${label} must verify mobile Companies careers link safety`);
+  expect(mobileCareerInteraction?.companyPracticeNavigated === true, `${label} must verify mobile Companies practice navigation`);
+  expect(mobileCareerInteraction?.noHorizontalOverflow === true, `${label} must verify mobile career flow has no horizontal overflow`);
   const libraryInteraction = findResult(data.interactions?.results, "library search, kind filter, practice navigation, and reader guard");
   expect(libraryInteraction?.status === "pass", `${label} must verify Library search, kind filter, practice navigation, and reader guard`);
   const libraryCloudReader = findResult(data.interactions?.results, "library cloud PDF reader opens, exposes links, and closes");
@@ -1720,6 +1729,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.browserMobileProblemsDetailHandoffPass === true, `${label} must verify the mobile Problems detail/interview handoff browser journey remains pass`);
   expect(data.checks?.browserProblemsRankingNavigationPass === true, `${label} must verify the Problems ranking navigation browser journey remains pass`);
   expect(data.checks?.browserLeetcodeHotTrackingPass === true, `${label} must verify the LeetCode Hot 100 browser journey remains pass`);
+  expect(data.checks?.browserMobileCareerControlsPass === true, `${label} must verify the mobile career browser journey remains pass`);
 
   for (const id of [
     "apex-www-ssl",
@@ -1779,7 +1789,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include question-bank evidence URL query rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
-  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 58, `${label} must reference the 58-interaction browser route smoke`);
+  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 59, `${label} must reference the 59-interaction browser route smoke`);
   expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
   expect(Number(browser?.localCoverage?.deployedBetaRoutesChecked || 0) >= 8, `${label} must include the eight-route deployed beta smoke`);
   expect(browser?.localCoverage?.deployedBetaRoutesPass === true, `${label} must include deployed beta route sweep coverage`);
@@ -1826,6 +1836,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.mobileProblemsDetailHandoffPass === true, `${label} must include mobile Problems detail/interview handoff browser coverage`);
   expect(browser?.localCoverage?.problemsRankingNavigationPass === true, `${label} must include Problems ranking navigation browser coverage`);
   expect(browser?.localCoverage?.leetcodeHotTrackingPass === true, `${label} must include LeetCode Hot 100 browser coverage`);
+  expect(browser?.localCoverage?.mobileCareerControlsPass === true, `${label} must include mobile career browser coverage`);
 }
 
 function validateChromeStoreReadinessSummary(data, expect, label) {
