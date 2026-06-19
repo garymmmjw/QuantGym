@@ -404,6 +404,21 @@ const blockers = [
           && item.repliesPersisted === true
           && item.reloaded === true;
       })(),
+      mobileContentControlsPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "mobile news and experiences controls avoid overflow"
+        );
+        return item?.status === "pass"
+          && item.mobileViewport === true
+          && item.experienceSaved === true
+          && item.experienceFilterUsable === true
+          && item.experienceShared === true
+          && item.newsSubmitted === true
+          && item.newsFiltersUsable === true
+          && item.newsDetailReadPersisted === true
+          && item.noHorizontalOverflow === true;
+      })(),
       memoryImageUploadPass: findResult(
         evidence.browserRouteSmoke.interactions?.results,
         "memory image resource upload fallback and reload persistence"
@@ -674,6 +689,7 @@ const summary = {
     browserCommunityDirectMessagePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.communityDirectMessagePass === true,
     browserMobileSocialControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileSocialControlsPass === true,
     browserMessagesMultiThreadUnreadPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.messagesMultiThreadUnreadPass === true,
+    browserMobileContentControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileContentControlsPass === true,
     browserMemoryImageUploadPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.memoryImageUploadPass === true,
     browserToolsMentalMathCompletionPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.toolsMentalMathCompletionPass === true,
     browserToolsMarketGamePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.toolsMarketGamePass === true,
