@@ -366,11 +366,12 @@ The media packet is written under `artifacts/media-storage/readiness-packet/` an
 To build a repeatable public-ATS jobs feed snapshot from the checked-in Greenhouse source list, run:
 
 ```bash
-npm run build:jobs-feed:public-ats -- --strict --pretty --out /tmp/quantgym-jobs-feed.json --summary docs/browser-audit-screenshots/jobs-feed-public-ats-summary.json
+npm run build:jobs-feed:public-ats -- --strict --pretty --out public/data/jobs/public-ats-feed.json --summary docs/browser-audit-screenshots/353-jobs-public-ats-static-feed-summary.json
+npm run check:jobs-feed:static
 npm run build:jobs-feed:publication-packet
 ```
 
-The publication packet is written under `artifacts/jobs-feed/publication-packet/` and includes a generated feed snapshot, feed SHA-256, source list, stable HTTPS hosting runbook, production env template, and live-signoff checklist. Host the generated JSON at a stable HTTPS URL, set `QUANTGYM_JOBS_SOURCE_URL` to that URL, then run `npm run check:jobs-source:production -- --live`. The generator removes obvious non-role listings, preserves real posting URLs and published timestamps, and fails if the output lacks both internship and full-time roles.
+The checked-in static feed is copied into the Vite build as `/data/jobs/public-ats-feed.json`, with the beta URL expected at `https://beta.quantgym.app/data/jobs/public-ats-feed.json`. The publication packet is written under `artifacts/jobs-feed/publication-packet/` and includes a generated feed snapshot, feed SHA-256, source list, stable HTTPS hosting runbook, production env template, and live-signoff checklist. Set production `QUANTGYM_JOBS_SOURCE_URL` to the deployed beta/static feed URL or another stable HTTPS vendor feed, then run `npm run check:jobs-source:production -- --live`. The generator removes obvious non-role listings, preserves real posting URLs and published timestamps, and fails if the output lacks both internship and full-time roles.
 
 When production alerting and edge rate limits are configured, validate that shape too:
 
@@ -502,6 +503,7 @@ npm run check:repo-hygiene
 npm run check:jobs-source
 npm run check:jobs-source:runtime-smoke
 npm run check:jobs-source:production-fixture
+npm run check:jobs-feed:static
 npm run build:jobs-feed:publication-packet
 npm run check:media-storage
 npm run check:media-storage:runtime-smoke
@@ -524,6 +526,7 @@ npm run check:jobs-source:production
 npm run check:jobs-source:production -- --live
 npm run check:jobs-source:runtime-smoke
 npm run check:jobs-source:production-fixture
+npm run check:jobs-feed:static
 npm run build:jobs-feed:publication-packet
 npm run check:media-storage:production-fixture
 npm run build:media-storage-packet

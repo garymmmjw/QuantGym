@@ -1,0 +1,40 @@
+{
+  "status": "pass",
+  "durationMs": 2,
+  "feedPath": "public/data/jobs/public-ats-feed.json",
+  "publicUrlHost": "beta.quantgym.app",
+  "publicUrlPath": "/data/jobs/public-ats-feed.json",
+  "generatedAt": "2026-06-19T11:39:51.427Z",
+  "generatedBy": "scripts/build-public-ats-jobs-feed.mjs",
+  "source": "public-ats-greenhouse",
+  "feedSha256": "8ae062f562bceb41d0df5fb04c423104f925d35ecf8c01db125f4f89ca3cfdee",
+  "count": 160,
+  "internships": 6,
+  "fulltime": 154,
+  "companies": [
+    "Hudson River Trading",
+    "IMC",
+    "Jane Street",
+    "Jump Trading"
+  ],
+  "firstId": "hudson-river-trading-1229082",
+  "firstPostedAt": "2026-06-18T05:04:23.000Z",
+  "checks": {
+    "feedExists": true,
+    "generatedByPublicAts": true,
+    "sourcePublicAtsGreenhouse": true,
+    "generatedAtValid": true,
+    "hasMinimumJobs": true,
+    "includesInternshipAndFulltime": true,
+    "includesMultipleCompanies": true,
+    "uniqueIds": true,
+    "validUrls": true,
+    "validPostedAt": true,
+    "realMetadata": true,
+    "publicUrlHttps": true,
+    "publicUrlStablePath": true,
+    "feedSha256Set": true
+  },
+  "failures": [],
+  "warnings": []
+}

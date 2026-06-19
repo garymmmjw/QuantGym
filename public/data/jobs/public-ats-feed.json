@@ -1,0 +1,2519 @@
+{
+  "generatedAt": "2026-06-19T11:39:51.427Z",
+  "generatedBy": "scripts/build-public-ats-jobs-feed.mjs",
+  "source": "public-ats-greenhouse",
+  "jobs": [
+    {
+      "id": "hudson-river-trading-1229082",
+      "company": "Hudson River Trading",
+      "title": "Software Engineer - Low Level (C++)",
+      "type": "fulltime",
+      "location": "Singapore",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=1229082",
+      "postedAt": "2026-06-18T05:04:23.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jane-street-8596349002",
+      "company": "Jane Street",
+      "title": "Compiler Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8596349002",
+      "postedAt": "2026-06-17T14:50:25.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-5870604",
+      "company": "Jump Trading",
+      "title": "Quantitative Trader, Trading Team",
+      "type": "fulltime",
+      "location": "Singapore",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=5870604",
+      "postedAt": "2026-06-17T04:05:28.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "imc-4892687101",
+      "company": "IMC",
+      "title": "Graduate Quantitative Researcher",
+      "type": "fulltime",
+      "location": "Zug, Switzerland",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4892687101",
+      "postedAt": "2026-06-12T14:48:39.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "research",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-8000350",
+      "company": "Hudson River Trading",
+      "title": "AI Researcher, LLMs",
+      "type": "fulltime",
+      "location": "London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=8000350",
+      "postedAt": "2026-06-12T13:54:16.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "ai",
+        "algo",
+        "research"
+      ]
+    },
+    {
+      "id": "jane-street-8588405002",
+      "company": "Jane Street",
+      "title": "Formal Methods Engineer",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8588405002",
+      "postedAt": "2026-06-11T17:59:10.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-8585303002",
+      "company": "Jane Street",
+      "title": "Formal Methods Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8585303002",
+      "postedAt": "2026-06-11T15:06:51.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-8576934002",
+      "company": "Jane Street",
+      "title": "Machine Learning Researcher",
+      "type": "fulltime",
+      "location": "Hong Kong, Hong Kong",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8576934002",
+      "postedAt": "2026-06-04T16:40:37.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "research"
+      ]
+    },
+    {
+      "id": "jane-street-8576931002",
+      "company": "Jane Street",
+      "title": "Machine Learning Researcher",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8576931002",
+      "postedAt": "2026-06-04T16:40:35.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "research"
+      ]
+    },
+    {
+      "id": "imc-4877192101",
+      "company": "IMC",
+      "title": "Legal Counsel Crypto",
+      "type": "fulltime",
+      "location": "Amsterdam, Netherlands",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4877192101",
+      "postedAt": "2026-06-03T16:14:53.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime"
+      ]
+    },
+    {
+      "id": "jump-trading-7977686",
+      "company": "Jump Trading",
+      "title": "Research Engineer, Pre-Training",
+      "type": "fulltime",
+      "location": "New York, London, Chicago",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7977686",
+      "postedAt": "2026-06-02T21:37:37.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "imc-4872806101",
+      "company": "IMC",
+      "title": "FX Options Trader",
+      "type": "fulltime",
+      "location": "London, United Kingdom",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4872806101",
+      "postedAt": "2026-06-02T07:42:36.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7972584",
+      "company": "Hudson River Trading",
+      "title": "AI Research Engineer, Pre-Training",
+      "type": "fulltime",
+      "location": "New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7972584",
+      "postedAt": "2026-06-01T14:20:21.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "ai",
+        "algo",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7972593",
+      "company": "Hudson River Trading",
+      "title": "AI Research Engineer, Inference",
+      "type": "fulltime",
+      "location": "New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7972593",
+      "postedAt": "2026-06-01T14:20:19.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "ai",
+        "algo",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7958900",
+      "company": "Hudson River Trading",
+      "title": "Electronic Trading Support Engineer",
+      "type": "fulltime",
+      "location": "Singapore",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7958900",
+      "postedAt": "2026-05-27T02:52:01.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4867453101",
+      "company": "IMC",
+      "title": "OTC Trader (Crypto)",
+      "type": "fulltime",
+      "location": "Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4867453101",
+      "postedAt": "2026-05-21T10:16:38.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-7405132",
+      "company": "Jump Trading",
+      "title": "HPC Operations Engineer",
+      "type": "fulltime",
+      "location": "London",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7405132",
+      "postedAt": "2026-05-19T15:45:11.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-7405156",
+      "company": "Jump Trading",
+      "title": "HPC Production Engineer",
+      "type": "fulltime",
+      "location": "London",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7405156",
+      "postedAt": "2026-05-19T15:44:31.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-8549353002",
+      "company": "Jane Street",
+      "title": "Korea Trading Controls Specialist",
+      "type": "fulltime",
+      "location": "Hong Kong, Hong Kong",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8549353002",
+      "postedAt": "2026-05-19T10:09:40.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "imc-4840228101",
+      "company": "IMC",
+      "title": "Index Options Volatility Trader",
+      "type": "fulltime",
+      "location": "Chicago, United States",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4840228101",
+      "postedAt": "2026-05-18T16:32:24.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jump-trading-7929540",
+      "company": "Jump Trading",
+      "title": "Software Engineer | Trading Team",
+      "type": "fulltime",
+      "location": "Shanghai",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7929540",
+      "postedAt": "2026-05-15T08:15:17.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-7715291",
+      "company": "Jump Trading",
+      "title": "Data Center Engineer",
+      "type": "fulltime",
+      "location": "Mumbai",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7715291",
+      "postedAt": "2026-05-15T05:15:57.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7774123",
+      "company": "Hudson River Trading",
+      "title": "Senior Hardware Product Manager",
+      "type": "fulltime",
+      "location": "Chicago, Illinois, United States; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7774123",
+      "postedAt": "2026-05-12T02:13:21.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4855354101",
+      "company": "IMC",
+      "title": "Java Software Engineer",
+      "type": "fulltime",
+      "location": "Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4855354101",
+      "postedAt": "2026-05-04T05:45:34.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-7875817",
+      "company": "Jump Trading",
+      "title": "Production Reliability Engineer | Trading Team",
+      "type": "fulltime",
+      "location": "Chicago",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7875817",
+      "postedAt": "2026-05-02T11:55:43.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jane-street-8531243002",
+      "company": "Jane Street",
+      "title": "ASIC Physical Design Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8531243002",
+      "postedAt": "2026-04-30T13:45:21.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7867883",
+      "company": "Hudson River Trading",
+      "title": "Design Verification (DV) Engineer",
+      "type": "fulltime",
+      "location": "Austin, TX, United States; Boulder, Colorado, United States; Chicago, Illinois, United States; London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7867883",
+      "postedAt": "2026-04-29T20:07:39.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7564973",
+      "company": "Hudson River Trading",
+      "title": "Physical Design Engineer",
+      "type": "fulltime",
+      "location": "Austin, TX, United States; Boulder, Colorado, United States; Chicago, Illinois, United States; London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7564973",
+      "postedAt": "2026-04-28T15:44:32.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7846663",
+      "company": "Hudson River Trading",
+      "title": "Junior Trading Systems Engineer",
+      "type": "fulltime",
+      "location": "Chicago, Illinois, United States; London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7846663",
+      "postedAt": "2026-04-23T13:38:59.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-7838715",
+      "company": "Jump Trading",
+      "title": "HPC Data Center Developer",
+      "type": "fulltime",
+      "location": "Chicago, IL, United States, New York, NY, United States",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7838715",
+      "postedAt": "2026-04-21T18:12:55.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4845173101",
+      "company": "IMC",
+      "title": "Connect with us at ICLR 2026!",
+      "type": "fulltime",
+      "location": "Amsterdam, Netherlands; Chicago, United States; Hong Kong, Hong Kong; Mumbai, India; New York, United States; Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4845173101",
+      "postedAt": "2026-04-19T22:24:01.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jane-street-8512072002",
+      "company": "Jane Street",
+      "title": "ASIC Physical Design Engineer",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8512072002",
+      "postedAt": "2026-04-17T15:25:23.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4829785101",
+      "company": "IMC",
+      "title": "Hardware Machine Learning PhD Research Internship",
+      "type": "internship",
+      "location": "Chicago, United States",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4829785101",
+      "postedAt": "2026-04-16T20:03:32.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "internship",
+        "ai",
+        "research"
+      ]
+    },
+    {
+      "id": "imc-4694133101",
+      "company": "IMC",
+      "title": "Data Center Engineer",
+      "type": "fulltime",
+      "location": "Mumbai, India",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4694133101",
+      "postedAt": "2026-04-16T07:03:11.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-7819624",
+      "company": "Jump Trading",
+      "title": "HPC Data Center Electrical Engineer",
+      "type": "fulltime",
+      "location": "Chicago or New York",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7819624",
+      "postedAt": "2026-04-15T22:15:38.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-7781613",
+      "company": "Jump Trading",
+      "title": "HPC Data Center Operational Lead",
+      "type": "fulltime",
+      "location": "Chicago or New York",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7781613",
+      "postedAt": "2026-04-15T21:43:38.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime"
+      ]
+    },
+    {
+      "id": "jump-trading-7781600",
+      "company": "Jump Trading",
+      "title": "HPC Data Center Technician",
+      "type": "fulltime",
+      "location": "Carrollton, TX",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7781600",
+      "postedAt": "2026-04-15T21:42:51.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime"
+      ]
+    },
+    {
+      "id": "jane-street-8497319002",
+      "company": "Jane Street",
+      "title": "Commodities Trader",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8497319002",
+      "postedAt": "2026-04-14T21:09:28.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jump-trading-7781551",
+      "company": "Jump Trading",
+      "title": "HPC Data Center Infrastructure Planning Lead",
+      "type": "fulltime",
+      "location": "Chicago, New York",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7781551",
+      "postedAt": "2026-04-14T19:08:01.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7811990",
+      "company": "Hudson River Trading",
+      "title": "Senior WAN Network Engineer",
+      "type": "fulltime",
+      "location": "London, United Kingdom",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7811990",
+      "postedAt": "2026-04-13T17:00:55.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7812006",
+      "company": "Hudson River Trading",
+      "title": "Senior WAN Network Engineer",
+      "type": "fulltime",
+      "location": "New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7812006",
+      "postedAt": "2026-04-13T17:00:55.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7787784",
+      "company": "Hudson River Trading",
+      "title": "Data Production Engineer",
+      "type": "fulltime",
+      "location": "New York, NY, United States; Singapore",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7787784",
+      "postedAt": "2026-04-07T19:18:04.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4742833101",
+      "company": "IMC",
+      "title": "Java Software Engineer (Power/Gas)",
+      "type": "fulltime",
+      "location": "Aarhus, Central Denmark Region, Denmark",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4742833101",
+      "postedAt": "2026-04-02T15:02:37.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4827281101",
+      "company": "IMC",
+      "title": "Operations Specialist (Crypto)",
+      "type": "fulltime",
+      "location": "Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4827281101",
+      "postedAt": "2026-04-01T22:02:00.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime"
+      ]
+    },
+    {
+      "id": "jump-trading-7767735",
+      "company": "Jump Trading",
+      "title": "Quantitative Developer | Trading Team",
+      "type": "fulltime",
+      "location": "New York City or Chicago",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7767735",
+      "postedAt": "2026-03-31T01:51:58.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7656512",
+      "company": "Hudson River Trading",
+      "title": "Finance Associate",
+      "type": "fulltime",
+      "location": "Mumbai",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7656512",
+      "postedAt": "2026-03-18T14:58:15.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime"
+      ]
+    },
+    {
+      "id": "imc-4634204101",
+      "company": "IMC",
+      "title": "C++ Software Engineer",
+      "type": "fulltime",
+      "location": "Amsterdam, Netherlands",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4634204101",
+      "postedAt": "2026-03-18T14:29:53.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7706309",
+      "company": "Hudson River Trading",
+      "title": "Quantitative Latency Engineer",
+      "type": "fulltime",
+      "location": "Austin, TX, United States; Chicago, Illinois, United States; London, United Kingdom; New York, NY, United States; Singapore",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7706309",
+      "postedAt": "2026-03-13T19:21:17.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7706268",
+      "company": "Hudson River Trading",
+      "title": "Junior Quantitative Latency Engineer",
+      "type": "fulltime",
+      "location": "Chicago, Illinois, United States; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7706268",
+      "postedAt": "2026-03-13T19:21:16.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7701596",
+      "company": "Hudson River Trading",
+      "title": "Hardware Strategy & Technology Partnerships Lead",
+      "type": "fulltime",
+      "location": "Austin, TX, United States; Boston, Massachusetts, United States; Boulder, Colorado, United States; Chicago, Illinois, United States; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7701596",
+      "postedAt": "2026-03-12T21:10:13.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "imc-4805320101",
+      "company": "IMC",
+      "title": "OTC Trader",
+      "type": "fulltime",
+      "location": "Zug, Switzerland",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4805320101",
+      "postedAt": "2026-03-11T09:29:10.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-6004172",
+      "company": "Jump Trading",
+      "title": "DevOps/High Performance Trading System Engineer",
+      "type": "fulltime",
+      "location": "London",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6004172",
+      "postedAt": "2026-03-10T13:54:05.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4795128101",
+      "company": "IMC",
+      "title": "Index Options volatility Trader",
+      "type": "fulltime",
+      "location": "Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4795128101",
+      "postedAt": "2026-03-05T00:19:08.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "imc-4795169101",
+      "company": "IMC",
+      "title": "Commodities Trader - China",
+      "type": "fulltime",
+      "location": "Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4795169101",
+      "postedAt": "2026-03-04T09:09:48.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jane-street-8443094002",
+      "company": "Jane Street",
+      "title": "Exotic Options Trader",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8443094002",
+      "postedAt": "2026-03-02T14:10:35.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jane-street-8433748002",
+      "company": "Jane Street",
+      "title": "Exotic Options Trader",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8433748002",
+      "postedAt": "2026-02-24T17:07:54.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jane-street-8433793002",
+      "company": "Jane Street",
+      "title": "Exotic Options Trader",
+      "type": "fulltime",
+      "location": "Hong Kong, Hong Kong",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8433793002",
+      "postedAt": "2026-02-24T16:09:15.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "imc-4786701101",
+      "company": "IMC",
+      "title": "Graduate Floor Trader",
+      "type": "fulltime",
+      "location": "Chicago, United States; Miami, United States; New York, United States; Philadelphia, United States; San Francisco, United States",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4786701101",
+      "postedAt": "2026-02-23T22:10:10.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-7606254",
+      "company": "Jump Trading",
+      "title": "Infrastructure Engineer",
+      "type": "fulltime",
+      "location": "Mumbai",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7606254",
+      "postedAt": "2026-02-20T11:25:41.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7621807",
+      "company": "Hudson River Trading",
+      "title": "Deployment Engineer",
+      "type": "fulltime",
+      "location": "Singapore",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7621807",
+      "postedAt": "2026-02-18T03:59:00.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4713602101",
+      "company": "IMC",
+      "title": "Hardware Machine Learning Engineer",
+      "type": "fulltime",
+      "location": "Chicago, United States; New York, United States",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4713602101",
+      "postedAt": "2026-02-13T18:35:18.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "ai",
+        "engineering"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7610947",
+      "company": "Hudson River Trading",
+      "title": "Software Engineer - GPU reliability",
+      "type": "fulltime",
+      "location": "New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7610947",
+      "postedAt": "2026-02-12T16:11:13.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "jump-trading-7565728",
+      "company": "Jump Trading",
+      "title": "Campus Trading Team Software Engineer (Intern)",
+      "type": "internship",
+      "location": "Hong Kong",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7565728",
+      "postedAt": "2026-02-05T23:30:44.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "internship",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7583953",
+      "company": "Hudson River Trading",
+      "title": "Software Engineer - Treasury Infrastructure",
+      "type": "fulltime",
+      "location": "New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7583953",
+      "postedAt": "2026-02-02T23:18:12.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7583957",
+      "company": "Hudson River Trading",
+      "title": "Software Engineer - AI Tools",
+      "type": "fulltime",
+      "location": "Chicago, Illinois, United States; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7583957",
+      "postedAt": "2026-02-02T23:18:11.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "ai",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7398013",
+      "company": "Hudson River Trading",
+      "title": "Software Engineer - Python",
+      "type": "fulltime",
+      "location": "Chicago, Illinois, United States; London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7398013",
+      "postedAt": "2026-02-02T23:18:10.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7583922",
+      "company": "Hudson River Trading",
+      "title": "Research Engineer",
+      "type": "fulltime",
+      "location": "London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7583922",
+      "postedAt": "2026-02-02T23:18:09.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7566004",
+      "company": "Hudson River Trading",
+      "title": "Software Engineer - Distributed Compute",
+      "type": "fulltime",
+      "location": "Singapore",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7566004",
+      "postedAt": "2026-01-27T02:45:26.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-7495806",
+      "company": "Jump Trading",
+      "title": "Data Engineer | Post Trade Analytics",
+      "type": "fulltime",
+      "location": "Shanghai",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7495806",
+      "postedAt": "2026-01-21T03:20:59.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-7483202",
+      "company": "Jump Trading",
+      "title": "Data Scientist | Post Trade Analytics",
+      "type": "fulltime",
+      "location": "Shanghai",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7483202",
+      "postedAt": "2026-01-20T10:28:21.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime"
+      ]
+    },
+    {
+      "id": "jane-street-8377832002",
+      "company": "Jane Street",
+      "title": "Linux Engineer",
+      "type": "internship",
+      "location": "Hong Kong, Hong Kong",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8377832002",
+      "postedAt": "2026-01-19T05:52:26.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "internship",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-8377831002",
+      "company": "Jane Street",
+      "title": "IT Operations Engineer",
+      "type": "internship",
+      "location": "Hong Kong, Hong Kong",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8377831002",
+      "postedAt": "2026-01-19T05:36:35.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "internship",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4760871101",
+      "company": "IMC",
+      "title": "C++ Software Engineer",
+      "type": "fulltime",
+      "location": "Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4760871101",
+      "postedAt": "2026-01-19T00:16:40.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4685067101",
+      "company": "IMC",
+      "title": "Power & Gas Quantitative Analyst - Algo Research & Development",
+      "type": "fulltime",
+      "location": "Aarhus, Central Denmark Region, Denmark",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4685067101",
+      "postedAt": "2026-01-06T10:56:37.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "algo",
+        "research",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jump-trading-7460950",
+      "company": "Jump Trading",
+      "title": "Quantamental Research Analyst",
+      "type": "fulltime",
+      "location": "Singapore",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7460950",
+      "postedAt": "2025-12-17T03:50:39.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "research",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7462541",
+      "company": "Hudson River Trading",
+      "title": "Fullstack Developer",
+      "type": "fulltime",
+      "location": "Chicago, Illinois, United States; London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7462541",
+      "postedAt": "2025-12-11T17:17:32.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-8209005002",
+      "company": "Jane Street",
+      "title": "China Sales",
+      "type": "fulltime",
+      "location": "Hong Kong, Hong Kong",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8209005002",
+      "postedAt": "2025-12-05T08:21:34.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4721116101",
+      "company": "IMC",
+      "title": "Principal Machine Learning Engineer",
+      "type": "fulltime",
+      "location": "Chicago, United States; Hong Kong, Hong Kong; New York, United States; Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4721116101",
+      "postedAt": "2025-12-01T03:16:41.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "ai",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4699252101",
+      "company": "IMC",
+      "title": "Machine Learning Researcher",
+      "type": "fulltime",
+      "location": "Chicago, United States; New York, United States",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4699252101",
+      "postedAt": "2025-11-28T17:44:48.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "ai",
+        "research",
+        "trading"
+      ]
+    },
+    {
+      "id": "jane-street-8228899002",
+      "company": "Jane Street",
+      "title": "China ECM Analyst",
+      "type": "fulltime",
+      "location": "Hong Kong, Hong Kong",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8228899002",
+      "postedAt": "2025-11-18T03:06:29.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "imc-4710845101",
+      "company": "IMC",
+      "title": "Global Internal Auditor",
+      "type": "internship",
+      "location": "Amsterdam, Netherlands",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4710845101",
+      "postedAt": "2025-11-14T09:01:13.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "internship"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7392942",
+      "company": "Hudson River Trading",
+      "title": "Software Engineer – C++",
+      "type": "fulltime",
+      "location": "Austin, TX, United States; Chicago, Illinois, United States; London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7392942",
+      "postedAt": "2025-11-12T23:50:03.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4608591101",
+      "company": "IMC",
+      "title": "Graduate Trading Operations Specialist",
+      "type": "fulltime",
+      "location": "Chicago, United States",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4608591101",
+      "postedAt": "2025-10-31T15:48:37.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "jane-street-8233259002",
+      "company": "Jane Street",
+      "title": "ASIC Engineer",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8233259002",
+      "postedAt": "2025-10-29T17:12:15.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-7217856",
+      "company": "Jump Trading",
+      "title": "Campus Crypto Researcher (Full-Time)",
+      "type": "fulltime",
+      "location": "London",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7217856",
+      "postedAt": "2025-10-29T16:39:08.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "research"
+      ]
+    },
+    {
+      "id": "jump-trading-7362318",
+      "company": "Jump Trading",
+      "title": "Campus Crypto Researcher (Intern)",
+      "type": "internship",
+      "location": "London",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7362318",
+      "postedAt": "2025-10-29T16:39:02.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "internship",
+        "research"
+      ]
+    },
+    {
+      "id": "jane-street-8213653002",
+      "company": "Jane Street",
+      "title": "ASIC Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8213653002",
+      "postedAt": "2025-10-29T14:54:57.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-7294191",
+      "company": "Jump Trading",
+      "title": "Quantitative Researcher | Trading Team",
+      "type": "fulltime",
+      "location": "New York City",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7294191",
+      "postedAt": "2025-10-27T11:15:15.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "research",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7353090",
+      "company": "Hudson River Trading",
+      "title": "High Performance Compute (HPC) Storage Engineer",
+      "type": "fulltime",
+      "location": "Austin, TX, United States; Chicago, Illinois, United States; London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7353090",
+      "postedAt": "2025-10-23T14:48:35.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7351141",
+      "company": "Hudson River Trading",
+      "title": "Junior Crypto Electronic Trading Support Engineer",
+      "type": "fulltime",
+      "location": "London, United Kingdom",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7351141",
+      "postedAt": "2025-10-22T22:45:55.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-7340244",
+      "company": "Jump Trading",
+      "title": "Portfolio Finance Trader, SBL Specialist | Finance",
+      "type": "fulltime",
+      "location": "Shanghai or Hong Kong",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7340244",
+      "postedAt": "2025-10-22T06:41:18.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4684991101",
+      "company": "IMC",
+      "title": "Power Trader (Intraday)",
+      "type": "fulltime",
+      "location": "Aarhus, Central Denmark Region, Denmark",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4684991101",
+      "postedAt": "2025-10-21T12:58:04.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jump-trading-7282220",
+      "company": "Jump Trading",
+      "title": "Campus AI/ML Researcher (Spring 2026 / Fall 2026)",
+      "type": "fulltime",
+      "location": "Shanghai; Singapore; Hong Kong",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=7282220",
+      "postedAt": "2025-09-30T05:56:58.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "ai",
+        "research"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7162019",
+      "company": "Hudson River Trading",
+      "title": "GPU Systems Engineer",
+      "type": "fulltime",
+      "location": "London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7162019",
+      "postedAt": "2025-09-25T14:03:25.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "jump-trading-5870589",
+      "company": "Jump Trading",
+      "title": "Quantitative Researcher | Trading Team",
+      "type": "fulltime",
+      "location": "Singapore",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=5870589",
+      "postedAt": "2025-09-24T07:15:12.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "research",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "imc-4673650101",
+      "company": "IMC",
+      "title": "C++ Software Engineer",
+      "type": "fulltime",
+      "location": "Chicago, United States; New York, United States",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4673650101",
+      "postedAt": "2025-09-12T20:54:58.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7247998",
+      "company": "Hudson River Trading",
+      "title": "HPC Network Engineer",
+      "type": "fulltime",
+      "location": "Austin, TX, United States; Chicago, Illinois, United States; London, United Kingdom; New York, NY, United States; Singapore",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7247998",
+      "postedAt": "2025-09-12T13:26:57.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jane-street-8161177002",
+      "company": "Jane Street",
+      "title": "FIX Onboarding and Connectivity Engineer",
+      "type": "fulltime",
+      "location": "Hong Kong, Hong Kong",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8161177002",
+      "postedAt": "2025-09-12T03:57:49.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-8159216002",
+      "company": "Jane Street",
+      "title": "FIX Onboarding and Connectivity Engineer",
+      "type": "fulltime",
+      "location": "Singapore",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8159216002",
+      "postedAt": "2025-09-12T03:56:59.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4564495101",
+      "company": "IMC",
+      "title": "Graduate Trader (2026)",
+      "type": "fulltime",
+      "location": "Amsterdam, Netherlands",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4564495101",
+      "postedAt": "2025-08-27T18:12:40.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4564480101",
+      "company": "IMC",
+      "title": "Graduate Software Engineer (2026)",
+      "type": "fulltime",
+      "location": "Amsterdam, Netherlands",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4564480101",
+      "postedAt": "2025-08-27T18:11:46.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4635938101",
+      "company": "IMC",
+      "title": "Graduate Software Engineer (2026)",
+      "type": "fulltime",
+      "location": "Aarhus, Central Denmark Region, Denmark",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4635938101",
+      "postedAt": "2025-08-27T18:11:00.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4658374101",
+      "company": "IMC",
+      "title": "Commodities Broker Trader",
+      "type": "fulltime",
+      "location": "London, United Kingdom",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4658374101",
+      "postedAt": "2025-08-20T11:14:20.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4658369101",
+      "company": "IMC",
+      "title": "Commodities Volatility Trader",
+      "type": "fulltime",
+      "location": "London, United Kingdom",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4658369101",
+      "postedAt": "2025-08-20T11:10:09.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "jane-street-8120713002",
+      "company": "Jane Street",
+      "title": "European Natural Gas & LNG Analyst/Trader",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8120713002",
+      "postedAt": "2025-08-18T15:23:22.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7133986",
+      "company": "Hudson River Trading",
+      "title": "Algorithm Developer (Quant Researcher) – 2026 PhDs",
+      "type": "fulltime",
+      "location": "London, United Kingdom; New York, NY, United States; Singapore",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7133986",
+      "postedAt": "2025-08-07T15:28:35.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "algo",
+        "engineering",
+        "research",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7116458",
+      "company": "Hudson River Trading",
+      "title": "Junior Electronic Trading Support Engineer",
+      "type": "fulltime",
+      "location": "Austin, TX, United States; Dublin, Ireland; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7116458",
+      "postedAt": "2025-07-29T14:27:16.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jane-street-8061011002",
+      "company": "Jane Street",
+      "title": "FPGA Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8061011002",
+      "postedAt": "2025-07-10T13:43:56.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-8061045002",
+      "company": "Jane Street",
+      "title": "FPGA Engineer",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8061045002",
+      "postedAt": "2025-07-10T13:42:50.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4630983101",
+      "company": "IMC",
+      "title": "Python Software Engineer",
+      "type": "fulltime",
+      "location": "Amsterdam, Netherlands",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4630983101",
+      "postedAt": "2025-07-09T10:12:33.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-7024891",
+      "company": "Hudson River Trading",
+      "title": "AI Researcher",
+      "type": "fulltime",
+      "location": "London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=7024891",
+      "postedAt": "2025-06-30T22:46:54.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "ai",
+        "algo",
+        "research"
+      ]
+    },
+    {
+      "id": "jane-street-8056588002",
+      "company": "Jane Street",
+      "title": "Machine Learning Educator",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/8056588002",
+      "postedAt": "2025-06-30T18:41:46.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "research"
+      ]
+    },
+    {
+      "id": "jump-trading-6780244",
+      "company": "Jump Trading",
+      "title": "HPC Production Engineer",
+      "type": "fulltime",
+      "location": "Sydney",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6780244",
+      "postedAt": "2025-06-30T01:18:00.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4594570101",
+      "company": "IMC",
+      "title": "Equity Options Trader",
+      "type": "fulltime",
+      "location": "Amsterdam, Netherlands",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4594570101",
+      "postedAt": "2025-05-30T11:29:16.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-6870551",
+      "company": "Jump Trading",
+      "title": "Trader",
+      "type": "fulltime",
+      "location": "Shanghai",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6870551",
+      "postedAt": "2025-05-23T01:50:18.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4568796101",
+      "company": "IMC",
+      "title": "Network Engineer",
+      "type": "fulltime",
+      "location": "Mumbai, India",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4568796101",
+      "postedAt": "2025-05-09T09:58:04.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4283842101",
+      "company": "IMC",
+      "title": "Equity Options Volatility Trader",
+      "type": "fulltime",
+      "location": "Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4283842101",
+      "postedAt": "2025-05-01T02:44:27.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "imc-4573906101",
+      "company": "IMC",
+      "title": "Machine Learning Research Lead",
+      "type": "fulltime",
+      "location": "Chicago, United States; New York, United States",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4573906101",
+      "postedAt": "2025-04-14T15:56:04.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "ai",
+        "research",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4573232101",
+      "company": "IMC",
+      "title": "Index Options Volatility Trader",
+      "type": "fulltime",
+      "location": "Amsterdam, Netherlands",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4573232101",
+      "postedAt": "2025-04-11T14:24:50.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-6786146",
+      "company": "Jump Trading",
+      "title": "HPC Operations Engineer",
+      "type": "fulltime",
+      "location": "Sydney and Mumbai",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6786146",
+      "postedAt": "2025-04-08T23:16:40.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4570309101",
+      "company": "IMC",
+      "title": "Machine Learning Engineer",
+      "type": "fulltime",
+      "location": "Chicago, United States; Hong Kong, Hong Kong; Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4570309101",
+      "postedAt": "2025-04-07T17:15:21.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "ai",
+        "engineering"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-6703954",
+      "company": "Hudson River Trading",
+      "title": "Software Engineer - Distributed Compute",
+      "type": "fulltime",
+      "location": "London, United Kingdom; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=6703954",
+      "postedAt": "2025-04-04T18:16:26.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-6703952",
+      "company": "Hudson River Trading",
+      "title": "Software Engineer - Distributed Systems (Storage/Databases)",
+      "type": "fulltime",
+      "location": "New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=6703952",
+      "postedAt": "2025-04-04T18:16:22.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4567047101",
+      "company": "IMC",
+      "title": "Machine Learning Engineer",
+      "type": "fulltime",
+      "location": "Amsterdam, Netherlands; London, United Kingdom",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4567047101",
+      "postedAt": "2025-04-01T19:20:28.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "ai",
+        "engineering"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-6726219",
+      "company": "Hudson River Trading",
+      "title": "Experienced Hardware Design Engineer",
+      "type": "fulltime",
+      "location": "Austin, TX, United States; Boulder, Colorado, United States; Chicago, Illinois, United States; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=6726219",
+      "postedAt": "2025-03-24T01:22:55.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "imc-4548292101",
+      "company": "IMC",
+      "title": "Python Software Engineer",
+      "type": "fulltime",
+      "location": "Sydney, Australia",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4548292101",
+      "postedAt": "2025-02-27T22:50:37.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-6603013",
+      "company": "Jump Trading",
+      "title": "Deep Learning Researcher | Trading Team",
+      "type": "fulltime",
+      "location": "Shanghai, Singapore, Hong Kong",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6603013",
+      "postedAt": "2025-02-04T22:56:44.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "research",
+        "trading"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-6575600",
+      "company": "Hudson River Trading",
+      "title": "Electronic Trading Support Engineer",
+      "type": "fulltime",
+      "location": "Austin, TX, United States; Chicago, Illinois, United States; Dublin, Ireland; New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=6575600",
+      "postedAt": "2025-01-27T18:22:39.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-6405445",
+      "company": "Jump Trading",
+      "title": "Crypto Production Engineer",
+      "type": "fulltime",
+      "location": "Sydney",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6405445",
+      "postedAt": "2024-11-18T05:27:00.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-6345536",
+      "company": "Hudson River Trading",
+      "title": "Software Engineer - Low Level (C++)",
+      "type": "fulltime",
+      "location": "Hong Kong",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=6345536",
+      "postedAt": "2024-10-22T17:01:13.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jane-street-7668113002",
+      "company": "Jane Street",
+      "title": "Data Engineer",
+      "type": "fulltime",
+      "location": "Hong Kong, Hong Kong",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/7668113002",
+      "postedAt": "2024-10-04T00:16:05.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-6190021",
+      "company": "Jump Trading",
+      "title": "Quantitative Developer | Trading Team",
+      "type": "fulltime",
+      "location": "Shanghai",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6190021",
+      "postedAt": "2024-08-23T08:33:09.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jump-trading-6084822",
+      "company": "Jump Trading",
+      "title": "Software Engineer | Trading Team",
+      "type": "fulltime",
+      "location": "Singapore",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6084822",
+      "postedAt": "2024-08-23T08:31:30.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jump-trading-6172858",
+      "company": "Jump Trading",
+      "title": "Quantitative Developer | Trading team",
+      "type": "fulltime",
+      "location": "Hong Kong",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6172858",
+      "postedAt": "2024-08-14T02:06:34.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jump-trading-6032511",
+      "company": "Jump Trading",
+      "title": "Research Scientist/Research Engineer | Deep Learning",
+      "type": "fulltime",
+      "location": "Chicago, New York, London",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6032511",
+      "postedAt": "2024-07-23T16:47:01.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering",
+        "research"
+      ]
+    },
+    {
+      "id": "jump-trading-6098760",
+      "company": "Jump Trading",
+      "title": "Quantitative Researcher | Trading Team",
+      "type": "fulltime",
+      "location": "Hong Kong",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=6098760",
+      "postedAt": "2024-07-22T05:13:56.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "research",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jane-street-7449077002",
+      "company": "Jane Street",
+      "title": "Machine Learning Performance Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/7449077002",
+      "postedAt": "2024-05-20T21:27:18.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-7449252002",
+      "company": "Jane Street",
+      "title": "Machine Learning Performance Engineer",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/7449252002",
+      "postedAt": "2024-05-20T21:25:08.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-7449190002",
+      "company": "Jane Street",
+      "title": "Machine Learning Performance Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/7449190002",
+      "postedAt": "2024-05-20T21:22:15.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-7437779002",
+      "company": "Jane Street",
+      "title": "Machine Learning Engineer",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/7437779002",
+      "postedAt": "2024-05-20T21:18:21.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-5830344",
+      "company": "Jump Trading",
+      "title": "Quantitative Researcher | Trading Team",
+      "type": "fulltime",
+      "location": "Amsterdam",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=5830344",
+      "postedAt": "2024-03-19T13:37:19.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "research",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jump-trading-5752845",
+      "company": "Jump Trading",
+      "title": "HPC Production Engineer",
+      "type": "fulltime",
+      "location": "Chicago",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=5752845",
+      "postedAt": "2024-03-08T22:52:44.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jump-trading-4982814",
+      "company": "Jump Trading",
+      "title": "AI Research Scientist | Research & Development",
+      "type": "fulltime",
+      "location": "New York, London, Singapore",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=4982814",
+      "postedAt": "2024-03-04T22:33:17.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "ai",
+        "research"
+      ]
+    },
+    {
+      "id": "jane-street-7246339002",
+      "company": "Jane Street",
+      "title": "Machine Learning Researcher",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/7246339002",
+      "postedAt": "2024-02-16T14:53:42.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "research"
+      ]
+    },
+    {
+      "id": "jane-street-7229633002",
+      "company": "Jane Street",
+      "title": "Data Engineer",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/7229633002",
+      "postedAt": "2024-02-15T15:33:15.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "imc-4282973101",
+      "company": "IMC",
+      "title": "C++ Software Engineer",
+      "type": "fulltime",
+      "location": "Mumbai, India",
+      "url": "https://job-boards.eu.greenhouse.io/imc/jobs/4282973101",
+      "postedAt": "2024-02-07T09:05:57.000Z",
+      "tags": [
+        "greenhouse",
+        "imc",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-6802323002",
+      "company": "Jane Street",
+      "title": "Machine Learning Engineer",
+      "type": "fulltime",
+      "location": "Hong Kong, Hong Kong",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/6802323002",
+      "postedAt": "2023-06-13T20:46:07.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-6673515002",
+      "company": "Jane Street",
+      "title": "FTR Trader",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/6673515002",
+      "postedAt": "2023-03-20T15:58:34.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "jump-trading-4862925",
+      "company": "Jump Trading",
+      "title": "Trader | Crypto",
+      "type": "fulltime",
+      "location": "Singapore",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=4862925",
+      "postedAt": "2023-02-14T09:09:31.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "trading"
+      ]
+    },
+    {
+      "id": "jane-street-6558007002",
+      "company": "Jane Street",
+      "title": "Data Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/6558007002",
+      "postedAt": "2023-01-09T14:54:03.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-6485460002",
+      "company": "Jane Street",
+      "title": "Machine Learning Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/6485460002",
+      "postedAt": "2022-11-18T20:30:44.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-6254435002",
+      "company": "Jane Street",
+      "title": "Low-Latency Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/6254435002",
+      "postedAt": "2022-07-06T21:45:24.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-6236002002",
+      "company": "Jane Street",
+      "title": "Front End Software Engineer",
+      "type": "fulltime",
+      "location": "London, England, United Kingdom",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/6236002002",
+      "postedAt": "2022-06-27T20:52:27.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-6184529002",
+      "company": "Jane Street",
+      "title": "Front End Software Engineer",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/6184529002",
+      "postedAt": "2022-06-24T18:37:47.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering"
+      ]
+    },
+    {
+      "id": "jane-street-6110602002",
+      "company": "Jane Street",
+      "title": "Data Specialist",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/6110602002",
+      "postedAt": "2022-05-03T20:15:55.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-3903145",
+      "company": "Hudson River Trading",
+      "title": "Quantitative Researcher (Mid-Freq)",
+      "type": "fulltime",
+      "location": "New York, NY, United States",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=3903145",
+      "postedAt": "2022-02-04T19:19:05.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "algo",
+        "research",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-96224",
+      "company": "Hudson River Trading",
+      "title": "Algo Developer",
+      "type": "fulltime",
+      "location": "New York, NY, United States; Singapore",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=96224",
+      "postedAt": "2021-12-06T14:09:50.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "algo",
+        "engineering",
+        "research",
+        "quant"
+      ]
+    },
+    {
+      "id": "jump-trading-3115552",
+      "company": "Jump Trading",
+      "title": "Quantitative Researcher | Trading Team",
+      "type": "fulltime",
+      "location": "London",
+      "url": "https://www.jumptrading.com/hr/job?gh_jid=3115552",
+      "postedAt": "2021-06-01T14:54:14.000Z",
+      "tags": [
+        "greenhouse",
+        "jump-trading",
+        "fulltime",
+        "research",
+        "trading",
+        "quant"
+      ]
+    },
+    {
+      "id": "hudson-river-trading-1248067",
+      "company": "Hudson River Trading",
+      "title": "Senior Network Engineer - Low Latency Trading",
+      "type": "fulltime",
+      "location": "Chicago, Illinois, United States; London, United Kingdom; New York, NY, United States; Singapore",
+      "url": "https://www.hudsonrivertrading.com/careers/job/?gh_jid=1248067",
+      "postedAt": "2019-11-01T16:46:21.000Z",
+      "tags": [
+        "greenhouse",
+        "hudson-river-trading",
+        "fulltime",
+        "engineering",
+        "trading"
+      ]
+    },
+    {
+      "id": "jane-street-4276720002",
+      "company": "Jane Street",
+      "title": "Machine Learning Researcher",
+      "type": "fulltime",
+      "location": "New York, New York, United States",
+      "url": "https://job-boards.greenhouse.io/janestreet/jobs/4276720002",
+      "postedAt": "2019-05-02T20:55:45.000Z",
+      "tags": [
+        "greenhouse",
+        "jane-street",
+        "fulltime",
+        "ai",
+        "research"
+      ]
+    }
+  ]
+}
