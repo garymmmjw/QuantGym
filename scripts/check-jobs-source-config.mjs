@@ -13,13 +13,15 @@ const productionMode = args.has("--production");
 const liveMode = args.has("--live");
 const loadDotEnv = !args.has("--no-dotenv");
 const MIN_PRODUCTION_SOURCE_TOKEN_LENGTH = 24;
+const DEFAULT_PUBLIC_ATS_JOBS_SOURCE_URL = "https://beta.quantgym.app/data/jobs/public-ats-feed.json";
 
 if (loadDotEnv) loadEnvFromProjectRoot();
 
 const env = process.env;
 const config = {
   catalogPath: path.resolve(projectRoot, clean(env.QUANTGYM_JOBS_CATALOG || "data/jobs-catalog.json")),
-  sourceUrl: clean(env.QUANTGYM_JOBS_SOURCE_URL),
+  sourceUrl: resolveSourceUrl(env.QUANTGYM_JOBS_SOURCE_URL),
+  sourceDefaulted: shouldUseDefaultSource(env.QUANTGYM_JOBS_SOURCE_URL),
   sourceToken: clean(env.QUANTGYM_JOBS_SOURCE_TOKEN),
   cacheSeconds: parseInteger(env.QUANTGYM_JOBS_SOURCE_CACHE_SECONDS, 300),
   timeoutSeconds: parseNumber(env.QUANTGYM_JOBS_SOURCE_TIMEOUT_SECONDS, 5),
@@ -80,6 +82,7 @@ check("source configuration", () => {
     configured: true,
     host: url.hostname,
     protocol: url.protocol.replace(":", ""),
+    defaulted: config.sourceDefaulted,
     tokenSet: Boolean(config.sourceToken),
     cacheSeconds: config.cacheSeconds,
     timeoutSeconds: config.timeoutSeconds,
@@ -292,6 +295,22 @@ function assertNoPlaceholder(name, value) {
 function assertStrongProductionValue(name, value, minLength) {
   const text = String(value || "");
   assert(text.length >= minLength, `${name} must be at least ${minLength} characters in production.`);
+}
+
+function resolveSourceUrl(value) {
+  const explicit = clean(value);
+  if (explicit && !isDisabledValue(explicit)) return explicit;
+  return shouldUseDefaultSource(value) ? DEFAULT_PUBLIC_ATS_JOBS_SOURCE_URL : "";
+}
+
+function shouldUseDefaultSource(value) {
+  const explicit = clean(value);
+  if (explicit && isDisabledValue(explicit)) return false;
+  return productionMode && !explicit;
+}
+
+function isDisabledValue(value) {
+  return ["0", "false", "off", "disabled", "none", "no"].includes(clean(value).toLowerCase());
 }
 
 function assertUrlHasNoSensitiveParts(name, url) {

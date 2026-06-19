@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 914,
+  "durationMs": 928,
   "productionFixture": {
     "status": "pass",
     "mode": "production",
@@ -12,19 +12,30 @@
     "sourceConfigured": true,
     "sourceHost": "jobs.quantgym.test",
     "sourceProtocol": "https",
+    "sourceDefaulted": false,
     "sourceTokenSet": true,
     "cacheSeconds": 300,
     "timeoutSeconds": 5,
     "maxBytes": 65536
   },
+  "defaultProductionFixture": {
+    "status": "pass",
+    "mode": "production",
+    "passed": 2,
+    "failed": 0,
+    "catalogCount": 2,
+    "catalogInternships": 1,
+    "catalogFulltime": 1,
+    "sourceConfigured": true,
+    "sourceHost": "beta.quantgym.app",
+    "sourceProtocol": "https",
+    "sourceDefaulted": true,
+    "sourceTokenSet": false,
+    "cacheSeconds": 300,
+    "timeoutSeconds": 5,
+    "maxBytes": 65536
+  },
   "negativeFixtures": [
-    {
-      "name": "missing source URL rejected",
-      "rejected": true,
-      "expectedErrorObserved": true,
-      "failed": 1,
-      "error": "Production jobs source must set QUANTGYM_JOBS_SOURCE_URL."
-    },
     {
       "name": "http source URL rejected",
       "rejected": true,
@@ -304,6 +315,9 @@
     "validProductionHasAllChecks": true,
     "validProductionSourceTokenRedacted": true,
     "validProductionSourceUrlRedacted": true,
+    "defaultProductionPass": true,
+    "defaultProductionUsesPublicAtsFeed": true,
+    "defaultProductionTokenOptional": true,
     "negativeFixturesRejected": true,
     "negativeFixturesMentionExpectedErrors": true,
     "sourceUrlEmbeddedCredentialsRejected": true,
