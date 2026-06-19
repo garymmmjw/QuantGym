@@ -184,6 +184,8 @@
         "deployedBetaRoutesPass": true,
         "deployedBetaLoginPass": true,
         "deployedBetaProductionEndpointPass": true,
+        "deployedBetaCorsPreflightPass": true,
+        "deployedBetaPokerCorsPreflightPass": true,
         "deployedBetaErrorSweepPass": true,
         "deployedBetaSummaryRedactedPass": true,
         "deployedBetaMobileContentPass": true,

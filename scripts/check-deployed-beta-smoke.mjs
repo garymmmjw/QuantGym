@@ -145,6 +145,21 @@ const routeChecks = [
   }
 ];
 
+const corsPreflightChecks = [
+  {
+    name: "cloud sync preflight",
+    path: "/sync",
+    method: "POST",
+    requestHeaders: ["content-type", "authorization"]
+  },
+  {
+    name: "poker join preflight",
+    path: "/poker/rooms/QG-MAIN/join",
+    method: "POST",
+    requestHeaders: ["content-type", "authorization"]
+  }
+];
+
 const summary = {
   status: "pass",
   surface: "deployed beta smoke",
@@ -152,6 +167,7 @@ const summary = {
   email: redactEmail(email),
   login: { status: "pending" },
   config: {},
+  corsPreflights: [],
   routes: [],
   routeSummary: { checked: 0, passed: 0, failed: 0 },
   errors: {
@@ -186,6 +202,7 @@ try {
 
   await signIn(page);
   summary.config = await readRuntimeConfig(page);
+  await checkCorsPreflights();
   await checkRoutes(page);
   finalizeChecks();
 } catch (error) {
@@ -382,6 +399,56 @@ async function checkRoutes(page) {
   };
 }
 
+async function checkCorsPreflights() {
+  const apiEndpoint = trimSlash(summary.config.cloudApiEndpoint || "");
+  const origin = new URL(baseUrl).origin;
+  for (const check of corsPreflightChecks) {
+    const result = {
+      name: check.name,
+      url: sanitizeUrl(`${apiEndpoint}${check.path}`),
+      method: check.method,
+      requestHeaders: check.requestHeaders,
+      status: 0,
+      allowOrigin: "",
+      allowMethods: "",
+      allowHeaders: "",
+      statusPass: false,
+      originPass: false,
+      methodPass: false,
+      headersPass: false,
+      statusText: ""
+    };
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const response = await fetch(`${apiEndpoint}${check.path}`, {
+        method: "OPTIONS",
+        headers: {
+          Origin: origin,
+          "Access-Control-Request-Method": check.method,
+          "Access-Control-Request-Headers": check.requestHeaders.join(", ")
+        },
+        signal: controller.signal
+      });
+      result.status = response.status;
+      result.statusText = response.statusText || "";
+      result.allowOrigin = response.headers.get("access-control-allow-origin") || "";
+      result.allowMethods = response.headers.get("access-control-allow-methods") || "";
+      result.allowHeaders = response.headers.get("access-control-allow-headers") || "";
+      result.statusPass = [200, 204].includes(response.status);
+      result.originPass = result.allowOrigin === origin;
+      result.methodPass = headerListIncludes(result.allowMethods, check.method);
+      result.headersPass = check.requestHeaders.every((header) => headerListIncludes(result.allowHeaders, header));
+    } catch (error) {
+      result.error = String(error?.message || error).slice(0, 300);
+    } finally {
+      clearTimeout(timeout);
+    }
+    result.pass = result.statusPass && result.originPass && result.methodPass && result.headersPass;
+    summary.corsPreflights.push(result);
+  }
+}
+
 function finalizeChecks() {
   summary.checks = {
     loginPass: summary.login.status === "pass",
@@ -391,6 +458,8 @@ function finalizeChecks() {
       && summary.config.cloudApiEndpoint === "https://api.quantgym.app/api",
     llmEndpointIsProduction: summary.config.llmEndpoint === "https://llm.quantgym.app/interview",
     googleLoginEnabled: summary.config.googleLoginEnabled === true && summary.config.googleClientIdSet === true,
+    corsPreflightPass: summary.corsPreflights.length === corsPreflightChecks.length
+      && summary.corsPreflights.every((result) => result.pass === true),
     routeCountPass: Number(summary.routeSummary.checked) === routeChecks.length
       && Number(summary.routeSummary.failed) === 0,
     noMaterialConsoleErrors: summary.errors.consoleErrors.length === 0,
@@ -455,6 +524,14 @@ function isSummaryRedacted(data) {
   return !/"password"\s*:/i.test(raw)
     && !/[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/.test(raw)
     && /^\S{2}\*\*\*@[^@\s]+$/.test(String(data.email || ""));
+}
+
+function headerListIncludes(value, expected) {
+  const needle = String(expected || "").trim().toLowerCase();
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .includes(needle);
 }
 
 function sanitizeUrl(value) {
