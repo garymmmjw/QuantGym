@@ -1,0 +1,403 @@
+#!/usr/bin/env node
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const args = process.argv.slice(2);
+const baseUrl = trimSlash(getArgValue("--base-url") || process.env.QUANTGYM_BETA_SMOKE_BASE_URL || "https://beta.quantgym.app");
+const summaryPath = path.resolve(
+  root,
+  getArgValue("--summary") || "docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json"
+);
+const email = clean(getArgValue("--email") || process.env.QUANTGYM_BETA_SMOKE_EMAIL || process.env.QUANTGYM_LIVE_EMAIL);
+const password = await readPassword();
+const chromePath = process.env.CHROME_PATH || findChromeExecutable();
+const startedAt = Date.now();
+
+const routeChecks = [
+  {
+    name: "overview",
+    path: "/",
+    selectors: ["#heroTypewriter", "#overviewProblemProgress", "#leaderboardMetricSelect"],
+    minText: 60
+  },
+  {
+    name: "problems",
+    path: "/problems",
+    selectors: ["#problemSearch", "#problemList"],
+    minText: 300
+  },
+  {
+    name: "interview",
+    path: "/interview",
+    selectors: ["#interviewSetup", "#startInterviewBtn"],
+    minText: 120
+  },
+  {
+    name: "resume",
+    path: "/resume",
+    selectors: ["#resumeForm", "#resumeText"],
+    minText: 120
+  },
+  {
+    name: "jobs",
+    path: "/jobs",
+    selectors: ["#jobsSummary", "#jobsList"],
+    minText: 300
+  },
+  {
+    name: "library",
+    path: "/library",
+    selectors: ["#librarySearch", "#libraryBookGrid"],
+    minText: 300
+  },
+  {
+    name: "settings",
+    path: "/settings",
+    selectors: ["#settingsForm", "#settingsLanguageSelect"],
+    minText: 150
+  },
+  {
+    name: "account",
+    path: "/account",
+    selectors: ["#accountForm", "#accountNameInput"],
+    minText: 150
+  }
+];
+
+const summary = {
+  status: "pass",
+  surface: "deployed beta smoke",
+  baseUrl,
+  email: redactEmail(email),
+  login: { status: "pending" },
+  config: {},
+  routes: [],
+  routeSummary: { checked: 0, passed: 0, failed: 0 },
+  errors: {
+    consoleErrors: [],
+    pageErrors: [],
+    requestFailures: [],
+    httpErrors: [],
+    ignored: []
+  },
+  checks: {},
+  durationMs: 0
+};
+
+let browser;
+try {
+  assert(email, "Set QUANTGYM_BETA_SMOKE_EMAIL or pass --email.");
+  assert(password, "Set QUANTGYM_BETA_SMOKE_PASSWORD or pass --password-stdin.");
+  assert(chromePath, "Google Chrome executable was not found. Set CHROME_PATH to run this check.");
+
+  const { chromium } = await import("playwright-core");
+  browser = await chromium.launch({
+    executablePath: chromePath,
+    headless: true,
+    args: ["--no-sandbox"]
+  });
+  const context = await browser.newContext({
+    viewport: { width: 1365, height: 900 },
+    locale: "zh-CN"
+  });
+  const page = await context.newPage();
+  attachCollectors(page);
+
+  await signIn(page);
+  summary.config = await readRuntimeConfig(page);
+  await checkRoutes(page);
+  finalizeChecks();
+} catch (error) {
+  summary.status = "fail";
+  summary.error = error.message;
+} finally {
+  summary.durationMs = Date.now() - startedAt;
+  if (browser) await browser.close().catch(() => {});
+  writeSummary(summary);
+  process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
+  if (summary.status !== "pass") process.exitCode = 1;
+}
+
+function attachCollectors(page) {
+  page.on("console", (message) => {
+    if (message.type() !== "error") return;
+    const text = message.text();
+    if (isIgnoredConsole(text)) {
+      summary.errors.ignored.push({ type: "console", text: text.slice(0, 220) });
+      return;
+    }
+    summary.errors.consoleErrors.push(text.slice(0, 500));
+  });
+  page.on("pageerror", (error) => {
+    summary.errors.pageErrors.push(String(error.message || error).slice(0, 500));
+  });
+  page.on("requestfailed", (request) => {
+    const url = request.url();
+    if (!isOwnUrl(url)) return;
+    const failure = request.failure()?.errorText || "";
+    if (/\/cdn-cgi\/rum/i.test(url)) {
+      summary.errors.ignored.push({ type: "requestfailed", url: sanitizeUrl(url), failure });
+      return;
+    }
+    summary.errors.requestFailures.push({ url: sanitizeUrl(url), failure });
+  });
+  page.on("response", (response) => {
+    const url = response.url();
+    const status = response.status();
+    if (status < 400 || !isOwnUrl(url) || /\/favicon\.ico($|\?)/i.test(url)) return;
+    if (status === 403 && /\/api\/admin\/(audit-events|metrics)($|\?)/i.test(url)) {
+      summary.errors.ignored.push({
+        type: "http",
+        status,
+        url: sanitizeUrl(url),
+        reason: "non-admin account admin endpoint guard"
+      });
+      return;
+    }
+    summary.errors.httpErrors.push({ status, url: sanitizeUrl(url) });
+  });
+}
+
+async function signIn(page) {
+  await page.goto(`${baseUrl}/problems`, { waitUntil: "domcontentloaded", timeout: 30000 });
+  await Promise.race([
+    page.waitForSelector("#authShell", { timeout: 15000 }).catch(() => null),
+    page.waitForSelector("#appShell", { timeout: 15000 }).catch(() => null)
+  ]);
+
+  if (await isVisible(page, "#authShell")) {
+    await page.locator("#loginEmail").fill(email);
+    await page.locator("#loginForm").evaluate((form) => form.requestSubmit());
+    await Promise.race([
+      page.waitForSelector("#loginPassword:not(.hidden)", { state: "visible", timeout: 15000 }).catch(() => null),
+      page.waitForSelector("#registerForm:not(.hidden)", { state: "visible", timeout: 15000 }).catch(() => null)
+    ]);
+    if (await isVisible(page, "#registerForm")) {
+      throw new Error("Live auth showed registration for this email.");
+    }
+    if (!(await isVisible(page, "#loginPassword"))) {
+      throw new Error("Password field did not appear after email submit.");
+    }
+    await page.locator("#loginPassword").fill(password);
+    await page.locator("#loginForm").evaluate((form) => form.requestSubmit());
+  }
+
+  await page.waitForSelector("#appShell:not(.hidden)", { state: "visible", timeout: 25000 });
+  await page.waitForFunction(() => (
+    !document.querySelector("#authShell") || document.querySelector("#authShell").classList.contains("hidden")
+  ), null, { timeout: 10000 });
+
+  const authSnapshot = await page.evaluate(() => {
+    const auth = JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}");
+    const cloud = JSON.parse(localStorage.getItem("quantMemoryBoard.cloud.v1") || "{}");
+    const accounts = Array.isArray(auth.accounts) ? auth.accounts : [];
+    const current = accounts.find((item) => item.id === auth.currentUserId) || auth.currentAccount || auth.account || {};
+    return {
+      hasCurrentUser: Boolean(auth.currentUserId),
+      currentAccountEmail: current.email || "",
+      provider: current.provider || "",
+      cloudEndpoint: cloud.endpoint || "",
+      hasCloudToken: Boolean(cloud.token),
+      cloudUserIdSet: Boolean(cloud.userId)
+    };
+  });
+
+  summary.login = {
+    status: authSnapshot.hasCurrentUser ? "pass" : "fail",
+    emailMatched: normalizeEmail(authSnapshot.currentAccountEmail) === normalizeEmail(email),
+    provider: authSnapshot.provider,
+    cloudEndpoint: authSnapshot.cloudEndpoint,
+    hasCloudToken: authSnapshot.hasCloudToken,
+    cloudUserIdSet: authSnapshot.cloudUserIdSet,
+    pathAfterLogin: new URL(page.url()).pathname
+  };
+  assert(summary.login.status === "pass", "Login did not create an authenticated session.");
+  assert(summary.login.emailMatched === true, "Authenticated account email did not match the requested beta account.");
+  assert(summary.login.hasCloudToken === true, "Login did not persist a cloud session token.");
+}
+
+async function readRuntimeConfig(page) {
+  return page.evaluate(() => {
+    const config = window.QUANTGYM_CONFIG || {};
+    return {
+      cloudApiEndpoint: config.cloudApiEndpoint || "",
+      llmEndpoint: config.llmEndpoint || "",
+      googleLoginEnabled: config.googleLoginEnabled === true,
+      googleClientIdSet: Boolean(config.googleClientId)
+    };
+  });
+}
+
+async function checkRoutes(page) {
+  for (const route of routeChecks) {
+    const routeResult = {
+      name: route.name,
+      path: route.path,
+      status: "pass",
+      selectors: {}
+    };
+    try {
+      await page.goto(`${baseUrl}${route.path}`, { waitUntil: "domcontentloaded", timeout: 30000 });
+      await page.waitForSelector("#appShell:not(.hidden)", { state: "visible", timeout: 15000 });
+      for (const selector of route.selectors) {
+        await page.waitForSelector(selector, { state: "visible", timeout: 15000 });
+        routeResult.selectors[selector] = true;
+      }
+      await page.waitForTimeout(700);
+      const health = await page.evaluate(() => {
+        const body = document.body;
+        const doc = document.documentElement;
+        const horizontalOverflowPx = Math.max(
+          0,
+          body.scrollWidth - doc.clientWidth,
+          doc.scrollWidth - doc.clientWidth
+        );
+        return {
+          pathname: location.pathname,
+          bodyTextLength: (body.innerText || "").trim().length,
+          appShellVisible: Boolean(document.querySelector("#appShell:not(.hidden)")),
+          authShellVisible: Boolean(document.querySelector("#authShell:not(.hidden)")),
+          horizontalOverflowPx
+        };
+      });
+      routeResult.health = health;
+      if (
+        !health.appShellVisible
+        || health.authShellVisible
+        || health.bodyTextLength < route.minText
+        || health.horizontalOverflowPx > 2
+      ) {
+        routeResult.status = "fail";
+      }
+    } catch (error) {
+      routeResult.status = "fail";
+      routeResult.error = error.message;
+    }
+    summary.routes.push(routeResult);
+  }
+
+  summary.routeSummary = {
+    checked: summary.routes.length,
+    passed: summary.routes.filter((route) => route.status === "pass").length,
+    failed: summary.routes.filter((route) => route.status !== "pass").length
+  };
+}
+
+function finalizeChecks() {
+  summary.checks = {
+    loginPass: summary.login.status === "pass",
+    loginEmailMatched: summary.login.emailMatched === true,
+    cloudTokenPresent: summary.login.hasCloudToken === true,
+    cloudEndpointIsProduction: summary.login.cloudEndpoint === "https://api.quantgym.app/api"
+      && summary.config.cloudApiEndpoint === "https://api.quantgym.app/api",
+    llmEndpointIsProduction: summary.config.llmEndpoint === "https://llm.quantgym.app/interview",
+    googleLoginEnabled: summary.config.googleLoginEnabled === true && summary.config.googleClientIdSet === true,
+    routeCountPass: Number(summary.routeSummary.checked) === routeChecks.length
+      && Number(summary.routeSummary.failed) === 0,
+    noMaterialConsoleErrors: summary.errors.consoleErrors.length === 0,
+    noPageErrors: summary.errors.pageErrors.length === 0,
+    noRequestFailures: summary.errors.requestFailures.length === 0,
+    noHttpErrors: summary.errors.httpErrors.length === 0,
+    summaryRedacted: isSummaryRedacted(summary)
+  };
+  for (const [name, value] of Object.entries(summary.checks)) {
+    if (value !== true) summary.errors[`${name}Failure`] = true;
+  }
+  if (Object.values(summary.checks).some((value) => value !== true)) summary.status = "fail";
+}
+
+async function readPassword() {
+  if (args.includes("--password-stdin")) {
+    const input = await new Promise((resolve, reject) => {
+      let data = "";
+      process.stdin.setEncoding("utf8");
+      process.stdin.on("data", (chunk) => {
+        data += chunk;
+      });
+      process.stdin.on("end", () => resolve(data));
+      process.stdin.on("error", reject);
+    });
+    return clean(String(input).split(/\r?\n/)[0] || input);
+  }
+  return clean(process.env.QUANTGYM_BETA_SMOKE_PASSWORD || process.env.QUANTGYM_LIVE_PASSWORD);
+}
+
+function writeSummary(data) {
+  fs.mkdirSync(path.dirname(summaryPath), { recursive: true });
+  fs.writeFileSync(summaryPath, `${JSON.stringify(data, null, 2)}\n`);
+}
+
+function isOwnUrl(value) {
+  const text = String(value || "");
+  return text.startsWith(baseUrl)
+    || text.startsWith("https://api.quantgym.app")
+    || text.startsWith("https://llm.quantgym.app");
+}
+
+function isIgnoredConsole(text) {
+  return /compute-pressure|Permissions-Policy|Failed to load resource: the server responded with a status of 403/i.test(text);
+}
+
+function isSummaryRedacted(data) {
+  const raw = JSON.stringify(data);
+  return !/"password"\s*:/i.test(raw)
+    && !/[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/.test(raw)
+    && /^\S{2}\*\*\*@[^@\s]+$/.test(String(data.email || ""));
+}
+
+function sanitizeUrl(value) {
+  try {
+    const url = new URL(value);
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return String(value || "").split("?")[0].slice(0, 300);
+  }
+}
+
+async function isVisible(page, selector) {
+  return page.locator(selector).isVisible({ timeout: 1000 }).catch(() => false);
+}
+
+function redactEmail(value) {
+  const [name, domain] = String(value || "").split("@");
+  return `${name ? name.slice(0, 2) : "**"}***@${domain || "unknown"}`;
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function clean(value) {
+  return String(value || "").trim();
+}
+
+function trimSlash(value) {
+  return clean(value).replace(/\/+$/, "");
+}
+
+function getArgValue(name) {
+  const index = args.indexOf(name);
+  if (index === -1) return "";
+  return args[index + 1] || "";
+}
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+function findChromeExecutable() {
+  const candidates = [
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser"
+  ];
+  return candidates.find((candidate) => fs.existsSync(candidate)) || "";
+}
