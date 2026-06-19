@@ -343,6 +343,7 @@ const evidenceArtifacts = [
   "338-jobs-source-production-fixture-summary.json",
   "339-chrome-store-publication-fixture-summary.json",
   "340-question-bank-rights-release-blockers-summary.json",
+  "355-apex-www-domain-summary.json",
   "341-external-launch-blockers-summary.json"
 ];
 
@@ -833,6 +834,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       break;
     case "340-question-bank-rights-release-blockers-summary.json":
       validateQuestionBankRightsReleaseBlockersSummary(data, expect, "question-bank rights release blockers");
+      break;
+    case "355-apex-www-domain-summary.json":
+      validateApexWwwDomainSummary(data, expect, "apex/WWW domain smoke");
       break;
     case "341-external-launch-blockers-summary.json":
       validateExternalLaunchBlockersSummary(data, expect, "external launch blockers", {
@@ -1865,6 +1869,36 @@ function validateChromeStorePublicationFixtureSummary(data, expect, label) {
   expect(data.checks?.externalPublicationStillRequired === true, `${label} must not mark real Chrome publication complete`);
 }
 
+function validateApexWwwDomainSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass while the beta entrypoint is healthy`);
+  expect(data.surface === "apex/www domain SSL or redirect", `${label} must report the apex/www surface`);
+  expect(data.signoffCommand === "npm run check:apex-www-domain -- --require-clear", `${label} must record the clear-signoff command`);
+  expect(data.launchReadiness === "blocked", `${label} must keep apex/www launch readiness blocked until HTTPS is usable`);
+  expect(data.betaEntrypoint?.host === "beta.quantgym.app", `${label} must keep beta.quantgym.app as the current healthy entrypoint`);
+  expect(data.betaEntrypoint?.https?.usableHttps === true, `${label} beta entrypoint must be usable`);
+  expect(Array.isArray(data.promotionHosts) && data.promotionHosts.length === 2, `${label} must inspect both promotion hosts`);
+  for (const host of ["quantgym.app", "www.quantgym.app"]) {
+    const result = data.promotionHosts.find((item) => item.host === host);
+    expect(Boolean(result), `${label} must include ${host}`);
+    expect((result?.dns?.aRecords || []).length > 0 || (result?.dns?.cnameRecords || []).length > 0, `${label} ${host} must resolve in DNS`);
+    expect(result?.https?.cloudflare525 === true, `${label} ${host} must record the current Cloudflare 525 state`);
+    expect(result?.https?.usableHttps === false, `${label} ${host} must remain unusable until external SSL/redirect is fixed`);
+    expect(result?.https?.blockedReason === "Cloudflare 525 SSL handshake error", `${label} ${host} must classify the blocker`);
+  }
+  expect(data.checks?.betaHealthy === true, `${label} must confirm beta remains healthy`);
+  expect(data.checks?.apexDnsResolved === true, `${label} must confirm apex DNS resolves`);
+  expect(data.checks?.wwwDnsResolved === true, `${label} must confirm WWW DNS resolves`);
+  expect(data.checks?.apexHttpsProbeRan === true, `${label} must probe apex HTTPS`);
+  expect(data.checks?.wwwHttpsProbeRan === true, `${label} must probe WWW HTTPS`);
+  expect(data.checks?.apexWwwClear === false, `${label} must not clear apex/www while 525 remains`);
+  expect(data.checks?.apexCloudflare525Observed === true, `${label} must observe apex Cloudflare 525`);
+  expect(data.checks?.wwwCloudflare525Observed === true, `${label} must observe WWW Cloudflare 525`);
+  expect(data.checks?.currentBlockedStateClassified === true, `${label} must classify the current blocked state`);
+  expect(data.checks?.requireClearModeAvailable === true, `${label} must expose a require-clear mode`);
+  expect(data.checks?.requireClearWouldFail === true, `${label} must prove require-clear would fail while blocked`);
+  expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
+}
+
 function validateExternalLaunchBlockersSummary(data, expect, label, options = {}) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.launchReadiness === "blocked", `${label} must keep public launch marked blocked until external signoffs clear`);
@@ -1947,6 +1981,19 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
     expect(blocker?.status === "blocked", `${label} must keep ${id} blocked until real external signoff`);
     expect(typeof blocker?.ownerAction === "string" && blocker.ownerAction.length > 20, `${label} ${id} must describe the owner action`);
   }
+
+  const apex = findBlocker(data.blockers, "apex-www-ssl");
+  expect(apex?.signoffCommand === "npm run check:apex-www-domain -- --require-clear", `${label} apex/WWW must record the clear-signoff command`);
+  expect(apex?.localCoverage?.trackedInProductStatus === true, `${label} must keep apex/WWW tracked in product status`);
+  expect(apex?.localCoverage?.liveDiagnosisPass === true, `${label} must include apex/WWW live diagnosis coverage`);
+  expect(apex?.localCoverage?.betaEntrypointHealthy === true, `${label} must prove beta entrypoint remains healthy`);
+  expect(apex?.localCoverage?.apexDnsResolved === true, `${label} must include apex DNS coverage`);
+  expect(apex?.localCoverage?.wwwDnsResolved === true, `${label} must include WWW DNS coverage`);
+  expect(apex?.localCoverage?.currentBlockedStateClassified === true, `${label} must classify the apex/WWW blocked state`);
+  expect(apex?.localCoverage?.apexCloudflare525Observed === true, `${label} must include apex Cloudflare 525 evidence`);
+  expect(apex?.localCoverage?.wwwCloudflare525Observed === true, `${label} must include WWW Cloudflare 525 evidence`);
+  expect(apex?.localCoverage?.requireClearModeAvailable === true, `${label} must expose apex/WWW require-clear mode`);
+  expect(apex?.localCoverage?.requireClearWouldFail === true, `${label} must prove apex/WWW require-clear would fail while blocked`);
 
   const ops = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");
   expect(ops?.localCoverage?.runtimeSmokePass === true, `${label} must include ops runtime smoke coverage`);

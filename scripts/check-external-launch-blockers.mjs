@@ -21,6 +21,7 @@ const packageJson = readJson("package.json", "package.json");
 const productStatusText = readText("docs/product-status.md", "product status");
 
 const evidence = {
+  apexWwwDomain: readJson("docs/browser-audit-screenshots/355-apex-www-domain-summary.json", "apex/WWW domain smoke"),
   opsRuntime: readJson("docs/browser-audit-screenshots/334-ops-alert-runtime-smoke-summary.json", "ops alert runtime smoke"),
   opsFixture: readJson("docs/browser-audit-screenshots/336-ops-alert-production-fixture-summary.json", "ops alert production fixture"),
   opsPacket: readJson("docs/browser-audit-screenshots/346-ops-alert-edge-packet-summary.json", "ops alert edge packet"),
@@ -64,6 +65,7 @@ const requiredScripts = [
   "check:question-bank-rights:public",
   "check:question-bank-rights:commercial",
   "build:question-bank-rights-packet",
+  "check:apex-www-domain",
   "check:browser-route-smoke",
   "check:deployed-beta-smoke",
   "check:deployed-beta-mobile-content-smoke"
@@ -87,16 +89,39 @@ const jobsFeedCleared = evidence.jobsDeployedApiSource.status === "pass"
   && evidence.jobsDeployedApiSource.checks?.sourceRealMetadata === true
   && evidence.jobsDeployedApiSource.checks?.firstSourceJobMatchesStaticFeed === true;
 
+const apexWwwClear = evidence.apexWwwDomain.status === "pass"
+  && evidence.apexWwwDomain.checks?.apexWwwClear === true;
+
 const blockers = [
   {
     id: "apex-www-ssl",
     title: "Apex/WWW domain SSL or redirect",
-    status: "blocked",
-    ownerAction: "Fix Cloudflare/origin SSL handshakes or intentionally redirect quantgym.app and www.quantgym.app before promoting those domains.",
-    signoffCommand: "",
-    localCoverage: {
-      trackedInProductStatus: productStatusIncludes(["quantgym.app", "www.quantgym.app", "525"])
-    }
+    status: apexWwwClear ? "pass" : "blocked",
+    ownerAction: apexWwwClear
+      ? "Apex and WWW HTTPS are usable; keep the canonical domain policy documented before promotion."
+      : "Fix Cloudflare/origin SSL handshakes or intentionally redirect quantgym.app and www.quantgym.app before promoting those domains.",
+    signoffCommand: "npm run check:apex-www-domain -- --require-clear",
+    localCoverage: apexWwwClear
+      ? {
+        trackedInProductStatus: productStatusIncludes(["quantgym.app", "www.quantgym.app"]),
+        liveDiagnosisPass: evidence.apexWwwDomain.status === "pass",
+        betaEntrypointHealthy: evidence.apexWwwDomain.checks?.betaHealthy === true,
+        apexUsableHttps: evidence.apexWwwDomain.checks?.apexUsableHttps === true,
+        wwwUsableHttps: evidence.apexWwwDomain.checks?.wwwUsableHttps === true,
+        requireClearModeAvailable: evidence.apexWwwDomain.checks?.requireClearModeAvailable === true
+      }
+      : {
+        trackedInProductStatus: productStatusIncludes(["quantgym.app", "www.quantgym.app", "525"]),
+        liveDiagnosisPass: evidence.apexWwwDomain.status === "pass",
+        betaEntrypointHealthy: evidence.apexWwwDomain.checks?.betaHealthy === true,
+        apexDnsResolved: evidence.apexWwwDomain.checks?.apexDnsResolved === true,
+        wwwDnsResolved: evidence.apexWwwDomain.checks?.wwwDnsResolved === true,
+        currentBlockedStateClassified: evidence.apexWwwDomain.checks?.currentBlockedStateClassified === true,
+        apexCloudflare525Observed: evidence.apexWwwDomain.checks?.apexCloudflare525Observed === true,
+        wwwCloudflare525Observed: evidence.apexWwwDomain.checks?.wwwCloudflare525Observed === true,
+        requireClearModeAvailable: evidence.apexWwwDomain.checks?.requireClearModeAvailable === true,
+        requireClearWouldFail: evidence.apexWwwDomain.checks?.requireClearWouldFail === true
+      }
   },
   {
     id: "ops-alerts-edge-rate-limit",

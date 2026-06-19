@@ -1,0 +1,125 @@
+{
+  "id": 355,
+  "date": "2026-06-19",
+  "surface": "apex/www domain SSL or redirect",
+  "status": "pass",
+  "durationMs": 441,
+  "requireClear": false,
+  "launchReadiness": "blocked",
+  "signoffCommand": "npm run check:apex-www-domain -- --require-clear",
+  "betaEntrypoint": {
+    "host": "beta.quantgym.app",
+    "dns": {
+      "aRecords": [
+        "104.21.93.42",
+        "172.67.204.103"
+      ],
+      "cnameRecords": []
+    },
+    "https": {
+      "initialUrl": "https://beta.quantgym.app/",
+      "finalUrl": "https://beta.quantgym.app/",
+      "finalStatusCode": 200,
+      "finalHost": "beta.quantgym.app",
+      "cloudflare525": false,
+      "usableHttps": true,
+      "redirectsToBeta": false,
+      "blockedReason": "",
+      "chain": [
+        {
+          "url": "https://beta.quantgym.app/",
+          "statusCode": 200,
+          "headers": {
+            "location": "",
+            "server": "cloudflare",
+            "cfRay": "a0e2e8b64869cb92-LAX",
+            "contentType": "text/html; charset=utf-8"
+          }
+        }
+      ]
+    }
+  },
+  "promotionHosts": [
+    {
+      "host": "quantgym.app",
+      "dns": {
+        "aRecords": [
+          "104.21.93.42",
+          "172.67.204.103"
+        ],
+        "cnameRecords": []
+      },
+      "https": {
+        "initialUrl": "https://quantgym.app/",
+        "finalUrl": "https://quantgym.app/",
+        "finalStatusCode": 525,
+        "finalHost": "quantgym.app",
+        "cloudflare525": true,
+        "usableHttps": false,
+        "redirectsToBeta": false,
+        "blockedReason": "Cloudflare 525 SSL handshake error",
+        "chain": [
+          {
+            "url": "https://quantgym.app/",
+            "statusCode": 525,
+            "headers": {
+              "location": "",
+              "server": "cloudflare",
+              "cfRay": "a0e2e8b42cbb01d9-LAX",
+              "contentType": "text/plain; charset=UTF-8"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "host": "www.quantgym.app",
+      "dns": {
+        "aRecords": [
+          "104.21.93.42",
+          "172.67.204.103"
+        ],
+        "cnameRecords": []
+      },
+      "https": {
+        "initialUrl": "https://www.quantgym.app/",
+        "finalUrl": "https://www.quantgym.app/",
+        "finalStatusCode": 525,
+        "finalHost": "www.quantgym.app",
+        "cloudflare525": true,
+        "usableHttps": false,
+        "redirectsToBeta": false,
+        "blockedReason": "Cloudflare 525 SSL handshake error",
+        "chain": [
+          {
+            "url": "https://www.quantgym.app/",
+            "statusCode": 525,
+            "headers": {
+              "location": "",
+              "server": "cloudflare",
+              "cfRay": "a0e2e8b53812b256-LAX",
+              "contentType": "text/plain; charset=UTF-8"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "checks": {
+    "betaHealthy": true,
+    "apexDnsResolved": true,
+    "wwwDnsResolved": true,
+    "apexHttpsProbeRan": true,
+    "wwwHttpsProbeRan": true,
+    "apexUsableHttps": false,
+    "wwwUsableHttps": false,
+    "apexWwwClear": false,
+    "apexCloudflare525Observed": true,
+    "wwwCloudflare525Observed": true,
+    "currentBlockedStateClassified": true,
+    "requireClearModeAvailable": true,
+    "requireClearWouldFail": true
+  },
+  "failures": [],
+  "warnings": []
+}

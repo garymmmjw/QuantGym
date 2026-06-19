@@ -512,7 +512,10 @@ Browser/CDP deep flows now recorded in
   SSL handshake errors; keep `beta.quantgym.app` as the current beta entrypoint
   until this separate domain/SSL follow-up is complete. Deferred by the
   2026-06-17 handoff decision and reaffirmed by the 2026-06-18 user decision
-  to leave this item in the unresolved backlog for now.
+  to leave this item in the unresolved backlog for now. Refresh live evidence
+  with `npm run check:apex-www-domain`; after the Cloudflare/origin SSL or
+  redirect fix, clear the item with
+  `npm run check:apex-www-domain -- --require-clear`.
 - [ ] Real Google provider account sign-off with a real Google ID token/session;
   keep the local and production web origins authorized in the OAuth Client.
 

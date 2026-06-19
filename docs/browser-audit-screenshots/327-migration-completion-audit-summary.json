@@ -74,9 +74,9 @@
       "status": "pass",
       "evidence": {
         "status": "pass",
-        "evidenceRefs": 277,
+        "evidenceRefs": 278,
         "imageRefs": 229,
-        "jsonRefs": 48,
+        "jsonRefs": 49,
         "missing": 0,
         "smallFiles": 0,
         "invalidJson": 0
