@@ -40,19 +40,31 @@ const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 const packageName = `quantgym-collector-v${manifest.version}.zip`;
 const outputPath = path.join(artifactsDir, packageName);
 const tempOutputPath = path.join(artifactsDir, `.tmp-${process.pid}-${Date.now()}-${packageName}`);
+const tempStagingDir = path.join(artifactsDir, `.tmp-${process.pid}-${Date.now()}-source`);
+const deterministicDate = new Date(Number(process.env.SOURCE_DATE_EPOCH || 1704067200) * 1000);
 fs.mkdirSync(artifactsDir, { recursive: true });
 if (fs.existsSync(tempOutputPath)) fs.rmSync(tempOutputPath);
+if (fs.existsSync(tempStagingDir)) fs.rmSync(tempStagingDir, { recursive: true, force: true });
 
 const missing = packageFiles.filter((file) => !fs.existsSync(path.join(extensionDir, file)));
 if (missing.length) fail(`missing package files: ${missing.join(", ")}`);
 
-const zip = spawnSync("zip", ["-X", "-q", tempOutputPath, ...packageFiles], {
-  cwd: extensionDir,
-  encoding: "utf8"
-});
-if (zip.status !== 0) {
-  if (fs.existsSync(tempOutputPath)) fs.rmSync(tempOutputPath);
-  fail((zip.stderr || zip.stdout || "zip command failed").trim());
+let zipFailure = "";
+try {
+  stagePackageFiles();
+  const zip = spawnSync("zip", ["-X", "-q", tempOutputPath, ...packageFiles], {
+    cwd: tempStagingDir,
+    encoding: "utf8"
+  });
+  if (zip.status !== 0) {
+    zipFailure = (zip.stderr || zip.stdout || "zip command failed").trim();
+  }
+} finally {
+  if (fs.existsSync(tempStagingDir)) fs.rmSync(tempStagingDir, { recursive: true, force: true });
+}
+if (zipFailure) {
+  if (fs.existsSync(tempOutputPath)) fs.rmSync(tempOutputPath, { force: true });
+  fail(zipFailure);
 }
 
 const tempStat = fs.statSync(tempOutputPath);
@@ -71,11 +83,23 @@ console.log(JSON.stringify({
   sha256: sha256File(outputPath),
   bytes: stat.size,
   files: packageFiles,
+  deterministicTimestamp: deterministicDate.toISOString(),
   fileHashes: Object.fromEntries(packageFiles.map((file) => [
     file,
     sha256File(path.join(extensionDir, file))
   ]))
 }, null, 2));
+
+function stagePackageFiles() {
+  for (const file of packageFiles) {
+    const source = path.join(extensionDir, file);
+    const destination = path.join(tempStagingDir, file);
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    fs.copyFileSync(source, destination);
+    fs.chmodSync(destination, 0o644);
+    fs.utimesSync(destination, deterministicDate, deterministicDate);
+  }
+}
 
 function sha256File(filePath) {
   return crypto.createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
