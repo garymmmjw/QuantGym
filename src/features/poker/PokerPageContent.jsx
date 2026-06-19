@@ -1,5 +1,6 @@
 import { PokerActionBar } from "./PokerActionBar.jsx";
 import { PokerLobbyPanel } from "./PokerLobbyPanel.jsx";
+import { PokerPreflopMatrix } from "./PokerPreflopMatrix.jsx";
 import { PokerTable } from "./PokerTable.jsx";
 import { PokerTournamentStrip } from "./PokerTournamentStrip.jsx";
 import { usePokerPageModel } from "./pokerHooks.js";
@@ -16,6 +17,10 @@ export function PokerPageContent() {
           <small>OWNER: GARY</small>
           <strong>NLH ~ <span id="pokerBlindText">{game?.blindsText || "10 / 20"}</span></strong>
           <em id="pokerRoomCode">{game?.roomCode || "QG"}</em>
+          <button id="pokerLeaveTableBtn" className="poker-leave-table-button" type="button" onClick={() => model.openModule("tools")}>
+            <i data-lucide="log-out" />
+            <span>Leave table</span>
+          </button>
         </div>
 
         <PokerTournamentStrip tournament={game?.table?.tournament} />
@@ -40,31 +45,12 @@ export function PokerPageContent() {
         <PokerActionBar table={game?.table} actions={model.actions} />
       </div>
 
-      <section className="poker-solver-panel">
-        <div className="panel-heading">
-          <div>
-            <h3>100BB Preflop Solver Lite</h3>
-            <small>简化 6-max baseline：RFI / mix / defend / fold，用来训练翻前直觉。</small>
-          </div>
-          <select id="pokerPreflopPositionSelect" aria-label="Preflop position" defaultValue="btn">
-            <option value="utg">UTG</option>
-            <option value="hj">HJ</option>
-            <option value="co">CO</option>
-            <option value="btn">BTN</option>
-            <option value="sb">SB</option>
-            <option value="bb">BB vs BTN</option>
-          </select>
-        </div>
-        <div className="poker-solver-layout">
-          <div
-            id="pokerPreflopMatrix"
-            className="poker-preflop-matrix"
-            aria-label="100BB preflop hand matrix"
-            onClick={model.handlePreflopClick}
-          />
-          <aside id="pokerPreflopDetail" className="poker-preflop-detail" />
-        </div>
-      </section>
+      <PokerPreflopMatrix
+        position={model.view.preflop?.position}
+        selectedHand={model.view.preflop?.selectedHand}
+        onPositionChange={model.actions.setPreflopPosition}
+        onHandSelect={model.actions.setPreflopHand}
+      />
     </section>
   );
 }

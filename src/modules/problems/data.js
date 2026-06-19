@@ -224,6 +224,7 @@ export function isCatalogProblem(problem, deps = {}) {
   const bookSlug = String(problem?.bookSlug || "").trim();
   const id = String(problem?.id || "");
   return source === "question-bank"
+    || source === "pdf-interview"
     || sourceType === "book"
     || sourceType === "question-bank"
     || Boolean(bookSlug)

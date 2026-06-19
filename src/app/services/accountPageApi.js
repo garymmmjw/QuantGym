@@ -52,12 +52,64 @@ export function createAccountPageApi(deps = {}) {
       return { ok: true, resume, meta: formatResumeUploadMeta(resume) };
     },
 
+    async uploadAvatarMedia({ dataUrl = "", name = "avatar" } = {}) {
+      if (!dataUrl || !deps.cloudApi || (deps.canUseCloud && !deps.canUseCloud())) return { ok: false, code: "unavailable" };
+      try {
+        const payload = await deps.cloudApi("/media", {
+          method: "POST",
+          body: {
+            dataUrl,
+            name,
+            context: "account-avatar"
+          }
+        });
+        const media = payload?.media || null;
+        if (!media?.url && !media?.dataUrl) {
+          return { ok: false, code: "invalidMedia" };
+        }
+        return { ok: true, media };
+      } catch (error) {
+        return {
+          ok: false,
+          code: "uploadFailed",
+          message: error?.message || "Could not upload avatar media"
+        };
+      }
+    },
+
     getResumeMeta() {
       return formatResumeUploadMeta(deps.userState?.value?.resume || {}, deps.t?.("resumeUploadHint") || "");
     },
 
     formatRank(user = deps.appState?.currentUser) {
       return deps.formatAccountRank?.(user) || "-";
+    },
+
+    async fetchAdminOverview(limit = 24) {
+      if (!deps.cloudApi) {
+        return { ok: false, code: "unavailable", message: "Cloud API is unavailable" };
+      }
+      const safeLimit = Math.max(1, Math.min(50, Number(limit) || 24));
+      try {
+        const [metricsPayload, eventsPayload] = await Promise.all([
+          deps.cloudApi("/admin/metrics"),
+          deps.cloudApi(`/admin/audit-events?limit=${safeLimit}`)
+        ]);
+        return {
+          ok: true,
+          metrics: metricsPayload?.metrics || {},
+          events: Array.isArray(eventsPayload?.events) ? eventsPayload.events : []
+        };
+      } catch (error) {
+        if (error?.status === 401 || error?.status === 403) {
+          return { ok: false, code: "forbidden", message: error.message || "Admin access is required" };
+        }
+        return {
+          ok: false,
+          code: "error",
+          message: error?.message || "Could not load admin overview"
+        };
+      }
     },
 
     logout() {

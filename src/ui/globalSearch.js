@@ -195,7 +195,19 @@ export function activateGlobalSearchResult(controller, index, actions = {}) {
     return true;
   }
   if (result.type === "news") {
-    actions.focusNews?.(result.id);
+    const CustomEventCtor = windowRef?.CustomEvent || globalThis.CustomEvent;
+    windowRef.__quantgymPendingNewsFocusId = result.id;
+    actions.switchModule?.("news");
+    actions.focusNews?.(result.id, false);
+    if (windowRef?.dispatchEvent && CustomEventCtor) {
+      [120, 500, 1000].forEach((delay) => {
+        windowRef.setTimeout?.(() => {
+          windowRef.dispatchEvent(new CustomEventCtor("quantgym:news-focus", {
+            detail: { id: result.id }
+          }));
+        }, delay);
+      });
+    }
     return true;
   }
   return false;

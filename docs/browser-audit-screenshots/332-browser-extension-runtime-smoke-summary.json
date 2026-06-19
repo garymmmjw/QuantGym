@@ -1,0 +1,37 @@
+{
+  "status": "pass",
+  "popup": {
+    "source": "browser-extension/popup.js",
+    "html": "browser-extension/popup.html",
+    "defaultBoardUrl": "https://beta.quantgym.app/"
+  },
+  "calls": {
+    "storageGets": 1,
+    "storageSets": 6,
+    "tabQueries": 2,
+    "openedTabs": 1,
+    "scriptExecutions": 2
+  },
+  "checks": {
+    "popupLoaded": true,
+    "storageDefaultLoaded": true,
+    "activeTabQueried": true,
+    "scriptExecuted": true,
+    "sourceHostRendered": true,
+    "problemTitleRendered": true,
+    "problemPromptRendered": true,
+    "problemMetaRendered": true,
+    "copyJsonWroteClipboard": true,
+    "capturePayloadHasTags": true,
+    "collectOpenedQuantGym": true,
+    "capturePayloadHasTitle": true,
+    "capturePayloadHasSourceUrl": true,
+    "boardUrlSaved": true,
+    "invalidBoardUrlRejected": true,
+    "insecureRemoteBoardUrlRejected": true,
+    "loopbackHttpBoardUrlAllowed": true,
+    "longCaptureFallsBackToClipboard": true,
+    "longCaptureStatusUpdated": true
+  },
+  "failures": []
+}

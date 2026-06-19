@@ -29,12 +29,11 @@ export function createPokerTableView(deps = {}) {
     isSpectator = () => false,
     makeGameRound = () => null,
     persistRoom = () => {},
-    refreshIcons = () => {},
-    renderPanelTabs = () => {},
-    renderPreflopChart = () => {},
-    renderRightPanel = () => {},
-    state = {}
-  } = deps;
+	    refreshIcons = () => {},
+	    renderPanelTabs = () => {},
+	    renderRightPanel = () => {},
+	    state = {}
+	  } = deps;
 
   function renderGame() {
     if (state.reactTable !== false) {
@@ -65,12 +64,11 @@ export function createPokerTableView(deps = {}) {
     renderBoard(game);
     renderActions(game);
     renderLobby(game);
-    renderLog(game);
-    renderPanelTabs();
-    renderRightPanel(game);
-    renderPreflopChart();
+	    renderLog(game);
+	    renderPanelTabs();
+	    renderRightPanel(game);
 
-    const active = getCurrentPlayer(game);
+	    const active = getCurrentPlayer(game);
     const toCall = active ? getToCall(game, active) : 0;
     const coach = getHeroPreflopCoach(game);
     elements.pokerGamePrompt.innerHTML = `

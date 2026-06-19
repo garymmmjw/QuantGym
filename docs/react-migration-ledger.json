@@ -32,11 +32,11 @@
     "pk": { "status": "converted", "behavior": "pageApi.pk.getView" }
   },
   "bundleBudget": {
-    "mainChunkRawKb": 800,
-    "mainChunkGzipKb": 400,
-    "note": "vendor-react/router/dom split; index chunk ~787KB raw / ~244KB gzip (2026-06-07)"
+    "mainChunkRawKb": 500,
+    "mainChunkGzipKb": 250,
+    "note": "manual chunks split app data/state/UI and feature cores; largest verified JS chunk ~184KB raw / ~52KB gzip (2026-06-17)"
   },
   "retainedHelpers": {
-    "poker": "React route/table/lobby/action-bar with retained module helpers for room state, actions, online sync, and preflop matrix DOM rendering."
+    "poker": "React route/table/lobby/action-bar/preflop matrix with retained module helpers for room state, actions, and online sync behind pokerPageApi."
   }
 }

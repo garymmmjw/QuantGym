@@ -25,7 +25,8 @@ export function usePkPageModel() {
 
   const submit = useCallback((event) => {
     event?.preventDefault?.();
-    sync(api?.submit?.(view.answer));
+    const submittedAnswer = event?.currentTarget?.elements?.pkAnswer?.value ?? view.answer;
+    sync(api?.submit?.(submittedAnswer));
     pageApi?.refreshIcons?.({ root: document.querySelector(".pk-section") || document });
   }, [api, pageApi, sync, view.answer]);
 

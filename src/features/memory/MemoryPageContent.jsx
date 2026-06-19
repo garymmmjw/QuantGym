@@ -59,12 +59,20 @@ export function MemoryPageContent() {
       }
 
       const dataUrl = await readFileAsDataUrl(file);
+      const uploadResult = await api.uploadResourceMedia?.({
+        dataUrl,
+        name: file.name || "memory-resource",
+        type: file.type || "image/*"
+      });
+      const previewData = uploadResult?.ok
+        ? uploadResult.media?.dataUrl || uploadResult.media?.url || dataUrl
+        : dataUrl;
       setForm((current) => ({
         ...current,
         title: current.title.trim() ? current.title : file.name,
         type: "image",
         content: file.name,
-        previewData: dataUrl
+        previewData
       }));
       return;
     }

@@ -6,6 +6,7 @@ import {
   prepSeasonDefs
 } from '../../prep-data.js';
 import { skillDefs } from '../../skills.js';
+import { timestampOrZero } from '../../lib/date.js';
 
 export function normalizeStudyPlan(raw = null, deps = {}) {
   const makeId = deps.makeId || (() => `${Date.now()}-${Math.random()}`);
@@ -74,9 +75,10 @@ export function normalizePrepPlan(raw = null, deps = {}) {
 }
 
 export function weeksUntilDate(dateText, now = Date.now()) {
-  const target = new Date(`${dateText}T12:00:00`);
-  const current = typeof now === "number" ? now : new Date(now).getTime();
-  const delta = target.getTime() - current;
+  const target = timestampOrZero(`${dateText}T12:00:00`);
+  const current = timestampOrZero(now);
+  if (!target || !current) return 0;
+  const delta = target - current;
   return Math.ceil(delta / (7 * 24 * 60 * 60 * 1000));
 }
 
@@ -177,7 +179,8 @@ export function getPrepDailyTasks(plan, deps = {}) {
       detail: override.detail || task.detail,
       minutes: override.minutes || task.minutes,
       skill: task.query || task.action,
-      done: Boolean(plan.completedTasks[key])
+      done: Boolean(plan.completedTasks[key]),
+      deletable: false
     };
   });
   const customTasks = (plan.customTasks || [])
@@ -185,7 +188,8 @@ export function getPrepDailyTasks(plan, deps = {}) {
     .map((task) => ({
       ...task,
       skill: task.query || task.action || "custom",
-      done: Boolean(plan.completedTasks[`${dateKey}:${task.id}`])
+      done: Boolean(plan.completedTasks[`${dateKey}:${task.id}`]),
+      deletable: true
     }));
   return [...preparedTasks, ...customTasks];
 }

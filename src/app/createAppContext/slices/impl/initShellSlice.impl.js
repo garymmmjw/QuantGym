@@ -254,10 +254,14 @@ export function initShellSliceImpl(shared, ctx) {
     maybeAutoRefreshNews: () => maybeAutoRefreshNews(),
     maybeAutoRefreshJobs: () => maybeAutoRefreshJobs(),
     updatePreview: () => sliceRefs.updatePreview?.(),
-    refreshIcons
+    refreshIcons: (...args) => (typeof sliceRefs.refreshIcons === "function"
+      ? sliceRefs.refreshIcons(...args)
+      : undefined)
   });
   const applySidebarState = appShellController.applySidebarState;
   const applyLanguage = appShellController.applyLanguage;
+  sliceRefs.applySidebarState = applySidebarState;
+  sliceRefs.applyLanguage = applyLanguage;
   const updateGlobalSearchPlaceholder = appShellController.updateGlobalSearchPlaceholder;
   const handleRouteChange = appShellController.handleRouteChange;
   const restoreRouteModule = appShellController.restoreRouteModule;
@@ -402,8 +406,8 @@ export function initShellSliceImpl(shared, ctx) {
     toggleStreakPanel,
     updateCheckInPill
   } = planningActivityBundle;
-  userStateActivityHooks = planningActivityBundle.userStateActivityHooks;
-  communityActivityHooks = planningActivityBundle.communityActivityHooks;
+  Object.assign(userStateActivityHooks, planningActivityBundle.userStateActivityHooks);
+  Object.assign(communityActivityHooks, planningActivityBundle.communityActivityHooks);
   const communityControllerBundle = createAppCommunityControllerBundle({
     appState,
     communityFilterState,
@@ -431,6 +435,6 @@ export function initShellSliceImpl(shared, ctx) {
   const normalizeMessageParticipant = communityControllerBundle.normalizeMessageParticipant;
   const normalizeMessageThread = communityControllerBundle.normalizeMessageThread;
   const updateUnreadMessageBadge = communityControllerBundle.updateUnreadMessageBadge;
-  return { addProblemFromForm, addProblemFromPayload, addTodoTask, appShellController, applyLanguage, applySidebarState, clearProblemLookupCaches, clearProblemStateCache, closeTodoDock, communityActivityHooks, communityControllerBundle, deleteProblem, els, experienceShareController, getModuleLifecycle, getNetworkStatusLabel, getProblemPersonalState, getProblemStateCache, getTodoDockPlan, getUnreadMessageCount, getUserMessageThreads, handleProblemPaginationChange, handleProblemPaginationClick, handleProblemPaginationKeydown, handleProblemPaginationSubmit, handleRouteChange, handleTodoDockClick, handleTodoDockEdit, heroCoachController, hideProblemPagination, importProblemJson, importProblemJsonText, interviewAnswerController, interviewFacade, interviewSessionFlowController, jobsFacade, jobsRuntime, leaderboardCloudController, leetcodeHotController, maybeAutoRefreshJobs, newsRuntime, normalizeCommunityComment, normalizeCommunityPost, normalizeMessageParticipant, normalizeMessageThread, openExternalUrl, overviewFacade, overviewSummaryController, pageLifecycleRef, planningActivityBundle, problemBrowserController, problemCaptureController, problemCatalogMutationController, problemPaginationController, problemPersonalStateController, problemsFacade, problemsRuntime, pruneProblemCatalog, publishInterviewExperience, refreshJobsFromApi, renderAll, renderModules, renderProblemPagination, renderTodoDock, resetProblemPagination, restoreRouteModule, runModuleLifecycle, setButtonLabel, setText, setupButtonRipples, showAuthMessage, switchModule, toggleProblemCompleted, toggleProblemSaved, toggleTodoDock, updateGlobalSearchPlaceholder, updateProblemState, updateUnreadMessageBadge, upsertProblems, userStateActivityHooks };
+  return { addProblemFromForm, addProblemFromPayload, addTodoTask, appShellController, applyLanguage, applySidebarState, clearProblemLookupCaches, clearProblemStateCache, closeTodoDock, communityActivityHooks, communityControllerBundle, deleteProblem, els, experienceShareController, getModuleLifecycle, getNetworkStatusLabel, getProblemPersonalState, getProblemStateCache, getTodoDockPlan, getUnreadMessageCount, getUserMessageThreads, handleProblemPaginationChange, handleProblemPaginationClick, handleProblemPaginationKeydown, handleProblemPaginationSubmit, handleRouteChange, handleTodoDockClick, handleTodoDockEdit, heroCoachController, hideProblemPagination, importProblemJson, importProblemJsonText, interviewAnswerController, interviewFacade, interviewSessionFlowController, jobsFacade, jobsRuntime, leaderboardCloudController, leetcodeHotController, maybeAutoRefreshJobs, newsRuntime, normalizeCommunityComment, normalizeCommunityPost, normalizeMessageParticipant, normalizeMessageThread, openExternalUrl, overviewFacade, overviewSummaryController, pageLifecycleRef, planningActivityBundle, problemBrowserController, problemCaptureController, problemCatalogMutationController, problemPaginationController, problemPersonalStateController, problemsFacade, problemsRuntime, pruneProblemCatalog, publishInterviewExperience, refreshJobsFromApi, renderAll, renderModules, renderProblemPagination, renderTodoDock, resetProblemPagination, restoreRouteModule, runModuleLifecycle, setButtonLabel, setStreakPanelOpen, setText, setupButtonRipples, showAuthMessage, switchModule, toggleProblemCompleted, toggleProblemSaved, toggleStreakPanel, toggleTodoDock, updateGlobalSearchPlaceholder, updateProblemState, updateUnreadMessageBadge, upsertProblems, userStateActivityHooks };
 
 }

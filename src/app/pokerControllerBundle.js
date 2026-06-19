@@ -1,4 +1,9 @@
 import { createPokerActionController } from '../modules/poker/actionController.js';
+import {
+  getPreflopStrategyForCards,
+  getStartingHandKey,
+  POKER_POSITION_LABELS
+} from '../modules/poker/engine.js';
 import { createPokerHandFlowController } from '../modules/poker/handFlowController.js';
 import {
   createPokerPlayer,
@@ -10,7 +15,6 @@ import {
 } from '../modules/poker/model.js';
 import { createPokerOnlineController } from '../modules/poker/onlineController.js';
 import { createPokerPanelView } from '../modules/poker/panelView.js';
-import { createPokerPreflopView } from '../modules/poker/preflopView.js';
 import { createPokerPlayerController } from '../modules/poker/playerController.js';
 import { createPokerRoomController } from '../modules/poker/roomController.js';
 import { createPokerTableView } from '../modules/poker/tableView.js';
@@ -134,20 +138,14 @@ export function createPokerControllerBundle(deps = {}) {
   const renderPokerPanelTabs = pokerPanelView.renderTabs;
   const renderPokerRightPanel = pokerPanelView.renderRightPanel;
 
-  const pokerPreflopView = createPokerPreflopView({
-    documentRef: document,
-    elements: els,
-    escapeHtml,
-    getHero: getPokerHero,
-    getPositionForPlayer: getPokerPositionForPlayer,
-    getSelectedHand: () => pokerState.selectedPreflopHand,
-    setSelectedHand(handKey) {
-      pokerState.selectedPreflopHand = handKey;
-    }
-  });
-  const renderPokerPreflopChart = pokerPreflopView.renderChart;
-  const handlePokerPreflopMatrixClick = pokerPreflopView.handleMatrixClick;
-  const getPokerHeroPreflopCoach = pokerPreflopView.getHeroCoach;
+  function getPokerHeroPreflopCoach(game) {
+    const hero = getPokerHero(game);
+    if (!hero || game.stage !== "preflop" || hero.cards.length < 2 || game.handComplete) return "";
+    const position = getPokerPositionForPlayer(game, game.players.indexOf(hero));
+    const strategy = getPreflopStrategyForCards(hero.cards, position);
+    const handKey = getStartingHandKey(hero.cards);
+    return `100BB chart: ${handKey} from ${POKER_POSITION_LABELS[position] || position.toUpperCase()} -> ${strategy.label} (${strategy.frequency}%).`;
+  }
 
   const pokerPlayerController = createPokerPlayerController({
     addLog: (game, line) => addPokerLog(game, line),
@@ -206,7 +204,6 @@ export function createPokerControllerBundle(deps = {}) {
     persistRoom: persistPokerRoom,
     refreshIcons,
     renderPanelTabs: renderPokerPanelTabs,
-    renderPreflopChart: renderPokerPreflopChart,
     renderRightPanel: renderPokerRightPanel,
     state: pokerState
   });
@@ -292,7 +289,6 @@ export function createPokerControllerBundle(deps = {}) {
     handlePokerDocumentClick,
     handlePokerDocumentSubmit,
     handlePokerPlayerAction,
-    handlePokerPreflopMatrixClick,
     isPokerHost,
     isPokerOnlineRoom,
     isPokerSpectator,
@@ -303,7 +299,6 @@ export function createPokerControllerBundle(deps = {}) {
     pausePokerGame,
     removePokerPlayer,
     renderPokerGame,
-    renderPokerPreflopChart,
     resetPokerTournament,
     resumePokerGame,
     sendPokerChat,

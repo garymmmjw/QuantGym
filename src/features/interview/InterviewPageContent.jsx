@@ -94,7 +94,7 @@ export function InterviewPageContent() {
             <div className="interview-advanced-grid">
               <label>
                 面试类型
-                <select id="interviewTypeSelect" aria-label="面试类型" onChange={() => model.handleSetupChange("type")}>
+                <select id="interviewTypeSelect" aria-label="面试类型" value={setup.type || "oa"} onChange={(event) => model.handleSetupChange("type", event.target.value)}>
                   <option value="oa">Online Assessment</option>
                   <option value="technical">Technical Interview</option>
                   <option value="behavioral">Behavioral Interview</option>
@@ -118,7 +118,7 @@ export function InterviewPageContent() {
               </label>
               <label>
                 题目来源
-                <select id="interviewSourceSelect" aria-label="题目来源" onChange={() => model.handleSetupChange("source")}>
+                <select id="interviewSourceSelect" aria-label="题目来源" value={setup.source || "full"} onChange={(event) => model.handleSetupChange("source", event.target.value)}>
                   <option value="full">全范围题库</option>
                   <option value="pdf">上传 PDF 生成题目</option>
                 </select>

@@ -81,6 +81,7 @@ export function createStreakController(deps = {}) {
     updateCheckInPill(getElements(), {
       checked: hasCheckedInToday(),
       open: uiState.isOpen(),
+      streak: deps.getStreak?.(),
       text: deps.t,
       renderCalendar
     });

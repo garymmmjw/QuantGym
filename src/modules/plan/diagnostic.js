@@ -1,8 +1,9 @@
 import { prepDiagnosticQuestions } from '../../prep-data.js';
+import { isoOrNow } from '../../lib/date.js';
 import { normalizePrepPlan } from './data.js';
 
 function getNowIso(now = new Date()) {
-  return now instanceof Date ? now.toISOString() : new Date(now).toISOString();
+  return isoOrNow(now);
 }
 
 function getAnswer(answers, questionId) {

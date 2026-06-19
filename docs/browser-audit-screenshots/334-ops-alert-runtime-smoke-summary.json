@@ -1,0 +1,107 @@
+{
+  "status": "pass",
+  "webhookReceived": 7,
+  "apiPort": 55608,
+  "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-ops-alert-W5b15r/quantgym-alert-smoke.sqlite3",
+  "payload": {
+    "eventType": "http.error.404",
+    "statusCode": 404,
+    "method": "GET",
+    "path": "/api/ops-alert-runtime-smoke-1781838019144",
+    "hasOccurredAt": true
+  },
+  "alerts": [
+    {
+      "eventType": "http.error.404",
+      "statusCode": 404,
+      "method": "GET",
+      "path": "/api/ops-alert-runtime-smoke-1781838019144",
+      "hasOccurredAt": true
+    },
+    {
+      "eventType": "http.error.401",
+      "statusCode": 401,
+      "method": "POST",
+      "path": "/api/auth/login",
+      "hasOccurredAt": true
+    },
+    {
+      "eventType": "http.error.401",
+      "statusCode": 401,
+      "method": "POST",
+      "path": "/api/auth/login",
+      "hasOccurredAt": true
+    },
+    {
+      "eventType": "http.error.429",
+      "statusCode": 429,
+      "method": "POST",
+      "path": "/api/auth/login",
+      "hasOccurredAt": true
+    },
+    {
+      "eventType": "http.error.400",
+      "statusCode": 400,
+      "method": "POST",
+      "path": "/api/auth/google",
+      "hasOccurredAt": true
+    },
+    {
+      "eventType": "http.error.400",
+      "statusCode": 400,
+      "method": "POST",
+      "path": "/api/auth/google",
+      "hasOccurredAt": true
+    },
+    {
+      "eventType": "http.error.429",
+      "statusCode": 429,
+      "method": "POST",
+      "path": "/api/auth/google",
+      "hasOccurredAt": true
+    }
+  ],
+  "checks": {
+    "expectedAlerts": 4,
+    "allExpectedAlertsDelivered": true,
+    "webhookAuthorizationOk": true,
+    "allWebhookPayloadsSanitized": true,
+    "statusCodes": [
+      404,
+      401,
+      401,
+      429,
+      400,
+      400,
+      429
+    ],
+    "authFailureAlertsDelivered": 2,
+    "authRateLimitAlertDelivered": true,
+    "spoofedForwardedForRateLimitAlertDelivered": true
+  },
+  "authRateLimit": {
+    "scope": "auth:login",
+    "configuredMaxRequests": 2,
+    "attemptedRequests": 3,
+    "statuses": [
+      401,
+      401,
+      429
+    ],
+    "rateLimited": true
+  },
+  "spoofedForwardedForRateLimit": {
+    "scope": "auth:google",
+    "configuredMaxRequests": 2,
+    "attemptedRequests": 3,
+    "spoofedForwardedForValues": 3,
+    "statuses": [
+      400,
+      400,
+      429
+    ],
+    "rateLimited": true
+  },
+  "failures": [],
+  "warnings": []
+}

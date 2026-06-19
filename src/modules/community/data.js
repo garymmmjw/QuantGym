@@ -1,3 +1,5 @@
+import { timestampOrZero } from '../../lib/date.js';
+
 export function normalizeCommunityStore(raw = {}, deps = {}) {
   return {
     posts: Array.isArray(raw?.posts) ? raw.posts.map((post) => normalizeCommunityPost(post, deps)) : [],
@@ -35,6 +37,7 @@ export function normalizeCommunityPost(raw = {}, deps = {}) {
     ? normalizeExperience(raw.experience)
     : null;
   const country = normalizeCountry(raw.country || "china");
+  const mediaUrl = raw.media?.url || raw.media?.dataUrl || raw.media?.path || "";
   return {
     id: raw.id || makeId(),
     kind: experience ? "experience" : "update",
@@ -45,10 +48,15 @@ export function normalizeCommunityPost(raw = {}, deps = {}) {
     country,
     region: normalizeRegionForCountry(raw.region, country),
     text: String(raw.text || "").trim(),
-    media: raw.media?.dataUrl ? {
-      dataUrl: raw.media.dataUrl,
+    media: mediaUrl ? {
+      id: raw.media.id || "",
+      dataUrl: mediaUrl,
+      url: mediaUrl,
       type: raw.media.type === "video" ? "video" : "image",
-      name: raw.media.name || ""
+      name: raw.media.name || "",
+      contentType: raw.media.contentType || "",
+      byteSize: Number(raw.media.byteSize || 0),
+      storage: raw.media.storage || ""
     } : null,
     likes: Array.isArray(raw.likes) ? raw.likes.map(String) : [],
     comments: Array.isArray(raw.comments) ? raw.comments.map((comment) => normalizeCommunityComment(comment, deps)) : [],
@@ -108,7 +116,7 @@ export function normalizeMessageThread(raw = {}, deps = {}) {
 export function getUserMessageThreads(store = {}, currentUserId = "local-user", deps = {}) {
   return normalizeCommunityStore(store, deps).threads
     .filter((thread) => thread.participants.some((participant) => participant.id === currentUserId))
-    .sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0));
+    .sort((a, b) => timestampOrZero(b.updatedAt) - timestampOrZero(a.updatedAt));
 }
 
 export function getUnreadMessageCount(threads = [], currentUserId = "local-user") {
@@ -142,7 +150,7 @@ export function mergeCloudCommunity(remoteCommunity, localCommunity, deps = {}) 
       }
       const messages = mergeRecordsById(existing.messages || [], thread.messages || [])
         .map((message) => normalizeDirectMessage(message, deps))
-        .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        .sort((a, b) => timestampOrZero(a.createdAt) - timestampOrZero(b.createdAt));
       threadsById.set(thread.id, normalizeMessageThread({
         ...existing,
         ...thread,
@@ -153,7 +161,7 @@ export function mergeCloudCommunity(remoteCommunity, localCommunity, deps = {}) 
     });
   });
   return {
-    posts: [...byId.values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)),
-    threads: [...threadsById.values()].sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))
+    posts: [...byId.values()].sort((a, b) => timestampOrZero(b.createdAt) - timestampOrZero(a.createdAt)),
+    threads: [...threadsById.values()].sort((a, b) => timestampOrZero(b.updatedAt) - timestampOrZero(a.updatedAt))
   };
 }

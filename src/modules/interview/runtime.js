@@ -10,6 +10,8 @@ export function createInterviewRuntime(deps = {}) {
     uiStatus: "",
     reactSession: true,
     setupMode: "practice",
+    setupSource: "full",
+    setupType: "oa",
     selectedProblemId: "",
     selectedCategories: new Set(["all"])
   };

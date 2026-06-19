@@ -9,6 +9,7 @@ export function createAuthUiRuntime(deps = {}) {
   let initializedGoogleClientId = "";
   let initializedGoogleCallback = null;
   let registerCodeTimer = null;
+  let resetPasswordCodeTimer = null;
 
   const windowRef = deps.windowRef || globalThis;
   const getElements = () => deps.elements || {};
@@ -37,6 +38,30 @@ export function createAuthUiRuntime(deps = {}) {
     };
     render();
     registerCodeTimer = windowRef.setInterval?.(render, 1000) || null;
+  }
+
+  function setResetPasswordCodeButtonBusy(isBusy, label = text("sendVerificationCode")) {
+    setRegisterCodeButtonStateView(getElements().sendResetPasswordCodeBtn, {
+      busy: isBusy,
+      label
+    });
+  }
+
+  function startResetPasswordCodeCooldown(seconds) {
+    windowRef.clearInterval?.(resetPasswordCodeTimer);
+    let remaining = Math.max(0, Math.floor(seconds || 0));
+    const render = () => {
+      if (!remaining) {
+        setResetPasswordCodeButtonBusy(false);
+        windowRef.clearInterval?.(resetPasswordCodeTimer);
+        resetPasswordCodeTimer = null;
+        return;
+      }
+      setResetPasswordCodeButtonBusy(true, `${text("resendIn")} ${remaining}s`);
+      remaining -= 1;
+    };
+    render();
+    resetPasswordCodeTimer = windowRef.setInterval?.(render, 1000) || null;
   }
 
   function renderGoogleClientInput() {
@@ -116,7 +141,9 @@ export function createAuthUiRuntime(deps = {}) {
 
   function dispose() {
     windowRef.clearInterval?.(registerCodeTimer);
+    windowRef.clearInterval?.(resetPasswordCodeTimer);
     registerCodeTimer = null;
+    resetPasswordCodeTimer = null;
   }
 
   return {
@@ -125,6 +152,8 @@ export function createAuthUiRuntime(deps = {}) {
     renderGoogleClientInput,
     renderGooglePlaceholder,
     setRegisterCodeButtonBusy,
-    startRegisterCodeCooldown
+    setResetPasswordCodeButtonBusy,
+    startRegisterCodeCooldown,
+    startResetPasswordCodeCooldown
   };
 }

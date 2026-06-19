@@ -1,3 +1,5 @@
+import { timestampOrZero } from '../lib/date.js';
+
 export function normalizeState(rawState = {}, deps = {}) {
   const {
     createBaseState = () => ({}),
@@ -183,7 +185,7 @@ export function mergeRecordsById(lists = [], deps = {}) {
     const id = item.id || makeId();
     byId.set(id, { ...(byId.get(id) || {}), ...item, id });
   });
-  return [...byId.values()].sort((a, b) => new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0));
+  return [...byId.values()].sort((a, b) => timestampOrZero(a.date || a.createdAt) - timestampOrZero(b.date || b.createdAt));
 }
 
 export function latestIso(...values) {

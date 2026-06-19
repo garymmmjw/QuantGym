@@ -1,0 +1,74 @@
+{
+  "status": "pass",
+  "durationMs": 1509,
+  "apiPort": 55569,
+  "media": {
+    "id": "ZnogE1epzx4mlD3rSXjWL4V5",
+    "path": "/api/media/ZnogE1epzx4mlD3rSXjWL4V5",
+    "contentType": "image/png",
+    "byteSize": 68,
+    "storage": "api-media",
+    "urlUsesApiMediaEndpoint": true,
+    "responseDoesNotInlineDataUrl": true
+  },
+  "spoofedForwardedHostUpload": {
+    "status": 201,
+    "mediaUrl": "http://127.0.0.1:55569/api/media/Y-dNFykFwBzsLiVFyBLq-0rV",
+    "urlUsesApiMediaEndpoint": true,
+    "forwardedHostIgnored": true,
+    "forwardedProtoIgnored": true
+  },
+  "objectStorage": {
+    "uploadReadThrough": {
+      "mode": "api-read-through",
+      "uploadStatus": 201,
+      "getMediaStatus": 200,
+      "redirectLocation": "",
+      "storedObjectCount": 1,
+      "putRequestSigned": true,
+      "getRequestSigned": true,
+      "storagePath": "s3:runtime-smoke/KXFppZhDVS76vsGGnS2fGfmV.png",
+      "mediaStorage": "s3-media",
+      "mediaUrl": "http://127.0.0.1:55577/api/media/KXFppZhDVS76vsGGnS2fGfmV",
+      "mediaUrlUsesPublicBase": false,
+      "apiReadBytes": 68
+    },
+    "publicUrlRedirect": {
+      "mode": "public-url",
+      "uploadStatus": 201,
+      "getMediaStatus": 302,
+      "redirectLocation": "https://media.quantgym.example.test/public/runtime-smoke/yImPO1KV-k3KmQncpShSFc57.png",
+      "storedObjectCount": 1,
+      "putRequestSigned": true,
+      "getRequestSigned": false,
+      "storagePath": "s3:runtime-smoke/yImPO1KV-k3KmQncpShSFc57.png",
+      "mediaStorage": "s3-media",
+      "mediaUrl": "https://media.quantgym.example.test/public/runtime-smoke/yImPO1KV-k3KmQncpShSFc57.png",
+      "mediaUrlUsesPublicBase": true,
+      "apiReadBytes": 0
+    }
+  },
+  "checks": {
+    "registrationReturnedToken": true,
+    "authenticatedUploadStatus": 201,
+    "spoofedForwardedHostUploadStatus": 201,
+    "spoofedForwardedHostIgnored": true,
+    "spoofedForwardedProtoIgnored": true,
+    "spoofedForwardedMediaUrlUsesApiEndpoint": true,
+    "unauthenticatedUploadStatus": 401,
+    "getMediaStatus": 200,
+    "getMediaBodyBytes": 68,
+    "unsupportedMediaStatus": 415,
+    "oversizedMediaStatus": 413,
+    "mismatchedExtensionUploadStatus": 201,
+    "mismatchedExtensionStoredAsContentTypeExtension": true,
+    "mismatchedExtensionOriginalNamePreserved": true,
+    "localFilePersisted": true,
+    "localFileBytesMatch": true,
+    "databaseMediaRowPersisted": true,
+    "databaseUploadAuditEvents": 3,
+    "databaseSessions": 1
+  },
+  "failures": [],
+  "warnings": []
+}

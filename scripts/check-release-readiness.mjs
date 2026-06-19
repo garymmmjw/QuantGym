@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import net from "node:net";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
+import vm from "node:vm";
+import { spawn, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -25,18 +27,46 @@ const gates = [
     parseJson: true,
     allowPartial: allowPartialProduction
   },
-  { name: "UI contracts", command: "npm", args: ["run", "check:ui-contracts"] },
+  { name: "Route integrity", command: "npm", args: ["run", "check:route-integrity"], parseJson: true },
+  { name: "Route interactions", command: "npm", args: ["run", "check:route-interactions"], parseJson: true },
+  { name: "Browser route smoke", command: "npm", args: ["run", "check:browser-route-smoke"], parseJson: true },
+  { name: "Module ownership", command: "npm", args: ["run", "check:module-ownership"], parseJson: true },
+  { name: "Chrome store readiness", command: "npm", args: ["run", "check:chrome-store-readiness"], parseJson: true },
+  { name: "Chrome store publication fixture", command: "npm", args: ["run", "check:chrome-store-publication:fixture"], parseJson: true },
+  { name: "Browser extension runtime smoke", command: "npm", args: ["run", "check:browser-extension:runtime-smoke"], parseJson: true },
+  { name: "Media storage runtime smoke", command: "npm", args: ["run", "check:media-storage:runtime-smoke"], parseJson: true },
+  { name: "Media storage production fixture", command: "npm", args: ["run", "check:media-storage:production-fixture"], parseJson: true },
+  { name: "Ops alert runtime smoke", command: "npm", args: ["run", "check:ops-alerts:runtime-smoke"], parseJson: true },
+  { name: "Ops alert production fixture", command: "npm", args: ["run", "check:ops-alerts:production-fixture"], parseJson: true },
+  { name: "Jobs source runtime smoke", command: "npm", args: ["run", "check:jobs-source:runtime-smoke"], parseJson: true },
+  { name: "Jobs source production fixture", command: "npm", args: ["run", "check:jobs-source:production-fixture"], parseJson: true },
+  { name: "Question-bank rights", command: "npm", args: ["run", "check:question-bank-rights"], parseJson: true },
+  { name: "Question-bank rights public smoke", command: "npm", args: ["run", "check:question-bank-rights:public-smoke"], parseJson: true },
+  { name: "Question-bank rights release blockers", command: "npm", args: ["run", "check:question-bank-rights:release-blockers"], parseJson: true },
+  {
+    name: "External launch blockers",
+    command: "npm",
+    args: ["run", "check:external-launch-blockers", "--", "--skip-release-summary-content"],
+    parseJson: true
+  },
+  { name: "Postgres cutover export smoke", command: "npm", args: ["run", "check:postgres-cutover:export-smoke"], parseJson: true },
+  { name: "Postgres cutover", command: "npm", args: ["run", "check:postgres-cutover"], parseJson: true },
   { name: "Static build", command: "npm", args: ["run", "build"] },
   {
     name: "Production boundaries",
     command: "npm",
     args: ["run", "verify:production-boundaries"],
     parseJson: true,
-    allowPartial: allowPartialProduction
-  }
+    allowPartial: allowPartialProduction,
+    manageLocalBoundaryServices: true
+  },
+  { name: "UI contracts", command: "npm", args: ["run", "check:ui-contracts", "--", "--skip-release-summary-content"] }
 ];
 
-const results = gates.map(runGate);
+const results = [];
+for (const gate of gates) {
+  results.push(await runGate(gate));
+}
 const failed = results.filter((item) => item.status === "fail");
 const partial = results.filter((item) => item.status === "partial");
 const summary = {
@@ -58,19 +88,40 @@ process.stdout.write(output);
 
 if (failed.length) process.exitCode = 1;
 
-function runGate(gate) {
+async function runGate(gate) {
   const startedAt = Date.now();
-  const child = spawnSync(gate.command, gate.args, {
-    cwd: root,
-    encoding: "utf8",
-    maxBuffer: 1024 * 1024 * 20,
-    env: process.env
-  });
+  let localBoundaryServices = null;
+  let child = null;
+  try {
+    if (gate.manageLocalBoundaryServices) {
+      localBoundaryServices = await maybeStartLocalBoundaryServices();
+    }
+    child = spawnSync(gate.command, gate.args, {
+      cwd: root,
+      encoding: "utf8",
+      maxBuffer: 1024 * 1024 * 20,
+      env: process.env
+    });
+  } catch (error) {
+    await stopManagedServices(localBoundaryServices);
+    return {
+      name: gate.name,
+      status: "fail",
+      durationMs: Date.now() - startedAt,
+      exitCode: 1,
+      error: error.message || String(error),
+      data: summarizeManagedServices(localBoundaryServices)
+    };
+  } finally {
+    await stopManagedServices(localBoundaryServices);
+  }
+
   const durationMs = Date.now() - startedAt;
-  const stdout = child.stdout || "";
-  const stderr = child.stderr || "";
-  const exitCode = typeof child.status === "number" ? child.status : 1;
+  const stdout = child?.stdout || "";
+  const stderr = child?.stderr || "";
+  const exitCode = typeof child?.status === "number" ? child.status : 1;
   const parsed = gate.parseJson ? parseLastJson(stdout) : null;
+  const serviceData = summarizeManagedServices(localBoundaryServices);
 
   if (exitCode !== 0) {
     return {
@@ -78,7 +129,8 @@ function runGate(gate) {
       status: "fail",
       durationMs,
       exitCode,
-      error: child.error?.message || firstNonEmptyLine(stderr, stdout) || `Exited with ${exitCode}`,
+      error: child?.error?.message || firstNonEmptyLine(stderr, stdout) || `Exited with ${exitCode}`,
+      data: serviceData,
       stdoutTail: tail(stdout),
       stderrTail: tail(stderr)
     };
@@ -91,6 +143,7 @@ function runGate(gate) {
       durationMs,
       exitCode,
       data: parsed,
+      serviceData,
       error: "Nested check reported failure"
     };
   }
@@ -102,6 +155,7 @@ function runGate(gate) {
       durationMs,
       exitCode,
       data: parsed,
+      serviceData,
       error: gate.allowPartial ? undefined : "Nested check is partial; run with required production credentials"
     };
   }
@@ -111,8 +165,234 @@ function runGate(gate) {
     status: "pass",
     durationMs,
     exitCode,
-    data: parsed || summarizeStdout(stdout)
+    data: parsed || summarizeStdout(stdout),
+    serviceData
   };
+}
+
+async function maybeStartLocalBoundaryServices() {
+  if (!allowPartialProduction) return null;
+  if (process.env.QUANTGYM_RELEASE_MANAGE_LOCAL_BOUNDARY_SERVICES === "0") return null;
+
+  const runtimeConfig = loadLocalRuntimeConfig();
+  const apiEndpoint = clean(process.env.QUANTGYM_CLOUD_API_ENDPOINT || process.env.CLOUD_API_ENDPOINT || runtimeConfig.cloudApiEndpoint);
+  const llmEndpoint = clean(process.env.QUANTGYM_LLM_ENDPOINT || process.env.LLM_ENDPOINT || runtimeConfig.llmEndpoint);
+  const apiUrl = toUrl(apiEndpoint);
+  const llmUrl = toUrl(llmEndpoint);
+  if (!apiUrl || !llmUrl || !isLoopbackHost(apiUrl.hostname) || !isLoopbackHost(llmUrl.hostname)) {
+    return null;
+  }
+
+  const services = {
+    managed: true,
+    api: {
+      name: "QuantGym API",
+      host: normalizeLoopbackHost(apiUrl.hostname),
+      port: Number(apiUrl.port || defaultPort(apiUrl.protocol)),
+      healthUrl: `${apiEndpoint.replace(/\/+$/, "")}/health`,
+      alreadyRunning: false,
+      started: false
+    },
+    llm: {
+      name: "QuantGym LLM proxy",
+      host: normalizeLoopbackHost(llmUrl.hostname),
+      port: Number(llmUrl.port || defaultPort(llmUrl.protocol)),
+      healthUrl: new URL("/health", llmUrl.origin).toString(),
+      alreadyRunning: false,
+      started: false
+    }
+  };
+
+  await ensureLocalService(services.api, {
+    command: "python3",
+    args: ["api-server/server.py"],
+    env: {
+      ...process.env,
+      PORT: String(services.api.port),
+      QUANTGYM_HOST: services.api.host,
+      QUANTGYM_REQUIRE_EMAIL_VERIFICATION: process.env.QUANTGYM_REQUIRE_EMAIL_VERIFICATION || "0",
+      QUANTGYM_GOOGLE_CLIENT_ID: process.env.QUANTGYM_GOOGLE_CLIENT_ID || runtimeConfig.googleClientId || ""
+    }
+  });
+  await ensureLocalService(services.llm, {
+    command: process.execPath,
+    args: ["llm-proxy/server.mjs"],
+    env: {
+      ...process.env,
+      PORT: String(services.llm.port),
+      LLM_PROXY_HOST: services.llm.host,
+      LLM_AUTH_API_BASE: ""
+    }
+  });
+
+  return services;
+}
+
+async function ensureLocalService(service, spec) {
+  if (await isTcpListening(service.host, service.port)) {
+    service.alreadyRunning = true;
+    await waitForHttp(service.healthUrl, { service });
+    return;
+  }
+
+  const child = spawn(spec.command, spec.args, {
+    cwd: root,
+    env: spec.env,
+    stdio: ["ignore", "pipe", "pipe"]
+  });
+  service.child = child;
+  service.started = true;
+  service.stdout = "";
+  service.stderr = "";
+  child.stdout.on("data", (chunk) => {
+    service.stdout = tail(`${service.stdout}${chunk}`, 4000);
+  });
+  child.stderr.on("data", (chunk) => {
+    service.stderr = tail(`${service.stderr}${chunk}`, 4000);
+  });
+  child.once("exit", (code, signal) => {
+    service.exit = { code, signal };
+  });
+  await waitForHttp(service.healthUrl, { service });
+}
+
+async function waitForHttp(url, options = {}) {
+  const service = options.service || {};
+  const deadline = Date.now() + 30000;
+  let lastError = "";
+  while (Date.now() < deadline) {
+    if (service.exit) {
+      throw new Error(`${service.name || "local service"} exited before becoming healthy: ${JSON.stringify(service.exit)} ${service.stderr || service.stdout || ""}`.trim());
+    }
+    let timeout = null;
+    try {
+      const controller = new AbortController();
+      timeout = setTimeout(() => controller.abort(), 1000);
+      const response = await fetch(url, { signal: controller.signal });
+      if (response.ok) return;
+      lastError = `HTTP ${response.status}`;
+    } catch (error) {
+      lastError = error.message || String(error);
+    } finally {
+      if (timeout) clearTimeout(timeout);
+    }
+    await delay(250);
+  }
+  throw new Error(`${service.name || "local service"} did not become healthy at ${url}: ${lastError}`);
+}
+
+async function stopManagedServices(services) {
+  if (!services) return;
+  await Promise.all([services.llm, services.api].map(stopManagedService));
+}
+
+async function stopManagedService(service) {
+  if (!service?.started || !service.child || service.exit) return;
+  await new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      try {
+        service.child.kill("SIGKILL");
+      } catch {
+        // The process may already be gone.
+      }
+      resolve();
+    }, 2000);
+    service.child.once("exit", () => {
+      clearTimeout(timeout);
+      resolve();
+    });
+    try {
+      service.child.kill("SIGTERM");
+    } catch {
+      clearTimeout(timeout);
+      resolve();
+    }
+  });
+}
+
+function summarizeManagedServices(services) {
+  if (!services) return undefined;
+  return {
+    api: summarizeManagedService(services.api),
+    llm: summarizeManagedService(services.llm)
+  };
+}
+
+function summarizeManagedService(service) {
+  if (!service) return undefined;
+  return {
+    host: service.host,
+    port: service.port,
+    healthUrl: service.healthUrl,
+    alreadyRunning: service.alreadyRunning,
+    started: service.started,
+    exit: service.exit,
+    stdoutTail: service.stdout ? tail(service.stdout, 1000) : undefined,
+    stderrTail: service.stderr ? tail(service.stderr, 1000) : undefined
+  };
+}
+
+function loadLocalRuntimeConfig() {
+  const configPath = path.join(root, "config.js");
+  if (!fs.existsSync(configPath)) return {};
+  try {
+    const context = { window: {} };
+    vm.createContext(context);
+    vm.runInContext(fs.readFileSync(configPath, "utf8"), context, {
+      filename: configPath,
+      timeout: 1000
+    });
+    return context.window?.QUANTGYM_CONFIG || {};
+  } catch {
+    return {};
+  }
+}
+
+function toUrl(value) {
+  try {
+    return value ? new URL(value) : null;
+  } catch {
+    return null;
+  }
+}
+
+function isLoopbackHost(hostname) {
+  const host = String(hostname || "").toLowerCase();
+  return host === "127.0.0.1" || host === "localhost" || host === "::1" || host === "[::1]";
+}
+
+function normalizeLoopbackHost(hostname) {
+  const host = String(hostname || "").toLowerCase();
+  return host === "::1" || host === "[::1]" ? "::1" : "127.0.0.1";
+}
+
+function defaultPort(protocol) {
+  return protocol === "https:" ? 443 : 80;
+}
+
+function isTcpListening(host, port) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (value) => {
+      if (settled) return;
+      settled = true;
+      socket.destroy();
+      resolve(value);
+    };
+    const socket = net.createConnection({ host, port });
+    socket.setTimeout(500);
+    socket.once("connect", () => finish(true));
+    socket.once("timeout", () => finish(false));
+    socket.once("error", () => finish(false));
+  });
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function clean(value) {
+  return String(value || "").trim();
 }
 
 function parseLastJson(text) {

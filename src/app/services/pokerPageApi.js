@@ -41,7 +41,6 @@ export function createPokerPageApi(deps = {}) {
     deps.rebindElements?.();
     if (!deps.pokerState?.game) deps.loadInitialPokerGame?.();
     if (!reactTable) deps.renderPokerGame?.();
-    deps.renderPokerPreflopChart?.();
     deps.refreshIcons?.();
     bumpRevision();
   }
@@ -70,17 +69,21 @@ export function createPokerPageApi(deps = {}) {
     return {
       mounted: true,
       revision,
+      preflop: {
+        position: runtime.selectedPreflopPosition || "btn",
+        selectedHand: runtime.selectedPreflopHand || "AKs"
+      },
       game: game
         ? {
-            id: game.id,
-            mode: game.mode,
-            roomCode: game.roomCode,
-            blindsText: `${game.smallBlind} / ${game.bigBlind}`,
-            playerName: runtime.playerName ?? helpers.getDefaultPlayerName(),
-            panelTab,
-            table,
-            panel: getPokerPanelViewModel(game, panelTab, panelHelpers)
-          }
+          id: game.id,
+          mode: game.mode,
+          roomCode: game.roomCode,
+          blindsText: `${game.smallBlind} / ${game.bigBlind}`,
+          playerName: runtime.playerName ?? helpers.getDefaultPlayerName(),
+          panelTab,
+          table,
+          panel: getPokerPanelViewModel(game, panelTab, panelHelpers)
+        }
         : null
     };
   }
@@ -105,6 +108,16 @@ export function createPokerPageApi(deps = {}) {
 
     setPanelTab: (tab) => {
       if (deps.pokerState) deps.pokerState.selectedPanelTab = tab || "chat";
+      afterAction();
+    },
+
+    setPreflopHand: (handKey) => {
+      if (deps.pokerState) deps.pokerState.selectedPreflopHand = handKey || "AKs";
+      afterAction();
+    },
+
+    setPreflopPosition: (position) => {
+      if (deps.pokerState) deps.pokerState.selectedPreflopPosition = position || "btn";
       afterAction();
     },
 
@@ -146,7 +159,6 @@ export function createPokerPageApi(deps = {}) {
       afterAction();
     },
 
-    handlePreflopMatrixClick: (event) => { deps.handlePokerPreflopMatrixClick?.(event); afterAction(); },
     switchModule: deps.switchModule
   };
 }

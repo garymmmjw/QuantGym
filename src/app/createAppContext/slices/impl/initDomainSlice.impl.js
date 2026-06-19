@@ -335,11 +335,15 @@ export function initDomainSliceImpl(shared, ctx) {
   const renderUserChip = accountAuthBundle.renderUserChip;
   const switchAuthTab = accountAuthBundle.switchAuthTab;
   const sendRegisterVerificationCode = accountAuthBundle.sendRegisterVerificationCode;
+  const sendPasswordResetCode = accountAuthBundle.sendPasswordResetCode;
+  const startPasswordReset = accountAuthBundle.startPasswordReset;
+  const cancelPasswordReset = accountAuthBundle.cancelPasswordReset;
   const resetEmailAuthFlow = accountAuthBundle.resetEmailAuthFlow;
   const authMutations = wrapAuthMutations({
     loginLocal: accountAuthBundle.loginLocal,
     logout: accountAuthBundle.logout,
     registerLocal: accountAuthBundle.registerLocal,
+    resetPassword: accountAuthBundle.resetPassword,
     saveAccount: accountAuthBundle.saveAccount,
     saveAuth: authStateRuntime.save,
     submitEmailAuth: accountAuthBundle.submitEmailAuth,
@@ -348,6 +352,7 @@ export function initDomainSliceImpl(shared, ctx) {
   const loginLocal = authMutations.loginLocal;
   const logout = authMutations.logout;
   const registerLocal = authMutations.registerLocal;
+  const resetPassword = authMutations.resetPassword;
   const saveAccount = authMutations.saveAccount;
   const submitEmailAuth = authMutations.submitEmailAuth;
   authStateRuntime.save = authMutations.saveAuth;
@@ -486,6 +491,7 @@ export function initDomainSliceImpl(shared, ctx) {
   const setGlobalSearchComposing = librarySearchBundles.setGlobalSearchComposing;
   const overviewActivityBundle = createOverviewActivityBundle({
     appState,
+    cloudApi,
     DEFAULT_GRADUATION_TERM,
     documentRef: document,
     elements: els,
@@ -754,6 +760,6 @@ export function initDomainSliceImpl(shared, ctx) {
     renderProblemCollectionGrid,
     handleProblemCollectionClick
   } = appProblemControllerBundles;
-  return { accountAuthBundle, appProblemControllerBundles, applyProblemFilterAction, applyProblemNavigationFilters, authMutations, buildLegacyTodayStudyPlan, buildMonthlyContributionHeatmap, buildRecentContributionHeatmap, buildTodayStudyPlan, cancelProblemSearchRender, clearGlobalSearch, closeLibraryReader, cloudSyncController, companyKey, companyTierWeight, contentControllerBundles, createProblemDetailNavigation, deleteProblemComment, generateTodayStudyPlan, getCloudStatusText, getCompanyAliases, getCompanyDef, getCompanyJobs, getCompanyProblemStats, getContributionSeries, getContributionStatsByDay, getDailyXpSeries, getLibraryEntries, getLibrarySearchText, getLibrarySourceLabel, getLibrarySubtitle, getLibraryTitle, getLlmConfig, getProblemCompanies, getProblemDetailNavigation, getProblemFilterState, getProblemFilterValue, getProblemNavigationSequence, getVisibleLibraryEntries, handleAccountResumeFile, handleGlobalSearchKeydown, handleProblemSearchInput, handleProblemSearchKeydown, heroCoachController, hideGlobalSearchResults, initGoogleLogin, isProblemDetailBlockRevealed, jobsRuntime, leaderboardCloudController, leetcodeHotController, librarySearchBundles, llmConfigRuntime, localResumeReview, loginLocal, logout, newsProvider, newsRuntime, normalizeLlmModel, openLibraryPractice, openLibraryReader, openProblemDetail, overviewActivityBundle, pokerRuntime, pokerState, postProblemComment, problemBrowserController, problemMatchesCompany, problemMatchesDifficulty, problemMatchesSource, problemMatchesTheme, problemNavigationBundle, problemsRuntime, registerLocal, renderAccountResumeMeta, renderCloudStatus, renderGlobalSearchResults, renderGoogleClientInput, renderGooglePlaceholder, renderProblemDetail, renderSession, renderTodayPlan, renderUserChip, requestResumeReviewFromApi, resetEmailAuthFlow, resetProblemDetailReveals, returnToProblemList, revealProblemDetailBlock, saveAccount, saveGoogleClientId, saveLlmConfig, saveLlmConfigToStorage, saveSettings, saveSettingsFromValues, scheduleGlobalSearchResults, scheduleProblemSearchRender, sendRegisterVerificationCode, setGlobalSearchComposing, setProblemFilterState, showCompanyProblems, skillsControllerBundle, submitEmailAuth, switchAuthTab, syncCloudNow, syncSettingsBundle, toggleProblemLike, updateLlmConfigFromControls };
+  return { accountAuthBundle, appProblemControllerBundles, applyProblemFilterAction, applyProblemNavigationFilters, authMutations, buildLegacyTodayStudyPlan, buildMonthlyContributionHeatmap, buildRecentContributionHeatmap, buildTodayStudyPlan, cancelPasswordReset, cancelProblemSearchRender, clearGlobalSearch, closeLibraryReader, cloudSyncController, companyKey, companyTierWeight, contentControllerBundles, createProblemDetailNavigation, deleteProblemComment, generateTodayStudyPlan, getCloudStatusText, getCompanyAliases, getCompanyDef, getCompanyJobs, getCompanyProblemStats, getContributionSeries, getContributionStatsByDay, getDailyXpSeries, getLibraryEntries, getLibrarySearchText, getLibrarySourceLabel, getLibrarySubtitle, getLibraryTitle, getLlmConfig, getProblemCompanies, getProblemDetailNavigation, getProblemFilterState, getProblemFilterValue, getProblemNavigationSequence, getVisibleLibraryEntries, handleAccountResumeFile, handleGlobalSearchKeydown, handleProblemSearchInput, handleProblemSearchKeydown, heroCoachController, hideGlobalSearchResults, initGoogleLogin, isProblemDetailBlockRevealed, jobsRuntime, leaderboardCloudController, leetcodeHotController, librarySearchBundles, llmConfigRuntime, localResumeReview, loginLocal, logout, newsProvider, newsRuntime, normalizeLlmModel, openLibraryPractice, openLibraryReader, openProblemDetail, overviewActivityBundle, pokerRuntime, pokerState, postProblemComment, problemBrowserController, problemMatchesCompany, problemMatchesDifficulty, problemMatchesSource, problemMatchesTheme, problemNavigationBundle, problemsRuntime, recordGameResult, registerLocal, renderAccountResumeMeta, renderCloudStatus, renderGlobalSearchResults, renderGoogleClientInput, renderGooglePlaceholder, renderProblemDetail, renderSession, renderTodayPlan, renderUserChip, requestResumeReviewFromApi, resetEmailAuthFlow, resetPassword, resetProblemDetailReveals, returnToProblemList, revealProblemDetailBlock, saveAccount, saveGoogleClientId, saveLlmConfig, saveLlmConfigToStorage, saveSettings, saveSettingsFromValues, scheduleGlobalSearchResults, scheduleProblemSearchRender, sendPasswordResetCode, sendRegisterVerificationCode, setGlobalSearchComposing, setProblemFilterState, showCompanyProblems, skillsControllerBundle, startPasswordReset, submitEmailAuth, switchAuthTab, syncCloudNow, syncSettingsBundle, toggleProblemLike, updateLlmConfigFromControls };
 
 }

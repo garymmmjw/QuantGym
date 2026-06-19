@@ -4,6 +4,7 @@ import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { Tag } from "../../components/common/Tag.jsx";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
+import { timestampOrZero } from "../../lib/date.js";
 
 export function CoursesPageContent() {
   const appServices = useAppServices();
@@ -18,7 +19,7 @@ export function CoursesPageContent() {
     const byId = new Map(courses.map((c) => [c.id, c]));
     return api.getCourseStates()
       .filter((item) => item.inPath && byId.has(item.courseId))
-      .sort((a, b) => new Date(a.pathAddedAt || a.updatedAt || 0) - new Date(b.pathAddedAt || b.updatedAt || 0))
+      .sort((a, b) => timestampOrZero(a.pathAddedAt || a.updatedAt) - timestampOrZero(b.pathAddedAt || b.updatedAt))
       .map((item) => ({ item, course: byId.get(item.courseId) }));
   }, [courses, api]);
 

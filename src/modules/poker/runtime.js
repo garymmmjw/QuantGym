@@ -3,6 +3,7 @@ export function createPokerRuntime() {
     state: {
       game: null,
       selectedPreflopHand: "AKs",
+      selectedPreflopPosition: "btn",
       selectedPanelTab: "chat",
       online: {
         roomCode: "",

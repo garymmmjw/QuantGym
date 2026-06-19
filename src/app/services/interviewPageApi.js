@@ -201,6 +201,7 @@ export function createInterviewPageApi(deps = {}) {
       setup: {
         summaryText,
         source,
+        type: deps.getInterviewType?.() || "oa",
         showPdfRow: source === "pdf",
         showCategoryRow: source === "full",
         mode: setupMode,
@@ -270,7 +271,15 @@ export function createInterviewPageApi(deps = {}) {
       if (runtime) runtime.setupMode = modeDefs[value] ? value : "practice";
       sync();
     },
-    handleSetupChange: (field) => {
+    handleSetupChange: (field, value = "") => {
+      const runtime = deps.interviewRuntime?.state;
+      if (field === "type" && runtime) {
+        const selectedType = String(value || "");
+        runtime.setupType = (deps.interviewTypeDefs || {})[selectedType] ? selectedType : "oa";
+      }
+      if (field === "source" && runtime) {
+        runtime.setupSource = String(value || "") === "pdf" ? "pdf" : "full";
+      }
       if (field === "type" || field === "source") {
         deps.interviewRuntime?.state && (deps.interviewRuntime.state.selectedCategories = new Set(["all"]));
       }
@@ -279,7 +288,7 @@ export function createInterviewPageApi(deps = {}) {
     },
     toggleCategory: (value) => { deps.toggleInterviewCategory?.(value); sync(); },
     setPanelExpandedIndex: (index) => { deps.setInterviewPanelExpandedIndex?.(index); sync(); },
-    updatePdfMeta: (event) => { deps.updateInterviewPdfMeta?.(event); sync(); },
+    updatePdfMeta: (event) => { deps.updateInterviewPdfMeta?.(event); },
     updateAnswerFileMeta: (event) => { deps.updateInterviewAnswerFileMeta?.(event); sync(); },
     autoSizeAnswer: () => deps.autoSizeInterviewAnswer?.(),
     handleAnswerKeydown: (event) => deps.handleInterviewAnswerKeydown?.(event),

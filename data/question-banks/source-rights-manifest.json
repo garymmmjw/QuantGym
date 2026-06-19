@@ -1,0 +1,282 @@
+{
+  "version": 1,
+  "notes": [
+    "This manifest is a release gate, not legal advice.",
+    "Private beta status records the current invite-only beta allowance.",
+    "Public or commercial release requires each active source to be explicitly approved here before shipping."
+  ],
+  "sources": [
+    {
+      "slug": "question-bank",
+      "expectedActive": false,
+      "expectedProblemCount": 128,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "blocked",
+        "basis": "Archived disabled source; temporarily removed from the app catalog pending copyright review.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-05-26"
+      },
+      "publicCommercial": {
+        "status": "blocked",
+        "basis": "Disabled pending copyright review.",
+        "requiredNextStep": "Do not include this source in any catalog until rights are re-reviewed."
+      }
+    },
+    {
+      "slug": "green-book",
+      "expectedActive": true,
+      "expectedProblemCount": 183,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Local owner-provided normalized source for current invite-only beta only.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Book-derived source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution permission or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "yellow-book",
+      "expectedActive": true,
+      "expectedProblemCount": 153,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Local owner-provided normalized source for current invite-only beta only.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Book-derived source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution permission or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "red-book",
+      "expectedActive": true,
+      "expectedProblemCount": 242,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Local owner-provided normalized source for current invite-only beta only.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Book-derived source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution permission or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "hull-derivatives",
+      "expectedActive": true,
+      "expectedProblemCount": 763,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Local owner-provided normalized source for current invite-only beta only.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Book-derived source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution permission or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "stefanica-fe-math",
+      "expectedActive": true,
+      "expectedProblemCount": 35,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Local owner-provided normalized source for current invite-only beta only.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Book-derived source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution permission or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "quantitative-primer",
+      "expectedActive": true,
+      "expectedProblemCount": 41,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Local owner-provided normalized source for current invite-only beta only.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Book-derived source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution permission or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "dudeney-puzzles",
+      "expectedActive": true,
+      "expectedProblemCount": 123,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Local owner-provided normalized source for current invite-only beta only.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Book-derived source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution permission or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "linalg-primer",
+      "expectedActive": true,
+      "expectedProblemCount": 18,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Local owner-provided normalized source for current invite-only beta only.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Book-derived source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution permission or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "probability-stochastic-10",
+      "expectedActive": true,
+      "expectedProblemCount": 10,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Local owner-provided normalized source for current invite-only beta only.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Book-derived source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution permission or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "quantguide",
+      "expectedActive": true,
+      "expectedProblemCount": 1204,
+      "allowedCatalogVisibility": ["private"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Project owner confirmed this authorized signed-in QuantGuide import is allowed for the current invite-only beta only.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Platform-derived source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit QuantGuide redistribution permission or remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "stat110-strategic-practice",
+      "expectedActive": true,
+      "expectedProblemCount": 184,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Official public course materials imported for current invite-only beta; redistribution still requires public/commercial review.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Public course material source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution review or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "stanford-msande214-hw3",
+      "expectedActive": true,
+      "expectedProblemCount": 5,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Official public course handout files with generated non-official answers for current invite-only beta.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Public course material source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution review or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "probabilitycourse-solved-samples",
+      "expectedActive": true,
+      "expectedProblemCount": 16,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Public in-chapter solved examples only; excludes the separately sold student solutions guide; prompts and answers are paraphrased/reviewed for current invite-only beta.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Public web source with explicit source-boundary notes; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution review or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "boyd-cvxbook-additional-exercises",
+      "expectedActive": true,
+      "expectedProblemCount": 10,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Official public additional exercises with generated non-official answers for current invite-only beta.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Public exercise source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution review or replace/remove this source before public/commercial release."
+      }
+    },
+    {
+      "slug": "etheridge-finmath-problem-sheets",
+      "expectedActive": true,
+      "expectedProblemCount": 10,
+      "allowedCatalogVisibility": ["public"],
+      "privateBeta": {
+        "status": "allowed",
+        "basis": "Official public author-hosted problem sheet with generated non-official answers for current invite-only beta.",
+        "reviewedBy": "project-owner",
+        "reviewedAt": "2026-06-17"
+      },
+      "publicCommercial": {
+        "status": "needs-review",
+        "basis": "Public course material source; public/commercial redistribution has not been approved in this manifest.",
+        "requiredNextStep": "Record explicit redistribution review or replace/remove this source before public/commercial release."
+      }
+    }
+  ]
+}

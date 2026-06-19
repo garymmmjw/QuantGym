@@ -1,6 +1,6 @@
 # QuantGym
 
-QuantGym is a local-first workspace for quant interview preparation. It combines a static web app, a SQLite API, an OpenAI-backed LLM proxy, a generated problem catalog, and a Chrome extension prototype.
+QuantGym is a local-first workspace for quant interview preparation. It combines a static web app, a SQLite API, an OpenAI-backed LLM proxy, a generated problem catalog, and a packageable Chrome collector extension.
 
 The current beta setup is intentionally simple:
 
@@ -198,12 +198,33 @@ For local handoff before a real Google ID token is available, use:
 npm run check:release-readiness:local
 ```
 
+The readiness chain also includes `npm run check:external-launch-blockers` in a
+non-overwriting nested mode, so the local summary keeps the seven external
+public-launch blockers visible while still allowing the standalone
+`341-external-launch-blockers-summary.json` to remain the canonical blocker
+artifact.
+
 To inspect the current migration completion state without changing runtime
 code, use:
 
 ```bash
 npm run check:migration-completion
 ```
+
+To inspect API database cutover readiness against the checked-in Postgres schema
+and the current SQLite data shape, use:
+
+```bash
+npm run check:postgres-cutover
+npm run check:postgres-cutover:export-smoke
+```
+
+After the Chrome Web Store developer dashboard shows the extension as published,
+run `npm run check:chrome-store-publication:published` with the real item id,
+detail listing URL, published status, submitted version, and upload SHA-256 from
+the current release package.
+
+After an actual managed Postgres migration, run `npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json` with the required signoff environment.
 
 To finish the Google provider login boundary locally, generate the temporary
 token helper and open the printed URL while the Vite dev server is running:
@@ -219,9 +240,29 @@ Git. After Google sign-in, copy the short-lived ID token and run:
 QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries
 ```
 
-The verifier checks the token structure, issuer, expiration, and audience
-against the configured Google Client ID before it calls the provider login
-endpoint.
+To verify the deployed beta endpoints instead of the local `config.js`
+fallback, run:
+
+```bash
+npm run verify:production-boundaries:deployed
+```
+
+For an interactive handoff that does not echo the token or write it to disk, run
+one of these commands and paste the token when prompted:
+
+```bash
+npm run verify:production-boundaries:paste-token
+npm run verify:production-boundaries:deployed:paste-token
+npm run check:release-readiness:local:paste-token
+```
+
+The deployed paste-token command reads `https://beta.quantgym.app/config.js`,
+uses the deployed API/LLM endpoints, and writes
+`docs/browser-audit-screenshots/333-production-boundaries-deployed-services-summary.json`
+only after the deployed LLM checks pass. The verifier checks the token
+structure, issuer, expiration, and audience against the configured Google Client
+ID before it calls the provider login endpoint; when that login succeeds, the
+returned QuantGym cloud session is reused for deployed LLM checks.
 
 ## Beta Deployment Configuration
 
@@ -265,6 +306,7 @@ Render API environment variables:
 PORT=8790
 QUANTGYM_HOST=0.0.0.0
 QUANTGYM_DB=/var/data/quantgym.sqlite3
+QUANTGYM_PUBLIC_API_BASE_URL=https://api.quantgym.app
 QUANTGYM_ALLOWED_ORIGINS=https://beta.quantgym.app
 QUANTGYM_BETA_EMAIL_ALLOWLIST=tester1@example.com,tester2@example.com
 QUANTGYM_REQUIRE_EMAIL_VERIFICATION=1
@@ -277,6 +319,37 @@ QUANTGYM_SMTP_USERNAME=resend
 QUANTGYM_SMTP_PASSWORD=<Resend API key>
 QUANTGYM_SMTP_FROM="QuantGym <no-reply@quantgym.app>"
 ```
+
+Before deploys, backups, or a future database cutover, run a read-only SQLite preflight from the repo root:
+
+```bash
+python3 scripts/export-api-sqlite.py --db "$QUANTGYM_DB" --summary-only
+```
+
+For public production media, configure real S3/R2-compatible object storage plus a CDN/public base URL, then validate both the environment shape and the live object path before deploy:
+
+```bash
+npm run check:media-storage:production-fixture
+npm run check:media-storage:production
+npm run check:media-storage:production -- --live
+```
+
+The live check is opt-in: it writes one tiny `readiness-smoke/` object, verifies signed read plus public media URL bytes, and deletes the object. Local/disk media storage remains fine for development and small controlled beta runs, but it intentionally fails the production gate.
+
+When production alerting and edge rate limits are configured, validate that shape too:
+
+```bash
+npm run check:ops-alerts:production-fixture
+QUANTGYM_ALERT_WEBHOOK_URL="https://alerts.example.com/quantgym-alerts" \
+QUANTGYM_ALERT_WEBHOOK_TOKEN="<32+ character random bearer token>" \
+QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED=1 \
+QUANTGYM_EDGE_RATE_LIMIT_PROVIDER=cloudflare \
+QUANTGYM_EDGE_RATE_LIMIT_NOTES="Cloudflare edge rule covers /api/auth/* bursts by IP." \
+QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL="https://dash.cloudflare.com/account/rulesets/rule" \
+npm run check:ops-alerts:production
+```
+
+Replace the alert URL, bearer token, and edge evidence URL with real production values before running the signoff; placeholders are intentionally rejected.
 
 Optional Google login variable, only if Google login is enabled on both frontend and API:
 
@@ -360,12 +433,42 @@ node scripts/import-quant-books.mjs --book-root /absolute/path/to/books
 
 Private raw exports, including the QuantGuide raw export folder, are ignored and should stay outside Git. Keep only normalized catalogs in the repository unless redistribution rights are explicit.
 
+Run the repository hygiene check before release commits to catch accidental `.env`, SQLite, `dist/`, `artifacts/`, raw exports, oversized files, or secret-shaped content in tracked files:
+
+```bash
+npm run check:repo-hygiene
+```
+
 ## Checks
 
 ```bash
 node --check src/main.js
 node --check llm-proxy/server.mjs
 node --check browser-extension/popup.js
+npm run check:browser-extension
+npm run check:browser-extension:runtime-smoke
+npm run check:chrome-store-readiness
+npm run check:chrome-store-publication
+npm run check:chrome-store-publication:fixture
+npm run check:route-integrity
+npm run check:route-interactions
+npm run check:browser-route-smoke
+npm run check:question-bank-rights
+npm run check:question-bank-rights:public-smoke
+npm run check:question-bank-rights:release-blockers
+npm run check:external-launch-blockers
+npm run check:postgres-cutover
+npm run check:postgres-cutover:export-smoke
+npm run check:repo-hygiene
+npm run check:jobs-source
+npm run check:jobs-source:runtime-smoke
+npm run check:jobs-source:production-fixture
+npm run check:media-storage
+npm run check:media-storage:runtime-smoke
+npm run check:media-storage:production-fixture
+npm run check:ops-alerts
+npm run check:ops-alerts:runtime-smoke
+npm run check:ops-alerts:production-fixture
 python3 -m py_compile api-server/server.py
 ```
 
@@ -375,6 +478,55 @@ For deployment-affecting changes, also run:
 QUANTGYM_WEB_API_ENDPOINT="https://api.quantgym.app/api" \
 QUANTGYM_WEB_LLM_ENDPOINT="https://llm.quantgym.app/interview" \
 node scripts/build-static-site.mjs --strict
+npm run check:jobs-source:production
+npm run check:jobs-source:production -- --live
+npm run check:jobs-source:runtime-smoke
+npm run check:jobs-source:production-fixture
+npm run check:media-storage:production-fixture
+npm run check:media-storage:production
+npm run check:media-storage:production -- --live
+npm run check:media-storage:runtime-smoke
+npm run check:chrome-store-publication
+npm run check:chrome-store-publication:fixture
+npm run check:ops-alerts:production-fixture
+npm run check:ops-alerts:production
+npm run check:ops-alerts:runtime-smoke
+npm run check:postgres-cutover
+npm run check:postgres-cutover:export-smoke
+```
+
+Before any public or commercial problem-bank release, also run:
+
+```bash
+npm run check:question-bank-rights:public-smoke
+npm run check:question-bank-rights:release-blockers
+npm run check:question-bank-rights:public
+npm run check:question-bank-rights:commercial
+```
+
+The public gate is expected to fail until every active question-bank source has explicit public/commercial redistribution approval recorded in `data/question-banks/source-rights-manifest.json`. Approved entries must carry the approval type, redistribution scopes, evidence summary, recent review date, and HTTPS evidence URL without embedded credentials, query strings, or fragments; commercial release also requires the `commercial-use` scope.
+
+To inspect all external public-launch blockers without calling external services, run `npm run check:external-launch-blockers`. It should pass while reporting `launchReadiness: "blocked"` until the seven external signoffs are cleared; use `npm run check:external-launch-blockers -- --require-clear` for final public-launch clearing.
+
+Before an actual SQLite to Postgres migration, create a protected full export and
+require the cutover checker to verify it is not redacted. After the managed
+Postgres import and app cutover are complete, set the `QUANTGYM_POSTGRES_CUTOVER_*`
+signoff variables and run the complete gate too:
+
+```bash
+python3 scripts/export-api-sqlite.py --db "$QUANTGYM_DB" --out /secure/quantgym-sqlite-export.json --include-sensitive
+python3 scripts/check-postgres-cutover.py --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json --require-sensitive-export
+npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json
+```
+
+The complete gate requires `QUANTGYM_POSTGRES_CUTOVER_STATUS=complete`, target
+host/database, completion timestamp, HTTPS evidence URL, source DB SHA-256,
+export SHA-256, target row count, app-DB-active confirmation, and backup
+confirmation. The local export smoke also verifies this contract with a temporary
+API database:
+
+```bash
+npm run check:postgres-cutover:export-smoke
 ```
 
 ## More Docs
@@ -384,4 +536,4 @@ node scripts/build-static-site.mjs --strict
 - [api-server/README.md](./api-server/README.md): API configuration and endpoint list.
 - [llm-proxy/README.md](./llm-proxy/README.md): LLM proxy setup and news API.
 - [data/question-banks/README.md](./data/question-banks/README.md): problem-source workflow.
-- [browser-extension/README.md](./browser-extension/README.md): Chrome extension prototype.
+- [browser-extension/README.md](./browser-extension/README.md): Chrome collector extension validation and packaging.

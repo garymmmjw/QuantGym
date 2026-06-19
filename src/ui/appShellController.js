@@ -20,7 +20,8 @@ export function createAppShellController(deps = {}) {
   const documentRef = deps.documentRef || globalThis.document;
   const windowRef = deps.windowRef || globalThis.window;
   const elements = deps.elements || {};
-  const text = (key, params) => deps.t?.(key, params) || key;
+  const text = (key, params) => (typeof deps.t === "function" ? deps.t(key, params) : key) || key;
+  const refreshIcons = (...args) => (typeof deps.refreshIcons === "function" ? deps.refreshIcons(...args) : undefined);
   const getAppState = () => deps.getAppState?.() || {};
   const getUserState = () => deps.getUserState?.() || {};
   const defaultRouteModule = deps.defaultRouteModule || "overview";
@@ -32,7 +33,7 @@ export function createAppShellController(deps = {}) {
       prefs: getAppState().appPrefs,
       button: elements.sidebarToggleBtn,
       t: text,
-      refreshIcons: deps.refreshIcons
+      refreshIcons
     });
   }
 
@@ -128,7 +129,7 @@ export function createAppShellController(deps = {}) {
     deps.maybeAutoRefreshNews?.();
     deps.maybeAutoRefreshJobs?.();
     deps.updatePreview?.();
-    deps.refreshIcons?.();
+    refreshIcons();
     applyLanguage();
   }
 

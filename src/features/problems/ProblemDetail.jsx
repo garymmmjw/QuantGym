@@ -202,8 +202,14 @@ export function ProblemDetail({
           className="problem-comment-form"
           onSubmit={(event) => {
             event.preventDefault();
-            onPostComment(detail.id, commentDraft);
-            setCommentDraft("");
+            const result = onPostComment(detail.id, commentDraft);
+            if (result && typeof result.then === "function") {
+              result.then((actionResult) => {
+                if (actionResult?.ok !== false) setCommentDraft("");
+              }).catch(() => {});
+            } else if (result?.ok !== false) {
+              setCommentDraft("");
+            }
           }}
         >
           <textarea

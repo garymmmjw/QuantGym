@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#2f8f6b"/>
+      <stop offset="1" stop-color="#28537f"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#102018" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect width="440" height="280" fill="url(#bg)"/>
+  <circle cx="74" cy="72" r="78" fill="#fffdf8" opacity="0.12"/>
+  <circle cx="390" cy="240" r="108" fill="#fffdf8" opacity="0.10"/>
+  <g filter="url(#soft)">
+    <rect x="54" y="58" width="156" height="156" rx="36" fill="#fffdf8"/>
+    <text x="86" y="163" font-family="Inter, Arial, sans-serif" font-size="88" font-weight="900" fill="#2f8f6b">Q</text>
+  </g>
+  <text x="238" y="112" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="900" fill="#ffffff">QuantGym</text>
+  <text x="238" y="147" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="800" fill="#ffffff">Collector</text>
+  <text x="238" y="184" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#eaf6ef">Capture problems</text>
+  <text x="238" y="205" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#eaf6ef">into your study board</text>
+</svg>

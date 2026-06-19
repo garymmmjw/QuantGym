@@ -956,11 +956,17 @@ async function createPdfInterviewQuestions(payload) {
   if (!response.ok) {
     throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
   }
-  const text = extractOutputText(data);
-  const parsed = parseJsonObject(text);
+  const text = requireOutputText(data, "OpenAI returned no PDF question text");
+  let parsed = {};
+  try {
+    parsed = parseJsonObject(text);
+  } catch {
+    parsed = {};
+  }
+  const questions = normalizePdfQuestions(parsed.questions, count, payload, text);
   return {
-    summary: parsed.summary || "",
-    questions: Array.isArray(parsed.questions) ? parsed.questions.slice(0, count) : []
+    summary: String(parsed.summary || summarizePdfQuestionText(text) || "").trim(),
+    questions
   };
 }
 
@@ -1090,6 +1096,93 @@ function parseJsonObject(text) {
     if (!match) throw new Error("Model did not return JSON");
     return JSON.parse(match[0]);
   }
+}
+
+function normalizePdfQuestions(value, count, payload, rawText = "") {
+  const source = Array.isArray(value) && value.length
+    ? value
+    : extractPdfQuestionCandidates(rawText, count);
+  return source
+    .map((item, index) => normalizePdfQuestion(item, index, payload, rawText))
+    .filter(Boolean)
+    .slice(0, count);
+}
+
+function extractPdfQuestionCandidates(text, count) {
+  const clean = stripMarkdownFences(text);
+  const matches = [...clean.matchAll(/(?:titleEn|title|question|promptEn)\s*[:：]\s*([^\n{}]{12,240})/gi)]
+    .map((match) => ({ promptEn: match[1].trim() }));
+  if (matches.length) return matches.slice(0, count);
+  const lines = clean
+    .split(/\n+/)
+    .map((line) => line.replace(/^[-*\d.)\s]+/, "").trim())
+    .filter((line) => line.length >= 24 && !/^(summary|questions?)\b/i.test(line));
+  if (lines.length) return lines.slice(0, count).map((line) => ({ promptEn: line }));
+  return [{ promptEn: clean.slice(0, 360) || "Explain the main quantitative concept from the uploaded PDF." }];
+}
+
+function normalizePdfQuestion(item, index, payload, rawText = "") {
+  const raw = typeof item === "string" ? { promptEn: item } : (item && typeof item === "object" ? item : {});
+  const fallbackPrompt = String(raw.promptEn || raw.prompt || raw.question || raw.text || raw.titleEn || raw.title || "").trim()
+    || "Explain the main quantitative concept from the uploaded PDF and how it would be tested in an interview.";
+  const title = String(raw.titleEn || raw.title || firstSentence(fallbackPrompt) || `PDF Interview Question ${index + 1}`).trim();
+  const titleZh = String(raw.titleZh || title).trim();
+  const promptEn = String(raw.promptEn || raw.prompt || raw.question || fallbackPrompt).trim();
+  const promptZh = String(raw.promptZh || promptEn).trim();
+  return {
+    titleEn: title.slice(0, 160),
+    titleZh: titleZh.slice(0, 160),
+    category: normalizeQuestionCategory(raw.category || inferQuestionCategory(`${title} ${promptEn} ${rawText}`)),
+    difficulty: normalizeQuestionDifficulty(raw.difficulty),
+    tags: normalizeQuestionTags(raw.tags, payload),
+    promptEn,
+    promptZh,
+    answer: String(raw.answer || raw.solution || "Discuss the assumptions, setup, method, and final interpretation clearly.").trim(),
+    explanation: String(raw.explanation || raw.rationale || raw.answer || "A strong answer should define the variables, state assumptions, derive the key relationship, and connect it to interview decision-making.").trim()
+  };
+}
+
+function normalizeQuestionCategory(value) {
+  const allowed = new Set(["leetcode", "pandasNumpy", "probabilityExpectation", "statistics", "machineLearning", "deepLearning", "market", "option", "mentalMath"]);
+  const text = String(value || "").trim();
+  return allowed.has(text) ? text : "probabilityExpectation";
+}
+
+function inferQuestionCategory(text) {
+  const lower = String(text || "").toLowerCase();
+  if (/option|delta|gamma|vega|volatility|black.scholes|hedg/.test(lower)) return "option";
+  if (/regression|variance|standard deviation|hypothesis|confidence|statistic/.test(lower)) return "statistics";
+  if (/machine learning|model|drift|feature|training/.test(lower)) return "machineLearning";
+  if (/market|trading|order book|liquidity|spread/.test(lower)) return "market";
+  return "probabilityExpectation";
+}
+
+function normalizeQuestionDifficulty(value) {
+  const text = String(value || "").trim();
+  return ["Easy", "Medium", "Hard"].includes(text) ? text : "Medium";
+}
+
+function normalizeQuestionTags(value, payload) {
+  const tags = Array.isArray(value) ? value.map(String) : String(value || "").split(/[,，]/);
+  const normalized = tags.map((item) => item.trim()).filter(Boolean);
+  normalized.push("pdf", String(payload.interviewType || "technical"));
+  return [...new Set(normalized)].slice(0, 6);
+}
+
+function summarizePdfQuestionText(text) {
+  return firstSentence(stripMarkdownFences(text)).slice(0, 240);
+}
+
+function stripMarkdownFences(value) {
+  return String(value || "")
+    .replace(/```(?:json)?/gi, "")
+    .replace(/```/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function firstSentence(value) {
+  return String(value || "").split(/(?<=[.!?。！？])\s+/)[0]?.trim() || "";
 }
 
 function extractResumeReviewItems(text) {

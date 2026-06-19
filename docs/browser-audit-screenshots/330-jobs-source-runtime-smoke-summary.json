@@ -1,0 +1,105 @@
+{
+  "status": "pass",
+  "durationMs": 1790,
+  "feedRequests": {
+    "total": 4,
+    "okFeed": 1,
+    "failFeed": 1,
+    "invalidJsonFeed": 1,
+    "largeFeed": 1,
+    "tokenAccepted": true,
+    "cacheAvoidedSecondFetch": true
+  },
+  "merged": {
+    "statusCode": 200,
+    "source": "catalog+source",
+    "sourceStatus": "ok",
+    "count": 5,
+    "firstId": "runtime-source-internship",
+    "ids": [
+      "runtime-source-internship",
+      "runtime-shared-role",
+      "runtime-unsafe-url",
+      "runtime-invalid-posted-at",
+      "runtime-local-fulltime"
+    ]
+  },
+  "cached": {
+    "statusCode": 200,
+    "source": "catalog+source",
+    "sourceStatus": "ok",
+    "count": 5,
+    "firstId": "runtime-source-internship",
+    "ids": [
+      "runtime-source-internship",
+      "runtime-shared-role",
+      "runtime-unsafe-url",
+      "runtime-invalid-posted-at",
+      "runtime-local-fulltime"
+    ]
+  },
+  "filtered": {
+    "statusCode": 200,
+    "source": "catalog+source",
+    "sourceStatus": "ok",
+    "count": 2,
+    "firstId": "runtime-shared-role",
+    "ids": [
+      "runtime-shared-role",
+      "runtime-local-fulltime"
+    ]
+  },
+  "fallback": {
+    "statusCode": 200,
+    "source": "catalog-fallback",
+    "sourceStatus": "error",
+    "count": 2,
+    "firstId": "runtime-local-fulltime",
+    "ids": [
+      "runtime-local-fulltime",
+      "runtime-shared-role"
+    ]
+  },
+  "invalidJsonFallback": {
+    "statusCode": 200,
+    "source": "catalog-fallback",
+    "sourceStatus": "error",
+    "count": 2,
+    "firstId": "runtime-local-fulltime",
+    "ids": [
+      "runtime-local-fulltime",
+      "runtime-shared-role"
+    ]
+  },
+  "largeFeedFallback": {
+    "statusCode": 200,
+    "source": "catalog-fallback",
+    "sourceStatus": "error",
+    "count": 2,
+    "firstId": "runtime-local-fulltime",
+    "ids": [
+      "runtime-local-fulltime",
+      "runtime-shared-role"
+    ]
+  },
+  "checks": {
+    "sourceStatusOk": true,
+    "sourceLabelCatalogPlusSource": true,
+    "sourceJobFirst": true,
+    "duplicateIdPrefersSource": true,
+    "unsafeSourceUrlSanitized": true,
+    "unknownSourceTypeDefaulted": true,
+    "invalidSourcePostedAtSanitized": true,
+    "localFallbackJobIncluded": true,
+    "postTypeFilterReturnedFulltimeOnly": true,
+    "fallbackSourceStatusError": true,
+    "fallbackSourceLabel": true,
+    "fallbackReturnedLocalCatalog": true,
+    "invalidJsonFallbackSourceStatusError": true,
+    "invalidJsonFallbackReturnedLocalCatalog": true,
+    "largeFeedFallbackSourceStatusError": true,
+    "largeFeedFallbackReturnedLocalCatalog": true
+  },
+  "failures": [],
+  "warnings": []
+}

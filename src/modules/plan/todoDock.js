@@ -91,10 +91,25 @@ export function createTodoDockTask(item = {}, options = {}) {
   detail.textContent = detailText;
   fields.append(title, detail);
 
+  const meta = documentRef.createElement("div");
+  meta.className = "todo-task-meta";
   const time = documentRef.createElement("span");
   time.className = "todo-task-time";
   time.textContent = `${String(item.minutes || 0)}m`;
+  meta.appendChild(time);
+  if (item.deletable) {
+    const deleteButton = documentRef.createElement("button");
+    deleteButton.className = "todo-task-delete icon-button ghost danger";
+    deleteButton.type = "button";
+    deleteButton.dataset.todoDelete = taskId;
+    deleteButton.setAttribute("aria-label", t("deleteTask") || "Delete task");
+    deleteButton.title = t("deleteTask") || "Delete task";
+    const deleteIcon = documentRef.createElement("i");
+    deleteIcon.setAttribute("data-lucide", "trash-2");
+    deleteButton.appendChild(deleteIcon);
+    meta.appendChild(deleteButton);
+  }
 
-  row.append(toggle, fields, time);
+  row.append(toggle, fields, meta);
   return row;
 }

@@ -1,0 +1,185 @@
+{
+  "status": "pass",
+  "durationMs": 4417,
+  "externalPublicationRequired": true,
+  "finalSignoffCommand": "npm run check:chrome-store-publication:published",
+  "submissionHandoff": {
+    "status": "pass",
+    "mode": "submission-handoff",
+    "published": false,
+    "manualSubmissionRequired": true,
+    "passed": 2,
+    "failed": 0,
+    "name": "QuantGym Collector",
+    "version": "0.2.0",
+    "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.2.0.zip",
+    "uploadSha256": "55f09a90f64ef9ebe363dde202b2c6032495ee60975ac31d50bd052941111212",
+    "uploadBytes": 38073,
+    "uploadFileCount": 9,
+    "listingCategory": "Productivity",
+    "listingLanguage": "en-US",
+    "listingHost": "beta.quantgym.app",
+    "privacyPolicyHost": "beta.quantgym.app",
+    "supportEmailSet": true,
+    "screenshots": 1,
+    "reviewerNotes": 3
+  },
+  "publishedFixture": {
+    "status": "pass",
+    "mode": "published-signoff",
+    "published": true,
+    "manualSubmissionRequired": false,
+    "passed": 3,
+    "failed": 0,
+    "name": "QuantGym Collector",
+    "version": "0.2.0",
+    "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.2.0.zip",
+    "uploadSha256": "55f09a90f64ef9ebe363dde202b2c6032495ee60975ac31d50bd052941111212",
+    "uploadBytes": 38073,
+    "uploadFileCount": 9,
+    "listingCategory": "Productivity",
+    "listingLanguage": "en-US",
+    "listingHost": "chromewebstore.google.com",
+    "privacyPolicyHost": "beta.quantgym.app",
+    "supportEmailSet": true,
+    "screenshots": 1,
+    "reviewerNotes": 3,
+    "itemId": "abcdefghijklmnopabcdefghijklmnop",
+    "evidenceHost": "chromewebstore.google.com",
+    "publicationStatus": "published",
+    "submittedVersion": "0.2.0"
+  },
+  "negativeFixtures": [
+    {
+      "name": "missing item id rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_ITEM_ID is required for published signoff."
+    },
+    {
+      "name": "malformed item id rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_ITEM_ID must look like a Chrome extension id."
+    },
+    {
+      "name": "placeholder item id rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_ITEM_ID looks like a placeholder Chrome extension id."
+    },
+    {
+      "name": "http listing URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must use HTTPS."
+    },
+    {
+      "name": "listing URL embedded credentials rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must not include embedded credentials."
+    },
+    {
+      "name": "listing URL query rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must not include query strings or fragments."
+    },
+    {
+      "name": "non-store listing URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must point to a Chrome Web Store listing."
+    },
+    {
+      "name": "non-detail listing URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must point to a Chrome Web Store detail listing."
+    },
+    {
+      "name": "listing URL without item id rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Chrome Web Store listing URL must include the item id."
+    },
+    {
+      "name": "draft status rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_STATUS must be published for final signoff."
+    },
+    {
+      "name": "submitted version mismatch rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_SUBMITTED_VERSION must equal manifest version 0.2.0."
+    },
+    {
+      "name": "upload SHA mismatch rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Published upload SHA-256 must match the current release package."
+    },
+    {
+      "name": "placeholder evidence URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL still contains placeholder brackets."
+    },
+    {
+      "name": "private evidence URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "evidence URL embedded credentials rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must not include embedded credentials."
+    },
+    {
+      "name": "evidence URL query rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must not include query strings or fragments."
+    }
+  ],
+  "checks": {
+    "submissionHandoffPass": true,
+    "submissionHandoffManualSubmissionRequired": true,
+    "publishedFixturePass": true,
+    "publishedFixtureHasAllChecks": true,
+    "publishedFixtureMatchesUploadSha": true,
+    "publishedFixtureVersionMatchesManifest": true,
+    "negativeFixturesRejected": true,
+    "negativeFixturesMentionExpectedErrors": true,
+    "placeholderItemIdRejected": true,
+    "listingUrlEmbeddedCredentialsRejected": true,
+    "listingUrlQueryRejected": true,
+    "listingUrlDetailPathRejected": true,
+    "evidenceUrlEmbeddedCredentialsRejected": true,
+    "evidenceUrlQueryRejected": true,
+    "externalPublicationStillRequired": true
+  },
+  "failures": [],
+  "warnings": []
+}

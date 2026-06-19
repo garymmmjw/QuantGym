@@ -58,6 +58,8 @@ export function mergeImportedState(currentState = {}, importedRaw = {}, deps = {
   const normalizeState = deps.normalizeState || ((state) => state);
   const nowIso = deps.nowIso || new Date().toISOString();
   return normalizeState({
+    ...currentState,
+    ...importedState,
     skills: { ...(currentState.skills || {}), ...(importedState.skills || {}) },
     entries: Array.isArray(importedState.entries) ? importedState.entries : [],
     resources: Array.isArray(importedState.resources) ? importedState.resources : [],

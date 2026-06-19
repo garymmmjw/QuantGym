@@ -161,6 +161,7 @@ export function AuthShell() {
               <label className="sr-only" htmlFor="loginPassword" data-i18n="password">密码</label>
               <input id="loginPassword" className="auth-password-field hidden" type="password" autoComplete="current-password" placeholder="密码" data-i18n-placeholder="password" />
               <button className="primary-button auth-submit" type="submit" data-i18n="continueAction">继续</button>
+              <button className="auth-link-button" id="forgotPasswordBtn" type="button" data-i18n="forgotPassword">忘记密码？</button>
             </form>
 
             <form className="auth-form auth-register-flow hidden" id="registerForm" autoComplete="on">
@@ -177,6 +178,21 @@ export function AuthShell() {
                 <button className="secondary-button" id="sendRegisterCodeBtn" type="button" data-i18n="sendVerificationCode">发送验证码</button>
               </div>
               <button className="primary-button auth-submit" type="submit" data-i18n="createAccount">创建账户</button>
+            </form>
+
+            <form className="auth-form auth-reset-flow hidden" id="resetPasswordForm" autoComplete="on">
+              <p className="auth-flow-note" data-i18n="resetPasswordNote">输入邮箱验证码并设置新密码。</p>
+              <label className="sr-only" htmlFor="resetPasswordEmail" data-i18n="emailAddress">电子邮件地址</label>
+              <input id="resetPasswordEmail" type="email" autoComplete="email" placeholder="电子邮件地址" data-i18n-placeholder="emailAddress" />
+              <div className="auth-code-row">
+                <label className="sr-only" htmlFor="resetPasswordVerificationCode" data-i18n="verificationCode">邮箱验证码</label>
+                <input id="resetPasswordVerificationCode" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength="6" placeholder="邮箱验证码" data-i18n-placeholder="verificationCode" />
+                <button className="secondary-button" id="sendResetPasswordCodeBtn" type="button" data-i18n="sendVerificationCode">发送验证码</button>
+              </div>
+              <label className="sr-only" htmlFor="resetPasswordNewPassword" data-i18n="newPassword">新密码</label>
+              <input id="resetPasswordNewPassword" type="password" autoComplete="new-password" placeholder="设置新密码，至少 6 位" data-i18n-placeholder="newPasswordPlaceholder" />
+              <button className="primary-button auth-submit" type="submit" data-i18n="resetPasswordSubmit">重置并登录</button>
+              <button className="auth-link-button" id="cancelResetPasswordBtn" type="button" data-i18n="cancel">取消</button>
             </form>
 
             <details className="google-config hidden" aria-hidden="true">

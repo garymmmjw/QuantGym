@@ -1,4 +1,5 @@
-const DEFAULT_BOARD_URL = "http://127.0.0.1:5176/index.html";
+const DEFAULT_BOARD_URL = "https://beta.quantgym.app/";
+const MAX_CAPTURE_URL_LENGTH = 7000;
 
 let capturedProblem = null;
 
@@ -20,17 +21,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 els.boardUrl.addEventListener("change", async () => {
-  await chrome.storage.local.set({ boardUrl: els.boardUrl.value.trim() || DEFAULT_BOARD_URL });
+  const boardUrl = normalizeBoardUrl(els.boardUrl.value);
+  els.boardUrl.value = boardUrl;
+  await chrome.storage.local.set({ boardUrl });
 });
 
 els.collectBtn.addEventListener("click", async () => {
   if (!capturedProblem) return;
-  const boardUrl = els.boardUrl.value.trim() || DEFAULT_BOARD_URL;
+  const boardUrl = normalizeBoardUrl(els.boardUrl.value);
+  els.boardUrl.value = boardUrl;
   await chrome.storage.local.set({ boardUrl });
   const target = new URL(boardUrl);
   target.searchParams.set("capture", encodePayload(capturedProblem));
 
-  if (target.toString().length > 7000) {
+  if (target.toString().length > MAX_CAPTURE_URL_LENGTH) {
     await copyProblemJson();
     els.status.textContent = "题干较长，已复制 JSON。";
     return;
@@ -46,14 +50,23 @@ async function captureCurrentTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) return;
 
-  els.sourceHost.textContent = new URL(tab.url).hostname.replace(/^www\./, "");
-  const [{ result }] = await chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: extractProblemFromPage
-  });
+  try {
+    els.sourceHost.textContent = new URL(tab.url || "").hostname.replace(/^www\./, "");
+    const [{ result }] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: extractProblemFromPage
+    });
 
-  capturedProblem = result;
-  renderProblem(result);
+    capturedProblem = result;
+    renderProblem(result);
+  } catch {
+    capturedProblem = null;
+    els.problemTitle.textContent = "无法读取当前页面";
+    els.problemPrompt.textContent = "请在 LeetCode、题库或普通网页题目页面打开扩展。";
+    els.status.textContent = "Chrome 内部页面和部分受限页面不可捕获。";
+    els.collectBtn.disabled = true;
+    els.copyBtn.disabled = true;
+  }
 }
 
 function renderProblem(problem) {
@@ -80,6 +93,22 @@ function encodePayload(payload) {
     binary += String.fromCharCode(byte);
   });
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function normalizeBoardUrl(value) {
+  try {
+    const url = new URL(String(value || "").trim() || DEFAULT_BOARD_URL);
+    if (!isAllowedBoardUrl(url)) return DEFAULT_BOARD_URL;
+    return url.toString();
+  } catch {
+    return DEFAULT_BOARD_URL;
+  }
+}
+
+function isAllowedBoardUrl(url) {
+  if (url.protocol === "https:") return true;
+  if (url.protocol !== "http:") return false;
+  return ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
 }
 
 function extractProblemFromPage() {

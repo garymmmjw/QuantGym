@@ -1,5 +1,5 @@
 import { SCORE_XP_PER_POINT } from '../../constants.js';
-import { dayKey } from '../../lib/date.js';
+import { dayKey, timestampOrZero } from '../../lib/date.js';
 import { skillDefs } from '../../skills.js';
 
 export function normalizeSkills(rawSkills = {}, defs = skillDefs) {
@@ -52,7 +52,7 @@ export function getRank(score = 0) {
 export function getWeeklyXp(entries = [], now = Date.now()) {
   const cutoff = now - 7 * 24 * 60 * 60 * 1000;
   return (Array.isArray(entries) ? entries : [])
-    .filter((entry) => new Date(entry.date).getTime() >= cutoff)
+    .filter((entry) => timestampOrZero(entry.date) >= cutoff)
     .reduce((sum, entry) => sum + Number(entry.totalXp || 0), 0);
 }
 
@@ -114,7 +114,7 @@ export function getSkillPracticeStats(skillKey, state = {}, deps = {}) {
     : null;
   const latestEntry = entries
     .slice()
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+    .sort((a, b) => timestampOrZero(b.date) - timestampOrZero(a.date))[0];
 
   return {
     score: getSkillScore(state.skills?.[skillKey] || 0),

@@ -3,6 +3,7 @@ import {
   loginCloudGoogle,
   registerCloudAccount,
   requestCloudAccountStatus,
+  resetCloudPassword,
   sendCloudVerificationCode
 } from './auth.js';
 
@@ -45,6 +46,15 @@ export function createAuthCloudClient(deps = {}) {
         cloudApi,
         email,
         password
+      });
+    },
+
+    resetPassword(email, password, verificationCode) {
+      return resetCloudPassword({
+        cloudApi,
+        email,
+        password,
+        verificationCode
       });
     },
 

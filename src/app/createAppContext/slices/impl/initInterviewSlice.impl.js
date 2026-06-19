@@ -224,6 +224,7 @@ export function initInterviewSliceImpl(shared, ctx) {
     getRuntimeState: () => interviewRuntime.state,
     getUserState: () => userState.value,
     getProblems: () => userState.value.problems,
+    typeDefs: interviewTypeDefs,
     focusDefs: interviewFocusDefs,
     formatCategory: formatCategoryLabel,
     formatDate,
@@ -522,6 +523,7 @@ export function initInterviewSliceImpl(shared, ctx) {
     renderSetup: () => renderInterviewSetup(),
     updateAnswerFileMeta: () => updateInterviewAnswerFileMeta(),
     updateStatus: (...args) => updateInterviewStatus(...args),
+    updateActionPanel: () => updateInterviewActionPanel(),
     renderTranscript: () => renderInterviewTranscript(),
     renderQuestionPanel: () => renderInterviewQuestionPanel(),
     normalizeSessionConfig: (...args) => normalizeInterviewSessionConfig(...args),
@@ -547,6 +549,31 @@ export function initInterviewSliceImpl(shared, ctx) {
   finalizeInterviewOnboarding = interviewSessionFlowController.finalizeOnboarding;
   showInterviewQuestion = interviewSessionFlowController.showQuestion;
   const restartInterviewWithSameConfig = interviewSessionFlowController.restartWithSameConfig;
+  async function uploadInterviewAttachmentMedia(attachment = {}) {
+    if (!attachment?.dataUrl || !deps.cloudApi || (deps.canUseCloud && !deps.canUseCloud())) return { ok: false, code: "unavailable" };
+    try {
+      const payload = await deps.cloudApi("/media", {
+        method: "POST",
+        body: {
+          dataUrl: attachment.dataUrl,
+          name: attachment.name || "interview-attachment",
+          type: attachment.type || "",
+          context: "interview-answer-attachment"
+        }
+      });
+      const media = payload?.media || null;
+      if (!media?.url && !media?.dataUrl) {
+        return { ok: false, code: "invalidMedia" };
+      }
+      return { ok: true, media };
+    } catch (error) {
+      return {
+        ok: false,
+        code: "uploadFailed",
+        message: error?.message || "Could not upload interview attachment"
+      };
+    }
+  }
   interviewAnswerController = createInterviewAnswerController({
     elements: els,
     getInterviewState: () => interviewState,
@@ -575,7 +602,8 @@ export function initInterviewSliceImpl(shared, ctx) {
     localConverse: (...args) => localInterviewConverse(...args),
     recordLiveQuestionResult: (...args) => recordLiveInterviewQuestionResult(...args),
     requestHintFromApi: (...args) => requestInterviewHintFromApi(...args),
-    localHint: (...args) => localInterviewHint(...args)
+    localHint: (...args) => localInterviewHint(...args),
+    uploadAttachmentMedia: uploadInterviewAttachmentMedia
   });
   sliceRefs.interviewAnswerController = interviewAnswerController;
   const requestInterviewHint = (...args) => interviewAnswerController?.requestHint?.(...args);

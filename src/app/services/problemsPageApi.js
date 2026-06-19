@@ -53,9 +53,13 @@ export function createProblemsPageApi(deps = {}) {
   }
 
   function getLeetcodeHotStats(hotItems = getLeetcodeHotItems()) {
+    const state = getState();
+    const hasStateDoneIds = Array.isArray(state.leetcodeHot100Done);
+    const doneIds = deps.normalizeLeetcodeHot100Done?.(state.leetcodeHot100Done, hotItems)
+      || (hasStateDoneIds ? state.leetcodeHot100Done : []);
     const stats = deps.getLeetcodeHotCompletionStats?.() || {};
     return {
-      done: Math.max(0, Number(stats.done || 0)),
+      done: hasStateDoneIds ? doneIds.length : Math.max(0, Number(stats.done || 0)),
       total: Math.max(0, Number(stats.total || 0)) || hotItems.length || 100
     };
   }
@@ -157,6 +161,21 @@ export function createProblemsPageApi(deps = {}) {
       || "题目";
   }
 
+  function compareProblemPopularityForView(isEnglish) {
+    return (left, right) => compareProblemsByPopularity(left, right, {
+      getSocial: (problemId) => deps.getProblemSocial?.(problemId) || {},
+      getTitle: (problem) => getProblemTitle(problem, isEnglish),
+      locale: deps.getLocale?.() || "en"
+    });
+  }
+
+  function getProblemNavigationMatches(matches, filters, isEnglish) {
+    if (filters.viewMode === "ranking") {
+      return [...matches].sort(compareProblemPopularityForView(isEnglish));
+    }
+    return matches;
+  }
+
   function syncElements() {
     deps.rebindElements?.();
     const els = deps.elements || {};
@@ -176,6 +195,14 @@ export function createProblemsPageApi(deps = {}) {
       });
     }
     deps.refreshIcons?.();
+  }
+
+  function syncAfter(result) {
+    if (result && typeof result.finally === "function") {
+      return result.finally(() => sync());
+    }
+    sync();
+    return result;
   }
 
   function buildChrome(filters, isEnglish, t) {
@@ -436,7 +463,7 @@ export function createProblemsPageApi(deps = {}) {
 
     if (viewState.mode === "detail" && viewState.selected) {
       const navigation = getProblemDetailNavigation(viewState.selected.id, {
-        sequence: matches,
+        sequence: getProblemNavigationMatches(matches, filters, isEnglish),
         fallbackSequence: problems.filter((problem) => deps.isCatalogProblem?.(problem) ?? true)
       });
       return withChrome({
@@ -452,11 +479,7 @@ export function createProblemsPageApi(deps = {}) {
 
     if (viewState.mode === "ranking") {
       const ranked = [...matches]
-        .sort((left, right) => compareProblemsByPopularity(left, right, {
-          getSocial: (problemId) => deps.getProblemSocial?.(problemId) || {},
-          getTitle: (problem) => getProblemTitle(problem, isEnglish),
-          locale: deps.getLocale?.() || "en"
-        }))
+        .sort(compareProblemPopularityForView(isEnglish))
         .slice(0, 50)
         .map((problem) => {
           const social = deps.getProblemSocial?.(problem.id) || {};
@@ -642,18 +665,15 @@ export function createProblemsPageApi(deps = {}) {
     },
 
     toggleLike(problemId) {
-      deps.toggleProblemLike?.(problemId);
-      sync();
+      return syncAfter(deps.toggleProblemLike?.(problemId));
     },
 
     postComment(problemId, text) {
-      deps.postProblemComment?.(problemId, text);
-      sync();
+      return syncAfter(deps.postProblemComment?.(problemId, text));
     },
 
     deleteComment(problemId, commentId) {
-      deps.deleteProblemComment?.(problemId, commentId);
-      sync();
+      return syncAfter(deps.deleteProblemComment?.(problemId, commentId));
     },
 
     selectForInterview(problemId) {

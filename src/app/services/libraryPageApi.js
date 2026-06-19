@@ -85,6 +85,7 @@ export function createLibraryPageApi(deps = {}) {
       deps.setProblemFilterState(filters);
       deps.setProblemPage?.(1);
       deps.setProblemDetailId?.("");
+      deps.setProblemSearchQuery?.("");
       if (deps.elements?.problemSearch) deps.elements.problemSearch.value = "";
       dispatchModuleNavigation("problems");
       deps.switchModule?.("problems");
