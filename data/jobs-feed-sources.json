@@ -1,0 +1,77 @@
+{
+  "includeKeywords": [
+    "ai",
+    "algo",
+    "algorithm",
+    "campus",
+    "compiler",
+    "crypto",
+    "fpga",
+    "graduate",
+    "hpc",
+    "intern",
+    "internship",
+    "machine learning",
+    "market",
+    "quant",
+    "research",
+    "researcher",
+    "software",
+    "strategy",
+    "trader",
+    "trading"
+  ],
+  "excludeKeywords": [
+    "accountant",
+    "accounting",
+    "business development",
+    "conference",
+    "corporate development",
+    "cybersecurity",
+    "event",
+    "finance automation",
+    "human resources",
+    "information security",
+    "interest form",
+    "leadership and professional development",
+    "marketing",
+    "meet up",
+    "meetup",
+    "office manager",
+    "recruiter",
+    "recruiting",
+    "security engineering",
+    "vulnerability",
+    "webinar"
+  ],
+  "sources": [
+    {
+      "id": "jane-street",
+      "provider": "greenhouse",
+      "company": "Jane Street",
+      "boardToken": "janestreet",
+      "url": "https://boards-api.greenhouse.io/v1/boards/janestreet/jobs?content=true"
+    },
+    {
+      "id": "imc",
+      "provider": "greenhouse",
+      "company": "IMC",
+      "boardToken": "imc",
+      "url": "https://boards-api.greenhouse.io/v1/boards/imc/jobs?content=true"
+    },
+    {
+      "id": "hudson-river-trading",
+      "provider": "greenhouse",
+      "company": "Hudson River Trading",
+      "boardToken": "wehrtyou",
+      "url": "https://boards-api.greenhouse.io/v1/boards/wehrtyou/jobs?content=true"
+    },
+    {
+      "id": "jump-trading",
+      "provider": "greenhouse",
+      "company": "Jump Trading",
+      "boardToken": "jumptrading",
+      "url": "https://boards-api.greenhouse.io/v1/boards/jumptrading/jobs?content=true"
+    }
+  ]
+}

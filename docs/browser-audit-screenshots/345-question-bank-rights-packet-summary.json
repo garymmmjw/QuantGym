@@ -1,0 +1,183 @@
+{
+  "status": "pass",
+  "generatedAt": "2026-06-19T04:01:25.047Z",
+  "mode": "commercial",
+  "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/question-bank-rights/public-commercial-approval-packet",
+  "blockedSourceCount": 15,
+  "activeSourceCount": 15,
+  "releaseBlocked": true,
+  "publicFailureCount": 15,
+  "commercialFailureCount": 15,
+  "requiredScopes": [
+    "public-web",
+    "redistribution",
+    "compiled-catalog",
+    "derived-adaptation",
+    "commercial-use"
+  ],
+  "filesWritten": [
+    "artifacts/question-bank-rights/public-commercial-approval-packet/README.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/rights-evidence-tracker.csv",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/manifest-draft.json",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/boyd-cvxbook-additional-exercises.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/dudeney-puzzles.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/etheridge-finmath-problem-sheets.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/green-book.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/hull-derivatives.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/linalg-primer.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/probability-stochastic-10.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/probabilitycourse-solved-samples.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/quantguide.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/quantitative-primer.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/red-book.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/stanford-msande214-hw3.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/stat110-strategic-practice.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/stefanica-fe-math.md",
+    "artifacts/question-bank-rights/public-commercial-approval-packet/sources/yellow-book.md"
+  ],
+  "sources": [
+    {
+      "slug": "boyd-cvxbook-additional-exercises",
+      "name": "Boyd Convex Optimization Additional Exercises",
+      "type": "open-access-exercise-with-generated-answer",
+      "problemCount": 10,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 2,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/boyd-cvxbook-additional-exercises.md"
+    },
+    {
+      "slug": "dudeney-puzzles",
+      "name": "Dudeney 经典挑战谜题",
+      "type": "latex",
+      "problemCount": 123,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 0,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/dudeney-puzzles.md"
+    },
+    {
+      "slug": "etheridge-finmath-problem-sheets",
+      "name": "Alison Etheridge Stochastic Calculus for Finance Problems",
+      "type": "public-course-problem-sheet-with-generated-answer",
+      "problemCount": 10,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 3,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/etheridge-finmath-problem-sheets.md"
+    },
+    {
+      "slug": "green-book",
+      "name": "绿皮书",
+      "type": "latex",
+      "problemCount": 183,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 0,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/green-book.md"
+    },
+    {
+      "slug": "hull-derivatives",
+      "name": "Hull 期权期货及其他衍生品",
+      "type": "latex",
+      "problemCount": 763,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 0,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/hull-derivatives.md"
+    },
+    {
+      "slug": "linalg-primer",
+      "name": "金融工程线性代数入门",
+      "type": "latex",
+      "problemCount": 18,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 0,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/linalg-primer.md"
+    },
+    {
+      "slug": "probability-stochastic-10",
+      "name": "概率与随机分析面试题 10 题",
+      "type": "latex",
+      "problemCount": 10,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 0,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/probability-stochastic-10.md"
+    },
+    {
+      "slug": "probabilitycourse-solved-samples",
+      "name": "ProbabilityCourse Public Solved Samples",
+      "type": "open-access-web-solved-example",
+      "problemCount": 16,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 8,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/probabilitycourse-solved-samples.md"
+    },
+    {
+      "slug": "quantguide",
+      "name": "QuantGuide",
+      "type": "platform",
+      "problemCount": 1204,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 1,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/quantguide.md"
+    },
+    {
+      "slug": "quantitative-primer",
+      "name": "Quantitative Primer",
+      "type": "latex",
+      "problemCount": 41,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 0,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/quantitative-primer.md"
+    },
+    {
+      "slug": "red-book",
+      "name": "红宝书 Quant Job Interview Questions And Answers",
+      "type": "latex",
+      "problemCount": 242,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 0,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/red-book.md"
+    },
+    {
+      "slug": "stanford-msande214-hw3",
+      "name": "Stanford MS&E 214 HW3 Logistics/Finance",
+      "type": "course-homework",
+      "problemCount": 5,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 2,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/stanford-msande214-hw3.md"
+    },
+    {
+      "slug": "stat110-strategic-practice",
+      "name": "Harvard Stat 110 概率论战略练习 Statistics 110 Strategic Practice",
+      "type": "pdf",
+      "problemCount": 184,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 1,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/stat110-strategic-practice.md"
+    },
+    {
+      "slug": "stefanica-fe-math",
+      "name": "Stefanica 金融工程数学入门",
+      "type": "latex",
+      "problemCount": 35,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 0,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/stefanica-fe-math.md"
+    },
+    {
+      "slug": "yellow-book",
+      "name": "黄皮书 150 Most Frequently Asked Questions",
+      "type": "latex",
+      "problemCount": 153,
+      "currentStatus": "needs-review",
+      "sourceUrlCount": 0,
+      "packetPath": "artifacts/question-bank-rights/public-commercial-approval-packet/sources/yellow-book.md"
+    }
+  ],
+  "checks": {
+    "allActiveSourcesHavePackets": true,
+    "manifestDraftEntriesMatchPackets": true,
+    "trackerRowsMatchPackets": true,
+    "includesCommercialUseScope": true
+  },
+  "failures": [],
+  "warnings": []
+}

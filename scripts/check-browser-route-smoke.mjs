@@ -14,6 +14,7 @@ const summaryPath = getArgValue("--summary") || "docs/browser-audit-screenshots/
 const skipBuild = args.includes("--no-build");
 const keepTemp = args.includes("--keep-temp");
 const onlyInteraction = getArgValue("--only-interaction") || "";
+const quietProgress = args.includes("--quiet-progress") || process.env.QUANTGYM_BROWSER_SMOKE_PROGRESS === "0";
 const chromePath = process.env.CHROME_PATH || findChromeExecutable();
 const startedAt = Date.now();
 const browserSmokeAccount = {
@@ -61,6 +62,7 @@ try {
     throw new Error("Google Chrome executable was not found. Set CHROME_PATH to run this check.");
   }
 
+  logProgress("loading module manifest");
   const { MODULE_MANIFEST } = await import(pathToFileURL(path.join(root, "src", "modules", "manifest.js")));
   const routes = MODULE_MANIFEST.map((entry) => ({
     id: entry.id,
@@ -75,10 +77,15 @@ try {
   const distDir = path.join(tempRoot, "dist");
   const port = await getFreePort();
 
-  if (!skipBuild) buildStaticSite(distDir);
+  if (!skipBuild) {
+    logProgress("building static site");
+    buildStaticSite(distDir);
+  }
+  logProgress(`starting preview server on port ${port}`);
   preview = await startPreviewServer({ distDir, port });
 
   const { chromium } = await import("playwright-core");
+  logProgress("launching browser");
   browser = await chromium.launch({
     executablePath: chromePath,
     headless: true,
@@ -91,6 +98,7 @@ try {
   });
 
   const baseUrl = `http://127.0.0.1:${port}`;
+  logProgress("checking unauthenticated auth flow");
   const unauthenticated = await checkUnauthenticatedAuthFlow(browser, baseUrl);
   const authenticated = await browser.newContext({
     viewport: { width: 1365, height: 900 },
@@ -103,9 +111,11 @@ try {
   attachPageCollectors(page, baseUrl);
 
   const routeResults = [];
-  for (const route of routes) {
+  for (const [index, route] of routes.entries()) {
+    logProgress(`route ${index + 1}/${routes.length}: ${route.id}`);
     const result = await checkRoute(page, baseUrl, route);
     routeResults.push(result);
+    logProgress(`route ${index + 1}/${routes.length}: ${route.id} ${result.status}`);
   }
 
   const interactionResults = [];
@@ -164,6 +174,7 @@ try {
     ["mobile account profile and upload controls avoid overflow", runMobileAccountProfileUploadFlow],
     ["settings saves runtime config, clears Google Client ID, and reloads", runSettingsPersistenceFlow],
     ["mobile settings config and backup controls avoid overflow", runMobileSettingsConfigBackupControlsFlow],
+    ["settings rejects invalid backup files without changing state", runSettingsInvalidBackupGuardFlow],
     ["settings backup export, import, and reset state", runSettingsBackupImportResetFlow]
   ];
   const selectedInteractionChecks = onlyInteraction
@@ -172,11 +183,17 @@ try {
   if (onlyInteraction && !selectedInteractionChecks.length) {
     throw new Error(`No browser interaction matched --only-interaction=${JSON.stringify(onlyInteraction)}`);
   }
-  for (const [, runCheck] of selectedInteractionChecks) {
+  for (const [index, [name, runCheck]] of selectedInteractionChecks.entries()) {
+    logProgress(`interaction ${index + 1}/${selectedInteractionChecks.length}: ${name}`);
     interactionResults.push(await runCheck(page, baseUrl));
+    logProgress(`interaction ${index + 1}/${selectedInteractionChecks.length}: ${name} ${interactionResults.at(-1)?.status || "done"}`);
   }
 
-  await authenticated.close();
+  logProgress("closing authenticated browser context");
+  await closeWithTimeout("authenticated browser context", () => authenticated.close(), 15000).catch((error) => {
+    warnings.push(error.message);
+    return false;
+  });
 
   if (consoleErrors.length) {
     fail(`Browser console errors were reported: ${consoleErrors.slice(0, 3).map((item) => item.text).join(" | ")}`);
@@ -236,9 +253,23 @@ try {
   process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
   process.exitCode = 1;
 } finally {
-  if (browser) await browser.close().catch(() => {});
-  if (preview) await stopProcess(preview);
+  if (browser) {
+    logProgress("closing browser");
+    const browserProcess = typeof browser.process === "function" ? browser.process() : null;
+    const closed = await closeWithTimeout("browser", () => browser.close(), 15000).catch((error) => {
+      warnings.push(error.message);
+      return false;
+    });
+    if (!closed && browserProcess && browserProcess.exitCode === null) {
+      browserProcess.kill("SIGKILL");
+    }
+  }
+  if (preview) {
+    logProgress("stopping preview server");
+    await stopProcess(preview);
+  }
   if (tempRoot && !keepTemp) fs.rmSync(tempRoot, { recursive: true, force: true });
+  logProgress("done");
 }
 
 async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
@@ -7171,6 +7202,98 @@ async function runSettingsBackupImportResetFlow(page, baseUrl) {
   return result;
 }
 
+async function runSettingsInvalidBackupGuardFlow(page, baseUrl) {
+  const result = { name: "settings rejects invalid backup files without changing state", status: "pass" };
+  const timestamp = Date.now();
+  const expected = {
+    resumeText: `Settings invalid backup guard resume ${timestamp}`,
+    resumeFileName: `settings-invalid-backup-guard-${timestamp}.txt`,
+    resourceId: `settings-invalid-backup-guard-resource-${timestamp}`,
+    courseId: `settings-invalid-backup-guard-course-${timestamp}`
+  };
+
+  try {
+    result.step = "seed sentinel state";
+    await page.goto(`${baseUrl}/settings`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+    await page.evaluate((values) => {
+      const key = "quantMemoryBoard.userState.v1.local:browser-route-smoke";
+      const current = JSON.parse(localStorage.getItem(key) || "{}");
+      const next = {
+        ...current,
+        resume: {
+          ...(current.resume || {}),
+          text: values.resumeText,
+          fileName: values.resumeFileName,
+          fileType: "text/plain",
+          fileSize: values.resumeText.length,
+          uploadedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        resources: [
+          ...(Array.isArray(current.resources) ? current.resources.filter((item) => item?.id !== values.resourceId) : []),
+          {
+            id: values.resourceId,
+            title: "Settings invalid backup guard resource",
+            type: "note",
+            content: "This resource must survive rejected backup imports.",
+            date: new Date().toISOString()
+          }
+        ],
+        courseStates: [
+          ...(Array.isArray(current.courseStates) ? current.courseStates.filter((item) => item?.courseId !== values.courseId) : []),
+          {
+            courseId: values.courseId,
+            saved: true,
+            inPath: true,
+            done: false,
+            note: "This course state must survive rejected backup imports.",
+            selectedSourceId: "invalid-backup-guard",
+            updatedAt: new Date().toISOString()
+          }
+        ],
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem(key, JSON.stringify(next));
+    }, expected);
+
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+    await expectStoredInvalidBackupGuardState(page, expected);
+
+    result.step = "reject malformed JSON backup";
+    const malformedMessage = await importInvalidSettingsBackupAndAcceptAlert(page, {
+      name: `settings-invalid-json-${timestamp}.json`,
+      buffer: Buffer.from("{\"version\":2,\"state\":", "utf8")
+    });
+    if (!/备份文件无法读取|backup file/i.test(malformedMessage)) {
+      throw new Error(`Unexpected malformed backup alert: ${malformedMessage}`);
+    }
+    await expectStoredInvalidBackupGuardState(page, expected);
+    result.malformedJsonRejected = true;
+
+    result.step = "reject non-object JSON backup";
+    const arrayMessage = await importInvalidSettingsBackupAndAcceptAlert(page, {
+      name: `settings-array-backup-${timestamp}.json`,
+      buffer: Buffer.from(JSON.stringify([{ resume: { text: "array backup should not import" } }]), "utf8")
+    });
+    if (!/备份文件无法读取|backup file/i.test(arrayMessage)) {
+      throw new Error(`Unexpected array backup alert: ${arrayMessage}`);
+    }
+    await expectStoredInvalidBackupGuardState(page, expected);
+    result.nonObjectJsonRejected = true;
+    result.statePreserved = true;
+    delete result.step;
+  } catch (error) {
+    result.status = "fail";
+    result.error = result.step ? `${result.step}: ${error.message}` : error.message;
+    fail(`${result.name} failed: ${error.message}`);
+  }
+  return result;
+}
+
 async function runMobileSettingsConfigBackupControlsFlow(page, baseUrl) {
   const result = { name: "mobile settings config and backup controls avoid overflow", status: "pass" };
   const desktopViewport = { width: 1365, height: 900 };
@@ -7351,6 +7474,36 @@ async function expectResetClearedImportedBackupState(page, expected) {
   }, expected, { timeout: 10000 });
 }
 
+async function importInvalidSettingsBackupAndAcceptAlert(page, file) {
+  const dialogPromise = page.waitForEvent("dialog", { timeout: 10000 }).then(async (dialog) => {
+    const message = dialog.message();
+    await dialog.accept();
+    return message;
+  });
+  await page.locator("#importInput").setInputFiles({
+    name: file.name,
+    mimeType: "application/json",
+    buffer: file.buffer
+  });
+  return dialogPromise;
+}
+
+async function expectStoredInvalidBackupGuardState(page, expected) {
+  await page.waitForFunction((values) => {
+    try {
+      const state = JSON.parse(localStorage.getItem("quantMemoryBoard.userState.v1.local:browser-route-smoke") || "{}");
+      return state.resume?.text === values.resumeText
+        && state.resume?.fileName === values.resumeFileName
+        && (state.resources || []).some((item) => item.id === values.resourceId)
+        && (state.courseStates || []).some((item) => item.courseId === values.courseId)
+        && !(state.resources || []).some((item) => item?.title === "array backup should not import")
+        && state.resume?.text !== "array backup should not import";
+    } catch {
+      return false;
+    }
+  }, expected, { timeout: 10000 });
+}
+
 async function waitForAuthenticatedShell(page) {
   await page.waitForSelector("#appShell:not(.hidden)", { timeout: 15000 });
   await page.waitForTimeout(150);
@@ -7383,6 +7536,7 @@ function attachPageCollectors(page, baseUrl) {
     if (/Failed to load resource: net::ERR_CONNECTION_REFUSED/i.test(text)) return;
     if (/Failed to load resource: the server responded with a status of 403/i.test(text)) return;
     if (/\[GSI_LOGGER\]|origin is not allowed for the given client ID/i.test(text)) return;
+    if (/\[QuantGym\] Failed to import backup/i.test(text)) return;
     if (/@bilibili\/bili-user-fingerprint\(report\): report is not found/i.test(text)) return;
     if (isIgnoredThirdPartyConsoleError(text)) {
       ignoredConsoleErrors.push({ type: message.type(), text: text.slice(0, 500) });
@@ -7575,6 +7729,33 @@ function getArgValue(name) {
 
 function fail(message) {
   failures.push(message);
+}
+
+function logProgress(message) {
+  if (quietProgress) return;
+  process.stderr.write(`[browser-route-smoke ${formatElapsed(Date.now() - startedAt)}] ${message}\n`);
+}
+
+async function closeWithTimeout(label, close, timeoutMs) {
+  let timer = null;
+  try {
+    await Promise.race([
+      Promise.resolve().then(close),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label} cleanup timed out after ${timeoutMs}ms`)), timeoutMs);
+      })
+    ]);
+    return true;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function formatElapsed(durationMs) {
+  const totalSeconds = Math.max(0, Math.floor(durationMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
 function tail(text, max = 2000) {

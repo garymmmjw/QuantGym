@@ -217,14 +217,23 @@ and the current SQLite data shape, use:
 ```bash
 npm run check:postgres-cutover
 npm run check:postgres-cutover:export-smoke
+npm run build:postgres-cutover-packet
 ```
 
 After the Chrome Web Store developer dashboard shows the extension as published,
 run `npm run check:chrome-store-publication:published` with the real item id,
 detail listing URL, published status, submitted version, and upload SHA-256 from
-the current release package.
+the current release package. Before opening the developer dashboard, run
+`npm run build:chrome-store-publication-packet`; the ignored packet under
+`artifacts/chrome-store-publication/readiness-packet/` contains the upload ZIP
+SHA-256, listing field snapshot, dashboard submission checklist, published
+signoff env template, and final checklist.
 
-After an actual managed Postgres migration, run `npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json` with the required signoff environment.
+`npm run build:postgres-cutover-packet` writes an ignored handoff packet under
+`artifacts/postgres-cutover/readiness-packet/` with a protected-export runbook,
+guarded Postgres import steps, rollback/backup checklist, final signoff env
+template, and live migration checklist. After an actual managed Postgres
+migration, run `npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json` with the required signoff environment.
 
 To finish the Google provider login boundary locally, generate the temporary
 token helper and open the printed URL while the Vite dev server is running:
@@ -330,16 +339,27 @@ For public production media, configure real S3/R2-compatible object storage plus
 
 ```bash
 npm run check:media-storage:production-fixture
+npm run build:media-storage-packet
 npm run check:media-storage:production
 npm run check:media-storage:production -- --live
 ```
 
-The live check is opt-in: it writes one tiny `readiness-smoke/` object, verifies signed read plus public media URL bytes, and deletes the object. Local/disk media storage remains fine for development and small controlled beta runs, but it intentionally fails the production gate.
+The media packet is written under `artifacts/media-storage/readiness-packet/` and contains the Render env template, R2/S3 bucket/CDN runbook, object-storage contract, and live-smoke checklist. The live check is opt-in: it writes one tiny `readiness-smoke/` object, verifies signed read plus public media URL bytes, and deletes the object. Local/disk media storage remains fine for development and small controlled beta runs, but it intentionally fails the production gate.
+
+To build a repeatable public-ATS jobs feed snapshot from the checked-in Greenhouse source list, run:
+
+```bash
+npm run build:jobs-feed:public-ats -- --strict --pretty --out /tmp/quantgym-jobs-feed.json --summary docs/browser-audit-screenshots/jobs-feed-public-ats-summary.json
+npm run build:jobs-feed:publication-packet
+```
+
+The publication packet is written under `artifacts/jobs-feed/publication-packet/` and includes a generated feed snapshot, feed SHA-256, source list, stable HTTPS hosting runbook, production env template, and live-signoff checklist. Host the generated JSON at a stable HTTPS URL, set `QUANTGYM_JOBS_SOURCE_URL` to that URL, then run `npm run check:jobs-source:production -- --live`. The generator removes obvious non-role listings, preserves real posting URLs and published timestamps, and fails if the output lacks both internship and full-time roles.
 
 When production alerting and edge rate limits are configured, validate that shape too:
 
 ```bash
 npm run check:ops-alerts:production-fixture
+npm run build:ops-alert-edge-packet
 QUANTGYM_ALERT_WEBHOOK_URL="https://alerts.example.com/quantgym-alerts" \
 QUANTGYM_ALERT_WEBHOOK_TOKEN="<32+ character random bearer token>" \
 QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED=1 \
@@ -349,7 +369,7 @@ QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL="https://dash.cloudflare.com/account/rules
 npm run check:ops-alerts:production
 ```
 
-Replace the alert URL, bearer token, and edge evidence URL with real production values before running the signoff; placeholders are intentionally rejected.
+The packet is written under `artifacts/ops-alert-edge/readiness-packet/` and contains the Render env template, webhook contract, Cloudflare `/api/auth/*` edge-rule runbook, smoke payload, and a signoff checklist. Replace the alert URL, bearer token, and edge evidence URL with real production values before running the signoff; placeholders are intentionally rejected.
 
 Optional Google login variable, only if Google login is enabled on both frontend and API:
 
@@ -450,6 +470,7 @@ npm run check:browser-extension:runtime-smoke
 npm run check:chrome-store-readiness
 npm run check:chrome-store-publication
 npm run check:chrome-store-publication:fixture
+npm run build:chrome-store-publication-packet
 npm run check:route-integrity
 npm run check:route-interactions
 npm run check:browser-route-smoke
@@ -459,16 +480,20 @@ npm run check:question-bank-rights:release-blockers
 npm run check:external-launch-blockers
 npm run check:postgres-cutover
 npm run check:postgres-cutover:export-smoke
+npm run build:postgres-cutover-packet
 npm run check:repo-hygiene
 npm run check:jobs-source
 npm run check:jobs-source:runtime-smoke
 npm run check:jobs-source:production-fixture
+npm run build:jobs-feed:publication-packet
 npm run check:media-storage
 npm run check:media-storage:runtime-smoke
 npm run check:media-storage:production-fixture
+npm run build:media-storage-packet
 npm run check:ops-alerts
 npm run check:ops-alerts:runtime-smoke
 npm run check:ops-alerts:production-fixture
+npm run build:ops-alert-edge-packet
 python3 -m py_compile api-server/server.py
 ```
 
@@ -482,17 +507,22 @@ npm run check:jobs-source:production
 npm run check:jobs-source:production -- --live
 npm run check:jobs-source:runtime-smoke
 npm run check:jobs-source:production-fixture
+npm run build:jobs-feed:publication-packet
 npm run check:media-storage:production-fixture
+npm run build:media-storage-packet
 npm run check:media-storage:production
 npm run check:media-storage:production -- --live
 npm run check:media-storage:runtime-smoke
 npm run check:chrome-store-publication
 npm run check:chrome-store-publication:fixture
+npm run build:chrome-store-publication-packet
 npm run check:ops-alerts:production-fixture
+npm run build:ops-alert-edge-packet
 npm run check:ops-alerts:production
 npm run check:ops-alerts:runtime-smoke
 npm run check:postgres-cutover
 npm run check:postgres-cutover:export-smoke
+npm run build:postgres-cutover-packet
 ```
 
 Before any public or commercial problem-bank release, also run:
@@ -506,6 +536,14 @@ npm run check:question-bank-rights:commercial
 
 The public gate is expected to fail until every active question-bank source has explicit public/commercial redistribution approval recorded in `data/question-banks/source-rights-manifest.json`. Approved entries must carry the approval type, redistribution scopes, evidence summary, recent review date, and HTTPS evidence URL without embedded credentials, query strings, or fragments; commercial release also requires the `commercial-use` scope.
 
+To turn the current blockers into a per-source approval workflow packet, run:
+
+```bash
+npm run build:question-bank-rights-packet
+```
+
+This writes a non-legal-advice work packet under `artifacts/question-bank-rights/public-commercial-approval-packet/` with a CSV tracker, per-source context, outreach templates, and draft manifest snippets. The packet is intentionally not a release approval; public/commercial gates should continue to fail until real evidence is reviewed and recorded in the rights manifest.
+
 To inspect all external public-launch blockers without calling external services, run `npm run check:external-launch-blockers`. It should pass while reporting `launchReadiness: "blocked"` until the seven external signoffs are cleared; use `npm run check:external-launch-blockers -- --require-clear` for final public-launch clearing.
 
 Before an actual SQLite to Postgres migration, create a protected full export and
@@ -516,6 +554,10 @@ signoff variables and run the complete gate too:
 ```bash
 python3 scripts/export-api-sqlite.py --db "$QUANTGYM_DB" --out /secure/quantgym-sqlite-export.json --include-sensitive
 python3 scripts/check-postgres-cutover.py --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json --require-sensitive-export
+python3 scripts/import-api-sqlite-export-to-postgres.py --export /secure/quantgym-sqlite-export.json --out /secure/quantgym-postgres-import.sql --replace
+npm run build:postgres-cutover-packet
+# Optional execution path after manually reviewing the generated SQL:
+# python3 scripts/import-api-sqlite-export-to-postgres.py --export /secure/quantgym-sqlite-export.json --out /secure/quantgym-postgres-import.sql --replace --execute --database-url "$DATABASE_URL" --confirm-replace
 npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json
 ```
 
