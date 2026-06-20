@@ -387,7 +387,7 @@ QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL="https://dash.cloudflare.com/account/rules
 npm run check:ops-alerts:production
 ```
 
-The packet is written under `artifacts/ops-alert-edge/readiness-packet/` and contains the Render env template, webhook contract, Cloudflare `/api/auth/*` edge-rule runbook, smoke payload, and a signoff checklist. Replace the alert URL, bearer token, and edge evidence URL with real production values before running the signoff; placeholders are intentionally rejected.
+The packet is written under `artifacts/ops-alert-edge/readiness-packet/` and contains the Render env template, webhook contract, Cloudflare `/api/auth/*` edge-rule runbook, smoke payload, and a signoff checklist. Replace the alert URL, bearer token, and edge evidence URL with real production values before running the signoff; placeholders are intentionally rejected, and production webhook/evidence URLs must use HTTPS DNS hostnames rather than raw IP addresses.
 
 Optional Google login variable, only if Google login is enabled on both frontend and API:
 

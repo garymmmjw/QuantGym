@@ -60,6 +60,11 @@ const negativeCases = [
     expectedError: "private network address"
   },
   {
+    name: "public IP webhook rejected",
+    env: { QUANTGYM_ALERT_WEBHOOK_URL: "https://8.8.8.8/quantgym-alerts" },
+    expectedError: "DNS hostname"
+  },
+  {
     name: "webhook embedded credentials rejected",
     env: { QUANTGYM_ALERT_WEBHOOK_URL: "https://alert-user:secret@alerts.quantgym.test/readiness-webhook" },
     expectedError: "embedded credentials"
@@ -108,6 +113,11 @@ const negativeCases = [
     name: "private edge evidence rejected",
     env: { QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL: "https://192.168.10.20/rulesets/quantgym-auth-rate-limit" },
     expectedError: "private network address"
+  },
+  {
+    name: "public IP edge evidence rejected",
+    env: { QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL: "https://8.8.4.4/rulesets/quantgym-auth-rate-limit" },
+    expectedError: "DNS hostname"
   },
   {
     name: "edge evidence embedded credentials rejected",
@@ -182,8 +192,10 @@ try {
     negativeFixturesMentionExpectedErrors: negativeFixtures.every((fixture) => fixture.expectedErrorObserved),
     shortWebhookTokenRejected: negativeFixtures.some((fixture) => fixture.name === "short webhook token rejected" && fixture.rejected === true),
     placeholderWebhookTokenRejected: negativeFixtures.some((fixture) => fixture.name === "placeholder webhook token rejected" && fixture.rejected === true),
+    webhookUrlRawIpRejected: negativeFixtures.some((fixture) => fixture.name === "public IP webhook rejected" && fixture.rejected === true),
     webhookUrlEmbeddedCredentialsRejected: negativeFixtures.some((fixture) => fixture.name === "webhook embedded credentials rejected" && fixture.rejected === true),
     webhookUrlQueryRejected: negativeFixtures.some((fixture) => fixture.name === "webhook query rejected" && fixture.rejected === true),
+    edgeEvidenceUrlRawIpRejected: negativeFixtures.some((fixture) => fixture.name === "public IP edge evidence rejected" && fixture.rejected === true),
     edgeEvidenceUrlEmbeddedCredentialsRejected: negativeFixtures.some((fixture) => fixture.name === "edge evidence embedded credentials rejected" && fixture.rejected === true),
     edgeEvidenceUrlQueryRejected: negativeFixtures.some((fixture) => fixture.name === "edge evidence query rejected" && fixture.rejected === true),
     genericEdgeNotesRejected: negativeFixtures.some((fixture) => fixture.name === "generic edge notes rejected" && fixture.rejected === true),

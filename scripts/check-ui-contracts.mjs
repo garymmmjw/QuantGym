@@ -1340,7 +1340,18 @@ function validateOpsAlertProductionFixtureSummary(data, expect, label) {
   } else {
     expect(false, `${label} must verify specific edge rate-limit notes coverage`);
   }
-  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= (hasSpecificEdgeNotesChecks ? 22 : 19), `${label} must include negative production fixtures`);
+  const hasRawIpUrlChecks = data.checks?.webhookUrlRawIpRejected !== undefined
+    || data.checks?.edgeEvidenceUrlRawIpRejected !== undefined;
+  if (hasRawIpUrlChecks) {
+    expect(data.checks?.webhookUrlRawIpRejected === true, `${label} must reject raw-IP webhook URLs`);
+    expect(data.checks?.edgeEvidenceUrlRawIpRejected === true, `${label} must reject raw-IP edge evidence URLs`);
+  } else if (/nested ops alert production fixture/i.test(label)) {
+    warnings.push("Release-readiness nested ops alert production fixture lacks raw-IP URL rejection coverage; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+  } else {
+    expect(false, `${label} must verify raw-IP webhook/evidence URL rejection`);
+  }
+  const minNegativeFixtures = hasRawIpUrlChecks ? 24 : hasSpecificEdgeNotesChecks ? 22 : 19;
+  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= minNegativeFixtures, `${label} must include negative production fixtures`);
   expect(data.checks?.negativeFixturesRejected === true, `${label} negative fixtures must be rejected`);
   expect(data.checks?.negativeFixturesMentionExpectedErrors === true, `${label} negative fixtures must mention expected errors`);
   expect(data.checks?.shortWebhookTokenRejected === true, `${label} must reject short production webhook tokens`);
@@ -1744,7 +1755,7 @@ function validateOpsAlertEdgePacketSummary(data, expect, label) {
   expect(data.edgeRule?.provider === "cloudflare", `${label} must include Cloudflare edge-rule plan`);
   expect(String(data.edgeRule?.expression || "").includes("/api/auth/"), `${label} edge-rule plan must target auth endpoints`);
   expect(Number(data.evidence?.runtimeAlertCount || 0) >= 7, `${label} must retain runtime alert-count coverage`);
-  expect(Number(data.evidence?.productionNegativeFixtureCount || 0) >= 19, `${label} must retain production negative-fixture coverage`);
+  expect(Number(data.evidence?.productionNegativeFixtureCount || 0) >= 24, `${label} must retain production negative-fixture coverage`);
   expectAllChecksTrue(data, expect, label, [
     "expectedFilesWritten",
     "includesProductionEnvTemplate",
@@ -1753,6 +1764,7 @@ function validateOpsAlertEdgePacketSummary(data, expect, label) {
     "includesSignoffChecklist",
     "includesWebhookSmokeSignoff",
     "usesPlaceholderOnlyForToken",
+    "includesRawIpUrlRule",
     "noDashboardQueryOrFragmentExamples",
     "runtimeSmokePass",
     "productionFixturePass",
@@ -2361,6 +2373,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(ops?.localCoverage?.runtimeSmokePass === true, `${label} must include ops runtime smoke coverage`);
   expect(ops?.localCoverage?.productionFixturePass === true, `${label} must include ops production fixture coverage`);
   expect(ops?.localCoverage?.packetIncludesWebhookSmokeSignoff === true, `${label} must include ops packet webhook-smoke signoff coverage`);
+  expect(ops?.localCoverage?.packetIncludesRawIpUrlRule === true, `${label} must include ops packet raw-IP URL rejection guidance`);
   expect(ops?.localCoverage?.packetSignoffRequiresWebhookSmoke === true, `${label} must require the ops webhook smoke in final signoff`);
   expect(ops?.localCoverage?.localWebhookSmokeAuthorized === true, `${label} must include ops local webhook smoke authorization coverage`);
   expect(ops?.localCoverage?.localWebhookSmokePayloadSafe === true, `${label} must include ops local webhook smoke payload-safety coverage`);
@@ -2369,8 +2382,10 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(ops?.localCoverage?.validProductionEdgeEvidenceUrlRedacted === true, `${label} must include ops edge evidence URL redaction coverage`);
   expect(ops?.localCoverage?.shortWebhookTokenRejected === true, `${label} must include ops short webhook-token rejection`);
   expect(ops?.localCoverage?.placeholderWebhookTokenRejected === true, `${label} must include ops placeholder webhook-token rejection`);
+  expect(ops?.localCoverage?.webhookUrlRawIpRejected === true, `${label} must include ops raw-IP webhook URL rejection`);
   expect(ops?.localCoverage?.webhookUrlEmbeddedCredentialsRejected === true, `${label} must include ops webhook URL credential rejection`);
   expect(ops?.localCoverage?.webhookUrlQueryRejected === true, `${label} must include ops webhook URL query rejection`);
+  expect(ops?.localCoverage?.edgeEvidenceUrlRawIpRejected === true, `${label} must include ops raw-IP edge evidence URL rejection`);
   expect(ops?.localCoverage?.edgeEvidenceUrlEmbeddedCredentialsRejected === true, `${label} must include ops edge evidence URL credential rejection`);
   expect(ops?.localCoverage?.edgeEvidenceUrlQueryRejected === true, `${label} must include ops edge evidence URL query rejection`);
   const media = findBlocker(data.blockers, "media-bucket-cdn");

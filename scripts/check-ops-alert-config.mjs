@@ -51,6 +51,7 @@ check("alert webhook shape", () => {
     assert(url.protocol === "https:", "Production alert webhook URL must use HTTPS.");
     assertNoUrlSecretParts("Production alert webhook URL", url);
     assert(!isLocalOrPrivateHost(url.hostname), "Production alert webhook URL must not point to localhost, loopback, or a private network address.");
+    assertDnsHostname("Production alert webhook URL", url.hostname);
     assert(config.alertWebhookToken, "Production alert webhook should set QUANTGYM_ALERT_WEBHOOK_TOKEN.");
     assertNoPlaceholder("QUANTGYM_ALERT_WEBHOOK_TOKEN", config.alertWebhookToken);
     assertStrongProductionToken("QUANTGYM_ALERT_WEBHOOK_TOKEN", config.alertWebhookToken);
@@ -144,6 +145,7 @@ check("edge rate-limit signoff", () => {
   assert(evidenceUrl.protocol === "https:", "Production edge rate-limit evidence URL must use HTTPS.");
   assertNoUrlSecretParts("Production edge rate-limit evidence URL", evidenceUrl);
   assert(!isLocalOrPrivateHost(evidenceUrl.hostname), "Production edge rate-limit evidence URL must not point to localhost, loopback, or a private network address.");
+  assertDnsHostname("Production edge rate-limit evidence URL", evidenceUrl.hostname);
   return {
     required: true,
     confirmed: true,
@@ -259,6 +261,11 @@ function validateEdgeRateLimitNotes(value) {
 function assertNoUrlSecretParts(label, url) {
   assert(!url.username && !url.password, `${label} must not include embedded credentials.`);
   assert(!url.search && !url.hash, `${label} must not include query strings or fragments.`);
+}
+
+function assertDnsHostname(label, hostname) {
+  const host = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
+  assert(net.isIP(host) === 0, `${label} must use a DNS hostname, not a raw IP address.`);
 }
 
 function parseHttpUrl(value, name) {
