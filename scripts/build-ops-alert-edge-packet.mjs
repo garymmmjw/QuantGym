@@ -50,6 +50,9 @@ try {
       && combinedContent.includes("/api/auth/*"),
     includesSignoffChecklist: combinedContent.includes("run production signoff")
       && combinedContent.includes("npm run check:ops-alerts:production"),
+    includesWebhookSmokeSignoff: combinedContent.includes("run production webhook smoke")
+      && combinedContent.includes("npm run check:ops-alerts:production -- --smoke")
+      && packet.signoffCommand.includes("npm run check:ops-alerts:production -- --smoke"),
     usesPlaceholderOnlyForToken: combinedContent.includes("<generate-with-openssl-rand-base64-32>")
       && !combinedContent.includes("qgprod_")
       && !combinedContent.includes("quantgym-local-config-smoke-token"),
