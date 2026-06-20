@@ -9,6 +9,8 @@ loadEnvFromProjectRoot();
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.LLM_PROXY_HOST || process.env.HOST || "127.0.0.1";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const OPENAI_RESPONSES_URL = openAiResponsesUrl(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1");
+const OPENAI_TIMEOUT_MS = clampInt(process.env.OPENAI_TIMEOUT_MS || process.env.LLM_OPENAI_TIMEOUT_MS || 30_000, 1_000, 120_000);
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-5-nano";
 const NEWS_MAX_ITEMS = Number(process.env.NEWS_MAX_ITEMS || 12);
 const MAX_BODY_BYTES = Number(process.env.LLM_MAX_BODY_BYTES || 12 * 1024 * 1024);
@@ -547,6 +549,56 @@ function inferNewsSourceType(sourceUrl = "", source = "") {
   return "news";
 }
 
+function openAiResponsesUrl(baseUrl) {
+  const cleanBase = String(baseUrl || "https://api.openai.com/v1").trim().replace(/\/+$/, "");
+  return /\/responses$/i.test(cleanBase) ? cleanBase : `${cleanBase}/responses`;
+}
+
+async function requestOpenAiResponses(body) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(OPENAI_RESPONSES_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+  } catch (error) {
+    throw new Error(formatOpenAiTransportError(error));
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
+  }
+  return data;
+}
+
+function formatOpenAiTransportError(error) {
+  const code = error?.cause?.code || "";
+  if (error?.name === "AbortError") return `OpenAI API request timed out after ${OPENAI_TIMEOUT_MS}ms`;
+  if (code === "UND_ERR_CONNECT_TIMEOUT") {
+    return `OpenAI API connection timed out to ${openAiEndpointHost()} after ${OPENAI_TIMEOUT_MS}ms`;
+  }
+  const suffix = code ? ` (${code})` : "";
+  return `OpenAI API request failed${suffix}: ${error?.message || String(error)}`;
+}
+
+function openAiEndpointHost() {
+  try {
+    return new URL(OPENAI_RESPONSES_URL).host;
+  } catch {
+    return "configured endpoint";
+  }
+}
+
 async function classifyLog(payload) {
   const model = payload.model || DEFAULT_MODEL;
   const skillKeys = Object.keys(payload.skills || {});
@@ -566,24 +618,12 @@ async function classifyLog(payload) {
     `Local heuristic gains:\n${JSON.stringify(payload.localGains || {})}`
   ].join("\n\n");
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model,
-      instructions,
-      input,
-      ...modelOptions(model, 700)
-    })
+  const data = await requestOpenAiResponses({
+    model,
+    instructions,
+    input,
+    ...modelOptions(model, 700)
   });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
-  }
   const text = extractOutputText(data);
   return parseJsonObject(text);
 }
@@ -619,24 +659,12 @@ async function createResumeReview(payload) {
     `Resume:\n${resume}`
   ].join("\n\n");
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model,
-      instructions,
-      input,
-      ...modelOptions(model, 900)
-    })
+  const data = await requestOpenAiResponses({
+    model,
+    instructions,
+    input,
+    ...modelOptions(model, 900)
   });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
-  }
   const text = extractOutputText(data);
   const items = extractResumeReviewItems(text);
   if (!items.length) throw new Error("Resume review returned no suggestions");
@@ -703,24 +731,12 @@ async function createInterviewEvaluation(payload) {
     }]
     : inputText;
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model,
-      instructions,
-      input,
-      ...modelOptions(model, 900)
-    })
+  const data = await requestOpenAiResponses({
+    model,
+    instructions,
+    input,
+    ...modelOptions(model, 900)
   });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
-  }
   const text = requireOutputText(data, "OpenAI returned no feedback text");
   try {
     const feedback = normalizeStructuredInterviewEvaluation(parseJsonObject(text));
@@ -779,24 +795,12 @@ async function createInterviewConverse(payload) {
     payload.answerAttachment?.text ? `Candidate uploaded answer text (${payload.answerAttachment.name || "file"}):\n${payload.answerAttachment.text}` : ""
   ].join("\n\n");
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model,
-      instructions,
-      input,
-      ...modelOptions(model, 700)
-    })
+  const data = await requestOpenAiResponses({
+    model,
+    instructions,
+    input,
+    ...modelOptions(model, 700)
   });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
-  }
   const text = requireOutputText(data, "OpenAI returned no conversation text");
   try {
     return { reply: normalizeInterviewConverseJson(parseJsonObject(text)) };
@@ -882,24 +886,12 @@ async function createInterviewHint(payload) {
     transcript.map((item) => `${item.role}: ${item.text}`).join("\n")
   ].join("\n\n");
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model,
-      instructions,
-      input,
-      ...modelOptions(model, 500)
-    })
+  const data = await requestOpenAiResponses({
+    model,
+    instructions,
+    input,
+    ...modelOptions(model, 500)
   });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
-  }
   return requireOutputText(data, "OpenAI returned no hint text");
 }
 
@@ -921,41 +913,29 @@ async function createPdfInterviewQuestions(payload) {
     `Use ${language} where appropriate, but keep English technical terms when useful.`
   ].join(" ");
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model,
-      instructions,
-      input: [{
-        role: "user",
-        content: [
-          {
-            type: "input_text",
-            text: [
-              `Interview type: ${payload.interviewType || "technical"}`,
-              `Question count: ${count}`,
-              "Summarize the PDF's highest-yield concepts, then write interview questions from them."
-            ].join("\n")
-          },
-          {
-            type: "input_file",
-            filename: file.name || "source.pdf",
-            file_data: file.dataUrl
-          }
-        ]
-      }],
-      ...modelOptions(model, 3000)
-    })
+  const data = await requestOpenAiResponses({
+    model,
+    instructions,
+    input: [{
+      role: "user",
+      content: [
+        {
+          type: "input_text",
+          text: [
+            `Interview type: ${payload.interviewType || "technical"}`,
+            `Question count: ${count}`,
+            "Summarize the PDF's highest-yield concepts, then write interview questions from them."
+          ].join("\n")
+        },
+        {
+          type: "input_file",
+          filename: file.name || "source.pdf",
+          file_data: file.dataUrl
+        }
+      ]
+    }],
+    ...modelOptions(model, 3000)
   });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
-  }
   const text = requireOutputText(data, "OpenAI returned no PDF question text");
   let parsed = {};
   try {
