@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-20T21:29:47.493Z",
+  "generatedAt": "2026-06-20T22:28:18.166Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/ops-alert-edge/readiness-packet",
   "filesWritten": [
     "artifacts/ops-alert-edge/readiness-packet/README.md",
@@ -14,7 +14,7 @@
     "runtimeSmokePass": true,
     "productionFixturePass": true,
     "runtimeAlertCount": 7,
-    "productionNegativeFixtureCount": 22
+    "productionNegativeFixtureCount": 24
   },
   "requiredEnv": [
     "QUANTGYM_ALERT_WEBHOOK_URL",
@@ -53,6 +53,7 @@
     "includesSignoffChecklist": true,
     "includesWebhookSmokeSignoff": true,
     "usesPlaceholderOnlyForToken": true,
+    "includesRawIpUrlRule": true,
     "noDashboardQueryOrFragmentExamples": true,
     "runtimeSmokePass": true,
     "productionFixturePass": true,

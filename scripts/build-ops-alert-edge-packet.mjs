@@ -56,6 +56,8 @@ try {
     usesPlaceholderOnlyForToken: combinedContent.includes("<generate-with-openssl-rand-base64-32>")
       && !combinedContent.includes("qgprod_")
       && !combinedContent.includes("quantgym-local-config-smoke-token"),
+    includesRawIpUrlRule: combinedContent.includes("DNS hostname")
+      && combinedContent.includes("raw IP address"),
     noDashboardQueryOrFragmentExamples: !/dash\.cloudflare\.com\/[^\s"']*[?#]/i.test(combinedContent),
     runtimeSmokePass: runtimeSmoke.status === "pass",
     productionFixturePass: productionFixture.status === "pass",
@@ -116,7 +118,7 @@ function buildPacketModel(runtimeSmoke, productionFixture) {
   return {
     generatedAt,
     requiredEnv: [
-      ["QUANTGYM_ALERT_WEBHOOK_URL", "Externally reachable HTTPS receiver endpoint."],
+      ["QUANTGYM_ALERT_WEBHOOK_URL", "Externally reachable HTTPS receiver endpoint with a DNS hostname, not a raw IP address."],
       ["QUANTGYM_ALERT_WEBHOOK_TOKEN", "Random bearer token, at least 24 chars. Generate with openssl rand -base64 32."],
       ["QUANTGYM_ALERT_MIN_STATUS_CODE", "Default 500. Use 400 only if the receiver should see client errors too."],
       ["QUANTGYM_ALERT_WEBHOOK_TIMEOUT_SECONDS", "Use 2 to 5 seconds; production gate allows 0 to 15."],
@@ -132,7 +134,7 @@ function buildPacketModel(runtimeSmoke, productionFixture) {
       ["QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED", "Set to 1 only after the edge rule is live."],
       ["QUANTGYM_EDGE_RATE_LIMIT_PROVIDER", "cloudflare, render, reverse-proxy, load-balancer, or other."],
       ["QUANTGYM_EDGE_RATE_LIMIT_NOTES", "Short description of the live edge rule."],
-      ["QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL", "Externally reachable HTTPS evidence URL without credentials, query, or fragment."]
+      ["QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL", "Externally reachable HTTPS evidence URL with a DNS hostname and without raw IP addresses, credentials, query, or fragment."]
     ].map(([name, description]) => ({ name, description })),
     edgeRule: {
       provider: "cloudflare",
@@ -185,7 +187,7 @@ function renderOverview(packet) {
     packet.signoffCommand,
     "```",
     "",
-    "The filled environment must not be committed. The gate intentionally rejects placeholder, local, private-network, credential-bearing, query-bearing, and incomplete evidence values.",
+    "The filled environment must not be committed. The gate intentionally rejects placeholder, local, private-network, raw-IP, credential-bearing, query-bearing, and incomplete evidence values.",
     ""
   ].join("\n");
 }
@@ -239,6 +241,7 @@ function renderCloudflareRule(packet) {
     "",
     "- Capture or link the dashboard rule page as an HTTPS URL.",
     "- The evidence URL must not include embedded credentials, query strings, or fragments.",
+    "- The evidence URL must use a DNS hostname, not a raw IP address.",
     `- Expected shape: \`${packet.edgeRule.evidenceUrlShape}\``,
     "",
     "## Local Check",
@@ -291,7 +294,7 @@ function renderChecklistCsv(packet) {
     ["configure Render API env", "", `${packet.requiredEnv.length} required variables set`, "pending"],
     ["configure trusted proxy CIDRs", "", "Cloudflare/Render/reverse-proxy CIDRs only, no wildcard", "pending"],
     ["create edge auth rate limit", "", "Cloudflare or reverse-proxy rule for /api/auth/* by client IP", "pending"],
-    ["record edge evidence URL", "", "HTTPS dashboard/evidence URL with no credentials/query/fragment", "pending"],
+    ["record edge evidence URL", "", "HTTPS dashboard/evidence URL with DNS hostname and no raw IP/credentials/query/fragment", "pending"],
     ["run production signoff", "", "npm run check:ops-alerts:production", "pending"],
     ["run production webhook smoke", "", "npm run check:ops-alerts:production -- --smoke", "pending"]
   ];
