@@ -1300,7 +1300,23 @@ function validateOpsAlertProductionFixtureSummary(data, expect, label) {
   expect(data.checks?.validProductionWebhookUrlRedacted === true, `${label} must redact full webhook URL from output`);
   expect(data.checks?.validProductionEdgeEvidenceUrlRedacted === true, `${label} must redact full edge evidence URL from output`);
   expect(data.checks?.validProductionEdgeNotesRedacted === true, `${label} must redact edge notes from output`);
-  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= 19, `${label} must include negative production fixtures`);
+  const hasSpecificEdgeNotesChecks = data.checks?.validProductionEdgeNotesDescribeAuthSurface !== undefined;
+  if (hasSpecificEdgeNotesChecks) {
+    expect(data.productionFixture?.edgeNotesDescribeAuthSurface === true, `${label} valid edge notes must describe the protected auth surface`);
+    expect(data.productionFixture?.edgeNotesDescribeClientIdentity === true, `${label} valid edge notes must describe client identity or IP`);
+    expect(data.productionFixture?.edgeNotesDescribeEnforcementAction === true, `${label} valid edge notes must describe the enforcement action`);
+    expect(data.checks?.validProductionEdgeNotesDescribeAuthSurface === true, `${label} must verify edge notes describe the protected auth surface`);
+    expect(data.checks?.validProductionEdgeNotesDescribeClientIdentity === true, `${label} must verify edge notes describe client identity or IP`);
+    expect(data.checks?.validProductionEdgeNotesDescribeEnforcementAction === true, `${label} must verify edge notes describe the enforcement action`);
+    expect(data.checks?.genericEdgeNotesRejected === true, `${label} must reject generic edge notes`);
+    expect(data.checks?.edgeNotesMissingClientIdentityRejected === true, `${label} must reject edge notes missing client identity`);
+    expect(data.checks?.edgeNotesMissingEnforcementActionRejected === true, `${label} must reject edge notes missing enforcement action`);
+  } else if (/nested ops alert production fixture/i.test(label)) {
+    warnings.push("Release-readiness nested ops alert production fixture lacks specific edge-notes coverage; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+  } else {
+    expect(false, `${label} must verify specific edge rate-limit notes coverage`);
+  }
+  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= (hasSpecificEdgeNotesChecks ? 22 : 19), `${label} must include negative production fixtures`);
   expect(data.checks?.negativeFixturesRejected === true, `${label} negative fixtures must be rejected`);
   expect(data.checks?.negativeFixturesMentionExpectedErrors === true, `${label} negative fixtures must mention expected errors`);
   expect(data.checks?.shortWebhookTokenRejected === true, `${label} must reject short production webhook tokens`);

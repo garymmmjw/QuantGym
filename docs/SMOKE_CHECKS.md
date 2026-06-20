@@ -394,7 +394,9 @@ Browser/CDP deep flows now recorded in
   proves the production signoff gate passes only with HTTPS webhook, token,
   sane auth limits, and complete edge-rate-limit evidence, while rejecting
   placeholder/local/credential-bearing/query-bearing/incomplete inputs without
-  exposing raw secrets.
+  exposing raw secrets. It also rejects generic edge notes that do not name the
+  protected auth surface, client IP/identity characteristic, and enforcement
+  action.
 - [x] Jobs source runtime smoke: `npm run check:jobs-source:runtime-smoke`
   starts a temporary jobs feed and API, verifies bearer-token source fetch,
   source/local catalog merge, duplicate-id source precedence, cache behavior,

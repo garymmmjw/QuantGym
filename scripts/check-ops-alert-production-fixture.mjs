@@ -29,7 +29,7 @@ const validProductionEnv = {
   QUANTGYM_TRUSTED_PROXY_CIDRS: "173.245.48.0/20,103.21.244.0/22",
   QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED: "1",
   QUANTGYM_EDGE_RATE_LIMIT_PROVIDER: "cloudflare",
-  QUANTGYM_EDGE_RATE_LIMIT_NOTES: "Cloudflare edge rule limits auth bursts by IP and auth path before Render.",
+  QUANTGYM_EDGE_RATE_LIMIT_NOTES: "Cloudflare edge rule limits /api/auth/* bursts by client IP and applies managed challenge before Render.",
   QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL: "https://dash.cloudflare.com/readiness/rulesets/quantgym-auth-rate-limit"
 };
 
@@ -125,6 +125,21 @@ const negativeCases = [
     expectedError: "QUANTGYM_EDGE_RATE_LIMIT_NOTES"
   },
   {
+    name: "generic edge notes rejected",
+    env: { QUANTGYM_EDGE_RATE_LIMIT_NOTES: "Production edge controls are configured and reviewed." },
+    expectedError: "protected auth surface"
+  },
+  {
+    name: "edge notes missing client identity rejected",
+    env: { QUANTGYM_EDGE_RATE_LIMIT_NOTES: "Cloudflare edge rule rate-limits /api/auth/* bursts before Render." },
+    expectedError: "client identity or IP"
+  },
+  {
+    name: "edge notes missing enforcement action rejected",
+    env: { QUANTGYM_EDGE_RATE_LIMIT_NOTES: "Cloudflare edge rule observes /api/auth/* requests by client IP before Render." },
+    expectedError: "enforcement action"
+  },
+  {
     name: "unconfirmed edge limiter rejected",
     env: { QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED: "0" },
     expectedError: "QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED"
@@ -160,6 +175,9 @@ try {
     validProductionWebhookUrlRedacted: !validProduction.combinedOutput.includes(validProductionEnv.QUANTGYM_ALERT_WEBHOOK_URL),
     validProductionEdgeEvidenceUrlRedacted: !validProduction.combinedOutput.includes(validProductionEnv.QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL),
     validProductionEdgeNotesRedacted: !validProduction.combinedOutput.includes(validProductionEnv.QUANTGYM_EDGE_RATE_LIMIT_NOTES),
+    validProductionEdgeNotesDescribeAuthSurface: productionFixture.edgeNotesDescribeAuthSurface === true,
+    validProductionEdgeNotesDescribeClientIdentity: productionFixture.edgeNotesDescribeClientIdentity === true,
+    validProductionEdgeNotesDescribeEnforcementAction: productionFixture.edgeNotesDescribeEnforcementAction === true,
     negativeFixturesRejected: negativeFixtures.every((fixture) => fixture.rejected),
     negativeFixturesMentionExpectedErrors: negativeFixtures.every((fixture) => fixture.expectedErrorObserved),
     shortWebhookTokenRejected: negativeFixtures.some((fixture) => fixture.name === "short webhook token rejected" && fixture.rejected === true),
@@ -168,6 +186,9 @@ try {
     webhookUrlQueryRejected: negativeFixtures.some((fixture) => fixture.name === "webhook query rejected" && fixture.rejected === true),
     edgeEvidenceUrlEmbeddedCredentialsRejected: negativeFixtures.some((fixture) => fixture.name === "edge evidence embedded credentials rejected" && fixture.rejected === true),
     edgeEvidenceUrlQueryRejected: negativeFixtures.some((fixture) => fixture.name === "edge evidence query rejected" && fixture.rejected === true),
+    genericEdgeNotesRejected: negativeFixtures.some((fixture) => fixture.name === "generic edge notes rejected" && fixture.rejected === true),
+    edgeNotesMissingClientIdentityRejected: negativeFixtures.some((fixture) => fixture.name === "edge notes missing client identity rejected" && fixture.rejected === true),
+    edgeNotesMissingEnforcementActionRejected: negativeFixtures.some((fixture) => fixture.name === "edge notes missing enforcement action rejected" && fixture.rejected === true),
     localWebhookSmokeDelivered: localWebhookSmoke.delivered,
     localWebhookSmokeAuthorized: localWebhookSmoke.tokenAccepted,
     localWebhookSmokePayloadSafe: localWebhookSmoke.payloadSanitized
@@ -207,6 +228,9 @@ function validateValidProductionFixture(result, summary) {
   if (summary.alertWebhookProtocol !== "https") fail(`Valid production fixture expected HTTPS webhook protocol, got ${summary.alertWebhookProtocol}.`);
   if (summary.edgeProvider !== "cloudflare") fail(`Valid production fixture expected cloudflare edge provider, got ${summary.edgeProvider}.`);
   if (summary.edgeEvidenceHost !== "dash.cloudflare.com") fail(`Valid production fixture expected dash.cloudflare.com evidence host, got ${summary.edgeEvidenceHost}.`);
+  if (!summary.edgeNotesDescribeAuthSurface) fail("Valid production fixture notes must describe the protected auth surface.");
+  if (!summary.edgeNotesDescribeClientIdentity) fail("Valid production fixture notes must describe client identity or IP.");
+  if (!summary.edgeNotesDescribeEnforcementAction) fail("Valid production fixture notes must describe the enforcement action.");
   if (!summary.proxyHeaderTrustEnabled) fail("Valid production fixture did not enable explicit proxy-header trust.");
   if (summary.trustedProxyCidrCount < 2) fail("Valid production fixture did not validate trusted proxy CIDRs.");
   if (result.combinedOutput.includes(validProductionEnv.QUANTGYM_ALERT_WEBHOOK_TOKEN)) fail("Valid production fixture output leaked the webhook token.");
@@ -354,6 +378,9 @@ function summarizeProductionFixture(result) {
     trustedProxyCidrCount: Number(proxyHeaderTrust.cidrCount || 0),
     edgeProvider: edgeSignoff.provider || "",
     edgeNotesLength: Number(edgeSignoff.notesLength || 0),
+    edgeNotesDescribeAuthSurface: edgeSignoff.describesAuthSurface === true,
+    edgeNotesDescribeClientIdentity: edgeSignoff.describesClientIdentity === true,
+    edgeNotesDescribeEnforcementAction: edgeSignoff.describesEnforcementAction === true,
     edgeEvidenceHost: edgeSignoff.evidenceHost || ""
   };
 }

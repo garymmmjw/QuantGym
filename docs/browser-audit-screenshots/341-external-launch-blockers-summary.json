@@ -50,12 +50,18 @@
         "validProductionWebhookTokenRedacted": true,
         "validProductionWebhookUrlRedacted": true,
         "validProductionEdgeEvidenceUrlRedacted": true,
+        "validProductionEdgeNotesDescribeAuthSurface": true,
+        "validProductionEdgeNotesDescribeClientIdentity": true,
+        "validProductionEdgeNotesDescribeEnforcementAction": true,
         "shortWebhookTokenRejected": true,
         "placeholderWebhookTokenRejected": true,
         "webhookUrlEmbeddedCredentialsRejected": true,
         "webhookUrlQueryRejected": true,
         "edgeEvidenceUrlEmbeddedCredentialsRejected": true,
         "edgeEvidenceUrlQueryRejected": true,
+        "genericEdgeNotesRejected": true,
+        "edgeNotesMissingClientIdentityRejected": true,
+        "edgeNotesMissingEnforcementActionRejected": true,
         "privateWebhookRejected": true,
         "privateEdgeEvidenceRejected": true
       }

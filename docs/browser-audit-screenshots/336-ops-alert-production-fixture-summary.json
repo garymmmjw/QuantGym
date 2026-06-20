@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 779,
+  "durationMs": 1010,
   "productionFixture": {
     "status": "pass",
     "passed": 4,
@@ -15,7 +15,10 @@
     "proxyHeaderTrustEnabled": true,
     "trustedProxyCidrCount": 2,
     "edgeProvider": "cloudflare",
-    "edgeNotesLength": 74,
+    "edgeNotesLength": 104,
+    "edgeNotesDescribeAuthSurface": true,
+    "edgeNotesDescribeClientIdentity": true,
+    "edgeNotesDescribeEnforcementAction": true,
     "edgeEvidenceHost": "dash.cloudflare.com"
   },
   "negativeFixtures": [
@@ -146,6 +149,27 @@
       "error": "QUANTGYM_EDGE_RATE_LIMIT_NOTES must briefly describe the configured edge rule."
     },
     {
+      "name": "generic edge notes rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_EDGE_RATE_LIMIT_NOTES must mention the protected auth surface, such as /api/auth/*."
+    },
+    {
+      "name": "edge notes missing client identity rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_EDGE_RATE_LIMIT_NOTES must mention the client identity or IP characteristic."
+    },
+    {
+      "name": "edge notes missing enforcement action rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_EDGE_RATE_LIMIT_NOTES must mention the enforcement action, such as block, challenge, throttle, or rate-limit."
+    },
+    {
       "name": "unconfirmed edge limiter rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -176,6 +200,9 @@
     "validProductionWebhookUrlRedacted": true,
     "validProductionEdgeEvidenceUrlRedacted": true,
     "validProductionEdgeNotesRedacted": true,
+    "validProductionEdgeNotesDescribeAuthSurface": true,
+    "validProductionEdgeNotesDescribeClientIdentity": true,
+    "validProductionEdgeNotesDescribeEnforcementAction": true,
     "negativeFixturesRejected": true,
     "negativeFixturesMentionExpectedErrors": true,
     "shortWebhookTokenRejected": true,
@@ -184,6 +211,9 @@
     "webhookUrlQueryRejected": true,
     "edgeEvidenceUrlEmbeddedCredentialsRejected": true,
     "edgeEvidenceUrlQueryRejected": true,
+    "genericEdgeNotesRejected": true,
+    "edgeNotesMissingClientIdentityRejected": true,
+    "edgeNotesMissingEnforcementActionRejected": true,
     "localWebhookSmokeDelivered": true,
     "localWebhookSmokeAuthorized": true,
     "localWebhookSmokePayloadSafe": true
