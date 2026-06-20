@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-19T04:56:09.853Z",
+  "generatedAt": "2026-06-20T23:27:06.059Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/jobs-feed/publication-packet",
   "filesWritten": [
     "artifacts/jobs-feed/publication-packet/README.md",
@@ -12,16 +12,16 @@
     "artifacts/jobs-feed/publication-packet/public-ats-feed.json"
   ],
   "feed": {
-    "generatedAt": "2026-06-19T04:56:10.629Z",
+    "generatedAt": "2026-06-20T23:27:09.636Z",
     "generatedBy": "scripts/build-public-ats-jobs-feed.mjs",
     "source": "public-ats-greenhouse",
     "feedPath": "artifacts/jobs-feed/publication-packet/public-ats-feed.json",
-    "feedSha256": "d53b26c2215859c0da4a403a6f7d3baf21f15e80094158a41a3a472c2125b89b",
+    "feedSha256": "dc7ac58faf16c911159bfdd52fac328e5d0e1ade1098d970c641e86bd8482126",
     "count": 160,
     "internships": 6,
     "fulltime": 154,
-    "firstId": "hudson-river-trading-1229082",
-    "firstPostedAt": "2026-06-18T05:04:23.000Z"
+    "firstId": "imc-4694088101",
+    "firstPostedAt": "2026-06-19T12:18:15.000Z"
   },
   "sources": [
     {
@@ -42,10 +42,10 @@
       "company": "IMC",
       "boardToken": "imc",
       "url": "https://boards-api.greenhouse.io/v1/boards/imc/jobs?content=true",
-      "fetched": 132,
-      "kept": 80,
+      "fetched": 133,
+      "kept": 81,
       "internships": 2,
-      "fulltime": 78,
+      "fulltime": 79,
       "status": "pass"
     },
     {
@@ -83,6 +83,7 @@
     "generatedFeedHasRealMetadata": true,
     "includesProductionEnvTemplate": true,
     "includesHostingRunbook": true,
+    "includesRawIpSourceUrlRule": true,
     "includesSourceList": true,
     "includesLiveSignoffChecklist": true,
     "usesPlaceholderOnlyForOptionalToken": true,

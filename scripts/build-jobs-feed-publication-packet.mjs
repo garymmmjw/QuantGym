@@ -77,6 +77,8 @@ try {
       && combinedContent.includes("QUANTGYM_JOBS_SOURCE_CACHE_SECONDS"),
     includesHostingRunbook: combinedContent.includes("Feed Hosting Runbook")
       && combinedContent.includes("stable HTTPS URL"),
+    includesRawIpSourceUrlRule: combinedContent.includes("DNS hostname")
+      && combinedContent.includes("raw IP"),
     includesSourceList: combinedContent.includes("Public ATS Source List")
       && packet.sources.every((source) => combinedContent.includes(source.id)),
     includesLiveSignoffChecklist: combinedContent.includes("run live jobs signoff")
@@ -230,7 +232,7 @@ function renderOverview(packet) {
     packet.signoffCommand,
     "```",
     "",
-    "The live signoff rejects localhost, private-network, credential-bearing, query-bearing, missing-role, duplicate-id, invalid-URL, defaulted-metadata, invalid-date, invalid-JSON, oversized, and bad-token feeds.",
+    "The live signoff rejects localhost, private-network, raw-IP, credential-bearing, query-bearing, missing-role, duplicate-id, invalid-URL, defaulted-metadata, invalid-date, invalid-JSON, oversized, and bad-token feeds. Production source URLs must use HTTPS DNS hostnames.",
     ""
   ].join("\n");
 }
@@ -244,6 +246,7 @@ function renderHostingRunbook(packet) {
     "## Recommended Shape",
     "",
     "- URL shape: `https://jobs.quantgym.app/quantgym-jobs-feed.json`",
+    "- Host shape: DNS hostname, not a raw IP address",
     "- Content type: `application/json`",
     "- Body shape: `{ \"generatedAt\": \"...\", \"generatedBy\": \"...\", \"source\": \"public-ats-greenhouse\", \"jobs\": [...] }`",
     "- Do not put secrets, credentials, query tokens, or fragments in the URL.",
@@ -258,7 +261,7 @@ function renderHostingRunbook(packet) {
     "",
     "## Local Host Dry Run",
     "",
-    "You can test the exact feed before production hosting with a temporary local HTTP server and `npm run check:jobs-source -- --live --no-dotenv`, but the production signoff must use an externally reachable HTTPS URL.",
+    "You can test the exact feed before production hosting with a temporary local HTTP server and `npm run check:jobs-source -- --live --no-dotenv`, but the production signoff must use an externally reachable HTTPS URL with a DNS hostname.",
     ""
   ].join("\n");
 }
@@ -267,6 +270,7 @@ function renderEnvTemplate() {
   return [
     "# QuantGym jobs feed production env template.",
     "# Fill these in the API provider dashboard. Do not commit filled values.",
+    "# Source URL must use an HTTPS DNS hostname, not a raw IP address.",
     "",
     "QUANTGYM_JOBS_SOURCE_URL=https://jobs.quantgym.app/quantgym-jobs-feed.json",
     "QUANTGYM_JOBS_SOURCE_TOKEN=<optional-strong-feed-token>",
@@ -299,7 +303,7 @@ function renderChecklistCsv(packet) {
   const rows = [
     ["step", "owner", "evidence", "status"],
     ["generate public ATS feed", "", packet.feedManifest.feedSha256, "complete"],
-    ["host feed snapshot", "", "stable HTTPS URL without credentials/query/fragment", "pending"],
+    ["host feed snapshot", "", "stable HTTPS DNS-hostname URL without raw IP, credentials, query, or fragment", "pending"],
     ["configure API env", "", "QUANTGYM_JOBS_SOURCE_URL plus optional bearer token", "pending"],
     ["run production config gate", "", "npm run check:jobs-source:production", "pending"],
     ["run live jobs signoff", "", "npm run check:jobs-source:production -- --live", "pending"],

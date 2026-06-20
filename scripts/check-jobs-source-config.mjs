@@ -61,6 +61,7 @@ check("source configuration", () => {
   if (productionMode) {
     assert(url.protocol === "https:", "Production jobs source URL must use HTTPS.");
     assert(!isLocalOrPrivateHost(url.hostname), "Production jobs source URL must not point to localhost, loopback, or a private network address.");
+    assert(!isIpLiteral(url.hostname), "Production jobs source URL must use a DNS hostname, not a raw IP address.");
     assertUrlHasNoSensitiveParts("QUANTGYM_JOBS_SOURCE_URL", url);
   }
   if (!config.sourceToken) {
@@ -361,6 +362,11 @@ function isLocalOrPrivateHost(hostname) {
   if (family === 4) return isPrivateIpv4(host);
   if (family === 6) return isPrivateIpv6(host);
   return false;
+}
+
+function isIpLiteral(hostname) {
+  const host = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
+  return net.isIP(host) !== 0;
 }
 
 function isPrivateIpv4(host) {

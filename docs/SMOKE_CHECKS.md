@@ -411,7 +411,7 @@ Browser/CDP deep flows now recorded in
   `npm run check:browser-route-smoke` verifies the `crawler-ready` fallback
   labels render while Jobs filtering and apply links continue to pass.
 - [x] Jobs source production fixture: `npm run check:jobs-source:production-fixture`
-  proves the production gate rejects missing/HTTP/localhost/private-network,
+  proves the production gate rejects missing/HTTP/localhost/private-network/raw-IP,
   credential-bearing, query-bearing, or placeholder source URLs, bad
   cache/timeout/size settings, placeholder or short source tokens, incomplete
   fallback catalogs, and duplicate catalog ids; it also runs `--live` against
