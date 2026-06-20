@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-19T12:58:40.548Z",
+  "generatedAt": "2026-06-20T20:07:58.355Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/postgres-cutover/readiness-packet",
   "filesWritten": [
     "artifacts/postgres-cutover/readiness-packet/README.md",
@@ -46,6 +46,7 @@
     "includesSignoffEnvTemplate": true,
     "includesRollbackBackupChecklist": true,
     "includesLiveCutoverChecklist": true,
+    "includesCompleteSignoffCommand": true,
     "usesPlaceholdersOnlyForSensitivePaths": true,
     "noCredentialUrlExamples": true,
     "exportSmokePass": true,
