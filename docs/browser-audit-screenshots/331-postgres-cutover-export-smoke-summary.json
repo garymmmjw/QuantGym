@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1734,
+  "durationMs": 1957,
   "fixture": {
     "tablesSeeded": [
       "audit_events",
@@ -13,7 +13,7 @@
       "user_states",
       "users"
     ],
-    "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-nTWPVc/quantgym-cutover-smoke.sqlite3"
+    "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-a5F5a9/quantgym-cutover-smoke.sqlite3"
   },
   "redactedExport": {
     "status": "pass",
@@ -69,6 +69,7 @@
     "privateTargetHostRejected": true,
     "publicIpTargetHostRejected": true,
     "privateEvidenceUrlRejected": true,
+    "evidenceUrlRawIpRejected": true,
     "targetHostWhitespaceRejected": true,
     "databaseUnsafeCharactersRejected": true,
     "evidenceUrlEmbeddedCredentialsRejected": true,
@@ -119,12 +120,12 @@
     "required": true,
     "targetHost": "postgres.quantgym.internal",
     "database": "quantgym",
-    "completedAt": "2026-06-20T22:05:56Z",
+    "completedAt": "2026-06-20T23:18:03Z",
     "evidenceHost": "render.com",
     "appDatabaseActive": true,
     "backupConfirmed": true,
-    "sourceDbSha256Prefix": "466d76ced3fa",
-    "exportSha256Prefix": "3143ad798c29",
+    "sourceDbSha256Prefix": "9f0718767f87",
+    "exportSha256Prefix": "dfef009db503",
     "importPlanRowCount": 12,
     "targetRowCount": 12
   },
@@ -196,8 +197,15 @@
       "name": "private evidence URL rejected",
       "rejected": true,
       "expectedErrorObserved": true,
+      "failed": 2,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must not point at localhost, loopback, or a private network address.\nQUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must use a DNS hostname, not a raw IP address."
+    },
+    {
+      "name": "public IP evidence URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
       "failed": 1,
-      "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must not point at localhost, loopback, or a private network address."
+      "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must use a DNS hostname, not a raw IP address."
     },
     {
       "name": "evidence URL embedded credentials rejected",
@@ -239,7 +247,7 @@
       "rejected": true,
       "expectedErrorObserved": true,
       "failed": 2,
-      "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-nTWPVc\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
+      "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-a5F5a9\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
     },
     {
       "name": "target row count mismatch rejected",

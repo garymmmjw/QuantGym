@@ -1577,6 +1577,7 @@ function validatePostgresCutoverExportSmokeSummary(data, expect, label) {
   expect(data.cutoverChecks?.privateTargetHostRejected === true, `${label} complete signoff must reject private-network target hosts`);
   expect(data.cutoverChecks?.publicIpTargetHostRejected === true, `${label} complete signoff must reject raw IP target hosts`);
   expect(data.cutoverChecks?.privateEvidenceUrlRejected === true, `${label} complete signoff must reject private-network evidence URLs`);
+  expect(data.cutoverChecks?.evidenceUrlRawIpRejected === true, `${label} complete signoff must reject raw-IP evidence URLs`);
   expect(data.cutoverChecks?.targetHostWhitespaceRejected === true, `${label} complete signoff must reject malformed target hosts`);
   expect(data.cutoverChecks?.databaseUnsafeCharactersRejected === true, `${label} complete signoff must reject unsafe database names`);
   expect(data.cutoverChecks?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} complete signoff must reject evidence URLs with embedded credentials`);
@@ -1926,6 +1927,7 @@ function validatePostgresCutoverPacketSummary(data, expect, label) {
     "includesSecureExportRunbook",
     "includesPostgresImportRunbook",
     "includesSignoffEnvTemplate",
+    "includesRawIpEvidenceUrlRule",
     "includesRollbackBackupChecklist",
     "includesLiveCutoverChecklist",
     "includesCompleteSignoffCommand",
@@ -2484,6 +2486,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(postgres?.localCoverage?.packetRejectsUnsafeExports === true, `${label} must include Postgres packet unsafe-export rejection coverage`);
   expect(postgres?.localCoverage?.packetCompleteSignoffRejectsRawIpTarget === true, `${label} must include Postgres packet raw-IP target rejection coverage`);
   expect(postgres?.localCoverage?.packetCompleteSignoffRejectsUnsafeEvidence === true, `${label} must include Postgres packet unsafe evidence rejection coverage`);
+  expect(postgres?.localCoverage?.packetIncludesRawIpEvidenceUrlRule === true, `${label} must include Postgres packet raw-IP evidence URL guidance`);
   expect(postgres?.localCoverage?.includeSensitiveImportPlanValid === true, `${label} must include Postgres include-sensitive import-plan validation`);
   expect(postgres?.localCoverage?.pendingStatusRejected === true, `${label} must include Postgres pending status rejection`);
   expect(postgres?.localCoverage?.localhostTargetHostRejected === true, `${label} must include Postgres localhost target-host rejection`);
@@ -2493,6 +2496,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(postgres?.localCoverage?.databaseDsnRejected === true, `${label} must include Postgres database DSN rejection`);
   expect(postgres?.localCoverage?.placeholderEvidenceUrlRejected === true, `${label} must include Postgres placeholder evidence-URL rejection`);
   expect(postgres?.localCoverage?.privateEvidenceUrlRejected === true, `${label} must include Postgres private evidence-URL rejection`);
+  expect(postgres?.localCoverage?.evidenceUrlRawIpRejected === true, `${label} must include Postgres raw-IP evidence URL rejection`);
   expect(postgres?.localCoverage?.targetHostWhitespaceRejected === true, `${label} must include Postgres malformed target-host rejection`);
   expect(postgres?.localCoverage?.databaseUnsafeCharactersRejected === true, `${label} must include Postgres unsafe database-name rejection`);
   expect(postgres?.localCoverage?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} must include Postgres evidence URL credential rejection`);

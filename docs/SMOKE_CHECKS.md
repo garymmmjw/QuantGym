@@ -458,9 +458,9 @@ Browser/CDP deep flows now recorded in
   and a sanitized HTTPS evidence host, and rejects pending status, localhost,
   private-network, or raw-IP target hosts, malformed target hosts, database DSNs or
   unsafe database names, future timestamps, placeholder/private-network
-  evidence URLs, evidence URLs with embedded credentials or query strings, SHA
-  mismatches, row-count mismatches, inactive app database confirmation, and
-  missing backup confirmation.
+  evidence URLs, raw-IP evidence URLs, evidence URLs with embedded credentials
+  or query strings, SHA mismatches, row-count mismatches, inactive app database
+  confirmation, and missing backup confirmation.
 - [x] Chrome Collector store readiness: `npm run check:chrome-store-readiness`
   validates Manifest V3 metadata, minimal permissions, store listing text,
   privacy disclosures, store screenshots/promotional images, and the generated

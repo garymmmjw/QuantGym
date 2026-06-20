@@ -217,6 +217,7 @@ try {
       privateTargetHostRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "private target host rejected" && fixture.rejected === true),
       publicIpTargetHostRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "public IP target host rejected" && fixture.rejected === true),
       privateEvidenceUrlRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "private evidence URL rejected" && fixture.rejected === true),
+      evidenceUrlRawIpRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "public IP evidence URL rejected" && fixture.rejected === true),
       targetHostWhitespaceRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "target host whitespace rejected" && fixture.rejected === true),
       databaseUnsafeCharactersRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "database unsafe characters rejected" && fixture.rejected === true),
       evidenceUrlEmbeddedCredentialsRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "evidence URL embedded credentials rejected" && fixture.rejected === true),
@@ -602,6 +603,11 @@ function runCompleteSignoffNegativeFixtures({ tempDb, sensitiveExportPath, valid
       name: "private evidence URL rejected",
       env: { QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL: "https://192.168.12.20/postgres-cutover" },
       expectedError: "private network address"
+    },
+    {
+      name: "public IP evidence URL rejected",
+      env: { QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL: "https://8.8.4.4/postgres-cutover" },
+      expectedError: "DNS hostname"
     },
     {
       name: "evidence URL embedded credentials rejected",
