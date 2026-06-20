@@ -293,6 +293,15 @@ function attachCollectors(page) {
       summary.errors.ignored.push({ type: "requestfailed", url: sanitizeUrl(url), failure });
       return;
     }
+    if (failure === "net::ERR_ABORTED" && isNavigationAbortedBackgroundRequest(url)) {
+      summary.errors.ignored.push({
+        type: "requestfailed",
+        url: sanitizeUrl(url),
+        failure,
+        reason: "navigation-aborted background request"
+      });
+      return;
+    }
     summary.errors.requestFailures.push({ url: sanitizeUrl(url), failure });
   });
   page.on("response", (response) => {
@@ -349,6 +358,19 @@ function isOwnUrl(value) {
 
 function isIgnoredConsole(text) {
   return /compute-pressure|Permissions-Policy|Failed to load resource: the server responded with a status of 403/i.test(text);
+}
+
+function isNavigationAbortedBackgroundRequest(value) {
+  try {
+    const url = new URL(value);
+    const expected = new URL(baseUrl);
+    if (url.origin === expected.origin && /^\/assets\/.+\.(png|jpe?g|webp|svg|gif|avif|woff2?)$/i.test(url.pathname)) {
+      return true;
+    }
+    return url.origin === "https://llm.quantgym.app" && /^\/(jobs|news)$/i.test(url.pathname);
+  } catch {
+    return false;
+  }
 }
 
 function isSummaryRedacted(data) {
