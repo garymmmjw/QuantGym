@@ -15,6 +15,8 @@ Option A: put env vars in the project-root `.env`:
 
 ```bash
 OPENAI_API_KEY=
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_TIMEOUT_MS=30000
 PORT=8787
 LLM_PROXY_HOST=127.0.0.1
 LLM_ALLOWED_ORIGINS=http://127.0.0.1:5176
@@ -34,6 +36,8 @@ Option B: export values in your shell:
 export OPENAI_API_KEY="your-api-key"
 node llm-proxy/server.mjs
 ```
+
+`OPENAI_BASE_URL` defaults to `https://api.openai.com/v1`; set it only when the host environment must reach OpenAI through an approved OpenAI-compatible gateway. It may point either at a `/v1` base URL or directly at a `/v1/responses` endpoint. `OPENAI_TIMEOUT_MS` defaults to `30000` and is clamped between 1000 and 120000 ms.
 
 The app endpoint should be:
 
