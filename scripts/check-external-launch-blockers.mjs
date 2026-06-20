@@ -146,12 +146,18 @@ const blockers = [
       validProductionWebhookTokenRedacted: evidence.opsFixture.checks?.validProductionWebhookTokenRedacted === true,
       validProductionWebhookUrlRedacted: evidence.opsFixture.checks?.validProductionWebhookUrlRedacted === true,
       validProductionEdgeEvidenceUrlRedacted: evidence.opsFixture.checks?.validProductionEdgeEvidenceUrlRedacted === true,
+      validProductionEdgeNotesDescribeAuthSurface: evidence.opsFixture.checks?.validProductionEdgeNotesDescribeAuthSurface === true,
+      validProductionEdgeNotesDescribeClientIdentity: evidence.opsFixture.checks?.validProductionEdgeNotesDescribeClientIdentity === true,
+      validProductionEdgeNotesDescribeEnforcementAction: evidence.opsFixture.checks?.validProductionEdgeNotesDescribeEnforcementAction === true,
       shortWebhookTokenRejected: evidence.opsFixture.checks?.shortWebhookTokenRejected === true,
       placeholderWebhookTokenRejected: evidence.opsFixture.checks?.placeholderWebhookTokenRejected === true,
       webhookUrlEmbeddedCredentialsRejected: evidence.opsFixture.checks?.webhookUrlEmbeddedCredentialsRejected === true,
       webhookUrlQueryRejected: evidence.opsFixture.checks?.webhookUrlQueryRejected === true,
       edgeEvidenceUrlEmbeddedCredentialsRejected: evidence.opsFixture.checks?.edgeEvidenceUrlEmbeddedCredentialsRejected === true,
       edgeEvidenceUrlQueryRejected: evidence.opsFixture.checks?.edgeEvidenceUrlQueryRejected === true,
+      genericEdgeNotesRejected: evidence.opsFixture.checks?.genericEdgeNotesRejected === true,
+      edgeNotesMissingClientIdentityRejected: evidence.opsFixture.checks?.edgeNotesMissingClientIdentityRejected === true,
+      edgeNotesMissingEnforcementActionRejected: evidence.opsFixture.checks?.edgeNotesMissingEnforcementActionRejected === true,
       privateWebhookRejected: findResult(evidence.opsFixture.negativeFixtures, "private webhook rejected")?.rejected === true,
       privateEdgeEvidenceRejected: findResult(evidence.opsFixture.negativeFixtures, "private edge evidence rejected")?.rejected === true
     }

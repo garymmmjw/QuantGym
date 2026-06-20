@@ -62,6 +62,12 @@ try {
     fixtureRejectsUnsafeInputs: productionFixture.checks?.negativeFixturesRejected === true
       && productionFixture.checks?.shortWebhookTokenRejected === true
       && productionFixture.checks?.placeholderWebhookTokenRejected === true,
+    fixtureRequiresSpecificEdgeNotes: productionFixture.checks?.validProductionEdgeNotesDescribeAuthSurface === true
+      && productionFixture.checks?.validProductionEdgeNotesDescribeClientIdentity === true
+      && productionFixture.checks?.validProductionEdgeNotesDescribeEnforcementAction === true
+      && productionFixture.checks?.genericEdgeNotesRejected === true
+      && productionFixture.checks?.edgeNotesMissingClientIdentityRejected === true
+      && productionFixture.checks?.edgeNotesMissingEnforcementActionRejected === true,
     fixtureOutputRedactsSecrets: productionFixture.checks?.validProductionWebhookTokenRedacted === true
       && productionFixture.checks?.validProductionWebhookUrlRedacted === true
       && productionFixture.checks?.validProductionEdgeEvidenceUrlRedacted === true
@@ -210,7 +216,7 @@ function renderEnvTemplate(packet) {
     "# Set these only after the edge rule is live.",
     "QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED=1",
     `QUANTGYM_EDGE_RATE_LIMIT_PROVIDER=${packet.edgeRule.provider}`,
-    "QUANTGYM_EDGE_RATE_LIMIT_NOTES=Cloudflare edge rule limits /api/auth/* bursts by client IP before Render.",
+    "QUANTGYM_EDGE_RATE_LIMIT_NOTES=Cloudflare edge rule limits /api/auth/* bursts by client IP and applies managed challenge before Render.",
     `QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL=${packet.edgeRule.evidenceUrlShape}`,
     ""
   ];

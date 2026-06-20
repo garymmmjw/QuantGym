@@ -137,6 +137,7 @@ check("edge rate-limit signoff", () => {
   );
   assert(config.edgeRateLimitNotes.length >= 20, "QUANTGYM_EDGE_RATE_LIMIT_NOTES must briefly describe the configured edge rule.");
   assertNoPlaceholder("QUANTGYM_EDGE_RATE_LIMIT_NOTES", config.edgeRateLimitNotes);
+  const notesSummary = validateEdgeRateLimitNotes(config.edgeRateLimitNotes);
   assert(config.edgeRateLimitEvidenceUrl, "QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL is required for production edge rate-limit signoff.");
   assertNoPlaceholder("QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL", config.edgeRateLimitEvidenceUrl);
   const evidenceUrl = parseHttpUrl(config.edgeRateLimitEvidenceUrl, "QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL");
@@ -149,6 +150,7 @@ check("edge rate-limit signoff", () => {
     provider: config.edgeRateLimitProvider,
     notesSet: true,
     notesLength: config.edgeRateLimitNotes.length,
+    ...notesSummary,
     evidenceHost: evidenceUrl.hostname
   };
 });
@@ -237,6 +239,21 @@ function assertStrongProductionToken(name, value) {
     text.length >= MIN_PRODUCTION_WEBHOOK_TOKEN_LENGTH,
     `${name} must be at least ${MIN_PRODUCTION_WEBHOOK_TOKEN_LENGTH} characters in production.`
   );
+}
+
+function validateEdgeRateLimitNotes(value) {
+  const text = String(value || "").toLowerCase();
+  const describesAuthSurface = /\/api\/auth|auth path|auth route|login|register|google|password reset/.test(text);
+  const describesClientIdentity = /client ip|per ip|source ip|ip address|visitor ip|remote address|forwarded ip/.test(text);
+  const describesEnforcementAction = /block|challenge|throttle|rate-?limit|limit|deny|reject/.test(text);
+  assert(describesAuthSurface, "QUANTGYM_EDGE_RATE_LIMIT_NOTES must mention the protected auth surface, such as /api/auth/*.");
+  assert(describesClientIdentity, "QUANTGYM_EDGE_RATE_LIMIT_NOTES must mention the client identity or IP characteristic.");
+  assert(describesEnforcementAction, "QUANTGYM_EDGE_RATE_LIMIT_NOTES must mention the enforcement action, such as block, challenge, throttle, or rate-limit.");
+  return {
+    describesAuthSurface,
+    describesClientIdentity,
+    describesEnforcementAction
+  };
 }
 
 function assertNoUrlSecretParts(label, url) {
