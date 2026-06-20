@@ -42,6 +42,12 @@ try {
   expect(privateEvidence.status !== 0, "Private-network evidence URL fixture must fail public mode.");
   expect(/private-network/i.test(failuresText(privateEvidence)), "Private-network evidence rejection must mention private-network.");
 
+  const rawIpEvidence = runFixture("public", makeApprovedPublicCommercial({
+    evidenceUrl: "https://8.8.8.8/evidence/approved-source-permission"
+  }));
+  expect(rawIpEvidence.status !== 0, "Raw-IP evidence URL fixture must fail public mode.");
+  expect(/not an IP address/i.test(failuresText(rawIpEvidence)), "Raw-IP evidence rejection must mention IP address.");
+
   const embeddedCredentialEvidence = runFixture("public", makeApprovedPublicCommercial({
     evidenceUrl: "https://reviewer:secret@rights.quantgym.app/evidence/approved-source-permission"
   }));
@@ -84,6 +90,7 @@ try {
       placeholderEvidenceRejected: placeholderEvidence.status !== 0,
       privateEvidenceRejected: privateEvidence.status !== 0,
       privateEvidenceMentionsPrivateNetwork: /private-network/i.test(failuresText(privateEvidence)),
+      rawIpEvidenceRejected: rawIpEvidence.status !== 0,
       evidenceUrlEmbeddedCredentialsRejected: embeddedCredentialEvidence.status !== 0,
       evidenceUrlQueryRejected: queryEvidence.status !== 0,
       staleApprovalRejected: staleApproval.status !== 0,
@@ -94,6 +101,7 @@ try {
     publicOnlyCommercialFailure: summarizeRun(publicOnlyCommercial),
     placeholderEvidenceFailure: summarizeRun(placeholderEvidence),
     privateEvidenceFailure: summarizeRun(privateEvidence),
+    rawIpEvidenceFailure: summarizeRun(rawIpEvidence),
     embeddedCredentialEvidenceFailure: summarizeRun(embeddedCredentialEvidence),
     queryEvidenceFailure: summarizeRun(queryEvidence),
     staleApprovalFailure: summarizeRun(staleApproval),

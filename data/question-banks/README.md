@@ -26,7 +26,7 @@ Run the rights gate before beta release changes:
 npm run check:question-bank-rights
 ```
 
-Before public or commercial distribution, every active source must be explicitly approved in `source-rights-manifest.json` and this stricter gate must pass. `publicCommercial.status: "approved"` must include `basis`, `reviewedBy`, a recent valid `reviewedAt` date, a non-placeholder HTTPS `evidenceUrl`, `approvalType`, `redistributionScope`, and `evidenceSummary`. Commercial release additionally requires `redistributionScope` to include `commercial-use`. Run the fixture smoke to verify the approval schema itself:
+Before public or commercial distribution, every active source must be explicitly approved in `source-rights-manifest.json` and this stricter gate must pass. `publicCommercial.status: "approved"` must include `basis`, `reviewedBy`, a recent valid `reviewedAt` date, a non-placeholder HTTPS `evidenceUrl` with a DNS hostname, `approvalType`, `redistributionScope`, and `evidenceSummary`. Commercial release additionally requires `redistributionScope` to include `commercial-use`. Run the fixture smoke to verify the approval schema itself:
 
 ```bash
 npm run check:question-bank-rights:public-smoke

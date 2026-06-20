@@ -428,11 +428,11 @@ Browser/CDP deep flows now recorded in
   counts match, disabled sources are absent from the compiled catalog, private
   beta status allows each active source, public/commercial status remains
   explicit, and any future approved public/commercial source has a valid recent
-  review date, non-placeholder HTTPS evidence URL without embedded credentials,
-  query strings, or fragments, approval type, evidence summary, and redistribution scopes. `npm run check:question-bank-rights:public-smoke`
+  review date, non-placeholder HTTPS evidence URL with a DNS hostname and without embedded credentials,
+  query strings, fragments, or raw IP hosts, approval type, evidence summary, and redistribution scopes. `npm run check:question-bank-rights:public-smoke`
   verifies the schema with positive and negative fixtures, including missing
   `commercial-use`, placeholder evidence, stale reviews, missing direct-permission
-  grantors, unsupported scopes, private-network evidence, and credential/query-bearing evidence URLs. The stricter
+  grantors, unsupported scopes, private-network/raw-IP evidence, and credential/query-bearing evidence URLs. The stricter
   `npm run check:question-bank-rights:public` and
   `npm run check:question-bank-rights:commercial` remain expected to fail until
   all active sources are approved or removed/replaced for public/commercial
