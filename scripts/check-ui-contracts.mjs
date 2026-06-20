@@ -840,6 +840,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
     case "340-question-bank-rights-release-blockers-summary.json":
       validateQuestionBankRightsReleaseBlockersSummary(data, expect, "question-bank rights release blockers");
       break;
+    case "345-question-bank-rights-packet-summary.json":
+      validateQuestionBankRightsPacketSummary(data, expect, "question-bank rights approval packet");
+      break;
     case "355-apex-www-domain-summary.json":
       validateApexWwwDomainSummary(data, expect, "apex/WWW domain smoke");
       break;
@@ -1606,6 +1609,49 @@ function validateQuestionBankRightsReleaseBlockersSummary(data, expect, label) {
   expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
 }
 
+function validateQuestionBankRightsPacketSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.mode === "commercial", `${label} must target commercial release readiness`);
+  expect(data.signoffCommand === "npm run check:question-bank-rights:public && npm run check:question-bank-rights:commercial", `${label} must record the full public/commercial signoff command`);
+  expect(data.supportingCommands?.releaseBlockers === "npm run check:question-bank-rights:release-blockers", `${label} must record the release-blocker refresh command`);
+  expect(data.supportingCommands?.rebuildPacket === "npm run build:question-bank-rights-packet", `${label} must record the packet rebuild command`);
+  expect(data.releaseBlockerSummaryPath === "docs/browser-audit-screenshots/340-question-bank-rights-release-blockers-summary.json", `${label} must reference the blocker summary evidence`);
+  expect(data.releaseBlocked === true, `${label} must keep public/commercial release blocked`);
+  expect(Number(data.blockedSourceCount || 0) === 15, `${label} must include all 15 blocked active sources`);
+  expect(Number(data.activeSourceCount || 0) === 15, `${label} must count all 15 active sources`);
+  expect(Number(data.sourcePacketCount || 0) === 15, `${label} must write one source packet per active source`);
+  expect(Number(data.manifestDraftSourceCount || 0) === 15, `${label} manifest draft must contain one entry per active source`);
+  expect(Number(data.trackerRowCount || 0) === 15, `${label} tracker must contain one row per active source`);
+  expect(Number(data.publicFailureCount || 0) === 15, `${label} public failure count must remain one per active source`);
+  expect(Number(data.commercialFailureCount || 0) === 15, `${label} commercial failure count must remain one per active source`);
+  const scopes = Array.isArray(data.requiredScopes) ? data.requiredScopes : [];
+  for (const scope of ["public-web", "redistribution", "compiled-catalog", "derived-adaptation", "commercial-use"]) {
+    expect(scopes.includes(scope), `${label} must include ${scope} scope`);
+  }
+  const files = Array.isArray(data.filesWritten) ? data.filesWritten : [];
+  expect(files.includes("artifacts/question-bank-rights/public-commercial-approval-packet/README.md"), `${label} must write README packet`);
+  expect(files.includes("artifacts/question-bank-rights/public-commercial-approval-packet/rights-evidence-tracker.csv"), `${label} must write tracker CSV`);
+  expect(files.includes("artifacts/question-bank-rights/public-commercial-approval-packet/manifest-draft.json"), `${label} must write manifest draft`);
+  const sources = Array.isArray(data.sources) ? data.sources : [];
+  expect(sources.length === 15, `${label} must summarize all source packets`);
+  expect(sources.some((source) => source.slug === "quantguide" && source.currentStatus === "needs-review"), `${label} must include QuantGuide as needs-review`);
+  expect(sources.every((source) => String(source.packetPath || "").startsWith("artifacts/question-bank-rights/public-commercial-approval-packet/sources/")), `${label} source summaries must point at source packet files`);
+  expect(data.checks?.allActiveSourcesHavePackets === true, `${label} all active sources must have packet coverage`);
+  expect(data.checks?.sourcePacketCountMatchesBlockedSources === true, `${label} packet count must match blocked sources`);
+  expect(data.checks?.manifestDraftEntriesMatchPackets === true, `${label} manifest draft entries must match packets`);
+  expect(data.checks?.trackerRowsMatchPackets === true, `${label} tracker rows must match packets`);
+  expect(data.checks?.filesIncludeOverviewTrackerAndManifestDraft === true, `${label} must include overview, tracker, and manifest draft files`);
+  expect(data.checks?.includesCommercialUseScope === true, `${label} must include commercial-use scope`);
+  expect(data.checks?.packetIncludesCompleteSignoffCommand === true, `${label} packet README must include complete signoff command`);
+  expect(data.checks?.packetIncludesReleaseBlockerCommand === true, `${label} packet README must include blocker refresh command`);
+  expect(data.checks?.packetIncludesEvidenceUrlSafetyRules === true, `${label} packet README must include evidence URL safety rules`);
+  expect(data.checks?.sourcePacketsIncludeOutreachAndDrafts === true, `${label} source packets must include outreach and manifest draft sections`);
+  expect(data.checks?.sourcePacketsListRequiredScopes === true, `${label} source packets must list required scopes`);
+  expect(data.checks?.manifestDraftEntriesContainTodoPlaceholders === true, `${label} manifest draft must retain TODO placeholders`);
+  expect(data.checks?.releaseBlockersMatchPacketSources === true, `${label} packet source list must match release blockers`);
+  expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
+}
+
 function validateBrowserExtensionRuntimeSmokeSummary(data, expect, label) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.popup?.source === "browser-extension/popup.js", `${label} must execute popup.js`);
@@ -2113,6 +2159,15 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   const rights = findBlocker(data.blockers, "question-bank-public-commercial-rights");
   expect(Number(rights?.localCoverage?.publicBlockerCount || 0) === 15, `${label} must keep all active public source-rights blockers visible`);
   expect(Number(rights?.localCoverage?.commercialBlockerCount || 0) === 15, `${label} must keep all active commercial source-rights blockers visible`);
+  expect(rights?.localCoverage?.approvalPacketGenerated === true, `${label} must include question-bank approval packet coverage`);
+  expect(rights?.localCoverage?.approvalPacketIncludesSignoffCommand === true, `${label} must include question-bank approval packet signoff command coverage`);
+  expect(rights?.localCoverage?.approvalPacketSignoffCommandRecorded === true, `${label} must record question-bank approval packet signoff command`);
+  expect(rights?.localCoverage?.approvalPacketIncludesReleaseBlockerCommand === true, `${label} must include question-bank blocker refresh command coverage`);
+  expect(rights?.localCoverage?.approvalPacketIncludesEvidenceUrlSafetyRules === true, `${label} must include question-bank evidence URL safety rules`);
+  expect(Number(rights?.localCoverage?.approvalPacketSourcePacketCount || 0) === 15, `${label} must include all question-bank source packets`);
+  expect(rights?.localCoverage?.approvalPacketSourcePacketsMatchBlockers === true, `${label} must match question-bank source packets to release blockers`);
+  expect(rights?.localCoverage?.approvalPacketDraftPlaceholders === true, `${label} must keep question-bank packet drafts placeholder-only`);
+  expect(rights?.localCoverage?.approvalPacketSourcePacketsIncludeOutreachAndDrafts === true, `${label} must include question-bank outreach and draft packet coverage`);
   expect(rights?.localCoverage?.publicSmokePass === true, `${label} must include question-bank public smoke coverage`);
   expect(rights?.localCoverage?.validPublicApprovalFixturePass === true, `${label} must include valid public approval fixture coverage`);
   expect(rights?.localCoverage?.validCommercialApprovalFixturePass === true, `${label} must include valid commercial approval fixture coverage`);

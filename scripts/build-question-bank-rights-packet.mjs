@@ -16,6 +16,9 @@ const releaseBlockersPath = path.join(projectRoot, "docs/browser-audit-screensho
 const generatedAt = new Date().toISOString();
 const publicScopes = ["public-web", "redistribution", "compiled-catalog", "derived-adaptation"];
 const commercialScopes = [...publicScopes, "commercial-use"];
+const finalSignoffCommand = "npm run check:question-bank-rights:public && npm run check:question-bank-rights:commercial";
+const releaseBlockerCommand = "npm run check:question-bank-rights:release-blockers";
+const packetBuildCommand = "npm run build:question-bank-rights-packet";
 const failures = [];
 const warnings = [];
 
@@ -38,26 +41,48 @@ try {
     warnings.push("Release blocker summary was not in the expected pass-but-blocked state.");
   }
 
+  const requiredScopes = mode === "commercial" ? commercialScopes : publicScopes;
+  const readme = renderOverview(blockedSources, releaseBlockers);
+  const trackerCsv = renderTrackerCsv(blockedSources);
+  const manifestDraft = renderManifestDraft(blockedSources);
+  const manifestDraftJson = `${JSON.stringify(manifestDraft, null, 2)}\n`;
+  const sourcePackets = blockedSources.map((source) => ({
+    source,
+    relativePath: `sources/${source.slug}.md`,
+    content: renderSourceMarkdown(source)
+  }));
+
   fs.mkdirSync(path.join(outDir, "sources"), { recursive: true });
   const files = [];
-  files.push(writePacketFile("README.md", renderOverview(blockedSources, releaseBlockers)));
-  files.push(writePacketFile("rights-evidence-tracker.csv", renderTrackerCsv(blockedSources)));
-  files.push(writePacketFile("manifest-draft.json", JSON.stringify(renderManifestDraft(blockedSources), null, 2) + "\n"));
-  for (const source of blockedSources) {
-    files.push(writePacketFile(`sources/${source.slug}.md`, renderSourceMarkdown(source)));
+  files.push(writePacketFile("README.md", readme));
+  files.push(writePacketFile("rights-evidence-tracker.csv", trackerCsv));
+  files.push(writePacketFile("manifest-draft.json", manifestDraftJson));
+  for (const packet of sourcePackets) {
+    files.push(writePacketFile(packet.relativePath, packet.content));
   }
+  const sourceSlugs = blockedSources.map((source) => source.slug);
+  const trackerRowCount = trackerCsv.trim().split("\n").length - 1;
 
   const summary = {
     status: failures.length ? "fail" : "pass",
     generatedAt,
     mode,
     outDir,
+    signoffCommand: finalSignoffCommand,
+    supportingCommands: {
+      releaseBlockers: releaseBlockerCommand,
+      rebuildPacket: packetBuildCommand
+    },
+    releaseBlockerSummaryPath: path.relative(projectRoot, releaseBlockersPath),
     blockedSourceCount: blockedSources.length,
     activeSourceCount: activeRightsSources.length,
+    sourcePacketCount: sourcePackets.length,
+    manifestDraftSourceCount: manifestDraft.sources.length,
+    trackerRowCount,
     releaseBlocked: releaseBlockers.releaseBlocked === true,
     publicFailureCount: releaseBlockers.publicRelease?.failureCount || 0,
     commercialFailureCount: releaseBlockers.commercialRelease?.failureCount || 0,
-    requiredScopes: mode === "commercial" ? commercialScopes : publicScopes,
+    requiredScopes,
     filesWritten: files,
     sources: blockedSources.map((source) => ({
       slug: source.slug,
@@ -70,9 +95,20 @@ try {
     })),
     checks: {
       allActiveSourcesHavePackets: blockedSources.length === activeRightsSources.length,
-      manifestDraftEntriesMatchPackets: renderManifestDraft(blockedSources).sources.length === blockedSources.length,
-      trackerRowsMatchPackets: renderTrackerCsv(blockedSources).trim().split("\n").length - 1 === blockedSources.length,
-      includesCommercialUseScope: mode === "commercial" && commercialScopes.includes("commercial-use")
+      sourcePacketCountMatchesBlockedSources: sourcePackets.length === blockedSources.length,
+      manifestDraftEntriesMatchPackets: manifestDraft.sources.length === blockedSources.length,
+      trackerRowsMatchPackets: trackerRowCount === blockedSources.length,
+      filesIncludeOverviewTrackerAndManifestDraft: ["README.md", "rights-evidence-tracker.csv", "manifest-draft.json"]
+        .every((relativePath) => files.includes(path.relative(projectRoot, path.join(outDir, relativePath)))),
+      includesCommercialUseScope: mode === "commercial" && commercialScopes.includes("commercial-use"),
+      packetIncludesCompleteSignoffCommand: readme.includes(finalSignoffCommand),
+      packetIncludesReleaseBlockerCommand: readme.includes(releaseBlockerCommand),
+      packetIncludesEvidenceUrlSafetyRules: readme.includes("Evidence URLs must be HTTPS, public, and free of embedded credentials, query strings, or fragments."),
+      sourcePacketsIncludeOutreachAndDrafts: sourcePackets.every((packet) => packet.content.includes("## Outreach Template") && packet.content.includes("## Manifest Draft")),
+      sourcePacketsListRequiredScopes: sourcePackets.every((packet) => requiredScopes.every((scope) => packet.content.includes(`- ${scope}`))),
+      manifestDraftEntriesContainTodoPlaceholders: manifestDraft.sources.every((entry) => draftContainsTodoPlaceholders(entry.publicCommercial)),
+      releaseBlockersMatchPacketSources: sameList(releaseBlockers.blockerSlugs?.public || [], sourceSlugs)
+        && sameList(releaseBlockers.blockerSlugs?.commercial || [], sourceSlugs)
     },
     failures,
     warnings
@@ -173,6 +209,17 @@ function renderOverview(sources, releaseBlockers) {
     `- \`redistributionScope\`: ${requiredScopes.map((scope) => `\`${scope}\``).join(", ")}`,
     "- `basis`, `reviewedBy`, `reviewedAt`, `evidenceUrl`, `evidenceSummary`",
     "- `permissionGrantor` for direct permission, or license/owner fields for other approval types",
+    "",
+    "## Signoff Commands",
+    "",
+    `- Final public/commercial signoff: \`${finalSignoffCommand}\``,
+    `- Refresh release-blocker evidence: \`${releaseBlockerCommand}\``,
+    `- Rebuild this packet: \`${packetBuildCommand}\``,
+    "",
+    "## Evidence URL Safety Rules",
+    "",
+    "Evidence URLs must be HTTPS, public, and free of embedded credentials, query strings, or fragments.",
+    "Do not record localhost, private-network, expiring-token, or secret-bearing links in `source-rights-manifest.json`.",
     "",
     "## Files",
     "",
@@ -323,6 +370,22 @@ function csvCell(value) {
 
 function clean(value) {
   return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function draftContainsTodoPlaceholders(publicCommercial = {}) {
+  return [
+    publicCommercial.basis,
+    publicCommercial.reviewedBy,
+    publicCommercial.evidenceUrl,
+    publicCommercial.evidenceSummary,
+    publicCommercial.permissionGrantor
+  ].every((value) => String(value || "").includes("TODO"))
+    && String(publicCommercial.reviewedAt || "") === "YYYY-MM-DD";
+}
+
+function sameList(left, right) {
+  const normalize = (items) => [...items].map(clean).filter(Boolean).sort();
+  return JSON.stringify(normalize(left)) === JSON.stringify(normalize(right));
 }
 
 function fail(message) {
