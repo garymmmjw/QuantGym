@@ -476,13 +476,15 @@ Browser/CDP deep flows now recorded in
   verifies the published-signoff contract with a controlled fixture, including
   item id, listing URL, published status, submitted version, upload SHA-256, and
   negative cases for malformed or placeholder evidence, placeholder-looking item
-  ids, non-detail or child-path listing URLs, private-network evidence URLs, and
-  credential/query-bearing listing or evidence URLs. Evidence:
+  ids, non-detail or child-path listing URLs, non-store or wrong-item evidence
+  URLs, private-network evidence URLs, and credential/query-bearing listing or
+  evidence URLs. Evidence:
   `339-chrome-store-publication-fixture-summary.json`. Final external
   publication still requires
   `npm run check:chrome-store-publication:published` with the item id, public
-  listing URL, `published` status, submitted version, and matching upload ZIP
-  SHA-256 from the developer-account submission.
+  listing/evidence URLs for the same Chrome Web Store item id, `published`
+  status, submitted version, and matching upload ZIP SHA-256 from the
+  developer-account submission.
 - [x] Browser evidence manifest: `npm run check:browser-evidence` validates all
   numbered browser-audit screenshot/JSON references in the audit and smoke docs.
 - [x] Migration completion audit: `npm run check:migration-completion` reports

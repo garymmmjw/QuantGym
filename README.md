@@ -222,8 +222,8 @@ npm run build:postgres-cutover-packet
 
 After the Chrome Web Store developer dashboard shows the extension as published,
 run `npm run check:chrome-store-publication:published` with the real item id,
-detail listing URL, published status, submitted version, and upload SHA-256 from
-the current release package. Before opening the developer dashboard, run
+detail listing URL, matching Chrome Web Store evidence URL, published status,
+submitted version, and upload SHA-256 from the current release package. Before opening the developer dashboard, run
 `npm run build:chrome-store-publication-packet`; the ignored packet under
 `artifacts/chrome-store-publication/readiness-packet/` contains the upload ZIP
 SHA-256, listing field snapshot, dashboard submission checklist, published
