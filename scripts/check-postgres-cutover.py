@@ -529,6 +529,8 @@ def validate_https_evidence_url(name: str, value: str, failures: list[str]) -> s
         return host
     if is_local_or_private_host(host):
         failures.append(f"{name} must not point at localhost, loopback, or a private network address.")
+    if is_ip_literal(host):
+        failures.append(f"{name} must use a DNS hostname, not a raw IP address.")
     if contains_placeholder(host) or (parsed.path and contains_placeholder(parsed.path)):
         failures.append(f"{name} must not be a placeholder URL.")
     if parsed.username or parsed.password:
