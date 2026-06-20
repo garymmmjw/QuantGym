@@ -2031,7 +2031,15 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(ops?.localCoverage?.edgeEvidenceUrlEmbeddedCredentialsRejected === true, `${label} must include ops edge evidence URL credential rejection`);
   expect(ops?.localCoverage?.edgeEvidenceUrlQueryRejected === true, `${label} must include ops edge evidence URL query rejection`);
   const media = findBlocker(data.blockers, "media-bucket-cdn");
+  expect(media?.signoffCommand === "npm run check:media-storage:production && npm run check:media-storage:production -- --live", `${label} media storage must record both production config and live signoff commands`);
+  expect(media?.localCoverage?.packetIncludesProductionConfigSignoff === true, `${label} must include media packet production-config signoff coverage`);
+  expect(media?.localCoverage?.packetSignoffRequiresConfigAndLive === true, `${label} must require both media config and live signoff`);
+  expect(media?.localCoverage?.validProductionAccessKeyRedacted === true, `${label} must include media access-key redaction coverage`);
+  expect(media?.localCoverage?.validProductionSecretRedacted === true, `${label} must include media secret-key redaction coverage`);
+  expect(media?.localCoverage?.validProductionEndpointUrlRedacted === true, `${label} must include media endpoint URL redaction coverage`);
+  expect(media?.localCoverage?.validProductionPublicBaseUrlRedacted === true, `${label} must include media public-base URL redaction coverage`);
   expect(media?.localCoverage?.liveFixturePass === true, `${label} must include media live fixture coverage`);
+  expect(media?.localCoverage?.liveFailureRejected === true, `${label} must include media failed-public-read live fixture rejection`);
   expect(media?.localCoverage?.endpointEmbeddedCredentialsRejected === true, `${label} must include media endpoint credential rejection`);
   expect(media?.localCoverage?.endpointQueryRejected === true, `${label} must include media endpoint query rejection`);
   expect(media?.localCoverage?.publicBaseEmbeddedCredentialsRejected === true, `${label} must include media public-base credential rejection`);
