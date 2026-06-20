@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 390,
+  "durationMs": 579,
   "checks": {
     "validPublicPass": true,
     "validCommercialPass": true,
@@ -10,6 +10,7 @@
     "placeholderEvidenceRejected": true,
     "privateEvidenceRejected": true,
     "privateEvidenceMentionsPrivateNetwork": true,
+    "rawIpEvidenceRejected": true,
     "evidenceUrlEmbeddedCredentialsRejected": true,
     "evidenceUrlQueryRejected": true,
     "staleApprovalRejected": true,
@@ -92,7 +93,28 @@
       }
     },
     "failures": [
-      "approved-source.publicCommercial.evidenceUrl must not point at localhost, loopback, or private-network hosts."
+      "approved-source.publicCommercial.evidenceUrl must not point at localhost, loopback, or private-network hosts.",
+      "approved-source.publicCommercial.evidenceUrl must use a DNS hostname, not an IP address."
+    ]
+  },
+  "rawIpEvidenceFailure": {
+    "mode": "public",
+    "status": "fail",
+    "reportedStatus": "fail",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": [
+      "approved-source.publicCommercial.evidenceUrl must use a DNS hostname, not an IP address."
     ]
   },
   "embeddedCredentialEvidenceFailure": {

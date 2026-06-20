@@ -556,7 +556,7 @@ npm run check:question-bank-rights:public
 npm run check:question-bank-rights:commercial
 ```
 
-The public gate is expected to fail until every active question-bank source has explicit public/commercial redistribution approval recorded in `data/question-banks/source-rights-manifest.json`. Approved entries must carry the approval type, redistribution scopes, evidence summary, recent review date, and HTTPS evidence URL without embedded credentials, query strings, or fragments; commercial release also requires the `commercial-use` scope.
+The public gate is expected to fail until every active question-bank source has explicit public/commercial redistribution approval recorded in `data/question-banks/source-rights-manifest.json`. Approved entries must carry the approval type, redistribution scopes, evidence summary, recent review date, and HTTPS evidence URL with a DNS hostname, without embedded credentials, query strings, fragments, or raw IP hosts; commercial release also requires the `commercial-use` scope.
 
 To turn the current blockers into a per-source approval workflow packet, run:
 

@@ -323,6 +323,7 @@ function validateApprovalEvidenceUrl(value, label) {
   const host = url.hostname.toLowerCase();
   if (isPlaceholderHost(host)) failures.push(`${label} must not point at placeholder hosts.`);
   if (isLocalOrPrivateHost(host)) failures.push(`${label} must not point at localhost, loopback, or private-network hosts.`);
+  if (isIpLiteral(host)) failures.push(`${label} must use a DNS hostname, not an IP address.`);
 }
 
 function validateApprovedPublicCommercial(entry, label, releaseMode, active) {
@@ -432,6 +433,10 @@ function isLocalOrPrivateHost(host) {
   return value.startsWith("fc")
     || value.startsWith("fd")
     || value.startsWith("fe80:");
+}
+
+function isIpLiteral(host) {
+  return net.isIP(clean(host).replace(/^\[|\]$/g, "").toLowerCase()) !== 0;
 }
 
 function parseArgs(argv) {

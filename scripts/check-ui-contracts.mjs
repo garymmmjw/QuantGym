@@ -1628,6 +1628,13 @@ function validateQuestionBankRightsPublicSmokeSummary(data, expect, label) {
   expect(data.checks?.placeholderEvidenceRejected === true, `${label} placeholder evidence must be rejected`);
   expect(data.checks?.privateEvidenceRejected === true, `${label} private-network evidence must be rejected`);
   expect(data.checks?.privateEvidenceMentionsPrivateNetwork === true, `${label} private-network rejection must mention private-network`);
+  if (data.checks?.rawIpEvidenceRejected !== undefined) {
+    expect(data.checks?.rawIpEvidenceRejected === true, `${label} raw-IP evidence must be rejected`);
+  } else if (/nested question-bank rights public smoke/i.test(label)) {
+    warnings.push("Release-readiness nested question-bank rights public smoke lacks raw-IP evidence URL coverage; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+  } else {
+    expect(false, `${label} raw-IP evidence must be rejected`);
+  }
   expect(data.checks?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} evidence URLs with embedded credentials must be rejected`);
   expect(data.checks?.evidenceUrlQueryRejected === true, `${label} evidence URLs with query strings or fragments must be rejected`);
   expect(data.checks?.staleApprovalRejected === true, `${label} stale approval must be rejected`);
@@ -1712,6 +1719,7 @@ function validateQuestionBankRightsPacketSummary(data, expect, label) {
   expect(data.checks?.packetIncludesCompleteSignoffCommand === true, `${label} packet README must include complete signoff command`);
   expect(data.checks?.packetIncludesReleaseBlockerCommand === true, `${label} packet README must include blocker refresh command`);
   expect(data.checks?.packetIncludesEvidenceUrlSafetyRules === true, `${label} packet README must include evidence URL safety rules`);
+  expect(data.checks?.packetIncludesRawIpEvidenceUrlRule === true, `${label} packet README must include raw-IP evidence URL safety rule`);
   expect(data.checks?.sourcePacketsIncludeOutreachAndDrafts === true, `${label} source packets must include outreach and manifest draft sections`);
   expect(data.checks?.sourcePacketsListRequiredScopes === true, `${label} source packets must list required scopes`);
   expect(data.checks?.manifestDraftEntriesContainTodoPlaceholders === true, `${label} manifest draft must retain TODO placeholders`);
@@ -2459,6 +2467,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.approvalPacketSignoffCommandRecorded === true, `${label} must record question-bank approval packet signoff command`);
   expect(rights?.localCoverage?.approvalPacketIncludesReleaseBlockerCommand === true, `${label} must include question-bank blocker refresh command coverage`);
   expect(rights?.localCoverage?.approvalPacketIncludesEvidenceUrlSafetyRules === true, `${label} must include question-bank evidence URL safety rules`);
+  expect(rights?.localCoverage?.approvalPacketIncludesRawIpEvidenceUrlRule === true, `${label} must include question-bank raw-IP evidence URL safety rule`);
   expect(Number(rights?.localCoverage?.approvalPacketSourcePacketCount || 0) === 15, `${label} must include all question-bank source packets`);
   expect(rights?.localCoverage?.approvalPacketSourcePacketsMatchBlockers === true, `${label} must match question-bank source packets to release blockers`);
   expect(rights?.localCoverage?.approvalPacketDraftPlaceholders === true, `${label} must keep question-bank packet drafts placeholder-only`);
@@ -2471,6 +2480,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.placeholderEvidenceRejected === true, `${label} must include question-bank placeholder evidence rejection`);
   expect(rights?.localCoverage?.privateEvidenceRejected === true, `${label} must include question-bank private evidence rejection`);
   expect(rights?.localCoverage?.privateEvidenceMentionsPrivateNetwork === true, `${label} must include question-bank private-network rejection detail`);
+  expect(rights?.localCoverage?.rawIpEvidenceRejected === true, `${label} must include question-bank raw-IP evidence rejection`);
   expect(rights?.localCoverage?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} must include question-bank evidence URL credential rejection`);
   expect(rights?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include question-bank evidence URL query rejection`);
   expect(rights?.localCoverage?.staleApprovalRejected === true, `${label} must include question-bank stale approval rejection`);
