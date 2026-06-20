@@ -55,6 +55,8 @@ try {
       && combinedContent.includes("backup confirmation"),
     includesLiveCutoverChecklist: combinedContent.includes("run complete cutover signoff")
       && combinedContent.includes("npm run check:postgres-cutover:complete"),
+    includesCompleteSignoffCommand: combinedContent.includes(packet.signoffCommand)
+      && packet.signoffCommand === 'npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json',
     usesPlaceholdersOnlyForSensitivePaths: combinedContent.includes("/secure/quantgym-sqlite-export.json")
       && combinedContent.includes("<managed-postgres-host>")
       && !combinedContent.includes("postgres://")
