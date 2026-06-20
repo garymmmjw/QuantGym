@@ -196,9 +196,18 @@
         "approvalPacketCoversActiveSources": true,
         "approvalPacketIncludesCommercialScope": true,
         "publicSmokePass": true,
+        "validPublicApprovalFixturePass": true,
+        "validCommercialApprovalFixturePass": true,
+        "publicOnlyRejectedCommercial": true,
+        "publicOnlyCommercialMentionsScope": true,
+        "placeholderEvidenceRejected": true,
         "privateEvidenceRejected": true,
+        "privateEvidenceMentionsPrivateNetwork": true,
         "evidenceUrlEmbeddedCredentialsRejected": true,
         "evidenceUrlQueryRejected": true,
+        "staleApprovalRejected": true,
+        "missingGrantorRejected": true,
+        "unsupportedScopeRejected": true,
         "noActivePublicCommercialApprovals": true
       }
     },

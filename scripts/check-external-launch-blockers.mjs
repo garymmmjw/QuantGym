@@ -298,9 +298,18 @@ const blockers = [
       approvalPacketCoversActiveSources: evidence.rightsPacket.checks?.allActiveSourcesHavePackets === true,
       approvalPacketIncludesCommercialScope: evidence.rightsPacket.checks?.includesCommercialUseScope === true,
       publicSmokePass: evidence.rightsPublicSmoke.status === "pass",
+      validPublicApprovalFixturePass: evidence.rightsPublicSmoke.checks?.validPublicPass === true,
+      validCommercialApprovalFixturePass: evidence.rightsPublicSmoke.checks?.validCommercialPass === true,
+      publicOnlyRejectedCommercial: evidence.rightsPublicSmoke.checks?.publicOnlyRejectedCommercial === true,
+      publicOnlyCommercialMentionsScope: evidence.rightsPublicSmoke.checks?.publicOnlyCommercialMentionsScope === true,
+      placeholderEvidenceRejected: evidence.rightsPublicSmoke.checks?.placeholderEvidenceRejected === true,
       privateEvidenceRejected: evidence.rightsPublicSmoke.checks?.privateEvidenceRejected === true,
+      privateEvidenceMentionsPrivateNetwork: evidence.rightsPublicSmoke.checks?.privateEvidenceMentionsPrivateNetwork === true,
       evidenceUrlEmbeddedCredentialsRejected: evidence.rightsPublicSmoke.checks?.evidenceUrlEmbeddedCredentialsRejected === true,
       evidenceUrlQueryRejected: evidence.rightsPublicSmoke.checks?.evidenceUrlQueryRejected === true,
+      staleApprovalRejected: evidence.rightsPublicSmoke.checks?.staleApprovalRejected === true,
+      missingGrantorRejected: evidence.rightsPublicSmoke.checks?.missingGrantorRejected === true,
+      unsupportedScopeRejected: evidence.rightsPublicSmoke.checks?.unsupportedScopeRejected === true,
       noActivePublicCommercialApprovals: evidence.rightsBlockers.checks?.noActivePublicCommercialApprovals === true
     }
   },

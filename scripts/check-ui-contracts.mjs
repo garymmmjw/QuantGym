@@ -2078,9 +2078,18 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(Number(rights?.localCoverage?.publicBlockerCount || 0) === 15, `${label} must keep all active public source-rights blockers visible`);
   expect(Number(rights?.localCoverage?.commercialBlockerCount || 0) === 15, `${label} must keep all active commercial source-rights blockers visible`);
   expect(rights?.localCoverage?.publicSmokePass === true, `${label} must include question-bank public smoke coverage`);
+  expect(rights?.localCoverage?.validPublicApprovalFixturePass === true, `${label} must include valid public approval fixture coverage`);
+  expect(rights?.localCoverage?.validCommercialApprovalFixturePass === true, `${label} must include valid commercial approval fixture coverage`);
+  expect(rights?.localCoverage?.publicOnlyRejectedCommercial === true, `${label} must include public-only commercial rejection`);
+  expect(rights?.localCoverage?.publicOnlyCommercialMentionsScope === true, `${label} must include public-only commercial scope detail`);
+  expect(rights?.localCoverage?.placeholderEvidenceRejected === true, `${label} must include question-bank placeholder evidence rejection`);
   expect(rights?.localCoverage?.privateEvidenceRejected === true, `${label} must include question-bank private evidence rejection`);
+  expect(rights?.localCoverage?.privateEvidenceMentionsPrivateNetwork === true, `${label} must include question-bank private-network rejection detail`);
   expect(rights?.localCoverage?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} must include question-bank evidence URL credential rejection`);
   expect(rights?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include question-bank evidence URL query rejection`);
+  expect(rights?.localCoverage?.staleApprovalRejected === true, `${label} must include question-bank stale approval rejection`);
+  expect(rights?.localCoverage?.missingGrantorRejected === true, `${label} must include question-bank missing grantor rejection`);
+  expect(rights?.localCoverage?.unsupportedScopeRejected === true, `${label} must include question-bank unsupported scope rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
   expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 62, `${label} must reference the 62-interaction browser route smoke`);
