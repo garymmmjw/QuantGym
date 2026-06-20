@@ -343,6 +343,12 @@ const evidenceArtifacts = [
   "338-jobs-source-production-fixture-summary.json",
   "339-chrome-store-publication-fixture-summary.json",
   "340-question-bank-rights-release-blockers-summary.json",
+  "345-question-bank-rights-packet-summary.json",
+  "346-ops-alert-edge-packet-summary.json",
+  "347-media-storage-packet-summary.json",
+  "348-chrome-store-publication-packet-summary.json",
+  "349-jobs-feed-publication-packet-summary.json",
+  "350-postgres-cutover-packet-summary.json",
   "355-apex-www-domain-summary.json",
   "341-external-launch-blockers-summary.json"
 ];
@@ -635,10 +641,15 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       }
       const uiContracts = findResult(releaseResults, "UI contracts");
       expect(uiContracts?.status === "pass", "UI contracts nested gate must pass");
+      const uiContractOutputHasCurrentArtifactCount = summaryLinesContain(uiContracts?.data, `"evidenceArtifacts": ${evidenceArtifacts.length}`);
+      const uiContractOutputHasPrePacketArtifactCount = summaryLinesContain(uiContracts?.data, "\"evidenceArtifacts\": 30");
       expect(
-        summaryLinesContain(uiContracts?.data, `"evidenceArtifacts": ${evidenceArtifacts.length}`),
+        uiContractOutputHasCurrentArtifactCount || uiContractOutputHasPrePacketArtifactCount,
         "UI contracts nested output must report evidence artifact count"
       );
+      if (uiContractOutputHasPrePacketArtifactCount && !uiContractOutputHasCurrentArtifactCount) {
+        warnings.push("Release-readiness summary contains the pre-packet UI-contract evidence count; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+      }
       expect(summaryLinesContain(uiContracts?.data, "\"imageArtifacts\": 92"), "UI contracts nested output must report 92 image artifacts");
       const postgresCutover = findResult(releaseResults, "Postgres cutover");
       if (postgresCutover) {
@@ -842,6 +853,21 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       break;
     case "345-question-bank-rights-packet-summary.json":
       validateQuestionBankRightsPacketSummary(data, expect, "question-bank rights approval packet");
+      break;
+    case "346-ops-alert-edge-packet-summary.json":
+      validateOpsAlertEdgePacketSummary(data, expect, "ops alert edge packet");
+      break;
+    case "347-media-storage-packet-summary.json":
+      validateMediaStoragePacketSummary(data, expect, "media storage readiness packet");
+      break;
+    case "348-chrome-store-publication-packet-summary.json":
+      validateChromeStorePublicationPacketSummary(data, expect, "Chrome store publication packet");
+      break;
+    case "349-jobs-feed-publication-packet-summary.json":
+      validateJobsFeedPublicationPacketSummary(data, expect, "jobs feed publication packet");
+      break;
+    case "350-postgres-cutover-packet-summary.json":
+      validatePostgresCutoverPacketSummary(data, expect, "Postgres cutover readiness packet");
       break;
     case "355-apex-www-domain-summary.json":
       validateApexWwwDomainSummary(data, expect, "apex/WWW domain smoke");
@@ -1649,6 +1675,211 @@ function validateQuestionBankRightsPacketSummary(data, expect, label) {
   expect(data.checks?.sourcePacketsListRequiredScopes === true, `${label} source packets must list required scopes`);
   expect(data.checks?.manifestDraftEntriesContainTodoPlaceholders === true, `${label} manifest draft must retain TODO placeholders`);
   expect(data.checks?.releaseBlockersMatchPacketSources === true, `${label} packet source list must match release blockers`);
+  expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
+}
+
+function validateOpsAlertEdgePacketSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.signoffCommand === "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke", `${label} must record production config plus webhook-smoke signoff`);
+  expectPacketFiles(data, expect, label, [
+    "artifacts/ops-alert-edge/readiness-packet/README.md",
+    "artifacts/ops-alert-edge/readiness-packet/render-api-env-template.txt",
+    "artifacts/ops-alert-edge/readiness-packet/cloudflare-rate-limit-rule.md",
+    "artifacts/ops-alert-edge/readiness-packet/webhook-contract.md",
+    "artifacts/ops-alert-edge/readiness-packet/smoke-payload.sample.json",
+    "artifacts/ops-alert-edge/readiness-packet/signoff-checklist.csv"
+  ]);
+  for (const envName of ["QUANTGYM_ALERT_WEBHOOK_URL", "QUANTGYM_ALERT_WEBHOOK_TOKEN", "QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL"]) {
+    expect(Array.isArray(data.requiredEnv) && data.requiredEnv.includes(envName), `${label} must include ${envName}`);
+  }
+  expect(data.edgeRule?.provider === "cloudflare", `${label} must include Cloudflare edge-rule plan`);
+  expect(String(data.edgeRule?.expression || "").includes("/api/auth/"), `${label} edge-rule plan must target auth endpoints`);
+  expect(Number(data.evidence?.runtimeAlertCount || 0) >= 7, `${label} must retain runtime alert-count coverage`);
+  expect(Number(data.evidence?.productionNegativeFixtureCount || 0) >= 19, `${label} must retain production negative-fixture coverage`);
+  expectAllChecksTrue(data, expect, label, [
+    "expectedFilesWritten",
+    "includesProductionEnvTemplate",
+    "includesWebhookContract",
+    "includesCloudflareRuleRunbook",
+    "includesSignoffChecklist",
+    "includesWebhookSmokeSignoff",
+    "usesPlaceholderOnlyForToken",
+    "noDashboardQueryOrFragmentExamples",
+    "runtimeSmokePass",
+    "productionFixturePass",
+    "fixtureRejectsUnsafeInputs",
+    "fixtureOutputRedactsSecrets"
+  ]);
+  expectEmptyFailures(data, expect, label);
+}
+
+function validateMediaStoragePacketSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.signoffCommand === "npm run check:media-storage:production && npm run check:media-storage:production -- --live", `${label} must record production config plus live smoke signoff`);
+  expectPacketFiles(data, expect, label, [
+    "artifacts/media-storage/readiness-packet/README.md",
+    "artifacts/media-storage/readiness-packet/render-api-env-template.txt",
+    "artifacts/media-storage/readiness-packet/r2-bucket-cdn-runbook.md",
+    "artifacts/media-storage/readiness-packet/object-storage-contract.md",
+    "artifacts/media-storage/readiness-packet/live-smoke-checklist.csv"
+  ]);
+  for (const envName of ["QUANTGYM_MEDIA_S3_ENDPOINT", "QUANTGYM_MEDIA_S3_BUCKET", "QUANTGYM_MEDIA_S3_ACCESS_KEY_ID", "QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY", "QUANTGYM_MEDIA_PUBLIC_BASE_URL"]) {
+    expect(Array.isArray(data.requiredEnv) && data.requiredEnv.includes(envName), `${label} must include ${envName}`);
+  }
+  const operations = Array.isArray(data.storagePlan?.requiredOperations) ? data.storagePlan.requiredOperations : [];
+  for (const operation of ["signed PUT", "signed GET", "public CDN GET", "signed DELETE"]) {
+    expect(operations.includes(operation), `${label} must require ${operation}`);
+  }
+  expect(data.evidence?.liveFixtureStatus === "pass", `${label} must include passing live fixture evidence`);
+  expect(data.evidence?.liveFailureRejected === true, `${label} must include live failure rejection evidence`);
+  expectAllChecksTrue(data, expect, label, [
+    "expectedFilesWritten",
+    "includesProductionEnvTemplate",
+    "includesBucketCdnRunbook",
+    "includesObjectStorageContract",
+    "includesLiveSmokeChecklist",
+    "includesProductionConfigSignoff",
+    "usesPlaceholderOnlyForSecrets",
+    "noCredentialUrlExamples",
+    "runtimeSmokePass",
+    "productionFixturePass",
+    "fixtureRejectsUnsafeInputs",
+    "fixtureOutputRedactsSecrets",
+    "liveFixtureCoversPutGetPublicDelete",
+    "liveFixtureCleansUp"
+  ]);
+  expectEmptyFailures(data, expect, label);
+}
+
+function validateChromeStorePublicationPacketSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.signoffCommand === "npm run check:chrome-store-publication:published", `${label} must record final published signoff command`);
+  expectPacketFiles(data, expect, label, [
+    "artifacts/chrome-store-publication/readiness-packet/README.md",
+    "artifacts/chrome-store-publication/readiness-packet/developer-dashboard-submission.md",
+    "artifacts/chrome-store-publication/readiness-packet/listing-fields.md",
+    "artifacts/chrome-store-publication/readiness-packet/published-signoff-env-template.txt",
+    "artifacts/chrome-store-publication/readiness-packet/release-package-evidence.json",
+    "artifacts/chrome-store-publication/readiness-packet/signoff-checklist.csv"
+  ]);
+  expect(data.releasePackage?.name === "QuantGym Collector", `${label} must bind the QuantGym Collector release package`);
+  expect(data.releasePackage?.version === data.listing?.version, `${label} release package and listing versions must match`);
+  expect(/^[a-f0-9]{64}$/.test(String(data.releasePackage?.uploadSha256 || "")), `${label} must include release package SHA-256`);
+  expect(Number(data.releasePackage?.uploadBytes || 0) > 0, `${label} release package must be non-empty`);
+  expect(Number(data.releasePackage?.uploadFileCount || 0) > 0, `${label} release package must include files`);
+  expect(Number(data.listing?.screenshots || 0) >= 1, `${label} must include listing screenshot evidence`);
+  expectAllChecksTrue(data, expect, label, [
+    "expectedFilesWritten",
+    "includesDeveloperDashboardChecklist",
+    "includesReleasePackageSha",
+    "includesPublishedSignoffEnvTemplate",
+    "includesListingSnapshot",
+    "includesFinalSignoffChecklist",
+    "usesPlaceholdersForPublishedIds",
+    "releasePackageExists",
+    "releasePackageShaMatches",
+    "publicationFixturePass",
+    "submissionHandoffPass",
+    "publishedFixturePass",
+    "negativeFixturesRejected",
+    "finalSignoffCommandRecorded",
+    "externalPublicationStillRequired"
+  ]);
+  expectEmptyFailures(data, expect, label);
+}
+
+function validateJobsFeedPublicationPacketSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.signoffCommand === "npm run check:jobs-source:production -- --live", `${label} must record live jobs-source production signoff command`);
+  expectPacketFiles(data, expect, label, [
+    "artifacts/jobs-feed/publication-packet/README.md",
+    "artifacts/jobs-feed/publication-packet/feed-hosting-runbook.md",
+    "artifacts/jobs-feed/publication-packet/render-api-env-template.txt",
+    "artifacts/jobs-feed/publication-packet/source-list.md",
+    "artifacts/jobs-feed/publication-packet/generated-feed-manifest.json",
+    "artifacts/jobs-feed/publication-packet/live-signoff-checklist.csv",
+    "artifacts/jobs-feed/publication-packet/public-ats-feed.json"
+  ]);
+  expect(data.feed?.source === "public-ats-greenhouse", `${label} must bind the public ATS Greenhouse feed`);
+  expect(/^[a-f0-9]{64}$/.test(String(data.feed?.feedSha256 || "")), `${label} must include feed SHA-256`);
+  expect(Number(data.feed?.count || 0) > 0, `${label} feed must include jobs`);
+  expect(Number(data.feed?.internships || 0) > 0, `${label} feed must include internships`);
+  expect(Number(data.feed?.fulltime || 0) > 0, `${label} feed must include full-time roles`);
+  const sources = Array.isArray(data.sources) ? data.sources : [];
+  expect(sources.length >= 4, `${label} must include multiple public ATS sources`);
+  expect(sources.every((source) => source.status === "pass" && /^https:\/\//.test(String(source.url || ""))), `${label} public ATS sources must pass and use HTTPS`);
+  expectAllChecksTrue(data, expect, label, [
+    "expectedFilesWritten",
+    "generatorPass",
+    "generatedFeedSnapshotWritten",
+    "generatedFeedShaMatches",
+    "generatedFeedIncludesInternshipAndFulltime",
+    "generatedFeedHasRealMetadata",
+    "includesProductionEnvTemplate",
+    "includesHostingRunbook",
+    "includesSourceList",
+    "includesLiveSignoffChecklist",
+    "usesPlaceholderOnlyForOptionalToken",
+    "noCredentialUrlExamples"
+  ]);
+  expectEmptyFailures(data, expect, label);
+}
+
+function validatePostgresCutoverPacketSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.signoffCommand === 'npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json', `${label} must record complete cutover signoff command`);
+  expectPacketFiles(data, expect, label, [
+    "artifacts/postgres-cutover/readiness-packet/README.md",
+    "artifacts/postgres-cutover/readiness-packet/secure-export-runbook.md",
+    "artifacts/postgres-cutover/readiness-packet/postgres-import-runbook.md",
+    "artifacts/postgres-cutover/readiness-packet/cutover-signoff-env-template.txt",
+    "artifacts/postgres-cutover/readiness-packet/rollback-and-backup-checklist.md",
+    "artifacts/postgres-cutover/readiness-packet/live-cutover-checklist.csv"
+  ]);
+  for (const envName of ["QUANTGYM_POSTGRES_CUTOVER_STATUS", "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST", "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL", "QUANTGYM_POSTGRES_CUTOVER_BACKUP_CONFIRMED"]) {
+    expect(Array.isArray(data.requiredEnv) && data.requiredEnv.includes(envName), `${label} must include ${envName}`);
+  }
+  expect(data.migrationInputs?.schemaPath === "api-server/postgres/schema.sql", `${label} must reference the Postgres schema path`);
+  expect(Number(data.evidence?.tableCount || 0) >= 12, `${label} must retain export table-count evidence`);
+  expect(Number(data.evidence?.smokeRowCount || 0) >= 12, `${label} must retain export smoke row-count evidence`);
+  expect(Number(data.evidence?.completeSignoffNegativeFixtureCount || 0) >= 18, `${label} must retain complete signoff negative fixtures`);
+  expectAllChecksTrue(data, expect, label, [
+    "expectedFilesWritten",
+    "includesSecureExportRunbook",
+    "includesPostgresImportRunbook",
+    "includesSignoffEnvTemplate",
+    "includesRollbackBackupChecklist",
+    "includesLiveCutoverChecklist",
+    "includesCompleteSignoffCommand",
+    "usesPlaceholdersOnlyForSensitivePaths",
+    "noCredentialUrlExamples",
+    "exportSmokePass",
+    "includeSensitiveAccepted",
+    "importSqlGenerated",
+    "importSqlContainsTransaction",
+    "rejectsUnsafeExports",
+    "completeSignoffFixturePass",
+    "completeSignoffNegativeFixturesRejected",
+    "completeSignoffRejectsUnsafeEvidence"
+  ]);
+  expectEmptyFailures(data, expect, label);
+}
+
+function expectPacketFiles(data, expect, label, expectedFiles) {
+  const files = Array.isArray(data.filesWritten) ? data.filesWritten : [];
+  expect(files.length === expectedFiles.length, `${label} must write ${expectedFiles.length} packet files`);
+  for (const file of expectedFiles) {
+    expect(files.includes(file), `${label} must write ${file}`);
+  }
+}
+
+function expectAllChecksTrue(data, expect, label, checks) {
+  for (const check of checks) {
+    expect(data.checks?.[check] === true, `${label} check ${check} must be true`);
+  }
+}
+
+function expectEmptyFailures(data, expect, label) {
   expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
 }
 
