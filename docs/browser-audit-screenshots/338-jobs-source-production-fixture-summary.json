@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 967,
+  "durationMs": 1387,
   "productionFixture": {
     "status": "pass",
     "mode": "production",
@@ -56,6 +56,13 @@
       "expectedErrorObserved": true,
       "failed": 1,
       "error": "Production jobs source URL must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "public IP source URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production jobs source URL must use a DNS hostname, not a raw IP address."
     },
     {
       "name": "source URL embedded credentials rejected",
@@ -320,6 +327,7 @@
     "defaultProductionTokenOptional": true,
     "negativeFixturesRejected": true,
     "negativeFixturesMentionExpectedErrors": true,
+    "sourceUrlRawIpRejected": true,
     "sourceUrlEmbeddedCredentialsRejected": true,
     "sourceUrlQueryRejected": true,
     "placeholderSourceTokenRejected": true,

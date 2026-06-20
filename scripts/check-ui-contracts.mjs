@@ -1511,9 +1511,20 @@ function validateJobsSourceProductionFixtureSummary(data, expect, label) {
   expect(data.checks?.defaultProductionPass === true, `${label} default production check must pass`);
   expect(data.checks?.defaultProductionUsesPublicAtsFeed === true, `${label} default production source must use the public ATS feed`);
   expect(data.checks?.defaultProductionTokenOptional === true, `${label} default production source token must be optional`);
-  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= 13, `${label} must include negative production fixtures`);
+  const hasRawIpSourceUrlCoverage = data.checks?.sourceUrlRawIpRejected !== undefined;
+  expect(
+    Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= (hasRawIpSourceUrlCoverage ? 14 : 13),
+    `${label} must include negative production fixtures`
+  );
   expect(data.checks?.negativeFixturesRejected === true, `${label} negative production fixtures must be rejected`);
   expect(data.checks?.negativeFixturesMentionExpectedErrors === true, `${label} negative fixtures must mention expected errors`);
+  if (hasRawIpSourceUrlCoverage) {
+    expect(data.checks?.sourceUrlRawIpRejected === true, `${label} must reject raw-IP source URLs`);
+  } else if (/nested jobs source production fixture/i.test(label)) {
+    warnings.push("Release-readiness nested jobs source production fixture lacks raw-IP source URL coverage; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+  } else {
+    expect(false, `${label} must reject raw-IP source URLs`);
+  }
   expect(data.checks?.sourceUrlEmbeddedCredentialsRejected === true, `${label} must reject source URLs with embedded credentials`);
   expect(data.checks?.sourceUrlQueryRejected === true, `${label} must reject source URLs with query strings`);
   expect(data.checks?.placeholderSourceTokenRejected === true, `${label} must reject placeholder source tokens`);
@@ -1897,6 +1908,7 @@ function validateJobsFeedPublicationPacketSummary(data, expect, label) {
     "includesProductionEnvTemplate",
     "includesHostingRunbook",
     "includesSourceList",
+    "includesRawIpSourceUrlRule",
     "includesLiveSignoffChecklist",
     "usesPlaceholderOnlyForOptionalToken",
     "noCredentialUrlExamples"
@@ -2440,6 +2452,8 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(jobs?.status === "pass", `${label} must mark jobs real feed pass after deployed API source smoke`);
   expect(typeof jobs?.ownerAction === "string" && jobs.ownerAction.includes("Deployed API source feed is live"), `${label} jobs owner action must record deployed source signoff`);
   expect(jobs?.localCoverage?.liveValidFixturePass === true, `${label} must include jobs live fixture coverage`);
+  expect(jobs?.localCoverage?.packetIncludesRawIpSourceUrlRule === true, `${label} must include jobs raw-IP source URL packet guidance`);
+  expect(jobs?.localCoverage?.sourceUrlRawIpRejected === true, `${label} must include jobs raw-IP source URL rejection`);
   expect(jobs?.localCoverage?.sourceUrlEmbeddedCredentialsRejected === true, `${label} must include jobs source URL credential rejection`);
   expect(jobs?.localCoverage?.sourceUrlQueryRejected === true, `${label} must include jobs source URL query rejection`);
   expect(jobs?.localCoverage?.placeholderSourceTokenRejected === true, `${label} must include jobs placeholder token rejection`);

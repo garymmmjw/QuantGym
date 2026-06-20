@@ -68,6 +68,11 @@ const negativeCases = [
     expectedError: "private network address"
   },
   {
+    name: "public IP source URL rejected",
+    env: { QUANTGYM_JOBS_SOURCE_URL: "https://8.8.4.4/jobs-feed.json" },
+    expectedError: "DNS hostname"
+  },
+  {
     name: "source URL embedded credentials rejected",
     env: { QUANTGYM_JOBS_SOURCE_URL: "https://crawler:secret@jobs.quantgym.test/feed.json" },
     expectedError: "embedded credentials"
@@ -180,6 +185,7 @@ try {
     defaultProductionTokenOptional: defaultProductionFixture.sourceTokenSet === false,
     negativeFixturesRejected: negativeFixtures.every((fixture) => fixture.rejected),
     negativeFixturesMentionExpectedErrors: negativeFixtures.every((fixture) => fixture.expectedErrorObserved),
+    sourceUrlRawIpRejected: findNegativeFixture(negativeFixtures, "public IP source URL rejected")?.rejected === true,
     sourceUrlEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "source URL embedded credentials rejected")?.rejected === true,
     sourceUrlQueryRejected: findNegativeFixture(negativeFixtures, "source URL query rejected")?.rejected === true,
     placeholderSourceTokenRejected: findNegativeFixture(negativeFixtures, "placeholder source token rejected")?.rejected === true,
