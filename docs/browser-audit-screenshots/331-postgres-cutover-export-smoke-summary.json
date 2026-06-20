@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1808,
+  "durationMs": 1734,
   "fixture": {
     "tablesSeeded": [
       "audit_events",
@@ -13,7 +13,7 @@
       "user_states",
       "users"
     ],
-    "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-tyziWM/quantgym-cutover-smoke.sqlite3"
+    "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-nTWPVc/quantgym-cutover-smoke.sqlite3"
   },
   "redactedExport": {
     "status": "pass",
@@ -67,6 +67,7 @@
     "completeSignoffNegativeFixturesRejected": true,
     "completeSignoffNegativeFixturesMentionExpectedErrors": true,
     "privateTargetHostRejected": true,
+    "publicIpTargetHostRejected": true,
     "privateEvidenceUrlRejected": true,
     "targetHostWhitespaceRejected": true,
     "databaseUnsafeCharactersRejected": true,
@@ -118,12 +119,12 @@
     "required": true,
     "targetHost": "postgres.quantgym.internal",
     "database": "quantgym",
-    "completedAt": "2026-06-20T19:26:49Z",
+    "completedAt": "2026-06-20T22:05:56Z",
     "evidenceHost": "render.com",
     "appDatabaseActive": true,
     "backupConfirmed": true,
-    "sourceDbSha256Prefix": "73748a7e514a",
-    "exportSha256Prefix": "83b061e9face",
+    "sourceDbSha256Prefix": "466d76ced3fa",
+    "exportSha256Prefix": "3143ad798c29",
     "importPlanRowCount": 12,
     "targetRowCount": 12
   },
@@ -150,11 +151,18 @@
       "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must not point at localhost, loopback, or a private network address."
     },
     {
+      "name": "public IP target host rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must be a managed Postgres DNS hostname, not an IP address."
+    },
+    {
       "name": "target host whitespace rejected",
       "rejected": true,
       "expectedErrorObserved": true,
       "failed": 1,
-      "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must be a plain DNS hostname or IP address."
+      "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must be a plain DNS hostname."
     },
     {
       "name": "database DSN rejected",
@@ -231,7 +239,7 @@
       "rejected": true,
       "expectedErrorObserved": true,
       "failed": 2,
-      "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-tyziWM\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
+      "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-nTWPVc\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
     },
     {
       "name": "target row count mismatch rejected",

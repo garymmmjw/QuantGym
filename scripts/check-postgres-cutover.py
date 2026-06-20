@@ -484,10 +484,13 @@ def validate_target_host(name: str, value: str, failures: list[str]) -> None:
         failures.append(f"{name} must be a host name only, not a database URL or DSN.")
         return
     if contains_unsafe_text(text) or not is_valid_host_name(text):
-        failures.append(f"{name} must be a plain DNS hostname or IP address.")
+        failures.append(f"{name} must be a plain DNS hostname.")
         return
     if is_local_or_private_host(text):
         failures.append(f"{name} must not point at localhost, loopback, or a private network address.")
+        return
+    if is_ip_literal(text):
+        failures.append(f"{name} must be a managed Postgres DNS hostname, not an IP address.")
 
 
 def validate_plain_label(name: str, value: str, failures: list[str]) -> None:
@@ -552,6 +555,15 @@ def is_valid_host_name(value: str) -> bool:
         return False
     labels = host.split(".")
     return all(re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label) for label in labels)
+
+
+def is_ip_literal(value: str) -> bool:
+    host = value.strip().strip("[]").lower()
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except ValueError:
+        return False
 
 
 def validate_sha256(name: str, value: str, failures: list[str]) -> None:
