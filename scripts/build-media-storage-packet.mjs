@@ -57,6 +57,8 @@ try {
       && !combinedContent.includes("QG_MEDIA_")
       && !combinedContent.includes("qgmediafixture")
       && !combinedContent.includes("qg-media-live-fixture-secret"),
+    includesRawIpUrlRule: combinedContent.includes("DNS hostname")
+      && combinedContent.includes("raw IP address"),
     noCredentialUrlExamples: !/https:\/\/[^/\s"']+:[^@\s"']+@/i.test(combinedContent),
     runtimeSmokePass: runtimeSmoke.status === "pass",
     productionFixturePass: productionFixture.status === "pass",
@@ -121,13 +123,13 @@ function buildPacketModel(runtimeSmoke, productionFixture) {
       ["QUANTGYM_MEDIA_STORAGE", "Use r2, s3, object, or object-storage for production."],
       ["QUANTGYM_MEDIA_MAX_BYTES", "Maximum raw upload bytes. Suggested 5242880."],
       ["QUANTGYM_MAX_BODY_BYTES", "JSON request body ceiling after base64 expansion. Suggested 10485760 or larger."],
-      ["QUANTGYM_MEDIA_S3_ENDPOINT", "Externally reachable HTTPS S3-compatible endpoint."],
+      ["QUANTGYM_MEDIA_S3_ENDPOINT", "Externally reachable HTTPS S3-compatible endpoint with a DNS hostname, not a raw IP address."],
       ["QUANTGYM_MEDIA_S3_BUCKET", "DNS-safe lowercase production bucket name."],
       ["QUANTGYM_MEDIA_S3_REGION", "S3 region or auto for Cloudflare R2."],
       ["QUANTGYM_MEDIA_S3_ACCESS_KEY_ID", "Object storage access key id."],
       ["QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY", "Object storage secret access key, at least 24 characters."],
       ["QUANTGYM_MEDIA_S3_PREFIX", "Safe object prefix, suggested media."],
-      ["QUANTGYM_MEDIA_PUBLIC_BASE_URL", "CDN/custom public HTTPS base URL, not the raw object endpoint."],
+      ["QUANTGYM_MEDIA_PUBLIC_BASE_URL", "CDN/custom public HTTPS base URL with a DNS hostname, not a raw IP address or raw object endpoint."],
       ["QUANTGYM_MEDIA_S3_TIMEOUT_SECONDS", "Use 5 to 10 seconds; production gate allows 0 to 60."]
     ].map(([name, description]) => ({ name, description })),
     storagePlan: {
@@ -173,7 +175,7 @@ function renderOverview(packet) {
     packet.signoffCommand,
     "```",
     "",
-    "The filled environment must not be committed. The gate intentionally rejects local, private-network, credential-bearing, query-bearing, placeholder, raw-endpoint, and raw provider object-storage public media URL values.",
+    "The filled environment must not be committed. The gate intentionally rejects local, private-network, raw-IP, credential-bearing, query-bearing, placeholder, raw-endpoint, and raw provider object-storage public media URL values.",
     ""
   ].join("\n");
 }
@@ -215,6 +217,7 @@ function renderBucketCdnRunbook(packet) {
     "",
     `- Public base URL shape: \`${packet.storagePlan.publicBaseUrlShape}\``,
     "- The public base URL must be HTTPS.",
+    "- The public base URL must use a DNS hostname, not a raw IP address.",
     "- The public base URL must be a CDN/custom origin, not the raw object storage endpoint.",
     "- Do not use raw provider object-storage hosts such as S3 bucket URLs, R2 storage hosts, r2.dev URLs, Google Cloud Storage hosts, Spaces, Backblaze, Wasabi, or Linode object URLs.",
     "- Do not include embedded credentials, query strings, or fragments.",
@@ -244,6 +247,7 @@ function renderObjectStorageContract(packet) {
     "",
     "- Object endpoint and public base URL must use HTTPS.",
     "- Object endpoint and public base URL must not point to localhost, loopback, or private-network hosts.",
+    "- Object endpoint and public base URL must use DNS hostnames, not raw IP addresses.",
     "- Object endpoint and public base URL must not include embedded credentials, query strings, or fragments.",
     "- Production public media must use a CDN/custom host, not a raw provider object-storage public host.",
     "- Public media reads must preserve object Content-Type so image/video rendering does not depend on file extension guesses.",
@@ -258,7 +262,7 @@ function renderChecklistCsv(packet) {
     ["step", "owner", "evidence", "status"],
     ["create production object bucket", "", "bucket name and region recorded", "pending"],
     ["create object credentials", "", "access key id and secret stored outside git", "pending"],
-    ["configure CDN or custom public media host", "", "HTTPS public base URL not equal to raw object endpoint", "pending"],
+    ["configure CDN or custom public media host", "", "HTTPS DNS-hostname public base URL not equal to raw object endpoint", "pending"],
     ["configure Render API env", "", `${packet.requiredEnv.length} required media variables set`, "pending"],
     ["run production media config gate", "", "npm run check:media-storage:production", "pending"],
     ["run live media signoff", "", "npm run check:media-storage:production -- --live returns matching bytes and Content-Type", "pending"],

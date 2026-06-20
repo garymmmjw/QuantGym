@@ -95,6 +95,7 @@ check("object storage credentials", () => {
   if (productionMode) {
     assert(endpointUrl.protocol === "https:", "Production object storage endpoint must use HTTPS.");
     assert(!isLocalOrPrivateHost(endpointUrl.hostname), "Production object storage endpoint must not point to localhost, loopback, or a private network address.");
+    assertDnsHostname("Production object storage endpoint", endpointUrl.hostname);
     assertUrlHasNoSensitiveParts("QUANTGYM_MEDIA_S3_ENDPOINT", endpointUrl);
     assertValidProductionBucketName("QUANTGYM_MEDIA_S3_BUCKET", config.bucket);
     assertStrongProductionValue("QUANTGYM_MEDIA_S3_ACCESS_KEY_ID", config.accessKeyId, MIN_PRODUCTION_ACCESS_KEY_LENGTH);
@@ -125,6 +126,7 @@ check("public media URL", () => {
   if (productionMode) {
     assert(publicUrl.protocol === "https:", "Production public media URL must use HTTPS.");
     assert(!isLocalOrPrivateHost(publicUrl.hostname), "Production public media URL must not point to localhost, loopback, or a private network address.");
+    assertDnsHostname("Production public media URL", publicUrl.hostname);
     assertUrlHasNoSensitiveParts("QUANTGYM_MEDIA_PUBLIC_BASE_URL", publicUrl);
     assertPublicBaseNotRawObjectStorageHost("QUANTGYM_MEDIA_PUBLIC_BASE_URL", publicUrl);
   }
@@ -264,6 +266,11 @@ function assertStrongProductionValue(name, value, minLength) {
 function assertUrlHasNoSensitiveParts(name, url) {
   assert(!url.username && !url.password, `${name} must not include embedded credentials.`);
   assert(!url.search && !url.hash, `${name} must not include query strings or fragments.`);
+}
+
+function assertDnsHostname(label, hostname) {
+  const host = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
+  assert(net.isIP(host) === 0, `${label} must use a DNS hostname, not a raw IP address.`);
 }
 
 function assertPublicBaseNotRawObjectStorageHost(name, url) {

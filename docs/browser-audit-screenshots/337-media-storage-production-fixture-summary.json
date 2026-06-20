@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 5382,
+  "durationMs": 1604,
   "productionFixture": {
     "status": "pass",
     "mode": "production",
@@ -50,6 +50,13 @@
       "error": "Production object storage endpoint must not point to localhost, loopback, or a private network address."
     },
     {
+      "name": "public IP object endpoint rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production object storage endpoint must use a DNS hostname, not a raw IP address."
+    },
+    {
       "name": "endpoint embedded credentials rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -83,6 +90,13 @@
       "expectedErrorObserved": true,
       "failed": 1,
       "error": "Production public media URL must not point to localhost, loopback, or a private network address."
+    },
+    {
+      "name": "public IP public base rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "Production public media URL must use a DNS hostname, not a raw IP address."
     },
     {
       "name": "public base embedded credentials rejected",
@@ -273,8 +287,10 @@
     "validProductionPublicBaseUrlRedacted": true,
     "negativeFixturesRejected": true,
     "negativeFixturesMentionExpectedErrors": true,
+    "endpointRawIpRejected": true,
     "endpointEmbeddedCredentialsRejected": true,
     "endpointQueryRejected": true,
+    "publicBaseRawIpRejected": true,
     "publicBaseEmbeddedCredentialsRejected": true,
     "publicBaseQueryRejected": true,
     "rawProviderPublicBaseRejected": true,

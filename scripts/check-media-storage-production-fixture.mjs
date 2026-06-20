@@ -49,6 +49,11 @@ const negativeCases = [
     expectedError: "private network address"
   },
   {
+    name: "public IP object endpoint rejected",
+    env: { QUANTGYM_MEDIA_S3_ENDPOINT: "https://8.8.8.8/quantgym-media" },
+    expectedError: "DNS hostname"
+  },
+  {
     name: "endpoint embedded credentials rejected",
     env: { QUANTGYM_MEDIA_S3_ENDPOINT: "https://access:secret@r2.quantgym.test" },
     expectedError: "embedded credentials"
@@ -72,6 +77,11 @@ const negativeCases = [
     name: "private public base rejected",
     env: { QUANTGYM_MEDIA_PUBLIC_BASE_URL: "https://192.168.12.12/media" },
     expectedError: "private network address"
+  },
+  {
+    name: "public IP public base rejected",
+    env: { QUANTGYM_MEDIA_PUBLIC_BASE_URL: "https://8.8.4.4/media" },
+    expectedError: "DNS hostname"
   },
   {
     name: "public base embedded credentials rejected",
@@ -172,8 +182,10 @@ try {
     validProductionPublicBaseUrlRedacted: !validProduction.combinedOutput.includes(validProductionEnv.QUANTGYM_MEDIA_PUBLIC_BASE_URL),
     negativeFixturesRejected: negativeFixtures.every((fixture) => fixture.rejected),
     negativeFixturesMentionExpectedErrors: negativeFixtures.every((fixture) => fixture.expectedErrorObserved),
+    endpointRawIpRejected: findNegativeFixture(negativeFixtures, "public IP object endpoint rejected")?.rejected === true,
     endpointEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "endpoint embedded credentials rejected")?.rejected === true,
     endpointQueryRejected: findNegativeFixture(negativeFixtures, "endpoint query rejected")?.rejected === true,
+    publicBaseRawIpRejected: findNegativeFixture(negativeFixtures, "public IP public base rejected")?.rejected === true,
     publicBaseEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "public base embedded credentials rejected")?.rejected === true,
     publicBaseQueryRejected: findNegativeFixture(negativeFixtures, "public base query rejected")?.rejected === true,
     rawProviderPublicBaseRejected: findNegativeFixture(negativeFixtures, "raw provider public host rejected")?.rejected === true,

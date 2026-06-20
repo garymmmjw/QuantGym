@@ -375,7 +375,7 @@ Browser/CDP deep flows now recorded in
 - [x] Media storage production fixture: `npm run check:media-storage:production-fixture`
   proves the production gate accepts only object storage with HTTPS endpoint,
   redacted credentials, CDN/public URL, sane upload envelope, and safe timeout;
-  it rejects local/HTTP/localhost/private-network/placeholder/raw-endpoint
+  it rejects local/HTTP/localhost/private-network/raw-IP/placeholder/raw-endpoint
   cases, credential-bearing or query/fragment-bearing endpoint/public-base URLs,
   raw provider object-storage public hosts, placeholder or short credentials,
   unsafe bucket names, and unsafe object prefixes, then runs the live smoke

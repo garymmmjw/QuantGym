@@ -1231,12 +1231,22 @@ function validateMediaStorageProductionFixtureSummary(data, expect, label) {
   expect(data.checks?.validProductionEndpointUrlRedacted === true, `${label} must redact full object endpoint URL from output`);
   expect(data.checks?.validProductionPublicBaseUrlRedacted === true, `${label} must redact full public base URL from output`);
   const hasRawProviderPublicBaseCoverage = data.checks?.rawProviderPublicBaseRejected !== undefined;
+  const hasRawIpUrlCoverage = data.checks?.endpointRawIpRejected !== undefined
+    || data.checks?.publicBaseRawIpRejected !== undefined;
   expect(
-    Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= (hasRawProviderPublicBaseCoverage ? 21 : 20),
+    Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= (hasRawIpUrlCoverage ? 23 : hasRawProviderPublicBaseCoverage ? 21 : 20),
     `${label} must include negative production fixtures`
   );
   expect(data.checks?.negativeFixturesRejected === true, `${label} negative production fixtures must be rejected`);
   expect(data.checks?.negativeFixturesMentionExpectedErrors === true, `${label} negative fixtures must mention expected errors`);
+  if (hasRawIpUrlCoverage) {
+    expect(data.checks?.endpointRawIpRejected === true, `${label} must reject raw-IP object endpoint URLs`);
+    expect(data.checks?.publicBaseRawIpRejected === true, `${label} must reject raw-IP public media base URLs`);
+  } else if (/nested media storage production fixture/i.test(label)) {
+    warnings.push("Release-readiness nested media storage production fixture lacks raw-IP URL rejection coverage; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+  } else {
+    expect(false, `${label} must reject raw-IP object endpoint/public base URLs`);
+  }
   expect(data.checks?.endpointEmbeddedCredentialsRejected === true, `${label} must reject object endpoint URLs with embedded credentials`);
   expect(data.checks?.endpointQueryRejected === true, `${label} must reject object endpoint URLs with query strings or fragments`);
   expect(data.checks?.publicBaseEmbeddedCredentialsRejected === true, `${label} must reject public media base URLs with embedded credentials`);
@@ -1802,6 +1812,7 @@ function validateMediaStoragePacketSummary(data, expect, label) {
     "includesLiveSmokeChecklist",
     "includesProductionConfigSignoff",
     "usesPlaceholderOnlyForSecrets",
+    "includesRawIpUrlRule",
     "noCredentialUrlExamples",
     "runtimeSmokePass",
     "productionFixturePass",
@@ -2392,14 +2403,17 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(media?.signoffCommand === "npm run check:media-storage:production && npm run check:media-storage:production -- --live", `${label} media storage must record both production config and live signoff commands`);
   expect(media?.localCoverage?.packetIncludesProductionConfigSignoff === true, `${label} must include media packet production-config signoff coverage`);
   expect(media?.localCoverage?.packetSignoffRequiresConfigAndLive === true, `${label} must require both media config and live signoff`);
+  expect(media?.localCoverage?.packetIncludesRawIpUrlRule === true, `${label} must include media packet raw-IP URL rejection guidance`);
   expect(media?.localCoverage?.validProductionAccessKeyRedacted === true, `${label} must include media access-key redaction coverage`);
   expect(media?.localCoverage?.validProductionSecretRedacted === true, `${label} must include media secret-key redaction coverage`);
   expect(media?.localCoverage?.validProductionEndpointUrlRedacted === true, `${label} must include media endpoint URL redaction coverage`);
   expect(media?.localCoverage?.validProductionPublicBaseUrlRedacted === true, `${label} must include media public-base URL redaction coverage`);
   expect(media?.localCoverage?.liveFixturePass === true, `${label} must include media live fixture coverage`);
   expect(media?.localCoverage?.liveFailureRejected === true, `${label} must include media failed-public-read live fixture rejection`);
+  expect(media?.localCoverage?.endpointRawIpRejected === true, `${label} must include media raw-IP endpoint rejection`);
   expect(media?.localCoverage?.endpointEmbeddedCredentialsRejected === true, `${label} must include media endpoint credential rejection`);
   expect(media?.localCoverage?.endpointQueryRejected === true, `${label} must include media endpoint query rejection`);
+  expect(media?.localCoverage?.publicBaseRawIpRejected === true, `${label} must include media raw-IP public-base rejection`);
   expect(media?.localCoverage?.publicBaseEmbeddedCredentialsRejected === true, `${label} must include media public-base credential rejection`);
   expect(media?.localCoverage?.publicBaseQueryRejected === true, `${label} must include media public-base query rejection`);
   expect(media?.localCoverage?.rawProviderPublicBaseRejected === true, `${label} must include media raw provider public-host rejection`);
