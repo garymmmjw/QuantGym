@@ -2014,8 +2014,16 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(apex?.localCoverage?.requireClearWouldFail === true, `${label} must prove apex/WWW require-clear would fail while blocked`);
 
   const ops = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");
+  expect(ops?.signoffCommand === "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke", `${label} ops alerts must record both production config and webhook-smoke signoff commands`);
   expect(ops?.localCoverage?.runtimeSmokePass === true, `${label} must include ops runtime smoke coverage`);
   expect(ops?.localCoverage?.productionFixturePass === true, `${label} must include ops production fixture coverage`);
+  expect(ops?.localCoverage?.packetIncludesWebhookSmokeSignoff === true, `${label} must include ops packet webhook-smoke signoff coverage`);
+  expect(ops?.localCoverage?.packetSignoffRequiresWebhookSmoke === true, `${label} must require the ops webhook smoke in final signoff`);
+  expect(ops?.localCoverage?.localWebhookSmokeAuthorized === true, `${label} must include ops local webhook smoke authorization coverage`);
+  expect(ops?.localCoverage?.localWebhookSmokePayloadSafe === true, `${label} must include ops local webhook smoke payload-safety coverage`);
+  expect(ops?.localCoverage?.validProductionWebhookTokenRedacted === true, `${label} must include ops production webhook token redaction coverage`);
+  expect(ops?.localCoverage?.validProductionWebhookUrlRedacted === true, `${label} must include ops production webhook URL redaction coverage`);
+  expect(ops?.localCoverage?.validProductionEdgeEvidenceUrlRedacted === true, `${label} must include ops edge evidence URL redaction coverage`);
   expect(ops?.localCoverage?.shortWebhookTokenRejected === true, `${label} must include ops short webhook-token rejection`);
   expect(ops?.localCoverage?.placeholderWebhookTokenRejected === true, `${label} must include ops placeholder webhook-token rejection`);
   expect(ops?.localCoverage?.webhookUrlEmbeddedCredentialsRejected === true, `${label} must include ops webhook URL credential rejection`);
