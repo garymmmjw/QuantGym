@@ -126,13 +126,15 @@ async function runGate(gate) {
   const serviceData = summarizeManagedServices(localBoundaryServices);
 
   if (exitCode !== 0) {
+    const parsedFailure = summarizeParsedFailure(parsed);
     return {
       name: gate.name,
       status: "fail",
       durationMs,
       exitCode,
-      error: child?.error?.message || firstNonEmptyLine(stderr, stdout) || `Exited with ${exitCode}`,
-      data: serviceData,
+      error: child?.error?.message || parsedFailure || firstNonEmptyLine(stderr, stdout) || `Exited with ${exitCode}`,
+      data: parsed || summarizeStdout(stdout),
+      serviceData,
       stdoutTail: tail(stdout),
       stderrTail: tail(stderr)
     };
@@ -336,6 +338,24 @@ function summarizeManagedService(service) {
     stdoutTail: service.stdout ? tail(service.stdout, 1000) : undefined,
     stderrTail: service.stderr ? tail(service.stderr, 1000) : undefined
   };
+}
+
+function summarizeParsedFailure(parsed) {
+  if (!parsed || typeof parsed !== "object") return "";
+  if (Array.isArray(parsed.results)) {
+    const failed = parsed.results
+      .filter((item) => item?.status === "fail")
+      .map((item) => {
+        const name = item?.name || "nested check";
+        const error = item?.error || item?.message || "failed";
+        return `${name}: ${error}`;
+      });
+    if (failed.length) return failed.join("; ");
+  }
+  if (Array.isArray(parsed.failures) && parsed.failures.length) return String(parsed.failures[0]);
+  if (parsed.error) return String(parsed.error);
+  if (Number(parsed.failed || 0) > 0) return `Nested check reported ${parsed.failed} failure(s)`;
+  return "";
 }
 
 function loadLocalRuntimeConfig() {
