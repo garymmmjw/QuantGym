@@ -274,7 +274,13 @@ const blockers = [
       targetHostWhitespaceRejected: evidence.postgresExport.cutoverChecks?.targetHostWhitespaceRejected === true,
       databaseUnsafeCharactersRejected: evidence.postgresExport.cutoverChecks?.databaseUnsafeCharactersRejected === true,
       evidenceUrlEmbeddedCredentialsRejected: evidence.postgresExport.cutoverChecks?.evidenceUrlEmbeddedCredentialsRejected === true,
-      evidenceUrlQueryRejected: evidence.postgresExport.cutoverChecks?.evidenceUrlQueryRejected === true
+      evidenceUrlQueryRejected: evidence.postgresExport.cutoverChecks?.evidenceUrlQueryRejected === true,
+      futureCompletedTimestampRejected: evidence.postgresExport.cutoverChecks?.futureCompletedTimestampRejected === true,
+      exportShaMismatchRejected: evidence.postgresExport.cutoverChecks?.exportShaMismatchRejected === true,
+      sourceDbShaMismatchRejected: evidence.postgresExport.cutoverChecks?.sourceDbShaMismatchRejected === true,
+      targetRowCountMismatchRejected: evidence.postgresExport.cutoverChecks?.targetRowCountMismatchRejected === true,
+      inactiveAppDatabaseRejected: evidence.postgresExport.cutoverChecks?.inactiveAppDatabaseRejected === true,
+      missingBackupConfirmationRejected: evidence.postgresExport.cutoverChecks?.missingBackupConfirmationRejected === true
     }
   },
   {
