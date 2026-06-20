@@ -377,13 +377,15 @@ Browser/CDP deep flows now recorded in
   redacted credentials, CDN/public URL, sane upload envelope, and safe timeout;
   it rejects local/HTTP/localhost/private-network/placeholder/raw-endpoint
   cases, credential-bearing or query/fragment-bearing endpoint/public-base URLs,
-  placeholder or short credentials, unsafe bucket names, and unsafe object
-  prefixes, then runs the live smoke against fake S3/CDN servers, including
-  cleanup after a simulated public CDN failure.
+  raw provider object-storage public hosts, placeholder or short credentials,
+  unsafe bucket names, and unsafe object prefixes, then runs the live smoke
+  against fake S3/CDN servers, including Content-Type preservation and cleanup
+  after a simulated public CDN failure.
 - [x] Media storage live-production handoff: `npm run check:media-storage:production -- --live`
   is required for final real bucket/CDN signoff. It is opt-in, writes one tiny
   `readiness-smoke/` object through signed S3/R2 PUT, verifies signed GET,
-  verifies the public media base URL returns the same bytes, and deletes the
+  verifies the public media base URL returns the same bytes with Content-Type
+  preserved, and deletes the
   object. The default production check remains shape-only and does not write to
   production storage; local/disk media intentionally stays a private-beta-only
   path and fails the production gate.

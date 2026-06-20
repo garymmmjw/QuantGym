@@ -361,7 +361,7 @@ npm run check:media-storage:production
 npm run check:media-storage:production -- --live
 ```
 
-The media packet is written under `artifacts/media-storage/readiness-packet/` and contains the Render env template, R2/S3 bucket/CDN runbook, object-storage contract, and live-smoke checklist. The live check is opt-in: it writes one tiny `readiness-smoke/` object, verifies signed read plus public media URL bytes, and deletes the object. Local/disk media storage remains fine for development and small controlled beta runs, but it intentionally fails the production gate.
+The media packet is written under `artifacts/media-storage/readiness-packet/` and contains the Render env template, R2/S3 bucket/CDN runbook, object-storage contract, and live-smoke checklist. The live check is opt-in: it writes one tiny `readiness-smoke/` object, verifies signed read plus public media URL bytes and Content-Type, and deletes the object. Local/disk media storage remains fine for development and small controlled beta runs, but it intentionally fails the production gate.
 
 To build a repeatable public-ATS jobs feed snapshot from the checked-in Greenhouse source list, run:
 

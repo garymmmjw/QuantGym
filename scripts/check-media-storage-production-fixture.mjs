@@ -89,6 +89,11 @@ const negativeCases = [
     expectedError: "CDN/custom public origin"
   },
   {
+    name: "raw provider public host rejected",
+    env: { QUANTGYM_MEDIA_PUBLIC_BASE_URL: "https://quantgym-media-fixture.s3.amazonaws.com/media" },
+    expectedError: "raw object storage host"
+  },
+  {
     name: "placeholder endpoint rejected",
     env: { QUANTGYM_MEDIA_S3_ENDPOINT: "https://<account-id>.r2.cloudflarestorage.com" },
     expectedError: "placeholder brackets"
@@ -171,6 +176,7 @@ try {
     endpointQueryRejected: findNegativeFixture(negativeFixtures, "endpoint query rejected")?.rejected === true,
     publicBaseEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "public base embedded credentials rejected")?.rejected === true,
     publicBaseQueryRejected: findNegativeFixture(negativeFixtures, "public base query rejected")?.rejected === true,
+    rawProviderPublicBaseRejected: findNegativeFixture(negativeFixtures, "raw provider public host rejected")?.rejected === true,
     placeholderAccessKeyRejected: findNegativeFixture(negativeFixtures, "placeholder access key rejected")?.rejected === true,
     shortSecretKeyRejected: findNegativeFixture(negativeFixtures, "short secret key rejected")?.rejected === true,
     unsafeBucketNameRejected: findNegativeFixture(negativeFixtures, "unsafe bucket name rejected")?.rejected === true,
@@ -180,6 +186,7 @@ try {
       && liveFixture.signedGetStatus === 200
       && liveFixture.publicGetStatus === 200
       && liveFixture.deleteObserved,
+    liveFixturePreservesContentType: liveFixture.contentTypePreserved === true,
     liveFailureRejected: livePublicFailureFixture.rejected,
     liveFailureCleanedUp: livePublicFailureFixture.deleteObserved && livePublicFailureFixture.objectsRemaining === 0
   };
@@ -234,6 +241,9 @@ function validateLiveFixture(summary) {
   if (summary.signedGetStatus !== 200) fail(`Live media fixture signed GET status should be 200, got ${summary.signedGetStatus}.`);
   if (summary.publicGetStatus !== 200) fail(`Live media fixture public GET status should be 200, got ${summary.publicGetStatus}.`);
   if (![200, 202, 204].includes(summary.deleteStatus)) fail(`Live media fixture DELETE status should be success, got ${summary.deleteStatus}.`);
+  if (!String(summary.signedGetContentType || "").toLowerCase().includes("text/plain")) fail(`Live media fixture signed GET should preserve text/plain Content-Type, got ${summary.signedGetContentType}.`);
+  if (!String(summary.publicGetContentType || "").toLowerCase().includes("text/plain")) fail(`Live media fixture public GET should preserve text/plain Content-Type, got ${summary.publicGetContentType}.`);
+  if (!summary.contentTypePreserved) fail("Live media fixture public GET should report Content-Type preservation.");
   if (!summary.putSigned) fail("Live media fixture PUT should include SigV4 headers.");
   if (!summary.signedGetSigned) fail("Live media fixture signed GET should include SigV4 headers.");
   if (!summary.deleteSigned) fail("Live media fixture DELETE should include SigV4 headers.");
@@ -286,6 +296,9 @@ async function runLiveFixture({ failPublicGet }) {
       signedGetStatus: Number(liveData.signedGetStatus || 0),
       publicGetStatus: Number(liveData.publicGetStatus || 0),
       deleteStatus: Number(liveData.deleteStatus || 0),
+      signedGetContentType: liveData.signedGetContentType || "",
+      publicGetContentType: liveData.publicGetContentType || "",
+      contentTypePreserved: liveData.contentTypePreserved === true,
       bytes: Number(liveData.bytes || 0),
       cleanedUp: liveData.cleanedUp === true,
       putSigned: hasSigV4Headers(putRequest),

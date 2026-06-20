@@ -1230,18 +1230,37 @@ function validateMediaStorageProductionFixtureSummary(data, expect, label) {
   expect(data.checks?.validProductionBucketRedacted === true, `${label} must redact bucket name from output`);
   expect(data.checks?.validProductionEndpointUrlRedacted === true, `${label} must redact full object endpoint URL from output`);
   expect(data.checks?.validProductionPublicBaseUrlRedacted === true, `${label} must redact full public base URL from output`);
-  expect(Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= 20, `${label} must include negative production fixtures`);
+  const hasRawProviderPublicBaseCoverage = data.checks?.rawProviderPublicBaseRejected !== undefined;
+  expect(
+    Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= (hasRawProviderPublicBaseCoverage ? 21 : 20),
+    `${label} must include negative production fixtures`
+  );
   expect(data.checks?.negativeFixturesRejected === true, `${label} negative production fixtures must be rejected`);
   expect(data.checks?.negativeFixturesMentionExpectedErrors === true, `${label} negative fixtures must mention expected errors`);
   expect(data.checks?.endpointEmbeddedCredentialsRejected === true, `${label} must reject object endpoint URLs with embedded credentials`);
   expect(data.checks?.endpointQueryRejected === true, `${label} must reject object endpoint URLs with query strings or fragments`);
   expect(data.checks?.publicBaseEmbeddedCredentialsRejected === true, `${label} must reject public media base URLs with embedded credentials`);
   expect(data.checks?.publicBaseQueryRejected === true, `${label} must reject public media base URLs with query strings or fragments`);
+  if (hasRawProviderPublicBaseCoverage) {
+    expect(data.checks?.rawProviderPublicBaseRejected === true, `${label} must reject raw provider object-storage public hosts`);
+  } else if (/nested media storage production fixture/i.test(label)) {
+    warnings.push("Release-readiness nested media storage production fixture lacks raw provider public-host coverage; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+  } else {
+    expect(false, `${label} must reject raw provider object-storage public hosts`);
+  }
   expect(data.checks?.placeholderAccessKeyRejected === true, `${label} must reject placeholder media access keys`);
   expect(data.checks?.shortSecretKeyRejected === true, `${label} must reject short media secret keys`);
   expect(data.checks?.unsafeBucketNameRejected === true, `${label} must reject unsafe media bucket names`);
   expect(data.checks?.unsafeObjectPrefixRejected === true, `${label} must reject unsafe media object prefixes`);
   expect(data.checks?.liveFixturePutGetPublicDelete === true, `${label} live fixture must prove PUT/GET/public GET/DELETE path`);
+  const hasLiveContentTypeCoverage = data.checks?.liveFixturePreservesContentType !== undefined;
+  if (hasLiveContentTypeCoverage) {
+    expect(data.checks?.liveFixturePreservesContentType === true, `${label} live fixture must prove public Content-Type preservation`);
+  } else if (/nested media storage production fixture/i.test(label)) {
+    warnings.push("Release-readiness nested media storage production fixture lacks live Content-Type preservation coverage; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+  } else {
+    expect(false, `${label} live fixture must prove public Content-Type preservation`);
+  }
   for (const fixture of data.negativeFixtures || []) {
     expect(fixture.rejected === true, `${label} negative fixture ${fixture.name} must be rejected`);
     expect(fixture.expectedErrorObserved === true, `${label} negative fixture ${fixture.name} must report expected error`);
@@ -1254,6 +1273,11 @@ function validateMediaStorageProductionFixtureSummary(data, expect, label) {
   expect(Number(data.liveFixture?.signedGetStatus || 0) === 200, `${label} live fixture signed GET must return 200`);
   expect(Number(data.liveFixture?.publicGetStatus || 0) === 200, `${label} live fixture public GET must return 200`);
   expect([200, 202, 204].includes(Number(data.liveFixture?.deleteStatus || 0)), `${label} live fixture DELETE must succeed`);
+  if (hasLiveContentTypeCoverage) {
+    expect(String(data.liveFixture?.signedGetContentType || "").toLowerCase().includes("text/plain"), `${label} live fixture signed GET must preserve text/plain Content-Type`);
+    expect(String(data.liveFixture?.publicGetContentType || "").toLowerCase().includes("text/plain"), `${label} live fixture public GET must preserve text/plain Content-Type`);
+    expect(data.liveFixture?.contentTypePreserved === true, `${label} live fixture must report public Content-Type preservation`);
+  }
   expect(Number(data.liveFixture?.objectsRemaining || 0) === 0, `${label} live fixture must clean up objects`);
   expect(data.livePublicFailureFixture?.rejected === true, `${label} failing public CDN fixture must be rejected`);
   expect(data.livePublicFailureFixture?.expectedErrorObserved === true, `${label} failing public CDN fixture must report public GET failure`);
@@ -1748,6 +1772,7 @@ function validateMediaStoragePacketSummary(data, expect, label) {
   }
   expect(data.evidence?.liveFixtureStatus === "pass", `${label} must include passing live fixture evidence`);
   expect(data.evidence?.liveFailureRejected === true, `${label} must include live failure rejection evidence`);
+  expect(data.evidence?.liveFixtureContentTypePreserved === true, `${label} must include live Content-Type preservation evidence`);
   expectAllChecksTrue(data, expect, label, [
     "expectedFilesWritten",
     "includesProductionEnvTemplate",
@@ -1762,6 +1787,7 @@ function validateMediaStoragePacketSummary(data, expect, label) {
     "fixtureRejectsUnsafeInputs",
     "fixtureOutputRedactsSecrets",
     "liveFixtureCoversPutGetPublicDelete",
+    "liveFixturePreservesContentType",
     "liveFixtureCleansUp"
   ]);
   expectEmptyFailures(data, expect, label);
@@ -2337,10 +2363,12 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(media?.localCoverage?.endpointQueryRejected === true, `${label} must include media endpoint query rejection`);
   expect(media?.localCoverage?.publicBaseEmbeddedCredentialsRejected === true, `${label} must include media public-base credential rejection`);
   expect(media?.localCoverage?.publicBaseQueryRejected === true, `${label} must include media public-base query rejection`);
+  expect(media?.localCoverage?.rawProviderPublicBaseRejected === true, `${label} must include media raw provider public-host rejection`);
   expect(media?.localCoverage?.placeholderAccessKeyRejected === true, `${label} must include media placeholder access-key rejection`);
   expect(media?.localCoverage?.shortSecretKeyRejected === true, `${label} must include media short secret-key rejection`);
   expect(media?.localCoverage?.unsafeBucketNameRejected === true, `${label} must include media unsafe bucket-name rejection`);
   expect(media?.localCoverage?.unsafeObjectPrefixRejected === true, `${label} must include media unsafe object-prefix rejection`);
+  expect(media?.localCoverage?.liveFixturePreservesContentType === true, `${label} must include media live Content-Type preservation coverage`);
   const jobs = findBlocker(data.blockers, "jobs-real-feed");
   expect(jobs?.status === "pass", `${label} must mark jobs real feed pass after deployed API source smoke`);
   expect(typeof jobs?.ownerAction === "string" && jobs.ownerAction.includes("Deployed API source feed is live"), `${label} jobs owner action must record deployed source signoff`);

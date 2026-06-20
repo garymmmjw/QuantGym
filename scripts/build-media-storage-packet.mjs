@@ -43,7 +43,8 @@ try {
     includesProductionEnvTemplate: combinedContent.includes("QUANTGYM_MEDIA_STORAGE")
       && combinedContent.includes("QUANTGYM_MEDIA_PUBLIC_BASE_URL"),
     includesBucketCdnRunbook: combinedContent.includes("R2 or S3 Bucket and CDN Runbook")
-      && combinedContent.includes("readiness-smoke/"),
+      && combinedContent.includes("readiness-smoke/")
+      && combinedContent.includes("raw provider object-storage hosts"),
     includesObjectStorageContract: combinedContent.includes("Object Storage Contract")
       && combinedContent.includes("signed PUT"),
     includesLiveSmokeChecklist: combinedContent.includes("run live media signoff")
@@ -61,12 +62,14 @@ try {
     productionFixturePass: productionFixture.status === "pass",
     fixtureRejectsUnsafeInputs: productionFixture.checks?.negativeFixturesRejected === true
       && productionFixture.checks?.endpointEmbeddedCredentialsRejected === true
-      && productionFixture.checks?.publicBaseQueryRejected === true,
+      && productionFixture.checks?.publicBaseQueryRejected === true
+      && productionFixture.checks?.rawProviderPublicBaseRejected === true,
     fixtureOutputRedactsSecrets: productionFixture.checks?.validProductionAccessKeyRedacted === true
       && productionFixture.checks?.validProductionSecretRedacted === true
       && productionFixture.checks?.validProductionEndpointUrlRedacted === true
       && productionFixture.checks?.validProductionPublicBaseUrlRedacted === true,
     liveFixtureCoversPutGetPublicDelete: productionFixture.checks?.liveFixturePutGetPublicDelete === true,
+    liveFixturePreservesContentType: productionFixture.checks?.liveFixturePreservesContentType === true,
     liveFixtureCleansUp: productionFixture.checks?.liveFailureCleanedUp === true
   };
 
@@ -84,7 +87,8 @@ try {
       productionFixturePass: productionFixture.status === "pass",
       productionNegativeFixtureCount: Number(productionFixture.negativeFixtures?.length || 0),
       liveFixtureStatus: productionFixture.liveFixture?.status || "",
-      liveFailureRejected: productionFixture.livePublicFailureFixture?.rejected === true
+      liveFailureRejected: productionFixture.livePublicFailureFixture?.rejected === true,
+      liveFixtureContentTypePreserved: productionFixture.checks?.liveFixturePreservesContentType === true
     },
     requiredEnv: packet.requiredEnv.map((item) => item.name),
     storagePlan: packet.storagePlan,
@@ -132,11 +136,12 @@ function buildPacketModel(runtimeSmoke, productionFixture) {
       prefix: "media",
       publicBaseUrlShape: "https://media.quantgym.app",
       liveSmokePrefix: "readiness-smoke/",
-      requiredOperations: ["signed PUT", "signed GET", "public CDN GET", "signed DELETE"]
+      requiredOperations: ["signed PUT", "signed GET", "public CDN GET", "public CDN GET with preserved Content-Type", "signed DELETE"]
     },
     runtimeSmokePass: runtimeSmoke.status === "pass",
     productionFixturePass: productionFixture.status === "pass",
     liveFixturePutGetPublicDelete: productionFixture.checks?.liveFixturePutGetPublicDelete === true,
+    liveFixturePreservesContentType: productionFixture.checks?.liveFixturePreservesContentType === true,
     signoffCommand: "npm run check:media-storage:production && npm run check:media-storage:production -- --live"
   };
 }
@@ -151,6 +156,7 @@ function renderOverview(packet) {
     `Runtime smoke currently passing: ${packet.runtimeSmokePass ? "yes" : "no"}`,
     `Production fixture currently passing: ${packet.productionFixturePass ? "yes" : "no"}`,
     `Live fixture covers PUT/GET/public GET/DELETE: ${packet.liveFixturePutGetPublicDelete ? "yes" : "no"}`,
+    `Live fixture preserves public Content-Type: ${packet.liveFixturePreservesContentType ? "yes" : "no"}`,
     "",
     "## Files",
     "",
@@ -167,7 +173,7 @@ function renderOverview(packet) {
     packet.signoffCommand,
     "```",
     "",
-    "The filled environment must not be committed. The gate intentionally rejects local, private-network, credential-bearing, query-bearing, placeholder, and raw-endpoint public media URL values.",
+    "The filled environment must not be committed. The gate intentionally rejects local, private-network, credential-bearing, query-bearing, placeholder, raw-endpoint, and raw provider object-storage public media URL values.",
     ""
   ].join("\n");
 }
@@ -210,11 +216,12 @@ function renderBucketCdnRunbook(packet) {
     `- Public base URL shape: \`${packet.storagePlan.publicBaseUrlShape}\``,
     "- The public base URL must be HTTPS.",
     "- The public base URL must be a CDN/custom origin, not the raw object storage endpoint.",
+    "- Do not use raw provider object-storage hosts such as S3 bucket URLs, R2 storage hosts, r2.dev URLs, Google Cloud Storage hosts, Spaces, Backblaze, Wasabi, or Linode object URLs.",
     "- Do not include embedded credentials, query strings, or fragments.",
     "",
     "## Live Smoke",
     "",
-    `The live signoff writes one tiny object under \`${packet.storagePlan.liveSmokePrefix}\`, reads it through signed storage, reads it through the public media URL, and deletes it.`,
+    `The live signoff writes one tiny object under \`${packet.storagePlan.liveSmokePrefix}\`, reads it through signed storage, reads it through the public media URL with Content-Type preserved, and deletes it.`,
     "",
     "```bash",
     "npm run check:media-storage:production -- --live",
@@ -238,6 +245,8 @@ function renderObjectStorageContract(packet) {
     "- Object endpoint and public base URL must use HTTPS.",
     "- Object endpoint and public base URL must not point to localhost, loopback, or private-network hosts.",
     "- Object endpoint and public base URL must not include embedded credentials, query strings, or fragments.",
+    "- Production public media must use a CDN/custom host, not a raw provider object-storage public host.",
+    "- Public media reads must preserve object Content-Type so image/video rendering does not depend on file extension guesses.",
     "- Access key and secret must be stored only in provider secret storage.",
     "- Live-smoke failure should still delete any object that was written.",
     ""
@@ -252,7 +261,7 @@ function renderChecklistCsv(packet) {
     ["configure CDN or custom public media host", "", "HTTPS public base URL not equal to raw object endpoint", "pending"],
     ["configure Render API env", "", `${packet.requiredEnv.length} required media variables set`, "pending"],
     ["run production media config gate", "", "npm run check:media-storage:production", "pending"],
-    ["run live media signoff", "", "npm run check:media-storage:production -- --live", "pending"],
+    ["run live media signoff", "", "npm run check:media-storage:production -- --live returns matching bytes and Content-Type", "pending"],
     ["confirm readiness object cleanup", "", "live smoke reports cleanedUp true", "pending"]
   ];
   return rows.map((row) => row.map(csvCell).join(",")).join("\n") + "\n";

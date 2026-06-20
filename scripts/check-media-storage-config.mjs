@@ -126,6 +126,7 @@ check("public media URL", () => {
     assert(publicUrl.protocol === "https:", "Production public media URL must use HTTPS.");
     assert(!isLocalOrPrivateHost(publicUrl.hostname), "Production public media URL must not point to localhost, loopback, or a private network address.");
     assertUrlHasNoSensitiveParts("QUANTGYM_MEDIA_PUBLIC_BASE_URL", publicUrl);
+    assertPublicBaseNotRawObjectStorageHost("QUANTGYM_MEDIA_PUBLIC_BASE_URL", publicUrl);
   }
   if (isObjectStorage(config.storage) && config.endpoint) {
     const endpointUrl = parseUrl(config.endpoint, "QUANTGYM_MEDIA_S3_ENDPOINT");
@@ -166,10 +167,12 @@ if (liveMode) {
       getResponse = await signedObjectRequest("GET", objectUrl);
       assert(getResponse.statusCode === 200, `Object storage live signed GET returned HTTP ${getResponse.statusCode}.`);
       assert(Buffer.compare(getResponse.body, body) === 0, "Object storage live signed GET bytes did not match PUT payload.");
+      assertContentTypeIncludes(getResponse.headers, "text/plain", "Object storage live signed GET");
 
       publicResponse = await httpRequest(publicUrl, { method: "GET", timeoutMs: Math.ceil(config.timeoutSeconds * 1000) });
       assert(publicResponse.statusCode === 200, `Public media live GET returned HTTP ${publicResponse.statusCode}.`);
       assert(Buffer.compare(publicResponse.body, body) === 0, "Public media live GET bytes did not match PUT payload.");
+      assertContentTypeIncludes(publicResponse.headers, "text/plain", "Public media live GET");
     } finally {
       if (putResponse?.statusCode >= 200 && putResponse.statusCode < 300) {
         try {
@@ -196,6 +199,9 @@ if (liveMode) {
       signedGetStatus: getResponse?.statusCode || 0,
       publicGetStatus: publicResponse?.statusCode || 0,
       deleteStatus: deleteResponse.statusCode,
+      signedGetContentType: responseContentType(getResponse?.headers),
+      publicGetContentType: responseContentType(publicResponse?.headers),
+      contentTypePreserved: responseContentType(publicResponse?.headers).toLowerCase().includes("text/plain"),
       bytes: body.length,
       cleanedUp: true
     };
@@ -258,6 +264,22 @@ function assertStrongProductionValue(name, value, minLength) {
 function assertUrlHasNoSensitiveParts(name, url) {
   assert(!url.username && !url.password, `${name} must not include embedded credentials.`);
   assert(!url.search && !url.hash, `${name} must not include query strings or fragments.`);
+}
+
+function assertPublicBaseNotRawObjectStorageHost(name, url) {
+  assert(
+    !isRawObjectStoragePublicHost(url.hostname),
+    `${name} must use a CDN/custom public host, not a raw object storage host.`
+  );
+}
+
+function assertContentTypeIncludes(headers, expected, label) {
+  const contentType = responseContentType(headers).toLowerCase();
+  assert(contentType.includes(expected.toLowerCase()), `${label} must preserve Content-Type ${expected}.`);
+}
+
+function responseContentType(headers = {}) {
+  return String(headers?.["content-type"] || headers?.["Content-Type"] || "");
 }
 
 function assertValidProductionBucketName(name, value) {
@@ -423,6 +445,24 @@ function isLocalOrPrivateHost(hostname) {
   if (family === 4) return isPrivateIpv4(host);
   if (family === 6) return isPrivateIpv6(host);
   return false;
+}
+
+function isRawObjectStoragePublicHost(hostname) {
+  const host = String(hostname || "").trim().toLowerCase().replace(/\.$/, "");
+  if (!host) return false;
+  if (host === "r2.cloudflarestorage.com" || host.endsWith(".r2.cloudflarestorage.com")) return true;
+  if (host === "r2.dev" || host.endsWith(".r2.dev")) return true;
+  if (host === "storage.googleapis.com" || host.endsWith(".storage.googleapis.com")) return true;
+  if (host.endsWith(".amazonaws.com")) {
+    return host.split(".").some((label) => label === "s3" || label.startsWith("s3-"));
+  }
+  return [
+    ".digitaloceanspaces.com",
+    ".backblazeb2.com",
+    ".b2clouddn.com",
+    ".wasabisys.com",
+    ".linodeobjects.com"
+  ].some((suffix) => host === suffix.slice(1) || host.endsWith(suffix));
 }
 
 function isPrivateIpv4(host) {
