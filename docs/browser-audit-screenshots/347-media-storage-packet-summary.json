@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-20T19:59:01.201Z",
+  "generatedAt": "2026-06-20T21:41:31.884Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/media-storage/readiness-packet",
   "filesWritten": [
     "artifacts/media-storage/readiness-packet/README.md",
@@ -12,9 +12,10 @@
   "evidence": {
     "runtimeSmokePass": true,
     "productionFixturePass": true,
-    "productionNegativeFixtureCount": 20,
+    "productionNegativeFixtureCount": 21,
     "liveFixtureStatus": "pass",
-    "liveFailureRejected": true
+    "liveFailureRejected": true,
+    "liveFixtureContentTypePreserved": true
   },
   "requiredEnv": [
     "QUANTGYM_MEDIA_STORAGE",
@@ -39,6 +40,7 @@
       "signed PUT",
       "signed GET",
       "public CDN GET",
+      "public CDN GET with preserved Content-Type",
       "signed DELETE"
     ]
   },
@@ -57,6 +59,7 @@
     "fixtureRejectsUnsafeInputs": true,
     "fixtureOutputRedactsSecrets": true,
     "liveFixtureCoversPutGetPublicDelete": true,
+    "liveFixturePreservesContentType": true,
     "liveFixtureCleansUp": true
   },
   "failures": [],

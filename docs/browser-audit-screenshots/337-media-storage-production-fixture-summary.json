@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 962,
+  "durationMs": 5382,
   "productionFixture": {
     "status": "pass",
     "mode": "production",
@@ -106,6 +106,13 @@
       "error": "Production public media URL should be a CDN/custom public origin, not the raw object storage endpoint."
     },
     {
+      "name": "raw provider public host rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_PUBLIC_BASE_URL must use a CDN/custom public host, not a raw object storage host."
+    },
+    {
       "name": "placeholder endpoint rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -172,6 +179,9 @@
     "signedGetStatus": 200,
     "publicGetStatus": 200,
     "deleteStatus": 204,
+    "signedGetContentType": "text/plain; charset=utf-8",
+    "publicGetContentType": "text/plain; charset=utf-8",
+    "contentTypePreserved": true,
     "bytes": 51,
     "cleanedUp": true,
     "putSigned": true,
@@ -216,6 +226,9 @@
     "signedGetStatus": 0,
     "publicGetStatus": 0,
     "deleteStatus": 0,
+    "signedGetContentType": "",
+    "publicGetContentType": "",
+    "contentTypePreserved": false,
     "bytes": 0,
     "cleanedUp": false,
     "putSigned": true,
@@ -264,12 +277,14 @@
     "endpointQueryRejected": true,
     "publicBaseEmbeddedCredentialsRejected": true,
     "publicBaseQueryRejected": true,
+    "rawProviderPublicBaseRejected": true,
     "placeholderAccessKeyRejected": true,
     "shortSecretKeyRejected": true,
     "unsafeBucketNameRejected": true,
     "unsafeObjectPrefixRejected": true,
     "liveFixturePassed": true,
     "liveFixturePutGetPublicDelete": true,
+    "liveFixturePreservesContentType": true,
     "liveFailureRejected": true,
     "liveFailureCleanedUp": true
   },

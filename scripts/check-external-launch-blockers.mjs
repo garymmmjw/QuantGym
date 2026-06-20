@@ -189,11 +189,13 @@ const blockers = [
       endpointQueryRejected: evidence.mediaFixture.checks?.endpointQueryRejected === true,
       publicBaseEmbeddedCredentialsRejected: evidence.mediaFixture.checks?.publicBaseEmbeddedCredentialsRejected === true,
       publicBaseQueryRejected: evidence.mediaFixture.checks?.publicBaseQueryRejected === true,
+      rawProviderPublicBaseRejected: evidence.mediaFixture.checks?.rawProviderPublicBaseRejected === true,
       placeholderAccessKeyRejected: evidence.mediaFixture.checks?.placeholderAccessKeyRejected === true,
       shortSecretKeyRejected: evidence.mediaFixture.checks?.shortSecretKeyRejected === true,
       unsafeBucketNameRejected: evidence.mediaFixture.checks?.unsafeBucketNameRejected === true,
       unsafeObjectPrefixRejected: evidence.mediaFixture.checks?.unsafeObjectPrefixRejected === true,
       liveFixturePass: evidence.mediaFixture.checks?.liveFixturePutGetPublicDelete === true,
+      liveFixturePreservesContentType: evidence.mediaFixture.checks?.liveFixturePreservesContentType === true,
       liveFailureRejected: evidence.mediaFixture.checks?.liveFailureRejected === true,
       liveCleanupPass: evidence.mediaFixture.checks?.liveFailureCleanedUp === true
     }

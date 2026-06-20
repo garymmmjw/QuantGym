@@ -93,11 +93,13 @@
         "endpointQueryRejected": true,
         "publicBaseEmbeddedCredentialsRejected": true,
         "publicBaseQueryRejected": true,
+        "rawProviderPublicBaseRejected": true,
         "placeholderAccessKeyRejected": true,
         "shortSecretKeyRejected": true,
         "unsafeBucketNameRejected": true,
         "unsafeObjectPrefixRejected": true,
         "liveFixturePass": true,
+        "liveFixturePreservesContentType": true,
         "liveFailureRejected": true,
         "liveCleanupPass": true
       }
