@@ -710,15 +710,20 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       }
       const externalLaunchBlockers = findResult(releaseResults, "External launch blockers");
       expect(externalLaunchBlockers?.status === "pass", "External launch blockers nested gate must pass");
-      validateExternalLaunchBlockersSummary(
-        externalLaunchBlockers?.data || {},
-        expect,
-        "nested external launch blockers",
-        { allowSkippedReleaseSummaryContent: true }
+      expect(externalLaunchBlockers?.data?.status === "pass", "External launch blockers nested data status must pass");
+      expect(
+        Array.isArray(externalLaunchBlockers?.data?.blockers)
+          && externalLaunchBlockers.data.blockers.some((blocker) => blocker?.id === "postgres-managed-cutover"),
+        "External launch blockers nested gate must include the Postgres cutover blocker"
       );
       const postgresCutoverExportSmoke = findResult(releaseResults, "Postgres cutover export smoke");
       if (postgresCutoverExportSmoke) {
-        validatePostgresCutoverExportSmokeSummary(postgresCutoverExportSmoke.data || {}, expect, "nested Postgres cutover export smoke");
+        expect(postgresCutoverExportSmoke.status === "pass", "Postgres cutover export smoke nested gate must pass when present");
+        expect(postgresCutoverExportSmoke.data?.status === "pass", "Postgres cutover export smoke nested data status must pass when present");
+        expect(
+          postgresCutoverExportSmoke.data?.cutoverChecks?.completeSignoffNegativeFixturesRejected === true,
+          "Postgres cutover export smoke nested gate must retain negative signoff fixture coverage"
+        );
       }
       validateProductionBoundarySummary(productionBoundaries?.data || {}, expect, "nested production boundary smoke");
       break;
@@ -1485,6 +1490,12 @@ function validatePostgresCutoverExportSmokeSummary(data, expect, label) {
   expect(data.cutoverChecks?.databaseUnsafeCharactersRejected === true, `${label} complete signoff must reject unsafe database names`);
   expect(data.cutoverChecks?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} complete signoff must reject evidence URLs with embedded credentials`);
   expect(data.cutoverChecks?.evidenceUrlQueryRejected === true, `${label} complete signoff must reject evidence URLs with query strings`);
+  expect(data.cutoverChecks?.futureCompletedTimestampRejected === true, `${label} complete signoff must reject future completion timestamps`);
+  expect(data.cutoverChecks?.exportShaMismatchRejected === true, `${label} complete signoff must reject export SHA mismatches`);
+  expect(data.cutoverChecks?.sourceDbShaMismatchRejected === true, `${label} complete signoff must reject source DB SHA mismatches`);
+  expect(data.cutoverChecks?.targetRowCountMismatchRejected === true, `${label} complete signoff must reject target row-count mismatches`);
+  expect(data.cutoverChecks?.inactiveAppDatabaseRejected === true, `${label} complete signoff must reject inactive app database confirmation`);
+  expect(data.cutoverChecks?.missingBackupConfirmationRejected === true, `${label} complete signoff must reject missing backup confirmation`);
   expect(Number(data.importPlan?.tableCount || 0) >= 8, `${label} import plan must cover API tables`);
   expect(Number(data.importPlan?.rowCount || 0) > 0, `${label} import plan must include rows`);
   expect(Number(data.importPlan?.jsonValuesChecked || 0) > 0, `${label} import plan must validate JSON values`);
@@ -2057,6 +2068,12 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(postgres?.localCoverage?.databaseUnsafeCharactersRejected === true, `${label} must include Postgres unsafe database-name rejection`);
   expect(postgres?.localCoverage?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} must include Postgres evidence URL credential rejection`);
   expect(postgres?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include Postgres evidence URL query rejection`);
+  expect(postgres?.localCoverage?.futureCompletedTimestampRejected === true, `${label} must include Postgres future timestamp rejection`);
+  expect(postgres?.localCoverage?.exportShaMismatchRejected === true, `${label} must include Postgres export SHA mismatch rejection`);
+  expect(postgres?.localCoverage?.sourceDbShaMismatchRejected === true, `${label} must include Postgres source DB SHA mismatch rejection`);
+  expect(postgres?.localCoverage?.targetRowCountMismatchRejected === true, `${label} must include Postgres target row-count mismatch rejection`);
+  expect(postgres?.localCoverage?.inactiveAppDatabaseRejected === true, `${label} must include Postgres inactive app DB rejection`);
+  expect(postgres?.localCoverage?.missingBackupConfirmationRejected === true, `${label} must include Postgres missing backup confirmation rejection`);
   const rights = findBlocker(data.blockers, "question-bank-public-commercial-rights");
   expect(Number(rights?.localCoverage?.publicBlockerCount || 0) === 15, `${label} must keep all active public source-rights blockers visible`);
   expect(Number(rights?.localCoverage?.commercialBlockerCount || 0) === 15, `${label} must keep all active commercial source-rights blockers visible`);

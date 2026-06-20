@@ -172,7 +172,13 @@
         "targetHostWhitespaceRejected": true,
         "databaseUnsafeCharactersRejected": true,
         "evidenceUrlEmbeddedCredentialsRejected": true,
-        "evidenceUrlQueryRejected": true
+        "evidenceUrlQueryRejected": true,
+        "futureCompletedTimestampRejected": true,
+        "exportShaMismatchRejected": true,
+        "sourceDbShaMismatchRejected": true,
+        "targetRowCountMismatchRejected": true,
+        "inactiveAppDatabaseRejected": true,
+        "missingBackupConfirmationRejected": true
       }
     },
     {

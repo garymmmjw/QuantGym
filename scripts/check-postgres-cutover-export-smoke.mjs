@@ -219,7 +219,13 @@ try {
       targetHostWhitespaceRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "target host whitespace rejected" && fixture.rejected === true),
       databaseUnsafeCharactersRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "database unsafe characters rejected" && fixture.rejected === true),
       evidenceUrlEmbeddedCredentialsRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "evidence URL embedded credentials rejected" && fixture.rejected === true),
-      evidenceUrlQueryRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "evidence URL query rejected" && fixture.rejected === true)
+      evidenceUrlQueryRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "evidence URL query rejected" && fixture.rejected === true),
+      futureCompletedTimestampRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "future completed timestamp rejected" && fixture.rejected === true),
+      exportShaMismatchRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "export SHA mismatch rejected" && fixture.rejected === true),
+      sourceDbShaMismatchRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "source DB SHA mismatch rejected" && fixture.rejected === true),
+      targetRowCountMismatchRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "target row count mismatch rejected" && fixture.rejected === true),
+      inactiveAppDatabaseRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "inactive app database rejected" && fixture.rejected === true),
+      missingBackupConfirmationRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "missing backup confirmation rejected" && fixture.rejected === true)
     },
     importPlan: summarizeImportPlan(sensitiveCutover?.exportCheck?.importPlan),
     postgresImport: summarizePostgresImport(postgresImport),

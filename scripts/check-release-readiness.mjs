@@ -177,8 +177,12 @@ async function maybeStartLocalBoundaryServices() {
   if (process.env.QUANTGYM_RELEASE_MANAGE_LOCAL_BOUNDARY_SERVICES === "0") return null;
 
   const runtimeConfig = loadLocalRuntimeConfig();
-  const apiEndpoint = clean(process.env.QUANTGYM_CLOUD_API_ENDPOINT || process.env.CLOUD_API_ENDPOINT || runtimeConfig.cloudApiEndpoint);
-  const llmEndpoint = clean(process.env.QUANTGYM_LLM_ENDPOINT || process.env.LLM_ENDPOINT || runtimeConfig.llmEndpoint);
+  const boundaryEnv = {
+    ...loadEnvFromProjectRoot(),
+    ...process.env
+  };
+  const apiEndpoint = clean(boundaryEnv.QUANTGYM_CLOUD_API_ENDPOINT || boundaryEnv.CLOUD_API_ENDPOINT || runtimeConfig.cloudApiEndpoint);
+  const llmEndpoint = clean(boundaryEnv.QUANTGYM_LLM_ENDPOINT || boundaryEnv.LLM_ENDPOINT || runtimeConfig.llmEndpoint);
   const apiUrl = toUrl(apiEndpoint);
   const llmUrl = toUrl(llmEndpoint);
   if (!apiUrl || !llmUrl || !isLoopbackHost(apiUrl.hostname) || !isLoopbackHost(llmUrl.hostname)) {
@@ -209,18 +213,18 @@ async function maybeStartLocalBoundaryServices() {
     command: "python3",
     args: ["api-server/server.py"],
     env: {
-      ...process.env,
+      ...boundaryEnv,
       PORT: String(services.api.port),
       QUANTGYM_HOST: services.api.host,
-      QUANTGYM_REQUIRE_EMAIL_VERIFICATION: process.env.QUANTGYM_REQUIRE_EMAIL_VERIFICATION || "0",
-      QUANTGYM_GOOGLE_CLIENT_ID: process.env.QUANTGYM_GOOGLE_CLIENT_ID || runtimeConfig.googleClientId || ""
+      QUANTGYM_REQUIRE_EMAIL_VERIFICATION: boundaryEnv.QUANTGYM_REQUIRE_EMAIL_VERIFICATION || "0",
+      QUANTGYM_GOOGLE_CLIENT_ID: boundaryEnv.QUANTGYM_GOOGLE_CLIENT_ID || runtimeConfig.googleClientId || ""
     }
   });
   await ensureLocalService(services.llm, {
     command: process.execPath,
     args: ["llm-proxy/server.mjs"],
     env: {
-      ...process.env,
+      ...boundaryEnv,
       PORT: String(services.llm.port),
       LLM_PROXY_HOST: services.llm.host,
       LLM_AUTH_API_BASE: ""
@@ -391,6 +395,25 @@ function isTcpListening(host, port) {
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function loadEnvFromProjectRoot() {
+  const envPath = path.join(root, ".env");
+  if (!fs.existsSync(envPath)) return {};
+  const values = {};
+  for (const rawLine of fs.readFileSync(envPath, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const equalIndex = line.indexOf("=");
+    if (equalIndex <= 0) continue;
+    const key = line.slice(0, equalIndex).trim();
+    let value = line.slice(equalIndex + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    values[key] = value;
+  }
+  return values;
 }
 
 function clean(value) {
