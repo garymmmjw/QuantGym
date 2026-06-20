@@ -477,8 +477,8 @@ Browser/CDP deep flows now recorded in
   item id, listing URL, published status, submitted version, upload SHA-256, and
   negative cases for malformed or placeholder evidence, placeholder-looking item
   ids, non-detail or child-path listing URLs, non-store or wrong-item evidence
-  URLs, private-network evidence URLs, and credential/query-bearing listing or
-  evidence URLs. Evidence:
+  URLs, private-network evidence URLs, raw-IP listing/evidence URLs, and
+  credential/query-bearing listing or evidence URLs. Evidence:
   `339-chrome-store-publication-fixture-summary.json`. Final external
   publication still requires
   `npm run check:chrome-store-publication:published` with the item id, public
