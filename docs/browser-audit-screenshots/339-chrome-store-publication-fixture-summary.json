@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 8311,
+  "durationMs": 11043,
   "externalPublicationRequired": true,
   "finalSignoffCommand": "npm run check:chrome-store-publication:published",
   "submissionHandoff": {
@@ -100,6 +100,13 @@
       "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must point to a Chrome Web Store listing."
     },
     {
+      "name": "raw IP listing URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must use a DNS hostname, not a raw IP address."
+    },
+    {
       "name": "non-detail listing URL rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -156,6 +163,13 @@
       "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must not point to localhost, loopback, or a private network address."
     },
     {
+      "name": "raw IP evidence URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must use a DNS hostname, not a raw IP address."
+    },
+    {
       "name": "non-store evidence URL rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -194,12 +208,14 @@
     "negativeFixturesRejected": true,
     "negativeFixturesMentionExpectedErrors": true,
     "placeholderItemIdRejected": true,
+    "listingUrlRawIpRejected": true,
     "listingUrlEmbeddedCredentialsRejected": true,
     "listingUrlQueryRejected": true,
     "listingUrlDetailPathRejected": true,
     "listingUrlExtraPathRejected": true,
     "evidenceUrlNonStoreRejected": true,
     "evidenceUrlWithoutItemIdRejected": true,
+    "evidenceUrlRawIpRejected": true,
     "evidenceUrlEmbeddedCredentialsRejected": true,
     "evidenceUrlQueryRejected": true,
     "externalPublicationStillRequired": true

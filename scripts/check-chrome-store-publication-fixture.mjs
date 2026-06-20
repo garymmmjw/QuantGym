@@ -68,6 +68,11 @@ try {
       expectedError: "Chrome Web Store listing"
     },
     {
+      name: "raw IP listing URL rejected",
+      env: { QUANTGYM_CHROME_WEB_STORE_LISTING_URL: `https://8.8.8.8/detail/quantgym-collector/${fixtureItemId}` },
+      expectedError: "DNS hostname"
+    },
+    {
       name: "non-detail listing URL rejected",
       env: { QUANTGYM_CHROME_WEB_STORE_LISTING_URL: `https://chromewebstore.google.com/search/${fixtureItemId}` },
       expectedError: "detail listing"
@@ -106,6 +111,11 @@ try {
       name: "private evidence URL rejected",
       env: { QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL: "https://192.168.10.10/chrome-store-evidence" },
       expectedError: "private network address"
+    },
+    {
+      name: "raw IP evidence URL rejected",
+      env: { QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL: "https://8.8.4.4/chrome-store-evidence" },
+      expectedError: "DNS hostname"
     },
     {
       name: "non-store evidence URL rejected",
@@ -153,12 +163,14 @@ try {
     negativeFixturesRejected: negativeFixtures.every((fixture) => fixture.rejected),
     negativeFixturesMentionExpectedErrors: negativeFixtures.every((fixture) => fixture.expectedErrorObserved),
     placeholderItemIdRejected: findNegativeFixture(negativeFixtures, "placeholder item id rejected")?.rejected === true,
+    listingUrlRawIpRejected: findNegativeFixture(negativeFixtures, "raw IP listing URL rejected")?.rejected === true,
     listingUrlEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "listing URL embedded credentials rejected")?.rejected === true,
     listingUrlQueryRejected: findNegativeFixture(negativeFixtures, "listing URL query rejected")?.rejected === true,
     listingUrlDetailPathRejected: findNegativeFixture(negativeFixtures, "non-detail listing URL rejected")?.rejected === true,
     listingUrlExtraPathRejected: findNegativeFixture(negativeFixtures, "listing URL extra path rejected")?.rejected === true,
     evidenceUrlNonStoreRejected: findNegativeFixture(negativeFixtures, "non-store evidence URL rejected")?.rejected === true,
     evidenceUrlWithoutItemIdRejected: findNegativeFixture(negativeFixtures, "evidence URL without item id rejected")?.rejected === true,
+    evidenceUrlRawIpRejected: findNegativeFixture(negativeFixtures, "raw IP evidence URL rejected")?.rejected === true,
     evidenceUrlEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "evidence URL embedded credentials rejected")?.rejected === true,
     evidenceUrlQueryRejected: findNegativeFixture(negativeFixtures, "evidence URL query rejected")?.rejected === true,
     externalPublicationStillRequired: true

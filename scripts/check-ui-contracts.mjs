@@ -1848,6 +1848,7 @@ function validateChromeStorePublicationPacketSummary(data, expect, label) {
     "includesReleasePackageSha",
     "includesPublishedSignoffEnvTemplate",
     "includesEvidenceUrlStoreDetailRequirement",
+    "includesRawIpUrlRule",
     "includesListingSnapshot",
     "includesFinalSignoffChecklist",
     "usesPlaceholdersForPublishedIds",
@@ -1858,6 +1859,7 @@ function validateChromeStorePublicationPacketSummary(data, expect, label) {
     "publishedFixturePass",
     "negativeFixturesRejected",
     "publishedEvidenceUrlBoundToStoreListing",
+    "publishedUrlsRejectRawIp",
     "finalSignoffCommandRecorded",
     "externalPublicationStillRequired"
   ]);
@@ -2223,8 +2225,10 @@ function validateChromeStorePublicationFixtureSummary(data, expect, label) {
   expect(published.uploadSha256 === submission.uploadSha256, `${label} published fixture upload SHA-256 must match submission handoff`);
 
   const hasEvidenceUrlStoreBindingCoverage = data.checks?.evidenceUrlNonStoreRejected !== undefined;
+  const hasRawIpUrlCoverage = data.checks?.listingUrlRawIpRejected !== undefined
+    || data.checks?.evidenceUrlRawIpRejected !== undefined;
   expect(
-    Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= (hasEvidenceUrlStoreBindingCoverage ? 19 : 17),
+    Array.isArray(data.negativeFixtures) && data.negativeFixtures.length >= (hasRawIpUrlCoverage ? 21 : hasEvidenceUrlStoreBindingCoverage ? 19 : 17),
     `${label} must include negative publication fixtures`
   );
   expect(data.checks?.submissionHandoffPass === true, `${label} submission handoff check must pass`);
@@ -2236,6 +2240,14 @@ function validateChromeStorePublicationFixtureSummary(data, expect, label) {
   expect(data.checks?.negativeFixturesRejected === true, `${label} negative fixtures must be rejected`);
   expect(data.checks?.negativeFixturesMentionExpectedErrors === true, `${label} negative fixtures must mention expected errors`);
   expect(data.checks?.placeholderItemIdRejected === true, `${label} must reject placeholder-looking Chrome extension ids`);
+  if (hasRawIpUrlCoverage) {
+    expect(data.checks?.listingUrlRawIpRejected === true, `${label} must reject raw-IP listing URLs`);
+    expect(data.checks?.evidenceUrlRawIpRejected === true, `${label} must reject raw-IP evidence URLs`);
+  } else if (/nested Chrome store publication fixture/i.test(label)) {
+    warnings.push("Release-readiness nested Chrome store publication fixture lacks raw-IP listing/evidence URL coverage; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+  } else {
+    expect(false, `${label} must reject raw-IP listing/evidence URLs`);
+  }
   expect(data.checks?.listingUrlEmbeddedCredentialsRejected === true, `${label} must reject listing URLs with embedded credentials`);
   expect(data.checks?.listingUrlQueryRejected === true, `${label} must reject listing URLs with query strings`);
   expect(data.checks?.listingUrlDetailPathRejected === true, `${label} must reject non-detail Chrome Web Store listing URLs`);
@@ -2444,6 +2456,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   const chrome = findBlocker(data.blockers, "chrome-web-store-publication");
   expect(chrome?.localCoverage?.packetReleasePackageExists === true, `${label} must include Chrome release package existence coverage`);
   expect(chrome?.localCoverage?.packetReleasePackageShaMatches === true, `${label} must include Chrome release package SHA match coverage`);
+  expect(chrome?.localCoverage?.packetIncludesRawIpUrlRule === true, `${label} must include Chrome packet raw-IP URL rejection guidance`);
   expect(chrome?.localCoverage?.submissionHandoffPass === true, `${label} must include Chrome submission handoff coverage`);
   expect(chrome?.localCoverage?.submissionHandoffManualSubmissionRequired === true, `${label} must preserve Chrome manual submission requirement`);
   expect(chrome?.localCoverage?.publishedFixturePass === true, `${label} must include Chrome published fixture coverage`);
@@ -2453,12 +2466,14 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(chrome?.localCoverage?.negativeFixturesRejected === true, `${label} must include Chrome negative publication fixture rejection`);
   expect(chrome?.localCoverage?.externalPublicationStillRequired === true, `${label} must preserve Chrome external publication requirement`);
   expect(chrome?.localCoverage?.placeholderItemIdRejected === true, `${label} must include Chrome placeholder item-id rejection`);
+  expect(chrome?.localCoverage?.listingUrlRawIpRejected === true, `${label} must include Chrome raw-IP listing URL rejection`);
   expect(chrome?.localCoverage?.listingUrlEmbeddedCredentialsRejected === true, `${label} must include Chrome listing URL credential rejection`);
   expect(chrome?.localCoverage?.listingUrlQueryRejected === true, `${label} must include Chrome listing URL query rejection`);
   expect(chrome?.localCoverage?.listingUrlExtraPathRejected === true, `${label} must include Chrome listing URL extra-path rejection`);
   expect(chrome?.localCoverage?.listingUrlDetailPathRejected === true, `${label} must include Chrome non-detail listing rejection`);
   expect(chrome?.localCoverage?.evidenceUrlNonStoreRejected === true, `${label} must include Chrome non-store evidence URL rejection`);
   expect(chrome?.localCoverage?.evidenceUrlWithoutItemIdRejected === true, `${label} must include Chrome evidence URL item-id binding`);
+  expect(chrome?.localCoverage?.evidenceUrlRawIpRejected === true, `${label} must include Chrome raw-IP evidence URL rejection`);
   expect(chrome?.localCoverage?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} must include Chrome evidence URL credential rejection`);
   expect(chrome?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include Chrome evidence URL query rejection`);
   const postgres = findBlocker(data.blockers, "postgres-managed-cutover");

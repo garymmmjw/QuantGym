@@ -182,6 +182,7 @@ function assertHttpsUrl(value, label) {
   }
   assert(url.protocol === "https:", `${label} must use HTTPS.`);
   assert(!isLocalOrPrivateHost(url.hostname), `${label} must not point to localhost, loopback, or a private network address.`);
+  assertDnsHostname(label, url.hostname);
   assert(!url.username && !url.password, `${label} must not include embedded credentials.`);
   assert(!url.search && !url.hash, `${label} must not include query strings or fragments.`);
   return url;
@@ -204,6 +205,11 @@ function assertNoPlaceholder(name, value) {
 
 function assertNotPlaceholderChromeExtensionId(itemId) {
   assert(!/^([a-p])\1{31}$/.test(itemId), "QUANTGYM_CHROME_WEB_STORE_ITEM_ID looks like a placeholder Chrome extension id.");
+}
+
+function assertDnsHostname(label, hostname) {
+  const host = String(hostname || "").trim().toLowerCase().replace(/^\[|\]$/g, "");
+  assert(net.isIP(host) === 0, `${label} must use a DNS hostname, not a raw IP address.`);
 }
 
 function assertChromeStoreListingUrl(url, itemId, label) {
