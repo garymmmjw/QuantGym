@@ -2068,6 +2068,15 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(jobs?.localCoverage?.deployedApiSourceHasRealMetadata === true, `${label} must include deployed jobs API metadata coverage`);
   expect(jobs?.localCoverage?.deployedApiFallbackCatalogMerged === true, `${label} must include deployed jobs API fallback-catalog merge coverage`);
   const chrome = findBlocker(data.blockers, "chrome-web-store-publication");
+  expect(chrome?.localCoverage?.packetReleasePackageExists === true, `${label} must include Chrome release package existence coverage`);
+  expect(chrome?.localCoverage?.packetReleasePackageShaMatches === true, `${label} must include Chrome release package SHA match coverage`);
+  expect(chrome?.localCoverage?.submissionHandoffPass === true, `${label} must include Chrome submission handoff coverage`);
+  expect(chrome?.localCoverage?.submissionHandoffManualSubmissionRequired === true, `${label} must preserve Chrome manual submission requirement`);
+  expect(chrome?.localCoverage?.publishedFixturePass === true, `${label} must include Chrome published fixture coverage`);
+  expect(chrome?.localCoverage?.publishedFixtureHasAllChecks === true, `${label} must include Chrome published fixture full-check coverage`);
+  expect(chrome?.localCoverage?.publishedFixtureMatchesUploadSha === true, `${label} must bind Chrome published fixture to the current upload SHA`);
+  expect(chrome?.localCoverage?.publishedFixtureVersionMatchesManifest === true, `${label} must bind Chrome published fixture to manifest version`);
+  expect(chrome?.localCoverage?.negativeFixturesRejected === true, `${label} must include Chrome negative publication fixture rejection`);
   expect(chrome?.localCoverage?.externalPublicationStillRequired === true, `${label} must preserve Chrome external publication requirement`);
   expect(chrome?.localCoverage?.placeholderItemIdRejected === true, `${label} must include Chrome placeholder item-id rejection`);
   expect(chrome?.localCoverage?.listingUrlEmbeddedCredentialsRejected === true, `${label} must include Chrome listing URL credential rejection`);
