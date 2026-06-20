@@ -160,8 +160,8 @@ const blockers = [
     id: "media-bucket-cdn",
     title: "Production S3/R2 media bucket and CDN",
     status: "blocked",
-    ownerAction: "Configure the real object bucket and public CDN/base URL, then run the live media storage signoff.",
-    signoffCommand: "npm run check:media-storage:production -- --live",
+    ownerAction: "Configure the real object bucket and public CDN/base URL, then run the production config and live media storage signoff commands.",
+    signoffCommand: "npm run check:media-storage:production && npm run check:media-storage:production -- --live",
     localCoverage: {
       runtimeSmokePass: evidence.mediaRuntime.status === "pass",
       productionFixturePass: evidence.mediaFixture.status === "pass",
@@ -170,7 +170,13 @@ const blockers = [
       packetIncludesBucketCdnRunbook: evidence.mediaPacket.checks?.includesBucketCdnRunbook === true,
       packetIncludesObjectStorageContract: evidence.mediaPacket.checks?.includesObjectStorageContract === true,
       packetIncludesLiveSmokeChecklist: evidence.mediaPacket.checks?.includesLiveSmokeChecklist === true,
+      packetIncludesProductionConfigSignoff: evidence.mediaPacket.checks?.includesProductionConfigSignoff === true,
+      packetSignoffRequiresConfigAndLive: evidence.mediaPacket.signoffCommand === "npm run check:media-storage:production && npm run check:media-storage:production -- --live",
       packetUsesPlaceholderOnlyForSecrets: evidence.mediaPacket.checks?.usesPlaceholderOnlyForSecrets === true,
+      validProductionAccessKeyRedacted: evidence.mediaFixture.checks?.validProductionAccessKeyRedacted === true,
+      validProductionSecretRedacted: evidence.mediaFixture.checks?.validProductionSecretRedacted === true,
+      validProductionEndpointUrlRedacted: evidence.mediaFixture.checks?.validProductionEndpointUrlRedacted === true,
+      validProductionPublicBaseUrlRedacted: evidence.mediaFixture.checks?.validProductionPublicBaseUrlRedacted === true,
       privateObjectEndpointRejected: findResult(evidence.mediaFixture.negativeFixtures, "private object endpoint rejected")?.rejected === true,
       privatePublicBaseRejected: findResult(evidence.mediaFixture.negativeFixtures, "private public base rejected")?.rejected === true,
       endpointEmbeddedCredentialsRejected: evidence.mediaFixture.checks?.endpointEmbeddedCredentialsRejected === true,
@@ -182,6 +188,7 @@ const blockers = [
       unsafeBucketNameRejected: evidence.mediaFixture.checks?.unsafeBucketNameRejected === true,
       unsafeObjectPrefixRejected: evidence.mediaFixture.checks?.unsafeObjectPrefixRejected === true,
       liveFixturePass: evidence.mediaFixture.checks?.liveFixturePutGetPublicDelete === true,
+      liveFailureRejected: evidence.mediaFixture.checks?.liveFailureRejected === true,
       liveCleanupPass: evidence.mediaFixture.checks?.liveFailureCleanedUp === true
     }
   },

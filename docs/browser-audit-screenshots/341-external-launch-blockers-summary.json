@@ -64,8 +64,8 @@
       "id": "media-bucket-cdn",
       "title": "Production S3/R2 media bucket and CDN",
       "status": "blocked",
-      "ownerAction": "Configure the real object bucket and public CDN/base URL, then run the live media storage signoff.",
-      "signoffCommand": "npm run check:media-storage:production -- --live",
+      "ownerAction": "Configure the real object bucket and public CDN/base URL, then run the production config and live media storage signoff commands.",
+      "signoffCommand": "npm run check:media-storage:production && npm run check:media-storage:production -- --live",
       "localCoverage": {
         "runtimeSmokePass": true,
         "productionFixturePass": true,
@@ -74,7 +74,13 @@
         "packetIncludesBucketCdnRunbook": true,
         "packetIncludesObjectStorageContract": true,
         "packetIncludesLiveSmokeChecklist": true,
+        "packetIncludesProductionConfigSignoff": true,
+        "packetSignoffRequiresConfigAndLive": true,
         "packetUsesPlaceholderOnlyForSecrets": true,
+        "validProductionAccessKeyRedacted": true,
+        "validProductionSecretRedacted": true,
+        "validProductionEndpointUrlRedacted": true,
+        "validProductionPublicBaseUrlRedacted": true,
         "privateObjectEndpointRejected": true,
         "privatePublicBaseRejected": true,
         "endpointEmbeddedCredentialsRejected": true,
@@ -86,6 +92,7 @@
         "unsafeBucketNameRejected": true,
         "unsafeObjectPrefixRejected": true,
         "liveFixturePass": true,
+        "liveFailureRejected": true,
         "liveCleanupPass": true
       }
     },

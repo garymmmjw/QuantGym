@@ -48,6 +48,9 @@ try {
       && combinedContent.includes("signed PUT"),
     includesLiveSmokeChecklist: combinedContent.includes("run live media signoff")
       && combinedContent.includes("npm run check:media-storage:production -- --live"),
+    includesProductionConfigSignoff: combinedContent.includes("run production media config gate")
+      && combinedContent.includes("npm run check:media-storage:production")
+      && packet.signoffCommand.includes("npm run check:media-storage:production && npm run check:media-storage:production -- --live"),
     usesPlaceholderOnlyForSecrets: combinedContent.includes("<object-storage-access-key-id>")
       && combinedContent.includes("<object-storage-secret-access-key>")
       && !combinedContent.includes("QG_MEDIA_")
