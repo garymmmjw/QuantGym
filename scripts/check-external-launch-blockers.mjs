@@ -274,6 +274,8 @@ const blockers = [
       listingUrlQueryRejected: evidence.chromeFixture.checks?.listingUrlQueryRejected === true,
       listingUrlDetailPathRejected: evidence.chromeFixture.checks?.listingUrlDetailPathRejected === true,
       listingUrlExtraPathRejected: evidence.chromeFixture.checks?.listingUrlExtraPathRejected === true,
+      evidenceUrlNonStoreRejected: evidence.chromeFixture.checks?.evidenceUrlNonStoreRejected === true,
+      evidenceUrlWithoutItemIdRejected: evidence.chromeFixture.checks?.evidenceUrlWithoutItemIdRejected === true,
       evidenceUrlEmbeddedCredentialsRejected: evidence.chromeFixture.checks?.evidenceUrlEmbeddedCredentialsRejected === true,
       evidenceUrlQueryRejected: evidence.chromeFixture.checks?.evidenceUrlQueryRejected === true,
       finalSignoffCommandRecorded: evidence.chromeFixture.finalSignoffCommand === "npm run check:chrome-store-publication:published"

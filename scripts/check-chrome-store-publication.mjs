@@ -80,9 +80,10 @@ if (publishedMode) {
     assertNotPlaceholderChromeExtensionId(itemId);
     const listingParsed = assertHttpsUrl(listingUrl, "QUANTGYM_CHROME_WEB_STORE_LISTING_URL");
     assertNoPlaceholder("QUANTGYM_CHROME_WEB_STORE_LISTING_URL", listingUrl);
-    assertChromeStoreListingUrl(listingParsed, itemId);
+    assertChromeStoreListingUrl(listingParsed, itemId, "QUANTGYM_CHROME_WEB_STORE_LISTING_URL");
     const evidenceParsed = assertHttpsUrl(evidenceUrl, "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL");
     assertNoPlaceholder("QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL", evidenceUrl);
+    assertChromeStoreListingUrl(evidenceParsed, itemId, "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL");
     assert(status === "published", "QUANTGYM_CHROME_WEB_STORE_STATUS must be published for final signoff.");
     assert(submittedVersion === manifest.version, `QUANTGYM_CHROME_WEB_STORE_SUBMITTED_VERSION must equal manifest version ${manifest.version}.`);
     assertSha256(uploadSha256, "QUANTGYM_CHROME_WEB_STORE_UPLOAD_SHA256");
@@ -205,16 +206,16 @@ function assertNotPlaceholderChromeExtensionId(itemId) {
   assert(!/^([a-p])\1{31}$/.test(itemId), "QUANTGYM_CHROME_WEB_STORE_ITEM_ID looks like a placeholder Chrome extension id.");
 }
 
-function assertChromeStoreListingUrl(url, itemId) {
+function assertChromeStoreListingUrl(url, itemId, label) {
   assert(
     ["chromewebstore.google.com", "chrome.google.com"].includes(url.hostname),
-    "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must point to a Chrome Web Store listing."
+    `${label} must point to a Chrome Web Store listing.`
   );
   const segments = url.pathname.split("/").map(clean).filter(Boolean);
   const detailIndex = segments.indexOf("detail");
-  assert(detailIndex >= 0, "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must point to a Chrome Web Store detail listing.");
-  assert(segments.slice(detailIndex + 1).includes(itemId), "Chrome Web Store listing URL must include the item id.");
-  assert(segments.at(-1) === itemId, "Chrome Web Store listing URL must end with the item id.");
+  assert(detailIndex >= 0, `${label} must point to a Chrome Web Store detail listing.`);
+  assert(segments.slice(detailIndex + 1).includes(itemId), `${label} must include the item id.`);
+  assert(segments.at(-1) === itemId, `${label} must end with the item id.`);
 }
 
 function assert(condition, message) {

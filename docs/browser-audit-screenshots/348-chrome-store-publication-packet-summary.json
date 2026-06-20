@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-20T20:03:13.804Z",
+  "generatedAt": "2026-06-20T21:52:47.804Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/chrome-store-publication/readiness-packet",
   "filesWritten": [
     "artifacts/chrome-store-publication/readiness-packet/README.md",
@@ -33,6 +33,7 @@
     "includesDeveloperDashboardChecklist": true,
     "includesReleasePackageSha": true,
     "includesPublishedSignoffEnvTemplate": true,
+    "includesEvidenceUrlStoreDetailRequirement": true,
     "includesListingSnapshot": true,
     "includesFinalSignoffChecklist": true,
     "usesPlaceholdersForPublishedIds": true,
@@ -42,6 +43,7 @@
     "submissionHandoffPass": true,
     "publishedFixturePass": true,
     "negativeFixturesRejected": true,
+    "publishedEvidenceUrlBoundToStoreListing": true,
     "finalSignoffCommandRecorded": true,
     "externalPublicationStillRequired": true
   },

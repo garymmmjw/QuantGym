@@ -108,6 +108,16 @@ try {
       expectedError: "private network address"
     },
     {
+      name: "non-store evidence URL rejected",
+      env: { QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL: "https://quantgym.app/chrome-store-evidence" },
+      expectedError: "Chrome Web Store listing"
+    },
+    {
+      name: "evidence URL without item id rejected",
+      env: { QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL: "https://chromewebstore.google.com/detail/quantgym-collector/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+      expectedError: "must include the item id"
+    },
+    {
       name: "evidence URL embedded credentials rejected",
       env: { QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL: `https://user:secret@chromewebstore.google.com/detail/quantgym-collector/${fixtureItemId}` },
       expectedError: "embedded credentials"
@@ -147,6 +157,8 @@ try {
     listingUrlQueryRejected: findNegativeFixture(negativeFixtures, "listing URL query rejected")?.rejected === true,
     listingUrlDetailPathRejected: findNegativeFixture(negativeFixtures, "non-detail listing URL rejected")?.rejected === true,
     listingUrlExtraPathRejected: findNegativeFixture(negativeFixtures, "listing URL extra path rejected")?.rejected === true,
+    evidenceUrlNonStoreRejected: findNegativeFixture(negativeFixtures, "non-store evidence URL rejected")?.rejected === true,
+    evidenceUrlWithoutItemIdRejected: findNegativeFixture(negativeFixtures, "evidence URL without item id rejected")?.rejected === true,
     evidenceUrlEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "evidence URL embedded credentials rejected")?.rejected === true,
     evidenceUrlQueryRejected: findNegativeFixture(negativeFixtures, "evidence URL query rejected")?.rejected === true,
     externalPublicationStillRequired: true

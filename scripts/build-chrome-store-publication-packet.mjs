@@ -55,6 +55,8 @@ try {
     includesReleasePackageSha: combinedContent.includes(packet.releasePackageEvidence.uploadSha256),
     includesPublishedSignoffEnvTemplate: combinedContent.includes("QUANTGYM_CHROME_WEB_STORE_ITEM_ID")
       && combinedContent.includes("QUANTGYM_CHROME_WEB_STORE_UPLOAD_SHA256"),
+    includesEvidenceUrlStoreDetailRequirement: combinedContent.includes("same Chrome Web Store detail URL")
+      && combinedContent.includes("same item id"),
     includesListingSnapshot: combinedContent.includes("Store Listing Fields")
       && combinedContent.includes(packet.manifest.name)
       && combinedContent.includes(packet.listing.shortDescription),
@@ -69,6 +71,8 @@ try {
     submissionHandoffPass: publicationFixture.checks?.submissionHandoffPass === true,
     publishedFixturePass: publicationFixture.checks?.publishedFixturePass === true,
     negativeFixturesRejected: publicationFixture.checks?.negativeFixturesRejected === true,
+    publishedEvidenceUrlBoundToStoreListing: publicationFixture.checks?.evidenceUrlNonStoreRejected === true
+      && publicationFixture.checks?.evidenceUrlWithoutItemIdRejected === true,
     finalSignoffCommandRecorded: publicationFixture.finalSignoffCommand === "npm run check:chrome-store-publication:published",
     externalPublicationStillRequired: publicationFixture.checks?.externalPublicationStillRequired === true
   };
@@ -164,7 +168,7 @@ function renderOverview(packet) {
     packet.signoffCommand,
     "```",
     "",
-    "The published signoff rejects placeholder item ids, draft status, mismatched versions or package hashes, non-store listing URLs, and private or credential/query-bearing evidence URLs.",
+    "The published signoff rejects placeholder item ids, draft status, mismatched versions or package hashes, non-store listing/evidence URLs, evidence URLs for a different item id, and private or credential/query-bearing evidence URLs.",
     ""
   ].join("\n");
 }
@@ -197,7 +201,7 @@ function renderDeveloperDashboardSubmission(packet) {
     "",
     "## After Approval",
     "",
-    "Record the real item id, Chrome Web Store detail listing URL, published status, submitted version, upload SHA-256, and evidence URL in the signoff environment template.",
+    "Record the real item id, Chrome Web Store detail listing URL, published status, submitted version, upload SHA-256, and evidence URL in the signoff environment template. The evidence URL must be the same Chrome Web Store detail URL, or another Chrome Web Store detail URL ending in the same item id.",
     ""
   ].join("\n");
 }
@@ -234,6 +238,7 @@ function renderPublishedSignoffEnv(packet) {
   return [
     "# Chrome Web Store published signoff env template.",
     "# Fill these only after the developer dashboard shows the item as published.",
+    "# The listing and evidence URLs must both be Chrome Web Store detail URLs for the same item id.",
     "",
     "QUANTGYM_CHROME_WEB_STORE_ITEM_ID=<real-chrome-extension-id>",
     "QUANTGYM_CHROME_WEB_STORE_LISTING_URL=https://chromewebstore.google.com/detail/quantgym-collector/<real-chrome-extension-id>",
@@ -257,7 +262,7 @@ function renderChecklistCsv(packet) {
     ["verify upload sha", "", packet.releasePackageEvidence.uploadSha256, "pending"],
     ["submit for review", "", "Chrome Web Store developer dashboard submission id or screenshot", "pending"],
     ["wait for published status", "", "dashboard shows published", "pending"],
-    ["record listing evidence", "", "Chrome Web Store detail URL without query or credentials", "pending"],
+    ["record listing evidence", "", "Chrome Web Store detail URL without query or credentials and with the same item id", "pending"],
     ["run published signoff", "", "npm run check:chrome-store-publication:published", "pending"]
   ];
   return rows.map((row) => row.map(csvCell).join(",")).join("\n") + "\n";

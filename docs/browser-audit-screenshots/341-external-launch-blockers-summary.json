@@ -172,6 +172,8 @@
         "listingUrlQueryRejected": true,
         "listingUrlDetailPathRejected": true,
         "listingUrlExtraPathRejected": true,
+        "evidenceUrlNonStoreRejected": true,
+        "evidenceUrlWithoutItemIdRejected": true,
         "evidenceUrlEmbeddedCredentialsRejected": true,
         "evidenceUrlQueryRejected": true,
         "finalSignoffCommandRecorded": true
