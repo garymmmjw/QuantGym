@@ -1,10 +1,19 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-19T04:01:25.047Z",
+  "generatedAt": "2026-06-20T20:15:48.632Z",
   "mode": "commercial",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/question-bank-rights/public-commercial-approval-packet",
+  "signoffCommand": "npm run check:question-bank-rights:public && npm run check:question-bank-rights:commercial",
+  "supportingCommands": {
+    "releaseBlockers": "npm run check:question-bank-rights:release-blockers",
+    "rebuildPacket": "npm run build:question-bank-rights-packet"
+  },
+  "releaseBlockerSummaryPath": "docs/browser-audit-screenshots/340-question-bank-rights-release-blockers-summary.json",
   "blockedSourceCount": 15,
   "activeSourceCount": 15,
+  "sourcePacketCount": 15,
+  "manifestDraftSourceCount": 15,
+  "trackerRowCount": 15,
   "releaseBlocked": true,
   "publicFailureCount": 15,
   "commercialFailureCount": 15,
@@ -174,9 +183,18 @@
   ],
   "checks": {
     "allActiveSourcesHavePackets": true,
+    "sourcePacketCountMatchesBlockedSources": true,
     "manifestDraftEntriesMatchPackets": true,
     "trackerRowsMatchPackets": true,
-    "includesCommercialUseScope": true
+    "filesIncludeOverviewTrackerAndManifestDraft": true,
+    "includesCommercialUseScope": true,
+    "packetIncludesCompleteSignoffCommand": true,
+    "packetIncludesReleaseBlockerCommand": true,
+    "packetIncludesEvidenceUrlSafetyRules": true,
+    "sourcePacketsIncludeOutreachAndDrafts": true,
+    "sourcePacketsListRequiredScopes": true,
+    "manifestDraftEntriesContainTodoPlaceholders": true,
+    "releaseBlockersMatchPacketSources": true
   },
   "failures": [],
   "warnings": []
