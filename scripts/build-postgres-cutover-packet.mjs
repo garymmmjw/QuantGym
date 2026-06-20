@@ -70,6 +70,7 @@ try {
       && exportSmoke.cutoverChecks?.postgresImportRejectsTruncatedExport === true,
     completeSignoffFixturePass: exportSmoke.cutoverChecks?.completeSignoffAccepted === true,
     completeSignoffNegativeFixturesRejected: exportSmoke.cutoverChecks?.completeSignoffNegativeFixturesRejected === true,
+    completeSignoffRejectsRawIpTarget: exportSmoke.cutoverChecks?.publicIpTargetHostRejected === true,
     completeSignoffRejectsUnsafeEvidence: exportSmoke.cutoverChecks?.privateEvidenceUrlRejected === true
       && exportSmoke.cutoverChecks?.evidenceUrlEmbeddedCredentialsRejected === true
       && exportSmoke.cutoverChecks?.evidenceUrlQueryRejected === true
@@ -121,7 +122,7 @@ function buildPacketModel(exportSmoke) {
     generatedAt,
     requiredEnv: [
       ["QUANTGYM_POSTGRES_CUTOVER_STATUS", "Set to complete only after the deployed API is using managed Postgres."],
-      ["QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST", "Managed Postgres host name only, not a DSN."],
+      ["QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST", "Managed Postgres DNS host name only, not a DSN or IP address."],
       ["QUANTGYM_POSTGRES_CUTOVER_DATABASE", "Plain database name."],
       ["QUANTGYM_POSTGRES_CUTOVER_COMPLETED_AT", "Non-future ISO timestamp for the cutover completion."],
       ["QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL", "Externally reachable HTTPS evidence URL without credentials, query, or fragment."],
@@ -173,7 +174,7 @@ function renderOverview(packet) {
     packet.signoffCommand,
     "```",
     "",
-    "The filled environment must not be committed. The gate rejects redacted or truncated exports, localhost/private target hosts, malformed database names, mismatched source/export hashes, row-count mismatch, inactive app DB state, missing backup confirmation, and private or credential/query-bearing evidence URLs.",
+    "The filled environment must not be committed. The gate rejects redacted or truncated exports, localhost/private/raw-IP target hosts, malformed database names, mismatched source/export hashes, row-count mismatch, inactive app DB state, missing backup confirmation, and private or credential/query-bearing evidence URLs.",
     ""
   ].join("\n");
 }

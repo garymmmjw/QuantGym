@@ -455,8 +455,8 @@ Browser/CDP deep flows now recorded in
   include-sensitive exports as migration input. The same smoke now exercises the
   final `--cutover-complete` signoff shape, binding source DB/export SHA-256
   prefixes, target row count, app-DB-active confirmation, backup confirmation,
-  and a sanitized HTTPS evidence host, and rejects pending status, localhost
-  or private-network target hosts, malformed target hosts, database DSNs or
+  and a sanitized HTTPS evidence host, and rejects pending status, localhost,
+  private-network, or raw-IP target hosts, malformed target hosts, database DSNs or
   unsafe database names, future timestamps, placeholder/private-network
   evidence URLs, evidence URLs with embedded credentials or query strings, SHA
   mismatches, row-count mismatches, inactive app database confirmation, and

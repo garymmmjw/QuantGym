@@ -1554,6 +1554,7 @@ function validatePostgresCutoverExportSmokeSummary(data, expect, label) {
   expect(data.cutoverChecks?.completeSignoffNegativeFixturesRejected === true, `${label} complete signoff negative fixtures must be rejected`);
   expect(data.cutoverChecks?.completeSignoffNegativeFixturesMentionExpectedErrors === true, `${label} complete signoff negative fixtures must mention expected errors`);
   expect(data.cutoverChecks?.privateTargetHostRejected === true, `${label} complete signoff must reject private-network target hosts`);
+  expect(data.cutoverChecks?.publicIpTargetHostRejected === true, `${label} complete signoff must reject raw IP target hosts`);
   expect(data.cutoverChecks?.privateEvidenceUrlRejected === true, `${label} complete signoff must reject private-network evidence URLs`);
   expect(data.cutoverChecks?.targetHostWhitespaceRejected === true, `${label} complete signoff must reject malformed target hosts`);
   expect(data.cutoverChecks?.databaseUnsafeCharactersRejected === true, `${label} complete signoff must reject unsafe database names`);
@@ -1579,7 +1580,7 @@ function validatePostgresCutoverExportSmokeSummary(data, expect, label) {
   expect(typeof data.cutoverSignoff?.sourceDbSha256Prefix === "string" && data.cutoverSignoff.sourceDbSha256Prefix.length === 12, `${label} complete cutover signoff must bind the source DB hash prefix`);
   expect(typeof data.cutoverSignoff?.exportSha256Prefix === "string" && data.cutoverSignoff.exportSha256Prefix.length === 12, `${label} complete cutover signoff must bind the export hash prefix`);
   expect(Number(data.cutoverSignoff?.targetRowCount || 0) === Number(data.importPlan?.rowCount || -1), `${label} complete cutover signoff target row count must match the import plan`);
-  expect(Array.isArray(data.completeSignoffNegativeFixtures) && data.completeSignoffNegativeFixtures.length >= 18, `${label} must include complete signoff negative fixtures`);
+  expect(Array.isArray(data.completeSignoffNegativeFixtures) && data.completeSignoffNegativeFixtures.length >= 19, `${label} must include complete signoff negative fixtures`);
   expect(
     (data.completeSignoffNegativeFixtures || []).some((fixture) => (
       fixture.name === "empty database path rejected"
@@ -1886,7 +1887,7 @@ function validatePostgresCutoverPacketSummary(data, expect, label) {
   expect(data.migrationInputs?.schemaPath === "api-server/postgres/schema.sql", `${label} must reference the Postgres schema path`);
   expect(Number(data.evidence?.tableCount || 0) >= 12, `${label} must retain export table-count evidence`);
   expect(Number(data.evidence?.smokeRowCount || 0) >= 12, `${label} must retain export smoke row-count evidence`);
-  expect(Number(data.evidence?.completeSignoffNegativeFixtureCount || 0) >= 18, `${label} must retain complete signoff negative fixtures`);
+  expect(Number(data.evidence?.completeSignoffNegativeFixtureCount || 0) >= 19, `${label} must retain complete signoff negative fixtures`);
   expectAllChecksTrue(data, expect, label, [
     "expectedFilesWritten",
     "includesSecureExportRunbook",
@@ -1904,6 +1905,7 @@ function validatePostgresCutoverPacketSummary(data, expect, label) {
     "rejectsUnsafeExports",
     "completeSignoffFixturePass",
     "completeSignoffNegativeFixturesRejected",
+    "completeSignoffRejectsRawIpTarget",
     "completeSignoffRejectsUnsafeEvidence"
   ]);
   expectEmptyFailures(data, expect, label);
@@ -2428,12 +2430,14 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(postgres?.localCoverage?.packetUsesPlaceholdersOnlyForSensitivePaths === true, `${label} must keep Postgres packet placeholders limited to sensitive paths`);
   expect(postgres?.localCoverage?.packetNoCredentialUrlExamples === true, `${label} must keep Postgres packet free of credential URL examples`);
   expect(postgres?.localCoverage?.packetRejectsUnsafeExports === true, `${label} must include Postgres packet unsafe-export rejection coverage`);
+  expect(postgres?.localCoverage?.packetCompleteSignoffRejectsRawIpTarget === true, `${label} must include Postgres packet raw-IP target rejection coverage`);
   expect(postgres?.localCoverage?.packetCompleteSignoffRejectsUnsafeEvidence === true, `${label} must include Postgres packet unsafe evidence rejection coverage`);
   expect(postgres?.localCoverage?.includeSensitiveImportPlanValid === true, `${label} must include Postgres include-sensitive import-plan validation`);
   expect(postgres?.localCoverage?.pendingStatusRejected === true, `${label} must include Postgres pending status rejection`);
   expect(postgres?.localCoverage?.localhostTargetHostRejected === true, `${label} must include Postgres localhost target-host rejection`);
   expect(postgres?.localCoverage?.completeSignoffNegativeFixturesRejected === true, `${label} must include Postgres negative signoff fixtures`);
   expect(postgres?.localCoverage?.privateTargetHostRejected === true, `${label} must include Postgres private target-host rejection`);
+  expect(postgres?.localCoverage?.publicIpTargetHostRejected === true, `${label} must include Postgres raw-IP target-host rejection`);
   expect(postgres?.localCoverage?.databaseDsnRejected === true, `${label} must include Postgres database DSN rejection`);
   expect(postgres?.localCoverage?.placeholderEvidenceUrlRejected === true, `${label} must include Postgres placeholder evidence-URL rejection`);
   expect(postgres?.localCoverage?.privateEvidenceUrlRejected === true, `${label} must include Postgres private evidence-URL rejection`);

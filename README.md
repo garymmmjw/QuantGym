@@ -583,11 +583,11 @@ npm run build:postgres-cutover-packet
 npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json
 ```
 
-The complete gate requires `QUANTGYM_POSTGRES_CUTOVER_STATUS=complete`, target
-host/database, completion timestamp, HTTPS evidence URL, source DB SHA-256,
+The complete gate requires `QUANTGYM_POSTGRES_CUTOVER_STATUS=complete`, managed
+Postgres DNS target host/database, completion timestamp, HTTPS evidence URL, source DB SHA-256,
 export SHA-256, target row count, app-DB-active confirmation, and backup
-confirmation. The local export smoke also verifies this contract with a temporary
-API database:
+confirmation, and rejects raw IP target hosts. The local export smoke also
+verifies this contract with a temporary API database:
 
 ```bash
 npm run check:postgres-cutover:export-smoke
