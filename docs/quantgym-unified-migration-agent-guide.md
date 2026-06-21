@@ -444,9 +444,10 @@ What is now correctly completed:
     `scripts/build-static-site.mjs` reads root `.env` and `config.js` as
     public-runtime fallbacks before writing `dist/config.js`. Verified local
     build output contains the configured `8790/8787` endpoints and Google
-    Client ID, does not embed `OPENAI_API_KEY`, and `--strict` still fails on
-    local non-HTTPS endpoints so beta/production deploys must provide HTTPS
-    web config.
+    Client ID, includes Git build provenance mirrored into `dist/version.json`,
+    does not embed `OPENAI_API_KEY`, and `--strict` still fails on local
+    non-HTTPS endpoints so beta/production deploys must provide HTTPS web
+    config.
 
 38. UI contract checks are now code-enforced. Run
     `npm run check:ui-contracts` after route, shell, or page UI edits. The
@@ -459,8 +460,9 @@ What is now correctly completed:
     evidence manifest integrity must stay clean, migration completion must stay
     10 pass / 0 pending / 0 fail, production boundary evidence must remain
     5 pass / 0 skip / 0 fail, local readiness must stay final-pass or an
-    explicit production-token-only partial, static build config must not embed the OpenAI
-    key, and the Google token helper browser smoke must stay
+    explicit production-token-only partial, static build config must not embed
+    the OpenAI key and must expose matching build provenance, and the Google
+    token helper browser smoke must stay
     renderable. It exists to catch regressions like missing problem
     search/cards, empty Overview leaderboard selectors, missing Resume review
     controls, broken Settings config ids, a disconnected Todo dock, stale or

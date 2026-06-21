@@ -1,6 +1,6 @@
 {
   "id": 321,
-  "date": "2026-06-08",
+  "date": "2026-06-21",
   "surface": "static build",
   "status": "pass",
   "checks": {
@@ -11,11 +11,17 @@
     "distConfigGoogleClientIdSet": true,
     "distConfigGoogleLoginEnabled": true,
     "distConfigContainsOpenAiKey": false,
+    "distConfigBuildCommit": "ddc8db7c55bacb402bc80318d3f3dc992b616341",
+    "distConfigBuildBranch": "main",
+    "distConfigBuildSource": "local-git",
+    "distVersionJsonPresent": true,
+    "distVersionJsonMatchesConfig": true,
     "strictModeRejectsLocalHttpEndpoints": true
   },
+  "failures": [],
   "notes": [
-    "scripts/build-static-site.mjs now reads root .env and config.js as public-runtime fallbacks.",
-    "The local build carries configured public endpoints/client id into dist/config.js.",
+    "scripts/build-static-site.mjs writes public runtime config to dist/config.js.",
+    "dist/version.json mirrors the build commit, branch, and source for deployment provenance checks.",
     "Strict mode still requires HTTPS endpoints for beta or production deploys."
   ]
 }

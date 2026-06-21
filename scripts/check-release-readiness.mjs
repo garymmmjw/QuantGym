@@ -61,6 +61,7 @@ const gates = [
   { name: "Postgres cutover export smoke", command: "npm", args: ["run", "check:postgres-cutover:export-smoke"], parseJson: true },
   { name: "Postgres cutover", command: "npm", args: ["run", "check:postgres-cutover"], parseJson: true },
   { name: "Static build", command: "npm", args: ["run", "build"] },
+  { name: "Static build config", command: "npm", args: ["run", "check:static-build-config", "--", "--no-build"], parseJson: true },
   {
     name: "Production boundaries",
     command: "npm",

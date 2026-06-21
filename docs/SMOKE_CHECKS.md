@@ -61,8 +61,10 @@ previous origin warning. Evidence:
 Static build config follow-up: `scripts/build-static-site.mjs` now reads root
 `.env` and `config.js` as public-runtime fallbacks before writing
 `dist/config.js`. Local `npm run build` writes the configured `8790/8787`
-endpoints and Google Client ID without embedding `OPENAI_API_KEY`; `--strict`
-still rejects non-HTTPS local endpoints for beta/production deploys.
+endpoints, Google Client ID, and build provenance without embedding
+`OPENAI_API_KEY`; `dist/version.json` mirrors the build commit/branch/source so
+deployed static assets can be tied back to a Git commit. `--strict` still
+rejects non-HTTPS local endpoints for beta/production deploys.
 
 UI contract follow-up: `npm run check:ui-contracts` now locks the React route
 surface against the most important migrated DOM contracts. It checks all 21
@@ -349,8 +351,9 @@ Browser/CDP deep flows now recorded in
 - [x] Empty-config external-boundary UI smoke: Login, Settings, and Resume
   fallback remain stable without production endpoints.
 - [x] Local LLM/PDF endpoint sign-off with real OpenAI-backed local proxy.
-- [x] Static build runtime config carries local public endpoints/client id into
-  `dist/config.js` while strict production mode rejects non-HTTPS endpoints.
+- [x] Static build runtime config carries local public endpoints/client id and
+  Git build provenance into `dist/config.js` plus `dist/version.json`, while
+  strict production mode rejects non-HTTPS endpoints.
 - [x] UI contract gate: `npm run check:ui-contracts` passes for 21 React routes,
   shell ids, 25 key JSON evidence artifacts, and 92 non-empty screenshot
   artifacts.

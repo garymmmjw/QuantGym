@@ -22,11 +22,17 @@ loadEnvFromProjectRoot();
 const runtimeConfig = await loadRuntimeConfig();
 
 const env = process.env;
-const llmEndpoint = clean(env.QUANTGYM_LLM_ENDPOINT || env.LLM_ENDPOINT || runtimeConfig.llmEndpoint);
-const cloudApiEndpoint = clean(env.QUANTGYM_CLOUD_API_ENDPOINT || env.CLOUD_API_ENDPOINT || runtimeConfig.cloudApiEndpoint);
+const llmEndpoint = deployedMode
+  ? clean(runtimeConfig.llmEndpoint || env.QUANTGYM_LLM_ENDPOINT || env.LLM_ENDPOINT)
+  : clean(env.QUANTGYM_LLM_ENDPOINT || env.LLM_ENDPOINT || runtimeConfig.llmEndpoint);
+const cloudApiEndpoint = deployedMode
+  ? clean(runtimeConfig.cloudApiEndpoint || env.QUANTGYM_CLOUD_API_ENDPOINT || env.CLOUD_API_ENDPOINT)
+  : clean(env.QUANTGYM_CLOUD_API_ENDPOINT || env.CLOUD_API_ENDPOINT || runtimeConfig.cloudApiEndpoint);
 const googleIdToken = clean(env.QUANTGYM_GOOGLE_ID_TOKEN || env.GOOGLE_ID_TOKEN);
 let llmBearerToken = clean(env.QUANTGYM_LLM_BEARER_TOKEN || env.LLM_BEARER_TOKEN);
-const googleClientId = clean(env.QUANTGYM_GOOGLE_CLIENT_ID || runtimeConfig.googleClientId);
+const googleClientId = deployedMode
+  ? clean(runtimeConfig.googleClientId || env.QUANTGYM_GOOGLE_CLIENT_ID)
+  : clean(env.QUANTGYM_GOOGLE_CLIENT_ID || runtimeConfig.googleClientId);
 const model = clean(env.QUANTGYM_LLM_MODEL || env.OPENAI_MODEL || runtimeConfig.llmModel) || "gpt-5-nano";
 
 const results = [];

@@ -589,6 +589,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       expect(data.checks?.distConfigGoogleClientIdSet === true, "dist config must carry Google Client ID");
       expect(data.checks?.distConfigGoogleLoginEnabled === true, "dist config must enable Google login");
       expect(data.checks?.distConfigContainsOpenAiKey === false, "dist config must not embed OPENAI_API_KEY");
+      expect(/^[0-9a-f]{7,40}$/i.test(String(data.checks?.distConfigBuildCommit || "")), "dist config must include a deployable Git build commit");
+      expect(data.checks?.distVersionJsonPresent === true, "static build must emit version.json");
+      expect(data.checks?.distVersionJsonMatchesConfig === true, "version.json must match dist config build metadata");
       expect(data.checks?.strictModeRejectsLocalHttpEndpoints === true, "strict build must reject local HTTP endpoints");
       break;
     case "322-ui-contract-gate-summary.json":

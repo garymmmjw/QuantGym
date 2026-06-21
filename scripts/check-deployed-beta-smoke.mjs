@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
 const baseUrl = trimSlash(getArgValue("--base-url") || process.env.QUANTGYM_BETA_SMOKE_BASE_URL || "https://beta.quantgym.app");
+const expectedCommit = clean(getArgValue("--expected-commit") || process.env.QUANTGYM_BETA_EXPECTED_COMMIT);
 const summaryPath = path.resolve(
   root,
   getArgValue("--summary") || "docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json"
@@ -165,8 +166,10 @@ const summary = {
   surface: "deployed beta smoke",
   baseUrl,
   email: redactEmail(email),
+  expectedCommit,
   login: { status: "pending" },
   config: {},
+  version: { status: "pending" },
   corsPreflights: [],
   staticAssetFallback: {},
   routes: [],
@@ -203,6 +206,7 @@ try {
 
   await signIn(page);
   summary.config = await readRuntimeConfig(page);
+  summary.version = await readVersionJson();
   await checkCorsPreflights();
   await checkStaticAssetFallback();
   await checkRoutes(page);
@@ -350,9 +354,56 @@ async function readRuntimeConfig(page) {
       cloudApiEndpoint: config.cloudApiEndpoint || "",
       llmEndpoint: config.llmEndpoint || "",
       googleLoginEnabled: config.googleLoginEnabled === true,
-      googleClientIdSet: Boolean(config.googleClientId)
+      googleClientIdSet: Boolean(config.googleClientId),
+      buildCommit: config.buildCommit || "",
+      buildBranch: config.buildBranch || "",
+      buildSource: config.buildSource || ""
     };
   });
+}
+
+async function readVersionJson() {
+  const result = {
+    status: "pending",
+    url: sanitizeUrl(`${baseUrl}/version.json`),
+    httpStatus: 0,
+    commit: "",
+    branch: "",
+    source: "",
+    matchesConfig: false,
+    expectedCommitMatch: expectedCommit ? false : null
+  };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(`${baseUrl}/version.json`, {
+      headers: {
+        Accept: "application/json"
+      },
+      signal: controller.signal
+    });
+    result.httpStatus = response.status;
+    if (!response.ok) {
+      result.status = "missing";
+      result.error = `HTTP ${response.status}`;
+      return result;
+    }
+    const data = await response.json();
+    result.commit = clean(data.commit);
+    result.branch = clean(data.branch);
+    result.source = clean(data.source);
+    result.matchesConfig = result.commit === clean(summary.config.buildCommit)
+      && result.branch === clean(summary.config.buildBranch)
+      && result.source === clean(summary.config.buildSource);
+    result.expectedCommitMatch = expectedCommit ? result.commit === expectedCommit : null;
+    result.status = result.commit ? "pass" : "fail";
+  } catch (error) {
+    result.status = "fail";
+    result.error = String(error?.message || error).slice(0, 300);
+  } finally {
+    clearTimeout(timeout);
+  }
+  return result;
 }
 
 async function checkRoutes(page) {
@@ -506,6 +557,12 @@ function finalizeChecks() {
       && summary.config.cloudApiEndpoint === "https://api.quantgym.app/api",
     llmEndpointIsProduction: summary.config.llmEndpoint === "https://llm.quantgym.app/interview",
     googleLoginEnabled: summary.config.googleLoginEnabled === true && summary.config.googleClientIdSet === true,
+    buildMetadataPass: !expectedCommit || (
+      summary.version.status === "pass"
+        && summary.version.matchesConfig === true
+        && /^[0-9a-f]{7,40}$/i.test(String(summary.version.commit || ""))
+    ),
+    expectedCommitPass: !expectedCommit || summary.version.expectedCommitMatch === true,
     corsPreflightPass: summary.corsPreflights.length === corsPreflightChecks.length
       && summary.corsPreflights.every((result) => result.pass === true),
     staticAssetFallbackPass: summary.staticAssetFallback?.pass === true,

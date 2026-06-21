@@ -16,7 +16,10 @@ const webConfig = {
   llmEndpoint: value("QUANTGYM_WEB_LLM_ENDPOINT", "QUANTGYM_LLM_ENDPOINT", "LLM_ENDPOINT") || clean(runtimeConfig.llmEndpoint),
   llmModel: value("QUANTGYM_WEB_LLM_MODEL", "QUANTGYM_LLM_MODEL", "OPENAI_MODEL") || clean(runtimeConfig.llmModel) || "gpt-5-nano",
   googleClientId: value("QUANTGYM_WEB_GOOGLE_CLIENT_ID", "QUANTGYM_GOOGLE_CLIENT_ID") || clean(runtimeConfig.googleClientId),
-  googleLoginEnabled: false
+  googleLoginEnabled: false,
+  buildCommit: resolveBuildCommit(),
+  buildBranch: resolveBuildBranch(),
+  buildSource: resolveBuildSource()
 };
 webConfig.googleLoginEnabled = boolValue(
   "QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED",
@@ -47,6 +50,7 @@ execSync("node_modules/.bin/vite build", {
 // Vite leaves classic script tags untouched, and dynamic asset paths in the app
 // are not visible to Rollup. Copy those static runtime files explicitly.
 writeConfig(outputDir);
+writeVersionFile(outputDir);
 copyRuntimeStaticFiles(outputDir);
 
 // Locale entry pages (/zh/ and /en/) are generated after Vite build because
@@ -155,6 +159,17 @@ function writeConfig(distDir) {
   fs.writeFileSync(configPath, content);
 }
 
+function writeVersionFile(distDir) {
+  fs.mkdirSync(distDir, { recursive: true });
+  const versionPath = path.join(distDir, "version.json");
+  const version = {
+    commit: webConfig.buildCommit,
+    branch: webConfig.buildBranch,
+    source: webConfig.buildSource
+  };
+  fs.writeFileSync(versionPath, `${JSON.stringify(version, null, 2)}\n`);
+}
+
 function loadEnvFromProjectRoot() {
   const envPath = path.join(projectRoot, ".env");
   if (!fs.existsSync(envPath)) return;
@@ -167,6 +182,40 @@ function loadEnvFromProjectRoot() {
     const key = trimmed.slice(0, separatorIndex).trim();
     if (!key || process.env[key] !== undefined) continue;
     process.env[key] = unquoteEnvValue(trimmed.slice(separatorIndex + 1).trim());
+  }
+}
+
+function resolveBuildCommit() {
+  return clean(
+    value("QUANTGYM_WEB_BUILD_COMMIT", "CF_PAGES_COMMIT_SHA", "GITHUB_SHA", "VERCEL_GIT_COMMIT_SHA", "RENDER_GIT_COMMIT")
+      || gitOutput("git rev-parse HEAD")
+  ).slice(0, 40);
+}
+
+function resolveBuildBranch() {
+  return clean(
+    value("QUANTGYM_WEB_BUILD_BRANCH", "CF_PAGES_BRANCH", "GITHUB_REF_NAME", "VERCEL_GIT_COMMIT_REF", "RENDER_GIT_BRANCH")
+      || gitOutput("git rev-parse --abbrev-ref HEAD")
+  );
+}
+
+function resolveBuildSource() {
+  if (clean(process.env.CF_PAGES_COMMIT_SHA)) return "cloudflare-pages";
+  if (clean(process.env.GITHUB_SHA)) return "github";
+  if (clean(process.env.VERCEL_GIT_COMMIT_SHA)) return "vercel";
+  if (clean(process.env.RENDER_GIT_COMMIT)) return "render";
+  return "local-git";
+}
+
+function gitOutput(command) {
+  try {
+    return execSync(command, {
+      cwd: projectRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"]
+    });
+  } catch {
+    return "";
   }
 }
 

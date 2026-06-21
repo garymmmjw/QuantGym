@@ -166,8 +166,9 @@ npm run build
 
 For local builds, the build script reads root `.env` and `config.js` as
 fallbacks for public runtime config, then writes the resolved values into
-`dist/config.js`. It never embeds server-side secrets such as
-`OPENAI_API_KEY`.
+`dist/config.js`. It also writes `dist/version.json` with the Git build commit,
+branch, and source so deployed static assets can be tied back to a specific
+commit. It never embeds server-side secrets such as `OPENAI_API_KEY`.
 
 For beta or production deploys, use strict mode and provide the public HTTPS service URLs:
 
@@ -181,7 +182,7 @@ node scripts/build-static-site.mjs --strict
 
 Strict mode fails fast unless both `QUANTGYM_WEB_API_ENDPOINT` and `QUANTGYM_WEB_LLM_ENDPOINT` are set and start with `https://`.
 
-The build script runs `vite build` internally, writes `dist/config.js`, copies runtime data scripts and generated image assets, writes locale entry pages (`/zh/`, `/en/`) from the built `dist/index.html`, emits `dist/_redirects` for SPA rewrites, and writes `dist/assets/404.html` so missing hashed chunks under `/assets` do not come back as `200 text/html` during deploy propagation. It intentionally does not emit a top-level `dist/404.html`, because Cloudflare Pages uses the absence of that file to serve unknown React routes through the SPA with HTTP 200. Publish only `dist/`. Do not publish the repository root as a static site.
+The build script runs `vite build` internally, writes `dist/config.js` and `dist/version.json`, copies runtime data scripts and generated image assets, writes locale entry pages (`/zh/`, `/en/`) from the built `dist/index.html`, emits `dist/_redirects` for SPA rewrites, and writes `dist/assets/404.html` so missing hashed chunks under `/assets` do not come back as `200 text/html` during deploy propagation. It intentionally does not emit a top-level `dist/404.html`, because Cloudflare Pages uses the absence of that file to serve unknown React routes through the SPA with HTTP 200. Publish only `dist/`. Do not publish the repository root as a static site.
 
 Cloudflare Pages build command: `npm install && node scripts/build-static-site.mjs --strict`
 
@@ -207,6 +208,15 @@ The full browser route smoke is intentionally allowed a longer nested timeout
 inside release-readiness because the 62 browser interactions currently take
 several minutes; set `QUANTGYM_BROWSER_ROUTE_SMOKE_TIMEOUT_MS` only if the local
 machine needs a different bound.
+
+After a push, confirm the deployed beta static site has picked up a target
+commit by passing that SHA to the deployed smoke:
+
+```bash
+QUANTGYM_BETA_SMOKE_EMAIL="you@example.com" \
+QUANTGYM_BETA_SMOKE_PASSWORD="..." \
+npm run check:deployed-beta-smoke -- --expected-commit "$(git rev-parse HEAD)"
+```
 
 To inspect the current migration completion state without changing runtime
 code, use:

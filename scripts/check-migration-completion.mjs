@@ -218,6 +218,9 @@ function staticBuildConfigEvidence() {
     && checks.distConfigGoogleClientIdSet === true
     && checks.distConfigGoogleLoginEnabled === true
     && checks.distConfigContainsOpenAiKey === false
+    && /^[0-9a-f]{7,40}$/i.test(String(checks.distConfigBuildCommit || ""))
+    && checks.distVersionJsonPresent === true
+    && checks.distVersionJsonMatchesConfig === true
     && checks.strictModeRejectsLocalHttpEndpoints === true;
   return {
     id: "static-build-config",

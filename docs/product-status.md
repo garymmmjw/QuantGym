@@ -7,7 +7,8 @@ This file keeps product state and roadmap notes out of the root README.
 - Private beta deployment targets Cloudflare Pages for the web app and Render for the API and LLM proxy.
 - Closed beta access is controlled by `QUANTGYM_BETA_EMAIL_ALLOWLIST` on the API service.
 - Email verification uses SMTP, currently documented for Resend.
-- The frontend build writes deployment endpoints into `dist/config.js`.
+- The frontend build writes deployment endpoints and build provenance into
+  `dist/config.js`, mirrored by `dist/version.json`.
 
 ## Completed Areas
 

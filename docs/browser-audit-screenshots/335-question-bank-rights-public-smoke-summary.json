@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 521,
+  "durationMs": 546,
   "checks": {
     "validPublicPass": true,
     "validCommercialPass": true,
