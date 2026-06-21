@@ -43,6 +43,7 @@ if (!sanity) {
 }
 
 if (dryRun) {
+  const childEnv = buildChildEnv(token);
   console.log(JSON.stringify({
     status: "ready",
     mode,
@@ -51,17 +52,16 @@ if (dryRun) {
     tokenWrittenToDisk: false,
     tokenPrinted: false,
     tokenExpiresAt: sanity.exp ? new Date(Number(sanity.exp) * 1000).toISOString() : null,
-    tokenEmailPresent: Boolean(sanity.email)
+    tokenEmailPresent: Boolean(sanity.email),
+    childProxyConfigured: Boolean(childEnv.HTTPS_PROXY || childEnv.https_proxy || childEnv.HTTP_PROXY || childEnv.http_proxy),
+    childNoProxy: childEnv.NO_PROXY || childEnv.no_proxy || ""
   }, null, 2));
   process.exit(0);
 }
 
 const result = spawnSync(command, commandArgs, {
   stdio: "inherit",
-  env: {
-    ...process.env,
-    QUANTGYM_GOOGLE_ID_TOKEN: token
-  }
+  env: buildChildEnv(token)
 });
 
 process.exit(typeof result.status === "number" ? result.status : 1);
@@ -127,4 +127,94 @@ function decodeJwtPayload(token) {
 
 function clean(value) {
   return String(value || "").trim();
+}
+
+function buildChildEnv(token) {
+  const env = {
+    ...process.env,
+    QUANTGYM_GOOGLE_ID_TOKEN: token
+  };
+  applyMacSystemProxyDefaults(env);
+  appendNoProxyDefaults(env);
+  return env;
+}
+
+function applyMacSystemProxyDefaults(env) {
+  if (process.platform !== "darwin") return;
+  if (hasProxyEnv(env)) return;
+  const proxy = readMacSystemProxy();
+  if (proxy.https) {
+    env.HTTPS_PROXY = proxy.https;
+    env.https_proxy = proxy.https;
+  }
+  if (proxy.http) {
+    env.HTTP_PROXY = proxy.http;
+    env.http_proxy = proxy.http;
+  }
+}
+
+function hasProxyEnv(env) {
+  return [
+    env.HTTPS_PROXY,
+    env.https_proxy,
+    env.HTTP_PROXY,
+    env.http_proxy,
+    env.ALL_PROXY,
+    env.all_proxy
+  ].some(isHttpProxyUrl);
+}
+
+function readMacSystemProxy() {
+  const result = spawnSync("scutil", ["--proxy"], {
+    encoding: "utf8",
+    maxBuffer: 1024 * 1024
+  });
+  if (result.status !== 0) return {};
+  const values = parseScutilProxy(result.stdout || "");
+  return {
+    https: proxyUrl(values.HTTPSEnable, values.HTTPSProxy, values.HTTPSPort),
+    http: proxyUrl(values.HTTPEnable, values.HTTPProxy, values.HTTPPort)
+  };
+}
+
+function parseScutilProxy(output) {
+  const values = {};
+  for (const line of String(output || "").split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Za-z][A-Za-z0-9]*)\s*:\s*(.+?)\s*$/);
+    if (match) values[match[1]] = match[2];
+  }
+  return values;
+}
+
+function proxyUrl(enabled, host, port) {
+  if (String(enabled || "").trim() !== "1") return "";
+  const cleanHost = clean(host);
+  const cleanPort = clean(port);
+  if (!cleanHost || !cleanPort || !/^\d+$/.test(cleanPort)) return "";
+  return `http://${cleanHost}:${cleanPort}`;
+}
+
+function isHttpProxyUrl(value) {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function appendNoProxyDefaults(env) {
+  const defaults = ["127.0.0.1", "localhost", "::1"];
+  const existing = String(env.NO_PROXY || env.no_proxy || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const seen = new Set(existing.map((item) => item.toLowerCase()));
+  for (const item of defaults) {
+    if (!seen.has(item.toLowerCase())) existing.push(item);
+  }
+  const value = existing.join(",");
+  env.NO_PROXY = value;
+  env.no_proxy = value;
 }
