@@ -529,10 +529,14 @@ What is now correctly completed:
     the same local origin, and shows the short-lived ID token after sign-in.
     The generated helper lives under ignored `artifacts/` and does not write
     the token to disk. Copy the token and immediately run
-    `QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries`.
-    The verifier decodes the JWT locally and fails fast for malformed, expired,
-    wrong-issuer, or wrong-audience tokens before calling the provider login
-    endpoint.
+    `npm run verify:production-boundaries:paste-token`. For deployed service
+    checks, run `npm run google:token-helper:deployed` and then
+    `npm run verify:production-boundaries:deployed:paste-token` so the token
+    audience matches the deployed Google Client ID. The paste-token wrapper
+    rejects expired or nearly expired tokens before launching verifier commands;
+    the verifier then decodes the JWT locally and fails fast for malformed,
+    expired, wrong-issuer, or wrong-audience tokens before calling the provider
+    login endpoint.
     Evidence: `324-google-token-helper-summary.json`.
 
 45. The token helper also has real browser smoke evidence. Google Chrome

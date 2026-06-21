@@ -30,6 +30,7 @@ const commandByMode = {
 
 const [command, commandArgs] = commandByMode[mode];
 const token = clean(process.env.QUANTGYM_GOOGLE_ID_TOKEN || await readToken());
+const minimumSecondsRemaining = parsePositiveInteger(process.env.QUANTGYM_GOOGLE_TOKEN_MIN_SECONDS) || 120;
 
 if (!token) {
   console.error("Google ID token is required.");
@@ -42,6 +43,23 @@ if (!sanity) {
   process.exit(1);
 }
 
+const freshness = tokenFreshness(sanity, minimumSecondsRemaining);
+if (!freshness.ok) {
+  console.error(JSON.stringify({
+    status: "fail",
+    mode,
+    reason: freshness.reason,
+    tokenProvided: true,
+    tokenWrittenToDisk: false,
+    tokenPrinted: false,
+    tokenExpiresAt: freshness.expiresAt,
+    secondsRemaining: freshness.secondsRemaining,
+    minimumSecondsRemaining,
+    tokenEmailPresent: Boolean(sanity.email)
+  }, null, 2));
+  process.exit(1);
+}
+
 if (dryRun) {
   const childEnv = buildChildEnv(token);
   console.log(JSON.stringify({
@@ -51,7 +69,9 @@ if (dryRun) {
     tokenProvided: true,
     tokenWrittenToDisk: false,
     tokenPrinted: false,
-    tokenExpiresAt: sanity.exp ? new Date(Number(sanity.exp) * 1000).toISOString() : null,
+    tokenExpiresAt: freshness.expiresAt,
+    secondsRemaining: freshness.secondsRemaining,
+    minimumSecondsRemaining,
     tokenEmailPresent: Boolean(sanity.email),
     childProxyConfigured: Boolean(childEnv.HTTPS_PROXY || childEnv.https_proxy || childEnv.HTTP_PROXY || childEnv.http_proxy),
     childNoProxy: childEnv.NO_PROXY || childEnv.no_proxy || ""
@@ -127,6 +147,48 @@ function decodeJwtPayload(token) {
 
 function clean(value) {
   return String(value || "").trim();
+}
+
+function tokenFreshness(payload, minSecondsRemaining) {
+  const exp = Number(payload?.exp || 0);
+  const now = Math.floor(Date.now() / 1000);
+  if (!Number.isFinite(exp) || exp <= 0) {
+    return {
+      ok: false,
+      reason: "Google ID token payload is missing exp.",
+      expiresAt: null,
+      secondsRemaining: null
+    };
+  }
+  const secondsRemaining = exp - now;
+  if (secondsRemaining < minSecondsRemaining) {
+    return {
+      ok: false,
+      reason: "Google ID token expires too soon for a safe verification run; generate a fresh token and rerun immediately.",
+      expiresAt: new Date(exp * 1000).toISOString(),
+      secondsRemaining
+    };
+  }
+  const nbf = Number(payload?.nbf || 0);
+  if (Number.isFinite(nbf) && nbf > now + 30) {
+    return {
+      ok: false,
+      reason: "Google ID token is not valid yet.",
+      expiresAt: new Date(exp * 1000).toISOString(),
+      secondsRemaining
+    };
+  }
+  return {
+    ok: true,
+    reason: "",
+    expiresAt: new Date(exp * 1000).toISOString(),
+    secondsRemaining
+  };
+}
+
+function parsePositiveInteger(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : 0;
 }
 
 function buildChildEnv(token) {
