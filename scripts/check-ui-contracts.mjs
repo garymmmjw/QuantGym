@@ -2220,6 +2220,11 @@ function validateDeployedBetaSmokeSummary(data, expect, label) {
   expect(data.config?.llmEndpoint === "https://llm.quantgym.app/interview", `${label} runtime config must use production LLM endpoint`);
   expect(data.config?.googleLoginEnabled === true, `${label} runtime config must enable Google login`);
   expect(data.config?.googleClientIdSet === true, `${label} runtime config must include Google client id`);
+  expect(data.deployReadiness?.status === "pass", `${label} must wait for deployed API readiness before browser login`);
+  expect(data.deployReadiness?.apiEndpoint === "https://api.quantgym.app/api", `${label} deploy readiness must target production API endpoint`);
+  expect(data.deployReadiness?.apiHealth?.status === "pass", `${label} deploy readiness API health must pass`);
+  expect(data.deployReadiness?.corsPreflight?.status === "pass", `${label} deploy readiness CORS preflight must pass`);
+  expect(data.deployReadiness?.version?.expectedCommitMatch !== false, `${label} deploy readiness must not run against the wrong build commit`);
 
   const expectedPreflights = new Set(["cloud sync preflight", "poker join preflight"]);
   expect(Array.isArray(data.corsPreflights), `${label} must include deployed API CORS preflight checks`);
@@ -2739,6 +2744,9 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
   expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 62, `${label} must reference the 62-interaction browser route smoke`);
   expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
+  expect(browser?.localCoverage?.deployedBetaDeployReadinessPass === true, `${label} must include deployed beta deploy-readiness coverage`);
+  expect(browser?.localCoverage?.deployedBetaDeployReadinessApiHealthPass === true, `${label} must include deployed beta API health readiness coverage`);
+  expect(browser?.localCoverage?.deployedBetaDeployReadinessCorsPass === true, `${label} must include deployed beta CORS readiness coverage`);
   expect(Number(browser?.localCoverage?.deployedBetaRoutesChecked || 0) >= routeIds.length, `${label} must include the all-route deployed beta smoke`);
   expect(browser?.localCoverage?.deployedBetaRoutesPass === true, `${label} must include deployed beta route sweep coverage`);
   expect(browser?.localCoverage?.deployedBetaLoginPass === true, `${label} must include deployed beta login coverage`);

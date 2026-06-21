@@ -71,6 +71,7 @@ const requiredScripts = [
   "check:apex-www-domain",
   "check:browser-route-smoke",
   "check:deployed-beta-smoke",
+  "check:deployed-beta-smoke:deploy-window-fixture",
   "check:deployed-beta-mobile-content-smoke",
   "google:token-helper:deployed",
   "verify:production-boundaries:deployed:paste-token"
@@ -483,6 +484,9 @@ const blockers = [
       routesChecked: evidence.browserRouteSmoke.routes?.checked || 0,
       interactionsChecked: evidence.browserRouteSmoke.interactions?.checked || 0,
       deployedBetaSmokePass: evidence.deployedBetaSmoke.status === "pass",
+      deployedBetaDeployReadinessPass: evidence.deployedBetaSmoke.deployReadiness?.status === "pass",
+      deployedBetaDeployReadinessApiHealthPass: evidence.deployedBetaSmoke.deployReadiness?.apiHealth?.status === "pass",
+      deployedBetaDeployReadinessCorsPass: evidence.deployedBetaSmoke.deployReadiness?.corsPreflight?.status === "pass",
       deployedBetaRoutesChecked: evidence.deployedBetaSmoke.routeSummary?.checked || 0,
       deployedBetaRoutesPass: Number(evidence.deployedBetaSmoke.routeSummary?.checked || 0) === 21
         && Number(evidence.deployedBetaSmoke.routeSummary?.passed || 0) === 21

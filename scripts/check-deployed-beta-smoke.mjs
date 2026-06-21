@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -15,6 +16,13 @@ const summaryPath = path.resolve(
 const email = clean(getArgValue("--email") || process.env.QUANTGYM_BETA_SMOKE_EMAIL || process.env.QUANTGYM_LIVE_EMAIL);
 const password = await readPassword();
 const chromePath = process.env.CHROME_PATH || findChromeExecutable();
+const readinessOnly = args.includes("--readiness-only");
+const readinessTimeoutMs = parsePositiveInteger(
+  getArgValue("--readiness-timeout-ms") || process.env.QUANTGYM_BETA_SMOKE_READINESS_TIMEOUT_MS
+) || 120000;
+const readinessIntervalMs = parsePositiveInteger(
+  getArgValue("--readiness-interval-ms") || process.env.QUANTGYM_BETA_SMOKE_READINESS_INTERVAL_MS
+) || 3000;
 const startedAt = Date.now();
 
 const routeChecks = [
@@ -167,6 +175,7 @@ const summary = {
   baseUrl,
   email: redactEmail(email),
   expectedCommit,
+  deployReadiness: { status: "pending" },
   login: { status: "pending" },
   config: {},
   version: { status: "pending" },
@@ -187,6 +196,16 @@ const summary = {
 
 let browser;
 try {
+  summary.deployReadiness = await waitForDeployReadiness();
+  assert(summary.deployReadiness.status === "pass", "Deployed API did not become ready before browser smoke.");
+  if (readinessOnly) {
+    summary.status = "pass";
+    summary.durationMs = Date.now() - startedAt;
+    writeSummary(summary);
+    process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
+    process.exit(0);
+  }
+
   assert(email, "Set QUANTGYM_BETA_SMOKE_EMAIL or pass --email.");
   assert(password, "Set QUANTGYM_BETA_SMOKE_PASSWORD or pass --password-stdin.");
   assert(chromePath, "Google Chrome executable was not found. Set CHROME_PATH to run this check.");
@@ -347,22 +366,98 @@ async function signIn(page) {
   assert(summary.login.hasCloudToken === true, "Login did not persist a cloud session token.");
 }
 
-async function readRuntimeConfig(page) {
-  return page.evaluate(() => {
-    const config = window.QUANTGYM_CONFIG || {};
-    return {
-      cloudApiEndpoint: config.cloudApiEndpoint || "",
-      llmEndpoint: config.llmEndpoint || "",
-      googleLoginEnabled: config.googleLoginEnabled === true,
-      googleClientIdSet: Boolean(config.googleClientId),
-      buildCommit: config.buildCommit || "",
-      buildBranch: config.buildBranch || "",
-      buildSource: config.buildSource || ""
-    };
-  });
+async function waitForDeployReadiness() {
+  const started = Date.now();
+  const result = {
+    status: "pending",
+    timeoutMs: readinessTimeoutMs,
+    intervalMs: readinessIntervalMs,
+    attempts: 0,
+    apiEndpoint: "",
+    transientFailureObserved: false,
+    version: { status: "pending" },
+    apiHealth: { status: "pending", failedAttempts: 0 },
+    corsPreflight: { status: "pending", failedAttempts: 0 }
+  };
+  let lastFailure = "";
+
+  while (Date.now() - started <= readinessTimeoutMs) {
+    result.attempts += 1;
+    const config = await fetchRuntimeConfig();
+    if (config.cloudApiEndpoint) {
+      summary.config = {
+        cloudApiEndpoint: config.cloudApiEndpoint || "",
+        llmEndpoint: config.llmEndpoint || "",
+        googleLoginEnabled: config.googleLoginEnabled === true,
+        googleClientIdSet: Boolean(config.googleClientId),
+        buildCommit: config.buildCommit || "",
+        buildBranch: config.buildBranch || "",
+        buildSource: config.buildSource || ""
+      };
+      result.apiEndpoint = trimSlash(config.cloudApiEndpoint);
+    }
+
+    const version = await fetchVersionJson();
+    result.version = version;
+    summary.version = version;
+    const apiHealth = result.apiEndpoint
+      ? await checkApiHealth(result.apiEndpoint)
+      : { status: "fail", pass: false, error: "Runtime config did not provide cloudApiEndpoint." };
+    const corsPreflight = result.apiEndpoint
+      ? await runCorsPreflight(result.apiEndpoint, corsPreflightChecks[0])
+      : { status: "fail", pass: false, error: "Runtime config did not provide cloudApiEndpoint." };
+
+    result.apiHealth = updateProbeSummary(result.apiHealth, apiHealth);
+    result.corsPreflight = updateProbeSummary(result.corsPreflight, corsPreflight);
+
+    const versionPass = version.status === "pass" && (!expectedCommit || version.expectedCommitMatch === true);
+    if (versionPass && apiHealth.pass === true && corsPreflight.pass === true) {
+      result.status = "pass";
+      result.durationMs = Date.now() - started;
+      return result;
+    }
+
+    result.transientFailureObserved = true;
+    if (apiHealth.pass !== true) result.apiHealth.failedAttempts += 1;
+    if (corsPreflight.pass !== true) result.corsPreflight.failedAttempts += 1;
+    lastFailure = [
+      versionPass ? "" : `version=${version.status}`,
+      apiHealth.pass === true ? "" : `apiHealth=${apiHealth.status || apiHealth.error || "fail"}`,
+      corsPreflight.pass === true ? "" : `cors=${corsPreflight.status || corsPreflight.error || "fail"}`
+    ].filter(Boolean).join("; ");
+    await sleep(readinessIntervalMs);
+  }
+
+  result.status = "fail";
+  result.error = lastFailure || "Readiness timed out.";
+  result.durationMs = Date.now() - started;
+  return result;
 }
 
-async function readVersionJson() {
+async function fetchRuntimeConfig() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(`${baseUrl}/config.js?smokeReadiness=${Date.now()}`, {
+      headers: { Accept: "application/javascript,text/javascript,*/*" },
+      signal: controller.signal
+    });
+    if (!response.ok) return {};
+    const source = await response.text();
+    const sandbox = { window: {} };
+    vm.runInNewContext(source, sandbox, {
+      filename: `${baseUrl}/config.js`,
+      timeout: 1000
+    });
+    return sandbox.window.QUANTGYM_CONFIG || {};
+  } catch {
+    return {};
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function fetchVersionJson() {
   const result = {
     status: "pending",
     url: sanitizeUrl(`${baseUrl}/version.json`),
@@ -376,7 +471,7 @@ async function readVersionJson() {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12000);
   try {
-    const response = await fetch(`${baseUrl}/version.json`, {
+    const response = await fetch(`${baseUrl}/version.json?smokeReadiness=${Date.now()}`, {
       headers: {
         Accept: "application/json"
       },
@@ -404,6 +499,66 @@ async function readVersionJson() {
     clearTimeout(timeout);
   }
   return result;
+}
+
+async function checkApiHealth(apiEndpoint) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  const result = {
+    status: "pending",
+    url: sanitizeUrl(`${trimSlash(apiEndpoint)}/health`),
+    httpStatus: 0,
+    pass: false
+  };
+  try {
+    const response = await fetch(`${trimSlash(apiEndpoint)}/health?smokeReadiness=${Date.now()}`, {
+      headers: { Accept: "application/json" },
+      signal: controller.signal
+    });
+    result.httpStatus = response.status;
+    const text = await response.text();
+    let data = {};
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = {};
+    }
+    result.ok = data.ok === true;
+    result.pass = response.status === 200 && data.ok === true;
+    result.status = result.pass ? "pass" : "fail";
+  } catch (error) {
+    result.status = "fail";
+    result.error = String(error?.message || error).slice(0, 300);
+  } finally {
+    clearTimeout(timeout);
+  }
+  return result;
+}
+
+function updateProbeSummary(previous, current) {
+  return {
+    ...current,
+    failedAttempts: Number(previous?.failedAttempts || 0)
+  };
+}
+
+async function readRuntimeConfig(page) {
+  return page.evaluate(() => {
+    const config = window.QUANTGYM_CONFIG || {};
+    return {
+      cloudApiEndpoint: config.cloudApiEndpoint || "",
+      llmEndpoint: config.llmEndpoint || "",
+      googleLoginEnabled: config.googleLoginEnabled === true,
+      googleClientIdSet: Boolean(config.googleClientId),
+      buildCommit: config.buildCommit || "",
+      buildBranch: config.buildBranch || "",
+      buildSource: config.buildSource || ""
+    };
+  });
+}
+
+async function readVersionJson() {
+  return fetchVersionJson();
 }
 
 async function checkRoutes(page) {
@@ -463,52 +618,57 @@ async function checkRoutes(page) {
 
 async function checkCorsPreflights() {
   const apiEndpoint = trimSlash(summary.config.cloudApiEndpoint || "");
-  const origin = new URL(baseUrl).origin;
   for (const check of corsPreflightChecks) {
-    const result = {
-      name: check.name,
-      url: sanitizeUrl(`${apiEndpoint}${check.path}`),
-      method: check.method,
-      requestHeaders: check.requestHeaders,
-      status: 0,
-      allowOrigin: "",
-      allowMethods: "",
-      allowHeaders: "",
-      statusPass: false,
-      originPass: false,
-      methodPass: false,
-      headersPass: false,
-      statusText: ""
-    };
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
-    try {
-      const response = await fetch(`${apiEndpoint}${check.path}`, {
-        method: "OPTIONS",
-        headers: {
-          Origin: origin,
-          "Access-Control-Request-Method": check.method,
-          "Access-Control-Request-Headers": check.requestHeaders.join(", ")
-        },
-        signal: controller.signal
-      });
-      result.status = response.status;
-      result.statusText = response.statusText || "";
-      result.allowOrigin = response.headers.get("access-control-allow-origin") || "";
-      result.allowMethods = response.headers.get("access-control-allow-methods") || "";
-      result.allowHeaders = response.headers.get("access-control-allow-headers") || "";
-      result.statusPass = [200, 204].includes(response.status);
-      result.originPass = result.allowOrigin === origin;
-      result.methodPass = headerListIncludes(result.allowMethods, check.method);
-      result.headersPass = check.requestHeaders.every((header) => headerListIncludes(result.allowHeaders, header));
-    } catch (error) {
-      result.error = String(error?.message || error).slice(0, 300);
-    } finally {
-      clearTimeout(timeout);
-    }
-    result.pass = result.statusPass && result.originPass && result.methodPass && result.headersPass;
-    summary.corsPreflights.push(result);
+    summary.corsPreflights.push(await runCorsPreflight(apiEndpoint, check));
   }
+}
+
+async function runCorsPreflight(apiEndpoint, check) {
+  const origin = new URL(baseUrl).origin;
+  const result = {
+    name: check.name,
+    url: sanitizeUrl(`${apiEndpoint}${check.path}`),
+    method: check.method,
+    requestHeaders: check.requestHeaders,
+    status: 0,
+    allowOrigin: "",
+    allowMethods: "",
+    allowHeaders: "",
+    statusPass: false,
+    originPass: false,
+    methodPass: false,
+    headersPass: false,
+    statusText: ""
+  };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+  try {
+    const response = await fetch(`${apiEndpoint}${check.path}`, {
+      method: "OPTIONS",
+      headers: {
+        Origin: origin,
+        "Access-Control-Request-Method": check.method,
+        "Access-Control-Request-Headers": check.requestHeaders.join(", ")
+      },
+      signal: controller.signal
+    });
+    result.status = response.status;
+    result.statusText = response.statusText || "";
+    result.allowOrigin = response.headers.get("access-control-allow-origin") || "";
+    result.allowMethods = response.headers.get("access-control-allow-methods") || "";
+    result.allowHeaders = response.headers.get("access-control-allow-headers") || "";
+    result.statusPass = [200, 204].includes(response.status);
+    result.originPass = result.allowOrigin === origin;
+    result.methodPass = headerListIncludes(result.allowMethods, check.method);
+    result.headersPass = check.requestHeaders.every((header) => headerListIncludes(result.allowHeaders, header));
+  } catch (error) {
+    result.error = String(error?.message || error).slice(0, 300);
+  } finally {
+    clearTimeout(timeout);
+  }
+  result.pass = result.statusPass && result.originPass && result.methodPass && result.headersPass;
+  result.status = result.pass ? "pass" : "fail";
+  return result;
 }
 
 async function checkStaticAssetFallback() {
@@ -612,6 +772,9 @@ function isIgnoredConsole(text) {
   if (/Framing 'https:\/\/accounts\.google\.com\/' violates the following report-only Content Security Policy directive/i.test(text)) {
     return true;
   }
+  if (/^Failed to load resource: net::ERR_CONNECTION_(CLOSED|RESET)$/i.test(text)) {
+    return true;
+  }
   return /compute-pressure|Permissions-Policy|Failed to load resource: the server responded with a status of 403/i.test(text);
 }
 
@@ -668,6 +831,11 @@ function clean(value) {
   return String(value || "").trim();
 }
 
+function parsePositiveInteger(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : 0;
+}
+
 function trimSlash(value) {
   return clean(value).replace(/\/+$/, "");
 }
@@ -680,6 +848,10 @@ function getArgValue(name) {
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function findChromeExecutable() {

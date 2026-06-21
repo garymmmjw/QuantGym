@@ -210,7 +210,10 @@ several minutes; set `QUANTGYM_BROWSER_ROUTE_SMOKE_TIMEOUT_MS` only if the local
 machine needs a different bound.
 
 After a push, confirm the deployed beta static site has picked up a target
-commit by passing that SHA to the deployed smoke:
+commit by passing that SHA to the deployed smoke. The smoke first waits for the
+deployed `config.js`/`version.json`, API health, and API CORS preflight to
+recover, so a short Render API deploy/restart window is recorded as readiness
+evidence instead of being mistaken for a broken route:
 
 ```bash
 QUANTGYM_BETA_SMOKE_EMAIL="you@example.com" \
@@ -316,6 +319,9 @@ Problems, Interview, Resume, Jobs, Library, Settings, and Account in Chrome, and
 writes the redacted evidence summary to
 `docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json`. The
 summary must not contain raw passwords, session tokens, or full account data.
+`npm run check:deployed-beta-smoke:deploy-window-fixture` covers the deploy
+window locally by simulating initial API `502`/missing-CORS responses followed by
+healthy API and CORS readiness.
 
 ## Beta Deployment Configuration
 
@@ -356,6 +362,19 @@ Start command: python3 api-server/server.py
 Custom domain: api.quantgym.app
 Persistent disk path: /var/data
 ```
+
+Configure the Render API service build filter so docs, frontend-only, and
+tooling-only commits do not auto-deploy and briefly restart `quantgym-api`.
+Use included paths for API runtime inputs such as:
+
+```text
+api-server/**
+data/**
+```
+
+Add other paths only when the API process actually reads them at runtime. After
+changing Render environment variables or any path excluded from the filter, use
+a manual deploy and rerun `npm run check:deployed-beta-smoke`.
 
 Render API environment variables:
 

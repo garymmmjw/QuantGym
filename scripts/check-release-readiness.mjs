@@ -36,6 +36,12 @@ const gates = [
   { name: "Route integrity", command: "npm", args: ["run", "check:route-integrity"], parseJson: true },
   { name: "Route interactions", command: "npm", args: ["run", "check:route-interactions"], parseJson: true },
   { name: "Browser route smoke", command: "npm", args: ["run", "check:browser-route-smoke"], parseJson: true, timeoutMs: browserRouteSmokeTimeoutMs },
+  {
+    name: "Deployed beta deploy-window fixture",
+    command: "npm",
+    args: ["run", "check:deployed-beta-smoke:deploy-window-fixture"],
+    parseJson: true
+  },
   { name: "Module ownership", command: "npm", args: ["run", "check:module-ownership"], parseJson: true },
   { name: "Chrome store readiness", command: "npm", args: ["run", "check:chrome-store-readiness"], parseJson: true },
   { name: "Chrome store publication fixture", command: "npm", args: ["run", "check:chrome-store-publication:fixture"], parseJson: true },
