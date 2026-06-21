@@ -955,7 +955,7 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(Number(data.routes?.checked || 0) === routeIds.length, `${label} must check all routes`);
   expect(Number(data.routes?.passed || 0) === routeIds.length, `${label} route pass count must match all routes`);
   expect(Number(data.routes?.failed || 0) === 0, `${label} must have zero route failures`);
-  expect(Number(data.interactions?.checked || 0) >= 63, `${label} must check key interactions`);
+  expect(Number(data.interactions?.checked || 0) >= 64, `${label} must check key interactions`);
   expect(Number(data.interactions?.failed || 0) === 0, `${label} must have zero interaction failures`);
   const planInteraction = findResult(data.interactions?.results, "plan create, edit, task persistence, and navigation");
   expect(planInteraction?.status === "pass", `${label} must verify Plan create, edit, task persistence, and navigation`);
@@ -1107,6 +1107,10 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   const accountUploadPersistence = findResult(data.interactions?.results, "account avatar upload, clear, and resume file persistence");
   expect(accountUploadPersistence?.status === "pass", `${label} must verify Account avatar and resume file upload persistence`);
   expect(accountUploadPersistence?.avatarCleared === true, `${label} must verify Account avatar clear persistence`);
+  const accountNonAdminAdminGuard = findResult(data.interactions?.results, "account non-admin cloud session avoids admin endpoint requests");
+  expect(accountNonAdminAdminGuard?.status === "pass", `${label} must verify non-admin Account page avoids admin endpoint requests`);
+  expect(accountNonAdminAdminGuard?.adminRequestCount === 0, `${label} must verify non-admin Account page made zero admin endpoint requests`);
+  expect(accountNonAdminAdminGuard?.adminPanelHidden === true, `${label} must verify non-admin Account page keeps the admin panel hidden`);
   const mobileAccountControls = findResult(data.interactions?.results, "mobile account profile and upload controls avoid overflow");
   expect(mobileAccountControls?.status === "pass", `${label} must verify mobile Account profile and upload controls`);
   expect(mobileAccountControls?.mobileViewport === true, `${label} must verify mobile Account viewport`);
@@ -2834,8 +2838,9 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.unsupportedScopeRejected === true, `${label} must include question-bank unsupported scope rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
-  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 63, `${label} must reference the 63-interaction browser route smoke`);
+  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 64, `${label} must reference the 64-interaction browser route smoke`);
   expect(browser?.localCoverage?.globalSearchKeyboardNavigationPass === true, `${label} must include global search keyboard navigation coverage`);
+  expect(browser?.localCoverage?.accountNonAdminAdminRequestGuardPass === true, `${label} must include non-admin Account admin request guard coverage`);
   expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
   expect(browser?.localCoverage?.deployedBetaDeployReadinessPass === true, `${label} must include deployed beta deploy-readiness coverage`);
   expect(browser?.localCoverage?.deployedBetaDeployReadinessApiHealthPass === true, `${label} must include deployed beta API health readiness coverage`);

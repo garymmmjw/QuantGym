@@ -578,6 +578,15 @@ const blockers = [
         && evidence.deployedBetaMobileContentSmoke.checks?.noHorizontalOverflow === true,
       deployedBetaMobileContentSummaryRedactedPass: evidence.deployedBetaMobileContentSmoke.checks?.summaryRedacted === true,
       authPasswordResetPass: evidence.browserRouteSmoke.unauthenticated?.localEmailAuth?.resetNewPasswordLoginSucceeded === true,
+      accountNonAdminAdminRequestGuardPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "account non-admin cloud session avoids admin endpoint requests"
+        );
+        return item?.status === "pass"
+          && item.adminRequestCount === 0
+          && item.adminPanelHidden === true;
+      })(),
       crossModuleJourneyPass: findResult(
         evidence.browserRouteSmoke.interactions?.results,
         "cross-module prep journey persists library, problem, todo, resume, and settings state"
@@ -1018,6 +1027,7 @@ const summary = {
     browserDeployedBetaMobileContentSummaryRedactedPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentSummaryRedactedPass === true,
     browserAuthPasswordResetPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.authPasswordResetPass === true,
     browserGlobalSearchKeyboardNavigationPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.globalSearchKeyboardNavigationPass === true,
+    browserAccountNonAdminAdminRequestGuardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.accountNonAdminAdminRequestGuardPass === true,
     browserCrossModuleJourneyPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.crossModuleJourneyPass === true,
     browserPlanBaselineDiagnosticPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.planBaselineDiagnosticPass === true,
     browserTodoDockLifecyclePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.todoDockLifecyclePass === true,

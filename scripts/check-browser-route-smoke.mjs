@@ -177,6 +177,7 @@ try {
     ["account profile save and reload persistence", runAccountProfileSaveFlow],
     ["account local email change requires password and reauthenticates", runAccountEmailChangeReauthFlow],
     ["account avatar upload, clear, and resume file persistence", runAccountAvatarAndResumeUploadFlow],
+    ["account non-admin cloud session avoids admin endpoint requests", runAccountNonAdminCloudNoAdminRequestsFlow],
     ["mobile account profile and upload controls avoid overflow", runMobileAccountProfileUploadFlow],
     ["settings language switch syncs URL and persists reload", runSettingsLanguageSwitchFlow],
     ["settings saves runtime config, clears Google Client ID, and reloads", runSettingsPersistenceFlow],
@@ -7801,6 +7802,74 @@ async function runAccountAvatarAndResumeUploadFlow(page, baseUrl) {
     result.status = "fail";
     result.error = error.message;
     fail(`${result.name} failed: ${error.message}`);
+  }
+  return result;
+}
+
+async function runAccountNonAdminCloudNoAdminRequestsFlow(page, baseUrl) {
+  const result = { name: "account non-admin cloud session avoids admin endpoint requests", status: "pass" };
+  const browserInstance = page.context().browser();
+  if (!browserInstance) throw new Error("Could not create an isolated browser context for Account admin request guard.");
+  const context = await browserInstance.newContext({
+    viewport: { width: 1365, height: 900 },
+    deviceScaleFactor: 1,
+    locale: "zh-CN"
+  });
+  await context.addInitScript(seedAuthenticatedStorage, browserSmokeAccount);
+  await context.addInitScript((config) => {
+    localStorage.setItem("quantMemoryBoard.cloud.v1", JSON.stringify(config));
+  }, {
+    endpoint: `${baseUrl}/api`,
+    token: "browser-non-admin-cloud-token",
+    userId: browserSmokeAccount.id,
+    lastSyncAt: "",
+    lastError: ""
+  });
+
+  const adminRequests = [];
+  const tempPage = await context.newPage();
+  await tempPage.route("**/api/**", async (route) => {
+    const requestUrl = new URL(route.request().url());
+    if (requestUrl.pathname.includes("/api/admin/")) {
+      adminRequests.push({
+        method: route.request().method(),
+        path: requestUrl.pathname + requestUrl.search
+      });
+      await route.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Admin access is required" })
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, state: {}, problemStates: [], community: {} })
+    });
+  });
+
+  try {
+    await tempPage.goto(`${baseUrl}/account`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(tempPage);
+    await tempPage.waitForSelector("#accountForm", { timeout: 10000 });
+    await tempPage.waitForTimeout(750);
+
+    if (adminRequests.length) {
+      throw new Error(`Non-admin account page made ${adminRequests.length} admin request(s): ${adminRequests.map((item) => `${item.method} ${item.path}`).join(", ")}`);
+    }
+    const adminPanelCount = await tempPage.locator(".account-admin-panel").count();
+    if (adminPanelCount !== 0) throw new Error("Non-admin account page rendered the admin overview panel.");
+
+    result.adminRequestCount = adminRequests.length;
+    result.adminPanelHidden = true;
+  } catch (error) {
+    result.status = "fail";
+    result.error = error.message;
+    result.adminRequests = adminRequests;
+    fail(`${result.name} failed: ${error.message}`);
+  } finally {
+    await context.close().catch(() => {});
   }
   return result;
 }

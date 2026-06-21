@@ -934,6 +934,17 @@ def account_subscription_tier(user: dict) -> str:
     return tier if tier in SUBSCRIPTION_TIER_ORDER else "registered"
 
 
+def account_is_admin(user: dict) -> bool:
+    email = normalize_email(user.get("email_norm") if isinstance(user, dict) else "")
+    return email in ADMIN_EMAILS or account_subscription_tier(user) == "admin"
+
+
+def account_response_payload(user: dict) -> dict:
+    account = parse_json(user.get("account_json") if isinstance(user, dict) else "", {})
+    account["isAdmin"] = account_is_admin(user)
+    return account
+
+
 def ensure_library_access(user: dict, asset: dict) -> None:
     min_tier = str(asset.get("minTier") or "registered")
     user_tier = account_subscription_tier(user)
@@ -2728,8 +2739,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
 
     def require_admin_user(self) -> dict:
         user = self.require_user()
-        email = normalize_email(user.get("email_norm"))
-        if email in ADMIN_EMAILS or account_subscription_tier(user) == "admin":
+        if account_is_admin(user):
             return user
         raise HttpError(403, "Admin access is required")
 
@@ -2744,7 +2754,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         return user
 
     def auth_response(self, conn: sqlite3.Connection, user: dict, token: str):
-        account = parse_json(user["account_json"], {})
+        account = account_response_payload(user)
         return {
             "token": token,
             "account": account,
@@ -3301,7 +3311,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
 
     def get_account(self):
         user = self.require_user()
-        self.send_json(200, {"account": parse_json(user["account_json"], {})})
+        self.send_json(200, {"account": account_response_payload(user)})
 
     def patch_account(self):
         user = self.require_user()
@@ -3322,8 +3332,11 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 "UPDATE users SET email_norm = ?, account_json = ?, updated_at = ? WHERE id = ?",
                 (email, compact_json(updates), updates["updatedAt"], user["id"]),
             )
+            refreshed = dict(user)
+            refreshed["email_norm"] = email
+            refreshed["account_json"] = compact_json(updates)
             self.audit_event("account.update", user=user, metadata={"emailChanged": email != normalize_email(user.get("email_norm"))}, conn=conn)
-            self.send_json(200, {"account": updates})
+            self.send_json(200, {"account": account_response_payload(refreshed)})
 
     def get_state(self):
         user = self.require_user()

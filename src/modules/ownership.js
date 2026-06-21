@@ -255,6 +255,7 @@ export const MODULE_OWNERSHIP = [
       "account profile save and reload persistence",
       "account local email change requires password and reauthenticates",
       "account avatar upload, clear, and resume file persistence",
+      "account non-admin cloud session avoids admin endpoint requests",
       "mobile account profile and upload controls avoid overflow"
     ]
   },

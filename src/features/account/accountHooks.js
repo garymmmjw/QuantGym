@@ -2,6 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppStore, useAuthStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 
+function canCurrentUserReadAdminOverview(user = {}) {
+  const tier = String(user?.subscriptionTier || user?.plan || "").toLowerCase();
+  return user?.isAdmin === true || tier === "admin";
+}
+
 export function useAccountPageModel() {
   const appServices = useAppServices();
   const pageApi = usePageApi();
@@ -132,6 +137,7 @@ export function useAccountPageModel() {
     currentUser?.id
       && cloudConfig?.token
       && cloudConfig?.userId === currentUser.id
+      && canCurrentUserReadAdminOverview(currentUser)
   );
 
   const refreshAdminOverview = useCallback(async () => {
