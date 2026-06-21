@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1209,
+  "durationMs": 1500,
   "productionFixture": {
     "status": "pass",
     "mode": "production",

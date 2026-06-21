@@ -1,7 +1,7 @@
 {
   "status": "pass",
-  "checks": 6,
-  "passed": 6,
+  "checks": 7,
+  "passed": 7,
   "failed": 0,
   "localCoverage": {
     "validProductionBuildFilterAccepted": true,
@@ -9,7 +9,8 @@
     "docsPathRejected": true,
     "frontendSrcPathRejected": true,
     "queryEvidenceUrlRejected": true,
-    "genericNotesRejected": true
+    "genericNotesRejected": true,
+    "missingProductionEnvDoesNotWriteDefaultSummary": true
   },
   "results": [
     {
@@ -65,6 +66,15 @@
       "expectedCheck": "",
       "expectedError": "notes",
       "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-21\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": false\n  },\n  \"failures\": [\n    \"QUANTGYM_"
+    },
+    {
+      "name": "missing production env does not write default summary",
+      "status": "pass",
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "expectedError": "QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED",
+      "createdDefaultSummary": false,
+      "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-21\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [],\n  \"evidenceHost\": \"\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": false,\n    \"hasApiServerPath\": false,\n    \"hasDataPath\": false,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": false,\n    \"serviceNamePass\": false,\n    \"evidenceUrlSafe\": false,\n    \"notesSpecific\": false\n  },\n  \"failures\": [\n    \"QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED must be 1 after the Render "
     }
   ]
 }

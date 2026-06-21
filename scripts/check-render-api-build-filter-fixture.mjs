@@ -75,6 +75,11 @@ const cases = [
   }
 ];
 
+const defaultProductionSummaryPath = path.join(
+  projectRoot,
+  "docs/browser-audit-screenshots/360-render-api-build-filter-production-summary.json"
+);
+
 const results = cases.map((testCase) => {
   const result = spawnSync(process.execPath, [
     "scripts/check-render-api-build-filter.mjs",
@@ -105,10 +110,42 @@ const results = cases.map((testCase) => {
   };
 });
 
+const missingEnvNoDefaultSummaryResult = (() => {
+  fs.rmSync(defaultProductionSummaryPath, { force: true });
+  const result = spawnSync(process.execPath, [
+    "scripts/check-render-api-build-filter.mjs",
+    "--production",
+    "--no-dotenv"
+  ], {
+    cwd: projectRoot,
+    env: {
+      PATH: process.env.PATH,
+      HOME: process.env.HOME,
+      TMPDIR: process.env.TMPDIR
+    },
+    encoding: "utf8",
+    maxBuffer: 1024 * 1024 * 5
+  });
+  const createdDefaultSummary = fs.existsSync(defaultProductionSummaryPath);
+  fs.rmSync(defaultProductionSummaryPath, { force: true });
+  const output = `${result.stdout || ""}\n${result.stderr || ""}`.trim();
+  return {
+    name: "missing production env does not write default summary",
+    status: result.status === 1 && createdDefaultSummary === false ? "pass" : "fail",
+    exitCode: result.status,
+    expectedExitCode: 1,
+    expectedError: "QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED",
+    createdDefaultSummary,
+    outputPreview: output.slice(0, 700)
+  };
+})();
+
+results.push(missingEnvNoDefaultSummaryResult);
+
 const failures = results.filter((item) => item.status !== "pass");
 const summary = {
   status: failures.length ? "fail" : "pass",
-  checks: cases.length,
+  checks: results.length,
   passed: results.length - failures.length,
   failed: failures.length,
   localCoverage: {
@@ -117,7 +154,8 @@ const summary = {
     docsPathRejected: results.find((item) => item.name === "docs path rejected")?.status === "pass",
     frontendSrcPathRejected: results.find((item) => item.name === "frontend src path rejected")?.status === "pass",
     queryEvidenceUrlRejected: results.find((item) => item.name === "query evidence URL rejected")?.status === "pass",
-    genericNotesRejected: results.find((item) => item.name === "generic notes rejected")?.status === "pass"
+    genericNotesRejected: results.find((item) => item.name === "generic notes rejected")?.status === "pass",
+    missingProductionEnvDoesNotWriteDefaultSummary: missingEnvNoDefaultSummaryResult.status === "pass"
   },
   results
 };

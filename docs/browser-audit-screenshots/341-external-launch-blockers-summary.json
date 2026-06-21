@@ -250,6 +250,7 @@
         "fixtureRejectsFrontendSrcPath": true,
         "fixtureRejectsUnsafeEvidenceUrl": true,
         "fixtureRejectsGenericNotes": true,
+        "fixtureMissingEnvNoDefaultSummaryWrite": true,
         "packetGenerated": true,
         "packetIncludesExactRecommendedPaths": true,
         "packetExcludesDocsFrontendToolingPaths": true,

@@ -2139,8 +2139,8 @@ function validateRenderApiBuildFilterPacketSummary(data, expect, label) {
 
 function validateRenderApiBuildFilterFixtureSummary(data, expect, label) {
   expect(data.status === "pass", `${label} status must be pass`);
-  expect(Number(data.checks || 0) === 6, `${label} must run six fixture cases`);
-  expect(Number(data.passed || 0) === 6, `${label} must pass all fixture cases`);
+  expect(Number(data.checks || 0) === 7, `${label} must run seven fixture cases`);
+  expect(Number(data.passed || 0) === 7, `${label} must pass all fixture cases`);
   expect(Number(data.failed || 0) === 0, `${label} must have zero failed fixture cases`);
   for (const key of [
     "validProductionBuildFilterAccepted",
@@ -2148,12 +2148,13 @@ function validateRenderApiBuildFilterFixtureSummary(data, expect, label) {
     "docsPathRejected",
     "frontendSrcPathRejected",
     "queryEvidenceUrlRejected",
-    "genericNotesRejected"
+    "genericNotesRejected",
+    "missingProductionEnvDoesNotWriteDefaultSummary"
   ]) {
     expect(data.localCoverage?.[key] === true, `${label} local coverage ${key} must be true`);
   }
   const results = Array.isArray(data.results) ? data.results : [];
-  expect(results.length === 6, `${label} must summarize all six fixture cases`);
+  expect(results.length === 7, `${label} must summarize all seven fixture cases`);
   expect(results.every((item) => item.status === "pass"), `${label} fixture case summaries must all pass`);
 }
 
@@ -2652,6 +2653,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsFrontendSrcPath === true, `${label} must reject src/** in the Render API build filter`);
   expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsUnsafeEvidenceUrl === true, `${label} must reject unsafe Render API build filter evidence URLs`);
   expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsGenericNotes === true, `${label} must reject generic Render API build filter notes`);
+  expect(renderApiBuildFilter?.localCoverage?.fixtureMissingEnvNoDefaultSummaryWrite === true, `${label} must avoid writing default Render API production summary files when env signoff is missing`);
   expect(renderApiBuildFilter?.localCoverage?.packetGenerated === true, `${label} must include Render API build filter packet coverage`);
   expect(renderApiBuildFilter?.localCoverage?.packetIncludesExactRecommendedPaths === true, `${label} must include exact Render API build filter path guidance`);
   expect(renderApiBuildFilter?.localCoverage?.packetExcludesDocsFrontendToolingPaths === true, `${label} must document excluded docs/frontend/tooling paths`);

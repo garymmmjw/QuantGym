@@ -9,6 +9,7 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const args = parseArgs(process.argv.slice(2));
 const productionMode = Boolean(args.production);
 const loadDotEnv = !args.noDotenv;
+const explicitSummaryPath = Boolean(args.summary);
 const summaryPath = args.summary
   ? path.resolve(projectRoot, args.summary)
   : productionMode
@@ -60,7 +61,9 @@ const summary = {
   failures
 };
 
-if (summaryPath) writeSummary(summary);
+const shouldWriteSummary = Boolean(summaryPath)
+  && (explicitSummaryPath || !productionMode || failures.length === 0);
+if (shouldWriteSummary) writeSummary(summary);
 process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
 if (failures.length) process.exit(1);
 

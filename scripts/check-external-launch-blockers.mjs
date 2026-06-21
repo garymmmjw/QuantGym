@@ -394,6 +394,7 @@ const blockers = [
       fixtureRejectsFrontendSrcPath: evidence.renderApiBuildFilterFixture.localCoverage?.frontendSrcPathRejected === true,
       fixtureRejectsUnsafeEvidenceUrl: evidence.renderApiBuildFilterFixture.localCoverage?.queryEvidenceUrlRejected === true,
       fixtureRejectsGenericNotes: evidence.renderApiBuildFilterFixture.localCoverage?.genericNotesRejected === true,
+      fixtureMissingEnvNoDefaultSummaryWrite: evidence.renderApiBuildFilterFixture.localCoverage?.missingProductionEnvDoesNotWriteDefaultSummary === true,
       packetGenerated: evidence.renderApiBuildFilterPacket.status === "pass",
       packetIncludesExactRecommendedPaths: evidence.renderApiBuildFilterPacket.checks?.includesExactRecommendedPaths === true,
       packetExcludesDocsFrontendToolingPaths: evidence.renderApiBuildFilterPacket.checks?.excludesDocsFrontendToolingPaths === true,
