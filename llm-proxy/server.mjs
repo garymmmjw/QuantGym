@@ -3,7 +3,6 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { ProxyAgent } from "undici";
 
 loadEnvFromProjectRoot();
 
@@ -12,7 +11,7 @@ const HOST = process.env.LLM_PROXY_HOST || process.env.HOST || (isRenderRuntime(
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_RESPONSES_URL = openAiResponsesUrl(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1");
 const OPENAI_PROXY_URL = proxyUrlForTarget(OPENAI_RESPONSES_URL);
-const OPENAI_FETCH_DISPATCHER = createProxyDispatcher(OPENAI_PROXY_URL);
+let openAiFetchDispatcherPromise = null;
 const OPENAI_TIMEOUT_MS = clampInt(process.env.OPENAI_TIMEOUT_MS || process.env.LLM_OPENAI_TIMEOUT_MS || 30_000, 1_000, 120_000);
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-5-nano";
 const NEWS_MAX_ITEMS = Number(process.env.NEWS_MAX_ITEMS || 12);
@@ -575,7 +574,8 @@ async function requestOpenAiResponses(body) {
       body: JSON.stringify(body),
       signal: controller.signal
     };
-    if (OPENAI_FETCH_DISPATCHER) fetchOptions.dispatcher = OPENAI_FETCH_DISPATCHER;
+    const dispatcher = await getOpenAiFetchDispatcher();
+    if (dispatcher) fetchOptions.dispatcher = dispatcher;
     response = await fetch(OPENAI_RESPONSES_URL, fetchOptions);
   } catch (error) {
     throw new Error(formatOpenAiTransportError(error));
@@ -590,12 +590,21 @@ async function requestOpenAiResponses(body) {
   return data;
 }
 
-function createProxyDispatcher(proxyUrl) {
+async function getOpenAiFetchDispatcher() {
+  if (!OPENAI_PROXY_URL) return null;
+  if (!openAiFetchDispatcherPromise) {
+    openAiFetchDispatcherPromise = createProxyDispatcher(OPENAI_PROXY_URL);
+  }
+  return openAiFetchDispatcherPromise;
+}
+
+async function createProxyDispatcher(proxyUrl) {
   if (!proxyUrl) return null;
   try {
+    const { ProxyAgent } = await import("undici");
     return new ProxyAgent(proxyUrl);
   } catch (error) {
-    console.warn(`Ignoring invalid outbound proxy URL for OpenAI requests: ${error.message || error}`);
+    console.warn(`Ignoring outbound proxy for OpenAI requests: ${error.message || error}`);
     return null;
   }
 }
