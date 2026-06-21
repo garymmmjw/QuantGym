@@ -178,6 +178,8 @@ try {
 
   const localWebhookSmoke = await runLocalWebhookSmoke();
   validateLocalWebhookSmoke(localWebhookSmoke);
+  const noVerificationAckSmoke = await runSmokeWithoutVerificationAck();
+  validateNoVerificationAckSmoke(noVerificationAckSmoke);
   const blockedProductionSmoke = await runBlockedProductionSmokeNoDelivery();
   validateBlockedProductionSmoke(blockedProductionSmoke);
 
@@ -207,7 +209,10 @@ try {
     localWebhookSmokeDelivered: localWebhookSmoke.delivered,
     localWebhookSmokeAuthorized: localWebhookSmoke.tokenAccepted,
     localWebhookSmokeSignatureValid: localWebhookSmoke.signatureValid,
+    localWebhookSmokeVerificationAcked: localWebhookSmoke.signatureVerificationAcknowledged === true,
     localWebhookSmokePayloadSafe: localWebhookSmoke.payloadSanitized,
+    smokeWithoutVerificationAckRejected: noVerificationAckSmoke.rejected === true,
+    smokeWithoutVerificationAckNoDeliverySecretLeak: noVerificationAckSmoke.secretSafe === true,
     productionSmokeBlockedWhenConfigInvalid: blockedProductionSmoke.blocked === true,
     productionSmokeNoDeliveryWhenConfigInvalid: blockedProductionSmoke.delivered === false,
     productionSmokeFailureExplained: blockedProductionSmoke.failureExplained === true
@@ -219,6 +224,7 @@ try {
     productionFixture,
     negativeFixtures,
     localWebhookSmoke,
+    noVerificationAckSmoke,
     blockedProductionSmoke,
     checks,
     failures,
@@ -264,6 +270,7 @@ function validateLocalWebhookSmoke(summary) {
   if (!summary.delivered) fail("Local webhook smoke did not deliver a request.");
   if (!summary.tokenAccepted) fail("Local webhook smoke did not send the expected bearer token.");
   if (!summary.signatureValid) fail("Local webhook smoke did not send a valid HMAC signature.");
+  if (!summary.signatureVerificationAcknowledged) fail("Local webhook smoke did not require receiver verification acknowledgement.");
   if (!summary.contentTypeJson) fail("Local webhook smoke should send application/json.");
   if (summary.payload?.eventType !== "ops.readiness.smoke") fail(`Local webhook smoke event type mismatch: ${summary.payload?.eventType}.`);
   if (summary.payload?.path !== "/ops/readiness-smoke") fail(`Local webhook smoke path mismatch: ${summary.payload?.path}.`);
@@ -277,6 +284,12 @@ function validateBlockedProductionSmoke(summary) {
   if (summary.delivered) fail("Production smoke with invalid config must not deliver a webhook request.");
   if (!summary.failureExplained) fail("Blocked production smoke should explain that config checks failed first.");
   if (summary.childExitCode === 0) fail("Blocked production smoke child should exit non-zero.");
+}
+
+function validateNoVerificationAckSmoke(summary) {
+  if (!summary.rejected) fail("Webhook smoke without receiver verification acknowledgement should fail.");
+  if (!summary.failureExplained) fail("Webhook smoke without receiver verification acknowledgement should explain the missing acknowledgement.");
+  if (!summary.secretSafe) fail("Webhook smoke without receiver verification acknowledgement should not leak the bearer token.");
 }
 
 async function runLocalWebhookSmoke() {
@@ -302,8 +315,11 @@ async function runLocalWebhookSmoke() {
         rawBody,
         payload
       });
-      res.writeHead(204);
-      res.end();
+      res.writeHead(200, {
+        "Content-Type": "application/json",
+        "X-QuantGym-Alert-Verified": "1"
+      });
+      res.end(JSON.stringify({ ok: true, verified: true }));
     });
   });
 
@@ -325,6 +341,7 @@ async function runLocalWebhookSmoke() {
     });
     const request = received[0] || {};
     const payload = request.payload || {};
+    const smokeResult = findResult(result.parsed?.results, "alert webhook smoke") || {};
     return {
       status: result.parsed?.status || "unknown",
       childExitCode: result.exitCode,
@@ -332,6 +349,7 @@ async function runLocalWebhookSmoke() {
       tokenAccepted: request.authorization === `Bearer ${token}`,
       signaturePresent: Boolean(request.signature),
       signatureValid: request.signature === signWebhookBody(token, request.rawBody || ""),
+      signatureVerificationAcknowledged: smokeResult.data?.signatureVerificationAcknowledged === true,
       contentTypeJson: /^application\/json\b/i.test(String(request.contentType || "")),
       payload: {
         eventType: payload.eventType || "",
@@ -342,6 +360,53 @@ async function runLocalWebhookSmoke() {
       },
       payloadSanitized: isPayloadSanitized(payload),
       childPassed: result.exitCode === 0 && result.parsed?.status === "pass"
+    };
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
+async function runSmokeWithoutVerificationAck() {
+  const received = [];
+  const token = "quantgym-no-ack-smoke-token";
+  const server = http.createServer((req, res) => {
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(chunk));
+    req.on("end", () => {
+      received.push({
+        authorization: req.headers.authorization || "",
+        signature: req.headers["x-quantgym-alert-signature"] || "",
+        rawBody: Buffer.concat(chunks).toString("utf8")
+      });
+      res.writeHead(204);
+      res.end();
+    });
+  });
+
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+
+  try {
+    const url = `http://127.0.0.1:${server.address().port}/ops-alert-no-ack-smoke`;
+    const result = await runConfig(["--smoke", "--no-dotenv"], {
+      QUANTGYM_ALERT_WEBHOOK_URL: url,
+      QUANTGYM_ALERT_WEBHOOK_TOKEN: token,
+      QUANTGYM_ALERT_MIN_STATUS_CODE: "500",
+      QUANTGYM_ALERT_WEBHOOK_TIMEOUT_SECONDS: "2",
+      QUANTGYM_RATE_LIMIT_WINDOW_SECONDS: "60",
+      QUANTGYM_AUTH_RATE_LIMIT_MAX: "30",
+      QUANTGYM_AUTH_VERIFICATION_RATE_LIMIT_MAX: "5"
+    });
+    const smokeResult = findResult(result.parsed?.results, "alert webhook smoke") || {};
+    const combined = result.combinedOutput || "";
+    return {
+      childExitCode: result.exitCode,
+      delivered: received.length === 1,
+      rejected: result.exitCode !== 0 && result.parsed?.status === "fail" && smokeResult.status === "fail",
+      failureExplained: /signature verification/i.test(String(smokeResult.error || "")),
+      secretSafe: !combined.includes(token)
     };
   } finally {
     await new Promise((resolve) => server.close(resolve));

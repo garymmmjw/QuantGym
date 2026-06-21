@@ -1445,6 +1445,18 @@ function validateOpsAlertProductionFixtureSummary(data, expect, label) {
   expect(data.localWebhookSmoke?.tokenAccepted === true, `${label} local webhook smoke must send bearer token`);
   expect(data.localWebhookSmoke?.signatureValid === true, `${label} local webhook smoke must send a valid HMAC signature`);
   expect(data.checks?.localWebhookSmokeSignatureValid === true, `${label} must verify local webhook smoke signature coverage`);
+  const hasVerificationAckChecks = data.checks?.localWebhookSmokeVerificationAcked !== undefined
+    || data.checks?.smokeWithoutVerificationAckRejected !== undefined;
+  if (hasVerificationAckChecks) {
+    expect(data.localWebhookSmoke?.signatureVerificationAcknowledged === true, `${label} local webhook smoke receiver must acknowledge signature verification`);
+    expect(data.checks?.localWebhookSmokeVerificationAcked === true, `${label} must verify local webhook smoke verification-ack coverage`);
+    expect(data.checks?.smokeWithoutVerificationAckRejected === true, `${label} must reject smoke receivers that do not acknowledge signature verification`);
+    expect(data.checks?.smokeWithoutVerificationAckNoDeliverySecretLeak === true, `${label} missing-ack smoke must not leak the bearer token`);
+  } else if (/nested ops alert production fixture/i.test(label)) {
+    warnings.push("Release-readiness nested ops alert production fixture lacks receiver verification-ack coverage; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+  } else {
+    expect(false, `${label} must verify receiver signature-verification acknowledgement coverage`);
+  }
   expect(data.localWebhookSmoke?.contentTypeJson === true, `${label} local webhook smoke must send JSON`);
   expect(data.localWebhookSmoke?.payload?.eventType === "ops.readiness.smoke", `${label} local webhook smoke event type must match`);
   expect(Number(data.localWebhookSmoke?.payload?.statusCode || 0) === 500, `${label} local webhook smoke status code must be 500`);
@@ -1879,6 +1891,7 @@ function validateOpsAlertEdgePacketSummary(data, expect, label) {
     "includesProductionEnvTemplate",
     "includesWebhookContract",
     "includesWebhookSignatureContract",
+    "includesWebhookVerificationAckContract",
     "includesCloudflareRuleRunbook",
     "includesSignoffChecklist",
     "includesWebhookSmokeSignoff",
@@ -1889,6 +1902,7 @@ function validateOpsAlertEdgePacketSummary(data, expect, label) {
     "productionFixturePass",
     "fixtureRejectsUnsafeInputs",
     "fixtureWebhookSignaturePass",
+    "fixtureRequiresSmokeVerificationAck",
     "fixtureBlocksUnsafeSmokeDelivery",
     "fixtureOutputRedactsSecrets"
   ]);
@@ -2551,7 +2565,10 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(ops?.localCoverage?.packetSignoffRequiresWebhookSmoke === true, `${label} must require the ops webhook smoke in final signoff`);
   expect(ops?.localCoverage?.localWebhookSmokeAuthorized === true, `${label} must include ops local webhook smoke authorization coverage`);
   expect(ops?.localCoverage?.localWebhookSmokeSignatureValid === true, `${label} must include ops local webhook signature coverage`);
+  expect(ops?.localCoverage?.localWebhookSmokeVerificationAcked === true, `${label} must include ops receiver signature-verification ack coverage`);
   expect(ops?.localCoverage?.localWebhookSmokePayloadSafe === true, `${label} must include ops local webhook smoke payload-safety coverage`);
+  expect(ops?.localCoverage?.smokeWithoutVerificationAckRejected === true, `${label} must include ops no-verification-ack rejection coverage`);
+  expect(ops?.localCoverage?.smokeWithoutVerificationAckNoDeliverySecretLeak === true, `${label} must include ops no-verification-ack token redaction coverage`);
   expect(ops?.localCoverage?.productionSmokeBlockedWhenConfigInvalid === true, `${label} must include ops invalid-production-smoke blocking coverage`);
   expect(ops?.localCoverage?.productionSmokeNoDeliveryWhenConfigInvalid === true, `${label} must include ops no-delivery coverage for invalid production smoke`);
   expect(ops?.localCoverage?.productionSmokeFailureExplained === true, `${label} must include ops invalid-production-smoke failure explanation coverage`);

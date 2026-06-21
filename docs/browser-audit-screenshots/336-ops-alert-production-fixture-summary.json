@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1098,
+  "durationMs": 1428,
   "productionFixture": {
     "status": "pass",
     "passed": 4,
@@ -198,6 +198,7 @@
     "tokenAccepted": true,
     "signaturePresent": true,
     "signatureValid": true,
+    "signatureVerificationAcknowledged": true,
     "contentTypeJson": true,
     "payload": {
       "eventType": "ops.readiness.smoke",
@@ -208,6 +209,13 @@
     },
     "payloadSanitized": true,
     "childPassed": true
+  },
+  "noVerificationAckSmoke": {
+    "childExitCode": 1,
+    "delivered": true,
+    "rejected": true,
+    "failureExplained": true,
+    "secretSafe": true
   },
   "blockedProductionSmoke": {
     "childExitCode": 1,
@@ -243,7 +251,10 @@
     "localWebhookSmokeDelivered": true,
     "localWebhookSmokeAuthorized": true,
     "localWebhookSmokeSignatureValid": true,
+    "localWebhookSmokeVerificationAcked": true,
     "localWebhookSmokePayloadSafe": true,
+    "smokeWithoutVerificationAckRejected": true,
+    "smokeWithoutVerificationAckNoDeliverySecretLeak": true,
     "productionSmokeBlockedWhenConfigInvalid": true,
     "productionSmokeNoDeliveryWhenConfigInvalid": true,
     "productionSmokeFailureExplained": true

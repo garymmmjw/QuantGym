@@ -409,16 +409,17 @@ When production alerting and edge rate limits are configured, validate that shap
 ```bash
 npm run check:ops-alerts:production-fixture
 npm run build:ops-alert-edge-packet
-QUANTGYM_ALERT_WEBHOOK_URL="https://alerts.example.com/quantgym-alerts" \
-QUANTGYM_ALERT_WEBHOOK_TOKEN="<32+ character random bearer token>" \
-QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED=1 \
-QUANTGYM_EDGE_RATE_LIMIT_PROVIDER=cloudflare \
-QUANTGYM_EDGE_RATE_LIMIT_NOTES="Cloudflare edge rule covers /api/auth/* bursts by IP." \
-QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL="https://dash.cloudflare.com/account/rulesets/rule" \
+export QUANTGYM_ALERT_WEBHOOK_URL="https://alerts.example.com/quantgym-alerts"
+export QUANTGYM_ALERT_WEBHOOK_TOKEN="<32+ character random bearer token>"
+export QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED=1
+export QUANTGYM_EDGE_RATE_LIMIT_PROVIDER=cloudflare
+export QUANTGYM_EDGE_RATE_LIMIT_NOTES="Cloudflare edge rule covers /api/auth/* bursts by IP."
+export QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL="https://dash.cloudflare.com/account/rulesets/rule"
 npm run check:ops-alerts:production
+npm run check:ops-alerts:production -- --smoke
 ```
 
-The packet is written under `artifacts/ops-alert-edge/readiness-packet/` and contains the Render env template, signed webhook contract, Cloudflare `/api/auth/*` edge-rule runbook, smoke payload, and a signoff checklist. Replace the alert URL, bearer token, and edge evidence URL with real production values before running the signoff; placeholders are intentionally rejected, production webhook/evidence URLs must use HTTPS DNS hostnames rather than raw IP addresses, and the receiver should verify `X-QuantGym-Alert-Signature` against the raw request body.
+The packet is written under `artifacts/ops-alert-edge/readiness-packet/` and contains the Render env template, signed webhook contract, Cloudflare `/api/auth/*` edge-rule runbook, smoke payload, and a signoff checklist. Replace the alert URL, bearer token, and edge evidence URL with real production values before running the signoff; placeholders are intentionally rejected, production webhook/evidence URLs must use HTTPS DNS hostnames rather than raw IP addresses, and the receiver must verify `X-QuantGym-Alert-Signature` against the raw request body before returning `X-QuantGym-Alert-Verified: 1` or JSON `verified: true` for the smoke payload.
 
 Optional Google login variable, only if Google login is enabled on both frontend and API:
 

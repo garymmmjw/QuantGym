@@ -185,11 +185,17 @@ if (smokeMode) {
         timeoutMs: Math.ceil(config.alertTimeoutSeconds * 1000)
       });
       assert(response.statusCode >= 200 && response.statusCode < 300, `Alert webhook smoke returned HTTP ${response.statusCode}.`);
+      const signatureVerificationAcknowledged = hasSignatureVerificationAck(response);
+      assert(
+        signatureVerificationAcknowledged,
+        "Alert webhook smoke receiver must acknowledge signature verification with X-QuantGym-Alert-Verified: 1 or JSON verified:true."
+      );
       return {
         delivered: true,
         statusCode: response.statusCode,
         host: url.hostname,
-        tokenSet: Boolean(config.alertWebhookToken)
+        tokenSet: Boolean(config.alertWebhookToken),
+        signatureVerificationAcknowledged
       };
     });
   }
@@ -388,8 +394,15 @@ function postJson(url, payload, { token = "", timeoutMs = 3000 } = {}) {
         } : {})
       }
     }, (response) => {
-      response.resume();
-      response.on("end", () => resolve({ statusCode: response.statusCode || 0 }));
+      const chunks = [];
+      response.on("data", (chunk) => {
+        chunks.push(chunk);
+      });
+      response.on("end", () => resolve({
+        statusCode: response.statusCode || 0,
+        headers: response.headers || {},
+        body: Buffer.concat(chunks).toString("utf8")
+      }));
     });
     request.on("timeout", () => {
       request.destroy(new Error("Alert webhook smoke timed out."));
@@ -397,6 +410,27 @@ function postJson(url, payload, { token = "", timeoutMs = 3000 } = {}) {
     request.on("error", reject);
     request.end(body);
   });
+}
+
+function hasSignatureVerificationAck(response) {
+  const header = firstHeaderValue(response?.headers, "x-quantgym-alert-verified").toLowerCase();
+  if (["1", "true", "yes", "ok", "verified"].includes(header)) return true;
+  const contentType = firstHeaderValue(response?.headers, "content-type").toLowerCase();
+  if (!contentType.includes("application/json")) return false;
+  try {
+    const data = JSON.parse(String(response?.body || ""));
+    return data?.verified === true
+      || data?.signatureVerified === true
+      || data?.quantgymAlertVerified === true;
+  } catch {
+    return false;
+  }
+}
+
+function firstHeaderValue(headers, name) {
+  const value = headers?.[name] ?? headers?.[String(name || "").toLowerCase()];
+  if (Array.isArray(value)) return String(value[0] || "").trim();
+  return String(value || "").trim();
 }
 
 function loadEnvFromProjectRoot() {

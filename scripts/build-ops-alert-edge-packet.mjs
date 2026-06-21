@@ -50,6 +50,8 @@ try {
     includesWebhookSignatureContract: combinedContent.includes("X-QuantGym-Alert-Signature")
       && combinedContent.includes("HMAC_SHA256(token, rawBody)")
       && combinedContent.includes("constant-time comparison"),
+    includesWebhookVerificationAckContract: combinedContent.includes("X-QuantGym-Alert-Verified: 1")
+      && combinedContent.includes("verified: true"),
     includesCloudflareRuleRunbook: combinedContent.includes("Cloudflare Edge Rate-Limit Rule")
       && combinedContent.includes("/api/auth/*"),
     includesSignoffChecklist: combinedContent.includes("run production signoff")
@@ -78,6 +80,8 @@ try {
       && productionFixture.checks?.validProductionWebhookUrlRedacted === true
       && productionFixture.checks?.validProductionEdgeEvidenceUrlRedacted === true,
     fixtureWebhookSignaturePass: productionFixture.checks?.localWebhookSmokeSignatureValid === true,
+    fixtureRequiresSmokeVerificationAck: productionFixture.checks?.localWebhookSmokeVerificationAcked === true
+      && productionFixture.checks?.smokeWithoutVerificationAckRejected === true,
     fixtureBlocksUnsafeSmokeDelivery: productionFixture.checks?.productionSmokeBlockedWhenConfigInvalid === true
       && productionFixture.checks?.productionSmokeNoDeliveryWhenConfigInvalid === true
       && productionFixture.checks?.productionSmokeFailureExplained === true
@@ -274,6 +278,7 @@ function renderWebhookContract(packet) {
     "- QuantGym sends the configured bearer token in the `Authorization` header.",
     "- QuantGym signs the exact compact JSON request body with HMAC-SHA256 and sends it as `X-QuantGym-Alert-Signature: sha256=<hex>`.",
     "- Verify the signature with the same webhook token before accepting the payload.",
+    "- After verification, return `X-QuantGym-Alert-Verified: 1` or a JSON response containing `verified: true`; the production smoke rejects receivers that only return a generic 2xx.",
     "- Store the token only in the receiver and Render/API secret stores.",
     "- Rotate the token by updating both sides, then rerun the smoke signoff.",
     "",
@@ -286,6 +291,7 @@ function renderWebhookContract(packet) {
     "```",
     "",
     "Signature input is the raw request body bytes. Compute `sha256=` plus `HMAC_SHA256(token, rawBody)` and compare it with a constant-time comparison.",
+    "The smoke command treats the verification acknowledgement as part of the receiver contract, so a 2xx without that acknowledgement is not a complete signoff.",
     "",
     "## Smoke",
     "",
