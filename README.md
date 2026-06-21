@@ -449,6 +449,11 @@ Run `npm run check:render-llm-deploy` before changing the LLM service deploy
 shape; it performs clean installs for both the repository root and
 `llm-proxy` root-directory configurations, verifies `undici` can be imported,
 and probes every supported start command through `/health`.
+After a Render deploy incident or dependency error email, run
+`npm run check:render-llm-deploy-status` after the beta deploy is live to
+refresh `docs/browser-audit-screenshots/357-render-llm-deploy-status-summary.json`;
+that evidence combines the clean-install/start gate, hosted API/LLM health,
+`beta.quantgym.app/version.json`, and the preserved Render failure-email audit.
 Prefer the root deployment shape above unless intentionally isolating the LLM
 service directory. On Render, the proxy binds to `0.0.0.0` automatically when no
 explicit `LLM_PROXY_HOST` or `HOST` is provided.

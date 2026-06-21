@@ -546,6 +546,12 @@ Browser/CDP deep flows now recorded in
   LLM checks, and refresh
   `333-production-boundaries-deployed-services-summary.json` only after the
   deployed LLM checks pass.
+- [x] Render LLM deploy failure follow-up: after the `undici`
+  `ERR_MODULE_NOT_FOUND` emails, `npm run check:render-llm-deploy-status`
+  records root and `llm-proxy` clean installs, `undici` imports, all supported
+  start commands, hosted API/LLM health, deployed version matching the current
+  commit, and the Gmail audit showing no recent/current-commit Render failures
+  in `357-render-llm-deploy-status-summary.json`.
 - [ ] Apex/WWW domain SSL or redirect sign-off: fix or intentionally redirect
   `quantgym.app` and `www.quantgym.app` so they no longer return Cloudflare 525
   SSL handshake errors; keep `beta.quantgym.app` as the current beta entrypoint

@@ -351,6 +351,7 @@ const evidenceArtifacts = [
   "349-jobs-feed-publication-packet-summary.json",
   "350-postgres-cutover-packet-summary.json",
   "355-apex-www-domain-summary.json",
+  "357-render-llm-deploy-status-summary.json",
   "341-external-launch-blockers-summary.json"
 ];
 
@@ -902,6 +903,26 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       break;
     case "355-apex-www-domain-summary.json":
       validateApexWwwDomainSummary(data, expect, "apex/WWW domain smoke");
+      break;
+    case "357-render-llm-deploy-status-summary.json":
+      expect(data.status === "pass", "Render LLM deploy status must be pass");
+      expect(data.checks?.rootUndiciDependencySet === true, "root package must keep undici in dependencies");
+      expect(data.checks?.llmProxyUndiciDependencySet === true, "llm-proxy package must keep undici in dependencies");
+      expect(data.checks?.renderLlmDeployCompatibilityPass === true, "Render LLM compatibility gate must pass");
+      expect(Number(data.checks?.compatibilityChecks || 0) === 15, "Render LLM compatibility gate must cover all 15 checks");
+      expect(data.checks?.rootUndiciImportPass === true, "root clean install must import undici");
+      expect(data.checks?.llmProxyUndiciImportPass === true, "llm-proxy clean install must import undici");
+      expect(data.checks?.rootStartCommandsPass === true, "root Render start command variants must pass");
+      expect(data.checks?.llmProxyStartCommandsPass === true, "llm-proxy Render start command variants must pass");
+      expect(data.checks?.deployedApiHealthPass === true, "deployed API health must pass");
+      expect(data.checks?.deployedLlmHealthPass === true, "deployed LLM health must pass");
+      expect(data.checks?.deployedVersionCommitMatchesHead === true, "deployed beta version must match current commit");
+      expect(data.checks?.renderMailAuditRecorded === true, "Render failure email audit must be recorded");
+      expect(data.checks?.renderMailCurrentCommitFailuresClear === true, "Render email audit must show no current-commit failures");
+      expect(data.checks?.renderMailRecentFailuresClear === true, "Render email audit must show no recent failures after the current deploy");
+      expect(data.mailAudit?.checkedExternally === true, "Render email audit must be checked externally");
+      expect(Number(data.mailAudit?.currentCommitFailureEmails || 0) === 0, "Render email audit current commit failures must be zero");
+      expect(Number(data.mailAudit?.recentFailureEmails || 0) === 0, "Render email audit recent failures must be zero");
       break;
     case "341-external-launch-blockers-summary.json":
       validateExternalLaunchBlockersSummary(data, expect, "external launch blockers", {

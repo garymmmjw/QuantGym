@@ -1,17 +1,17 @@
 {
   "status": "pass",
   "docsScanned": 2,
-  "totalBacktickFileRefs": 294,
-  "evidenceRefs": 279,
+  "totalBacktickFileRefs": 296,
+  "evidenceRefs": 280,
   "imageRefs": 229,
-  "jsonRefs": 50,
-  "ignoredRefs": 15,
+  "jsonRefs": 51,
+  "ignoredRefs": 16,
   "missing": 0,
   "smallFiles": 0,
   "invalidJson": 0,
   "checkedDir": "docs/browser-audit-screenshots",
   "ignoredReasonCounts": {
-    "non-browser-evidence-file": 10,
+    "non-browser-evidence-file": 11,
     "template-placeholder": 5
   },
   "failures": {

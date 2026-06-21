@@ -1,0 +1,91 @@
+{
+  "id": 357,
+  "date": "2026-06-21",
+  "surface": "Render LLM deploy status",
+  "status": "pass",
+  "durationMs": 5956,
+  "commit": "f823e6e6b65a923b73b442b88eb8cb04ec106e0f",
+  "checks": {
+    "rootUndiciDependencySet": true,
+    "llmProxyUndiciDependencySet": true,
+    "renderLlmDeployCompatibilityPass": true,
+    "compatibilityChecks": 15,
+    "rootUndiciImportPass": true,
+    "llmProxyUndiciImportPass": true,
+    "rootStartCommandsPass": true,
+    "llmProxyStartCommandsPass": true,
+    "deployedApiHealthPass": true,
+    "deployedLlmHealthPass": true,
+    "deployedVersionCommitMatchesHead": true,
+    "deployedVersionCommit": "f823e6e6b65a923b73b442b88eb8cb04ec106e0f",
+    "renderMailAuditRecorded": true,
+    "renderMailCurrentCommitFailuresClear": true,
+    "renderMailRecentFailuresClear": true
+  },
+  "deployed": {
+    "apiHealth": {
+      "url": "https://api.quantgym.app/api/health",
+      "status": 200,
+      "durationMs": 539,
+      "ok": true,
+      "commit": "",
+      "bodyPreview": "{\"ok\": true}",
+      "error": ""
+    },
+    "llmHealth": {
+      "url": "https://llm.quantgym.app/health",
+      "status": 200,
+      "durationMs": 691,
+      "ok": true,
+      "commit": "",
+      "bodyPreview": "{\"ok\":true}",
+      "error": ""
+    },
+    "version": {
+      "url": "https://beta.quantgym.app/version.json",
+      "status": 200,
+      "durationMs": 651,
+      "ok": false,
+      "commit": "f823e6e6b65a923b73b442b88eb8cb04ec106e0f",
+      "bodyPreview": "{\n  \"commit\": \"f823e6e6b65a923b73b442b88eb8cb04ec106e0f\",\n  \"branch\": \"main\",\n  \"source\": \"cloudflare-pages\"\n}\n",
+      "error": ""
+    }
+  },
+  "compatibility": {
+    "status": "pass",
+    "checks": 15,
+    "failures": [],
+    "resultNames": [
+      "root npm install",
+      "root undici import",
+      "root npm start",
+      "root node server.mjs",
+      "root node server.js",
+      "root node index.js",
+      "root node llm-proxy/server.mjs",
+      "llm-proxy npm install",
+      "llm-proxy npm run build",
+      "llm-proxy undici import",
+      "llm-proxy npm start",
+      "llm-proxy node server.mjs",
+      "llm-proxy node server.js",
+      "llm-proxy node index.js",
+      "llm-proxy node llm-proxy/server.mjs"
+    ]
+  },
+  "mailAudit": {
+    "checkedExternally": true,
+    "source": "Gmail connector manual search",
+    "reviewedAt": "2026-06-21T11:55:11Z",
+    "latestFailureUtc": "2026-06-21T06:19:17Z",
+    "currentCommitFailureEmails": 0,
+    "recentFailureEmails": 0,
+    "queries": [
+      "newer_than:4h (from:render.com OR subject:(deploy failed) OR \"Deploy failed\" OR \"quantgym-llm\" OR \"quantgym-api\" OR current commit/title) -in:spam -in:trash",
+      "(current commit OR current full commit OR current commit title) -in:spam -in:trash"
+    ],
+    "note": "The script cannot access Gmail directly; these fields are supplied from the Gmail connector audit and preserved across reruns."
+  },
+  "failures": [],
+  "warnings": []
+}
