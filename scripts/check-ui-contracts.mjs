@@ -1318,6 +1318,7 @@ function validateOpsAlertRuntimeSmokeSummary(data, expect, label) {
   expect(JSON.stringify(statusCodes.slice(0, 4)) === JSON.stringify([404, 401, 401, 429]), `${label} must observe 404, 401, 401, 429 alert sequence`);
   expect(data.checks?.allExpectedAlertsDelivered === true, `${label} must deliver all expected alerts`);
   expect(data.checks?.webhookAuthorizationOk === true, `${label} must send the webhook bearer token`);
+  expect(data.checks?.webhookSignaturesOk === true, `${label} must sign every webhook payload`);
   expect(data.checks?.allWebhookPayloadsSanitized === true, `${label} must sanitize all webhook payloads`);
   expect(Number(data.checks?.authFailureAlertsDelivered || 0) === 2, `${label} must deliver both auth failure alerts`);
   expect(data.checks?.authRateLimitAlertDelivered === true, `${label} must deliver the auth rate-limit alert`);
@@ -1387,6 +1388,8 @@ function validateOpsAlertProductionFixtureSummary(data, expect, label) {
   expect(data.localWebhookSmoke?.status === "pass", `${label} local webhook smoke child must pass`);
   expect(data.localWebhookSmoke?.delivered === true, `${label} local webhook smoke must deliver one request`);
   expect(data.localWebhookSmoke?.tokenAccepted === true, `${label} local webhook smoke must send bearer token`);
+  expect(data.localWebhookSmoke?.signatureValid === true, `${label} local webhook smoke must send a valid HMAC signature`);
+  expect(data.checks?.localWebhookSmokeSignatureValid === true, `${label} must verify local webhook smoke signature coverage`);
   expect(data.localWebhookSmoke?.contentTypeJson === true, `${label} local webhook smoke must send JSON`);
   expect(data.localWebhookSmoke?.payload?.eventType === "ops.readiness.smoke", `${label} local webhook smoke event type must match`);
   expect(Number(data.localWebhookSmoke?.payload?.statusCode || 0) === 500, `${label} local webhook smoke status code must be 500`);
@@ -1807,6 +1810,7 @@ function validateOpsAlertEdgePacketSummary(data, expect, label) {
     "expectedFilesWritten",
     "includesProductionEnvTemplate",
     "includesWebhookContract",
+    "includesWebhookSignatureContract",
     "includesCloudflareRuleRunbook",
     "includesSignoffChecklist",
     "includesWebhookSmokeSignoff",
@@ -1816,6 +1820,7 @@ function validateOpsAlertEdgePacketSummary(data, expect, label) {
     "runtimeSmokePass",
     "productionFixturePass",
     "fixtureRejectsUnsafeInputs",
+    "fixtureWebhookSignaturePass",
     "fixtureBlocksUnsafeSmokeDelivery",
     "fixtureOutputRedactsSecrets"
   ]);
@@ -2468,8 +2473,10 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(ops?.localCoverage?.productionFixturePass === true, `${label} must include ops production fixture coverage`);
   expect(ops?.localCoverage?.packetIncludesWebhookSmokeSignoff === true, `${label} must include ops packet webhook-smoke signoff coverage`);
   expect(ops?.localCoverage?.packetIncludesRawIpUrlRule === true, `${label} must include ops packet raw-IP URL rejection guidance`);
+  expect(ops?.localCoverage?.packetIncludesWebhookSignatureContract === true, `${label} must include ops webhook signature contract coverage`);
   expect(ops?.localCoverage?.packetSignoffRequiresWebhookSmoke === true, `${label} must require the ops webhook smoke in final signoff`);
   expect(ops?.localCoverage?.localWebhookSmokeAuthorized === true, `${label} must include ops local webhook smoke authorization coverage`);
+  expect(ops?.localCoverage?.localWebhookSmokeSignatureValid === true, `${label} must include ops local webhook signature coverage`);
   expect(ops?.localCoverage?.localWebhookSmokePayloadSafe === true, `${label} must include ops local webhook smoke payload-safety coverage`);
   expect(ops?.localCoverage?.productionSmokeBlockedWhenConfigInvalid === true, `${label} must include ops invalid-production-smoke blocking coverage`);
   expect(ops?.localCoverage?.productionSmokeNoDeliveryWhenConfigInvalid === true, `${label} must include ops no-delivery coverage for invalid production smoke`);

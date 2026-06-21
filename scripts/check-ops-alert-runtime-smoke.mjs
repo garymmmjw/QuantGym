@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import http from "node:http";
+import crypto from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -205,6 +206,7 @@ function validateWebhookRequest(request, expectation = {}) {
   if (request.url !== expectation.path) failures.push(`Webhook path mismatch: ${request.url}.`);
   if (request.headers.authorization !== `Bearer ${token}`) failures.push("Webhook Authorization bearer token was missing or wrong.");
   if (!/^application\/json\b/i.test(String(request.headers["content-type"] || ""))) failures.push("Webhook content-type should be application/json.");
+  if (!verifyWebhookSignature(request)) failures.push("Webhook HMAC signature was missing or wrong.");
 
   const payload = request.payload || {};
   const expectedPayload = {
@@ -271,12 +273,19 @@ function validateAllWebhookRequests(smokePath) {
     expectedAlerts: expectations.length,
     allExpectedAlertsDelivered: received.length >= expectations.length,
     webhookAuthorizationOk: received.every((request) => request.headers.authorization === `Bearer ${token}`),
+    webhookSignaturesOk: received.every((request) => verifyWebhookSignature(request)),
     allWebhookPayloadsSanitized: sanitized,
     statusCodes: statuses,
     authFailureAlertsDelivered: authAlerts.filter((request) => request.payload?.statusCode === 401).length,
     authRateLimitAlertDelivered: authAlerts.some((request) => request.payload?.statusCode === 429),
     spoofedForwardedForRateLimitAlertDelivered: googleAlerts.some((request) => request.payload?.statusCode === 429)
   };
+}
+
+function verifyWebhookSignature(request = {}) {
+  const actual = String(request.headers?.["x-quantgym-alert-signature"] || "");
+  const expected = `sha256=${crypto.createHmac("sha256", token).update(String(request.rawBody || ""), "utf8").digest("hex")}`;
+  return actual === expected;
 }
 
 function validatePayloadSanitization(payload = {}) {

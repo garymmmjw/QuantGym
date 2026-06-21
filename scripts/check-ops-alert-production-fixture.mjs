@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import http from "node:http";
+import crypto from "node:crypto";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -205,6 +206,7 @@ try {
     edgeNotesMissingEnforcementActionRejected: negativeFixtures.some((fixture) => fixture.name === "edge notes missing enforcement action rejected" && fixture.rejected === true),
     localWebhookSmokeDelivered: localWebhookSmoke.delivered,
     localWebhookSmokeAuthorized: localWebhookSmoke.tokenAccepted,
+    localWebhookSmokeSignatureValid: localWebhookSmoke.signatureValid,
     localWebhookSmokePayloadSafe: localWebhookSmoke.payloadSanitized,
     productionSmokeBlockedWhenConfigInvalid: blockedProductionSmoke.blocked === true,
     productionSmokeNoDeliveryWhenConfigInvalid: blockedProductionSmoke.delivered === false,
@@ -261,6 +263,7 @@ function validateLocalWebhookSmoke(summary) {
   if (summary.status !== "pass") fail(`Local webhook smoke child should pass, got ${summary.status}.`);
   if (!summary.delivered) fail("Local webhook smoke did not deliver a request.");
   if (!summary.tokenAccepted) fail("Local webhook smoke did not send the expected bearer token.");
+  if (!summary.signatureValid) fail("Local webhook smoke did not send a valid HMAC signature.");
   if (!summary.contentTypeJson) fail("Local webhook smoke should send application/json.");
   if (summary.payload?.eventType !== "ops.readiness.smoke") fail(`Local webhook smoke event type mismatch: ${summary.payload?.eventType}.`);
   if (summary.payload?.path !== "/ops/readiness-smoke") fail(`Local webhook smoke path mismatch: ${summary.payload?.path}.`);
@@ -294,6 +297,7 @@ async function runLocalWebhookSmoke() {
         method: req.method || "",
         url: req.url || "",
         authorization: req.headers.authorization || "",
+        signature: req.headers["x-quantgym-alert-signature"] || "",
         contentType: req.headers["content-type"] || "",
         rawBody,
         payload
@@ -326,6 +330,8 @@ async function runLocalWebhookSmoke() {
       childExitCode: result.exitCode,
       delivered: received.length === 1,
       tokenAccepted: request.authorization === `Bearer ${token}`,
+      signaturePresent: Boolean(request.signature),
+      signatureValid: request.signature === signWebhookBody(token, request.rawBody || ""),
       contentTypeJson: /^application\/json\b/i.test(String(request.contentType || "")),
       payload: {
         eventType: payload.eventType || "",
@@ -340,6 +346,10 @@ async function runLocalWebhookSmoke() {
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+}
+
+function signWebhookBody(token, body) {
+  return `sha256=${crypto.createHmac("sha256", token).update(String(body || ""), "utf8").digest("hex")}`;
 }
 
 async function runBlockedProductionSmokeNoDelivery() {

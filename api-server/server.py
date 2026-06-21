@@ -456,6 +456,8 @@ def send_alert_webhook(payload: dict) -> bool:
     }
     if ALERT_WEBHOOK_TOKEN:
         headers["Authorization"] = f"Bearer {ALERT_WEBHOOK_TOKEN}"
+        signature = hmac.new(ALERT_WEBHOOK_TOKEN.encode("utf-8"), body, hashlib.sha256).hexdigest()
+        headers["X-QuantGym-Alert-Signature"] = f"sha256={signature}"
     request = Request(ALERT_WEBHOOK_URL, data=body, headers=headers, method="POST")
     try:
         with urlopen(request, timeout=ALERT_WEBHOOK_TIMEOUT_SECONDS) as response:

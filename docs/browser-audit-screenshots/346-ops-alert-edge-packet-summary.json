@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-21T07:29:08.090Z",
+  "generatedAt": "2026-06-21T10:42:44.850Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/ops-alert-edge/readiness-packet",
   "filesWritten": [
     "artifacts/ops-alert-edge/readiness-packet/README.md",
@@ -49,6 +49,7 @@
     "expectedFilesWritten": true,
     "includesProductionEnvTemplate": true,
     "includesWebhookContract": true,
+    "includesWebhookSignatureContract": true,
     "includesCloudflareRuleRunbook": true,
     "includesSignoffChecklist": true,
     "includesWebhookSmokeSignoff": true,
@@ -60,6 +61,7 @@
     "fixtureRejectsUnsafeInputs": true,
     "fixtureRequiresSpecificEdgeNotes": true,
     "fixtureOutputRedactsSecrets": true,
+    "fixtureWebhookSignaturePass": true,
     "fixtureBlocksUnsafeSmokeDelivery": true
   },
   "failures": [],

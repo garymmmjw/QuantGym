@@ -96,8 +96,8 @@ temporary local webhook and API database, triggers a 404 through the actual API
 server, then triggers two failed auth logins, one auth rate-limit response, and
 three Google-login attempts with spoofed `X-Forwarded-For` values. It now
 verifies that the first four webhook payloads arrive with the expected bearer
-token, status sequence `404,401,401,429`, ISO timestamps, and no request bodies,
-credentials, auth tokens, synced state, community payloads, or problem payloads;
+token, valid HMAC signature, status sequence `404,401,401,429`, ISO timestamps,
+and no request bodies, credentials, auth tokens, synced state, community payloads, or problem payloads;
 it also verifies spoofed forwarded-IP headers cannot bypass the Google-login
 rate limit and that the resulting Google 429 alert is delivered.
 The API sanitizes `/api/auth/*` webhook messages before sending them to the
@@ -110,8 +110,9 @@ provider, a rule note, and a non-placeholder HTTPS evidence URL before
 fixture that proves the gate accepts the hardened shape, rejects placeholder,
 localhost, private-network, raw-IP, HTTP, credential-bearing URLs, query/fragment-bearing URLs,
 disabled-limiter, excessive-limiter, wildcard proxy trust, and incomplete edge
-signoff inputs, keeps raw tokens/full dashboard URLs out of output, and blocks
-webhook-smoke delivery whenever production configuration checks fail.
+signoff inputs, keeps raw tokens/full dashboard URLs out of output, verifies the
+production webhook-smoke signature contract, and blocks webhook-smoke delivery
+whenever production configuration checks fail.
 
 Production-boundary diagnostic follow-up: the verification script now reports
 the exact missing item for skipped checks, and the final real-token run is
@@ -413,14 +414,16 @@ Browser/CDP deep flows now recorded in
   path and fails the production gate.
 - [x] Ops alert runtime smoke: `npm run check:ops-alerts:runtime-smoke`
   triggers a local API HTTP error, two auth failures, and one auth rate-limit
-  response, then verifies all four webhook payloads are delivered and sanitized.
+  response, then verifies all four webhook payloads are delivered, signed, and
+  sanitized.
 - [x] Ops alert production fixture: `npm run check:ops-alerts:production-fixture`
   proves the production signoff gate passes only with HTTPS webhook, token,
   sane auth limits, and complete edge-rate-limit evidence, while rejecting
   placeholder/local/private/raw-IP/credential-bearing/query-bearing/incomplete inputs without
   exposing raw secrets. It also rejects generic edge notes that do not name the
   protected auth surface, client IP/identity characteristic, and enforcement
-  action, and verifies invalid production smoke attempts do not deliver webhooks.
+  action, verifies webhook-smoke HMAC signing, and verifies invalid production
+  smoke attempts do not deliver webhooks.
 - [x] Jobs source runtime smoke: `npm run check:jobs-source:runtime-smoke`
   starts a temporary jobs feed and API, verifies bearer-token source fetch,
   source/local catalog merge, duplicate-id source precedence, cache behavior,

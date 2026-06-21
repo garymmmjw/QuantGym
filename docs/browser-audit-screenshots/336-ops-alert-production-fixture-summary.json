@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1090,
+  "durationMs": 1106,
   "productionFixture": {
     "status": "pass",
     "passed": 4,
@@ -196,6 +196,8 @@
     "childExitCode": 0,
     "delivered": true,
     "tokenAccepted": true,
+    "signaturePresent": true,
+    "signatureValid": true,
     "contentTypeJson": true,
     "payload": {
       "eventType": "ops.readiness.smoke",
@@ -240,6 +242,7 @@
     "edgeNotesMissingEnforcementActionRejected": true,
     "localWebhookSmokeDelivered": true,
     "localWebhookSmokeAuthorized": true,
+    "localWebhookSmokeSignatureValid": true,
     "localWebhookSmokePayloadSafe": true,
     "productionSmokeBlockedWhenConfigInvalid": true,
     "productionSmokeNoDeliveryWhenConfigInvalid": true,

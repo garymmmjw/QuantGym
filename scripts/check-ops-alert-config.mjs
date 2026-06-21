@@ -4,6 +4,7 @@ import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
 import net from "node:net";
+import crypto from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -370,6 +371,9 @@ function clean(value) {
 function postJson(url, payload, { token = "", timeoutMs = 3000 } = {}) {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify(payload);
+    const signature = token
+      ? `sha256=${crypto.createHmac("sha256", token).update(body, "utf8").digest("hex")}`
+      : "";
     const client = url.protocol === "https:" ? https : http;
     const request = client.request(url, {
       method: "POST",
@@ -378,7 +382,10 @@ function postJson(url, payload, { token = "", timeoutMs = 3000 } = {}) {
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(body),
         "User-Agent": "QuantGymOpsReadiness/0.1",
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
+        ...(token ? {
+          Authorization: `Bearer ${token}`,
+          "X-QuantGym-Alert-Signature": signature
+        } : {})
       }
     }, (response) => {
       response.resume();

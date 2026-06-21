@@ -1,13 +1,13 @@
 {
   "status": "pass",
   "webhookReceived": 7,
-  "apiPort": 60485,
-  "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-ops-alert-Cd8Jjk/quantgym-alert-smoke.sqlite3",
+  "apiPort": 62825,
+  "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-ops-alert-J8h3J1/quantgym-alert-smoke.sqlite3",
   "payload": {
     "eventType": "http.error.404",
     "statusCode": 404,
     "method": "GET",
-    "path": "/api/ops-alert-runtime-smoke-1782037627028",
+    "path": "/api/ops-alert-runtime-smoke-1782039063180",
     "hasOccurredAt": true
   },
   "alerts": [
@@ -15,7 +15,7 @@
       "eventType": "http.error.404",
       "statusCode": 404,
       "method": "GET",
-      "path": "/api/ops-alert-runtime-smoke-1782037627028",
+      "path": "/api/ops-alert-runtime-smoke-1782039063180",
       "hasOccurredAt": true
     },
     {
@@ -65,6 +65,7 @@
     "expectedAlerts": 4,
     "allExpectedAlertsDelivered": true,
     "webhookAuthorizationOk": true,
+    "webhookSignaturesOk": true,
     "allWebhookPayloadsSanitized": true,
     "statusCodes": [
       404,
