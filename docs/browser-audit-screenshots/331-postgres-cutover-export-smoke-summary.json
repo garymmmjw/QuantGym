@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1608,
+  "durationMs": 2148,
   "fixture": {
     "tablesSeeded": [
       "audit_events",
@@ -13,7 +13,7 @@
       "user_states",
       "users"
     ],
-    "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-vmqCLY/quantgym-cutover-smoke.sqlite3"
+    "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-G7I5CT/quantgym-cutover-smoke.sqlite3"
   },
   "runtimeHealth": {
     "ok": true,
@@ -72,6 +72,11 @@
     "completeSignoffAccepted": true,
     "completeSignoffNegativeFixturesRejected": true,
     "completeSignoffNegativeFixturesMentionExpectedErrors": true,
+    "completeSignoffRuntimeBackendAccepted": true,
+    "completeSignoffRuntimeHealthUrlRecorded": true,
+    "runtimeBackendSqliteRejected": true,
+    "runtimeHealthUrlRawIpRejected": true,
+    "runtimeHealthUrlQueryRejected": true,
     "runtimeHealthReportsDatabaseBackend": true,
     "runtimeHealthReportsWritableDatabase": true,
     "runtimeHealthReportsForeignKeys": true,
@@ -129,12 +134,14 @@
     "required": true,
     "targetHost": "postgres.quantgym.internal",
     "database": "quantgym",
-    "completedAt": "2026-06-21T12:58:31Z",
+    "completedAt": "2026-06-21T15:47:01Z",
     "evidenceHost": "render.com",
+    "runtimeBackend": "postgres",
+    "runtimeHealthHost": "api.quantgym.app",
     "appDatabaseActive": true,
     "backupConfirmed": true,
-    "sourceDbSha256Prefix": "19e221498b66",
-    "exportSha256Prefix": "25170da9deab",
+    "sourceDbSha256Prefix": "3368092b7ed1",
+    "exportSha256Prefix": "0f2aaa121d32",
     "importPlanRowCount": 12,
     "targetRowCount": 12
   },
@@ -231,6 +238,27 @@
       "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must not include query strings or fragments."
     },
     {
+      "name": "runtime backend sqlite rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND must be postgres."
+    },
+    {
+      "name": "runtime health URL raw IP rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL must use a DNS hostname, not a raw IP address."
+    },
+    {
+      "name": "runtime health URL query rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL must not include query strings or fragments."
+    },
+    {
       "name": "export SHA mismatch rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -256,7 +284,7 @@
       "rejected": true,
       "expectedErrorObserved": true,
       "failed": 2,
-      "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-vmqCLY\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
+      "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-G7I5CT\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
     },
     {
       "name": "target row count mismatch rejected",

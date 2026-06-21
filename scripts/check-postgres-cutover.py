@@ -366,6 +366,8 @@ def check_cutover_signoff(
         "database": "",
         "completedAt": "",
         "evidenceHost": "",
+        "runtimeBackend": "",
+        "runtimeHealthHost": "",
         "appDatabaseActive": False,
         "backupConfirmed": False,
         "sourceDbSha256Prefix": "",
@@ -412,6 +414,17 @@ def check_cutover_signoff(
     evidence_url = require_env("QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL", failures)
     if evidence_url:
         result["evidenceHost"] = validate_https_evidence_url("QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL", evidence_url, failures)
+
+    runtime_backend = require_env("QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND", failures)
+    if runtime_backend:
+        normalized_backend = runtime_backend.lower()
+        result["runtimeBackend"] = normalized_backend
+        if normalized_backend != "postgres":
+            failures.append("QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND must be postgres.")
+
+    runtime_health_url = require_env("QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL", failures)
+    if runtime_health_url:
+        result["runtimeHealthHost"] = validate_https_evidence_url("QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL", runtime_health_url, failures)
 
     expected_export_sha = require_env("QUANTGYM_POSTGRES_CUTOVER_EXPORT_SHA256", failures)
     export_sha = file_sha256(export_path) if export_path and export_path.is_file() else ""

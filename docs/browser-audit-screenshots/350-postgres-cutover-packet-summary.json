@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-21T12:34:23.716Z",
+  "generatedAt": "2026-06-21T15:47:03.588Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/postgres-cutover/readiness-packet",
   "filesWritten": [
     "artifacts/postgres-cutover/readiness-packet/README.md",
@@ -16,7 +16,7 @@
     "rowTables": 9,
     "smokeRowCount": 12,
     "postgresImportSqlGenerated": true,
-    "completeSignoffNegativeFixtureCount": 20
+    "completeSignoffNegativeFixtureCount": 23
   },
   "requiredEnv": [
     "QUANTGYM_POSTGRES_CUTOVER_STATUS",
@@ -24,6 +24,8 @@
     "QUANTGYM_POSTGRES_CUTOVER_DATABASE",
     "QUANTGYM_POSTGRES_CUTOVER_COMPLETED_AT",
     "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL",
+    "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND",
+    "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL",
     "QUANTGYM_POSTGRES_CUTOVER_SOURCE_DB_SHA256",
     "QUANTGYM_POSTGRES_CUTOVER_EXPORT_SHA256",
     "QUANTGYM_POSTGRES_CUTOVER_TARGET_ROW_COUNT",
@@ -57,8 +59,11 @@
     "rejectsUnsafeExports": true,
     "completeSignoffFixturePass": true,
     "completeSignoffNegativeFixturesRejected": true,
+    "completeSignoffRequiresRuntimeBackend": true,
+    "completeSignoffRequiresRuntimeHealthUrl": true,
     "completeSignoffRejectsRawIpTarget": true,
-    "completeSignoffRejectsUnsafeEvidence": true
+    "completeSignoffRejectsUnsafeEvidence": true,
+    "completeSignoffRejectsUnsafeRuntimeHealth": true
   },
   "failures": [],
   "warnings": []

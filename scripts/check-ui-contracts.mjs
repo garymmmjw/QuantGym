@@ -1671,8 +1671,13 @@ function validatePostgresCutoverExportSmokeSummary(data, expect, label) {
   expect(data.cutoverChecks?.runtimeHealthReportsWritableDatabase === true, `${label} cutover checker must confirm runtime database writability reporting`);
   expect(data.cutoverChecks?.runtimeHealthReportsForeignKeys === true, `${label} cutover checker must confirm runtime foreign-key reporting`);
   expect(data.cutoverChecks?.completeSignoffAccepted === true, `${label} complete cutover signoff fixture must pass`);
+  expect(data.cutoverChecks?.completeSignoffRuntimeBackendAccepted === true, `${label} complete signoff must require observed runtime backend=postgres`);
+  expect(data.cutoverChecks?.completeSignoffRuntimeHealthUrlRecorded === true, `${label} complete signoff must record runtime health URL host`);
   expect(data.cutoverChecks?.completeSignoffNegativeFixturesRejected === true, `${label} complete signoff negative fixtures must be rejected`);
   expect(data.cutoverChecks?.completeSignoffNegativeFixturesMentionExpectedErrors === true, `${label} complete signoff negative fixtures must mention expected errors`);
+  expect(data.cutoverChecks?.runtimeBackendSqliteRejected === true, `${label} complete signoff must reject sqlite runtime backend evidence`);
+  expect(data.cutoverChecks?.runtimeHealthUrlRawIpRejected === true, `${label} complete signoff must reject raw-IP runtime health URLs`);
+  expect(data.cutoverChecks?.runtimeHealthUrlQueryRejected === true, `${label} complete signoff must reject query-bearing runtime health URLs`);
   expect(data.cutoverChecks?.privateTargetHostRejected === true, `${label} complete signoff must reject private-network target hosts`);
   expect(data.cutoverChecks?.publicIpTargetHostRejected === true, `${label} complete signoff must reject raw IP target hosts`);
   expect(data.cutoverChecks?.privateEvidenceUrlRejected === true, `${label} complete signoff must reject private-network evidence URLs`);
@@ -1698,10 +1703,12 @@ function validatePostgresCutoverExportSmokeSummary(data, expect, label) {
   expect(data.cutoverSignoff?.appDatabaseActive === true, `${label} complete cutover signoff must require app DB activation`);
   expect(data.cutoverSignoff?.backupConfirmed === true, `${label} complete cutover signoff must require backup confirmation`);
   expect(data.cutoverSignoff?.evidenceHost === "render.com", `${label} complete cutover signoff must keep sanitized evidence host`);
+  expect(data.cutoverSignoff?.runtimeBackend === "postgres", `${label} complete cutover signoff must record postgres runtime backend evidence`);
+  expect(data.cutoverSignoff?.runtimeHealthHost === "api.quantgym.app", `${label} complete cutover signoff must keep sanitized runtime health host`);
   expect(typeof data.cutoverSignoff?.sourceDbSha256Prefix === "string" && data.cutoverSignoff.sourceDbSha256Prefix.length === 12, `${label} complete cutover signoff must bind the source DB hash prefix`);
   expect(typeof data.cutoverSignoff?.exportSha256Prefix === "string" && data.cutoverSignoff.exportSha256Prefix.length === 12, `${label} complete cutover signoff must bind the export hash prefix`);
   expect(Number(data.cutoverSignoff?.targetRowCount || 0) === Number(data.importPlan?.rowCount || -1), `${label} complete cutover signoff target row count must match the import plan`);
-  expect(Array.isArray(data.completeSignoffNegativeFixtures) && data.completeSignoffNegativeFixtures.length >= 19, `${label} must include complete signoff negative fixtures`);
+  expect(Array.isArray(data.completeSignoffNegativeFixtures) && data.completeSignoffNegativeFixtures.length >= 22, `${label} must include complete signoff negative fixtures`);
   expect(
     (data.completeSignoffNegativeFixtures || []).some((fixture) => (
       fixture.name === "empty database path rejected"
@@ -2026,13 +2033,13 @@ function validatePostgresCutoverPacketSummary(data, expect, label) {
     "artifacts/postgres-cutover/readiness-packet/rollback-and-backup-checklist.md",
     "artifacts/postgres-cutover/readiness-packet/live-cutover-checklist.csv"
   ]);
-  for (const envName of ["QUANTGYM_POSTGRES_CUTOVER_STATUS", "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST", "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL", "QUANTGYM_POSTGRES_CUTOVER_BACKUP_CONFIRMED"]) {
+  for (const envName of ["QUANTGYM_POSTGRES_CUTOVER_STATUS", "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST", "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL", "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND", "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL", "QUANTGYM_POSTGRES_CUTOVER_BACKUP_CONFIRMED"]) {
     expect(Array.isArray(data.requiredEnv) && data.requiredEnv.includes(envName), `${label} must include ${envName}`);
   }
   expect(data.migrationInputs?.schemaPath === "api-server/postgres/schema.sql", `${label} must reference the Postgres schema path`);
   expect(Number(data.evidence?.tableCount || 0) >= 12, `${label} must retain export table-count evidence`);
   expect(Number(data.evidence?.smokeRowCount || 0) >= 12, `${label} must retain export smoke row-count evidence`);
-  expect(Number(data.evidence?.completeSignoffNegativeFixtureCount || 0) >= 19, `${label} must retain complete signoff negative fixtures`);
+  expect(Number(data.evidence?.completeSignoffNegativeFixtureCount || 0) >= 22, `${label} must retain complete signoff negative fixtures`);
   expectAllChecksTrue(data, expect, label, [
     "expectedFilesWritten",
     "includesSecureExportRunbook",
@@ -2051,8 +2058,11 @@ function validatePostgresCutoverPacketSummary(data, expect, label) {
     "rejectsUnsafeExports",
     "completeSignoffFixturePass",
     "completeSignoffNegativeFixturesRejected",
+    "completeSignoffRequiresRuntimeBackend",
+    "completeSignoffRequiresRuntimeHealthUrl",
     "completeSignoffRejectsRawIpTarget",
-    "completeSignoffRejectsUnsafeEvidence"
+    "completeSignoffRejectsUnsafeEvidence",
+    "completeSignoffRejectsUnsafeRuntimeHealth"
   ]);
   expectEmptyFailures(data, expect, label);
 }
@@ -2640,11 +2650,19 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(postgres?.localCoverage?.packetRejectsUnsafeExports === true, `${label} must include Postgres packet unsafe-export rejection coverage`);
   expect(postgres?.localCoverage?.packetCompleteSignoffRejectsRawIpTarget === true, `${label} must include Postgres packet raw-IP target rejection coverage`);
   expect(postgres?.localCoverage?.packetCompleteSignoffRejectsUnsafeEvidence === true, `${label} must include Postgres packet unsafe evidence rejection coverage`);
+  expect(postgres?.localCoverage?.packetCompleteSignoffRequiresRuntimeBackend === true, `${label} must include Postgres packet runtime-backend signoff coverage`);
+  expect(postgres?.localCoverage?.packetCompleteSignoffRequiresRuntimeHealthUrl === true, `${label} must include Postgres packet runtime-health URL signoff coverage`);
+  expect(postgres?.localCoverage?.packetCompleteSignoffRejectsUnsafeRuntimeHealth === true, `${label} must include Postgres packet unsafe runtime-health rejection coverage`);
   expect(postgres?.localCoverage?.packetIncludesRawIpEvidenceUrlRule === true, `${label} must include Postgres packet raw-IP evidence URL guidance`);
   expect(postgres?.localCoverage?.includeSensitiveImportPlanValid === true, `${label} must include Postgres include-sensitive import-plan validation`);
   expect(postgres?.localCoverage?.runtimeHealthReportsDatabaseBackend === true, `${label} must include Postgres runtime database-backend health coverage`);
   expect(postgres?.localCoverage?.runtimeHealthReportsWritableDatabase === true, `${label} must include Postgres runtime database writability health coverage`);
   expect(postgres?.localCoverage?.runtimeHealthReportsForeignKeys === true, `${label} must include Postgres runtime foreign-key health coverage`);
+  expect(postgres?.localCoverage?.completeSignoffRuntimeBackendAccepted === true, `${label} must include Postgres complete-signoff runtime backend coverage`);
+  expect(postgres?.localCoverage?.completeSignoffRuntimeHealthUrlRecorded === true, `${label} must include Postgres complete-signoff runtime health URL coverage`);
+  expect(postgres?.localCoverage?.runtimeBackendSqliteRejected === true, `${label} must include Postgres sqlite runtime backend rejection`);
+  expect(postgres?.localCoverage?.runtimeHealthUrlRawIpRejected === true, `${label} must include Postgres raw-IP runtime health URL rejection`);
+  expect(postgres?.localCoverage?.runtimeHealthUrlQueryRejected === true, `${label} must include Postgres query-bearing runtime health URL rejection`);
   expect(postgres?.localCoverage?.pendingStatusRejected === true, `${label} must include Postgres pending status rejection`);
   expect(postgres?.localCoverage?.localhostTargetHostRejected === true, `${label} must include Postgres localhost target-host rejection`);
   expect(postgres?.localCoverage?.completeSignoffNegativeFixturesRejected === true, `${label} must include Postgres negative signoff fixtures`);

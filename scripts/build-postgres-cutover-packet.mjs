@@ -50,7 +50,9 @@ try {
       && combinedContent.includes("scripts/import-api-sqlite-export-to-postgres.py")
       && combinedContent.includes("--confirm-replace"),
     includesSignoffEnvTemplate: combinedContent.includes("QUANTGYM_POSTGRES_CUTOVER_STATUS=complete")
-      && combinedContent.includes("QUANTGYM_POSTGRES_CUTOVER_TARGET_ROW_COUNT"),
+      && combinedContent.includes("QUANTGYM_POSTGRES_CUTOVER_TARGET_ROW_COUNT")
+      && combinedContent.includes("QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND=postgres")
+      && combinedContent.includes("QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL=https://"),
     includesRawIpEvidenceUrlRule: combinedContent.includes("DNS hostname")
       && combinedContent.includes("raw IP"),
     includesRollbackBackupChecklist: combinedContent.includes("Rollback and Backup Checklist")
@@ -72,11 +74,18 @@ try {
       && exportSmoke.cutoverChecks?.postgresImportRejectsTruncatedExport === true,
     completeSignoffFixturePass: exportSmoke.cutoverChecks?.completeSignoffAccepted === true,
     completeSignoffNegativeFixturesRejected: exportSmoke.cutoverChecks?.completeSignoffNegativeFixturesRejected === true,
+    completeSignoffRequiresRuntimeBackend: exportSmoke.cutoverChecks?.completeSignoffRuntimeBackendAccepted === true
+      && exportSmoke.cutoverSignoff?.runtimeBackend === "postgres",
+    completeSignoffRequiresRuntimeHealthUrl: exportSmoke.cutoverChecks?.completeSignoffRuntimeHealthUrlRecorded === true
+      && Boolean(exportSmoke.cutoverSignoff?.runtimeHealthHost),
     completeSignoffRejectsRawIpTarget: exportSmoke.cutoverChecks?.publicIpTargetHostRejected === true,
     completeSignoffRejectsUnsafeEvidence: exportSmoke.cutoverChecks?.privateEvidenceUrlRejected === true
       && exportSmoke.cutoverChecks?.evidenceUrlRawIpRejected === true
       && exportSmoke.cutoverChecks?.evidenceUrlEmbeddedCredentialsRejected === true
-      && exportSmoke.cutoverChecks?.evidenceUrlQueryRejected === true
+      && exportSmoke.cutoverChecks?.evidenceUrlQueryRejected === true,
+    completeSignoffRejectsUnsafeRuntimeHealth: exportSmoke.cutoverChecks?.runtimeBackendSqliteRejected === true
+      && exportSmoke.cutoverChecks?.runtimeHealthUrlRawIpRejected === true
+      && exportSmoke.cutoverChecks?.runtimeHealthUrlQueryRejected === true
   };
 
   for (const [name, value] of Object.entries(checks)) {
@@ -129,6 +138,8 @@ function buildPacketModel(exportSmoke) {
       ["QUANTGYM_POSTGRES_CUTOVER_DATABASE", "Plain database name."],
       ["QUANTGYM_POSTGRES_CUTOVER_COMPLETED_AT", "Non-future ISO timestamp for the cutover completion."],
       ["QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL", "Externally reachable HTTPS evidence URL with a DNS hostname, not a raw IP address, and without credentials, query, or fragment."],
+      ["QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND", "Observed `/api/health` database backend after deploy; must be postgres."],
+      ["QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL", "Externally reachable HTTPS API health URL used to observe the postgres backend."],
       ["QUANTGYM_POSTGRES_CUTOVER_SOURCE_DB_SHA256", "SHA-256 of the SQLite source DB used for the export."],
       ["QUANTGYM_POSTGRES_CUTOVER_EXPORT_SHA256", "SHA-256 of the include-sensitive SQLite export used for import."],
       ["QUANTGYM_POSTGRES_CUTOVER_TARGET_ROW_COUNT", "Managed Postgres row count matching the import plan row count."],
@@ -177,7 +188,7 @@ function renderOverview(packet) {
     packet.signoffCommand,
     "```",
     "",
-    "The filled environment must not be committed. The gate rejects redacted or truncated exports, localhost/private/raw-IP target hosts, malformed database names, mismatched source/export hashes, row-count mismatch, inactive app DB state, missing backup confirmation, and private/raw-IP/credential/query-bearing evidence URLs. Evidence URLs must use HTTPS DNS hostnames.",
+    "The filled environment must not be committed. The gate rejects redacted or truncated exports, localhost/private/raw-IP target hosts, malformed database names, mismatched source/export hashes, row-count mismatch, inactive app DB state, non-postgres runtime backend evidence, missing backup confirmation, and private/raw-IP/credential/query-bearing evidence URLs. Evidence URLs and runtime health URLs must use HTTPS DNS hostnames.",
     ""
   ].join("\n");
 }
@@ -242,7 +253,8 @@ function renderPostgresImportRunbook(packet) {
     "",
     "- Confirm target row count from the managed Postgres database.",
     "- Point the deployed API at managed Postgres.",
-    "- Run API health and release-readiness checks after deployment.",
+    "- Run API health and confirm the `database.backend` field reports `postgres` after deployment.",
+    "- Run release-readiness checks after deployment.",
     "- Keep the SQLite source DB and export available for rollback until the cutover is accepted.",
     ""
   ].join("\n");
@@ -260,6 +272,8 @@ function renderSignoffEnvTemplate(packet) {
     "QUANTGYM_POSTGRES_CUTOVER_DATABASE=quantgym",
     "QUANTGYM_POSTGRES_CUTOVER_COMPLETED_AT=<cutover-completed-at-iso>",
     "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL=https://<external-deployment-or-runbook-evidence-url>",
+    "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND=postgres",
+    "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL=https://api.quantgym.app/api/health",
     "QUANTGYM_POSTGRES_CUTOVER_SOURCE_DB_SHA256=<sqlite-source-db-sha256>",
     "QUANTGYM_POSTGRES_CUTOVER_EXPORT_SHA256=<include-sensitive-export-sha256>",
     "QUANTGYM_POSTGRES_CUTOVER_TARGET_ROW_COUNT=<managed-postgres-row-count>",
@@ -291,6 +305,7 @@ function renderRollbackChecklist() {
     "- Execute the reviewed import SQL only against the approved managed Postgres target.",
     "- Capture target row counts after import.",
     "- Switch the deployed API database configuration.",
+    "- Confirm `/api/health` reports `database.backend=postgres` and record the health URL.",
     "",
     "## Rollback",
     "",
@@ -314,6 +329,8 @@ function renderChecklistCsv(packet) {
     ["execute guarded Postgres import", "", "--execute --confirm-replace", "pending"],
     ["confirm target row count", "", "QUANTGYM_POSTGRES_CUTOVER_TARGET_ROW_COUNT", "pending"],
     ["switch deployed API database", "", "app database active confirmed", "pending"],
+    ["confirm runtime backend", "", "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND=postgres from API health", "pending"],
+    ["record runtime health URL", "", "QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL", "pending"],
     ["record evidence URL", "", "HTTPS DNS-hostname URL without raw IP, credentials, or query", "pending"],
     ["capture backup confirmation", "", "backup confirmation", "pending"],
     ["run complete cutover signoff", "", packet.signoffCommand, "pending"]

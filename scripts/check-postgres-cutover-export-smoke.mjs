@@ -221,6 +221,11 @@ try {
         && completeSignoff.cutoverSignoff?.required === true,
       completeSignoffNegativeFixturesRejected: completeSignoffNegativeFixtures.every((fixture) => fixture.rejected),
       completeSignoffNegativeFixturesMentionExpectedErrors: completeSignoffNegativeFixtures.every((fixture) => fixture.expectedErrorObserved),
+      completeSignoffRuntimeBackendAccepted: completeSignoff.cutoverSignoff?.runtimeBackend === "postgres",
+      completeSignoffRuntimeHealthUrlRecorded: completeSignoff.cutoverSignoff?.runtimeHealthHost === "api.quantgym.app",
+      runtimeBackendSqliteRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "runtime backend sqlite rejected" && fixture.rejected === true),
+      runtimeHealthUrlRawIpRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "runtime health URL raw IP rejected" && fixture.rejected === true),
+      runtimeHealthUrlQueryRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "runtime health URL query rejected" && fixture.rejected === true),
       runtimeHealthReportsDatabaseBackend: runtimeHealth.database?.backend === "sqlite",
       runtimeHealthReportsWritableDatabase: runtimeHealth.database?.writable === true,
       runtimeHealthReportsForeignKeys: runtimeHealth.database?.foreignKeys === true,
@@ -556,6 +561,8 @@ function validateCompleteCutoverSignoff(payload, env) {
   expect(signoff.targetHost === env.QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST, "Complete cutover signoff must report the target host.");
   expect(signoff.database === env.QUANTGYM_POSTGRES_CUTOVER_DATABASE, "Complete cutover signoff must report the database name.");
   expect(signoff.evidenceHost === "render.com", "Complete cutover signoff must report the evidence host.");
+  expect(signoff.runtimeBackend === "postgres", "Complete cutover signoff must record the observed runtime backend as postgres.");
+  expect(signoff.runtimeHealthHost === "api.quantgym.app", "Complete cutover signoff must record the runtime health host.");
   expect(signoff.appDatabaseActive === true, "Complete cutover signoff must require active app DB confirmation.");
   expect(signoff.backupConfirmed === true, "Complete cutover signoff must require backup confirmation.");
   expect(signoff.exportSha256Prefix === env.QUANTGYM_POSTGRES_CUTOVER_EXPORT_SHA256.slice(0, 12), "Complete cutover signoff must bind to the export SHA.");
@@ -640,6 +647,21 @@ function runCompleteSignoffNegativeFixtures({ tempDb, sensitiveExportPath, valid
       name: "evidence URL query rejected",
       env: { QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL: "https://render.com/quantgym/postgres-cutover?token=leaky" },
       expectedError: "query strings or fragments"
+    },
+    {
+      name: "runtime backend sqlite rejected",
+      env: { QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND: "sqlite" },
+      expectedError: "RUNTIME_BACKEND must be postgres"
+    },
+    {
+      name: "runtime health URL raw IP rejected",
+      env: { QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL: "https://8.8.8.8/api/health" },
+      expectedError: "RUNTIME_HEALTH_URL must use a DNS hostname"
+    },
+    {
+      name: "runtime health URL query rejected",
+      env: { QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL: "https://api.quantgym.app/api/health?token=leaky" },
+      expectedError: "RUNTIME_HEALTH_URL must not include query strings or fragments"
     },
     {
       name: "export SHA mismatch rejected",
@@ -878,6 +900,8 @@ function summarizeCutoverSignoff(signoff = {}) {
     database: String(signoff.database || ""),
     completedAt: String(signoff.completedAt || ""),
     evidenceHost: String(signoff.evidenceHost || ""),
+    runtimeBackend: String(signoff.runtimeBackend || ""),
+    runtimeHealthHost: String(signoff.runtimeHealthHost || ""),
     appDatabaseActive: signoff.appDatabaseActive === true,
     backupConfirmed: signoff.backupConfirmed === true,
     sourceDbSha256Prefix: String(signoff.sourceDbSha256Prefix || ""),
@@ -894,6 +918,8 @@ function buildCompleteSignoffEnv(dbFile, exportFile, importRowCount) {
     QUANTGYM_POSTGRES_CUTOVER_DATABASE: "quantgym",
     QUANTGYM_POSTGRES_CUTOVER_COMPLETED_AT: new Date().toISOString(),
     QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL: "https://render.com/quantgym/postgres-cutover-smoke",
+    QUANTGYM_POSTGRES_CUTOVER_RUNTIME_BACKEND: "postgres",
+    QUANTGYM_POSTGRES_CUTOVER_RUNTIME_HEALTH_URL: "https://api.quantgym.app/api/health",
     QUANTGYM_POSTGRES_CUTOVER_EXPORT_SHA256: sha256File(exportFile),
     QUANTGYM_POSTGRES_CUTOVER_SOURCE_DB_SHA256: sha256File(dbFile),
     QUANTGYM_POSTGRES_CUTOVER_TARGET_ROW_COUNT: String(Number(importRowCount || 0)),
