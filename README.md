@@ -249,7 +249,8 @@ signoff env template, and final checklist.
 `artifacts/postgres-cutover/readiness-packet/` with a protected-export runbook,
 guarded Postgres import steps, rollback/backup checklist, final signoff env
 template, and live migration checklist. After an actual managed Postgres
-migration, run `npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json` with the required signoff environment.
+migration, confirm `/api/health` reports the intended database backend and run
+`npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json` with the required signoff environment.
 
 To finish the Google provider login boundary locally, generate the temporary
 token helper and open the printed URL while the Vite dev server is running:
@@ -638,8 +639,11 @@ The complete gate requires `QUANTGYM_POSTGRES_CUTOVER_STATUS=complete`, managed
 Postgres DNS target host/database, completion timestamp, HTTPS evidence URL with
 a DNS hostname, source DB SHA-256, export SHA-256, target row count,
 app-DB-active confirmation, and backup confirmation, and rejects raw IP target
-hosts or evidence URLs. The local export smoke also
-verifies this contract with a temporary API database:
+hosts or evidence URLs. The API `/api/health` response now includes a
+`database` object with the active backend, writability, and SQLite foreign-key
+status, so cutover evidence can prove which database backend the running app is
+using. The local export smoke also verifies this contract with a temporary API
+database:
 
 ```bash
 npm run check:postgres-cutover:export-smoke

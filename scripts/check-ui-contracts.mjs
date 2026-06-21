@@ -1664,6 +1664,12 @@ function validatePostgresCutoverExportSmokeSummary(data, expect, label) {
   expect(data.cutoverChecks?.truncatedSensitiveRejected === true, `${label} cutover checker must reject truncated include-sensitive export`);
   expect(data.cutoverChecks?.truncatedRejectsFullExportRequirement === true, `${label} truncated rejection must mention full export requirement`);
   expect(data.cutoverChecks?.includeSensitiveImportPlanValid === true, `${label} include-sensitive export must have a valid import plan`);
+  expect(data.runtimeHealth?.databaseBackend === "sqlite", `${label} runtime health must report the SQLite database backend`);
+  expect(data.runtimeHealth?.databaseWritable === true, `${label} runtime health must report a writable database`);
+  expect(data.runtimeHealth?.databaseForeignKeys === true, `${label} runtime health must report enabled foreign keys`);
+  expect(data.cutoverChecks?.runtimeHealthReportsDatabaseBackend === true, `${label} cutover checker must confirm runtime database backend reporting`);
+  expect(data.cutoverChecks?.runtimeHealthReportsWritableDatabase === true, `${label} cutover checker must confirm runtime database writability reporting`);
+  expect(data.cutoverChecks?.runtimeHealthReportsForeignKeys === true, `${label} cutover checker must confirm runtime foreign-key reporting`);
   expect(data.cutoverChecks?.completeSignoffAccepted === true, `${label} complete cutover signoff fixture must pass`);
   expect(data.cutoverChecks?.completeSignoffNegativeFixturesRejected === true, `${label} complete signoff negative fixtures must be rejected`);
   expect(data.cutoverChecks?.completeSignoffNegativeFixturesMentionExpectedErrors === true, `${label} complete signoff negative fixtures must mention expected errors`);
@@ -2636,6 +2642,9 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(postgres?.localCoverage?.packetCompleteSignoffRejectsUnsafeEvidence === true, `${label} must include Postgres packet unsafe evidence rejection coverage`);
   expect(postgres?.localCoverage?.packetIncludesRawIpEvidenceUrlRule === true, `${label} must include Postgres packet raw-IP evidence URL guidance`);
   expect(postgres?.localCoverage?.includeSensitiveImportPlanValid === true, `${label} must include Postgres include-sensitive import-plan validation`);
+  expect(postgres?.localCoverage?.runtimeHealthReportsDatabaseBackend === true, `${label} must include Postgres runtime database-backend health coverage`);
+  expect(postgres?.localCoverage?.runtimeHealthReportsWritableDatabase === true, `${label} must include Postgres runtime database writability health coverage`);
+  expect(postgres?.localCoverage?.runtimeHealthReportsForeignKeys === true, `${label} must include Postgres runtime foreign-key health coverage`);
   expect(postgres?.localCoverage?.pendingStatusRejected === true, `${label} must include Postgres pending status rejection`);
   expect(postgres?.localCoverage?.localhostTargetHostRejected === true, `${label} must include Postgres localhost target-host rejection`);
   expect(postgres?.localCoverage?.completeSignoffNegativeFixturesRejected === true, `${label} must include Postgres negative signoff fixtures`);

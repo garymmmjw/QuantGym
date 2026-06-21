@@ -483,6 +483,8 @@ Browser/CDP deep flows now recorded in
   export, validating row columns against `schema.sql`, JSON/timestamp values,
   dependency-safe COPY table order, and rejection of row-limited/truncated
   include-sensitive exports as migration input. The same smoke now exercises the
+  API `/api/health` database object for backend, writability, and SQLite
+  foreign-key visibility, then exercises the
   final `--cutover-complete` signoff shape, binding source DB/export SHA-256
   prefixes, target row count, app-DB-active confirmation, backup confirmation,
   and a sanitized HTTPS evidence host, and rejects pending status, localhost,

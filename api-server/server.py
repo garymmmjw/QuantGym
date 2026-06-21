@@ -1387,6 +1387,36 @@ class Database:
                 """
             )
 
+    def health(self) -> dict:
+        try:
+            with self.connect() as conn:
+                foreign_keys = bool(conn.execute("PRAGMA foreign_keys").fetchone()[0])
+                table_count = int(
+                    conn.execute(
+                        """
+                        SELECT COUNT(*)
+                        FROM sqlite_master
+                        WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
+                        """
+                    ).fetchone()[0] or 0
+                )
+        except sqlite3.Error:
+            return {
+                "backend": "sqlite",
+                "writable": False,
+                "foreignKeys": False,
+                "schemaTables": 0,
+            }
+        writable = self.path.exists() and os.access(self.path, os.W_OK)
+        if not self.path.exists():
+            writable = os.access(self.path.parent, os.W_OK)
+        return {
+            "backend": "sqlite",
+            "writable": bool(writable),
+            "foreignKeys": foreign_keys,
+            "schemaTables": table_count,
+        }
+
     def create_session(self, conn: sqlite3.Connection, user_id: str) -> str:
         token = secrets.token_urlsafe(32)
         now = utc_now()
@@ -2471,7 +2501,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path.rstrip("/") or "/"
         try:
             if path in {"/health", "/api/health"} and self.command == "GET":
-                return self.send_json(200, {"ok": True})
+                return self.send_json(200, {"ok": True, "database": db.health()})
             if path == "/api/auth/verification-code" and self.command == "POST":
                 return self.send_verification_code()
             if path == "/api/auth/account-status" and self.command == "GET":

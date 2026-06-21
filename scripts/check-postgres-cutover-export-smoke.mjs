@@ -41,7 +41,8 @@ try {
   const apiPort = await findFreePort();
   const baseUrl = `http://127.0.0.1:${apiPort}`;
   apiProcess = startApi(apiPort);
-  await waitForHealth(baseUrl);
+  const runtimeHealth = await waitForHealth(baseUrl);
+  validateRuntimeHealth(runtimeHealth);
   await seedFixtureData(baseUrl);
 
   const redactedRun = runPython(["scripts/export-api-sqlite.py", "--db", tempDb, "--out", redactedExportPath]);
@@ -170,6 +171,12 @@ try {
       tablesSeeded: seededTables(redactedExport),
       dbPath: tempDb
     },
+    runtimeHealth: {
+      ok: runtimeHealth.ok === true,
+      databaseBackend: runtimeHealth.database?.backend || "",
+      databaseWritable: runtimeHealth.database?.writable === true,
+      databaseForeignKeys: runtimeHealth.database?.foreignKeys === true
+    },
     redactedExport: {
       status: redactedExport.status,
       includeSensitive: redactedExport.includeSensitive,
@@ -214,6 +221,9 @@ try {
         && completeSignoff.cutoverSignoff?.required === true,
       completeSignoffNegativeFixturesRejected: completeSignoffNegativeFixtures.every((fixture) => fixture.rejected),
       completeSignoffNegativeFixturesMentionExpectedErrors: completeSignoffNegativeFixtures.every((fixture) => fixture.expectedErrorObserved),
+      runtimeHealthReportsDatabaseBackend: runtimeHealth.database?.backend === "sqlite",
+      runtimeHealthReportsWritableDatabase: runtimeHealth.database?.writable === true,
+      runtimeHealthReportsForeignKeys: runtimeHealth.database?.foreignKeys === true,
       privateTargetHostRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "private target host rejected" && fixture.rejected === true),
       publicIpTargetHostRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "public IP target host rejected" && fixture.rejected === true),
       privateEvidenceUrlRejected: completeSignoffNegativeFixtures.some((fixture) => fixture.name === "private evidence URL rejected" && fixture.rejected === true),
@@ -295,13 +305,25 @@ async function waitForHealth(baseUrl) {
     try {
       const response = await fetch(`${baseUrl}/api/health`);
       const data = await response.json().catch(() => ({}));
-      if (response.ok && data.ok === true) return;
+      if (response.ok && data.ok === true) return data;
     } catch {
       // Keep polling until startup finishes or timeout.
     }
     await delay(200);
   }
   throw new Error("Timed out waiting for API health.");
+}
+
+function validateRuntimeHealth(data) {
+  if (data?.database?.backend !== "sqlite") {
+    fail("API health must report database.backend=sqlite until the runtime is actually cut over.");
+  }
+  if (data?.database?.writable !== true) {
+    fail("API health must report database.writable=true for the active runtime database.");
+  }
+  if (data?.database?.foreignKeys !== true) {
+    fail("API health must report database.foreignKeys=true for SQLite runtime integrity.");
+  }
 }
 
 async function seedFixtureData(baseUrl) {
