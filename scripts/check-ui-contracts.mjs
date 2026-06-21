@@ -2339,7 +2339,7 @@ function validateApexWwwDomainSummary(data, expect, label) {
 function validateExternalLaunchBlockersSummary(data, expect, label, options = {}) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.launchReadiness === "blocked", `${label} must keep public launch marked blocked until external signoffs clear`);
-  expect(Number(data.blockerCount || 0) === 7, `${label} must track seven remaining external blockers after jobs feed clears`);
+  expect(Number(data.blockerCount || 0) === 6, `${label} must track six remaining external blockers after deployed Google provider clears`);
   expect(Number(data.trackedCount || 0) === 1, `${label} must track one continuing browser-journey expansion item`);
   expect(data.checks?.requiredScriptsPresent === true, `${label} must verify required signoff scripts exist`);
   expect(data.checks?.outstandingItemsTracked === true, `${label} must verify product-status outstanding items are tracked`);
@@ -2408,7 +2408,6 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
 
   for (const id of [
     "apex-www-ssl",
-    "deployed-google-provider-login",
     "ops-alerts-edge-rate-limit",
     "media-bucket-cdn",
     "chrome-web-store-publication",
@@ -2434,6 +2433,8 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(apex?.localCoverage?.requireClearWouldFail === true, `${label} must prove apex/WWW require-clear would fail while blocked`);
 
   const deployedGoogle = findBlocker(data.blockers, "deployed-google-provider-login");
+  expect(deployedGoogle?.status === "pass", `${label} must show deployed Google provider login cleared after real deployed token signoff`);
+  expect(typeof deployedGoogle?.ownerAction === "string" && deployedGoogle.ownerAction.includes("signed off"), `${label} deployed Google provider must describe the completed signoff`);
   expect(deployedGoogle?.signoffCommand === "npm run verify:production-boundaries:deployed:paste-token", `${label} deployed Google provider must record the deployed paste-token signoff command`);
   expect(deployedGoogle?.localCoverage?.trackedInProductStatus === true, `${label} deployed Google provider must be tracked in product status`);
   expect(deployedGoogle?.localCoverage?.deployedBoundarySummaryPresent === true, `${label} must include deployed boundary summary coverage`);
@@ -2442,7 +2443,12 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(deployedGoogle?.localCoverage?.deployedBoundaryLlmResumeReviewPass === true, `${label} must include deployed LLM resume review coverage`);
   expect(deployedGoogle?.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationPass === true, `${label} must include deployed LLM PDF question generation coverage`);
   expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginStateCaptured === true, `${label} must capture deployed Google provider login state`);
-  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginSkippedForToken === true, `${label} must show deployed Google provider is blocked only on fresh token signoff`);
+  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginPass === true, `${label} must include deployed Google provider login pass coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginHasToken === true, `${label} must include deployed Google provider token coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginGoogleLinked === true, `${label} must include deployed Google provider account-link coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenAudienceMatchesClientId === true, `${label} must include deployed Google provider token audience coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginEmailRedacted === true, `${label} must prove deployed Google provider email evidence is redacted`);
+  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenEmailRedacted === true, `${label} must prove deployed Google token email evidence is redacted`);
   expect(deployedGoogle?.localCoverage?.deployedTokenHelperScriptPresent === true, `${label} must include deployed token helper coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenVerifierPresent === true, `${label} must include deployed paste-token verifier coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenAudiencePrecheck === true, `${label} must include deployed paste-token audience precheck coverage`);

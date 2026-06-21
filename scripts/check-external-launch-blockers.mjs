@@ -80,7 +80,7 @@ for (const name of requiredScripts) {
 }
 
 const outstandingItems = extractOutstandingItems(productStatusText);
-for (let index = 1; index <= 9; index += 1) {
+for (let index = 1; index <= 8; index += 1) {
   expect(outstandingItems.some((item) => item.index === index), `docs/product-status.md is missing Outstanding Item ${index}.`);
 }
 
@@ -97,10 +97,14 @@ const apexWwwClear = evidence.apexWwwDomain.status === "pass"
   && evidence.apexWwwDomain.checks?.apexWwwClear === true;
 
 const deployedBoundaryGoogleProviderLogin = findResult(evidence.deployedProductionBoundaries.results, "google provider login");
-const deployedGoogleProviderCleared = evidence.deployedProductionBoundaries.status === "pass"
-  && deployedBoundaryGoogleProviderLogin?.status === "pass"
+const deployedGoogleProviderLoginPassed = deployedBoundaryGoogleProviderLogin?.status === "pass"
   && deployedBoundaryGoogleProviderLogin?.data?.googleLinked === true
   && deployedBoundaryGoogleProviderLogin?.data?.tokenAudienceMatchesClientId === true;
+const deployedGoogleProviderLoginSkippedForToken = deployedBoundaryGoogleProviderLogin?.status === "skip"
+  && String(deployedBoundaryGoogleProviderLogin?.reason || "").includes("QUANTGYM_GOOGLE_ID_TOKEN");
+const redactedEmailPattern = /^\S{2}\*\*\*@[^@\s]+$/;
+const deployedGoogleProviderCleared = evidence.deployedProductionBoundaries.status === "pass"
+  && deployedGoogleProviderLoginPassed;
 
 const blockers = [
   {
@@ -152,8 +156,18 @@ const blockers = [
       deployedBoundaryLlmResumeReviewPass: findResult(evidence.deployedProductionBoundaries.results, "LLM resume review")?.status === "pass",
       deployedBoundaryLlmPdfQuestionGenerationPass: findResult(evidence.deployedProductionBoundaries.results, "LLM PDF question generation")?.status === "pass",
       deployedGoogleProviderLoginStateCaptured: Boolean(deployedBoundaryGoogleProviderLogin?.status),
-      deployedGoogleProviderLoginSkippedForToken: deployedBoundaryGoogleProviderLogin?.status === "skip"
-        && String(deployedBoundaryGoogleProviderLogin?.reason || "").includes("QUANTGYM_GOOGLE_ID_TOKEN"),
+      ...(deployedGoogleProviderCleared
+        ? {
+          deployedGoogleProviderLoginPass: deployedBoundaryGoogleProviderLogin?.status === "pass",
+          deployedGoogleProviderLoginHasToken: deployedBoundaryGoogleProviderLogin?.data?.hasToken === true,
+          deployedGoogleProviderLoginGoogleLinked: deployedBoundaryGoogleProviderLogin?.data?.googleLinked === true,
+          deployedGoogleProviderLoginTokenAudienceMatchesClientId: deployedBoundaryGoogleProviderLogin?.data?.tokenAudienceMatchesClientId === true,
+          deployedGoogleProviderLoginEmailRedacted: redactedEmailPattern.test(String(deployedBoundaryGoogleProviderLogin?.data?.email || "")),
+          deployedGoogleProviderLoginTokenEmailRedacted: redactedEmailPattern.test(String(deployedBoundaryGoogleProviderLogin?.data?.tokenEmail || ""))
+        }
+        : {
+          deployedGoogleProviderLoginSkippedForToken
+        }),
       deployedTokenHelperScriptPresent: Boolean(scripts["google:token-helper:deployed"]),
       deployedPasteTokenVerifierPresent: Boolean(scripts["verify:production-boundaries:deployed:paste-token"]),
       deployedPasteTokenAudiencePrecheck: googleTokenGateText.includes("tokenAudienceMatchesExpected")
@@ -898,7 +912,7 @@ const summary = {
   blockers,
   checks: {
     requiredScriptsPresent: requiredScripts.every((name) => Boolean(scripts[name])),
-    outstandingItemsTracked: outstandingItems.length >= 9,
+    outstandingItemsTracked: outstandingItems.length >= 8,
     releaseReadinessIncludesExternalFixtures: skipReleaseSummaryContent ? "skipped" : true,
     releaseReadinessIncludesExternalBlockerGate: skipReleaseSummaryContent ? "skipped" : true,
     skippedReleaseSummaryContent: skipReleaseSummaryContent,

@@ -197,11 +197,12 @@ button, token textarea, copy button, and `Ready.` status. Evidence:
 `325-google-token-helper-browser.png`, and
 `325-google-token-helper-browser-summary.json`.
 
-Current Google OAuth caveat: Google provider login still needs a real Google ID
-token/session. Keep `http://127.0.0.1:5179` and the production web origin in the
-OAuth Client's Authorized JavaScript origins; if the browser warning
-`The given origin is not allowed for the given client ID.` returns, re-check
-that Google Cloud Console setting before debugging app code.
+Google provider signoff requires a fresh real Google ID token/session whenever
+the production-boundary evidence is refreshed. Keep `http://127.0.0.1:5179` and
+the production web origin in the OAuth Client's Authorized JavaScript origins;
+if the browser warning `The given origin is not allowed for the given client
+ID.` returns, re-check that Google Cloud Console setting before debugging app
+code.
 
 Production credential sign-off command:
 
@@ -512,7 +513,7 @@ Browser/CDP deep flows now recorded in
   otherwise may report the documented production-token-only partial.
 - [x] External launch blockers summary: `npm run check:external-launch-blockers`
   writes `341-external-launch-blockers-summary.json`, keeps public launch
-  marked `blocked` while the seven external signoffs remain, and supports
+  marked `blocked` while the six remaining external signoffs remain, and supports
   `-- --require-clear` for final public-launch clearing. The same check is also
   included inside `npm run check:release-readiness:local` without overwriting
   the standalone `341` summary.
