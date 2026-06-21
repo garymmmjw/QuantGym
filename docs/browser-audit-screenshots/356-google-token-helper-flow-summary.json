@@ -38,6 +38,8 @@
     "deployedNextStepsUseExternalOrigin": true,
     "deployedWarnsAboutOriginMismatch": true,
     "deployedProvidesConsoleSnippet": true,
+    "deployedExplainsVerifierAudienceMismatch": true,
+    "deployedShowsLiveExpiryCountdown": true,
     "deployedAvoidsLocalGisScriptTag": true,
     "deployedDoesNotTellUserToSignInOnLoopback": true,
     "deployedVerifierCommand": true,

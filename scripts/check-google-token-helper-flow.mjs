@@ -29,6 +29,11 @@ checks.deployedNextStepsUseExternalOrigin = Array.isArray(deployed.nextSteps)
 checks.deployedWarnsAboutOriginMismatch = deployedHtml.includes("origin_mismatch");
 checks.deployedProvidesConsoleSnippet = deployedHtml.includes("id=\"consoleSnippet\"")
   && deployedHtml.includes("Token copied. Paste it to Codex immediately.");
+checks.deployedExplainsVerifierAudienceMismatch = deployedHtml.includes("local verifier expects a different Client ID")
+  && deployedHtml.includes("audience mismatch");
+checks.deployedShowsLiveExpiryCountdown = deployedHtml.includes("Minimum verifier window: 120 seconds")
+  && deployedHtml.includes("qg-google-token-expires")
+  && deployedHtml.includes("setInterval(updateTokenExpiryStatus, 1000)");
 checks.deployedAvoidsLocalGisScriptTag = !deployedHtml.includes("<script src=\"https://accounts.google.com/gsi/client\" async defer></script>");
 checks.deployedDoesNotTellUserToSignInOnLoopback = !deployedHtml.includes("Use this page only from <code>http://127.0.0.1:5179</code>")
   && !deployed.nextSteps.some((step) => /sign in.+127\.0\.0\.1/i.test(String(step)));

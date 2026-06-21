@@ -148,6 +148,7 @@ function localHelperHtml(googleClientId, details) {
         <li>Copy the token into your shell as <code>QUANTGYM_GOOGLE_ID_TOKEN</code>.</li>
         <li>Immediately run <code>${details.verifyCommand}</code>. The wrapper hides the pasted token, rejects expired or nearly expired tokens before touching evidence files, and passes fresh tokens only to the child process.</li>
       </ol>
+      <p class="muted">Verifier freshness rule: tokens must have at least 120 seconds remaining.</p>
       <div id="googleButton"></div>
       <textarea id="tokenOutput" spellcheck="false" placeholder="Google ID token will appear here after sign-in." readonly></textarea>
       <button id="copyTokenBtn" type="button" disabled>Copy token</button>
@@ -310,6 +311,7 @@ function deployedHelperHtml(googleClientId, details) {
       <h1>QuantGym Deployed Google ID Token Helper</h1>
       <p>This helper prepares a Console snippet for deployed release-boundary verification. It does not write the token to disk. The Google sign-in button must run from <code>${details.deployedOrigin}</code>, because the deployed OAuth Client ID is authorized for that origin.</p>
       <p class="warning">Do not click Google sign-in from <code>http://127.0.0.1:5179</code> with the deployed Client ID. Google will reject that as <code>origin_mismatch</code>.</p>
+      <p class="warning">Use the copied token only with <code>${details.verifyCommand}</code>. It is minted for the deployed Client ID; the local verifier expects a different Client ID and will reject it with an audience mismatch.</p>
       <ol>
         <li>Open <a href="${details.deployedOrigin}" target="_blank" rel="noreferrer">${details.deployedOrigin}</a> in your normal browser.</li>
         <li>Open DevTools Console on that deployed page.</li>
@@ -397,6 +399,7 @@ function deployedConsoleSnippet(googleClientId, details) {
     "<p style='margin:8px 0;color:#596070'>Click the Google button, then paste the copied token into Codex immediately.</p>",
     "<div id='qg-google-button'></div>",
     "<textarea id='qg-google-token-output' readonly spellcheck='false' style='box-sizing:border-box;width:100%;height:128px;margin-top:10px;border:1px solid #cfd5ee;border-radius:8px;padding:10px;font:12px ui-monospace,SFMono-Regular,Menlo,monospace'></textarea>",
+    "<p id='qg-google-token-expires' style='margin:10px 0 0;color:#596070;font-weight:700'>Minimum verifier window: 120 seconds. No token yet.</p>",
     "<button id='qg-google-token-copy' type='button' style='margin-top:10px;border:0;border-radius:8px;background:#5b5ff5;color:#fff;font-weight:700;padding:9px 12px;cursor:pointer'>Copy token</button>",
     "<p id='qg-google-token-status' style='margin:10px 0 0;color:#7b8192;font-weight:700'>Ready.</p>"
   ].join("");
@@ -404,7 +407,11 @@ function deployedConsoleSnippet(googleClientId, details) {
 
   const tokenOutput = panel.querySelector("#qg-google-token-output");
   const copyButton = panel.querySelector("#qg-google-token-copy");
+  const expires = panel.querySelector("#qg-google-token-expires");
   const status = panel.querySelector("#qg-google-token-status");
+  const minimumVerifierSeconds = 120;
+  let latestPayload = {};
+  let tokenExpiryTimer = null;
 
   const decodePayload = (token) => {
     try {
@@ -416,8 +423,27 @@ function deployedConsoleSnippet(googleClientId, details) {
     }
   };
 
+  const updateTokenExpiryStatus = () => {
+    const expiry = Number(latestPayload.exp || 0);
+    if (!expiry) {
+      expires.style.color = "#596070";
+      expires.textContent = "Minimum verifier window: 120 seconds. No token yet.";
+      return;
+    }
+    const remaining = Math.floor(expiry - Date.now() / 1000);
+    if (remaining < minimumVerifierSeconds) {
+      expires.style.color = "#9f2d20";
+      expires.textContent = "Minimum verifier window: 120 seconds. Token has only " + remaining + " seconds remaining; click Google again.";
+      status.textContent = "Token is too close to expiry. Click Google again, then run " + verifyCommand + " immediately.";
+      return;
+    }
+    expires.style.color = "#256c3a";
+    expires.textContent = "Minimum verifier window: 120 seconds. Token expires in " + remaining + " seconds. Run now: " + verifyCommand;
+  };
+
   copyButton.addEventListener("click", async () => {
     await navigator.clipboard.writeText(tokenOutput.value);
+    updateTokenExpiryStatus();
     status.textContent = "Copied. Run now: " + verifyCommand;
   });
 
@@ -427,6 +453,10 @@ function deployedConsoleSnippet(googleClientId, details) {
       const token = credential || "";
       tokenOutput.value = token;
       const payload = decodePayload(token);
+      latestPayload = payload;
+      if (tokenExpiryTimer) clearInterval(tokenExpiryTimer);
+      updateTokenExpiryStatus();
+      tokenExpiryTimer = setInterval(updateTokenExpiryStatus, 1000);
       const remaining = payload.exp ? Math.floor(payload.exp - Date.now() / 1000) : "unknown";
       if (token) await navigator.clipboard.writeText(token).catch(() => {});
       status.textContent = token
