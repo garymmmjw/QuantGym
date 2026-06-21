@@ -60,7 +60,7 @@
   ],
   "staticAssetFallback": {
     "name": "missing hashed asset fallback",
-    "url": "https://beta.quantgym.app/assets/__quantgym_missing_asset_probe_1781868368838.js",
+    "url": "https://beta.quantgym.app/assets/__quantgym_missing_asset_probe_1782001918898.js",
     "status": 404,
     "contentType": "text/html; charset=utf-8",
     "cacheControl": "no-store",
@@ -81,7 +81,7 @@
       },
       "health": {
         "pathname": "/",
-        "bodyTextLength": 2005,
+        "bodyTextLength": 2010,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -160,7 +160,7 @@
       },
       "health": {
         "pathname": "/tools",
-        "bodyTextLength": 733,
+        "bodyTextLength": 732,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -208,7 +208,7 @@
       },
       "health": {
         "pathname": "/news",
-        "bodyTextLength": 10368,
+        "bodyTextLength": 10392,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -286,7 +286,7 @@
       },
       "health": {
         "pathname": "/jobs",
-        "bodyTextLength": 4174,
+        "bodyTextLength": 4438,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -302,7 +302,7 @@
       },
       "health": {
         "pathname": "/companies",
-        "bodyTextLength": 2423,
+        "bodyTextLength": 2424,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -537,19 +537,15 @@
         "text": "Failed to load resource: the server responded with a status of 403 ()"
       },
       {
-        "type": "http",
-        "status": 403,
-        "url": "https://api.quantgym.app/api/admin/metrics",
-        "reason": "non-admin account admin endpoint guard"
-      },
-      {
-        "type": "console",
-        "text": "Failed to load resource: the server responded with a status of 403 ()"
-      },
-      {
         "type": "requestfailed",
         "url": "https://beta.quantgym.app/cdn-cgi/rum",
         "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://api.quantgym.app/api/admin/metrics",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted admin background request"
       }
     ]
   },
@@ -569,5 +565,5 @@
     "noHttpErrors": true,
     "summaryRedacted": true
   },
-  "durationMs": 59324
+  "durationMs": 81978
 }

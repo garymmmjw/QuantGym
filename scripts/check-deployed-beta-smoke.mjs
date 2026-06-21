@@ -248,6 +248,15 @@ function attachCollectors(page) {
       });
       return;
     }
+    if (/\/api\/admin\/(audit-events|metrics)($|\?)/i.test(url) && failure === "net::ERR_ABORTED") {
+      summary.errors.ignored.push({
+        type: "requestfailed",
+        url: sanitizeUrl(url),
+        failure,
+        reason: "navigation-aborted admin background request"
+      });
+      return;
+    }
     if (failure === "net::ERR_ABORTED" && isNavigationAbortedStaticAsset(url)) {
       summary.errors.ignored.push({
         type: "requestfailed",
