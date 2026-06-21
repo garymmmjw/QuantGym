@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-20T22:28:18.166Z",
+  "generatedAt": "2026-06-21T02:44:38.810Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/ops-alert-edge/readiness-packet",
   "filesWritten": [
     "artifacts/ops-alert-edge/readiness-packet/README.md",
@@ -59,7 +59,8 @@
     "productionFixturePass": true,
     "fixtureRejectsUnsafeInputs": true,
     "fixtureRequiresSpecificEdgeNotes": true,
-    "fixtureOutputRedactsSecrets": true
+    "fixtureOutputRedactsSecrets": true,
+    "fixtureBlocksUnsafeSmokeDelivery": true
   },
   "failures": [],
   "warnings": []

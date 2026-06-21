@@ -1385,6 +1385,20 @@ function validateOpsAlertProductionFixtureSummary(data, expect, label) {
   expect(data.localWebhookSmoke?.payload?.path === "/ops/readiness-smoke", `${label} local webhook smoke payload path must match`);
   expect(data.localWebhookSmoke?.payload?.hasOccurredAt === true, `${label} local webhook smoke must include occurredAt`);
   expect(data.localWebhookSmoke?.payloadSanitized === true, `${label} local webhook smoke payload must be sanitized`);
+  const hasBlockedSmokeChecks = data.checks?.productionSmokeBlockedWhenConfigInvalid !== undefined;
+  if (hasBlockedSmokeChecks) {
+    expect(data.blockedProductionSmoke?.blocked === true, `${label} invalid production smoke must be blocked before delivery`);
+    expect(data.blockedProductionSmoke?.delivered === false, `${label} invalid production smoke must not deliver a webhook request`);
+    expect(Number(data.blockedProductionSmoke?.receivedCount || 0) === 0, `${label} invalid production smoke receiver must see zero requests`);
+    expect(data.blockedProductionSmoke?.failureExplained === true, `${label} invalid production smoke must explain config precheck failure`);
+    expect(data.checks?.productionSmokeBlockedWhenConfigInvalid === true, `${label} must verify invalid production smoke is blocked`);
+    expect(data.checks?.productionSmokeNoDeliveryWhenConfigInvalid === true, `${label} must verify invalid production smoke is not delivered`);
+    expect(data.checks?.productionSmokeFailureExplained === true, `${label} must verify invalid production smoke failure is explained`);
+  } else if (/nested ops alert production fixture/i.test(label)) {
+    warnings.push("Release-readiness nested ops alert production fixture lacks blocked-smoke no-delivery coverage; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
+  } else {
+    expect(false, `${label} must verify production smoke is blocked before delivery when config checks fail`);
+  }
   expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
 }
 
@@ -1793,6 +1807,7 @@ function validateOpsAlertEdgePacketSummary(data, expect, label) {
     "runtimeSmokePass",
     "productionFixturePass",
     "fixtureRejectsUnsafeInputs",
+    "fixtureBlocksUnsafeSmokeDelivery",
     "fixtureOutputRedactsSecrets"
   ]);
   expectEmptyFailures(data, expect, label);
@@ -2435,6 +2450,9 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(ops?.localCoverage?.packetSignoffRequiresWebhookSmoke === true, `${label} must require the ops webhook smoke in final signoff`);
   expect(ops?.localCoverage?.localWebhookSmokeAuthorized === true, `${label} must include ops local webhook smoke authorization coverage`);
   expect(ops?.localCoverage?.localWebhookSmokePayloadSafe === true, `${label} must include ops local webhook smoke payload-safety coverage`);
+  expect(ops?.localCoverage?.productionSmokeBlockedWhenConfigInvalid === true, `${label} must include ops invalid-production-smoke blocking coverage`);
+  expect(ops?.localCoverage?.productionSmokeNoDeliveryWhenConfigInvalid === true, `${label} must include ops no-delivery coverage for invalid production smoke`);
+  expect(ops?.localCoverage?.productionSmokeFailureExplained === true, `${label} must include ops invalid-production-smoke failure explanation coverage`);
   expect(ops?.localCoverage?.validProductionWebhookTokenRedacted === true, `${label} must include ops production webhook token redaction coverage`);
   expect(ops?.localCoverage?.validProductionWebhookUrlRedacted === true, `${label} must include ops production webhook URL redaction coverage`);
   expect(ops?.localCoverage?.validProductionEdgeEvidenceUrlRedacted === true, `${label} must include ops edge evidence URL redaction coverage`);

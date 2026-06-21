@@ -177,6 +177,8 @@ try {
 
   const localWebhookSmoke = await runLocalWebhookSmoke();
   validateLocalWebhookSmoke(localWebhookSmoke);
+  const blockedProductionSmoke = await runBlockedProductionSmokeNoDelivery();
+  validateBlockedProductionSmoke(blockedProductionSmoke);
 
   const checks = {
     validProductionPass: productionFixture.status === "pass",
@@ -203,7 +205,10 @@ try {
     edgeNotesMissingEnforcementActionRejected: negativeFixtures.some((fixture) => fixture.name === "edge notes missing enforcement action rejected" && fixture.rejected === true),
     localWebhookSmokeDelivered: localWebhookSmoke.delivered,
     localWebhookSmokeAuthorized: localWebhookSmoke.tokenAccepted,
-    localWebhookSmokePayloadSafe: localWebhookSmoke.payloadSanitized
+    localWebhookSmokePayloadSafe: localWebhookSmoke.payloadSanitized,
+    productionSmokeBlockedWhenConfigInvalid: blockedProductionSmoke.blocked === true,
+    productionSmokeNoDeliveryWhenConfigInvalid: blockedProductionSmoke.delivered === false,
+    productionSmokeFailureExplained: blockedProductionSmoke.failureExplained === true
   };
 
   const summary = {
@@ -212,6 +217,7 @@ try {
     productionFixture,
     negativeFixtures,
     localWebhookSmoke,
+    blockedProductionSmoke,
     checks,
     failures,
     warnings
@@ -261,6 +267,13 @@ function validateLocalWebhookSmoke(summary) {
   if (summary.payload?.statusCode !== 500) fail(`Local webhook smoke statusCode mismatch: ${summary.payload?.statusCode}.`);
   if (!summary.payload?.hasOccurredAt) fail("Local webhook smoke payload should include occurredAt.");
   if (!summary.payloadSanitized) fail("Local webhook smoke payload should not contain tokens or credentials.");
+}
+
+function validateBlockedProductionSmoke(summary) {
+  if (!summary.blocked) fail("Production smoke with invalid config should fail before delivery.");
+  if (summary.delivered) fail("Production smoke with invalid config must not deliver a webhook request.");
+  if (!summary.failureExplained) fail("Blocked production smoke should explain that config checks failed first.");
+  if (summary.childExitCode === 0) fail("Blocked production smoke child should exit non-zero.");
 }
 
 async function runLocalWebhookSmoke() {
@@ -323,6 +336,44 @@ async function runLocalWebhookSmoke() {
       },
       payloadSanitized: isPayloadSanitized(payload),
       childPassed: result.exitCode === 0 && result.parsed?.status === "pass"
+    };
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
+async function runBlockedProductionSmokeNoDelivery() {
+  const received = [];
+  const server = http.createServer((req, res) => {
+    received.push({
+      method: req.method || "",
+      url: req.url || "",
+      authorization: req.headers.authorization || ""
+    });
+    res.writeHead(204);
+    res.end();
+  });
+
+  await new Promise((resolve, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", resolve);
+  });
+
+  try {
+    const url = `http://127.0.0.1:${server.address().port}/should-not-receive-production-smoke`;
+    const result = await runConfig(["--production", "--smoke", "--no-dotenv"], {
+      ...validProductionEnv,
+      QUANTGYM_ALERT_WEBHOOK_URL: url,
+      QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED: "0"
+    });
+    const smokeResult = findResult(result.parsed?.results, "alert webhook smoke") || {};
+    return {
+      childExitCode: result.exitCode,
+      blocked: result.exitCode !== 0 && result.parsed?.status === "fail" && smokeResult.status === "fail",
+      delivered: received.length > 0,
+      receivedCount: received.length,
+      failureExplained: /configuration checks failed before external delivery/i.test(String(smokeResult.error || "")),
+      firstFailure: firstFailure(result)
     };
   } finally {
     await new Promise((resolve) => server.close(resolve));

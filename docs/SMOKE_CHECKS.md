@@ -108,7 +108,8 @@ provider, a rule note, and a non-placeholder HTTPS evidence URL before
 fixture that proves the gate accepts the hardened shape, rejects placeholder,
 localhost, private-network, raw-IP, HTTP, credential-bearing URLs, query/fragment-bearing URLs,
 disabled-limiter, excessive-limiter, wildcard proxy trust, and incomplete edge
-signoff inputs, and keeps raw tokens/full dashboard URLs out of output.
+signoff inputs, keeps raw tokens/full dashboard URLs out of output, and blocks
+webhook-smoke delivery whenever production configuration checks fail.
 
 Production-boundary diagnostic follow-up: the verification script now reports
 the exact missing item for skipped checks, and the final real-token run is
@@ -410,7 +411,7 @@ Browser/CDP deep flows now recorded in
   placeholder/local/private/raw-IP/credential-bearing/query-bearing/incomplete inputs without
   exposing raw secrets. It also rejects generic edge notes that do not name the
   protected auth surface, client IP/identity characteristic, and enforcement
-  action.
+  action, and verifies invalid production smoke attempts do not deliver webhooks.
 - [x] Jobs source runtime smoke: `npm run check:jobs-source:runtime-smoke`
   starts a temporary jobs feed and API, verifies bearer-token source fetch,
   source/local catalog merge, duplicate-id source precedence, cache behavior,

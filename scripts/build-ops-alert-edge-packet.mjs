@@ -72,7 +72,10 @@ try {
       && productionFixture.checks?.edgeNotesMissingEnforcementActionRejected === true,
     fixtureOutputRedactsSecrets: productionFixture.checks?.validProductionWebhookTokenRedacted === true
       && productionFixture.checks?.validProductionWebhookUrlRedacted === true
-      && productionFixture.checks?.validProductionEdgeEvidenceUrlRedacted === true
+      && productionFixture.checks?.validProductionEdgeEvidenceUrlRedacted === true,
+    fixtureBlocksUnsafeSmokeDelivery: productionFixture.checks?.productionSmokeBlockedWhenConfigInvalid === true
+      && productionFixture.checks?.productionSmokeNoDeliveryWhenConfigInvalid === true
+      && productionFixture.checks?.productionSmokeFailureExplained === true
   };
 
   for (const [name, value] of Object.entries(checks)) {
