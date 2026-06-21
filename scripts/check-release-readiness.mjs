@@ -42,6 +42,12 @@ const gates = [
     args: ["run", "check:deployed-beta-smoke:deploy-window-fixture"],
     parseJson: true
   },
+  {
+    name: "Deployed beta expected-commit fixture",
+    command: "npm",
+    args: ["run", "check:deployed-beta-smoke:expected-commit-fixture"],
+    parseJson: true
+  },
   { name: "Module ownership", command: "npm", args: ["run", "check:module-ownership"], parseJson: true },
   { name: "Chrome store readiness", command: "npm", args: ["run", "check:chrome-store-readiness"], parseJson: true },
   { name: "Chrome store publication fixture", command: "npm", args: ["run", "check:chrome-store-publication:fixture"], parseJson: true },

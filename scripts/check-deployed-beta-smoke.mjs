@@ -3,12 +3,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
 const baseUrl = trimSlash(getArgValue("--base-url") || process.env.QUANTGYM_BETA_SMOKE_BASE_URL || "https://beta.quantgym.app");
-const expectedCommit = clean(getArgValue("--expected-commit") || process.env.QUANTGYM_BETA_EXPECTED_COMMIT);
+const expectedCommitInput = clean(getArgValue("--expected-commit") || process.env.QUANTGYM_BETA_EXPECTED_COMMIT);
+const expectedCommit = resolveExpectedCommit(expectedCommitInput);
 const summaryPath = path.resolve(
   root,
   getArgValue("--summary") || "docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json"
@@ -175,6 +177,7 @@ const summary = {
   baseUrl,
   email: redactEmail(email),
   expectedCommit,
+  expectedCommitInput: expectedCommitInput && expectedCommitInput !== expectedCommit ? expectedCommitInput : undefined,
   deployReadiness: { status: "pending" },
   login: { status: "pending" },
   config: {},
@@ -834,6 +837,24 @@ function clean(value) {
 function parsePositiveInteger(value) {
   const number = Number(value);
   return Number.isInteger(number) && number > 0 ? number : 0;
+}
+
+function resolveExpectedCommit(value) {
+  const text = clean(value);
+  if (!text) return "";
+  if (/^HEAD$/i.test(text)) return gitRevParse(["HEAD"]) || text;
+  if (/^[0-9a-f]{7,39}$/i.test(text)) return gitRevParse([`${text}^{commit}`]) || text;
+  return text;
+}
+
+function gitRevParse(gitArgs) {
+  const result = spawnSync("git", ["rev-parse", "--verify", ...gitArgs], {
+    cwd: root,
+    encoding: "utf8",
+    maxBuffer: 1024 * 1024
+  });
+  if (result.status !== 0) return "";
+  return clean(result.stdout).split(/\s+/)[0] || "";
 }
 
 function trimSlash(value) {

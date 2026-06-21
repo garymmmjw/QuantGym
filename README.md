@@ -218,8 +218,11 @@ evidence instead of being mistaken for a broken route:
 ```bash
 QUANTGYM_BETA_SMOKE_EMAIL="you@example.com" \
 QUANTGYM_BETA_SMOKE_PASSWORD="..." \
-npm run check:deployed-beta-smoke -- --expected-commit "$(git rev-parse HEAD)"
+npm run check:deployed-beta-smoke -- --expected-commit HEAD
 ```
+
+`--expected-commit` accepts a full SHA, a local short SHA, or `HEAD`; the smoke
+records the resolved full commit in its summary.
 
 To inspect the current migration completion state without changing runtime
 code, use:
