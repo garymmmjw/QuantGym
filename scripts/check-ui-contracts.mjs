@@ -642,11 +642,34 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       );
       const migrationCompletion = findResult(releaseResults, "Migration completion audit");
       if (migrationCompletion?.data?.requirements) {
+        const googleProvider = findRequirement(migrationCompletion.data.checks, "google-provider-login");
+        const googleProviderTokenSecondsRemaining = secondsUntil(
+          googleProvider?.evidence?.tokenExpiresAt
+        );
+        const googleProviderTokenFresh = Number.isFinite(googleProviderTokenSecondsRemaining)
+          && googleProviderTokenSecondsRemaining >= 120;
+        const finalMigrationComplete = migrationCompletion.status === "pass"
+          && migrationCompletion.data?.status === "pass"
+          && Number(migrationCompletion.data?.requirements?.passed) === 10
+          && Number(migrationCompletion.data?.requirements?.pending) === 0
+          && Number(migrationCompletion.data?.requirements?.failed) === 0
+          && googleProvider?.status === "pass"
+          && googleProvider?.evidence?.providerLoginCompleted === true
+          && googleProviderTokenFresh;
+        const interimMigrationComplete = migrationCompletion.status === "partial"
+          && migrationCompletion.data?.status === "partial"
+          && Number(migrationCompletion.data?.requirements?.passed) === 9
+          && Number(migrationCompletion.data?.requirements?.pending) === 1
+          && Number(migrationCompletion.data?.requirements?.failed) === 0
+          && googleProvider?.status === "pending"
+          && String(googleProvider?.reason || "").includes("QUANTGYM_GOOGLE_ID_TOKEN");
         expect(
-          (migrationCompletion.status === "pass" && migrationCompletion.data?.requirements?.pending === 0)
-            || (migrationCompletion.status === "partial" && migrationCompletion.data?.requirements?.pending === 1),
+          finalMigrationComplete || interimMigrationComplete,
           "Migration completion audit nested gate must be final pass or one-token pending partial"
         );
+        if (googleProvider?.status === "pass") {
+          expect(googleProviderTokenFresh === true, "Migration completion audit nested pass requires fresh token evidence");
+        }
       }
       const uiContracts = findResult(releaseResults, "UI contracts");
       expect(uiContracts?.status === "pass", "UI contracts nested gate must pass");
