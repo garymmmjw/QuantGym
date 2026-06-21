@@ -82,22 +82,22 @@ function validateProduction() {
   expect(notesAreSpecific(config.notes), "QUANTGYM_RENDER_API_BUILD_FILTER_NOTES must mention quantgym-api, api-server/**, data/**, and that docs/frontend/tooling commits should not restart or deploy the API.");
 }
 
-function validateEvidenceUrl(value) {
-  expect(value, "QUANTGYM_RENDER_API_BUILD_FILTER_EVIDENCE_URL is required.");
-  expectNoPlaceholder("QUANTGYM_RENDER_API_BUILD_FILTER_EVIDENCE_URL", value);
+function validateEvidenceUrl(value, targetFailures = failures) {
+  expect(value, "QUANTGYM_RENDER_API_BUILD_FILTER_EVIDENCE_URL is required.", targetFailures);
+  expectNoPlaceholder("QUANTGYM_RENDER_API_BUILD_FILTER_EVIDENCE_URL", value, targetFailures);
   let url;
   try {
     url = new URL(value);
   } catch {
-    fail("QUANTGYM_RENDER_API_BUILD_FILTER_EVIDENCE_URL must be a valid HTTPS URL.");
+    fail("QUANTGYM_RENDER_API_BUILD_FILTER_EVIDENCE_URL must be a valid HTTPS URL.", targetFailures);
     return;
   }
-  expect(url.protocol === "https:", "Render API build filter evidence URL must use HTTPS.");
-  expect(!url.username && !url.password, "Render API build filter evidence URL must not include embedded credentials.");
-  expect(!url.search && !url.hash, "Render API build filter evidence URL must not include query strings or fragments.");
-  expect(isDnsHostname(url.hostname), "Render API build filter evidence URL must use a DNS hostname, not a raw IP address.");
-  expect(!isLocalOrPrivateHost(url.hostname), "Render API build filter evidence URL must not point at localhost, loopback, or a private network address.");
-  expect(url.hostname === "render.com" || url.hostname.endsWith(".render.com"), "Render API build filter evidence URL should point at Render dashboard or Render API evidence.");
+  expect(url.protocol === "https:", "Render API build filter evidence URL must use HTTPS.", targetFailures);
+  expect(!url.username && !url.password, "Render API build filter evidence URL must not include embedded credentials.", targetFailures);
+  expect(!url.search && !url.hash, "Render API build filter evidence URL must not include query strings or fragments.", targetFailures);
+  expect(isDnsHostname(url.hostname), "Render API build filter evidence URL must use a DNS hostname, not a raw IP address.", targetFailures);
+  expect(!isLocalOrPrivateHost(url.hostname), "Render API build filter evidence URL must not point at localhost, loopback, or a private network address.", targetFailures);
+  expect(url.hostname === "render.com" || url.hostname.endsWith(".render.com"), "Render API build filter evidence URL should point at Render dashboard or Render API evidence.", targetFailures);
 }
 
 function notesAreSpecific(value) {
@@ -113,9 +113,9 @@ function notesAreSpecific(value) {
 }
 
 function isSafeEvidenceUrl(value) {
-  const before = failures.length;
-  validateEvidenceUrl(value);
-  return failures.length === before;
+  const localFailures = [];
+  validateEvidenceUrl(value, localFailures);
+  return localFailures.length === 0;
 }
 
 function summarizeEvidenceHost(value) {
@@ -159,8 +159,8 @@ function isLocalOrPrivateHost(hostname) {
   return false;
 }
 
-function expectNoPlaceholder(name, value) {
-  expect(!/[<>{}]|example|placeholder|change-me|todo|your-/i.test(String(value || "")), `${name} must not be a placeholder value.`);
+function expectNoPlaceholder(name, value, targetFailures = failures) {
+  expect(!/[<>{}]|example|placeholder|change-me|todo|your-/i.test(String(value || "")), `${name} must not be a placeholder value.`, targetFailures);
 }
 
 function truthy(value) {
@@ -190,12 +190,12 @@ function writeSummary(data) {
   fs.writeFileSync(summaryPath, `${JSON.stringify(data, null, 2)}\n`);
 }
 
-function expect(condition, message) {
-  if (!condition) fail(message);
+function expect(condition, message, targetFailures = failures) {
+  if (!condition) fail(message, targetFailures);
 }
 
-function fail(message) {
-  failures.push(message);
+function fail(message, targetFailures = failures) {
+  targetFailures.push(message);
 }
 
 function clean(value) {

@@ -129,13 +129,16 @@ const missingEnvNoDefaultSummaryResult = (() => {
   const createdDefaultSummary = fs.existsSync(defaultProductionSummaryPath);
   fs.rmSync(defaultProductionSummaryPath, { force: true });
   const output = `${result.stdout || ""}\n${result.stderr || ""}`.trim();
+  const json = parseFirstJson(output);
+  const duplicateFailures = duplicateItems(json?.failures || []);
   return {
     name: "missing production env does not write default summary",
-    status: result.status === 1 && createdDefaultSummary === false ? "pass" : "fail",
+    status: result.status === 1 && createdDefaultSummary === false && duplicateFailures.length === 0 ? "pass" : "fail",
     exitCode: result.status,
     expectedExitCode: 1,
     expectedError: "QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED",
     createdDefaultSummary,
+    duplicateFailures,
     outputPreview: output.slice(0, 700)
   };
 })();
@@ -173,6 +176,17 @@ function parseFirstJson(output) {
   } catch {
     return null;
   }
+}
+
+function duplicateItems(items) {
+  const seen = new Set();
+  const duplicates = new Set();
+  for (const item of items) {
+    const value = String(item || "");
+    if (seen.has(value)) duplicates.add(value);
+    seen.add(value);
+  }
+  return [...duplicates];
 }
 
 function parseArgs(argv) {

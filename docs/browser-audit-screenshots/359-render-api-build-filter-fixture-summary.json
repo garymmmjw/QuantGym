@@ -74,6 +74,7 @@
       "expectedExitCode": 1,
       "expectedError": "QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED",
       "createdDefaultSummary": false,
+      "duplicateFailures": [],
       "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-21\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [],\n  \"evidenceHost\": \"\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": false,\n    \"hasApiServerPath\": false,\n    \"hasDataPath\": false,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": false,\n    \"serviceNamePass\": false,\n    \"evidenceUrlSafe\": false,\n    \"notesSpecific\": false\n  },\n  \"failures\": [\n    \"QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED must be 1 after the Render "
     }
   ]
