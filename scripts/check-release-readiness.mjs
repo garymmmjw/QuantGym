@@ -41,6 +41,7 @@ const gates = [
   { name: "Chrome store publication fixture", command: "npm", args: ["run", "check:chrome-store-publication:fixture"], parseJson: true },
   { name: "Browser extension runtime smoke", command: "npm", args: ["run", "check:browser-extension:runtime-smoke"], parseJson: true },
   { name: "Render LLM deploy compatibility", command: "npm", args: ["run", "check:render-llm-deploy"], parseJson: true },
+  { name: "Google token helper flow", command: "npm", args: ["run", "check:google-token-helper"], parseJson: true },
   { name: "Media storage runtime smoke", command: "npm", args: ["run", "check:media-storage:runtime-smoke"], parseJson: true },
   { name: "Media storage production fixture", command: "npm", args: ["run", "check:media-storage:production-fixture"], parseJson: true },
   { name: "Ops alert runtime smoke", command: "npm", args: ["run", "check:ops-alerts:runtime-smoke"], parseJson: true },

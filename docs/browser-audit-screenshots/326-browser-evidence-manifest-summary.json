@@ -1,10 +1,10 @@
 {
   "status": "pass",
   "docsScanned": 2,
-  "totalBacktickFileRefs": 293,
-  "evidenceRefs": 278,
+  "totalBacktickFileRefs": 294,
+  "evidenceRefs": 279,
   "imageRefs": 229,
-  "jsonRefs": 49,
+  "jsonRefs": 50,
   "ignoredRefs": 15,
   "missing": 0,
   "smallFiles": 0,

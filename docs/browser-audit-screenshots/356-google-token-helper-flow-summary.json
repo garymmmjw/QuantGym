@@ -1,0 +1,39 @@
+{
+  "status": "pass",
+  "generatedPath": "artifacts/google-id-token-helper.html",
+  "local": {
+    "status": "created",
+    "target": "local",
+    "url": "http://127.0.0.1:5179/artifacts/google-id-token-helper.html",
+    "clientIdSource": "environment",
+    "clientIdSet": true,
+    "verifyCommand": "npm run verify:production-boundaries:paste-token or npm run check:release-readiness:local:paste-token",
+    "nextStepCount": 4
+  },
+  "deployed": {
+    "status": "created",
+    "target": "deployed",
+    "url": "http://127.0.0.1:5179/artifacts/google-id-token-helper.html",
+    "deployedOrigin": "https://beta.quantgym.app",
+    "clientIdSource": "https://beta.quantgym.app/config.js",
+    "clientIdSet": true,
+    "verifyCommand": "npm run verify:production-boundaries:deployed:paste-token",
+    "nextStepCount": 4
+  },
+  "checks": {
+    "localTarget": true,
+    "localUrlIsLoopback": true,
+    "localUsesGoogleButton": true,
+    "localMentionsVerifier": true,
+    "deployedTarget": true,
+    "deployedOriginIsBeta": true,
+    "deployedNextStepsUseExternalOrigin": true,
+    "deployedWarnsAboutOriginMismatch": true,
+    "deployedProvidesConsoleSnippet": true,
+    "deployedAvoidsLocalGisScriptTag": true,
+    "deployedDoesNotTellUserToSignInOnLoopback": true,
+    "deployedVerifierCommand": true,
+    "tokenNotWrittenToArtifact": true
+  },
+  "failures": []
+}

@@ -175,15 +175,19 @@ server is running. The default helper uses the local `config.js` Google Client
 ID and is intended for local `verify:production-boundaries` and
 `check:release-readiness:local` runs. For deployed service verification, use
 `npm run google:token-helper:deployed` instead; it reads
-`https://beta.quantgym.app/config.js` and generates a token for the deployed
-Google Client ID, which is the audience required by
-`npm run verify:production-boundaries:deployed:paste-token`. The generated
-helper is ignored by Git and does not write the short-lived Google ID token to
-disk. After signing in, copy the token and run
+`https://beta.quantgym.app/config.js` and writes an external-browser handoff page
+with a Console snippet for `https://beta.quantgym.app`. The deployed Google
+button must run on that deployed origin, not from loopback, otherwise Google
+rejects the OAuth flow with `origin_mismatch`. The snippet obtains a token for
+the deployed Google Client ID, which is the audience required by
+`npm run verify:production-boundaries:deployed:paste-token`. The generated helper
+is ignored by Git and does not write the short-lived Google ID token to disk.
+After signing in, copy the token and run
 the matching paste-token verifier immediately: use
 `npm run verify:production-boundaries:paste-token` for local checks, or
 `npm run verify:production-boundaries:deployed:paste-token` for deployed
-checks.
+checks. `npm run check:google-token-helper` covers both helper flows and writes
+`356-google-token-helper-flow-summary.json`.
 For a no-echo interactive handoff, run
 `npm run verify:production-boundaries:paste-token`,
 `npm run verify:production-boundaries:deployed:paste-token`, or

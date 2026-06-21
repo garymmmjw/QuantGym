@@ -74,9 +74,9 @@
       "status": "pass",
       "evidence": {
         "status": "pass",
-        "evidenceRefs": 278,
+        "evidenceRefs": 279,
         "imageRefs": 229,
-        "jsonRefs": 49,
+        "jsonRefs": 50,
         "missing": 0,
         "smallFiles": 0,
         "invalidJson": 0
@@ -94,7 +94,7 @@
         "distConfigGoogleClientIdSet": true,
         "distConfigGoogleLoginEnabled": true,
         "distConfigContainsOpenAiKey": false,
-        "distConfigBuildCommit": "ddc8db7c55bacb402bc80318d3f3dc992b616341",
+        "distConfigBuildCommit": "0d6d830980aac51adc4cf6abafc66aee390caf45",
         "distConfigBuildBranch": "main",
         "distConfigBuildSource": "local-git",
         "distVersionJsonPresent": true,

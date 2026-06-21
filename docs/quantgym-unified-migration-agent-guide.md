@@ -532,14 +532,18 @@ What is now correctly completed:
     The generated helper lives under ignored `artifacts/` and does not write
     the token to disk. Copy the token and immediately run
     `npm run verify:production-boundaries:paste-token`. For deployed service
-    checks, run `npm run google:token-helper:deployed` and then
-    `npm run verify:production-boundaries:deployed:paste-token` so the token
-    audience matches the deployed Google Client ID. The paste-token wrapper
-    rejects expired or nearly expired tokens before launching verifier commands;
+    checks, run `npm run google:token-helper:deployed`, open its generated
+    local instruction page, then open `https://beta.quantgym.app` and paste the
+    generated Console snippet there before running
+    `npm run verify:production-boundaries:deployed:paste-token`; this keeps
+    Google Sign-In on the deployed origin and avoids `origin_mismatch` for the
+    deployed OAuth Client ID. The paste-token wrapper rejects expired or nearly
+    expired tokens before launching verifier commands;
     the verifier then decodes the JWT locally and fails fast for malformed,
     expired, wrong-issuer, or wrong-audience tokens before calling the provider
     login endpoint.
-    Evidence: `324-google-token-helper-summary.json`.
+    Evidence: `324-google-token-helper-summary.json` and
+    `356-google-token-helper-flow-summary.json`.
 
 45. The token helper also has real browser smoke evidence. Google Chrome
     headless loaded

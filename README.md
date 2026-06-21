@@ -269,8 +269,18 @@ To verify the deployed beta endpoints instead of the local `config.js`
 fallback, run:
 
 ```bash
+npm run google:token-helper:deployed
 npm run verify:production-boundaries:deployed
 ```
+
+`npm run google:token-helper:deployed` writes the same ignored
+`artifacts/google-id-token-helper.html`, but for deployed verification it is an
+external-browser handoff page. Open its instructions locally, then open
+`https://beta.quantgym.app`, paste the generated Console snippet on that deployed
+origin, click the injected Google sign-in button, and paste the copied token into
+the deployed paste-token verifier immediately. Do not run the deployed Google
+button from `127.0.0.1`; Google rejects that origin for the deployed OAuth Client
+ID.
 
 For an interactive handoff that does not echo the token or write it to disk, run
 one of these commands and paste the token when prompted:

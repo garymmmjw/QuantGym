@@ -43,6 +43,7 @@
     "build:ops-alert-edge-packet": "node scripts/build-ops-alert-edge-packet.mjs",
     "check:repo-hygiene": "node scripts/check-repo-hygiene.mjs",
     "check:render-llm-deploy": "node scripts/check-render-llm-deploy-compat.mjs",
+    "check:google-token-helper": "node scripts/check-google-token-helper-flow.mjs",
     "check:static-build-config": "node scripts/check-static-build-config.mjs",
     "check:jobs-source": "node scripts/check-jobs-source-config.mjs",
     "check:jobs-source:runtime-smoke": "node scripts/check-jobs-source-runtime-smoke.mjs",

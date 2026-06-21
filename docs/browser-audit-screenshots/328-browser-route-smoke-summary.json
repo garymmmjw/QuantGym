@@ -1,9 +1,9 @@
 {
   "status": "pass",
-  "durationMs": 455091,
+  "durationMs": 458981,
   "browser": "Google Chrome via playwright-core",
   "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "baseUrl": "http://127.0.0.1:62015",
+  "baseUrl": "http://127.0.0.1:64440",
   "routes": {
     "checked": 21,
     "passed": 21,
@@ -107,7 +107,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 752,
+          "bodyTextLength": 744,
           "horizontalOverflowPx": 0,
           "pathname": "/tools"
         }
@@ -523,7 +523,7 @@
       {
         "name": "tools drill starts and accepts an answer",
         "status": "pass",
-        "question": "16 28 40 52 64 ?"
+        "question": "14 25 36 47 58 ?"
       },
       {
         "name": "tools mental math completes session and persists records",
@@ -541,8 +541,8 @@
       {
         "name": "tools market game rejects crossed quote, scores valid quote, and persists record",
         "status": "pass",
-        "fairValue": 100,
-        "feedback": "Round +22. Mid 100, width 2, fair 100.",
+        "fairValue": 117,
+        "feedback": "Round +22. Mid 117, width 2, fair 117.",
         "score": 22,
         "recordsBefore": 0,
         "recordsAfter": 1,
@@ -578,8 +578,8 @@
       {
         "name": "pk match, submit, reveal, and record persistence",
         "status": "pass",
-        "opponentName": "AlphaQuant",
-        "problemPreview": "问题 9.6 - 你的弱点是什么\n\n你的弱点是什么？",
+        "opponentName": "Jane Street Trainee",
+        "problemPreview": "问题 2.55 - 蒙特卡洛与二项式树——什么时候应该使用其中之一\n\n蒙特卡洛与二项式树——什么时候应该使用其中之一？",
         "recordPersisted": true,
         "revealed": true
       },
@@ -622,7 +622,7 @@
       {
         "name": "interview attachment upload preview, transcript, and request payload",
         "status": "pass",
-        "fileName": "browser-smoke-interview-attachment-1782038829240.png",
+        "fileName": "browser-smoke-interview-attachment-1782040395355.png",
         "previewRendered": true,
         "transcriptAttachmentRendered": true,
         "requestAttachmentSent": true,
@@ -631,8 +631,8 @@
       {
         "name": "interview PDF source upload generates questions and starts session",
         "status": "pass",
-        "fileName": "browser-smoke-interview-source-1782038829508.pdf",
-        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782038829508",
+        "fileName": "browser-smoke-interview-source-1782040395642.pdf",
+        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782040395642",
         "requestCount": 1,
         "requestPdfPayloadSent": true,
         "generatedQuestionRendered": true
@@ -645,7 +645,7 @@
       {
         "name": "todo dock edit, complete, delete, and reload persistence",
         "status": "pass",
-        "taskId": "custom-1a0010f2-a5ea-4bb4-8d96-285a6976f9bb",
+        "taskId": "custom-8b32e542-3aff-4e00-8fdc-f0df8ea96cee",
         "edited": true,
         "completed": true,
         "reopened": true,
@@ -656,31 +656,31 @@
       {
         "name": "community post, like, comment, and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community post 1782038858293",
-        "commentText": "Browser smoke comment 1782038858293",
+        "postText": "Browser smoke community post 1782040424961",
+        "commentText": "Browser smoke comment 1782040424961",
         "reloaded": true
       },
       {
         "name": "community image post fallback and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community image post 1782038861537",
-        "fileName": "browser-smoke-community-1782038861537.png",
+        "postText": "Browser smoke community image post 1782040428328",
+        "fileName": "browser-smoke-community-1782040428328.png",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "community video post fallback and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community video post 1782038864717",
-        "fileName": "browser-smoke-community-1782038864717.webm",
+        "postText": "Browser smoke community video post 1782040431648",
+        "fileName": "browser-smoke-community-1782040431648.webm",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "community direct message from post opens messages thread",
         "status": "pass",
-        "authorName": "Community Mentor 1782038867944",
-        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782038867944",
+        "authorName": "Community Mentor 1782040434994",
+        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782040434994",
         "openedMessages": true,
         "threadPersisted": true,
         "replyPersisted": true
@@ -695,14 +695,14 @@
         "messageReplyPersisted": true,
         "messageReloadPersisted": true,
         "noHorizontalOverflow": true,
-        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782038872812",
+        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782040440153",
         "finalPath": "/messages"
       },
       {
         "name": "messages thread read, send, and reload persistence",
         "status": "pass",
-        "threadId": "thread-browser-route-smoke-1782038877724",
-        "mentorName": "Smoke Mentor 1782038877724",
+        "threadId": "thread-browser-route-smoke-1782040445230",
+        "mentorName": "Smoke Mentor 1782040445230",
         "replied": true,
         "reloaded": true
       },
@@ -719,15 +719,15 @@
       {
         "name": "experiences create, edit, share, delete, and reload persistence",
         "status": "pass",
-        "recordId": "cbdfed46-00d5-421d-b266-d2b416152a09",
-        "sharedPostId": "13774fa4-5915-49c1-bc55-a0a0056b535f",
+        "recordId": "ffdee4b2-1057-422e-8038-81dd89c888ab",
+        "sharedPostId": "26536e9a-c148-4de7-bda6-3536b4952129",
         "deleted": true,
         "reloaded": true
       },
       {
         "name": "news manual submit, filter, detail, and reload persistence",
         "status": "pass",
-        "newsId": "news-browser-smoke-jane-street-official-update-1782038895890-https-www-janestreet-com-join-jane",
+        "newsId": "news-browser-smoke-jane-street-official-update-1782040463922-https-www-janestreet-com-join-jane",
         "sourceType": "official",
         "reloaded": true,
         "readPersisted": true
@@ -743,30 +743,30 @@
         "newsFiltersUsable": true,
         "newsDetailReadPersisted": true,
         "noHorizontalOverflow": true,
-        "recordId": "ff809665-87e8-42c9-b505-fc3dd2d8bac5",
-        "sharedPostId": "016e4bdb-2d1a-468c-8fec-474dd9de90e7",
-        "newsId": "news-mobile-smoke-official-recruiting-update-1782038901010-https-www-janestreet-com-join-jane-s",
+        "recordId": "bce13d3c-9598-4fb1-a230-e3fcf66dea26",
+        "sharedPostId": "d4af41e3-49c2-4b66-89dd-86c69a39c335",
+        "newsId": "news-mobile-smoke-official-recruiting-update-1782040468957-https-www-janestreet-com-join-jane-s",
         "finalPath": "/news"
       },
       {
         "name": "memory resource add, source link, and reload persistence",
         "status": "pass",
-        "title": "Browser Smoke Resource 1782038908251",
+        "title": "Browser Smoke Resource 1782040476475",
         "sourceUrl": "https://www.youtube.com/@atypicalquant",
         "reloaded": true
       },
       {
         "name": "memory image resource upload fallback and reload persistence",
         "status": "pass",
-        "title": "Browser Smoke Image Resource 1782038911884",
-        "fileName": "browser-smoke-memory-1782038911884.png",
+        "title": "Browser Smoke Image Resource 1782040480248",
+        "fileName": "browser-smoke-memory-1782040480248.png",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "network contact add, edit, delete, and reload persistence",
         "status": "pass",
-        "contactName": "Browser Smoke Contact 1782038915524",
+        "contactName": "Browser Smoke Contact 1782040484016",
         "edited": true,
         "deleted": true
       },
@@ -845,8 +845,8 @@
         "readerTokenRequests": 2,
         "pdfRequests": 4,
         "readerOpened": true,
-        "openNewHref": "http://127.0.0.1:62015/api/library-reader-smoke/green-book.pdf",
-        "embedUrl": "http://127.0.0.1:62015/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+        "openNewHref": "http://127.0.0.1:64440/api/library-reader-smoke/green-book.pdf",
+        "embedUrl": "http://127.0.0.1:64440/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
         "closedByButton": true,
         "closedByEscape": true
       },
@@ -855,7 +855,7 @@
         "status": "pass",
         "problemId": "quantguide-place-or-take",
         "problemTitle": "放置或取出",
-        "todoTitle": "Cross-module QuantGuide review 1782038959587: 放置或取出",
+        "todoTitle": "Cross-module QuantGuide review 1782040530754: 放置或取出",
         "resumeTextLength": 237,
         "settings": {
           "llmEndpoint": "http://127.0.0.1:8789/interview",
@@ -877,7 +877,7 @@
       {
         "name": "account profile save and reload persistence",
         "status": "pass",
-        "profileName": "Browser Smoke 1782038982272",
+        "profileName": "Browser Smoke 1782040553685",
         "country": "unitedStates",
         "region": "California",
         "graduationTerm": "2028-05",
@@ -889,7 +889,7 @@
         "wrongPasswordRejected": true,
         "oldEmailRejected": true,
         "oldEmail": "browser-route-smoke@quantgym.local",
-        "newEmail": "browser-route-smoke+email-1782038986979@quantgym.local",
+        "newEmail": "browser-route-smoke+email-1782040558778@quantgym.local",
         "passwordHashRotated": true,
         "reloginSucceeded": true,
         "reloginPath": "/"
@@ -899,7 +899,7 @@
         "status": "pass",
         "avatarDataUrl": true,
         "avatarCleared": true,
-        "resumeFileName": "browser-smoke-resume-1782038997187.txt",
+        "resumeFileName": "browser-smoke-resume-1782040569773.txt",
         "resumeTextLength": 215,
         "reloaded": true
       },
@@ -914,8 +914,8 @@
         "resumeUploadPersisted": true,
         "noHorizontalOverflow": true,
         "reloaded": true,
-        "profileName": "Mobile Account 1782039007098",
-        "resumeFileName": "mobile-account-resume-1782039007098.txt"
+        "profileName": "Mobile Account 1782040580149",
+        "resumeFileName": "mobile-account-resume-1782040580149.txt"
       },
       {
         "name": "settings language switch syncs URL and persists reload",
@@ -979,7 +979,7 @@
         "exportDownloadWorks": true,
         "noHorizontalOverflow": true,
         "reloaded": true,
-        "exportedFilename": "quantgym-Mobile Account 1782039007098-2026-06-21.json"
+        "exportedFilename": "quantgym-Mobile Account 1782040580149-2026-06-21.json"
       },
       {
         "name": "settings rejects invalid backup files without changing state",
@@ -992,10 +992,10 @@
         "name": "settings backup export, import, and reset state",
         "status": "pass",
         "resetPrompt": "清空当前账户的训练记录？已连接云端时也会同步为空。",
-        "exportedFilename": "quantgym-Mobile Account 1782039007098-2026-06-21.json",
-        "importedResumeFile": "settings-imported-resume-1782039034919.txt",
-        "importedResourceId": "settings-imported-resource-1782039034919",
-        "importedCourseId": "settings-imported-course-1782039034919",
+        "exportedFilename": "quantgym-Mobile Account 1782040580149-2026-06-21.json",
+        "importedResumeFile": "settings-imported-resume-1782040608885.txt",
+        "importedResourceId": "settings-imported-resource-1782040608885",
+        "importedCourseId": "settings-imported-course-1782040608885",
         "resetClearedImport": true
       }
     ]
@@ -1004,7 +1004,7 @@
     "name": "protected route redirects to auth and local email auth works",
     "status": "pass",
     "localEmailAuth": {
-      "email": "browser-auth-1782038593714-sxq94b@quantgym.local",
+      "email": "browser-auth-1782040163481-673z3m@quantgym.local",
       "redirectedToLogin": true,
       "accountStatusChecked": true,
       "registrationFormShown": true,
@@ -1019,7 +1019,7 @@
       "resetSucceeded": true,
       "resetOldPasswordRejected": true,
       "resetNewPasswordLoginSucceeded": true,
-      "accountId": "e9889b9c-4cb3-4017-81d3-4f55ed5d20f1",
+      "accountId": "b20f2ef9-866c-452f-8b6f-981509fe5640",
       "reloginPath": "/"
     },
     "path": "/login",

@@ -336,6 +336,7 @@ const evidenceArtifacts = [
   "333-production-boundaries-deployed-services-summary.json",
   "351-deployed-beta-smoke-summary.json",
   "352-deployed-beta-mobile-content-smoke-summary.json",
+  "356-google-token-helper-flow-summary.json",
   "334-ops-alert-runtime-smoke-summary.json",
   "335-question-bank-rights-public-smoke-summary.json",
   "336-ops-alert-production-fixture-summary.json",
@@ -485,7 +486,8 @@ function checkGoogleTokenGateScripts() {
   const expectedScripts = {
     "verify:production-boundaries:paste-token": "node scripts/run-google-token-gate.mjs --verify",
     "check:release-readiness:local:paste-token": "node scripts/run-google-token-gate.mjs --release-readiness-local",
-    "verify:production-boundaries:deployed:paste-token": "node scripts/run-google-token-gate.mjs --verify-deployed"
+    "verify:production-boundaries:deployed:paste-token": "node scripts/run-google-token-gate.mjs --verify-deployed",
+    "check:google-token-helper": "node scripts/check-google-token-helper-flow.mjs"
   };
   for (const [name, command] of Object.entries(expectedScripts)) {
     if (scripts[name] !== command) fail(`package.json script "${name}" must be "${command}"`);
@@ -645,6 +647,12 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       }
       const uiContracts = findResult(releaseResults, "UI contracts");
       expect(uiContracts?.status === "pass", "UI contracts nested gate must pass");
+      const googleTokenHelperFlow = findResult(releaseResults, "Google token helper flow");
+      expect(googleTokenHelperFlow?.status === "pass", "Google token helper flow nested gate must pass");
+      expect(
+        googleTokenHelperFlow?.data?.checks?.deployedDoesNotTellUserToSignInOnLoopback === true,
+        "Google token helper flow nested gate must prevent deployed loopback Google sign-in guidance"
+      );
       const uiContractOutputHasCurrentArtifactCount = summaryLinesContain(uiContracts?.data, `"evidenceArtifacts": ${evidenceArtifacts.length}`);
       const uiContractOutputHasPrePacketArtifactCount = summaryLinesContain(uiContracts?.data, "\"evidenceArtifacts\": 30");
       expect(
@@ -766,6 +774,19 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       expect(data.checks?.copyButtonVisible === true, "Google token helper browser smoke must show copy button");
       expect(data.checks?.verifierSanityTextVisible === true, "Google token helper browser smoke must mention verifier sanity checks");
       expect(data.checks?.statusText === "Ready.", "Google token helper browser smoke must reach Ready status");
+      break;
+    case "356-google-token-helper-flow-summary.json":
+      expect(data.status === "pass", "Google token helper flow status must be pass");
+      expect(data.local?.target === "local", "Google token helper flow must cover local helper target");
+      expect(data.deployed?.target === "deployed", "Google token helper flow must cover deployed helper target");
+      expect(data.deployed?.deployedOrigin === "https://beta.quantgym.app", "Deployed Google token helper flow must use the beta origin");
+      expect(data.checks?.localUsesGoogleButton === true, "Local Google token helper must keep its direct Google sign-in button");
+      expect(data.checks?.deployedProvidesConsoleSnippet === true, "Deployed Google token helper must provide a Console snippet");
+      expect(data.checks?.deployedWarnsAboutOriginMismatch === true, "Deployed Google token helper must warn about origin_mismatch");
+      expect(data.checks?.deployedAvoidsLocalGisScriptTag === true, "Deployed Google token helper must not load GIS on loopback");
+      expect(data.checks?.deployedDoesNotTellUserToSignInOnLoopback === true, "Deployed Google token helper must not tell users to sign in on loopback");
+      expect(data.checks?.deployedVerifierCommand === true, "Deployed Google token helper must point at deployed paste-token verifier");
+      expect(data.checks?.tokenNotWrittenToArtifact === true, "Google token helper flow must not write ID tokens to artifacts");
       break;
     case "326-browser-evidence-manifest-summary.json":
       expect(data.status === "pass", "browser evidence manifest status must be pass");
