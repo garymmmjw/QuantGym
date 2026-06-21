@@ -222,6 +222,7 @@ const blockers = [
       packetUsesPlaceholderOnlyForSecrets: evidence.mediaPacket.checks?.usesPlaceholderOnlyForSecrets === true,
       validProductionAccessKeyRedacted: evidence.mediaFixture.checks?.validProductionAccessKeyRedacted === true,
       validProductionSecretRedacted: evidence.mediaFixture.checks?.validProductionSecretRedacted === true,
+      validProductionBucketRedacted: evidence.mediaFixture.checks?.validProductionBucketRedacted === true,
       validProductionEndpointUrlRedacted: evidence.mediaFixture.checks?.validProductionEndpointUrlRedacted === true,
       validProductionPublicBaseUrlRedacted: evidence.mediaFixture.checks?.validProductionPublicBaseUrlRedacted === true,
       privateObjectEndpointRejected: findResult(evidence.mediaFixture.negativeFixtures, "private object endpoint rejected")?.rejected === true,
