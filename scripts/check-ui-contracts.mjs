@@ -788,6 +788,10 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       expect(data.checks?.deployedDoesNotTellUserToSignInOnLoopback === true, "Deployed Google token helper must not tell users to sign in on loopback");
       expect(data.checks?.deployedVerifierCommand === true, "Deployed Google token helper must point at deployed paste-token verifier");
       expect(data.checks?.tokenNotWrittenToArtifact === true, "Google token helper flow must not write ID tokens to artifacts");
+      expect(data.checks?.deployedPasteTokenRejectsDamagedGoogleAudience === true, "Deployed paste-token verifier must reject corrupted Google Client ID audience hosts");
+      expect(data.checks?.deployedPasteTokenRejectsDamagedGoogleAudienceWithoutTokenLeak === true, "Deployed paste-token verifier must reject corrupted audience tokens without printing the token");
+      expect(data.damagedAudienceGate?.tokenAudienceHost === "googleusercont.com", "Google token helper flow must record corrupted token audience host diagnostics");
+      expect(data.damagedAudienceGate?.expectedGoogleClientIdHost === "googleusercontent.com", "Google token helper flow must record expected Google Client ID host diagnostics");
       break;
     case "326-browser-evidence-manifest-summary.json":
       expect(data.status === "pass", "browser evidence manifest status must be pass");
@@ -2553,6 +2557,8 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(deployedGoogle?.localCoverage?.deployedTokenHelperScriptPresent === true, `${label} must include deployed token helper coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenVerifierPresent === true, `${label} must include deployed paste-token verifier coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenAudiencePrecheck === true, `${label} must include deployed paste-token audience precheck coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedPasteTokenDamagedAudienceDiagnostics === true, `${label} must include deployed paste-token corrupted-audience diagnostics coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedPasteTokenDamagedAudienceNoTokenLeak === true, `${label} must include deployed paste-token corrupted-audience no-token-leak coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenPinsDeployedClientId === true, `${label} must pin deployed paste-token checks to the deployed Google Client ID`);
 
   const ops = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");

@@ -50,6 +50,8 @@
         "deployedTokenHelperScriptPresent": true,
         "deployedPasteTokenVerifierPresent": true,
         "deployedPasteTokenAudiencePrecheck": true,
+        "deployedPasteTokenDamagedAudienceDiagnostics": true,
+        "deployedPasteTokenDamagedAudienceNoTokenLeak": true,
         "deployedPasteTokenPinsDeployedClientId": true
       }
     },

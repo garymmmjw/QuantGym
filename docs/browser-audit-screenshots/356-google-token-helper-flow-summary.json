@@ -20,6 +20,14 @@
     "verifyCommand": "npm run verify:production-boundaries:deployed:paste-token",
     "nextStepCount": 4
   },
+  "damagedAudienceGate": {
+    "status": 1,
+    "parsedJson": true,
+    "tokenPrinted": false,
+    "tokenAudienceHost": "googleusercont.com",
+    "expectedGoogleClientIdHost": "googleusercontent.com",
+    "tokenAudienceLooksCorruptedGoogleClientId": true
+  },
   "checks": {
     "localTarget": true,
     "localUrlIsLoopback": true,
@@ -33,7 +41,9 @@
     "deployedAvoidsLocalGisScriptTag": true,
     "deployedDoesNotTellUserToSignInOnLoopback": true,
     "deployedVerifierCommand": true,
-    "tokenNotWrittenToArtifact": true
+    "tokenNotWrittenToArtifact": true,
+    "deployedPasteTokenRejectsDamagedGoogleAudience": true,
+    "deployedPasteTokenRejectsDamagedGoogleAudienceWithoutTokenLeak": true
   },
   "failures": []
 }

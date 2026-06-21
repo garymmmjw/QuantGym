@@ -69,6 +69,7 @@ if (!freshness.ok) {
 
 const audience = tokenAudience(sanity, expectedAudience);
 if (!audience.ok) {
+  const audienceDetails = googleAudienceDetails(sanity.aud, expectedAudience.clientId);
   console.error(JSON.stringify({
     status: "fail",
     mode,
@@ -85,6 +86,9 @@ if (!audience.ok) {
     expectedGoogleClientIdSet: Boolean(expectedAudience.clientId),
     expectedGoogleClientIdSource: expectedAudience.source || "",
     tokenAudienceMatchesExpected: false,
+    tokenAudienceHost: audienceDetails.tokenHost,
+    expectedGoogleClientIdHost: audienceDetails.expectedHost,
+    tokenAudienceLooksCorruptedGoogleClientId: audienceDetails.looksCorruptedGoogleClientId,
     helperCommand: expectedAudience.helperCommand
   }, null, 2));
   process.exit(1);
@@ -250,6 +254,31 @@ function tokenAudience(payload, expected) {
     reason: matchesExpected
       ? ""
       : `Google ID token audience does not match the ${expected.label} Google Client ID. Generate a fresh token with ${expected.helperCommand}.`
+  };
+}
+
+function googleAudienceDetails(tokenAudienceValue, expectedClientId) {
+  const token = parseGoogleClientId(tokenAudienceValue);
+  const expected = parseGoogleClientId(expectedClientId);
+  const sameClientPrefix = Boolean(token.prefix && expected.prefix && token.prefix === expected.prefix);
+  const differentHost = Boolean(token.host && expected.host && token.host !== expected.host);
+  return {
+    tokenHost: token.host,
+    expectedHost: expected.host,
+    looksCorruptedGoogleClientId: sameClientPrefix && differentHost
+  };
+}
+
+function parseGoogleClientId(value) {
+  const clientId = clean(value);
+  const marker = ".apps.";
+  const markerIndex = clientId.indexOf(marker);
+  if (markerIndex < 0) {
+    return { prefix: "", host: "" };
+  }
+  return {
+    prefix: clientId.slice(0, markerIndex),
+    host: clientId.slice(markerIndex + marker.length)
   };
 }
 

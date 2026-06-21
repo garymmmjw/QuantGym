@@ -45,6 +45,7 @@ const evidence = {
   deployedBetaSmoke: readJson("docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json", "deployed beta smoke"),
   deployedBetaMobileContentSmoke: readJson("docs/browser-audit-screenshots/352-deployed-beta-mobile-content-smoke-summary.json", "deployed beta mobile content smoke"),
   deployedProductionBoundaries: readJson("docs/browser-audit-screenshots/333-production-boundaries-deployed-services-summary.json", "deployed production boundary smoke"),
+  googleTokenHelperFlow: readJson("docs/browser-audit-screenshots/356-google-token-helper-flow-summary.json", "Google token helper flow"),
   releaseReadiness: skipReleaseSummaryContent
     ? { results: [] }
     : readJson("docs/browser-audit-screenshots/323-release-readiness-summary.json", "release readiness")
@@ -172,6 +173,11 @@ const blockers = [
       deployedPasteTokenVerifierPresent: Boolean(scripts["verify:production-boundaries:deployed:paste-token"]),
       deployedPasteTokenAudiencePrecheck: googleTokenGateText.includes("tokenAudienceMatchesExpected")
         && googleTokenGateText.includes("Google ID token audience does not match the ${expected.label} Google Client ID"),
+      deployedPasteTokenDamagedAudienceDiagnostics: evidence.googleTokenHelperFlow.checks?.deployedPasteTokenRejectsDamagedGoogleAudience === true
+        && evidence.googleTokenHelperFlow.damagedAudienceGate?.tokenAudienceHost === "googleusercont.com"
+        && evidence.googleTokenHelperFlow.damagedAudienceGate?.expectedGoogleClientIdHost === "googleusercontent.com",
+      deployedPasteTokenDamagedAudienceNoTokenLeak: evidence.googleTokenHelperFlow.checks?.deployedPasteTokenRejectsDamagedGoogleAudienceWithoutTokenLeak === true
+        && evidence.googleTokenHelperFlow.damagedAudienceGate?.tokenPrinted === false,
       deployedPasteTokenPinsDeployedClientId: googleTokenGateText.includes("https://beta.quantgym.app/config.js")
         && googleTokenGateText.includes("env.QUANTGYM_GOOGLE_CLIENT_ID = expected.clientId")
     }
