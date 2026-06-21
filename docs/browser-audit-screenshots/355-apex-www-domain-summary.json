@@ -3,10 +3,37 @@
   "date": "2026-06-19",
   "surface": "apex/www domain SSL or redirect",
   "status": "pass",
-  "durationMs": 3364,
+  "durationMs": 3416,
   "requireClear": false,
   "launchReadiness": "blocked",
   "signoffCommand": "npm run check:apex-www-domain -- --require-clear",
+  "ownerAction": "Fix the Cloudflare-to-origin SSL handshake or intentionally redirect quantgym.app and www.quantgym.app to the healthy beta entrypoint before promoting apex/WWW.",
+  "remediation": {
+    "ownerAction": "Fix the Cloudflare-to-origin SSL handshake or intentionally redirect quantgym.app and www.quantgym.app to the healthy beta entrypoint before promoting apex/WWW.",
+    "probableCause": "Cloudflare is reachable for apex/WWW, but the TLS handshake between Cloudflare and the configured origin is failing.",
+    "blockedHosts": [
+      {
+        "host": "quantgym.app",
+        "reason": "Cloudflare 525 SSL handshake error"
+      },
+      {
+        "host": "www.quantgym.app",
+        "reason": "Cloudflare 525 SSL handshake error"
+      }
+    ],
+    "checklist": [
+      "Confirm quantgym.app and www.quantgym.app are attached to the intended Cloudflare Pages/custom-domain or origin service.",
+      "Confirm the origin presents a valid certificate for quantgym.app and www.quantgym.app, or configure Cloudflare to redirect both hosts to beta.quantgym.app before origin TLS is attempted.",
+      "Keep beta.quantgym.app healthy while changing apex/WWW routing.",
+      "Run npm run check:apex-www-domain -- --require-clear after the routing or SSL change."
+    ],
+    "acceptanceCriteria": [
+      "quantgym.app returns HTTP 2xx/3xx over HTTPS and no Cloudflare 525 appears in the redirect chain.",
+      "www.quantgym.app returns HTTP 2xx/3xx over HTTPS and no Cloudflare 525 appears in the redirect chain.",
+      "beta.quantgym.app remains HTTP 2xx/3xx over HTTPS.",
+      "npm run check:apex-www-domain -- --require-clear exits 0."
+    ]
+  },
   "betaEntrypoint": {
     "host": "beta.quantgym.app",
     "dns": {
@@ -32,7 +59,7 @@
           "headers": {
             "location": "",
             "server": "cloudflare",
-            "cfRay": "a0ef40996edd66b6-AMS",
+            "cfRay": "a0ef694e5d6efeac-AMS",
             "contentType": "text/html; charset=utf-8"
           }
         }
@@ -65,7 +92,7 @@
             "headers": {
               "location": "",
               "server": "cloudflare",
-              "cfRay": "a0ef40884a3d199c-AMS",
+              "cfRay": "a0ef693d6ac3e9db-AMS",
               "contentType": "text/plain; charset=UTF-8"
             }
           }
@@ -97,7 +124,7 @@
             "headers": {
               "location": "",
               "server": "cloudflare",
-              "cfRay": "a0ef409139ffad9f-AMS",
+              "cfRay": "a0ef69452865fea0-AMS",
               "contentType": "text/plain; charset=UTF-8"
             }
           }

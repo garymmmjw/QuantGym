@@ -2284,6 +2284,11 @@ function validateApexWwwDomainSummary(data, expect, label) {
   expect(data.surface === "apex/www domain SSL or redirect", `${label} must report the apex/www surface`);
   expect(data.signoffCommand === "npm run check:apex-www-domain -- --require-clear", `${label} must record the clear-signoff command`);
   expect(data.launchReadiness === "blocked", `${label} must keep apex/www launch readiness blocked until HTTPS is usable`);
+  expect(typeof data.ownerAction === "string" && data.ownerAction.includes("Cloudflare-to-origin SSL handshake"), `${label} must include the apex/WWW owner action`);
+  expect(data.remediation?.probableCause === "Cloudflare is reachable for apex/WWW, but the TLS handshake between Cloudflare and the configured origin is failing.", `${label} must explain the probable Cloudflare 525 cause`);
+  expect(Array.isArray(data.remediation?.blockedHosts) && data.remediation.blockedHosts.length === 2, `${label} must list blocked apex/WWW hosts`);
+  expect(Array.isArray(data.remediation?.checklist) && data.remediation.checklist.length >= 4, `${label} must include a remediation checklist`);
+  expect(Array.isArray(data.remediation?.acceptanceCriteria) && data.remediation.acceptanceCriteria.includes("npm run check:apex-www-domain -- --require-clear exits 0."), `${label} must include the clear-signoff acceptance criterion`);
   expect(data.betaEntrypoint?.host === "beta.quantgym.app", `${label} must keep beta.quantgym.app as the current healthy entrypoint`);
   expect(data.betaEntrypoint?.https?.usableHttps === true, `${label} beta entrypoint must be usable`);
   expect(Array.isArray(data.promotionHosts) && data.promotionHosts.length === 2, `${label} must inspect both promotion hosts`);
