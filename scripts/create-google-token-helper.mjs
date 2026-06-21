@@ -32,7 +32,7 @@ if (!clientId) {
 }
 
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-fs.writeFileSync(outputPath, helperHtml(clientId));
+fs.writeFileSync(outputPath, helperHtml(clientId, { target, verifyCommand }));
 
 console.log(JSON.stringify({
   status: "created",
@@ -49,8 +49,10 @@ console.log(JSON.stringify({
   ]
 }, null, 2));
 
-function helperHtml(googleClientId) {
+function helperHtml(googleClientId, details) {
   const escapedClientId = JSON.stringify(googleClientId);
+  const escapedTarget = JSON.stringify(details.target);
+  const escapedVerifyCommand = JSON.stringify(details.verifyCommand);
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -124,12 +126,12 @@ function helperHtml(googleClientId) {
   <body>
     <main>
       <h1>QuantGym Google ID Token Helper</h1>
-      <p>This local helper obtains a short-lived Google ID token for release-boundary verification. It does not write the token to disk or send it anywhere except Google's Sign-In script.</p>
+      <p>This local helper obtains a short-lived Google ID token for <code>${details.target}</code> release-boundary verification. It does not write the token to disk or send it anywhere except Google's Sign-In script.</p>
       <ol>
         <li>Use this page only from <code>http://127.0.0.1:5179</code>.</li>
         <li>Click the Google sign-in button below.</li>
         <li>Copy the token into your shell as <code>QUANTGYM_GOOGLE_ID_TOKEN</code>.</li>
-        <li>Run <code>npm run verify:production-boundaries:paste-token</code> or <code>npm run check:release-readiness:local:paste-token</code> before the token expires. The wrapper hides the pasted token and passes it only to the child process.</li>
+        <li>Immediately run <code>${details.verifyCommand}</code>. The wrapper hides the pasted token, rejects expired or nearly expired tokens before touching evidence files, and passes fresh tokens only to the child process.</li>
       </ol>
       <div id="googleButton"></div>
       <textarea id="tokenOutput" spellcheck="false" placeholder="Google ID token will appear here after sign-in." readonly></textarea>
@@ -138,6 +140,8 @@ function helperHtml(googleClientId) {
     </main>
     <script>
       const clientId = ${escapedClientId};
+      const target = ${escapedTarget};
+      const verifyCommand = ${escapedVerifyCommand};
       const tokenOutput = document.getElementById("tokenOutput");
       const copyButton = document.getElementById("copyTokenBtn");
       const status = document.getElementById("status");
@@ -152,14 +156,23 @@ function helperHtml(googleClientId) {
         }
       }
 
+      function expiryText(payload) {
+        if (!payload.exp) return "Expiry: unknown.";
+        const secondsRemaining = Math.floor(payload.exp - Date.now() / 1000);
+        const expiresAt = new Date(payload.exp * 1000).toLocaleString();
+        const urgency = secondsRemaining < 120
+          ? " Generate a new token before running the verifier."
+          : " Run the verifier now.";
+        return "Expires: " + expiresAt + " (" + secondsRemaining + " seconds remaining)." + urgency;
+      }
+
       function handleCredential(response) {
         const token = response && response.credential ? response.credential : "";
         tokenOutput.value = token;
         copyButton.disabled = !token;
         const payload = decodePayload(token);
-        const expiresAt = payload.exp ? new Date(payload.exp * 1000).toLocaleString() : "unknown";
         status.textContent = token
-          ? "Token ready. Audience: " + (payload.aud || "unknown") + ". Expires: " + expiresAt + "."
+          ? "Token ready for " + target + ". Audience: " + (payload.aud || "unknown") + ". " + expiryText(payload) + " Command: " + verifyCommand
           : "Google did not return a credential.";
       }
 
@@ -183,7 +196,7 @@ function helperHtml(googleClientId) {
 
       copyButton.addEventListener("click", async () => {
         await navigator.clipboard.writeText(tokenOutput.value);
-        status.textContent = "Copied. Run: npm run verify:production-boundaries:paste-token";
+        status.textContent = "Copied. Run immediately: " + verifyCommand;
       });
 
       window.addEventListener("load", initGoogle);

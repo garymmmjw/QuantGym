@@ -484,7 +484,8 @@ function checkGoogleTokenGateScripts() {
   const scripts = packageJson.scripts || {};
   const expectedScripts = {
     "verify:production-boundaries:paste-token": "node scripts/run-google-token-gate.mjs --verify",
-    "check:release-readiness:local:paste-token": "node scripts/run-google-token-gate.mjs --release-readiness-local"
+    "check:release-readiness:local:paste-token": "node scripts/run-google-token-gate.mjs --release-readiness-local",
+    "verify:production-boundaries:deployed:paste-token": "node scripts/run-google-token-gate.mjs --verify-deployed"
   };
   for (const [name, command] of Object.entries(expectedScripts)) {
     if (scripts[name] !== command) fail(`package.json script "${name}" must be "${command}"`);
@@ -746,6 +747,7 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       expect(data.checks?.artifactIgnoredByGit === true, "Google token helper artifact must stay ignored by Git");
       expect(data.checks?.tokenWrittenToDisk === false, "Google token helper must not write tokens to disk");
       expect(data.checks?.verifierChecksTokenStructureAudienceAndExpiry === true, "Google token verifier must check token structure, audience, and expiry");
+      expect(data.checks?.pasteTokenWrapperRejectsStaleTokens === true, "Google token paste wrapper must reject expired or nearly expired tokens before running verifier commands");
       break;
     case "325-google-token-helper-browser-summary.json":
       expect(data.status === "pass", "Google token helper browser smoke status must be pass");

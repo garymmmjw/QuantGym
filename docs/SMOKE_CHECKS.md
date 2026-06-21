@@ -171,12 +171,17 @@ Google Client ID, which is the audience required by
 `npm run verify:production-boundaries:deployed:paste-token`. The generated
 helper is ignored by Git and does not write the short-lived Google ID token to
 disk. After signing in, copy the token and run
-`QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries`.
+the matching paste-token verifier immediately: use
+`npm run verify:production-boundaries:paste-token` for local checks, or
+`npm run verify:production-boundaries:deployed:paste-token` for deployed
+checks.
 For a no-echo interactive handoff, run
-`npm run verify:production-boundaries:paste-token` or
+`npm run verify:production-boundaries:paste-token`,
+`npm run verify:production-boundaries:deployed:paste-token`, or
 `npm run check:release-readiness:local:paste-token` and paste the token at the
-prompt; the wrapper passes it only to the child process environment and does not
-write it to disk.
+prompt; the wrapper rejects expired or nearly expired tokens before it launches
+the verifier, passes fresh tokens only to the child process environment, and
+does not write tokens to disk.
 The production-boundary verifier now decodes the token locally and fails fast
 for malformed, expired, wrong-issuer, or wrong-audience tokens before it calls
 the provider login endpoint.
@@ -507,7 +512,9 @@ Browser/CDP deep flows now recorded in
   the standalone `341` summary.
 - [x] Google ID token helper handoff: `npm run google:token-helper` creates an
   ignored local helper page for obtaining the short-lived token needed by the
-  final provider login boundary.
+  final provider login boundary; `npm run google:token-helper:deployed` points
+  the helper at the deployed Google Client ID and the deployed paste-token
+  verifier.
 - [x] Google ID token helper browser smoke: real Chrome renders the helper page
   and Google sign-in button at the local 127.0.0.1 origin.
 - [x] Production LLM/PDF endpoint sign-off against deployed service URL:

@@ -10,12 +10,14 @@
     "artifactIgnoredByGit": true,
     "tokenWrittenToDisk": false,
     "verifierChecksTokenStructureAudienceAndExpiry": true,
+    "pasteTokenWrapperRejectsStaleTokens": true,
     "clientIdSource": ".env QUANTGYM_GOOGLE_CLIENT_ID or config.js googleClientId"
   },
   "notes": [
     "The helper page is generated into the ignored artifacts directory and is served by the existing Vite dev server.",
     "It renders Google Identity Services on the same 127.0.0.1:5179 origin used by the app and displays the short-lived Google ID token locally after sign-in.",
-    "Use the copied token with QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries before it expires.",
+    "Use the copied token with the matching paste-token verifier immediately after sign-in; deployed checks should use npm run verify:production-boundaries:deployed:paste-token.",
+    "The paste-token wrapper rejects expired or nearly expired tokens before launching verifier commands, so stale tokens do not overwrite evidence summaries.",
     "The production-boundary verifier decodes the JWT locally and fails fast for malformed, expired, wrong-issuer, or wrong-audience tokens before calling the provider login endpoint."
   ]
 }
