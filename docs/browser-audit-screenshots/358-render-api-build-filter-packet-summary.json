@@ -1,0 +1,34 @@
+{
+  "id": 358,
+  "date": "2026-06-21",
+  "surface": "Render API build filter readiness packet",
+  "status": "pass",
+  "generatedAt": "2026-06-21T18:02:02.500Z",
+  "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/render-api-build-filter/readiness-packet",
+  "filesWritten": [
+    "artifacts/render-api-build-filter/readiness-packet/README.md",
+    "artifacts/render-api-build-filter/readiness-packet/render-dashboard-checklist.md",
+    "artifacts/render-api-build-filter/readiness-packet/render-blueprint-snippet.yaml",
+    "artifacts/render-api-build-filter/readiness-packet/render-api-reference-payload.json",
+    "artifacts/render-api-build-filter/readiness-packet/signoff-env-template.txt",
+    "artifacts/render-api-build-filter/readiness-packet/signoff-checklist.csv"
+  ],
+  "recommendedPaths": [
+    "api-server/**",
+    "data/**"
+  ],
+  "signoffCommand": "npm run check:render-api-build-filter:production",
+  "checks": {
+    "expectedFilesWritten": true,
+    "includesExactRecommendedPaths": true,
+    "excludesDocsFrontendToolingPaths": true,
+    "includesDashboardInstructions": true,
+    "includesBlueprintSnippet": true,
+    "includesApiReferencePayload": true,
+    "includesSignoffCommand": true,
+    "includesEvidenceUrlSafety": true,
+    "includesNoHalfBlueprintWarning": true,
+    "noFilledSecrets": true
+  },
+  "failures": []
+}

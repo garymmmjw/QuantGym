@@ -375,6 +375,20 @@ api-server/**
 data/**
 ```
 
+Before configuring Render, refresh the local guardrails and handoff packet:
+
+```bash
+npm run check:render-api-build-filter:fixture
+npm run build:render-api-build-filter-packet
+```
+
+After the Render setting is live, fill the `QUANTGYM_RENDER_API_BUILD_FILTER_*`
+signoff variables locally and run:
+
+```bash
+npm run check:render-api-build-filter:production
+```
+
 Add other paths only when the API process actually reads them at runtime. After
 changing Render environment variables or any path excluded from the filter, use
 a manual deploy and rerun `npm run check:deployed-beta-smoke`.
@@ -641,7 +655,7 @@ npm run build:question-bank-rights-packet
 
 This writes a non-legal-advice work packet under `artifacts/question-bank-rights/public-commercial-approval-packet/` with a CSV tracker, per-source context, outreach templates, and draft manifest snippets. The packet is intentionally not a release approval; public/commercial gates should continue to fail until real evidence is reviewed and recorded in the rights manifest.
 
-To inspect all external public-launch blockers without calling external services, run `npm run check:external-launch-blockers`. It should pass while reporting `launchReadiness: "blocked"` until the six remaining external signoffs are cleared; use `npm run check:external-launch-blockers -- --require-clear` for final public-launch clearing.
+To inspect all external public-launch blockers without calling external services, run `npm run check:external-launch-blockers`. It should pass while reporting `launchReadiness: "blocked"` until the seven remaining external signoffs are cleared; use `npm run check:external-launch-blockers -- --require-clear` for final public-launch clearing.
 
 Before an actual SQLite to Postgres migration, create a protected full export and
 require the cutover checker to verify it is not redacted. After the managed

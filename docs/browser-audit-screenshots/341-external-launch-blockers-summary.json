@@ -5,7 +5,7 @@
   "status": "pass",
   "launchReadiness": "blocked",
   "requireClear": false,
-  "blockerCount": 6,
+  "blockerCount": 7,
   "trackedCount": 1,
   "blockers": [
     {
@@ -236,6 +236,34 @@
       }
     },
     {
+      "id": "render-api-build-filter",
+      "title": "Render API service build filter",
+      "status": "blocked",
+      "ownerAction": "Configure the Render quantgym-api service build filter with included paths exactly api-server/** and data/**, then run the production signoff with specific notes and an HTTPS Render evidence URL.",
+      "signoffCommand": "npm run check:render-api-build-filter:production",
+      "localCoverage": {
+        "trackedInProductStatus": true,
+        "fixturePass": true,
+        "fixtureAcceptedValidProductionFilter": true,
+        "fixtureRejectsMissingDataPath": true,
+        "fixtureRejectsDocsPath": true,
+        "fixtureRejectsFrontendSrcPath": true,
+        "fixtureRejectsUnsafeEvidenceUrl": true,
+        "fixtureRejectsGenericNotes": true,
+        "packetGenerated": true,
+        "packetIncludesExactRecommendedPaths": true,
+        "packetExcludesDocsFrontendToolingPaths": true,
+        "packetIncludesDashboardInstructions": true,
+        "packetIncludesBlueprintSnippet": true,
+        "packetIncludesApiReferencePayload": true,
+        "packetIncludesSignoffCommand": true,
+        "packetIncludesEvidenceUrlSafety": true,
+        "packetWarnsAgainstPartialBlueprint": true,
+        "packetHasNoFilledSecrets": true,
+        "finalSignoffCommandRecorded": true
+      }
+    },
+    {
       "id": "postgres-managed-cutover",
       "title": "Managed Postgres cutover",
       "status": "blocked",
@@ -418,6 +446,9 @@
   "checks": {
     "requiredScriptsPresent": true,
     "outstandingItemsTracked": true,
+    "renderApiBuildFilterFixturePass": true,
+    "renderApiBuildFilterPacketPass": true,
+    "renderApiBuildFilterPathsExact": true,
     "releaseReadinessIncludesExternalFixtures": true,
     "releaseReadinessIncludesExternalBlockerGate": true,
     "skippedReleaseSummaryContent": false,

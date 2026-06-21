@@ -51,6 +51,8 @@ const gates = [
   { name: "Module ownership", command: "npm", args: ["run", "check:module-ownership"], parseJson: true },
   { name: "Chrome store readiness", command: "npm", args: ["run", "check:chrome-store-readiness"], parseJson: true },
   { name: "Chrome store publication fixture", command: "npm", args: ["run", "check:chrome-store-publication:fixture"], parseJson: true },
+  { name: "Render API build filter fixture", command: "npm", args: ["run", "check:render-api-build-filter:fixture"], parseJson: true },
+  { name: "Render API build filter packet", command: "npm", args: ["run", "build:render-api-build-filter-packet"], parseJson: true },
   { name: "Browser extension runtime smoke", command: "npm", args: ["run", "check:browser-extension:runtime-smoke"], parseJson: true },
   { name: "Render LLM deploy compatibility", command: "npm", args: ["run", "check:render-llm-deploy"], parseJson: true },
   { name: "Google token helper flow", command: "npm", args: ["run", "check:google-token-helper"], parseJson: true },

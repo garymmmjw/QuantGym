@@ -36,6 +36,8 @@ const evidence = {
   jobsDeployedApiSource: readJson("docs/browser-audit-screenshots/354-deployed-jobs-api-source-summary.json", "deployed jobs API source smoke"),
   chromeFixture: readJson("docs/browser-audit-screenshots/339-chrome-store-publication-fixture-summary.json", "Chrome store publication fixture"),
   chromePacket: readJson("docs/browser-audit-screenshots/348-chrome-store-publication-packet-summary.json", "Chrome store publication packet"),
+  renderApiBuildFilterFixture: readJson("docs/browser-audit-screenshots/359-render-api-build-filter-fixture-summary.json", "Render API build filter fixture"),
+  renderApiBuildFilterPacket: readJson("docs/browser-audit-screenshots/358-render-api-build-filter-packet-summary.json", "Render API build filter packet"),
   postgresExport: readJson("docs/browser-audit-screenshots/331-postgres-cutover-export-smoke-summary.json", "Postgres cutover export smoke"),
   postgresPacket: readJson("docs/browser-audit-screenshots/350-postgres-cutover-packet-summary.json", "Postgres cutover readiness packet"),
   rightsPublicSmoke: readJson("docs/browser-audit-screenshots/335-question-bank-rights-public-smoke-summary.json", "question-bank rights public smoke"),
@@ -63,6 +65,10 @@ const requiredScripts = [
   "build:jobs-feed:publication-packet",
   "check:chrome-store-publication:published",
   "build:chrome-store-publication-packet",
+  "check:render-api-build-filter",
+  "check:render-api-build-filter:production",
+  "check:render-api-build-filter:fixture",
+  "build:render-api-build-filter-packet",
   "check:postgres-cutover:complete",
   "build:postgres-cutover-packet",
   "check:question-bank-rights:public",
@@ -82,7 +88,7 @@ for (const name of requiredScripts) {
 }
 
 const outstandingItems = extractOutstandingItems(productStatusText);
-for (let index = 1; index <= 8; index += 1) {
+for (let index = 1; index <= 9; index += 1) {
   expect(outstandingItems.some((item) => item.index === index), `docs/product-status.md is missing Outstanding Item ${index}.`);
 }
 
@@ -367,6 +373,38 @@ const blockers = [
       evidenceUrlEmbeddedCredentialsRejected: evidence.chromeFixture.checks?.evidenceUrlEmbeddedCredentialsRejected === true,
       evidenceUrlQueryRejected: evidence.chromeFixture.checks?.evidenceUrlQueryRejected === true,
       finalSignoffCommandRecorded: evidence.chromeFixture.finalSignoffCommand === "npm run check:chrome-store-publication:published"
+    }
+  },
+  {
+    id: "render-api-build-filter",
+    title: "Render API service build filter",
+    status: "blocked",
+    ownerAction: "Configure the Render quantgym-api service build filter with included paths exactly api-server/** and data/**, then run the production signoff with specific notes and an HTTPS Render evidence URL.",
+    signoffCommand: "npm run check:render-api-build-filter:production",
+    localCoverage: {
+      trackedInProductStatus: productStatusIncludes([
+        "check:render-api-build-filter:production",
+        "api-server/**",
+        "data/**"
+      ]),
+      fixturePass: evidence.renderApiBuildFilterFixture.status === "pass",
+      fixtureAcceptedValidProductionFilter: evidence.renderApiBuildFilterFixture.localCoverage?.validProductionBuildFilterAccepted === true,
+      fixtureRejectsMissingDataPath: evidence.renderApiBuildFilterFixture.localCoverage?.missingDataPathRejected === true,
+      fixtureRejectsDocsPath: evidence.renderApiBuildFilterFixture.localCoverage?.docsPathRejected === true,
+      fixtureRejectsFrontendSrcPath: evidence.renderApiBuildFilterFixture.localCoverage?.frontendSrcPathRejected === true,
+      fixtureRejectsUnsafeEvidenceUrl: evidence.renderApiBuildFilterFixture.localCoverage?.queryEvidenceUrlRejected === true,
+      fixtureRejectsGenericNotes: evidence.renderApiBuildFilterFixture.localCoverage?.genericNotesRejected === true,
+      packetGenerated: evidence.renderApiBuildFilterPacket.status === "pass",
+      packetIncludesExactRecommendedPaths: evidence.renderApiBuildFilterPacket.checks?.includesExactRecommendedPaths === true,
+      packetExcludesDocsFrontendToolingPaths: evidence.renderApiBuildFilterPacket.checks?.excludesDocsFrontendToolingPaths === true,
+      packetIncludesDashboardInstructions: evidence.renderApiBuildFilterPacket.checks?.includesDashboardInstructions === true,
+      packetIncludesBlueprintSnippet: evidence.renderApiBuildFilterPacket.checks?.includesBlueprintSnippet === true,
+      packetIncludesApiReferencePayload: evidence.renderApiBuildFilterPacket.checks?.includesApiReferencePayload === true,
+      packetIncludesSignoffCommand: evidence.renderApiBuildFilterPacket.checks?.includesSignoffCommand === true,
+      packetIncludesEvidenceUrlSafety: evidence.renderApiBuildFilterPacket.checks?.includesEvidenceUrlSafety === true,
+      packetWarnsAgainstPartialBlueprint: evidence.renderApiBuildFilterPacket.checks?.includesNoHalfBlueprintWarning === true,
+      packetHasNoFilledSecrets: evidence.renderApiBuildFilterPacket.checks?.noFilledSecrets === true,
+      finalSignoffCommandRecorded: evidence.renderApiBuildFilterPacket.signoffCommand === "npm run check:render-api-build-filter:production"
     }
   },
   {
@@ -919,6 +957,14 @@ if (!skipReleaseSummaryContent) {
     "release readiness must include the Chrome store publication fixture gate."
   );
   expect(
+    findResult(evidence.releaseReadiness.results, "Render API build filter fixture")?.status === "pass",
+    "release readiness must include the Render API build filter fixture gate."
+  );
+  expect(
+    findResult(evidence.releaseReadiness.results, "Render API build filter packet")?.status === "pass",
+    "release readiness must include the Render API build filter packet gate."
+  );
+  expect(
     findResult(evidence.releaseReadiness.results, "External launch blockers")?.status === "pass",
     "release readiness must include the external launch blockers gate."
   );
@@ -941,7 +987,11 @@ const summary = {
   blockers,
   checks: {
     requiredScriptsPresent: requiredScripts.every((name) => Boolean(scripts[name])),
-    outstandingItemsTracked: outstandingItems.length >= 8,
+    outstandingItemsTracked: outstandingItems.length >= 9,
+    renderApiBuildFilterFixturePass: evidence.renderApiBuildFilterFixture.status === "pass",
+    renderApiBuildFilterPacketPass: evidence.renderApiBuildFilterPacket.status === "pass",
+    renderApiBuildFilterPathsExact: evidence.renderApiBuildFilterPacket.checks?.includesExactRecommendedPaths === true
+      && evidence.renderApiBuildFilterFixture.localCoverage?.validProductionBuildFilterAccepted === true,
     releaseReadinessIncludesExternalFixtures: skipReleaseSummaryContent ? "skipped" : true,
     releaseReadinessIncludesExternalBlockerGate: skipReleaseSummaryContent ? "skipped" : true,
     skippedReleaseSummaryContent: skipReleaseSummaryContent,

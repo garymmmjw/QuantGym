@@ -352,6 +352,8 @@ const evidenceArtifacts = [
   "350-postgres-cutover-packet-summary.json",
   "355-apex-www-domain-summary.json",
   "357-render-llm-deploy-status-summary.json",
+  "358-render-api-build-filter-packet-summary.json",
+  "359-render-api-build-filter-fixture-summary.json",
   "341-external-launch-blockers-summary.json"
 ];
 
@@ -692,6 +694,12 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       if (chromeStorePublicationFixture) {
         validateChromeStorePublicationFixtureSummary(chromeStorePublicationFixture.data || {}, expect, "nested Chrome store publication fixture");
       }
+      const renderApiBuildFilterFixture = findResult(releaseResults, "Render API build filter fixture");
+      expect(renderApiBuildFilterFixture?.status === "pass", "Render API build filter fixture nested gate must pass");
+      validateRenderApiBuildFilterFixtureSummary(renderApiBuildFilterFixture?.data || {}, expect, "nested Render API build filter fixture");
+      const renderApiBuildFilterPacket = findResult(releaseResults, "Render API build filter packet");
+      expect(renderApiBuildFilterPacket?.status === "pass", "Render API build filter packet nested gate must pass");
+      validateRenderApiBuildFilterPacketSummary(renderApiBuildFilterPacket?.data || {}, expect, "nested Render API build filter packet");
       const browserExtensionRuntimeSmoke = findResult(releaseResults, "Browser extension runtime smoke");
       if (browserExtensionRuntimeSmoke) {
         validateBrowserExtensionRuntimeSmokeSummary(browserExtensionRuntimeSmoke.data || {}, expect, "nested browser extension runtime smoke");
@@ -927,6 +935,12 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       expect(data.mailAudit?.checkedExternally === true, "Render email audit must be checked externally");
       expect(Number(data.mailAudit?.currentCommitFailureEmails || 0) === 0, "Render email audit current commit failures must be zero");
       expect(Number(data.mailAudit?.recentFailureEmails || 0) === 0, "Render email audit recent failures must be zero");
+      break;
+    case "358-render-api-build-filter-packet-summary.json":
+      validateRenderApiBuildFilterPacketSummary(data, expect, "Render API build filter packet");
+      break;
+    case "359-render-api-build-filter-fixture-summary.json":
+      validateRenderApiBuildFilterFixtureSummary(data, expect, "Render API build filter fixture");
       break;
     case "341-external-launch-blockers-summary.json":
       validateExternalLaunchBlockersSummary(data, expect, "external launch blockers", {
@@ -2085,6 +2099,57 @@ function validatePostgresCutoverPacketSummary(data, expect, label) {
   expectEmptyFailures(data, expect, label);
 }
 
+function validateRenderApiBuildFilterPacketSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.signoffCommand === "npm run check:render-api-build-filter:production", `${label} must record the production signoff command`);
+  expectPacketFiles(data, expect, label, [
+    "artifacts/render-api-build-filter/readiness-packet/README.md",
+    "artifacts/render-api-build-filter/readiness-packet/render-dashboard-checklist.md",
+    "artifacts/render-api-build-filter/readiness-packet/render-blueprint-snippet.yaml",
+    "artifacts/render-api-build-filter/readiness-packet/render-api-reference-payload.json",
+    "artifacts/render-api-build-filter/readiness-packet/signoff-env-template.txt",
+    "artifacts/render-api-build-filter/readiness-packet/signoff-checklist.csv"
+  ]);
+  const recommendedPaths = Array.isArray(data.recommendedPaths) ? data.recommendedPaths : [];
+  expect(recommendedPaths.length === 2, `${label} must recommend exactly two included paths`);
+  expect(recommendedPaths.includes("api-server/**"), `${label} must include api-server/**`);
+  expect(recommendedPaths.includes("data/**"), `${label} must include data/**`);
+  expect(String(data.outDir || "").endsWith("artifacts/render-api-build-filter/readiness-packet"), `${label} must write under the ignored render-api-build-filter artifact directory`);
+  expectAllChecksTrue(data, expect, label, [
+    "expectedFilesWritten",
+    "includesExactRecommendedPaths",
+    "excludesDocsFrontendToolingPaths",
+    "includesDashboardInstructions",
+    "includesBlueprintSnippet",
+    "includesApiReferencePayload",
+    "includesSignoffCommand",
+    "includesEvidenceUrlSafety",
+    "includesNoHalfBlueprintWarning",
+    "noFilledSecrets"
+  ]);
+  expectEmptyFailures(data, expect, label);
+}
+
+function validateRenderApiBuildFilterFixtureSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(Number(data.checks || 0) === 6, `${label} must run six fixture cases`);
+  expect(Number(data.passed || 0) === 6, `${label} must pass all fixture cases`);
+  expect(Number(data.failed || 0) === 0, `${label} must have zero failed fixture cases`);
+  for (const key of [
+    "validProductionBuildFilterAccepted",
+    "missingDataPathRejected",
+    "docsPathRejected",
+    "frontendSrcPathRejected",
+    "queryEvidenceUrlRejected",
+    "genericNotesRejected"
+  ]) {
+    expect(data.localCoverage?.[key] === true, `${label} local coverage ${key} must be true`);
+  }
+  const results = Array.isArray(data.results) ? data.results : [];
+  expect(results.length === 6, `${label} must summarize all six fixture cases`);
+  expect(results.every((item) => item.status === "pass"), `${label} fixture case summaries must all pass`);
+}
+
 function expectPacketFiles(data, expect, label, expectedFiles) {
   const files = Array.isArray(data.filesWritten) ? data.filesWritten : [];
   expect(files.length === expectedFiles.length, `${label} must write ${expectedFiles.length} packet files`);
@@ -2449,10 +2514,13 @@ function validateApexWwwDomainSummary(data, expect, label) {
 function validateExternalLaunchBlockersSummary(data, expect, label, options = {}) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.launchReadiness === "blocked", `${label} must keep public launch marked blocked until external signoffs clear`);
-  expect(Number(data.blockerCount || 0) === 6, `${label} must track six remaining external blockers after deployed Google provider clears`);
+  expect(Number(data.blockerCount || 0) === 7, `${label} must track seven remaining external blockers after deployed Google provider clears`);
   expect(Number(data.trackedCount || 0) === 1, `${label} must track one continuing browser-journey expansion item`);
   expect(data.checks?.requiredScriptsPresent === true, `${label} must verify required signoff scripts exist`);
   expect(data.checks?.outstandingItemsTracked === true, `${label} must verify product-status outstanding items are tracked`);
+  expect(data.checks?.renderApiBuildFilterFixturePass === true, `${label} must verify the Render API build filter fixture passes`);
+  expect(data.checks?.renderApiBuildFilterPacketPass === true, `${label} must verify the Render API build filter packet passes`);
+  expect(data.checks?.renderApiBuildFilterPathsExact === true, `${label} must verify the Render API build filter exact path contract`);
   const releaseReadinessCheck = data.checks?.releaseReadinessIncludesExternalFixtures;
   const releaseReadinessBlockerGateCheck = data.checks?.releaseReadinessIncludesExternalBlockerGate;
   const skippedReleaseSummaryContent = data.checks?.skippedReleaseSummaryContent === true;
@@ -2521,6 +2589,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
     "ops-alerts-edge-rate-limit",
     "media-bucket-cdn",
     "chrome-web-store-publication",
+    "render-api-build-filter",
     "postgres-managed-cutover",
     "question-bank-public-commercial-rights"
   ]) {
@@ -2565,6 +2634,26 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenDamagedAudienceDiagnostics === true, `${label} must include deployed paste-token corrupted-audience diagnostics coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenDamagedAudienceNoTokenLeak === true, `${label} must include deployed paste-token corrupted-audience no-token-leak coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenPinsDeployedClientId === true, `${label} must pin deployed paste-token checks to the deployed Google Client ID`);
+
+  const renderApiBuildFilter = findBlocker(data.blockers, "render-api-build-filter");
+  expect(renderApiBuildFilter?.signoffCommand === "npm run check:render-api-build-filter:production", `${label} Render API build filter must record the production signoff command`);
+  expect(renderApiBuildFilter?.localCoverage?.trackedInProductStatus === true, `${label} must keep Render API build filter tracked in product status`);
+  expect(renderApiBuildFilter?.localCoverage?.fixturePass === true, `${label} must include Render API build filter fixture coverage`);
+  expect(renderApiBuildFilter?.localCoverage?.fixtureAcceptedValidProductionFilter === true, `${label} must accept the valid Render API build filter fixture`);
+  expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsMissingDataPath === true, `${label} must reject a Render API build filter missing data/**`);
+  expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsDocsPath === true, `${label} must reject docs/** in the Render API build filter`);
+  expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsFrontendSrcPath === true, `${label} must reject src/** in the Render API build filter`);
+  expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsUnsafeEvidenceUrl === true, `${label} must reject unsafe Render API build filter evidence URLs`);
+  expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsGenericNotes === true, `${label} must reject generic Render API build filter notes`);
+  expect(renderApiBuildFilter?.localCoverage?.packetGenerated === true, `${label} must include Render API build filter packet coverage`);
+  expect(renderApiBuildFilter?.localCoverage?.packetIncludesExactRecommendedPaths === true, `${label} must include exact Render API build filter path guidance`);
+  expect(renderApiBuildFilter?.localCoverage?.packetExcludesDocsFrontendToolingPaths === true, `${label} must document excluded docs/frontend/tooling paths`);
+  expect(renderApiBuildFilter?.localCoverage?.packetIncludesDashboardInstructions === true, `${label} must include Render Dashboard build-filter instructions`);
+  expect(renderApiBuildFilter?.localCoverage?.packetIncludesApiReferencePayload === true, `${label} must include a Render API reference payload`);
+  expect(renderApiBuildFilter?.localCoverage?.packetIncludesEvidenceUrlSafety === true, `${label} must include Render evidence URL safety rules`);
+  expect(renderApiBuildFilter?.localCoverage?.packetWarnsAgainstPartialBlueprint === true, `${label} must warn against committing a partial Render Blueprint`);
+  expect(renderApiBuildFilter?.localCoverage?.packetHasNoFilledSecrets === true, `${label} Render API build filter packet must not contain filled secrets`);
+  expect(renderApiBuildFilter?.localCoverage?.finalSignoffCommandRecorded === true, `${label} Render API build filter packet must record its signoff command`);
 
   const ops = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");
   expect(ops?.signoffCommand === "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke", `${label} ops alerts must record both production config and webhook-smoke signoff commands`);
