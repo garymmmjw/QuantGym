@@ -38,6 +38,13 @@ const wwwCloudflare525Observed = hasStatus(wwwProbe.https, 525);
 const currentBlockedStateClassified = !apexWwwClear
   && betaHealthy
   && promotionHosts.every((host) => Boolean(blockedReason(probes[host])));
+const remediation = buildRemediation({
+  apexWwwClear,
+  betaHealthy,
+  apexCloudflare525Observed,
+  wwwCloudflare525Observed,
+  probes
+});
 
 if (!betaHealthy) {
   failures.push("beta.quantgym.app must remain healthy while apex/WWW promotion domains are blocked.");
@@ -58,6 +65,8 @@ const summary = {
   requireClear,
   launchReadiness: apexWwwClear ? "pass" : "blocked",
   signoffCommand,
+  ownerAction: remediation.ownerAction,
+  remediation,
   betaEntrypoint: summarizeHost(betaHost, betaProbe),
   promotionHosts: promotionHosts.map((host) => summarizeHost(host, probes[host])),
   checks: {
@@ -236,6 +245,49 @@ function blockedReason(probe) {
 
 function hasStatus(httpsInfo, statusCode) {
   return Boolean(httpsInfo?.chain?.some((item) => item.statusCode === statusCode));
+}
+
+function buildRemediation({ apexWwwClear, betaHealthy, apexCloudflare525Observed, wwwCloudflare525Observed, probes }) {
+  if (apexWwwClear) {
+    return {
+      ownerAction: "Apex and WWW HTTPS are usable. Keep this summary as the promotion-domain signoff evidence.",
+      probableCause: "",
+      checklist: [
+        "Keep beta.quantgym.app healthy.",
+        `Keep ${signoffCommand} passing before promoting apex/WWW as public entrypoints.`
+      ],
+      acceptanceCriteria: [
+        "quantgym.app returns HTTP 2xx/3xx over HTTPS.",
+        "www.quantgym.app returns HTTP 2xx/3xx over HTTPS.",
+        "beta.quantgym.app remains HTTP 2xx/3xx over HTTPS."
+      ]
+    };
+  }
+
+  const blockedHosts = promotionHosts
+    .map((host) => ({ host, reason: blockedReason(probes[host]) || "not usable" }));
+  const cloudflare525Observed = apexCloudflare525Observed || wwwCloudflare525Observed;
+  return {
+    ownerAction: cloudflare525Observed
+      ? "Fix the Cloudflare-to-origin SSL handshake or intentionally redirect quantgym.app and www.quantgym.app to the healthy beta entrypoint before promoting apex/WWW."
+      : "Fix apex/WWW HTTPS or redirect routing before promoting those domains.",
+    probableCause: cloudflare525Observed
+      ? "Cloudflare is reachable for apex/WWW, but the TLS handshake between Cloudflare and the configured origin is failing."
+      : "Apex/WWW DNS resolves, but HTTPS is not yet returning a usable 2xx/3xx response.",
+    blockedHosts,
+    checklist: [
+      "Confirm quantgym.app and www.quantgym.app are attached to the intended Cloudflare Pages/custom-domain or origin service.",
+      "Confirm the origin presents a valid certificate for quantgym.app and www.quantgym.app, or configure Cloudflare to redirect both hosts to beta.quantgym.app before origin TLS is attempted.",
+      "Keep beta.quantgym.app healthy while changing apex/WWW routing.",
+      `Run ${signoffCommand} after the routing or SSL change.`
+    ],
+    acceptanceCriteria: [
+      "quantgym.app returns HTTP 2xx/3xx over HTTPS and no Cloudflare 525 appears in the redirect chain.",
+      "www.quantgym.app returns HTTP 2xx/3xx over HTTPS and no Cloudflare 525 appears in the redirect chain.",
+      "beta.quantgym.app remains HTTP 2xx/3xx over HTTPS.",
+      `${signoffCommand} exits 0.`
+    ]
+  };
 }
 
 function isRedirect(statusCode) {
