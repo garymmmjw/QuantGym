@@ -43,7 +43,9 @@
         "deployedGoogleProviderLoginStateCaptured": true,
         "deployedGoogleProviderLoginSkippedForToken": true,
         "deployedTokenHelperScriptPresent": true,
-        "deployedPasteTokenVerifierPresent": true
+        "deployedPasteTokenVerifierPresent": true,
+        "deployedPasteTokenAudiencePrecheck": true,
+        "deployedPasteTokenPinsDeployedClientId": true
       }
     },
     {

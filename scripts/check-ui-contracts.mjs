@@ -2445,6 +2445,8 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginSkippedForToken === true, `${label} must show deployed Google provider is blocked only on fresh token signoff`);
   expect(deployedGoogle?.localCoverage?.deployedTokenHelperScriptPresent === true, `${label} must include deployed token helper coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenVerifierPresent === true, `${label} must include deployed paste-token verifier coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedPasteTokenAudiencePrecheck === true, `${label} must include deployed paste-token audience precheck coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedPasteTokenPinsDeployedClientId === true, `${label} must pin deployed paste-token checks to the deployed Google Client ID`);
 
   const ops = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");
   expect(ops?.signoffCommand === "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke", `${label} ops alerts must record both production config and webhook-smoke signoff commands`);
