@@ -68,6 +68,11 @@ try {
       expectedError: "Chrome Web Store listing"
     },
     {
+      name: "legacy store listing URL rejected",
+      env: { QUANTGYM_CHROME_WEB_STORE_LISTING_URL: `https://chrome.google.com/webstore/detail/quantgym-collector/${fixtureItemId}` },
+      expectedError: "chromewebstore.google.com"
+    },
+    {
       name: "raw IP listing URL rejected",
       env: { QUANTGYM_CHROME_WEB_STORE_LISTING_URL: `https://8.8.8.8/detail/quantgym-collector/${fixtureItemId}` },
       expectedError: "DNS hostname"
@@ -123,6 +128,11 @@ try {
       expectedError: "Chrome Web Store listing"
     },
     {
+      name: "legacy store evidence URL rejected",
+      env: { QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL: `https://chrome.google.com/webstore/detail/quantgym-collector/${fixtureItemId}` },
+      expectedError: "chromewebstore.google.com"
+    },
+    {
       name: "evidence URL without item id rejected",
       env: { QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL: "https://chromewebstore.google.com/detail/quantgym-collector/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
       expectedError: "must include the item id"
@@ -171,6 +181,8 @@ try {
     evidenceUrlNonStoreRejected: findNegativeFixture(negativeFixtures, "non-store evidence URL rejected")?.rejected === true,
     evidenceUrlWithoutItemIdRejected: findNegativeFixture(negativeFixtures, "evidence URL without item id rejected")?.rejected === true,
     evidenceUrlRawIpRejected: findNegativeFixture(negativeFixtures, "raw IP evidence URL rejected")?.rejected === true,
+    listingUrlLegacyHostRejected: findNegativeFixture(negativeFixtures, "legacy store listing URL rejected")?.rejected === true,
+    evidenceUrlLegacyHostRejected: findNegativeFixture(negativeFixtures, "legacy store evidence URL rejected")?.rejected === true,
     evidenceUrlEmbeddedCredentialsRejected: findNegativeFixture(negativeFixtures, "evidence URL embedded credentials rejected")?.rejected === true,
     evidenceUrlQueryRejected: findNegativeFixture(negativeFixtures, "evidence URL query rejected")?.rejected === true,
     externalPublicationStillRequired: true

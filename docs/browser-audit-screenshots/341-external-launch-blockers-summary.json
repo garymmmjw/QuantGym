@@ -188,6 +188,7 @@
         "packetIncludesListingSnapshot": true,
         "packetIncludesFinalSignoffChecklist": true,
         "packetIncludesRawIpUrlRule": true,
+        "packetIncludesCurrentStoreHostRequirement": true,
         "packetUsesPlaceholdersForPublishedIds": true,
         "packetReleasePackageExists": true,
         "packetReleasePackageShaMatches": true,
@@ -202,6 +203,7 @@
         "privateEvidenceUrlRejected": true,
         "placeholderItemIdRejected": true,
         "listingUrlRawIpRejected": true,
+        "listingUrlLegacyHostRejected": true,
         "listingUrlEmbeddedCredentialsRejected": true,
         "listingUrlQueryRejected": true,
         "listingUrlDetailPathRejected": true,
@@ -209,6 +211,7 @@
         "evidenceUrlNonStoreRejected": true,
         "evidenceUrlWithoutItemIdRejected": true,
         "evidenceUrlRawIpRejected": true,
+        "evidenceUrlLegacyHostRejected": true,
         "evidenceUrlEmbeddedCredentialsRejected": true,
         "evidenceUrlQueryRejected": true,
         "finalSignoffCommandRecorded": true

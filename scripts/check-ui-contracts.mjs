@@ -1879,6 +1879,7 @@ function validateChromeStorePublicationPacketSummary(data, expect, label) {
     "includesReleasePackageSha",
     "includesPublishedSignoffEnvTemplate",
     "includesEvidenceUrlStoreDetailRequirement",
+    "includesCurrentStoreHostRequirement",
     "includesRawIpUrlRule",
     "includesListingSnapshot",
     "includesFinalSignoffChecklist",
@@ -1891,6 +1892,7 @@ function validateChromeStorePublicationPacketSummary(data, expect, label) {
     "negativeFixturesRejected",
     "publishedEvidenceUrlBoundToStoreListing",
     "publishedUrlsRejectRawIp",
+    "publishedUrlsRejectLegacyStoreHost",
     "finalSignoffCommandRecorded",
     "externalPublicationStillRequired"
   ]);
@@ -2516,6 +2518,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(chrome?.localCoverage?.packetReleasePackageExists === true, `${label} must include Chrome release package existence coverage`);
   expect(chrome?.localCoverage?.packetReleasePackageShaMatches === true, `${label} must include Chrome release package SHA match coverage`);
   expect(chrome?.localCoverage?.packetIncludesRawIpUrlRule === true, `${label} must include Chrome packet raw-IP URL rejection guidance`);
+  expect(chrome?.localCoverage?.packetIncludesCurrentStoreHostRequirement === true, `${label} must require current Chrome Web Store host guidance`);
   expect(chrome?.localCoverage?.submissionHandoffPass === true, `${label} must include Chrome submission handoff coverage`);
   expect(chrome?.localCoverage?.submissionHandoffManualSubmissionRequired === true, `${label} must preserve Chrome manual submission requirement`);
   expect(chrome?.localCoverage?.publishedFixturePass === true, `${label} must include Chrome published fixture coverage`);
@@ -2526,6 +2529,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(chrome?.localCoverage?.externalPublicationStillRequired === true, `${label} must preserve Chrome external publication requirement`);
   expect(chrome?.localCoverage?.placeholderItemIdRejected === true, `${label} must include Chrome placeholder item-id rejection`);
   expect(chrome?.localCoverage?.listingUrlRawIpRejected === true, `${label} must include Chrome raw-IP listing URL rejection`);
+  expect(chrome?.localCoverage?.listingUrlLegacyHostRejected === true, `${label} must include Chrome legacy listing host rejection`);
   expect(chrome?.localCoverage?.listingUrlEmbeddedCredentialsRejected === true, `${label} must include Chrome listing URL credential rejection`);
   expect(chrome?.localCoverage?.listingUrlQueryRejected === true, `${label} must include Chrome listing URL query rejection`);
   expect(chrome?.localCoverage?.listingUrlExtraPathRejected === true, `${label} must include Chrome listing URL extra-path rejection`);
@@ -2533,6 +2537,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(chrome?.localCoverage?.evidenceUrlNonStoreRejected === true, `${label} must include Chrome non-store evidence URL rejection`);
   expect(chrome?.localCoverage?.evidenceUrlWithoutItemIdRejected === true, `${label} must include Chrome evidence URL item-id binding`);
   expect(chrome?.localCoverage?.evidenceUrlRawIpRejected === true, `${label} must include Chrome raw-IP evidence URL rejection`);
+  expect(chrome?.localCoverage?.evidenceUrlLegacyHostRejected === true, `${label} must include Chrome legacy evidence host rejection`);
   expect(chrome?.localCoverage?.evidenceUrlEmbeddedCredentialsRejected === true, `${label} must include Chrome evidence URL credential rejection`);
   expect(chrome?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include Chrome evidence URL query rejection`);
   const postgres = findBlocker(data.blockers, "postgres-managed-cutover");

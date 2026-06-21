@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 10196,
+  "durationMs": 11261,
   "externalPublicationRequired": true,
   "finalSignoffCommand": "npm run check:chrome-store-publication:published",
   "submissionHandoff": {
@@ -97,7 +97,14 @@
       "rejected": true,
       "expectedErrorObserved": true,
       "failed": 1,
-      "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must point to a Chrome Web Store listing."
+      "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must point to the current chromewebstore.google.com Chrome Web Store listing host."
+    },
+    {
+      "name": "legacy store listing URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must point to the current chromewebstore.google.com Chrome Web Store listing host."
     },
     {
       "name": "raw IP listing URL rejected",
@@ -174,7 +181,14 @@
       "rejected": true,
       "expectedErrorObserved": true,
       "failed": 1,
-      "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must point to a Chrome Web Store listing."
+      "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must point to the current chromewebstore.google.com Chrome Web Store listing host."
+    },
+    {
+      "name": "legacy store evidence URL rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must point to the current chromewebstore.google.com Chrome Web Store listing host."
     },
     {
       "name": "evidence URL without item id rejected",
@@ -216,6 +230,8 @@
     "evidenceUrlNonStoreRejected": true,
     "evidenceUrlWithoutItemIdRejected": true,
     "evidenceUrlRawIpRejected": true,
+    "listingUrlLegacyHostRejected": true,
+    "evidenceUrlLegacyHostRejected": true,
     "evidenceUrlEmbeddedCredentialsRejected": true,
     "evidenceUrlQueryRejected": true,
     "externalPublicationStillRequired": true
