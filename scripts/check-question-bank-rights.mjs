@@ -22,6 +22,7 @@ const REQUIRED_PUBLIC_SCOPES = ["public-web", "redistribution", "compiled-catalo
 const REQUIRED_COMMERCIAL_SCOPES = [...REQUIRED_PUBLIC_SCOPES, "commercial-use"];
 const APPROVAL_MAX_AGE_DAYS = 366;
 const PLACEHOLDER_PATTERN = /\b(tbd|todo|placeholder|example|xxx)\b/i;
+const INTERNAL_GRANTOR_PATTERN = /\b(quantgym|internal|self[-\s]?approval|ourselves?|our team|product team|engineering team)\b/i;
 
 const failures = [];
 const warnings = [];
@@ -356,6 +357,7 @@ function validateApprovedPublicCommercial(entry, label, releaseMode, active) {
   if (approvalType === "direct-permission") {
     if (!clean(entry?.permissionGrantor)) failures.push(`${label}.permissionGrantor is required for direct permission.`);
     validateRequiredText(entry?.permissionGrantor, `${label}.permissionGrantor`);
+    validateExternalPermissionGrantor(entry?.permissionGrantor, `${label}.permissionGrantor`);
   }
   if (approvalType === "open-license" || approvalType === "public-domain") {
     if (!clean(entry?.licenseName)) failures.push(`${label}.licenseName is required for ${approvalType}.`);
@@ -366,6 +368,14 @@ function validateApprovedPublicCommercial(entry, label, releaseMode, active) {
   if (approvalType === "owned-original") {
     if (!clean(entry?.owner)) failures.push(`${label}.owner is required for owned-original approvals.`);
     validateRequiredText(entry?.owner, `${label}.owner`);
+  }
+}
+
+function validateExternalPermissionGrantor(value, label) {
+  const grantor = clean(value);
+  if (!grantor) return;
+  if (INTERNAL_GRANTOR_PATTERN.test(grantor)) {
+    failures.push(`${label} must name an external rights holder or authorized representative, not QuantGym or an internal self-approval.`);
   }
 }
 

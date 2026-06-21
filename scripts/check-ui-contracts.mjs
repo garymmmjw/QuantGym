@@ -1769,6 +1769,7 @@ function validateQuestionBankRightsPacketSummary(data, expect, label) {
   expect(data.checks?.packetIncludesReleaseBlockerCommand === true, `${label} packet README must include blocker refresh command`);
   expect(data.checks?.packetIncludesEvidenceUrlSafetyRules === true, `${label} packet README must include evidence URL safety rules`);
   expect(data.checks?.packetIncludesRawIpEvidenceUrlRule === true, `${label} packet README must include raw-IP evidence URL safety rule`);
+  expect(data.checks?.packetRequiresExternalPermissionGrantor === true, `${label} packet README must require an external direct-permission grantor`);
   expect(data.checks?.sourcePacketsIncludeOutreachAndDrafts === true, `${label} source packets must include outreach and manifest draft sections`);
   expect(data.checks?.sourcePacketsListRequiredScopes === true, `${label} source packets must list required scopes`);
   expect(data.checks?.manifestDraftEntriesContainTodoPlaceholders === true, `${label} manifest draft must retain TODO placeholders`);
@@ -2578,6 +2579,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.approvalPacketIncludesReleaseBlockerCommand === true, `${label} must include question-bank blocker refresh command coverage`);
   expect(rights?.localCoverage?.approvalPacketIncludesEvidenceUrlSafetyRules === true, `${label} must include question-bank evidence URL safety rules`);
   expect(rights?.localCoverage?.approvalPacketIncludesRawIpEvidenceUrlRule === true, `${label} must include question-bank raw-IP evidence URL safety rule`);
+  expect(rights?.localCoverage?.approvalPacketRequiresExternalPermissionGrantor === true, `${label} must include question-bank external grantor guidance`);
   expect(Number(rights?.localCoverage?.approvalPacketSourcePacketCount || 0) === 15, `${label} must include all question-bank source packets`);
   expect(rights?.localCoverage?.approvalPacketSourcePacketsMatchBlockers === true, `${label} must match question-bank source packets to release blockers`);
   expect(rights?.localCoverage?.approvalPacketDraftPlaceholders === true, `${label} must keep question-bank packet drafts placeholder-only`);
@@ -2595,6 +2597,8 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.evidenceUrlQueryRejected === true, `${label} must include question-bank evidence URL query rejection`);
   expect(rights?.localCoverage?.staleApprovalRejected === true, `${label} must include question-bank stale approval rejection`);
   expect(rights?.localCoverage?.missingGrantorRejected === true, `${label} must include question-bank missing grantor rejection`);
+  expect(rights?.localCoverage?.internalGrantorRejected === true, `${label} must include question-bank internal grantor rejection`);
+  expect(rights?.localCoverage?.internalGrantorMentionsExternalRightsHolder === true, `${label} must mention external rights holder for internal grantor rejection`);
   expect(rights?.localCoverage?.unsupportedScopeRejected === true, `${label} must include question-bank unsupported scope rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);

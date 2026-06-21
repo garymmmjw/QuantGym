@@ -403,6 +403,7 @@ const blockers = [
       approvalPacketIncludesReleaseBlockerCommand: evidence.rightsPacket.checks?.packetIncludesReleaseBlockerCommand === true,
       approvalPacketIncludesEvidenceUrlSafetyRules: evidence.rightsPacket.checks?.packetIncludesEvidenceUrlSafetyRules === true,
       approvalPacketIncludesRawIpEvidenceUrlRule: evidence.rightsPacket.checks?.packetIncludesRawIpEvidenceUrlRule === true,
+      approvalPacketRequiresExternalPermissionGrantor: evidence.rightsPacket.checks?.packetRequiresExternalPermissionGrantor === true,
       approvalPacketSourcePacketCount: evidence.rightsPacket.sourcePacketCount || 0,
       approvalPacketSourcePacketsMatchBlockers: evidence.rightsPacket.checks?.releaseBlockersMatchPacketSources === true,
       approvalPacketDraftPlaceholders: evidence.rightsPacket.checks?.manifestDraftEntriesContainTodoPlaceholders === true,
@@ -420,6 +421,8 @@ const blockers = [
       evidenceUrlQueryRejected: evidence.rightsPublicSmoke.checks?.evidenceUrlQueryRejected === true,
       staleApprovalRejected: evidence.rightsPublicSmoke.checks?.staleApprovalRejected === true,
       missingGrantorRejected: evidence.rightsPublicSmoke.checks?.missingGrantorRejected === true,
+      internalGrantorRejected: evidence.rightsPublicSmoke.checks?.internalGrantorRejected === true,
+      internalGrantorMentionsExternalRightsHolder: evidence.rightsPublicSmoke.checks?.internalGrantorMentionsExternalRightsHolder === true,
       unsupportedScopeRejected: evidence.rightsPublicSmoke.checks?.unsupportedScopeRejected === true,
       noActivePublicCommercialApprovals: evidence.rightsBlockers.checks?.noActivePublicCommercialApprovals === true
     }

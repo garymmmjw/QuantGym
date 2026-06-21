@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 473,
+  "durationMs": 524,
   "checks": {
     "validPublicPass": true,
     "validCommercialPass": true,
@@ -15,6 +15,8 @@
     "evidenceUrlQueryRejected": true,
     "staleApprovalRejected": true,
     "missingGrantorRejected": true,
+    "internalGrantorRejected": true,
+    "internalGrantorMentionsExternalRightsHolder": true,
     "unsupportedScopeRejected": true
   },
   "validApproval": {
@@ -195,6 +197,26 @@
     },
     "failures": [
       "approved-source.publicCommercial.permissionGrantor is required for direct permission."
+    ]
+  },
+  "internalGrantorFailure": {
+    "mode": "public",
+    "status": "fail",
+    "reportedStatus": "fail",
+    "activeSources": 1,
+    "rightsStatus": {
+      "privateBeta": {
+        "allowed": 1
+      },
+      "publicCommercial": {
+        "approved": 1
+      },
+      "activePublicCommercial": {
+        "approved": 1
+      }
+    },
+    "failures": [
+      "approved-source.publicCommercial.permissionGrantor must name an external rights holder or authorized representative, not QuantGym or an internal self-approval."
     ]
   },
   "unsupportedScopeFailure": {

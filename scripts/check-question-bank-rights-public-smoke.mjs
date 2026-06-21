@@ -72,6 +72,12 @@ try {
   expect(missingGrantor.status !== 0, "Direct-permission approval without grantor must fail public mode.");
   expect(/permissionGrantor/i.test(failuresText(missingGrantor)), "Missing grantor rejection must mention permissionGrantor.");
 
+  const internalGrantor = runFixture("public", makeApprovedPublicCommercial({
+    permissionGrantor: "QuantGym Team"
+  }));
+  expect(internalGrantor.status !== 0, "Direct-permission approval from an internal QuantGym grantor must fail public mode.");
+  expect(/external rights holder/i.test(failuresText(internalGrantor)), "Internal grantor rejection must mention external rights holder.");
+
   const unsupportedScope = runFixture("public", makeApprovedPublicCommercial({
     redistributionScope: ["public-web", "redistribution", "compiled-catalog", "derived-adaptation", "print-resale"]
   }));
@@ -95,6 +101,8 @@ try {
       evidenceUrlQueryRejected: queryEvidence.status !== 0,
       staleApprovalRejected: staleApproval.status !== 0,
       missingGrantorRejected: missingGrantor.status !== 0,
+      internalGrantorRejected: internalGrantor.status !== 0,
+      internalGrantorMentionsExternalRightsHolder: /external rights holder/i.test(failuresText(internalGrantor)),
       unsupportedScopeRejected: unsupportedScope.status !== 0
     },
     validApproval: summarizeRun(validCommercial),
@@ -106,6 +114,7 @@ try {
     queryEvidenceFailure: summarizeRun(queryEvidence),
     staleApprovalFailure: summarizeRun(staleApproval),
     missingGrantorFailure: summarizeRun(missingGrantor),
+    internalGrantorFailure: summarizeRun(internalGrantor),
     unsupportedScopeFailure: summarizeRun(unsupportedScope),
     failures,
     warnings
