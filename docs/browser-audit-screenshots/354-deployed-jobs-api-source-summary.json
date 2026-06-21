@@ -3,7 +3,7 @@
   "date": "2026-06-19",
   "surface": "deployed jobs API source smoke",
   "status": "pass",
-  "durationMs": 275,
+  "durationMs": 1262,
   "apiHost": "api.quantgym.app",
   "apiPath": "/api/jobs",
   "statusCode": 200,
