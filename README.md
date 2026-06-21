@@ -296,6 +296,10 @@ summary must not contain raw passwords, session tokens, or full account data.
 
 Keep real secrets in Render, Cloudflare, or Resend. Do not commit `.env`, real API keys, GitHub tokens, Resend keys, or the real beta email list.
 
+Node runtime is pinned in `.node-version` to `20.20.2`. Keep Render Node
+services on that version, or on a version allowed by `package.json` engines,
+before deploying services that run `npm install` from the repo root.
+
 ### Cloudflare Pages: `quantgym-beta`
 
 Use Cloudflare Pages for the static web app:
@@ -405,6 +409,7 @@ Use Render for the Node LLM proxy:
 
 ```text
 Root directory: leave blank
+Build command: npm install
 Start command: node llm-proxy/server.mjs
 Custom domain: llm.quantgym.app
 ```

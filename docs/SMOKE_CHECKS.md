@@ -141,6 +141,11 @@ it runs after the route/runtime evidence refresh and skips only the content
 validation for the prior `323-release-readiness-summary.json` to avoid a stale
 self-reference; standalone `npm run check:ui-contracts` still validates the
 refreshed release summary, including the nested external launch blocker gate.
+Each release-readiness child gate has a default timeout of 180000 ms. For
+diagnosing stuck Render/LLM/API deploy checks, override it with
+`node scripts/check-release-readiness.mjs --allow-partial-production --gate-timeout-ms <ms> --summary /tmp/quantgym-release-readiness.json`
+or `QUANTGYM_RELEASE_GATE_TIMEOUT_MS=<ms>`; timed-out gates are reported in the
+JSON summary with `timedOut: true` instead of hanging indefinitely.
 
 Browser evidence manifest follow-up: `npm run check:browser-evidence` scans
 `docs/ui-function-regression-audit-2026-06-07.md` and this smoke checklist for
