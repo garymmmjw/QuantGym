@@ -12,6 +12,7 @@ const args = process.argv.slice(2);
 const allowPartialProduction = args.includes("--allow-partial-production")
   || process.env.QUANTGYM_RELEASE_ALLOW_PARTIAL_PRODUCTION === "1";
 const summaryPath = getArgValue("--summary");
+const baseChildEnv = buildChildEnv();
 
 const gates = [
   { name: "git diff --check", command: "git", args: ["diff", "--check"] },
@@ -102,7 +103,7 @@ async function runGate(gate) {
       cwd: root,
       encoding: "utf8",
       maxBuffer: 1024 * 1024 * 20,
-      env: process.env
+      env: baseChildEnv
     });
   } catch (error) {
     await stopManagedServices(localBoundaryServices);
@@ -181,7 +182,7 @@ async function maybeStartLocalBoundaryServices() {
   const runtimeConfig = loadLocalRuntimeConfig();
   const boundaryEnv = {
     ...loadEnvFromProjectRoot(),
-    ...process.env
+    ...baseChildEnv
   };
   const apiEndpoint = clean(boundaryEnv.QUANTGYM_CLOUD_API_ENDPOINT || boundaryEnv.CLOUD_API_ENDPOINT || runtimeConfig.cloudApiEndpoint);
   const llmEndpoint = clean(boundaryEnv.QUANTGYM_LLM_ENDPOINT || boundaryEnv.LLM_ENDPOINT || runtimeConfig.llmEndpoint);
@@ -434,6 +435,90 @@ function loadEnvFromProjectRoot() {
     values[key] = value;
   }
   return values;
+}
+
+function buildChildEnv(extra = {}) {
+  const env = {
+    ...process.env,
+    ...extra
+  };
+  applyMacSystemProxyDefaults(env);
+  appendNoProxyDefaults(env);
+  return env;
+}
+
+function applyMacSystemProxyDefaults(env) {
+  if (process.platform !== "darwin") return;
+  if (hasProxyEnv(env)) return;
+  const proxy = readMacSystemProxy();
+  if (proxy.https) {
+    env.HTTPS_PROXY = proxy.https;
+    env.https_proxy = proxy.https;
+  }
+  if (proxy.http) {
+    env.HTTP_PROXY = proxy.http;
+    env.http_proxy = proxy.http;
+  }
+}
+
+function hasProxyEnv(env) {
+  return [
+    env.HTTPS_PROXY,
+    env.https_proxy,
+    env.HTTP_PROXY,
+    env.http_proxy,
+    env.ALL_PROXY,
+    env.all_proxy
+  ].some(isHttpProxyUrl);
+}
+
+function readMacSystemProxy() {
+  const result = spawnSync("scutil", ["--proxy"], {
+    encoding: "utf8",
+    maxBuffer: 1024 * 1024
+  });
+  if (result.status !== 0) return {};
+  const values = parseScutilProxy(result.stdout || "");
+  return {
+    https: proxyUrl(values.HTTPSEnable, values.HTTPSProxy, values.HTTPSPort),
+    http: proxyUrl(values.HTTPEnable, values.HTTPProxy, values.HTTPPort)
+  };
+}
+
+function parseScutilProxy(output) {
+  const values = {};
+  for (const line of String(output || "").split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Za-z][A-Za-z0-9]*)\s*:\s*(.+?)\s*$/);
+    if (match) values[match[1]] = match[2];
+  }
+  return values;
+}
+
+function proxyUrl(enabled, host, port) {
+  if (String(enabled || "").trim() !== "1") return "";
+  const cleanHost = clean(host);
+  const cleanPort = clean(port);
+  if (!cleanHost || !cleanPort || !/^\d+$/.test(cleanPort)) return "";
+  return `http://${cleanHost}:${cleanPort}`;
+}
+
+function isHttpProxyUrl(value) {
+  return /^https?:\/\//i.test(String(value || "").trim());
+}
+
+function appendNoProxyDefaults(env) {
+  const existing = clean(env.NO_PROXY || env.no_proxy);
+  const defaults = ["127.0.0.1", "localhost", "::1"];
+  const values = new Set(
+    existing
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean)
+  );
+  for (const value of defaults) values.add(value);
+  const joined = [...values].join(",");
+  env.NO_PROXY = joined;
+  env.no_proxy = joined;
 }
 
 function clean(value) {
