@@ -46,7 +46,6 @@
         "deployedBoundaryLlmPdfQuestionGenerationPass": true,
         "deployedGoogleProviderLoginStateCaptured": true,
         "deployedGoogleProviderLoginTokenExpiresAt": "2026-06-21T10:06:39.000Z",
-        "deployedGoogleProviderLoginTokenSecondsRemaining": -41375,
         "deployedGoogleProviderLoginTokenMinimumSeconds": 120,
         "deployedGoogleProviderLoginTokenFresh": false,
         "deployedGoogleProviderLoginTokenExpired": true,

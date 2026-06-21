@@ -180,9 +180,6 @@ const blockers = [
       deployedBoundaryLlmPdfQuestionGenerationPass: findResult(evidence.deployedProductionBoundaries.results, "LLM PDF question generation")?.status === "pass",
       deployedGoogleProviderLoginStateCaptured: Boolean(deployedBoundaryGoogleProviderLogin?.status),
       deployedGoogleProviderLoginTokenExpiresAt,
-      deployedGoogleProviderLoginTokenSecondsRemaining: Number.isFinite(deployedGoogleProviderLoginSecondsRemaining)
-        ? deployedGoogleProviderLoginSecondsRemaining
-        : null,
       deployedGoogleProviderLoginTokenMinimumSeconds: 120,
       deployedGoogleProviderLoginTokenFresh,
       deployedGoogleProviderLoginTokenExpired,
