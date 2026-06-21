@@ -235,20 +235,35 @@ function localServiceBoundaryEvidence() {
   const googleLogin = findResult(data.results, "google provider login");
   const resumeReview = findResult(data.results, "LLM resume review");
   const pdfGeneration = findResult(data.results, "LLM PDF question generation");
+  const googleLoginTokenExpiresAt = String(googleLogin?.data?.tokenExpiresAt || "").trim();
+  const googleLoginTokenSecondsRemaining = secondsUntil(googleLoginTokenExpiresAt);
+  const googleLoginTokenFresh = Number.isFinite(googleLoginTokenSecondsRemaining)
+    && googleLoginTokenSecondsRemaining >= 120;
+  const googleLoginTokenExpired = Number.isFinite(googleLoginTokenSecondsRemaining)
+    && googleLoginTokenSecondsRemaining < 120;
   const googleLoginCompleted = data.status === "pass"
     && data.passed === 5
     && data.skipped === 0
     && data.failed === 0
     && googleLogin?.status === "pass"
     && googleLogin?.data?.hasToken === true
-    && googleLogin?.data?.tokenAudienceMatchesClientId === true;
+    && googleLogin?.data?.tokenAudienceMatchesClientId === true
+    && googleLoginTokenFresh;
+  const googleLoginExpiredEvidence = data.status === "pass"
+    && data.passed === 5
+    && data.skipped === 0
+    && data.failed === 0
+    && googleLogin?.status === "pass"
+    && googleLogin?.data?.hasToken === true
+    && googleLogin?.data?.tokenAudienceMatchesClientId === true
+    && googleLoginTokenExpired;
   const googleLoginIsolated = data.status === "partial"
     && data.passed === 4
     && data.skipped === 1
     && data.failed === 0
     && googleLogin?.status === "skip"
     && googleLogin?.reason === "Set QUANTGYM_GOOGLE_ID_TOKEN.";
-  const pass = (googleLoginCompleted || googleLoginIsolated)
+  const pass = (googleLoginCompleted || googleLoginExpiredEvidence || googleLoginIsolated)
     && resumeReview?.status === "pass"
     && Number(resumeReview?.data?.itemCount || 0) > 0
     && pdfGeneration?.status === "pass"
@@ -264,6 +279,11 @@ function localServiceBoundaryEvidence() {
       failed: data.failed,
       googleProviderLogin: googleLogin,
       providerLoginCompleted: googleLoginCompleted,
+      providerLoginExpiredEvidence: googleLoginExpiredEvidence,
+      tokenExpiresAt: googleLoginTokenExpiresAt,
+      tokenMinimumSeconds: 120,
+      tokenFresh: googleLoginTokenFresh,
+      tokenExpired: googleLoginTokenExpired,
       llmResumeReview: resumeReview?.status,
       llmPdfQuestionGeneration: pdfGeneration?.status
     }
@@ -302,18 +322,27 @@ function googleProviderLoginEvidence() {
   const browserData = readJson("docs/browser-audit-screenshots/320-iab-google-config-summary.json");
   const boundaryData = readJson("docs/browser-audit-screenshots/319-production-boundaries-local-services-summary.json");
   const googleLogin = findResult(boundaryData.results, "google provider login");
+  const tokenExpiresAt = String(googleLogin?.data?.tokenExpiresAt || "").trim();
+  const tokenSecondsRemaining = secondsUntil(tokenExpiresAt);
+  const tokenFresh = Number.isFinite(tokenSecondsRemaining) && tokenSecondsRemaining >= 120;
+  const tokenExpired = Number.isFinite(tokenSecondsRemaining) && tokenSecondsRemaining < 120;
   const rendered = browserData.checks?.googleButtonIframeRendered === true
     && browserData.checks?.googleIframeUsesConfiguredClientId === true
     && browserData.checks?.originNotAllowedWarningPresent === false;
   const completed = boundaryData.status === "pass"
     && googleLogin?.status === "pass"
     && googleLogin?.data?.hasToken === true
-    && googleLogin?.data?.tokenAudienceMatchesClientId === true;
+    && googleLogin?.data?.tokenAudienceMatchesClientId === true
+    && tokenFresh;
   return {
     id: "google-provider-login",
     title: "Real Google provider account login is signed off",
     status: completed ? "pass" : rendered ? "pending" : "fail",
-    reason: completed ? "" : "Google Sign-In is configured and renderable, but provider login still needs a short-lived QUANTGYM_GOOGLE_ID_TOKEN.",
+    reason: completed
+      ? ""
+      : tokenExpired
+        ? "Google Sign-In is configured and renderable, but the recorded provider token is expired; refresh QUANTGYM_GOOGLE_ID_TOKEN."
+        : "Google Sign-In is configured and renderable, but provider login still needs a short-lived QUANTGYM_GOOGLE_ID_TOKEN.",
     nextStep: completed
       ? ""
       : "Run npm run google:token-helper, complete Google sign-in, then run QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries before the token expires.",
@@ -324,7 +353,11 @@ function googleProviderLoginEvidence() {
       providerLoginCompleted: completed,
       productionBoundaryStatus: boundaryData.status,
       googleLinked: googleLogin?.data?.googleLinked,
-      tokenAudienceMatchesClientId: googleLogin?.data?.tokenAudienceMatchesClientId
+      tokenAudienceMatchesClientId: googleLogin?.data?.tokenAudienceMatchesClientId,
+      tokenExpiresAt,
+      tokenMinimumSeconds: 120,
+      tokenFresh,
+      tokenExpired
     }
   };
 }
@@ -350,6 +383,14 @@ function extractSetIds(text, exportName) {
 
 function findResult(results, name) {
   return Array.isArray(results) ? results.find((result) => result.name === name) : undefined;
+}
+
+function secondsUntil(isoTimestamp) {
+  const value = String(isoTimestamp || "").trim();
+  if (!value) return null;
+  const timestampMs = Date.parse(value);
+  if (!Number.isFinite(timestampMs)) return null;
+  return Math.floor((timestampMs - Date.now()) / 1000);
 }
 
 function read(relativePath) {

@@ -814,13 +814,19 @@ function validateEvidenceContract(artifact, artifactPath, data) {
     case "327-migration-completion-audit-summary.json": {
       expectCount(data.requirements?.total, 10, "migration completion total requirement count");
       const googleProvider = findRequirement(data.checks, "google-provider-login");
+      const googleProviderTokenSecondsRemaining = secondsUntil(
+        googleProvider?.evidence?.tokenExpiresAt
+      );
+      const googleProviderTokenFresh = Number.isFinite(googleProviderTokenSecondsRemaining)
+        && googleProviderTokenSecondsRemaining >= 120;
       const finalComplete = data.status === "pass"
         && Number(data.requirements?.passed) === 10
         && Number(data.requirements?.pending) === 0
         && Number(data.requirements?.failed) === 0
         && Number(data.completionPercent) === 100
         && googleProvider?.status === "pass"
-        && googleProvider?.evidence?.providerLoginCompleted === true;
+        && googleProvider?.evidence?.providerLoginCompleted === true
+        && googleProviderTokenFresh;
       const interimComplete = data.status === "partial"
         && Number(data.requirements?.passed) === 9
         && Number(data.requirements?.pending) === 1
@@ -829,6 +835,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
         && googleProvider?.status === "pending"
         && String(googleProvider?.reason || "").includes("QUANTGYM_GOOGLE_ID_TOKEN");
       expect(finalComplete || interimComplete, "migration completion audit must be either final pass or one-token pending partial");
+      if (googleProvider?.status === "pass") {
+        expect(googleProviderTokenFresh === true, "migration completion Google provider pass requires fresh token evidence");
+      }
       for (const id of [
         "react-route-ownership",
         "migration-ledger-converted",
@@ -2952,6 +2961,14 @@ function findBlocker(blockers, id) {
 
 function findRequirement(checks, id) {
   return Array.isArray(checks) ? checks.find((check) => check.id === id) : undefined;
+}
+
+function secondsUntil(isoTimestamp) {
+  const value = String(isoTimestamp || "").trim();
+  if (!value) return null;
+  const timestampMs = Date.parse(value);
+  if (!Number.isFinite(timestampMs)) return null;
+  return Math.floor((timestampMs - Date.now()) / 1000);
 }
 
 function summaryLinesContain(lines, needle) {

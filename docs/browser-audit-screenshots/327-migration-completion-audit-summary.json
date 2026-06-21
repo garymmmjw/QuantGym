@@ -2,15 +2,22 @@
   "id": 327,
   "date": "2026-06-08",
   "surface": "migration completion audit",
-  "status": "pass",
-  "completionPercent": 100,
+  "status": "partial",
+  "completionPercent": 90,
   "requirements": {
     "total": 10,
-    "passed": 10,
-    "pending": 0,
+    "passed": 9,
+    "pending": 1,
     "failed": 0
   },
-  "remainingRequiredWork": [],
+  "remainingRequiredWork": [
+    {
+      "id": "google-provider-login",
+      "title": "Real Google provider account login is signed off",
+      "reason": "Google Sign-In is configured and renderable, but the recorded provider token is expired; refresh QUANTGYM_GOOGLE_ID_TOKEN.",
+      "nextStep": "Run npm run google:token-helper, complete Google sign-in, then run QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries before the token expires."
+    }
+  ],
   "checks": [
     {
       "id": "react-route-ownership",
@@ -125,7 +132,12 @@
             "tokenEmail": "mi***@gmail.com"
           }
         },
-        "providerLoginCompleted": true,
+        "providerLoginCompleted": false,
+        "providerLoginExpiredEvidence": true,
+        "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
+        "tokenMinimumSeconds": 120,
+        "tokenFresh": false,
+        "tokenExpired": true,
         "llmResumeReview": "pass",
         "llmPdfQuestionGeneration": "pass"
       }
@@ -148,17 +160,21 @@
     {
       "id": "google-provider-login",
       "title": "Real Google provider account login is signed off",
-      "status": "pass",
-      "reason": "",
-      "nextStep": "",
+      "status": "pending",
+      "reason": "Google Sign-In is configured and renderable, but the recorded provider token is expired; refresh QUANTGYM_GOOGLE_ID_TOKEN.",
+      "nextStep": "Run npm run google:token-helper, complete Google sign-in, then run QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries before the token expires.",
       "evidence": {
         "googleButtonIframeRendered": true,
         "googleIframeUsesConfiguredClientId": true,
         "originNotAllowedWarningPresent": false,
-        "providerLoginCompleted": true,
+        "providerLoginCompleted": false,
         "productionBoundaryStatus": "pass",
         "googleLinked": true,
-        "tokenAudienceMatchesClientId": true
+        "tokenAudienceMatchesClientId": true,
+        "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
+        "tokenMinimumSeconds": 120,
+        "tokenFresh": false,
+        "tokenExpired": true
       }
     }
   ]
