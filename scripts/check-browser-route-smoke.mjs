@@ -8590,7 +8590,15 @@ async function expectStoredInvalidBackupGuardState(page, expected) {
 }
 
 async function waitForAuthenticatedShell(page) {
-  await page.waitForSelector("#appShell:not(.hidden)", { timeout: 15000 });
+  await page.waitForFunction(() => {
+    const appShell = document.querySelector("#appShell");
+    const authShell = document.querySelector("#authShell");
+    if (!appShell || appShell.classList.contains("hidden")) return false;
+    const style = window.getComputedStyle(appShell);
+    return style.visibility !== "hidden"
+      && style.display !== "none"
+      && (!authShell || authShell.classList.contains("hidden"));
+  }, null, { timeout: 15000 });
   await page.waitForTimeout(150);
 }
 
