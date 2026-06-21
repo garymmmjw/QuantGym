@@ -57,6 +57,8 @@ try {
       && combinedContent.includes("QUANTGYM_CHROME_WEB_STORE_UPLOAD_SHA256"),
     includesEvidenceUrlStoreDetailRequirement: combinedContent.includes("same Chrome Web Store detail URL")
       && combinedContent.includes("same item id"),
+    includesCurrentStoreHostRequirement: combinedContent.includes("chromewebstore.google.com")
+      && combinedContent.includes("current public Chrome Web Store host"),
     includesRawIpUrlRule: combinedContent.includes("DNS hostname")
       && combinedContent.includes("raw IP address"),
     includesListingSnapshot: combinedContent.includes("Store Listing Fields")
@@ -77,6 +79,8 @@ try {
       && publicationFixture.checks?.evidenceUrlWithoutItemIdRejected === true,
     publishedUrlsRejectRawIp: publicationFixture.checks?.listingUrlRawIpRejected === true
       && publicationFixture.checks?.evidenceUrlRawIpRejected === true,
+    publishedUrlsRejectLegacyStoreHost: publicationFixture.checks?.listingUrlLegacyHostRejected === true
+      && publicationFixture.checks?.evidenceUrlLegacyHostRejected === true,
     finalSignoffCommandRecorded: publicationFixture.finalSignoffCommand === "npm run check:chrome-store-publication:published",
     externalPublicationStillRequired: publicationFixture.checks?.externalPublicationStillRequired === true
   };
@@ -172,7 +176,7 @@ function renderOverview(packet) {
     packet.signoffCommand,
     "```",
     "",
-    "The published signoff rejects placeholder item ids, draft status, mismatched versions or package hashes, non-store listing/evidence URLs, evidence URLs for a different item id, raw-IP listing/evidence URLs, and private or credential/query-bearing evidence URLs. Listing and evidence URLs must use HTTPS DNS hostnames.",
+    "The published signoff rejects placeholder item ids, draft status, mismatched versions or package hashes, non-store listing/evidence URLs, legacy store hosts, evidence URLs for a different item id, raw-IP listing/evidence URLs, and private or credential/query-bearing evidence URLs. Listing and evidence URLs must use HTTPS DNS hostnames on the current public Chrome Web Store host.",
     ""
   ].join("\n");
 }
@@ -205,7 +209,7 @@ function renderDeveloperDashboardSubmission(packet) {
     "",
     "## After Approval",
     "",
-    "Record the real item id, Chrome Web Store detail listing URL, published status, submitted version, upload SHA-256, and evidence URL in the signoff environment template. The listing and evidence URLs must use HTTPS DNS hostnames, not raw IP addresses. The evidence URL must be the same Chrome Web Store detail URL, or another Chrome Web Store detail URL ending in the same item id.",
+    "Record the real item id, Chrome Web Store detail listing URL, published status, submitted version, upload SHA-256, and evidence URL in the signoff environment template. The listing and evidence URLs must use HTTPS DNS hostnames, not raw IP addresses, and must use `chromewebstore.google.com` as the current public Chrome Web Store host. The evidence URL must be the same Chrome Web Store detail URL, or another Chrome Web Store detail URL ending in the same item id.",
     ""
   ].join("\n");
 }
@@ -243,6 +247,7 @@ function renderPublishedSignoffEnv(packet) {
     "# Chrome Web Store published signoff env template.",
     "# Fill these only after the developer dashboard shows the item as published.",
     "# The listing and evidence URLs must both be Chrome Web Store detail URLs for the same item id.",
+    "# Use chromewebstore.google.com, the current public Chrome Web Store host, not legacy chrome.google.com URLs.",
     "# They must use HTTPS DNS hostnames, not raw IP addresses.",
     "",
     "QUANTGYM_CHROME_WEB_STORE_ITEM_ID=<real-chrome-extension-id>",

@@ -214,8 +214,8 @@ function assertDnsHostname(label, hostname) {
 
 function assertChromeStoreListingUrl(url, itemId, label) {
   assert(
-    ["chromewebstore.google.com", "chrome.google.com"].includes(url.hostname),
-    `${label} must point to a Chrome Web Store listing.`
+    url.hostname === "chromewebstore.google.com",
+    `${label} must point to the current chromewebstore.google.com Chrome Web Store listing host.`
   );
   const segments = url.pathname.split("/").map(clean).filter(Boolean);
   const detailIndex = segments.indexOf("detail");

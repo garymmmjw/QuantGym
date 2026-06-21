@@ -305,6 +305,7 @@ const blockers = [
       packetIncludesListingSnapshot: evidence.chromePacket.checks?.includesListingSnapshot === true,
       packetIncludesFinalSignoffChecklist: evidence.chromePacket.checks?.includesFinalSignoffChecklist === true,
       packetIncludesRawIpUrlRule: evidence.chromePacket.checks?.includesRawIpUrlRule === true,
+      packetIncludesCurrentStoreHostRequirement: evidence.chromePacket.checks?.includesCurrentStoreHostRequirement === true,
       packetUsesPlaceholdersForPublishedIds: evidence.chromePacket.checks?.usesPlaceholdersForPublishedIds === true,
       packetReleasePackageExists: evidence.chromePacket.checks?.releasePackageExists === true,
       packetReleasePackageShaMatches: evidence.chromePacket.checks?.releasePackageShaMatches === true,
@@ -319,6 +320,7 @@ const blockers = [
       privateEvidenceUrlRejected: findResult(evidence.chromeFixture.negativeFixtures, "private evidence URL rejected")?.rejected === true,
       placeholderItemIdRejected: evidence.chromeFixture.checks?.placeholderItemIdRejected === true,
       listingUrlRawIpRejected: evidence.chromeFixture.checks?.listingUrlRawIpRejected === true,
+      listingUrlLegacyHostRejected: evidence.chromeFixture.checks?.listingUrlLegacyHostRejected === true,
       listingUrlEmbeddedCredentialsRejected: evidence.chromeFixture.checks?.listingUrlEmbeddedCredentialsRejected === true,
       listingUrlQueryRejected: evidence.chromeFixture.checks?.listingUrlQueryRejected === true,
       listingUrlDetailPathRejected: evidence.chromeFixture.checks?.listingUrlDetailPathRejected === true,
@@ -326,6 +328,7 @@ const blockers = [
       evidenceUrlNonStoreRejected: evidence.chromeFixture.checks?.evidenceUrlNonStoreRejected === true,
       evidenceUrlWithoutItemIdRejected: evidence.chromeFixture.checks?.evidenceUrlWithoutItemIdRejected === true,
       evidenceUrlRawIpRejected: evidence.chromeFixture.checks?.evidenceUrlRawIpRejected === true,
+      evidenceUrlLegacyHostRejected: evidence.chromeFixture.checks?.evidenceUrlLegacyHostRejected === true,
       evidenceUrlEmbeddedCredentialsRejected: evidence.chromeFixture.checks?.evidenceUrlEmbeddedCredentialsRejected === true,
       evidenceUrlQueryRejected: evidence.chromeFixture.checks?.evidenceUrlQueryRejected === true,
       finalSignoffCommandRecorded: evidence.chromeFixture.finalSignoffCommand === "npm run check:chrome-store-publication:published"
