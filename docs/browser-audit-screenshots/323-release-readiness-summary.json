@@ -1,8 +1,8 @@
 {
-  "status": "partial",
+  "status": "pass",
   "allowPartialProduction": true,
-  "passed": 30,
-  "partial": 1,
+  "passed": 31,
+  "partial": 0,
   "failed": 0,
   "results": [
     {
@@ -15,7 +15,7 @@
     {
       "name": "Stage 1",
       "status": "pass",
-      "durationMs": 198,
+      "durationMs": 272,
       "exitCode": 0,
       "data": [
         "⚠ Missing module entry: src/modules/companies/index.js (React-owned module; registrar optional)",
@@ -31,7 +31,7 @@
     {
       "name": "Stage 2 bridge",
       "status": "pass",
-      "durationMs": 170,
+      "durationMs": 231,
       "exitCode": 0,
       "data": [
         "> check:stage2",
@@ -45,7 +45,7 @@
     {
       "name": "Stage 2 full",
       "status": "pass",
-      "durationMs": 225,
+      "durationMs": 530,
       "exitCode": 0,
       "data": [
         "> check:stage2:full",
@@ -59,7 +59,7 @@
     {
       "name": "Stage 2 strict",
       "status": "pass",
-      "durationMs": 220,
+      "durationMs": 325,
       "exitCode": 0,
       "data": [
         "> check:stage2:strict",
@@ -73,7 +73,7 @@
     {
       "name": "Browser evidence",
       "status": "pass",
-      "durationMs": 163,
+      "durationMs": 273,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -101,7 +101,7 @@
     {
       "name": "Migration completion audit",
       "status": "pass",
-      "durationMs": 169,
+      "durationMs": 235,
       "exitCode": 0,
       "data": {
         "id": 327,
@@ -267,7 +267,7 @@
     {
       "name": "Route integrity",
       "status": "pass",
-      "durationMs": 144,
+      "durationMs": 232,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -282,7 +282,7 @@
     {
       "name": "Route interactions",
       "status": "pass",
-      "durationMs": 139,
+      "durationMs": 287,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -296,14 +296,14 @@
     {
       "name": "Browser route smoke",
       "status": "pass",
-      "durationMs": 419876,
+      "durationMs": 474661,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 419487,
+        "durationMs": 473979,
         "browser": "Google Chrome via playwright-core",
         "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        "baseUrl": "http://127.0.0.1:58459",
+        "baseUrl": "http://127.0.0.1:52331",
         "routes": {
           "checked": 21,
           "passed": 21,
@@ -322,7 +322,7 @@
                 "appShellVisible": true,
                 "authShellVisible": false,
                 "overlayVisible": false,
-                "bodyTextLength": 1012,
+                "bodyTextLength": 1009,
                 "horizontalOverflowPx": 0,
                 "pathname": "/"
               }
@@ -407,7 +407,7 @@
                 "appShellVisible": true,
                 "authShellVisible": false,
                 "overlayVisible": false,
-                "bodyTextLength": 748,
+                "bodyTextLength": 746,
                 "horizontalOverflowPx": 0,
                 "pathname": "/tools"
               }
@@ -823,7 +823,7 @@
             {
               "name": "tools drill starts and accepts an answer",
               "status": "pass",
-              "question": "6 9 15 24 39 ?"
+              "question": "22 30 26 34 30 ?"
             },
             {
               "name": "tools mental math completes session and persists records",
@@ -841,12 +841,12 @@
             {
               "name": "tools market game rejects crossed quote, scores valid quote, and persists record",
               "status": "pass",
-              "fairValue": 92,
-              "feedback": "Round +21. Mid 92, width 2, fair 92.",
-              "score": 21,
+              "fairValue": 110,
+              "feedback": "Round +23. Mid 110, width 2, fair 110.",
+              "score": 23,
               "recordsBefore": 0,
               "recordsAfter": 1,
-              "marketSkill": 21,
+              "marketSkill": 23,
               "reloaded": true
             },
             {
@@ -864,7 +864,7 @@
               "handNumber": 1,
               "playerCount": 6,
               "actionLabel": "Call 20",
-              "currentHandLogCount": 13,
+              "currentHandLogCount": 9,
               "persisted": true
             },
             {
@@ -878,8 +878,8 @@
             {
               "name": "pk match, submit, reveal, and record persistence",
               "status": "pass",
-              "opponentName": "AlphaQuant",
-              "problemPreview": "基础 Gamma\n\n一个深度虚值看涨期权的 Gamma 是多少？",
+              "opponentName": "Vol Arb Intern",
+              "problemPreview": "连续数对\n\n考虑 10 个连续整数构成的集合 $\\{1, 2, \\ldots, 10\\}$。有多少个子集恰好包含 1 对连续整数？例如，$\\{3, 5, 6, 9\\}$ 恰好包含 1 对连续整数。",
               "recordPersisted": true,
               "revealed": true
             },
@@ -922,7 +922,7 @@
             {
               "name": "interview attachment upload preview, transcript, and request payload",
               "status": "pass",
-              "fileName": "browser-smoke-interview-attachment-1781878493644.png",
+              "fileName": "browser-smoke-interview-attachment-1782005219564.png",
               "previewRendered": true,
               "transcriptAttachmentRendered": true,
               "requestAttachmentSent": true,
@@ -931,8 +931,8 @@
             {
               "name": "interview PDF source upload generates questions and starts session",
               "status": "pass",
-              "fileName": "browser-smoke-interview-source-1781878493890.pdf",
-              "generatedQuestionTitle": "PDF Smoke Delta Hedging 1781878493890",
+              "fileName": "browser-smoke-interview-source-1782005219858.pdf",
+              "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782005219858",
               "requestCount": 1,
               "requestPdfPayloadSent": true,
               "generatedQuestionRendered": true
@@ -945,7 +945,7 @@
             {
               "name": "todo dock edit, complete, delete, and reload persistence",
               "status": "pass",
-              "taskId": "custom-ef1f94ee-fd56-4858-bd3a-d696617a20d5",
+              "taskId": "custom-b5ebe67c-0d3a-450c-ac11-0c06677551f3",
               "edited": true,
               "completed": true,
               "reopened": true,
@@ -956,31 +956,31 @@
             {
               "name": "community post, like, comment, and reload persistence",
               "status": "pass",
-              "postText": "Browser smoke community post 1781878522221",
-              "commentText": "Browser smoke comment 1781878522221",
+              "postText": "Browser smoke community post 1782005249038",
+              "commentText": "Browser smoke comment 1782005249038",
               "reloaded": true
             },
             {
               "name": "community image post fallback and reload persistence",
               "status": "pass",
-              "postText": "Browser smoke community image post 1781878525346",
-              "fileName": "browser-smoke-community-1781878525346.png",
+              "postText": "Browser smoke community image post 1782005252405",
+              "fileName": "browser-smoke-community-1782005252405.png",
               "dataUrlFallback": true,
               "reloaded": true
             },
             {
               "name": "community video post fallback and reload persistence",
               "status": "pass",
-              "postText": "Browser smoke community video post 1781878528454",
-              "fileName": "browser-smoke-community-1781878528454.webm",
+              "postText": "Browser smoke community video post 1782005255765",
+              "fileName": "browser-smoke-community-1782005255765.webm",
               "dataUrlFallback": true,
               "reloaded": true
             },
             {
               "name": "community direct message from post opens messages thread",
               "status": "pass",
-              "authorName": "Community Mentor 1781878531576",
-              "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1781878531576",
+              "authorName": "Community Mentor 1782005259113",
+              "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782005259113",
               "openedMessages": true,
               "threadPersisted": true,
               "replyPersisted": true
@@ -995,14 +995,14 @@
               "messageReplyPersisted": true,
               "messageReloadPersisted": true,
               "noHorizontalOverflow": true,
-              "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1781878536297",
+              "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782005264154",
               "finalPath": "/messages"
             },
             {
               "name": "messages thread read, send, and reload persistence",
               "status": "pass",
-              "threadId": "thread-browser-route-smoke-1781878541050",
-              "mentorName": "Smoke Mentor 1781878541050",
+              "threadId": "thread-browser-route-smoke-1782005269406",
+              "mentorName": "Smoke Mentor 1782005269406",
               "replied": true,
               "reloaded": true
             },
@@ -1019,15 +1019,15 @@
             {
               "name": "experiences create, edit, share, delete, and reload persistence",
               "status": "pass",
-              "recordId": "a84ddab9-7fe1-453f-8342-5ce1eb6fde09",
-              "sharedPostId": "1692e442-1822-4487-ae91-2b870ff51646",
+              "recordId": "51418047-5a0c-4aca-b422-82829ccbb6a3",
+              "sharedPostId": "c0e7bb5f-5bd8-4365-8b5e-a5a24a79e801",
               "deleted": true,
               "reloaded": true
             },
             {
               "name": "news manual submit, filter, detail, and reload persistence",
               "status": "pass",
-              "newsId": "news-browser-smoke-jane-street-official-update-1781878558649-https-www-janestreet-com-join-jane",
+              "newsId": "news-browser-smoke-jane-street-official-update-1782005289023-https-www-janestreet-com-join-jane",
               "sourceType": "official",
               "reloaded": true,
               "readPersisted": true
@@ -1043,30 +1043,30 @@
               "newsFiltersUsable": true,
               "newsDetailReadPersisted": true,
               "noHorizontalOverflow": true,
-              "recordId": "ad8c2543-e3e2-4868-8fff-7b605cafe330",
-              "sharedPostId": "8da972f4-0fa4-4b60-aa95-d64c4913af8e",
-              "newsId": "news-mobile-smoke-official-recruiting-update-1781878563146-https-www-janestreet-com-join-jane-s",
+              "recordId": "b3519547-2573-4926-b27c-489ca0f5a6b6",
+              "sharedPostId": "fba460ef-4bb4-4b8b-96aa-a481938b4f30",
+              "newsId": "news-mobile-smoke-official-recruiting-update-1782005294234-https-www-janestreet-com-join-jane-s",
               "finalPath": "/news"
             },
             {
               "name": "memory resource add, source link, and reload persistence",
               "status": "pass",
-              "title": "Browser Smoke Resource 1781878571328",
+              "title": "Browser Smoke Resource 1782005302047",
               "sourceUrl": "https://www.youtube.com/@atypicalquant",
               "reloaded": true
             },
             {
               "name": "memory image resource upload fallback and reload persistence",
               "status": "pass",
-              "title": "Browser Smoke Image Resource 1781878574839",
-              "fileName": "browser-smoke-memory-1781878574839.png",
+              "title": "Browser Smoke Image Resource 1782005305935",
+              "fileName": "browser-smoke-memory-1782005305935.png",
               "dataUrlFallback": true,
               "reloaded": true
             },
             {
               "name": "network contact add, edit, delete, and reload persistence",
               "status": "pass",
-              "contactName": "Browser Smoke Contact 1781878578371",
+              "contactName": "Browser Smoke Contact 1782005311075",
               "edited": true,
               "deleted": true
             },
@@ -1145,8 +1145,8 @@
               "readerTokenRequests": 2,
               "pdfRequests": 4,
               "readerOpened": true,
-              "openNewHref": "http://127.0.0.1:58459/api/library-reader-smoke/green-book.pdf",
-              "embedUrl": "http://127.0.0.1:58459/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+              "openNewHref": "http://127.0.0.1:52331/api/library-reader-smoke/green-book.pdf",
+              "embedUrl": "http://127.0.0.1:52331/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
               "closedByButton": true,
               "closedByEscape": true
             },
@@ -1155,7 +1155,7 @@
               "status": "pass",
               "problemId": "quantguide-place-or-take",
               "problemTitle": "放置或取出",
-              "todoTitle": "Cross-module QuantGuide review 1781878615076: 放置或取出",
+              "todoTitle": "Cross-module QuantGuide review 1782005358663: 放置或取出",
               "resumeTextLength": 237,
               "settings": {
                 "llmEndpoint": "http://127.0.0.1:8789/interview",
@@ -1177,7 +1177,7 @@
             {
               "name": "account profile save and reload persistence",
               "status": "pass",
-              "profileName": "Browser Smoke 1781878636781",
+              "profileName": "Browser Smoke 1782005382577",
               "country": "unitedStates",
               "region": "California",
               "graduationTerm": "2028-05",
@@ -1189,7 +1189,7 @@
               "wrongPasswordRejected": true,
               "oldEmailRejected": true,
               "oldEmail": "browser-route-smoke@quantgym.local",
-              "newEmail": "browser-route-smoke+email-1781878641298@quantgym.local",
+              "newEmail": "browser-route-smoke+email-1782005387491@quantgym.local",
               "passwordHashRotated": true,
               "reloginSucceeded": true,
               "reloginPath": "/"
@@ -1199,7 +1199,7 @@
               "status": "pass",
               "avatarDataUrl": true,
               "avatarCleared": true,
-              "resumeFileName": "browser-smoke-resume-1781878651511.txt",
+              "resumeFileName": "browser-smoke-resume-1782005398098.txt",
               "resumeTextLength": 215,
               "reloaded": true
             },
@@ -1214,8 +1214,8 @@
               "resumeUploadPersisted": true,
               "noHorizontalOverflow": true,
               "reloaded": true,
-              "profileName": "Mobile Account 1781878661451",
-              "resumeFileName": "mobile-account-resume-1781878661451.txt"
+              "profileName": "Mobile Account 1782005408304",
+              "resumeFileName": "mobile-account-resume-1782005408304.txt"
             },
             {
               "name": "settings language switch syncs URL and persists reload",
@@ -1279,7 +1279,7 @@
               "exportDownloadWorks": true,
               "noHorizontalOverflow": true,
               "reloaded": true,
-              "exportedFilename": "quantgym-Mobile Account 1781878661451-2026-06-19.json"
+              "exportedFilename": "quantgym-Mobile Account 1782005408304-2026-06-21.json"
             },
             {
               "name": "settings rejects invalid backup files without changing state",
@@ -1292,10 +1292,10 @@
               "name": "settings backup export, import, and reset state",
               "status": "pass",
               "resetPrompt": "清空当前账户的训练记录？已连接云端时也会同步为空。",
-              "exportedFilename": "quantgym-Mobile Account 1781878661451-2026-06-19.json",
-              "importedResumeFile": "settings-imported-resume-1781878688704.txt",
-              "importedResourceId": "settings-imported-resource-1781878688704",
-              "importedCourseId": "settings-imported-course-1781878688704",
+              "exportedFilename": "quantgym-Mobile Account 1782005408304-2026-06-21.json",
+              "importedResumeFile": "settings-imported-resume-1782005436872.txt",
+              "importedResourceId": "settings-imported-resource-1782005436872",
+              "importedCourseId": "settings-imported-course-1782005436872",
               "resetClearedImport": true
             }
           ]
@@ -1304,7 +1304,7 @@
           "name": "protected route redirects to auth and local email auth works",
           "status": "pass",
           "localEmailAuth": {
-            "email": "browser-auth-1781878282172-zyzc7e@quantgym.local",
+            "email": "browser-auth-1782004979371-yde7x8@quantgym.local",
             "redirectedToLogin": true,
             "accountStatusChecked": true,
             "registrationFormShown": true,
@@ -1319,7 +1319,7 @@
             "resetSucceeded": true,
             "resetOldPasswordRejected": true,
             "resetNewPasswordLoginSucceeded": true,
-            "accountId": "717cb647-601b-4b2c-ba58-2718807e584b",
+            "accountId": "d6ca0ab4-7162-4c12-befa-cd8255de82a8",
             "reloginPath": "/"
           },
           "path": "/login",
@@ -1336,7 +1336,7 @@
     {
       "name": "Module ownership",
       "status": "pass",
-      "durationMs": 170,
+      "durationMs": 221,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -1408,7 +1408,7 @@
     {
       "name": "Chrome store readiness",
       "status": "pass",
-      "durationMs": 439,
+      "durationMs": 532,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -1496,7 +1496,7 @@
             "status": "pass",
             "data": {
               "output": "artifacts/browser-extension/quantgym-collector-v0.2.0.zip",
-              "sha256": "be329e0c1a09c9b8bdda444ae87a54f0663ccfb680df5fe2716aa71990d4f519",
+              "sha256": "db43b965bb6c8600fff8cae44221b347d112d31b4f5de896174a8784cdeb4b2d",
               "bytes": 38073,
               "deterministic": true,
               "deterministicTimestamp": "2024-01-01T00:00:00.000Z",
@@ -1530,11 +1530,11 @@
     {
       "name": "Chrome store publication fixture",
       "status": "pass",
-      "durationMs": 6762,
+      "durationMs": 10371,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 6624,
+        "durationMs": 10196,
         "externalPublicationRequired": true,
         "finalSignoffCommand": "npm run check:chrome-store-publication:published",
         "submissionHandoff": {
@@ -1547,7 +1547,7 @@
           "name": "QuantGym Collector",
           "version": "0.2.0",
           "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.2.0.zip",
-          "uploadSha256": "be329e0c1a09c9b8bdda444ae87a54f0663ccfb680df5fe2716aa71990d4f519",
+          "uploadSha256": "db43b965bb6c8600fff8cae44221b347d112d31b4f5de896174a8784cdeb4b2d",
           "uploadBytes": 38073,
           "uploadFileCount": 9,
           "listingCategory": "Productivity",
@@ -1568,7 +1568,7 @@
           "name": "QuantGym Collector",
           "version": "0.2.0",
           "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.2.0.zip",
-          "uploadSha256": "be329e0c1a09c9b8bdda444ae87a54f0663ccfb680df5fe2716aa71990d4f519",
+          "uploadSha256": "db43b965bb6c8600fff8cae44221b347d112d31b4f5de896174a8784cdeb4b2d",
           "uploadBytes": 38073,
           "uploadFileCount": 9,
           "listingCategory": "Productivity",
@@ -1634,6 +1634,13 @@
             "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must point to a Chrome Web Store listing."
           },
           {
+            "name": "raw IP listing URL rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must use a DNS hostname, not a raw IP address."
+          },
+          {
             "name": "non-detail listing URL rejected",
             "rejected": true,
             "expectedErrorObserved": true,
@@ -1645,14 +1652,14 @@
             "rejected": true,
             "expectedErrorObserved": true,
             "failed": 1,
-            "error": "Chrome Web Store listing URL must include the item id."
+            "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must include the item id."
           },
           {
             "name": "listing URL extra path rejected",
             "rejected": true,
             "expectedErrorObserved": true,
             "failed": 1,
-            "error": "Chrome Web Store listing URL must end with the item id."
+            "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must end with the item id."
           },
           {
             "name": "draft status rejected",
@@ -1690,6 +1697,27 @@
             "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must not point to localhost, loopback, or a private network address."
           },
           {
+            "name": "raw IP evidence URL rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must use a DNS hostname, not a raw IP address."
+          },
+          {
+            "name": "non-store evidence URL rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must point to a Chrome Web Store listing."
+          },
+          {
+            "name": "evidence URL without item id rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must include the item id."
+          },
+          {
             "name": "evidence URL embedded credentials rejected",
             "rejected": true,
             "expectedErrorObserved": true,
@@ -1714,10 +1742,14 @@
           "negativeFixturesRejected": true,
           "negativeFixturesMentionExpectedErrors": true,
           "placeholderItemIdRejected": true,
+          "listingUrlRawIpRejected": true,
           "listingUrlEmbeddedCredentialsRejected": true,
           "listingUrlQueryRejected": true,
           "listingUrlDetailPathRejected": true,
           "listingUrlExtraPathRejected": true,
+          "evidenceUrlNonStoreRejected": true,
+          "evidenceUrlWithoutItemIdRejected": true,
+          "evidenceUrlRawIpRejected": true,
           "evidenceUrlEmbeddedCredentialsRejected": true,
           "evidenceUrlQueryRejected": true,
           "externalPublicationStillRequired": true
@@ -1729,7 +1761,7 @@
     {
       "name": "Browser extension runtime smoke",
       "status": "pass",
-      "durationMs": 144,
+      "durationMs": 163,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -1772,15 +1804,15 @@
     {
       "name": "Media storage runtime smoke",
       "status": "pass",
-      "durationMs": 1674,
+      "durationMs": 1714,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1527,
-        "apiPort": 59015,
+        "durationMs": 1545,
+        "apiPort": 53524,
         "media": {
-          "id": "kPXlsZFMnannVfeIXEFJuw_4",
-          "path": "/api/media/kPXlsZFMnannVfeIXEFJuw_4",
+          "id": "9btqrM_He7zF6SOIQAGzxUzI",
+          "path": "/api/media/9btqrM_He7zF6SOIQAGzxUzI",
           "contentType": "image/png",
           "byteSize": 68,
           "storage": "api-media",
@@ -1789,7 +1821,7 @@
         },
         "spoofedForwardedHostUpload": {
           "status": 201,
-          "mediaUrl": "http://127.0.0.1:59015/api/media/069A-tMyTLyTP0-Bo4sW0qI9",
+          "mediaUrl": "http://127.0.0.1:53524/api/media/TGHHFVzVsg3HA7h-Xp18yj7p",
           "urlUsesApiMediaEndpoint": true,
           "forwardedHostIgnored": true,
           "forwardedProtoIgnored": true
@@ -1803,9 +1835,9 @@
             "storedObjectCount": 1,
             "putRequestSigned": true,
             "getRequestSigned": true,
-            "storagePath": "s3:runtime-smoke/dyS17xib5qJ_UPnudRjwwI9-.png",
+            "storagePath": "s3:runtime-smoke/Gm_-htMzEBknwv2HZPwRsWWC.png",
             "mediaStorage": "s3-media",
-            "mediaUrl": "http://127.0.0.1:59022/api/media/dyS17xib5qJ_UPnudRjwwI9-",
+            "mediaUrl": "http://127.0.0.1:53531/api/media/Gm_-htMzEBknwv2HZPwRsWWC",
             "mediaUrlUsesPublicBase": false,
             "apiReadBytes": 68
           },
@@ -1813,13 +1845,13 @@
             "mode": "public-url",
             "uploadStatus": 201,
             "getMediaStatus": 302,
-            "redirectLocation": "https://media.quantgym.example.test/public/runtime-smoke/WnRGuM54UAp9gfOk4dXKedJ6.png",
+            "redirectLocation": "https://media.quantgym.example.test/public/runtime-smoke/qjj2AITnpG_oDdHP2Niwyiq8.png",
             "storedObjectCount": 1,
             "putRequestSigned": true,
             "getRequestSigned": false,
-            "storagePath": "s3:runtime-smoke/WnRGuM54UAp9gfOk4dXKedJ6.png",
+            "storagePath": "s3:runtime-smoke/qjj2AITnpG_oDdHP2Niwyiq8.png",
             "mediaStorage": "s3-media",
-            "mediaUrl": "https://media.quantgym.example.test/public/runtime-smoke/WnRGuM54UAp9gfOk4dXKedJ6.png",
+            "mediaUrl": "https://media.quantgym.example.test/public/runtime-smoke/qjj2AITnpG_oDdHP2Niwyiq8.png",
             "mediaUrlUsesPublicBase": true,
             "apiReadBytes": 0
           }
@@ -1852,11 +1884,11 @@
     {
       "name": "Media storage production fixture",
       "status": "pass",
-      "durationMs": 1137,
+      "durationMs": 1389,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1001,
+        "durationMs": 1234,
         "productionFixture": {
           "status": "pass",
           "mode": "production",
@@ -1906,6 +1938,13 @@
             "error": "Production object storage endpoint must not point to localhost, loopback, or a private network address."
           },
           {
+            "name": "public IP object endpoint rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "Production object storage endpoint must use a DNS hostname, not a raw IP address."
+          },
+          {
             "name": "endpoint embedded credentials rejected",
             "rejected": true,
             "expectedErrorObserved": true,
@@ -1941,6 +1980,13 @@
             "error": "Production public media URL must not point to localhost, loopback, or a private network address."
           },
           {
+            "name": "public IP public base rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "Production public media URL must use a DNS hostname, not a raw IP address."
+          },
+          {
             "name": "public base embedded credentials rejected",
             "rejected": true,
             "expectedErrorObserved": true,
@@ -1960,6 +2006,13 @@
             "expectedErrorObserved": true,
             "failed": 1,
             "error": "Production public media URL should be a CDN/custom public origin, not the raw object storage endpoint."
+          },
+          {
+            "name": "raw provider public host rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_MEDIA_PUBLIC_BASE_URL must use a CDN/custom public host, not a raw object storage host."
           },
           {
             "name": "placeholder endpoint rejected",
@@ -2028,6 +2081,9 @@
           "signedGetStatus": 200,
           "publicGetStatus": 200,
           "deleteStatus": 204,
+          "signedGetContentType": "text/plain; charset=utf-8",
+          "publicGetContentType": "text/plain; charset=utf-8",
+          "contentTypePreserved": true,
           "bytes": 51,
           "cleanedUp": true,
           "putSigned": true,
@@ -2072,6 +2128,9 @@
           "signedGetStatus": 0,
           "publicGetStatus": 0,
           "deleteStatus": 0,
+          "signedGetContentType": "",
+          "publicGetContentType": "",
+          "contentTypePreserved": false,
           "bytes": 0,
           "cleanedUp": false,
           "putSigned": true,
@@ -2116,16 +2175,20 @@
           "validProductionPublicBaseUrlRedacted": true,
           "negativeFixturesRejected": true,
           "negativeFixturesMentionExpectedErrors": true,
+          "endpointRawIpRejected": true,
           "endpointEmbeddedCredentialsRejected": true,
           "endpointQueryRejected": true,
+          "publicBaseRawIpRejected": true,
           "publicBaseEmbeddedCredentialsRejected": true,
           "publicBaseQueryRejected": true,
+          "rawProviderPublicBaseRejected": true,
           "placeholderAccessKeyRejected": true,
           "shortSecretKeyRejected": true,
           "unsafeBucketNameRejected": true,
           "unsafeObjectPrefixRejected": true,
           "liveFixturePassed": true,
           "liveFixturePutGetPublicDelete": true,
+          "liveFixturePreservesContentType": true,
           "liveFailureRejected": true,
           "liveFailureCleanedUp": true
         },
@@ -2136,18 +2199,18 @@
     {
       "name": "Ops alert runtime smoke",
       "status": "pass",
-      "durationMs": 927,
+      "durationMs": 933,
       "exitCode": 0,
       "data": {
         "status": "pass",
         "webhookReceived": 7,
-        "apiPort": 59048,
-        "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-ops-alert-kYZZ0q/quantgym-alert-smoke.sqlite3",
+        "apiPort": 53560,
+        "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-ops-alert-9v9mgF/quantgym-alert-smoke.sqlite3",
         "payload": {
           "eventType": "http.error.404",
           "statusCode": 404,
           "method": "GET",
-          "path": "/api/ops-alert-runtime-smoke-1781878709511",
+          "path": "/api/ops-alert-runtime-smoke-1782005462188",
           "hasOccurredAt": true
         },
         "alerts": [
@@ -2155,7 +2218,7 @@
             "eventType": "http.error.404",
             "statusCode": 404,
             "method": "GET",
-            "path": "/api/ops-alert-runtime-smoke-1781878709511",
+            "path": "/api/ops-alert-runtime-smoke-1782005462188",
             "hasOccurredAt": true
           },
           {
@@ -2249,11 +2312,11 @@
     {
       "name": "Ops alert production fixture",
       "status": "pass",
-      "durationMs": 937,
+      "durationMs": 1258,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 793,
+        "durationMs": 1101,
         "productionFixture": {
           "status": "pass",
           "passed": 4,
@@ -2268,7 +2331,10 @@
           "proxyHeaderTrustEnabled": true,
           "trustedProxyCidrCount": 2,
           "edgeProvider": "cloudflare",
-          "edgeNotesLength": 74,
+          "edgeNotesLength": 104,
+          "edgeNotesDescribeAuthSurface": true,
+          "edgeNotesDescribeClientIdentity": true,
+          "edgeNotesDescribeEnforcementAction": true,
           "edgeEvidenceHost": "dash.cloudflare.com"
         },
         "negativeFixtures": [
@@ -2306,6 +2372,13 @@
             "expectedErrorObserved": true,
             "failed": 1,
             "error": "Production alert webhook URL must not point to localhost, loopback, or a private network address."
+          },
+          {
+            "name": "public IP webhook rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "Production alert webhook URL must use a DNS hostname, not a raw IP address."
           },
           {
             "name": "webhook embedded credentials rejected",
@@ -2378,6 +2451,13 @@
             "error": "Production edge rate-limit evidence URL must not point to localhost, loopback, or a private network address."
           },
           {
+            "name": "public IP edge evidence rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "Production edge rate-limit evidence URL must use a DNS hostname, not a raw IP address."
+          },
+          {
             "name": "edge evidence embedded credentials rejected",
             "rejected": true,
             "expectedErrorObserved": true,
@@ -2397,6 +2477,27 @@
             "expectedErrorObserved": true,
             "failed": 1,
             "error": "QUANTGYM_EDGE_RATE_LIMIT_NOTES must briefly describe the configured edge rule."
+          },
+          {
+            "name": "generic edge notes rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_EDGE_RATE_LIMIT_NOTES must mention the protected auth surface, such as /api/auth/*."
+          },
+          {
+            "name": "edge notes missing client identity rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_EDGE_RATE_LIMIT_NOTES must mention the client identity or IP characteristic."
+          },
+          {
+            "name": "edge notes missing enforcement action rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_EDGE_RATE_LIMIT_NOTES must mention the enforcement action, such as block, challenge, throttle, or rate-limit."
           },
           {
             "name": "unconfirmed edge limiter rejected",
@@ -2429,14 +2530,22 @@
           "validProductionWebhookUrlRedacted": true,
           "validProductionEdgeEvidenceUrlRedacted": true,
           "validProductionEdgeNotesRedacted": true,
+          "validProductionEdgeNotesDescribeAuthSurface": true,
+          "validProductionEdgeNotesDescribeClientIdentity": true,
+          "validProductionEdgeNotesDescribeEnforcementAction": true,
           "negativeFixturesRejected": true,
           "negativeFixturesMentionExpectedErrors": true,
           "shortWebhookTokenRejected": true,
           "placeholderWebhookTokenRejected": true,
+          "webhookUrlRawIpRejected": true,
           "webhookUrlEmbeddedCredentialsRejected": true,
           "webhookUrlQueryRejected": true,
+          "edgeEvidenceUrlRawIpRejected": true,
           "edgeEvidenceUrlEmbeddedCredentialsRejected": true,
           "edgeEvidenceUrlQueryRejected": true,
+          "genericEdgeNotesRejected": true,
+          "edgeNotesMissingClientIdentityRejected": true,
+          "edgeNotesMissingEnforcementActionRejected": true,
           "localWebhookSmokeDelivered": true,
           "localWebhookSmokeAuthorized": true,
           "localWebhookSmokePayloadSafe": true
@@ -2448,11 +2557,11 @@
     {
       "name": "Jobs source runtime smoke",
       "status": "pass",
-      "durationMs": 1946,
+      "durationMs": 1930,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1804,
+        "durationMs": 1772,
         "feedRequests": {
           "total": 4,
           "okFeed": 1,
@@ -2559,11 +2668,11 @@
     {
       "name": "Jobs source production fixture",
       "status": "pass",
-      "durationMs": 1076,
+      "durationMs": 1332,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 937,
+        "durationMs": 1180,
         "productionFixture": {
           "status": "pass",
           "mode": "production",
@@ -2619,6 +2728,13 @@
             "expectedErrorObserved": true,
             "failed": 1,
             "error": "Production jobs source URL must not point to localhost, loopback, or a private network address."
+          },
+          {
+            "name": "public IP source URL rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "Production jobs source URL must use a DNS hostname, not a raw IP address."
           },
           {
             "name": "source URL embedded credentials rejected",
@@ -2883,6 +2999,7 @@
           "defaultProductionTokenOptional": true,
           "negativeFixturesRejected": true,
           "negativeFixturesMentionExpectedErrors": true,
+          "sourceUrlRawIpRejected": true,
           "sourceUrlEmbeddedCredentialsRejected": true,
           "sourceUrlQueryRejected": true,
           "placeholderSourceTokenRejected": true,
@@ -2899,7 +3016,7 @@
     {
       "name": "Jobs public ATS static feed",
       "status": "pass",
-      "durationMs": 140,
+      "durationMs": 158,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -2945,7 +3062,7 @@
     {
       "name": "Question-bank rights",
       "status": "pass",
-      "durationMs": 264,
+      "durationMs": 291,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -3183,11 +3300,11 @@
     {
       "name": "Question-bank rights public smoke",
       "status": "pass",
-      "durationMs": 539,
+      "durationMs": 638,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 394,
+        "durationMs": 473,
         "checks": {
           "validPublicPass": true,
           "validCommercialPass": true,
@@ -3197,6 +3314,7 @@
           "placeholderEvidenceRejected": true,
           "privateEvidenceRejected": true,
           "privateEvidenceMentionsPrivateNetwork": true,
+          "rawIpEvidenceRejected": true,
           "evidenceUrlEmbeddedCredentialsRejected": true,
           "evidenceUrlQueryRejected": true,
           "staleApprovalRejected": true,
@@ -3279,7 +3397,28 @@
             }
           },
           "failures": [
-            "approved-source.publicCommercial.evidenceUrl must not point at localhost, loopback, or private-network hosts."
+            "approved-source.publicCommercial.evidenceUrl must not point at localhost, loopback, or private-network hosts.",
+            "approved-source.publicCommercial.evidenceUrl must use a DNS hostname, not an IP address."
+          ]
+        },
+        "rawIpEvidenceFailure": {
+          "mode": "public",
+          "status": "fail",
+          "reportedStatus": "fail",
+          "activeSources": 1,
+          "rightsStatus": {
+            "privateBeta": {
+              "allowed": 1
+            },
+            "publicCommercial": {
+              "approved": 1
+            },
+            "activePublicCommercial": {
+              "approved": 1
+            }
+          },
+          "failures": [
+            "approved-source.publicCommercial.evidenceUrl must use a DNS hostname, not an IP address."
           ]
         },
         "embeddedCredentialEvidenceFailure": {
@@ -3389,11 +3528,11 @@
     {
       "name": "Question-bank rights release blockers",
       "status": "pass",
-      "durationMs": 551,
+      "durationMs": 611,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 417,
+        "durationMs": 460,
         "releaseBlocked": true,
         "privateBeta": {
           "mode": "private-beta",
@@ -3549,14 +3688,14 @@
     {
       "name": "Apex/WWW domain",
       "status": "pass",
-      "durationMs": 674,
+      "durationMs": 3512,
       "exitCode": 0,
       "data": {
         "id": 355,
         "date": "2026-06-19",
         "surface": "apex/www domain SSL or redirect",
         "status": "pass",
-        "durationMs": 522,
+        "durationMs": 3364,
         "requireClear": false,
         "launchReadiness": "blocked",
         "signoffCommand": "npm run check:apex-www-domain -- --require-clear",
@@ -3585,7 +3724,7 @@
                 "headers": {
                   "location": "",
                   "server": "cloudflare",
-                  "cfRay": "a0e329f699ad0f19-LAX",
+                  "cfRay": "a0ef40996edd66b6-AMS",
                   "contentType": "text/html; charset=utf-8"
                 }
               }
@@ -3618,7 +3757,7 @@
                   "headers": {
                     "location": "",
                     "server": "cloudflare",
-                    "cfRay": "a0e329f43d679dfc-LAX",
+                    "cfRay": "a0ef40884a3d199c-AMS",
                     "contentType": "text/plain; charset=UTF-8"
                   }
                 }
@@ -3650,7 +3789,7 @@
                   "headers": {
                     "location": "",
                     "server": "cloudflare",
-                    "cfRay": "a0e329f55a545b5f-LAX",
+                    "cfRay": "a0ef409139ffad9f-AMS",
                     "contentType": "text/plain; charset=UTF-8"
                   }
                 }
@@ -3680,7 +3819,7 @@
     {
       "name": "External launch blockers",
       "status": "pass",
-      "durationMs": 159,
+      "durationMs": 152,
       "exitCode": 0,
       "data": {
         "id": 341,
@@ -3715,8 +3854,8 @@
             "id": "ops-alerts-edge-rate-limit",
             "title": "Production alert receiver and edge rate limits",
             "status": "blocked",
-            "ownerAction": "Configure the real alert receiver and edge rate limits, then run the production signoff command with real provider, notes, and HTTPS evidence URL.",
-            "signoffCommand": "npm run check:ops-alerts:production",
+            "ownerAction": "Configure the real alert receiver and edge rate limits, then run the production config and webhook-smoke signoff commands with real provider, notes, and HTTPS evidence URL.",
+            "signoffCommand": "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke",
             "localCoverage": {
               "runtimeSmokePass": true,
               "productionFixturePass": true,
@@ -3725,14 +3864,30 @@
               "packetIncludesWebhookContract": true,
               "packetIncludesCloudflareRuleRunbook": true,
               "packetIncludesSignoffChecklist": true,
+              "packetIncludesWebhookSmokeSignoff": true,
+              "packetIncludesRawIpUrlRule": true,
+              "packetSignoffRequiresWebhookSmoke": true,
               "packetUsesPlaceholderOnlyForToken": true,
               "localWebhookSmokeDelivered": true,
+              "localWebhookSmokeAuthorized": true,
+              "localWebhookSmokePayloadSafe": true,
+              "validProductionWebhookTokenRedacted": true,
+              "validProductionWebhookUrlRedacted": true,
+              "validProductionEdgeEvidenceUrlRedacted": true,
+              "validProductionEdgeNotesDescribeAuthSurface": true,
+              "validProductionEdgeNotesDescribeClientIdentity": true,
+              "validProductionEdgeNotesDescribeEnforcementAction": true,
               "shortWebhookTokenRejected": true,
               "placeholderWebhookTokenRejected": true,
+              "webhookUrlRawIpRejected": true,
               "webhookUrlEmbeddedCredentialsRejected": true,
               "webhookUrlQueryRejected": true,
+              "edgeEvidenceUrlRawIpRejected": true,
               "edgeEvidenceUrlEmbeddedCredentialsRejected": true,
               "edgeEvidenceUrlQueryRejected": true,
+              "genericEdgeNotesRejected": true,
+              "edgeNotesMissingClientIdentityRejected": true,
+              "edgeNotesMissingEnforcementActionRejected": true,
               "privateWebhookRejected": true,
               "privateEdgeEvidenceRejected": true
             }
@@ -3741,8 +3896,8 @@
             "id": "media-bucket-cdn",
             "title": "Production S3/R2 media bucket and CDN",
             "status": "blocked",
-            "ownerAction": "Configure the real object bucket and public CDN/base URL, then run the live media storage signoff.",
-            "signoffCommand": "npm run check:media-storage:production -- --live",
+            "ownerAction": "Configure the real object bucket and public CDN/base URL, then run the production config and live media storage signoff commands.",
+            "signoffCommand": "npm run check:media-storage:production && npm run check:media-storage:production -- --live",
             "localCoverage": {
               "runtimeSmokePass": true,
               "productionFixturePass": true,
@@ -3751,18 +3906,30 @@
               "packetIncludesBucketCdnRunbook": true,
               "packetIncludesObjectStorageContract": true,
               "packetIncludesLiveSmokeChecklist": true,
+              "packetIncludesProductionConfigSignoff": true,
+              "packetSignoffRequiresConfigAndLive": true,
+              "packetIncludesRawIpUrlRule": true,
               "packetUsesPlaceholderOnlyForSecrets": true,
+              "validProductionAccessKeyRedacted": true,
+              "validProductionSecretRedacted": true,
+              "validProductionEndpointUrlRedacted": true,
+              "validProductionPublicBaseUrlRedacted": true,
               "privateObjectEndpointRejected": true,
               "privatePublicBaseRejected": true,
+              "endpointRawIpRejected": true,
               "endpointEmbeddedCredentialsRejected": true,
               "endpointQueryRejected": true,
+              "publicBaseRawIpRejected": true,
               "publicBaseEmbeddedCredentialsRejected": true,
               "publicBaseQueryRejected": true,
+              "rawProviderPublicBaseRejected": true,
               "placeholderAccessKeyRejected": true,
               "shortSecretKeyRejected": true,
               "unsafeBucketNameRejected": true,
               "unsafeObjectPrefixRejected": true,
               "liveFixturePass": true,
+              "liveFixturePreservesContentType": true,
+              "liveFailureRejected": true,
               "liveCleanupPass": true
             }
           },
@@ -3794,7 +3961,9 @@
               "packetIncludesProductionEnvTemplate": true,
               "packetIncludesHostingRunbook": true,
               "packetIncludesLiveSignoffChecklist": true,
+              "packetIncludesRawIpSourceUrlRule": true,
               "privateSourceUrlRejected": true,
+              "sourceUrlRawIpRejected": true,
               "sourceUrlEmbeddedCredentialsRejected": true,
               "sourceUrlQueryRejected": true,
               "placeholderSourceTokenRejected": true,
@@ -3817,14 +3986,28 @@
               "packetIncludesPublishedSignoffEnvTemplate": true,
               "packetIncludesListingSnapshot": true,
               "packetIncludesFinalSignoffChecklist": true,
+              "packetIncludesRawIpUrlRule": true,
               "packetUsesPlaceholdersForPublishedIds": true,
+              "packetReleasePackageExists": true,
+              "packetReleasePackageShaMatches": true,
+              "submissionHandoffPass": true,
+              "submissionHandoffManualSubmissionRequired": true,
+              "publishedFixturePass": true,
+              "publishedFixtureHasAllChecks": true,
+              "publishedFixtureMatchesUploadSha": true,
+              "publishedFixtureVersionMatchesManifest": true,
+              "negativeFixturesRejected": true,
               "externalPublicationStillRequired": true,
               "privateEvidenceUrlRejected": true,
               "placeholderItemIdRejected": true,
+              "listingUrlRawIpRejected": true,
               "listingUrlEmbeddedCredentialsRejected": true,
               "listingUrlQueryRejected": true,
               "listingUrlDetailPathRejected": true,
               "listingUrlExtraPathRejected": true,
+              "evidenceUrlNonStoreRejected": true,
+              "evidenceUrlWithoutItemIdRejected": true,
+              "evidenceUrlRawIpRejected": true,
               "evidenceUrlEmbeddedCredentialsRejected": true,
               "evidenceUrlQueryRejected": true,
               "finalSignoffCommandRecorded": true
@@ -3849,14 +4032,35 @@
               "packetIncludesSignoffEnvTemplate": true,
               "packetIncludesRollbackBackupChecklist": true,
               "packetIncludesLiveCutoverChecklist": true,
+              "packetIncludesCompleteSignoffCommand": true,
+              "packetSignoffCommandRecorded": true,
+              "packetUsesPlaceholdersOnlyForSensitivePaths": true,
+              "packetNoCredentialUrlExamples": true,
+              "packetRejectsUnsafeExports": true,
+              "packetCompleteSignoffRejectsRawIpTarget": true,
+              "packetCompleteSignoffRejectsUnsafeEvidence": true,
+              "packetIncludesRawIpEvidenceUrlRule": true,
               "completeSignoffPositiveFixturePass": true,
               "completeSignoffNegativeFixturesRejected": true,
+              "includeSensitiveImportPlanValid": true,
+              "pendingStatusRejected": true,
+              "localhostTargetHostRejected": true,
               "privateTargetHostRejected": true,
+              "publicIpTargetHostRejected": true,
+              "databaseDsnRejected": true,
+              "placeholderEvidenceUrlRejected": true,
               "privateEvidenceUrlRejected": true,
+              "evidenceUrlRawIpRejected": true,
               "targetHostWhitespaceRejected": true,
               "databaseUnsafeCharactersRejected": true,
               "evidenceUrlEmbeddedCredentialsRejected": true,
-              "evidenceUrlQueryRejected": true
+              "evidenceUrlQueryRejected": true,
+              "futureCompletedTimestampRejected": true,
+              "exportShaMismatchRejected": true,
+              "sourceDbShaMismatchRejected": true,
+              "targetRowCountMismatchRejected": true,
+              "inactiveAppDatabaseRejected": true,
+              "missingBackupConfirmationRejected": true
             }
           },
           {
@@ -3873,10 +4077,29 @@
               "approvalPacketGenerated": true,
               "approvalPacketCoversActiveSources": true,
               "approvalPacketIncludesCommercialScope": true,
+              "approvalPacketIncludesSignoffCommand": true,
+              "approvalPacketSignoffCommandRecorded": true,
+              "approvalPacketIncludesReleaseBlockerCommand": true,
+              "approvalPacketIncludesEvidenceUrlSafetyRules": true,
+              "approvalPacketIncludesRawIpEvidenceUrlRule": true,
+              "approvalPacketSourcePacketCount": 15,
+              "approvalPacketSourcePacketsMatchBlockers": true,
+              "approvalPacketDraftPlaceholders": true,
+              "approvalPacketSourcePacketsIncludeOutreachAndDrafts": true,
               "publicSmokePass": true,
+              "validPublicApprovalFixturePass": true,
+              "validCommercialApprovalFixturePass": true,
+              "publicOnlyRejectedCommercial": true,
+              "publicOnlyCommercialMentionsScope": true,
+              "placeholderEvidenceRejected": true,
               "privateEvidenceRejected": true,
+              "privateEvidenceMentionsPrivateNetwork": true,
+              "rawIpEvidenceRejected": true,
               "evidenceUrlEmbeddedCredentialsRejected": true,
               "evidenceUrlQueryRejected": true,
+              "staleApprovalRejected": true,
+              "missingGrantorRejected": true,
+              "unsupportedScopeRejected": true,
               "noActivePublicCommercialApprovals": true
             }
           },
@@ -4023,11 +4246,11 @@
     {
       "name": "Postgres cutover export smoke",
       "status": "pass",
-      "durationMs": 1609,
+      "durationMs": 1857,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1465,
+        "durationMs": 1698,
         "fixture": {
           "tablesSeeded": [
             "audit_events",
@@ -4040,7 +4263,7 @@
             "user_states",
             "users"
           ],
-          "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-nM5LQp/quantgym-cutover-smoke.sqlite3"
+          "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-gP2J00/quantgym-cutover-smoke.sqlite3"
         },
         "redactedExport": {
           "status": "pass",
@@ -4094,11 +4317,19 @@
           "completeSignoffNegativeFixturesRejected": true,
           "completeSignoffNegativeFixturesMentionExpectedErrors": true,
           "privateTargetHostRejected": true,
+          "publicIpTargetHostRejected": true,
           "privateEvidenceUrlRejected": true,
+          "evidenceUrlRawIpRejected": true,
           "targetHostWhitespaceRejected": true,
           "databaseUnsafeCharactersRejected": true,
           "evidenceUrlEmbeddedCredentialsRejected": true,
-          "evidenceUrlQueryRejected": true
+          "evidenceUrlQueryRejected": true,
+          "futureCompletedTimestampRejected": true,
+          "exportShaMismatchRejected": true,
+          "sourceDbShaMismatchRejected": true,
+          "targetRowCountMismatchRejected": true,
+          "inactiveAppDatabaseRejected": true,
+          "missingBackupConfirmationRejected": true
         },
         "importPlan": {
           "tableCount": 12,
@@ -4139,12 +4370,12 @@
           "required": true,
           "targetHost": "postgres.quantgym.internal",
           "database": "quantgym",
-          "completedAt": "2026-06-19T14:18:36Z",
+          "completedAt": "2026-06-21T01:31:13Z",
           "evidenceHost": "render.com",
           "appDatabaseActive": true,
           "backupConfirmed": true,
-          "sourceDbSha256Prefix": "150f62267f3d",
-          "exportSha256Prefix": "8eccbd59b846",
+          "sourceDbSha256Prefix": "f89a4bf4fa7e",
+          "exportSha256Prefix": "c4176e6d8b30",
           "importPlanRowCount": 12,
           "targetRowCount": 12
         },
@@ -4171,11 +4402,18 @@
             "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must not point at localhost, loopback, or a private network address."
           },
           {
+            "name": "public IP target host rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must be a managed Postgres DNS hostname, not an IP address."
+          },
+          {
             "name": "target host whitespace rejected",
             "rejected": true,
             "expectedErrorObserved": true,
             "failed": 1,
-            "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must be a plain DNS hostname or IP address."
+            "error": "QUANTGYM_POSTGRES_CUTOVER_TARGET_HOST must be a plain DNS hostname."
           },
           {
             "name": "database DSN rejected",
@@ -4209,8 +4447,15 @@
             "name": "private evidence URL rejected",
             "rejected": true,
             "expectedErrorObserved": true,
+            "failed": 2,
+            "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must not point at localhost, loopback, or a private network address.\nQUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must use a DNS hostname, not a raw IP address."
+          },
+          {
+            "name": "public IP evidence URL rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
             "failed": 1,
-            "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must not point at localhost, loopback, or a private network address."
+            "error": "QUANTGYM_POSTGRES_CUTOVER_EVIDENCE_URL must use a DNS hostname, not a raw IP address."
           },
           {
             "name": "evidence URL embedded credentials rejected",
@@ -4252,7 +4497,7 @@
             "rejected": true,
             "expectedErrorObserved": true,
             "failed": 2,
-            "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-nM5LQp\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
+            "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-gP2J00\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
           },
           {
             "name": "target row count mismatch rejected",
@@ -4283,7 +4528,7 @@
     {
       "name": "Postgres cutover",
       "status": "pass",
-      "durationMs": 322,
+      "durationMs": 354,
       "exitCode": 0,
       "data": {
         "status": "pass",
@@ -4320,7 +4565,7 @@
           "integrityOk": true,
           "foreignKeyOk": true,
           "tableCounts": {
-            "audit_events": 132,
+            "audit_events": 146,
             "community": 1,
             "email_verification_codes": 10,
             "media_objects": 0,
@@ -4353,7 +4598,7 @@
     {
       "name": "Static build",
       "status": "pass",
-      "durationMs": 1735,
+      "durationMs": 2184,
       "exitCode": 0,
       "data": [
         "dist/assets/feature-problems-core-CZNbhMMr.js    80.16 kB │ gzip: 23.83 kB",
@@ -4362,29 +4607,29 @@
         "dist/assets/feature-support-core-CT2L7w1m.js    135.51 kB │ gzip: 41.50 kB",
         "dist/assets/vendor-react-dom-B49trWfG.js        181.78 kB │ gzip: 57.19 kB",
         "dist/assets/createAppServices-T-sQVS3u.js       188.41 kB │ gzip: 53.84 kB",
-        "✓ built in 419ms",
+        "✓ built in 559ms",
         "Built static site in dist"
       ]
     },
     {
       "name": "Production boundaries",
-      "status": "partial",
-      "durationMs": 12545,
+      "status": "pass",
+      "durationMs": 14439,
       "exitCode": 0,
       "data": {
-        "status": "partial",
+        "status": "pass",
         "scope": "configured production boundary service URLs",
         "endpointSource": "local config.js",
         "cloudApiEndpoint": "http://127.0.0.1:8790/api",
         "llmEndpoint": "http://127.0.0.1:8787/interview",
-        "passed": 4,
-        "skipped": 1,
+        "passed": 5,
+        "skipped": 0,
         "failed": 0,
         "results": [
           {
             "name": "cloud health",
             "status": "pass",
-            "durationMs": 23,
+            "durationMs": 24,
             "data": {
               "ok": true
             }
@@ -4392,7 +4637,7 @@
           {
             "name": "google provider config",
             "status": "pass",
-            "durationMs": 5,
+            "durationMs": 7,
             "data": {
               "googleClientIdSet": true,
               "endpointRequiresToken": true
@@ -4400,25 +4645,34 @@
           },
           {
             "name": "google provider login",
-            "status": "skip",
-            "reason": "Set QUANTGYM_GOOGLE_ID_TOKEN."
+            "status": "pass",
+            "durationMs": 1213,
+            "data": {
+              "provider": "local",
+              "googleLinked": true,
+              "email": "mi***@gmail.com",
+              "hasToken": true,
+              "tokenAudienceMatchesClientId": true,
+              "tokenExpiresAt": "2026-06-21T02:10:00.000Z",
+              "tokenEmail": "mi***@gmail.com"
+            }
           },
           {
             "name": "LLM resume review",
             "status": "pass",
-            "durationMs": 3798,
+            "durationMs": 4283,
             "data": {
               "itemCount": 6,
-              "firstItem": "Specify exact tech stack and libraries used (e.g., Python, NumPy/Pandas, PyTorch, SciPy, JAX) and environment (Linux, Gi"
+              "firstItem": "Quantify impact with metrics: specify the dataset and runtime reduction in absolute units (e.g., from X hours to Y hours"
             }
           },
           {
             "name": "LLM PDF question generation",
             "status": "pass",
-            "durationMs": 7774,
+            "durationMs": 7944,
             "data": {
               "questionCount": 1,
-              "firstTitle": "Option Pricing and Hedging Basics"
+              "firstTitle": "Understanding Production Boundary Monitors"
             }
           }
         ]
@@ -4434,7 +4688,7 @@
             "code": null,
             "signal": "SIGTERM"
           },
-          "stderrTail": "127.0.0.1 - - [19/Jun/2026 07:18:40] \"GET /api/health HTTP/1.1\" 200 -127.0.0.1 - - [19/Jun/2026 07:18:40] \"GET /api/health HTTP/1.1\" 200 -\n127.0.0.1 - - [19/Jun/2026 07:18:40] \"POST /api/auth/google HTTP/1.1\" 400 -"
+          "stderrTail": "127.0.0.1 - - [21/Jun/2026 09:31:17] \"GET /api/health HTTP/1.1\" 200 -127.0.0.1 - - [21/Jun/2026 09:31:17] \"GET /api/health HTTP/1.1\" 200 -\n127.0.0.1 - - [21/Jun/2026 09:31:17] \"POST /api/auth/google HTTP/1.1\" 400 -\n127.0.0.1 - - [21/Jun/2026 09:31:19] \"POST /api/auth/google HTTP/1.1\" 200 -"
         },
         "llm": {
           "host": "127.0.0.1",
@@ -4453,7 +4707,7 @@
     {
       "name": "UI contracts",
       "status": "pass",
-      "durationMs": 171,
+      "durationMs": 235,
       "exitCode": 0,
       "data": [
         "> node scripts/check-ui-contracts.mjs --skip-release-summary-content",
@@ -4461,7 +4715,7 @@
         "\"status\": \"pass\",",
         "\"routes\": 21,",
         "\"shellContracts\": 3,",
-        "\"evidenceArtifacts\": 30,",
+        "\"evidenceArtifacts\": 36,",
         "\"imageArtifacts\": 92",
         "}"
       ]
