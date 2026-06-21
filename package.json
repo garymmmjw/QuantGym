@@ -67,7 +67,8 @@
     "verify:production-boundaries:paste-token": "node scripts/run-google-token-gate.mjs --verify",
     "verify:production-boundaries:deployed": "node scripts/verify-production-boundaries.mjs --deployed",
     "verify:production-boundaries:deployed:paste-token": "node scripts/run-google-token-gate.mjs --verify-deployed",
-    "google:token-helper": "node scripts/create-google-token-helper.mjs"
+    "google:token-helper": "node scripts/create-google-token-helper.mjs",
+    "google:token-helper:deployed": "node scripts/create-google-token-helper.mjs --deployed"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",

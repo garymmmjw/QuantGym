@@ -6,14 +6,28 @@ import vm from "node:vm";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const args = process.argv.slice(2);
+const deployedMode = args.includes("--deployed");
+const configUrl = clean(
+  getArgValue("--config-url")
+  || getArgValue("--deployed-config")
+  || (deployedMode ? "https://beta.quantgym.app/config.js" : "")
+);
 loadEnvFromProjectRoot();
-const runtimeConfig = loadRuntimeConfig();
-const clientId = clean(process.env.QUANTGYM_GOOGLE_CLIENT_ID || runtimeConfig.googleClientId);
+const runtimeConfig = configUrl ? await loadRuntimeConfigFromUrl(configUrl) : loadRuntimeConfig();
+const argClientId = clean(getArgValue("--client-id"));
+const envClientId = configUrl ? "" : clean(process.env.QUANTGYM_GOOGLE_CLIENT_ID);
+const explicitClientId = clean(argClientId || envClientId);
+const clientId = clean(explicitClientId || runtimeConfig.googleClientId);
+const target = configUrl || deployedMode ? "deployed" : "local";
+const verifyCommand = target === "deployed"
+  ? "npm run verify:production-boundaries:deployed:paste-token"
+  : "npm run verify:production-boundaries:paste-token or npm run check:release-readiness:local:paste-token";
 const outputPath = path.join(root, "artifacts", "google-id-token-helper.html");
 const localUrl = "http://127.0.0.1:5179/artifacts/google-id-token-helper.html";
 
 if (!clientId) {
-  console.error("Google Client ID is missing. Set QUANTGYM_GOOGLE_CLIENT_ID or config.js googleClientId first.");
+  console.error("Google Client ID is missing. Set QUANTGYM_GOOGLE_CLIENT_ID, pass --client-id, or provide a config.js with googleClientId.");
   process.exit(1);
 }
 
@@ -24,12 +38,14 @@ console.log(JSON.stringify({
   status: "created",
   path: path.relative(root, outputPath),
   url: localUrl,
+  target,
+  clientIdSource: argClientId ? "argument" : (envClientId ? "environment" : (configUrl || "local config.js")),
   clientIdSet: true,
   nextSteps: [
     "Keep the Vite dev server running on http://127.0.0.1:5179.",
     `Open ${localUrl} in the browser.`,
     "Sign in with Google and copy the generated ID token.",
-    "Run npm run verify:production-boundaries:paste-token or npm run check:release-readiness:local:paste-token before the token expires. The verifier checks token structure, audience, and expiry before calling the provider login endpoint."
+    `Run ${verifyCommand} before the token expires. The verifier checks token structure, audience, and expiry before calling the provider login endpoint.`
   ]
 }, null, 2));
 
@@ -194,12 +210,45 @@ function loadEnvFromProjectRoot() {
 function loadRuntimeConfig() {
   const configPath = path.join(root, "config.js");
   if (!fs.existsSync(configPath)) return {};
+  return evaluateRuntimeConfig(fs.readFileSync(configPath, "utf8"), configPath);
+}
+
+async function loadRuntimeConfigFromUrl(value) {
+  let url;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`Invalid config URL: ${value}`);
+  }
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    throw new Error(`Config URL must use http or https: ${value}`);
+  }
+  const response = await fetch(url, {
+    headers: {
+      "accept": "application/javascript,text/javascript,*/*"
+    }
+  });
+  if (!response.ok) {
+    throw new Error(`Could not fetch config URL ${url.href}: HTTP ${response.status}`);
+  }
+  return evaluateRuntimeConfig(await response.text(), url.href);
+}
+
+function evaluateRuntimeConfig(source, filename) {
   const sandbox = { window: {} };
-  vm.runInNewContext(fs.readFileSync(configPath, "utf8"), sandbox, {
-    filename: configPath,
+  vm.runInNewContext(source, sandbox, {
+    filename,
     timeout: 1000
   });
   return sandbox.window.QUANTGYM_CONFIG || {};
+}
+
+function getArgValue(name) {
+  const index = args.indexOf(name);
+  if (index >= 0 && args[index + 1]) return args[index + 1];
+  const prefix = `${name}=`;
+  const inline = args.find((arg) => arg.startsWith(prefix));
+  return inline ? inline.slice(prefix.length) : "";
 }
 
 function unquote(value) {
