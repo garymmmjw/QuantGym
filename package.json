@@ -2,6 +2,9 @@
   "name": "quantgym",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0 <21 || >=22.12.0 <25"
+  },
   "scripts": {
     "dev": "vite",
     "build": "node scripts/build-static-site.mjs",

@@ -12,6 +12,9 @@ const args = process.argv.slice(2);
 const allowPartialProduction = args.includes("--allow-partial-production")
   || process.env.QUANTGYM_RELEASE_ALLOW_PARTIAL_PRODUCTION === "1";
 const summaryPath = getArgValue("--summary");
+const gateTimeoutMs = parsePositiveInteger(getArgValue("--gate-timeout-ms"))
+  || parsePositiveInteger(process.env.QUANTGYM_RELEASE_GATE_TIMEOUT_MS)
+  || 180000;
 const baseChildEnv = buildChildEnv();
 
 const gates = [
@@ -75,6 +78,7 @@ const partial = results.filter((item) => item.status === "partial");
 const summary = {
   status: failed.length ? "fail" : partial.length ? "partial" : "pass",
   allowPartialProduction,
+  gateTimeoutMs,
   passed: results.filter((item) => item.status === "pass").length,
   partial: partial.length,
   failed: failed.length,
@@ -93,6 +97,7 @@ if (failed.length) process.exitCode = 1;
 
 async function runGate(gate) {
   const startedAt = Date.now();
+  const timeoutMs = gate.timeoutMs || gateTimeoutMs;
   let localBoundaryServices = null;
   let child = null;
   try {
@@ -103,7 +108,9 @@ async function runGate(gate) {
       cwd: root,
       encoding: "utf8",
       maxBuffer: 1024 * 1024 * 20,
-      env: baseChildEnv
+      env: baseChildEnv,
+      timeout: timeoutMs,
+      killSignal: "SIGTERM"
     });
   } catch (error) {
     await stopManagedServices(localBoundaryServices);
@@ -111,6 +118,7 @@ async function runGate(gate) {
       name: gate.name,
       status: "fail",
       durationMs: Date.now() - startedAt,
+      timeoutMs,
       exitCode: 1,
       error: error.message || String(error),
       data: summarizeManagedServices(localBoundaryServices)
@@ -123,17 +131,22 @@ async function runGate(gate) {
   const stdout = child?.stdout || "";
   const stderr = child?.stderr || "";
   const exitCode = typeof child?.status === "number" ? child.status : 1;
+  const timedOut = child?.error?.code === "ETIMEDOUT";
   const parsed = gate.parseJson ? parseLastJson(stdout) : null;
   const serviceData = summarizeManagedServices(localBoundaryServices);
 
-  if (exitCode !== 0) {
+  if (timedOut || exitCode !== 0) {
     const parsedFailure = summarizeParsedFailure(parsed);
     return {
       name: gate.name,
       status: "fail",
       durationMs,
+      timeoutMs,
       exitCode,
-      error: child?.error?.message || parsedFailure || firstNonEmptyLine(stderr, stdout) || `Exited with ${exitCode}`,
+      timedOut,
+      error: timedOut
+        ? `Timed out after ${timeoutMs}ms`
+        : child?.error?.message || parsedFailure || firstNonEmptyLine(stderr, stdout) || `Exited with ${exitCode}`,
       data: parsed || summarizeStdout(stdout),
       serviceData,
       stdoutTail: tail(stdout),
@@ -146,6 +159,7 @@ async function runGate(gate) {
       name: gate.name,
       status: "fail",
       durationMs,
+      timeoutMs,
       exitCode,
       data: parsed,
       serviceData,
@@ -158,6 +172,7 @@ async function runGate(gate) {
       name: gate.name,
       status: gate.allowPartial ? "partial" : "fail",
       durationMs,
+      timeoutMs,
       exitCode,
       data: parsed,
       serviceData,
@@ -169,6 +184,7 @@ async function runGate(gate) {
     name: gate.name,
     status: "pass",
     durationMs,
+    timeoutMs,
     exitCode,
     data: parsed || summarizeStdout(stdout),
     serviceData
@@ -395,6 +411,11 @@ function normalizeLoopbackHost(hostname) {
 
 function defaultPort(protocol) {
   return protocol === "https:" ? 443 : 80;
+}
+
+function parsePositiveInteger(value) {
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : 0;
 }
 
 function isTcpListening(host, port) {
