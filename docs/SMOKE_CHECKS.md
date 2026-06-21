@@ -162,8 +162,15 @@ Production boundaries are fully signed off.
 Google token handoff helper: `npm run google:token-helper` creates
 `artifacts/google-id-token-helper.html`, served at
 `http://127.0.0.1:5179/artifacts/google-id-token-helper.html` while the Vite dev
-server is running. The generated helper is ignored by Git and does not write the
-short-lived Google ID token to disk. After signing in, copy the token and run
+server is running. The default helper uses the local `config.js` Google Client
+ID and is intended for local `verify:production-boundaries` and
+`check:release-readiness:local` runs. For deployed service verification, use
+`npm run google:token-helper:deployed` instead; it reads
+`https://beta.quantgym.app/config.js` and generates a token for the deployed
+Google Client ID, which is the audience required by
+`npm run verify:production-boundaries:deployed:paste-token`. The generated
+helper is ignored by Git and does not write the short-lived Google ID token to
+disk. After signing in, copy the token and run
 `QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries`.
 For a no-echo interactive handoff, run
 `npm run verify:production-boundaries:paste-token` or
