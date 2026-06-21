@@ -111,6 +111,7 @@
         "packetUsesPlaceholderOnlyForSecrets": true,
         "validProductionAccessKeyRedacted": true,
         "validProductionSecretRedacted": true,
+        "validProductionBucketRedacted": true,
         "validProductionEndpointUrlRedacted": true,
         "validProductionPublicBaseUrlRedacted": true,
         "privateObjectEndpointRejected": true,

@@ -2476,6 +2476,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(media?.localCoverage?.packetIncludesRawIpUrlRule === true, `${label} must include media packet raw-IP URL rejection guidance`);
   expect(media?.localCoverage?.validProductionAccessKeyRedacted === true, `${label} must include media access-key redaction coverage`);
   expect(media?.localCoverage?.validProductionSecretRedacted === true, `${label} must include media secret-key redaction coverage`);
+  expect(media?.localCoverage?.validProductionBucketRedacted === true, `${label} must include media bucket-name redaction coverage`);
   expect(media?.localCoverage?.validProductionEndpointUrlRedacted === true, `${label} must include media endpoint URL redaction coverage`);
   expect(media?.localCoverage?.validProductionPublicBaseUrlRedacted === true, `${label} must include media public-base URL redaction coverage`);
   expect(media?.localCoverage?.liveFixturePass === true, `${label} must include media live fixture coverage`);

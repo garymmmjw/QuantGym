@@ -68,6 +68,7 @@ try {
       && productionFixture.checks?.rawProviderPublicBaseRejected === true,
     fixtureOutputRedactsSecrets: productionFixture.checks?.validProductionAccessKeyRedacted === true
       && productionFixture.checks?.validProductionSecretRedacted === true
+      && productionFixture.checks?.validProductionBucketRedacted === true
       && productionFixture.checks?.validProductionEndpointUrlRedacted === true
       && productionFixture.checks?.validProductionPublicBaseUrlRedacted === true,
     liveFixtureCoversPutGetPublicDelete: productionFixture.checks?.liveFixturePutGetPublicDelete === true,
