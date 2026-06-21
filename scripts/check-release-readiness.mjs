@@ -15,6 +15,8 @@ const summaryPath = getArgValue("--summary");
 const gateTimeoutMs = parsePositiveInteger(getArgValue("--gate-timeout-ms"))
   || parsePositiveInteger(process.env.QUANTGYM_RELEASE_GATE_TIMEOUT_MS)
   || 180000;
+const browserRouteSmokeTimeoutMs = parsePositiveInteger(process.env.QUANTGYM_BROWSER_ROUTE_SMOKE_TIMEOUT_MS)
+  || Math.max(gateTimeoutMs, 900000);
 const baseChildEnv = buildChildEnv();
 
 const gates = [
@@ -33,11 +35,12 @@ const gates = [
   },
   { name: "Route integrity", command: "npm", args: ["run", "check:route-integrity"], parseJson: true },
   { name: "Route interactions", command: "npm", args: ["run", "check:route-interactions"], parseJson: true },
-  { name: "Browser route smoke", command: "npm", args: ["run", "check:browser-route-smoke"], parseJson: true },
+  { name: "Browser route smoke", command: "npm", args: ["run", "check:browser-route-smoke"], parseJson: true, timeoutMs: browserRouteSmokeTimeoutMs },
   { name: "Module ownership", command: "npm", args: ["run", "check:module-ownership"], parseJson: true },
   { name: "Chrome store readiness", command: "npm", args: ["run", "check:chrome-store-readiness"], parseJson: true },
   { name: "Chrome store publication fixture", command: "npm", args: ["run", "check:chrome-store-publication:fixture"], parseJson: true },
   { name: "Browser extension runtime smoke", command: "npm", args: ["run", "check:browser-extension:runtime-smoke"], parseJson: true },
+  { name: "Render LLM deploy compatibility", command: "npm", args: ["run", "check:render-llm-deploy"], parseJson: true },
   { name: "Media storage runtime smoke", command: "npm", args: ["run", "check:media-storage:runtime-smoke"], parseJson: true },
   { name: "Media storage production fixture", command: "npm", args: ["run", "check:media-storage:production-fixture"], parseJson: true },
   { name: "Ops alert runtime smoke", command: "npm", args: ["run", "check:ops-alerts:runtime-smoke"], parseJson: true },

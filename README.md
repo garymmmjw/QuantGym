@@ -203,6 +203,10 @@ non-overwriting nested mode, so the local summary keeps the current external
 public-launch blockers visible while still allowing the standalone
 `341-external-launch-blockers-summary.json` to remain the canonical blocker
 artifact.
+The full browser route smoke is intentionally allowed a longer nested timeout
+inside release-readiness because the 62 browser interactions currently take
+several minutes; set `QUANTGYM_BROWSER_ROUTE_SMOKE_TIMEOUT_MS` only if the local
+machine needs a different bound.
 
 To inspect the current migration completion state without changing runtime
 code, use:
@@ -421,6 +425,10 @@ start command. From the repository root, `npm start`, `node server.mjs`,
 `node server.js`, `node index.js`, and `node llm-proxy/server.mjs` all start the
 same proxy. The `llm-proxy` package also includes a lightweight `npm run build`
 syntax check for Render build commands copied from another Node service.
+Run `npm run check:render-llm-deploy` before changing the LLM service deploy
+shape; it performs clean installs for both the repository root and
+`llm-proxy` root-directory configurations, verifies `undici` can be imported,
+and probes every supported start command through `/health`.
 Prefer the root deployment shape above unless intentionally isolating the LLM
 service directory. On Render, the proxy binds to `0.0.0.0` automatically when no
 explicit `LLM_PROXY_HOST` or `HOST` is provided.

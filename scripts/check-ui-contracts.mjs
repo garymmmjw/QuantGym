@@ -684,6 +684,11 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       if (browserExtensionRuntimeSmoke) {
         validateBrowserExtensionRuntimeSmokeSummary(browserExtensionRuntimeSmoke.data || {}, expect, "nested browser extension runtime smoke");
       }
+      const renderLlmDeployCompatibility = findResult(releaseResults, "Render LLM deploy compatibility");
+      expect(renderLlmDeployCompatibility?.status === "pass", "Render LLM deploy compatibility nested gate must pass");
+      expect(renderLlmDeployCompatibility?.data?.status === "pass", "Render LLM deploy compatibility nested data status must pass");
+      expect(Number(renderLlmDeployCompatibility?.data?.checks || 0) === 15, "Render LLM deploy compatibility must cover all clean install and start command checks");
+      expect(Array.isArray(renderLlmDeployCompatibility?.data?.failures) && renderLlmDeployCompatibility.data.failures.length === 0, "Render LLM deploy compatibility must have no failures");
       const mediaStorageRuntimeSmoke = findResult(releaseResults, "Media storage runtime smoke");
       if (mediaStorageRuntimeSmoke) {
         validateMediaStorageRuntimeSmokeSummary(mediaStorageRuntimeSmoke.data || {}, expect, "nested media storage runtime smoke");

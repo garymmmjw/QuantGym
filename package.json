@@ -42,6 +42,7 @@
     "check:ops-alerts:production": "node scripts/check-ops-alert-config.mjs --production",
     "build:ops-alert-edge-packet": "node scripts/build-ops-alert-edge-packet.mjs",
     "check:repo-hygiene": "node scripts/check-repo-hygiene.mjs",
+    "check:render-llm-deploy": "node scripts/check-render-llm-deploy-compat.mjs",
     "check:jobs-source": "node scripts/check-jobs-source-config.mjs",
     "check:jobs-source:runtime-smoke": "node scripts/check-jobs-source-runtime-smoke.mjs",
     "check:jobs-source:production-fixture": "node scripts/check-jobs-source-production-fixture.mjs",
