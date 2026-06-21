@@ -6,6 +6,7 @@
     "node": ">=20.19.0 <21 || >=22.12.0 <25"
   },
   "scripts": {
+    "build": "node --check server.mjs && node --check server.js && node --check index.js && node --check llm-proxy/server.mjs && node --check llm-proxy/server.js && node --check llm-proxy/index.js",
     "start": "node server.mjs"
   },
   "dependencies": {
