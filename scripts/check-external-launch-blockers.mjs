@@ -103,6 +103,10 @@ const jobsFeedCleared = evidence.jobsDeployedApiSource.status === "pass"
 
 const apexWwwClear = evidence.apexWwwDomain.status === "pass"
   && evidence.apexWwwDomain.checks?.apexWwwClear === true;
+const apexPromotionHost = findHostSummary(evidence.apexWwwDomain.promotionHosts, "quantgym.app");
+const wwwPromotionHost = findHostSummary(evidence.apexWwwDomain.promotionHosts, "www.quantgym.app");
+const apexBlockedReasonRecorded = Boolean(String(apexPromotionHost?.https?.blockedReason || "").trim());
+const wwwBlockedReasonRecorded = Boolean(String(wwwPromotionHost?.https?.blockedReason || "").trim());
 
 const deployedBoundaryGoogleProviderLogin = findResult(evidence.deployedProductionBoundaries.results, "google provider login");
 const deployedGoogleProviderLoginPassed = deployedBoundaryGoogleProviderLogin?.status === "pass"
@@ -110,9 +114,16 @@ const deployedGoogleProviderLoginPassed = deployedBoundaryGoogleProviderLogin?.s
   && deployedBoundaryGoogleProviderLogin?.data?.tokenAudienceMatchesClientId === true;
 const deployedGoogleProviderLoginSkippedForToken = deployedBoundaryGoogleProviderLogin?.status === "skip"
   && String(deployedBoundaryGoogleProviderLogin?.reason || "").includes("QUANTGYM_GOOGLE_ID_TOKEN");
+const deployedGoogleProviderLoginTokenExpiresAt = String(deployedBoundaryGoogleProviderLogin?.data?.tokenExpiresAt || "").trim();
+const deployedGoogleProviderLoginSecondsRemaining = secondsUntil(deployedGoogleProviderLoginTokenExpiresAt);
+const deployedGoogleProviderLoginTokenFresh = Number.isFinite(deployedGoogleProviderLoginSecondsRemaining)
+  && deployedGoogleProviderLoginSecondsRemaining >= 120;
+const deployedGoogleProviderLoginTokenExpired = Number.isFinite(deployedGoogleProviderLoginSecondsRemaining)
+  && deployedGoogleProviderLoginSecondsRemaining < 120;
 const redactedEmailPattern = /^\S{2}\*\*\*@[^@\s]+$/;
 const deployedGoogleProviderCleared = evidence.deployedProductionBoundaries.status === "pass"
-  && deployedGoogleProviderLoginPassed;
+  && deployedGoogleProviderLoginPassed
+  && deployedGoogleProviderLoginTokenFresh;
 
 const blockers = [
   {
@@ -133,12 +144,16 @@ const blockers = [
         requireClearModeAvailable: evidence.apexWwwDomain.checks?.requireClearModeAvailable === true
       }
       : {
-        trackedInProductStatus: productStatusIncludes(["quantgym.app", "www.quantgym.app", "525"]),
+        trackedInProductStatus: productStatusIncludes(["quantgym.app", "www.quantgym.app", "check:apex-www-domain"]),
         liveDiagnosisPass: evidence.apexWwwDomain.status === "pass",
         betaEntrypointHealthy: evidence.apexWwwDomain.checks?.betaHealthy === true,
         apexDnsResolved: evidence.apexWwwDomain.checks?.apexDnsResolved === true,
         wwwDnsResolved: evidence.apexWwwDomain.checks?.wwwDnsResolved === true,
         currentBlockedStateClassified: evidence.apexWwwDomain.checks?.currentBlockedStateClassified === true,
+        apexPromotionHostBlocked: apexPromotionHost?.https?.usableHttps === false && apexBlockedReasonRecorded,
+        wwwPromotionHostBlocked: wwwPromotionHost?.https?.usableHttps === false && wwwBlockedReasonRecorded,
+        apexBlockedReason: String(apexPromotionHost?.https?.blockedReason || ""),
+        wwwBlockedReason: String(wwwPromotionHost?.https?.blockedReason || ""),
         apexCloudflare525Observed: evidence.apexWwwDomain.checks?.apexCloudflare525Observed === true,
         wwwCloudflare525Observed: evidence.apexWwwDomain.checks?.wwwCloudflare525Observed === true,
         requireClearModeAvailable: evidence.apexWwwDomain.checks?.requireClearModeAvailable === true,
@@ -164,6 +179,13 @@ const blockers = [
       deployedBoundaryLlmResumeReviewPass: findResult(evidence.deployedProductionBoundaries.results, "LLM resume review")?.status === "pass",
       deployedBoundaryLlmPdfQuestionGenerationPass: findResult(evidence.deployedProductionBoundaries.results, "LLM PDF question generation")?.status === "pass",
       deployedGoogleProviderLoginStateCaptured: Boolean(deployedBoundaryGoogleProviderLogin?.status),
+      deployedGoogleProviderLoginTokenExpiresAt,
+      deployedGoogleProviderLoginTokenSecondsRemaining: Number.isFinite(deployedGoogleProviderLoginSecondsRemaining)
+        ? deployedGoogleProviderLoginSecondsRemaining
+        : null,
+      deployedGoogleProviderLoginTokenMinimumSeconds: 120,
+      deployedGoogleProviderLoginTokenFresh,
+      deployedGoogleProviderLoginTokenExpired,
       ...(deployedGoogleProviderCleared
         ? {
           deployedGoogleProviderLoginPass: deployedBoundaryGoogleProviderLogin?.status === "pass",
@@ -962,10 +984,50 @@ const blockers = [
 
 for (const blocker of blockers) {
   for (const [key, value] of Object.entries(blocker.localCoverage || {})) {
+    if (blocker.id === "apex-www-ssl" && [
+      "apexCloudflare525Observed",
+      "wwwCloudflare525Observed"
+    ].includes(key)) {
+      continue;
+    }
+    if (blocker.id === "deployed-google-provider-login" && [
+      "deployedGoogleProviderLoginTokenFresh",
+      "deployedGoogleProviderLoginTokenExpired",
+      "deployedGoogleProviderLoginSkippedForToken"
+    ].includes(key)) {
+      continue;
+    }
     if (typeof value === "boolean") {
       expect(value, `${blocker.id} local coverage check failed: ${key}.`);
     }
   }
+}
+
+const apexWwwBlocker = blockers.find((item) => item.id === "apex-www-ssl");
+if (apexWwwBlocker?.status === "blocked") {
+  expect(
+    apexWwwBlocker.localCoverage?.apexPromotionHostBlocked === true
+      && apexWwwBlocker.localCoverage?.wwwPromotionHostBlocked === true,
+    "apex-www-ssl blocked state requires blocked promotion-host evidence for both apex and WWW."
+  );
+}
+
+const deployedGoogleBlocker = blockers.find((item) => item.id === "deployed-google-provider-login");
+if (deployedGoogleBlocker?.status === "pass") {
+  expect(
+    deployedGoogleBlocker.localCoverage?.deployedGoogleProviderLoginTokenFresh === true
+      && deployedGoogleBlocker.localCoverage?.deployedGoogleProviderLoginTokenExpired === false,
+    "deployed-google-provider-login pass requires fresh, unexpired token evidence."
+  );
+} else {
+  expect(
+    deployedGoogleBlocker?.localCoverage?.deployedGoogleProviderLoginTokenFresh === false
+      && (
+        deployedGoogleBlocker?.localCoverage?.deployedGoogleProviderLoginTokenExpired === true
+          || deployedGoogleBlocker?.localCoverage?.deployedGoogleProviderLoginSkippedForToken === true
+      ),
+    "deployed-google-provider-login blocked state requires expired-token or missing-token evidence."
+  );
 }
 
 if (!skipReleaseSummaryContent) {
@@ -1102,6 +1164,18 @@ function productStatusIncludes(needles) {
 
 function findResult(items, name) {
   return Array.isArray(items) ? items.find((item) => item.name === name) : undefined;
+}
+
+function findHostSummary(items, host) {
+  return Array.isArray(items) ? items.find((item) => item.host === host) : undefined;
+}
+
+function secondsUntil(isoTimestamp) {
+  const value = String(isoTimestamp || "").trim();
+  if (!value) return null;
+  const timestampMs = Date.parse(value);
+  if (!Number.isFinite(timestampMs)) return null;
+  return Math.floor((timestampMs - Date.now()) / 1000);
 }
 
 function readJson(relativePath, label) {

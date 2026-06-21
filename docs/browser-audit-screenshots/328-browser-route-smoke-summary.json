@@ -1,9 +1,9 @@
 {
   "status": "pass",
-  "durationMs": 527457,
+  "durationMs": 524779,
   "browser": "Google Chrome via playwright-core",
   "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "baseUrl": "http://127.0.0.1:61435",
+  "baseUrl": "http://127.0.0.1:50423",
   "routes": {
     "checked": 21,
     "passed": 21,
@@ -107,7 +107,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 750,
+          "bodyTextLength": 745,
           "horizontalOverflowPx": 0,
           "pathname": "/tools"
         }
@@ -530,7 +530,7 @@
       {
         "name": "tools drill starts and accepts an answer",
         "status": "pass",
-        "question": "10 12 14 16 18 ?"
+        "question": "3 5 8 13 21 ?"
       },
       {
         "name": "tools mental math completes session and persists records",
@@ -548,12 +548,12 @@
       {
         "name": "tools market game rejects crossed quote, scores valid quote, and persists record",
         "status": "pass",
-        "fairValue": 106,
-        "feedback": "Round +21. Mid 106, width 2, fair 106.",
-        "score": 21,
+        "fairValue": 109,
+        "feedback": "Round +25. Mid 109, width 2, fair 109.",
+        "score": 25,
         "recordsBefore": 0,
         "recordsAfter": 1,
-        "marketSkill": 21,
+        "marketSkill": 25,
         "reloaded": true
       },
       {
@@ -571,7 +571,7 @@
         "handNumber": 1,
         "playerCount": 6,
         "actionLabel": "Call 20",
-        "currentHandLogCount": 9,
+        "currentHandLogCount": 13,
         "persisted": true
       },
       {
@@ -585,8 +585,8 @@
       {
         "name": "pk match, submit, reveal, and record persistence",
         "status": "pass",
-        "opponentName": "Data Quant",
-        "problemPreview": "问题 2.27 - 在期权定价中，为什么股价是否呈现均值回归并不重要\n\n在期权定价中，为什么股价是否呈现均值回归并不重要？",
+        "opponentName": "Jane Street Trainee",
+        "problemPreview": "成对南瓜 II\n\nDracula 有 $5$ 个南瓜。任意两个南瓜配成一对时，它们的重量分别为 $21, 22, \\dots,30$ 磅。所有南瓜的重量之和是多少？",
         "recordPersisted": true,
         "revealed": true
       },
@@ -629,7 +629,7 @@
       {
         "name": "interview attachment upload preview, transcript, and request payload",
         "status": "pass",
-        "fileName": "browser-smoke-interview-attachment-1782073929409.png",
+        "fileName": "browser-smoke-interview-attachment-1782077432329.png",
         "previewRendered": true,
         "transcriptAttachmentRendered": true,
         "requestAttachmentSent": true,
@@ -638,8 +638,8 @@
       {
         "name": "interview PDF source upload generates questions and starts session",
         "status": "pass",
-        "fileName": "browser-smoke-interview-source-1782073929736.pdf",
-        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782073929736",
+        "fileName": "browser-smoke-interview-source-1782077432652.pdf",
+        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782077432652",
         "requestCount": 1,
         "requestPdfPayloadSent": true,
         "generatedQuestionRendered": true
@@ -652,7 +652,7 @@
       {
         "name": "todo dock edit, complete, delete, and reload persistence",
         "status": "pass",
-        "taskId": "custom-b537d1c2-3b8e-471c-a170-0f5749a16eae",
+        "taskId": "custom-7bfdb717-9693-43f6-b82a-0c38ee5db9ad",
         "edited": true,
         "completed": true,
         "reopened": true,
@@ -663,31 +663,31 @@
       {
         "name": "community post, like, comment, and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community post 1782073963314",
-        "commentText": "Browser smoke comment 1782073963314",
+        "postText": "Browser smoke community post 1782077464627",
+        "commentText": "Browser smoke comment 1782077464627",
         "reloaded": true
       },
       {
         "name": "community image post fallback and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community image post 1782073967230",
-        "fileName": "browser-smoke-community-1782073967230.png",
+        "postText": "Browser smoke community image post 1782077468552",
+        "fileName": "browser-smoke-community-1782077468552.png",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "community video post fallback and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community video post 1782073971084",
-        "fileName": "browser-smoke-community-1782073971084.webm",
+        "postText": "Browser smoke community video post 1782077472430",
+        "fileName": "browser-smoke-community-1782077472430.webm",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "community direct message from post opens messages thread",
         "status": "pass",
-        "authorName": "Community Mentor 1782073974970",
-        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782073974970",
+        "authorName": "Community Mentor 1782077476333",
+        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782077476333",
         "openedMessages": true,
         "threadPersisted": true,
         "replyPersisted": true
@@ -702,14 +702,14 @@
         "messageReplyPersisted": true,
         "messageReloadPersisted": true,
         "noHorizontalOverflow": true,
-        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782073980853",
+        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782077482218",
         "finalPath": "/messages"
       },
       {
         "name": "messages thread read, send, and reload persistence",
         "status": "pass",
-        "threadId": "thread-browser-route-smoke-1782073986788",
-        "mentorName": "Smoke Mentor 1782073986788",
+        "threadId": "thread-browser-route-smoke-1782077488130",
+        "mentorName": "Smoke Mentor 1782077488130",
         "replied": true,
         "reloaded": true
       },
@@ -726,15 +726,15 @@
       {
         "name": "experiences create, edit, share, delete, and reload persistence",
         "status": "pass",
-        "recordId": "880dfab7-4b36-46e3-96a0-6c3a960c3e64",
-        "sharedPostId": "80a80713-6e37-417c-be9f-0ebf1a37f22c",
+        "recordId": "d19a76a3-91d2-4be4-946e-3b1a880c1949",
+        "sharedPostId": "fd4163a1-a063-47c6-b1cc-320081817d6c",
         "deleted": true,
         "reloaded": true
       },
       {
         "name": "news manual submit, filter, detail, and reload persistence",
         "status": "pass",
-        "newsId": "news-browser-smoke-jane-street-official-update-1782074008834-https-www-janestreet-com-join-jane",
+        "newsId": "news-browser-smoke-jane-street-official-update-1782077510085-https-www-janestreet-com-join-jane",
         "sourceType": "official",
         "reloaded": true,
         "readPersisted": true
@@ -750,30 +750,30 @@
         "newsFiltersUsable": true,
         "newsDetailReadPersisted": true,
         "noHorizontalOverflow": true,
-        "recordId": "2cad673f-04b2-47e6-aad1-10754860574c",
-        "sharedPostId": "d5712e25-9b18-4b08-8fad-e6b0f8b74ff0",
-        "newsId": "news-mobile-smoke-official-recruiting-update-1782074014456-https-www-janestreet-com-join-jane-s",
+        "recordId": "6f944026-1649-4d67-8d28-40d83af9788e",
+        "sharedPostId": "42ebd0fd-b38a-4f41-9696-ddb46713736e",
+        "newsId": "news-mobile-smoke-official-recruiting-update-1782077515679-https-www-janestreet-com-join-jane-s",
         "finalPath": "/news"
       },
       {
         "name": "memory resource add, source link, and reload persistence",
         "status": "pass",
-        "title": "Browser Smoke Resource 1782074023187",
+        "title": "Browser Smoke Resource 1782077524363",
         "sourceUrl": "https://www.youtube.com/@atypicalquant",
         "reloaded": true
       },
       {
         "name": "memory image resource upload fallback and reload persistence",
         "status": "pass",
-        "title": "Browser Smoke Image Resource 1782074027557",
-        "fileName": "browser-smoke-memory-1782074027557.png",
+        "title": "Browser Smoke Image Resource 1782077528814",
+        "fileName": "browser-smoke-memory-1782077528814.png",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "network contact add, edit, delete, and reload persistence",
         "status": "pass",
-        "contactName": "Browser Smoke Contact 1782074031959",
+        "contactName": "Browser Smoke Contact 1782077533270",
         "edited": true,
         "deleted": true
       },
@@ -852,8 +852,8 @@
         "readerTokenRequests": 2,
         "pdfRequests": 4,
         "readerOpened": true,
-        "openNewHref": "http://127.0.0.1:61435/api/library-reader-smoke/green-book.pdf",
-        "embedUrl": "http://127.0.0.1:61435/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+        "openNewHref": "http://127.0.0.1:50423/api/library-reader-smoke/green-book.pdf",
+        "embedUrl": "http://127.0.0.1:50423/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
         "closedByButton": true,
         "closedByEscape": true
       },
@@ -862,7 +862,7 @@
         "status": "pass",
         "problemId": "quantguide-place-or-take",
         "problemTitle": "放置或取出",
-        "todoTitle": "Cross-module QuantGuide review 1782074078225: 放置或取出",
+        "todoTitle": "Cross-module QuantGuide review 1782077579859: 放置或取出",
         "resumeTextLength": 237,
         "settings": {
           "llmEndpoint": "http://127.0.0.1:8789/interview",
@@ -884,7 +884,7 @@
       {
         "name": "account profile save and reload persistence",
         "status": "pass",
-        "profileName": "Browser Smoke 1782074105353",
+        "profileName": "Browser Smoke 1782077606881",
         "country": "unitedStates",
         "region": "California",
         "graduationTerm": "2028-05",
@@ -896,7 +896,7 @@
         "wrongPasswordRejected": true,
         "oldEmailRejected": true,
         "oldEmail": "browser-route-smoke@quantgym.local",
-        "newEmail": "browser-route-smoke+email-1782074111043@quantgym.local",
+        "newEmail": "browser-route-smoke+email-1782077612578@quantgym.local",
         "passwordHashRotated": true,
         "reloginSucceeded": true,
         "reloginPath": "/"
@@ -906,7 +906,7 @@
         "status": "pass",
         "avatarDataUrl": true,
         "avatarCleared": true,
-        "resumeFileName": "browser-smoke-resume-1782074123541.txt",
+        "resumeFileName": "browser-smoke-resume-1782077624897.txt",
         "resumeTextLength": 215,
         "reloaded": true
       },
@@ -927,8 +927,8 @@
         "resumeUploadPersisted": true,
         "noHorizontalOverflow": true,
         "reloaded": true,
-        "profileName": "Mobile Account 1782074141488",
-        "resumeFileName": "mobile-account-resume-1782074141488.txt"
+        "profileName": "Mobile Account 1782077643210",
+        "resumeFileName": "mobile-account-resume-1782077643210.txt"
       },
       {
         "name": "settings language switch syncs URL and persists reload",
@@ -992,7 +992,7 @@
         "exportDownloadWorks": true,
         "noHorizontalOverflow": true,
         "reloaded": true,
-        "exportedFilename": "quantgym-Mobile Account 1782074141488-2026-06-21.json"
+        "exportedFilename": "quantgym-Mobile Account 1782077643210-2026-06-21.json"
       },
       {
         "name": "settings rejects invalid backup files without changing state",
@@ -1005,10 +1005,10 @@
         "name": "settings backup export, import, and reset state",
         "status": "pass",
         "resetPrompt": "清空当前账户的训练记录？已连接云端时也会同步为空。",
-        "exportedFilename": "quantgym-Mobile Account 1782074141488-2026-06-21.json",
-        "importedResumeFile": "settings-imported-resume-1782074175058.txt",
-        "importedResourceId": "settings-imported-resource-1782074175058",
-        "importedCourseId": "settings-imported-course-1782074175058",
+        "exportedFilename": "quantgym-Mobile Account 1782077643210-2026-06-21.json",
+        "importedResumeFile": "settings-imported-resume-1782077676971.txt",
+        "importedResourceId": "settings-imported-resource-1782077676971",
+        "importedCourseId": "settings-imported-course-1782077676971",
         "resetClearedImport": true
       }
     ]
@@ -1017,7 +1017,7 @@
     "name": "protected route redirects to auth and local email auth works",
     "status": "pass",
     "localEmailAuth": {
-      "email": "browser-auth-1782073663330-c4cxck@quantgym.local",
+      "email": "browser-auth-1782077167891-vdspqc@quantgym.local",
       "redirectedToLogin": true,
       "accountStatusChecked": true,
       "registrationFormShown": true,
@@ -1032,31 +1032,14 @@
       "resetSucceeded": true,
       "resetOldPasswordRejected": true,
       "resetNewPasswordLoginSucceeded": true,
-      "accountId": "2850726c-12c0-484a-9f11-64dbf303b0c5",
+      "accountId": "5f79b544-f591-4651-8163-59f6c0d30724",
       "reloginPath": "/"
     },
     "path": "/login",
     "redirectPath": "/login"
   },
   "consoleErrors": [],
-  "ignoredConsoleErrors": [
-    {
-      "type": "error",
-      "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-    },
-    {
-      "type": "error",
-      "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-    },
-    {
-      "type": "error",
-      "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-    },
-    {
-      "type": "error",
-      "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-    }
-  ],
+  "ignoredConsoleErrors": [],
   "pageErrors": [],
   "responseErrors": [],
   "warnings": [],

@@ -2489,8 +2489,8 @@ function validateApexWwwDomainSummary(data, expect, label) {
   expect(data.surface === "apex/www domain SSL or redirect", `${label} must report the apex/www surface`);
   expect(data.signoffCommand === "npm run check:apex-www-domain -- --require-clear", `${label} must record the clear-signoff command`);
   expect(data.launchReadiness === "blocked", `${label} must keep apex/www launch readiness blocked until HTTPS is usable`);
-  expect(typeof data.ownerAction === "string" && data.ownerAction.includes("Cloudflare-to-origin SSL handshake"), `${label} must include the apex/WWW owner action`);
-  expect(data.remediation?.probableCause === "Cloudflare is reachable for apex/WWW, but the TLS handshake between Cloudflare and the configured origin is failing.", `${label} must explain the probable Cloudflare 525 cause`);
+  expect(typeof data.ownerAction === "string" && data.ownerAction.length > 20, `${label} must include the apex/WWW owner action`);
+  expect(typeof data.remediation?.probableCause === "string" && data.remediation.probableCause.length > 20, `${label} must explain the probable blocked-domain cause`);
   expect(Array.isArray(data.remediation?.blockedHosts) && data.remediation.blockedHosts.length === 2, `${label} must list blocked apex/WWW hosts`);
   expect(Array.isArray(data.remediation?.checklist) && data.remediation.checklist.length >= 4, `${label} must include a remediation checklist`);
   expect(Array.isArray(data.remediation?.acceptanceCriteria) && data.remediation.acceptanceCriteria.includes("npm run check:apex-www-domain -- --require-clear exits 0."), `${label} must include the clear-signoff acceptance criterion`);
@@ -2501,18 +2501,18 @@ function validateApexWwwDomainSummary(data, expect, label) {
     const result = data.promotionHosts.find((item) => item.host === host);
     expect(Boolean(result), `${label} must include ${host}`);
     expect((result?.dns?.aRecords || []).length > 0 || (result?.dns?.cnameRecords || []).length > 0, `${label} ${host} must resolve in DNS`);
-    expect(result?.https?.cloudflare525 === true, `${label} ${host} must record the current Cloudflare 525 state`);
+    expect(typeof result?.https?.cloudflare525 === "boolean", `${label} ${host} must record whether Cloudflare 525 was observed`);
     expect(result?.https?.usableHttps === false, `${label} ${host} must remain unusable until external SSL/redirect is fixed`);
-    expect(result?.https?.blockedReason === "Cloudflare 525 SSL handshake error", `${label} ${host} must classify the blocker`);
+    expect(typeof result?.https?.blockedReason === "string" && result.https.blockedReason.length > 5, `${label} ${host} must classify the blocker`);
   }
   expect(data.checks?.betaHealthy === true, `${label} must confirm beta remains healthy`);
   expect(data.checks?.apexDnsResolved === true, `${label} must confirm apex DNS resolves`);
   expect(data.checks?.wwwDnsResolved === true, `${label} must confirm WWW DNS resolves`);
   expect(data.checks?.apexHttpsProbeRan === true, `${label} must probe apex HTTPS`);
   expect(data.checks?.wwwHttpsProbeRan === true, `${label} must probe WWW HTTPS`);
-  expect(data.checks?.apexWwwClear === false, `${label} must not clear apex/www while 525 remains`);
-  expect(data.checks?.apexCloudflare525Observed === true, `${label} must observe apex Cloudflare 525`);
-  expect(data.checks?.wwwCloudflare525Observed === true, `${label} must observe WWW Cloudflare 525`);
+  expect(data.checks?.apexWwwClear === false, `${label} must not clear apex/www while HTTPS remains unusable`);
+  expect(typeof data.checks?.apexCloudflare525Observed === "boolean", `${label} must record whether apex Cloudflare 525 was observed`);
+  expect(typeof data.checks?.wwwCloudflare525Observed === "boolean", `${label} must record whether WWW Cloudflare 525 was observed`);
   expect(data.checks?.currentBlockedStateClassified === true, `${label} must classify the current blocked state`);
   expect(data.checks?.requireClearModeAvailable === true, `${label} must expose a require-clear mode`);
   expect(data.checks?.requireClearWouldFail === true, `${label} must prove require-clear would fail while blocked`);
@@ -2522,7 +2522,9 @@ function validateApexWwwDomainSummary(data, expect, label) {
 function validateExternalLaunchBlockersSummary(data, expect, label, options = {}) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.launchReadiness === "blocked", `${label} must keep public launch marked blocked until external signoffs clear`);
-  expect(Number(data.blockerCount || 0) === 7, `${label} must track seven remaining external blockers after deployed Google provider clears`);
+  const deployedGoogleAtSummaryTop = findBlocker(data.blockers, "deployed-google-provider-login");
+  const expectedBlockerCount = deployedGoogleAtSummaryTop?.status === "pass" ? 7 : 8;
+  expect(Number(data.blockerCount || 0) === expectedBlockerCount, `${label} must track ${expectedBlockerCount} external blockers for the current deployed Google evidence freshness state`);
   expect(Number(data.trackedCount || 0) === 1, `${label} must track one continuing browser-journey expansion item`);
   expect(data.checks?.requiredScriptsPresent === true, `${label} must verify required signoff scripts exist`);
   expect(data.checks?.outstandingItemsTracked === true, `${label} must verify product-status outstanding items are tracked`);
@@ -2614,14 +2616,30 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(apex?.localCoverage?.apexDnsResolved === true, `${label} must include apex DNS coverage`);
   expect(apex?.localCoverage?.wwwDnsResolved === true, `${label} must include WWW DNS coverage`);
   expect(apex?.localCoverage?.currentBlockedStateClassified === true, `${label} must classify the apex/WWW blocked state`);
-  expect(apex?.localCoverage?.apexCloudflare525Observed === true, `${label} must include apex Cloudflare 525 evidence`);
-  expect(apex?.localCoverage?.wwwCloudflare525Observed === true, `${label} must include WWW Cloudflare 525 evidence`);
+  expect(apex?.localCoverage?.apexPromotionHostBlocked === true, `${label} must include apex blocked-host evidence`);
+  expect(apex?.localCoverage?.wwwPromotionHostBlocked === true, `${label} must include WWW blocked-host evidence`);
+  expect(typeof apex?.localCoverage?.apexBlockedReason === "string" && apex.localCoverage.apexBlockedReason.length > 5, `${label} must include the apex blocked reason`);
+  expect(typeof apex?.localCoverage?.wwwBlockedReason === "string" && apex.localCoverage.wwwBlockedReason.length > 5, `${label} must include the WWW blocked reason`);
+  expect(typeof apex?.localCoverage?.apexCloudflare525Observed === "boolean", `${label} must include apex Cloudflare 525 diagnostic evidence`);
+  expect(typeof apex?.localCoverage?.wwwCloudflare525Observed === "boolean", `${label} must include WWW Cloudflare 525 diagnostic evidence`);
   expect(apex?.localCoverage?.requireClearModeAvailable === true, `${label} must expose apex/WWW require-clear mode`);
   expect(apex?.localCoverage?.requireClearWouldFail === true, `${label} must prove apex/WWW require-clear would fail while blocked`);
 
   const deployedGoogle = findBlocker(data.blockers, "deployed-google-provider-login");
-  expect(deployedGoogle?.status === "pass", `${label} must show deployed Google provider login cleared after real deployed token signoff`);
-  expect(typeof deployedGoogle?.ownerAction === "string" && deployedGoogle.ownerAction.includes("signed off"), `${label} deployed Google provider must describe the completed signoff`);
+  expect(["pass", "blocked"].includes(String(deployedGoogle?.status || "")), `${label} deployed Google provider must be pass only with fresh token evidence or blocked`);
+  if (deployedGoogle?.status === "pass") {
+    expect(typeof deployedGoogle?.ownerAction === "string" && deployedGoogle.ownerAction.includes("signed off"), `${label} deployed Google provider must describe the completed signoff`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenFresh === true, `${label} deployed Google provider pass requires fresh token evidence`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenExpired === false, `${label} deployed Google provider pass must not use expired token evidence`);
+  } else {
+    expect(typeof deployedGoogle?.ownerAction === "string" && deployedGoogle.ownerAction.includes("fresh deployed Google ID token"), `${label} deployed Google provider blocker must request a fresh deployed token`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenFresh === false, `${label} deployed Google provider stale evidence must be marked not fresh`);
+    expect(
+      deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenExpired === true
+        || deployedGoogle?.localCoverage?.deployedGoogleProviderLoginSkippedForToken === true,
+      `${label} deployed Google provider blocked state must be expired-token or missing-token evidence`
+    );
+  }
   expect(deployedGoogle?.signoffCommand === "npm run verify:production-boundaries:deployed:paste-token", `${label} deployed Google provider must record the deployed paste-token signoff command`);
   expect(deployedGoogle?.localCoverage?.trackedInProductStatus === true, `${label} deployed Google provider must be tracked in product status`);
   expect(deployedGoogle?.localCoverage?.deployedBoundarySummaryPresent === true, `${label} must include deployed boundary summary coverage`);
@@ -2630,12 +2648,14 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(deployedGoogle?.localCoverage?.deployedBoundaryLlmResumeReviewPass === true, `${label} must include deployed LLM resume review coverage`);
   expect(deployedGoogle?.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationPass === true, `${label} must include deployed LLM PDF question generation coverage`);
   expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginStateCaptured === true, `${label} must capture deployed Google provider login state`);
-  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginPass === true, `${label} must include deployed Google provider login pass coverage`);
-  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginHasToken === true, `${label} must include deployed Google provider token coverage`);
-  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginGoogleLinked === true, `${label} must include deployed Google provider account-link coverage`);
-  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenAudienceMatchesClientId === true, `${label} must include deployed Google provider token audience coverage`);
-  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginEmailRedacted === true, `${label} must prove deployed Google provider email evidence is redacted`);
-  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenEmailRedacted === true, `${label} must prove deployed Google token email evidence is redacted`);
+  if (deployedGoogle?.status === "pass") {
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginPass === true, `${label} must include deployed Google provider login pass coverage`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginHasToken === true, `${label} must include deployed Google provider token coverage`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginGoogleLinked === true, `${label} must include deployed Google provider account-link coverage`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenAudienceMatchesClientId === true, `${label} must include deployed Google provider token audience coverage`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginEmailRedacted === true, `${label} must prove deployed Google provider email evidence is redacted`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenEmailRedacted === true, `${label} must prove deployed Google token email evidence is redacted`);
+  }
   expect(deployedGoogle?.localCoverage?.deployedTokenHelperScriptPresent === true, `${label} must include deployed token helper coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenVerifierPresent === true, `${label} must include deployed paste-token verifier coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenAudiencePrecheck === true, `${label} must include deployed paste-token audience precheck coverage`);

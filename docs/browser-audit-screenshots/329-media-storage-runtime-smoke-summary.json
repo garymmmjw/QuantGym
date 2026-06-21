@@ -1,10 +1,10 @@
 {
   "status": "pass",
-  "durationMs": 1801,
-  "apiPort": 62325,
+  "durationMs": 1918,
+  "apiPort": 51347,
   "media": {
-    "id": "Qnv4URL_1BcWJOaO7BNIrXyX",
-    "path": "/api/media/Qnv4URL_1BcWJOaO7BNIrXyX",
+    "id": "GBopM2YLkILzXNdCpY2cK6dc",
+    "path": "/api/media/GBopM2YLkILzXNdCpY2cK6dc",
     "contentType": "image/png",
     "byteSize": 68,
     "storage": "api-media",
@@ -13,7 +13,7 @@
   },
   "spoofedForwardedHostUpload": {
     "status": 201,
-    "mediaUrl": "http://127.0.0.1:62325/api/media/mnCQgytQ2Y09FWX2XvAB2bh_",
+    "mediaUrl": "http://127.0.0.1:51347/api/media/YlkL7Fpi_4nz3S1VsbwaCxdI",
     "urlUsesApiMediaEndpoint": true,
     "forwardedHostIgnored": true,
     "forwardedProtoIgnored": true
@@ -27,9 +27,9 @@
       "storedObjectCount": 1,
       "putRequestSigned": true,
       "getRequestSigned": true,
-      "storagePath": "s3:runtime-smoke/HPBQ9I6QqPJVETrjUZ2JzJRi.png",
+      "storagePath": "s3:runtime-smoke/1gBroN2WO6As1BbzIEgNUx6P.png",
       "mediaStorage": "s3-media",
-      "mediaUrl": "http://127.0.0.1:62333/api/media/HPBQ9I6QqPJVETrjUZ2JzJRi",
+      "mediaUrl": "http://127.0.0.1:51355/api/media/1gBroN2WO6As1BbzIEgNUx6P",
       "mediaUrlUsesPublicBase": false,
       "apiReadBytes": 68
     },
@@ -37,13 +37,13 @@
       "mode": "public-url",
       "uploadStatus": 201,
       "getMediaStatus": 302,
-      "redirectLocation": "https://media.quantgym.example.test/public/runtime-smoke/kdc4fCrX_oA6KDZOHnvK9SUh.png",
+      "redirectLocation": "https://media.quantgym.example.test/public/runtime-smoke/cYmFhx6DImPgcRSJTguRYkbM.png",
       "storedObjectCount": 1,
       "putRequestSigned": true,
       "getRequestSigned": false,
-      "storagePath": "s3:runtime-smoke/kdc4fCrX_oA6KDZOHnvK9SUh.png",
+      "storagePath": "s3:runtime-smoke/cYmFhx6DImPgcRSJTguRYkbM.png",
       "mediaStorage": "s3-media",
-      "mediaUrl": "https://media.quantgym.example.test/public/runtime-smoke/kdc4fCrX_oA6KDZOHnvK9SUh.png",
+      "mediaUrl": "https://media.quantgym.example.test/public/runtime-smoke/cYmFhx6DImPgcRSJTguRYkbM.png",
       "mediaUrlUsesPublicBase": true,
       "apiReadBytes": 0
     }
