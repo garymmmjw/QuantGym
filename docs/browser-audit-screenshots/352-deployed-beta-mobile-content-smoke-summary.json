@@ -104,19 +104,14 @@
     "ignored": [
       {
         "type": "requestfailed",
-        "url": "https://beta.quantgym.app/cdn-cgi/rum",
-        "failure": "net::ERR_ABORTED"
-      },
-      {
-        "type": "requestfailed",
-        "url": "https://beta.quantgym.app/cdn-cgi/rum",
-        "failure": "net::ERR_ABORTED"
-      },
-      {
-        "type": "requestfailed",
         "url": "https://llm.quantgym.app/jobs",
         "failure": "net::ERR_ABORTED",
         "reason": "navigation-aborted background request"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
       },
       {
         "type": "requestfailed",
@@ -128,11 +123,16 @@
         "type": "requestfailed",
         "url": "https://beta.quantgym.app/cdn-cgi/rum",
         "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
       }
     ]
   },
-  "durationMs": 16693,
-  "recordId": "cc3bd18f-e582-481b-82f7-dfe45126ef19",
-  "newsId": "news-mobile-live-smoke-official-update-1781996168206-https-www-janestreet-com-join-jane-street-",
+  "durationMs": 17733,
+  "recordId": "de4f1d66-5ffc-4a86-8a8c-ca22a8d8bdd3",
+  "newsId": "news-mobile-live-smoke-official-update-1782026180598-https-www-janestreet-com-join-jane-street-",
   "finalPath": "/news"
 }

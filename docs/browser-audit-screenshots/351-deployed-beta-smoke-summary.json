@@ -60,7 +60,7 @@
   ],
   "staticAssetFallback": {
     "name": "missing hashed asset fallback",
-    "url": "https://beta.quantgym.app/assets/__quantgym_missing_asset_probe_1782006017011.js",
+    "url": "https://beta.quantgym.app/assets/__quantgym_missing_asset_probe_1782026055769.js",
     "status": 404,
     "contentType": "text/html; charset=utf-8",
     "cacheControl": "no-store",
@@ -160,7 +160,7 @@
       },
       "health": {
         "pathname": "/tools",
-        "bodyTextLength": 733,
+        "bodyTextLength": 734,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -508,19 +508,13 @@
       },
       {
         "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/stanford-msande214-hw3.webp",
+        "url": "https://beta.quantgym.app/assets/library-covers/probabilitycourse-textbook.webp",
         "failure": "net::ERR_ABORTED",
         "reason": "navigation-aborted static asset"
       },
       {
         "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/market-microstructure.webp",
-        "failure": "net::ERR_ABORTED",
-        "reason": "navigation-aborted static asset"
-      },
-      {
-        "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/boyd-convex-optimization.webp",
+        "url": "https://beta.quantgym.app/assets/library-covers/probability-stochastic-10.webp",
         "failure": "net::ERR_ABORTED",
         "reason": "navigation-aborted static asset"
       },
@@ -538,8 +532,15 @@
       },
       {
         "type": "requestfailed",
-        "url": "https://beta.quantgym.app/cdn-cgi/rum",
-        "failure": "net::ERR_ABORTED"
+        "url": "https://beta.quantgym.app/assets/library-covers/stanford-msande214-hw3.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/assets/library-covers/mike-giles-mlmc.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
       },
       {
         "type": "requestfailed",
@@ -555,7 +556,30 @@
       },
       {
         "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/assets/library-covers/boyd-convex-optimization.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
+      },
+      {
+        "type": "requestfailed",
         "url": "https://beta.quantgym.app/assets/library-covers/etheridge-finmath-problem-sheets.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/assets/library-covers/market-microstructure.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/assets/library-covers/quantitative-primer.webp",
         "failure": "net::ERR_ABORTED",
         "reason": "navigation-aborted static asset"
       },
@@ -570,19 +594,13 @@
         "failure": "net::ERR_ABORTED"
       },
       {
+        "type": "console",
+        "text": "Framing 'https://accounts.google.com/' violates the following report-only Content Security Policy directive: \"frame-ancestors 'self'\". The violation has been logged, but no further action has been taken.\n"
+      },
+      {
         "type": "requestfailed",
         "url": "https://beta.quantgym.app/cdn-cgi/rum",
         "failure": "net::ERR_ABORTED"
-      },
-      {
-        "type": "http",
-        "status": 403,
-        "url": "https://api.quantgym.app/api/admin/metrics",
-        "reason": "non-admin account admin endpoint guard"
-      },
-      {
-        "type": "console",
-        "text": "Failed to load resource: the server responded with a status of 403 ()"
       },
       {
         "type": "http",
@@ -598,6 +616,12 @@
         "type": "requestfailed",
         "url": "https://beta.quantgym.app/cdn-cgi/rum",
         "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://api.quantgym.app/api/admin/metrics",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted admin background request"
       }
     ]
   },
@@ -617,5 +641,5 @@
     "noHttpErrors": true,
     "summaryRedacted": true
   },
-  "durationMs": 83844
+  "durationMs": 139970
 }
