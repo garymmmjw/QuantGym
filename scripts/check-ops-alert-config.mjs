@@ -158,31 +158,40 @@ check("edge rate-limit signoff", () => {
 });
 
 if (smokeMode) {
-  await checkAsync("alert webhook smoke", async () => {
-    assert(config.alertWebhookUrl, "QUANTGYM_ALERT_WEBHOOK_URL is required for --smoke.");
-    const url = parseHttpUrl(config.alertWebhookUrl, "QUANTGYM_ALERT_WEBHOOK_URL");
-    const payload = {
-      service: "quantgym-api",
-      eventType: "ops.readiness.smoke",
-      status: "test",
-      statusCode: Math.max(400, Math.min(599, config.alertMinStatusCode || 500)),
-      method: "POST",
-      path: "/ops/readiness-smoke",
-      message: "QuantGym alert webhook readiness smoke.",
-      occurredAt: new Date().toISOString()
-    };
-    const response = await postJson(url, payload, {
-      token: config.alertWebhookToken,
-      timeoutMs: Math.ceil(config.alertTimeoutSeconds * 1000)
+  const configFailed = results.some((item) => item.status === "fail");
+  if (configFailed) {
+    results.push({
+      name: "alert webhook smoke",
+      status: "fail",
+      error: "Alert webhook smoke was not sent because configuration checks failed before external delivery."
     });
-    assert(response.statusCode >= 200 && response.statusCode < 300, `Alert webhook smoke returned HTTP ${response.statusCode}.`);
-    return {
-      delivered: true,
-      statusCode: response.statusCode,
-      host: url.hostname,
-      tokenSet: Boolean(config.alertWebhookToken)
-    };
-  });
+  } else {
+    await checkAsync("alert webhook smoke", async () => {
+      assert(config.alertWebhookUrl, "QUANTGYM_ALERT_WEBHOOK_URL is required for --smoke.");
+      const url = parseHttpUrl(config.alertWebhookUrl, "QUANTGYM_ALERT_WEBHOOK_URL");
+      const payload = {
+        service: "quantgym-api",
+        eventType: "ops.readiness.smoke",
+        status: "test",
+        statusCode: Math.max(400, Math.min(599, config.alertMinStatusCode || 500)),
+        method: "POST",
+        path: "/ops/readiness-smoke",
+        message: "QuantGym alert webhook readiness smoke.",
+        occurredAt: new Date().toISOString()
+      };
+      const response = await postJson(url, payload, {
+        token: config.alertWebhookToken,
+        timeoutMs: Math.ceil(config.alertTimeoutSeconds * 1000)
+      });
+      assert(response.statusCode >= 200 && response.statusCode < 300, `Alert webhook smoke returned HTTP ${response.statusCode}.`);
+      return {
+        delivered: true,
+        statusCode: response.statusCode,
+        host: url.hostname,
+        tokenSet: Boolean(config.alertWebhookToken)
+      };
+    });
+  }
 }
 
 const failed = results.filter((item) => item.status === "fail");

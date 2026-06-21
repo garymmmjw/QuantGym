@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1101,
+  "durationMs": 2331,
   "productionFixture": {
     "status": "pass",
     "passed": 4,
@@ -207,6 +207,14 @@
     "payloadSanitized": true,
     "childPassed": true
   },
+  "blockedProductionSmoke": {
+    "childExitCode": 1,
+    "blocked": true,
+    "delivered": false,
+    "receivedCount": 0,
+    "failureExplained": true,
+    "firstFailure": "Production alert webhook URL must use HTTPS."
+  },
   "checks": {
     "validProductionPass": true,
     "validProductionHasAllChecks": true,
@@ -232,7 +240,10 @@
     "edgeNotesMissingEnforcementActionRejected": true,
     "localWebhookSmokeDelivered": true,
     "localWebhookSmokeAuthorized": true,
-    "localWebhookSmokePayloadSafe": true
+    "localWebhookSmokePayloadSafe": true,
+    "productionSmokeBlockedWhenConfigInvalid": true,
+    "productionSmokeNoDeliveryWhenConfigInvalid": true,
+    "productionSmokeFailureExplained": true
   },
   "failures": [],
   "warnings": []
