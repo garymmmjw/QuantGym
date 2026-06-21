@@ -40,7 +40,7 @@ Language can be switched from the app header or Settings. The static app support
 Start the LLM proxy when you need mock interviews, log classification, or LLM resume feedback:
 
 ```bash
-node llm-proxy/server.mjs
+npm start
 ```
 
 The proxy reads local secrets from `.env`. Copy [.env.example](./.env.example) and fill in real values locally. Do not commit `.env`.
@@ -410,9 +410,14 @@ Use Render for the Node LLM proxy:
 ```text
 Root directory: leave blank
 Build command: npm install
-Start command: node llm-proxy/server.mjs
+Start command: npm start
 Custom domain: llm.quantgym.app
 ```
+
+The checked-in LLM proxy also supports Render services configured with
+`Root directory: llm-proxy` and either `npm start`, `node server.mjs`, or the
+legacy `node llm-proxy/server.mjs` start command. Prefer the root deployment
+shape above unless intentionally isolating the LLM service directory.
 
 Render LLM environment variables:
 

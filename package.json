@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "start": "node llm-proxy/server.mjs",
     "build": "node scripts/build-static-site.mjs",
     "preview": "vite preview",
     "check:stage1": "node scripts/check-stage1.mjs",
