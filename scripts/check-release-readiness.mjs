@@ -17,6 +17,10 @@ const gateTimeoutMs = parsePositiveInteger(getArgValue("--gate-timeout-ms"))
   || 180000;
 const browserRouteSmokeTimeoutMs = parsePositiveInteger(process.env.QUANTGYM_BROWSER_ROUTE_SMOKE_TIMEOUT_MS)
   || Math.max(gateTimeoutMs, 900000);
+const browserRouteSmokeSummaryPath = path.join(
+  process.env.TMPDIR || "/tmp",
+  `quantgym-browser-route-smoke-release-${process.pid}.json`
+);
 const baseChildEnv = buildChildEnv();
 
 const gates = [
@@ -35,7 +39,16 @@ const gates = [
   },
   { name: "Route integrity", command: "npm", args: ["run", "check:route-integrity"], parseJson: true },
   { name: "Route interactions", command: "npm", args: ["run", "check:route-interactions"], parseJson: true },
-  { name: "Browser route smoke", command: "npm", args: ["run", "check:browser-route-smoke"], parseJson: true, timeoutMs: browserRouteSmokeTimeoutMs },
+  {
+    name: "Browser route smoke",
+    command: "npm",
+    args: ["run", "check:browser-route-smoke", "--", "--summary", browserRouteSmokeSummaryPath],
+    parseJson: true,
+    timeoutMs: browserRouteSmokeTimeoutMs,
+    streamStderr: true,
+    tempSummaryPath: browserRouteSmokeSummaryPath,
+    promoteSummaryTo: "docs/browser-audit-screenshots/328-browser-route-smoke-summary.json"
+  },
   {
     name: "Deployed beta deploy-window fixture",
     command: "npm",
@@ -123,14 +136,7 @@ async function runGate(gate) {
     if (gate.manageLocalBoundaryServices) {
       localBoundaryServices = await maybeStartLocalBoundaryServices();
     }
-    child = spawnSync(gate.command, gate.args, {
-      cwd: root,
-      encoding: "utf8",
-      maxBuffer: 1024 * 1024 * 20,
-      env: baseChildEnv,
-      timeout: timeoutMs,
-      killSignal: "SIGTERM"
-    });
+    child = await runGateProcess(gate, timeoutMs);
   } catch (error) {
     await stopManagedServices(localBoundaryServices);
     return {
@@ -199,6 +205,21 @@ async function runGate(gate) {
     };
   }
 
+  try {
+    promoteGateSummary(gate);
+  } catch (error) {
+    return {
+      name: gate.name,
+      status: "fail",
+      durationMs: Date.now() - startedAt,
+      timeoutMs,
+      exitCode,
+      data: parsed || summarizeStdout(stdout),
+      serviceData,
+      error: error.message || String(error)
+    };
+  }
+
   return {
     name: gate.name,
     status: "pass",
@@ -208,6 +229,74 @@ async function runGate(gate) {
     data: parsed || summarizeStdout(stdout),
     serviceData
   };
+}
+
+function promoteGateSummary(gate) {
+  if (!gate.promoteSummaryTo) return;
+  const source = path.resolve(root, gate.tempSummaryPath || "");
+  const target = path.resolve(root, gate.promoteSummaryTo);
+  if (!fs.existsSync(source)) {
+    throw new Error(`Expected temporary summary for ${gate.name} at ${source}`);
+  }
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.copyFileSync(source, target);
+}
+
+function runGateProcess(gate, timeoutMs) {
+  if (!gate.streamStderr && !gate.streamStdout) {
+    return spawnSync(gate.command, gate.args, {
+      cwd: root,
+      encoding: "utf8",
+      maxBuffer: 1024 * 1024 * 20,
+      env: baseChildEnv,
+      timeout: timeoutMs,
+      killSignal: "SIGTERM"
+    });
+  }
+
+  return new Promise((resolve) => {
+    const child = spawn(gate.command, gate.args, {
+      cwd: root,
+      env: baseChildEnv,
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    let stdout = "";
+    let stderr = "";
+    let error = null;
+    const maxBuffer = 1024 * 1024 * 20;
+    const timeout = setTimeout(() => {
+      error = new Error(`Timed out after ${timeoutMs}ms`);
+      error.code = "ETIMEDOUT";
+      child.kill("SIGTERM");
+      setTimeout(() => {
+        if (child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
+      }, 2000).unref();
+    }, timeoutMs);
+
+    child.stdout.on("data", (chunk) => {
+      const text = chunk.toString();
+      stdout = appendCapped(stdout, text, maxBuffer);
+      if (gate.streamStdout) process.stderr.write(text);
+    });
+    child.stderr.on("data", (chunk) => {
+      const text = chunk.toString();
+      stderr = appendCapped(stderr, text, maxBuffer);
+      if (gate.streamStderr) process.stderr.write(text);
+    });
+    child.once("error", (childError) => {
+      error = childError;
+    });
+    child.once("close", (code, signal) => {
+      clearTimeout(timeout);
+      resolve({
+        stdout,
+        stderr,
+        status: typeof code === "number" ? code : null,
+        signal,
+        error
+      });
+    });
+  });
 }
 
 async function maybeStartLocalBoundaryServices() {
@@ -583,6 +672,11 @@ function summarizeStdout(text) {
     .map((line) => line.trim())
     .filter(Boolean);
   return lines.slice(-8);
+}
+
+function appendCapped(current, next, max) {
+  const value = `${current}${next}`;
+  return value.length > max ? value.slice(-max) : value;
 }
 
 function tail(text, max = 2000) {
