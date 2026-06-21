@@ -376,7 +376,8 @@
       "localCoverage": {
         "browserRouteSmokePass": true,
         "routesChecked": 21,
-        "interactionsChecked": 62,
+        "interactionsChecked": 63,
+        "globalSearchKeyboardNavigationPass": true,
         "deployedBetaSmokePass": true,
         "deployedBetaDeployReadinessPass": true,
         "deployedBetaDeployReadinessApiHealthPass": true,
@@ -465,6 +466,7 @@
     "browserDeployedBetaMobileContentErrorSweepPass": true,
     "browserDeployedBetaMobileContentSummaryRedactedPass": true,
     "browserAuthPasswordResetPass": true,
+    "browserGlobalSearchKeyboardNavigationPass": true,
     "browserCrossModuleJourneyPass": true,
     "browserPlanBaselineDiagnosticPass": true,
     "browserTodoDockLifecyclePass": true,

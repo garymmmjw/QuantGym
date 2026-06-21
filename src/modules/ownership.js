@@ -14,7 +14,8 @@ export const MODULE_OWNERSHIP = [
       "hash compat deep links redirect without losing query state",
       "mobile shell sidebar, search, and settings controls avoid overflow",
       "mobile module nav groups open problems and library routes",
-      "global search module, problem, job, company, course, and news navigation"
+      "global search module, problem, job, company, course, and news navigation",
+      "global search keyboard navigation keeps moving through focused results"
     ]
   },
   {

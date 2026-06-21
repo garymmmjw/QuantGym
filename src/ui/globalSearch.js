@@ -52,6 +52,7 @@ export function createGlobalSearchController(options = {}) {
       button.append(meta, title, detail);
       button.addEventListener("mousedown", (event) => event.preventDefault());
       button.addEventListener("click", () => activateResult(index));
+      button.addEventListener("keydown", handleResultKeydown);
       elements.globalSearchResults.appendChild(button);
     });
     elements.globalSearchResults.classList.remove("hidden");
@@ -97,6 +98,12 @@ export function createGlobalSearchController(options = {}) {
     const delta = event.key === "ArrowDown" ? 1 : -1;
     const next = current < 0 ? 0 : (current + delta + buttons.length) % buttons.length;
     buttons[next].focus();
+  }
+
+  function handleResultKeydown(event) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Escape") {
+      handleKeydown(event);
+    }
   }
 
   return {

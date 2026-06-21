@@ -129,6 +129,7 @@ try {
     ["mobile module nav groups open problems and library routes", runMobileModuleNavGroupRoutingFlow],
     ["skills radar hover and global search spotlight", runSkillsRadarAndGlobalSearchFlow],
     ["global search module, problem, job, company, course, and news navigation", runGlobalSearchResultNavigationFlow],
+    ["global search keyboard navigation keeps moving through focused results", runGlobalSearchKeyboardNavigationFlow],
     ["problems search, detail, reveal, and save", runProblemDetailFlow],
     ["problems pagination, collection filter, and mock interview handoff", runProblemPaginationCollectionInterviewFlow],
     ["mobile problems detail actions and mock handoff avoid overflow", runMobileProblemDetailActionsFlow],
@@ -2124,6 +2125,48 @@ async function runGlobalSearchResultNavigationFlow(page, baseUrl) {
   return result;
 }
 
+async function runGlobalSearchKeyboardNavigationFlow(page, baseUrl) {
+  const result = { name: "global search keyboard navigation keeps moving through focused results", status: "pass" };
+  try {
+    result.step = "open overview and render search results";
+    await page.goto(`${baseUrl}/`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.locator("#globalSearchInput").fill("quant");
+    await page.waitForFunction(() => (
+      document.querySelectorAll("#globalSearchResults .global-search-result").length >= 3
+    ), null, { timeout: 12000 });
+
+    result.step = "focus first result from input";
+    await page.locator("#globalSearchInput").press("ArrowDown");
+    await expectGlobalSearchFocusedIndex(page, 0);
+
+    result.step = "move from focused result to next result";
+    await page.keyboard.press("ArrowDown");
+    await expectGlobalSearchFocusedIndex(page, 1);
+    result.focusedSecondTitle = await readGlobalSearchFocusedTitle(page);
+
+    result.step = "move back to previous result";
+    await page.keyboard.press("ArrowUp");
+    await expectGlobalSearchFocusedIndex(page, 0);
+
+    result.step = "activate focused result with keyboard";
+    await page.locator("#globalSearchInput").press("ArrowDown");
+    await page.keyboard.press("Enter");
+    await expectGlobalSearchCleared(page);
+    result.keyboardActivated = true;
+    result.resultCount = await page.locator("#globalSearchResults .global-search-result").count();
+    delete result.step;
+  } catch (error) {
+    result.status = "fail";
+    result.error = `${result.step}: ${error.message}`;
+    result.diagnostics = await collectGlobalSearchKeyboardDiagnostics(page).catch((diagnosticError) => ({
+      error: diagnosticError.message
+    }));
+    fail(`${result.name} failed: ${error.message}`);
+  }
+  return result;
+}
+
 async function expectSkillsSurface(page) {
   await page.waitForFunction(() => {
     const canvas = document.querySelector("#skillRadar");
@@ -2198,6 +2241,33 @@ async function expectGlobalSearchCleared(page) {
     return input?.value === ""
       && results?.classList.contains("hidden");
   }, null, { timeout: 10000 });
+}
+
+async function expectGlobalSearchFocusedIndex(page, expectedIndex) {
+  await page.waitForFunction((index) => {
+    const active = document.activeElement;
+    return active?.classList?.contains("global-search-result")
+      && active?.dataset?.searchIndex === String(index);
+  }, expectedIndex, { timeout: 5000 });
+}
+
+async function readGlobalSearchFocusedTitle(page) {
+  return page.evaluate(() => document.activeElement?.querySelector("strong")?.textContent?.trim() || "");
+}
+
+async function collectGlobalSearchKeyboardDiagnostics(page) {
+  return page.evaluate(() => {
+    const active = document.activeElement;
+    return {
+      inputValue: document.querySelector("#globalSearchInput")?.value || "",
+      resultsHidden: document.querySelector("#globalSearchResults")?.classList.contains("hidden") ?? true,
+      resultCount: document.querySelectorAll("#globalSearchResults .global-search-result").length,
+      activeTag: active?.tagName || "",
+      activeClass: active?.className || "",
+      activeSearchIndex: active?.dataset?.searchIndex || "",
+      activeText: active?.textContent?.replace(/\s+/g, " ").trim().slice(0, 160) || ""
+    };
+  });
 }
 
 async function expectGlobalSearchTargetVisible(page, expected) {

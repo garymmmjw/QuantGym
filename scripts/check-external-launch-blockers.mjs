@@ -521,6 +521,15 @@ const blockers = [
       browserRouteSmokePass: evidence.browserRouteSmoke.status === "pass",
       routesChecked: evidence.browserRouteSmoke.routes?.checked || 0,
       interactionsChecked: evidence.browserRouteSmoke.interactions?.checked || 0,
+      globalSearchKeyboardNavigationPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "global search keyboard navigation keeps moving through focused results"
+        );
+        return item?.status === "pass"
+          && item.keyboardActivated === true
+          && Number(item.resultCount || 0) >= 1;
+      })(),
       deployedBetaSmokePass: evidence.deployedBetaSmoke.status === "pass",
       deployedBetaDeployReadinessPass: evidence.deployedBetaSmoke.deployReadiness?.status === "pass",
       deployedBetaDeployReadinessApiHealthPass: evidence.deployedBetaSmoke.deployReadiness?.apiHealth?.status === "pass",
@@ -1008,6 +1017,7 @@ const summary = {
     browserDeployedBetaMobileContentErrorSweepPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentErrorSweepPass === true,
     browserDeployedBetaMobileContentSummaryRedactedPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.deployedBetaMobileContentSummaryRedactedPass === true,
     browserAuthPasswordResetPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.authPasswordResetPass === true,
+    browserGlobalSearchKeyboardNavigationPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.globalSearchKeyboardNavigationPass === true,
     browserCrossModuleJourneyPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.crossModuleJourneyPass === true,
     browserPlanBaselineDiagnosticPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.planBaselineDiagnosticPass === true,
     browserTodoDockLifecyclePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.todoDockLifecyclePass === true,

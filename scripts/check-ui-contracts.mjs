@@ -955,7 +955,7 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(Number(data.routes?.checked || 0) === routeIds.length, `${label} must check all routes`);
   expect(Number(data.routes?.passed || 0) === routeIds.length, `${label} route pass count must match all routes`);
   expect(Number(data.routes?.failed || 0) === 0, `${label} must have zero route failures`);
-  expect(Number(data.interactions?.checked || 0) >= 62, `${label} must check key interactions`);
+  expect(Number(data.interactions?.checked || 0) >= 63, `${label} must check key interactions`);
   expect(Number(data.interactions?.failed || 0) === 0, `${label} must have zero interaction failures`);
   const planInteraction = findResult(data.interactions?.results, "plan create, edit, task persistence, and navigation");
   expect(planInteraction?.status === "pass", `${label} must verify Plan create, edit, task persistence, and navigation`);
@@ -1040,6 +1040,9 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(skillsInteraction?.status === "pass", `${label} must verify Skills radar hover and global search spotlight`);
   const globalSearchInteraction = findResult(data.interactions?.results, "global search module, problem, job, company, course, and news navigation");
   expect(globalSearchInteraction?.status === "pass", `${label} must verify global search module, problem, job, company, course, and news navigation`);
+  const globalSearchKeyboardInteraction = findResult(data.interactions?.results, "global search keyboard navigation keeps moving through focused results");
+  expect(globalSearchKeyboardInteraction?.status === "pass", `${label} must verify global search keyboard navigation through focused results`);
+  expect(globalSearchKeyboardInteraction?.keyboardActivated === true, `${label} must verify global search keyboard activation clears the result list`);
   const pokerInteraction = findResult(data.interactions?.results, "poker demo table starts, acts, and persists room state");
   expect(pokerInteraction?.status === "pass", `${label} must verify Poker demo table start, action, and persisted room state`);
   const pokerPreflopInteraction = findResult(data.interactions?.results, "poker preflop matrix position, hand selection, and leave-table navigation");
@@ -2831,7 +2834,8 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.unsupportedScopeRejected === true, `${label} must include question-bank unsupported scope rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
-  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 62, `${label} must reference the 62-interaction browser route smoke`);
+  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 63, `${label} must reference the 63-interaction browser route smoke`);
+  expect(browser?.localCoverage?.globalSearchKeyboardNavigationPass === true, `${label} must include global search keyboard navigation coverage`);
   expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
   expect(browser?.localCoverage?.deployedBetaDeployReadinessPass === true, `${label} must include deployed beta deploy-readiness coverage`);
   expect(browser?.localCoverage?.deployedBetaDeployReadinessApiHealthPass === true, `${label} must include deployed beta API health readiness coverage`);
