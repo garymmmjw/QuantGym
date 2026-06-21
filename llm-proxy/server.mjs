@@ -8,7 +8,7 @@ import { ProxyAgent } from "undici";
 loadEnvFromProjectRoot();
 
 const PORT = Number(process.env.PORT || 8787);
-const HOST = process.env.LLM_PROXY_HOST || process.env.HOST || "127.0.0.1";
+const HOST = process.env.LLM_PROXY_HOST || process.env.HOST || (isRenderRuntime() ? "0.0.0.0" : "127.0.0.1");
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_RESPONSES_URL = openAiResponsesUrl(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1");
 const OPENAI_PROXY_URL = proxyUrlForTarget(OPENAI_RESPONSES_URL);
@@ -94,6 +94,10 @@ function loadEnvFromProjectRoot() {
       process.env[key] = value;
     }
   }
+}
+
+function isRenderRuntime() {
+  return Boolean(process.env.RENDER || process.env.RENDER_SERVICE_ID || process.env.RENDER_SERVICE_NAME);
 }
 
 const server = http.createServer(async (req, res) => {

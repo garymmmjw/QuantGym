@@ -415,9 +415,13 @@ Custom domain: llm.quantgym.app
 ```
 
 The checked-in LLM proxy also supports Render services configured with
-`Root directory: llm-proxy` and either `npm start`, `node server.mjs`, or the
-legacy `node llm-proxy/server.mjs` start command. Prefer the root deployment
-shape above unless intentionally isolating the LLM service directory.
+`Root directory: llm-proxy` and `npm start`, `node server.mjs`,
+`node server.js`, `node index.js`, or the legacy `node llm-proxy/server.mjs`
+start command. From the repository root, `npm start`, `node server.mjs`,
+`node index.js`, and `node llm-proxy/server.mjs` all start the same proxy.
+Prefer the root deployment shape above unless intentionally isolating the LLM
+service directory. On Render, the proxy binds to `0.0.0.0` automatically when no
+explicit `LLM_PROXY_HOST` or `HOST` is provided.
 
 Render LLM environment variables:
 
