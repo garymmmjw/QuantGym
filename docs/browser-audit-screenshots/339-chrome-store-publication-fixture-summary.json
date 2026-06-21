@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 11632,
+  "durationMs": 12598,
   "externalPublicationRequired": true,
   "finalSignoffCommand": "npm run check:chrome-store-publication:published",
   "submissionHandoff": {
@@ -135,6 +135,13 @@
       "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must end with the item id."
     },
     {
+      "name": "listing URL extra segment before item id rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_LISTING_URL must use a Chrome Web Store detail path of /detail/<extension-slug>/<item id>."
+    },
+    {
       "name": "draft status rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -198,6 +205,13 @@
       "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must include the item id."
     },
     {
+      "name": "evidence URL extra segment before item id rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL must use a Chrome Web Store detail path of /detail/<extension-slug>/<item id>."
+    },
+    {
       "name": "evidence URL embedded credentials rejected",
       "rejected": true,
       "expectedErrorObserved": true,
@@ -227,8 +241,10 @@
     "listingUrlQueryRejected": true,
     "listingUrlDetailPathRejected": true,
     "listingUrlExtraPathRejected": true,
+    "listingUrlExtraSegmentBeforeItemIdRejected": true,
     "evidenceUrlNonStoreRejected": true,
     "evidenceUrlWithoutItemIdRejected": true,
+    "evidenceUrlExtraSegmentBeforeItemIdRejected": true,
     "evidenceUrlRawIpRejected": true,
     "listingUrlLegacyHostRejected": true,
     "evidenceUrlLegacyHostRejected": true,

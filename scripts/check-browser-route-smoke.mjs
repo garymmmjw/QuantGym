@@ -7,6 +7,7 @@ import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { closeWithTimeout } from "./cleanup-timeout.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -198,10 +199,13 @@ try {
   }
 
   logProgress("closing authenticated browser context");
-  await closeWithTimeout("authenticated browser context", () => authenticated.close(), 15000).catch((error) => {
+  const authenticatedClosed = await closeWithTimeout("authenticated browser context", () => authenticated.close(), 15000).catch((error) => {
     warnings.push(error.message);
     return false;
   });
+  if (!authenticatedClosed) {
+    warnings.push("authenticated browser context cleanup timed out after 15000ms");
+  }
 
   if (consoleErrors.length) {
     fail(`Browser console errors were reported: ${consoleErrors.slice(0, 3).map((item) => item.text).join(" | ")}`);
@@ -264,7 +268,11 @@ try {
   if (browser) {
     logProgress("closing browser");
     const browserProcess = typeof browser.process === "function" ? browser.process() : null;
-    const closed = await closeWithTimeout("browser", () => browser.close(), 15000).catch((error) => {
+    const closed = await closeWithTimeout("browser", () => browser.close(), 15000, () => {
+      if (browserProcess && browserProcess.exitCode === null) {
+        browserProcess.kill("SIGKILL");
+      }
+    }).catch((error) => {
       warnings.push(error.message);
       return false;
     });
@@ -8882,12 +8890,17 @@ async function startPreviewServer({ distDir, port }) {
       warnings.push(`Vite preview exited with ${code}: ${tail(stderr || stdout)}`);
     }
   });
-  await waitForHttp(`http://127.0.0.1:${port}/`, () => {
-    if (child.exitCode !== null) {
-      throw new Error(`Vite preview exited before it became ready:\n${tail(stdout)}\n${tail(stderr)}`);
-    }
-  });
-  return child;
+  try {
+    await waitForHttp(`http://127.0.0.1:${port}/`, () => {
+      if (child.exitCode !== null || child.signalCode !== null) {
+        throw new Error(`Vite preview exited before it became ready:\n${tail(stdout)}\n${tail(stderr)}`);
+      }
+    });
+    return child;
+  } catch (error) {
+    await stopProcess(child);
+    throw error;
+  }
 }
 
 async function waitForHttp(url, checkProcess) {
@@ -8966,21 +8979,6 @@ function fail(message) {
 function logProgress(message) {
   if (quietProgress) return;
   process.stderr.write(`[browser-route-smoke ${formatElapsed(Date.now() - startedAt)}] ${message}\n`);
-}
-
-async function closeWithTimeout(label, close, timeoutMs) {
-  let timer = null;
-  try {
-    await Promise.race([
-      Promise.resolve().then(close),
-      new Promise((_, reject) => {
-        timer = setTimeout(() => reject(new Error(`${label} cleanup timed out after ${timeoutMs}ms`)), timeoutMs);
-      })
-    ]);
-    return true;
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
 }
 
 function formatElapsed(durationMs) {

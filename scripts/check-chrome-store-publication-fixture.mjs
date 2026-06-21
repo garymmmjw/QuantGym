@@ -93,6 +93,11 @@ try {
       expectedError: "must end with the item id"
     },
     {
+      name: "listing URL extra segment before item id rejected",
+      env: { QUANTGYM_CHROME_WEB_STORE_LISTING_URL: `https://chromewebstore.google.com/detail/quantgym-collector/extra/${fixtureItemId}` },
+      expectedError: "Chrome Web Store detail path"
+    },
+    {
       name: "draft status rejected",
       env: { QUANTGYM_CHROME_WEB_STORE_STATUS: "draft" },
       expectedError: "must be published"
@@ -138,6 +143,11 @@ try {
       expectedError: "must include the item id"
     },
     {
+      name: "evidence URL extra segment before item id rejected",
+      env: { QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL: `https://chromewebstore.google.com/detail/quantgym-collector/extra/${fixtureItemId}` },
+      expectedError: "Chrome Web Store detail path"
+    },
+    {
       name: "evidence URL embedded credentials rejected",
       env: { QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL: `https://user:secret@chromewebstore.google.com/detail/quantgym-collector/${fixtureItemId}` },
       expectedError: "embedded credentials"
@@ -178,8 +188,10 @@ try {
     listingUrlQueryRejected: findNegativeFixture(negativeFixtures, "listing URL query rejected")?.rejected === true,
     listingUrlDetailPathRejected: findNegativeFixture(negativeFixtures, "non-detail listing URL rejected")?.rejected === true,
     listingUrlExtraPathRejected: findNegativeFixture(negativeFixtures, "listing URL extra path rejected")?.rejected === true,
+    listingUrlExtraSegmentBeforeItemIdRejected: findNegativeFixture(negativeFixtures, "listing URL extra segment before item id rejected")?.rejected === true,
     evidenceUrlNonStoreRejected: findNegativeFixture(negativeFixtures, "non-store evidence URL rejected")?.rejected === true,
     evidenceUrlWithoutItemIdRejected: findNegativeFixture(negativeFixtures, "evidence URL without item id rejected")?.rejected === true,
+    evidenceUrlExtraSegmentBeforeItemIdRejected: findNegativeFixture(negativeFixtures, "evidence URL extra segment before item id rejected")?.rejected === true,
     evidenceUrlRawIpRejected: findNegativeFixture(negativeFixtures, "raw IP evidence URL rejected")?.rejected === true,
     listingUrlLegacyHostRejected: findNegativeFixture(negativeFixtures, "legacy store listing URL rejected")?.rejected === true,
     evidenceUrlLegacyHostRejected: findNegativeFixture(negativeFixtures, "legacy store evidence URL rejected")?.rejected === true,

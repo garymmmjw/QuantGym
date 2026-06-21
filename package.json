@@ -20,6 +20,7 @@
     "check:route-integrity": "node scripts/check-route-integrity.mjs",
     "check:route-interactions": "node scripts/check-route-interactions.mjs",
     "check:module-ownership": "node scripts/check-module-ownership.mjs",
+    "check:cleanup-timeout:fixture": "node scripts/check-cleanup-timeout-fixture.mjs",
     "check:browser-route-smoke": "node scripts/check-browser-route-smoke.mjs",
     "check:deployed-beta-smoke": "node scripts/check-deployed-beta-smoke.mjs",
     "check:deployed-beta-smoke:deploy-window-fixture": "node scripts/check-deployed-beta-smoke-deploy-window-fixture.mjs",

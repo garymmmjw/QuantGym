@@ -222,6 +222,10 @@ function assertChromeStoreListingUrl(url, itemId, label) {
   assert(detailIndex >= 0, `${label} must point to a Chrome Web Store detail listing.`);
   assert(segments.slice(detailIndex + 1).includes(itemId), `${label} must include the item id.`);
   assert(segments.at(-1) === itemId, `${label} must end with the item id.`);
+  assert(
+    detailIndex === 0 && segments.length === 3 && segments[1] && segments[2] === itemId,
+    `${label} must use a Chrome Web Store detail path of /detail/<extension-slug>/<item id>.`
+  );
 }
 
 function assert(condition, message) {

@@ -57,6 +57,7 @@ try {
       && combinedContent.includes("QUANTGYM_CHROME_WEB_STORE_UPLOAD_SHA256"),
     includesEvidenceUrlStoreDetailRequirement: combinedContent.includes("same Chrome Web Store detail URL")
       && combinedContent.includes("same item id"),
+    includesExactStoreDetailPathRequirement: combinedContent.includes("/detail/<extension-slug>/<item id>"),
     includesCurrentStoreHostRequirement: combinedContent.includes("chromewebstore.google.com")
       && combinedContent.includes("current public Chrome Web Store host"),
     includesRawIpUrlRule: combinedContent.includes("DNS hostname")
@@ -77,6 +78,8 @@ try {
     negativeFixturesRejected: publicationFixture.checks?.negativeFixturesRejected === true,
     publishedEvidenceUrlBoundToStoreListing: publicationFixture.checks?.evidenceUrlNonStoreRejected === true
       && publicationFixture.checks?.evidenceUrlWithoutItemIdRejected === true,
+    publishedUrlsRejectExtraSegmentBeforeItemId: publicationFixture.checks?.listingUrlExtraSegmentBeforeItemIdRejected === true
+      && publicationFixture.checks?.evidenceUrlExtraSegmentBeforeItemIdRejected === true,
     publishedUrlsRejectRawIp: publicationFixture.checks?.listingUrlRawIpRejected === true
       && publicationFixture.checks?.evidenceUrlRawIpRejected === true,
     publishedUrlsRejectLegacyStoreHost: publicationFixture.checks?.listingUrlLegacyHostRejected === true
@@ -176,7 +179,7 @@ function renderOverview(packet) {
     packet.signoffCommand,
     "```",
     "",
-    "The published signoff rejects placeholder item ids, draft status, mismatched versions or package hashes, non-store listing/evidence URLs, legacy store hosts, evidence URLs for a different item id, raw-IP listing/evidence URLs, and private or credential/query-bearing evidence URLs. Listing and evidence URLs must use HTTPS DNS hostnames on the current public Chrome Web Store host.",
+    "The published signoff rejects placeholder item ids, draft status, mismatched versions or package hashes, non-store listing/evidence URLs, legacy store hosts, evidence URLs for a different item id, raw-IP listing/evidence URLs, non-canonical detail paths, and private or credential/query-bearing evidence URLs. Listing and evidence URLs must use HTTPS DNS hostnames on the current public Chrome Web Store host and the exact `/detail/<extension-slug>/<item id>` path shape.",
     ""
   ].join("\n");
 }
@@ -209,7 +212,7 @@ function renderDeveloperDashboardSubmission(packet) {
     "",
     "## After Approval",
     "",
-    "Record the real item id, Chrome Web Store detail listing URL, published status, submitted version, upload SHA-256, and evidence URL in the signoff environment template. The listing and evidence URLs must use HTTPS DNS hostnames, not raw IP addresses, and must use `chromewebstore.google.com` as the current public Chrome Web Store host. The evidence URL must be the same Chrome Web Store detail URL, or another Chrome Web Store detail URL ending in the same item id.",
+    "Record the real item id, Chrome Web Store detail listing URL, published status, submitted version, upload SHA-256, and evidence URL in the signoff environment template. The listing and evidence URLs must use HTTPS DNS hostnames, not raw IP addresses, and must use `chromewebstore.google.com` as the current public Chrome Web Store host. The evidence URL must be the same Chrome Web Store detail URL, or another Chrome Web Store detail URL ending in the same item id. Both URLs must use the exact `/detail/<extension-slug>/<item id>` path shape.",
     ""
   ].join("\n");
 }
@@ -247,6 +250,7 @@ function renderPublishedSignoffEnv(packet) {
     "# Chrome Web Store published signoff env template.",
     "# Fill these only after the developer dashboard shows the item as published.",
     "# The listing and evidence URLs must both be Chrome Web Store detail URLs for the same item id.",
+    "# The URL path must use /detail/<extension-slug>/<item id> with no extra path segments.",
     "# Use chromewebstore.google.com, the current public Chrome Web Store host, not legacy chrome.google.com URLs.",
     "# They must use HTTPS DNS hostnames, not raw IP addresses.",
     "",
