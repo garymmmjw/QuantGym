@@ -106,23 +106,25 @@ async function readToken() {
     stdin.setRawMode(true);
     stdin.resume();
     stdin.setEncoding("utf8");
-    const onData = (char) => {
-      if (char === "\r" || char === "\n") {
-        cleanup();
-        process.stdout.write("\n");
-        resolve(value.trim());
-        return;
+    const onData = (chunk) => {
+      for (const char of chunk) {
+        if (char === "\r" || char === "\n") {
+          cleanup();
+          process.stdout.write("\n");
+          resolve(value.trim());
+          return;
+        }
+        if (char === "\u0003") {
+          cleanup();
+          process.stdout.write("\n");
+          process.exit(130);
+        }
+        if (char === "\u007f" || char === "\b") {
+          value = value.slice(0, -1);
+          continue;
+        }
+        value += char;
       }
-      if (char === "\u0003") {
-        cleanup();
-        process.stdout.write("\n");
-        process.exit(130);
-      }
-      if (char === "\u007f" || char === "\b") {
-        value = value.slice(0, -1);
-        return;
-      }
-      value += char;
     };
     const cleanup = () => {
       stdin.off("data", onData);
