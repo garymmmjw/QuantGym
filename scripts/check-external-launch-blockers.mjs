@@ -19,6 +19,7 @@ const failures = [];
 const warnings = [];
 const packageJson = readJson("package.json", "package.json");
 const productStatusText = readText("docs/product-status.md", "product status");
+const googleTokenGateText = readText("scripts/run-google-token-gate.mjs", "Google token gate");
 
 const evidence = {
   apexWwwDomain: readJson("docs/browser-audit-screenshots/355-apex-www-domain-summary.json", "apex/WWW domain smoke"),
@@ -154,7 +155,11 @@ const blockers = [
       deployedGoogleProviderLoginSkippedForToken: deployedBoundaryGoogleProviderLogin?.status === "skip"
         && String(deployedBoundaryGoogleProviderLogin?.reason || "").includes("QUANTGYM_GOOGLE_ID_TOKEN"),
       deployedTokenHelperScriptPresent: Boolean(scripts["google:token-helper:deployed"]),
-      deployedPasteTokenVerifierPresent: Boolean(scripts["verify:production-boundaries:deployed:paste-token"])
+      deployedPasteTokenVerifierPresent: Boolean(scripts["verify:production-boundaries:deployed:paste-token"]),
+      deployedPasteTokenAudiencePrecheck: googleTokenGateText.includes("tokenAudienceMatchesExpected")
+        && googleTokenGateText.includes("Google ID token audience does not match the ${expected.label} Google Client ID"),
+      deployedPasteTokenPinsDeployedClientId: googleTokenGateText.includes("https://beta.quantgym.app/config.js")
+        && googleTokenGateText.includes("env.QUANTGYM_GOOGLE_CLIENT_ID = expected.clientId")
     }
   },
   {

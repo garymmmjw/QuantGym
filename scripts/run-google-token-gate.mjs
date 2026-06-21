@@ -1,9 +1,15 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import vm from "node:vm";
+import { fileURLToPath } from "node:url";
 
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const deployedConfigUrl = "https://beta.quantgym.app/config.js";
 const mode = args.includes("--verify-deployed")
   ? "verify-deployed"
   : args.includes("--release-readiness")
@@ -31,6 +37,7 @@ const commandByMode = {
 const [command, commandArgs] = commandByMode[mode];
 const token = clean(process.env.QUANTGYM_GOOGLE_ID_TOKEN || await readToken());
 const minimumSecondsRemaining = parsePositiveInteger(process.env.QUANTGYM_GOOGLE_TOKEN_MIN_SECONDS) || 120;
+const expectedAudience = await expectedGoogleAudience(mode);
 
 if (!token) {
   console.error("Google ID token is required.");
@@ -60,8 +67,32 @@ if (!freshness.ok) {
   process.exit(1);
 }
 
+const audience = tokenAudience(sanity, expectedAudience);
+if (!audience.ok) {
+  console.error(JSON.stringify({
+    status: "fail",
+    mode,
+    reason: audience.reason,
+    tokenProvided: true,
+    tokenWrittenToDisk: false,
+    tokenPrinted: false,
+    tokenExpiresAt: freshness.expiresAt,
+    secondsRemaining: freshness.secondsRemaining,
+    minimumSecondsRemaining,
+    tokenEmailPresent: Boolean(sanity.email),
+    tokenAudiencePresent: Boolean(sanity.aud),
+    tokenAuthorizedPartyPresent: Boolean(sanity.azp),
+    expectedGoogleClientIdSet: Boolean(expectedAudience.clientId),
+    expectedGoogleClientIdSource: expectedAudience.source || "",
+    tokenAudienceMatchesExpected: false,
+    helperCommand: expectedAudience.helperCommand
+  }, null, 2));
+  process.exit(1);
+}
+
+const childEnv = buildChildEnv(token, expectedAudience);
+
 if (dryRun) {
-  const childEnv = buildChildEnv(token);
   console.log(JSON.stringify({
     status: "ready",
     mode,
@@ -73,6 +104,10 @@ if (dryRun) {
     secondsRemaining: freshness.secondsRemaining,
     minimumSecondsRemaining,
     tokenEmailPresent: Boolean(sanity.email),
+    expectedGoogleClientIdSet: Boolean(expectedAudience.clientId),
+    expectedGoogleClientIdSource: expectedAudience.source || "",
+    tokenAudiencePresent: Boolean(sanity.aud),
+    tokenAudienceMatchesExpected: audience.matchesExpected,
     childProxyConfigured: Boolean(childEnv.HTTPS_PROXY || childEnv.https_proxy || childEnv.HTTP_PROXY || childEnv.http_proxy),
     childNoProxy: childEnv.NO_PROXY || childEnv.no_proxy || ""
   }, null, 2));
@@ -81,7 +116,7 @@ if (dryRun) {
 
 const result = spawnSync(command, commandArgs, {
   stdio: "inherit",
-  env: buildChildEnv(token)
+  env: childEnv
 });
 
 process.exit(typeof result.status === "number" ? result.status : 1);
@@ -193,14 +228,126 @@ function parsePositiveInteger(value) {
   return Number.isInteger(number) && number > 0 ? number : 0;
 }
 
-function buildChildEnv(token) {
+function tokenAudience(payload, expected) {
+  if (!expected.clientId) {
+    if (mode === "verify-deployed") {
+      return {
+        ok: false,
+        matchesExpected: false,
+        reason: "Could not load the deployed Google Client ID before verification; rerun when beta config.js is reachable."
+      };
+    }
+    return {
+      ok: true,
+      matchesExpected: null,
+      reason: ""
+    };
+  }
+  const matchesExpected = payload.aud === expected.clientId;
+  return {
+    ok: matchesExpected,
+    matchesExpected,
+    reason: matchesExpected
+      ? ""
+      : `Google ID token audience does not match the ${expected.label} Google Client ID. Generate a fresh token with ${expected.helperCommand}.`
+  };
+}
+
+async function expectedGoogleAudience(value) {
+  if (value === "verify-deployed") {
+    const config = await loadRuntimeConfigFromUrl(deployedConfigUrl);
+    return {
+      clientId: clean(config.googleClientId),
+      source: config.__source || deployedConfigUrl,
+      label: "deployed beta",
+      helperCommand: "npm run google:token-helper:deployed"
+    };
+  }
+  const envClientId = clean(process.env.QUANTGYM_GOOGLE_CLIENT_ID || readProjectEnvValue("QUANTGYM_GOOGLE_CLIENT_ID"));
+  if (envClientId) {
+    return {
+      clientId: envClientId,
+      source: "QUANTGYM_GOOGLE_CLIENT_ID",
+      label: "configured local",
+      helperCommand: "npm run google:token-helper"
+    };
+  }
+  const config = loadRuntimeConfigFromFile(path.join(projectRoot, "config.js"));
+  return {
+    clientId: clean(config.googleClientId),
+    source: config.__source || "local config.js",
+    label: "configured local",
+    helperCommand: "npm run google:token-helper"
+  };
+}
+
+function buildChildEnv(token, expected) {
   const env = {
     ...process.env,
     QUANTGYM_GOOGLE_ID_TOKEN: token
   };
+  if (mode === "verify-deployed" && expected.clientId) {
+    env.QUANTGYM_GOOGLE_CLIENT_ID = expected.clientId;
+  }
   applyMacSystemProxyDefaults(env);
   appendNoProxyDefaults(env);
   return env;
+}
+
+function readProjectEnvValue(key) {
+  if (process.env[key] != null) return process.env[key];
+  const envPath = path.join(projectRoot, ".env");
+  if (!fs.existsSync(envPath)) return "";
+  for (const rawLine of fs.readFileSync(envPath, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const equalIndex = line.indexOf("=");
+    if (equalIndex <= 0) continue;
+    if (line.slice(0, equalIndex).trim() !== key) continue;
+    return unquote(line.slice(equalIndex + 1).trim());
+  }
+  return "";
+}
+
+function loadRuntimeConfigFromFile(configPath) {
+  if (!fs.existsSync(configPath)) return {};
+  return parseRuntimeConfig(fs.readFileSync(configPath, "utf8"), configPath, "local config.js");
+}
+
+async function loadRuntimeConfigFromUrl(value) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(value, {
+      headers: {
+        "accept": "application/javascript,text/javascript,*/*"
+      },
+      signal: controller.signal
+    });
+    if (!response.ok) return {};
+    return parseRuntimeConfig(await response.text(), value, value);
+  } catch {
+    return {};
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function parseRuntimeConfig(source, filename, sourceLabel) {
+  const sandbox = { window: {} };
+  vm.runInNewContext(source, sandbox, {
+    filename,
+    timeout: 1000
+  });
+  const config = sandbox.window.QUANTGYM_CONFIG || {};
+  return { ...config, __source: sourceLabel };
+}
+
+function unquote(value) {
+  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    return value.slice(1, -1);
+  }
+  return value;
 }
 
 function applyMacSystemProxyDefaults(env) {
