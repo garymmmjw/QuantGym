@@ -1,13 +1,17 @@
 {
-  "status": "pass",
-  "passed": 5,
-  "skipped": 0,
+  "status": "partial",
+  "scope": "configured production boundary service URLs",
+  "endpointSource": "local config.js",
+  "cloudApiEndpoint": "http://127.0.0.1:8790/api",
+  "llmEndpoint": "http://127.0.0.1:8787/interview",
+  "passed": 4,
+  "skipped": 1,
   "failed": 0,
   "results": [
     {
       "name": "cloud health",
       "status": "pass",
-      "durationMs": 31,
+      "durationMs": 23,
       "data": {
         "ok": true
       }
@@ -15,7 +19,7 @@
     {
       "name": "google provider config",
       "status": "pass",
-      "durationMs": 6,
+      "durationMs": 7,
       "data": {
         "googleClientIdSet": true,
         "endpointRequiresToken": true
@@ -23,34 +27,25 @@
     },
     {
       "name": "google provider login",
-      "status": "pass",
-      "durationMs": 157,
-      "data": {
-        "provider": "local",
-        "googleLinked": true,
-        "email": "mi***@gmail.com",
-        "hasToken": true,
-        "tokenAudienceMatchesClientId": true,
-        "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
-        "tokenEmail": "mi***@gmail.com"
-      }
+      "status": "skip",
+      "reason": "Set QUANTGYM_GOOGLE_ID_TOKEN."
     },
     {
       "name": "LLM resume review",
       "status": "pass",
-      "durationMs": 3327,
+      "durationMs": 4510,
       "data": {
         "itemCount": 6,
-        "firstItem": "Quantify impact with explicit metrics: convert to annualized or project scope, e.g., \"Processed 1.2M rows of tick data; "
+        "firstItem": "Specify technical stack and libraries: include pandas, numpy, numba, and multiprocessing; add versioning and tooling (Gi"
       }
     },
     {
       "name": "LLM PDF question generation",
       "status": "pass",
-      "durationMs": 6748,
+      "durationMs": 7206,
       "data": {
         "questionCount": 1,
-        "firstTitle": "Understanding Production Boundaries and Smoke Tests"
+        "firstTitle": "Boundary Validation in Production Pipelines"
       }
     }
   ]

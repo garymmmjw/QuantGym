@@ -109,11 +109,19 @@ const apexBlockedReasonRecorded = Boolean(String(apexPromotionHost?.https?.block
 const wwwBlockedReasonRecorded = Boolean(String(wwwPromotionHost?.https?.blockedReason || "").trim());
 
 const deployedBoundaryGoogleProviderLogin = findResult(evidence.deployedProductionBoundaries.results, "google provider login");
+const deployedBoundaryLlmResumeReview = findResult(evidence.deployedProductionBoundaries.results, "LLM resume review");
+const deployedBoundaryLlmPdfQuestionGeneration = findResult(evidence.deployedProductionBoundaries.results, "LLM PDF question generation");
 const deployedGoogleProviderLoginPassed = deployedBoundaryGoogleProviderLogin?.status === "pass"
   && deployedBoundaryGoogleProviderLogin?.data?.googleLinked === true
   && deployedBoundaryGoogleProviderLogin?.data?.tokenAudienceMatchesClientId === true;
 const deployedGoogleProviderLoginSkippedForToken = deployedBoundaryGoogleProviderLogin?.status === "skip"
   && String(deployedBoundaryGoogleProviderLogin?.reason || "").includes("QUANTGYM_GOOGLE_ID_TOKEN");
+const deployedBoundaryLlmResumeReviewPass = deployedBoundaryLlmResumeReview?.status === "pass";
+const deployedBoundaryLlmPdfQuestionGenerationPass = deployedBoundaryLlmPdfQuestionGeneration?.status === "pass";
+const deployedBoundaryLlmResumeReviewSkippedForAuth = deployedBoundaryLlmResumeReview?.status === "skip"
+  && /QUANTGYM_(?:LLM_BEARER_TOKEN|GOOGLE_ID_TOKEN)/.test(String(deployedBoundaryLlmResumeReview?.reason || ""));
+const deployedBoundaryLlmPdfQuestionGenerationSkippedForAuth = deployedBoundaryLlmPdfQuestionGeneration?.status === "skip"
+  && /QUANTGYM_(?:LLM_BEARER_TOKEN|GOOGLE_ID_TOKEN)/.test(String(deployedBoundaryLlmPdfQuestionGeneration?.reason || ""));
 const deployedGoogleProviderLoginTokenExpiresAt = String(deployedBoundaryGoogleProviderLogin?.data?.tokenExpiresAt || "").trim();
 const deployedGoogleProviderLoginSecondsRemaining = secondsUntil(deployedGoogleProviderLoginTokenExpiresAt);
 const deployedGoogleProviderLoginTokenFresh = Number.isFinite(deployedGoogleProviderLoginSecondsRemaining)
@@ -176,8 +184,10 @@ const blockers = [
       deployedBoundarySummaryPresent: Boolean(evidence.deployedProductionBoundaries.status),
       deployedBoundaryCloudHealthPass: findResult(evidence.deployedProductionBoundaries.results, "cloud health")?.status === "pass",
       deployedBoundaryGoogleConfigPass: findResult(evidence.deployedProductionBoundaries.results, "google provider config")?.status === "pass",
-      deployedBoundaryLlmResumeReviewPass: findResult(evidence.deployedProductionBoundaries.results, "LLM resume review")?.status === "pass",
-      deployedBoundaryLlmPdfQuestionGenerationPass: findResult(evidence.deployedProductionBoundaries.results, "LLM PDF question generation")?.status === "pass",
+      deployedBoundaryLlmResumeReviewPass,
+      deployedBoundaryLlmPdfQuestionGenerationPass,
+      deployedBoundaryLlmResumeReviewSkippedForAuth,
+      deployedBoundaryLlmPdfQuestionGenerationSkippedForAuth,
       deployedGoogleProviderLoginStateCaptured: Boolean(deployedBoundaryGoogleProviderLogin?.status),
       deployedGoogleProviderLoginTokenExpiresAt,
       deployedGoogleProviderLoginTokenMinimumSeconds: 120,
@@ -988,6 +998,10 @@ for (const blocker of blockers) {
       continue;
     }
     if (blocker.id === "deployed-google-provider-login" && [
+      "deployedBoundaryLlmResumeReviewPass",
+      "deployedBoundaryLlmPdfQuestionGenerationPass",
+      "deployedBoundaryLlmResumeReviewSkippedForAuth",
+      "deployedBoundaryLlmPdfQuestionGenerationSkippedForAuth",
       "deployedGoogleProviderLoginTokenFresh",
       "deployedGoogleProviderLoginTokenExpired",
       "deployedGoogleProviderLoginSkippedForToken"
@@ -1016,14 +1030,30 @@ if (deployedGoogleBlocker?.status === "pass") {
       && deployedGoogleBlocker.localCoverage?.deployedGoogleProviderLoginTokenExpired === false,
     "deployed-google-provider-login pass requires fresh, unexpired token evidence."
   );
+  expect(
+    deployedGoogleBlocker.localCoverage?.deployedBoundaryLlmResumeReviewPass === true
+      && deployedGoogleBlocker.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationPass === true,
+    "deployed-google-provider-login pass requires deployed LLM resume and PDF checks to pass."
+  );
 } else {
   expect(
     deployedGoogleBlocker?.localCoverage?.deployedGoogleProviderLoginTokenFresh === false
       && (
         deployedGoogleBlocker?.localCoverage?.deployedGoogleProviderLoginTokenExpired === true
           || deployedGoogleBlocker?.localCoverage?.deployedGoogleProviderLoginSkippedForToken === true
-      ),
+    ),
     "deployed-google-provider-login blocked state requires expired-token or missing-token evidence."
+  );
+  expect(
+    (
+      deployedGoogleBlocker?.localCoverage?.deployedBoundaryLlmResumeReviewPass === true
+        || deployedGoogleBlocker?.localCoverage?.deployedBoundaryLlmResumeReviewSkippedForAuth === true
+    )
+      && (
+        deployedGoogleBlocker?.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationPass === true
+          || deployedGoogleBlocker?.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationSkippedForAuth === true
+      ),
+    "deployed-google-provider-login blocked state requires deployed LLM pass evidence or explicit auth-token skip evidence."
   );
 }
 

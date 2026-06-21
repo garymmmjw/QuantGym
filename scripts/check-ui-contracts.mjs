@@ -2250,13 +2250,17 @@ function validateProductionBoundarySummary(data, expect, label) {
   const googleLogin = findResult(data.results, "google provider login");
   const resumeReview = findResult(data.results, "LLM resume review");
   const pdfGeneration = findResult(data.results, "LLM PDF question generation");
+  const googleLoginTokenSecondsRemaining = secondsUntil(googleLogin?.data?.tokenExpiresAt);
+  const googleLoginTokenFresh = Number.isFinite(googleLoginTokenSecondsRemaining)
+    && googleLoginTokenSecondsRemaining >= 120;
   const finalComplete = data.status === "pass"
     && Number(data.passed) === 5
     && Number(data.skipped) === 0
     && Number(data.failed) === 0
     && googleLogin?.status === "pass"
     && googleLogin?.data?.hasToken === true
-    && googleLogin?.data?.tokenAudienceMatchesClientId === true;
+    && googleLogin?.data?.tokenAudienceMatchesClientId === true
+    && googleLoginTokenFresh;
   const interimComplete = data.status === "partial"
     && Number(data.passed) === 4
     && Number(data.skipped) === 1
@@ -2265,6 +2269,9 @@ function validateProductionBoundarySummary(data, expect, label) {
     && googleLogin?.reason === "Set QUANTGYM_GOOGLE_ID_TOKEN.";
 
   expect(finalComplete || interimComplete, `${label} must be either final 5/5 pass or one-token pending partial`);
+  if (googleLogin?.status === "pass") {
+    expect(googleLoginTokenFresh === true, `${label} full Google provider login pass requires fresh token evidence`);
+  }
 
   expect(cloudHealth?.status === "pass" && cloudHealth?.data?.ok === true, `${label} must pass cloud health`);
   expect(
@@ -2282,28 +2289,51 @@ function validateDeployedProductionBoundarySummary(data, expect, label) {
     && Number(data.passed) === 4
     && Number(data.skipped) === 1
     && Number(data.failed) === 0;
+  const authTokenPartial = data.status === "partial"
+    && Number(data.passed) === 2
+    && Number(data.skipped) === 3
+    && Number(data.failed) === 0;
+  const googleLogin = findResult(data.results, "google provider login");
+  const googleLoginTokenSecondsRemaining = secondsUntil(googleLogin?.data?.tokenExpiresAt);
+  const googleLoginTokenFresh = Number.isFinite(googleLoginTokenSecondsRemaining)
+    && googleLoginTokenSecondsRemaining >= 120;
   const fullPass = data.status === "pass"
     && Number(data.passed) === 5
     && Number(data.skipped) === 0
-    && Number(data.failed) === 0;
-  expect(googleTokenOnlyPartial || fullPass, `${label} must be either Google-token-only partial or full deployed pass`);
+    && Number(data.failed) === 0
+    && googleLoginTokenFresh;
+  expect(googleTokenOnlyPartial || authTokenPartial || fullPass, `${label} must be either auth-token partial, Google-token-only partial, or full deployed pass`);
   expect(data.cloudApiEndpoint === "https://api.quantgym.app/api", `${label} must target deployed API URL`);
   expect(data.llmEndpoint === "https://llm.quantgym.app/interview", `${label} must target deployed LLM URL`);
   expect(Number(data.failed) === 0, `${label} must have zero failures`);
   const cloudHealth = findResult(data.results, "cloud health");
   const googleConfig = findResult(data.results, "google provider config");
-  const googleLogin = findResult(data.results, "google provider login");
   const resumeReview = findResult(data.results, "LLM resume review");
   const pdfGeneration = findResult(data.results, "LLM PDF question generation");
   expect(cloudHealth?.status === "pass" && cloudHealth?.data?.ok === true, `${label} must pass cloud health`);
   expect(googleConfig?.status === "pass" && googleConfig?.data?.googleClientIdSet === true, `${label} must pass Google config`);
-  if (googleTokenOnlyPartial) {
+  if (googleTokenOnlyPartial || authTokenPartial) {
     expect(googleLogin?.status === "skip" && googleLogin?.reason === "Set QUANTGYM_GOOGLE_ID_TOKEN.", `${label} must skip only Google provider login`);
+    if (authTokenPartial) {
+      expect(
+        resumeReview?.status === "skip"
+          && /QUANTGYM_(?:LLM_BEARER_TOKEN|GOOGLE_ID_TOKEN)/.test(String(resumeReview?.reason || "")),
+        `${label} auth-token partial must skip deployed LLM resume review for auth`
+      );
+      expect(
+        pdfGeneration?.status === "skip"
+          && /QUANTGYM_(?:LLM_BEARER_TOKEN|GOOGLE_ID_TOKEN)/.test(String(pdfGeneration?.reason || "")),
+        `${label} auth-token partial must skip deployed LLM PDF question generation for auth`
+      );
+    }
   } else {
     expect(googleLogin?.status === "pass" && googleLogin?.data?.googleLinked === true, `${label} full deployed pass must include Google provider login`);
+    expect(googleLoginTokenFresh === true, `${label} full deployed pass requires fresh token evidence`);
   }
-  expect(resumeReview?.status === "pass" && Number(resumeReview?.data?.itemCount || 0) > 0, `${label} must pass deployed LLM resume review`);
-  expect(pdfGeneration?.status === "pass" && Number(pdfGeneration?.data?.questionCount || 0) > 0, `${label} must pass deployed LLM PDF question generation`);
+  if (!authTokenPartial) {
+    expect(resumeReview?.status === "pass" && Number(resumeReview?.data?.itemCount || 0) > 0, `${label} must pass deployed LLM resume review`);
+    expect(pdfGeneration?.status === "pass" && Number(pdfGeneration?.data?.questionCount || 0) > 0, `${label} must pass deployed LLM PDF question generation`);
+  }
 }
 
 function validateDeployedBetaSmokeSummary(data, expect, label) {
@@ -2677,8 +2707,21 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(deployedGoogle?.localCoverage?.deployedBoundarySummaryPresent === true, `${label} must include deployed boundary summary coverage`);
   expect(deployedGoogle?.localCoverage?.deployedBoundaryCloudHealthPass === true, `${label} must include deployed cloud health coverage`);
   expect(deployedGoogle?.localCoverage?.deployedBoundaryGoogleConfigPass === true, `${label} must include deployed Google config coverage`);
-  expect(deployedGoogle?.localCoverage?.deployedBoundaryLlmResumeReviewPass === true, `${label} must include deployed LLM resume review coverage`);
-  expect(deployedGoogle?.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationPass === true, `${label} must include deployed LLM PDF question generation coverage`);
+  if (deployedGoogle?.status === "pass") {
+    expect(deployedGoogle?.localCoverage?.deployedBoundaryLlmResumeReviewPass === true, `${label} deployed Google provider pass must include deployed LLM resume review coverage`);
+    expect(deployedGoogle?.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationPass === true, `${label} deployed Google provider pass must include deployed LLM PDF question generation coverage`);
+  } else {
+    expect(
+      deployedGoogle?.localCoverage?.deployedBoundaryLlmResumeReviewPass === true
+        || deployedGoogle?.localCoverage?.deployedBoundaryLlmResumeReviewSkippedForAuth === true,
+      `${label} deployed Google provider blocker must include deployed LLM resume pass or auth-token skip coverage`
+    );
+    expect(
+      deployedGoogle?.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationPass === true
+        || deployedGoogle?.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationSkippedForAuth === true,
+      `${label} deployed Google provider blocker must include deployed LLM PDF pass or auth-token skip coverage`
+    );
+  }
   expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginStateCaptured === true, `${label} must capture deployed Google provider login state`);
   if (deployedGoogle?.status === "pass") {
     expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginPass === true, `${label} must include deployed Google provider login pass coverage`);

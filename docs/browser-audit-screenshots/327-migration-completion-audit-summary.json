@@ -14,7 +14,7 @@
     {
       "id": "google-provider-login",
       "title": "Real Google provider account login is signed off",
-      "reason": "Google Sign-In is configured and renderable, but the recorded provider token is expired; refresh QUANTGYM_GOOGLE_ID_TOKEN.",
+      "reason": "Google Sign-In is configured and renderable, but provider login still needs a short-lived QUANTGYM_GOOGLE_ID_TOKEN.",
       "nextStep": "Run npm run google:token-helper, complete Google sign-in, then run QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries before the token expires."
     }
   ],
@@ -114,30 +114,21 @@
       "title": "Local cloud, Google, and LLM boundaries are verified",
       "status": "pass",
       "evidence": {
-        "status": "pass",
-        "passed": 5,
-        "skipped": 0,
+        "status": "partial",
+        "passed": 4,
+        "skipped": 1,
         "failed": 0,
         "googleProviderLogin": {
           "name": "google provider login",
-          "status": "pass",
-          "durationMs": 157,
-          "data": {
-            "provider": "local",
-            "googleLinked": true,
-            "email": "mi***@gmail.com",
-            "hasToken": true,
-            "tokenAudienceMatchesClientId": true,
-            "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
-            "tokenEmail": "mi***@gmail.com"
-          }
+          "status": "skip",
+          "reason": "Set QUANTGYM_GOOGLE_ID_TOKEN."
         },
         "providerLoginCompleted": false,
-        "providerLoginExpiredEvidence": true,
-        "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
+        "providerLoginExpiredEvidence": false,
+        "tokenExpiresAt": "",
         "tokenMinimumSeconds": 120,
         "tokenFresh": false,
-        "tokenExpired": true,
+        "tokenExpired": false,
         "llmResumeReview": "pass",
         "llmPdfQuestionGeneration": "pass"
       }
@@ -161,20 +152,18 @@
       "id": "google-provider-login",
       "title": "Real Google provider account login is signed off",
       "status": "pending",
-      "reason": "Google Sign-In is configured and renderable, but the recorded provider token is expired; refresh QUANTGYM_GOOGLE_ID_TOKEN.",
+      "reason": "Google Sign-In is configured and renderable, but provider login still needs a short-lived QUANTGYM_GOOGLE_ID_TOKEN.",
       "nextStep": "Run npm run google:token-helper, complete Google sign-in, then run QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries before the token expires.",
       "evidence": {
         "googleButtonIframeRendered": true,
         "googleIframeUsesConfiguredClientId": true,
         "originNotAllowedWarningPresent": false,
         "providerLoginCompleted": false,
-        "productionBoundaryStatus": "pass",
-        "googleLinked": true,
-        "tokenAudienceMatchesClientId": true,
-        "tokenExpiresAt": "2026-06-08T22:20:27.000Z",
+        "productionBoundaryStatus": "partial",
+        "tokenExpiresAt": "",
         "tokenMinimumSeconds": 120,
         "tokenFresh": false,
-        "tokenExpired": true
+        "tokenExpired": false
       }
     }
   ]
