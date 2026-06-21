@@ -240,7 +240,9 @@ const blockers = [
       liveFixturePass: evidence.mediaFixture.checks?.liveFixturePutGetPublicDelete === true,
       liveFixturePreservesContentType: evidence.mediaFixture.checks?.liveFixturePreservesContentType === true,
       liveFailureRejected: evidence.mediaFixture.checks?.liveFailureRejected === true,
-      liveCleanupPass: evidence.mediaFixture.checks?.liveFailureCleanedUp === true
+      liveCleanupPass: evidence.mediaFixture.checks?.liveFailureCleanedUp === true,
+      liveSmokeNoObjectWritesWhenConfigInvalid: evidence.mediaFixture.checks?.liveSmokeNoObjectWritesWhenConfigInvalid === true,
+      packetIncludesLiveWriteBlockerEvidence: evidence.mediaPacket.checks?.liveSmokeBlocksUnsafeProductionWrites === true
     }
   },
   {

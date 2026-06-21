@@ -72,7 +72,9 @@ try {
       && productionFixture.checks?.validProductionPublicBaseUrlRedacted === true,
     liveFixtureCoversPutGetPublicDelete: productionFixture.checks?.liveFixturePutGetPublicDelete === true,
     liveFixturePreservesContentType: productionFixture.checks?.liveFixturePreservesContentType === true,
-    liveFixtureCleansUp: productionFixture.checks?.liveFailureCleanedUp === true
+    liveFixtureCleansUp: productionFixture.checks?.liveFailureCleanedUp === true,
+    liveSmokeBlocksUnsafeProductionWrites: productionFixture.checks?.liveSmokeBlockedWhenConfigInvalid === true
+      && productionFixture.checks?.liveSmokeNoObjectWritesWhenConfigInvalid === true
   };
 
   for (const [name, value] of Object.entries(checks)) {
@@ -90,7 +92,8 @@ try {
       productionNegativeFixtureCount: Number(productionFixture.negativeFixtures?.length || 0),
       liveFixtureStatus: productionFixture.liveFixture?.status || "",
       liveFailureRejected: productionFixture.livePublicFailureFixture?.rejected === true,
-      liveFixtureContentTypePreserved: productionFixture.checks?.liveFixturePreservesContentType === true
+      liveFixtureContentTypePreserved: productionFixture.checks?.liveFixturePreservesContentType === true,
+      liveSmokeNoObjectWritesWhenConfigInvalid: productionFixture.checks?.liveSmokeNoObjectWritesWhenConfigInvalid === true
     },
     requiredEnv: packet.requiredEnv.map((item) => item.name),
     storagePlan: packet.storagePlan,
@@ -144,6 +147,8 @@ function buildPacketModel(runtimeSmoke, productionFixture) {
     productionFixturePass: productionFixture.status === "pass",
     liveFixturePutGetPublicDelete: productionFixture.checks?.liveFixturePutGetPublicDelete === true,
     liveFixturePreservesContentType: productionFixture.checks?.liveFixturePreservesContentType === true,
+    liveSmokeBlocksUnsafeProductionWrites: productionFixture.checks?.liveSmokeBlockedWhenConfigInvalid === true
+      && productionFixture.checks?.liveSmokeNoObjectWritesWhenConfigInvalid === true,
     signoffCommand: "npm run check:media-storage:production && npm run check:media-storage:production -- --live"
   };
 }
@@ -159,6 +164,7 @@ function renderOverview(packet) {
     `Production fixture currently passing: ${packet.productionFixturePass ? "yes" : "no"}`,
     `Live fixture covers PUT/GET/public GET/DELETE: ${packet.liveFixturePutGetPublicDelete ? "yes" : "no"}`,
     `Live fixture preserves public Content-Type: ${packet.liveFixturePreservesContentType ? "yes" : "no"}`,
+    `Live smoke blocks unsafe production writes: ${packet.liveSmokeBlocksUnsafeProductionWrites ? "yes" : "no"}`,
     "",
     "## Files",
     "",
@@ -252,6 +258,7 @@ function renderObjectStorageContract(packet) {
     "- Production public media must use a CDN/custom host, not a raw provider object-storage public host.",
     "- Public media reads must preserve object Content-Type so image/video rendering does not depend on file extension guesses.",
     "- Access key and secret must be stored only in provider secret storage.",
+    "- Live smoke must stop before external object writes when production config checks fail.",
     "- Live-smoke failure should still delete any object that was written.",
     ""
   ].join("\n");

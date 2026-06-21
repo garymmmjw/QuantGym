@@ -171,6 +171,8 @@ try {
   validateLiveFixture(liveFixture);
   const livePublicFailureFixture = await runLiveFixture({ failPublicGet: true });
   validateLivePublicFailureFixture(livePublicFailureFixture);
+  const invalidProductionLiveFixture = await runInvalidProductionLiveNoWriteFixture();
+  validateInvalidProductionLiveNoWriteFixture(invalidProductionLiveFixture);
 
   const checks = {
     validProductionPass: productionFixture.status === "pass",
@@ -200,7 +202,11 @@ try {
       && liveFixture.deleteObserved,
     liveFixturePreservesContentType: liveFixture.contentTypePreserved === true,
     liveFailureRejected: livePublicFailureFixture.rejected,
-    liveFailureCleanedUp: livePublicFailureFixture.deleteObserved && livePublicFailureFixture.objectsRemaining === 0
+    liveFailureCleanedUp: livePublicFailureFixture.deleteObserved && livePublicFailureFixture.objectsRemaining === 0,
+    liveSmokeBlockedWhenConfigInvalid: invalidProductionLiveFixture.rejected
+      && invalidProductionLiveFixture.expectedErrorObserved,
+    liveSmokeNoObjectWritesWhenConfigInvalid: invalidProductionLiveFixture.noObjectStoreRequests
+      && invalidProductionLiveFixture.objectsRemaining === 0
   };
 
   const summary = {
@@ -210,6 +216,7 @@ try {
     negativeFixtures,
     liveFixture,
     livePublicFailureFixture,
+    invalidProductionLiveFixture,
     checks,
     failures,
     warnings
@@ -271,6 +278,15 @@ function validateLivePublicFailureFixture(summary) {
   if (!summary.deleteSigned) fail("Live public failure fixture DELETE should include SigV4 headers.");
 }
 
+function validateInvalidProductionLiveNoWriteFixture(summary) {
+  if (!summary.rejected) fail("Invalid production live fixture should fail.");
+  if (!summary.expectedErrorObserved) fail("Invalid production live fixture should report that live smoke was blocked before external writes.");
+  if (summary.s3RequestCount !== 0) fail(`Invalid production live fixture should not call object storage, got ${summary.s3RequestCount} requests.`);
+  if (summary.cdnRequestCount !== 0) fail(`Invalid production live fixture should not call CDN, got ${summary.cdnRequestCount} requests.`);
+  if (summary.objectWriteCount !== 0) fail(`Invalid production live fixture should not write objects, got ${summary.objectWriteCount} PUT requests.`);
+  if (summary.objectsRemaining !== 0) fail(`Invalid production live fixture should leave no objects, got ${summary.objectsRemaining}.`);
+}
+
 async function runLiveFixture({ failPublicGet }) {
   const fakeS3 = await createFakeS3Server();
   const fakeCdn = await createFakeCdnServer(fakeS3, {
@@ -321,6 +337,50 @@ async function runLiveFixture({ failPublicGet }) {
       publicGetFailureObserved: fakeCdn.requests.some((request) => request.statusCode === 502),
       s3Requests: summarizeRequests(fakeS3.requests),
       cdnRequests: summarizeRequests(fakeCdn.requests),
+      objectsRemaining: fakeS3.objects.size
+    };
+  } finally {
+    await closeServer(fakeCdn.server);
+    await closeServer(fakeS3.server);
+  }
+}
+
+async function runInvalidProductionLiveNoWriteFixture() {
+  const fakeS3 = await createFakeS3Server();
+  const fakeCdn = await createFakeCdnServer(fakeS3, {
+    bucket: "quantgym-live-fixture",
+    mountPath: "/cdn",
+    failPublicGet: false
+  });
+  try {
+    const result = await runConfig(["--production", "--live", "--no-dotenv"], {
+      QUANTGYM_MEDIA_STORAGE: "s3",
+      QUANTGYM_MEDIA_MAX_BYTES: "1024",
+      QUANTGYM_MAX_BODY_BYTES: "8192",
+      QUANTGYM_MEDIA_S3_ENDPOINT: fakeS3.endpoint,
+      QUANTGYM_MEDIA_S3_BUCKET: "quantgym-live-fixture",
+      QUANTGYM_MEDIA_S3_REGION: "us-east-1",
+      QUANTGYM_MEDIA_S3_ACCESS_KEY_ID: "QG_MEDIA_LIVE_FIXTURE_ACCESS",
+      QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY: "qg-media-live-fixture-secret",
+      QUANTGYM_MEDIA_S3_PREFIX: "fixture-media",
+      QUANTGYM_MEDIA_PUBLIC_BASE_URL: `${fakeCdn.endpoint}/cdn`,
+      QUANTGYM_MEDIA_S3_TIMEOUT_SECONDS: "5"
+    });
+    const live = findResult(result.parsed?.results, "object storage live smoke");
+    const liveError = String(live?.error || "");
+    return {
+      status: result.parsed?.status || "unknown",
+      childExitCode: result.exitCode,
+      rejected: result.exitCode !== 0 && (result.parsed?.status === "fail" || Number(result.parsed?.failed || 0) > 0),
+      expectedErrorObserved: liveError.includes("configuration checks failed before external object writes"),
+      liveSmokeError: liveError,
+      failedChecks: Array.isArray(result.parsed?.results)
+        ? result.parsed.results.filter((item) => item.status === "fail").map((item) => item.name)
+        : [],
+      s3RequestCount: fakeS3.requests.length,
+      cdnRequestCount: fakeCdn.requests.length,
+      objectWriteCount: fakeS3.requests.filter((request) => request.method === "PUT").length,
+      noObjectStoreRequests: fakeS3.requests.length === 0 && fakeCdn.requests.length === 0,
       objectsRemaining: fakeS3.objects.size
     };
   } finally {

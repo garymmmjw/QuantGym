@@ -144,7 +144,15 @@ check("public media URL", () => {
   };
 });
 
-if (liveMode) {
+if (liveMode && hasFailedChecks()) {
+  check("object storage live smoke", () => {
+    const failedChecks = results
+      .filter((item) => item.status === "fail")
+      .map((item) => item.name)
+      .join(", ");
+    throw new Error(`Live media smoke was not run because configuration checks failed before external object writes: ${failedChecks}`);
+  });
+} else if (liveMode) {
   await checkAsync("object storage live smoke", async () => {
     assert(isObjectStorage(config.storage), "Live media smoke requires QUANTGYM_MEDIA_STORAGE=s3/r2/object/object-storage.");
     assertPresent("QUANTGYM_MEDIA_S3_ENDPOINT", config.endpoint);
@@ -241,6 +249,10 @@ async function checkAsync(name, fn) {
   } catch (error) {
     results.push({ name, status: "fail", error: error.message || String(error) });
   }
+}
+
+function hasFailedChecks() {
+  return results.some((item) => item.status === "fail");
 }
 
 function assert(condition, message) {
