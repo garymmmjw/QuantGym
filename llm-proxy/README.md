@@ -27,14 +27,15 @@ LLM_MAX_BODY_BYTES=12582912
 Then start:
 
 ```bash
-node llm-proxy/server.mjs
+npm --prefix llm-proxy install
+npm --prefix llm-proxy start
 ```
 
 Option B: export values in your shell:
 
 ```bash
 export OPENAI_API_KEY="your-api-key"
-node llm-proxy/server.mjs
+npm --prefix llm-proxy start
 ```
 
 `OPENAI_BASE_URL` defaults to `https://api.openai.com/v1`; set it only when the host environment must reach OpenAI through an approved OpenAI-compatible gateway. It may point either at a `/v1` base URL or directly at a `/v1/responses` endpoint. `OPENAI_TIMEOUT_MS` defaults to `30000` and is clamped between 1000 and 120000 ms.
