@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ProxyAgent } from "undici";
 
 loadEnvFromProjectRoot();
 
@@ -10,6 +11,8 @@ const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.LLM_PROXY_HOST || process.env.HOST || "127.0.0.1";
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 const OPENAI_RESPONSES_URL = openAiResponsesUrl(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1");
+const OPENAI_PROXY_URL = proxyUrlForTarget(OPENAI_RESPONSES_URL);
+const OPENAI_FETCH_DISPATCHER = createProxyDispatcher(OPENAI_PROXY_URL);
 const OPENAI_TIMEOUT_MS = clampInt(process.env.OPENAI_TIMEOUT_MS || process.env.LLM_OPENAI_TIMEOUT_MS || 30_000, 1_000, 120_000);
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || "gpt-5-nano";
 const NEWS_MAX_ITEMS = Number(process.env.NEWS_MAX_ITEMS || 12);
@@ -559,7 +562,7 @@ async function requestOpenAiResponses(body) {
   const timeout = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
   let response;
   try {
-    response = await fetch(OPENAI_RESPONSES_URL, {
+    const fetchOptions = {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${OPENAI_API_KEY}`,
@@ -567,7 +570,9 @@ async function requestOpenAiResponses(body) {
       },
       body: JSON.stringify(body),
       signal: controller.signal
-    });
+    };
+    if (OPENAI_FETCH_DISPATCHER) fetchOptions.dispatcher = OPENAI_FETCH_DISPATCHER;
+    response = await fetch(OPENAI_RESPONSES_URL, fetchOptions);
   } catch (error) {
     throw new Error(formatOpenAiTransportError(error));
   } finally {
@@ -579,6 +584,57 @@ async function requestOpenAiResponses(body) {
     throw new Error(data.error?.message || `OpenAI API returned ${response.status}`);
   }
   return data;
+}
+
+function createProxyDispatcher(proxyUrl) {
+  if (!proxyUrl) return null;
+  try {
+    return new ProxyAgent(proxyUrl);
+  } catch (error) {
+    console.warn(`Ignoring invalid outbound proxy URL for OpenAI requests: ${error.message || error}`);
+    return null;
+  }
+}
+
+function proxyUrlForTarget(targetUrl) {
+  let target;
+  try {
+    target = new URL(targetUrl);
+  } catch {
+    return "";
+  }
+  if (isNoProxyHost(target.hostname)) return "";
+  const candidates = target.protocol === "https:"
+    ? [process.env.HTTPS_PROXY, process.env.https_proxy, process.env.HTTP_PROXY, process.env.http_proxy, process.env.ALL_PROXY, process.env.all_proxy]
+    : [process.env.HTTP_PROXY, process.env.http_proxy, process.env.ALL_PROXY, process.env.all_proxy];
+  return candidates.map((value) => String(value || "").trim()).find(isHttpProxyUrl) || "";
+}
+
+function isHttpProxyUrl(value) {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function isNoProxyHost(hostname) {
+  const host = String(hostname || "").toLowerCase();
+  const rules = [
+    process.env.NO_PROXY,
+    process.env.no_proxy
+  ].join(",").split(",").map((item) => item.trim().toLowerCase()).filter(Boolean);
+  return rules.some((rule) => {
+    if (rule === "*") return true;
+    if (rule.startsWith(".")) return host === rule.slice(1) || host.endsWith(rule);
+    if (rule.startsWith("*.")) {
+      const suffix = rule.slice(1);
+      return host === suffix.slice(1) || host.endsWith(suffix);
+    }
+    return host === rule || host.endsWith(`.${rule}`);
+  });
 }
 
 function formatOpenAiTransportError(error) {
