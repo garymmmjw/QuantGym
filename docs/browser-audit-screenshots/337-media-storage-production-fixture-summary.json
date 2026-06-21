@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1206,
+  "durationMs": 1214,
   "productionFixture": {
     "status": "pass",
     "mode": "production",
@@ -192,10 +192,13 @@
     "putStatus": 200,
     "signedGetStatus": 200,
     "publicGetStatus": 200,
+    "publicRangeStatus": 206,
     "deleteStatus": 204,
     "signedGetContentType": "text/plain; charset=utf-8",
     "publicGetContentType": "text/plain; charset=utf-8",
     "contentTypePreserved": true,
+    "publicRangeBytesMatch": true,
+    "publicRangeContentRangeOk": true,
     "bytes": 51,
     "cleanedUp": true,
     "putSigned": true,
@@ -226,6 +229,11 @@
         "method": "GET",
         "signed": false,
         "statusCode": 200
+      },
+      {
+        "method": "GET",
+        "signed": false,
+        "statusCode": 206
       }
     ],
     "objectsRemaining": 0
@@ -239,10 +247,13 @@
     "putStatus": 0,
     "signedGetStatus": 0,
     "publicGetStatus": 0,
+    "publicRangeStatus": 0,
     "deleteStatus": 0,
     "signedGetContentType": "",
     "publicGetContentType": "",
     "contentTypePreserved": false,
+    "publicRangeBytesMatch": false,
+    "publicRangeContentRangeOk": false,
     "bytes": 0,
     "cleanedUp": false,
     "putSigned": true,
@@ -318,6 +329,7 @@
     "liveFixturePassed": true,
     "liveFixturePutGetPublicDelete": true,
     "liveFixturePreservesContentType": true,
+    "liveFixturePublicRangePass": true,
     "liveFailureRejected": true,
     "liveFailureCleanedUp": true,
     "liveSmokeBlockedWhenConfigInvalid": true,

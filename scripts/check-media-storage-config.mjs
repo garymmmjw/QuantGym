@@ -168,6 +168,7 @@ if (liveMode && hasFailedChecks()) {
     let putResponse = null;
     let getResponse = null;
     let publicResponse = null;
+    let publicRangeResponse = null;
     let deleteResponse = null;
     let cleanupError = "";
     try {
@@ -183,6 +184,19 @@ if (liveMode && hasFailedChecks()) {
       assert(publicResponse.statusCode === 200, `Public media live GET returned HTTP ${publicResponse.statusCode}.`);
       assert(Buffer.compare(publicResponse.body, body) === 0, "Public media live GET bytes did not match PUT payload.");
       assertContentTypeIncludes(publicResponse.headers, "text/plain", "Public media live GET");
+
+      const rangeEnd = Math.min(15, body.length - 1);
+      const expectedRangeBody = body.subarray(0, rangeEnd + 1);
+      publicRangeResponse = await httpRequest(publicUrl, {
+        method: "GET",
+        headers: {
+          Range: `bytes=0-${rangeEnd}`
+        },
+        timeoutMs: Math.ceil(config.timeoutSeconds * 1000)
+      });
+      assert(publicRangeResponse.statusCode === 206, `Public media live Range GET returned HTTP ${publicRangeResponse.statusCode}.`);
+      assert(Buffer.compare(publicRangeResponse.body, expectedRangeBody) === 0, "Public media live Range GET bytes did not match requested range.");
+      assertContentRangeMatches(publicRangeResponse.headers, 0, rangeEnd, body.length, "Public media live Range GET");
     } finally {
       if (putResponse?.statusCode >= 200 && putResponse.statusCode < 300) {
         try {
@@ -208,10 +222,15 @@ if (liveMode && hasFailedChecks()) {
       putStatus: putResponse?.statusCode || 0,
       signedGetStatus: getResponse?.statusCode || 0,
       publicGetStatus: publicResponse?.statusCode || 0,
+      publicRangeStatus: publicRangeResponse?.statusCode || 0,
       deleteStatus: deleteResponse.statusCode,
       signedGetContentType: responseContentType(getResponse?.headers),
       publicGetContentType: responseContentType(publicResponse?.headers),
+      publicRangeContentRange: responseContentRange(publicRangeResponse?.headers),
       contentTypePreserved: responseContentType(publicResponse?.headers).toLowerCase().includes("text/plain"),
+      publicRangeBytesMatch: Boolean(publicRangeResponse) && Buffer.compare(publicRangeResponse.body, body.subarray(0, Math.min(16, body.length))) === 0,
+      publicRangeContentRangeOk: Boolean(publicRangeResponse)
+        && responseContentRange(publicRangeResponse.headers) === `bytes 0-${Math.min(15, body.length - 1)}/${body.length}`,
       bytes: body.length,
       cleanedUp: true
     };
@@ -297,8 +316,17 @@ function assertContentTypeIncludes(headers, expected, label) {
   assert(contentType.includes(expected.toLowerCase()), `${label} must preserve Content-Type ${expected}.`);
 }
 
+function assertContentRangeMatches(headers, start, end, total, label) {
+  const contentRange = responseContentRange(headers).toLowerCase();
+  assert(contentRange === `bytes ${start}-${end}/${total}`, `${label} must return Content-Range bytes ${start}-${end}/${total}.`);
+}
+
 function responseContentType(headers = {}) {
   return String(headers?.["content-type"] || headers?.["Content-Type"] || "");
+}
+
+function responseContentRange(headers = {}) {
+  return String(headers?.["content-range"] || headers?.["Content-Range"] || "");
 }
 
 function assertValidProductionBucketName(name, value) {

@@ -201,6 +201,9 @@ try {
       && liveFixture.publicGetStatus === 200
       && liveFixture.deleteObserved,
     liveFixturePreservesContentType: liveFixture.contentTypePreserved === true,
+    liveFixturePublicRangePass: liveFixture.publicRangeStatus === 206
+      && liveFixture.publicRangeBytesMatch === true
+      && liveFixture.publicRangeContentRangeOk === true,
     liveFailureRejected: livePublicFailureFixture.rejected,
     liveFailureCleanedUp: livePublicFailureFixture.deleteObserved && livePublicFailureFixture.objectsRemaining === 0,
     liveSmokeBlockedWhenConfigInvalid: invalidProductionLiveFixture.rejected
@@ -263,6 +266,9 @@ function validateLiveFixture(summary) {
   if (!String(summary.signedGetContentType || "").toLowerCase().includes("text/plain")) fail(`Live media fixture signed GET should preserve text/plain Content-Type, got ${summary.signedGetContentType}.`);
   if (!String(summary.publicGetContentType || "").toLowerCase().includes("text/plain")) fail(`Live media fixture public GET should preserve text/plain Content-Type, got ${summary.publicGetContentType}.`);
   if (!summary.contentTypePreserved) fail("Live media fixture public GET should report Content-Type preservation.");
+  if (summary.publicRangeStatus !== 206) fail(`Live media fixture public Range GET should return 206, got ${summary.publicRangeStatus}.`);
+  if (!summary.publicRangeBytesMatch) fail("Live media fixture public Range GET should return the requested byte slice.");
+  if (!summary.publicRangeContentRangeOk) fail("Live media fixture public Range GET should return a valid Content-Range header.");
   if (!summary.putSigned) fail("Live media fixture PUT should include SigV4 headers.");
   if (!summary.signedGetSigned) fail("Live media fixture signed GET should include SigV4 headers.");
   if (!summary.deleteSigned) fail("Live media fixture DELETE should include SigV4 headers.");
@@ -323,10 +329,13 @@ async function runLiveFixture({ failPublicGet }) {
       putStatus: Number(liveData.putStatus || 0),
       signedGetStatus: Number(liveData.signedGetStatus || 0),
       publicGetStatus: Number(liveData.publicGetStatus || 0),
+      publicRangeStatus: Number(liveData.publicRangeStatus || 0),
       deleteStatus: Number(liveData.deleteStatus || 0),
       signedGetContentType: liveData.signedGetContentType || "",
       publicGetContentType: liveData.publicGetContentType || "",
       contentTypePreserved: liveData.contentTypePreserved === true,
+      publicRangeBytesMatch: liveData.publicRangeBytesMatch === true,
+      publicRangeContentRangeOk: liveData.publicRangeContentRangeOk === true,
       bytes: Number(liveData.bytes || 0),
       cleanedUp: liveData.cleanedUp === true,
       putSigned: hasSigV4Headers(putRequest),
@@ -504,6 +513,7 @@ function createFakeCdnServer(fakeS3, { bucket, mountPath, failPublicGet }) {
     const item = {
       method: request.method || "",
       path: decodeURIComponent(requestUrl.pathname),
+      headers: request.headers,
       statusCode: 0
     };
     requests.push(item);
@@ -522,8 +532,22 @@ function createFakeCdnServer(fakeS3, { bucket, mountPath, failPublicGet }) {
       response.end(JSON.stringify({ error: "not found" }));
       return;
     }
+    const range = parseByteRange(request.headers.range, object.body.length);
+    if (range) {
+      const body = object.body.subarray(range.start, range.end + 1);
+      item.statusCode = 206;
+      response.writeHead(206, {
+        "Accept-Ranges": "bytes",
+        "Content-Type": object.contentType,
+        "Content-Length": String(body.length),
+        "Content-Range": `bytes ${range.start}-${range.end}/${object.body.length}`
+      });
+      response.end(body);
+      return;
+    }
     item.statusCode = 200;
     response.writeHead(200, {
+      "Accept-Ranges": "bytes",
       "Content-Type": object.contentType,
       "Content-Length": String(object.body.length)
     });
@@ -539,6 +563,19 @@ function createFakeCdnServer(fakeS3, { bucket, mountPath, failPublicGet }) {
       });
     });
   });
+}
+
+function parseByteRange(value, totalLength) {
+  const match = /^bytes=(\d+)-(\d*)$/.exec(String(value || "").trim());
+  if (!match) return null;
+  const start = Number(match[1]);
+  const requestedEnd = match[2] ? Number(match[2]) : totalLength - 1;
+  if (!Number.isInteger(start) || !Number.isInteger(requestedEnd)) return null;
+  if (start < 0 || start >= totalLength || requestedEnd < start) return null;
+  return {
+    start,
+    end: Math.min(requestedEnd, totalLength - 1)
+  };
 }
 
 function summarizeProductionFixture(result) {

@@ -261,10 +261,13 @@ const blockers = [
       unsafeObjectPrefixRejected: evidence.mediaFixture.checks?.unsafeObjectPrefixRejected === true,
       liveFixturePass: evidence.mediaFixture.checks?.liveFixturePutGetPublicDelete === true,
       liveFixturePreservesContentType: evidence.mediaFixture.checks?.liveFixturePreservesContentType === true,
+      liveFixtureSupportsPublicRange: evidence.mediaFixture.checks?.liveFixturePublicRangePass === true,
       liveFailureRejected: evidence.mediaFixture.checks?.liveFailureRejected === true,
       liveCleanupPass: evidence.mediaFixture.checks?.liveFailureCleanedUp === true,
       liveSmokeNoObjectWritesWhenConfigInvalid: evidence.mediaFixture.checks?.liveSmokeNoObjectWritesWhenConfigInvalid === true,
-      packetIncludesLiveWriteBlockerEvidence: evidence.mediaPacket.checks?.liveSmokeBlocksUnsafeProductionWrites === true
+      packetIncludesLiveWriteBlockerEvidence: evidence.mediaPacket.checks?.liveSmokeBlocksUnsafeProductionWrites === true,
+      packetIncludesPublicRangeContract: evidence.mediaPacket.checks?.includesPublicRangeContract === true,
+      packetIncludesPublicRangeEvidence: evidence.mediaPacket.checks?.liveFixtureSupportsPublicRange === true
     }
   },
   {

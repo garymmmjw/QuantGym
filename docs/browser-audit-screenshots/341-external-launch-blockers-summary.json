@@ -138,10 +138,13 @@
         "unsafeObjectPrefixRejected": true,
         "liveFixturePass": true,
         "liveFixturePreservesContentType": true,
+        "liveFixtureSupportsPublicRange": true,
         "liveFailureRejected": true,
         "liveCleanupPass": true,
         "liveSmokeNoObjectWritesWhenConfigInvalid": true,
-        "packetIncludesLiveWriteBlockerEvidence": true
+        "packetIncludesLiveWriteBlockerEvidence": true,
+        "packetIncludesPublicRangeContract": true,
+        "packetIncludesPublicRangeEvidence": true
       }
     },
     {

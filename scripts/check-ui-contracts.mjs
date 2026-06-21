@@ -1302,6 +1302,14 @@ function validateMediaStorageProductionFixtureSummary(data, expect, label) {
   } else {
     expect(false, `${label} live fixture must prove public Content-Type preservation`);
   }
+  const hasLiveRangeCoverage = data.checks?.liveFixturePublicRangePass !== undefined;
+  if (hasLiveRangeCoverage) {
+    expect(data.checks?.liveFixturePublicRangePass === true, `${label} live fixture must prove public Range GET support`);
+  } else if (/nested media storage production fixture/i.test(label)) {
+    warnings.push("Release-readiness nested media storage production fixture lacks live public Range GET coverage; rerun npm run check:release-readiness:local.");
+  } else {
+    expect(false, `${label} live fixture must prove public Range GET support`);
+  }
   for (const fixture of data.negativeFixtures || []) {
     expect(fixture.rejected === true, `${label} negative fixture ${fixture.name} must be rejected`);
     expect(fixture.expectedErrorObserved === true, `${label} negative fixture ${fixture.name} must report expected error`);
@@ -1313,6 +1321,11 @@ function validateMediaStorageProductionFixtureSummary(data, expect, label) {
   expect(Number(data.liveFixture?.putStatus || 0) >= 200 && Number(data.liveFixture?.putStatus || 0) < 300, `${label} live fixture PUT must return 2xx`);
   expect(Number(data.liveFixture?.signedGetStatus || 0) === 200, `${label} live fixture signed GET must return 200`);
   expect(Number(data.liveFixture?.publicGetStatus || 0) === 200, `${label} live fixture public GET must return 200`);
+  if (hasLiveRangeCoverage) {
+    expect(Number(data.liveFixture?.publicRangeStatus || 0) === 206, `${label} live fixture public Range GET must return 206`);
+    expect(data.liveFixture?.publicRangeBytesMatch === true, `${label} live fixture public Range GET bytes must match`);
+    expect(data.liveFixture?.publicRangeContentRangeOk === true, `${label} live fixture public Range GET Content-Range must match`);
+  }
   expect([200, 202, 204].includes(Number(data.liveFixture?.deleteStatus || 0)), `${label} live fixture DELETE must succeed`);
   if (hasLiveContentTypeCoverage) {
     expect(String(data.liveFixture?.signedGetContentType || "").toLowerCase().includes("text/plain"), `${label} live fixture signed GET must preserve text/plain Content-Type`);
@@ -1862,12 +1875,13 @@ function validateMediaStoragePacketSummary(data, expect, label) {
     expect(Array.isArray(data.requiredEnv) && data.requiredEnv.includes(envName), `${label} must include ${envName}`);
   }
   const operations = Array.isArray(data.storagePlan?.requiredOperations) ? data.storagePlan.requiredOperations : [];
-  for (const operation of ["signed PUT", "signed GET", "public CDN GET", "signed DELETE"]) {
+  for (const operation of ["signed PUT", "signed GET", "public CDN GET", "public CDN Range GET", "signed DELETE"]) {
     expect(operations.includes(operation), `${label} must require ${operation}`);
   }
   expect(data.evidence?.liveFixtureStatus === "pass", `${label} must include passing live fixture evidence`);
   expect(data.evidence?.liveFailureRejected === true, `${label} must include live failure rejection evidence`);
   expect(data.evidence?.liveFixtureContentTypePreserved === true, `${label} must include live Content-Type preservation evidence`);
+  expect(data.evidence?.liveFixturePublicRangePass === true, `${label} must include live public Range evidence`);
   expect(data.evidence?.liveSmokeNoObjectWritesWhenConfigInvalid === true, `${label} must include no-write evidence for invalid production live smoke`);
   expectAllChecksTrue(data, expect, label, [
     "expectedFilesWritten",
@@ -1875,6 +1889,7 @@ function validateMediaStoragePacketSummary(data, expect, label) {
     "includesBucketCdnRunbook",
     "includesObjectStorageContract",
     "includesLiveSmokeChecklist",
+    "includesPublicRangeContract",
     "includesProductionConfigSignoff",
     "usesPlaceholderOnlyForSecrets",
     "includesRawIpUrlRule",
@@ -1885,6 +1900,7 @@ function validateMediaStoragePacketSummary(data, expect, label) {
     "fixtureOutputRedactsSecrets",
     "liveFixtureCoversPutGetPublicDelete",
     "liveFixturePreservesContentType",
+    "liveFixtureSupportsPublicRange",
     "liveFixtureCleansUp",
     "liveSmokeBlocksUnsafeProductionWrites"
   ]);
@@ -2539,6 +2555,9 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(media?.localCoverage?.unsafeBucketNameRejected === true, `${label} must include media unsafe bucket-name rejection`);
   expect(media?.localCoverage?.unsafeObjectPrefixRejected === true, `${label} must include media unsafe object-prefix rejection`);
   expect(media?.localCoverage?.liveFixturePreservesContentType === true, `${label} must include media live Content-Type preservation coverage`);
+  expect(media?.localCoverage?.liveFixtureSupportsPublicRange === true, `${label} must include media live public Range coverage`);
+  expect(media?.localCoverage?.packetIncludesPublicRangeContract === true, `${label} must include media packet public Range contract`);
+  expect(media?.localCoverage?.packetIncludesPublicRangeEvidence === true, `${label} must include media packet public Range evidence`);
   const jobs = findBlocker(data.blockers, "jobs-real-feed");
   expect(jobs?.status === "pass", `${label} must mark jobs real feed pass after deployed API source smoke`);
   expect(typeof jobs?.ownerAction === "string" && jobs.ownerAction.includes("Deployed API source feed is live"), `${label} jobs owner action must record deployed source signoff`);

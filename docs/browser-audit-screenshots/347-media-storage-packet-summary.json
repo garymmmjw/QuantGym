@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-21T07:29:09.430Z",
+  "generatedAt": "2026-06-21T11:29:29.333Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/media-storage/readiness-packet",
   "filesWritten": [
     "artifacts/media-storage/readiness-packet/README.md",
@@ -16,6 +16,7 @@
     "liveFixtureStatus": "pass",
     "liveFailureRejected": true,
     "liveFixtureContentTypePreserved": true,
+    "liveFixturePublicRangePass": true,
     "liveSmokeNoObjectWritesWhenConfigInvalid": true
   },
   "requiredEnv": [
@@ -42,6 +43,7 @@
       "signed GET",
       "public CDN GET",
       "public CDN GET with preserved Content-Type",
+      "public CDN Range GET",
       "signed DELETE"
     ]
   },
@@ -52,6 +54,7 @@
     "includesBucketCdnRunbook": true,
     "includesObjectStorageContract": true,
     "includesLiveSmokeChecklist": true,
+    "includesPublicRangeContract": true,
     "includesProductionConfigSignoff": true,
     "usesPlaceholderOnlyForSecrets": true,
     "includesRawIpUrlRule": true,
@@ -62,6 +65,7 @@
     "fixtureOutputRedactsSecrets": true,
     "liveFixtureCoversPutGetPublicDelete": true,
     "liveFixturePreservesContentType": true,
+    "liveFixtureSupportsPublicRange": true,
     "liveFixtureCleansUp": true,
     "liveSmokeBlocksUnsafeProductionWrites": true
   },
