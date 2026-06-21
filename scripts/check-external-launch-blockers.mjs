@@ -43,6 +43,7 @@ const evidence = {
   browserRouteSmoke: readJson("docs/browser-audit-screenshots/328-browser-route-smoke-summary.json", "browser route smoke"),
   deployedBetaSmoke: readJson("docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json", "deployed beta smoke"),
   deployedBetaMobileContentSmoke: readJson("docs/browser-audit-screenshots/352-deployed-beta-mobile-content-smoke-summary.json", "deployed beta mobile content smoke"),
+  deployedProductionBoundaries: readJson("docs/browser-audit-screenshots/333-production-boundaries-deployed-services-summary.json", "deployed production boundary smoke"),
   releaseReadiness: skipReleaseSummaryContent
     ? { results: [] }
     : readJson("docs/browser-audit-screenshots/323-release-readiness-summary.json", "release readiness")
@@ -68,7 +69,9 @@ const requiredScripts = [
   "check:apex-www-domain",
   "check:browser-route-smoke",
   "check:deployed-beta-smoke",
-  "check:deployed-beta-mobile-content-smoke"
+  "check:deployed-beta-mobile-content-smoke",
+  "google:token-helper:deployed",
+  "verify:production-boundaries:deployed:paste-token"
 ];
 
 for (const name of requiredScripts) {
@@ -76,7 +79,7 @@ for (const name of requiredScripts) {
 }
 
 const outstandingItems = extractOutstandingItems(productStatusText);
-for (let index = 1; index <= 8; index += 1) {
+for (let index = 1; index <= 9; index += 1) {
   expect(outstandingItems.some((item) => item.index === index), `docs/product-status.md is missing Outstanding Item ${index}.`);
 }
 
@@ -91,6 +94,12 @@ const jobsFeedCleared = evidence.jobsDeployedApiSource.status === "pass"
 
 const apexWwwClear = evidence.apexWwwDomain.status === "pass"
   && evidence.apexWwwDomain.checks?.apexWwwClear === true;
+
+const deployedBoundaryGoogleProviderLogin = findResult(evidence.deployedProductionBoundaries.results, "google provider login");
+const deployedGoogleProviderCleared = evidence.deployedProductionBoundaries.status === "pass"
+  && deployedBoundaryGoogleProviderLogin?.status === "pass"
+  && deployedBoundaryGoogleProviderLogin?.data?.googleLinked === true
+  && deployedBoundaryGoogleProviderLogin?.data?.tokenAudienceMatchesClientId === true;
 
 const blockers = [
   {
@@ -122,6 +131,31 @@ const blockers = [
         requireClearModeAvailable: evidence.apexWwwDomain.checks?.requireClearModeAvailable === true,
         requireClearWouldFail: evidence.apexWwwDomain.checks?.requireClearWouldFail === true
       }
+  },
+  {
+    id: "deployed-google-provider-login",
+    title: "Deployed Google provider account login",
+    status: deployedGoogleProviderCleared ? "pass" : "blocked",
+    ownerAction: deployedGoogleProviderCleared
+      ? "Deployed Google provider login is signed off with a fresh token that matches the deployed Google Client ID."
+      : "Generate a fresh deployed Google ID token with npm run google:token-helper:deployed, then run npm run verify:production-boundaries:deployed:paste-token before the token expires.",
+    signoffCommand: "npm run verify:production-boundaries:deployed:paste-token",
+    localCoverage: {
+      trackedInProductStatus: productStatusIncludes([
+        "google:token-helper:deployed",
+        "verify:production-boundaries:deployed:paste-token"
+      ]),
+      deployedBoundarySummaryPresent: Boolean(evidence.deployedProductionBoundaries.status),
+      deployedBoundaryCloudHealthPass: findResult(evidence.deployedProductionBoundaries.results, "cloud health")?.status === "pass",
+      deployedBoundaryGoogleConfigPass: findResult(evidence.deployedProductionBoundaries.results, "google provider config")?.status === "pass",
+      deployedBoundaryLlmResumeReviewPass: findResult(evidence.deployedProductionBoundaries.results, "LLM resume review")?.status === "pass",
+      deployedBoundaryLlmPdfQuestionGenerationPass: findResult(evidence.deployedProductionBoundaries.results, "LLM PDF question generation")?.status === "pass",
+      deployedGoogleProviderLoginStateCaptured: Boolean(deployedBoundaryGoogleProviderLogin?.status),
+      deployedGoogleProviderLoginSkippedForToken: deployedBoundaryGoogleProviderLogin?.status === "skip"
+        && String(deployedBoundaryGoogleProviderLogin?.reason || "").includes("QUANTGYM_GOOGLE_ID_TOKEN"),
+      deployedTokenHelperScriptPresent: Boolean(scripts["google:token-helper:deployed"]),
+      deployedPasteTokenVerifierPresent: Boolean(scripts["verify:production-boundaries:deployed:paste-token"])
+    }
   },
   {
     id: "ops-alerts-edge-rate-limit",
@@ -847,7 +881,7 @@ const summary = {
   blockers,
   checks: {
     requiredScriptsPresent: requiredScripts.every((name) => Boolean(scripts[name])),
-    outstandingItemsTracked: outstandingItems.length >= 8,
+    outstandingItemsTracked: outstandingItems.length >= 9,
     releaseReadinessIncludesExternalFixtures: skipReleaseSummaryContent ? "skipped" : true,
     releaseReadinessIncludesExternalBlockerGate: skipReleaseSummaryContent ? "skipped" : true,
     skippedReleaseSummaryContent: skipReleaseSummaryContent,

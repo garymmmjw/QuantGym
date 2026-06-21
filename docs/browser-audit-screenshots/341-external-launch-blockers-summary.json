@@ -5,7 +5,7 @@
   "status": "pass",
   "launchReadiness": "blocked",
   "requireClear": false,
-  "blockerCount": 6,
+  "blockerCount": 7,
   "trackedCount": 1,
   "blockers": [
     {
@@ -25,6 +25,25 @@
         "wwwCloudflare525Observed": true,
         "requireClearModeAvailable": true,
         "requireClearWouldFail": true
+      }
+    },
+    {
+      "id": "deployed-google-provider-login",
+      "title": "Deployed Google provider account login",
+      "status": "blocked",
+      "ownerAction": "Generate a fresh deployed Google ID token with npm run google:token-helper:deployed, then run npm run verify:production-boundaries:deployed:paste-token before the token expires.",
+      "signoffCommand": "npm run verify:production-boundaries:deployed:paste-token",
+      "localCoverage": {
+        "trackedInProductStatus": true,
+        "deployedBoundarySummaryPresent": true,
+        "deployedBoundaryCloudHealthPass": true,
+        "deployedBoundaryGoogleConfigPass": true,
+        "deployedBoundaryLlmResumeReviewPass": true,
+        "deployedBoundaryLlmPdfQuestionGenerationPass": true,
+        "deployedGoogleProviderLoginStateCaptured": true,
+        "deployedGoogleProviderLoginSkippedForToken": true,
+        "deployedTokenHelperScriptPresent": true,
+        "deployedPasteTokenVerifierPresent": true
       }
     },
     {

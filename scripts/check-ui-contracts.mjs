@@ -2317,7 +2317,7 @@ function validateApexWwwDomainSummary(data, expect, label) {
 function validateExternalLaunchBlockersSummary(data, expect, label, options = {}) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.launchReadiness === "blocked", `${label} must keep public launch marked blocked until external signoffs clear`);
-  expect(Number(data.blockerCount || 0) === 6, `${label} must track six remaining external blockers after jobs feed clears`);
+  expect(Number(data.blockerCount || 0) === 7, `${label} must track seven remaining external blockers after jobs feed clears`);
   expect(Number(data.trackedCount || 0) === 1, `${label} must track one continuing browser-journey expansion item`);
   expect(data.checks?.requiredScriptsPresent === true, `${label} must verify required signoff scripts exist`);
   expect(data.checks?.outstandingItemsTracked === true, `${label} must verify product-status outstanding items are tracked`);
@@ -2386,6 +2386,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
 
   for (const id of [
     "apex-www-ssl",
+    "deployed-google-provider-login",
     "ops-alerts-edge-rate-limit",
     "media-bucket-cdn",
     "chrome-web-store-publication",
@@ -2409,6 +2410,19 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(apex?.localCoverage?.wwwCloudflare525Observed === true, `${label} must include WWW Cloudflare 525 evidence`);
   expect(apex?.localCoverage?.requireClearModeAvailable === true, `${label} must expose apex/WWW require-clear mode`);
   expect(apex?.localCoverage?.requireClearWouldFail === true, `${label} must prove apex/WWW require-clear would fail while blocked`);
+
+  const deployedGoogle = findBlocker(data.blockers, "deployed-google-provider-login");
+  expect(deployedGoogle?.signoffCommand === "npm run verify:production-boundaries:deployed:paste-token", `${label} deployed Google provider must record the deployed paste-token signoff command`);
+  expect(deployedGoogle?.localCoverage?.trackedInProductStatus === true, `${label} deployed Google provider must be tracked in product status`);
+  expect(deployedGoogle?.localCoverage?.deployedBoundarySummaryPresent === true, `${label} must include deployed boundary summary coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedBoundaryCloudHealthPass === true, `${label} must include deployed cloud health coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedBoundaryGoogleConfigPass === true, `${label} must include deployed Google config coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedBoundaryLlmResumeReviewPass === true, `${label} must include deployed LLM resume review coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationPass === true, `${label} must include deployed LLM PDF question generation coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginStateCaptured === true, `${label} must capture deployed Google provider login state`);
+  expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginSkippedForToken === true, `${label} must show deployed Google provider is blocked only on fresh token signoff`);
+  expect(deployedGoogle?.localCoverage?.deployedTokenHelperScriptPresent === true, `${label} must include deployed token helper coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedPasteTokenVerifierPresent === true, `${label} must include deployed paste-token verifier coverage`);
 
   const ops = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");
   expect(ops?.signoffCommand === "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke", `${label} ops alerts must record both production config and webhook-smoke signoff commands`);
