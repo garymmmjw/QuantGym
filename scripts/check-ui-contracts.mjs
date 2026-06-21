@@ -1833,6 +1833,7 @@ function validateMediaStoragePacketSummary(data, expect, label) {
   expect(data.evidence?.liveFixtureStatus === "pass", `${label} must include passing live fixture evidence`);
   expect(data.evidence?.liveFailureRejected === true, `${label} must include live failure rejection evidence`);
   expect(data.evidence?.liveFixtureContentTypePreserved === true, `${label} must include live Content-Type preservation evidence`);
+  expect(data.evidence?.liveSmokeNoObjectWritesWhenConfigInvalid === true, `${label} must include no-write evidence for invalid production live smoke`);
   expectAllChecksTrue(data, expect, label, [
     "expectedFilesWritten",
     "includesProductionEnvTemplate",
@@ -1849,7 +1850,8 @@ function validateMediaStoragePacketSummary(data, expect, label) {
     "fixtureOutputRedactsSecrets",
     "liveFixtureCoversPutGetPublicDelete",
     "liveFixturePreservesContentType",
-    "liveFixtureCleansUp"
+    "liveFixtureCleansUp",
+    "liveSmokeBlocksUnsafeProductionWrites"
   ]);
   expectEmptyFailures(data, expect, label);
 }
@@ -2475,6 +2477,8 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(media?.localCoverage?.validProductionPublicBaseUrlRedacted === true, `${label} must include media public-base URL redaction coverage`);
   expect(media?.localCoverage?.liveFixturePass === true, `${label} must include media live fixture coverage`);
   expect(media?.localCoverage?.liveFailureRejected === true, `${label} must include media failed-public-read live fixture rejection`);
+  expect(media?.localCoverage?.liveSmokeNoObjectWritesWhenConfigInvalid === true, `${label} must include media no-write coverage for invalid production live smoke`);
+  expect(media?.localCoverage?.packetIncludesLiveWriteBlockerEvidence === true, `${label} must include media packet no-write live blocker evidence`);
   expect(media?.localCoverage?.endpointRawIpRejected === true, `${label} must include media raw-IP endpoint rejection`);
   expect(media?.localCoverage?.endpointEmbeddedCredentialsRejected === true, `${label} must include media endpoint credential rejection`);
   expect(media?.localCoverage?.endpointQueryRejected === true, `${label} must include media endpoint query rejection`);

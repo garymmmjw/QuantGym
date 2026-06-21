@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1234,
+  "durationMs": 1303,
   "productionFixture": {
     "status": "pass",
     "mode": "production",
@@ -277,6 +277,23 @@
     ],
     "objectsRemaining": 0
   },
+  "invalidProductionLiveFixture": {
+    "status": "fail",
+    "childExitCode": 1,
+    "rejected": true,
+    "expectedErrorObserved": true,
+    "liveSmokeError": "Live media smoke was not run because configuration checks failed before external object writes: object storage credentials, public media URL",
+    "failedChecks": [
+      "object storage credentials",
+      "public media URL",
+      "object storage live smoke"
+    ],
+    "s3RequestCount": 0,
+    "cdnRequestCount": 0,
+    "objectWriteCount": 0,
+    "noObjectStoreRequests": true,
+    "objectsRemaining": 0
+  },
   "checks": {
     "validProductionPass": true,
     "validProductionHasAllChecks": true,
@@ -302,7 +319,9 @@
     "liveFixturePutGetPublicDelete": true,
     "liveFixturePreservesContentType": true,
     "liveFailureRejected": true,
-    "liveFailureCleanedUp": true
+    "liveFailureCleanedUp": true,
+    "liveSmokeBlockedWhenConfigInvalid": true,
+    "liveSmokeNoObjectWritesWhenConfigInvalid": true
   },
   "failures": [],
   "warnings": []
