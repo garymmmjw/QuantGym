@@ -3,8 +3,8 @@
   "date": "2026-06-21",
   "surface": "Render LLM deploy status",
   "status": "pass",
-  "durationMs": 7204,
-  "commit": "fbe489e891fec9595243ce5e4462fca1d887a11e",
+  "durationMs": 6774,
+  "commit": "369f1838da8a5fd59c0ae1424052898794bed7b5",
   "checks": {
     "rootUndiciDependencySet": true,
     "llmProxyUndiciDependencySet": true,
@@ -17,7 +17,7 @@
     "deployedApiHealthPass": true,
     "deployedLlmHealthPass": true,
     "deployedVersionCommitMatchesHead": true,
-    "deployedVersionCommit": "fbe489e891fec9595243ce5e4462fca1d887a11e",
+    "deployedVersionCommit": "369f1838da8a5fd59c0ae1424052898794bed7b5",
     "renderMailAuditRecorded": true,
     "renderMailCurrentCommitFailuresClear": true,
     "renderMailRecentFailuresClear": true
@@ -26,7 +26,7 @@
     "apiHealth": {
       "url": "https://api.quantgym.app/api/health",
       "status": 200,
-      "durationMs": 592,
+      "durationMs": 755,
       "ok": true,
       "commit": "",
       "bodyPreview": "{\"ok\": true, \"database\": {\"backend\": \"sqlite\", \"writable\": true, \"foreignKeys\": true, \"schemaTables\": 12}}",
@@ -35,7 +35,7 @@
     "llmHealth": {
       "url": "https://llm.quantgym.app/health",
       "status": 200,
-      "durationMs": 581,
+      "durationMs": 760,
       "ok": true,
       "commit": "",
       "bodyPreview": "{\"ok\":true}",
@@ -44,10 +44,10 @@
     "version": {
       "url": "https://beta.quantgym.app/version.json",
       "status": 200,
-      "durationMs": 1467,
+      "durationMs": 680,
       "ok": false,
-      "commit": "fbe489e891fec9595243ce5e4462fca1d887a11e",
-      "bodyPreview": "{\n  \"commit\": \"fbe489e891fec9595243ce5e4462fca1d887a11e\",\n  \"branch\": \"main\",\n  \"source\": \"cloudflare-pages\"\n}\n",
+      "commit": "369f1838da8a5fd59c0ae1424052898794bed7b5",
+      "bodyPreview": "{\n  \"commit\": \"369f1838da8a5fd59c0ae1424052898794bed7b5\",\n  \"branch\": \"main\",\n  \"source\": \"cloudflare-pages\"\n}\n",
       "error": ""
     }
   },
@@ -76,7 +76,7 @@
   "mailAudit": {
     "checkedExternally": true,
     "source": "Gmail connector manual search",
-    "reviewedAt": "2026-06-21T08:19:00Z",
+    "reviewedAt": "2026-06-21T17:15:08Z",
     "latestFailureUtc": "2026-06-21T06:19:17Z",
     "currentCommitFailureEmails": 0,
     "recentFailureEmails": 0,
