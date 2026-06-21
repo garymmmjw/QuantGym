@@ -286,6 +286,7 @@
         "approvalPacketIncludesReleaseBlockerCommand": true,
         "approvalPacketIncludesEvidenceUrlSafetyRules": true,
         "approvalPacketIncludesRawIpEvidenceUrlRule": true,
+        "approvalPacketRequiresExternalPermissionGrantor": true,
         "approvalPacketSourcePacketCount": 15,
         "approvalPacketSourcePacketsMatchBlockers": true,
         "approvalPacketDraftPlaceholders": true,
@@ -303,6 +304,8 @@
         "evidenceUrlQueryRejected": true,
         "staleApprovalRejected": true,
         "missingGrantorRejected": true,
+        "internalGrantorRejected": true,
+        "internalGrantorMentionsExternalRightsHolder": true,
         "unsupportedScopeRejected": true,
         "noActivePublicCommercialApprovals": true
       }

@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-20T22:15:16.488Z",
+  "generatedAt": "2026-06-21T03:19:24.998Z",
   "mode": "commercial",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/question-bank-rights/public-commercial-approval-packet",
   "signoffCommand": "npm run check:question-bank-rights:public && npm run check:question-bank-rights:commercial",
@@ -192,6 +192,7 @@
     "packetIncludesReleaseBlockerCommand": true,
     "packetIncludesEvidenceUrlSafetyRules": true,
     "packetIncludesRawIpEvidenceUrlRule": true,
+    "packetRequiresExternalPermissionGrantor": true,
     "sourcePacketsIncludeOutreachAndDrafts": true,
     "sourcePacketsListRequiredScopes": true,
     "manifestDraftEntriesContainTodoPlaceholders": true,
