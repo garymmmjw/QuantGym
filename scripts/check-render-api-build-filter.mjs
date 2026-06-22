@@ -19,7 +19,7 @@ const summaryPath = args.summary
 if (loadDotEnv) loadEnvFromProjectRoot();
 
 const recommendedPaths = ["api-server/**", "data/**"];
-const allowedMethods = new Set(["dashboard", "api", "blueprint"]);
+const allowedMethods = new Set(["dashboard", "cli", "api", "blueprint"]);
 const env = process.env;
 const config = {
   confirmed: truthy(env.QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED),
@@ -70,7 +70,7 @@ if (failures.length) process.exit(1);
 function validateProduction() {
   expect(config.confirmed, "QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED must be 1 after the Render build filter is configured.");
   expect(config.service === "quantgym-api", "QUANTGYM_RENDER_API_BUILD_FILTER_SERVICE must be quantgym-api.");
-  expect(allowedMethods.has(config.method), "QUANTGYM_RENDER_API_BUILD_FILTER_METHOD must be dashboard, api, or blueprint.");
+  expect(allowedMethods.has(config.method), "QUANTGYM_RENDER_API_BUILD_FILTER_METHOD must be dashboard, cli, api, or blueprint.");
   expect(config.paths.length > 0, "QUANTGYM_RENDER_API_BUILD_FILTER_PATHS is required.");
   expect(config.paths.includes("api-server/**"), "Render API build filter paths must include api-server/**.");
   expect(config.paths.includes("data/**"), "Render API build filter paths must include data/**.");

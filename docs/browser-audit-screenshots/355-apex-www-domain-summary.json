@@ -3,7 +3,7 @@
   "date": "2026-06-19",
   "surface": "apex/www domain SSL or redirect",
   "status": "pass",
-  "durationMs": 8082,
+  "durationMs": 3251,
   "requireClear": false,
   "launchReadiness": "blocked",
   "signoffCommand": "npm run check:apex-www-domain -- --require-clear",
@@ -59,7 +59,7 @@
           "headers": {
             "location": "",
             "server": "cloudflare",
-            "cfRay": "a0fde1376a60e2e2-HKG",
+            "cfRay": "a0fe0026cf13ef2f-LHR",
             "contentType": "text/html; charset=utf-8"
           }
         }
@@ -92,7 +92,7 @@
             "headers": {
               "location": "",
               "server": "cloudflare",
-              "cfRay": "a0fde10e3d25dd51-HKG",
+              "cfRay": "a0fe0016394dd173-HKG",
               "contentType": "text/plain; charset=UTF-8"
             }
           }
@@ -124,7 +124,7 @@
             "headers": {
               "location": "",
               "server": "cloudflare",
-              "cfRay": "a0fde1275b2c9590-HKG",
+              "cfRay": "a0fe001dcd9f5e05-HKG",
               "contentType": "text/plain; charset=UTF-8"
             }
           }

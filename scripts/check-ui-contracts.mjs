@@ -2188,6 +2188,7 @@ function validateRenderApiBuildFilterPacketSummary(data, expect, label) {
   expectPacketFiles(data, expect, label, [
     "artifacts/render-api-build-filter/readiness-packet/README.md",
     "artifacts/render-api-build-filter/readiness-packet/render-dashboard-checklist.md",
+    "artifacts/render-api-build-filter/readiness-packet/render-cli-command.md",
     "artifacts/render-api-build-filter/readiness-packet/render-blueprint-snippet.yaml",
     "artifacts/render-api-build-filter/readiness-packet/render-api-reference-payload.json",
     "artifacts/render-api-build-filter/readiness-packet/signoff-env-template.txt",
@@ -2203,6 +2204,7 @@ function validateRenderApiBuildFilterPacketSummary(data, expect, label) {
     "includesExactRecommendedPaths",
     "excludesDocsFrontendToolingPaths",
     "includesDashboardInstructions",
+    "includesCliInstructions",
     "includesBlueprintSnippet",
     "includesApiReferencePayload",
     "includesSignoffCommand",
@@ -2215,11 +2217,12 @@ function validateRenderApiBuildFilterPacketSummary(data, expect, label) {
 
 function validateRenderApiBuildFilterFixtureSummary(data, expect, label) {
   expect(data.status === "pass", `${label} status must be pass`);
-  expect(Number(data.checks || 0) === 7, `${label} must run seven fixture cases`);
-  expect(Number(data.passed || 0) === 7, `${label} must pass all fixture cases`);
+  expect(Number(data.checks || 0) === 8, `${label} must run eight fixture cases`);
+  expect(Number(data.passed || 0) === 8, `${label} must pass all fixture cases`);
   expect(Number(data.failed || 0) === 0, `${label} must have zero failed fixture cases`);
   for (const key of [
     "validProductionBuildFilterAccepted",
+    "cliProductionBuildFilterAccepted",
     "missingDataPathRejected",
     "docsPathRejected",
     "frontendSrcPathRejected",
@@ -2230,7 +2233,7 @@ function validateRenderApiBuildFilterFixtureSummary(data, expect, label) {
     expect(data.localCoverage?.[key] === true, `${label} local coverage ${key} must be true`);
   }
   const results = Array.isArray(data.results) ? data.results : [];
-  expect(results.length === 7, `${label} must summarize all seven fixture cases`);
+  expect(results.length === 8, `${label} must summarize all eight fixture cases`);
   expect(results.every((item) => item.status === "pass"), `${label} fixture case summaries must all pass`);
 }
 
@@ -2645,6 +2648,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.renderApiBuildFilterFixturePass === true, `${label} must verify the Render API build filter fixture passes`);
   expect(data.checks?.renderApiBuildFilterPacketPass === true, `${label} must verify the Render API build filter packet passes`);
   expect(data.checks?.renderApiBuildFilterPathsExact === true, `${label} must verify the Render API build filter exact path contract`);
+  expect(data.checks?.renderApiBuildFilterCliCovered === true, `${label} must verify the Render API build filter CLI handoff is covered`);
   const releaseReadinessCheck = data.checks?.releaseReadinessIncludesExternalFixtures;
   const releaseReadinessBlockerGateCheck = data.checks?.releaseReadinessIncludesExternalBlockerGate;
   const skippedReleaseSummaryContent = data.checks?.skippedReleaseSummaryContent === true;
@@ -2798,6 +2802,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(renderApiBuildFilter?.localCoverage?.trackedInProductStatus === true, `${label} must keep Render API build filter tracked in product status`);
   expect(renderApiBuildFilter?.localCoverage?.fixturePass === true, `${label} must include Render API build filter fixture coverage`);
   expect(renderApiBuildFilter?.localCoverage?.fixtureAcceptedValidProductionFilter === true, `${label} must accept the valid Render API build filter fixture`);
+  expect(renderApiBuildFilter?.localCoverage?.fixtureAcceptsCliMethod === true, `${label} must accept CLI as a Render API build filter signoff method`);
   expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsMissingDataPath === true, `${label} must reject a Render API build filter missing data/**`);
   expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsDocsPath === true, `${label} must reject docs/** in the Render API build filter`);
   expect(renderApiBuildFilter?.localCoverage?.fixtureRejectsFrontendSrcPath === true, `${label} must reject src/** in the Render API build filter`);
@@ -2808,6 +2813,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(renderApiBuildFilter?.localCoverage?.packetIncludesExactRecommendedPaths === true, `${label} must include exact Render API build filter path guidance`);
   expect(renderApiBuildFilter?.localCoverage?.packetExcludesDocsFrontendToolingPaths === true, `${label} must document excluded docs/frontend/tooling paths`);
   expect(renderApiBuildFilter?.localCoverage?.packetIncludesDashboardInstructions === true, `${label} must include Render Dashboard build-filter instructions`);
+  expect(renderApiBuildFilter?.localCoverage?.packetIncludesCliInstructions === true, `${label} must include Render CLI build-filter instructions`);
   expect(renderApiBuildFilter?.localCoverage?.packetIncludesApiReferencePayload === true, `${label} must include a Render API reference payload`);
   expect(renderApiBuildFilter?.localCoverage?.packetIncludesEvidenceUrlSafety === true, `${label} must include Render evidence URL safety rules`);
   expect(renderApiBuildFilter?.localCoverage?.packetWarnsAgainstPartialBlueprint === true, `${label} must warn against committing a partial Render Blueprint`);

@@ -1,10 +1,11 @@
 {
   "status": "pass",
-  "checks": 7,
-  "passed": 7,
+  "checks": 8,
+  "passed": 8,
   "failed": 0,
   "localCoverage": {
     "validProductionBuildFilterAccepted": true,
+    "cliProductionBuildFilterAccepted": true,
     "missingDataPathRejected": true,
     "docsPathRejected": true,
     "frontendSrcPathRejected": true,
@@ -21,6 +22,15 @@
       "expectedCheck": "productionSignoffPass",
       "expectedError": "",
       "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-22\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"pass\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": true,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": []\n}"
+    },
+    {
+      "name": "CLI production build filter",
+      "status": "pass",
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "expectedCheck": "productionSignoffPass",
+      "expectedError": "",
+      "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-22\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"pass\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"cli\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": true,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": []\n}"
     },
     {
       "name": "missing data path rejected",

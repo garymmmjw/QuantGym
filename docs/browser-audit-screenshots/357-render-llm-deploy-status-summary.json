@@ -3,8 +3,8 @@
   "date": "2026-06-22",
   "surface": "Render LLM deploy status",
   "status": "pass",
-  "durationMs": 6285,
-  "commit": "91fe86c5b771600ce7e0063a37e2ad2f560f576d",
+  "durationMs": 7739,
+  "commit": "045c04479693f7a6a63a330d7055443cc9dcf18c",
   "checks": {
     "rootUndiciDependencySet": true,
     "llmProxyUndiciDependencySet": true,
@@ -17,7 +17,7 @@
     "deployedApiHealthPass": true,
     "deployedLlmHealthPass": true,
     "deployedVersionCommitMatchesHead": true,
-    "deployedVersionCommit": "91fe86c5b771600ce7e0063a37e2ad2f560f576d",
+    "deployedVersionCommit": "045c04479693f7a6a63a330d7055443cc9dcf18c",
     "renderMailAuditRecorded": true,
     "renderMailCurrentCommitFailuresClear": true,
     "renderMailRecentFailuresClear": true
@@ -26,7 +26,7 @@
     "apiHealth": {
       "url": "https://api.quantgym.app/api/health",
       "status": 200,
-      "durationMs": 800,
+      "durationMs": 1287,
       "ok": true,
       "commit": "",
       "bodyPreview": "{\"ok\": true, \"database\": {\"backend\": \"sqlite\", \"writable\": true, \"foreignKeys\": true, \"schemaTables\": 12}}",
@@ -35,7 +35,7 @@
     "llmHealth": {
       "url": "https://llm.quantgym.app/health",
       "status": 200,
-      "durationMs": 747,
+      "durationMs": 1243,
       "ok": true,
       "commit": "",
       "bodyPreview": "{\"ok\":true}",
@@ -44,10 +44,10 @@
     "version": {
       "url": "https://beta.quantgym.app/version.json",
       "status": 200,
-      "durationMs": 652,
+      "durationMs": 885,
       "ok": false,
-      "commit": "91fe86c5b771600ce7e0063a37e2ad2f560f576d",
-      "bodyPreview": "{\n  \"commit\": \"91fe86c5b771600ce7e0063a37e2ad2f560f576d\",\n  \"branch\": \"main\",\n  \"source\": \"cloudflare-pages\"\n}\n",
+      "commit": "045c04479693f7a6a63a330d7055443cc9dcf18c",
+      "bodyPreview": "{\n  \"commit\": \"045c04479693f7a6a63a330d7055443cc9dcf18c\",\n  \"branch\": \"main\",\n  \"source\": \"cloudflare-pages\"\n}\n",
       "error": ""
     }
   },

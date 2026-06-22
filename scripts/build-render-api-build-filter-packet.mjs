@@ -16,6 +16,7 @@ const failures = [];
 
 writePacketFile("README.md", renderOverview());
 writePacketFile("render-dashboard-checklist.md", renderDashboardChecklist());
+writePacketFile("render-cli-command.md", renderCliCommand());
 writePacketFile("render-blueprint-snippet.yaml", renderBlueprintSnippet());
 writePacketFile("render-api-reference-payload.json", `${JSON.stringify(renderApiPayload(), null, 2)}\n`);
 writePacketFile("signoff-env-template.txt", renderSignoffEnvTemplate());
@@ -28,6 +29,7 @@ const checks = {
   expectedFilesWritten: [
     "README.md",
     "render-dashboard-checklist.md",
+    "render-cli-command.md",
     "render-blueprint-snippet.yaml",
     "render-api-reference-payload.json",
     "signoff-env-template.txt",
@@ -36,6 +38,7 @@ const checks = {
   includesExactRecommendedPaths: recommendedPaths.every((item) => combinedContent.includes(item)),
   excludesDocsFrontendToolingPaths: combinedContent.includes("Do not include `docs/**`, `src/**`, `scripts/**`, `public/**`, `artifacts/**`, or root docs/tooling files"),
   includesDashboardInstructions: combinedContent.includes("Render Dashboard") && combinedContent.includes("Build Filter"),
+  includesCliInstructions: combinedContent.includes("Render CLI") && combinedContent.includes("render services update") && combinedContent.includes("--build-filter-path"),
   includesBlueprintSnippet: combinedContent.includes("buildFilter:") && combinedContent.includes("paths:"),
   includesApiReferencePayload: combinedContent.includes("\"buildFilter\"") && combinedContent.includes("\"paths\""),
   includesSignoffCommand: combinedContent.includes(signoffCommand),
@@ -85,6 +88,8 @@ function renderOverview() {
     "",
     "Do not commit a partial `render.yaml` for this service. A Blueprint can replace service settings, so use it only if it reflects the complete current Render service configuration.",
     "",
+    "Configuration options in this packet: Render Dashboard, Render CLI, Render API reference payload, or a complete Render Blueprint.",
+    "",
     "Final signoff after configuring Render:",
     "",
     "```bash",
@@ -108,6 +113,34 @@ function renderDashboardChecklist() {
     "5. Save the setting.",
     "6. Trigger a docs-only or frontend-only commit only after the build filter is live, then confirm `quantgym-api` does not restart.",
     "7. Record an HTTPS evidence URL from the Render Dashboard. The URL must use a DNS hostname and must have no embedded credentials, no query strings or fragments.",
+    ""
+  ].join("\n");
+}
+
+function renderCliCommand() {
+  return [
+    "# Render CLI Build Filter Command",
+    "",
+    "Use this only from a machine where the Render CLI is already installed and authenticated.",
+    "",
+    "Reference:",
+    "",
+    "- https://render.com/docs/cli-reference",
+    "",
+    "Recommended command:",
+    "",
+    "```bash",
+    "render services update quantgym-api \\",
+    ...recommendedPaths.map((item, index) => `  --build-filter-path ${quoteShell(item)}${index === recommendedPaths.length - 1 ? "" : " \\"}`),
+    "```",
+    "",
+    "After the command completes:",
+    "",
+    "1. Reopen the Render Dashboard service `quantgym-api`.",
+    "2. Confirm the included Build Filter paths are exactly `api-server/**` and `data/**`.",
+    "3. Confirm `docs/**`, `src/**`, `scripts/**`, `public/**`, and `artifacts/**` are not included.",
+    "4. Record an HTTPS Render Dashboard evidence URL with a DNS hostname and no query strings or fragments.",
+    "5. Run the production signoff with `QUANTGYM_RENDER_API_BUILD_FILTER_METHOD=cli`.",
     ""
   ].join("\n");
 }
@@ -139,6 +172,7 @@ function renderSignoffEnvTemplate() {
   return [
     "# Fill these locally after the Render build filter is live. Do not commit filled values.",
     "QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED=1",
+    "# Allowed methods: dashboard, cli, api, blueprint.",
     "QUANTGYM_RENDER_API_BUILD_FILTER_METHOD=dashboard",
     "QUANTGYM_RENDER_API_BUILD_FILTER_SERVICE=quantgym-api",
     `QUANTGYM_RENDER_API_BUILD_FILTER_PATHS=${recommendedPaths.join(",")}`,
@@ -173,6 +207,10 @@ function writePacketFile(name, content) {
 function csvCell(value) {
   const text = String(value || "");
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function quoteShell(value) {
+  return `"${String(value).replace(/(["\\$`])/g, "\\$1")}"`;
 }
 
 function parseArgs(argv) {

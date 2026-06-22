@@ -29,6 +29,15 @@ const cases = [
     expectedCheck: "productionSignoffPass"
   },
   {
+    name: "CLI production build filter",
+    env: {
+      ...validEnv,
+      QUANTGYM_RENDER_API_BUILD_FILTER_METHOD: "cli"
+    },
+    expectStatus: 0,
+    expectedCheck: "productionSignoffPass"
+  },
+  {
     name: "missing data path rejected",
     env: {
       ...validEnv,
@@ -153,6 +162,7 @@ const summary = {
   failed: failures.length,
   localCoverage: {
     validProductionBuildFilterAccepted: results.find((item) => item.name === "valid production build filter")?.status === "pass",
+    cliProductionBuildFilterAccepted: results.find((item) => item.name === "CLI production build filter")?.status === "pass",
     missingDataPathRejected: results.find((item) => item.name === "missing data path rejected")?.status === "pass",
     docsPathRejected: results.find((item) => item.name === "docs path rejected")?.status === "pass",
     frontendSrcPathRejected: results.find((item) => item.name === "frontend src path rejected")?.status === "pass",

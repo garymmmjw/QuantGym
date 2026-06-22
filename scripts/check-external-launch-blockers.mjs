@@ -420,6 +420,7 @@ const blockers = [
       ]),
       fixturePass: evidence.renderApiBuildFilterFixture.status === "pass",
       fixtureAcceptedValidProductionFilter: evidence.renderApiBuildFilterFixture.localCoverage?.validProductionBuildFilterAccepted === true,
+      fixtureAcceptsCliMethod: evidence.renderApiBuildFilterFixture.localCoverage?.cliProductionBuildFilterAccepted === true,
       fixtureRejectsMissingDataPath: evidence.renderApiBuildFilterFixture.localCoverage?.missingDataPathRejected === true,
       fixtureRejectsDocsPath: evidence.renderApiBuildFilterFixture.localCoverage?.docsPathRejected === true,
       fixtureRejectsFrontendSrcPath: evidence.renderApiBuildFilterFixture.localCoverage?.frontendSrcPathRejected === true,
@@ -430,6 +431,7 @@ const blockers = [
       packetIncludesExactRecommendedPaths: evidence.renderApiBuildFilterPacket.checks?.includesExactRecommendedPaths === true,
       packetExcludesDocsFrontendToolingPaths: evidence.renderApiBuildFilterPacket.checks?.excludesDocsFrontendToolingPaths === true,
       packetIncludesDashboardInstructions: evidence.renderApiBuildFilterPacket.checks?.includesDashboardInstructions === true,
+      packetIncludesCliInstructions: evidence.renderApiBuildFilterPacket.checks?.includesCliInstructions === true,
       packetIncludesBlueprintSnippet: evidence.renderApiBuildFilterPacket.checks?.includesBlueprintSnippet === true,
       packetIncludesApiReferencePayload: evidence.renderApiBuildFilterPacket.checks?.includesApiReferencePayload === true,
       packetIncludesSignoffCommand: evidence.renderApiBuildFilterPacket.checks?.includesSignoffCommand === true,
@@ -1146,6 +1148,8 @@ const summary = {
     renderApiBuildFilterPacketPass: evidence.renderApiBuildFilterPacket.status === "pass",
     renderApiBuildFilterPathsExact: evidence.renderApiBuildFilterPacket.checks?.includesExactRecommendedPaths === true
       && evidence.renderApiBuildFilterFixture.localCoverage?.validProductionBuildFilterAccepted === true,
+    renderApiBuildFilterCliCovered: evidence.renderApiBuildFilterPacket.checks?.includesCliInstructions === true
+      && evidence.renderApiBuildFilterFixture.localCoverage?.cliProductionBuildFilterAccepted === true,
     releaseReadinessIncludesExternalFixtures: skipReleaseSummaryContent ? "skipped" : true,
     releaseReadinessIncludesExternalBlockerGate: skipReleaseSummaryContent ? "skipped" : true,
     skippedReleaseSummaryContent: skipReleaseSummaryContent,
