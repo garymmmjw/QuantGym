@@ -1,17 +1,17 @@
 {
-  "status": "partial",
+  "status": "pass",
   "scope": "deployed production service URLs from beta.quantgym.app config.js",
   "endpointSource": "https://beta.quantgym.app/config.js",
   "cloudApiEndpoint": "https://api.quantgym.app/api",
   "llmEndpoint": "https://llm.quantgym.app/interview",
-  "passed": 2,
-  "skipped": 3,
+  "passed": 5,
+  "skipped": 0,
   "failed": 0,
   "results": [
     {
       "name": "cloud health",
       "status": "pass",
-      "durationMs": 712,
+      "durationMs": 1194,
       "data": {
         "ok": true
       }
@@ -19,7 +19,7 @@
     {
       "name": "google provider config",
       "status": "pass",
-      "durationMs": 255,
+      "durationMs": 390,
       "data": {
         "googleClientIdSet": true,
         "endpointRequiresToken": true
@@ -27,20 +27,35 @@
     },
     {
       "name": "google provider login",
-      "status": "skip",
-      "reason": "Set QUANTGYM_GOOGLE_ID_TOKEN."
+      "status": "pass",
+      "durationMs": 505,
+      "data": {
+        "provider": "local",
+        "googleLinked": true,
+        "email": "mi***@gmail.com",
+        "hasToken": true,
+        "tokenAudienceMatchesClientId": true,
+        "tokenExpiresAt": "2026-06-22T21:49:54.000Z",
+        "tokenEmail": "mi***@gmail.com"
+      }
     },
     {
       "name": "LLM resume review",
-      "status": "skip",
-      "durationMs": 697,
-      "reason": "Set QUANTGYM_LLM_BEARER_TOKEN or QUANTGYM_GOOGLE_ID_TOKEN for deployed LLM checks."
+      "status": "pass",
+      "durationMs": 4090,
+      "data": {
+        "itemCount": 6,
+        "firstItem": "Quantify impact with clear metrics: specify CPU time reduction and benchmark after optimization (e.g., reduced runtime f"
+      }
     },
     {
       "name": "LLM PDF question generation",
-      "status": "skip",
-      "durationMs": 228,
-      "reason": "Set QUANTGYM_LLM_BEARER_TOKEN or QUANTGYM_GOOGLE_ID_TOKEN for deployed LLM checks."
+      "status": "pass",
+      "durationMs": 7715,
+      "data": {
+        "questionCount": 1,
+        "firstTitle": "Understanding production boundaries and smoke testing in model deployment"
+      }
     }
   ]
 }
