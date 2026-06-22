@@ -182,6 +182,7 @@ try {
     ["mobile account profile and upload controls avoid overflow", runMobileAccountProfileUploadFlow],
     ["settings language switch syncs URL and persists reload", runSettingsLanguageSwitchFlow],
     ["settings saves runtime config, clears Google Client ID, and reloads", runSettingsPersistenceFlow],
+    ["settings sync cloud without session shows guarded status", runSettingsCloudSyncNoSessionGuardFlow],
     ["mobile settings config and backup controls avoid overflow", runMobileSettingsConfigBackupControlsFlow],
     ["settings rejects invalid backup files without changing state", runSettingsInvalidBackupGuardFlow],
     ["settings backup restores community posts and messages", runSettingsBackupCommunityRestoreFlow],
@@ -8247,6 +8248,79 @@ async function runSettingsPersistenceFlow(page, baseUrl) {
   return result;
 }
 
+async function runSettingsCloudSyncNoSessionGuardFlow(page, baseUrl) {
+  const result = { name: "settings sync cloud without session shows guarded status", status: "pass" };
+  const syncRequests = [];
+  const syncRoutePattern = "**/api/sync**";
+  try {
+    await page.route(syncRoutePattern, async (route) => {
+      const requestUrl = new URL(route.request().url());
+      syncRequests.push({
+        method: route.request().method(),
+        path: requestUrl.pathname
+      });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ syncedAt: new Date().toISOString() })
+      });
+    });
+
+    result.step = "open settings without a cloud session";
+    await page.goto(`${baseUrl}/settings?source=browser-smoke-cloud-sync`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+    await page.evaluate(() => {
+      localStorage.setItem("quantMemoryBoard.cloud.v1", JSON.stringify({
+        endpoint: `${window.location.origin}/api`,
+        token: "",
+        userId: "",
+        lastSyncAt: "",
+        lastError: ""
+      }));
+    });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+
+    const before = await readSettingsCloudSyncGuardSnapshot(page);
+    if (before.cloudTokenPresent) throw new Error("Settings cloud guard started with a token.");
+    if (!before.currentUserId) throw new Error("Settings cloud guard did not start with an authenticated local user.");
+
+    result.step = "click Sync Cloud without a cloud session";
+    await page.locator("#syncCloudBtn").click({ timeout: 10000 });
+    await page.waitForFunction(() => {
+      const message = document.querySelector("#settingsMessage")?.textContent || "";
+      return /云端还没有登录会话|No cloud session/i.test(message);
+    }, null, { timeout: 10000 });
+    const after = await readSettingsCloudSyncGuardSnapshot(page);
+    if (!/云端还没有登录会话|No cloud session/i.test(after.message)) {
+      throw new Error(`Settings cloud sync did not show the no-session guard: ${after.message}`);
+    }
+    if (syncRequests.length) {
+      throw new Error(`Settings cloud sync called /sync without a cloud session: ${JSON.stringify(syncRequests)}`);
+    }
+    if (after.cloudTokenPresent) throw new Error("Settings cloud guard unexpectedly created a cloud token.");
+
+    delete result.step;
+    result.noSessionGuardShown = true;
+    result.syncRequestCount = syncRequests.length;
+    result.cloudTokenPresent = after.cloudTokenPresent;
+    result.currentUserId = after.currentUserId;
+    result.message = after.message;
+  } catch (error) {
+    result.status = "fail";
+    result.error = result.step ? `${result.step}: ${error.message}` : error.message;
+    result.diagnostics = await readSettingsCloudSyncGuardSnapshot(page).catch((diagnosticError) => ({
+      error: diagnosticError?.message || String(diagnosticError)
+    }));
+    fail(`${result.name} failed: ${error.message}`);
+  } finally {
+    await page.unroute(syncRoutePattern).catch(() => {});
+  }
+  return result;
+}
+
 async function runSettingsBackupImportResetFlow(page, baseUrl) {
   const result = { name: "settings backup export, import, and reset state", status: "pass" };
   const timestamp = Date.now();
@@ -8734,6 +8808,31 @@ async function readSettingsPersistenceValues(page) {
     storedCloud: JSON.parse(localStorage.getItem("quantMemoryBoard.cloud.v1") || "{}"),
     storedAuth: JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}")
   }));
+}
+
+async function readSettingsCloudSyncGuardSnapshot(page) {
+  return page.evaluate(() => {
+    let cloud = {};
+    let auth = {};
+    try {
+      cloud = JSON.parse(localStorage.getItem("quantMemoryBoard.cloud.v1") || "{}");
+    } catch {
+      cloud = {};
+    }
+    try {
+      auth = JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}");
+    } catch {
+      auth = {};
+    }
+    return {
+      message: document.querySelector("#settingsMessage")?.textContent || "",
+      currentUserId: auth.currentUserId || "",
+      cloudEndpoint: cloud.endpoint || "",
+      cloudUserId: cloud.userId || "",
+      cloudTokenPresent: Boolean(cloud.token),
+      syncButtonVisible: Boolean(document.querySelector("#syncCloudBtn"))
+    };
+  });
 }
 
 async function expectSettingsLanguageState(page, expected) {

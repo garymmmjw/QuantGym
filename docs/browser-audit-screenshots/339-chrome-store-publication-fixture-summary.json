@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 9882,
+  "durationMs": 9959,
   "externalPublicationRequired": true,
   "finalSignoffCommand": "npm run check:chrome-store-publication:published",
   "submissionHandoff": {

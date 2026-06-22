@@ -879,6 +879,16 @@ const blockers = [
         evidence.browserRouteSmoke.interactions?.results,
         "settings saves runtime config, clears Google Client ID, and reloads"
       )?.status === "pass",
+      settingsCloudSyncGuardPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "settings sync cloud without session shows guarded status"
+        );
+        return item?.status === "pass"
+          && item.noSessionGuardShown === true
+          && item.syncRequestCount === 0
+          && item.cloudTokenPresent === false;
+      })(),
       settingsLanguageSwitchPass: (() => {
         const item = findResult(
           evidence.browserRouteSmoke.interactions?.results,
@@ -1164,6 +1174,7 @@ const summary = {
     browserMobileShellControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileShellControlsPass === true,
     browserMobileModuleNavPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileModuleNavPass === true,
     browserSettingsRuntimeConfigPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsRuntimeConfigPass === true,
+    browserSettingsCloudSyncGuardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsCloudSyncGuardPass === true,
     browserSettingsLanguageSwitchPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsLanguageSwitchPass === true,
     browserSettingsGoogleClientClearPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsGoogleClientClearPass === true,
     browserSettingsBackupPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsBackupPass === true,
