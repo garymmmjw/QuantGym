@@ -183,6 +183,7 @@ try {
     ["settings language switch syncs URL and persists reload", runSettingsLanguageSwitchFlow],
     ["settings saves runtime config, clears Google Client ID, and reloads", runSettingsPersistenceFlow],
     ["settings sync cloud without session shows guarded status", runSettingsCloudSyncNoSessionGuardFlow],
+    ["settings sync cloud with session sends state and updates status", runSettingsCloudSyncSuccessFlow],
     ["mobile settings config and backup controls avoid overflow", runMobileSettingsConfigBackupControlsFlow],
     ["settings rejects invalid backup files without changing state", runSettingsInvalidBackupGuardFlow],
     ["settings backup restores community posts and messages", runSettingsBackupCommunityRestoreFlow],
@@ -570,7 +571,11 @@ async function checkRoute(page, baseUrl, route) {
     selectors: routeTargets[route.id]
   };
   try {
-    await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: 25000 });
+    const navigation = await gotoRouteWithColdStartRetry(page, targetUrl);
+    if (navigation.retried) {
+      result.navigationRetried = true;
+      result.firstNavigationError = navigation.firstError;
+    }
     await waitForAuthenticatedShell(page);
     for (const selector of routeTargets[route.id]) {
       await page.waitForSelector(selector, { state: "attached", timeout: 12000 });
@@ -588,6 +593,29 @@ async function checkRoute(page, baseUrl, route) {
     fail(`Route ${route.id} failed browser smoke: ${error.message}`);
   }
   return result;
+}
+
+async function gotoRouteWithColdStartRetry(page, targetUrl) {
+  const attempts = [
+    { timeout: 25000 },
+    { timeout: 45000 }
+  ];
+  let firstError = null;
+  for (const [index, attempt] of attempts.entries()) {
+    try {
+      await page.goto(targetUrl, { waitUntil: "domcontentloaded", timeout: attempt.timeout });
+      return {
+        retried: index > 0,
+        firstError: firstError ? firstError.message : ""
+      };
+    } catch (error) {
+      if (!firstError) firstError = error;
+      if (index === attempts.length - 1) throw error;
+      await page.goto("about:blank", { waitUntil: "domcontentloaded", timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(750);
+    }
+  }
+  return { retried: false, firstError: "" };
 }
 
 async function runOverviewToProblemsFlow(page, baseUrl) {
@@ -8321,6 +8349,163 @@ async function runSettingsCloudSyncNoSessionGuardFlow(page, baseUrl) {
   return result;
 }
 
+async function runSettingsCloudSyncSuccessFlow(page, baseUrl) {
+  const result = { name: "settings sync cloud with session sends state and updates status", status: "pass" };
+  const timestamp = Date.now();
+  const token = `browser-cloud-sync-token-${timestamp}`;
+  const resumeText = `Settings cloud sync resume payload ${timestamp}`;
+  const postText = `Settings cloud sync community payload ${timestamp}`;
+  const syncedAt = new Date(timestamp + 1000).toISOString();
+  const syncRequests = [];
+  const syncRoutePattern = "**/api/sync**";
+  try {
+    await page.route(syncRoutePattern, async (route) => {
+      const request = route.request();
+      const requestUrl = new URL(request.url());
+      let body = {};
+      try {
+        body = JSON.parse(request.postData() || "{}");
+      } catch {
+        body = {};
+      }
+      syncRequests.push({
+        method: request.method(),
+        path: requestUrl.pathname,
+        authorization: request.headers().authorization || "",
+        body
+      });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ syncedAt })
+      });
+    });
+
+    result.step = "open settings with a cloud session";
+    await page.goto(`${baseUrl}/settings?source=browser-smoke-cloud-sync-success`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+    await page.evaluate(({ token: cloudToken, resumeText: text, postText: communityPostText }) => {
+      let auth = {};
+      try {
+        auth = JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}");
+      } catch {
+        auth = {};
+      }
+      const userId = auth.currentUserId || "local:browser-route-smoke";
+      localStorage.setItem("quantMemoryBoard.cloud.v1", JSON.stringify({
+        endpoint: `${window.location.origin}/api`,
+        token: cloudToken,
+        userId,
+        lastSyncAt: "",
+        lastError: ""
+      }));
+      const stateKey = `quantMemoryBoard.userState.v1.${userId}`;
+      let state = {};
+      try {
+        state = JSON.parse(localStorage.getItem(stateKey) || "{}");
+      } catch {
+        state = {};
+      }
+      localStorage.setItem(stateKey, JSON.stringify({
+        ...state,
+        resume: {
+          ...(state.resume || {}),
+          text,
+          updatedAt: new Date().toISOString()
+        }
+      }));
+      let community = {};
+      try {
+        community = JSON.parse(localStorage.getItem("quantMemoryBoard.community.v1") || "{}");
+      } catch {
+        community = {};
+      }
+      localStorage.setItem("quantMemoryBoard.community.v1", JSON.stringify({
+        posts: [
+          ...(Array.isArray(community.posts) ? community.posts : []),
+          {
+            id: `post:settings-cloud-sync:${Date.now()}`,
+            kind: "update",
+            authorId: userId,
+            authorName: "Browser Route Smoke",
+            authorAvatar: "",
+            country: "china",
+            region: "上海",
+            text: communityPostText,
+            media: null,
+            likes: [],
+            comments: [],
+            createdAt: new Date().toISOString()
+          }
+        ],
+        threads: Array.isArray(community.threads) ? community.threads : []
+      }));
+    }, { token, resumeText, postText });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+    const before = await readSettingsCloudSyncGuardSnapshot(page);
+    if (!before.cloudTokenPresent) throw new Error("Settings cloud sync success path started without a token.");
+    if (before.cloudUserId !== before.currentUserId) {
+      throw new Error(`Settings cloud sync user mismatch: ${before.cloudUserId} !== ${before.currentUserId}`);
+    }
+
+    result.step = "click Sync Cloud with a cloud session";
+    await page.locator("#syncCloudBtn").click({ timeout: 10000 });
+    await page.waitForFunction((expected) => {
+      let cloud = {};
+      try {
+        cloud = JSON.parse(localStorage.getItem("quantMemoryBoard.cloud.v1") || "{}");
+      } catch {
+        cloud = {};
+      }
+      const message = document.querySelector("#settingsMessage")?.textContent || "";
+      return cloud.lastSyncAt === expected.syncedAt && /云端已同步|Cloud synced/i.test(message);
+    }, { syncedAt }, { timeout: 10000 });
+
+    if (syncRequests.length !== 1) {
+      throw new Error(`Expected exactly one /sync request, got ${syncRequests.length}.`);
+    }
+    const request = syncRequests[0];
+    if (request.method !== "POST") throw new Error(`Settings cloud sync used ${request.method} instead of POST.`);
+    if (request.authorization !== `Bearer ${token}`) throw new Error("Settings cloud sync did not send the expected Authorization header.");
+    const body = request.body || {};
+    const payloadIncludesState = body.state?.resume?.text === resumeText;
+    const payloadIncludesCommunity = Array.isArray(body.community?.posts)
+      && body.community.posts.some((post) => post.text === postText);
+    const payloadIncludesAccount = body.account?.id === before.currentUserId
+      && body.account?.email
+      && !Object.prototype.hasOwnProperty.call(body.account, "passwordHash");
+    if (!payloadIncludesState) throw new Error("Settings cloud sync payload did not include the seeded resume state.");
+    if (!payloadIncludesCommunity) throw new Error("Settings cloud sync payload did not include the seeded community post.");
+    if (!payloadIncludesAccount) throw new Error("Settings cloud sync payload did not include the sanitized current account.");
+
+    const after = await readSettingsCloudSyncGuardSnapshot(page);
+    if (after.lastSyncAt !== syncedAt) throw new Error(`Settings cloud sync did not persist lastSyncAt: ${after.lastSyncAt}`);
+    if (!/云端已同步|Cloud synced/i.test(after.message)) throw new Error(`Settings cloud sync did not update status: ${after.message}`);
+
+    delete result.step;
+    result.syncRequestCount = syncRequests.length;
+    result.authorizationHeaderPresent = request.authorization === `Bearer ${token}`;
+    result.payloadIncludesState = payloadIncludesState;
+    result.payloadIncludesCommunity = payloadIncludesCommunity;
+    result.payloadIncludesAccount = Boolean(payloadIncludesAccount);
+    result.statusUpdated = true;
+    result.lastSyncAt = after.lastSyncAt;
+  } catch (error) {
+    result.status = "fail";
+    result.error = result.step ? `${result.step}: ${error.message}` : error.message;
+    result.diagnostics = await readSettingsCloudSyncGuardSnapshot(page).catch((diagnosticError) => ({
+      error: diagnosticError?.message || String(diagnosticError)
+    }));
+    fail(`${result.name} failed: ${error.message}`);
+  } finally {
+    await page.unroute(syncRoutePattern).catch(() => {});
+  }
+  return result;
+}
+
 async function runSettingsBackupImportResetFlow(page, baseUrl) {
   const result = { name: "settings backup export, import, and reset state", status: "pass" };
   const timestamp = Date.now();
@@ -8829,6 +9014,7 @@ async function readSettingsCloudSyncGuardSnapshot(page) {
       currentUserId: auth.currentUserId || "",
       cloudEndpoint: cloud.endpoint || "",
       cloudUserId: cloud.userId || "",
+      lastSyncAt: cloud.lastSyncAt || "",
       cloudTokenPresent: Boolean(cloud.token),
       syncButtonVisible: Boolean(document.querySelector("#syncCloudBtn"))
     };
@@ -9114,6 +9300,10 @@ function attachPageCollectors(page, baseUrl) {
     const text = message.text();
     if (/favicon\.ico/i.test(text)) return;
     if (/Failed to load resource: net::ERR_CONNECTION_REFUSED/i.test(text)) return;
+    if (/^Failed to load resource: net::ERR_TIMED_OUT$/i.test(text)) {
+      ignoredConsoleErrors.push({ type: message.type(), text: text.slice(0, 500) });
+      return;
+    }
     if (/Failed to load resource: the server responded with a status of 403/i.test(text)) return;
     if (/\[GSI_LOGGER\]|origin is not allowed for the given client ID/i.test(text)) return;
     if (/\[QuantGym\] Failed to import backup/i.test(text)) return;

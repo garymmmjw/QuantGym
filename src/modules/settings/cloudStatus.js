@@ -38,6 +38,7 @@ export async function syncSettingsCloudNow(elements = {}, config = {}, options =
   getSyncController()?.markAllDirty?.();
   if (elements.settingsMessage) elements.settingsMessage.textContent = t("cloudSyncing");
   await flushSync();
-  if (elements.settingsMessage) elements.settingsMessage.textContent = getStatusText();
-  return true;
+  const statusText = getStatusText();
+  if (elements.settingsMessage) elements.settingsMessage.textContent = statusText;
+  return statusText || true;
 }

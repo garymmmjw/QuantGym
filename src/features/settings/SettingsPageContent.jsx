@@ -82,7 +82,7 @@ export function SettingsPageContent() {
     setStatusMessage(text("cloudSyncing", "云端同步中..."));
     const synced = await model.syncCloud?.();
     if (synced) {
-      setStatusMessage(model.getCloudStatusText?.() || text("cloudConnected", "云端已连接。"));
+      setStatusMessage(typeof synced === "string" ? synced : model.getCloudStatusText?.() || text("cloudConnected", "云端已连接。"));
     } else {
       setStatusMessage(text("cloudNoSession", "云端还没有登录会话，请先用邮箱密码登录一次。"));
     }

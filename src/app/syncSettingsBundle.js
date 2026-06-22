@@ -79,12 +79,16 @@ export function createSyncSettingsBundle(deps = {}) {
       appState.cloudConfig.lastSyncAt = result.syncedAt || new Date().toISOString();
       appState.cloudConfig.lastError = "";
       saveCloudConfig();
+      if (typeof syncStores === "function") syncStores();
       settingsController?.renderCloudStatus?.();
-      if (dirty.state || dirty.account) invalidateLeaderboardCloud({ refresh: true });
+      if ((dirty.state || dirty.account) && typeof invalidateLeaderboardCloud === "function") {
+        invalidateLeaderboardCloud({ refresh: true });
+      }
     },
     onError(error) {
       appState.cloudConfig.lastError = error.message || "Cloud sync failed";
       saveCloudConfig();
+      if (typeof syncStores === "function") syncStores();
       settingsController?.renderCloudStatus?.();
     }
   });

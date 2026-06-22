@@ -987,7 +987,7 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(Number(data.routes?.checked || 0) === routeIds.length, `${label} must check all routes`);
   expect(Number(data.routes?.passed || 0) === routeIds.length, `${label} route pass count must match all routes`);
   expect(Number(data.routes?.failed || 0) === 0, `${label} must have zero route failures`);
-  expect(Number(data.interactions?.checked || 0) >= 66, `${label} must check key interactions`);
+  expect(Number(data.interactions?.checked || 0) >= 67, `${label} must check key interactions`);
   expect(Number(data.interactions?.failed || 0) === 0, `${label} must have zero interaction failures`);
   const planInteraction = findResult(data.interactions?.results, "plan create, edit, task persistence, and navigation");
   expect(planInteraction?.status === "pass", `${label} must verify Plan create, edit, task persistence, and navigation`);
@@ -1108,6 +1108,14 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(settingsCloudSyncGuard?.noSessionGuardShown === true, `${label} must verify Settings cloud sync shows the no-session guard`);
   expect(settingsCloudSyncGuard?.syncRequestCount === 0, `${label} must verify Settings cloud sync does not call /sync without a cloud session`);
   expect(settingsCloudSyncGuard?.cloudTokenPresent === false, `${label} must verify Settings cloud sync guard starts without a cloud token`);
+  const settingsCloudSyncSuccess = findResult(data.interactions?.results, "settings sync cloud with session sends state and updates status");
+  expect(settingsCloudSyncSuccess?.status === "pass", `${label} must verify Settings cloud sync success path`);
+  expect(settingsCloudSyncSuccess?.syncRequestCount === 1, `${label} must verify Settings cloud sync sends exactly one /sync request`);
+  expect(settingsCloudSyncSuccess?.authorizationHeaderPresent === true, `${label} must verify Settings cloud sync sends Authorization`);
+  expect(settingsCloudSyncSuccess?.payloadIncludesState === true, `${label} must verify Settings cloud sync payload includes state`);
+  expect(settingsCloudSyncSuccess?.payloadIncludesCommunity === true, `${label} must verify Settings cloud sync payload includes community`);
+  expect(settingsCloudSyncSuccess?.payloadIncludesAccount === true, `${label} must verify Settings cloud sync payload includes account`);
+  expect(settingsCloudSyncSuccess?.statusUpdated === true, `${label} must verify Settings cloud sync updates status`);
   const settingsLanguageSwitch = findResult(data.interactions?.results, "settings language switch syncs URL and persists reload");
   expect(settingsLanguageSwitch?.status === "pass", `${label} must verify Settings language switching`);
   expect(settingsLanguageSwitch?.englishSelected === true, `${label} must verify Settings English selection`);
@@ -2658,6 +2666,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.browserHashCompatDeepLinkPass === true, `${label} must verify the hash-compatible deep-link browser journey remains pass`);
   expect(data.checks?.browserSettingsRuntimeConfigPass === true, `${label} must verify the Settings runtime config browser journey remains pass`);
   expect(data.checks?.browserSettingsCloudSyncGuardPass === true, `${label} must verify the Settings cloud sync guard browser journey remains pass`);
+  expect(data.checks?.browserSettingsCloudSyncSuccessPass === true, `${label} must verify the Settings cloud sync success browser journey remains pass`);
   expect(data.checks?.browserSettingsLanguageSwitchPass === true, `${label} must verify the Settings language-switch browser journey remains pass`);
   expect(data.checks?.browserSettingsGoogleClientClearPass === true, `${label} must verify the Settings Google Client ID clear browser journey remains pass`);
   expect(data.checks?.browserSettingsBackupPass === true, `${label} must verify the Settings backup browser journey remains pass`);
@@ -2950,7 +2959,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.unsupportedScopeRejected === true, `${label} must include question-bank unsupported scope rejection`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
-  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 66, `${label} must reference the 66-interaction browser route smoke`);
+  expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 67, `${label} must reference the 67-interaction browser route smoke`);
   expect(browser?.localCoverage?.globalSearchKeyboardNavigationPass === true, `${label} must include global search keyboard navigation coverage`);
   expect(browser?.localCoverage?.accountNonAdminAdminRequestGuardPass === true, `${label} must include non-admin Account admin request guard coverage`);
   expect(browser?.localCoverage?.deployedBetaSmokePass === true, `${label} must include deployed beta smoke coverage`);
@@ -3004,6 +3013,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.mobileModuleNavPass === true, `${label} must include mobile module nav browser coverage`);
   expect(browser?.localCoverage?.settingsRuntimeConfigPass === true, `${label} must include Settings runtime config browser coverage`);
   expect(browser?.localCoverage?.settingsCloudSyncGuardPass === true, `${label} must include Settings cloud sync guard browser coverage`);
+  expect(browser?.localCoverage?.settingsCloudSyncSuccessPass === true, `${label} must include Settings cloud sync success browser coverage`);
   expect(browser?.localCoverage?.settingsLanguageSwitchPass === true, `${label} must include Settings language-switch browser coverage`);
   expect(browser?.localCoverage?.settingsGoogleClientClearPass === true, `${label} must include Settings Google Client ID clear browser coverage`);
   expect(browser?.localCoverage?.settingsBackupPass === true, `${label} must include Settings backup browser coverage`);

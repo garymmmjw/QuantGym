@@ -239,6 +239,7 @@ export const MODULE_OWNERSHIP = [
       "settings language switch syncs URL and persists reload",
       "settings saves runtime config, clears Google Client ID, and reloads",
       "settings sync cloud without session shows guarded status",
+      "settings sync cloud with session sends state and updates status",
       "mobile settings config and backup controls avoid overflow",
       "settings rejects invalid backup files without changing state",
       "settings backup restores community posts and messages",

@@ -889,6 +889,19 @@ const blockers = [
           && item.syncRequestCount === 0
           && item.cloudTokenPresent === false;
       })(),
+      settingsCloudSyncSuccessPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "settings sync cloud with session sends state and updates status"
+        );
+        return item?.status === "pass"
+          && item.syncRequestCount === 1
+          && item.authorizationHeaderPresent === true
+          && item.payloadIncludesState === true
+          && item.payloadIncludesCommunity === true
+          && item.payloadIncludesAccount === true
+          && item.statusUpdated === true;
+      })(),
       settingsLanguageSwitchPass: (() => {
         const item = findResult(
           evidence.browserRouteSmoke.interactions?.results,
@@ -1175,6 +1188,7 @@ const summary = {
     browserMobileModuleNavPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileModuleNavPass === true,
     browserSettingsRuntimeConfigPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsRuntimeConfigPass === true,
     browserSettingsCloudSyncGuardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsCloudSyncGuardPass === true,
+    browserSettingsCloudSyncSuccessPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsCloudSyncSuccessPass === true,
     browserSettingsLanguageSwitchPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsLanguageSwitchPass === true,
     browserSettingsGoogleClientClearPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsGoogleClientClearPass === true,
     browserSettingsBackupPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsBackupPass === true,
