@@ -1,10 +1,10 @@
 {
   "id": 357,
-  "date": "2026-06-21",
+  "date": "2026-06-22",
   "surface": "Render LLM deploy status",
   "status": "pass",
-  "durationMs": 6364,
-  "commit": "9a91c2f31eb06869df3eebaf21a018080ad5fbdb",
+  "durationMs": 6285,
+  "commit": "91fe86c5b771600ce7e0063a37e2ad2f560f576d",
   "checks": {
     "rootUndiciDependencySet": true,
     "llmProxyUndiciDependencySet": true,
@@ -17,7 +17,7 @@
     "deployedApiHealthPass": true,
     "deployedLlmHealthPass": true,
     "deployedVersionCommitMatchesHead": true,
-    "deployedVersionCommit": "9a91c2f31eb06869df3eebaf21a018080ad5fbdb",
+    "deployedVersionCommit": "91fe86c5b771600ce7e0063a37e2ad2f560f576d",
     "renderMailAuditRecorded": true,
     "renderMailCurrentCommitFailuresClear": true,
     "renderMailRecentFailuresClear": true
@@ -26,7 +26,7 @@
     "apiHealth": {
       "url": "https://api.quantgym.app/api/health",
       "status": 200,
-      "durationMs": 765,
+      "durationMs": 800,
       "ok": true,
       "commit": "",
       "bodyPreview": "{\"ok\": true, \"database\": {\"backend\": \"sqlite\", \"writable\": true, \"foreignKeys\": true, \"schemaTables\": 12}}",
@@ -35,7 +35,7 @@
     "llmHealth": {
       "url": "https://llm.quantgym.app/health",
       "status": 200,
-      "durationMs": 560,
+      "durationMs": 747,
       "ok": true,
       "commit": "",
       "bodyPreview": "{\"ok\":true}",
@@ -44,10 +44,10 @@
     "version": {
       "url": "https://beta.quantgym.app/version.json",
       "status": 200,
-      "durationMs": 790,
+      "durationMs": 652,
       "ok": false,
-      "commit": "9a91c2f31eb06869df3eebaf21a018080ad5fbdb",
-      "bodyPreview": "{\n  \"commit\": \"9a91c2f31eb06869df3eebaf21a018080ad5fbdb\",\n  \"branch\": \"main\",\n  \"source\": \"cloudflare-pages\"\n}\n",
+      "commit": "91fe86c5b771600ce7e0063a37e2ad2f560f576d",
+      "bodyPreview": "{\n  \"commit\": \"91fe86c5b771600ce7e0063a37e2ad2f560f576d\",\n  \"branch\": \"main\",\n  \"source\": \"cloudflare-pages\"\n}\n",
       "error": ""
     }
   },

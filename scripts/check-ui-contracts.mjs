@@ -1120,6 +1120,8 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(settingsCommunityBackup?.threadRestored === true, `${label} must verify Settings backup restores message threads`);
   expect(settingsCommunityBackup?.existingPostPreserved === true, `${label} must verify Settings backup preserves existing community posts`);
   expect(settingsCommunityBackup?.existingThreadPreserved === true, `${label} must verify Settings backup preserves existing message threads`);
+  expect(settingsCommunityBackup?.exportedPostIncluded === true, `${label} must verify Settings backup exports community posts`);
+  expect(settingsCommunityBackup?.exportedThreadIncluded === true, `${label} must verify Settings backup exports message threads`);
   const mobileSettingsControls = findResult(data.interactions?.results, "mobile settings config and backup controls avoid overflow");
   expect(mobileSettingsControls?.status === "pass", `${label} must verify mobile Settings config and backup controls`);
   expect(mobileSettingsControls?.mobileViewport === true, `${label} must verify mobile Settings viewport`);

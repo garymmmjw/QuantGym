@@ -910,7 +910,9 @@ const blockers = [
           && item.postRestored === true
           && item.threadRestored === true
           && item.existingPostPreserved === true
-          && item.existingThreadPreserved === true;
+          && item.existingThreadPreserved === true
+          && item.exportedPostIncluded === true
+          && item.exportedThreadIncluded === true;
       })(),
       settingsInvalidBackupGuardPass: (() => {
         const item = findResult(

@@ -8477,6 +8477,26 @@ async function runSettingsBackupCommunityRestoreFlow(page, baseUrl) {
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#settingsForm", { timeout: 10000 });
 
+    result.step = "export backup includes community store";
+    const [download] = await Promise.all([
+      page.waitForEvent("download", { timeout: 10000 }),
+      page.locator("#exportBtn").click({ timeout: 10000 })
+    ]);
+    const exportedPath = await download.path();
+    if (!exportedPath) throw new Error("Settings export did not produce a readable download path.");
+    const downloadedBackup = JSON.parse(fs.readFileSync(exportedPath, "utf8"));
+    const exportedPost = Array.isArray(downloadedBackup.community?.posts)
+      ? downloadedBackup.community.posts.find((item) => item.text === existingPostText)
+      : null;
+    const exportedThread = Array.isArray(downloadedBackup.community?.threads)
+      ? downloadedBackup.community.threads.find((item) => item.id === existingThreadId)
+      : null;
+    const exportedMessages = Array.isArray(exportedThread?.messages) ? exportedThread.messages : [];
+    if (!exportedPost) throw new Error("Settings export did not include existing community post.");
+    if (!exportedMessages.some((message) => message.text === existingInboundText)) {
+      throw new Error("Settings export did not include existing message thread.");
+    }
+
     result.step = "import backup with community store";
     const exportedBackup = await page.evaluate(() => ({
       version: 2,
@@ -8530,6 +8550,8 @@ async function runSettingsBackupCommunityRestoreFlow(page, baseUrl) {
     delete result.step;
     result.existingPostPreserved = true;
     result.existingThreadPreserved = true;
+    result.exportedPostIncluded = true;
+    result.exportedThreadIncluded = true;
     result.postRestored = true;
     result.threadRestored = true;
     result.threadId = threadId;
