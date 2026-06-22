@@ -184,6 +184,7 @@ const summary = {
   version: { status: "pending" },
   corsPreflights: [],
   staticAssetFallback: {},
+  settingsCloudSync: { status: "pending" },
   routes: [],
   routeSummary: { checked: 0, passed: 0, failed: 0 },
   errors: {
@@ -231,6 +232,7 @@ try {
   summary.version = await readVersionJson();
   await checkCorsPreflights();
   await checkStaticAssetFallback();
+  await checkSettingsCloudSync(page);
   await checkRoutes(page);
   finalizeChecks();
 } catch (error) {
@@ -711,6 +713,121 @@ async function checkStaticAssetFallback() {
   summary.staticAssetFallback = result;
 }
 
+async function checkSettingsCloudSync(page) {
+  const timestamp = Date.now();
+  const resumeText = `Deployed beta settings cloud sync resume ${timestamp}`;
+  const postText = `Deployed beta settings cloud sync community ${timestamp}`;
+  const syncRequests = [];
+  const result = {
+    status: "pass",
+    syncRequestCount: 0,
+    authorizationHeaderPresent: false,
+    payloadIncludesState: false,
+    payloadIncludesCommunity: false,
+    payloadIncludesAccount: false,
+    statusUpdated: false,
+    lastSyncAtPresent: false
+  };
+
+  try {
+    await page.goto(`${baseUrl}/settings?source=deployed-beta-smoke-cloud-sync`, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.waitForSelector("#appShell:not(.hidden)", { state: "visible", timeout: 15000 });
+    await page.waitForSelector("#settingsForm", { state: "visible", timeout: 15000 });
+    await page.waitForTimeout(500);
+    await page.evaluate(({ resumeText: stateText, postText: communityText }) => {
+      const auth = JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}");
+      const userId = auth.currentUserId || "";
+      if (!userId) throw new Error("No current user id for deployed Settings cloud sync smoke.");
+      const stateKey = `quantMemoryBoard.userState.v1.${userId}`;
+      const state = JSON.parse(localStorage.getItem(stateKey) || "{}");
+      localStorage.setItem(stateKey, JSON.stringify({
+        ...state,
+        resume: {
+          ...(state.resume || {}),
+          text: stateText,
+          updatedAt: new Date().toISOString()
+        }
+      }));
+      const community = JSON.parse(localStorage.getItem("quantMemoryBoard.community.v1") || "{}");
+      localStorage.setItem("quantMemoryBoard.community.v1", JSON.stringify({
+        posts: [
+          ...(Array.isArray(community.posts) ? community.posts : []),
+          {
+            id: `post:deployed-settings-cloud-sync:${Date.now()}`,
+            kind: "update",
+            authorId: userId,
+            authorName: "Deployed Beta Smoke",
+            authorAvatar: "",
+            country: "china",
+            region: "上海",
+            text: communityText,
+            media: null,
+            likes: [],
+            comments: [],
+            createdAt: new Date().toISOString()
+          }
+        ],
+        threads: Array.isArray(community.threads) ? community.threads : []
+      }));
+    }, { resumeText, postText });
+
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.waitForSelector("#settingsForm", { state: "visible", timeout: 15000 });
+    await page.waitForTimeout(500);
+
+    await page.route("**/api/sync**", async (route) => {
+      const request = route.request();
+      let body = {};
+      try {
+        body = JSON.parse(request.postData() || "{}");
+      } catch {
+        body = {};
+      }
+      syncRequests.push({
+        method: request.method(),
+        authorizationPresent: Boolean(request.headers().authorization),
+        body
+      });
+      await route.continue();
+    });
+
+    await page.locator("#syncCloudBtn").click({ timeout: 15000 });
+    await page.waitForFunction(() => {
+      const cloud = JSON.parse(localStorage.getItem("quantMemoryBoard.cloud.v1") || "{}");
+      const message = document.querySelector("#settingsMessage")?.textContent || "";
+      return Boolean(cloud.lastSyncAt) && /云端已同步|Cloud synced/i.test(message);
+    }, null, { timeout: 20000 });
+
+    const request = syncRequests[0] || {};
+    const body = request.body || {};
+    result.syncRequestCount = syncRequests.length;
+    result.authorizationHeaderPresent = request.authorizationPresent === true;
+    result.payloadIncludesState = body.state?.resume?.text === resumeText;
+    result.payloadIncludesCommunity = Array.isArray(body.community?.posts)
+      && body.community.posts.some((post) => post.text === postText);
+    result.payloadIncludesAccount = Boolean(body.account?.id)
+      && Boolean(body.account?.email)
+      && !Object.prototype.hasOwnProperty.call(body.account || {}, "passwordHash");
+    result.statusUpdated = await page.evaluate(() => /云端已同步|Cloud synced/i.test(document.querySelector("#settingsMessage")?.textContent || ""));
+    result.lastSyncAtPresent = await page.evaluate(() => Boolean(JSON.parse(localStorage.getItem("quantMemoryBoard.cloud.v1") || "{}").lastSyncAt));
+
+    if (result.syncRequestCount !== 1) throw new Error(`Expected exactly one deployed /sync request, got ${result.syncRequestCount}.`);
+    if (request.method !== "POST") throw new Error(`Expected deployed /sync POST, got ${request.method || "none"}.`);
+    if (!result.authorizationHeaderPresent) throw new Error("Deployed Settings cloud sync did not send Authorization.");
+    if (!result.payloadIncludesState) throw new Error("Deployed Settings cloud sync payload did not include seeded state.");
+    if (!result.payloadIncludesCommunity) throw new Error("Deployed Settings cloud sync payload did not include seeded community data.");
+    if (!result.payloadIncludesAccount) throw new Error("Deployed Settings cloud sync payload did not include sanitized account data.");
+    if (!result.statusUpdated || !result.lastSyncAtPresent) throw new Error("Deployed Settings cloud sync did not update status and lastSyncAt.");
+  } catch (error) {
+    result.status = "fail";
+    result.error = String(error?.message || error).slice(0, 500);
+  } finally {
+    await page.unroute("**/api/sync**").catch(() => {});
+  }
+
+  summary.settingsCloudSync = result;
+}
+
 function finalizeChecks() {
   summary.checks = {
     loginPass: summary.login.status === "pass",
@@ -729,6 +846,14 @@ function finalizeChecks() {
     corsPreflightPass: summary.corsPreflights.length === corsPreflightChecks.length
       && summary.corsPreflights.every((result) => result.pass === true),
     staticAssetFallbackPass: summary.staticAssetFallback?.pass === true,
+    deployedSettingsCloudSyncSuccessPass: summary.settingsCloudSync?.status === "pass"
+      && summary.settingsCloudSync?.syncRequestCount === 1
+      && summary.settingsCloudSync?.authorizationHeaderPresent === true
+      && summary.settingsCloudSync?.payloadIncludesState === true
+      && summary.settingsCloudSync?.payloadIncludesCommunity === true
+      && summary.settingsCloudSync?.payloadIncludesAccount === true
+      && summary.settingsCloudSync?.statusUpdated === true
+      && summary.settingsCloudSync?.lastSyncAtPresent === true,
     routeCountPass: Number(summary.routeSummary.checked) === routeChecks.length
       && Number(summary.routeSummary.failed) === 0,
     noMaterialConsoleErrors: summary.errors.consoleErrors.length === 0,

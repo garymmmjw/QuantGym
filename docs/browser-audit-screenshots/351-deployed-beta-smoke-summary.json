@@ -3,7 +3,7 @@
   "surface": "deployed beta smoke",
   "baseUrl": "https://beta.quantgym.app",
   "email": "mi***@gmail.com",
-  "expectedCommit": "e90cddcba3bfc2ca4faf4f80c68eff54e0c700d4",
+  "expectedCommit": "c024086ba6f967dd25f2beb5856e6549276e7f8a",
   "deployReadiness": {
     "status": "pass",
     "timeoutMs": 120000,
@@ -15,7 +15,7 @@
       "status": "pass",
       "url": "https://beta.quantgym.app/version.json",
       "httpStatus": 200,
-      "commit": "e90cddcba3bfc2ca4faf4f80c68eff54e0c700d4",
+      "commit": "c024086ba6f967dd25f2beb5856e6549276e7f8a",
       "branch": "main",
       "source": "cloudflare-pages",
       "matchesConfig": true,
@@ -49,7 +49,7 @@
       "pass": true,
       "failedAttempts": 0
     },
-    "durationMs": 1739
+    "durationMs": 2041
   },
   "login": {
     "status": "pass",
@@ -65,7 +65,7 @@
     "llmEndpoint": "https://llm.quantgym.app/interview",
     "googleLoginEnabled": true,
     "googleClientIdSet": true,
-    "buildCommit": "e90cddcba3bfc2ca4faf4f80c68eff54e0c700d4",
+    "buildCommit": "c024086ba6f967dd25f2beb5856e6549276e7f8a",
     "buildBranch": "main",
     "buildSource": "cloudflare-pages"
   },
@@ -73,7 +73,7 @@
     "status": "pass",
     "url": "https://beta.quantgym.app/version.json",
     "httpStatus": 200,
-    "commit": "e90cddcba3bfc2ca4faf4f80c68eff54e0c700d4",
+    "commit": "c024086ba6f967dd25f2beb5856e6549276e7f8a",
     "branch": "main",
     "source": "cloudflare-pages",
     "matchesConfig": true,
@@ -121,7 +121,7 @@
   ],
   "staticAssetFallback": {
     "name": "missing hashed asset fallback",
-    "url": "https://beta.quantgym.app/assets/__quantgym_missing_asset_probe_1782091799948.js",
+    "url": "https://beta.quantgym.app/assets/__quantgym_missing_asset_probe_1782157045900.js",
     "status": 404,
     "contentType": "text/html; charset=utf-8",
     "cacheControl": "no-store",
@@ -129,6 +129,16 @@
     "notHtml200Pass": true,
     "noStorePass": true,
     "pass": true
+  },
+  "settingsCloudSync": {
+    "status": "pass",
+    "syncRequestCount": 1,
+    "authorizationHeaderPresent": true,
+    "payloadIncludesState": true,
+    "payloadIncludesCommunity": true,
+    "payloadIncludesAccount": true,
+    "statusUpdated": true,
+    "lastSyncAtPresent": true
   },
   "routes": [
     {
@@ -142,7 +152,7 @@
       },
       "health": {
         "pathname": "/",
-        "bodyTextLength": 2120,
+        "bodyTextLength": 2024,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -221,7 +231,7 @@
       },
       "health": {
         "pathname": "/tools",
-        "bodyTextLength": 738,
+        "bodyTextLength": 745,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -269,7 +279,7 @@
       },
       "health": {
         "pathname": "/news",
-        "bodyTextLength": 11556,
+        "bodyTextLength": 10960,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -285,7 +295,7 @@
       },
       "health": {
         "pathname": "/community",
-        "bodyTextLength": 118,
+        "bodyTextLength": 224,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -347,7 +357,7 @@
       },
       "health": {
         "pathname": "/jobs",
-        "bodyTextLength": 4711,
+        "bodyTextLength": 5077,
         "appShellVisible": true,
         "authShellVisible": false,
         "horizontalOverflowPx": 0
@@ -478,6 +488,16 @@
     "ignored": [
       {
         "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
         "url": "https://api.quantgym.app/api/sync",
         "failure": "net::ERR_ABORTED",
         "reason": "navigation-aborted background sync"
@@ -498,8 +518,36 @@
         "failure": "net::ERR_ABORTED"
       },
       {
-        "type": "console",
-        "text": "Framing 'https://accounts.google.com/' violates the following report-only Content Security Policy directive: \"frame-ancestors 'self'\". The violation has been logged, but no further action has been taken.\n"
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/assets/generated/mascot-teacher-chart.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/assets/generated/mascot-calculator.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
       },
       {
         "type": "requestfailed",
@@ -553,18 +601,15 @@
       },
       {
         "type": "requestfailed",
-        "url": "https://beta.quantgym.app/cdn-cgi/rum",
-        "failure": "net::ERR_ABORTED"
+        "url": "https://beta.quantgym.app/assets/library-covers/stat110-strategic-practice.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
       },
       {
         "type": "requestfailed",
-        "url": "https://beta.quantgym.app/cdn-cgi/rum",
-        "failure": "net::ERR_ABORTED"
-      },
-      {
-        "type": "requestfailed",
-        "url": "https://beta.quantgym.app/cdn-cgi/rum",
-        "failure": "net::ERR_ABORTED"
+        "url": "https://beta.quantgym.app/assets/library-covers/probabilitycourse-solved-samples.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
       },
       {
         "type": "requestfailed",
@@ -580,48 +625,7 @@
       },
       {
         "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/probabilitycourse-solved-samples.webp",
-        "failure": "net::ERR_ABORTED",
-        "reason": "navigation-aborted static asset"
-      },
-      {
-        "type": "requestfailed",
-        "url": "https://beta.quantgym.app/cdn-cgi/rum",
-        "failure": "net::ERR_ABORTED"
-      },
-      {
-        "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/probability-stochastic-10.webp",
-        "failure": "net::ERR_ABORTED",
-        "reason": "navigation-aborted static asset"
-      },
-      {
-        "type": "requestfailed",
         "url": "https://beta.quantgym.app/assets/library-covers/etheridge-finmath-problem-sheets.webp",
-        "failure": "net::ERR_ABORTED",
-        "reason": "navigation-aborted static asset"
-      },
-      {
-        "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/stat110-strategic-practice.webp",
-        "failure": "net::ERR_ABORTED",
-        "reason": "navigation-aborted static asset"
-      },
-      {
-        "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/mike-giles-mlmc.webp",
-        "failure": "net::ERR_ABORTED",
-        "reason": "navigation-aborted static asset"
-      },
-      {
-        "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/quantitative-primer.webp",
-        "failure": "net::ERR_ABORTED",
-        "reason": "navigation-aborted static asset"
-      },
-      {
-        "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/stanford-msande214-hw3.webp",
         "failure": "net::ERR_ABORTED",
         "reason": "navigation-aborted static asset"
       },
@@ -633,13 +637,30 @@
       },
       {
         "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/boyd-cvxbook-additional-exercises.webp",
+        "url": "https://beta.quantgym.app/assets/library-covers/boyd-convex-optimization.webp",
         "failure": "net::ERR_ABORTED",
         "reason": "navigation-aborted static asset"
       },
       {
         "type": "requestfailed",
-        "url": "https://beta.quantgym.app/assets/library-covers/boyd-convex-optimization.webp",
+        "url": "https://beta.quantgym.app/assets/library-covers/stanford-msande214-hw3.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/assets/library-covers/mike-giles-mlmc.webp",
+        "failure": "net::ERR_ABORTED",
+        "reason": "navigation-aborted static asset"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/cdn-cgi/rum",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "type": "requestfailed",
+        "url": "https://beta.quantgym.app/assets/library-covers/boyd-cvxbook-additional-exercises.webp",
         "failure": "net::ERR_ABORTED",
         "reason": "navigation-aborted static asset"
       },
@@ -676,6 +697,7 @@
     "expectedCommitPass": true,
     "corsPreflightPass": true,
     "staticAssetFallbackPass": true,
+    "deployedSettingsCloudSyncSuccessPass": true,
     "routeCountPass": true,
     "noMaterialConsoleErrors": true,
     "noPageErrors": true,
@@ -683,5 +705,5 @@
     "noHttpErrors": true,
     "summaryRedacted": true
   },
-  "durationMs": 95216
+  "durationMs": 93057
 }

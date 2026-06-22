@@ -2398,6 +2398,13 @@ function validateDeployedBetaSmokeSummary(data, expect, label) {
   expect(data.staticAssetFallback?.status === 404, `${label} missing asset fallback must return 404`);
   expect(data.staticAssetFallback?.notHtml200Pass === true, `${label} missing asset fallback must not return 200 text/html`);
   expect(data.staticAssetFallback?.noStorePass === true, `${label} missing asset fallback must be no-store`);
+  expect(data.settingsCloudSync?.status === "pass", `${label} must verify Settings cloud sync on the deployed beta`);
+  expect(data.settingsCloudSync?.syncRequestCount === 1, `${label} deployed Settings cloud sync must send exactly one /sync request`);
+  expect(data.settingsCloudSync?.authorizationHeaderPresent === true, `${label} deployed Settings cloud sync must send Authorization`);
+  expect(data.settingsCloudSync?.payloadIncludesState === true, `${label} deployed Settings cloud sync payload must include state`);
+  expect(data.settingsCloudSync?.payloadIncludesCommunity === true, `${label} deployed Settings cloud sync payload must include community`);
+  expect(data.settingsCloudSync?.payloadIncludesAccount === true, `${label} deployed Settings cloud sync payload must include account`);
+  expect(data.settingsCloudSync?.statusUpdated === true, `${label} deployed Settings cloud sync must update status`);
 
   expect(Number(data.routeSummary?.checked || 0) === routeIds.length, `${label} must check all deployed routes`);
   expect(Number(data.routeSummary?.passed || 0) === routeIds.length, `${label} must pass all deployed routes`);
@@ -2422,6 +2429,7 @@ function validateDeployedBetaSmokeSummary(data, expect, label) {
   expect(data.checks?.summaryRedacted === true, `${label} summaryRedacted check must pass`);
   expect(data.checks?.corsPreflightPass === true, `${label} corsPreflightPass check must pass`);
   expect(data.checks?.staticAssetFallbackPass === true, `${label} staticAssetFallbackPass check must pass`);
+  expect(data.checks?.deployedSettingsCloudSyncSuccessPass === true, `${label} deployed Settings cloud sync success check must pass`);
   expect(data.checks?.routeCountPass === true, `${label} routeCountPass check must pass`);
   expect(data.checks?.noHttpErrors === true, `${label} noHttpErrors check must pass`);
 }
@@ -2973,6 +2981,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.deployedBetaCorsPreflightPass === true, `${label} must include deployed beta API CORS preflight coverage`);
   expect(browser?.localCoverage?.deployedBetaPokerCorsPreflightPass === true, `${label} must include deployed beta Poker join CORS preflight coverage`);
   expect(browser?.localCoverage?.deployedBetaStaticAssetFallbackPass === true, `${label} must include deployed beta missing asset 404 coverage`);
+  expect(browser?.localCoverage?.deployedBetaSettingsCloudSyncSuccessPass === true, `${label} must include deployed beta Settings cloud sync success coverage`);
   expect(browser?.localCoverage?.deployedBetaErrorSweepPass === true, `${label} must include deployed beta error sweep coverage`);
   expect(browser?.localCoverage?.deployedBetaSummaryRedactedPass === true, `${label} must include deployed beta summary redaction coverage`);
   expect(browser?.localCoverage?.deployedBetaMobileContentPass === true, `${label} must include deployed beta mobile content coverage`);
