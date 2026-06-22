@@ -11,7 +11,7 @@
     {
       "name": "cloud health",
       "status": "pass",
-      "durationMs": 1194,
+      "durationMs": 1585,
       "data": {
         "ok": true
       }
@@ -19,7 +19,7 @@
     {
       "name": "google provider config",
       "status": "pass",
-      "durationMs": 390,
+      "durationMs": 438,
       "data": {
         "googleClientIdSet": true,
         "endpointRequiresToken": true
@@ -28,7 +28,7 @@
     {
       "name": "google provider login",
       "status": "pass",
-      "durationMs": 505,
+      "durationMs": 518,
       "data": {
         "provider": "local",
         "googleLinked": true,
@@ -42,19 +42,19 @@
     {
       "name": "LLM resume review",
       "status": "pass",
-      "durationMs": 4090,
+      "durationMs": 4147,
       "data": {
         "itemCount": 6,
-        "firstItem": "Quantify impact with clear metrics: specify CPU time reduction and benchmark after optimization (e.g., reduced runtime f"
+        "firstItem": "Quantify impact with metrics: specify the 1.2M rows processed as a concrete data handling capability (e.g., processed 1."
       }
     },
     {
       "name": "LLM PDF question generation",
       "status": "pass",
-      "durationMs": 7715,
+      "durationMs": 6432,
       "data": {
         "questionCount": 1,
-        "firstTitle": "Understanding production boundaries and smoke testing in model deployment"
+        "firstTitle": "Explain production boundary considerations for a QuantGym workflow"
       }
     }
   ]
