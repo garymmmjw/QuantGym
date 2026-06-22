@@ -498,8 +498,14 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
   const clearStateForUser = userStateRuntime.clearForUser;
   const backupController = createBackupController({
     windowRef: window,
+    getCommunity: () => appState.community,
     getCurrentUser: () => appState.currentUser,
     getState: () => userState.value,
+    setCommunity(store) {
+      appState.community = communityRuntime.normalizeStore(store);
+      domainStores.syncCommunityStore?.();
+      domainStores.syncAppStore?.();
+    },
     setState(state) {
       userStateRuntime.setValue(state);
     },
@@ -509,14 +515,18 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
       const clearCaches = sliceRefs.clearProblemLookupCaches || clearProblemLookupCaches;
       if (typeof clearCaches === "function") clearCaches();
     },
+    saveCommunity: (...args) => communityRuntime.save(...args),
     saveState,
     renderAll: () => {
       const render = sliceRefs.renderAll || renderAll;
       if (typeof render === "function") render();
     },
+    serializeCommunity: (store) => communityRuntime.normalizeStore(store),
     serializeState: localStatePayload,
     normalizeMentalMathRecords,
     normalizeGameRecords,
+    normalizeCommunityStore: (store) => communityRuntime.normalizeStore(store),
+    mergeCommunityStores: (remote, local) => communityRuntime.mergeCloud(remote, local),
     mergeProblemStates,
     problemStatesFromFavorites,
     defaultLeaderboardSettings,

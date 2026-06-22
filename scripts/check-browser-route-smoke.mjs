@@ -184,6 +184,7 @@ try {
     ["settings saves runtime config, clears Google Client ID, and reloads", runSettingsPersistenceFlow],
     ["mobile settings config and backup controls avoid overflow", runMobileSettingsConfigBackupControlsFlow],
     ["settings rejects invalid backup files without changing state", runSettingsInvalidBackupGuardFlow],
+    ["settings backup restores community posts and messages", runSettingsBackupCommunityRestoreFlow],
     ["settings backup export, import, and reset state", runSettingsBackupImportResetFlow]
   ];
   const selectedInteractionChecks = onlyInteraction
@@ -8373,6 +8374,176 @@ async function runSettingsBackupImportResetFlow(page, baseUrl) {
   return result;
 }
 
+async function runSettingsBackupCommunityRestoreFlow(page, baseUrl) {
+  const result = { name: "settings backup restores community posts and messages", status: "pass" };
+  const timestamp = Date.now();
+  const currentUserId = "local:browser-route-smoke";
+  const existingMentorId = `mentor:settings-backup-existing-${timestamp}`;
+  const existingMentorName = `Existing Backup Mentor ${timestamp}`;
+  const existingPostText = `Existing settings backup post ${timestamp}`;
+  const existingInboundText = `Existing settings backup inbound message ${timestamp}`;
+  const existingThreadId = `thread-settings-backup-existing-${timestamp}`;
+  const mentorId = `mentor:settings-backup-community-${timestamp}`;
+  const mentorName = `Settings Backup Mentor ${timestamp}`;
+  const postText = `Settings backup restored post ${timestamp}`;
+  const inboundText = `Settings backup restored inbound message ${timestamp}`;
+  const replyText = `Settings backup restored reply ${timestamp}`;
+  const threadId = `thread-settings-backup-community-${timestamp}`;
+  const createdAt = new Date(timestamp).toISOString();
+  const existingCommunity = {
+    posts: [{
+      id: `post:${existingMentorId}`,
+      kind: "update",
+      authorId: existingMentorId,
+      authorName: existingMentorName,
+      authorAvatar: "",
+      country: "unitedStates",
+      region: "Chicago",
+      text: existingPostText,
+      media: null,
+      likes: [],
+      comments: [],
+      createdAt
+    }],
+    threads: [{
+      id: existingThreadId,
+      participants: [
+        { id: currentUserId, name: "Browser Route Smoke", avatar: "" },
+        { id: existingMentorId, name: existingMentorName, avatar: "" }
+      ],
+      messages: [{
+        id: `message:${existingThreadId}:inbound`,
+        senderId: existingMentorId,
+        text: existingInboundText,
+        createdAt,
+        readBy: []
+      }],
+      updatedAt: createdAt
+    }]
+  };
+  const importedCommunity = {
+    posts: [{
+      id: `post:${mentorId}`,
+      kind: "update",
+      authorId: mentorId,
+      authorName: mentorName,
+      authorAvatar: "",
+      country: "unitedStates",
+      region: "New York",
+      text: postText,
+      media: null,
+      likes: [currentUserId],
+      comments: [{
+        id: `comment:${mentorId}`,
+        authorId: currentUserId,
+        authorName: "Browser Route Smoke",
+        text: replyText,
+        createdAt
+      }],
+      createdAt
+    }],
+    threads: [{
+      id: threadId,
+      participants: [
+        { id: currentUserId, name: "Browser Route Smoke", avatar: "" },
+        { id: mentorId, name: mentorName, avatar: "" }
+      ],
+      messages: [{
+        id: `message:${threadId}:inbound`,
+        senderId: mentorId,
+        text: inboundText,
+        createdAt,
+        readBy: []
+      }, {
+        id: `message:${threadId}:reply`,
+        senderId: currentUserId,
+        text: replyText,
+        createdAt: new Date(timestamp + 1000).toISOString(),
+        readBy: [currentUserId, mentorId]
+      }],
+      updatedAt: new Date(timestamp + 1000).toISOString()
+    }]
+  };
+
+  try {
+    result.step = "seed existing community state";
+    await page.goto(`${baseUrl}/settings`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+    await page.evaluate((store) => {
+      localStorage.setItem("quantMemoryBoard.community.v1", JSON.stringify(store));
+    }, existingCommunity);
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+
+    result.step = "import backup with community store";
+    const exportedBackup = await page.evaluate(() => ({
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      user: { name: "Browser Route Smoke", email: "browser-route-smoke@quantgym.local", provider: "local" },
+      state: JSON.parse(localStorage.getItem("quantMemoryBoard.userState.v1.local:browser-route-smoke") || "{}")
+    }));
+    await page.locator("#importInput").setInputFiles({
+      name: `settings-community-backup-${timestamp}.json`,
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify({
+        ...exportedBackup,
+        community: importedCommunity
+      }), "utf8")
+    });
+    await expectStoredImportedCommunityBackup(page, {
+      existingPostText,
+      existingThreadId,
+      existingInboundText,
+      postText,
+      threadId,
+      inboundText,
+      replyText
+    });
+
+    result.step = "verify community page restored post";
+    await page.goto(`${baseUrl}/community`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#communityList", { timeout: 10000 });
+    await page.waitForFunction(({ postText, replyText }) => {
+      const card = [...document.querySelectorAll("#communityList .community-card")]
+        .find((node) => node.textContent.includes(postText));
+      const text = card?.textContent || "";
+      return text.includes(postText)
+        && text.includes(replyText)
+        && /已赞|取消赞|Liked|Unlike/i.test(text);
+    }, { postText, replyText }, { timeout: 10000 });
+
+    result.step = "verify messages page restored thread";
+    await page.goto(`${baseUrl}/messages`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await page.waitForSelector("#messageThreadList", { timeout: 10000 });
+    await expectCommunityDirectMessageThread(page, {
+      authorName: mentorName,
+      introText: inboundText,
+      replyText,
+      threadId,
+      unreadCleared: false
+    });
+
+    delete result.step;
+    result.existingPostPreserved = true;
+    result.existingThreadPreserved = true;
+    result.postRestored = true;
+    result.threadRestored = true;
+    result.threadId = threadId;
+  } catch (error) {
+    result.status = "fail";
+    result.error = result.step ? `${result.step}: ${error.message}` : error.message;
+    result.diagnostics = await collectSettingsCommunityBackupDiagnostics(page).catch((diagnosticError) => ({
+      error: diagnosticError?.message || String(diagnosticError)
+    }));
+    fail(`${result.name} failed: ${error.message}`);
+  }
+  return result;
+}
+
 async function runSettingsInvalidBackupGuardFlow(page, baseUrl) {
   const result = { name: "settings rejects invalid backup files without changing state", status: "pass" };
   const timestamp = Date.now();
@@ -8689,6 +8860,54 @@ async function expectStoredImportedBackupState(page, expected) {
       return false;
     }
   }, expected, { timeout: 10000 });
+}
+
+async function expectStoredImportedCommunityBackup(page, expected) {
+  await page.waitForFunction((values) => {
+    try {
+      const community = JSON.parse(localStorage.getItem("quantMemoryBoard.community.v1") || "{}");
+      const post = Array.isArray(community.posts)
+        ? community.posts.find((item) => item.text === values.postText)
+        : null;
+      const thread = Array.isArray(community.threads)
+        ? community.threads.find((item) => item.id === values.threadId)
+        : null;
+      const existingPost = Array.isArray(community.posts)
+        ? community.posts.find((item) => item.text === values.existingPostText)
+        : null;
+      const existingThread = Array.isArray(community.threads)
+        ? community.threads.find((item) => item.id === values.existingThreadId)
+        : null;
+      const messages = Array.isArray(thread?.messages) ? thread.messages : [];
+      const existingMessages = Array.isArray(existingThread?.messages) ? existingThread.messages : [];
+      return Boolean(post)
+        && Boolean(existingPost)
+        && messages.some((message) => message.text === values.inboundText)
+        && messages.some((message) => message.text === values.replyText)
+        && existingMessages.some((message) => message.text === values.existingInboundText);
+    } catch {
+      return false;
+    }
+  }, expected, { timeout: 10000 });
+}
+
+async function collectSettingsCommunityBackupDiagnostics(page) {
+  return page.evaluate(() => {
+    let community = {};
+    try {
+      community = JSON.parse(localStorage.getItem("quantMemoryBoard.community.v1") || "{}");
+    } catch {
+      community = {};
+    }
+    return {
+      pathname: window.location.pathname,
+      message: document.querySelector("#settingsMessage")?.textContent || "",
+      communityPosts: Array.isArray(community.posts) ? community.posts.length : null,
+      communityThreads: Array.isArray(community.threads) ? community.threads.length : null,
+      visibleCommunityText: document.querySelector("#communityList")?.textContent?.slice(0, 300) || "",
+      visibleMessageText: document.querySelector("#messageThreadList")?.textContent?.slice(0, 300) || ""
+    };
+  });
 }
 
 async function expectResetClearedImportedBackupState(page, expected) {

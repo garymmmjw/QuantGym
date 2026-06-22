@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 2,
+  "durationMs": 3,
   "feedPath": "public/data/jobs/public-ats-feed.json",
   "publicUrlHost": "beta.quantgym.app",
   "publicUrlPath": "/data/jobs/public-ats-feed.json",

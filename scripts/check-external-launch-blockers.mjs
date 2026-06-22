@@ -901,6 +901,17 @@ const blockers = [
         evidence.browserRouteSmoke.interactions?.results,
         "settings backup export, import, and reset state"
       )?.status === "pass",
+      settingsCommunityBackupPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "settings backup restores community posts and messages"
+        );
+        return item?.status === "pass"
+          && item.postRestored === true
+          && item.threadRestored === true
+          && item.existingPostPreserved === true
+          && item.existingThreadPreserved === true;
+      })(),
       settingsInvalidBackupGuardPass: (() => {
         const item = findResult(
           evidence.browserRouteSmoke.interactions?.results,
@@ -1154,6 +1165,7 @@ const summary = {
     browserSettingsLanguageSwitchPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsLanguageSwitchPass === true,
     browserSettingsGoogleClientClearPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsGoogleClientClearPass === true,
     browserSettingsBackupPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsBackupPass === true,
+    browserSettingsCommunityBackupPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsCommunityBackupPass === true,
     browserSettingsInvalidBackupGuardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.settingsInvalidBackupGuardPass === true,
     browserMobileSettingsControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.mobileSettingsControlsPass === true,
     browserLibraryCloudPdfReaderPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.libraryCloudPdfReaderPass === true,

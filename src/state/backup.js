@@ -1,16 +1,22 @@
 export function createBackupPayload(options = {}) {
   const {
+    community,
     currentUser = null,
     now = new Date(),
+    serializeCommunity = (store) => store,
     serializeState = (state) => state,
     state = {}
   } = options;
-  return {
+  const payload = {
     version: 2,
     exportedAt: now.toISOString(),
     user: currentUser ? { name: currentUser.name, email: currentUser.email, provider: currentUser.provider } : null,
     state: serializeState(state)
   };
+  if (community && typeof community === "object") {
+    payload.community = serializeCommunity(community);
+  }
+  return payload;
 }
 
 export function getBackupFilename(currentUser = null, now = new Date()) {
@@ -22,15 +28,17 @@ export function createBackupDownload(options = {}) {
   return {
     filename: getBackupFilename(options.currentUser, now),
     payload: createBackupPayload({
+      community: options.community,
       currentUser: options.currentUser,
       now,
+      serializeCommunity: options.serializeCommunity,
       serializeState: options.serializeState,
       state: options.state
     })
   };
 }
 
-export function parseBackupState(raw) {
+export function parseBackupPayload(raw) {
   const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
   if (!isPlainObject(parsed)) {
     throw new Error("Backup payload must be a JSON object.");
@@ -39,9 +47,22 @@ export function parseBackupState(raw) {
     if (!isPlainObject(parsed.state)) {
       throw new Error("Backup state must be a JSON object.");
     }
-    return parsed.state;
+    if (
+      Object.prototype.hasOwnProperty.call(parsed, "community")
+        && !isPlainObject(parsed.community)
+    ) {
+      throw new Error("Backup community must be a JSON object.");
+    }
+    return {
+      state: parsed.state,
+      community: parsed.community
+    };
   }
-  return parsed;
+  return { state: parsed };
+}
+
+export function parseBackupState(raw) {
+  return parseBackupPayload(raw).state;
 }
 
 export async function mergeBackupFile(file, currentState = {}, deps = {}) {
@@ -49,10 +70,15 @@ export async function mergeBackupFile(file, currentState = {}, deps = {}) {
   const readFileAsText = deps.readFileAsText;
   if (typeof readFileAsText !== "function") throw new Error("Missing file reader");
   const raw = await readFileAsText(file);
-  return {
+  const payload = parseBackupPayload(raw);
+  const result = {
     changed: true,
-    state: mergeImportedState(currentState, parseBackupState(raw), deps)
+    state: mergeImportedState(currentState, payload.state, deps)
   };
+  if (isPlainObject(payload.community)) {
+    result.community = mergeImportedCommunity(deps.currentCommunity || {}, payload.community, deps);
+  }
+  return result;
 }
 
 export function mergeImportedState(currentState = {}, importedRaw = {}, deps = {}) {
@@ -89,6 +115,24 @@ export function mergeImportedState(currentState = {}, importedRaw = {}, deps = {
     newsSyncError: importedState.newsSyncError || "",
     createdAt: importedState.createdAt || currentState.createdAt || nowIso,
     updatedAt: nowIso
+  });
+}
+
+export function mergeImportedCommunity(currentCommunity = {}, importedCommunity = {}, deps = {}) {
+  const normalizeCommunityStore = deps.normalizeCommunityStore || ((store) => store || {});
+  const mergeCommunityStores = deps.mergeCommunityStores;
+  if (typeof mergeCommunityStores === "function") {
+    return mergeCommunityStores(importedCommunity, currentCommunity);
+  }
+  return normalizeCommunityStore({
+    posts: [
+      ...(Array.isArray(currentCommunity.posts) ? currentCommunity.posts : []),
+      ...(Array.isArray(importedCommunity.posts) ? importedCommunity.posts : [])
+    ],
+    threads: [
+      ...(Array.isArray(currentCommunity.threads) ? currentCommunity.threads : []),
+      ...(Array.isArray(importedCommunity.threads) ? importedCommunity.threads : [])
+    ]
   });
 }
 

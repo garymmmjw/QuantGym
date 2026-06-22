@@ -240,6 +240,7 @@ export const MODULE_OWNERSHIP = [
       "settings saves runtime config, clears Google Client ID, and reloads",
       "mobile settings config and backup controls avoid overflow",
       "settings rejects invalid backup files without changing state",
+      "settings backup restores community posts and messages",
       "settings backup export, import, and reset state",
       "cross-module prep journey persists library, problem, todo, resume, and settings state"
     ]

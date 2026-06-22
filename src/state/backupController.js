@@ -25,7 +25,9 @@ export function createBackupController(deps = {}) {
 
   function exportState() {
     const backup = createBackupDownload({
+      community: deps.getCommunity?.(),
       currentUser: deps.getCurrentUser?.(),
+      serializeCommunity: deps.serializeCommunity,
       serializeState: deps.serializeState,
       state: deps.getState?.(),
       now: deps.now?.() || new Date()
@@ -42,8 +44,11 @@ export function createBackupController(deps = {}) {
     try {
       const result = await mergeBackupFile(file, deps.getState?.(), {
         readFileAsText,
+        currentCommunity: deps.getCommunity?.(),
         normalizeMentalMathRecords: deps.normalizeMentalMathRecords,
         normalizeGameRecords: deps.normalizeGameRecords,
+        normalizeCommunityStore: deps.normalizeCommunityStore,
+        mergeCommunityStores: deps.mergeCommunityStores,
         mergeProblemStates: deps.mergeProblemStates,
         problemStatesFromFavorites: deps.problemStatesFromFavorites,
         defaultLeaderboardSettings: deps.defaultLeaderboardSettings,
@@ -54,6 +59,13 @@ export function createBackupController(deps = {}) {
       });
       if (!result.changed) return;
       deps.setState?.(result.state);
+      if (result.community) {
+        deps.setCommunity?.(result.community);
+        deps.saveCommunity?.({ sync: false, checkIn: false });
+        if (typeof windowRef.CustomEvent === "function") {
+          windowRef.dispatchEvent?.(new windowRef.CustomEvent("quantgym:community-updated"));
+        }
+      }
       deps.clearProblemLookupCaches?.();
       deps.saveState?.();
       deps.renderAll?.();
