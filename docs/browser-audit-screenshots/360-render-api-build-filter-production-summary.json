@@ -1,0 +1,31 @@
+{
+  "id": 360,
+  "date": "2026-06-22",
+  "surface": "Render API build filter signoff",
+  "status": "pass",
+  "mode": "production",
+  "service": "quantgym-api",
+  "method": "dashboard",
+  "recommendedPaths": [
+    "api-server/**",
+    "data/**"
+  ],
+  "configuredPaths": [
+    "api-server/**",
+    "data/**"
+  ],
+  "evidenceHost": "dashboard.render.com",
+  "checks": {
+    "productionMode": true,
+    "productionSignoffPass": true,
+    "recommendedPathsExact": true,
+    "hasApiServerPath": true,
+    "hasDataPath": true,
+    "noUnexpectedPaths": true,
+    "methodAllowed": true,
+    "serviceNamePass": true,
+    "evidenceUrlSafe": true,
+    "notesSpecific": true
+  },
+  "failures": []
+}

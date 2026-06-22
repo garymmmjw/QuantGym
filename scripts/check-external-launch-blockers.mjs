@@ -38,6 +38,7 @@ const evidence = {
   chromePacket: readJson("docs/browser-audit-screenshots/348-chrome-store-publication-packet-summary.json", "Chrome store publication packet"),
   renderApiBuildFilterFixture: readJson("docs/browser-audit-screenshots/359-render-api-build-filter-fixture-summary.json", "Render API build filter fixture"),
   renderApiBuildFilterPacket: readJson("docs/browser-audit-screenshots/358-render-api-build-filter-packet-summary.json", "Render API build filter packet"),
+  renderApiBuildFilterProduction: readJson("docs/browser-audit-screenshots/360-render-api-build-filter-production-summary.json", "Render API build filter production signoff"),
   postgresExport: readJson("docs/browser-audit-screenshots/331-postgres-cutover-export-smoke-summary.json", "Postgres cutover export smoke"),
   postgresPacket: readJson("docs/browser-audit-screenshots/350-postgres-cutover-packet-summary.json", "Postgres cutover readiness packet"),
   rightsPublicSmoke: readJson("docs/browser-audit-screenshots/335-question-bank-rights-public-smoke-summary.json", "question-bank rights public smoke"),
@@ -132,6 +133,30 @@ const redactedEmailPattern = /^\S{2}\*\*\*@[^@\s]+$/;
 const deployedGoogleProviderCleared = evidence.deployedProductionBoundaries.status === "pass"
   && deployedGoogleProviderLoginPassed
   && deployedGoogleProviderLoginTokenFresh;
+
+const renderApiBuildFilterProductionPaths = Array.isArray(evidence.renderApiBuildFilterProduction.configuredPaths)
+  ? evidence.renderApiBuildFilterProduction.configuredPaths
+  : [];
+const renderApiBuildFilterProductionCleared = evidence.renderApiBuildFilterProduction.status === "pass"
+  && evidence.renderApiBuildFilterProduction.mode === "production"
+  && evidence.renderApiBuildFilterProduction.service === "quantgym-api"
+  && ["dashboard", "cli", "api", "blueprint"].includes(String(evidence.renderApiBuildFilterProduction.method || ""))
+  && renderApiBuildFilterProductionPaths.length === 2
+  && renderApiBuildFilterProductionPaths.includes("api-server/**")
+  && renderApiBuildFilterProductionPaths.includes("data/**")
+  && evidence.renderApiBuildFilterProduction.evidenceHost === "dashboard.render.com"
+  && evidence.renderApiBuildFilterProduction.checks?.productionSignoffPass === true
+  && evidence.renderApiBuildFilterProduction.checks?.productionMode === true
+  && evidence.renderApiBuildFilterProduction.checks?.recommendedPathsExact === true
+  && evidence.renderApiBuildFilterProduction.checks?.hasApiServerPath === true
+  && evidence.renderApiBuildFilterProduction.checks?.hasDataPath === true
+  && evidence.renderApiBuildFilterProduction.checks?.noUnexpectedPaths === true
+  && evidence.renderApiBuildFilterProduction.checks?.methodAllowed === true
+  && evidence.renderApiBuildFilterProduction.checks?.serviceNamePass === true
+  && evidence.renderApiBuildFilterProduction.checks?.evidenceUrlSafe === true
+  && evidence.renderApiBuildFilterProduction.checks?.notesSpecific === true
+  && Array.isArray(evidence.renderApiBuildFilterProduction.failures)
+  && evidence.renderApiBuildFilterProduction.failures.length === 0;
 
 const blockers = [
   {
@@ -409,8 +434,10 @@ const blockers = [
   {
     id: "render-api-build-filter",
     title: "Render API service build filter",
-    status: "blocked",
-    ownerAction: "Configure the Render quantgym-api service build filter with included paths exactly api-server/** and data/**, then run the production signoff with specific notes and an HTTPS Render evidence URL.",
+    status: renderApiBuildFilterProductionCleared ? "pass" : "blocked",
+    ownerAction: renderApiBuildFilterProductionCleared
+      ? "Render quantgym-api service build filter is configured with included paths exactly api-server/** and data/** and has production dashboard signoff evidence."
+      : "Configure the Render quantgym-api service build filter with included paths exactly api-server/** and data/**, then run the production signoff with specific notes and an HTTPS Render evidence URL.",
     signoffCommand: "npm run check:render-api-build-filter:production",
     localCoverage: {
       trackedInProductStatus: productStatusIncludes([
@@ -438,7 +465,18 @@ const blockers = [
       packetIncludesEvidenceUrlSafety: evidence.renderApiBuildFilterPacket.checks?.includesEvidenceUrlSafety === true,
       packetWarnsAgainstPartialBlueprint: evidence.renderApiBuildFilterPacket.checks?.includesNoHalfBlueprintWarning === true,
       packetHasNoFilledSecrets: evidence.renderApiBuildFilterPacket.checks?.noFilledSecrets === true,
-      finalSignoffCommandRecorded: evidence.renderApiBuildFilterPacket.signoffCommand === "npm run check:render-api-build-filter:production"
+      finalSignoffCommandRecorded: evidence.renderApiBuildFilterPacket.signoffCommand === "npm run check:render-api-build-filter:production",
+      ...(renderApiBuildFilterProductionCleared
+        ? {
+          productionSignoffPass: evidence.renderApiBuildFilterProduction.checks?.productionSignoffPass === true,
+          productionSignoffMode: evidence.renderApiBuildFilterProduction.mode === "production",
+          productionSignoffService: evidence.renderApiBuildFilterProduction.service === "quantgym-api",
+          productionSignoffMethodAllowed: evidence.renderApiBuildFilterProduction.checks?.methodAllowed === true,
+          productionSignoffPathsExact: evidence.renderApiBuildFilterProduction.checks?.recommendedPathsExact === true,
+          productionSignoffEvidenceHost: evidence.renderApiBuildFilterProduction.evidenceHost === "dashboard.render.com",
+          productionSignoffNotesSpecific: evidence.renderApiBuildFilterProduction.checks?.notesSpecific === true
+        }
+        : {})
     }
   },
   {
@@ -1150,6 +1188,7 @@ const summary = {
       && evidence.renderApiBuildFilterFixture.localCoverage?.validProductionBuildFilterAccepted === true,
     renderApiBuildFilterCliCovered: evidence.renderApiBuildFilterPacket.checks?.includesCliInstructions === true
       && evidence.renderApiBuildFilterFixture.localCoverage?.cliProductionBuildFilterAccepted === true,
+    renderApiBuildFilterProductionPass: renderApiBuildFilterProductionCleared,
     releaseReadinessIncludesExternalFixtures: skipReleaseSummaryContent ? "skipped" : true,
     releaseReadinessIncludesExternalBlockerGate: skipReleaseSummaryContent ? "skipped" : true,
     skippedReleaseSummaryContent: skipReleaseSummaryContent,

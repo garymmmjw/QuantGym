@@ -354,6 +354,7 @@ const evidenceArtifacts = [
   "357-render-llm-deploy-status-summary.json",
   "358-render-api-build-filter-packet-summary.json",
   "359-render-api-build-filter-fixture-summary.json",
+  "360-render-api-build-filter-production-summary.json",
   "341-external-launch-blockers-summary.json"
 ];
 
@@ -703,11 +704,15 @@ function validateEvidenceContract(artifact, artifactPath, data) {
         "Google token helper flow nested gate must prevent deployed loopback Google sign-in guidance"
       );
       const uiContractOutputHasCurrentArtifactCount = summaryLinesContain(uiContracts?.data, `"evidenceArtifacts": ${evidenceArtifacts.length}`);
+      const uiContractOutputHasPreviousArtifactCount = summaryLinesContain(uiContracts?.data, `"evidenceArtifacts": ${evidenceArtifacts.length - 1}`);
       const uiContractOutputHasPrePacketArtifactCount = summaryLinesContain(uiContracts?.data, "\"evidenceArtifacts\": 30");
       expect(
-        uiContractOutputHasCurrentArtifactCount || uiContractOutputHasPrePacketArtifactCount,
+        uiContractOutputHasCurrentArtifactCount || uiContractOutputHasPreviousArtifactCount || uiContractOutputHasPrePacketArtifactCount,
         "UI contracts nested output must report evidence artifact count"
       );
+      if (uiContractOutputHasPreviousArtifactCount && !uiContractOutputHasCurrentArtifactCount) {
+        warnings.push("Release-readiness summary contains the previous UI-contract evidence count; rerun npm run check:release-readiness:local after refreshing the Render API build-filter production signoff.");
+      }
       if (uiContractOutputHasPrePacketArtifactCount && !uiContractOutputHasCurrentArtifactCount) {
         warnings.push("Release-readiness summary contains the pre-packet UI-contract evidence count; rerun npm run check:release-readiness:local after production-boundary dependencies are available.");
       }
@@ -996,6 +1001,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       break;
     case "359-render-api-build-filter-fixture-summary.json":
       validateRenderApiBuildFilterFixtureSummary(data, expect, "Render API build filter fixture");
+      break;
+    case "360-render-api-build-filter-production-summary.json":
+      validateRenderApiBuildFilterProductionSummary(data, expect, "Render API build filter production signoff");
       break;
     case "341-external-launch-blockers-summary.json":
       validateExternalLaunchBlockersSummary(data, expect, "external launch blockers", {
@@ -2237,6 +2245,35 @@ function validateRenderApiBuildFilterFixtureSummary(data, expect, label) {
   expect(results.every((item) => item.status === "pass"), `${label} fixture case summaries must all pass`);
 }
 
+function validateRenderApiBuildFilterProductionSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.mode === "production", `${label} must be production mode`);
+  expect(data.service === "quantgym-api", `${label} must sign off quantgym-api`);
+  expect(["dashboard", "cli", "api", "blueprint"].includes(String(data.method || "")), `${label} must use an allowed signoff method`);
+  expect(data.evidenceHost === "dashboard.render.com", `${label} evidence host must be dashboard.render.com`);
+  const recommendedPaths = Array.isArray(data.recommendedPaths) ? data.recommendedPaths : [];
+  const configuredPaths = Array.isArray(data.configuredPaths) ? data.configuredPaths : [];
+  expect(recommendedPaths.length === 2, `${label} must recommend exactly two paths`);
+  expect(recommendedPaths.includes("api-server/**"), `${label} must recommend api-server/**`);
+  expect(recommendedPaths.includes("data/**"), `${label} must recommend data/**`);
+  expect(configuredPaths.length === 2, `${label} must configure exactly two paths`);
+  expect(configuredPaths.includes("api-server/**"), `${label} must configure api-server/**`);
+  expect(configuredPaths.includes("data/**"), `${label} must configure data/**`);
+  expectAllChecksTrue(data, expect, label, [
+    "productionMode",
+    "productionSignoffPass",
+    "recommendedPathsExact",
+    "hasApiServerPath",
+    "hasDataPath",
+    "noUnexpectedPaths",
+    "methodAllowed",
+    "serviceNamePass",
+    "evidenceUrlSafe",
+    "notesSpecific"
+  ]);
+  expectEmptyFailures(data, expect, label);
+}
+
 function expectPacketFiles(data, expect, label, expectedFiles) {
   const files = Array.isArray(data.filesWritten) ? data.filesWritten : [];
   expect(files.length === expectedFiles.length, `${label} must write ${expectedFiles.length} packet files`);
@@ -2640,7 +2677,10 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.launchReadiness === "blocked", `${label} must keep public launch marked blocked until external signoffs clear`);
   const deployedGoogleAtSummaryTop = findBlocker(data.blockers, "deployed-google-provider-login");
-  const expectedBlockerCount = deployedGoogleAtSummaryTop?.status === "pass" ? 7 : 8;
+  const renderApiAtSummaryTop = findBlocker(data.blockers, "render-api-build-filter");
+  let expectedBlockerCount = 8;
+  if (deployedGoogleAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
+  if (renderApiAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
   expect(Number(data.blockerCount || 0) === expectedBlockerCount, `${label} must track ${expectedBlockerCount} external blockers for the current deployed Google evidence freshness state`);
   expect(Number(data.trackedCount || 0) === 1, `${label} must track one continuing browser-journey expansion item`);
   expect(data.checks?.requiredScriptsPresent === true, `${label} must verify required signoff scripts exist`);
@@ -2649,6 +2689,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.renderApiBuildFilterPacketPass === true, `${label} must verify the Render API build filter packet passes`);
   expect(data.checks?.renderApiBuildFilterPathsExact === true, `${label} must verify the Render API build filter exact path contract`);
   expect(data.checks?.renderApiBuildFilterCliCovered === true, `${label} must verify the Render API build filter CLI handoff is covered`);
+  expect(data.checks?.renderApiBuildFilterProductionPass === (renderApiAtSummaryTop?.status === "pass"), `${label} must mirror the Render API production signoff state`);
   const releaseReadinessCheck = data.checks?.releaseReadinessIncludesExternalFixtures;
   const releaseReadinessBlockerGateCheck = data.checks?.releaseReadinessIncludesExternalBlockerGate;
   const skippedReleaseSummaryContent = data.checks?.skippedReleaseSummaryContent === true;
@@ -2720,7 +2761,6 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
     "ops-alerts-edge-rate-limit",
     "media-bucket-cdn",
     "chrome-web-store-publication",
-    "render-api-build-filter",
     "postgres-managed-cutover",
     "question-bank-public-commercial-rights"
   ]) {
@@ -2798,6 +2838,19 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenPinsDeployedClientId === true, `${label} must pin deployed paste-token checks to the deployed Google Client ID`);
 
   const renderApiBuildFilter = findBlocker(data.blockers, "render-api-build-filter");
+  expect(["pass", "blocked"].includes(String(renderApiBuildFilter?.status || "")), `${label} Render API build filter must be pass only after production signoff or blocked`);
+  if (renderApiBuildFilter?.status === "pass") {
+    expect(typeof renderApiBuildFilter?.ownerAction === "string" && renderApiBuildFilter.ownerAction.includes("configured"), `${label} Render API build filter pass must describe completed configuration`);
+    expect(renderApiBuildFilter?.localCoverage?.productionSignoffPass === true, `${label} Render API build filter pass must include production signoff coverage`);
+    expect(renderApiBuildFilter?.localCoverage?.productionSignoffMode === true, `${label} Render API build filter pass must prove production mode`);
+    expect(renderApiBuildFilter?.localCoverage?.productionSignoffService === true, `${label} Render API build filter pass must prove quantgym-api service`);
+    expect(renderApiBuildFilter?.localCoverage?.productionSignoffMethodAllowed === true, `${label} Render API build filter pass must prove the method is allowed`);
+    expect(renderApiBuildFilter?.localCoverage?.productionSignoffPathsExact === true, `${label} Render API build filter pass must prove exact included paths`);
+    expect(renderApiBuildFilter?.localCoverage?.productionSignoffEvidenceHost === true, `${label} Render API build filter pass must prove Render dashboard evidence`);
+    expect(renderApiBuildFilter?.localCoverage?.productionSignoffNotesSpecific === true, `${label} Render API build filter pass must prove specific notes`);
+  } else {
+    expect(typeof renderApiBuildFilter?.ownerAction === "string" && renderApiBuildFilter.ownerAction.includes("Configure the Render quantgym-api service build filter"), `${label} Render API build filter blocked state must request the real production signoff`);
+  }
   expect(renderApiBuildFilter?.signoffCommand === "npm run check:render-api-build-filter:production", `${label} Render API build filter must record the production signoff command`);
   expect(renderApiBuildFilter?.localCoverage?.trackedInProductStatus === true, `${label} must keep Render API build filter tracked in product status`);
   expect(renderApiBuildFilter?.localCoverage?.fixturePass === true, `${label} must include Render API build filter fixture coverage`);

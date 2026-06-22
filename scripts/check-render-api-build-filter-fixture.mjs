@@ -120,6 +120,9 @@ const results = cases.map((testCase) => {
 });
 
 const missingEnvNoDefaultSummaryResult = (() => {
+  const existingProductionSummary = fs.existsSync(defaultProductionSummaryPath)
+    ? fs.readFileSync(defaultProductionSummaryPath, "utf8")
+    : null;
   fs.rmSync(defaultProductionSummaryPath, { force: true });
   const result = spawnSync(process.execPath, [
     "scripts/check-render-api-build-filter.mjs",
@@ -137,6 +140,10 @@ const missingEnvNoDefaultSummaryResult = (() => {
   });
   const createdDefaultSummary = fs.existsSync(defaultProductionSummaryPath);
   fs.rmSync(defaultProductionSummaryPath, { force: true });
+  if (existingProductionSummary !== null) {
+    fs.mkdirSync(path.dirname(defaultProductionSummaryPath), { recursive: true });
+    fs.writeFileSync(defaultProductionSummaryPath, existingProductionSummary);
+  }
   const output = `${result.stdout || ""}\n${result.stderr || ""}`.trim();
   const json = parseFirstJson(output);
   const duplicateFailures = duplicateItems(json?.failures || []);
