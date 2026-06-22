@@ -388,6 +388,7 @@ checkRouteContracts();
 checkEvidenceArtifacts();
 checkImageArtifacts();
 checkGoogleTokenGateScripts();
+checkGoogleProviderDocsCurrentState();
 
 if (failures.length) {
   console.error("UI contract check failed:");
@@ -454,6 +455,28 @@ function checkRouteContracts() {
 
     for (const selector of contract.selectors) {
       if (!hasStaticId(featureText, selector)) fail(`${featureDir} is missing #${selector}`);
+    }
+  }
+}
+
+function checkGoogleProviderDocsCurrentState() {
+  const migration = JSON.parse(read("docs/browser-audit-screenshots/327-migration-completion-audit-summary.json"));
+  const release = JSON.parse(read("docs/browser-audit-screenshots/323-release-readiness-summary.json"));
+  const docs = [
+    "docs/SMOKE_CHECKS.md",
+    "docs/quantgym-unified-migration-agent-guide.md"
+  ];
+  const staleSignedOffPattern = /Current status is `pass`:\s*10 \/ 10 requirements pass|Real Google provider account login is signed off|Real Google provider account login is no longer remaining work|final provider login boundary is signed off/i;
+
+  if (migration?.status !== "partial" && release?.status !== "partial") return;
+
+  for (const file of docs) {
+    const text = read(file);
+    if (staleSignedOffPattern.test(text)) {
+      fail(`${file} must not claim Google provider signoff is complete while release evidence is partial`);
+    }
+    if (!/fresh (real )?Google ID token|fresh Google provider token|QUANTGYM_GOOGLE_ID_TOKEN/i.test(text)) {
+      fail(`${file} must explain the fresh Google token requirement while release evidence is partial`);
     }
   }
 }

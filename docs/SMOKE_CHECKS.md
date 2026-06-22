@@ -44,12 +44,13 @@ and no document-level horizontal overflow. Evidence:
 `317-external-boundary-resume-local-fallback.png`, and
 `317-external-boundary-empty-config-summary.json`.
 
-Latest configured local-service smoke: 2026-06-08. After adding local endpoints,
-OpenAI key, Google Client ID, and a short-lived Google ID token,
-`npm run verify:production-boundaries` reports 5 pass / 0 skip / 0 fail: cloud
-health, Google provider config, real Google provider login, LLM resume review,
-and LLM PDF question generation all pass. Resume UI also posted to the real
-local LLM proxy and rendered review items. Evidence:
+Latest configured local-service smoke: 2026-06-23. With no fresh
+`QUANTGYM_GOOGLE_ID_TOKEN`, `npm run verify:production-boundaries` is expected
+to report 4 pass / 1 skip / 0 fail: cloud health, Google provider config, LLM
+resume review, and LLM PDF question generation pass, while real Google provider
+login is skipped until a short-lived token is supplied. A fresh-token run should
+report 5 pass / 0 skip / 0 fail before final sign-off. Resume UI also posted to
+the real local LLM proxy and rendered review items. Evidence:
 `318-resume-real-llm-proxy-review.png`,
 `318-resume-real-llm-proxy-review-summary.json`, and
 `319-production-boundaries-local-services-summary.json`.
@@ -75,12 +76,14 @@ route smoke must cover all routes and key interactions, deployed LLM/PDF
 endpoint evidence must pass with a cloud session token, Chrome extension popup
 runtime capture/copy/open/fallback behavior must pass, GitHub baseline parity
 must stay 21/21 pass with zero actionable issues, browser evidence manifest must
-report zero missing/invalid artifacts, migration completion must stay
-10 pass / 0 pending / 0 fail, production boundary evidence must stay
-5 pass / 0 skip / 0 fail, local readiness must stay final-pass or an explicit
-production-token-only partial, static build config must not embed the OpenAI
-key, and the Google token helper browser smoke must stay renderable. This is not
-a replacement for screenshot review, but it catches accidental removal of
+report zero missing/invalid artifacts, migration completion must stay either
+fresh-token complete or the explicit 9 pass / 1 pending Google-token partial,
+production boundary evidence must stay either 5 pass / 0 skip / 0 fail with a
+fresh token or the explicit 4 pass / 1 skip token-only partial, local readiness
+must stay final-pass or an explicit production-token-only partial, static build
+config must not embed the OpenAI key, and the Google token helper browser smoke
+must stay renderable. This is not a replacement for screenshot review, but it
+catches accidental removal of
 route-critical ids such as `problemSearch`, `leaderboardMetricSelect`,
 `resumeReview`, `settingsGoogleClientIdInput`, and `todoDockButton`.
 
@@ -117,11 +120,12 @@ acknowledge signature verification with `X-QuantGym-Alert-Verified: 1` or JSON
 configuration checks fail.
 
 Production-boundary diagnostic follow-up: the verification script now reports
-the exact missing item for skipped checks, and the final real-token run is
-green. With the current local config and short-lived Google ID token,
-`npm run verify:production-boundaries` reports 5 pass / 0 skip / 0 fail,
-including cloud health, Google provider config, Google provider login, LLM
-resume review, and LLM PDF question generation.
+the exact missing item for skipped checks. With the current local config and no
+fresh Google ID token, `npm run verify:production-boundaries` remains a
+token-only partial: cloud health, Google provider config, LLM resume review, and
+LLM PDF question generation pass, while Google provider login is skipped. A
+fresh-token run is still required to report 5 pass / 0 skip / 0 fail before
+final sign-off.
 
 LLM proxy robustness follow-up: Resume review now tolerates model output that is
 close to JSON but malformed, extracts actionable review items, and still
@@ -161,9 +165,10 @@ images, and 0 invalid JSON files. Evidence:
 
 Migration completion audit follow-up: `npm run check:migration-completion`
 summarizes final migration sign-off state into
-`327-migration-completion-audit-summary.json`. Current status is `pass`:
-10 / 10 requirements pass, 0 pending, and 0 fail. Real Google provider account
-login is signed off with a short-lived ID token and audience check.
+`327-migration-completion-audit-summary.json`. Current status is `partial`:
+9 / 10 requirements pass, 1 pending, and 0 fail. The pending item is real Google
+provider account login, which requires a fresh short-lived Google ID token whose
+audience matches the configured Client ID.
 
 Readiness accounting note: local release readiness now parses the migration
 completion audit JSON as well as production-boundary JSON. That means the local

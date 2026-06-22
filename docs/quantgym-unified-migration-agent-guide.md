@@ -421,14 +421,16 @@ What is now correctly completed:
     verify cloud health, Google provider login, LLM resume review, and LLM PDF
     question generation.
 
-35. Local OpenAI-backed LLM/PDF and Google provider boundaries now pass. After
-    fixing `llm-proxy/server.mjs` to support the frontend's
-    `task=resume_review` and completing the short-lived Google ID token handoff,
-    `npm run verify:production-boundaries` reports 5 pass / 0 skip / 0 fail
-    with local `8787` and `8790`: cloud health, Google provider config, real
-    Google provider login, LLM resume review, and LLM PDF question generation
-    pass. Resume UI also posts to the real local LLM proxy and renders review
-    items. Evidence:
+35. Local OpenAI-backed LLM/PDF boundaries pass, and Google provider config is
+    ready for a fresh token sign-off. After fixing `llm-proxy/server.mjs` to
+    support the frontend's `task=resume_review`, the current no-token
+    `npm run verify:production-boundaries` run reports 4 pass / 1 skip / 0 fail
+    with local `8787` and `8790`: cloud health, Google provider config, LLM
+    resume review, and LLM PDF question generation pass, while real Google
+    provider login is skipped until a fresh short-lived token is supplied. A
+    fresh-token run should report 5 pass / 0 skip / 0 fail before final
+    sign-off. Resume UI also posts to the real local LLM proxy and renders
+    review items. Evidence:
     `318-resume-real-llm-proxy-review.png`,
     `318-resume-real-llm-proxy-review-summary.json`, and
     `319-production-boundaries-local-services-summary.json`.
@@ -458,11 +460,13 @@ What is now correctly completed:
     browser route smoke and Chrome extension popup runtime smoke must pass,
     GitHub parity must stay 21/21 pass with zero actionable issues, browser
     evidence manifest integrity must stay clean, migration completion must stay
-    10 pass / 0 pending / 0 fail, production boundary evidence must remain
-    5 pass / 0 skip / 0 fail, local readiness must stay final-pass or an
-    explicit production-token-only partial, static build config must not embed
-    the OpenAI key and must expose matching build provenance, and the Google
-    token helper browser smoke must stay
+    either fresh-token complete or the explicit 9 pass / 1 pending Google-token
+    partial, production boundary evidence must remain either 5 pass / 0 skip /
+    0 fail with a fresh token or the explicit 4 pass / 1 skip token-only
+    partial, local readiness must stay final-pass or an explicit
+    production-token-only partial, static build config must not embed the OpenAI
+    key and must expose matching build provenance, and the Google token helper
+    browser smoke must stay
     renderable. It exists to catch regressions like missing problem
     search/cards, empty Overview leaderboard selectors, missing Resume review
     controls, broken Settings config ids, a disconnected Todo dock, stale or
@@ -470,12 +474,13 @@ What is now correctly completed:
     screenshots are regenerated.
 
 39. Production-boundary diagnostics are contextual and now final-pass capable.
-    With the current local config and a short-lived Google ID token,
-    `npm run verify:production-boundaries` passes cloud health, Google provider
-    config, Google provider login, LLM resume review, and LLM PDF question
-    generation: 5 pass / 0 skip / 0 fail. If the token is absent or expired,
-    the same script reports the exact missing item instead of misdiagnosing
-    endpoint config.
+    With the current local config but no fresh Google ID token,
+    `npm run verify:production-boundaries` reports the expected token-only
+    partial: cloud health, Google provider config, LLM resume review, and LLM
+    PDF question generation pass, while Google provider login is skipped. If a
+    fresh token is supplied, the same script should report 5 pass / 0 skip /
+    0 fail; if the token is absent or expired, it reports the exact missing item
+    instead of misdiagnosing endpoint config.
 
 40. Resume review LLM output is now tolerant of malformed JSON. The
     OpenAI-backed `resume_review` smoke exposed an intermittent failure where
@@ -518,10 +523,10 @@ What is now correctly completed:
     the React migration ledger, absence of retired bridge symbols under `src/`,
     route smoke, GitHub parity, browser evidence manifest integrity, static
     build config, local cloud/LLM boundaries, and Google token helper evidence.
-    Current status is `pass`: 10 requirements pass, 0 requirements are pending,
-    and 0 requirements fail. Real Google provider account login is signed off
-    with a short-lived ID token whose audience matches the configured Google
-    Client ID.
+    Current status is `partial`: 9 requirements pass, 1 requirement is pending,
+    and 0 requirements fail. The pending requirement is real Google provider
+    account login, which needs a fresh short-lived ID token whose audience
+    matches the configured Google Client ID.
 
 44. Google provider login now has a local token handoff helper. Run
     `npm run google:token-helper`, keep the Vite dev server on
@@ -552,9 +557,10 @@ What is now correctly completed:
     textarea, copy button, and `Ready.` status. Evidence:
     `325-google-token-helper-browser.png` and
     `325-google-token-helper-browser-summary.json`. This proves helper
-    renderability; the final provider login boundary is signed off separately by
+    renderability; the final provider login boundary is verified separately by
     `323-release-readiness-summary.json` and
-    `327-migration-completion-audit-summary.json`.
+    `327-migration-completion-audit-summary.json`, and it is complete only while
+    fresh token evidence is present.
 
 Remaining work before final sign-off:
 
@@ -577,10 +583,11 @@ Resolved cleanup:
   feature cores. Local build no longer emits the >500 KB JS chunk warning; the
   largest JavaScript chunk in the verified build is `createAppServices` at about
   184 KB minified.
-- 2026-06-17: Real Google provider account login is no longer remaining work.
-  Release readiness evidence reports final pass when a fresh token is present, and the
-  production-boundary Google provider login check passes with a Google-linked
-  account and matching token audience.
+- 2026-06-17: Real Google provider account login became runnable through the
+  token helper, but it remains time-sensitive remaining work whenever no fresh
+  token evidence is present. Release readiness reports final pass only while a
+  fresh token is present and the production-boundary Google provider login check
+  passes with a Google-linked account and matching token audience.
 - 2026-06-17: Poker preflop matrix DOM rendering is retired. The solver panel is
   React-owned via `PokerPreflopMatrix`, while rich-text and iframe/embed helpers
   remain intentionally controlled rendering boundaries rather than migration
