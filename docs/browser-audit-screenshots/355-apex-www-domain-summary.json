@@ -3,35 +3,22 @@
   "date": "2026-06-19",
   "surface": "apex/www domain SSL or redirect",
   "status": "pass",
-  "durationMs": 4920,
+  "durationMs": 4181,
   "requireClear": false,
-  "launchReadiness": "blocked",
+  "launchReadiness": "pass",
   "signoffCommand": "npm run check:apex-www-domain -- --require-clear",
-  "ownerAction": "Fix the Cloudflare-to-origin SSL handshake or intentionally redirect quantgym.app and www.quantgym.app to the healthy beta entrypoint before promoting apex/WWW.",
+  "ownerAction": "Apex and WWW HTTPS are usable. Keep this summary as the promotion-domain signoff evidence.",
   "remediation": {
-    "ownerAction": "Fix the Cloudflare-to-origin SSL handshake or intentionally redirect quantgym.app and www.quantgym.app to the healthy beta entrypoint before promoting apex/WWW.",
-    "probableCause": "Cloudflare is reachable for apex/WWW, but the TLS handshake between Cloudflare and the configured origin is failing.",
-    "blockedHosts": [
-      {
-        "host": "quantgym.app",
-        "reason": "Cloudflare 525 SSL handshake error"
-      },
-      {
-        "host": "www.quantgym.app",
-        "reason": "Cloudflare 525 SSL handshake error"
-      }
-    ],
+    "ownerAction": "Apex and WWW HTTPS are usable. Keep this summary as the promotion-domain signoff evidence.",
+    "probableCause": "",
     "checklist": [
-      "Confirm quantgym.app and www.quantgym.app are attached to the intended Cloudflare Pages/custom-domain or origin service.",
-      "Confirm the origin presents a valid certificate for quantgym.app and www.quantgym.app, or configure Cloudflare to redirect both hosts to beta.quantgym.app before origin TLS is attempted.",
-      "Keep beta.quantgym.app healthy while changing apex/WWW routing.",
-      "Run npm run check:apex-www-domain -- --require-clear after the routing or SSL change."
+      "Keep beta.quantgym.app healthy.",
+      "Keep npm run check:apex-www-domain -- --require-clear passing before promoting apex/WWW as public entrypoints."
     ],
     "acceptanceCriteria": [
-      "quantgym.app returns HTTP 2xx/3xx over HTTPS and no Cloudflare 525 appears in the redirect chain.",
-      "www.quantgym.app returns HTTP 2xx/3xx over HTTPS and no Cloudflare 525 appears in the redirect chain.",
-      "beta.quantgym.app remains HTTP 2xx/3xx over HTTPS.",
-      "npm run check:apex-www-domain -- --require-clear exits 0."
+      "quantgym.app returns HTTP 2xx/3xx over HTTPS.",
+      "www.quantgym.app returns HTTP 2xx/3xx over HTTPS.",
+      "beta.quantgym.app remains HTTP 2xx/3xx over HTTPS."
     ]
   },
   "betaEntrypoint": {
@@ -52,6 +39,8 @@
       "usableHttps": true,
       "redirectsToBeta": false,
       "blockedReason": "",
+      "error": "",
+      "transientErrors": [],
       "chain": [
         {
           "url": "https://beta.quantgym.app/",
@@ -59,7 +48,7 @@
           "headers": {
             "location": "",
             "server": "cloudflare",
-            "cfRay": "a1019a5079bd250b-HKG",
+            "cfRay": "a105faa97fd5ddc9-HKG",
             "contentType": "text/html; charset=utf-8"
           }
         }
@@ -78,22 +67,34 @@
       },
       "https": {
         "initialUrl": "https://quantgym.app/",
-        "finalUrl": "https://quantgym.app/",
-        "finalStatusCode": 525,
-        "finalHost": "quantgym.app",
-        "cloudflare525": true,
-        "usableHttps": false,
-        "redirectsToBeta": false,
-        "blockedReason": "Cloudflare 525 SSL handshake error",
+        "finalUrl": "https://beta.quantgym.app/",
+        "finalStatusCode": 200,
+        "finalHost": "beta.quantgym.app",
+        "cloudflare525": false,
+        "usableHttps": true,
+        "redirectsToBeta": true,
+        "blockedReason": "",
+        "error": "",
+        "transientErrors": [],
         "chain": [
           {
             "url": "https://quantgym.app/",
-            "statusCode": 525,
+            "statusCode": 302,
+            "headers": {
+              "location": "https://beta.quantgym.app/",
+              "server": "cloudflare",
+              "cfRay": "a105fa9c4d43ef33-LHR",
+              "contentType": ""
+            }
+          },
+          {
+            "url": "https://beta.quantgym.app/",
+            "statusCode": 200,
             "headers": {
               "location": "",
               "server": "cloudflare",
-              "cfRay": "a1019a35da9b3eb0-HKG",
-              "contentType": "text/plain; charset=UTF-8"
+              "cfRay": "a105faa1f9adccd7-LHR",
+              "contentType": "text/html; charset=utf-8"
             }
           }
         ]
@@ -110,22 +111,34 @@
       },
       "https": {
         "initialUrl": "https://www.quantgym.app/",
-        "finalUrl": "https://www.quantgym.app/",
-        "finalStatusCode": 525,
-        "finalHost": "www.quantgym.app",
-        "cloudflare525": true,
-        "usableHttps": false,
-        "redirectsToBeta": false,
-        "blockedReason": "Cloudflare 525 SSL handshake error",
+        "finalUrl": "https://beta.quantgym.app/",
+        "finalStatusCode": 200,
+        "finalHost": "beta.quantgym.app",
+        "cloudflare525": false,
+        "usableHttps": true,
+        "redirectsToBeta": true,
+        "blockedReason": "",
+        "error": "",
+        "transientErrors": [],
         "chain": [
           {
             "url": "https://www.quantgym.app/",
-            "statusCode": 525,
+            "statusCode": 302,
+            "headers": {
+              "location": "https://beta.quantgym.app/",
+              "server": "cloudflare",
+              "cfRay": "a105faa56a1688cc-HKG",
+              "contentType": ""
+            }
+          },
+          {
+            "url": "https://beta.quantgym.app/",
+            "statusCode": 200,
             "headers": {
               "location": "",
               "server": "cloudflare",
-              "cfRay": "a1019a406ea09c94-HKG",
-              "contentType": "text/plain; charset=UTF-8"
+              "cfRay": "a105faa85a930865-HKG",
+              "contentType": "text/html; charset=utf-8"
             }
           }
         ]
@@ -138,14 +151,14 @@
     "wwwDnsResolved": true,
     "apexHttpsProbeRan": true,
     "wwwHttpsProbeRan": true,
-    "apexUsableHttps": false,
-    "wwwUsableHttps": false,
-    "apexWwwClear": false,
-    "apexCloudflare525Observed": true,
-    "wwwCloudflare525Observed": true,
-    "currentBlockedStateClassified": true,
+    "apexUsableHttps": true,
+    "wwwUsableHttps": true,
+    "apexWwwClear": true,
+    "apexCloudflare525Observed": false,
+    "wwwCloudflare525Observed": false,
+    "currentBlockedStateClassified": false,
     "requireClearModeAvailable": true,
-    "requireClearWouldFail": true
+    "requireClearWouldFail": false
   },
   "failures": [],
   "warnings": []

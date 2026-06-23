@@ -18,6 +18,8 @@ const summaryPath = path.resolve(
 const signoffCommand = "npm run check:apex-www-domain -- --require-clear";
 const promotionHosts = ["quantgym.app", "www.quantgym.app"];
 const betaHost = "beta.quantgym.app";
+const httpsProbeAttempts = 3;
+const httpsProbeTimeoutMs = 10000;
 const failures = [];
 const warnings = [];
 
@@ -123,10 +125,15 @@ async function probeHttps(initialUrl) {
   const chain = [];
   let currentUrl = initialUrl;
   let error = "";
+  const transientErrors = [];
   for (let redirectCount = 0; redirectCount <= 3; redirectCount += 1) {
     let response;
     try {
-      response = await requestHead(currentUrl, 10000);
+      response = await requestHeadWithRetry(currentUrl, {
+        attempts: httpsProbeAttempts,
+        timeoutMs: httpsProbeTimeoutMs,
+        transientErrors
+      });
     } catch (requestError) {
       error = requestError.message || String(requestError);
       break;
@@ -149,8 +156,27 @@ async function probeHttps(initialUrl) {
     finalHost: parseUrl(final?.url || currentUrl)?.hostname || "",
     cloudflare525: chain.some((item) => item.statusCode === 525),
     chain,
-    error
+    error,
+    transientErrors
   };
+}
+
+async function requestHeadWithRetry(url, options) {
+  const attempts = Math.max(1, Number(options?.attempts) || 1);
+  const timeoutMs = Math.max(1000, Number(options?.timeoutMs) || 10000);
+  const transientErrors = Array.isArray(options?.transientErrors) ? options.transientErrors : [];
+  let lastError = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await requestHead(url, timeoutMs);
+    } catch (error) {
+      lastError = error;
+      const message = error?.message || String(error);
+      transientErrors.push({ url, attempt, message });
+      if (attempt < attempts) await delay(500 * attempt);
+    }
+  }
+  throw lastError || new Error(`HTTPS request failed for ${url}.`);
 }
 
 function requestHead(url, timeoutMs) {
@@ -195,6 +221,10 @@ function requestHead(url, timeoutMs) {
   });
 }
 
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function summarizeHost(host, probe) {
   return {
     host,
@@ -208,6 +238,8 @@ function summarizeHost(host, probe) {
       usableHttps: isUsableHttps(probe.https),
       redirectsToBeta: redirectsToBeta(probe.https),
       blockedReason: blockedReason(probe),
+      error: probe.https.error,
+      transientErrors: probe.https.transientErrors,
       chain: probe.https.chain
     }
   };

@@ -92,9 +92,13 @@ for (const name of requiredScripts) {
 }
 
 const outstandingItems = extractOutstandingItems(productStatusText);
-for (let index = 1; index <= 9; index += 1) {
+const expectedOutstandingItemIndexes = [1, 2, 3, 4, 5, 6, 7];
+for (const index of expectedOutstandingItemIndexes) {
   expect(outstandingItems.some((item) => item.index === index), `docs/product-status.md is missing Outstanding Item ${index}.`);
 }
+const outstandingItemsSequential = outstandingItems.length === expectedOutstandingItemIndexes.length
+  && outstandingItems.every((item, listIndex) => item.index === expectedOutstandingItemIndexes[listIndex]);
+expect(outstandingItemsSequential, "docs/product-status.md Outstanding Items must use the current 1-7 sequence after clearing apex/WWW and ops alert blockers.");
 
 const jobsFeedCleared = evidence.jobsDeployedApiSource.status === "pass"
   && evidence.jobsDeployedApiSource.checks?.sourceMerged === true
@@ -1272,7 +1276,7 @@ const summary = {
   blockers,
   checks: {
     requiredScriptsPresent: requiredScripts.every((name) => Boolean(scripts[name])),
-    outstandingItemsTracked: outstandingItems.length >= 9,
+    outstandingItemsTracked: outstandingItemsSequential,
     renderApiBuildFilterFixturePass: evidence.renderApiBuildFilterFixture.status === "pass",
     renderApiBuildFilterPacketPass: evidence.renderApiBuildFilterPacket.status === "pass",
     renderApiBuildFilterPathsExact: evidence.renderApiBuildFilterPacket.checks?.includesExactRecommendedPaths === true

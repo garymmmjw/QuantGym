@@ -2741,12 +2741,21 @@ function validateApexWwwDomainSummary(data, expect, label) {
   expect(data.status === "pass", `${label} status must be pass while the beta entrypoint is healthy`);
   expect(data.surface === "apex/www domain SSL or redirect", `${label} must report the apex/www surface`);
   expect(data.signoffCommand === "npm run check:apex-www-domain -- --require-clear", `${label} must record the clear-signoff command`);
-  expect(data.launchReadiness === "blocked", `${label} must keep apex/www launch readiness blocked until HTTPS is usable`);
+  const apexWwwClear = data.launchReadiness === "pass" && data.checks?.apexWwwClear === true;
+  expect(["blocked", "pass"].includes(String(data.launchReadiness || "")), `${label} launch readiness must be blocked or pass`);
   expect(typeof data.ownerAction === "string" && data.ownerAction.length > 20, `${label} must include the apex/WWW owner action`);
-  expect(typeof data.remediation?.probableCause === "string" && data.remediation.probableCause.length > 20, `${label} must explain the probable blocked-domain cause`);
-  expect(Array.isArray(data.remediation?.blockedHosts) && data.remediation.blockedHosts.length === 2, `${label} must list blocked apex/WWW hosts`);
-  expect(Array.isArray(data.remediation?.checklist) && data.remediation.checklist.length >= 4, `${label} must include a remediation checklist`);
-  expect(Array.isArray(data.remediation?.acceptanceCriteria) && data.remediation.acceptanceCriteria.includes("npm run check:apex-www-domain -- --require-clear exits 0."), `${label} must include the clear-signoff acceptance criterion`);
+  if (apexWwwClear) {
+    expect(data.remediation?.probableCause === "", `${label} clear state must not keep a stale probable-cause diagnosis`);
+    expect(Array.isArray(data.remediation?.checklist) && data.remediation.checklist.length >= 2, `${label} clear state must include a keep-green checklist`);
+    expect(Array.isArray(data.remediation?.acceptanceCriteria) && data.remediation.acceptanceCriteria.includes("quantgym.app returns HTTP 2xx/3xx over HTTPS."), `${label} clear state must include apex HTTPS acceptance criteria`);
+    expect(data.ownerAction.includes("usable"), `${label} clear state owner action must describe usable apex/WWW HTTPS`);
+  } else {
+    expect(data.launchReadiness === "blocked", `${label} must keep apex/www launch readiness blocked until HTTPS is usable`);
+    expect(typeof data.remediation?.probableCause === "string" && data.remediation.probableCause.length > 20, `${label} must explain the probable blocked-domain cause`);
+    expect(Array.isArray(data.remediation?.blockedHosts) && data.remediation.blockedHosts.length === 2, `${label} must list blocked apex/WWW hosts`);
+    expect(Array.isArray(data.remediation?.checklist) && data.remediation.checklist.length >= 4, `${label} must include a remediation checklist`);
+    expect(Array.isArray(data.remediation?.acceptanceCriteria) && data.remediation.acceptanceCriteria.includes("npm run check:apex-www-domain -- --require-clear exits 0."), `${label} must include the clear-signoff acceptance criterion`);
+  }
   expect(data.betaEntrypoint?.host === "beta.quantgym.app", `${label} must keep beta.quantgym.app as the current healthy entrypoint`);
   expect(data.betaEntrypoint?.https?.usableHttps === true, `${label} beta entrypoint must be usable`);
   expect(Array.isArray(data.promotionHosts) && data.promotionHosts.length === 2, `${label} must inspect both promotion hosts`);
@@ -2755,30 +2764,47 @@ function validateApexWwwDomainSummary(data, expect, label) {
     expect(Boolean(result), `${label} must include ${host}`);
     expect((result?.dns?.aRecords || []).length > 0 || (result?.dns?.cnameRecords || []).length > 0, `${label} ${host} must resolve in DNS`);
     expect(typeof result?.https?.cloudflare525 === "boolean", `${label} ${host} must record whether Cloudflare 525 was observed`);
-    expect(result?.https?.usableHttps === false, `${label} ${host} must remain unusable until external SSL/redirect is fixed`);
-    expect(typeof result?.https?.blockedReason === "string" && result.https.blockedReason.length > 5, `${label} ${host} must classify the blocker`);
+    if (apexWwwClear) {
+      expect(result?.https?.usableHttps === true, `${label} ${host} must be usable after external SSL/redirect signoff`);
+      expect(result?.https?.cloudflare525 === false, `${label} ${host} must not observe Cloudflare 525 after signoff`);
+      expect(result?.https?.blockedReason === "", `${label} ${host} clear state must not keep a blocked reason`);
+      expect(result?.https?.finalStatusCode >= 200 && result?.https?.finalStatusCode < 400, `${label} ${host} must end in HTTP 2xx/3xx after signoff`);
+    } else {
+      expect(result?.https?.usableHttps === false, `${label} ${host} must remain unusable until external SSL/redirect is fixed`);
+      expect(typeof result?.https?.blockedReason === "string" && result.https.blockedReason.length > 5, `${label} ${host} must classify the blocker`);
+    }
   }
   expect(data.checks?.betaHealthy === true, `${label} must confirm beta remains healthy`);
   expect(data.checks?.apexDnsResolved === true, `${label} must confirm apex DNS resolves`);
   expect(data.checks?.wwwDnsResolved === true, `${label} must confirm WWW DNS resolves`);
   expect(data.checks?.apexHttpsProbeRan === true, `${label} must probe apex HTTPS`);
   expect(data.checks?.wwwHttpsProbeRan === true, `${label} must probe WWW HTTPS`);
-  expect(data.checks?.apexWwwClear === false, `${label} must not clear apex/www while HTTPS remains unusable`);
   expect(typeof data.checks?.apexCloudflare525Observed === "boolean", `${label} must record whether apex Cloudflare 525 was observed`);
   expect(typeof data.checks?.wwwCloudflare525Observed === "boolean", `${label} must record whether WWW Cloudflare 525 was observed`);
-  expect(data.checks?.currentBlockedStateClassified === true, `${label} must classify the current blocked state`);
   expect(data.checks?.requireClearModeAvailable === true, `${label} must expose a require-clear mode`);
-  expect(data.checks?.requireClearWouldFail === true, `${label} must prove require-clear would fail while blocked`);
+  if (apexWwwClear) {
+    expect(data.checks?.apexUsableHttps === true, `${label} must confirm apex HTTPS is usable after signoff`);
+    expect(data.checks?.wwwUsableHttps === true, `${label} must confirm WWW HTTPS is usable after signoff`);
+    expect(data.checks?.apexWwwClear === true, `${label} must clear apex/www after HTTPS is usable`);
+    expect(data.checks?.currentBlockedStateClassified === false, `${label} clear state must not classify a current blocked state`);
+    expect(data.checks?.requireClearWouldFail === false, `${label} require-clear must not fail after apex/WWW signoff`);
+  } else {
+    expect(data.checks?.apexWwwClear === false, `${label} must not clear apex/www while HTTPS remains unusable`);
+    expect(data.checks?.currentBlockedStateClassified === true, `${label} must classify the current blocked state`);
+    expect(data.checks?.requireClearWouldFail === true, `${label} must prove require-clear would fail while blocked`);
+  }
   expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
 }
 
 function validateExternalLaunchBlockersSummary(data, expect, label, options = {}) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.launchReadiness === "blocked", `${label} must keep public launch marked blocked until external signoffs clear`);
+  const apexAtSummaryTop = findBlocker(data.blockers, "apex-www-ssl");
   const deployedGoogleAtSummaryTop = findBlocker(data.blockers, "deployed-google-provider-login");
   const renderApiAtSummaryTop = findBlocker(data.blockers, "render-api-build-filter");
   const opsAlertAtSummaryTop = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");
   let expectedBlockerCount = 8;
+  if (apexAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
   if (deployedGoogleAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
   if (renderApiAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
   if (opsAlertAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
@@ -2858,7 +2884,6 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.browserMobileCareerControlsPass === true, `${label} must verify the mobile career browser journey remains pass`);
 
   for (const id of [
-    "apex-www-ssl",
     "media-bucket-cdn",
     "chrome-web-store-publication",
     "postgres-managed-cutover",
@@ -2870,21 +2895,29 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   }
 
   const apex = findBlocker(data.blockers, "apex-www-ssl");
+  expect(["pass", "blocked"].includes(String(apex?.status || "")), `${label} apex/WWW must be pass only with clear HTTPS evidence or blocked`);
   expect(apex?.signoffCommand === "npm run check:apex-www-domain -- --require-clear", `${label} apex/WWW must record the clear-signoff command`);
   expect(apex?.localCoverage?.trackedInProductStatus === true, `${label} must keep apex/WWW tracked in product status`);
   expect(apex?.localCoverage?.liveDiagnosisPass === true, `${label} must include apex/WWW live diagnosis coverage`);
   expect(apex?.localCoverage?.betaEntrypointHealthy === true, `${label} must prove beta entrypoint remains healthy`);
-  expect(apex?.localCoverage?.apexDnsResolved === true, `${label} must include apex DNS coverage`);
-  expect(apex?.localCoverage?.wwwDnsResolved === true, `${label} must include WWW DNS coverage`);
-  expect(apex?.localCoverage?.currentBlockedStateClassified === true, `${label} must classify the apex/WWW blocked state`);
-  expect(apex?.localCoverage?.apexPromotionHostBlocked === true, `${label} must include apex blocked-host evidence`);
-  expect(apex?.localCoverage?.wwwPromotionHostBlocked === true, `${label} must include WWW blocked-host evidence`);
-  expect(typeof apex?.localCoverage?.apexBlockedReason === "string" && apex.localCoverage.apexBlockedReason.length > 5, `${label} must include the apex blocked reason`);
-  expect(typeof apex?.localCoverage?.wwwBlockedReason === "string" && apex.localCoverage.wwwBlockedReason.length > 5, `${label} must include the WWW blocked reason`);
-  expect(typeof apex?.localCoverage?.apexCloudflare525Observed === "boolean", `${label} must include apex Cloudflare 525 diagnostic evidence`);
-  expect(typeof apex?.localCoverage?.wwwCloudflare525Observed === "boolean", `${label} must include WWW Cloudflare 525 diagnostic evidence`);
   expect(apex?.localCoverage?.requireClearModeAvailable === true, `${label} must expose apex/WWW require-clear mode`);
-  expect(apex?.localCoverage?.requireClearWouldFail === true, `${label} must prove apex/WWW require-clear would fail while blocked`);
+  if (apex?.status === "pass") {
+    expect(typeof apex?.ownerAction === "string" && apex.ownerAction.includes("usable"), `${label} apex/WWW pass must describe usable HTTPS`);
+    expect(apex?.localCoverage?.apexUsableHttps === true, `${label} apex/WWW pass must prove apex HTTPS usable`);
+    expect(apex?.localCoverage?.wwwUsableHttps === true, `${label} apex/WWW pass must prove WWW HTTPS usable`);
+  } else {
+    expect(typeof apex?.ownerAction === "string" && apex.ownerAction.length > 20, `${label} apex/WWW blocked state must describe owner action`);
+    expect(apex?.localCoverage?.apexDnsResolved === true, `${label} must include apex DNS coverage`);
+    expect(apex?.localCoverage?.wwwDnsResolved === true, `${label} must include WWW DNS coverage`);
+    expect(apex?.localCoverage?.currentBlockedStateClassified === true, `${label} must classify the apex/WWW blocked state`);
+    expect(apex?.localCoverage?.apexPromotionHostBlocked === true, `${label} must include apex blocked-host evidence`);
+    expect(apex?.localCoverage?.wwwPromotionHostBlocked === true, `${label} must include WWW blocked-host evidence`);
+    expect(typeof apex?.localCoverage?.apexBlockedReason === "string" && apex.localCoverage.apexBlockedReason.length > 5, `${label} must include the apex blocked reason`);
+    expect(typeof apex?.localCoverage?.wwwBlockedReason === "string" && apex.localCoverage.wwwBlockedReason.length > 5, `${label} must include the WWW blocked reason`);
+    expect(typeof apex?.localCoverage?.apexCloudflare525Observed === "boolean", `${label} must include apex Cloudflare 525 diagnostic evidence`);
+    expect(typeof apex?.localCoverage?.wwwCloudflare525Observed === "boolean", `${label} must include WWW Cloudflare 525 diagnostic evidence`);
+    expect(apex?.localCoverage?.requireClearWouldFail === true, `${label} must prove apex/WWW require-clear would fail while blocked`);
+  }
 
   const deployedGoogle = findBlocker(data.blockers, "deployed-google-provider-login");
   expect(["pass", "blocked"].includes(String(deployedGoogle?.status || "")), `${label} deployed Google provider must be pass only with fresh token evidence or blocked`);

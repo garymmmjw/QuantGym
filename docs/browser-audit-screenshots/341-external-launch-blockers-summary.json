@@ -5,30 +5,22 @@
   "status": "pass",
   "launchReadiness": "blocked",
   "requireClear": false,
-  "blockerCount": 6,
+  "blockerCount": 5,
   "trackedCount": 1,
   "blockers": [
     {
       "id": "apex-www-ssl",
       "title": "Apex/WWW domain SSL or redirect",
-      "status": "blocked",
-      "ownerAction": "Fix Cloudflare/origin SSL handshakes or intentionally redirect quantgym.app and www.quantgym.app before promoting those domains.",
+      "status": "pass",
+      "ownerAction": "Apex and WWW HTTPS are usable; keep the canonical domain policy documented before promotion.",
       "signoffCommand": "npm run check:apex-www-domain -- --require-clear",
       "localCoverage": {
         "trackedInProductStatus": true,
         "liveDiagnosisPass": true,
         "betaEntrypointHealthy": true,
-        "apexDnsResolved": true,
-        "wwwDnsResolved": true,
-        "currentBlockedStateClassified": true,
-        "apexPromotionHostBlocked": true,
-        "wwwPromotionHostBlocked": true,
-        "apexBlockedReason": "Cloudflare 525 SSL handshake error",
-        "wwwBlockedReason": "Cloudflare 525 SSL handshake error",
-        "apexCloudflare525Observed": true,
-        "wwwCloudflare525Observed": true,
-        "requireClearModeAvailable": true,
-        "requireClearWouldFail": true
+        "apexUsableHttps": true,
+        "wwwUsableHttps": true,
+        "requireClearModeAvailable": true
       }
     },
     {

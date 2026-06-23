@@ -569,17 +569,12 @@ Browser/CDP deep flows now recorded in
   start commands, hosted API/LLM health, deployed version matching the current
   commit, and the Gmail audit showing no recent/current-commit Render failures
   in `357-render-llm-deploy-status-summary.json`.
-- [ ] Apex/WWW domain SSL or redirect sign-off: fix or intentionally redirect
-  `quantgym.app` and `www.quantgym.app` so they no longer return Cloudflare 525
-  SSL handshake errors; keep `beta.quantgym.app` as the current beta entrypoint
-  until this separate domain/SSL follow-up is complete. Deferred by the
-  2026-06-17 handoff decision and reaffirmed by the 2026-06-18 user decision
-  to leave this item in the unresolved backlog for now. Refresh live evidence
-  with `npm run check:apex-www-domain`; the generated `355` summary includes
-  the current blocked hosts, probable cause, owner action, remediation
-  checklist, and acceptance criteria. After the Cloudflare/origin SSL or
-  redirect fix, clear the item with
-  `npm run check:apex-www-domain -- --require-clear`.
+- [x] Apex/WWW domain SSL or redirect sign-off: `quantgym.app` and
+  `www.quantgym.app` now route through the `quantgym-apex-redirect`
+  Cloudflare Worker and return 302 to `https://beta.quantgym.app/`, which then
+  returns 200. Refresh and clear live evidence with
+  `npm run check:apex-www-domain -- --require-clear`; the generated `355`
+  summary records the 302 -> 200 chain and confirms no Cloudflare 525 remains.
 - [ ] Real Google provider account sign-off with a real Google ID token/session;
   keep the local and production web origins authorized in the OAuth Client.
 
