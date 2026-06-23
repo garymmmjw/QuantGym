@@ -1432,7 +1432,13 @@ function validateMediaStorageProductionFixtureSummary(data, expect, label) {
     expect(false, `${label} must reject raw provider object-storage public hosts`);
   }
   expect(data.checks?.placeholderAccessKeyRejected === true, `${label} must reject placeholder media access keys`);
+  if (data.checks?.nonAsciiAccessKeyRejected !== undefined) {
+    expect(data.checks?.nonAsciiAccessKeyRejected === true, `${label} must reject non-ASCII media access keys`);
+  }
   expect(data.checks?.shortSecretKeyRejected === true, `${label} must reject short media secret keys`);
+  if (data.checks?.nonAsciiSecretKeyRejected !== undefined) {
+    expect(data.checks?.nonAsciiSecretKeyRejected === true, `${label} must reject non-ASCII media secret keys`);
+  }
   expect(data.checks?.unsafeBucketNameRejected === true, `${label} must reject unsafe media bucket names`);
   expect(data.checks?.unsafeObjectPrefixRejected === true, `${label} must reject unsafe media object prefixes`);
   expect(data.checks?.liveFixturePutGetPublicDelete === true, `${label} live fixture must prove PUT/GET/public GET/DELETE path`);

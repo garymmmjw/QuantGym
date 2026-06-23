@@ -727,6 +727,15 @@ def media_storage_label(storage_path: str = "") -> str:
 def require_media_s3_config() -> None:
     if not (MEDIA_S3_ENDPOINT and MEDIA_S3_BUCKET and MEDIA_S3_ACCESS_KEY_ID and MEDIA_S3_SECRET_ACCESS_KEY):
         raise HttpError(503, "Media object storage is not configured")
+    require_ascii_config("QUANTGYM_MEDIA_S3_ACCESS_KEY_ID", MEDIA_S3_ACCESS_KEY_ID)
+    require_ascii_config("QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY", MEDIA_S3_SECRET_ACCESS_KEY)
+
+
+def require_ascii_config(name: str, value: str) -> None:
+    try:
+        str(value or "").encode("ascii")
+    except UnicodeEncodeError:
+        raise HttpError(503, f"{name} must contain only ASCII characters")
 
 
 def media_s3_key(storage_path: str) -> str:

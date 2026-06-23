@@ -100,6 +100,8 @@ check("object storage credentials", () => {
     assertValidProductionBucketName("QUANTGYM_MEDIA_S3_BUCKET", config.bucket);
     assertStrongProductionValue("QUANTGYM_MEDIA_S3_ACCESS_KEY_ID", config.accessKeyId, MIN_PRODUCTION_ACCESS_KEY_LENGTH);
     assertStrongProductionValue("QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY", config.secretAccessKey, MIN_PRODUCTION_SECRET_KEY_LENGTH);
+    assertAsciiCredential("QUANTGYM_MEDIA_S3_ACCESS_KEY_ID", config.accessKeyId);
+    assertAsciiCredential("QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY", config.secretAccessKey);
     assertSafeProductionPrefix("QUANTGYM_MEDIA_S3_PREFIX", config.prefix);
   }
   assert(config.timeoutSeconds > 0 && config.timeoutSeconds <= 60, "QUANTGYM_MEDIA_S3_TIMEOUT_SECONDS must be between 0 and 60 seconds.");
@@ -292,6 +294,11 @@ function assertNoPlaceholder(name, value) {
 function assertStrongProductionValue(name, value, minLength) {
   const text = String(value || "");
   assert(text.length >= minLength, `${name} must be at least ${minLength} characters in production.`);
+}
+
+function assertAsciiCredential(name, value) {
+  const text = String(value || "");
+  assert(/^[\x21-\x7e]+$/.test(text), `${name} must contain only printable ASCII characters.`);
 }
 
 function assertUrlHasNoSensitiveParts(name, url) {

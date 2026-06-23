@@ -119,9 +119,19 @@ const negativeCases = [
     expectedError: "placeholder value"
   },
   {
+    name: "non-ascii access key rejected",
+    env: { QUANTGYM_MEDIA_S3_ACCESS_KEY_ID: "\u8bbf\u95ee\u5bc6\u94a5ID1234567890" },
+    expectedError: "printable ASCII characters"
+  },
+  {
     name: "short secret key rejected",
     env: { QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY: "short-secret" },
     expectedError: "at least 24 characters"
+  },
+  {
+    name: "non-ascii secret key rejected",
+    env: { QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY: "\u5bc6\u94a5secretsecretsecretsecret" },
+    expectedError: "printable ASCII characters"
   },
   {
     name: "unsafe bucket name rejected",
@@ -192,7 +202,9 @@ try {
     publicBaseQueryRejected: findNegativeFixture(negativeFixtures, "public base query rejected")?.rejected === true,
     rawProviderPublicBaseRejected: findNegativeFixture(negativeFixtures, "raw provider public host rejected")?.rejected === true,
     placeholderAccessKeyRejected: findNegativeFixture(negativeFixtures, "placeholder access key rejected")?.rejected === true,
+    nonAsciiAccessKeyRejected: findNegativeFixture(negativeFixtures, "non-ascii access key rejected")?.rejected === true,
     shortSecretKeyRejected: findNegativeFixture(negativeFixtures, "short secret key rejected")?.rejected === true,
+    nonAsciiSecretKeyRejected: findNegativeFixture(negativeFixtures, "non-ascii secret key rejected")?.rejected === true,
     unsafeBucketNameRejected: findNegativeFixture(negativeFixtures, "unsafe bucket name rejected")?.rejected === true,
     unsafeObjectPrefixRejected: findNegativeFixture(negativeFixtures, "unsafe object prefix rejected")?.rejected === true,
     liveFixturePassed: liveFixture.status === "pass",

@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1429,
+  "durationMs": 1257,
   "productionFixture": {
     "status": "pass",
     "mode": "production",
@@ -148,11 +148,25 @@
       "error": "QUANTGYM_MEDIA_S3_ACCESS_KEY_ID still contains a placeholder value."
     },
     {
+      "name": "non-ascii access key rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_S3_ACCESS_KEY_ID must contain only printable ASCII characters."
+    },
+    {
       "name": "short secret key rejected",
       "rejected": true,
       "expectedErrorObserved": true,
       "failed": 1,
       "error": "QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY must be at least 24 characters in production."
+    },
+    {
+      "name": "non-ascii secret key rejected",
+      "rejected": true,
+      "expectedErrorObserved": true,
+      "failed": 1,
+      "error": "QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY must contain only printable ASCII characters."
     },
     {
       "name": "unsafe bucket name rejected",
@@ -323,7 +337,9 @@
     "publicBaseQueryRejected": true,
     "rawProviderPublicBaseRejected": true,
     "placeholderAccessKeyRejected": true,
+    "nonAsciiAccessKeyRejected": true,
     "shortSecretKeyRejected": true,
+    "nonAsciiSecretKeyRejected": true,
     "unsafeBucketNameRejected": true,
     "unsafeObjectPrefixRejected": true,
     "liveFixturePassed": true,
