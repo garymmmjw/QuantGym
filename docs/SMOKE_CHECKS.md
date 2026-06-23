@@ -118,6 +118,11 @@ production webhook-smoke signature contract, rejects receivers that do not
 acknowledge signature verification with `X-QuantGym-Alert-Verified: 1` or JSON
 `verified: true`, and blocks webhook-smoke delivery whenever production
 configuration checks fail.
+`npm run check:ops-alerts:worker-fixture` validates the checked-in Cloudflare
+Worker alert receiver in `workers/quantgym-alert-receiver/worker.mjs`: a valid
+signed smoke payload returns the verification acknowledgement, while wrong bearer
+tokens, wrong signatures, missing Worker secrets, non-POST requests, and invalid
+JSON are rejected without echoing the shared secret.
 
 Production-boundary diagnostic follow-up: the verification script now reports
 the exact missing item for skipped checks. With the current local config and no

@@ -24,8 +24,10 @@ const googleTokenGateText = readText("scripts/run-google-token-gate.mjs", "Googl
 const evidence = {
   apexWwwDomain: readJson("docs/browser-audit-screenshots/355-apex-www-domain-summary.json", "apex/WWW domain smoke"),
   opsRuntime: readJson("docs/browser-audit-screenshots/334-ops-alert-runtime-smoke-summary.json", "ops alert runtime smoke"),
+  opsWorker: readJson("docs/browser-audit-screenshots/356-ops-alert-worker-fixture-summary.json", "ops alert worker fixture"),
   opsFixture: readJson("docs/browser-audit-screenshots/336-ops-alert-production-fixture-summary.json", "ops alert production fixture"),
   opsPacket: readJson("docs/browser-audit-screenshots/346-ops-alert-edge-packet-summary.json", "ops alert edge packet"),
+  opsProductionSignoff: readJsonOptional("docs/browser-audit-screenshots/361-ops-alert-production-signoff-summary.json", "ops alert production signoff"),
   mediaRuntime: readJson("docs/browser-audit-screenshots/329-media-storage-runtime-smoke-summary.json", "media storage runtime smoke"),
   mediaFixture: readJson("docs/browser-audit-screenshots/337-media-storage-production-fixture-summary.json", "media storage production fixture"),
   mediaPacket: readJson("docs/browser-audit-screenshots/347-media-storage-packet-summary.json", "media storage readiness packet"),
@@ -57,6 +59,7 @@ const evidence = {
 const scripts = packageJson.scripts || {};
 const requiredScripts = [
   "check:ops-alerts:production",
+  "check:ops-alerts:worker-fixture",
   "build:ops-alert-edge-packet",
   "check:media-storage:production",
   "build:media-storage-packet",
@@ -158,6 +161,28 @@ const renderApiBuildFilterProductionCleared = evidence.renderApiBuildFilterProdu
   && Array.isArray(evidence.renderApiBuildFilterProduction.failures)
   && evidence.renderApiBuildFilterProduction.failures.length === 0;
 
+const opsProductionSignoffCleared = evidence.opsProductionSignoff.status === "pass"
+  && evidence.opsProductionSignoff.mode === "production"
+  && evidence.opsProductionSignoff.smoke === true
+  && evidence.opsProductionSignoff.alertWebhookProtocol === "https"
+  && evidence.opsProductionSignoff.edgeProvider === "cloudflare"
+  && String(evidence.opsProductionSignoff.edgeEvidenceHost || "").endsWith("cloudflare.com")
+  && evidence.opsProductionSignoff.checks?.productionSignoffPass === true
+  && evidence.opsProductionSignoff.checks?.alertWebhookConfigured === true
+  && evidence.opsProductionSignoff.checks?.alertWebhookHttps === true
+  && evidence.opsProductionSignoff.checks?.alertWebhookTokenSet === true
+  && evidence.opsProductionSignoff.checks?.rateLimitsEnabled === true
+  && evidence.opsProductionSignoff.checks?.edgeRateLimitConfirmed === true
+  && evidence.opsProductionSignoff.checks?.edgeProviderSet === true
+  && evidence.opsProductionSignoff.checks?.edgeNotesDescribeAuthSurface === true
+  && evidence.opsProductionSignoff.checks?.edgeNotesDescribeClientIdentity === true
+  && evidence.opsProductionSignoff.checks?.edgeNotesDescribeEnforcementAction === true
+  && evidence.opsProductionSignoff.checks?.edgeEvidenceHostSet === true
+  && evidence.opsProductionSignoff.checks?.webhookSmokeRequired === true
+  && evidence.opsProductionSignoff.checks?.webhookSmokePass === true
+  && evidence.opsProductionSignoff.checks?.webhookSmokeDelivered === true
+  && evidence.opsProductionSignoff.checks?.webhookSmokeSignatureVerificationAcked === true;
+
 const blockers = [
   {
     id: "apex-www-ssl",
@@ -246,14 +271,27 @@ const blockers = [
   {
     id: "ops-alerts-edge-rate-limit",
     title: "Production alert receiver and edge rate limits",
-    status: "blocked",
-    ownerAction: "Configure the real alert receiver and edge rate limits, then run the production config and webhook-smoke signoff commands with real provider, notes, and HTTPS evidence URL.",
+    status: opsProductionSignoffCleared ? "pass" : "blocked",
+    ownerAction: opsProductionSignoffCleared
+      ? "Production alert receiver and Cloudflare edge rate limits are signed off with a verified webhook smoke."
+      : "Configure the real alert receiver and edge rate limits, then run the production config and webhook-smoke signoff commands with real provider, notes, and HTTPS evidence URL.",
     signoffCommand: "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke",
     localCoverage: {
       runtimeSmokePass: evidence.opsRuntime.status === "pass",
+      workerFixturePass: evidence.opsWorker.status === "pass",
+      workerFixtureValidAccepted: evidence.opsWorker.checks?.validAccepted === true,
+      workerFixtureVerificationHeader: evidence.opsWorker.checks?.validVerificationHeader === true,
+      workerFixtureJsonAck: evidence.opsWorker.checks?.validJsonAck === true,
+      workerFixtureRejectsWrongBearer: evidence.opsWorker.checks?.wrongBearerRejected === true,
+      workerFixtureRejectsWrongSignature: evidence.opsWorker.checks?.wrongSignatureRejected === true,
+      workerFixtureRejectsMissingEnvToken: evidence.opsWorker.checks?.missingEnvTokenRejected === true,
+      workerFixtureRejectsNonPost: evidence.opsWorker.checks?.nonPostRejected === true,
+      workerFixtureRejectsInvalidJson: evidence.opsWorker.checks?.invalidJsonRejected === true,
+      workerFixtureNoSecretLeak: evidence.opsWorker.checks?.noSecretLeak === true,
       productionFixturePass: evidence.opsFixture.status === "pass",
       readinessPacketGenerated: evidence.opsPacket.status === "pass",
       packetIncludesProductionEnvTemplate: evidence.opsPacket.checks?.includesProductionEnvTemplate === true,
+      packetIncludesCloudflareWorkerRunbook: evidence.opsPacket.checks?.includesCloudflareWorkerRunbook === true,
       packetIncludesWebhookContract: evidence.opsPacket.checks?.includesWebhookContract === true,
       packetIncludesCloudflareRuleRunbook: evidence.opsPacket.checks?.includesCloudflareRuleRunbook === true,
       packetIncludesSignoffChecklist: evidence.opsPacket.checks?.includesSignoffChecklist === true,
@@ -290,7 +328,18 @@ const blockers = [
       edgeNotesMissingClientIdentityRejected: evidence.opsFixture.checks?.edgeNotesMissingClientIdentityRejected === true,
       edgeNotesMissingEnforcementActionRejected: evidence.opsFixture.checks?.edgeNotesMissingEnforcementActionRejected === true,
       privateWebhookRejected: findResult(evidence.opsFixture.negativeFixtures, "private webhook rejected")?.rejected === true,
-      privateEdgeEvidenceRejected: findResult(evidence.opsFixture.negativeFixtures, "private edge evidence rejected")?.rejected === true
+      privateEdgeEvidenceRejected: findResult(evidence.opsFixture.negativeFixtures, "private edge evidence rejected")?.rejected === true,
+      productionSignoffSummaryPresent: Boolean(evidence.opsProductionSignoff.status),
+      productionSignoffPass: evidence.opsProductionSignoff.checks?.productionSignoffPass === true,
+      productionSignoffMode: evidence.opsProductionSignoff.mode === "production",
+      productionSignoffSmoke: evidence.opsProductionSignoff.smoke === true,
+      productionAlertWebhookHostSet: Boolean(evidence.opsProductionSignoff.alertWebhookHost),
+      productionAlertWebhookHttps: evidence.opsProductionSignoff.alertWebhookProtocol === "https",
+      productionEdgeProviderCloudflare: evidence.opsProductionSignoff.edgeProvider === "cloudflare",
+      productionEdgeEvidenceHostCloudflare: String(evidence.opsProductionSignoff.edgeEvidenceHost || "").endsWith("cloudflare.com"),
+      productionWebhookSmokePass: evidence.opsProductionSignoff.checks?.webhookSmokePass === true,
+      productionWebhookSmokeDelivered: evidence.opsProductionSignoff.checks?.webhookSmokeDelivered === true,
+      productionWebhookSmokeVerificationAcked: evidence.opsProductionSignoff.checks?.webhookSmokeSignatureVerificationAcked === true
     }
   },
   {
@@ -1092,6 +1141,21 @@ for (const blocker of blockers) {
     ].includes(key)) {
       continue;
     }
+    if (blocker.id === "ops-alerts-edge-rate-limit" && [
+      "productionSignoffSummaryPresent",
+      "productionSignoffPass",
+      "productionSignoffMode",
+      "productionSignoffSmoke",
+      "productionAlertWebhookHostSet",
+      "productionAlertWebhookHttps",
+      "productionEdgeProviderCloudflare",
+      "productionEdgeEvidenceHostCloudflare",
+      "productionWebhookSmokePass",
+      "productionWebhookSmokeDelivered",
+      "productionWebhookSmokeVerificationAcked"
+    ].includes(key)) {
+      continue;
+    }
     if (typeof value === "boolean") {
       expect(value, `${blocker.id} local coverage check failed: ${key}.`);
     }
@@ -1138,6 +1202,33 @@ if (deployedGoogleBlocker?.status === "pass") {
           || deployedGoogleBlocker?.localCoverage?.deployedBoundaryLlmPdfQuestionGenerationSkippedForAuth === true
       ),
     "deployed-google-provider-login blocked state requires deployed LLM pass evidence or explicit auth-token skip evidence."
+  );
+}
+
+const opsAlertBlocker = blockers.find((item) => item.id === "ops-alerts-edge-rate-limit");
+if (opsAlertBlocker?.status === "pass") {
+  expect(
+    opsAlertBlocker.localCoverage?.productionSignoffPass === true
+      && opsAlertBlocker.localCoverage?.productionSignoffMode === true
+      && opsAlertBlocker.localCoverage?.productionSignoffSmoke === true,
+    "ops-alerts-edge-rate-limit pass requires production config plus smoke signoff evidence."
+  );
+  expect(
+    opsAlertBlocker.localCoverage?.productionWebhookSmokePass === true
+      && opsAlertBlocker.localCoverage?.productionWebhookSmokeDelivered === true
+      && opsAlertBlocker.localCoverage?.productionWebhookSmokeVerificationAcked === true,
+    "ops-alerts-edge-rate-limit pass requires verified webhook-smoke delivery evidence."
+  );
+  expect(
+    opsAlertBlocker.localCoverage?.productionEdgeProviderCloudflare === true
+      && opsAlertBlocker.localCoverage?.productionEdgeEvidenceHostCloudflare === true,
+    "ops-alerts-edge-rate-limit pass requires Cloudflare edge evidence."
+  );
+} else {
+  expect(
+    opsAlertBlocker?.localCoverage?.productionSignoffPass !== true
+      || opsAlertBlocker?.localCoverage?.productionWebhookSmokePass !== true,
+    "ops-alerts-edge-rate-limit blocked state should not contain a complete production smoke signoff."
   );
 }
 
@@ -1298,6 +1389,17 @@ function secondsUntil(isoTimestamp) {
 
 function readJson(relativePath, label) {
   const absolutePath = path.join(root, relativePath);
+  try {
+    return JSON.parse(fs.readFileSync(absolutePath, "utf8"));
+  } catch (error) {
+    failures.push(`${label} is not valid JSON: ${error.message}`);
+    return {};
+  }
+}
+
+function readJsonOptional(relativePath, label) {
+  const absolutePath = path.join(root, relativePath);
+  if (!fs.existsSync(absolutePath)) return {};
   try {
     return JSON.parse(fs.readFileSync(absolutePath, "utf8"));
   } catch (error) {

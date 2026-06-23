@@ -1,0 +1,97 @@
+{
+  "id": 361,
+  "date": "2026-06-23",
+  "surface": "Ops alert production signoff",
+  "status": "pass",
+  "mode": "production",
+  "smoke": true,
+  "passed": 5,
+  "failed": 0,
+  "alertWebhookHost": "alerts.quantgym.app",
+  "alertWebhookProtocol": "https",
+  "alertMinStatusCode": 500,
+  "edgeProvider": "cloudflare",
+  "edgeEvidenceHost": "dash.cloudflare.com",
+  "checks": {
+    "productionMode": true,
+    "productionSignoffPass": true,
+    "alertWebhookConfigured": true,
+    "alertWebhookHttps": true,
+    "alertWebhookTokenSet": true,
+    "rateLimitsEnabled": true,
+    "authRateLimitWindowSet": true,
+    "proxyHeaderTrustConfigured": true,
+    "edgeRateLimitConfirmed": true,
+    "edgeProviderSet": true,
+    "edgeNotesDescribeAuthSurface": true,
+    "edgeNotesDescribeClientIdentity": true,
+    "edgeNotesDescribeEnforcementAction": true,
+    "edgeEvidenceHostSet": true,
+    "webhookSmokeRequired": true,
+    "webhookSmokePass": true,
+    "webhookSmokeDelivered": true,
+    "webhookSmokeSignatureVerificationAcked": true
+  },
+  "results": [
+    {
+      "name": "alert webhook shape",
+      "status": "pass",
+      "data": {
+        "configured": true,
+        "host": "alerts.quantgym.app",
+        "protocol": "https",
+        "tokenSet": true,
+        "minStatusCode": 500,
+        "timeoutSeconds": 5
+      }
+    },
+    {
+      "name": "auth rate limits",
+      "status": "pass",
+      "data": {
+        "disabled": false,
+        "windowSeconds": 60,
+        "authRateLimitMax": 30,
+        "verificationRateLimitMax": 5,
+        "registerRateLimitMax": 20,
+        "loginRateLimitMax": 20,
+        "googleRateLimitMax": 20,
+        "passwordResetRateLimitMax": 5
+      }
+    },
+    {
+      "name": "proxy header trust",
+      "status": "pass",
+      "data": {
+        "enabled": false,
+        "cidrCount": 0
+      }
+    },
+    {
+      "name": "edge rate-limit signoff",
+      "status": "pass",
+      "data": {
+        "required": true,
+        "confirmed": true,
+        "provider": "cloudflare",
+        "notesSet": true,
+        "notesLength": 104,
+        "describesAuthSurface": true,
+        "describesClientIdentity": true,
+        "describesEnforcementAction": true,
+        "evidenceHost": "dash.cloudflare.com"
+      }
+    },
+    {
+      "name": "alert webhook smoke",
+      "status": "pass",
+      "data": {
+        "delivered": true,
+        "statusCode": 200,
+        "host": "alerts.quantgym.app",
+        "tokenSet": true,
+        "signatureVerificationAcknowledged": true
+      }
+    }
+  ]
+}

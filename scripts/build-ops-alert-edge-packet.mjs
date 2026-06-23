@@ -15,6 +15,7 @@ const warnings = [];
 const expectedFiles = [
   "README.md",
   "render-api-env-template.txt",
+  "cloudflare-alert-worker.md",
   "cloudflare-rate-limit-rule.md",
   "webhook-contract.md",
   "smoke-payload.sample.json",
@@ -23,14 +24,17 @@ const expectedFiles = [
 
 try {
   const runtimeSmoke = readJson("docs/browser-audit-screenshots/334-ops-alert-runtime-smoke-summary.json", "ops alert runtime smoke");
+  const workerFixture = readJson("docs/browser-audit-screenshots/356-ops-alert-worker-fixture-summary.json", "ops alert worker fixture");
   const productionFixture = readJson("docs/browser-audit-screenshots/336-ops-alert-production-fixture-summary.json", "ops alert production fixture");
   if (runtimeSmoke.status !== "pass") warnings.push("Ops alert runtime smoke is not currently passing.");
+  if (workerFixture.status !== "pass") warnings.push("Ops alert worker fixture is not currently passing.");
   if (productionFixture.status !== "pass") warnings.push("Ops alert production fixture is not currently passing.");
 
-  const packet = buildPacketModel(runtimeSmoke, productionFixture);
+  const packet = buildPacketModel(runtimeSmoke, workerFixture, productionFixture);
   const files = [
     writePacketFile("README.md", renderOverview(packet)),
     writePacketFile("render-api-env-template.txt", renderEnvTemplate(packet)),
+    writePacketFile("cloudflare-alert-worker.md", renderCloudflareAlertWorker(packet)),
     writePacketFile("cloudflare-rate-limit-rule.md", renderCloudflareRule(packet)),
     writePacketFile("webhook-contract.md", renderWebhookContract(packet)),
     writePacketFile("smoke-payload.sample.json", `${JSON.stringify(packet.smokePayload, null, 2)}\n`),
@@ -44,6 +48,10 @@ try {
     expectedFilesWritten: expectedFiles.every((file) => files.includes(path.relative(projectRoot, path.join(outDir, file)))),
     includesProductionEnvTemplate: combinedContent.includes("QUANTGYM_ALERT_WEBHOOK_URL")
       && combinedContent.includes("QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL"),
+    includesCloudflareWorkerRunbook: combinedContent.includes("Cloudflare Alert Receiver Worker")
+      && combinedContent.includes("workers/quantgym-alert-receiver/worker.mjs")
+      && combinedContent.includes("check:ops-alerts:worker-fixture")
+      && combinedContent.includes("wrangler secret put QUANTGYM_ALERT_WEBHOOK_TOKEN"),
     includesWebhookContract: combinedContent.includes("Alert Webhook Contract")
       && combinedContent.includes("2xx response")
       && combinedContent.includes("X-QuantGym-Alert-Signature"),
@@ -66,6 +74,12 @@ try {
       && combinedContent.includes("raw IP address"),
     noDashboardQueryOrFragmentExamples: !/dash\.cloudflare\.com\/[^\s"']*[?#]/i.test(combinedContent),
     runtimeSmokePass: runtimeSmoke.status === "pass",
+    workerFixturePass: workerFixture.status === "pass",
+    workerFixtureVerifiesGoodSignature: workerFixture.checks?.validVerificationHeader === true
+      && workerFixture.checks?.validJsonAck === true,
+    workerFixtureRejectsBadAuth: workerFixture.checks?.wrongBearerRejected === true
+      && workerFixture.checks?.wrongSignatureRejected === true,
+    workerFixtureNoSecretLeak: workerFixture.checks?.noSecretLeak === true,
     productionFixturePass: productionFixture.status === "pass",
     fixtureRejectsUnsafeInputs: productionFixture.checks?.negativeFixturesRejected === true
       && productionFixture.checks?.shortWebhookTokenRejected === true
@@ -98,8 +112,10 @@ try {
     filesWritten: files,
     evidence: {
       runtimeSmokePass: runtimeSmoke.status === "pass",
+      workerFixturePass: workerFixture.status === "pass",
       productionFixturePass: productionFixture.status === "pass",
       runtimeAlertCount: Number(runtimeSmoke.alerts?.length || 0),
+      workerFixtureCaseCount: Number(Object.keys(workerFixture.cases || {}).length),
       productionNegativeFixtureCount: Number(productionFixture.negativeFixtures?.length || 0)
     },
     requiredEnv: packet.requiredEnv.map((item) => item.name),
@@ -126,7 +142,7 @@ try {
   process.exitCode = 1;
 }
 
-function buildPacketModel(runtimeSmoke, productionFixture) {
+function buildPacketModel(runtimeSmoke, workerFixture, productionFixture) {
   return {
     generatedAt,
     requiredEnv: [
@@ -168,6 +184,7 @@ function buildPacketModel(runtimeSmoke, productionFixture) {
       occurredAt: "2026-06-19T00:00:00.000Z"
     },
     runtimeSmokePass: runtimeSmoke.status === "pass",
+    workerFixturePass: workerFixture.status === "pass",
     productionFixturePass: productionFixture.status === "pass",
     signoffCommand: "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke"
   };
@@ -181,11 +198,13 @@ function renderOverview(packet) {
     "",
     `Generated at: ${packet.generatedAt}`,
     `Runtime smoke currently passing: ${packet.runtimeSmokePass ? "yes" : "no"}`,
+    `Worker receiver fixture currently passing: ${packet.workerFixturePass ? "yes" : "no"}`,
     `Production fixture currently passing: ${packet.productionFixturePass ? "yes" : "no"}`,
     "",
     "## Files",
     "",
     "- `render-api-env-template.txt`: Render API environment variables to fill with real production values.",
+    "- `cloudflare-alert-worker.md`: Cloudflare Worker receiver deployment and secret setup notes.",
     "- `cloudflare-rate-limit-rule.md`: Suggested edge rule shape for `/api/auth/*` bursts.",
     "- `webhook-contract.md`: Receiver contract and safe alert payload shape.",
     "- `smoke-payload.sample.json`: Non-secret sample payload for receiver setup.",
@@ -235,6 +254,48 @@ function renderEnvTemplate(packet) {
     ""
   ];
   return lines.join("\n");
+}
+
+function renderCloudflareAlertWorker(packet) {
+  return [
+    "# Cloudflare Alert Receiver Worker",
+    "",
+    "Deploy `workers/quantgym-alert-receiver/worker.mjs` as the HTTPS alert receiver before wiring Render API alerts to it.",
+    "",
+    "## Local Fixture",
+    "",
+    "Run this before deployment and after edits:",
+    "",
+    "```bash",
+    "npm run check:ops-alerts:worker-fixture",
+    "```",
+    "",
+    "The fixture signs the readiness smoke payload with HMAC-SHA256, verifies the Worker returns `X-QuantGym-Alert-Verified: 1`, and checks wrong bearer tokens, wrong signatures, missing secrets, non-POST requests, invalid JSON, and secret redaction.",
+    "",
+    "## Worker Secret",
+    "",
+    "Generate one shared secret and store the same value in Cloudflare Worker secrets and Render API environment variables:",
+    "",
+    "```bash",
+    "openssl rand -base64 32",
+    "wrangler secret put QUANTGYM_ALERT_WEBHOOK_TOKEN",
+    "```",
+    "",
+    "Do not put the secret in `wrangler.toml`, source files, screenshots, dashboard URLs, or committed env files.",
+    "",
+    "## Render API Env",
+    "",
+    "- `QUANTGYM_ALERT_WEBHOOK_URL` should point to the deployed Worker HTTPS URL without query strings or fragments.",
+    "- `QUANTGYM_ALERT_WEBHOOK_TOKEN` must match the Worker secret.",
+    "- Keep `QUANTGYM_ALERT_MIN_STATUS_CODE=500` unless operators intentionally want 4xx alerts too.",
+    "",
+    "After the Worker is deployed and Render env is set, run the production smoke:",
+    "",
+    "```bash",
+    "npm run check:ops-alerts:production -- --smoke",
+    "```",
+    ""
+  ].join("\n");
 }
 
 function renderCloudflareRule(packet) {
@@ -308,6 +369,7 @@ function renderChecklistCsv(packet) {
   const rows = [
     ["step", "owner", "evidence", "status"],
     ["create alert receiver", "", "receiver HTTPS URL", "pending"],
+    ["deploy alert receiver worker", "", "npm run check:ops-alerts:worker-fixture and Cloudflare Worker HTTPS URL", "pending"],
     ["store webhook bearer token", "", "token generated with openssl rand -base64 32 and stored outside git", "pending"],
     ["configure Render API env", "", `${packet.requiredEnv.length} required variables set`, "pending"],
     ["configure trusted proxy CIDRs", "", "Cloudflare/Render/reverse-proxy CIDRs only, no wildcard", "pending"],

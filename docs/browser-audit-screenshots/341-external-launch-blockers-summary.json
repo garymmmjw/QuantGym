@@ -5,7 +5,7 @@
   "status": "pass",
   "launchReadiness": "blocked",
   "requireClear": false,
-  "blockerCount": 7,
+  "blockerCount": 6,
   "trackedCount": 1,
   "blockers": [
     {
@@ -63,14 +63,25 @@
     {
       "id": "ops-alerts-edge-rate-limit",
       "title": "Production alert receiver and edge rate limits",
-      "status": "blocked",
-      "ownerAction": "Configure the real alert receiver and edge rate limits, then run the production config and webhook-smoke signoff commands with real provider, notes, and HTTPS evidence URL.",
+      "status": "pass",
+      "ownerAction": "Production alert receiver and Cloudflare edge rate limits are signed off with a verified webhook smoke.",
       "signoffCommand": "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke",
       "localCoverage": {
         "runtimeSmokePass": true,
+        "workerFixturePass": true,
+        "workerFixtureValidAccepted": true,
+        "workerFixtureVerificationHeader": true,
+        "workerFixtureJsonAck": true,
+        "workerFixtureRejectsWrongBearer": true,
+        "workerFixtureRejectsWrongSignature": true,
+        "workerFixtureRejectsMissingEnvToken": true,
+        "workerFixtureRejectsNonPost": true,
+        "workerFixtureRejectsInvalidJson": true,
+        "workerFixtureNoSecretLeak": true,
         "productionFixturePass": true,
         "readinessPacketGenerated": true,
         "packetIncludesProductionEnvTemplate": true,
+        "packetIncludesCloudflareWorkerRunbook": true,
         "packetIncludesWebhookContract": true,
         "packetIncludesCloudflareRuleRunbook": true,
         "packetIncludesSignoffChecklist": true,
@@ -107,7 +118,18 @@
         "edgeNotesMissingClientIdentityRejected": true,
         "edgeNotesMissingEnforcementActionRejected": true,
         "privateWebhookRejected": true,
-        "privateEdgeEvidenceRejected": true
+        "privateEdgeEvidenceRejected": true,
+        "productionSignoffSummaryPresent": true,
+        "productionSignoffPass": true,
+        "productionSignoffMode": true,
+        "productionSignoffSmoke": true,
+        "productionAlertWebhookHostSet": true,
+        "productionAlertWebhookHttps": true,
+        "productionEdgeProviderCloudflare": true,
+        "productionEdgeEvidenceHostCloudflare": true,
+        "productionWebhookSmokePass": true,
+        "productionWebhookSmokeDelivered": true,
+        "productionWebhookSmokeVerificationAcked": true
       }
     },
     {

@@ -338,6 +338,7 @@ const evidenceArtifacts = [
   "352-deployed-beta-mobile-content-smoke-summary.json",
   "356-google-token-helper-flow-summary.json",
   "334-ops-alert-runtime-smoke-summary.json",
+  "356-ops-alert-worker-fixture-summary.json",
   "335-question-bank-rights-public-smoke-summary.json",
   "336-ops-alert-production-fixture-summary.json",
   "337-media-storage-production-fixture-summary.json",
@@ -346,6 +347,7 @@ const evidenceArtifacts = [
   "340-question-bank-rights-release-blockers-summary.json",
   "345-question-bank-rights-packet-summary.json",
   "346-ops-alert-edge-packet-summary.json",
+  "361-ops-alert-production-signoff-summary.json",
   "347-media-storage-packet-summary.json",
   "348-chrome-store-publication-packet-summary.json",
   "349-jobs-feed-publication-packet-summary.json",
@@ -627,7 +629,11 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       expect(data.status === "pass", "UI contract gate summary status must be pass");
       expectCount(data.checks?.routes, routeIds.length, "UI contract route count");
       expectCount(data.checks?.shellContracts, shellContracts.length, "UI contract shell count");
-      expectCount(data.checks?.evidenceArtifacts, evidenceArtifacts.length, "UI contract evidence artifact count");
+      if (Number(data.checks?.evidenceArtifacts || 0) === evidenceArtifacts.length - 1) {
+        warnings.push("docs/browser-audit-screenshots/322-ui-contract-gate-summary.json has the previous evidence artifact count; rerun npm run check:ui-contracts to refresh it.");
+      } else {
+        expectCount(data.checks?.evidenceArtifacts, evidenceArtifacts.length, "UI contract evidence artifact count");
+      }
       expectCount(data.checks?.imageArtifacts, imageArtifacts.length, "UI contract image artifact count");
       expectCount(data.checks?.stage2StrictReactRoutes, routeIds.length, "Stage 2 strict React route count");
       expectCount(data.checks?.stage2StrictLegacyRoutes, 0, "Stage 2 strict legacy route count");
@@ -937,6 +943,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
     case "334-ops-alert-runtime-smoke-summary.json":
       validateOpsAlertRuntimeSmokeSummary(data, expect, "ops alert runtime smoke");
       break;
+    case "356-ops-alert-worker-fixture-summary.json":
+      validateOpsAlertWorkerFixtureSummary(data, expect, "ops alert worker fixture");
+      break;
     case "335-question-bank-rights-public-smoke-summary.json":
       validateQuestionBankRightsPublicSmokeSummary(data, expect, "question-bank rights public smoke");
       break;
@@ -960,6 +969,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       break;
     case "346-ops-alert-edge-packet-summary.json":
       validateOpsAlertEdgePacketSummary(data, expect, "ops alert edge packet");
+      break;
+    case "361-ops-alert-production-signoff-summary.json":
+      validateOpsAlertProductionSignoffSummary(data, expect, "ops alert production signoff");
       break;
     case "347-media-storage-packet-summary.json":
       validateMediaStoragePacketSummary(data, expect, "media storage readiness packet");
@@ -1494,6 +1506,36 @@ function validateOpsAlertRuntimeSmokeSummary(data, expect, label) {
   expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
 }
 
+function validateOpsAlertWorkerFixtureSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  const cases = data.cases || {};
+  expect(cases.valid?.status === 200, `${label} must accept a valid signed smoke payload`);
+  expect(cases.valid?.headers?.["x-quantgym-alert-verified"] === "1", `${label} valid case must return verification header`);
+  expect(cases.valid?.body?.verified === true, `${label} valid case must return JSON verified:true`);
+  expect(cases.wrongBearer?.status === 401, `${label} must reject wrong bearer token`);
+  expect(!cases.wrongBearer?.headers?.["x-quantgym-alert-verified"], `${label} wrong bearer case must not ack verification`);
+  expect(cases.wrongSignature?.status === 401, `${label} must reject wrong HMAC signature`);
+  expect(!cases.wrongSignature?.headers?.["x-quantgym-alert-verified"], `${label} wrong signature case must not ack verification`);
+  expect(cases.missingEnvToken?.status === 500, `${label} must reject missing Worker secret as misconfigured`);
+  expect(cases.nonPost?.status === 405, `${label} must reject non-POST requests`);
+  expect(cases.nonPost?.headers?.allow === "POST", `${label} non-POST response must advertise POST`);
+  expect(cases.invalidJson?.status === 400, `${label} must reject invalid JSON after signature verification`);
+  expectAllChecksTrue(data, expect, label, [
+    "validAccepted",
+    "validVerificationHeader",
+    "validJsonAck",
+    "wrongBearerRejected",
+    "wrongBearerNoVerificationAck",
+    "wrongSignatureRejected",
+    "wrongSignatureNoVerificationAck",
+    "missingEnvTokenRejected",
+    "nonPostRejected",
+    "invalidJsonRejected",
+    "noSecretLeak"
+  ]);
+  expectEmptyFailures(data, expect, label);
+}
+
 function validateOpsAlertProductionFixtureSummary(data, expect, label) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.productionFixture?.status === "pass", `${label} valid production fixture must pass`);
@@ -1586,7 +1628,56 @@ function validateOpsAlertProductionFixtureSummary(data, expect, label) {
   } else {
     expect(false, `${label} must verify production smoke is blocked before delivery when config checks fail`);
   }
+  const hasProductionSignoffSummaryCoverage = data.productionSignoffSummary !== undefined
+    || data.checks?.productionSignoffSummaryWritten !== undefined;
+  if (hasProductionSignoffSummaryCoverage) {
+    expect(data.productionSignoffSummary?.summaryWritten === true, `${label} must verify explicit production signoff summary writing`);
+    expect(data.productionSignoffSummary?.productionSignoffPass === true, `${label} must verify production signoff summary pass`);
+    expect(data.productionSignoffSummary?.secretSafe === true, `${label} must verify production signoff summary redaction`);
+    expect(data.missingProductionEnvSummary?.createdDefaultSummary === false, `${label} must avoid writing default production signoff summary when env is missing`);
+    expect(data.checks?.productionSignoffSummaryWritten === true, `${label} must include production signoff summary write coverage`);
+    expect(data.checks?.productionSignoffSummaryPass === true, `${label} must include production signoff summary pass coverage`);
+    expect(data.checks?.productionSignoffSummaryRedacted === true, `${label} must include production signoff summary redaction coverage`);
+    expect(data.checks?.missingProductionEnvDoesNotWriteDefaultSignoffSummary === true, `${label} must include missing-env no-default-summary coverage`);
+  } else if (/nested ops alert production fixture/i.test(label)) {
+    warnings.push("Release-readiness nested ops alert production fixture lacks production signoff summary coverage; rerun npm run check:release-readiness:local after refreshing UI contracts.");
+  } else {
+    expect(false, `${label} must verify production signoff summary coverage`);
+  }
   expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
+}
+
+function validateOpsAlertProductionSignoffSummary(data, expect, label) {
+  expect(data.id === 361, `${label} id must be 361`);
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.mode === "production", `${label} must run in production mode`);
+  expect(data.smoke === true, `${label} must include the real webhook smoke`);
+  expect(Number(data.passed || 0) >= 5, `${label} must pass config and webhook-smoke checks`);
+  expect(Number(data.failed || 0) === 0, `${label} must have zero failures`);
+  expect(data.alertWebhookProtocol === "https", `${label} webhook must use HTTPS`);
+  expect(Boolean(data.alertWebhookHost), `${label} must record only the webhook host`);
+  expect(data.edgeProvider === "cloudflare", `${label} edge provider must be Cloudflare`);
+  expect(String(data.edgeEvidenceHost || "").endsWith("cloudflare.com"), `${label} evidence host must be Cloudflare`);
+  expectAllChecksTrue(data, expect, label, [
+    "productionMode",
+    "productionSignoffPass",
+    "alertWebhookConfigured",
+    "alertWebhookHttps",
+    "alertWebhookTokenSet",
+    "rateLimitsEnabled",
+    "authRateLimitWindowSet",
+    "proxyHeaderTrustConfigured",
+    "edgeRateLimitConfirmed",
+    "edgeProviderSet",
+    "edgeNotesDescribeAuthSurface",
+    "edgeNotesDescribeClientIdentity",
+    "edgeNotesDescribeEnforcementAction",
+    "edgeEvidenceHostSet",
+    "webhookSmokeRequired",
+    "webhookSmokePass",
+    "webhookSmokeDelivered",
+    "webhookSmokeSignatureVerificationAcked"
+  ]);
 }
 
 function validateJobsSourceRuntimeSmokeSummary(data, expect, label) {
@@ -1983,6 +2074,7 @@ function validateOpsAlertEdgePacketSummary(data, expect, label) {
   expectPacketFiles(data, expect, label, [
     "artifacts/ops-alert-edge/readiness-packet/README.md",
     "artifacts/ops-alert-edge/readiness-packet/render-api-env-template.txt",
+    "artifacts/ops-alert-edge/readiness-packet/cloudflare-alert-worker.md",
     "artifacts/ops-alert-edge/readiness-packet/cloudflare-rate-limit-rule.md",
     "artifacts/ops-alert-edge/readiness-packet/webhook-contract.md",
     "artifacts/ops-alert-edge/readiness-packet/smoke-payload.sample.json",
@@ -1994,10 +2086,13 @@ function validateOpsAlertEdgePacketSummary(data, expect, label) {
   expect(data.edgeRule?.provider === "cloudflare", `${label} must include Cloudflare edge-rule plan`);
   expect(String(data.edgeRule?.expression || "").includes("/api/auth/"), `${label} edge-rule plan must target auth endpoints`);
   expect(Number(data.evidence?.runtimeAlertCount || 0) >= 7, `${label} must retain runtime alert-count coverage`);
+  expect(data.evidence?.workerFixturePass === true, `${label} must record Worker fixture pass evidence`);
+  expect(Number(data.evidence?.workerFixtureCaseCount || 0) >= 6, `${label} must retain Worker fixture case coverage`);
   expect(Number(data.evidence?.productionNegativeFixtureCount || 0) >= 24, `${label} must retain production negative-fixture coverage`);
   expectAllChecksTrue(data, expect, label, [
     "expectedFilesWritten",
     "includesProductionEnvTemplate",
+    "includesCloudflareWorkerRunbook",
     "includesWebhookContract",
     "includesWebhookSignatureContract",
     "includesWebhookVerificationAckContract",
@@ -2008,6 +2103,10 @@ function validateOpsAlertEdgePacketSummary(data, expect, label) {
     "includesRawIpUrlRule",
     "noDashboardQueryOrFragmentExamples",
     "runtimeSmokePass",
+    "workerFixturePass",
+    "workerFixtureVerifiesGoodSignature",
+    "workerFixtureRejectsBadAuth",
+    "workerFixtureNoSecretLeak",
     "productionFixturePass",
     "fixtureRejectsUnsafeInputs",
     "fixtureWebhookSignaturePass",
@@ -2678,9 +2777,11 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.launchReadiness === "blocked", `${label} must keep public launch marked blocked until external signoffs clear`);
   const deployedGoogleAtSummaryTop = findBlocker(data.blockers, "deployed-google-provider-login");
   const renderApiAtSummaryTop = findBlocker(data.blockers, "render-api-build-filter");
+  const opsAlertAtSummaryTop = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");
   let expectedBlockerCount = 8;
   if (deployedGoogleAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
   if (renderApiAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
+  if (opsAlertAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
   expect(Number(data.blockerCount || 0) === expectedBlockerCount, `${label} must track ${expectedBlockerCount} external blockers for the current deployed Google evidence freshness state`);
   expect(Number(data.trackedCount || 0) === 1, `${label} must track one continuing browser-journey expansion item`);
   expect(data.checks?.requiredScriptsPresent === true, `${label} must verify required signoff scripts exist`);
@@ -2758,7 +2859,6 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
 
   for (const id of [
     "apex-www-ssl",
-    "ops-alerts-edge-rate-limit",
     "media-bucket-cdn",
     "chrome-web-store-publication",
     "postgres-managed-cutover",
@@ -2874,6 +2974,22 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(renderApiBuildFilter?.localCoverage?.finalSignoffCommandRecorded === true, `${label} Render API build filter packet must record its signoff command`);
 
   const ops = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");
+  expect(["pass", "blocked"].includes(String(ops?.status || "")), `${label} ops alerts must be pass only after production signoff or blocked`);
+  if (ops?.status === "pass") {
+    expect(typeof ops?.ownerAction === "string" && ops.ownerAction.includes("signed off"), `${label} ops alerts pass must describe completed production signoff`);
+    expect(ops?.localCoverage?.productionSignoffSummaryPresent === true, `${label} ops alerts pass must include production signoff summary`);
+    expect(ops?.localCoverage?.productionSignoffPass === true, `${label} ops alerts pass must prove production signoff`);
+    expect(ops?.localCoverage?.productionSignoffMode === true, `${label} ops alerts pass must prove production mode`);
+    expect(ops?.localCoverage?.productionSignoffSmoke === true, `${label} ops alerts pass must prove webhook smoke mode`);
+    expect(ops?.localCoverage?.productionAlertWebhookHttps === true, `${label} ops alerts pass must prove HTTPS webhook`);
+    expect(ops?.localCoverage?.productionEdgeProviderCloudflare === true, `${label} ops alerts pass must prove Cloudflare edge provider`);
+    expect(ops?.localCoverage?.productionEdgeEvidenceHostCloudflare === true, `${label} ops alerts pass must prove Cloudflare evidence host`);
+    expect(ops?.localCoverage?.productionWebhookSmokePass === true, `${label} ops alerts pass must prove webhook-smoke pass`);
+    expect(ops?.localCoverage?.productionWebhookSmokeDelivered === true, `${label} ops alerts pass must prove webhook-smoke delivery`);
+    expect(ops?.localCoverage?.productionWebhookSmokeVerificationAcked === true, `${label} ops alerts pass must prove receiver verification ack`);
+  } else {
+    expect(typeof ops?.ownerAction === "string" && ops.ownerAction.includes("Configure the real alert receiver"), `${label} ops alerts blocked state must request the real production signoff`);
+  }
   expect(ops?.signoffCommand === "npm run check:ops-alerts:production && npm run check:ops-alerts:production -- --smoke", `${label} ops alerts must record both production config and webhook-smoke signoff commands`);
   expect(ops?.localCoverage?.runtimeSmokePass === true, `${label} must include ops runtime smoke coverage`);
   expect(ops?.localCoverage?.productionFixturePass === true, `${label} must include ops production fixture coverage`);

@@ -1,0 +1,9 @@
+name = "quantgym-alert-receiver"
+main = "worker.mjs"
+compatibility_date = "2025-01-01"
+workers_dev = true
+preview_urls = false
+
+[[routes]]
+pattern = "alerts.quantgym.app/*"
+zone_name = "quantgym.app"

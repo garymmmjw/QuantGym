@@ -40,6 +40,7 @@
     "check:media-storage:production": "node scripts/check-media-storage-config.mjs --production",
     "build:media-storage-packet": "node scripts/build-media-storage-packet.mjs",
     "check:ops-alerts": "node scripts/check-ops-alert-config.mjs",
+    "check:ops-alerts:worker-fixture": "node scripts/check-ops-alert-worker-fixture.mjs",
     "check:ops-alerts:runtime-smoke": "node scripts/check-ops-alert-runtime-smoke.mjs",
     "check:ops-alerts:production-fixture": "node scripts/check-ops-alert-production-fixture.mjs",
     "check:ops-alerts:production": "node scripts/check-ops-alert-config.mjs --production",

@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 1170,
+  "durationMs": 1225,
   "productionFixture": {
     "status": "pass",
     "passed": 4,
@@ -225,6 +225,27 @@
     "failureExplained": true,
     "firstFailure": "Production alert webhook URL must use HTTPS."
   },
+  "productionSignoffSummary": {
+    "childExitCode": 0,
+    "summaryWritten": true,
+    "status": "pass",
+    "mode": "production",
+    "smoke": false,
+    "productionSignoffPass": true,
+    "webhookSmokePass": false,
+    "alertWebhookHost": "alerts.quantgym.test",
+    "alertWebhookTokenSet": true,
+    "edgeProvider": "cloudflare",
+    "edgeEvidenceHost": "dash.cloudflare.com",
+    "secretSafe": true,
+    "outputPreview": "{\n  \"id\": 361,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Ops alert production signoff\",\n  \"status\": \"pass\",\n  \"mode\": \"production\",\n  \"smoke\": false,\n  \"passed\": 4,\n  \"failed\": 0,\n  \"alertWebhookHost\": \"alerts.quantgym.test\",\n  \"alertWebhookProtocol\": \"https\",\n  \"alertMinStatusCode\": 500,\n  \"edgeProvider\": \"cloudflare\",\n  \"edgeEvidenceHost\": \"dash.cloudflare.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": true,\n    \"alertWebhookConfigured\": true,\n    \"alertWebhookHttps\": true,\n    \"alertWebhookTokenSet\": true,\n    \"rateLimitsEnabled\": true,\n    \"authRateLimitWindowSet\": true,\n    \"proxyHeaderTrustConfigured\": true,\n    \"edgeRateLimitConfirmed\": true,\n    \"edgeProvide"
+  },
+  "missingProductionEnvSummary": {
+    "childExitCode": 1,
+    "createdDefaultSummary": false,
+    "failureExplained": true,
+    "outputPreview": "{\n  \"id\": 361,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Ops alert production signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"smoke\": false,\n  \"passed\": 2,\n  \"failed\": 2,\n  \"alertWebhookHost\": \"\",\n  \"alertWebhookProtocol\": \"\",\n  \"alertMinStatusCode\": 0,\n  \"edgeProvider\": \"\",\n  \"edgeEvidenceHost\": \"\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"alertWebhookConfigured\": false,\n    \"alertWebhookHttps\": false,\n    \"alertWebhookTokenSet\": false,\n    \"rateLimitsEnabled\": true,\n    \"authRateLimitWindowSet\": true,\n    \"proxyHeaderTrustConfigured\": true,\n    \"edgeRateLimitConfirmed\": false,\n    \"edgeProviderSet\": false,\n    \"edgeNotesDescribeAuthSurface\": f"
+  },
   "checks": {
     "validProductionPass": true,
     "validProductionHasAllChecks": true,
@@ -257,7 +278,11 @@
     "smokeWithoutVerificationAckNoDeliverySecretLeak": true,
     "productionSmokeBlockedWhenConfigInvalid": true,
     "productionSmokeNoDeliveryWhenConfigInvalid": true,
-    "productionSmokeFailureExplained": true
+    "productionSmokeFailureExplained": true,
+    "productionSignoffSummaryWritten": true,
+    "productionSignoffSummaryPass": true,
+    "productionSignoffSummaryRedacted": true,
+    "missingProductionEnvDoesNotWriteDefaultSignoffSummary": true
   },
   "failures": [],
   "warnings": []

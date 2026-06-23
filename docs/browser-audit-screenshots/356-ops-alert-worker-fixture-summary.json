@@ -1,0 +1,99 @@
+{
+  "status": "pass",
+  "durationMs": 22,
+  "cases": {
+    "valid": {
+      "status": 200,
+      "headers": {
+        "allow": "",
+        "cache-control": "no-store",
+        "content-type": "application/json; charset=utf-8",
+        "x-quantgym-alert-verified": "1"
+      },
+      "body": {
+        "ok": true,
+        "verified": true
+      }
+    },
+    "wrongBearer": {
+      "status": 401,
+      "headers": {
+        "allow": "",
+        "cache-control": "no-store",
+        "content-type": "application/json; charset=utf-8",
+        "x-quantgym-alert-verified": ""
+      },
+      "body": {
+        "ok": false,
+        "error": "unauthorized"
+      }
+    },
+    "wrongSignature": {
+      "status": 401,
+      "headers": {
+        "allow": "",
+        "cache-control": "no-store",
+        "content-type": "application/json; charset=utf-8",
+        "x-quantgym-alert-verified": ""
+      },
+      "body": {
+        "ok": false,
+        "error": "bad_signature"
+      }
+    },
+    "missingEnvToken": {
+      "status": 500,
+      "headers": {
+        "allow": "",
+        "cache-control": "no-store",
+        "content-type": "application/json; charset=utf-8",
+        "x-quantgym-alert-verified": ""
+      },
+      "body": {
+        "ok": false,
+        "error": "receiver_not_configured"
+      }
+    },
+    "nonPost": {
+      "status": 405,
+      "headers": {
+        "allow": "POST",
+        "cache-control": "no-store",
+        "content-type": "application/json; charset=utf-8",
+        "x-quantgym-alert-verified": ""
+      },
+      "body": {
+        "ok": false,
+        "error": "method_not_allowed"
+      }
+    },
+    "invalidJson": {
+      "status": 400,
+      "headers": {
+        "allow": "",
+        "cache-control": "no-store",
+        "content-type": "application/json; charset=utf-8",
+        "x-quantgym-alert-verified": ""
+      },
+      "body": {
+        "ok": false,
+        "error": "invalid_json"
+      }
+    }
+  },
+  "checks": {
+    "validAccepted": true,
+    "validVerificationHeader": true,
+    "validJsonAck": true,
+    "wrongBearerRejected": true,
+    "wrongBearerNoVerificationAck": true,
+    "wrongSignatureRejected": true,
+    "wrongSignatureNoVerificationAck": true,
+    "missingEnvTokenRejected": true,
+    "nonPostRejected": true,
+    "invalidJsonRejected": true,
+    "noSecretLeak": true
+  },
+  "failures": [],
+  "warnings": []
+}

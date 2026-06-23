@@ -9,10 +9,16 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const args = new Set(process.argv.slice(2));
-const productionMode = args.has("--production");
-const smokeMode = args.has("--smoke");
-const loadDotEnv = !args.has("--no-dotenv");
+const args = parseArgs(process.argv.slice(2));
+const productionMode = Boolean(args.production);
+const smokeMode = Boolean(args.smoke);
+const loadDotEnv = !args.noDotenv;
+const explicitSummaryPath = Boolean(args.summary);
+const summaryPath = args.summary
+  ? path.resolve(projectRoot, args.summary)
+  : productionMode
+    ? path.resolve(projectRoot, "docs/browser-audit-screenshots/361-ops-alert-production-signoff-summary.json")
+    : "";
 const MIN_PRODUCTION_WEBHOOK_TOKEN_LENGTH = 24;
 
 if (loadDotEnv) loadEnvFromProjectRoot();
@@ -203,15 +209,12 @@ if (smokeMode) {
 
 const failed = results.filter((item) => item.status === "fail");
 const passed = results.filter((item) => item.status === "pass");
+const summary = buildSummary({ passed, failed });
+const shouldWriteSummary = Boolean(summaryPath)
+  && (explicitSummaryPath || (productionMode && failed.length === 0));
+if (shouldWriteSummary) writeSummary(summary);
 
-console.log(JSON.stringify({
-  status: failed.length ? "fail" : "pass",
-  mode: productionMode ? "production" : "local",
-  smoke: smokeMode,
-  passed: passed.length,
-  failed: failed.length,
-  results
-}, null, 2));
+console.log(JSON.stringify(summary, null, 2));
 
 if (failed.length) process.exitCode = 1;
 
@@ -231,6 +234,62 @@ async function checkAsync(name, fn) {
   } catch (error) {
     results.push({ name, status: "fail", error: error.message || String(error) });
   }
+}
+
+function buildSummary({ passed, failed }) {
+  const alertShape = findResult(results, "alert webhook shape")?.data || {};
+  const authRateLimits = findResult(results, "auth rate limits")?.data || {};
+  const edgeSignoff = findResult(results, "edge rate-limit signoff")?.data || {};
+  const proxyHeaderTrust = findResult(results, "proxy header trust")?.data || {};
+  const webhookSmoke = findResult(results, "alert webhook smoke");
+  const webhookSmokeData = webhookSmoke?.data || {};
+  return {
+    id: 361,
+    date: new Date().toISOString().slice(0, 10),
+    surface: "Ops alert production signoff",
+    status: failed.length ? "fail" : "pass",
+    mode: productionMode ? "production" : "local",
+    smoke: smokeMode,
+    passed: passed.length,
+    failed: failed.length,
+    alertWebhookHost: alertShape.host || "",
+    alertWebhookProtocol: alertShape.protocol || "",
+    alertMinStatusCode: Number(alertShape.minStatusCode || 0),
+    edgeProvider: edgeSignoff.provider || "",
+    edgeEvidenceHost: edgeSignoff.evidenceHost || "",
+    checks: {
+      productionMode,
+      productionSignoffPass: productionMode && failed.length === 0,
+      alertWebhookConfigured: alertShape.configured === true,
+      alertWebhookHttps: alertShape.protocol === "https",
+      alertWebhookTokenSet: alertShape.tokenSet === true,
+      rateLimitsEnabled: authRateLimits.disabled === false,
+      authRateLimitWindowSet: Number(authRateLimits.windowSeconds || 0) > 0,
+      proxyHeaderTrustConfigured: proxyHeaderTrust.enabled === true
+        ? Number(proxyHeaderTrust.cidrCount || 0) > 0
+        : true,
+      edgeRateLimitConfirmed: edgeSignoff.confirmed === true,
+      edgeProviderSet: Boolean(edgeSignoff.provider),
+      edgeNotesDescribeAuthSurface: edgeSignoff.describesAuthSurface === true,
+      edgeNotesDescribeClientIdentity: edgeSignoff.describesClientIdentity === true,
+      edgeNotesDescribeEnforcementAction: edgeSignoff.describesEnforcementAction === true,
+      edgeEvidenceHostSet: Boolean(edgeSignoff.evidenceHost),
+      webhookSmokeRequired: smokeMode,
+      webhookSmokePass: smokeMode ? webhookSmoke?.status === "pass" : false,
+      webhookSmokeDelivered: webhookSmokeData.delivered === true,
+      webhookSmokeSignatureVerificationAcked: webhookSmokeData.signatureVerificationAcknowledged === true
+    },
+    results
+  };
+}
+
+function findResult(items, name) {
+  return Array.isArray(items) ? items.find((item) => item.name === name) : null;
+}
+
+function writeSummary(data) {
+  fs.mkdirSync(path.dirname(summaryPath), { recursive: true });
+  fs.writeFileSync(summaryPath, `${JSON.stringify(data, null, 2)}\n`);
 }
 
 function assert(condition, message) {
@@ -448,4 +507,19 @@ function loadEnvFromProjectRoot() {
     }
     if (process.env[key] == null) process.env[key] = value;
   }
+}
+
+function parseArgs(argv) {
+  const parsed = {};
+  for (let index = 0; index < argv.length; index += 1) {
+    const value = argv[index];
+    if (value === "--production") parsed.production = true;
+    else if (value === "--smoke") parsed.smoke = true;
+    else if (value === "--no-dotenv") parsed.noDotenv = true;
+    else if (value === "--summary") {
+      parsed.summary = argv[index + 1] || "";
+      index += 1;
+    }
+  }
+  return parsed;
 }

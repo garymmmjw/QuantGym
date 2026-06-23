@@ -443,6 +443,7 @@ The checked-in static feed is copied into the Vite build as `/data/jobs/public-a
 When production alerting and edge rate limits are configured, validate that shape too:
 
 ```bash
+npm run check:ops-alerts:worker-fixture
 npm run check:ops-alerts:production-fixture
 npm run build:ops-alert-edge-packet
 export QUANTGYM_ALERT_WEBHOOK_URL="https://alerts.example.com/quantgym-alerts"
@@ -455,7 +456,7 @@ npm run check:ops-alerts:production
 npm run check:ops-alerts:production -- --smoke
 ```
 
-The packet is written under `artifacts/ops-alert-edge/readiness-packet/` and contains the Render env template, signed webhook contract, Cloudflare `/api/auth/*` edge-rule runbook, smoke payload, and a signoff checklist. Replace the alert URL, bearer token, and edge evidence URL with real production values before running the signoff; placeholders are intentionally rejected, production webhook/evidence URLs must use HTTPS DNS hostnames rather than raw IP addresses, and the receiver must verify `X-QuantGym-Alert-Signature` against the raw request body before returning `X-QuantGym-Alert-Verified: 1` or JSON `verified: true` for the smoke payload.
+The packet is written under `artifacts/ops-alert-edge/readiness-packet/` and contains the Render env template, Cloudflare Worker alert receiver runbook, signed webhook contract, Cloudflare `/api/auth/*` edge-rule runbook, smoke payload, and a signoff checklist. The Worker source lives in `workers/quantgym-alert-receiver/worker.mjs`; deploy it with `QUANTGYM_ALERT_WEBHOOK_TOKEN` as a Worker secret, use the same token in Render, and run `npm run check:ops-alerts:worker-fixture` before deployment. Replace the alert URL, bearer token, and edge evidence URL with real production values before running the signoff; placeholders are intentionally rejected, production webhook/evidence URLs must use HTTPS DNS hostnames rather than raw IP addresses, and the receiver must verify `X-QuantGym-Alert-Signature` against the raw request body before returning `X-QuantGym-Alert-Verified: 1` or JSON `verified: true` for the smoke payload.
 
 Optional Google login variable, only if Google login is enabled on both frontend and API:
 

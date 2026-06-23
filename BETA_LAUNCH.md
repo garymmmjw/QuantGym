@@ -106,7 +106,7 @@ export LLM_MAX_BODY_BYTES=12582912
 1. 生成并部署静态网页 `dist/`，确认 `dist/config.js` 指向 HTTPS API 和 HTTPS LLM endpoint。
 2. 部署 API，确认 SQLite 路径在持久化磁盘；小规模封闭 beta 的媒体可先用持久化 `QUANTGYM_MEDIA_ROOT`，本地用 `npm run check:media-storage:runtime-smoke` 验证真实上传/下载路径。正式生产签收需要配置 S3/R2 兼容对象存储和 `QUANTGYM_MEDIA_PUBLIC_BASE_URL`，先跑 `npm run check:media-storage:production` 确认变量完整、HTTPS endpoint 和 public base URL 都合格，再跑 `npm run check:media-storage:production -- --live` 写入、读取、公开获取并删除一个 tiny readiness object。
 3. 部署 LLM 代理，确认 OpenAI key 只存在服务端环境变量，并打开 `LLM_AUTH_API_BASE`。
-4. 在反向代理或托管平台开启 HTTPS、访问日志、请求体上限和边缘 rate limit；API 自身也会对 auth 入口做基础内存限流，并提供 admin-only metrics/audit endpoints，管理员登录后可在账户页看到小型运维概览。本地先跑 `npm run check:ops-alerts:runtime-smoke` 确认 API 运行时告警链路；配置真实 alert receiver 后跑 `npm run check:ops-alerts:production`；需要实发测试时加 `-- --smoke`。
+4. 在反向代理或托管平台开启 HTTPS、访问日志、请求体上限和边缘 rate limit；API 自身也会对 auth 入口做基础内存限流，并提供 admin-only metrics/audit endpoints，管理员登录后可在账户页看到小型运维概览。本地先跑 `npm run check:ops-alerts:runtime-smoke` 确认 API 运行时告警链路；Cloudflare Worker 告警接收器在 `workers/quantgym-alert-receiver/worker.mjs`，部署前跑 `npm run check:ops-alerts:worker-fixture`；配置真实 alert receiver 后跑 `npm run check:ops-alerts:production`；需要实发测试时加 `-- --smoke`。
 5. 访问 `GET /api/health` 和 `GET /health`，确认 API 和 LLM 代理在线。
 6. 跑一次只读 SQLite preflight：`python3 scripts/export-api-sqlite.py --db "$QUANTGYM_DB" --summary-only`，确认 integrity 和 foreign-key 检查通过；同时跑 `npm run check:postgres-cutover:export-smoke` 确认默认导出脱敏、full export 才能作为迁移输入；如需迁移/备份，再把 `--include-sensitive` 导出写到受保护位置。
 7. 跑 `npm run check:repo-hygiene`，确认没有把 `.env`、SQLite、`dist/`、`artifacts/`、raw-export、大型私有文件或 secret-shaped 内容纳入 Git。

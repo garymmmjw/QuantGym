@@ -158,16 +158,30 @@ const negativeCases = [
 ];
 
 try {
-  const validProduction = await runConfig(["--production", "--no-dotenv"], validProductionEnv);
+  const defaultSummaryPath = path.join(root, "docs/browser-audit-screenshots/361-ops-alert-production-signoff-summary.json");
+  const previousDefaultSummary = readOptionalFile(defaultSummaryPath);
+  const defaultSummarySentinel = `${JSON.stringify({
+    status: "pass",
+    smoke: true,
+    fixtureSentinel: "preserve-real-production-signoff-summary"
+  }, null, 2)}\n`;
+  fs.mkdirSync(path.dirname(defaultSummaryPath), { recursive: true });
+  fs.writeFileSync(defaultSummaryPath, defaultSummarySentinel);
+  const validProduction = await runConfigWithTempSummary(["--production", "--no-dotenv"], validProductionEnv, "valid");
+  const defaultSummaryAfterValidFixture = readOptionalFile(defaultSummaryPath);
+  restoreOptionalFile(defaultSummaryPath, previousDefaultSummary);
+  if (defaultSummaryAfterValidFixture !== defaultSummarySentinel) {
+    fail("Valid production fixture must not mutate the real production signoff summary; use an explicit fixture summary path.");
+  }
   const productionFixture = summarizeProductionFixture(validProduction);
   validateValidProductionFixture(validProduction, productionFixture);
 
   const negativeFixtures = [];
   for (const fixture of negativeCases) {
-    const result = await runConfig(["--production", "--no-dotenv"], {
+    const result = await runConfigWithTempSummary(["--production", "--no-dotenv"], {
       ...validProductionEnv,
       ...fixture.env
-    });
+    }, `negative-${fixture.name}`);
     const summary = summarizeNegativeFixture(fixture, result);
     negativeFixtures.push(summary);
     if (!summary.rejected) fail(`Negative fixture "${fixture.name}" should fail production config validation.`);
@@ -182,6 +196,10 @@ try {
   validateNoVerificationAckSmoke(noVerificationAckSmoke);
   const blockedProductionSmoke = await runBlockedProductionSmokeNoDelivery();
   validateBlockedProductionSmoke(blockedProductionSmoke);
+  const productionSignoffSummary = await runProductionSignoffSummaryFixture();
+  validateProductionSignoffSummaryFixture(productionSignoffSummary);
+  const missingProductionEnvSummary = await runMissingProductionEnvSummaryFixture();
+  validateMissingProductionEnvSummaryFixture(missingProductionEnvSummary);
 
   const checks = {
     validProductionPass: productionFixture.status === "pass",
@@ -215,7 +233,11 @@ try {
     smokeWithoutVerificationAckNoDeliverySecretLeak: noVerificationAckSmoke.secretSafe === true,
     productionSmokeBlockedWhenConfigInvalid: blockedProductionSmoke.blocked === true,
     productionSmokeNoDeliveryWhenConfigInvalid: blockedProductionSmoke.delivered === false,
-    productionSmokeFailureExplained: blockedProductionSmoke.failureExplained === true
+    productionSmokeFailureExplained: blockedProductionSmoke.failureExplained === true,
+    productionSignoffSummaryWritten: productionSignoffSummary.summaryWritten === true,
+    productionSignoffSummaryPass: productionSignoffSummary.productionSignoffPass === true,
+    productionSignoffSummaryRedacted: productionSignoffSummary.secretSafe === true,
+    missingProductionEnvDoesNotWriteDefaultSignoffSummary: missingProductionEnvSummary.createdDefaultSummary === false
   };
 
   const summary = {
@@ -226,6 +248,8 @@ try {
     localWebhookSmoke,
     noVerificationAckSmoke,
     blockedProductionSmoke,
+    productionSignoffSummary,
+    missingProductionEnvSummary,
     checks,
     failures,
     warnings
@@ -286,10 +310,86 @@ function validateBlockedProductionSmoke(summary) {
   if (summary.childExitCode === 0) fail("Blocked production smoke child should exit non-zero.");
 }
 
+function validateProductionSignoffSummaryFixture(summary) {
+  if (!summary.summaryWritten) fail("Production signoff fixture should write an explicit summary file.");
+  if (summary.childExitCode !== 0) fail(`Production signoff summary child should pass, got exit ${summary.childExitCode}.`);
+  if (summary.status !== "pass") fail(`Production signoff summary should report pass, got ${summary.status}.`);
+  if (summary.mode !== "production") fail(`Production signoff summary should record production mode, got ${summary.mode}.`);
+  if (summary.smoke !== false) fail("Production signoff summary without --smoke should record smoke=false.");
+  if (!summary.productionSignoffPass) fail("Production signoff summary should set productionSignoffPass.");
+  if (!summary.alertWebhookTokenSet) fail("Production signoff summary should record that the webhook token is set.");
+  if (summary.alertWebhookHost !== "alerts.quantgym.test") fail(`Production signoff summary webhook host mismatch: ${summary.alertWebhookHost}.`);
+  if (summary.edgeProvider !== "cloudflare") fail(`Production signoff summary edge provider mismatch: ${summary.edgeProvider}.`);
+  if (summary.edgeEvidenceHost !== "dash.cloudflare.com") fail(`Production signoff summary evidence host mismatch: ${summary.edgeEvidenceHost}.`);
+  if (!summary.secretSafe) fail("Production signoff summary must not leak tokens, full webhook URLs, full dashboard URLs, or edge notes.");
+}
+
+function validateMissingProductionEnvSummaryFixture(summary) {
+  if (summary.childExitCode === 0) fail("Missing production env fixture should fail.");
+  if (summary.createdDefaultSummary) fail("Missing production env fixture must not write the default production signoff summary.");
+  if (!summary.failureExplained) fail("Missing production env fixture should explain the missing webhook URL.");
+}
+
 function validateNoVerificationAckSmoke(summary) {
   if (!summary.rejected) fail("Webhook smoke without receiver verification acknowledgement should fail.");
   if (!summary.failureExplained) fail("Webhook smoke without receiver verification acknowledgement should explain the missing acknowledgement.");
   if (!summary.secretSafe) fail("Webhook smoke without receiver verification acknowledgement should not leak the bearer token.");
+}
+
+async function runProductionSignoffSummaryFixture() {
+  const explicitSummaryPath = path.join("/tmp", `quantgym-ops-alert-production-signoff-${process.pid}.json`);
+  fs.rmSync(explicitSummaryPath, { force: true });
+  const result = await runConfig(["--production", "--no-dotenv", "--summary", explicitSummaryPath], validProductionEnv);
+  const summaryWritten = fs.existsSync(explicitSummaryPath);
+  let summary = null;
+  if (summaryWritten) {
+    try {
+      summary = JSON.parse(fs.readFileSync(explicitSummaryPath, "utf8"));
+    } catch {
+      summary = null;
+    }
+  }
+  fs.rmSync(explicitSummaryPath, { force: true });
+  const serialized = summary ? JSON.stringify(summary) : "";
+  return {
+    childExitCode: result.exitCode,
+    summaryWritten,
+    status: summary?.status || "",
+    mode: summary?.mode || "",
+    smoke: summary?.smoke,
+    productionSignoffPass: summary?.checks?.productionSignoffPass === true,
+    webhookSmokePass: summary?.checks?.webhookSmokePass === true,
+    alertWebhookHost: summary?.alertWebhookHost || "",
+    alertWebhookTokenSet: summary?.checks?.alertWebhookTokenSet === true,
+    edgeProvider: summary?.edgeProvider || "",
+    edgeEvidenceHost: summary?.edgeEvidenceHost || "",
+    secretSafe: !serialized.includes(validProductionEnv.QUANTGYM_ALERT_WEBHOOK_TOKEN)
+      && !serialized.includes(validProductionEnv.QUANTGYM_ALERT_WEBHOOK_URL)
+      && !serialized.includes(validProductionEnv.QUANTGYM_EDGE_RATE_LIMIT_EVIDENCE_URL)
+      && !serialized.includes(validProductionEnv.QUANTGYM_EDGE_RATE_LIMIT_NOTES),
+    outputPreview: result.combinedOutput.slice(0, 700)
+  };
+}
+
+async function runMissingProductionEnvSummaryFixture() {
+  const defaultSummaryPath = path.join(root, "docs/browser-audit-screenshots/361-ops-alert-production-signoff-summary.json");
+  const existingSummary = fs.existsSync(defaultSummaryPath)
+    ? fs.readFileSync(defaultSummaryPath, "utf8")
+    : null;
+  fs.rmSync(defaultSummaryPath, { force: true });
+  const result = await runConfig(["--production", "--no-dotenv"], {});
+  const createdDefaultSummary = fs.existsSync(defaultSummaryPath);
+  fs.rmSync(defaultSummaryPath, { force: true });
+  if (existingSummary !== null) {
+    fs.mkdirSync(path.dirname(defaultSummaryPath), { recursive: true });
+    fs.writeFileSync(defaultSummaryPath, existingSummary);
+  }
+  return {
+    childExitCode: result.exitCode,
+    createdDefaultSummary,
+    failureExplained: /QUANTGYM_ALERT_WEBHOOK_URL is required/i.test(firstFailure(result)),
+    outputPreview: result.combinedOutput.slice(0, 700)
+  };
 }
 
 async function runLocalWebhookSmoke() {
@@ -436,11 +536,11 @@ async function runBlockedProductionSmokeNoDelivery() {
 
   try {
     const url = `http://127.0.0.1:${server.address().port}/should-not-receive-production-smoke`;
-    const result = await runConfig(["--production", "--smoke", "--no-dotenv"], {
+    const result = await runConfigWithTempSummary(["--production", "--smoke", "--no-dotenv"], {
       ...validProductionEnv,
       QUANTGYM_ALERT_WEBHOOK_URL: url,
       QUANTGYM_EDGE_RATE_LIMIT_CONFIRMED: "0"
-    });
+    }, "blocked-smoke");
     const smokeResult = findResult(result.parsed?.results, "alert webhook smoke") || {};
     return {
       childExitCode: result.exitCode,
@@ -493,6 +593,17 @@ async function runConfig(configArgs, envOverrides) {
       });
     });
   });
+}
+
+async function runConfigWithTempSummary(configArgs, envOverrides, label) {
+  const safeLabel = String(label || "fixture").replace(/[^a-z0-9._-]+/gi, "-").slice(0, 80);
+  const tempSummaryPath = path.join("/tmp", `quantgym-ops-alert-production-fixture-${process.pid}-${safeLabel}.json`);
+  fs.rmSync(tempSummaryPath, { force: true });
+  try {
+    return await runConfig([...configArgs, "--summary", tempSummaryPath], envOverrides);
+  } finally {
+    fs.rmSync(tempSummaryPath, { force: true });
+  }
 }
 
 function summarizeProductionFixture(result) {
@@ -596,4 +707,17 @@ function writeSummary(summary) {
   const absoluteSummaryPath = path.resolve(root, summaryPath);
   fs.mkdirSync(path.dirname(absoluteSummaryPath), { recursive: true });
   fs.writeFileSync(absoluteSummaryPath, `${JSON.stringify(summary, null, 2)}\n`);
+}
+
+function readOptionalFile(filePath) {
+  return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : null;
+}
+
+function restoreOptionalFile(filePath, content) {
+  if (content === null) {
+    fs.rmSync(filePath, { force: true });
+    return;
+  }
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, content);
 }

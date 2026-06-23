@@ -1,10 +1,11 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-21T16:02:31.681Z",
+  "generatedAt": "2026-06-22T23:00:41.337Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/ops-alert-edge/readiness-packet",
   "filesWritten": [
     "artifacts/ops-alert-edge/readiness-packet/README.md",
     "artifacts/ops-alert-edge/readiness-packet/render-api-env-template.txt",
+    "artifacts/ops-alert-edge/readiness-packet/cloudflare-alert-worker.md",
     "artifacts/ops-alert-edge/readiness-packet/cloudflare-rate-limit-rule.md",
     "artifacts/ops-alert-edge/readiness-packet/webhook-contract.md",
     "artifacts/ops-alert-edge/readiness-packet/smoke-payload.sample.json",
@@ -12,8 +13,10 @@
   ],
   "evidence": {
     "runtimeSmokePass": true,
+    "workerFixturePass": true,
     "productionFixturePass": true,
     "runtimeAlertCount": 7,
+    "workerFixtureCaseCount": 6,
     "productionNegativeFixtureCount": 24
   },
   "requiredEnv": [
@@ -48,6 +51,7 @@
   "checks": {
     "expectedFilesWritten": true,
     "includesProductionEnvTemplate": true,
+    "includesCloudflareWorkerRunbook": true,
     "includesWebhookContract": true,
     "includesWebhookSignatureContract": true,
     "includesWebhookVerificationAckContract": true,
@@ -58,6 +62,10 @@
     "includesRawIpUrlRule": true,
     "noDashboardQueryOrFragmentExamples": true,
     "runtimeSmokePass": true,
+    "workerFixturePass": true,
+    "workerFixtureVerifiesGoodSignature": true,
+    "workerFixtureRejectsBadAuth": true,
+    "workerFixtureNoSecretLeak": true,
     "productionFixturePass": true,
     "fixtureRejectsUnsafeInputs": true,
     "fixtureRequiresSpecificEdgeNotes": true,
