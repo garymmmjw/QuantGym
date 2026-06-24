@@ -9,7 +9,7 @@
     {
       "name": "git diff --check",
       "status": "pass",
-      "durationMs": 40,
+      "durationMs": 30,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": []
@@ -17,7 +17,7 @@
     {
       "name": "Stage 1",
       "status": "pass",
-      "durationMs": 240,
+      "durationMs": 223,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -34,7 +34,7 @@
     {
       "name": "Stage 2 bridge",
       "status": "pass",
-      "durationMs": 173,
+      "durationMs": 172,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -49,7 +49,7 @@
     {
       "name": "Stage 2 full",
       "status": "pass",
-      "durationMs": 271,
+      "durationMs": 251,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -64,7 +64,7 @@
     {
       "name": "Stage 2 strict",
       "status": "pass",
-      "durationMs": 255,
+      "durationMs": 249,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -79,7 +79,7 @@
     {
       "name": "Browser evidence",
       "status": "pass",
-      "durationMs": 196,
+      "durationMs": 200,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -108,7 +108,7 @@
     {
       "name": "Migration completion audit",
       "status": "partial",
-      "durationMs": 188,
+      "durationMs": 185,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -285,7 +285,7 @@
     {
       "name": "Route integrity",
       "status": "pass",
-      "durationMs": 161,
+      "durationMs": 155,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -301,7 +301,7 @@
     {
       "name": "Route interactions",
       "status": "pass",
-      "durationMs": 157,
+      "durationMs": 174,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -316,15 +316,15 @@
     {
       "name": "Browser route smoke",
       "status": "pass",
-      "durationMs": 507622,
+      "durationMs": 480981,
       "timeoutMs": 900000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 507161,
+        "durationMs": 480467,
         "browser": "Google Chrome via playwright-core",
         "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        "baseUrl": "http://127.0.0.1:51168",
+        "baseUrl": "http://127.0.0.1:51664",
         "routes": {
           "checked": 21,
           "passed": 21,
@@ -428,7 +428,7 @@
                 "appShellVisible": true,
                 "authShellVisible": false,
                 "overlayVisible": false,
-                "bodyTextLength": 751,
+                "bodyTextLength": 756,
                 "horizontalOverflowPx": 0,
                 "pathname": "/tools"
               }
@@ -851,7 +851,7 @@
             {
               "name": "tools drill starts and accepts an answer",
               "status": "pass",
-              "question": "20 29 25 34 30 ?"
+              "question": "5 15 45 135 405 ?"
             },
             {
               "name": "tools mental math completes session and persists records",
@@ -869,8 +869,8 @@
             {
               "name": "tools market game rejects crossed quote, scores valid quote, and persists record",
               "status": "pass",
-              "fairValue": 99,
-              "feedback": "Round +25. Mid 99, width 2, fair 99.",
+              "fairValue": 84,
+              "feedback": "Round +25. Mid 84, width 2, fair 84.",
               "score": 25,
               "recordsBefore": 0,
               "recordsAfter": 1,
@@ -906,8 +906,8 @@
             {
               "name": "pk match, submit, reveal, and record persistence",
               "status": "pass",
-              "opponentName": "Jane Street Trainee",
-              "problemPreview": "问题10 - 计算 $\\int x\\ln(x)\\,dx$ 和 $\\int x e^x\\,dx$\n\n计算 $\\int x\\ln(x)\\,dx$ 和 $\\int x e^x\\,dx$。",
+              "opponentName": "Data Quant",
+              "problemPreview": "立方体切割\n\n一名伐木工人正在把一块 $3 \\times 3 \\times 3$ 的立方体木块切成 $27$ 个 $1 \\times 1 \\times 1$ 的小木块。每次切割后，伐木工人都可以重新摆放立方体和单个木块。求伐木工人至少需要切",
               "recordPersisted": true,
               "revealed": true
             },
@@ -950,7 +950,7 @@
             {
               "name": "interview attachment upload preview, transcript, and request payload",
               "status": "pass",
-              "fileName": "browser-smoke-interview-attachment-1782316212462.png",
+              "fileName": "browser-smoke-interview-attachment-1782318647807.png",
               "previewRendered": true,
               "transcriptAttachmentRendered": true,
               "requestAttachmentSent": true,
@@ -959,8 +959,8 @@
             {
               "name": "interview PDF source upload generates questions and starts session",
               "status": "pass",
-              "fileName": "browser-smoke-interview-source-1782316212732.pdf",
-              "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782316212732",
+              "fileName": "browser-smoke-interview-source-1782318648104.pdf",
+              "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782318648104",
               "requestCount": 1,
               "requestPdfPayloadSent": true,
               "generatedQuestionRendered": true
@@ -973,7 +973,7 @@
             {
               "name": "todo dock edit, complete, delete, and reload persistence",
               "status": "pass",
-              "taskId": "custom-84ad4377-d8a8-472c-bc4b-a7ba888cfc69",
+              "taskId": "custom-02e4d23f-cbcc-4691-8489-d386467808f0",
               "edited": true,
               "completed": true,
               "reopened": true,
@@ -984,31 +984,31 @@
             {
               "name": "community post, like, comment, and reload persistence",
               "status": "pass",
-              "postText": "Browser smoke community post 1782316241678",
-              "commentText": "Browser smoke comment 1782316241678",
+              "postText": "Browser smoke community post 1782318677015",
+              "commentText": "Browser smoke comment 1782318677015",
               "reloaded": true
             },
             {
               "name": "community image post fallback and reload persistence",
               "status": "pass",
-              "postText": "Browser smoke community image post 1782316244854",
-              "fileName": "browser-smoke-community-1782316244854.png",
+              "postText": "Browser smoke community image post 1782318680207",
+              "fileName": "browser-smoke-community-1782318680207.png",
               "dataUrlFallback": true,
               "reloaded": true
             },
             {
               "name": "community video post fallback and reload persistence",
               "status": "pass",
-              "postText": "Browser smoke community video post 1782316248003",
-              "fileName": "browser-smoke-community-1782316248003.webm",
+              "postText": "Browser smoke community video post 1782318683327",
+              "fileName": "browser-smoke-community-1782318683327.webm",
               "dataUrlFallback": true,
               "reloaded": true
             },
             {
               "name": "community direct message from post opens messages thread",
               "status": "pass",
-              "authorName": "Community Mentor 1782316251153",
-              "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782316251153",
+              "authorName": "Community Mentor 1782318686464",
+              "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782318686464",
               "openedMessages": true,
               "threadPersisted": true,
               "replyPersisted": true
@@ -1023,14 +1023,14 @@
               "messageReplyPersisted": true,
               "messageReloadPersisted": true,
               "noHorizontalOverflow": true,
-              "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782316255939",
+              "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782318691193",
               "finalPath": "/messages"
             },
             {
               "name": "messages thread read, send, and reload persistence",
               "status": "pass",
-              "threadId": "thread-browser-route-smoke-1782316260847",
-              "mentorName": "Smoke Mentor 1782316260847",
+              "threadId": "thread-browser-route-smoke-1782318695991",
+              "mentorName": "Smoke Mentor 1782318695991",
               "replied": true,
               "reloaded": true
             },
@@ -1047,15 +1047,15 @@
             {
               "name": "experiences create, edit, share, delete, and reload persistence",
               "status": "pass",
-              "recordId": "43efc16f-4a1f-442a-b21b-548cb767e78a",
-              "sharedPostId": "7ac549a6-14d4-46fd-881d-8dc85467fd18",
+              "recordId": "250e7d09-f151-4352-b48c-0b7df5b1791b",
+              "sharedPostId": "1d905cb3-2023-4dcf-843d-a3f36f56ff68",
               "deleted": true,
               "reloaded": true
             },
             {
               "name": "news manual submit, filter, detail, and reload persistence",
               "status": "pass",
-              "newsId": "news-browser-smoke-jane-street-official-update-1782316278786-https-www-janestreet-com-join-jane",
+              "newsId": "news-browser-smoke-jane-street-official-update-1782318713815-https-www-janestreet-com-join-jane",
               "sourceType": "official",
               "reloaded": true,
               "readPersisted": true
@@ -1071,30 +1071,30 @@
               "newsFiltersUsable": true,
               "newsDetailReadPersisted": true,
               "noHorizontalOverflow": true,
-              "recordId": "ceec95fc-990c-42e2-9d5b-b28cc659df79",
-              "sharedPostId": "292c33f2-2695-4cbc-904f-f84056474bc6",
-              "newsId": "news-mobile-smoke-official-recruiting-update-1782316283347-https-www-janestreet-com-join-jane-s",
+              "recordId": "83750103-f3a2-4dd2-add3-559cd28fdad9",
+              "sharedPostId": "cb54e009-00a8-4775-9700-b1f219fe5bec",
+              "newsId": "news-mobile-smoke-official-recruiting-update-1782318718364-https-www-janestreet-com-join-jane-s",
               "finalPath": "/news"
             },
             {
               "name": "memory resource add, source link, and reload persistence",
               "status": "pass",
-              "title": "Browser Smoke Resource 1782316290645",
+              "title": "Browser Smoke Resource 1782318725683",
               "sourceUrl": "https://www.youtube.com/@atypicalquant",
               "reloaded": true
             },
             {
               "name": "memory image resource upload fallback and reload persistence",
               "status": "pass",
-              "title": "Browser Smoke Image Resource 1782316294169",
-              "fileName": "browser-smoke-memory-1782316294169.png",
+              "title": "Browser Smoke Image Resource 1782318729347",
+              "fileName": "browser-smoke-memory-1782318729347.png",
               "dataUrlFallback": true,
               "reloaded": true
             },
             {
               "name": "network contact add, edit, delete, and reload persistence",
               "status": "pass",
-              "contactName": "Browser Smoke Contact 1782316297756",
+              "contactName": "Browser Smoke Contact 1782318732912",
               "edited": true,
               "deleted": true
             },
@@ -1173,8 +1173,8 @@
               "readerTokenRequests": 2,
               "pdfRequests": 4,
               "readerOpened": true,
-              "openNewHref": "http://127.0.0.1:51168/api/library-reader-smoke/green-book.pdf",
-              "embedUrl": "http://127.0.0.1:51168/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+              "openNewHref": "http://127.0.0.1:51664/api/library-reader-smoke/green-book.pdf",
+              "embedUrl": "http://127.0.0.1:51664/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
               "closedByButton": true,
               "closedByEscape": true
             },
@@ -1183,7 +1183,7 @@
               "status": "pass",
               "problemId": "quantguide-place-or-take",
               "problemTitle": "放置或取出",
-              "todoTitle": "Cross-module QuantGuide review 1782316342690: 放置或取出",
+              "todoTitle": "Cross-module QuantGuide review 1782318776181: 放置或取出",
               "resumeTextLength": 237,
               "settings": {
                 "llmEndpoint": "http://127.0.0.1:8789/interview",
@@ -1205,7 +1205,7 @@
             {
               "name": "account profile save and reload persistence",
               "status": "pass",
-              "profileName": "Browser Smoke 1782316365036",
+              "profileName": "Browser Smoke 1782318798423",
               "country": "unitedStates",
               "region": "California",
               "graduationTerm": "2028-05",
@@ -1217,7 +1217,7 @@
               "wrongPasswordRejected": true,
               "oldEmailRejected": true,
               "oldEmail": "browser-route-smoke@quantgym.local",
-              "newEmail": "browser-route-smoke+email-1782316369672@quantgym.local",
+              "newEmail": "browser-route-smoke+email-1782318802993@quantgym.local",
               "passwordHashRotated": true,
               "reloginSucceeded": true,
               "reloginPath": "/"
@@ -1227,7 +1227,7 @@
               "status": "pass",
               "avatarDataUrl": true,
               "avatarCleared": true,
-              "resumeFileName": "browser-smoke-resume-1782316379681.txt",
+              "resumeFileName": "browser-smoke-resume-1782318812870.txt",
               "resumeTextLength": 215,
               "reloaded": true
             },
@@ -1248,8 +1248,8 @@
               "resumeUploadPersisted": true,
               "noHorizontalOverflow": true,
               "reloaded": true,
-              "profileName": "Mobile Account 1782316397026",
-              "resumeFileName": "mobile-account-resume-1782316397026.txt"
+              "profileName": "Mobile Account 1782318829219",
+              "resumeFileName": "mobile-account-resume-1782318829219.txt"
             },
             {
               "name": "settings language switch syncs URL and persists reload",
@@ -1321,7 +1321,7 @@
               "payloadIncludesCommunity": true,
               "payloadIncludesAccount": true,
               "statusUpdated": true,
-              "lastSyncAt": "2026-06-24T15:53:45.405Z"
+              "lastSyncAt": "2026-06-24T16:34:18.885Z"
             },
             {
               "name": "mobile settings config and backup controls avoid overflow",
@@ -1333,7 +1333,7 @@
               "exportDownloadWorks": true,
               "noHorizontalOverflow": true,
               "reloaded": true,
-              "exportedFilename": "quantgym-Mobile Account 1782316397026-2026-06-24.json"
+              "exportedFilename": "quantgym-Mobile Account 1782318829219-2026-06-24.json"
             },
             {
               "name": "settings rejects invalid backup files without changing state",
@@ -1351,16 +1351,16 @@
               "exportedThreadIncluded": true,
               "postRestored": true,
               "threadRestored": true,
-              "threadId": "thread-settings-backup-community-1782316442585"
+              "threadId": "thread-settings-backup-community-1782318873115"
             },
             {
               "name": "settings backup export, import, and reset state",
               "status": "pass",
               "resetPrompt": "清空当前账户的训练记录？已连接云端时也会同步为空。",
-              "exportedFilename": "quantgym-Mobile Account 1782316397026-2026-06-24.json",
-              "importedResumeFile": "settings-imported-resume-1782316451121.txt",
-              "importedResourceId": "settings-imported-resource-1782316451121",
-              "importedCourseId": "settings-imported-course-1782316451121",
+              "exportedFilename": "quantgym-Mobile Account 1782318829219-2026-06-24.json",
+              "importedResumeFile": "settings-imported-resume-1782318881583.txt",
+              "importedResourceId": "settings-imported-resource-1782318881583",
+              "importedCourseId": "settings-imported-course-1782318881583",
               "resetClearedImport": true
             }
           ]
@@ -1369,7 +1369,7 @@
           "name": "protected route redirects to auth and local email auth works",
           "status": "pass",
           "localEmailAuth": {
-            "email": "browser-auth-1782315957490-6ojrtf@quantgym.local",
+            "email": "browser-auth-1782318414203-sxt9ue@quantgym.local",
             "redirectedToLogin": true,
             "accountStatusChecked": true,
             "registrationFormShown": true,
@@ -1384,14 +1384,31 @@
             "resetSucceeded": true,
             "resetOldPasswordRejected": true,
             "resetNewPasswordLoginSucceeded": true,
-            "accountId": "db3bd901-a916-4b52-9542-cc13670e1432",
+            "accountId": "b127c50b-e904-4971-8b73-34e79d51d62c",
             "reloginPath": "/"
           },
           "path": "/login",
           "redirectPath": "/login"
         },
         "consoleErrors": [],
-        "ignoredConsoleErrors": [],
+        "ignoredConsoleErrors": [
+          {
+            "type": "error",
+            "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
+          },
+          {
+            "type": "error",
+            "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
+          },
+          {
+            "type": "error",
+            "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
+          },
+          {
+            "type": "error",
+            "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
+          }
+        ],
         "pageErrors": [],
         "responseErrors": [],
         "warnings": [],
@@ -1401,7 +1418,7 @@
     {
       "name": "Deployed beta deploy-window fixture",
       "status": "pass",
-      "durationMs": 426,
+      "durationMs": 424,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -1417,19 +1434,19 @@
         },
         "failures": [],
         "childStatus": 0,
-        "childOutputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:54680\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"deploy-window-fixture-commit\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 12000,\n    \"intervalMs\": 100,\n    \"attempts\": 2,\n    \"apiEndpoint\": \"http://127.0.0.1:54679/api\",\n    \"transientFailureObserved\": true,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:54680/version.json\",\n      \"httpStatus\": 200,\n      \"commit\": \"deploy-window-fixture-commit\",\n      \"branch\": \"main\",\n      \"source\": \"fixture\",\n      \"matchesConfig\": true,\n      \"expectedCommitMatch\": true\n    },\n    \"apiHealth\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:54679/api/health\",\n      \"httpStatus\": 200,\n      \"pass\": true,\n      \"ok\": true,\n      \"failedAttempts\": 1\n    },\n    \"corsPreflight\": {\n      \"name\": \"cloud sync preflight\",\n      \"url\": \"http://127.0.0.1:54679/api/sync\",\n      \"method\": \"POST\",\n      \"requestHe"
+        "childOutputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:56954\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"deploy-window-fixture-commit\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 12000,\n    \"intervalMs\": 100,\n    \"attempts\": 2,\n    \"apiEndpoint\": \"http://127.0.0.1:56953/api\",\n    \"transientFailureObserved\": true,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:56954/version.json\",\n      \"httpStatus\": 200,\n      \"commit\": \"deploy-window-fixture-commit\",\n      \"branch\": \"main\",\n      \"source\": \"fixture\",\n      \"matchesConfig\": true,\n      \"expectedCommitMatch\": true\n    },\n    \"apiHealth\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:56953/api/health\",\n      \"httpStatus\": 200,\n      \"pass\": true,\n      \"ok\": true,\n      \"failedAttempts\": 1\n    },\n    \"corsPreflight\": {\n      \"name\": \"cloud sync preflight\",\n      \"url\": \"http://127.0.0.1:56953/api/sync\",\n      \"method\": \"POST\",\n      \"requestHe"
       }
     },
     {
       "name": "Deployed beta expected-commit fixture",
       "status": "pass",
-      "durationMs": 412,
+      "durationMs": 425,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "headCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
-        "shortCommit": "89e1e4f",
+        "headCommit": "a94b3eb72a7fff953f68bd0855e099ccb39e8dfd",
+        "shortCommit": "a94b3eb",
         "checks": {
           "headResolved": true,
           "shortShaResolved": true,
@@ -1442,20 +1459,20 @@
             "expectedCommit": "HEAD",
             "status": 0,
             "smokeStatus": "pass",
-            "summaryExpectedCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
-            "versionCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
+            "summaryExpectedCommit": "a94b3eb72a7fff953f68bd0855e099ccb39e8dfd",
+            "versionCommit": "a94b3eb72a7fff953f68bd0855e099ccb39e8dfd",
             "expectedCommitMatch": true,
-            "outputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:54686\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf\",\n  \"expectedCommitInput\": \"HEAD\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 500,\n    \"intervalMs\": 50,\n    \"attempts\": 1,\n    \"apiEndpoint\": \"http://127.0.0.1:54685/api\",\n    \"transientFailureObserved\": false,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:54686/vers"
+            "outputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:56960\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"a94b3eb72a7fff953f68bd0855e099ccb39e8dfd\",\n  \"expectedCommitInput\": \"HEAD\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 500,\n    \"intervalMs\": 50,\n    \"attempts\": 1,\n    \"apiEndpoint\": \"http://127.0.0.1:56959/api\",\n    \"transientFailureObserved\": false,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:56960/vers"
           },
           {
             "name": "short SHA",
-            "expectedCommit": "89e1e4f",
+            "expectedCommit": "a94b3eb",
             "status": 0,
             "smokeStatus": "pass",
-            "summaryExpectedCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
-            "versionCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
+            "summaryExpectedCommit": "a94b3eb72a7fff953f68bd0855e099ccb39e8dfd",
+            "versionCommit": "a94b3eb72a7fff953f68bd0855e099ccb39e8dfd",
             "expectedCommitMatch": true,
-            "outputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:54686\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf\",\n  \"expectedCommitInput\": \"89e1e4f\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 500,\n    \"intervalMs\": 50,\n    \"attempts\": 1,\n    \"apiEndpoint\": \"http://127.0.0.1:54685/api\",\n    \"transientFailureObserved\": false,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:54686/v"
+            "outputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:56960\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"a94b3eb72a7fff953f68bd0855e099ccb39e8dfd\",\n  \"expectedCommitInput\": \"a94b3eb\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 500,\n    \"intervalMs\": 50,\n    \"attempts\": 1,\n    \"apiEndpoint\": \"http://127.0.0.1:56959/api\",\n    \"transientFailureObserved\": false,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:56960/v"
           }
         ],
         "failures": []
@@ -1464,7 +1481,7 @@
     {
       "name": "Module ownership",
       "status": "pass",
-      "durationMs": 157,
+      "durationMs": 148,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -1537,7 +1554,7 @@
     {
       "name": "Chrome store readiness",
       "status": "pass",
-      "durationMs": 450,
+      "durationMs": 443,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -1660,12 +1677,12 @@
     {
       "name": "Chrome store publication fixture",
       "status": "pass",
-      "durationMs": 9842,
+      "durationMs": 9774,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 9695,
+        "durationMs": 9632,
         "externalPublicationRequired": true,
         "finalSignoffCommand": "npm run check:chrome-store-publication:published",
         "submissionHandoff": {
@@ -1924,7 +1941,7 @@
     {
       "name": "Render API build filter fixture",
       "status": "pass",
-      "durationMs": 455,
+      "durationMs": 436,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -2022,7 +2039,7 @@
     {
       "name": "Render API build filter packet",
       "status": "pass",
-      "durationMs": 150,
+      "durationMs": 156,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -2030,7 +2047,7 @@
         "date": "2026-06-24",
         "surface": "Render API build filter readiness packet",
         "status": "pass",
-        "generatedAt": "2026-06-24T15:54:32.729Z",
+        "generatedAt": "2026-06-24T16:35:03.116Z",
         "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/render-api-build-filter/readiness-packet",
         "filesWritten": [
           "artifacts/render-api-build-filter/readiness-packet/README.md",
@@ -2065,7 +2082,7 @@
     {
       "name": "Browser extension runtime smoke",
       "status": "pass",
-      "durationMs": 157,
+      "durationMs": 154,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -2109,12 +2126,12 @@
     {
       "name": "Render LLM deploy compatibility",
       "status": "pass",
-      "durationMs": 4294,
+      "durationMs": 4236,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 4147,
+        "durationMs": 4091,
         "checks": 15,
         "results": [
           {
@@ -2128,27 +2145,27 @@
           {
             "name": "root npm start",
             "status": "pass",
-            "port": 54781
+            "port": 57099
           },
           {
             "name": "root node server.mjs",
             "status": "pass",
-            "port": 54784
+            "port": 57102
           },
           {
             "name": "root node server.js",
             "status": "pass",
-            "port": 54791
+            "port": 57110
           },
           {
             "name": "root node index.js",
             "status": "pass",
-            "port": 54798
+            "port": 57113
           },
           {
             "name": "root node llm-proxy/server.mjs",
             "status": "pass",
-            "port": 54806
+            "port": 57121
           },
           {
             "name": "llm-proxy npm install",
@@ -2165,27 +2182,27 @@
           {
             "name": "llm-proxy npm start",
             "status": "pass",
-            "port": 54814
+            "port": 57136
           },
           {
             "name": "llm-proxy node server.mjs",
             "status": "pass",
-            "port": 54818
+            "port": 57139
           },
           {
             "name": "llm-proxy node server.js",
             "status": "pass",
-            "port": 54825
+            "port": 57146
           },
           {
             "name": "llm-proxy node index.js",
             "status": "pass",
-            "port": 54832
+            "port": 57149
           },
           {
             "name": "llm-proxy node llm-proxy/server.mjs",
             "status": "pass",
-            "port": 54835
+            "port": 57156
           }
         ],
         "failures": []
@@ -2194,7 +2211,7 @@
     {
       "name": "Google token helper flow",
       "status": "pass",
-      "durationMs": 3573,
+      "durationMs": 1788,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -2257,11 +2274,11 @@
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1524,
-        "apiPort": 54865,
+        "durationMs": 1522,
+        "apiPort": 57184,
         "media": {
-          "id": "95vlMigC0xui8yi55VPknZkY",
-          "path": "/api/media/95vlMigC0xui8yi55VPknZkY",
+          "id": "JpqnkPcfQNzf3ExqpjSl9kR8",
+          "path": "/api/media/JpqnkPcfQNzf3ExqpjSl9kR8",
           "contentType": "image/png",
           "byteSize": 68,
           "storage": "api-media",
@@ -2270,7 +2287,7 @@
         },
         "spoofedForwardedHostUpload": {
           "status": 201,
-          "mediaUrl": "http://127.0.0.1:54865/api/media/zT2Rdu7DhplLzYhH5DPt32ey",
+          "mediaUrl": "http://127.0.0.1:57184/api/media/pd3Z-Mfefc0g8eS8DwISErey",
           "urlUsesApiMediaEndpoint": true,
           "forwardedHostIgnored": true,
           "forwardedProtoIgnored": true
@@ -2284,9 +2301,9 @@
             "storedObjectCount": 1,
             "putRequestSigned": true,
             "getRequestSigned": true,
-            "storagePath": "s3:runtime-smoke/YjDiebFL0XrNnZ8Ih-pLiQ_f.png",
+            "storagePath": "s3:runtime-smoke/zlNAMpxoNS6DFpetYITzO2RS.png",
             "mediaStorage": "s3-media",
-            "mediaUrl": "http://127.0.0.1:54877/api/media/YjDiebFL0XrNnZ8Ih-pLiQ_f",
+            "mediaUrl": "http://127.0.0.1:57198/api/media/zlNAMpxoNS6DFpetYITzO2RS",
             "mediaUrlUsesPublicBase": false,
             "apiReadBytes": 68
           },
@@ -2294,13 +2311,13 @@
             "mode": "public-url",
             "uploadStatus": 201,
             "getMediaStatus": 302,
-            "redirectLocation": "https://media.quantgym.example.test/public/runtime-smoke/tOBL1lBm2CgWuNBRb5xrjKok.png",
+            "redirectLocation": "https://media.quantgym.example.test/public/runtime-smoke/5nUoxRoFNVMEe8CJK_cQvEHa.png",
             "storedObjectCount": 1,
             "putRequestSigned": true,
             "getRequestSigned": false,
-            "storagePath": "s3:runtime-smoke/tOBL1lBm2CgWuNBRb5xrjKok.png",
+            "storagePath": "s3:runtime-smoke/5nUoxRoFNVMEe8CJK_cQvEHa.png",
             "mediaStorage": "s3-media",
-            "mediaUrl": "https://media.quantgym.example.test/public/runtime-smoke/tOBL1lBm2CgWuNBRb5xrjKok.png",
+            "mediaUrl": "https://media.quantgym.example.test/public/runtime-smoke/5nUoxRoFNVMEe8CJK_cQvEHa.png",
             "mediaUrlUsesPublicBase": true,
             "apiReadBytes": 0
           }
@@ -2333,12 +2350,12 @@
     {
       "name": "Media storage production fixture",
       "status": "pass",
-      "durationMs": 1413,
+      "durationMs": 1393,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1252,
+        "durationMs": 1246,
         "productionFixture": {
           "status": "pass",
           "mode": "production",
@@ -2696,19 +2713,19 @@
     {
       "name": "Ops alert runtime smoke",
       "status": "pass",
-      "durationMs": 933,
+      "durationMs": 961,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
         "webhookReceived": 7,
-        "apiPort": 54913,
-        "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-ops-alert-pQ7cHg/quantgym-alert-smoke.sqlite3",
+        "apiPort": 57251,
+        "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-ops-alert-Ar9ggN/quantgym-alert-smoke.sqlite3",
         "payload": {
           "eventType": "http.error.404",
           "statusCode": 404,
           "method": "GET",
-          "path": "/api/ops-alert-runtime-smoke-1782316484448",
+          "path": "/api/ops-alert-runtime-smoke-1782318912962",
           "hasOccurredAt": true
         },
         "alerts": [
@@ -2716,7 +2733,7 @@
             "eventType": "http.error.404",
             "statusCode": 404,
             "method": "GET",
-            "path": "/api/ops-alert-runtime-smoke-1782316484448",
+            "path": "/api/ops-alert-runtime-smoke-1782318912962",
             "hasOccurredAt": true
           },
           {
@@ -2811,12 +2828,12 @@
     {
       "name": "Ops alert production fixture",
       "status": "pass",
-      "durationMs": 1388,
+      "durationMs": 1354,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1238,
+        "durationMs": 1203,
         "productionFixture": {
           "status": "pass",
           "passed": 4,
@@ -3107,12 +3124,12 @@
     {
       "name": "Jobs source runtime smoke",
       "status": "pass",
-      "durationMs": 1932,
+      "durationMs": 1924,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1782,
+        "durationMs": 1774,
         "feedRequests": {
           "total": 4,
           "okFeed": 1,
@@ -3219,12 +3236,12 @@
     {
       "name": "Jobs source production fixture",
       "status": "pass",
-      "durationMs": 1176,
+      "durationMs": 1159,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1023,
+        "durationMs": 1013,
         "productionFixture": {
           "status": "pass",
           "mode": "production",
@@ -3568,7 +3585,7 @@
     {
       "name": "Jobs public ATS static feed",
       "status": "pass",
-      "durationMs": 158,
+      "durationMs": 147,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -3615,7 +3632,7 @@
     {
       "name": "Question-bank rights",
       "status": "pass",
-      "durationMs": 267,
+      "durationMs": 268,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -3854,12 +3871,12 @@
     {
       "name": "Question-bank rights public smoke",
       "status": "pass",
-      "durationMs": 641,
+      "durationMs": 643,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 487,
+        "durationMs": 486,
         "checks": {
           "validPublicPass": true,
           "validCommercialPass": true,
@@ -4105,12 +4122,12 @@
     {
       "name": "Question-bank rights release blockers",
       "status": "pass",
-      "durationMs": 574,
+      "durationMs": 584,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 425,
+        "durationMs": 431,
         "releaseBlocked": true,
         "privateBeta": {
           "mode": "private-beta",
@@ -4266,7 +4283,7 @@
     {
       "name": "Apex/WWW domain",
       "status": "pass",
-      "durationMs": 5443,
+      "durationMs": 17189,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -4274,7 +4291,7 @@
         "date": "2026-06-19",
         "surface": "apex/www domain SSL or redirect",
         "status": "pass",
-        "durationMs": 5292,
+        "durationMs": 17038,
         "requireClear": false,
         "launchReadiness": "pass",
         "signoffCommand": "npm run check:apex-www-domain -- --require-clear",
@@ -4319,7 +4336,7 @@
                 "headers": {
                   "location": "",
                   "server": "cloudflare",
-                  "cfRay": "a10ce9f1dc5d0458-HKG",
+                  "cfRay": "a10d2584cf7c6352-LHR",
                   "contentType": "text/html; charset=utf-8"
                 }
               }
@@ -4354,7 +4371,7 @@
                   "headers": {
                     "location": "https://beta.quantgym.app/",
                     "server": "cloudflare",
-                    "cfRay": "a10ce9d8a9856131-HKG",
+                    "cfRay": "a10d253739940f08-HKG",
                     "contentType": ""
                   }
                 },
@@ -4364,7 +4381,7 @@
                   "headers": {
                     "location": "",
                     "server": "cloudflare",
-                    "cfRay": "a10ce9e25bf9e6fc-LHR",
+                    "cfRay": "a10d253b3b3ddd42-HKG",
                     "contentType": "text/html; charset=utf-8"
                   }
                 }
@@ -4398,7 +4415,7 @@
                   "headers": {
                     "location": "https://beta.quantgym.app/",
                     "server": "cloudflare",
-                    "cfRay": "a10ce9ea38f06353-LHR",
+                    "cfRay": "a10d256bdd3185a0-HKG",
                     "contentType": ""
                   }
                 },
@@ -4408,7 +4425,7 @@
                   "headers": {
                     "location": "",
                     "server": "cloudflare",
-                    "cfRay": "a10ce9eefdcc25d4-HKG",
+                    "cfRay": "a10d257eab3409f4-HKG",
                     "contentType": "text/html; charset=utf-8"
                   }
                 }
@@ -4438,7 +4455,7 @@
     {
       "name": "External launch blockers",
       "status": "pass",
-      "durationMs": 180,
+      "durationMs": 164,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -4448,7 +4465,7 @@
         "status": "pass",
         "launchReadiness": "blocked",
         "requireClear": false,
-        "blockerCount": 4,
+        "blockerCount": 3,
         "trackedCount": 1,
         "blockers": [
           {
@@ -4469,8 +4486,8 @@
           {
             "id": "deployed-google-provider-login",
             "title": "Deployed Google provider account login",
-            "status": "blocked",
-            "ownerAction": "Generate a fresh deployed Google ID token with npm run google:token-helper:deployed, then run npm run verify:production-boundaries:deployed:paste-token before the token expires.",
+            "status": "pass",
+            "ownerAction": "Deployed Google provider login is signed off with a fresh token that matches the deployed Google Client ID.",
             "signoffCommand": "npm run verify:production-boundaries:deployed:paste-token",
             "localCoverage": {
               "trackedInProductStatus": true,
@@ -4482,11 +4499,16 @@
               "deployedBoundaryLlmResumeReviewSkippedForAuth": false,
               "deployedBoundaryLlmPdfQuestionGenerationSkippedForAuth": false,
               "deployedGoogleProviderLoginStateCaptured": true,
-              "deployedGoogleProviderLoginTokenExpiresAt": "2026-06-23T21:36:24.000Z",
+              "deployedGoogleProviderLoginTokenExpiresAt": "2026-06-24T17:23:35.000Z",
               "deployedGoogleProviderLoginTokenMinimumSeconds": 120,
-              "deployedGoogleProviderLoginTokenFresh": false,
-              "deployedGoogleProviderLoginTokenExpired": true,
-              "deployedGoogleProviderLoginSkippedForToken": false,
+              "deployedGoogleProviderLoginTokenFresh": true,
+              "deployedGoogleProviderLoginTokenExpired": false,
+              "deployedGoogleProviderLoginPass": true,
+              "deployedGoogleProviderLoginHasToken": true,
+              "deployedGoogleProviderLoginGoogleLinked": true,
+              "deployedGoogleProviderLoginTokenAudienceMatchesClientId": true,
+              "deployedGoogleProviderLoginEmailRedacted": true,
+              "deployedGoogleProviderLoginTokenEmailRedacted": true,
               "deployedTokenHelperScriptPresent": true,
               "deployedPasteTokenVerifierPresent": true,
               "deployedPasteTokenAudiencePrecheck": true,
@@ -5017,12 +5039,12 @@
     {
       "name": "Postgres cutover export smoke",
       "status": "pass",
-      "durationMs": 1858,
+      "durationMs": 1868,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1708,
+        "durationMs": 1718,
         "fixture": {
           "tablesSeeded": [
             "audit_events",
@@ -5035,7 +5057,7 @@
             "user_states",
             "users"
           ],
-          "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-2tqHVc/quantgym-cutover-smoke.sqlite3"
+          "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-t4UL3M/quantgym-cutover-smoke.sqlite3"
         },
         "runtimeHealth": {
           "ok": true,
@@ -5156,14 +5178,14 @@
           "required": true,
           "targetHost": "postgres.quantgym.internal",
           "database": "quantgym",
-          "completedAt": "2026-06-24T15:54:57Z",
+          "completedAt": "2026-06-24T16:35:37Z",
           "evidenceHost": "render.com",
           "runtimeBackend": "postgres",
           "runtimeHealthHost": "api.quantgym.app",
           "appDatabaseActive": true,
           "backupConfirmed": true,
-          "sourceDbSha256Prefix": "d920ca1aa7d6",
-          "exportSha256Prefix": "64486848a4dd",
+          "sourceDbSha256Prefix": "98aafb16e035",
+          "exportSha256Prefix": "73507e8bcbb2",
           "importPlanRowCount": 12,
           "targetRowCount": 12
         },
@@ -5306,7 +5328,7 @@
             "rejected": true,
             "expectedErrorObserved": true,
             "failed": 2,
-            "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-2tqHVc\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
+            "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-t4UL3M\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
           },
           {
             "name": "target row count mismatch rejected",
@@ -5337,7 +5359,7 @@
     {
       "name": "Postgres cutover",
       "status": "pass",
-      "durationMs": 346,
+      "durationMs": 337,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -5375,7 +5397,7 @@
           "integrityOk": true,
           "foreignKeyOk": true,
           "tableCounts": {
-            "audit_events": 215,
+            "audit_events": 216,
             "community": 1,
             "email_verification_codes": 10,
             "media_objects": 0,
@@ -5408,7 +5430,7 @@
     {
       "name": "Static build",
       "status": "pass",
-      "durationMs": 2027,
+      "durationMs": 1960,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -5418,14 +5440,14 @@
         "dist/assets/feature-support-core-DLEEiIoz.js    135.54 kB │ gzip: 41.51 kB",
         "dist/assets/vendor-react-dom-B49trWfG.js        181.78 kB │ gzip: 57.19 kB",
         "dist/assets/createAppServices-0u4FV4iZ.js       188.79 kB │ gzip: 53.93 kB",
-        "✓ built in 462ms",
+        "✓ built in 473ms",
         "Built static site in dist"
       ]
     },
     {
       "name": "Static build config",
       "status": "pass",
-      "durationMs": 211,
+      "durationMs": 206,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -5441,7 +5463,7 @@
           "distConfigGoogleClientIdSet": true,
           "distConfigGoogleLoginEnabled": true,
           "distConfigContainsOpenAiKey": false,
-          "distConfigBuildCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
+          "distConfigBuildCommit": "a94b3eb72a7fff953f68bd0855e099ccb39e8dfd",
           "distConfigBuildBranch": "main",
           "distConfigBuildSource": "local-git",
           "distVersionJsonPresent": true,
@@ -5459,7 +5481,7 @@
     {
       "name": "Production boundaries",
       "status": "partial",
-      "durationMs": 16447,
+      "durationMs": 14343,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -5475,7 +5497,7 @@
           {
             "name": "cloud health",
             "status": "pass",
-            "durationMs": 23,
+            "durationMs": 25,
             "data": {
               "ok": true
             }
@@ -5483,7 +5505,7 @@
           {
             "name": "google provider config",
             "status": "pass",
-            "durationMs": 6,
+            "durationMs": 5,
             "data": {
               "googleClientIdSet": true,
               "endpointRequiresToken": true
@@ -5497,19 +5519,19 @@
           {
             "name": "LLM resume review",
             "status": "pass",
-            "durationMs": 5101,
+            "durationMs": 4460,
             "data": {
               "itemCount": 6,
-              "firstItem": "Quantify impact further: specify metrics like Sharpe/return variance or PnL stability from the simulator to demonstrate "
+              "firstItem": "Quantify impact with concrete metrics: did you measure profitability or risk metrics? e.g., \"Improved P&L realism by X%\""
             }
           },
           {
             "name": "LLM PDF question generation",
             "status": "pass",
-            "durationMs": 10361,
+            "durationMs": 8869,
             "data": {
               "questionCount": 1,
-              "firstTitle": "What is your approach to validating a quantitative model boundary in production?"
+              "firstTitle": "Quantitative production boundary reasoning"
             }
           }
         ]
@@ -5525,7 +5547,7 @@
             "code": null,
             "signal": "SIGTERM"
           },
-          "stderrTail": "127.0.0.1 - - [24/Jun/2026 23:55:01] \"GET /api/health HTTP/1.1\" 200 -127.0.0.1 - - [24/Jun/2026 23:55:01] \"GET /api/health HTTP/1.1\" 200 -\n127.0.0.1 - - [24/Jun/2026 23:55:01] \"POST /api/auth/google HTTP/1.1\" 400 -"
+          "stderrTail": "127.0.0.1 - - [25/Jun/2026 00:35:41] \"GET /api/health HTTP/1.1\" 200 -127.0.0.1 - - [25/Jun/2026 00:35:42] \"GET /api/health HTTP/1.1\" 200 -\n127.0.0.1 - - [25/Jun/2026 00:35:42] \"POST /api/auth/google HTTP/1.1\" 400 -"
         },
         "llm": {
           "host": "127.0.0.1",
@@ -5544,7 +5566,7 @@
     {
       "name": "UI contracts",
       "status": "pass",
-      "durationMs": 189,
+      "durationMs": 201,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
