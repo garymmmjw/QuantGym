@@ -1,0 +1,71 @@
+{
+  "id": 362,
+  "date": "2026-06-24",
+  "surface": "deployed media storage smoke",
+  "status": "pass",
+  "durationMs": 14678,
+  "apiHost": "api.quantgym.app",
+  "apiPath": "/",
+  "publicHost": "media.quantgym.app",
+  "publicPathPrefix": "/media",
+  "auth": {
+    "emailRedacted": "mi***@gmail.com",
+    "tokenReturned": true,
+    "loginStatus": 200
+  },
+  "upload": {
+    "status": 201,
+    "error": "",
+    "media": {
+      "idPresent": true,
+      "storage": "s3-media",
+      "contentType": "image/png",
+      "byteSize": 68,
+      "path": "/api/media/keWEtDxWgVx-DG4NFIRcFGPD",
+      "urlHost": "media.quantgym.app",
+      "urlPathPrefix": "/media/keWEtDxWgVx-DG4NFIRcFGPD.png",
+      "responseDoesNotInlineDataUrl": true
+    }
+  },
+  "publicGet": {
+    "status": 200,
+    "contentType": "image/png",
+    "bytes": 68,
+    "bytesMatch": true
+  },
+  "publicRange": {
+    "status": 206,
+    "contentRange": "bytes 0-0/68",
+    "bytes": 1
+  },
+  "apiGet": {
+    "status": 302,
+    "locationHost": "media.quantgym.app",
+    "redirectsToPublicMedia": true
+  },
+  "checks": {
+    "apiHttps": true,
+    "apiHostProduction": true,
+    "apiUrlSafe": true,
+    "publicBaseHttps": true,
+    "publicBaseHostProduction": true,
+    "publicBaseUrlSafe": true,
+    "emailRedacted": true,
+    "loginOk": true,
+    "tokenReturned": true,
+    "uploadCreated": true,
+    "uploadReportsS3Media": true,
+    "uploadContentTypePng": true,
+    "uploadByteSizeMatches": true,
+    "uploadUrlUsesPublicBase": true,
+    "uploadResponseDoesNotInlineDataUrl": true,
+    "publicGetOk": true,
+    "publicGetBytesMatch": true,
+    "publicGetContentTypePng": true,
+    "publicRangeSupported": true,
+    "publicRangeHeaderValid": true,
+    "apiGetRedirectsToPublicMedia": true
+  },
+  "failures": [],
+  "warnings": []
+}

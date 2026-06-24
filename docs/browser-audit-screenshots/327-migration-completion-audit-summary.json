@@ -101,7 +101,7 @@
         "distConfigGoogleClientIdSet": true,
         "distConfigGoogleLoginEnabled": true,
         "distConfigContainsOpenAiKey": false,
-        "distConfigBuildCommit": "e56b8f10fe611ef888e8980172e23f9034e770ee",
+        "distConfigBuildCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
         "distConfigBuildBranch": "main",
         "distConfigBuildSource": "local-git",
         "distVersionJsonPresent": true,

@@ -9,7 +9,7 @@
     {
       "name": "git diff --check",
       "status": "pass",
-      "durationMs": 21,
+      "durationMs": 40,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": []
@@ -17,7 +17,7 @@
     {
       "name": "Stage 1",
       "status": "pass",
-      "durationMs": 263,
+      "durationMs": 240,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -34,7 +34,7 @@
     {
       "name": "Stage 2 bridge",
       "status": "pass",
-      "durationMs": 186,
+      "durationMs": 173,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -49,7 +49,7 @@
     {
       "name": "Stage 2 full",
       "status": "pass",
-      "durationMs": 291,
+      "durationMs": 271,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -64,7 +64,7 @@
     {
       "name": "Stage 2 strict",
       "status": "pass",
-      "durationMs": 303,
+      "durationMs": 255,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -79,7 +79,7 @@
     {
       "name": "Browser evidence",
       "status": "pass",
-      "durationMs": 221,
+      "durationMs": 196,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -108,7 +108,7 @@
     {
       "name": "Migration completion audit",
       "status": "partial",
-      "durationMs": 221,
+      "durationMs": 188,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -214,7 +214,7 @@
               "distConfigGoogleClientIdSet": true,
               "distConfigGoogleLoginEnabled": true,
               "distConfigContainsOpenAiKey": false,
-              "distConfigBuildCommit": "e56b8f10fe611ef888e8980172e23f9034e770ee",
+              "distConfigBuildCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
               "distConfigBuildBranch": "main",
               "distConfigBuildSource": "local-git",
               "distVersionJsonPresent": true,
@@ -285,7 +285,7 @@
     {
       "name": "Route integrity",
       "status": "pass",
-      "durationMs": 177,
+      "durationMs": 161,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -301,7 +301,7 @@
     {
       "name": "Route interactions",
       "status": "pass",
-      "durationMs": 182,
+      "durationMs": 157,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -316,15 +316,15 @@
     {
       "name": "Browser route smoke",
       "status": "pass",
-      "durationMs": 555840,
+      "durationMs": 507622,
       "timeoutMs": 900000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 555337,
+        "durationMs": 507161,
         "browser": "Google Chrome via playwright-core",
         "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        "baseUrl": "http://127.0.0.1:57152",
+        "baseUrl": "http://127.0.0.1:51168",
         "routes": {
           "checked": 21,
           "passed": 21,
@@ -428,7 +428,7 @@
                 "appShellVisible": true,
                 "authShellVisible": false,
                 "overlayVisible": false,
-                "bodyTextLength": 750,
+                "bodyTextLength": 751,
                 "horizontalOverflowPx": 0,
                 "pathname": "/tools"
               }
@@ -851,7 +851,7 @@
             {
               "name": "tools drill starts and accepts an answer",
               "status": "pass",
-              "question": "18 28 24 34 30 ?"
+              "question": "20 29 25 34 30 ?"
             },
             {
               "name": "tools mental math completes session and persists records",
@@ -869,12 +869,12 @@
             {
               "name": "tools market game rejects crossed quote, scores valid quote, and persists record",
               "status": "pass",
-              "fairValue": 97,
-              "feedback": "Round +23. Mid 97, width 2, fair 97.",
-              "score": 23,
+              "fairValue": 99,
+              "feedback": "Round +25. Mid 99, width 2, fair 99.",
+              "score": 25,
               "recordsBefore": 0,
               "recordsAfter": 1,
-              "marketSkill": 23,
+              "marketSkill": 25,
               "reloaded": true
             },
             {
@@ -891,8 +891,8 @@
               "roomCode": "QG-MAIN",
               "handNumber": 1,
               "playerCount": 6,
-              "actionLabel": "Call 40",
-              "currentHandLogCount": 14,
+              "actionLabel": "Call 20",
+              "currentHandLogCount": 12,
               "persisted": true
             },
             {
@@ -906,8 +906,8 @@
             {
               "name": "pk match, submit, reveal, and record persistence",
               "status": "pass",
-              "opponentName": "AlphaQuant",
-              "problemPreview": "宽跨式 Delta\n\n标的当前价格为 $S_0 = 2$。你买入一个行权价为 $K = 3$ 和 $K = 5$ 的 strangle。你更希望标的往哪个方向移动？如果希望上涨，回答 $1$；如果希望下跌，回答 $-1$；如果希望保持原位，",
+              "opponentName": "Jane Street Trainee",
+              "problemPreview": "问题10 - 计算 $\\int x\\ln(x)\\,dx$ 和 $\\int x e^x\\,dx$\n\n计算 $\\int x\\ln(x)\\,dx$ 和 $\\int x e^x\\,dx$。",
               "recordPersisted": true,
               "revealed": true
             },
@@ -950,7 +950,7 @@
             {
               "name": "interview attachment upload preview, transcript, and request payload",
               "status": "pass",
-              "fileName": "browser-smoke-interview-attachment-1782243457911.png",
+              "fileName": "browser-smoke-interview-attachment-1782316212462.png",
               "previewRendered": true,
               "transcriptAttachmentRendered": true,
               "requestAttachmentSent": true,
@@ -959,8 +959,8 @@
             {
               "name": "interview PDF source upload generates questions and starts session",
               "status": "pass",
-              "fileName": "browser-smoke-interview-source-1782243458240.pdf",
-              "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782243458240",
+              "fileName": "browser-smoke-interview-source-1782316212732.pdf",
+              "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782316212732",
               "requestCount": 1,
               "requestPdfPayloadSent": true,
               "generatedQuestionRendered": true
@@ -973,7 +973,7 @@
             {
               "name": "todo dock edit, complete, delete, and reload persistence",
               "status": "pass",
-              "taskId": "custom-4c181fab-879e-4d11-b0fc-a52fc6f45d03",
+              "taskId": "custom-84ad4377-d8a8-472c-bc4b-a7ba888cfc69",
               "edited": true,
               "completed": true,
               "reopened": true,
@@ -984,31 +984,31 @@
             {
               "name": "community post, like, comment, and reload persistence",
               "status": "pass",
-              "postText": "Browser smoke community post 1782243492229",
-              "commentText": "Browser smoke comment 1782243492229",
+              "postText": "Browser smoke community post 1782316241678",
+              "commentText": "Browser smoke comment 1782316241678",
               "reloaded": true
             },
             {
               "name": "community image post fallback and reload persistence",
               "status": "pass",
-              "postText": "Browser smoke community image post 1782243496170",
-              "fileName": "browser-smoke-community-1782243496170.png",
+              "postText": "Browser smoke community image post 1782316244854",
+              "fileName": "browser-smoke-community-1782316244854.png",
               "dataUrlFallback": true,
               "reloaded": true
             },
             {
               "name": "community video post fallback and reload persistence",
               "status": "pass",
-              "postText": "Browser smoke community video post 1782243500064",
-              "fileName": "browser-smoke-community-1782243500064.webm",
+              "postText": "Browser smoke community video post 1782316248003",
+              "fileName": "browser-smoke-community-1782316248003.webm",
               "dataUrlFallback": true,
               "reloaded": true
             },
             {
               "name": "community direct message from post opens messages thread",
               "status": "pass",
-              "authorName": "Community Mentor 1782243503992",
-              "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782243503992",
+              "authorName": "Community Mentor 1782316251153",
+              "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782316251153",
               "openedMessages": true,
               "threadPersisted": true,
               "replyPersisted": true
@@ -1023,14 +1023,14 @@
               "messageReplyPersisted": true,
               "messageReloadPersisted": true,
               "noHorizontalOverflow": true,
-              "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782243509917",
+              "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782316255939",
               "finalPath": "/messages"
             },
             {
               "name": "messages thread read, send, and reload persistence",
               "status": "pass",
-              "threadId": "thread-browser-route-smoke-1782243515872",
-              "mentorName": "Smoke Mentor 1782243515872",
+              "threadId": "thread-browser-route-smoke-1782316260847",
+              "mentorName": "Smoke Mentor 1782316260847",
               "replied": true,
               "reloaded": true
             },
@@ -1047,15 +1047,15 @@
             {
               "name": "experiences create, edit, share, delete, and reload persistence",
               "status": "pass",
-              "recordId": "5decdd5a-0708-4e10-84de-86e610a0b3e1",
-              "sharedPostId": "b38382ce-6d06-4e03-ab13-7e4f5890a92b",
+              "recordId": "43efc16f-4a1f-442a-b21b-548cb767e78a",
+              "sharedPostId": "7ac549a6-14d4-46fd-881d-8dc85467fd18",
               "deleted": true,
               "reloaded": true
             },
             {
               "name": "news manual submit, filter, detail, and reload persistence",
               "status": "pass",
-              "newsId": "news-browser-smoke-jane-street-official-update-1782243538000-https-www-janestreet-com-join-jane",
+              "newsId": "news-browser-smoke-jane-street-official-update-1782316278786-https-www-janestreet-com-join-jane",
               "sourceType": "official",
               "reloaded": true,
               "readPersisted": true
@@ -1071,30 +1071,30 @@
               "newsFiltersUsable": true,
               "newsDetailReadPersisted": true,
               "noHorizontalOverflow": true,
-              "recordId": "924b9c58-33f9-433f-bfcf-ad06dfbd1e44",
-              "sharedPostId": "fb81365c-1828-4885-b790-6cfcc274fb9e",
-              "newsId": "news-mobile-smoke-official-recruiting-update-1782243543636-https-www-janestreet-com-join-jane-s",
+              "recordId": "ceec95fc-990c-42e2-9d5b-b28cc659df79",
+              "sharedPostId": "292c33f2-2695-4cbc-904f-f84056474bc6",
+              "newsId": "news-mobile-smoke-official-recruiting-update-1782316283347-https-www-janestreet-com-join-jane-s",
               "finalPath": "/news"
             },
             {
               "name": "memory resource add, source link, and reload persistence",
               "status": "pass",
-              "title": "Browser Smoke Resource 1782243552363",
+              "title": "Browser Smoke Resource 1782316290645",
               "sourceUrl": "https://www.youtube.com/@atypicalquant",
               "reloaded": true
             },
             {
               "name": "memory image resource upload fallback and reload persistence",
               "status": "pass",
-              "title": "Browser Smoke Image Resource 1782243556756",
-              "fileName": "browser-smoke-memory-1782243556756.png",
+              "title": "Browser Smoke Image Resource 1782316294169",
+              "fileName": "browser-smoke-memory-1782316294169.png",
               "dataUrlFallback": true,
               "reloaded": true
             },
             {
               "name": "network contact add, edit, delete, and reload persistence",
               "status": "pass",
-              "contactName": "Browser Smoke Contact 1782243561180",
+              "contactName": "Browser Smoke Contact 1782316297756",
               "edited": true,
               "deleted": true
             },
@@ -1173,8 +1173,8 @@
               "readerTokenRequests": 2,
               "pdfRequests": 4,
               "readerOpened": true,
-              "openNewHref": "http://127.0.0.1:57152/api/library-reader-smoke/green-book.pdf",
-              "embedUrl": "http://127.0.0.1:57152/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+              "openNewHref": "http://127.0.0.1:51168/api/library-reader-smoke/green-book.pdf",
+              "embedUrl": "http://127.0.0.1:51168/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
               "closedByButton": true,
               "closedByEscape": true
             },
@@ -1183,7 +1183,7 @@
               "status": "pass",
               "problemId": "quantguide-place-or-take",
               "problemTitle": "放置或取出",
-              "todoTitle": "Cross-module QuantGuide review 1782243609194: 放置或取出",
+              "todoTitle": "Cross-module QuantGuide review 1782316342690: 放置或取出",
               "resumeTextLength": 237,
               "settings": {
                 "llmEndpoint": "http://127.0.0.1:8789/interview",
@@ -1205,7 +1205,7 @@
             {
               "name": "account profile save and reload persistence",
               "status": "pass",
-              "profileName": "Browser Smoke 1782243635981",
+              "profileName": "Browser Smoke 1782316365036",
               "country": "unitedStates",
               "region": "California",
               "graduationTerm": "2028-05",
@@ -1217,7 +1217,7 @@
               "wrongPasswordRejected": true,
               "oldEmailRejected": true,
               "oldEmail": "browser-route-smoke@quantgym.local",
-              "newEmail": "browser-route-smoke+email-1782243641754@quantgym.local",
+              "newEmail": "browser-route-smoke+email-1782316369672@quantgym.local",
               "passwordHashRotated": true,
               "reloginSucceeded": true,
               "reloginPath": "/"
@@ -1227,7 +1227,7 @@
               "status": "pass",
               "avatarDataUrl": true,
               "avatarCleared": true,
-              "resumeFileName": "browser-smoke-resume-1782243654124.txt",
+              "resumeFileName": "browser-smoke-resume-1782316379681.txt",
               "resumeTextLength": 215,
               "reloaded": true
             },
@@ -1248,8 +1248,8 @@
               "resumeUploadPersisted": true,
               "noHorizontalOverflow": true,
               "reloaded": true,
-              "profileName": "Mobile Account 1782243673340",
-              "resumeFileName": "mobile-account-resume-1782243673340.txt"
+              "profileName": "Mobile Account 1782316397026",
+              "resumeFileName": "mobile-account-resume-1782316397026.txt"
             },
             {
               "name": "settings language switch syncs URL and persists reload",
@@ -1321,7 +1321,7 @@
               "payloadIncludesCommunity": true,
               "payloadIncludesAccount": true,
               "statusUpdated": true,
-              "lastSyncAt": "2026-06-23T19:41:44.399Z"
+              "lastSyncAt": "2026-06-24T15:53:45.405Z"
             },
             {
               "name": "mobile settings config and backup controls avoid overflow",
@@ -1333,7 +1333,7 @@
               "exportDownloadWorks": true,
               "noHorizontalOverflow": true,
               "reloaded": true,
-              "exportedFilename": "quantgym-Mobile Account 1782243673340-2026-06-23.json"
+              "exportedFilename": "quantgym-Mobile Account 1782316397026-2026-06-24.json"
             },
             {
               "name": "settings rejects invalid backup files without changing state",
@@ -1351,16 +1351,16 @@
               "exportedThreadIncluded": true,
               "postRestored": true,
               "threadRestored": true,
-              "threadId": "thread-settings-backup-community-1782243720425"
+              "threadId": "thread-settings-backup-community-1782316442585"
             },
             {
               "name": "settings backup export, import, and reset state",
               "status": "pass",
               "resetPrompt": "清空当前账户的训练记录？已连接云端时也会同步为空。",
-              "exportedFilename": "quantgym-Mobile Account 1782243673340-2026-06-23.json",
-              "importedResumeFile": "settings-imported-resume-1782243731012.txt",
-              "importedResourceId": "settings-imported-resource-1782243731012",
-              "importedCourseId": "settings-imported-course-1782243731012",
+              "exportedFilename": "quantgym-Mobile Account 1782316397026-2026-06-24.json",
+              "importedResumeFile": "settings-imported-resume-1782316451121.txt",
+              "importedResourceId": "settings-imported-resource-1782316451121",
+              "importedCourseId": "settings-imported-course-1782316451121",
               "resetClearedImport": true
             }
           ]
@@ -1369,7 +1369,7 @@
           "name": "protected route redirects to auth and local email auth works",
           "status": "pass",
           "localEmailAuth": {
-            "email": "browser-auth-1782243191366-y4no3t@quantgym.local",
+            "email": "browser-auth-1782315957490-6ojrtf@quantgym.local",
             "redirectedToLogin": true,
             "accountStatusChecked": true,
             "registrationFormShown": true,
@@ -1384,27 +1384,14 @@
             "resetSucceeded": true,
             "resetOldPasswordRejected": true,
             "resetNewPasswordLoginSucceeded": true,
-            "accountId": "f41024d9-5bb4-4035-8fec-0843b954eb93",
+            "accountId": "db3bd901-a916-4b52-9542-cc13670e1432",
             "reloginPath": "/"
           },
           "path": "/login",
           "redirectPath": "/login"
         },
         "consoleErrors": [],
-        "ignoredConsoleErrors": [
-          {
-            "type": "error",
-            "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-          },
-          {
-            "type": "error",
-            "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-          },
-          {
-            "type": "error",
-            "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-          }
-        ],
+        "ignoredConsoleErrors": [],
         "pageErrors": [],
         "responseErrors": [],
         "warnings": [],
@@ -1414,7 +1401,7 @@
     {
       "name": "Deployed beta deploy-window fixture",
       "status": "pass",
-      "durationMs": 444,
+      "durationMs": 426,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -1430,19 +1417,19 @@
         },
         "failures": [],
         "childStatus": 0,
-        "childOutputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:60907\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"deploy-window-fixture-commit\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 12000,\n    \"intervalMs\": 100,\n    \"attempts\": 2,\n    \"apiEndpoint\": \"http://127.0.0.1:60906/api\",\n    \"transientFailureObserved\": true,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:60907/version.json\",\n      \"httpStatus\": 200,\n      \"commit\": \"deploy-window-fixture-commit\",\n      \"branch\": \"main\",\n      \"source\": \"fixture\",\n      \"matchesConfig\": true,\n      \"expectedCommitMatch\": true\n    },\n    \"apiHealth\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:60906/api/health\",\n      \"httpStatus\": 200,\n      \"pass\": true,\n      \"ok\": true,\n      \"failedAttempts\": 1\n    },\n    \"corsPreflight\": {\n      \"name\": \"cloud sync preflight\",\n      \"url\": \"http://127.0.0.1:60906/api/sync\",\n      \"method\": \"POST\",\n      \"requestHe"
+        "childOutputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:54680\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"deploy-window-fixture-commit\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 12000,\n    \"intervalMs\": 100,\n    \"attempts\": 2,\n    \"apiEndpoint\": \"http://127.0.0.1:54679/api\",\n    \"transientFailureObserved\": true,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:54680/version.json\",\n      \"httpStatus\": 200,\n      \"commit\": \"deploy-window-fixture-commit\",\n      \"branch\": \"main\",\n      \"source\": \"fixture\",\n      \"matchesConfig\": true,\n      \"expectedCommitMatch\": true\n    },\n    \"apiHealth\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:54679/api/health\",\n      \"httpStatus\": 200,\n      \"pass\": true,\n      \"ok\": true,\n      \"failedAttempts\": 1\n    },\n    \"corsPreflight\": {\n      \"name\": \"cloud sync preflight\",\n      \"url\": \"http://127.0.0.1:54679/api/sync\",\n      \"method\": \"POST\",\n      \"requestHe"
       }
     },
     {
       "name": "Deployed beta expected-commit fixture",
       "status": "pass",
-      "durationMs": 491,
+      "durationMs": 412,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "headCommit": "a79a543dcbdb72b3fe96b1120ea93d9788de790f",
-        "shortCommit": "a79a543",
+        "headCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
+        "shortCommit": "89e1e4f",
         "checks": {
           "headResolved": true,
           "shortShaResolved": true,
@@ -1455,20 +1442,20 @@
             "expectedCommit": "HEAD",
             "status": 0,
             "smokeStatus": "pass",
-            "summaryExpectedCommit": "a79a543dcbdb72b3fe96b1120ea93d9788de790f",
-            "versionCommit": "a79a543dcbdb72b3fe96b1120ea93d9788de790f",
+            "summaryExpectedCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
+            "versionCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
             "expectedCommitMatch": true,
-            "outputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:60914\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"a79a543dcbdb72b3fe96b1120ea93d9788de790f\",\n  \"expectedCommitInput\": \"HEAD\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 500,\n    \"intervalMs\": 50,\n    \"attempts\": 1,\n    \"apiEndpoint\": \"http://127.0.0.1:60913/api\",\n    \"transientFailureObserved\": false,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:60914/vers"
+            "outputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:54686\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf\",\n  \"expectedCommitInput\": \"HEAD\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 500,\n    \"intervalMs\": 50,\n    \"attempts\": 1,\n    \"apiEndpoint\": \"http://127.0.0.1:54685/api\",\n    \"transientFailureObserved\": false,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:54686/vers"
           },
           {
             "name": "short SHA",
-            "expectedCommit": "a79a543",
+            "expectedCommit": "89e1e4f",
             "status": 0,
             "smokeStatus": "pass",
-            "summaryExpectedCommit": "a79a543dcbdb72b3fe96b1120ea93d9788de790f",
-            "versionCommit": "a79a543dcbdb72b3fe96b1120ea93d9788de790f",
+            "summaryExpectedCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
+            "versionCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
             "expectedCommitMatch": true,
-            "outputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:60914\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"a79a543dcbdb72b3fe96b1120ea93d9788de790f\",\n  \"expectedCommitInput\": \"a79a543\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 500,\n    \"intervalMs\": 50,\n    \"attempts\": 1,\n    \"apiEndpoint\": \"http://127.0.0.1:60913/api\",\n    \"transientFailureObserved\": false,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:60914/v"
+            "outputPreview": "{\n  \"status\": \"pass\",\n  \"surface\": \"deployed beta smoke\",\n  \"baseUrl\": \"http://127.0.0.1:54686\",\n  \"email\": \"*****@unknown\",\n  \"expectedCommit\": \"89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf\",\n  \"expectedCommitInput\": \"89e1e4f\",\n  \"deployReadiness\": {\n    \"status\": \"pass\",\n    \"timeoutMs\": 500,\n    \"intervalMs\": 50,\n    \"attempts\": 1,\n    \"apiEndpoint\": \"http://127.0.0.1:54685/api\",\n    \"transientFailureObserved\": false,\n    \"version\": {\n      \"status\": \"pass\",\n      \"url\": \"http://127.0.0.1:54686/v"
           }
         ],
         "failures": []
@@ -1477,7 +1464,7 @@
     {
       "name": "Module ownership",
       "status": "pass",
-      "durationMs": 179,
+      "durationMs": 157,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -1550,7 +1537,7 @@
     {
       "name": "Chrome store readiness",
       "status": "pass",
-      "durationMs": 540,
+      "durationMs": 450,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -1673,12 +1660,12 @@
     {
       "name": "Chrome store publication fixture",
       "status": "pass",
-      "durationMs": 11947,
+      "durationMs": 9842,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 11772,
+        "durationMs": 9695,
         "externalPublicationRequired": true,
         "finalSignoffCommand": "npm run check:chrome-store-publication:published",
         "submissionHandoff": {
@@ -1937,7 +1924,7 @@
     {
       "name": "Render API build filter fixture",
       "status": "pass",
-      "durationMs": 518,
+      "durationMs": 455,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -1963,7 +1950,7 @@
             "expectedExitCode": 0,
             "expectedCheck": "productionSignoffPass",
             "expectedError": "",
-            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"pass\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": true,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": []\n}"
+            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-24\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"pass\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": true,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": []\n}"
           },
           {
             "name": "CLI production build filter",
@@ -1972,7 +1959,7 @@
             "expectedExitCode": 0,
             "expectedCheck": "productionSignoffPass",
             "expectedError": "",
-            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"pass\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"cli\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": true,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": []\n}"
+            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-24\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"pass\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"cli\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": true,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": []\n}"
           },
           {
             "name": "missing data path rejected",
@@ -1981,7 +1968,7 @@
             "expectedExitCode": 1,
             "expectedCheck": "",
             "expectedError": "data/**",
-            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": false,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": false,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": [\n    \"Render API build filter"
+            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-24\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": false,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": false,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": [\n    \"Render API build filter"
           },
           {
             "name": "docs path rejected",
@@ -1990,7 +1977,7 @@
             "expectedExitCode": 1,
             "expectedCheck": "",
             "expectedError": "docs/**",
-            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\",\n    \"docs/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": false,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": false,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": "
+            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-24\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\",\n    \"docs/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": false,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": false,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": "
           },
           {
             "name": "frontend src path rejected",
@@ -1999,7 +1986,7 @@
             "expectedExitCode": 1,
             "expectedCheck": "",
             "expectedError": "src/**",
-            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\",\n    \"src/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": false,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": false,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": ["
+            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-24\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\",\n    \"src/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": false,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": false,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": true\n  },\n  \"failures\": ["
           },
           {
             "name": "query evidence URL rejected",
@@ -2008,7 +1995,7 @@
             "expectedExitCode": 1,
             "expectedCheck": "",
             "expectedError": "query",
-            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": false,\n    \"notesSpecific\": true\n  },\n  \"failures\": [\n    \"Render AP"
+            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-24\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": false,\n    \"notesSpecific\": true\n  },\n  \"failures\": [\n    \"Render AP"
           },
           {
             "name": "generic notes rejected",
@@ -2017,7 +2004,7 @@
             "expectedExitCode": 1,
             "expectedCheck": "",
             "expectedError": "notes",
-            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": false\n  },\n  \"failures\": [\n    \"QUANTGYM_"
+            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-24\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"dashboard\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"evidenceHost\": \"dashboard.render.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": true,\n    \"hasApiServerPath\": true,\n    \"hasDataPath\": true,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": true,\n    \"serviceNamePass\": true,\n    \"evidenceUrlSafe\": true,\n    \"notesSpecific\": false\n  },\n  \"failures\": [\n    \"QUANTGYM_"
           },
           {
             "name": "missing production env does not write default summary",
@@ -2027,7 +2014,7 @@
             "expectedError": "QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED",
             "createdDefaultSummary": false,
             "duplicateFailures": [],
-            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [],\n  \"evidenceHost\": \"\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": false,\n    \"hasApiServerPath\": false,\n    \"hasDataPath\": false,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": false,\n    \"serviceNamePass\": false,\n    \"evidenceUrlSafe\": false,\n    \"notesSpecific\": false\n  },\n  \"failures\": [\n    \"QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED must be 1 after the Render "
+            "outputPreview": "{\n  \"id\": 360,\n  \"date\": \"2026-06-24\",\n  \"surface\": \"Render API build filter signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"service\": \"quantgym-api\",\n  \"method\": \"\",\n  \"recommendedPaths\": [\n    \"api-server/**\",\n    \"data/**\"\n  ],\n  \"configuredPaths\": [],\n  \"evidenceHost\": \"\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"recommendedPathsExact\": false,\n    \"hasApiServerPath\": false,\n    \"hasDataPath\": false,\n    \"noUnexpectedPaths\": true,\n    \"methodAllowed\": false,\n    \"serviceNamePass\": false,\n    \"evidenceUrlSafe\": false,\n    \"notesSpecific\": false\n  },\n  \"failures\": [\n    \"QUANTGYM_RENDER_API_BUILD_FILTER_CONFIRMED must be 1 after the Render "
           }
         ]
       }
@@ -2035,15 +2022,15 @@
     {
       "name": "Render API build filter packet",
       "status": "pass",
-      "durationMs": 174,
+      "durationMs": 150,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "id": 358,
-        "date": "2026-06-23",
+        "date": "2026-06-24",
         "surface": "Render API build filter readiness packet",
         "status": "pass",
-        "generatedAt": "2026-06-23T19:42:37.369Z",
+        "generatedAt": "2026-06-24T15:54:32.729Z",
         "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/render-api-build-filter/readiness-packet",
         "filesWritten": [
           "artifacts/render-api-build-filter/readiness-packet/README.md",
@@ -2078,7 +2065,7 @@
     {
       "name": "Browser extension runtime smoke",
       "status": "pass",
-      "durationMs": 181,
+      "durationMs": 157,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -2122,12 +2109,12 @@
     {
       "name": "Render LLM deploy compatibility",
       "status": "pass",
-      "durationMs": 4491,
+      "durationMs": 4294,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 4319,
+        "durationMs": 4147,
         "checks": 15,
         "results": [
           {
@@ -2141,27 +2128,27 @@
           {
             "name": "root npm start",
             "status": "pass",
-            "port": 61034
+            "port": 54781
           },
           {
             "name": "root node server.mjs",
             "status": "pass",
-            "port": 61041
+            "port": 54784
           },
           {
             "name": "root node server.js",
             "status": "pass",
-            "port": 61046
+            "port": 54791
           },
           {
             "name": "root node index.js",
             "status": "pass",
-            "port": 61049
+            "port": 54798
           },
           {
             "name": "root node llm-proxy/server.mjs",
             "status": "pass",
-            "port": 61052
+            "port": 54806
           },
           {
             "name": "llm-proxy npm install",
@@ -2178,27 +2165,27 @@
           {
             "name": "llm-proxy npm start",
             "status": "pass",
-            "port": 61059
+            "port": 54814
           },
           {
             "name": "llm-proxy node server.mjs",
             "status": "pass",
-            "port": 61067
+            "port": 54818
           },
           {
             "name": "llm-proxy node server.js",
             "status": "pass",
-            "port": 61072
+            "port": 54825
           },
           {
             "name": "llm-proxy node index.js",
             "status": "pass",
-            "port": 61075
+            "port": 54832
           },
           {
             "name": "llm-proxy node llm-proxy/server.mjs",
             "status": "pass",
-            "port": 61080
+            "port": 54835
           }
         ],
         "failures": []
@@ -2207,7 +2194,7 @@
     {
       "name": "Google token helper flow",
       "status": "pass",
-      "durationMs": 2279,
+      "durationMs": 3573,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -2265,16 +2252,16 @@
     {
       "name": "Media storage runtime smoke",
       "status": "pass",
-      "durationMs": 1842,
+      "durationMs": 1684,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1670,
-        "apiPort": 61114,
+        "durationMs": 1524,
+        "apiPort": 54865,
         "media": {
-          "id": "3h4hsc0upefNCIJ_C2FriUFF",
-          "path": "/api/media/3h4hsc0upefNCIJ_C2FriUFF",
+          "id": "95vlMigC0xui8yi55VPknZkY",
+          "path": "/api/media/95vlMigC0xui8yi55VPknZkY",
           "contentType": "image/png",
           "byteSize": 68,
           "storage": "api-media",
@@ -2283,7 +2270,7 @@
         },
         "spoofedForwardedHostUpload": {
           "status": 201,
-          "mediaUrl": "http://127.0.0.1:61114/api/media/iYqp9ze59hCl5QOV7VdxnsQx",
+          "mediaUrl": "http://127.0.0.1:54865/api/media/zT2Rdu7DhplLzYhH5DPt32ey",
           "urlUsesApiMediaEndpoint": true,
           "forwardedHostIgnored": true,
           "forwardedProtoIgnored": true
@@ -2297,9 +2284,9 @@
             "storedObjectCount": 1,
             "putRequestSigned": true,
             "getRequestSigned": true,
-            "storagePath": "s3:runtime-smoke/VwBV8x4SoJOUmxWZvMziyI31.png",
+            "storagePath": "s3:runtime-smoke/YjDiebFL0XrNnZ8Ih-pLiQ_f.png",
             "mediaStorage": "s3-media",
-            "mediaUrl": "http://127.0.0.1:61129/api/media/VwBV8x4SoJOUmxWZvMziyI31",
+            "mediaUrl": "http://127.0.0.1:54877/api/media/YjDiebFL0XrNnZ8Ih-pLiQ_f",
             "mediaUrlUsesPublicBase": false,
             "apiReadBytes": 68
           },
@@ -2307,13 +2294,13 @@
             "mode": "public-url",
             "uploadStatus": 201,
             "getMediaStatus": 302,
-            "redirectLocation": "https://media.quantgym.example.test/public/runtime-smoke/ea7izKU82uj3G3X0FyN_rQCk.png",
+            "redirectLocation": "https://media.quantgym.example.test/public/runtime-smoke/tOBL1lBm2CgWuNBRb5xrjKok.png",
             "storedObjectCount": 1,
             "putRequestSigned": true,
             "getRequestSigned": false,
-            "storagePath": "s3:runtime-smoke/ea7izKU82uj3G3X0FyN_rQCk.png",
+            "storagePath": "s3:runtime-smoke/tOBL1lBm2CgWuNBRb5xrjKok.png",
             "mediaStorage": "s3-media",
-            "mediaUrl": "https://media.quantgym.example.test/public/runtime-smoke/ea7izKU82uj3G3X0FyN_rQCk.png",
+            "mediaUrl": "https://media.quantgym.example.test/public/runtime-smoke/tOBL1lBm2CgWuNBRb5xrjKok.png",
             "mediaUrlUsesPublicBase": true,
             "apiReadBytes": 0
           }
@@ -2346,12 +2333,12 @@
     {
       "name": "Media storage production fixture",
       "status": "pass",
-      "durationMs": 1610,
+      "durationMs": 1413,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1429,
+        "durationMs": 1252,
         "productionFixture": {
           "status": "pass",
           "mode": "production",
@@ -2499,11 +2486,25 @@
             "error": "QUANTGYM_MEDIA_S3_ACCESS_KEY_ID still contains a placeholder value."
           },
           {
+            "name": "non-ascii access key rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_MEDIA_S3_ACCESS_KEY_ID must contain only printable ASCII characters."
+          },
+          {
             "name": "short secret key rejected",
             "rejected": true,
             "expectedErrorObserved": true,
             "failed": 1,
             "error": "QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY must be at least 24 characters in production."
+          },
+          {
+            "name": "non-ascii secret key rejected",
+            "rejected": true,
+            "expectedErrorObserved": true,
+            "failed": 1,
+            "error": "QUANTGYM_MEDIA_S3_SECRET_ACCESS_KEY must contain only printable ASCII characters."
           },
           {
             "name": "unsafe bucket name rejected",
@@ -2674,7 +2675,9 @@
           "publicBaseQueryRejected": true,
           "rawProviderPublicBaseRejected": true,
           "placeholderAccessKeyRejected": true,
+          "nonAsciiAccessKeyRejected": true,
           "shortSecretKeyRejected": true,
+          "nonAsciiSecretKeyRejected": true,
           "unsafeBucketNameRejected": true,
           "unsafeObjectPrefixRejected": true,
           "liveFixturePassed": true,
@@ -2693,19 +2696,19 @@
     {
       "name": "Ops alert runtime smoke",
       "status": "pass",
-      "durationMs": 965,
+      "durationMs": 933,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
         "webhookReceived": 7,
-        "apiPort": 61173,
-        "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-ops-alert-bvnDRJ/quantgym-alert-smoke.sqlite3",
+        "apiPort": 54913,
+        "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-ops-alert-pQ7cHg/quantgym-alert-smoke.sqlite3",
         "payload": {
           "eventType": "http.error.404",
           "statusCode": 404,
           "method": "GET",
-          "path": "/api/ops-alert-runtime-smoke-1782243768408",
+          "path": "/api/ops-alert-runtime-smoke-1782316484448",
           "hasOccurredAt": true
         },
         "alerts": [
@@ -2713,7 +2716,7 @@
             "eventType": "http.error.404",
             "statusCode": 404,
             "method": "GET",
-            "path": "/api/ops-alert-runtime-smoke-1782243768408",
+            "path": "/api/ops-alert-runtime-smoke-1782316484448",
             "hasOccurredAt": true
           },
           {
@@ -2808,12 +2811,12 @@
     {
       "name": "Ops alert production fixture",
       "status": "pass",
-      "durationMs": 1630,
+      "durationMs": 1388,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1460,
+        "durationMs": 1238,
         "productionFixture": {
           "status": "pass",
           "passed": 4,
@@ -3051,13 +3054,13 @@
           "edgeProvider": "cloudflare",
           "edgeEvidenceHost": "dash.cloudflare.com",
           "secretSafe": true,
-          "outputPreview": "{\n  \"id\": 361,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Ops alert production signoff\",\n  \"status\": \"pass\",\n  \"mode\": \"production\",\n  \"smoke\": false,\n  \"passed\": 4,\n  \"failed\": 0,\n  \"alertWebhookHost\": \"alerts.quantgym.test\",\n  \"alertWebhookProtocol\": \"https\",\n  \"alertMinStatusCode\": 500,\n  \"edgeProvider\": \"cloudflare\",\n  \"edgeEvidenceHost\": \"dash.cloudflare.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": true,\n    \"alertWebhookConfigured\": true,\n    \"alertWebhookHttps\": true,\n    \"alertWebhookTokenSet\": true,\n    \"rateLimitsEnabled\": true,\n    \"authRateLimitWindowSet\": true,\n    \"proxyHeaderTrustConfigured\": true,\n    \"edgeRateLimitConfirmed\": true,\n    \"edgeProvide"
+          "outputPreview": "{\n  \"id\": 361,\n  \"date\": \"2026-06-24\",\n  \"surface\": \"Ops alert production signoff\",\n  \"status\": \"pass\",\n  \"mode\": \"production\",\n  \"smoke\": false,\n  \"passed\": 4,\n  \"failed\": 0,\n  \"alertWebhookHost\": \"alerts.quantgym.test\",\n  \"alertWebhookProtocol\": \"https\",\n  \"alertMinStatusCode\": 500,\n  \"edgeProvider\": \"cloudflare\",\n  \"edgeEvidenceHost\": \"dash.cloudflare.com\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": true,\n    \"alertWebhookConfigured\": true,\n    \"alertWebhookHttps\": true,\n    \"alertWebhookTokenSet\": true,\n    \"rateLimitsEnabled\": true,\n    \"authRateLimitWindowSet\": true,\n    \"proxyHeaderTrustConfigured\": true,\n    \"edgeRateLimitConfirmed\": true,\n    \"edgeProvide"
         },
         "missingProductionEnvSummary": {
           "childExitCode": 1,
           "createdDefaultSummary": false,
           "failureExplained": true,
-          "outputPreview": "{\n  \"id\": 361,\n  \"date\": \"2026-06-23\",\n  \"surface\": \"Ops alert production signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"smoke\": false,\n  \"passed\": 2,\n  \"failed\": 2,\n  \"alertWebhookHost\": \"\",\n  \"alertWebhookProtocol\": \"\",\n  \"alertMinStatusCode\": 0,\n  \"edgeProvider\": \"\",\n  \"edgeEvidenceHost\": \"\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"alertWebhookConfigured\": false,\n    \"alertWebhookHttps\": false,\n    \"alertWebhookTokenSet\": false,\n    \"rateLimitsEnabled\": true,\n    \"authRateLimitWindowSet\": true,\n    \"proxyHeaderTrustConfigured\": true,\n    \"edgeRateLimitConfirmed\": false,\n    \"edgeProviderSet\": false,\n    \"edgeNotesDescribeAuthSurface\": f"
+          "outputPreview": "{\n  \"id\": 361,\n  \"date\": \"2026-06-24\",\n  \"surface\": \"Ops alert production signoff\",\n  \"status\": \"fail\",\n  \"mode\": \"production\",\n  \"smoke\": false,\n  \"passed\": 2,\n  \"failed\": 2,\n  \"alertWebhookHost\": \"\",\n  \"alertWebhookProtocol\": \"\",\n  \"alertMinStatusCode\": 0,\n  \"edgeProvider\": \"\",\n  \"edgeEvidenceHost\": \"\",\n  \"checks\": {\n    \"productionMode\": true,\n    \"productionSignoffPass\": false,\n    \"alertWebhookConfigured\": false,\n    \"alertWebhookHttps\": false,\n    \"alertWebhookTokenSet\": false,\n    \"rateLimitsEnabled\": true,\n    \"authRateLimitWindowSet\": true,\n    \"proxyHeaderTrustConfigured\": true,\n    \"edgeRateLimitConfirmed\": false,\n    \"edgeProviderSet\": false,\n    \"edgeNotesDescribeAuthSurface\": f"
         },
         "checks": {
           "validProductionPass": true,
@@ -3104,12 +3107,12 @@
     {
       "name": "Jobs source runtime smoke",
       "status": "pass",
-      "durationMs": 1964,
+      "durationMs": 1932,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1787,
+        "durationMs": 1782,
         "feedRequests": {
           "total": 4,
           "okFeed": 1,
@@ -3216,12 +3219,12 @@
     {
       "name": "Jobs source production fixture",
       "status": "pass",
-      "durationMs": 1398,
+      "durationMs": 1176,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 1222,
+        "durationMs": 1023,
         "productionFixture": {
           "status": "pass",
           "mode": "production",
@@ -3565,7 +3568,7 @@
     {
       "name": "Jobs public ATS static feed",
       "status": "pass",
-      "durationMs": 178,
+      "durationMs": 158,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -3612,7 +3615,7 @@
     {
       "name": "Question-bank rights",
       "status": "pass",
-      "durationMs": 329,
+      "durationMs": 267,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -3851,12 +3854,12 @@
     {
       "name": "Question-bank rights public smoke",
       "status": "pass",
-      "durationMs": 833,
+      "durationMs": 641,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 602,
+        "durationMs": 487,
         "checks": {
           "validPublicPass": true,
           "validCommercialPass": true,
@@ -4102,12 +4105,12 @@
     {
       "name": "Question-bank rights release blockers",
       "status": "pass",
-      "durationMs": 700,
+      "durationMs": 574,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 531,
+        "durationMs": 425,
         "releaseBlocked": true,
         "privateBeta": {
           "mode": "private-beta",
@@ -4263,7 +4266,7 @@
     {
       "name": "Apex/WWW domain",
       "status": "pass",
-      "durationMs": 4355,
+      "durationMs": 5443,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -4271,7 +4274,7 @@
         "date": "2026-06-19",
         "surface": "apex/www domain SSL or redirect",
         "status": "pass",
-        "durationMs": 4181,
+        "durationMs": 5292,
         "requireClear": false,
         "launchReadiness": "pass",
         "signoffCommand": "npm run check:apex-www-domain -- --require-clear",
@@ -4316,7 +4319,7 @@
                 "headers": {
                   "location": "",
                   "server": "cloudflare",
-                  "cfRay": "a105faa97fd5ddc9-HKG",
+                  "cfRay": "a10ce9f1dc5d0458-HKG",
                   "contentType": "text/html; charset=utf-8"
                 }
               }
@@ -4351,7 +4354,7 @@
                   "headers": {
                     "location": "https://beta.quantgym.app/",
                     "server": "cloudflare",
-                    "cfRay": "a105fa9c4d43ef33-LHR",
+                    "cfRay": "a10ce9d8a9856131-HKG",
                     "contentType": ""
                   }
                 },
@@ -4361,7 +4364,7 @@
                   "headers": {
                     "location": "",
                     "server": "cloudflare",
-                    "cfRay": "a105faa1f9adccd7-LHR",
+                    "cfRay": "a10ce9e25bf9e6fc-LHR",
                     "contentType": "text/html; charset=utf-8"
                   }
                 }
@@ -4395,7 +4398,7 @@
                   "headers": {
                     "location": "https://beta.quantgym.app/",
                     "server": "cloudflare",
-                    "cfRay": "a105faa56a1688cc-HKG",
+                    "cfRay": "a10ce9ea38f06353-LHR",
                     "contentType": ""
                   }
                 },
@@ -4405,7 +4408,7 @@
                   "headers": {
                     "location": "",
                     "server": "cloudflare",
-                    "cfRay": "a105faa85a930865-HKG",
+                    "cfRay": "a10ce9eefdcc25d4-HKG",
                     "contentType": "text/html; charset=utf-8"
                   }
                 }
@@ -4435,7 +4438,7 @@
     {
       "name": "External launch blockers",
       "status": "pass",
-      "durationMs": 179,
+      "durationMs": 180,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -4445,7 +4448,7 @@
         "status": "pass",
         "launchReadiness": "blocked",
         "requireClear": false,
-        "blockerCount": 5,
+        "blockerCount": 4,
         "trackedCount": 1,
         "blockers": [
           {
@@ -4474,16 +4477,16 @@
               "deployedBoundarySummaryPresent": true,
               "deployedBoundaryCloudHealthPass": true,
               "deployedBoundaryGoogleConfigPass": true,
-              "deployedBoundaryLlmResumeReviewPass": false,
-              "deployedBoundaryLlmPdfQuestionGenerationPass": false,
-              "deployedBoundaryLlmResumeReviewSkippedForAuth": true,
-              "deployedBoundaryLlmPdfQuestionGenerationSkippedForAuth": true,
+              "deployedBoundaryLlmResumeReviewPass": true,
+              "deployedBoundaryLlmPdfQuestionGenerationPass": true,
+              "deployedBoundaryLlmResumeReviewSkippedForAuth": false,
+              "deployedBoundaryLlmPdfQuestionGenerationSkippedForAuth": false,
               "deployedGoogleProviderLoginStateCaptured": true,
-              "deployedGoogleProviderLoginTokenExpiresAt": "",
+              "deployedGoogleProviderLoginTokenExpiresAt": "2026-06-23T21:36:24.000Z",
               "deployedGoogleProviderLoginTokenMinimumSeconds": 120,
               "deployedGoogleProviderLoginTokenFresh": false,
-              "deployedGoogleProviderLoginTokenExpired": false,
-              "deployedGoogleProviderLoginSkippedForToken": true,
+              "deployedGoogleProviderLoginTokenExpired": true,
+              "deployedGoogleProviderLoginSkippedForToken": false,
               "deployedTokenHelperScriptPresent": true,
               "deployedPasteTokenVerifierPresent": true,
               "deployedPasteTokenAudiencePrecheck": true,
@@ -4567,9 +4570,9 @@
           {
             "id": "media-bucket-cdn",
             "title": "Production S3/R2 media bucket and CDN",
-            "status": "blocked",
-            "ownerAction": "Configure the real object bucket and public CDN/base URL, then run the production config and live media storage signoff commands.",
-            "signoffCommand": "npm run check:media-storage:production && npm run check:media-storage:production -- --live",
+            "status": "pass",
+            "ownerAction": "Deployed Render media uploads are signed off against the real R2 bucket and media.quantgym.app public base URL.",
+            "signoffCommand": "npm run check:media-storage:deployed",
             "localCoverage": {
               "runtimeSmokePass": true,
               "productionFixturePass": true,
@@ -4608,7 +4611,20 @@
               "liveSmokeNoObjectWritesWhenConfigInvalid": true,
               "packetIncludesLiveWriteBlockerEvidence": true,
               "packetIncludesPublicRangeContract": true,
-              "packetIncludesPublicRangeEvidence": true
+              "packetIncludesPublicRangeEvidence": true,
+              "deployedMediaStoragePass": true,
+              "deployedMediaApiHostProduction": true,
+              "deployedMediaPublicHostProduction": true,
+              "deployedMediaLoginOk": true,
+              "deployedMediaUploadCreated": true,
+              "deployedMediaUploadReportsS3Media": true,
+              "deployedMediaUploadUrlUsesPublicBase": true,
+              "deployedMediaPublicGetOk": true,
+              "deployedMediaPublicGetBytesMatch": true,
+              "deployedMediaPublicGetContentTypePng": true,
+              "deployedMediaPublicRangeSupported": true,
+              "deployedMediaPublicRangeHeaderValid": true,
+              "deployedMediaApiGetRedirectsToPublicMedia": true
             }
           },
           {
@@ -5001,12 +5017,12 @@
     {
       "name": "Postgres cutover export smoke",
       "status": "pass",
-      "durationMs": 2223,
+      "durationMs": 1858,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "status": "pass",
-        "durationMs": 2045,
+        "durationMs": 1708,
         "fixture": {
           "tablesSeeded": [
             "audit_events",
@@ -5019,7 +5035,7 @@
             "user_states",
             "users"
           ],
-          "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-hL6Ogs/quantgym-cutover-smoke.sqlite3"
+          "dbPath": "/var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-2tqHVc/quantgym-cutover-smoke.sqlite3"
         },
         "runtimeHealth": {
           "ok": true,
@@ -5140,14 +5156,14 @@
           "required": true,
           "targetHost": "postgres.quantgym.internal",
           "database": "quantgym",
-          "completedAt": "2026-06-23T19:43:01Z",
+          "completedAt": "2026-06-24T15:54:57Z",
           "evidenceHost": "render.com",
           "runtimeBackend": "postgres",
           "runtimeHealthHost": "api.quantgym.app",
           "appDatabaseActive": true,
           "backupConfirmed": true,
-          "sourceDbSha256Prefix": "d4edbe005535",
-          "exportSha256Prefix": "eceb6391fcdf",
+          "sourceDbSha256Prefix": "d920ca1aa7d6",
+          "exportSha256Prefix": "64486848a4dd",
           "importPlanRowCount": 12,
           "targetRowCount": 12
         },
@@ -5290,7 +5306,7 @@
             "rejected": true,
             "expectedErrorObserved": true,
             "failed": 2,
-            "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-hL6Ogs\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
+            "error": "SQLite DB path is not a file: /var/folders/24/73l9h9y53y3ctxxgd4yy6q880000gn/T/quantgym-postgres-export-2tqHVc\n--cutover-complete requires a readable SQLite --db path so the source DB hash can be signed off."
           },
           {
             "name": "target row count mismatch rejected",
@@ -5321,7 +5337,7 @@
     {
       "name": "Postgres cutover",
       "status": "pass",
-      "durationMs": 385,
+      "durationMs": 346,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -5359,7 +5375,7 @@
           "integrityOk": true,
           "foreignKeyOk": true,
           "tableCounts": {
-            "audit_events": 204,
+            "audit_events": 215,
             "community": 1,
             "email_verification_codes": 10,
             "media_objects": 0,
@@ -5367,10 +5383,10 @@
             "problem_comments": 0,
             "problem_likes": 0,
             "problems": 2997,
-            "sessions": 41,
+            "sessions": 42,
             "user_problem_states": 0,
-            "user_states": 12,
-            "users": 12
+            "user_states": 13,
+            "users": 13
           },
           "jsonColumnsChecked": 8,
           "timestampColumnsChecked": 22,
@@ -5392,7 +5408,7 @@
     {
       "name": "Static build",
       "status": "pass",
-      "durationMs": 2196,
+      "durationMs": 2027,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -5402,19 +5418,19 @@
         "dist/assets/feature-support-core-DLEEiIoz.js    135.54 kB │ gzip: 41.51 kB",
         "dist/assets/vendor-react-dom-B49trWfG.js        181.78 kB │ gzip: 57.19 kB",
         "dist/assets/createAppServices-0u4FV4iZ.js       188.79 kB │ gzip: 53.93 kB",
-        "✓ built in 591ms",
+        "✓ built in 462ms",
         "Built static site in dist"
       ]
     },
     {
       "name": "Static build config",
       "status": "pass",
-      "durationMs": 237,
+      "durationMs": 211,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
         "id": 321,
-        "date": "2026-06-23",
+        "date": "2026-06-24",
         "surface": "static build",
         "status": "pass",
         "checks": {
@@ -5425,7 +5441,7 @@
           "distConfigGoogleClientIdSet": true,
           "distConfigGoogleLoginEnabled": true,
           "distConfigContainsOpenAiKey": false,
-          "distConfigBuildCommit": "a79a543dcbdb72b3fe96b1120ea93d9788de790f",
+          "distConfigBuildCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
           "distConfigBuildBranch": "main",
           "distConfigBuildSource": "local-git",
           "distVersionJsonPresent": true,
@@ -5443,7 +5459,7 @@
     {
       "name": "Production boundaries",
       "status": "partial",
-      "durationMs": 15968,
+      "durationMs": 16447,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": {
@@ -5459,7 +5475,7 @@
           {
             "name": "cloud health",
             "status": "pass",
-            "durationMs": 30,
+            "durationMs": 23,
             "data": {
               "ok": true
             }
@@ -5481,19 +5497,19 @@
           {
             "name": "LLM resume review",
             "status": "pass",
-            "durationMs": 4007,
+            "durationMs": 5101,
             "data": {
               "itemCount": 6,
-              "firstItem": "Quantify impact further: specify the scale of the simulator (e.g., latency, throughput) and the resulting performance ga"
+              "firstItem": "Quantify impact further: specify metrics like Sharpe/return variance or PnL stability from the simulator to demonstrate "
             }
           },
           {
             "name": "LLM PDF question generation",
             "status": "pass",
-            "durationMs": 10956,
+            "durationMs": 10361,
             "data": {
               "questionCount": 1,
-              "firstTitle": "Risk bounds under production boundary constraints"
+              "firstTitle": "What is your approach to validating a quantitative model boundary in production?"
             }
           }
         ]
@@ -5509,7 +5525,7 @@
             "code": null,
             "signal": "SIGTERM"
           },
-          "stderrTail": "127.0.0.1 - - [24/Jun/2026 03:43:05] \"GET /api/health HTTP/1.1\" 200 -127.0.0.1 - - [24/Jun/2026 03:43:06] \"GET /api/health HTTP/1.1\" 200 -\n127.0.0.1 - - [24/Jun/2026 03:43:06] \"POST /api/auth/google HTTP/1.1\" 400 -"
+          "stderrTail": "127.0.0.1 - - [24/Jun/2026 23:55:01] \"GET /api/health HTTP/1.1\" 200 -127.0.0.1 - - [24/Jun/2026 23:55:01] \"GET /api/health HTTP/1.1\" 200 -\n127.0.0.1 - - [24/Jun/2026 23:55:01] \"POST /api/auth/google HTTP/1.1\" 400 -"
         },
         "llm": {
           "host": "127.0.0.1",
@@ -5528,7 +5544,7 @@
     {
       "name": "UI contracts",
       "status": "pass",
-      "durationMs": 241,
+      "durationMs": 189,
       "timeoutMs": 180000,
       "exitCode": 0,
       "data": [
@@ -5537,7 +5553,7 @@
         "\"status\": \"pass\",",
         "\"routes\": 21,",
         "\"shellContracts\": 3,",
-        "\"evidenceArtifacts\": 43,",
+        "\"evidenceArtifacts\": 44,",
         "\"imageArtifacts\": 92",
         "}"
       ]

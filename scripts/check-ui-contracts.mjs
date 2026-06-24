@@ -331,6 +331,7 @@ const evidenceArtifacts = [
   "330-jobs-source-runtime-smoke-summary.json",
   "353-jobs-public-ats-static-feed-summary.json",
   "354-deployed-jobs-api-source-summary.json",
+  "362-deployed-media-storage-summary.json",
   "331-postgres-cutover-export-smoke-summary.json",
   "332-browser-extension-runtime-smoke-summary.json",
   "333-production-boundaries-deployed-services-summary.json",
@@ -924,6 +925,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       break;
     case "354-deployed-jobs-api-source-summary.json":
       validateDeployedJobsApiSourceSummary(data, expect, "deployed jobs API source smoke");
+      break;
+    case "362-deployed-media-storage-summary.json":
+      validateDeployedMediaStorageSummary(data, expect, "deployed media storage smoke");
       break;
     case "331-postgres-cutover-export-smoke-summary.json":
       validatePostgresCutoverExportSmokeSummary(data, expect, "Postgres cutover export smoke");
@@ -1787,6 +1791,41 @@ function validateDeployedJobsApiSourceSummary(data, expect, label) {
   expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
 }
 
+function validateDeployedMediaStorageSummary(data, expect, label) {
+  expect(Number(data.id || 0) === 362, `${label} id must be 362`);
+  expect(data.surface === "deployed media storage smoke", `${label} surface must match`);
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.apiHost === "api.quantgym.app", `${label} must target api.quantgym.app`);
+  expect(data.publicHost === "media.quantgym.app", `${label} must target media.quantgym.app`);
+  expect(data.publicPathPrefix === "/media", `${label} public path prefix must be /media`);
+  expect(data.auth?.emailRedacted === true || String(data.auth?.emailRedacted || "").includes("***"), `${label} must redact the smoke email`);
+  expect(data.auth?.tokenReturned === true, `${label} must authenticate and receive a token`);
+  expect(Number(data.auth?.loginStatus || 0) === 200, `${label} login must return HTTP 200`);
+  expect(Number(data.upload?.status || 0) === 201, `${label} upload must return HTTP 201`);
+  expect(data.upload?.error === "", `${label} upload error must be empty`);
+  expect(data.upload?.media?.idPresent === true, `${label} upload must return a media id`);
+  expect(data.upload?.media?.storage === "s3-media", `${label} upload must report s3-media storage`);
+  expect(data.upload?.media?.contentType === "image/png", `${label} upload must report image/png`);
+  expect(Number(data.upload?.media?.byteSize || 0) === 68, `${label} upload must report the tiny PNG byte size`);
+  expect(data.upload?.media?.urlHost === "media.quantgym.app", `${label} upload URL host must be media.quantgym.app`);
+  expect(String(data.upload?.media?.urlPathPrefix || "").startsWith("/media/"), `${label} upload URL must use /media objects`);
+  expect(data.upload?.media?.responseDoesNotInlineDataUrl === true, `${label} upload response must not inline the data URL`);
+  expect(Number(data.publicGet?.status || 0) === 200, `${label} public GET must return HTTP 200`);
+  expect(String(data.publicGet?.contentType || "").toLowerCase().includes("image/png"), `${label} public GET must preserve image/png`);
+  expect(Number(data.publicGet?.bytes || 0) === 68, `${label} public GET byte count must match the tiny PNG`);
+  expect(data.publicGet?.bytesMatch === true, `${label} public GET bytes must match upload`);
+  expect(Number(data.publicRange?.status || 0) === 206, `${label} public Range GET must return HTTP 206`);
+  expect(/^bytes 0-0\/68$/.test(String(data.publicRange?.contentRange || "")), `${label} public Range Content-Range must match bytes 0-0/68`);
+  expect(Number(data.publicRange?.bytes || 0) === 1, `${label} public Range GET must return one byte`);
+  expect(Number(data.apiGet?.status || 0) === 302, `${label} API media GET must redirect`);
+  expect(data.apiGet?.locationHost === "media.quantgym.app", `${label} API media redirect host must be media.quantgym.app`);
+  expect(data.apiGet?.redirectsToPublicMedia === true, `${label} API media redirect must point at the public object`);
+  for (const [name, value] of Object.entries(data.checks || {})) {
+    expect(value === true, `${label} check ${name} must pass`);
+  }
+  expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
+}
+
 function validateJobsSourceProductionFixtureSummary(data, expect, label) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.productionFixture?.status === "pass", `${label} valid production fixture must pass`);
@@ -2491,7 +2530,18 @@ function validateDeployedProductionBoundarySummary(data, expect, label) {
     && Number(data.skipped) === 0
     && Number(data.failed) === 0
     && googleLoginTokenFresh;
-  expect(googleTokenOnlyPartial || authTokenPartial || fullPass, `${label} must be either auth-token partial, Google-token-only partial, or full deployed pass`);
+  const staleGoogleTokenPass = data.status === "pass"
+    && Number(data.passed) === 5
+    && Number(data.skipped) === 0
+    && Number(data.failed) === 0
+    && googleLogin?.status === "pass"
+    && googleLogin?.data?.googleLinked === true
+    && Number.isFinite(googleLoginTokenSecondsRemaining)
+    && googleLoginTokenFresh === false;
+  expect(
+    googleTokenOnlyPartial || authTokenPartial || fullPass || staleGoogleTokenPass,
+    `${label} must be either auth-token partial, Google-token-only partial, stale-token deployed pass evidence, or full deployed pass`
+  );
   expect(data.cloudApiEndpoint === "https://api.quantgym.app/api", `${label} must target deployed API URL`);
   expect(data.llmEndpoint === "https://llm.quantgym.app/interview", `${label} must target deployed LLM URL`);
   expect(Number(data.failed) === 0, `${label} must have zero failures`);
@@ -2515,6 +2565,9 @@ function validateDeployedProductionBoundarySummary(data, expect, label) {
         `${label} auth-token partial must skip deployed LLM PDF question generation for auth`
       );
     }
+  } else if (staleGoogleTokenPass) {
+    expect(googleLogin?.status === "pass" && googleLogin?.data?.googleLinked === true, `${label} stale deployed pass evidence must still include the Google provider login result`);
+    expect(googleLoginTokenFresh === false, `${label} stale deployed pass evidence must be marked stale by external launch blockers`);
   } else {
     expect(googleLogin?.status === "pass" && googleLogin?.data?.googleLinked === true, `${label} full deployed pass must include Google provider login`);
     expect(googleLoginTokenFresh === true, `${label} full deployed pass requires fresh token evidence`);
@@ -2809,11 +2862,13 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   const deployedGoogleAtSummaryTop = findBlocker(data.blockers, "deployed-google-provider-login");
   const renderApiAtSummaryTop = findBlocker(data.blockers, "render-api-build-filter");
   const opsAlertAtSummaryTop = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");
+  const mediaAtSummaryTop = findBlocker(data.blockers, "media-bucket-cdn");
   let expectedBlockerCount = 8;
   if (apexAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
   if (deployedGoogleAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
   if (renderApiAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
   if (opsAlertAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
+  if (mediaAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
   expect(Number(data.blockerCount || 0) === expectedBlockerCount, `${label} must track ${expectedBlockerCount} external blockers for the current deployed Google evidence freshness state`);
   expect(Number(data.trackedCount || 0) === 1, `${label} must track one continuing browser-journey expansion item`);
   expect(data.checks?.requiredScriptsPresent === true, `${label} must verify required signoff scripts exist`);
@@ -2890,7 +2945,6 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.browserMobileCareerControlsPass === true, `${label} must verify the mobile career browser journey remains pass`);
 
   for (const id of [
-    "media-bucket-cdn",
     "chrome-web-store-publication",
     "postgres-managed-cutover",
     "question-bank-public-commercial-rights"
@@ -3057,7 +3111,25 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(ops?.localCoverage?.edgeEvidenceUrlEmbeddedCredentialsRejected === true, `${label} must include ops edge evidence URL credential rejection`);
   expect(ops?.localCoverage?.edgeEvidenceUrlQueryRejected === true, `${label} must include ops edge evidence URL query rejection`);
   const media = findBlocker(data.blockers, "media-bucket-cdn");
-  expect(media?.signoffCommand === "npm run check:media-storage:production && npm run check:media-storage:production -- --live", `${label} media storage must record both production config and live signoff commands`);
+  expect(["pass", "blocked"].includes(String(media?.status || "")), `${label} media storage must be pass only after deployed R2/CDN signoff or blocked`);
+  if (media?.status === "pass") {
+    expect(typeof media?.ownerAction === "string" && media.ownerAction.includes("signed off"), `${label} media storage pass must describe completed deployed signoff`);
+    expect(media?.localCoverage?.deployedMediaStoragePass === true, `${label} media storage pass must include deployed smoke summary`);
+    expect(media?.localCoverage?.deployedMediaApiHostProduction === true, `${label} media storage pass must target production API`);
+    expect(media?.localCoverage?.deployedMediaPublicHostProduction === true, `${label} media storage pass must target production public media host`);
+    expect(media?.localCoverage?.deployedMediaUploadCreated === true, `${label} media storage pass must prove deployed upload`);
+    expect(media?.localCoverage?.deployedMediaUploadReportsS3Media === true, `${label} media storage pass must prove deployed upload uses S3/R2 media storage`);
+    expect(media?.localCoverage?.deployedMediaUploadUrlUsesPublicBase === true, `${label} media storage pass must prove deployed media URL uses public base`);
+    expect(media?.localCoverage?.deployedMediaPublicGetOk === true, `${label} media storage pass must prove public GET`);
+    expect(media?.localCoverage?.deployedMediaPublicGetBytesMatch === true, `${label} media storage pass must prove public bytes match upload`);
+    expect(media?.localCoverage?.deployedMediaPublicGetContentTypePng === true, `${label} media storage pass must prove public Content-Type`);
+    expect(media?.localCoverage?.deployedMediaPublicRangeSupported === true, `${label} media storage pass must prove public Range support`);
+    expect(media?.localCoverage?.deployedMediaPublicRangeHeaderValid === true, `${label} media storage pass must prove public Content-Range`);
+    expect(media?.localCoverage?.deployedMediaApiGetRedirectsToPublicMedia === true, `${label} media storage pass must prove API redirects to public media`);
+  } else {
+    expect(typeof media?.ownerAction === "string" && media.ownerAction.includes("deployed media storage signoff"), `${label} media storage blocked state must request deployed signoff`);
+  }
+  expect(media?.signoffCommand === "npm run check:media-storage:deployed", `${label} media storage must record the deployed signoff command`);
   expect(media?.localCoverage?.packetIncludesProductionConfigSignoff === true, `${label} must include media packet production-config signoff coverage`);
   expect(media?.localCoverage?.packetSignoffRequiresConfigAndLive === true, `${label} must require both media config and live signoff`);
   expect(media?.localCoverage?.packetIncludesRawIpUrlRule === true, `${label} must include media packet raw-IP URL rejection guidance`);

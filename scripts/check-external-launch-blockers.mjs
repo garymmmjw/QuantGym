@@ -31,6 +31,7 @@ const evidence = {
   mediaRuntime: readJson("docs/browser-audit-screenshots/329-media-storage-runtime-smoke-summary.json", "media storage runtime smoke"),
   mediaFixture: readJson("docs/browser-audit-screenshots/337-media-storage-production-fixture-summary.json", "media storage production fixture"),
   mediaPacket: readJson("docs/browser-audit-screenshots/347-media-storage-packet-summary.json", "media storage readiness packet"),
+  deployedMediaStorage: readJson("docs/browser-audit-screenshots/362-deployed-media-storage-summary.json", "deployed media storage smoke"),
   jobsRuntime: readJson("docs/browser-audit-screenshots/330-jobs-source-runtime-smoke-summary.json", "jobs source runtime smoke"),
   jobsFixture: readJson("docs/browser-audit-screenshots/338-jobs-source-production-fixture-summary.json", "jobs source production fixture"),
   jobsPacket: readJson("docs/browser-audit-screenshots/349-jobs-feed-publication-packet-summary.json", "jobs feed publication packet"),
@@ -62,6 +63,7 @@ const requiredScripts = [
   "check:ops-alerts:worker-fixture",
   "build:ops-alert-edge-packet",
   "check:media-storage:production",
+  "check:media-storage:deployed",
   "build:media-storage-packet",
   "check:jobs-source:production",
   "check:jobs-feed:static",
@@ -108,6 +110,24 @@ const jobsFeedCleared = evidence.jobsDeployedApiSource.status === "pass"
   && evidence.jobsDeployedApiSource.checks?.sourceValidPostedAt === true
   && evidence.jobsDeployedApiSource.checks?.sourceRealMetadata === true
   && evidence.jobsDeployedApiSource.checks?.firstSourceJobMatchesStaticFeed === true;
+
+const mediaStorageCleared = evidence.deployedMediaStorage.status === "pass"
+  && evidence.deployedMediaStorage.checks?.apiHostProduction === true
+  && evidence.deployedMediaStorage.checks?.publicBaseHostProduction === true
+  && evidence.deployedMediaStorage.checks?.loginOk === true
+  && evidence.deployedMediaStorage.checks?.tokenReturned === true
+  && evidence.deployedMediaStorage.checks?.uploadCreated === true
+  && evidence.deployedMediaStorage.checks?.uploadReportsS3Media === true
+  && evidence.deployedMediaStorage.checks?.uploadContentTypePng === true
+  && evidence.deployedMediaStorage.checks?.uploadByteSizeMatches === true
+  && evidence.deployedMediaStorage.checks?.uploadUrlUsesPublicBase === true
+  && evidence.deployedMediaStorage.checks?.uploadResponseDoesNotInlineDataUrl === true
+  && evidence.deployedMediaStorage.checks?.publicGetOk === true
+  && evidence.deployedMediaStorage.checks?.publicGetBytesMatch === true
+  && evidence.deployedMediaStorage.checks?.publicGetContentTypePng === true
+  && evidence.deployedMediaStorage.checks?.publicRangeSupported === true
+  && evidence.deployedMediaStorage.checks?.publicRangeHeaderValid === true
+  && evidence.deployedMediaStorage.checks?.apiGetRedirectsToPublicMedia === true;
 
 const apexWwwClear = evidence.apexWwwDomain.status === "pass"
   && evidence.apexWwwDomain.checks?.apexWwwClear === true;
@@ -349,9 +369,11 @@ const blockers = [
   {
     id: "media-bucket-cdn",
     title: "Production S3/R2 media bucket and CDN",
-    status: "blocked",
-    ownerAction: "Configure the real object bucket and public CDN/base URL, then run the production config and live media storage signoff commands.",
-    signoffCommand: "npm run check:media-storage:production && npm run check:media-storage:production -- --live",
+    status: mediaStorageCleared ? "pass" : "blocked",
+    ownerAction: mediaStorageCleared
+      ? "Deployed Render media uploads are signed off against the real R2 bucket and media.quantgym.app public base URL."
+      : "Configure the real object bucket and public CDN/base URL, then run the deployed media storage signoff.",
+    signoffCommand: "npm run check:media-storage:deployed",
     localCoverage: {
       runtimeSmokePass: evidence.mediaRuntime.status === "pass",
       productionFixturePass: evidence.mediaFixture.status === "pass",
@@ -390,7 +412,20 @@ const blockers = [
       liveSmokeNoObjectWritesWhenConfigInvalid: evidence.mediaFixture.checks?.liveSmokeNoObjectWritesWhenConfigInvalid === true,
       packetIncludesLiveWriteBlockerEvidence: evidence.mediaPacket.checks?.liveSmokeBlocksUnsafeProductionWrites === true,
       packetIncludesPublicRangeContract: evidence.mediaPacket.checks?.includesPublicRangeContract === true,
-      packetIncludesPublicRangeEvidence: evidence.mediaPacket.checks?.liveFixtureSupportsPublicRange === true
+      packetIncludesPublicRangeEvidence: evidence.mediaPacket.checks?.liveFixtureSupportsPublicRange === true,
+      deployedMediaStoragePass: evidence.deployedMediaStorage.status === "pass",
+      deployedMediaApiHostProduction: evidence.deployedMediaStorage.checks?.apiHostProduction === true,
+      deployedMediaPublicHostProduction: evidence.deployedMediaStorage.checks?.publicBaseHostProduction === true,
+      deployedMediaLoginOk: evidence.deployedMediaStorage.checks?.loginOk === true,
+      deployedMediaUploadCreated: evidence.deployedMediaStorage.checks?.uploadCreated === true,
+      deployedMediaUploadReportsS3Media: evidence.deployedMediaStorage.checks?.uploadReportsS3Media === true,
+      deployedMediaUploadUrlUsesPublicBase: evidence.deployedMediaStorage.checks?.uploadUrlUsesPublicBase === true,
+      deployedMediaPublicGetOk: evidence.deployedMediaStorage.checks?.publicGetOk === true,
+      deployedMediaPublicGetBytesMatch: evidence.deployedMediaStorage.checks?.publicGetBytesMatch === true,
+      deployedMediaPublicGetContentTypePng: evidence.deployedMediaStorage.checks?.publicGetContentTypePng === true,
+      deployedMediaPublicRangeSupported: evidence.deployedMediaStorage.checks?.publicRangeSupported === true,
+      deployedMediaPublicRangeHeaderValid: evidence.deployedMediaStorage.checks?.publicRangeHeaderValid === true,
+      deployedMediaApiGetRedirectsToPublicMedia: evidence.deployedMediaStorage.checks?.apiGetRedirectsToPublicMedia === true
     }
   },
   {
@@ -1233,6 +1268,35 @@ if (opsAlertBlocker?.status === "pass") {
     opsAlertBlocker?.localCoverage?.productionSignoffPass !== true
       || opsAlertBlocker?.localCoverage?.productionWebhookSmokePass !== true,
     "ops-alerts-edge-rate-limit blocked state should not contain a complete production smoke signoff."
+  );
+}
+
+const mediaStorageBlocker = blockers.find((item) => item.id === "media-bucket-cdn");
+if (mediaStorageBlocker?.status === "pass") {
+  expect(
+    mediaStorageBlocker.localCoverage?.deployedMediaStoragePass === true
+      && mediaStorageBlocker.localCoverage?.deployedMediaApiHostProduction === true
+      && mediaStorageBlocker.localCoverage?.deployedMediaPublicHostProduction === true,
+    "media-bucket-cdn pass requires deployed API plus public media host evidence."
+  );
+  expect(
+    mediaStorageBlocker.localCoverage?.deployedMediaUploadCreated === true
+      && mediaStorageBlocker.localCoverage?.deployedMediaUploadReportsS3Media === true
+      && mediaStorageBlocker.localCoverage?.deployedMediaUploadUrlUsesPublicBase === true,
+    "media-bucket-cdn pass requires a deployed upload that reports S3/R2 media and uses the public base URL."
+  );
+  expect(
+    mediaStorageBlocker.localCoverage?.deployedMediaPublicGetOk === true
+      && mediaStorageBlocker.localCoverage?.deployedMediaPublicGetBytesMatch === true
+      && mediaStorageBlocker.localCoverage?.deployedMediaPublicRangeSupported === true
+      && mediaStorageBlocker.localCoverage?.deployedMediaPublicRangeHeaderValid === true
+      && mediaStorageBlocker.localCoverage?.deployedMediaApiGetRedirectsToPublicMedia === true,
+    "media-bucket-cdn pass requires deployed public GET, Range, and API redirect evidence."
+  );
+} else {
+  expect(
+    mediaStorageBlocker?.localCoverage?.deployedMediaStoragePass !== true,
+    "media-bucket-cdn blocked state should not contain complete deployed media storage signoff."
   );
 }
 

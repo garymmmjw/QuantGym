@@ -26,8 +26,8 @@
     {
       "id": "deployed-google-provider-login",
       "title": "Deployed Google provider account login",
-      "status": "pass",
-      "ownerAction": "Deployed Google provider login is signed off with a fresh token that matches the deployed Google Client ID.",
+      "status": "blocked",
+      "ownerAction": "Generate a fresh deployed Google ID token with npm run google:token-helper:deployed, then run npm run verify:production-boundaries:deployed:paste-token before the token expires.",
       "signoffCommand": "npm run verify:production-boundaries:deployed:paste-token",
       "localCoverage": {
         "trackedInProductStatus": true,
@@ -41,14 +41,9 @@
         "deployedGoogleProviderLoginStateCaptured": true,
         "deployedGoogleProviderLoginTokenExpiresAt": "2026-06-23T21:36:24.000Z",
         "deployedGoogleProviderLoginTokenMinimumSeconds": 120,
-        "deployedGoogleProviderLoginTokenFresh": true,
-        "deployedGoogleProviderLoginTokenExpired": false,
-        "deployedGoogleProviderLoginPass": true,
-        "deployedGoogleProviderLoginHasToken": true,
-        "deployedGoogleProviderLoginGoogleLinked": true,
-        "deployedGoogleProviderLoginTokenAudienceMatchesClientId": true,
-        "deployedGoogleProviderLoginEmailRedacted": true,
-        "deployedGoogleProviderLoginTokenEmailRedacted": true,
+        "deployedGoogleProviderLoginTokenFresh": false,
+        "deployedGoogleProviderLoginTokenExpired": true,
+        "deployedGoogleProviderLoginSkippedForToken": false,
         "deployedTokenHelperScriptPresent": true,
         "deployedPasteTokenVerifierPresent": true,
         "deployedPasteTokenAudiencePrecheck": true,
@@ -132,9 +127,9 @@
     {
       "id": "media-bucket-cdn",
       "title": "Production S3/R2 media bucket and CDN",
-      "status": "blocked",
-      "ownerAction": "Configure the real object bucket and public CDN/base URL, then run the production config and live media storage signoff commands.",
-      "signoffCommand": "npm run check:media-storage:production && npm run check:media-storage:production -- --live",
+      "status": "pass",
+      "ownerAction": "Deployed Render media uploads are signed off against the real R2 bucket and media.quantgym.app public base URL.",
+      "signoffCommand": "npm run check:media-storage:deployed",
       "localCoverage": {
         "runtimeSmokePass": true,
         "productionFixturePass": true,
@@ -173,7 +168,20 @@
         "liveSmokeNoObjectWritesWhenConfigInvalid": true,
         "packetIncludesLiveWriteBlockerEvidence": true,
         "packetIncludesPublicRangeContract": true,
-        "packetIncludesPublicRangeEvidence": true
+        "packetIncludesPublicRangeEvidence": true,
+        "deployedMediaStoragePass": true,
+        "deployedMediaApiHostProduction": true,
+        "deployedMediaPublicHostProduction": true,
+        "deployedMediaLoginOk": true,
+        "deployedMediaUploadCreated": true,
+        "deployedMediaUploadReportsS3Media": true,
+        "deployedMediaUploadUrlUsesPublicBase": true,
+        "deployedMediaPublicGetOk": true,
+        "deployedMediaPublicGetBytesMatch": true,
+        "deployedMediaPublicGetContentTypePng": true,
+        "deployedMediaPublicRangeSupported": true,
+        "deployedMediaPublicRangeHeaderValid": true,
+        "deployedMediaApiGetRedirectsToPublicMedia": true
       }
     },
     {
