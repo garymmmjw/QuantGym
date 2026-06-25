@@ -11,7 +11,7 @@
     {
       "name": "cloud health",
       "status": "pass",
-      "durationMs": 1132,
+      "durationMs": 1555,
       "data": {
         "ok": true
       }
@@ -19,7 +19,7 @@
     {
       "name": "google provider config",
       "status": "pass",
-      "durationMs": 1054,
+      "durationMs": 413,
       "data": {
         "googleClientIdSet": true,
         "endpointRequiresToken": true
@@ -28,33 +28,33 @@
     {
       "name": "google provider login",
       "status": "pass",
-      "durationMs": 1343,
+      "durationMs": 1409,
       "data": {
         "provider": "local",
         "googleLinked": true,
         "email": "mi***@gmail.com",
         "hasToken": true,
         "tokenAudienceMatchesClientId": true,
-        "tokenExpiresAt": "2026-06-24T17:23:35.000Z",
+        "tokenExpiresAt": "2026-06-25T14:26:27.000Z",
         "tokenEmail": "mi***@gmail.com"
       }
     },
     {
       "name": "LLM resume review",
       "status": "pass",
-      "durationMs": 5141,
+      "durationMs": 8359,
       "data": {
         "itemCount": 6,
-        "firstItem": "Quantify impact with concrete metrics: specify baseline and current runtimes, e.g., reduced scenario runtime from X hour"
+        "firstItem": "Specify quantitative impact: \"Built a Python market-making simulator for option risk analysis, processing 1.2M tick rows"
       }
     },
     {
       "name": "LLM PDF question generation",
       "status": "pass",
-      "durationMs": 8878,
+      "durationMs": 8599,
       "data": {
         "questionCount": 1,
-        "firstTitle": "Given a trading strategy with a fixed production boundary, compute maximum expected daily loss under a bottleneck constr"
+        "firstTitle": "Understanding Production Boundaries"
       }
     }
   ]
