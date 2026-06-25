@@ -2238,6 +2238,8 @@ function validateChromeStorePublicationPacketSummary(data, expect, label) {
     "usesPlaceholdersForPublishedIds",
     "releasePackageExists",
     "releasePackageShaMatches",
+    "releasePackageVersionMatchesManifest",
+    "releasePackageOutputMatchesManifestVersion",
     "publicationFixturePass",
     "submissionHandoffPass",
     "publishedFixturePass",
@@ -2444,7 +2446,9 @@ function validateBrowserExtensionRuntimeSmokeSummary(data, expect, label) {
   expect(Number(data.calls?.storageSets || 0) >= 2, `${label} must write extension storage during URL changes`);
   expect(Number(data.calls?.tabQueries || 0) >= 1, `${label} must query the active tab`);
   expect(Number(data.calls?.scriptExecutions || 0) >= 1, `${label} must execute the active-tab content script`);
-  expect(Number(data.calls?.openedTabs || 0) >= 1, `${label} must open QuantGym for a normal capture`);
+  expect(Number(data.calls?.openedTabs || 0) >= 1, `${label} must open QuantGym for a viewport capture`);
+  expect(Number(data.calls?.captureVisibleTab || 0) >= 1, `${label} must capture the visible tab`);
+  expect(Number(data.calls?.sentMessages || 0) >= 1, `${label} must send the QuantGym bridge message`);
   for (const [key, value] of Object.entries(data.checks || {})) {
     expect(value === true, `${label} check ${key} must pass`);
   }
@@ -2458,14 +2462,20 @@ function validateBrowserExtensionRuntimeSmokeSummary(data, expect, label) {
     "problemPromptRendered",
     "problemMetaRendered",
     "copyJsonWroteClipboard",
-    "collectOpenedQuantGym",
-    "capturePayloadHasTitle",
-	    "capturePayloadHasSourceUrl",
+    "viewportCaptureCalled",
+    "viewportCaptureUsesJpeg",
+    "bridgeTabOpened",
+    "bridgeTabOpenedInactiveFirst",
+    "bridgeTabActivatedAfterMessage",
+    "bridgeMessageSent",
+    "bridgePayloadHasScreenshot",
+    "bridgePayloadHasTitle",
+	    "bridgePayloadHasSourceUrl",
 	    "boardUrlSaved",
 	    "invalidBoardUrlRejected",
 	    "insecureRemoteBoardUrlRejected",
 	    "loopbackHttpBoardUrlAllowed",
-	    "longCaptureFallsBackToClipboard"
+	    "longCaptureCopiesJson"
 	  ]) {
     expect(data.checks?.[key] === true, `${label} must pass ${key}`);
   }

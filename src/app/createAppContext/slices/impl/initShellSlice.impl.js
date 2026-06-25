@@ -30,6 +30,7 @@ export function initShellSliceImpl(shared, ctx) {
   createProblemCatalogMutationController,
   createProblemPaginationController,
   createProblemPersonalStateController,
+  createProblemViewportCaptureController,
   createProblemsFacade,
   current,
   currentUser,
@@ -53,6 +54,8 @@ export function initShellSliceImpl(shared, ctx) {
   getLeaderboardController,
   getLeaderboardRows,
   getLeetcodeHotController,
+  getLlmConfig,
+  getLlmRequestHeaders,
   getLocale,
   getNetworkStatusLabelValue,
   getPersonalState,
@@ -157,6 +160,7 @@ export function initShellSliceImpl(shared, ctx) {
   const setupButtonRipples = () => setupButtonRipplesView(document);
   let problemBrowserController = null;
   let problemCaptureController = null;
+  let viewportCaptureController = null;
   let leetcodeHotController = null;
   let problemsRuntime = null;
   const problemsFacade = createProblemsFacade({
@@ -338,6 +342,28 @@ export function initShellSliceImpl(shared, ctx) {
     },
     showAuthMessage
   });
+  viewportCaptureController = createProblemViewportCaptureController({
+    windowRef: window,
+    getCurrentUser: () => appState.currentUser,
+    getLanguage,
+    getLlmConfig: () => getLlmConfig?.() || {},
+    getLlmRequestHeaders: () => getLlmRequestHeaders?.() || {},
+    normalizeProblem,
+    upsertProblems,
+    setSelectedProblemId(problemId) {
+      interviewRuntime.state.selectedProblemId = problemId;
+    },
+    switchModule,
+    renderAll,
+    setStatus(message) {
+      if (els.problemInteractionStatus) {
+        els.problemInteractionStatus.textContent = message;
+      } else {
+        showAuthMessage(message);
+      }
+    }
+  });
+  viewportCaptureController.start();
   const planningActivityBundle = createPlanningActivityBundle({
     appState,
     buildTodayStudyPlan: () => sliceRefs.buildTodayStudyPlan?.(),

@@ -1310,12 +1310,36 @@ if (!skipReleaseSummaryContent) {
     "release readiness must include the Chrome store publication fixture gate."
   );
   expect(
+    findResult(evidence.releaseReadiness.results, "Chrome store publication packet")?.status === "pass",
+    "release readiness must include the Chrome store publication packet gate."
+  );
+  expect(
     findResult(evidence.releaseReadiness.results, "Render API build filter fixture")?.status === "pass",
     "release readiness must include the Render API build filter fixture gate."
   );
   expect(
     findResult(evidence.releaseReadiness.results, "Render API build filter packet")?.status === "pass",
     "release readiness must include the Render API build filter packet gate."
+  );
+  expect(
+    findResult(evidence.releaseReadiness.results, "Media storage packet")?.status === "pass",
+    "release readiness must include the media storage packet gate."
+  );
+  expect(
+    findResult(evidence.releaseReadiness.results, "Ops alert edge packet")?.status === "pass",
+    "release readiness must include the ops alert edge packet gate."
+  );
+  expect(
+    findResult(evidence.releaseReadiness.results, "Jobs feed publication packet")?.status === "pass",
+    "release readiness must include the jobs feed publication packet gate."
+  );
+  expect(
+    findResult(evidence.releaseReadiness.results, "Postgres cutover packet")?.status === "pass",
+    "release readiness must include the Postgres cutover packet gate."
+  );
+  expect(
+    findResult(evidence.releaseReadiness.results, "Question-bank rights packet")?.status === "pass",
+    "release readiness must include the question-bank rights packet gate."
   );
   expect(
     findResult(evidence.releaseReadiness.results, "External launch blockers")?.status === "pass",

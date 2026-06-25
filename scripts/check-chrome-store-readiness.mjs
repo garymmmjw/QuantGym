@@ -21,6 +21,7 @@ const requiredPackageFiles = [
   "popup.html",
   "popup.css",
   "popup.js",
+  "quantgym-bridge.js",
   "README.md",
   "icons/icon16.png",
   "icons/icon32.png",
@@ -112,6 +113,8 @@ check("privacy disclosures", () => {
     assertTextIncludes(text, "activeTab", `${label} privacy policy`);
     assertTextIncludes(text, "scripting", `${label} privacy policy`);
     assertTextIncludes(text, "storage", `${label} privacy policy`);
+    assertTextIncludes(text, "tabs", `${label} privacy policy`);
+    assertTextIncludes(text, "screenshot", `${label} privacy policy`);
     assertTextIncludes(text, "does not sell", `${label} privacy policy`);
     assertTextIncludes(text, "ads", `${label} privacy policy`);
     assertTextIncludes(text, "background collection", `${label} privacy policy`);

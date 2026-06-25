@@ -1,6 +1,6 @@
 # QuantGym Collector
 
-Chrome extension for collecting LeetCode and interview-problem pages into QuantGym.
+Chrome extension for recording visible LeetCode and interview-problem pages into QuantGym.
 
 The production default board URL is `https://beta.quantgym.app/`. Remote Board URLs must use HTTPS; local development may use loopback HTTP URLs such as `http://127.0.0.1:5173/`, and the popup saves the chosen URL in Chrome extension storage.
 
@@ -13,7 +13,7 @@ The production default board URL is `https://beta.quantgym.app/`. Remote Board U
 
 ## Use
 
-Open a LeetCode or interview-problem page, click the extension, then click "收录到面板". The extension opens QuantGym with a capture payload. If the problem is too long for a URL handoff, use "复制 JSON" and paste it into the app manually later.
+Open a LeetCode or interview-problem page, scroll or zoom until the problem is visible in the current browser viewport, click the extension, then click "记录题目". The extension captures the visible tab, opens QuantGym, and sends the screenshot plus page context to the QuantGym web app so the signed-in app can extract and save the problem. If you only want the text-based fallback, use "复制 JSON" and paste it into the app manually later.
 
 ## Validate and package
 
@@ -42,9 +42,9 @@ Build a Chrome Web Store upload ZIP:
 npm run package:browser-extension
 ```
 
-The package is written to `artifacts/browser-extension/`, which is ignored by Git. The extension checker enforces Manifest V3, the expected permission set, required PNG icons, no `<all_urls>` host permission, no local default URL, and popup syntax validity.
+The package is written to `artifacts/browser-extension/`, which is ignored by Git. The extension checker enforces Manifest V3, the expected permission set, required PNG icons, QuantGym-only host permissions, no `<all_urls>` host permission, no local default URL, popup syntax validity, and the QuantGym bridge script.
 
-The runtime smoke executes `popup.js` in a Node VM with fake `chrome.storage.local`, `chrome.tabs`, `chrome.scripting`, clipboard, popup DOM, and active-tab DOM objects. It verifies default Board URL loading, active-tab capture, rendered source/title/prompt/meta, copy JSON, normal QuantGym capture URL handoff, invalid/insecure remote Board URL fallback, loopback HTTP development URL allowance, and long-prompt clipboard fallback.
+The runtime smoke executes `popup.js` in a Node VM with fake `chrome.storage.local`, `chrome.tabs`, `chrome.scripting`, clipboard, popup DOM, and active-tab DOM objects. It verifies default Board URL loading, active-tab capture, rendered source/title/prompt/meta, copy JSON, visible-tab screenshot capture, QuantGym bridge message delivery, invalid/insecure remote Board URL fallback, loopback HTTP development URL allowance, and long-prompt clipboard fallback.
 
 The store-readiness checker validates `store-listing.json`, the public privacy page at `public/chrome-extension-privacy.html`, screenshot and small promo image dimensions, permission justifications, data-use disclosures, and the final upload ZIP contents. The ZIP intentionally contains only the runtime extension files, not the store-listing metadata or store-assets source files.
 
@@ -59,7 +59,7 @@ QUANTGYM_CHROME_WEB_STORE_ITEM_ID="$REAL_CHROME_ITEM_ID" \
 QUANTGYM_CHROME_WEB_STORE_LISTING_URL="https://chromewebstore.google.com/detail/quantgym-collector/$REAL_CHROME_ITEM_ID" \
 QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL="https://chromewebstore.google.com/detail/quantgym-collector/$REAL_CHROME_ITEM_ID" \
 QUANTGYM_CHROME_WEB_STORE_STATUS="published" \
-QUANTGYM_CHROME_WEB_STORE_SUBMITTED_VERSION="0.2.0" \
+QUANTGYM_CHROME_WEB_STORE_SUBMITTED_VERSION="0.3.0" \
 QUANTGYM_CHROME_WEB_STORE_UPLOAD_SHA256="$REAL_UPLOAD_SHA256" \
 npm run check:chrome-store-publication:published
 ```

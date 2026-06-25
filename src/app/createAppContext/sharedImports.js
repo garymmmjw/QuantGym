@@ -188,6 +188,7 @@ export { createProblemsFacade } from '../../modules/problems/facade.js';
 export { createProblemProvider } from '../../modules/problems/provider.js';
 export { createProblemProviderFacade } from '../../modules/problems/providerFacade.js';
 export { createProblemCaptureController } from '../../modules/problems/captureController.js';
+export { createProblemViewportCaptureController } from '../../modules/problems/viewportCaptureController.js';
 export { addProblemTag } from '../../modules/problems/list.js';
 export { createProblemCatalogMutationController } from '../../modules/problems/catalogMutationController.js';
 export { createProblemPaginationController } from '../../modules/problems/paginationController.js';

@@ -1,7 +1,7 @@
 {
   "name": "QuantGym Collector",
-  "shortDescription": "Capture LeetCode and quant interview problems into your QuantGym study board.",
-  "detailedDescription": "QuantGym Collector helps QuantGym beta users capture a problem page from LeetCode or another interview-prep site, preview the extracted title, prompt, source, difficulty, and tags, then send that structured problem into QuantGym. If the capture is too large for a URL handoff, the extension copies JSON so the user can paste it manually. The extension runs only when the user opens the popup and clicks a command.",
+  "shortDescription": "Record visible quant interview problems into your QuantGym study board.",
+  "detailedDescription": "QuantGym Collector helps QuantGym beta users record a problem that is visible in the current browser viewport. When the user clicks Record, the extension captures the active tab screenshot, attaches lightweight page context such as title and source URL, opens QuantGym, and sends the capture to the QuantGym web app for OCR/vision extraction and saving. A JSON copy fallback remains available for text-based captures. The extension runs only after explicit user action and does not collect page content in the background.",
   "category": "Productivity",
   "language": "en-US",
   "homepageUrl": "https://beta.quantgym.app/",
@@ -17,23 +17,25 @@
     "small": "store-assets/small-promo-440x280.png",
     "marquee": "store-assets/marquee-promo-1400x560.png"
   },
-  "singlePurpose": "Capture the current problem page into QuantGym for study tracking.",
+  "singlePurpose": "Record the current visible problem into QuantGym for study tracking.",
   "permissionJustifications": {
     "activeTab": "Used only after the user opens the popup, so the extension can read the active problem page.",
     "scripting": "Used to run the page extraction script on the active tab after user interaction.",
-    "storage": "Used to remember the user's preferred QuantGym board URL locally in Chrome."
+    "storage": "Used to remember the user's preferred QuantGym board URL locally in Chrome.",
+    "tabs": "Used after the user clicks Record to capture the visible active tab, open QuantGym in an inactive tab, send the capture, and then focus QuantGym."
   },
   "dataUsage": {
     "collectsPersonalData": false,
     "handlesActiveTabContent": true,
+    "handlesVisibleTabScreenshot": true,
     "sellsData": false,
     "usesDataForAds": false,
     "backgroundCollection": false,
     "remoteCode": false
   },
   "reviewNotes": [
-    "No host permissions are requested.",
+    "Host permissions are limited to quantgym.app so the bridge script can deliver user-triggered captures to the QuantGym web app.",
     "No remote scripts are loaded.",
-    "Captured content is sent only to the user-configured QuantGym board URL or copied to the clipboard by explicit user action."
+    "Captured content is sent only after the user clicks Record, and the screenshot is processed by the user's configured QuantGym LLM endpoint through the signed-in web app."
   ]
 }

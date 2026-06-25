@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-20T23:27:06.059Z",
+  "generatedAt": "2026-06-25T04:17:42.126Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/jobs-feed/publication-packet",
   "filesWritten": [
     "artifacts/jobs-feed/publication-packet/README.md",
@@ -12,16 +12,16 @@
     "artifacts/jobs-feed/publication-packet/public-ats-feed.json"
   ],
   "feed": {
-    "generatedAt": "2026-06-20T23:27:09.636Z",
+    "generatedAt": "2026-06-25T04:17:44.044Z",
     "generatedBy": "scripts/build-public-ats-jobs-feed.mjs",
     "source": "public-ats-greenhouse",
     "feedPath": "artifacts/jobs-feed/publication-packet/public-ats-feed.json",
-    "feedSha256": "dc7ac58faf16c911159bfdd52fac328e5d0e1ade1098d970c641e86bd8482126",
+    "feedSha256": "d879ed13b1923563a5de7359736c14171e11f0883ad9c2db551f3c80cb3892a1",
     "count": 160,
-    "internships": 6,
-    "fulltime": 154,
-    "firstId": "imc-4694088101",
-    "firstPostedAt": "2026-06-19T12:18:15.000Z"
+    "internships": 7,
+    "fulltime": 153,
+    "firstId": "hudson-river-trading-7364943",
+    "firstPostedAt": "2026-06-24T15:23:48.000Z"
   },
   "sources": [
     {
@@ -30,9 +30,9 @@
       "company": "Jane Street",
       "boardToken": "janestreet",
       "url": "https://boards-api.greenhouse.io/v1/boards/janestreet/jobs?content=true",
-      "fetched": 209,
-      "kept": 103,
-      "internships": 11,
+      "fetched": 206,
+      "kept": 102,
+      "internships": 10,
       "fulltime": 92,
       "status": "pass"
     },
@@ -42,10 +42,10 @@
       "company": "IMC",
       "boardToken": "imc",
       "url": "https://boards-api.greenhouse.io/v1/boards/imc/jobs?content=true",
-      "fetched": 133,
-      "kept": 81,
+      "fetched": 131,
+      "kept": 79,
       "internships": 2,
-      "fulltime": 79,
+      "fulltime": 77,
       "status": "pass"
     },
     {
@@ -55,9 +55,9 @@
       "boardToken": "wehrtyou",
       "url": "https://boards-api.greenhouse.io/v1/boards/wehrtyou/jobs?content=true",
       "fetched": 73,
-      "kept": 44,
+      "kept": 46,
       "internships": 0,
-      "fulltime": 44,
+      "fulltime": 46,
       "status": "pass"
     },
     {
@@ -66,10 +66,10 @@
       "company": "Jump Trading",
       "boardToken": "jumptrading",
       "url": "https://boards-api.greenhouse.io/v1/boards/jumptrading/jobs?content=true",
-      "fetched": 61,
-      "kept": 41,
+      "fetched": 57,
+      "kept": 40,
       "internships": 2,
-      "fulltime": 39,
+      "fulltime": 38,
       "status": "pass"
     }
   ],

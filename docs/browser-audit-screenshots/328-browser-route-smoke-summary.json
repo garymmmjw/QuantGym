@@ -1,9 +1,9 @@
 {
   "status": "pass",
-  "durationMs": 480467,
+  "durationMs": 464551,
   "browser": "Google Chrome via playwright-core",
   "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "baseUrl": "http://127.0.0.1:51664",
+  "baseUrl": "http://127.0.0.1:63291",
   "routes": {
     "checked": 21,
     "passed": 21,
@@ -107,7 +107,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 756,
+          "bodyTextLength": 751,
           "horizontalOverflowPx": 0,
           "pathname": "/tools"
         }
@@ -530,7 +530,7 @@
       {
         "name": "tools drill starts and accepts an answer",
         "status": "pass",
-        "question": "5 15 45 135 405 ?"
+        "question": "2 3 5 8 13 ?"
       },
       {
         "name": "tools mental math completes session and persists records",
@@ -548,12 +548,12 @@
       {
         "name": "tools market game rejects crossed quote, scores valid quote, and persists record",
         "status": "pass",
-        "fairValue": 84,
-        "feedback": "Round +25. Mid 84, width 2, fair 84.",
-        "score": 25,
+        "fairValue": 117,
+        "feedback": "Round +22. Mid 117, width 2, fair 117.",
+        "score": 22,
         "recordsBefore": 0,
         "recordsAfter": 1,
-        "marketSkill": 25,
+        "marketSkill": 22,
         "reloaded": true
       },
       {
@@ -570,8 +570,8 @@
         "roomCode": "QG-MAIN",
         "handNumber": 1,
         "playerCount": 6,
-        "actionLabel": "Call 20",
-        "currentHandLogCount": 12,
+        "actionLabel": "Call 80",
+        "currentHandLogCount": 11,
         "persisted": true
       },
       {
@@ -586,7 +586,7 @@
         "name": "pk match, submit, reveal, and record persistence",
         "status": "pass",
         "opponentName": "Data Quant",
-        "problemPreview": "立方体切割\n\n一名伐木工人正在把一块 $3 \\times 3 \\times 3$ 的立方体木块切成 $27$ 个 $1 \\times 1 \\times 1$ 的小木块。每次切割后，伐木工人都可以重新摆放立方体和单个木块。求伐木工人至少需要切",
+        "problemPreview": "车队\n\nAlice、Bob 和 Carter 正沿着同一方向在一条单车道公路上行驶。每辆车都以某个恒定速度行驶。在某一瞬间，Alice 在 Bob 后方距离 $d$ 的位置，Carter 在 Bob 前方距离 $2d$ 的位置。Alice ",
         "recordPersisted": true,
         "revealed": true
       },
@@ -629,7 +629,7 @@
       {
         "name": "interview attachment upload preview, transcript, and request payload",
         "status": "pass",
-        "fileName": "browser-smoke-interview-attachment-1782318647807.png",
+        "fileName": "browser-smoke-interview-attachment-1782360796723.png",
         "previewRendered": true,
         "transcriptAttachmentRendered": true,
         "requestAttachmentSent": true,
@@ -638,8 +638,8 @@
       {
         "name": "interview PDF source upload generates questions and starts session",
         "status": "pass",
-        "fileName": "browser-smoke-interview-source-1782318648104.pdf",
-        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782318648104",
+        "fileName": "browser-smoke-interview-source-1782360796985.pdf",
+        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782360796985",
         "requestCount": 1,
         "requestPdfPayloadSent": true,
         "generatedQuestionRendered": true
@@ -652,7 +652,7 @@
       {
         "name": "todo dock edit, complete, delete, and reload persistence",
         "status": "pass",
-        "taskId": "custom-02e4d23f-cbcc-4691-8489-d386467808f0",
+        "taskId": "custom-1e6ad20d-3761-4ca2-9f1c-56c19bc31f8c",
         "edited": true,
         "completed": true,
         "reopened": true,
@@ -663,31 +663,31 @@
       {
         "name": "community post, like, comment, and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community post 1782318677015",
-        "commentText": "Browser smoke comment 1782318677015",
+        "postText": "Browser smoke community post 1782360826315",
+        "commentText": "Browser smoke comment 1782360826315",
         "reloaded": true
       },
       {
         "name": "community image post fallback and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community image post 1782318680207",
-        "fileName": "browser-smoke-community-1782318680207.png",
+        "postText": "Browser smoke community image post 1782360829520",
+        "fileName": "browser-smoke-community-1782360829520.png",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "community video post fallback and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community video post 1782318683327",
-        "fileName": "browser-smoke-community-1782318683327.webm",
+        "postText": "Browser smoke community video post 1782360832639",
+        "fileName": "browser-smoke-community-1782360832639.webm",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "community direct message from post opens messages thread",
         "status": "pass",
-        "authorName": "Community Mentor 1782318686464",
-        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782318686464",
+        "authorName": "Community Mentor 1782360835780",
+        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782360835780",
         "openedMessages": true,
         "threadPersisted": true,
         "replyPersisted": true
@@ -702,14 +702,14 @@
         "messageReplyPersisted": true,
         "messageReloadPersisted": true,
         "noHorizontalOverflow": true,
-        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782318691193",
+        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782360840546",
         "finalPath": "/messages"
       },
       {
         "name": "messages thread read, send, and reload persistence",
         "status": "pass",
-        "threadId": "thread-browser-route-smoke-1782318695991",
-        "mentorName": "Smoke Mentor 1782318695991",
+        "threadId": "thread-browser-route-smoke-1782360845354",
+        "mentorName": "Smoke Mentor 1782360845354",
         "replied": true,
         "reloaded": true
       },
@@ -726,15 +726,15 @@
       {
         "name": "experiences create, edit, share, delete, and reload persistence",
         "status": "pass",
-        "recordId": "250e7d09-f151-4352-b48c-0b7df5b1791b",
-        "sharedPostId": "1d905cb3-2023-4dcf-843d-a3f36f56ff68",
+        "recordId": "b233257c-1196-47a3-9dea-c96c6eadd6f1",
+        "sharedPostId": "c9974c07-ecf1-41e1-9716-f109639b6909",
         "deleted": true,
         "reloaded": true
       },
       {
         "name": "news manual submit, filter, detail, and reload persistence",
         "status": "pass",
-        "newsId": "news-browser-smoke-jane-street-official-update-1782318713815-https-www-janestreet-com-join-jane",
+        "newsId": "news-browser-smoke-jane-street-official-update-1782360863055-https-www-janestreet-com-join-jane",
         "sourceType": "official",
         "reloaded": true,
         "readPersisted": true
@@ -750,30 +750,30 @@
         "newsFiltersUsable": true,
         "newsDetailReadPersisted": true,
         "noHorizontalOverflow": true,
-        "recordId": "83750103-f3a2-4dd2-add3-559cd28fdad9",
-        "sharedPostId": "cb54e009-00a8-4775-9700-b1f219fe5bec",
-        "newsId": "news-mobile-smoke-official-recruiting-update-1782318718364-https-www-janestreet-com-join-jane-s",
+        "recordId": "621a0e70-ffb8-4067-8a4c-c749639d1fa5",
+        "sharedPostId": "f6fdd946-9752-4c44-8cb8-c51620cda30f",
+        "newsId": "news-mobile-smoke-official-recruiting-update-1782360867620-https-www-janestreet-com-join-jane-s",
         "finalPath": "/news"
       },
       {
         "name": "memory resource add, source link, and reload persistence",
         "status": "pass",
-        "title": "Browser Smoke Resource 1782318725683",
+        "title": "Browser Smoke Resource 1782360874935",
         "sourceUrl": "https://www.youtube.com/@atypicalquant",
         "reloaded": true
       },
       {
         "name": "memory image resource upload fallback and reload persistence",
         "status": "pass",
-        "title": "Browser Smoke Image Resource 1782318729347",
-        "fileName": "browser-smoke-memory-1782318729347.png",
+        "title": "Browser Smoke Image Resource 1782360878479",
+        "fileName": "browser-smoke-memory-1782360878479.png",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "network contact add, edit, delete, and reload persistence",
         "status": "pass",
-        "contactName": "Browser Smoke Contact 1782318732912",
+        "contactName": "Browser Smoke Contact 1782360882051",
         "edited": true,
         "deleted": true
       },
@@ -852,8 +852,8 @@
         "readerTokenRequests": 2,
         "pdfRequests": 4,
         "readerOpened": true,
-        "openNewHref": "http://127.0.0.1:51664/api/library-reader-smoke/green-book.pdf",
-        "embedUrl": "http://127.0.0.1:51664/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+        "openNewHref": "http://127.0.0.1:63291/api/library-reader-smoke/green-book.pdf",
+        "embedUrl": "http://127.0.0.1:63291/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
         "closedByButton": true,
         "closedByEscape": true
       },
@@ -862,7 +862,7 @@
         "status": "pass",
         "problemId": "quantguide-place-or-take",
         "problemTitle": "放置或取出",
-        "todoTitle": "Cross-module QuantGuide review 1782318776181: 放置或取出",
+        "todoTitle": "Cross-module QuantGuide review 1782360922690: 放置或取出",
         "resumeTextLength": 237,
         "settings": {
           "llmEndpoint": "http://127.0.0.1:8789/interview",
@@ -884,7 +884,7 @@
       {
         "name": "account profile save and reload persistence",
         "status": "pass",
-        "profileName": "Browser Smoke 1782318798423",
+        "profileName": "Browser Smoke 1782360944908",
         "country": "unitedStates",
         "region": "California",
         "graduationTerm": "2028-05",
@@ -896,7 +896,7 @@
         "wrongPasswordRejected": true,
         "oldEmailRejected": true,
         "oldEmail": "browser-route-smoke@quantgym.local",
-        "newEmail": "browser-route-smoke+email-1782318802993@quantgym.local",
+        "newEmail": "browser-route-smoke+email-1782360949521@quantgym.local",
         "passwordHashRotated": true,
         "reloginSucceeded": true,
         "reloginPath": "/"
@@ -906,7 +906,7 @@
         "status": "pass",
         "avatarDataUrl": true,
         "avatarCleared": true,
-        "resumeFileName": "browser-smoke-resume-1782318812870.txt",
+        "resumeFileName": "browser-smoke-resume-1782360959521.txt",
         "resumeTextLength": 215,
         "reloaded": true
       },
@@ -927,8 +927,8 @@
         "resumeUploadPersisted": true,
         "noHorizontalOverflow": true,
         "reloaded": true,
-        "profileName": "Mobile Account 1782318829219",
-        "resumeFileName": "mobile-account-resume-1782318829219.txt"
+        "profileName": "Mobile Account 1782360975639",
+        "resumeFileName": "mobile-account-resume-1782360975639.txt"
       },
       {
         "name": "settings language switch syncs URL and persists reload",
@@ -1000,7 +1000,7 @@
         "payloadIncludesCommunity": true,
         "payloadIncludesAccount": true,
         "statusUpdated": true,
-        "lastSyncAt": "2026-06-24T16:34:18.885Z"
+        "lastSyncAt": "2026-06-25T04:16:41.513Z"
       },
       {
         "name": "mobile settings config and backup controls avoid overflow",
@@ -1012,7 +1012,7 @@
         "exportDownloadWorks": true,
         "noHorizontalOverflow": true,
         "reloaded": true,
-        "exportedFilename": "quantgym-Mobile Account 1782318829219-2026-06-24.json"
+        "exportedFilename": "quantgym-Mobile Account 1782360975639-2026-06-25.json"
       },
       {
         "name": "settings rejects invalid backup files without changing state",
@@ -1030,16 +1030,16 @@
         "exportedThreadIncluded": true,
         "postRestored": true,
         "threadRestored": true,
-        "threadId": "thread-settings-backup-community-1782318873115"
+        "threadId": "thread-settings-backup-community-1782361015246"
       },
       {
         "name": "settings backup export, import, and reset state",
         "status": "pass",
         "resetPrompt": "清空当前账户的训练记录？已连接云端时也会同步为空。",
-        "exportedFilename": "quantgym-Mobile Account 1782318829219-2026-06-24.json",
-        "importedResumeFile": "settings-imported-resume-1782318881583.txt",
-        "importedResourceId": "settings-imported-resource-1782318881583",
-        "importedCourseId": "settings-imported-course-1782318881583",
+        "exportedFilename": "quantgym-Mobile Account 1782360975639-2026-06-25.json",
+        "importedResumeFile": "settings-imported-resume-1782361023791.txt",
+        "importedResourceId": "settings-imported-resource-1782361023791",
+        "importedCourseId": "settings-imported-course-1782361023791",
         "resetClearedImport": true
       }
     ]
@@ -1048,7 +1048,7 @@
     "name": "protected route redirects to auth and local email auth works",
     "status": "pass",
     "localEmailAuth": {
-      "email": "browser-auth-1782318414203-sxt9ue@quantgym.local",
+      "email": "browser-auth-1782360571720-dwwju5@quantgym.local",
       "redirectedToLogin": true,
       "accountStatusChecked": true,
       "registrationFormShown": true,
@@ -1063,7 +1063,7 @@
       "resetSucceeded": true,
       "resetOldPasswordRejected": true,
       "resetNewPasswordLoginSucceeded": true,
-      "accountId": "b127c50b-e904-4971-8b73-34e79d51d62c",
+      "accountId": "ebc42dde-a909-488e-8f93-d5ebca539abf",
       "reloginPath": "/"
     },
     "path": "/login",
@@ -1071,10 +1071,6 @@
   },
   "consoleErrors": [],
   "ignoredConsoleErrors": [
-    {
-      "type": "error",
-      "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-    },
     {
       "type": "error",
       "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"

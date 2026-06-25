@@ -5,7 +5,7 @@
   "status": "pass",
   "launchReadiness": "blocked",
   "requireClear": false,
-  "blockerCount": 3,
+  "blockerCount": 4,
   "trackedCount": 1,
   "blockers": [
     {
@@ -26,8 +26,8 @@
     {
       "id": "deployed-google-provider-login",
       "title": "Deployed Google provider account login",
-      "status": "pass",
-      "ownerAction": "Deployed Google provider login is signed off with a fresh token that matches the deployed Google Client ID.",
+      "status": "blocked",
+      "ownerAction": "Generate a fresh deployed Google ID token with npm run google:token-helper:deployed, then run npm run verify:production-boundaries:deployed:paste-token before the token expires.",
       "signoffCommand": "npm run verify:production-boundaries:deployed:paste-token",
       "localCoverage": {
         "trackedInProductStatus": true,
@@ -41,14 +41,9 @@
         "deployedGoogleProviderLoginStateCaptured": true,
         "deployedGoogleProviderLoginTokenExpiresAt": "2026-06-24T17:23:35.000Z",
         "deployedGoogleProviderLoginTokenMinimumSeconds": 120,
-        "deployedGoogleProviderLoginTokenFresh": true,
-        "deployedGoogleProviderLoginTokenExpired": false,
-        "deployedGoogleProviderLoginPass": true,
-        "deployedGoogleProviderLoginHasToken": true,
-        "deployedGoogleProviderLoginGoogleLinked": true,
-        "deployedGoogleProviderLoginTokenAudienceMatchesClientId": true,
-        "deployedGoogleProviderLoginEmailRedacted": true,
-        "deployedGoogleProviderLoginTokenEmailRedacted": true,
+        "deployedGoogleProviderLoginTokenFresh": false,
+        "deployedGoogleProviderLoginTokenExpired": true,
+        "deployedGoogleProviderLoginSkippedForToken": false,
         "deployedTokenHelperScriptPresent": true,
         "deployedPasteTokenVerifierPresent": true,
         "deployedPasteTokenAudiencePrecheck": true,

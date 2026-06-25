@@ -28,6 +28,8 @@
     "check:deployed-beta-mobile-content-smoke": "node scripts/check-deployed-beta-mobile-content-smoke.mjs",
     "check:browser-extension": "node scripts/check-browser-extension.mjs",
     "check:browser-extension:runtime-smoke": "node scripts/check-browser-extension-runtime-smoke.mjs",
+    "check:viewport-capture:web-bridge": "node scripts/check-viewport-capture-web-bridge.mjs",
+    "check:viewport-capture-llm:fixture": "node scripts/check-viewport-capture-llm-fixture.mjs",
     "check:chrome-store-readiness": "node scripts/check-chrome-store-readiness.mjs",
     "check:chrome-store-publication": "node scripts/check-chrome-store-publication.mjs",
     "check:chrome-store-publication:fixture": "node scripts/check-chrome-store-publication-fixture.mjs",

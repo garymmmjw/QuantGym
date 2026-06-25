@@ -1,9 +1,14 @@
 {
   "manifest_version": 3,
   "name": "QuantGym Collector",
-  "version": "0.2.0",
-  "description": "Collect LeetCode and interview problems into QuantGym.",
-  "permissions": ["activeTab", "scripting", "storage"],
+  "version": "0.3.0",
+  "description": "Record visible interview problems into QuantGym.",
+  "permissions": ["activeTab", "scripting", "storage", "tabs"],
+  "host_permissions": [
+    "https://beta.quantgym.app/*",
+    "https://quantgym.app/*",
+    "https://www.quantgym.app/*"
+  ],
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -11,11 +16,22 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_title": "Collect problem",
+    "default_title": "Record problem",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png"
     }
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://beta.quantgym.app/*",
+        "https://quantgym.app/*",
+        "https://www.quantgym.app/*"
+      ],
+      "js": ["quantgym-bridge.js"],
+      "run_at": "document_idle"
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 9518,
+  "durationMs": 11499,
   "externalPublicationRequired": true,
   "finalSignoffCommand": "npm run check:chrome-store-publication:published",
   "submissionHandoff": {
@@ -11,11 +11,11 @@
     "passed": 2,
     "failed": 0,
     "name": "QuantGym Collector",
-    "version": "0.2.0",
-    "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.2.0.zip",
-    "uploadSha256": "db43b965bb6c8600fff8cae44221b347d112d31b4f5de896174a8784cdeb4b2d",
-    "uploadBytes": 38073,
-    "uploadFileCount": 9,
+    "version": "0.3.0",
+    "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.3.0.zip",
+    "uploadSha256": "44e5a17971072281f1c11089adc7eb31177e691723af43d61d27a2ce5fe5bfe2",
+    "uploadBytes": 39237,
+    "uploadFileCount": 10,
     "listingCategory": "Productivity",
     "listingLanguage": "en-US",
     "listingHost": "beta.quantgym.app",
@@ -32,11 +32,11 @@
     "passed": 3,
     "failed": 0,
     "name": "QuantGym Collector",
-    "version": "0.2.0",
-    "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.2.0.zip",
-    "uploadSha256": "db43b965bb6c8600fff8cae44221b347d112d31b4f5de896174a8784cdeb4b2d",
-    "uploadBytes": 38073,
-    "uploadFileCount": 9,
+    "version": "0.3.0",
+    "uploadOutput": "artifacts/browser-extension/quantgym-collector-v0.3.0.zip",
+    "uploadSha256": "44e5a17971072281f1c11089adc7eb31177e691723af43d61d27a2ce5fe5bfe2",
+    "uploadBytes": 39237,
+    "uploadFileCount": 10,
     "listingCategory": "Productivity",
     "listingLanguage": "en-US",
     "listingHost": "chromewebstore.google.com",
@@ -47,7 +47,7 @@
     "itemId": "abcdefghijklmnopabcdefghijklmnop",
     "evidenceHost": "chromewebstore.google.com",
     "publicationStatus": "published",
-    "submittedVersion": "0.2.0"
+    "submittedVersion": "0.3.0"
   },
   "negativeFixtures": [
     {
@@ -153,7 +153,7 @@
       "rejected": true,
       "expectedErrorObserved": true,
       "failed": 1,
-      "error": "QUANTGYM_CHROME_WEB_STORE_SUBMITTED_VERSION must equal manifest version 0.2.0."
+      "error": "QUANTGYM_CHROME_WEB_STORE_SUBMITTED_VERSION must equal manifest version 0.3.0."
     },
     {
       "name": "upload SHA mismatch rejected",

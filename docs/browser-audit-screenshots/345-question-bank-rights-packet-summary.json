@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-21T07:29:27.506Z",
+  "generatedAt": "2026-06-25T04:17:45.670Z",
   "mode": "commercial",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/question-bank-rights/public-commercial-approval-packet",
   "signoffCommand": "npm run check:question-bank-rights:public && npm run check:question-bank-rights:commercial",

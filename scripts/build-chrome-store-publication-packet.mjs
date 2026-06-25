@@ -72,6 +72,9 @@ try {
     releasePackageExists: fs.existsSync(releasePackagePath),
     releasePackageShaMatches: fs.existsSync(releasePackagePath)
       && sha256File(releasePackagePath) === packet.releasePackageEvidence.uploadSha256,
+    releasePackageVersionMatchesManifest: packet.releasePackageEvidence.version === packet.manifest.version,
+    releasePackageOutputMatchesManifestVersion: String(packet.releasePackageEvidence.uploadOutput || "")
+      === `artifacts/browser-extension/quantgym-collector-v${packet.manifest.version}.zip`,
     publicationFixturePass: publicationFixture.status === "pass",
     submissionHandoffPass: publicationFixture.checks?.submissionHandoffPass === true,
     publishedFixturePass: publicationFixture.checks?.publishedFixturePass === true,

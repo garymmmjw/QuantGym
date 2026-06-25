@@ -702,6 +702,7 @@ async function createInterviewReply(payload) {
   if (payload.task === "hint") return createInterviewHint(payload);
   if (payload.task === "converse") return createInterviewConverse(payload);
   if (payload.task === "generate_pdf_questions") return createPdfInterviewQuestions(payload);
+  if (payload.task === "extract_screenshot_question") return createScreenshotQuestionExtraction(payload);
   if (payload.task === "evaluate" || !payload.task) return createInterviewEvaluation(payload);
   throw new Error(`Unsupported interview task: ${payload.task}`);
 }
@@ -1019,6 +1020,75 @@ async function createPdfInterviewQuestions(payload) {
   };
 }
 
+async function createScreenshotQuestionExtraction(payload) {
+  const model = payload.model || DEFAULT_MODEL;
+  const language = payload.language === "en" ? "English" : "Chinese";
+  const screenshot = payload.screenshot || {};
+  const imageUrl = String(screenshot.dataUrl || "").trim();
+  if (!/^data:image\//i.test(imageUrl)) throw new Error("Screenshot image_data is missing");
+
+  const sourceUrl = String(payload.sourceUrl || "").trim();
+  const pageTitle = String(payload.pageTitle || "").trim().slice(0, 240);
+  const pageText = String(payload.pageText || "").trim().slice(0, 12000);
+  const pageContext = payload.pageContext && typeof payload.pageContext === "object" ? payload.pageContext : {};
+
+  const instructions = [
+    "You extract one quant interview or coding problem from a browser viewport screenshot.",
+    "Use the screenshot as the source of truth. Use supplied page text only as supporting context.",
+    "If the visible screen contains navigation, ads, comments, or unrelated UI, ignore them.",
+    "Return only compact JSON.",
+    "Schema: {\"problem\":{\"titleEn\":\"...\",\"titleZh\":\"...\",\"category\":\"...\",\"difficulty\":\"Easy|Medium|Hard\",\"tags\":[\"...\"],\"promptEn\":\"...\",\"promptZh\":\"...\",\"answer\":\"\",\"explanation\":\"\"},\"confidence\":\"high|medium|low\"}.",
+    "category must be one of: leetcode, pandasNumpy, probabilityExpectation, statistics, machineLearning, deepLearning, market, option, mentalMath.",
+    "Preserve formulas and choices in the prompt when visible. Do not solve the question unless the answer is visible.",
+    `Use ${language} where appropriate, but keep English technical terms when useful.`
+  ].join(" ");
+
+  const data = await requestOpenAiResponses({
+    model,
+    instructions,
+    input: [{
+      role: "user",
+      content: [
+        {
+          type: "input_text",
+          text: [
+            `Source URL: ${sourceUrl || "unknown"}`,
+            `Page title: ${pageTitle || "unknown"}`,
+            pageText ? `Page text hint:\n${pageText}` : "",
+            Object.keys(pageContext).length ? `Existing DOM capture hint:\n${JSON.stringify({
+              titleEn: pageContext.titleEn || "",
+              titleZh: pageContext.titleZh || "",
+              category: pageContext.category || "",
+              difficulty: pageContext.difficulty || "",
+              tags: Array.isArray(pageContext.tags) ? pageContext.tags.slice(0, 8) : [],
+              promptEn: String(pageContext.promptEn || "").slice(0, 3000),
+              promptZh: String(pageContext.promptZh || "").slice(0, 3000)
+            })}` : "",
+            "Extract the single main question visible in the screenshot."
+          ].filter(Boolean).join("\n\n")
+        },
+        {
+          type: "input_image",
+          image_url: imageUrl
+        }
+      ]
+    }],
+    ...modelOptions(model, 1600)
+  });
+  const text = requireOutputText(data, "OpenAI returned no screenshot extraction text");
+  let parsed = {};
+  try {
+    parsed = parseJsonObject(text);
+  } catch {
+    parsed = { problem: { promptEn: text } };
+  }
+  const problem = normalizeScreenshotQuestion(parsed.problem || parsed, payload, text);
+  return {
+    problem,
+    confidence: normalizeScreenshotConfidence(parsed.confidence)
+  };
+}
+
 function extractOutputText(data) {
   if (data.output_text) return data.output_text;
   const chunks = [];
@@ -1191,6 +1261,30 @@ function normalizePdfQuestion(item, index, payload, rawText = "") {
   };
 }
 
+function normalizeScreenshotQuestion(item, payload, rawText = "") {
+  const raw = typeof item === "string" ? { promptEn: item } : (item && typeof item === "object" ? item : {});
+  const pageContext = payload.pageContext && typeof payload.pageContext === "object" ? payload.pageContext : {};
+  const fallbackPrompt = String(raw.promptEn || raw.promptZh || raw.prompt || raw.question || payload.pageText || rawText || "").trim()
+    || "Extracted viewport question needs manual review.";
+  const title = String(raw.titleEn || raw.title || pageContext.titleEn || payload.pageTitle || firstSentence(fallbackPrompt) || "Captured Viewport Question").trim();
+  const titleZh = String(raw.titleZh || pageContext.titleZh || "").trim();
+  const promptEn = String(raw.promptEn || raw.prompt || raw.question || fallbackPrompt).trim();
+  const promptZh = String(raw.promptZh || "").trim();
+  return {
+    titleEn: title.slice(0, 160),
+    titleZh: titleZh.slice(0, 160),
+    category: normalizeQuestionCategory(raw.category || pageContext.category || inferQuestionCategory(`${title} ${promptEn} ${promptZh} ${rawText}`)),
+    difficulty: normalizeQuestionDifficulty(raw.difficulty || pageContext.difficulty),
+    tags: normalizeViewportQuestionTags(raw.tags || pageContext.tags, `${title} ${promptEn} ${promptZh}`),
+    source: String(raw.source || pageContext.source || "viewport").trim(),
+    sourceUrl: String(raw.sourceUrl || payload.sourceUrl || pageContext.sourceUrl || "").trim(),
+    promptEn,
+    promptZh,
+    answer: String(raw.answer || raw.solution || "").trim(),
+    explanation: String(raw.explanation || raw.rationale || "").trim()
+  };
+}
+
 function normalizeQuestionCategory(value) {
   const allowed = new Set(["leetcode", "pandasNumpy", "probabilityExpectation", "statistics", "machineLearning", "deepLearning", "market", "option", "mentalMath"]);
   const text = String(value || "").trim();
@@ -1204,6 +1298,22 @@ function inferQuestionCategory(text) {
   if (/machine learning|model|drift|feature|training/.test(lower)) return "machineLearning";
   if (/market|trading|order book|liquidity|spread/.test(lower)) return "market";
   return "probabilityExpectation";
+}
+
+function normalizeViewportQuestionTags(value, text = "") {
+  const tags = Array.isArray(value) ? value.map(String) : String(value || "").split(/[,，]/);
+  const normalized = tags.map((item) => item.trim()).filter(Boolean);
+  const lower = String(text || "").toLowerCase();
+  if (/option|delta|gamma|vega|volatility|black.scholes|hedg/.test(lower)) normalized.push("option");
+  if (/probability|expected value|expectation|bayes|random/.test(lower)) normalized.push("probability");
+  if (/array|hash|tree|graph|dynamic programming|leetcode/.test(lower)) normalized.push("leetcode");
+  normalized.push("viewport");
+  return [...new Set(normalized)].slice(0, 8);
+}
+
+function normalizeScreenshotConfidence(value) {
+  const text = String(value || "").trim().toLowerCase();
+  return ["high", "medium", "low"].includes(text) ? text : "medium";
 }
 
 function normalizeQuestionDifficulty(value) {

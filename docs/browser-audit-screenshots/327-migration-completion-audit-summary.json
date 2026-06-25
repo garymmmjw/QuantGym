@@ -46,7 +46,7 @@
       "title": "Retired route bridge symbols are absent from src",
       "status": "pass",
       "evidence": {
-        "checkedFiles": 453,
+        "checkedFiles": 455,
         "hits": []
       }
     },
@@ -101,8 +101,8 @@
         "distConfigGoogleClientIdSet": true,
         "distConfigGoogleLoginEnabled": true,
         "distConfigContainsOpenAiKey": false,
-        "distConfigBuildCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
-        "distConfigBuildBranch": "main",
+        "distConfigBuildCommit": "c275c9214fa5707aca8f4f2a0e18c63bfb2d0a31",
+        "distConfigBuildBranch": "codex/viewport-capture-recording",
         "distConfigBuildSource": "local-git",
         "distVersionJsonPresent": true,
         "distVersionJsonMatchesConfig": true,
