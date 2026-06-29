@@ -30,6 +30,15 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote, unquote, urlparse
 from urllib.request import Request, urlopen
 
+try:
+    import psycopg
+    from psycopg.rows import dict_row
+    from psycopg.types.json import Jsonb
+except ModuleNotFoundError:
+    psycopg = None
+    dict_row = None
+    Jsonb = None
+
 from poker_engine import (
     PokerError,
     add_player as poker_add_player,
@@ -79,11 +88,30 @@ BASE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = BASE_DIR.parent
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = Path(os.environ.get("QUANTGYM_DB", DATA_DIR / "quantgym.sqlite3"))
+POSTGRES_DATABASE_URL = (
+    os.environ.get("QUANTGYM_POSTGRES_DATABASE_URL")
+    or os.environ.get("QUANTGYM_DATABASE_URL")
+    or os.environ.get("DATABASE_URL")
+    or ""
+).strip()
+DATABASE_BACKEND = os.environ.get("QUANTGYM_DB_BACKEND", "").strip().lower()
+if not DATABASE_BACKEND:
+    DATABASE_BACKEND = "postgres" if POSTGRES_DATABASE_URL else "sqlite"
 PROBLEM_CATALOG_PATH = Path(
     os.environ.get("QUANTGYM_PROBLEM_CATALOG", PROJECT_ROOT / "data" / "problem-catalog.json")
 )
 JOBS_CATALOG_PATH = Path(os.environ.get("QUANTGYM_JOBS_CATALOG", PROJECT_ROOT / "data" / "jobs-catalog.json"))
 DEFAULT_PUBLIC_ATS_JOBS_SOURCE_URL = "https://beta.quantgym.app/data/jobs/public-ats-feed.json"
+POSTGRES_SCHEMA_PATH = BASE_DIR / "postgres" / "schema.sql"
+POSTGRES_JSON_COLUMNS = {
+    "account_json",
+    "state_json",
+    "community_json",
+    "metadata_json",
+    "problem_json",
+    "room_json",
+    "tags_json",
+}
 
 
 def is_truthy_env(value: str) -> bool:
@@ -493,8 +521,12 @@ def sanitize_audit_metadata(metadata: dict | None) -> dict:
     return cleaned
 
 
-def parse_json(raw: str, fallback):
+def parse_json(raw, fallback):
+    if isinstance(raw, (dict, list)):
+        return raw
     if not raw:
+        return fallback
+    if not isinstance(raw, str):
         return fallback
     try:
         return json.loads(raw)
@@ -1229,19 +1261,294 @@ def merge_community(existing: dict | None, incoming: dict | None) -> dict:
     return {"posts": posts}
 
 
+def split_sql_items(body: str) -> list[str]:
+    items = []
+    current = []
+    depth = 0
+    quote = ""
+    for char in str(body or ""):
+        if quote:
+            current.append(char)
+            if char == quote:
+                quote = ""
+            continue
+        if char in {"'", '"'}:
+            quote = char
+            current.append(char)
+            continue
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth = max(0, depth - 1)
+        if char == "," and depth == 0:
+            items.append("".join(current).strip())
+            current = []
+        else:
+            current.append(char)
+    if current:
+        items.append("".join(current).strip())
+    return items
+
+
+def count_sql_placeholders(sql: str) -> int:
+    count = 0
+    quote = ""
+    for char in str(sql or ""):
+        if quote:
+            if char == quote:
+                quote = ""
+            continue
+        if char in {"'", '"'}:
+            quote = char
+            continue
+        if char == "?":
+            count += 1
+    return count
+
+
+def translate_postgres_placeholders(sql: str) -> str:
+    translated = []
+    quote = ""
+    for char in str(sql or ""):
+        if quote:
+            translated.append(char)
+            if char == quote:
+                quote = ""
+            continue
+        if char in {"'", '"'}:
+            quote = char
+            translated.append(char)
+            continue
+        translated.append("%s" if char == "?" else char)
+    return "".join(translated)
+
+
+def split_sql_script(script: str) -> list[str]:
+    statements = []
+    current = []
+    quote = ""
+    for raw_line in str(script or "").splitlines():
+        line = raw_line
+        if not quote and line.lstrip().startswith("--"):
+            continue
+        index = 0
+        while index < len(line):
+            char = line[index]
+            if quote:
+                current.append(char)
+                if char == quote:
+                    quote = ""
+                index += 1
+                continue
+            if char in {"'", '"'}:
+                quote = char
+                current.append(char)
+                index += 1
+                continue
+            if char == "-" and index + 1 < len(line) and line[index + 1] == "-":
+                break
+            if char == ";":
+                statement = "".join(current).strip()
+                if statement:
+                    statements.append(statement)
+                current = []
+                index += 1
+                continue
+            current.append(char)
+            index += 1
+        current.append("\n")
+    statement = "".join(current).strip()
+    if statement:
+        statements.append(statement)
+    return statements
+
+
+def idempotent_postgres_schema_statement(sql: str) -> str:
+    statement = str(sql or "").strip()
+    if re.match(r"^CREATE\s+TABLE\s+(?!IF\s+NOT\s+EXISTS\b)", statement, flags=re.IGNORECASE):
+        return re.sub(
+            r"^CREATE\s+TABLE\s+",
+            "CREATE TABLE IF NOT EXISTS ",
+            statement,
+            count=1,
+            flags=re.IGNORECASE,
+        )
+    if re.match(r"^CREATE\s+INDEX\s+(?!IF\s+NOT\s+EXISTS\b)", statement, flags=re.IGNORECASE):
+        return re.sub(
+            r"^CREATE\s+INDEX\s+",
+            "CREATE INDEX IF NOT EXISTS ",
+            statement,
+            count=1,
+            flags=re.IGNORECASE,
+        )
+    return statement
+
+
+def clean_sql_column_name(value: str) -> str:
+    return str(value or "").strip().split(".")[-1].strip().strip('"').lower()
+
+
+def postgres_json_param_indexes(sql: str) -> set[int]:
+    indexes: set[int] = set()
+    text = str(sql or "")
+    insert_match = re.search(
+        r"INSERT\s+INTO\s+[a-zA-Z_][\w]*\s*\((.*?)\)\s*VALUES\s*\((.*?)\)",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if insert_match:
+        columns = split_sql_items(insert_match.group(1))
+        values = split_sql_items(insert_match.group(2))
+        param_index = 0
+        for index, value_sql in enumerate(values):
+            placeholder_count = count_sql_placeholders(value_sql)
+            column = clean_sql_column_name(columns[index]) if index < len(columns) else ""
+            if column in POSTGRES_JSON_COLUMNS and placeholder_count == 1:
+                indexes.add(param_index)
+            param_index += placeholder_count
+
+    update_match = re.search(
+        r"UPDATE\s+[a-zA-Z_][\w]*\s+SET\s+(.*?)\s+WHERE\s+",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if update_match:
+        param_index = 0
+        for assignment in split_sql_items(update_match.group(1)):
+            placeholder_count = count_sql_placeholders(assignment)
+            left = assignment.split("=", 1)[0] if "=" in assignment else ""
+            column = clean_sql_column_name(left)
+            if column in POSTGRES_JSON_COLUMNS and placeholder_count == 1:
+                indexes.add(param_index)
+            param_index += placeholder_count
+    return indexes
+
+
+def postgres_json_value(value):
+    if Jsonb is None:
+        return value
+    if isinstance(value, str):
+        try:
+            return Jsonb(json.loads(value))
+        except json.JSONDecodeError:
+            return Jsonb(value)
+    return Jsonb(value)
+
+
+def adapt_postgres_params(sql: str, params):
+    if params is None:
+        return None
+    if not isinstance(params, (list, tuple)):
+        return params
+    json_indexes = postgres_json_param_indexes(sql)
+    if not json_indexes:
+        return params
+    adapted = []
+    for index, value in enumerate(params):
+        adapted.append(postgres_json_value(value) if index in json_indexes else value)
+    return tuple(adapted)
+
+
+class CompatRow(dict):
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return list(self.values())[key]
+        return super().__getitem__(key)
+
+
+class PostgresCursor:
+    def __init__(self, cursor):
+        self.cursor = cursor
+
+    @property
+    def rowcount(self) -> int:
+        return int(getattr(self.cursor, "rowcount", -1) or 0)
+
+    def fetchone(self):
+        row = self.cursor.fetchone()
+        return CompatRow(row) if isinstance(row, dict) else row
+
+    def fetchall(self):
+        return [CompatRow(row) if isinstance(row, dict) else row for row in self.cursor.fetchall()]
+
+
+class PostgresConnection:
+    def __init__(self, raw_conn):
+        self.raw_conn = raw_conn
+
+    def execute(self, sql: str, params=None):
+        return PostgresCursor(
+            self.raw_conn.execute(
+                translate_postgres_placeholders(sql),
+                adapt_postgres_params(sql, params),
+            )
+        )
+
+    def executemany(self, sql: str, params_seq):
+        return self.raw_conn.executemany(
+            translate_postgres_placeholders(sql),
+            [adapt_postgres_params(sql, params) for params in (params_seq or [])],
+        )
+
+    def executescript(self, sql: str):
+        last_cursor = None
+        for statement in split_sql_script(sql):
+            if statement.strip().upper() in {"BEGIN", "COMMIT"}:
+                continue
+            last_cursor = self.raw_conn.execute(idempotent_postgres_schema_statement(statement))
+        if last_cursor is None:
+            last_cursor = self.raw_conn.execute("SELECT 1 AS ok")
+        return PostgresCursor(last_cursor)
+
+    def commit(self):
+        return self.raw_conn.commit()
+
+    def rollback(self):
+        return self.raw_conn.rollback()
+
+    def close(self):
+        return self.raw_conn.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        if exc_type:
+            self.rollback()
+        else:
+            self.commit()
+        self.close()
+
+
 class Database:
-    def __init__(self, path: Path):
-        path.parent.mkdir(parents=True, exist_ok=True)
+    def __init__(self, path: Path, *, backend: str = "sqlite", postgres_url: str = ""):
+        self.backend = backend if backend in {"sqlite", "postgres"} else "sqlite"
         self.path = path
+        self.postgres_url = postgres_url
+        if self.backend == "sqlite":
+            path.parent.mkdir(parents=True, exist_ok=True)
         self.init_schema()
 
-    def connect(self) -> sqlite3.Connection:
+    def connect(self):
+        if self.backend == "postgres":
+            if not self.postgres_url:
+                raise RuntimeError("Postgres backend requires QUANTGYM_POSTGRES_DATABASE_URL, QUANTGYM_DATABASE_URL, or DATABASE_URL.")
+            if psycopg is None:
+                raise RuntimeError(
+                    "Postgres backend requires psycopg. Install it with: pip install -r api-server/requirements.txt"
+                )
+            return PostgresConnection(psycopg.connect(self.postgres_url, row_factory=dict_row))
         conn = sqlite3.connect(self.path)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON")
         return conn
 
     def init_schema(self) -> None:
+        if self.backend == "postgres":
+            schema_sql = POSTGRES_SCHEMA_PATH.read_text(encoding="utf-8")
+            with self.connect() as conn:
+                conn.executescript(schema_sql)
+            return
         with self.connect() as conn:
             conn.executescript(
                 """
@@ -1408,6 +1715,33 @@ class Database:
             )
 
     def health(self) -> dict:
+        if self.backend == "postgres":
+            try:
+                with self.connect() as conn:
+                    conn.execute("SELECT 1 AS ok").fetchone()
+                    readonly = str(conn.execute("SHOW transaction_read_only").fetchone()[0] or "").lower()
+                    table_count = int(
+                        conn.execute(
+                            """
+                            SELECT COUNT(*) AS count
+                            FROM information_schema.tables
+                            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+                            """
+                        ).fetchone()[0] or 0
+                    )
+            except Exception:
+                return {
+                    "backend": "postgres",
+                    "writable": False,
+                    "foreignKeys": False,
+                    "schemaTables": 0,
+                }
+            return {
+                "backend": "postgres",
+                "writable": readonly in {"off", "false", "0", "no"},
+                "foreignKeys": True,
+                "schemaTables": table_count,
+            }
         try:
             with self.connect() as conn:
                 foreign_keys = bool(conn.execute("PRAGMA foreign_keys").fetchone()[0])
@@ -2115,7 +2449,7 @@ class Database:
             return [room for room in (parse_json(row["room_json"], None) for row in rows) if isinstance(room, dict)]
 
 
-db = Database(DB_PATH)
+db = Database(DB_PATH, backend=DATABASE_BACKEND, postgres_url=POSTGRES_DATABASE_URL)
 IMPORTED_CATALOG_COUNT = db.import_problem_catalog(PROBLEM_CATALOG_PATH)
 
 
@@ -3643,7 +3977,10 @@ class QuantGymHandler(BaseHTTPRequestHandler):
 def main():
     server = ThreadingHTTPServer((HOST, PORT), QuantGymHandler)
     print(f"QuantGym API listening on http://{HOST}:{PORT}")
-    print(f"SQLite database: {DB_PATH}")
+    if db.backend == "postgres":
+        print("Database backend: postgres")
+    else:
+        print(f"SQLite database: {DB_PATH}")
     server.serve_forever()
 
 
