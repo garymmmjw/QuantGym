@@ -237,6 +237,7 @@ and the current SQLite data shape, use:
 ```bash
 npm run check:postgres-cutover
 npm run check:postgres-cutover:export-smoke
+npm run check:postgres-cutover:deployed-health
 npm run build:postgres-cutover-packet
 ```
 
@@ -256,7 +257,12 @@ signoff env template, and final checklist.
 guarded Postgres import steps, rollback/backup checklist, final signoff env
 template, and live migration checklist. After an actual managed Postgres
 migration, confirm `/api/health` reports `database.backend="postgres"` and run
-`npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json` with the required signoff environment.
+`npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json`
+with the required signoff environment.
+
+`npm run check:postgres-cutover:deployed-health` records the current deployed
+`https://api.quantgym.app/api/health` database backend and remains partial while
+production still reports SQLite.
 
 To finish the Google provider login boundary locally, generate the temporary
 token helper and open the printed URL while the Vite dev server is running:
@@ -276,18 +282,19 @@ To verify the deployed beta endpoints instead of the local `config.js`
 fallback, run:
 
 ```bash
-npm run google:token-helper:deployed
-npm run verify:production-boundaries:deployed
+npm run google:token-helper:deployed:clipboard
+npm run verify:production-boundaries:deployed:paste-token
 ```
 
-`npm run google:token-helper:deployed` writes the same ignored
-`artifacts/google-id-token-helper.html`, but for deployed verification it is an
-external-browser handoff page. Open its instructions locally, then open
-`https://beta.quantgym.app`, paste the generated Console snippet on that deployed
-origin, click the injected Google sign-in button, and paste the copied token into
-the deployed paste-token verifier immediately. Do not run the deployed Google
-button from `127.0.0.1`; Google rejects that origin for the deployed OAuth Client
-ID.
+`npm run google:token-helper:deployed:clipboard` writes the same ignored
+`artifacts/google-id-token-helper.html`, copies the deployed Console snippet to
+the system clipboard when a supported clipboard command is available, and opens
+`https://beta.quantgym.app`. Paste the snippet into the deployed page Console,
+click the injected Google sign-in button, and paste the copied token into the
+deployed paste-token verifier immediately. If clipboard or browser opening is
+not available, run `npm run google:token-helper:deployed` and use the helper
+page's Copy Console snippet button. Do not run the deployed Google button from
+`127.0.0.1`; Google rejects that origin for the deployed OAuth Client ID.
 
 For an interactive handoff that does not echo the token or write it to disk, run
 one of these commands and paste the token when prompted:
@@ -400,6 +407,9 @@ Render API environment variables:
 PORT=8790
 QUANTGYM_HOST=0.0.0.0
 QUANTGYM_DB=/var/data/quantgym.sqlite3
+# For the managed Postgres cutover, set:
+# QUANTGYM_DB_BACKEND=postgres
+# QUANTGYM_POSTGRES_DATABASE_URL=<Render managed Postgres internal/external URL>
 QUANTGYM_PUBLIC_API_BASE_URL=https://api.quantgym.app
 QUANTGYM_ALLOWED_ORIGINS=https://beta.quantgym.app
 QUANTGYM_BETA_EMAIL_ALLOWLIST=tester1@example.com,tester2@example.com
@@ -638,16 +648,17 @@ npm run check:postgres-cutover:export-smoke
 npm run build:postgres-cutover-packet
 ```
 
-Before any public or commercial problem-bank release, also run:
+Before any public or commercial problem-bank release, run the release-safe catalog gate. Run the full approval gates only when you intend to ship the full private-beta catalog:
 
 ```bash
 npm run check:question-bank-rights:public-smoke
 npm run check:question-bank-rights:release-blockers
+npm run check:question-bank-release-catalog
 npm run check:question-bank-rights:public
 npm run check:question-bank-rights:commercial
 ```
 
-The public gate is expected to fail until every active question-bank source has explicit public/commercial redistribution approval recorded in `data/question-banks/source-rights-manifest.json`. Approved entries must carry the approval type, redistribution scopes, evidence summary, recent review date, and HTTPS evidence URL with a DNS hostname, without embedded credentials, query strings, fragments, or raw IP hosts; commercial release also requires the `commercial-use` scope.
+The public/commercial approval gates are expected to fail until every active question-bank source has explicit redistribution approval recorded in `data/question-banks/source-rights-manifest.json`. Approved entries must carry the approval type, redistribution scopes, evidence summary, recent review date, and HTTPS evidence URL with a DNS hostname, without embedded credentials, query strings, fragments, or raw IP hosts; commercial release also requires the `commercial-use` scope. `npm run check:question-bank-release-catalog` is the current release-safe catalog gate: it generates public/commercial catalog artifacts that exclude every unapproved source and verifies the web runtime can select those artifacts through `config.js` via `problemCatalogScript`. This clears the current publication path by not distributing unapproved sources; it is not a rights approval for the full catalog.
 
 To turn the current blockers into a per-source approval workflow packet, run:
 
@@ -655,13 +666,16 @@ To turn the current blockers into a per-source approval workflow packet, run:
 npm run build:question-bank-rights-packet
 ```
 
-This writes a non-legal-advice work packet under `artifacts/question-bank-rights/public-commercial-approval-packet/` with a CSV tracker, per-source context, outreach templates, and draft manifest snippets. The packet is intentionally not a release approval; public/commercial gates should continue to fail until real evidence is reviewed and recorded in the rights manifest.
+This writes a non-legal-advice work packet under `artifacts/question-bank-rights/public-commercial-approval-packet/` with a CSV tracker, per-source context, outreach templates, and draft manifest snippets. The packet is intentionally not a release approval; full public/commercial catalog gates should continue to fail until real evidence is reviewed and recorded in the rights manifest.
 
-To inspect all external public-launch blockers without calling external services, run `npm run check:external-launch-blockers`. It should pass while reporting `launchReadiness: "blocked"` until the seven remaining external signoffs are cleared; use `npm run check:external-launch-blockers -- --require-clear` for final public-launch clearing.
+To inspect all external public-launch blockers without calling external services, run `npm run check:external-launch-blockers`. It should pass while reporting `launchReadiness: "blocked"` until the remaining external signoffs are cleared; use `npm run check:external-launch-blockers -- --require-clear` for final public-launch clearing.
 
 Before an actual SQLite to Postgres migration, create a protected full export and
-require the cutover checker to verify it is not redacted. After the managed
-Postgres import and app cutover are complete, set the `QUANTGYM_POSTGRES_CUTOVER_*`
+require the cutover checker to verify it is not redacted. The API now has an
+optional Postgres runtime path behind `QUANTGYM_DB_BACKEND=postgres`; keep
+SQLite active until the managed Postgres import has been reviewed and the Render
+service has installed `api-server/requirements.txt`. After the managed Postgres
+import and app cutover are complete, set the `QUANTGYM_POSTGRES_CUTOVER_*`
 signoff variables and run the complete gate too:
 
 ```bash
@@ -669,6 +683,8 @@ python3 scripts/export-api-sqlite.py --db "$QUANTGYM_DB" --out /secure/quantgym-
 python3 scripts/check-postgres-cutover.py --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json --require-sensitive-export
 python3 scripts/import-api-sqlite-export-to-postgres.py --export /secure/quantgym-sqlite-export.json --out /secure/quantgym-postgres-import.sql --replace
 npm run build:postgres-cutover-packet
+npm run check:api-postgres-runtime-adapter
+npm run check:postgres-cutover:deployed-health
 # Optional execution path after manually reviewing the generated SQL:
 # python3 scripts/import-api-sqlite-export-to-postgres.py --export /secure/quantgym-sqlite-export.json --out /secure/quantgym-postgres-import.sql --replace --execute --database-url "$DATABASE_URL" --confirm-replace
 npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json
@@ -686,6 +702,7 @@ using. The local export smoke also verifies this contract with a temporary API
 database:
 
 ```bash
+npm run check:postgres-cutover:deployed-health
 npm run check:postgres-cutover:export-smoke
 ```
 

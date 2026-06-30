@@ -1,6 +1,6 @@
 {
   "id": 321,
-  "date": "2026-06-25",
+  "date": "2026-06-30",
   "surface": "static build",
   "status": "pass",
   "checks": {
@@ -9,9 +9,10 @@
     "distConfigLlmEndpoint": "http://127.0.0.1:8787/interview",
     "distConfigLlmModel": "gpt-5-nano",
     "distConfigGoogleClientIdSet": true,
+    "distConfigProblemCatalogScript": "/data/problem-catalog.js?v=2",
     "distConfigGoogleLoginEnabled": true,
     "distConfigContainsOpenAiKey": false,
-    "distConfigBuildCommit": "c275c9214fa5707aca8f4f2a0e18c63bfb2d0a31",
+    "distConfigBuildCommit": "74e273911180f194ae1777739f36a658132c5bb4",
     "distConfigBuildBranch": "codex/viewport-capture-recording",
     "distConfigBuildSource": "local-git",
     "distVersionJsonPresent": true,

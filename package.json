@@ -70,14 +70,18 @@
     "check:question-bank-rights:commercial": "node scripts/check-question-bank-rights.mjs --mode commercial",
     "check:question-bank-rights:public-smoke": "node scripts/check-question-bank-rights-public-smoke.mjs",
     "check:question-bank-rights:release-blockers": "node scripts/check-question-bank-rights-release-blockers.mjs",
+    "check:question-bank-release-catalog": "node scripts/check-question-bank-release-catalog.mjs",
     "build:question-bank-rights-packet": "node scripts/build-question-bank-rights-packet.mjs",
     "check:apex-www-domain": "node scripts/check-apex-www-domain.mjs",
     "check:external-launch-blockers": "node scripts/check-external-launch-blockers.mjs",
     "export:api-sqlite": "python3 scripts/export-api-sqlite.py",
     "import:api-sqlite-export:postgres": "python3 scripts/import-api-sqlite-export-to-postgres.py",
     "build:postgres-cutover-packet": "node scripts/build-postgres-cutover-packet.mjs",
+    "check:api-postgres-runtime-adapter": "node scripts/check-api-postgres-runtime-adapter.mjs",
+    "check:postgres-cutover:deployed-health": "node scripts/check-postgres-deployed-health.mjs",
     "check:postgres-cutover": "python3 scripts/check-postgres-cutover.py",
     "check:postgres-cutover:complete": "python3 scripts/check-postgres-cutover.py --require-db --require-sensitive-export --cutover-complete",
+    "check:postgres-import:psycopg-fixture": "node scripts/check-postgres-import-psycopg-fixture.mjs",
     "check:postgres-cutover:export-smoke": "node scripts/check-postgres-cutover-export-smoke.mjs",
     "check:release-readiness": "node scripts/check-release-readiness.mjs",
     "check:release-readiness:local": "node scripts/check-release-readiness.mjs --allow-partial-production --summary docs/browser-audit-screenshots/323-release-readiness-summary.json",
@@ -87,7 +91,8 @@
     "verify:production-boundaries:deployed": "node scripts/verify-production-boundaries.mjs --deployed",
     "verify:production-boundaries:deployed:paste-token": "node scripts/run-google-token-gate.mjs --verify-deployed",
     "google:token-helper": "node scripts/create-google-token-helper.mjs",
-    "google:token-helper:deployed": "node scripts/create-google-token-helper.mjs --deployed"
+    "google:token-helper:deployed": "node scripts/create-google-token-helper.mjs --deployed",
+    "google:token-helper:deployed:clipboard": "node scripts/create-google-token-helper.mjs --deployed --copy-snippet --open-deployed"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",

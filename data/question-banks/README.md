@@ -30,9 +30,12 @@ Before public or commercial distribution, every active source must be explicitly
 
 ```bash
 npm run check:question-bank-rights:public-smoke
+npm run check:question-bank-release-catalog
 npm run check:question-bank-rights:public
 npm run check:question-bank-rights:commercial
 ```
+
+`npm run check:question-bank-release-catalog` generates release-safe public and commercial catalog artifacts under `artifacts/question-bank-rights/release-catalog/`. These artifacts exclude sources whose `publicCommercial.status` is not approved and verify that the web app can select a catalog script through `window.QUANTGYM_CONFIG.problemCatalogScript`. This is a safe-deployment fallback for a reduced or empty public catalog; it does not approve any source for redistribution.
 
 ## Current Catalog
 

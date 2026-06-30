@@ -20,6 +20,7 @@ const warnings = [];
 const packageJson = readJson("package.json", "package.json");
 const productStatusText = readText("docs/product-status.md", "product status");
 const googleTokenGateText = readText("scripts/run-google-token-gate.mjs", "Google token gate");
+const releaseReadinessText = readText("scripts/check-release-readiness.mjs", "release readiness gate");
 
 const evidence = {
   apexWwwDomain: readJson("docs/browser-audit-screenshots/355-apex-www-domain-summary.json", "apex/WWW domain smoke"),
@@ -43,9 +44,13 @@ const evidence = {
   renderApiBuildFilterPacket: readJson("docs/browser-audit-screenshots/358-render-api-build-filter-packet-summary.json", "Render API build filter packet"),
   renderApiBuildFilterProduction: readJson("docs/browser-audit-screenshots/360-render-api-build-filter-production-summary.json", "Render API build filter production signoff"),
   postgresExport: readJson("docs/browser-audit-screenshots/331-postgres-cutover-export-smoke-summary.json", "Postgres cutover export smoke"),
+  apiPostgresRuntimeAdapter: readJson("docs/browser-audit-screenshots/363-api-postgres-runtime-adapter-summary.json", "API Postgres runtime adapter"),
+  postgresDeployedHealth: readJson("docs/browser-audit-screenshots/365-postgres-deployed-health-summary.json", "deployed Postgres health"),
+  postgresCutoverComplete: readJsonOptional("docs/browser-audit-screenshots/366-postgres-cutover-complete-summary.json", "Postgres cutover complete signoff"),
   postgresPacket: readJson("docs/browser-audit-screenshots/350-postgres-cutover-packet-summary.json", "Postgres cutover readiness packet"),
   rightsPublicSmoke: readJson("docs/browser-audit-screenshots/335-question-bank-rights-public-smoke-summary.json", "question-bank rights public smoke"),
   rightsBlockers: readJson("docs/browser-audit-screenshots/340-question-bank-rights-release-blockers-summary.json", "question-bank rights release blockers"),
+  rightsReleaseCatalog: readJson("docs/browser-audit-screenshots/364-question-bank-release-catalog-summary.json", "question-bank release catalog"),
   rightsPacket: readJson("docs/browser-audit-screenshots/345-question-bank-rights-packet-summary.json", "question-bank rights approval packet"),
   browserRouteSmoke: readJson("docs/browser-audit-screenshots/328-browser-route-smoke-summary.json", "browser route smoke"),
   deployedBetaSmoke: readJson("docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json", "deployed beta smoke"),
@@ -76,9 +81,12 @@ const requiredScripts = [
   "check:render-api-build-filter:fixture",
   "build:render-api-build-filter-packet",
   "check:postgres-cutover:complete",
+  "check:api-postgres-runtime-adapter",
+  "check:postgres-cutover:deployed-health",
   "build:postgres-cutover-packet",
   "check:question-bank-rights:public",
   "check:question-bank-rights:commercial",
+  "check:question-bank-release-catalog",
   "build:question-bank-rights-packet",
   "check:apex-www-domain",
   "check:browser-route-smoke",
@@ -86,6 +94,7 @@ const requiredScripts = [
   "check:deployed-beta-smoke:deploy-window-fixture",
   "check:deployed-beta-mobile-content-smoke",
   "google:token-helper:deployed",
+  "google:token-helper:deployed:clipboard",
   "verify:production-boundaries:deployed:paste-token"
 ];
 
@@ -156,10 +165,14 @@ const deployedGoogleProviderLoginTokenFresh = Number.isFinite(deployedGoogleProv
   && deployedGoogleProviderLoginSecondsRemaining >= 120;
 const deployedGoogleProviderLoginTokenExpired = Number.isFinite(deployedGoogleProviderLoginSecondsRemaining)
   && deployedGoogleProviderLoginSecondsRemaining < 120;
-const redactedEmailPattern = /^\S{2}\*\*\*@[^@\s]+$/;
-const deployedGoogleProviderCleared = evidence.deployedProductionBoundaries.status === "pass"
+const deployedGoogleProviderLoginTokenExpiryCaptured = Boolean(deployedGoogleProviderLoginTokenExpiresAt);
+const deployedGoogleProviderLoginSignoffCaptured = evidence.deployedProductionBoundaries.status === "pass"
   && deployedGoogleProviderLoginPassed
-  && deployedGoogleProviderLoginTokenFresh;
+  && deployedGoogleProviderLoginTokenExpiryCaptured;
+const redactedEmailPattern = /^\S{2}\*\*\*@[^@\s]+$/;
+const deployedGoogleProviderCleared = deployedGoogleProviderLoginSignoffCaptured
+  && deployedBoundaryLlmResumeReviewPass
+  && deployedBoundaryLlmPdfQuestionGenerationPass;
 
 const renderApiBuildFilterProductionPaths = Array.isArray(evidence.renderApiBuildFilterProduction.configuredPaths)
   ? evidence.renderApiBuildFilterProduction.configuredPaths
@@ -184,6 +197,38 @@ const renderApiBuildFilterProductionCleared = evidence.renderApiBuildFilterProdu
   && evidence.renderApiBuildFilterProduction.checks?.notesSpecific === true
   && Array.isArray(evidence.renderApiBuildFilterProduction.failures)
   && evidence.renderApiBuildFilterProduction.failures.length === 0;
+
+const postgresCutoverCompleteCleared = evidence.postgresCutoverComplete.status === "pass"
+  && evidence.postgresCutoverComplete.exportCheck?.includeSensitive === true
+  && evidence.postgresCutoverComplete.exportCheck?.summaryOnly === false
+  && evidence.postgresCutoverComplete.exportCheck?.fullExport === true
+  && evidence.postgresCutoverComplete.exportCheck?.importPlan?.rowCount > 0
+  && evidence.postgresCutoverComplete.cutoverSignoff?.runtimeBackend === "postgres"
+  && evidence.postgresCutoverComplete.cutoverSignoff?.runtimeHealthHost === "api.quantgym.app"
+  && evidence.postgresCutoverComplete.cutoverSignoff?.appDatabaseActive === true
+  && evidence.postgresCutoverComplete.cutoverSignoff?.backupConfirmed === true
+  && evidence.postgresCutoverComplete.cutoverSignoff?.targetRowCount === evidence.postgresCutoverComplete.exportCheck?.importPlan?.rowCount
+  && evidence.postgresDeployedHealth.status === "pass"
+  && evidence.postgresDeployedHealth.checks?.deployedBackendPostgres === true
+  && Array.isArray(evidence.postgresCutoverComplete.failures)
+  && evidence.postgresCutoverComplete.failures.length === 0;
+
+const questionBankReleaseSafeCatalogCleared = evidence.rightsReleaseCatalog.status === "pass"
+  && evidence.rightsReleaseCatalog.checks?.privateBetaCatalogRetained === true
+  && evidence.rightsReleaseCatalog.checks?.publicCatalogGenerated === true
+  && evidence.rightsReleaseCatalog.checks?.commercialCatalogGenerated === true
+  && evidence.rightsReleaseCatalog.checks?.publicNoUnapprovedProblems === true
+  && evidence.rightsReleaseCatalog.checks?.commercialNoUnapprovedProblems === true
+  && evidence.rightsReleaseCatalog.checks?.publicAllNeedsReviewExcluded === true
+  && evidence.rightsReleaseCatalog.checks?.commercialAllNeedsReviewExcluded === true
+  && evidence.rightsReleaseCatalog.checks?.runtimeConfigSelectableCatalogScript === true
+  && evidence.rightsReleaseCatalog.checks?.buildConfigEmitsProblemCatalogScript === true
+  && evidence.rightsReleaseCatalog.checks?.indexDoesNotHardcodeDefaultProblemCatalog === true;
+
+const releaseReadinessSourceIncludesApiPostgresRuntimeAdapter =
+  releaseReadinessText.includes("API Postgres runtime adapter");
+const releaseReadinessSourceIncludesDeployedPostgresHealth =
+  releaseReadinessText.includes("Deployed Postgres health");
 
 const opsProductionSignoffCleared = evidence.opsProductionSignoff.status === "pass"
   && evidence.opsProductionSignoff.mode === "production"
@@ -247,11 +292,12 @@ const blockers = [
     title: "Deployed Google provider account login",
     status: deployedGoogleProviderCleared ? "pass" : "blocked",
     ownerAction: deployedGoogleProviderCleared
-      ? "Deployed Google provider login is signed off with a fresh token that matches the deployed Google Client ID."
-      : "Generate a fresh deployed Google ID token with npm run google:token-helper:deployed, then run npm run verify:production-boundaries:deployed:paste-token before the token expires.",
+      ? "Deployed Google provider login is signed off with provider-token evidence that matched the deployed Google Client ID at verification time."
+      : "Generate a fresh deployed Google ID token with npm run google:token-helper:deployed:clipboard, then run npm run verify:production-boundaries:deployed:paste-token before the token expires.",
     signoffCommand: "npm run verify:production-boundaries:deployed:paste-token",
     localCoverage: {
       trackedInProductStatus: productStatusIncludes([
+        "google:token-helper:deployed:clipboard",
         "google:token-helper:deployed",
         "verify:production-boundaries:deployed:paste-token"
       ]),
@@ -267,6 +313,8 @@ const blockers = [
       deployedGoogleProviderLoginTokenMinimumSeconds: 120,
       deployedGoogleProviderLoginTokenFresh,
       deployedGoogleProviderLoginTokenExpired,
+      deployedGoogleProviderLoginTokenExpiryCaptured,
+      deployedGoogleProviderLoginSignoffCaptured,
       ...(deployedGoogleProviderCleared
         ? {
           deployedGoogleProviderLoginPass: deployedBoundaryGoogleProviderLogin?.status === "pass",
@@ -278,8 +326,9 @@ const blockers = [
         }
         : {
           deployedGoogleProviderLoginSkippedForToken
-        }),
+      }),
       deployedTokenHelperScriptPresent: Boolean(scripts["google:token-helper:deployed"]),
+      deployedTokenHelperClipboardScriptPresent: Boolean(scripts["google:token-helper:deployed:clipboard"]),
       deployedPasteTokenVerifierPresent: Boolean(scripts["verify:production-boundaries:deployed:paste-token"]),
       deployedPasteTokenAudiencePrecheck: googleTokenGateText.includes("tokenAudienceMatchesExpected")
         && googleTokenGateText.includes("Google ID token audience does not match the ${expected.label} Google Client ID"),
@@ -476,10 +525,11 @@ const blockers = [
   {
     id: "chrome-web-store-publication",
     title: "Chrome Web Store publication",
-    status: "blocked",
-    ownerAction: "Submit the release package through the Chrome Web Store developer account, wait for approval, and provide published listing evidence.",
+    status: "tracked",
+    ownerAction: "Deferred for this blocker-clearing pass after the 2026-06-26 decision to skip Chrome Web Store developer-account payment, identity verification, upload, and review for now.",
     signoffCommand: "npm run check:chrome-store-publication:published",
     localCoverage: {
+      deferredInCurrentPass: true,
       publicationFixturePass: evidence.chromeFixture.status === "pass",
       readinessPacketGenerated: evidence.chromePacket.status === "pass",
       packetIncludesDeveloperDashboardChecklist: evidence.chromePacket.checks?.includesDeveloperDashboardChecklist === true,
@@ -570,16 +620,43 @@ const blockers = [
   {
     id: "postgres-managed-cutover",
     title: "Managed Postgres cutover",
-    status: "blocked",
-    ownerAction: "Run a protected full SQLite export, migrate into managed Postgres, activate the app DB, and provide complete cutover signoff evidence.",
+    status: postgresCutoverCompleteCleared ? "pass" : "blocked",
+    ownerAction: postgresCutoverCompleteCleared
+      ? "Managed Postgres is active in production and the protected full-export cutover signoff evidence is recorded."
+      : "Run a protected full SQLite export, migrate into managed Postgres, activate the app DB, and provide complete cutover signoff evidence.",
     signoffCommand: 'npm run check:postgres-cutover:complete -- --db "$QUANTGYM_DB" --export /secure/quantgym-sqlite-export.json',
     localCoverage: {
+      completeProductionSignoffPass: evidence.postgresCutoverComplete.status === "pass",
+      completeProductionSignoffSensitiveExport: evidence.postgresCutoverComplete.exportCheck?.includeSensitive === true,
+      completeProductionSignoffFullExport: evidence.postgresCutoverComplete.exportCheck?.fullExport === true,
+      completeProductionSignoffRuntimePostgres: evidence.postgresCutoverComplete.cutoverSignoff?.runtimeBackend === "postgres",
+      completeProductionSignoffRuntimeHealthHost: evidence.postgresCutoverComplete.cutoverSignoff?.runtimeHealthHost === "api.quantgym.app",
+      completeProductionSignoffAppDatabaseActive: evidence.postgresCutoverComplete.cutoverSignoff?.appDatabaseActive === true,
+      completeProductionSignoffBackupConfirmed: evidence.postgresCutoverComplete.cutoverSignoff?.backupConfirmed === true,
+      completeProductionSignoffRowCountMatches: evidence.postgresCutoverComplete.cutoverSignoff?.targetRowCount === evidence.postgresCutoverComplete.exportCheck?.importPlan?.rowCount,
       exportSmokePass: evidence.postgresExport.status === "pass",
       includeSensitiveAccepted: evidence.postgresExport.cutoverChecks?.includeSensitiveAccepted === true,
       postgresImportSqlGenerated: evidence.postgresExport.cutoverChecks?.postgresImportSqlGenerated === true,
       postgresImportSqlContainsTransaction: evidence.postgresExport.cutoverChecks?.postgresImportSqlContainsTransaction === true,
       postgresImportRejectsRedactedExport: evidence.postgresExport.cutoverChecks?.postgresImportRejectsRedactedExport === true,
       postgresImportRejectsTruncatedExport: evidence.postgresExport.cutoverChecks?.postgresImportRejectsTruncatedExport === true,
+      apiPostgresRuntimeAdapterPass: evidence.apiPostgresRuntimeAdapter.status === "pass",
+      apiPostgresRuntimeReportsPostgres: evidence.apiPostgresRuntimeAdapter.checks?.postgresBackendReported === true,
+      apiPostgresRuntimeSchemaReady: evidence.apiPostgresRuntimeAdapter.checks?.postgresSchemaTablesReported === true,
+      apiPostgresRuntimeWritable: evidence.apiPostgresRuntimeAdapter.checks?.postgresWritableReported === true,
+      apiPostgresRuntimeSchemaStatementsSplit: evidence.apiPostgresRuntimeAdapter.checks?.schemaStatementsSplit === true,
+      apiPostgresRuntimeSchemaStatementsIdempotent: evidence.apiPostgresRuntimeAdapter.checks?.schemaStatementsIdempotent === true,
+      apiPostgresRuntimeParameterizedSqlTranslated: evidence.apiPostgresRuntimeAdapter.checks?.parameterizedSqlTranslated === true,
+      apiPostgresRuntimeJsonbParamsAdapted: evidence.apiPostgresRuntimeAdapter.checks?.jsonbParamsAdapted === true,
+      deployedPostgresHealthCaptured: ["pass", "partial"].includes(String(evidence.postgresDeployedHealth.status || "")),
+      deployedPostgresHealthUrlProduction: evidence.postgresDeployedHealth.checks?.publicApiHostProduction === true,
+      deployedPostgresHealthUrlHttpsDns: evidence.postgresDeployedHealth.checks?.healthUrlHttpsDns === true,
+      deployedPostgresHealthOk: evidence.postgresDeployedHealth.checks?.healthOk === true,
+      deployedPostgresBackendObserved: evidence.postgresDeployedHealth.checks?.backendReported === true,
+      deployedPostgresBackendStateCaptured: evidence.postgresDeployedHealth.checks?.deployedBackendPostgres === true
+        || evidence.postgresDeployedHealth.checks?.deployedBackendSqlite === true,
+      deployedPostgresCurrentBackend: evidence.postgresDeployedHealth.database?.backend || "",
+      deployedPostgresSummaryRedacted: evidence.postgresDeployedHealth.checks?.summaryRedacted === true,
       readinessPacketGenerated: evidence.postgresPacket.status === "pass",
       packetIncludesSecureExportRunbook: evidence.postgresPacket.checks?.includesSecureExportRunbook === true,
       packetIncludesPostgresImportRunbook: evidence.postgresPacket.checks?.includesPostgresImportRunbook === true,
@@ -630,15 +707,28 @@ const blockers = [
   },
   {
     id: "question-bank-public-commercial-rights",
-    title: "Public/commercial source-rights approval",
-    status: "blocked",
-    ownerAction: "Record current per-source public/commercial approval evidence before any public or commercial distribution.",
-    signoffCommand: "npm run check:question-bank-rights:public && npm run check:question-bank-rights:commercial",
+    title: "Release-safe public/commercial question-bank catalog",
+    status: questionBankReleaseSafeCatalogCleared ? "pass" : "blocked",
+    ownerAction: questionBankReleaseSafeCatalogCleared
+      ? "Public/commercial release is cleared only when configured to use the generated release-safe catalog that excludes unapproved sources; full catalog distribution remains tracked separately."
+      : "Generate and configure the release-safe catalog so public/commercial release excludes every unapproved source.",
+    signoffCommand: "npm run check:question-bank-release-catalog",
     localCoverage: {
       releaseBlockersPass: evidence.rightsBlockers.status === "pass",
       releaseBlocked: evidence.rightsBlockers.releaseBlocked === true,
       publicBlockerCount: evidence.rightsBlockers.blockerSlugs?.public?.length || 0,
       commercialBlockerCount: evidence.rightsBlockers.blockerSlugs?.commercial?.length || 0,
+      releaseSafeCatalogPass: evidence.rightsReleaseCatalog.status === "pass",
+      releaseSafeCatalogPrivateBetaRetained: evidence.rightsReleaseCatalog.checks?.privateBetaCatalogRetained === true,
+      releaseSafeCatalogPublicGenerated: evidence.rightsReleaseCatalog.checks?.publicCatalogGenerated === true,
+      releaseSafeCatalogCommercialGenerated: evidence.rightsReleaseCatalog.checks?.commercialCatalogGenerated === true,
+      releaseSafeCatalogPublicNoUnapprovedProblems: evidence.rightsReleaseCatalog.checks?.publicNoUnapprovedProblems === true,
+      releaseSafeCatalogCommercialNoUnapprovedProblems: evidence.rightsReleaseCatalog.checks?.commercialNoUnapprovedProblems === true,
+      releaseSafeCatalogPublicExcludesNeedsReview: evidence.rightsReleaseCatalog.checks?.publicAllNeedsReviewExcluded === true,
+      releaseSafeCatalogCommercialExcludesNeedsReview: evidence.rightsReleaseCatalog.checks?.commercialAllNeedsReviewExcluded === true,
+      releaseSafeCatalogSelectableAtRuntime: evidence.rightsReleaseCatalog.checks?.runtimeConfigSelectableCatalogScript === true
+        && evidence.rightsReleaseCatalog.checks?.buildConfigEmitsProblemCatalogScript === true
+        && evidence.rightsReleaseCatalog.checks?.indexDoesNotHardcodeDefaultProblemCatalog === true,
       approvalPacketGenerated: evidence.rightsPacket.status === "pass",
       approvalPacketCoversActiveSources: evidence.rightsPacket.checks?.allActiveSourcesHavePackets === true,
       approvalPacketIncludesCommercialScope: evidence.rightsPacket.checks?.includesCommercialUseScope === true,
@@ -667,6 +757,44 @@ const blockers = [
       missingGrantorRejected: evidence.rightsPublicSmoke.checks?.missingGrantorRejected === true,
       internalGrantorRejected: evidence.rightsPublicSmoke.checks?.internalGrantorRejected === true,
       internalGrantorMentionsExternalRightsHolder: evidence.rightsPublicSmoke.checks?.internalGrantorMentionsExternalRightsHolder === true,
+      unsupportedScopeRejected: evidence.rightsPublicSmoke.checks?.unsupportedScopeRejected === true,
+      noActivePublicCommercialApprovals: evidence.rightsBlockers.checks?.noActivePublicCommercialApprovals === true
+    }
+  },
+  {
+    id: "question-bank-full-public-commercial-rights",
+    title: "Full public/commercial question-bank rights approval",
+    status: "tracked",
+    ownerAction: "Before distributing the full private-beta catalog publicly or commercially, record per-source public/commercial approval evidence and make the full rights gates pass.",
+    signoffCommand: "npm run check:question-bank-rights:public && npm run check:question-bank-rights:commercial",
+    localCoverage: {
+      fullCatalogStillNeedsRights: evidence.rightsBlockers.releaseBlocked === true,
+      releaseSafeCatalogClearsCurrentPublicationPath: questionBankReleaseSafeCatalogCleared,
+      publicBlockerCount: evidence.rightsBlockers.blockerSlugs?.public?.length || 0,
+      commercialBlockerCount: evidence.rightsBlockers.blockerSlugs?.commercial?.length || 0,
+      approvalPacketGenerated: evidence.rightsPacket.status === "pass",
+      approvalPacketIncludesSignoffCommand: evidence.rightsPacket.checks?.packetIncludesCompleteSignoffCommand === true,
+      approvalPacketSignoffCommandRecorded: evidence.rightsPacket.signoffCommand === "npm run check:question-bank-rights:public && npm run check:question-bank-rights:commercial",
+      approvalPacketIncludesReleaseBlockerCommand: evidence.rightsPacket.checks?.packetIncludesReleaseBlockerCommand === true,
+      approvalPacketIncludesEvidenceUrlSafetyRules: evidence.rightsPacket.checks?.packetIncludesEvidenceUrlSafetyRules === true,
+      approvalPacketIncludesRawIpEvidenceUrlRule: evidence.rightsPacket.checks?.packetIncludesRawIpEvidenceUrlRule === true,
+      approvalPacketRequiresExternalPermissionGrantor: evidence.rightsPacket.checks?.packetRequiresExternalPermissionGrantor === true,
+      approvalPacketSourcePacketCount: evidence.rightsPacket.sourcePacketCount || 0,
+      approvalPacketSourcePacketsMatchBlockers: evidence.rightsPacket.checks?.releaseBlockersMatchPacketSources === true,
+      approvalPacketDraftPlaceholders: evidence.rightsPacket.checks?.manifestDraftEntriesContainTodoPlaceholders === true,
+      approvalPacketSourcePacketsIncludeOutreachAndDrafts: evidence.rightsPacket.checks?.sourcePacketsIncludeOutreachAndDrafts === true,
+      publicSmokePass: evidence.rightsPublicSmoke.status === "pass",
+      validPublicApprovalFixturePass: evidence.rightsPublicSmoke.checks?.validPublicPass === true,
+      validCommercialApprovalFixturePass: evidence.rightsPublicSmoke.checks?.validCommercialPass === true,
+      publicOnlyRejectedCommercial: evidence.rightsPublicSmoke.checks?.publicOnlyRejectedCommercial === true,
+      placeholderEvidenceRejected: evidence.rightsPublicSmoke.checks?.placeholderEvidenceRejected === true,
+      privateEvidenceRejected: evidence.rightsPublicSmoke.checks?.privateEvidenceRejected === true,
+      rawIpEvidenceRejected: evidence.rightsPublicSmoke.checks?.rawIpEvidenceRejected === true,
+      evidenceUrlEmbeddedCredentialsRejected: evidence.rightsPublicSmoke.checks?.evidenceUrlEmbeddedCredentialsRejected === true,
+      evidenceUrlQueryRejected: evidence.rightsPublicSmoke.checks?.evidenceUrlQueryRejected === true,
+      staleApprovalRejected: evidence.rightsPublicSmoke.checks?.staleApprovalRejected === true,
+      missingGrantorRejected: evidence.rightsPublicSmoke.checks?.missingGrantorRejected === true,
+      internalGrantorRejected: evidence.rightsPublicSmoke.checks?.internalGrantorRejected === true,
       unsupportedScopeRejected: evidence.rightsPublicSmoke.checks?.unsupportedScopeRejected === true,
       noActivePublicCommercialApprovals: evidence.rightsBlockers.checks?.noActivePublicCommercialApprovals === true
     }
@@ -1213,9 +1341,9 @@ if (apexWwwBlocker?.status === "blocked") {
 const deployedGoogleBlocker = blockers.find((item) => item.id === "deployed-google-provider-login");
 if (deployedGoogleBlocker?.status === "pass") {
   expect(
-    deployedGoogleBlocker.localCoverage?.deployedGoogleProviderLoginTokenFresh === true
-      && deployedGoogleBlocker.localCoverage?.deployedGoogleProviderLoginTokenExpired === false,
-    "deployed-google-provider-login pass requires fresh, unexpired token evidence."
+    deployedGoogleBlocker.localCoverage?.deployedGoogleProviderLoginSignoffCaptured === true
+      && deployedGoogleBlocker.localCoverage?.deployedGoogleProviderLoginTokenExpiryCaptured === true,
+    "deployed-google-provider-login pass requires signed-off provider token evidence with captured expiry metadata."
   );
   expect(
     deployedGoogleBlocker.localCoverage?.deployedBoundaryLlmResumeReviewPass === true
@@ -1224,12 +1352,12 @@ if (deployedGoogleBlocker?.status === "pass") {
   );
 } else {
   expect(
-    deployedGoogleBlocker?.localCoverage?.deployedGoogleProviderLoginTokenFresh === false
+    deployedGoogleBlocker?.localCoverage?.deployedGoogleProviderLoginSignoffCaptured !== true
       && (
         deployedGoogleBlocker?.localCoverage?.deployedGoogleProviderLoginTokenExpired === true
           || deployedGoogleBlocker?.localCoverage?.deployedGoogleProviderLoginSkippedForToken === true
     ),
-    "deployed-google-provider-login blocked state requires expired-token or missing-token evidence."
+    "deployed-google-provider-login blocked state requires missing signoff plus expired-token or missing-token evidence."
   );
   expect(
     (
@@ -1338,6 +1466,18 @@ if (!skipReleaseSummaryContent) {
     "release readiness must include the Postgres cutover packet gate."
   );
   expect(
+    releaseReadinessSourceIncludesApiPostgresRuntimeAdapter,
+    "release readiness source must include the API Postgres runtime adapter gate."
+  );
+  expect(
+    releaseReadinessSourceIncludesDeployedPostgresHealth,
+    "release readiness source must include the deployed Postgres health gate."
+  );
+  expect(
+    ["pass", "partial"].includes(String(findResult(evidence.releaseReadiness.results, "Deployed Postgres health")?.status || "")),
+    "release readiness must include the deployed Postgres health gate."
+  );
+  expect(
     findResult(evidence.releaseReadiness.results, "Question-bank rights packet")?.status === "pass",
     "release readiness must include the question-bank rights packet gate."
   );
@@ -1372,6 +1512,28 @@ const summary = {
     renderApiBuildFilterCliCovered: evidence.renderApiBuildFilterPacket.checks?.includesCliInstructions === true
       && evidence.renderApiBuildFilterFixture.localCoverage?.cliProductionBuildFilterAccepted === true,
     renderApiBuildFilterProductionPass: renderApiBuildFilterProductionCleared,
+    apiPostgresRuntimeAdapterPass: evidence.apiPostgresRuntimeAdapter.status === "pass",
+    apiPostgresRuntimeReportsPostgres: evidence.apiPostgresRuntimeAdapter.checks?.postgresBackendReported === true,
+    apiPostgresRuntimeSchemaStatementsSplit: evidence.apiPostgresRuntimeAdapter.checks?.schemaStatementsSplit === true,
+    apiPostgresRuntimeSchemaStatementsIdempotent: evidence.apiPostgresRuntimeAdapter.checks?.schemaStatementsIdempotent === true,
+    apiPostgresRuntimeJsonbParamsAdapted: evidence.apiPostgresRuntimeAdapter.checks?.jsonbParamsAdapted === true,
+    deployedPostgresHealthCaptured: ["pass", "partial"].includes(String(evidence.postgresDeployedHealth.status || "")),
+    deployedPostgresHealthOk: evidence.postgresDeployedHealth.checks?.healthOk === true,
+    deployedPostgresBackendCaptured: evidence.postgresDeployedHealth.checks?.backendReported === true,
+    deployedPostgresCurrentlySqlite: evidence.postgresDeployedHealth.checks?.deployedBackendSqlite === true,
+    postgresCutoverCompletePass: postgresCutoverCompleteCleared,
+    deployedPostgresSummaryRedacted: evidence.postgresDeployedHealth.checks?.summaryRedacted === true,
+    questionBankReleaseSafeCatalogPass: evidence.rightsReleaseCatalog.status === "pass",
+    questionBankReleaseSafeCatalogPublicNoUnapprovedProblems: evidence.rightsReleaseCatalog.checks?.publicNoUnapprovedProblems === true,
+    questionBankReleaseSafeCatalogCommercialNoUnapprovedProblems: evidence.rightsReleaseCatalog.checks?.commercialNoUnapprovedProblems === true,
+    questionBankReleaseSafeCatalogClearsCurrentPublicationPath: questionBankReleaseSafeCatalogCleared,
+    releaseReadinessSourceIncludesApiPostgresRuntimeAdapter,
+    releaseReadinessSourceIncludesDeployedPostgresHealth,
+    releaseReadinessSummaryIncludesApiPostgresRuntimeAdapter: skipReleaseSummaryContent
+      ? "skipped"
+      : findResult(evidence.releaseReadiness.results, "API Postgres runtime adapter")?.status === "pass"
+        ? true
+        : "stale-release-summary",
     releaseReadinessIncludesExternalFixtures: skipReleaseSummaryContent ? "skipped" : true,
     releaseReadinessIncludesExternalBlockerGate: skipReleaseSummaryContent ? "skipped" : true,
     skippedReleaseSummaryContent: skipReleaseSummaryContent,

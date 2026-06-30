@@ -1,0 +1,50 @@
+{
+  "id": 364,
+  "date": "2026-06-26",
+  "surface": "question-bank release catalog",
+  "status": "pass",
+  "generatedAt": "2026-06-30T03:05:28.488Z",
+  "outDir": "artifacts/question-bank-rights/release-catalog",
+  "fullPrivateBetaProblemCount": 2997,
+  "releaseCatalogs": {
+    "public": {
+      "generated": true,
+      "problemCount": 0,
+      "approvedSourceSlugs": [],
+      "needsReviewSourceCount": 15,
+      "blockedSourceCount": 0,
+      "excludedNeedsReviewSourceCount": 15,
+      "unapprovedProblemCount": 0,
+      "artifactJson": "artifacts/question-bank-rights/release-catalog/public/problem-catalog.json",
+      "artifactScript": "artifacts/question-bank-rights/release-catalog/public/problem-catalog.js"
+    },
+    "commercial": {
+      "generated": true,
+      "problemCount": 0,
+      "approvedSourceSlugs": [],
+      "needsReviewSourceCount": 15,
+      "blockedSourceCount": 0,
+      "excludedNeedsReviewSourceCount": 15,
+      "unapprovedProblemCount": 0,
+      "artifactJson": "artifacts/question-bank-rights/release-catalog/commercial/problem-catalog.json",
+      "artifactScript": "artifacts/question-bank-rights/release-catalog/commercial/problem-catalog.js"
+    }
+  },
+  "checks": {
+    "privateBetaCatalogRetained": true,
+    "publicCatalogGenerated": true,
+    "commercialCatalogGenerated": true,
+    "publicNoUnapprovedProblems": true,
+    "commercialNoUnapprovedProblems": true,
+    "publicAllNeedsReviewExcluded": true,
+    "commercialAllNeedsReviewExcluded": true,
+    "indexDoesNotHardcodeDefaultProblemCatalog": true,
+    "runtimeConfigSelectableCatalogScript": true,
+    "buildConfigEmitsProblemCatalogScript": true
+  },
+  "failures": [],
+  "warnings": [
+    "public release catalog contains no problems because no active source has public/commercial approval yet.",
+    "commercial release catalog contains no problems because no active source has public/commercial approval yet."
+  ]
+}

@@ -1,9 +1,9 @@
 {
   "id": 362,
-  "date": "2026-06-24",
+  "date": "2026-06-26",
   "surface": "deployed media storage smoke",
   "status": "pass",
-  "durationMs": 14678,
+  "durationMs": 7956,
   "apiHost": "api.quantgym.app",
   "apiPath": "/",
   "publicHost": "media.quantgym.app",
@@ -21,9 +21,9 @@
       "storage": "s3-media",
       "contentType": "image/png",
       "byteSize": 68,
-      "path": "/api/media/keWEtDxWgVx-DG4NFIRcFGPD",
+      "path": "/api/media/jWO1iAr6gyihZYdbC4MtthAz",
       "urlHost": "media.quantgym.app",
-      "urlPathPrefix": "/media/keWEtDxWgVx-DG4NFIRcFGPD.png",
+      "urlPathPrefix": "/media/jWO1iAr6gyihZYdbC4MtthAz.png",
       "responseDoesNotInlineDataUrl": true
     }
   },

@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-25T04:17:49.890Z",
+  "generatedAt": "2026-06-30T03:05:36.819Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/postgres-cutover/readiness-packet",
   "filesWritten": [
     "artifacts/postgres-cutover/readiness-packet/README.md",

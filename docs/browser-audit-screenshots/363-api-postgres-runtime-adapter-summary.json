@@ -1,0 +1,27 @@
+{
+  "id": 363,
+  "date": "2026-06-26",
+  "surface": "API Postgres runtime adapter",
+  "status": "pass",
+  "fixture": "fake psycopg runtime adapter",
+  "checks": {
+    "postgresBackendReported": true,
+    "postgresSchemaTablesReported": true,
+    "postgresWritableReported": true,
+    "fakePsycopgImported": true,
+    "schemaStatementsSplit": true,
+    "schemaStatementsIdempotent": true,
+    "parameterizedSqlTranslated": true,
+    "jsonbParamsAdapted": true
+  },
+  "failures": [],
+  "health": {
+    "ok": true,
+    "database": {
+      "backend": "postgres",
+      "writable": true,
+      "foreignKeys": true,
+      "schemaTables": 12
+    }
+  }
+}

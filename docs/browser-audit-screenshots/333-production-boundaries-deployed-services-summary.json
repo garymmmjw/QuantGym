@@ -11,7 +11,7 @@
     {
       "name": "cloud health",
       "status": "pass",
-      "durationMs": 1555,
+      "durationMs": 625,
       "data": {
         "ok": true
       }
@@ -19,7 +19,7 @@
     {
       "name": "google provider config",
       "status": "pass",
-      "durationMs": 413,
+      "durationMs": 275,
       "data": {
         "googleClientIdSet": true,
         "endpointRequiresToken": true
@@ -28,33 +28,33 @@
     {
       "name": "google provider login",
       "status": "pass",
-      "durationMs": 1409,
+      "durationMs": 328,
       "data": {
         "provider": "local",
         "googleLinked": true,
         "email": "mi***@gmail.com",
         "hasToken": true,
         "tokenAudienceMatchesClientId": true,
-        "tokenExpiresAt": "2026-06-25T14:26:27.000Z",
+        "tokenExpiresAt": "2026-06-30T03:09:19.000Z",
         "tokenEmail": "mi***@gmail.com"
       }
     },
     {
       "name": "LLM resume review",
       "status": "pass",
-      "durationMs": 8359,
+      "durationMs": 4009,
       "data": {
         "itemCount": 6,
-        "firstItem": "Specify quantitative impact: \"Built a Python market-making simulator for option risk analysis, processing 1.2M tick rows"
+        "firstItem": "Specify tech stack and libraries used (e.g., Python, NumPy, pandas, SciPy, PyTorch) and integration with data sources; e"
       }
     },
     {
       "name": "LLM PDF question generation",
       "status": "pass",
-      "durationMs": 8599,
+      "durationMs": 9938,
       "data": {
         "questionCount": 1,
-        "firstTitle": "Understanding Production Boundaries"
+        "firstTitle": "Design a production-ready model validation and monitoring workflow"
       }
     }
   ]

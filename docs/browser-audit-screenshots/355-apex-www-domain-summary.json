@@ -3,7 +3,7 @@
   "date": "2026-06-19",
   "surface": "apex/www domain SSL or redirect",
   "status": "pass",
-  "durationMs": 1941,
+  "durationMs": 3317,
   "requireClear": false,
   "launchReadiness": "pass",
   "signoffCommand": "npm run check:apex-www-domain -- --require-clear",
@@ -48,7 +48,7 @@
           "headers": {
             "location": "",
             "server": "cloudflare",
-            "cfRay": "a1112a211d0fdda0-HKG",
+            "cfRay": "a139f327fd8ae18e-AMS",
             "contentType": "text/html; charset=utf-8"
           }
         }
@@ -83,7 +83,7 @@
             "headers": {
               "location": "https://beta.quantgym.app/",
               "server": "cloudflare",
-              "cfRay": "a1112a173b330671-HKG",
+              "cfRay": "a139f317c91a4946-AMS",
               "contentType": ""
             }
           },
@@ -93,7 +93,7 @@
             "headers": {
               "location": "",
               "server": "cloudflare",
-              "cfRay": "a1112a1898a78a4c-HKG",
+              "cfRay": "a139f31b7f9de6d0-AMS",
               "contentType": "text/html; charset=utf-8"
             }
           }
@@ -127,7 +127,7 @@
             "headers": {
               "location": "https://beta.quantgym.app/",
               "server": "cloudflare",
-              "cfRay": "a1112a1d2a0ba61c-HKG",
+              "cfRay": "a139f3201e257aa7-AMS",
               "contentType": ""
             }
           },
@@ -137,7 +137,7 @@
             "headers": {
               "location": "",
               "server": "cloudflare",
-              "cfRay": "a1112a1e3c0d20e4-HKG",
+              "cfRay": "a139f323ff46670e-AMS",
               "contentType": "text/html; charset=utf-8"
             }
           }

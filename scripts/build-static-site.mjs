@@ -16,6 +16,7 @@ const webConfig = {
   llmEndpoint: value("QUANTGYM_WEB_LLM_ENDPOINT", "QUANTGYM_LLM_ENDPOINT", "LLM_ENDPOINT") || clean(runtimeConfig.llmEndpoint),
   llmModel: value("QUANTGYM_WEB_LLM_MODEL", "QUANTGYM_LLM_MODEL", "OPENAI_MODEL") || clean(runtimeConfig.llmModel) || "gpt-5-nano",
   googleClientId: value("QUANTGYM_WEB_GOOGLE_CLIENT_ID", "QUANTGYM_GOOGLE_CLIENT_ID") || clean(runtimeConfig.googleClientId),
+  problemCatalogScript: value("QUANTGYM_WEB_PROBLEM_CATALOG_SCRIPT") || clean(runtimeConfig.problemCatalogScript) || "/data/problem-catalog.js?v=2",
   googleLoginEnabled: false,
   buildCommit: resolveBuildCommit(),
   buildBranch: resolveBuildBranch(),
@@ -112,6 +113,7 @@ function copyRuntimeStaticFiles(distDir) {
       fs.copyFileSync(path.join(dataDir, fileName), path.join(distDataDir, fileName));
     }
   }
+  copyConfiguredProblemCatalog(distDir);
 
   const generatedAssetsDir = path.join(projectRoot, "assets", "generated");
   const distGeneratedAssetsDir = path.join(distDir, "assets", "generated");
@@ -126,6 +128,22 @@ function copyRuntimeStaticFiles(distDir) {
   if (fs.existsSync(libraryCoversDir)) {
     fs.cpSync(libraryCoversDir, path.join(distDir, "assets", "library-covers"), { recursive: true });
   }
+}
+
+function copyConfiguredProblemCatalog(distDir) {
+  const source = clean(process.env.QUANTGYM_WEB_PROBLEM_CATALOG_SOURCE);
+  if (!source) return;
+  const scriptPath = clean(webConfig.problemCatalogScript).split(/[?#]/, 1)[0];
+  if (!scriptPath.startsWith("/data/") || !scriptPath.endsWith(".js") || scriptPath.includes("..")) {
+    throw new Error("QUANTGYM_WEB_PROBLEM_CATALOG_SCRIPT must be a site-relative /data/*.js path when QUANTGYM_WEB_PROBLEM_CATALOG_SOURCE is set.");
+  }
+  const sourcePath = path.resolve(projectRoot, source);
+  if (!fs.existsSync(sourcePath)) {
+    throw new Error(`QUANTGYM_WEB_PROBLEM_CATALOG_SOURCE not found: ${source}`);
+  }
+  const destination = path.join(distDir, scriptPath.replace(/^\/+/, ""));
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.copyFileSync(sourcePath, destination);
 }
 
 function writeSpaFallbackRules(distDir) {
