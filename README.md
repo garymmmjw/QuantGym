@@ -361,6 +361,7 @@ Use Render for the Python API:
 
 ```text
 Root directory: leave blank
+Build command: pip install -r requirements.txt
 Start command: python3 api-server/server.py
 Custom domain: api.quantgym.app
 Persistent disk path: /var/data
