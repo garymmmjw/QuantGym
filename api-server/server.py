@@ -326,6 +326,8 @@ def utc_now() -> str:
 
 
 def parse_utc(value: str | None) -> datetime:
+    if isinstance(value, datetime):
+        return value
     try:
         return datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
     except ValueError:
@@ -333,11 +335,20 @@ def parse_utc(value: str | None) -> datetime:
 
 
 def is_valid_timestamp(value: str | None) -> bool:
+    if isinstance(value, datetime):
+        return True
     try:
         datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
         return True
     except ValueError:
         return False
+
+
+def api_timestamp(value) -> str:
+    if isinstance(value, datetime):
+        stamped = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        return stamped.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    return str(value or "")
 
 
 def normalize_email(email: str | None) -> str:
@@ -410,7 +421,7 @@ def send_email_verification_code(email: str, code: str, purpose: str) -> str:
 
 
 def compact_json(value) -> str:
-    return json.dumps(value or {}, ensure_ascii=False, separators=(",", ":"))
+    return json.dumps(value or {}, ensure_ascii=False, separators=(",", ":"), default=api_timestamp)
 
 
 def sanitize_alert_message(status: int, path: str, message: str) -> str:
@@ -2138,7 +2149,7 @@ class Database:
                 continue
             if previous and visibility == "public" and previous["visibility"] != "public":
                 continue
-            previous_created_at = previous["created_at"] if previous else ""
+            previous_created_at = api_timestamp(previous["created_at"]) if previous else ""
             created_at = previous_created_at if is_valid_timestamp(previous_created_at) else problem["createdAt"]
             if not is_valid_timestamp(created_at):
                 created_at = utc_now()
