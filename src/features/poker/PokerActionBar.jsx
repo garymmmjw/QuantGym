@@ -4,7 +4,7 @@ export function PokerActionBar({ table, actions }) {
   if (!hud || !actionState) return null;
 
   return (
-    <section className="poker-bottom-hud">
+    <section id="pokerActionBar" className="poker-bottom-hud">
       <div id="pokerGamePrompt" className="game-prompt poker-game-prompt">
         <span>
           <b className="poker-viewer-badge">{hud.viewerBadge}</b>

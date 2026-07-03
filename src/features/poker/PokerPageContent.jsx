@@ -10,8 +10,8 @@ export function PokerPageContent() {
   const game = model.view.game;
 
   return (
-    <section className="poker-room-section">
-      <div className="poker-now-shell">
+    <section className="poker-room-section qg-training-page qg-poker-page">
+      <div className="poker-now-shell qg-poker-table-world">
         <div className="poker-now-brand">POKER <span>GYM</span></div>
         <div className="poker-now-room-meta">
           <small>OWNER: GARY</small>

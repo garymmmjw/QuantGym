@@ -20,8 +20,8 @@ export function ProblemsPageContent() {
   const viewMode = view.filters?.viewMode || "all";
 
   return (
-    <section className="problem-section">
-      <div className="problem-workspace-grid">
+    <section className="problem-section qg-training-page qg-problems-page">
+      <div className="problem-workspace-grid qg-problem-browser">
         <main className="problem-main-column">
           <div className="problem-page-header">
             <div className="problem-page-copy">
@@ -29,7 +29,7 @@ export function ProblemsPageContent() {
               <h2>题目</h2>
               <p>系统练习概率、期望、博弈和 quant 面试基础题。</p>
             </div>
-            <img src="/assets/generated/mascot-calculator.webp?v=premium-system-2" alt="" loading="lazy" />
+            <img src="/assets/generated/playful-precision/mascot-calculator-v2.png" alt="" loading="lazy" />
             <div className="problem-actions">
               <i data-lucide="search" />
               <input

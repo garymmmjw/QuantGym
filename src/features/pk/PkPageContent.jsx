@@ -4,7 +4,7 @@ export function PkPageContent() {
   const model = usePkPageModel();
 
   return (
-    <section className="pk-section">
+    <section className="pk-section qg-training-page qg-pk-page">
       <div className="section-heading">
         <h2>PK</h2>
         <button id="startPkBtn" className="secondary-button" type="button" onClick={model.start}>
@@ -13,7 +13,7 @@ export function PkPageContent() {
         </button>
       </div>
       <div className="pk-grid">
-        <div className="pk-arena">
+        <div className="pk-arena qg-pk-arena">
           <div className="pk-scoreboard">
             <div>
               <small>你</small>

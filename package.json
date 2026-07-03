@@ -20,6 +20,7 @@
     "check:ui-redesign-foundation": "node scripts/check-ui-redesign-foundation.mjs",
     "check:ui-redesign-shell": "node scripts/check-ui-redesign-shell.mjs",
     "check:ui-redesign-growth": "node scripts/check-ui-redesign-growth.mjs",
+    "check:ui-redesign-training": "node scripts/check-ui-redesign-training.mjs",
     "check:route-integrity": "node scripts/check-route-integrity.mjs",
     "check:route-interactions": "node scripts/check-route-interactions.mjs",
     "check:module-ownership": "node scripts/check-module-ownership.mjs",

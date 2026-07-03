@@ -43,7 +43,7 @@ export function ToolsPageContent() {
   ]);
 
   return (
-    <section className="mental-math-section">
+    <section className="mental-math-section qg-training-page qg-tools-page">
       <div className="mental-hero">
         <div>
           <span className="rank-label">OPTIVER STYLE</span>
@@ -97,7 +97,7 @@ export function ToolsPageContent() {
         </div>
       </div>
 
-      <div className="mental-workspace">
+      <div className="mental-workspace qg-mental-arena">
         <section className="drill-panel mental-oa-panel">
           <div className="mental-oa-top">
             <span id="drillProgressText">{drill.progressText}</span>
