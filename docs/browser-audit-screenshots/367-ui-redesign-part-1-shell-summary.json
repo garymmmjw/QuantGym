@@ -1,0 +1,198 @@
+{
+  "status": "pass",
+  "baseUrl": "http://127.0.0.1:5174",
+  "screenshots": [
+    "docs/browser-audit-screenshots/367-ui-redesign-part-1-login-desktop.png",
+    "docs/browser-audit-screenshots/367-ui-redesign-part-1-login-mobile.png",
+    "docs/browser-audit-screenshots/367-ui-redesign-part-1-overview-desktop.png",
+    "docs/browser-audit-screenshots/367-ui-redesign-part-1-overview-mobile.png",
+    "docs/browser-audit-screenshots/367-ui-redesign-part-1-overview-dark.png"
+  ],
+  "checks": [
+    {
+      "name": "login-desktop",
+      "status": "pass",
+      "bytes": 388125,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/login",
+        "theme": "light",
+        "bodyClass": "",
+        "horizontalOverflowPx": 0,
+        "authShellVisible": true,
+        "appShellVisible": false,
+        "moduleNavVisible": false,
+        "searchVisible": false,
+        "settingsVisible": false,
+        "chatVisible": false,
+        "accountVisible": false,
+        "themeToggleVisible": false,
+        "authShellRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 900
+        },
+        "appShellRect": null,
+        "commandBarRect": null,
+        "moduleNavRect": null
+      }
+    },
+    {
+      "name": "login-mobile",
+      "status": "pass",
+      "bytes": 39828,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/login",
+        "theme": "light",
+        "bodyClass": "",
+        "horizontalOverflowPx": 0,
+        "authShellVisible": true,
+        "appShellVisible": false,
+        "moduleNavVisible": false,
+        "searchVisible": false,
+        "settingsVisible": false,
+        "chatVisible": false,
+        "accountVisible": false,
+        "themeToggleVisible": false,
+        "authShellRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844
+        },
+        "appShellRect": null,
+        "commandBarRect": null,
+        "moduleNavRect": null
+      }
+    },
+    {
+      "name": "overview-desktop",
+      "status": "pass",
+      "bytes": 775028,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/",
+        "theme": "light",
+        "bodyClass": "is-authenticated",
+        "horizontalOverflowPx": 0,
+        "authShellVisible": false,
+        "appShellVisible": true,
+        "moduleNavVisible": true,
+        "searchVisible": true,
+        "settingsVisible": true,
+        "chatVisible": true,
+        "accountVisible": true,
+        "themeToggleVisible": true,
+        "authShellRect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "appShellRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 900
+        },
+        "commandBarRect": {
+          "x": 252,
+          "y": 0,
+          "width": 1113,
+          "height": 70
+        },
+        "moduleNavRect": {
+          "x": 0,
+          "y": 0,
+          "width": 252,
+          "height": 900
+        }
+      }
+    },
+    {
+      "name": "overview-mobile",
+      "status": "pass",
+      "bytes": 457678,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/",
+        "theme": "light",
+        "bodyClass": "is-authenticated",
+        "horizontalOverflowPx": 0,
+        "authShellVisible": false,
+        "appShellVisible": true,
+        "moduleNavVisible": true,
+        "searchVisible": true,
+        "settingsVisible": true,
+        "chatVisible": false,
+        "accountVisible": false,
+        "themeToggleVisible": false,
+        "authShellRect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "appShellRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 845
+        },
+        "commandBarRect": {
+          "x": 86,
+          "y": 0,
+          "width": 304,
+          "height": 59
+        },
+        "moduleNavRect": {
+          "x": 0,
+          "y": 59,
+          "width": 86,
+          "height": 786
+        }
+      }
+    },
+    {
+      "name": "overview-dark",
+      "status": "pass",
+      "bytes": 779647,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/",
+        "theme": "dark",
+        "bodyClass": "is-authenticated",
+        "horizontalOverflowPx": 0,
+        "authShellVisible": false,
+        "appShellVisible": true,
+        "moduleNavVisible": true,
+        "searchVisible": true,
+        "settingsVisible": true,
+        "chatVisible": true,
+        "accountVisible": true,
+        "themeToggleVisible": true,
+        "authShellRect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "appShellRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 900
+        },
+        "commandBarRect": {
+          "x": 252,
+          "y": 0,
+          "width": 1113,
+          "height": 70
+        },
+        "moduleNavRect": {
+          "x": 0,
+          "y": 0,
+          "width": 252,
+          "height": 900
+        }
+      }
+    }
+  ]
+}

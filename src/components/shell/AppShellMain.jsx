@@ -1,16 +1,40 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { useAppServices } from "../../stores/usePageApi.js";
 import { setStreakPanelOpen as setStreakPanelOpenView } from "../../ui/streak.js";
+
+const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
+
+function getStoredTheme() {
+  try {
+    return globalThis.localStorage?.getItem(THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
+  } catch {
+    return "light";
+  }
+}
 
 export function AppShellMain() {
   const appServices = useAppServices();
   const shellServices = appServices.services || {};
   const shellServicesRef = useRef(shellServices);
+  const [theme, setTheme] = useState(getStoredTheme);
 
   useEffect(() => {
     shellServicesRef.current = shellServices;
   }, [shellServices]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.setAttribute("data-qg-theme", "dark");
+    } else {
+      root.removeAttribute("data-qg-theme");
+    }
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {}
+    window.requestAnimationFrame(() => globalThis.lucide?.createIcons?.());
+  }, [theme]);
 
   const getShellServices = () => {
     shellServicesRef.current.rebindElements?.();
@@ -40,6 +64,10 @@ export function AppShellMain() {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme((current) => current === "dark" ? "light" : "dark");
+  };
+
   useEffect(() => {
     const closeStreakPanel = (event) => {
       if (event.target?.closest?.(".streak-widget")) return;
@@ -51,11 +79,26 @@ export function AppShellMain() {
     return () => document.removeEventListener("click", closeStreakPanel);
   }, []);
 
+  useEffect(() => {
+    const resetDesktopRailScroll = () => {
+      if (window.matchMedia("(max-width: 760px)").matches) return;
+      const rail = document.getElementById("moduleNav");
+      if (rail) rail.scrollTop = 0;
+    };
+    resetDesktopRailScroll();
+    const firstTimer = window.setTimeout(resetDesktopRailScroll, 120);
+    const secondTimer = window.setTimeout(resetDesktopRailScroll, 420);
+    return () => {
+      window.clearTimeout(firstTimer);
+      window.clearTimeout(secondTimer);
+    };
+  }, []);
+
   return (
-    <main id="appShell" className="hidden">
-          <nav className="module-nav" id="moduleNav" aria-label="模块导航" data-i18n-aria-label="moduleNavLabel">
-            <div className="sidebar-brand" aria-label="QuantGym">
-              <img src="assets/generated/brand-q-mark.webp?v=premium-system-2" alt="" />
+    <main id="appShell" className="hidden qg-app-shell">
+          <nav className="module-nav qg-shell-rail" id="moduleNav" aria-label="模块导航" data-i18n-aria-label="moduleNavLabel">
+            <div className="sidebar-brand qg-shell-brand" aria-label="QuantGym">
+              <img src="/assets/generated/playful-precision/brand-q-mark.webp" alt="" />
               <strong>QuantGym</strong>
             </div>
             <div className="module-nav-group primary" aria-label="总览" data-i18n-aria-label="navOverview">
@@ -178,23 +221,23 @@ export function AppShellMain() {
                 设置
               </button>
             </div>
-            <aside className="sidebar-helper hidden" aria-label="Today guide">
-              <img src="assets/generated/quanty-side-coach.webp?v=premium-system-2" alt="" loading="lazy" decoding="async" />
+            <aside className="sidebar-helper qg-nav-helper" aria-label="Today guide">
+              <img src="/assets/generated/playful-precision/avatar-focused-v2.png" alt="" loading="lazy" decoding="async" />
               <strong>今日向导</strong>
               <span>3 个任务待完成</span>
             </aside>
           </nav>
 
-          <section className="app-command-bar" aria-label="全局搜索和状态" data-i18n-aria-label="commandBarLabel">
+          <section className="app-command-bar qg-command-bar" aria-label="全局搜索和状态" data-i18n-aria-label="commandBarLabel">
             <button className="sidebar-toggle-button" id="sidebarToggleBtn" type="button" aria-controls="moduleNav" aria-expanded="true" aria-label="隐藏模块列表" title="隐藏模块列表">
               <i data-lucide="panel-left-close"></i>
             </button>
-            <div className="app-search" role="search">
+            <div className="app-search qg-command-search" role="search">
               <i data-lucide="search"></i>
               <input id="globalSearchInput" type="search" placeholder="Search topics, lessons, or concepts..." aria-label="Search topics" />
               <div id="globalSearchResults" className="global-search-results hidden" role="listbox" aria-label="搜索结果" data-i18n-aria-label="searchResultsLabel"></div>
             </div>
-            <div className="app-command-actions">
+            <div className="app-command-actions qg-command-actions">
               <div className="streak-widget" id="streakWidget">
                 <button className="app-stat-pill streak-pill" id="checkInPill" type="button" aria-expanded="false" aria-controls="streakCalendarPanel" data-streak-react-handler="true" onClick={toggleStreakPanel}>
                   <span className="stat-art stat-art-fire" aria-hidden="true"></span>
@@ -217,6 +260,17 @@ export function AppShellMain() {
                 <strong id="commandUnreadCount">0</strong>
                 <small>聊天</small>
               </button>
+              <button
+                className="app-theme-button"
+                id="themeToggleBtn"
+                type="button"
+                aria-label={theme === "dark" ? "切换浅色主题" : "切换深色主题"}
+                aria-pressed={theme === "dark"}
+                title={theme === "dark" ? "切换浅色主题" : "切换深色主题"}
+                onClick={toggleTheme}
+              >
+                <i data-lucide={theme === "dark" ? "sun" : "moon-star"}></i>
+              </button>
               <button className="app-account-chip" type="button" data-jump-module="account" aria-label="打开账号" data-i18n-aria-label="openAccount">
                 <span className="avatar app-account-avatar" id="commandUserAvatar" aria-hidden="true">Q</span>
                 <span className="app-account-meta">
@@ -231,7 +285,7 @@ export function AppShellMain() {
           </section>
 
           <section className="module-view active" data-module-view="route" aria-live="polite">
-            <div className="app-route-root">
+            <div className="app-route-root qg-route-container">
               <Outlet />
             </div>
           </section>

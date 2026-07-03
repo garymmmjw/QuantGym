@@ -83,12 +83,12 @@ export function AuthShell() {
   };
 
   return (
-    <section className="auth-shell" id="authShell">
-          <div className="auth-brand" aria-label="QuantGym 备考封面">
+    <section className="auth-shell qg-auth-screen" id="authShell">
+          <div className="auth-brand qg-auth-brand" aria-label="QuantGym 备考封面">
             <div className="auth-brand-logo">
               <img
                 className="auth-brand-q-image"
-                src="assets/generated/brand-q-mark.webp?v=premium-system-2"
+                src="/assets/generated/playful-precision/brand-q-mark.webp"
                 width="404"
                 height="420"
                 decoding="async"
@@ -99,12 +99,12 @@ export function AuthShell() {
             </div>
             <div className="auth-brand-body">
               <h2>
-                <span className="auth-title-line"><span className="auth-title-gradient">Quant workout</span></span>
-                <span className="auth-title-line">从这里开始</span>
+                <span className="auth-title-line">量化面试，</span>
+                <span className="auth-title-line"><span className="auth-title-gradient">练出来的底气。</span></span>
               </h2>
               <p>
-                <span className="auth-copy-line">从 <strong className="auth-copy-keyword">高频题</strong>、<strong className="auth-copy-keyword auth-copy-english">Mental Math</strong>、<strong className="auth-copy-keyword">简历复盘</strong> 到 <strong className="auth-copy-keyword auth-copy-english">AI Mock</strong>，</span>
-                <span className="auth-copy-line">把 Quant 面试练成肌肉记忆。</span>
+                <span className="auth-copy-line"><strong className="auth-copy-keyword">2,997 道真题</strong> · <strong className="auth-copy-keyword auth-copy-english">Mental Math</strong> · <strong className="auth-copy-keyword auth-copy-english">AI Mock</strong></span>
+                <span className="auth-copy-line">每天 20 分钟，把 offer 变成时间问题。</span>
               </p>
             </div>
             <div className="auth-cover-visual">
@@ -119,7 +119,7 @@ export function AuthShell() {
                   onClick={pokeAuthShark}
                 >
                   <span className="auth-cover-shark-glow" aria-hidden="true" />
-                  <img className="auth-cover-mascot" src="assets/generated/shark-hero-clean.png?v=premium-system-2" alt="" draggable="false" />
+                  <img className="auth-cover-mascot" src="/assets/generated/playful-precision/mascot-hero-v5-clean.png" alt="" draggable="false" />
                 </button>
               </div>
             </div>
@@ -143,7 +143,7 @@ export function AuthShell() {
             </div>
           </div>
 
-          <div className="auth-panel" role="dialog" aria-labelledby="authTitle" aria-describedby="authSubtitle">
+          <div className="auth-panel qg-auth-card" role="dialog" aria-labelledby="authTitle" aria-describedby="authSubtitle">
             <div className="auth-copy">
               <h2 id="authTitle" data-i18n="authTitle">登录或注册</h2>
               <p id="authSubtitle" data-i18n="authSubtitle">同步你的题库、模拟面试复盘、简历和训练进度。</p>
