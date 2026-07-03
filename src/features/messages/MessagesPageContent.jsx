@@ -79,7 +79,7 @@ export function MessagesPageContent() {
   };
 
   return (
-    <section className="messages-section">
+    <section className="messages-section qg-support-page qg-messages-page">
       <div className="section-heading">
         <div>
           <h2 id="messagesPageTitle">{t("messages")}</h2>

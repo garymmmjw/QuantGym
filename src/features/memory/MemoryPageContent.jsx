@@ -112,7 +112,7 @@ export function MemoryPageContent() {
   };
 
   return (
-    <>
+    <div className="qg-support-page qg-memory-page">
       <section className="tool-grid single-column">
         <div className="resource-panel">
           <div className="panel-heading">
@@ -235,6 +235,6 @@ export function MemoryPageContent() {
           ))}
         </div>
       </section>
-    </>
+    </div>
   );
 }

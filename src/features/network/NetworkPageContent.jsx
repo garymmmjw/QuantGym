@@ -60,7 +60,7 @@ export function NetworkPageContent() {
   const contactCountLabel = (t("networkContacts") || "{count} contacts").replace("{count}", contacts.length);
 
   return (
-    <section className="network-section">
+    <section className="network-section qg-support-page qg-network-page">
       <div className="section-heading">
         <div>
           <h2>{t("networkModule") || "人脉"}</h2>

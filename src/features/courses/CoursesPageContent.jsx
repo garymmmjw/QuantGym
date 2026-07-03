@@ -43,7 +43,7 @@ export function CoursesPageContent() {
   };
 
   return (
-    <section className="courses-section">
+    <section className="courses-section qg-support-page qg-courses-page">
       <div className="section-heading">
         <div>
           <h2>{t("courses")}</h2>

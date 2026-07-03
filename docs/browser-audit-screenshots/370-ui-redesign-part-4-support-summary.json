@@ -1,0 +1,750 @@
+{
+  "status": "pass",
+  "baseUrl": "http://127.0.0.1:5174",
+  "screenshots": [
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-experiences-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-experiences-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-news-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-news-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-community-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-community-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-messages-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-messages-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-network-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-network-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-resume-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-resume-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-jobs-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-jobs-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-companies-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-companies-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-library-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-library-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-courses-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-courses-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-memory-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-memory-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-settings-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-settings-mobile.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-account-desktop.png",
+    "docs/browser-audit-screenshots/370-ui-redesign-part-4-account-mobile.png"
+  ],
+  "checks": [
+    {
+      "name": "experiences-desktop",
+      "status": "pass",
+      "bytes": 245363,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/experiences",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#newExperienceBtn": true,
+          "#experienceForm": true,
+          "#experienceList": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 1259
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 1415
+        }
+      }
+    },
+    {
+      "name": "experiences-mobile",
+      "status": "pass",
+      "bytes": 126631,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/experiences",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#newExperienceBtn": true,
+          "#experienceForm": true,
+          "#experienceList": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 1983
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 2094
+        }
+      }
+    },
+    {
+      "name": "news-desktop",
+      "status": "pass",
+      "bytes": 304766,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/news",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#newsTopicFilter": true,
+          "#newsList": true,
+          "#refreshNewsBtn": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 1458
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 1614
+        }
+      }
+    },
+    {
+      "name": "news-mobile",
+      "status": "pass",
+      "bytes": 104871,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/news",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#newsTopicFilter": true,
+          "#newsList": true,
+          "#refreshNewsBtn": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 4247
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 4358
+        }
+      }
+    },
+    {
+      "name": "community-desktop",
+      "status": "pass",
+      "bytes": 182182,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/community",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#communityForm": true,
+          "#communityText": true,
+          "#communityList": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 521
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 900
+        }
+      }
+    },
+    {
+      "name": "community-mobile",
+      "status": "pass",
+      "bytes": 114010,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/community",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#communityForm": true,
+          "#communityText": true,
+          "#communityList": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 626
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 845
+        }
+      }
+    },
+    {
+      "name": "messages-desktop",
+      "status": "pass",
+      "bytes": 189105,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/messages",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#messageThreadList": true,
+          "#messageConversationBody": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 808
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 964
+        }
+      }
+    },
+    {
+      "name": "messages-mobile",
+      "status": "pass",
+      "bytes": 120591,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/messages",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#messageThreadList": true,
+          "#messageConversationBody": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 933
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 1044
+        }
+      }
+    },
+    {
+      "name": "network-desktop",
+      "status": "pass",
+      "bytes": 156779,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/network",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#addNetworkBtn": true,
+          "#networkList": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 180
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 900
+        }
+      }
+    },
+    {
+      "name": "network-mobile",
+      "status": "pass",
+      "bytes": 95163,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/network",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#addNetworkBtn": true,
+          "#networkList": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 293
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 845
+        }
+      }
+    },
+    {
+      "name": "resume-desktop",
+      "status": "pass",
+      "bytes": 187063,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/resume",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#resumeForm": true,
+          "#resumeText": true,
+          "#resumeReview": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 636
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 900
+        }
+      }
+    },
+    {
+      "name": "resume-mobile",
+      "status": "pass",
+      "bytes": 110510,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/resume",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#resumeForm": true,
+          "#resumeText": true,
+          "#resumeReview": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 863
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 974
+        }
+      }
+    },
+    {
+      "name": "jobs-desktop",
+      "status": "pass",
+      "bytes": 252959,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/jobs",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#jobsSummary": true,
+          "#jobsList": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 888
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 1044
+        }
+      }
+    },
+    {
+      "name": "jobs-mobile",
+      "status": "pass",
+      "bytes": 116354,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/jobs",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#jobsSummary": true,
+          "#jobsList": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 2211
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 2322
+        }
+      }
+    },
+    {
+      "name": "companies-desktop",
+      "status": "pass",
+      "bytes": 307279,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/companies",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#companiesPageTitle": true,
+          "#companyTierFilter": true,
+          "#companyOverviewList": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 2831
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 2987
+        }
+      }
+    },
+    {
+      "name": "companies-mobile",
+      "status": "pass",
+      "bytes": 120220,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/companies",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#companiesPageTitle": true,
+          "#companyTierFilter": true,
+          "#companyOverviewList": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 8944
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 9055
+        }
+      }
+    },
+    {
+      "name": "library-desktop",
+      "status": "pass",
+      "bytes": 330522,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/library",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#librarySearch": true,
+          "#libraryBookGrid": true,
+          "#libraryKindTabs": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 4622
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 4778
+        }
+      }
+    },
+    {
+      "name": "library-mobile",
+      "status": "pass",
+      "bytes": 87472,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/library",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#librarySearch": true,
+          "#libraryBookGrid": true,
+          "#libraryKindTabs": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 11266
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 11377
+        }
+      }
+    },
+    {
+      "name": "courses-desktop",
+      "status": "pass",
+      "bytes": 238809,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/courses",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#learningPathTitle": true,
+          "#courseList": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 3747
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 3903
+        }
+      }
+    },
+    {
+      "name": "courses-mobile",
+      "status": "pass",
+      "bytes": 131608,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/courses",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#learningPathTitle": true,
+          "#courseList": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 6696
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 6807
+        }
+      }
+    },
+    {
+      "name": "memory-desktop",
+      "status": "pass",
+      "bytes": 162085,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/memory",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#addResourceBtn": true,
+          "#resourceList": true,
+          "#historyList": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 352
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 900
+        }
+      }
+    },
+    {
+      "name": "memory-mobile",
+      "status": "pass",
+      "bytes": 94878,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/memory",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#addResourceBtn": true,
+          "#resourceList": true,
+          "#historyList": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 461
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 845
+        }
+      }
+    },
+    {
+      "name": "settings-desktop",
+      "status": "pass",
+      "bytes": 201731,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/settings",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#settingsForm": true,
+          "#settingsLanguageSelect": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 558
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 900
+        }
+      }
+    },
+    {
+      "name": "settings-mobile",
+      "status": "pass",
+      "bytes": 115131,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/settings",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#settingsForm": true,
+          "#settingsLanguageSelect": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 1237
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 1348
+        }
+      }
+    },
+    {
+      "name": "account-desktop",
+      "status": "pass",
+      "bytes": 221308,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/account",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#accountForm": true,
+          "#accountNameInput": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 815
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 971
+        }
+      }
+    },
+    {
+      "name": "account-mobile",
+      "status": "pass",
+      "bytes": 105541,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/account",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "supportPageVisible": true,
+        "criticalVisible": {
+          "#accountForm": true,
+          "#accountNameInput": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 1569
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 1680
+        }
+      }
+    }
+  ]
+}

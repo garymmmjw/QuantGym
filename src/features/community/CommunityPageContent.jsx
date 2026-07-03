@@ -14,7 +14,7 @@ export function CommunityPageContent() {
   };
 
   return (
-    <section className="community-section">
+    <section className="community-section qg-support-page qg-community-page">
       <div className="section-heading">
         <div>
           <h2>{model.t("communityPageTitle") || "社区"}</h2>

@@ -89,7 +89,7 @@ export function SettingsPageContent() {
   };
 
   return (
-    <section className="settings-section">
+    <section className="settings-section qg-support-page qg-settings-page">
       <div className="section-heading">
         <div>
           <h2>{model.t("settings")}</h2>

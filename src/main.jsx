@@ -6,6 +6,7 @@ import "./styles/react-route-overrides.css";
 import "./styles/playful-precision-shell.css";
 import "./styles/playful-precision-growth.css";
 import "./styles/playful-precision-training.css";
+import "./styles/playful-precision-support.css";
 
 const DEFAULT_PROBLEM_CATALOG_SCRIPT = "/data/problem-catalog.js?v=2";
 

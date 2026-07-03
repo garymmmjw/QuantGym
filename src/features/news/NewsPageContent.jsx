@@ -45,7 +45,7 @@ export function NewsPageContent() {
   };
 
   return (
-    <section className="news-section">
+    <section className="news-section qg-support-page qg-news-page">
       <div className="section-heading">
         <div>
           <h2>{model.t("newsModuleTitle")}</h2>

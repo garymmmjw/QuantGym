@@ -11,7 +11,7 @@ export function CompaniesPageContent() {
   useScopedRefreshIcons(model.refreshIcons, ".companies-section", [model.entries, model.tierFilter]);
 
   return (
-    <section className="companies-section">
+    <section className="companies-section qg-support-page qg-companies-page">
       <div className="section-heading">
         <div>
           <h2 id="companiesPageTitle">{model.t("companies")}</h2>

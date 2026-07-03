@@ -30,7 +30,7 @@ export function JobsPageContent() {
   useScopedRefreshIcons(pageApi.refreshIcons, ".jobs-section", [jobs, filter]);
 
   return (
-    <section className="jobs-section">
+    <section className="jobs-section qg-support-page qg-jobs-page">
       <div className="section-heading">
         <div>
           <h2>{t("jobsModule")}</h2>

@@ -135,7 +135,7 @@ export function AccountPageContent() {
   };
 
   return (
-    <section className="account-section">
+    <section className="account-section qg-support-page qg-account-page">
       <div className="section-heading">
         <div>
           <h2>{model.t("accountInfo") || "账户信息"}</h2>

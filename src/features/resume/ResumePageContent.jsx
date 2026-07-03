@@ -39,7 +39,7 @@ export function ResumePageContent() {
   };
 
   return (
-    <section className="resume-section">
+    <section className="resume-section qg-support-page qg-resume-page">
       <div className="section-heading">
         <div>
           <h2>{t("resumeModule") || "简历模块"}</h2>

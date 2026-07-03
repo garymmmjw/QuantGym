@@ -88,7 +88,7 @@ export function LibraryPageContent() {
         <p className="library-alert" role="status">{model.alertMessage}</p>
       ) : null}
 
-      <section className="library-section" aria-labelledby="libraryPageTitle">
+      <section className="library-section qg-support-page qg-library-page" aria-labelledby="libraryPageTitle">
         <header className="library-topbar">
           <label className="library-search">
             <i data-lucide="search" />

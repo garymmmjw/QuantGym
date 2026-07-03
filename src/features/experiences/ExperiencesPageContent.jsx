@@ -144,7 +144,7 @@ export function ExperiencesPageContent() {
   };
 
   return (
-    <section className="experience-section">
+    <section className="experience-section experiences-section qg-support-page qg-experiences-page">
       <header className="experience-header">
         <div>
           <span className="experience-kicker">INTERVIEW LOG</span>
