@@ -4,6 +4,7 @@ import { App } from "./App.jsx";
 import "./styles/playful-precision-tokens.css";
 import "./styles/react-route-overrides.css";
 import "./styles/playful-precision-shell.css";
+import "./styles/playful-precision-growth.css";
 
 const DEFAULT_PROBLEM_CATALOG_SCRIPT = "/data/problem-catalog.js?v=2";
 

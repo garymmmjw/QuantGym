@@ -79,6 +79,7 @@ body.is-authenticated .qg-shell-brand img {
 }
 
 body.is-authenticated .qg-shell-brand strong {
+  color: var(--qg-text) !important;
   font-family: var(--qg-font-number);
   font-size: 20px !important;
   font-weight: 700;

@@ -72,8 +72,8 @@ export function OverviewPageContent() {
   }, [updateLeaderboard]);
 
   return (
-    <div className="overview-route-page">
-      <section className="news-ticker" aria-label="Quant 新闻滚动条" data-i18n-aria-label="newsTickerLabel">
+    <div className="overview-route-page qg-growth-page qg-overview-page">
+      <section className="news-ticker qg-overview-ticker" aria-label="Quant 新闻滚动条" data-i18n-aria-label="newsTickerLabel">
         <div className="ticker-label">
           <i data-lucide="radio" />
           <span data-i18n="newsTickerTitle">{model.t("newsTickerTitle") || "Quant Wire"}</span>
@@ -103,7 +103,7 @@ export function OverviewPageContent() {
         </div>
       </section>
 
-      <section className="quanty-hero">
+      <section className="quanty-hero qg-overview-hero">
         <div className="quanty-hero-copy">
           <span className="hero-kicker">Welcome back, Quant</span>
           <h2 id="heroTypewriter">Sharpen your quant edge today.</h2>
@@ -150,7 +150,7 @@ export function OverviewPageContent() {
           <button className="shark-interactive" id="sharkInteractive" type="button" aria-label="戳一下 Quanty">
             <span className="shark-glow" aria-hidden="true" />
             <img
-              src="assets/generated/shark-hero-clean.png?v=original-clean-1"
+              src="/assets/generated/playful-precision/mascot-hero-v5-clean.png"
               alt=""
               loading="lazy"
               id="heroShark"
@@ -181,7 +181,7 @@ export function OverviewPageContent() {
         ))}
       </section>
 
-      <section className="summary-band">
+      <section className="summary-band qg-overview-summary">
         <div className="summary-copy">
           <div className="rank-row">
             <span className="rank-label">当前段位</span>
@@ -208,8 +208,8 @@ export function OverviewPageContent() {
         </div>
       </section>
 
-      <section className="overview-effect-grid" aria-label="训练进度可视化">
-        <article className="overview-effect-panel problem-progress-panel">
+      <section className="overview-effect-grid qg-overview-effects" aria-label="训练进度可视化">
+        <article className="overview-effect-panel problem-progress-panel qg-overview-progress">
           <div className="effect-panel-heading">
             <div>
               <span className="rank-label">PROGRESS</span>
@@ -242,7 +242,7 @@ export function OverviewPageContent() {
           </div>
         </article>
 
-        <article className="overview-effect-panel daily-xp-panel">
+        <article className="overview-effect-panel daily-xp-panel qg-overview-rhythm">
           <div className="effect-panel-heading">
             <div>
               <span className="rank-label">DAILY XP</span>
@@ -260,7 +260,7 @@ export function OverviewPageContent() {
           </div>
         </article>
 
-        <article className="overview-effect-panel contribution-panel">
+        <article className="overview-effect-panel contribution-panel qg-overview-heatmap">
           <div className="effect-panel-heading">
             <div>
               <span className="rank-label">CONSISTENCY</span>
@@ -314,7 +314,7 @@ export function OverviewPageContent() {
         </article>
       </section>
 
-      <section className="workspace-grid overview-ranking-grid">
+      <section className="workspace-grid overview-ranking-grid qg-overview-ranking">
         <form
           className="log-panel hidden"
           id="logForm"
@@ -348,7 +348,7 @@ export function OverviewPageContent() {
           </div>
           <div id="analysisPreview" className="analysis-preview" aria-live="polite" />
         </form>
-        <aside className="leaderboard-panel">
+        <aside className="leaderboard-panel qg-overview-leaderboard">
           <div className="panel-heading">
             <h2>排行榜</h2>
             <button

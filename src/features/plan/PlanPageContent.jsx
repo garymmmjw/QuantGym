@@ -98,7 +98,7 @@ function PrepSetupForm({ model, hidden = false }) {
   const { setup, updateSetup, createPlan } = model;
 
   return (
-    <form id="prepPlanSetupForm" className={`prep-plan-setup${hidden ? " hidden" : ""}`} onSubmit={createPlan}>
+    <form id="prepPlanSetupForm" className={`prep-plan-setup qg-plan-setup${hidden ? " hidden" : ""}`} onSubmit={createPlan}>
       <div className="prep-setup-heading">
         <strong>建立你的备战路线</strong>
         <span>不同岗位和招聘季，需要不同的训练重点与节奏。</span>
@@ -178,7 +178,7 @@ function PrepDashboard({ model, hidden = false }) {
     : plan.diagnosticStatus === "pending" ? "Baseline 待完成" : "未测评";
 
   return (
-    <div className={`prep-plan-dashboard${hidden ? " hidden" : ""}`} id="prepPlanDashboard" aria-live="polite">
+    <div className={`prep-plan-dashboard qg-plan-dashboard${hidden ? " hidden" : ""}`} id="prepPlanDashboard" aria-live="polite">
       <section className="prep-status-band">
         <div className="prep-status-copy">
           <span className="prep-status-label">{plan.track === "internship" ? t("prepTrackInternship") : t("prepTrackFulltime")}</span>
@@ -191,7 +191,7 @@ function PrepDashboard({ model, hidden = false }) {
           <div><strong>{diagnosticCopy}</strong><span>{t("prepSkillLevel")}</span></div>
         </div>
       </section>
-      <div className="prep-dashboard-grid">
+      <div className="prep-dashboard-grid qg-plan-board">
         <section className="prep-work-panel">
           <div className="prep-panel-heading">
             <div>
@@ -201,7 +201,7 @@ function PrepDashboard({ model, hidden = false }) {
           </div>
           <div className="prep-task-list">
             {tasks.map((task) => (
-              <article className={`prep-task${task.done ? " done" : ""}`} key={task.id}>
+            <article className={`prep-task qg-plan-week${task.done ? " done" : ""}`} key={task.id}>
                 <button
                   className="prep-task-toggle"
                   type="button"
@@ -284,7 +284,7 @@ export function PlanPageContent() {
   useScopedRefreshIcons(model.refreshIcons, ".prep-plan-section", [model.view, showSetup, hasPlan]);
 
   return (
-    <section className="prep-plan-section">
+    <section className="prep-plan-section qg-growth-page qg-plan-page">
       <header className="prep-plan-header">
         <div>
           <span className="rank-label">PREP PLAN</span>
@@ -304,7 +304,7 @@ export function PlanPageContent() {
       <PrepSetupForm model={model} hidden={!showSetup} />
       {!showSetup && model.view.mode === "dashboard"
         ? <PrepDashboard model={model} />
-        : <div className="prep-plan-dashboard hidden" id="prepPlanDashboard" aria-live="polite" />}
+        : <div className="prep-plan-dashboard qg-plan-dashboard hidden" id="prepPlanDashboard" aria-live="polite" />}
     </section>
   );
 }
