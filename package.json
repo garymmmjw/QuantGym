@@ -17,6 +17,7 @@
     "check:browser-evidence": "node scripts/check-browser-evidence.mjs",
     "check:migration-completion": "node scripts/check-migration-completion.mjs",
     "check:ui-contracts": "node scripts/check-ui-contracts.mjs",
+    "check:ui-redesign-foundation": "node scripts/check-ui-redesign-foundation.mjs",
     "check:route-integrity": "node scripts/check-route-integrity.mjs",
     "check:route-interactions": "node scripts/check-route-interactions.mjs",
     "check:module-ownership": "node scripts/check-module-ownership.mjs",
