@@ -13,6 +13,14 @@ const COACH_AVATAR_SRC = "assets/generated/shark-avatar-happy.webp?v=premium-sys
 
 export function InterviewTranscript({ messages = [], language = "zh", renderRichText, onAction, onActionValue }) {
   const containerRef = useRef(null);
+  // Snapshot the message keys present on first render: history bubbles never
+  // get the entrance animation; only messages appended afterwards do.
+  const initialKeysRef = useRef(null);
+  if (initialKeysRef.current === null) {
+    initialKeysRef.current = new Set(
+      messages.map((message, index) => message.id || `message-${index}`)
+    );
+  }
 
   useEffect(() => {
     const node = containerRef.current;
@@ -28,35 +36,40 @@ export function InterviewTranscript({ messages = [], language = "zh", renderRich
       className="interview-transcript"
       onClick={onAction}
     >
-      {messages.map((message, index) => (
-        <InterviewTranscriptTurn
-          key={message.id || `message-${index}`}
-          message={message}
-          language={language}
-          renderRichText={renderRichText}
-          onActionValue={onActionValue}
-        />
-      ))}
+      {messages.map((message, index) => {
+        const key = message.id || `message-${index}`;
+        return (
+          <InterviewTranscriptTurn
+            key={key}
+            message={message}
+            language={language}
+            renderRichText={renderRichText}
+            onActionValue={onActionValue}
+            entering={!initialKeysRef.current.has(key)}
+          />
+        );
+      })}
     </div>
   );
 }
 
-function InterviewTranscriptTurn({ message, language, renderRichText, onActionValue }) {
+function InterviewTranscriptTurn({ message, language, renderRichText, onActionValue, entering = false }) {
   const role = message.role || "system";
   const useZh = language !== "en";
+  const enterClass = entering ? " is-entering" : "";
 
   if (message.thinking) {
     return (
-      <article className={`message-turn ${role}${message.grouped ? " is-grouped" : ""}`} data-message-id={message.id || undefined}>
+      <article className={`message-turn ${role}${message.grouped ? " is-grouped" : ""}${enterClass}`} data-message-id={message.id || undefined}>
         <div className={`message-avatar avatar-${role}`} aria-hidden="true" style={message.grouped ? { visibility: "hidden" } : undefined}>
           {role === "coach" ? <CoachAvatar /> : getInterviewMessageAvatar(role)}
         </div>
         <div className="message-stack">
-          {!message.grouped ? <div className="message-meta">{getInterviewMessageLabel(role, language)}</div> : null}
           <div className={`message ${role} thinking`} aria-label={useZh ? "正在思考" : "Thinking"}>
             <span className="thinking-label">{useZh ? "分析回答" : "Analyzing"}</span>
             <span className="thinking-dots"><i /><i /><i /></span>
           </div>
+          {!message.grouped ? <div className="message-meta">{getInterviewMessageLabel(role, language)}</div> : null}
         </div>
       </article>
     );
@@ -64,24 +77,24 @@ function InterviewTranscriptTurn({ message, language, renderRichText, onActionVa
 
   if (role === "user") {
     return (
-      <article className={`message-turn ${role}${message.grouped ? " is-grouped" : ""}`} data-message-id={message.id || undefined}>
+      <article className={`message-turn ${role}${message.grouped ? " is-grouped" : ""}${enterClass}`} data-message-id={message.id || undefined}>
         <div className="message-stack">
           <div className={`message ${role}${message.compact ? " message-short" : ""}${message.variant ? ` message-${message.variant}` : ""}${message.typing ? " is-streaming" : ""}`}>
             {message.text}
             <InterviewMessageAttachments attachments={message.attachments} language={language} />
           </div>
+          {!message.grouped ? <div className="message-meta">{getInterviewMessageLabel(role, language)}</div> : null}
         </div>
       </article>
     );
   }
 
   return (
-    <article className={`message-turn ${role}${message.grouped ? " is-grouped" : ""}${message.typing ? " is-streaming" : ""}`} data-message-id={message.id || undefined}>
+    <article className={`message-turn ${role}${message.grouped ? " is-grouped" : ""}${message.typing ? " is-streaming" : ""}${enterClass}`} data-message-id={message.id || undefined}>
       <div className={`message-avatar avatar-${role}`} aria-hidden="true" style={message.grouped ? { visibility: "hidden" } : undefined}>
         {role === "coach" ? <CoachAvatar /> : getInterviewMessageAvatar(role)}
       </div>
       <div className="message-stack">
-        {!message.grouped ? <div className="message-meta">{getInterviewMessageLabel(role, language)}</div> : null}
         <div className={`message ${role}${message.variant ? ` message-${message.variant}` : ""}${message.typing ? " is-streaming" : ""}`}>
           <InterviewRichText content={message.text} renderInto={renderRichText} />
           <InterviewMessageAttachments attachments={message.attachments} language={language} />
@@ -106,6 +119,7 @@ function InterviewTranscriptTurn({ message, language, renderRichText, onActionVa
             </div>
           ) : null}
         </div>
+        {!message.grouped ? <div className="message-meta">{getInterviewMessageLabel(role, language)}</div> : null}
       </div>
     </article>
   );

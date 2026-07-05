@@ -1,3 +1,5 @@
+import { awardCoinsForXp } from '../economy/index.js';
+
 export function getScaledClassificationGains(gains = {}, difficulty = 1) {
   return Object.fromEntries(
     Object.entries(gains || {}).map(([key, value]) => [key, Math.round(Number(value || 0) * Number(difficulty || 1))])
@@ -20,11 +22,16 @@ export function applySkillEntry(state = {}, entry = {}, options = {}) {
   const skillDefs = options.skillDefs || {};
   if (!state.skills) state.skills = {};
   if (!Array.isArray(state.entries)) state.entries = [];
+  let appliedXp = 0;
   Object.entries(entry.gains || {}).forEach(([key, value]) => {
     if (!skillDefs[key]) return;
-    state.skills[key] = Math.max(0, (state.skills[key] || 0) + Number(value || 0));
+    const gain = Number(value || 0);
+    state.skills[key] = Math.max(0, (state.skills[key] || 0) + gain);
+    if (gain > 0) appliedXp += gain;
   });
   state.entries.push(entry);
+  // Real XP write → coins (design rule). Undo paths never claw coins back.
+  awardCoinsForXp(state, appliedXp, { source: "skill-entry" });
   return entry;
 }
 

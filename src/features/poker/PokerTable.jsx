@@ -1,7 +1,7 @@
 import { PokerBoard } from "./PokerBoard.jsx";
 import { PokerSeatGrid } from "./PokerSeatGrid.jsx";
 
-export function PokerTable({ table, actions }) {
+export function PokerTable({ table, actions, skinOwned = false }) {
   if (!table) return null;
   return (
     <section className="poker-table-panel">
@@ -10,7 +10,7 @@ export function PokerTable({ table, actions }) {
           <span id="pokerStageText">{table.stageLabel}</span>
           <span id="pokerPlayerCount">{table.playerCountLabel}</span>
         </div>
-        <div id="pokerPot" className="poker-pot">{table.potLabel}</div>
+        <div id="pokerPot" className="poker-pot">{String(table.potLabel || "").replace(/^Pot\s*/, "")}</div>
         <PokerBoard board={table.board} />
         <div className="poker-table-watermark">No Limit Texas Hold&apos;em</div>
         <PokerSeatGrid
@@ -18,6 +18,7 @@ export function PokerTable({ table, actions }) {
           onSit={actions.sitAtSeat}
           onAddBot={actions.addBotAtSeat}
           onRemove={actions.removePlayer}
+          skinOwned={skinOwned}
         />
       </div>
     </section>

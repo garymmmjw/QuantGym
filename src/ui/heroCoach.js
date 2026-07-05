@@ -11,6 +11,24 @@ export function createHeroCoachController(options = {}) {
     typewriterTimer = null;
   }
 
+  function renderTypedPhrase(node, phrase, length) {
+    const visible = phrase.slice(0, length);
+    const wordStart = phrase.toLowerCase().indexOf("quant");
+    node.textContent = "";
+    if (wordStart === -1 || length <= wordStart) {
+      node.textContent = visible;
+      return;
+    }
+    const wordEnd = Math.min(length, wordStart + "quant".length);
+    if (wordStart > 0) node.append(visible.slice(0, wordStart));
+    const mark = documentRef.createElement("span");
+    mark.className = "hero-brand-word";
+    mark.style.color = "var(--qg-brand-ink)";
+    mark.textContent = visible.slice(wordStart, wordEnd);
+    node.append(mark);
+    if (length > wordEnd) node.append(visible.slice(wordEnd));
+  }
+
   function startTypewriter() {
     const node = elements.heroTypewriter;
     if (!node) return false;
@@ -20,14 +38,14 @@ export function createHeroCoachController(options = {}) {
     const phrasePause = 6800;
     const nextPhraseDelay = 460;
     const phrases = [
-      "Sharpen your quant edge today.",
-      "Practice faster. Think clearer.",
-      "Turn solved problems into signal.",
-      "Build interview-ready intuition."
+      "把你的 quant 练到锋利。",
+      "练得更快，想得更清楚。",
+      "把做过的题，变成盘感。",
+      "练出面试级的直觉。"
     ];
     const prefersReducedMotion = windowRef.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
     if (prefersReducedMotion) {
-      node.textContent = phrases[0];
+      renderTypedPhrase(node, phrases[0], phrases[0].length);
       return true;
     }
 
@@ -40,7 +58,7 @@ export function createHeroCoachController(options = {}) {
 
     const tick = () => {
       const phrase = phrases[phraseIndex];
-      node.textContent = phrase.slice(0, charIndex);
+      renderTypedPhrase(node, phrase, charIndex);
       if (!deleting && charIndex < phrase.length) {
         charIndex += 1;
         typewriterTimer = windowRef.setTimeout?.(tick, typeDelay) || null;

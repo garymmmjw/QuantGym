@@ -56,10 +56,12 @@ export function getWeeklyXp(entries = [], now = Date.now()) {
     .reduce((sum, entry) => sum + Number(entry.totalXp || 0), 0);
 }
 
-export function getStreak(entries = [], checkIns = [], today = new Date()) {
+export function getStreak(entries = [], checkIns = [], today = new Date(), frozenDays = []) {
   const days = new Set([
     ...(Array.isArray(entries) ? entries : []).map((entry) => dayKey(entry.date)),
-    ...(Array.isArray(checkIns) ? checkIns : []).map((item) => dayKey(item.date))
+    ...(Array.isArray(checkIns) ? checkIns : []).map((item) => dayKey(item.date)),
+    // Streak-freeze cards bridge missed days (economy.frozenDays, ISO date strings).
+    ...(Array.isArray(frozenDays) ? frozenDays : []).map((item) => dayKey(item))
   ]);
   let streak = 0;
   const cursor = new Date(today);

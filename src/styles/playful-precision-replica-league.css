@@ -1,0 +1,916 @@
+/* Design-replication: League page (联赛) — matches "QuantGym 联赛" design reference.
+   Owned by the league chain. Scoped, token-driven (--qg-*), imported after base
+   playful CSS so it wins ties. Animations transform/opacity only. */
+
+/* ===== Page scaffold ===== */
+body.is-authenticated .app-route-root .qg-league-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--qg-font-ui);
+  color: var(--qg-text);
+}
+
+/* ===== Head: kicker + title + coins/countdown (design L29-42) ===== */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-league-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  margin-bottom: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-head h2 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-league-title-en {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-league-subtitle {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--qg-muted);
+  font-weight: 500;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-headstats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-coin-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 16px;
+  border-radius: 16px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-coin-card img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-coin-card small {
+  display: block;
+  font-size: 11px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-coin-card strong {
+  display: block;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-countdown-card {
+  padding: 11px 16px;
+  border-radius: 16px;
+  background: linear-gradient(150deg, #fff3dd, #ffe9c7);
+  border: 1px solid #ffe0ad;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-countdown-card small {
+  display: block;
+  font-size: 11px;
+  color: #8a5a10;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-countdown-card strong {
+  display: block;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 18px;
+  color: #b3610a;
+}
+
+/* ===== Main grid (design L44) ===== */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* ===== Standings board (design L46-67) ===== */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-board {
+  border-radius: 22px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: var(--qg-shadow-card);
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-board-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-board-head img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-board-title {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-board-title strong {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-board-title small {
+  display: block;
+  font-size: 11.5px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rank-pill {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 800;
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rank-pill.is-up {
+  background: #e3f7ee;
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rank-pill.is-down {
+  background: #fdeceb;
+  color: #d0524b;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rows {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+}
+
+/* Promotion / demotion cut lines (design L55-56) */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-cut {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 18px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-cut span {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-cut.is-up span {
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-cut.is-down span {
+  color: #d0524b;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-cut-line {
+  flex: 1;
+  height: 1.5px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-cut.is-up .qg-lg-cut-line {
+  background: linear-gradient(90deg, #2ec38a, transparent);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-cut.is-down .qg-lg-cut-line {
+  background: linear-gradient(90deg, transparent, #d0524b);
+}
+
+/* Standings rows (design L57-63, L174-178) */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  transition: background 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-row.is-me {
+  background: var(--qg-brand-soft);
+  border-top: 1px solid #c9c7f5;
+  border-bottom: 1px solid #c9c7f5;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-row.is-me {
+  border-top-color: #4a4790;
+  border-bottom-color: #4a4790;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rowrank {
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 13.5px;
+  width: 20px;
+  text-align: center;
+  flex: 0 0 auto;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rowrank.is-gold {
+  color: #c98a1e;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rowrank.is-up {
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rowrank.is-down {
+  color: #d0524b;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-avatar.is-me {
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff);
+  color: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rowname {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rowname strong {
+  display: block;
+  font-weight: 700;
+  font-size: 13.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rowname small {
+  display: block;
+  font-size: 11px;
+  color: var(--qg-muted-3);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-zone {
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-zone.is-up {
+  background: #e3f7ee;
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-zone.is-down {
+  background: #fdeceb;
+  color: #d0524b;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rowxp {
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 15px;
+  width: 56px;
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+/* ===== Right column: LIVE card + rules (design L69-86) ===== */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-live {
+  border-radius: 20px;
+  background: linear-gradient(135deg, #1b1a38, #2d2a5c);
+  color: #fff;
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-live > img {
+  width: 78px;
+  height: auto;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.4));
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-live-body {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-live-body small {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #b9b8e0;
+  margin-bottom: 4px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-live-body p {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1.5;
+  color: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-live-btn {
+  margin-top: 11px;
+  padding: 9px 15px;
+  border: none;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #3f39c9;
+  transition: transform 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-live-btn:active {
+  transform: translateY(2px);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rules {
+  border-radius: 20px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05);
+  padding: 18px 20px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rules-title {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rule {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rule-num {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rule-num.is-green {
+  background: #e3f7ee;
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rule-num.is-brand {
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rule-num.is-amber {
+  background: #fff3dd;
+  color: #b3610a;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-rule-text {
+  font-size: 12.5px;
+  color: var(--qg-text-2);
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+/* Honest bot disclosure line (spec §5.3) */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-disclosure {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--qg-border-2);
+  font-size: 11.5px;
+  color: var(--qg-muted);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+/* ===== Shared section shell: map + shop (design L90, L112) ===== */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-map,
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop {
+  border-radius: 22px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: var(--qg-shadow-card);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-map {
+  padding: 22px 22px 18px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop {
+  padding: 22px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop .qg-lg-section-head {
+  margin-bottom: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-section-title {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-section-note {
+  font-size: 12px;
+  color: var(--qg-muted);
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-map-count {
+  font-family: var(--qg-font-number);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--qg-brand-ink);
+}
+
+/* ===== Learning map (design L95-107, L199-218) ===== */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-map-scroller {
+  overflow-x: auto;
+  padding: 14px 2px 6px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-map-track {
+  display: flex;
+  align-items: flex-start;
+  min-width: 640px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node-cell {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 86px;
+  flex: 0 0 auto;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  color: inherit;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node-dot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 16px;
+  transition: transform 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node:hover .qg-lg-node-dot {
+  transform: translateY(-2px);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node.is-done .qg-lg-node-dot {
+  background: linear-gradient(135deg, #2ec38a, #16a06a);
+  color: #fff;
+  box-shadow: 0 8px 16px -8px rgba(22, 160, 106, 0.6);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node.is-current .qg-lg-node-dot {
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff);
+  color: #fff;
+}
+
+/* Pulse ring re-built with transform/opacity only (motion rule) */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node.is-current .qg-lg-node-dot::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(91, 95, 245, 0.45);
+  animation: qg-lg-pulse 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node.is-locked .qg-lg-node-dot {
+  background: var(--qg-track);
+  color: var(--qg-muted-2);
+  border: 1.5px dashed var(--qg-border-2);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node-name {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node.is-locked .qg-lg-node-name {
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node-sub {
+  display: block;
+  font-size: 10.5px;
+  color: var(--qg-muted-3);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node-link {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  margin-top: 25px;
+  min-width: 14px;
+  background: var(--qg-track);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-node-link.is-done {
+  background: linear-gradient(90deg, #2ec38a, #16a06a);
+}
+
+/* ===== Reward shop (design L112-126, L230-241) ===== */
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-balance-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px 6px 8px;
+  border-radius: 12px;
+  background: var(--qg-brand-soft);
+  border: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-balance-pill img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-balance-pill span {
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 14px 14px;
+  border-radius: 18px;
+  background: var(--qg-surface-2);
+  border: 1px solid var(--qg-border);
+  transition: transform 0.16s ease;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px -18px rgba(74, 67, 214, 0.4);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-figure {
+  display: grid;
+  place-items: center;
+  height: 96px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-figure img {
+  max-width: 96px;
+  max-height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 18px rgba(74, 67, 214, 0.22));
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-copy {
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-copy strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-copy small {
+  display: block;
+  font-size: 11px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+  line-height: 1.5;
+  margin-top: 3px;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-btn {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+  margin-top: auto;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-btn:active {
+  transform: translateY(2px);
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-btn.is-buy {
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #fff;
+  box-shadow: 0 3px 0 #3f39c9;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-btn.is-owned {
+  background: #e3f7ee;
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-btn.is-poor {
+  background: var(--qg-track);
+  color: var(--qg-muted-2);
+}
+
+/* ===== Dark theme accents ===== */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-coin-card,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-rules {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-rank-pill.is-up,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-zone.is-up,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-rule-num.is-green,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-btn.is-owned {
+  background: rgba(46, 195, 138, 0.16);
+  color: #4cd6a1;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-rank-pill.is-down,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-zone.is-down {
+  background: rgba(208, 82, 75, 0.18);
+  color: #f08a84;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-rule-num.is-amber {
+  background: rgba(255, 159, 46, 0.16);
+  color: #ffbf5e;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-countdown-card {
+  background: linear-gradient(150deg, rgba(255, 159, 46, 0.2), rgba(255, 191, 94, 0.12));
+  border-color: rgba(255, 191, 94, 0.35);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-countdown-card small {
+  color: #d9a866;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-countdown-card strong {
+  color: #ffbf5e;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-league-page .qg-lg-rowrank.is-gold {
+  color: #ffbf5e;
+}
+
+/* Bot avatar chips keep their light palettes in dark mode (design parity). */
+
+/* ===== Entrance motion (design qgRise → lgRise) ===== */
+@keyframes qg-lg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes qg-lg-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-head,
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-board,
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-side,
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-map,
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop {
+  animation: qg-lg-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-board {
+  animation-delay: 0.05s;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-side {
+  animation-delay: 0.1s;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-map {
+  animation-delay: 0.15s;
+}
+
+body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop {
+  animation-delay: 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-head,
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-board,
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-side,
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-map,
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop,
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-node.is-current .qg-lg-node-dot::after {
+    animation: none;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-node-dot,
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-item,
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-btn,
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-live-btn {
+    transition: none;
+  }
+}
+
+/* ===== Mobile (≤860px single column) ===== */
+@media (max-width: 860px) {
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-grid {
+    grid-template-columns: 1fr;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-headstats {
+    width: 100%;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-coin-card,
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-countdown-card {
+    flex: 1 1 auto;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-row {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-cut {
+    padding: 5px 14px;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-board-head {
+    padding: 14px;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-rowxp {
+    width: 48px;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-live {
+    padding: 18px;
+    gap: 12px;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-live > img {
+    width: 64px;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-map {
+    padding: 18px 14px 14px;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop {
+    padding: 18px 14px;
+  }
+
+  body.is-authenticated .app-route-root .qg-league-page .qg-lg-shop-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}

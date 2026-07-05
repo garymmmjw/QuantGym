@@ -7,6 +7,16 @@ import "./styles/playful-precision-shell.css";
 import "./styles/playful-precision-growth.css";
 import "./styles/playful-precision-training.css";
 import "./styles/playful-precision-support.css";
+import "./styles/playful-precision-replica-growth.css";
+import "./styles/playful-precision-replica-training.css";
+import "./styles/playful-precision-replica-training2.css";
+import "./styles/playful-precision-replica-support-a.css";
+import "./styles/playful-precision-replica-support-a2.css";
+import "./styles/playful-precision-replica-support-b.css";
+import "./styles/playful-precision-replica-support-b2.css";
+import "./styles/playful-precision-replica-auth.css";
+import "./styles/playful-precision-replica-league.css";
+import "./styles/playful-precision-feedback.css";
 
 const DEFAULT_PROBLEM_CATALOG_SCRIPT = "/data/problem-catalog.js?v=2";
 

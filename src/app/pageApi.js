@@ -4,6 +4,7 @@ import { createCoursesPageApi } from "./services/coursesPageApi.js";
 import { createExperiencesPageApi } from "./services/experiencesPageApi.js";
 import { createInterviewPageApi } from "./services/interviewPageApi.js";
 import { createJobsPageApi } from "./services/jobsPageApi.js";
+import { createLeaguePageApi } from "./services/leaguePageApi.js";
 import { createLibraryPageApi } from "./services/libraryPageApi.js";
 import { createMemoryPageApi } from "./services/memoryPageApi.js";
 import { createMessagesPageApi } from "./services/messagesPageApi.js";
@@ -59,6 +60,7 @@ export function createPageApi(deps = {}) {
     }),
     overview: createOverviewPageApi(deps),
     plan,
+    league: createLeaguePageApi(deps),
     skills: createSkillsPageApi(deps),
     pk: createPkPageApi(deps),
     tools: createToolsPageApi(deps),

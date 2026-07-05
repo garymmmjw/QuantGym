@@ -1,0 +1,1248 @@
+/* Design-replication additions (playful-precision-replica-support-b2.css) — matches UI 设计提升.zip design specs.
+   Loaded after its sibling replica sheet; may override earlier rules. */
+
+/* ============================================================
+   Courses page — 课程 (design: QuantGym 课程.dc.html)
+   Adds the "继续学习 · Continue" gradient hero, collapses course
+   cards into compact design tiles (expand via the play button),
+   per-accent chips/progress, and the horizontal path stepper.
+   ============================================================ */
+
+/* --- Dark mode: keep the flat header flat (support.css repaints it) --- */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-courses-page .section-heading.courses-header,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-courses-page .section-heading.courses-header {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+/* --- Continue-learning hero banner --- */
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 20px;
+  align-items: center;
+  overflow: hidden;
+  padding: 26px 28px;
+  border-radius: 24px;
+  background: linear-gradient(120deg, #155e6b, #16879a 55%, #1aa39a);
+  color: #fff;
+  box-shadow: 0 22px 48px -26px rgba(22, 135, 154, 0.6);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(500px 220px at 90% 10%, rgba(255, 255, 255, 0.16), transparent 60%);
+  pointer-events: none;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-main {
+  position: relative;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 12px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-title {
+  margin: 0 0 6px;
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-sub {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0 0 16px;
+  max-width: 560px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 420px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-track i {
+  display: block;
+  height: 100%;
+  border-radius: 20px;
+  background: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-pct {
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 16px;
+  padding: 13px 22px;
+  border: 0;
+  border-radius: 14px;
+  background: #fff;
+  color: #155e6b;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-cta:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-cta i,
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-cta svg {
+  width: 17px;
+  height: 17px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-cover {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  aspect-ratio: 3 / 4;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 14px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08));
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-cover-cat {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-cover-mark {
+  font-family: var(--qg-font-number);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-hero-cover-meta {
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* --- Compact design tiles: hide the workbench parts until expanded --- */
+body.is-authenticated .app-route-root .qg-courses-page .course-card {
+  gap: 0;
+  padding: 0 0 13px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .course-card-status,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .problem-prompt,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .course-source-bar,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .course-player,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .course-actions,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .course-note-field,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .problem-card-footer {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card.is-expanded {
+  grid-column: 1 / -1;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card.is-expanded > .course-card-status {
+  display: inline-flex;
+  margin: 12px 15px 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card.is-expanded > .problem-prompt {
+  display: block;
+  margin: 10px 15px 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card.is-expanded > .course-source-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 15px 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card.is-expanded > .course-player {
+  display: block;
+  margin: 12px 15px 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card.is-expanded > .course-actions {
+  display: grid;
+  gap: 10px;
+  margin: 12px 15px 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card.is-expanded > .course-note-field {
+  display: grid;
+  gap: 8px;
+  margin: 12px 15px 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card.is-expanded > .problem-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 15px 0;
+}
+
+/* Expanded card: give the wide row a roomier action layout */
+body.is-authenticated .app-route-root .qg-courses-page .course-card.is-expanded > .course-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* --- Card body typography (compact tile) --- */
+body.is-authenticated .app-route-root .qg-courses-page .course-card > h3 {
+  margin: 13px 15px 0;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-subtitle {
+  margin: 2px 15px 0;
+  color: var(--qg-muted-3, var(--qg-muted-2));
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .problem-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 11px 15px 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-count {
+  font-family: var(--qg-font-number);
+  color: var(--qg-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Category chip: flat 8px-radius tinted chip (overrides the pill capsule) */
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .problem-meta .pill {
+  min-height: 0;
+  padding: 3px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: #16879a18;
+  color: #16879a;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* --- Per-card progress bar + label --- */
+body.is-authenticated .app-route-root .qg-courses-page .course-card-progress {
+  height: 6px;
+  margin: 11px 15px 0;
+  border-radius: 20px;
+  background: var(--qg-track);
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-progress i {
+  display: block;
+  height: 100%;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #16879a, #16879aaa);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-progress-label {
+  display: block;
+  margin: 5px 15px 0;
+  color: var(--qg-muted-3, var(--qg-muted-2));
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+/* --- Play badge is now a real toggle button --- */
+body.is-authenticated .app-route-root .qg-courses-page .course-card-play {
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  transition: transform 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-play:hover {
+  transform: scale(1.06);
+}
+
+/* --- Accent variants: chip / progress / play color follow the cover --- */
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="b"] .problem-meta .pill { background: #148f5c18; color: #148f5c; }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="c"] .problem-meta .pill { background: #c48a1218; color: #c48a12; }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="d"] .problem-meta .pill { background: #c94a4418; color: #c94a44; }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="e"] .problem-meta .pill { background: #5b5ff518; color: #5b5ff5; }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="f"] .problem-meta .pill { background: #2685c618; color: #2685c6; }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="g"] .problem-meta .pill { background: #f08a1218; color: #f08a12; }
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="b"] .course-card-progress i { background: linear-gradient(90deg, #148f5c, #148f5caa); }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="c"] .course-card-progress i { background: linear-gradient(90deg, #c48a12, #c48a12aa); }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="d"] .course-card-progress i { background: linear-gradient(90deg, #c94a44, #c94a44aa); }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="e"] .course-card-progress i { background: linear-gradient(90deg, #5b5ff5, #5b5ff5aa); }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="f"] .course-card-progress i { background: linear-gradient(90deg, #2685c6, #2685c6aa); }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="g"] .course-card-progress i { background: linear-gradient(90deg, #f08a12, #f08a12aa); }
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="b"] .course-card-play { color: #148f5c; }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="c"] .course-card-play { color: #c48a12; }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="d"] .course-card-play { color: #c94a44; }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="e"] .course-card-play { color: #5b5ff5; }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="f"] .course-card-play { color: #2685c6; }
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="g"] .course-card-play { color: #f08a12; }
+
+/* --- Learning path: horizontal stepper (44px nodes + connector lines) --- */
+body.is-authenticated .app-route-root .qg-courses-page .courses-path-panel {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-path-panel:has(.course-path-list.is-timeline) .courses-path-head p {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item {
+  display: flex;
+  align-items: flex-start;
+  flex: 1 1 0;
+  min-width: 0;
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item:last-child {
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-done,
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-current,
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-locked {
+  border: 0;
+  background: none;
+  opacity: 1;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  width: 96px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-node {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #16879a;
+  color: #fff;
+  box-shadow: 0 0 0 5px rgba(22, 135, 154, 0.16);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-node i,
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-node svg {
+  width: 18px;
+  height: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-current .course-path-node::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-done .course-path-node {
+  background: #16a06a;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-locked .course-path-node {
+  background: #e2e1ef;
+  color: var(--qg-muted-2);
+  box-shadow: none;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-locked .course-path-node,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-locked .course-path-node {
+  background: var(--qg-track);
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-copy {
+  min-width: 0;
+  max-width: 96px;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-copy strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: #16879a;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-done .course-path-copy strong {
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-locked .course-path-copy strong {
+  color: var(--qg-muted-3, #a3a2bd);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-copy small {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-actions {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item:hover .course-path-actions,
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item:focus-within .course-path-actions {
+  opacity: 1;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-actions .icon-button {
+  width: 26px;
+  height: 26px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-line {
+  flex: 1 1 auto;
+  height: 3px;
+  margin: 20.5px 2px 0;
+  border-radius: 2px;
+  background: var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-done .course-path-line,
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-current .course-path-line {
+  background: #16a06a;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  body.is-authenticated .app-route-root .qg-courses-page .courses-hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 22px 20px;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .courses-hero-cover {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  body.is-authenticated .app-route-root .qg-courses-page .courses-hero-title {
+    font-size: 20px;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-line {
+    display: none;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-step {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-copy {
+    max-width: none;
+    flex: 1 1 auto;
+    text-align: left;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-copy small {
+    display: block;
+    margin-top: 2px;
+    color: var(--qg-muted-2);
+    font-size: 10.5px;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-actions {
+    opacity: 1;
+    margin-left: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-courses-page .courses-hero-cta,
+  body.is-authenticated .app-route-root .qg-courses-page .course-card-play,
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-actions {
+    transition-duration: 1ms;
+  }
+}
+
+/* ============================================================
+   Memory page — 资料笔记 (design: QuantGym 资料笔记.dc.html)
+   Sidebar = search + tag chips + bare note rows; right = note
+   reader card (tag pill, edited date, edit/star buttons, blocks,
+   关联 chips). Overrides the earlier replica-support-b rules.
+   ============================================================ */
+
+/* --- Kicker: design hardcodes the mint pill in both themes --- */
+body.is-authenticated .app-route-root .qg-memory-page .memory-kicker {
+  background: #e4f5f2;
+  color: #16879a;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-memory-page .memory-kicker,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-memory-page .memory-kicker {
+  background: #e4f5f2;
+  color: #16879a;
+}
+
+/* --- Layout: 300px sidebar (design) --- */
+body.is-authenticated .app-route-root .qg-memory-page .memory-workspace {
+  grid-template-columns: 300px minmax(0, 1fr);
+}
+
+/* --- Sidebar: transparent stack, each note row is its own card --- */
+body.is-authenticated .app-route-root .qg-memory-page .resource-panel.memory-side {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0;
+  background: none !important;
+  box-shadow: none !important;
+  gap: 12px;
+}
+
+/* Search box */
+body.is-authenticated .app-route-root .qg-memory-page .memory-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 13px;
+  border-radius: 12px;
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-search i,
+body.is-authenticated .app-route-root .qg-memory-page .memory-search svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: #a5a4c2;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-memory-page .memory-search i,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-memory-page .memory-search svg,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-memory-page .memory-search i,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-memory-page .memory-search svg {
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none !important;
+  border-radius: 0;
+  outline: none;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--qg-text);
+  font-family: inherit;
+  font-size: 13px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-search input::placeholder {
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-search input::-webkit-search-decoration,
+body.is-authenticated .app-route-root .qg-memory-page .memory-search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+/* Tag filter chips */
+body.is-authenticated .app-route-root .qg-memory-page .memory-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-tag {
+  padding: 6px 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 10px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none;
+  transition: background 130ms ease, color 130ms ease, border-color 130ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-tag:hover {
+  border-color: color-mix(in srgb, #16879a 40%, var(--qg-border));
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-tag.is-active {
+  border-color: transparent;
+  background: #16879a;
+  color: #fff;
+}
+
+/* Inline new-note form becomes its own card on the bare sidebar */
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-form {
+  padding: 14px;
+  border: 1px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.03);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-list .empty-state {
+  padding: 16px 14px;
+  border: 1px dashed var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface);
+}
+
+/* Note rows: pointer + meta line + selected state */
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-item {
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-meta {
+  margin-top: 5px;
+  color: var(--qg-muted-2);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-item.is-selected {
+  border-color: #c9c7f5;
+  background: var(--qg-brand-soft);
+  box-shadow: 0 8px 20px -14px rgba(91, 95, 245, 0.5);
+}
+
+/* --- Detail card header: 22/26 padding, meta row + 24px title --- */
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 26px 16px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail-title {
+  display: grid;
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail-title h2 {
+  font-size: 24px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-note-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 20px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-note-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--qg-brand);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-note-date {
+  color: var(--qg-muted-3, #a3a2bd);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* 32px square icon buttons (design), incl. the legacy undo button */
+body.is-authenticated .app-route-root .qg-memory-page .memory-note-actions {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .section-heading .icon-button,
+body.is-authenticated .app-route-root .qg-memory-page .memory-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 1px solid var(--qg-border);
+  border-radius: 9px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  cursor: pointer;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: border-color 140ms ease, color 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .section-heading .icon-button:hover,
+body.is-authenticated .app-route-root .qg-memory-page .memory-icon-btn:hover {
+  transform: none;
+  border-color: #c9c7f5;
+  background: var(--qg-surface);
+  color: var(--qg-text);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-icon-btn i,
+body.is-authenticated .app-route-root .qg-memory-page .memory-icon-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-icon-btn.is-starred {
+  border-color: color-mix(in srgb, #f5a524 55%, var(--qg-border));
+  color: #f5a524;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-icon-btn.is-starred i,
+body.is-authenticated .app-route-root .qg-memory-page .memory-icon-btn.is-starred svg {
+  fill: currentColor;
+}
+
+/* --- Note body: 22/26 padding, 14px/1.75 reading text --- */
+body.is-authenticated .app-route-root .qg-memory-page .memory-note-body {
+  padding: 22px 26px;
+  color: var(--qg-text-2, #3f3e5e);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-block-h {
+  margin: 14px 0 6px;
+  color: var(--qg-text);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-note-body .memory-block:first-child {
+  margin-top: 0;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-block-p {
+  margin: 4px 0;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-block-li {
+  padding: 2px 0 2px 6px;
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-block-f {
+  margin: 8px 0;
+  padding: 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface-2);
+  color: var(--qg-text);
+  font-family: var(--qg-font-number, "Space Grotesk");
+  font-size: 14px;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-note-body .resource-image {
+  margin: 4px 0 10px;
+}
+
+/* 关联 links row */
+body.is-authenticated .app-route-root .qg-memory-page .memory-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-links-label {
+  color: #a9a8c4;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-memory-page .memory-links-label,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-memory-page .memory-links-label {
+  color: var(--qg-muted-3, #76749c);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid var(--qg-border);
+  border-radius: 10px;
+  background: var(--qg-surface-3, var(--qg-surface-2));
+  color: var(--qg-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 130ms ease, color 130ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-link-chip:hover {
+  border-color: #c9c7f5;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-link-dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--qg-brand);
+}
+
+/* History list: design body padding; hide entirely when empty under a note */
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .history-list {
+  padding: 22px 26px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .memory-note-body + .history-list {
+  padding-top: 0;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .history-list:empty {
+  display: none;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  body.is-authenticated .app-route-root .qg-memory-page .memory-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.is-authenticated .app-route-root .qg-memory-page .memory-detail .section-heading,
+  body.is-authenticated .app-route-root .qg-memory-page .memory-note-body {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  body.is-authenticated .app-route-root .qg-memory-page .memory-detail .history-list {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-memory-page .memory-tag,
+  body.is-authenticated .app-route-root .qg-memory-page .memory-icon-btn,
+  body.is-authenticated .app-route-root .qg-memory-page .memory-link-chip {
+    transition-duration: 1ms;
+  }
+}
+
+/* ============================================================
+   Account page fixes — 账户 (design: QuantGym 账户.dc.html)
+   ============================================================ */
+
+/* Note: the section dropped the legacy "account-section" class (its h2/dt
+   texts were rewritten by src/ui/languageText.js after saves). The legacy
+   class only contributed margin-top:24px, which support.css already
+   neutralizes with `margin: 0 !important`, so no compensation is needed. */
+
+/* Dark mode: keep the header flat (support.css paints a hero gradient
+   on .qg-support-page .section-heading with :root specificity). */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-account-page .section-heading.account-header {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+/* Identity card: gold streak chip next to the Lv chip (same colors in dark
+   per design account-dark reference). */
+body.is-authenticated .app-route-root .qg-account-page .account-streak-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: #fff3dd;
+  color: #b3610a;
+  font-family: var(--qg-font-number);
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* Avatar picker: collapse the custom URL/upload controls behind a small
+   disclosure so the card keeps the design's height rhythm. */
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-more {
+  margin-top: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-more summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-more summary::-webkit-details-marker {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-more summary::after {
+  content: "▾";
+  font-size: 10px;
+  line-height: 1;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-more[open] summary::after {
+  content: "▴";
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-more .account-avatar-actions {
+  margin-top: 10px;
+}
+
+/* Data overview panel ("数据概览"). Uses .account-stats-panel instead of the
+   legacy .account-meta-panel class so src/ui/languageText.js cannot rewrite
+   its title/keys back to the old 账户信息 rows after renderAll. Geometry
+   mirrors the design: radius 20, padding 17px 19px, rows 7px 2px. */
+body.is-authenticated .app-route-root .qg-account-page .account-stats-panel {
+  padding: 17px 19px;
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-stats-panel h3 {
+  margin: 0 0 11px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-stats-panel dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-stats-panel dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 2px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-stats-panel dt {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-stats-panel dd {
+  margin: 0;
+  font-family: var(--qg-font-number);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--qg-text);
+  text-align: right;
+}
+
+/* Email (login name): design shows it as a disabled-looking track field. */
+body.is-authenticated .app-route-root .qg-account-page .account-fields #accountEmailInput {
+  background: var(--qg-track);
+  color: var(--qg-muted-2);
+}
+
+/* Security panel: 修改密码 primary button (enabled: brand gradient with
+   hard shadow; invalid: muted grey, no shadow — matches pwBtnStyle). */
+body.is-authenticated .app-route-root .qg-account-page .account-password-btn {
+  padding: 12px 22px;
+  min-height: 0;
+  border: 0;
+  border-radius: 13px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #3f39c9;
+  transition: transform 120ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-password-btn:active {
+  transform: translateY(2px);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-password-btn.is-disabled {
+  background: var(--qg-muted-2);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-account-page .account-password-btn {
+    transition: none;
+  }
+  body.is-authenticated .app-route-root .qg-account-page .account-password-btn:active {
+    transform: none;
+  }
+}
+
+/* =========================================================================
+   Settings page — Playful Precision replica polish (B2 layer)
+   Design ref: "QuantGym 设置.dc.html"
+   Fixes: segmented controls (language/theme), cloud-sync stat tiles,
+   button typography, import-button styling, danger card, mobile buttons.
+   ========================================================================= */
+
+/* --- segmented pill control (界面语言 / 外观主题) ------------------------ */
+body.is-authenticated .app-route-root .qg-settings-page .qg-seg-group {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--qg-track);
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-seg-group .qg-seg-btn {
+  padding: 9px 18px;
+  border: none !important;
+  border-radius: 9px !important;
+  min-height: 0;
+  font-family: inherit;
+  font-size: 12.5px !important;
+  font-weight: 800;
+  background: transparent !important;
+  color: var(--qg-muted) !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: all 0.13s ease;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-seg-group .qg-seg-btn.is-active {
+  background: var(--qg-surface) !important;
+  color: var(--qg-text) !important;
+  box-shadow: 0 2px 6px rgba(27, 26, 56, 0.12) !important;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-seg-group .qg-seg-btn:hover {
+  transform: none;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-seg-group .qg-seg-btn:active {
+  transform: none;
+}
+
+/* legacy select kept for form plumbing/AT — visually removed */
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-row-control.qg-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-width: 0 !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- page-head status line: hidden while idle (design has no status row) */
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-status[data-idle="true"] {
+  display: none;
+}
+
+/* --- advanced / model access card (fields moved out of card 1) ----------- */
+body.is-authenticated .app-route-root .qg-settings-page .qg-card-advanced > .primary-button {
+  width: 100%;
+}
+
+/* --- cloud sync stat tiles ------------------------------------------------*/
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 10px;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-stat {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--qg-surface-2);
+  border: 1px solid var(--qg-border);
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-stat .k {
+  font-size: 11px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-stat .v {
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 15px;
+  margin-top: 3px;
+  color: var(--qg-text);
+}
+
+/* --- button typography: design uses 13px/800, radius 13px (12px accents) */
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card .primary-button,
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card .secondary-button {
+  font-size: 13px !important;
+  font-weight: 800;
+  border-radius: 13px !important;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-now.secondary-button {
+  border-radius: 12px !important;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-now.secondary-button:disabled {
+  background: var(--qg-muted-2) !important;
+  box-shadow: none !important;
+  cursor: default;
+  transform: none;
+}
+
+/* --- backup card: 导入备份… secondary button (brand ink + hard shadow) --- */
+body.is-authenticated .app-route-root .qg-settings-page .qg-backup-actions .settings-file-button.file-button {
+  color: var(--qg-brand-ink) !important;
+  background: var(--qg-surface) !important;
+  border: 1.5px solid var(--qg-border) !important;
+  border-radius: 13px !important;
+  box-shadow: 0 3px 0 var(--qg-border) !important;
+  font-size: 13px !important;
+  font-weight: 800;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-backup-actions .settings-file-button.file-button:active {
+  transform: translateY(2px);
+}
+
+/* --- danger zone card: plain surface, no shadow, #f3c4c0 frame ----------- */
+body.is-authenticated .app-route-root .qg-settings-page .qg-card-danger {
+  background: var(--qg-surface) !important;
+  border: 1.5px solid #f3c4c0 !important;
+  box-shadow: none !important;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-danger-actions .danger-action.secondary-button {
+  font-size: 12.5px !important;
+  border-radius: 12px !important;
+  border: 1.5px solid #f3c4c0 !important;
+}
+
+/* --- mobile: neutralize legacy `.primary-button{flex:1 1 130px}` (≤760px)
+   which turns the save button into a 130px-tall block inside column cards */
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card .primary-button,
+  body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card .secondary-button,
+  body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card .file-button {
+    flex: 0 0 auto;
+  }
+}
+
+/* design mobile keeps the sync button at natural width (replica-b forces 100%) */
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-settings-page .qg-sync-now.secondary-button {
+    width: auto;
+    align-self: flex-start;
+  }
+}

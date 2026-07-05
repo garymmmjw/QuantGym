@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getStreak } from "../../modules/skills/data.js";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 
@@ -72,6 +73,35 @@ export function useProblemsPageModel() {
       t: appServices.t || ((key) => key)
     };
   }, [api, appServices.t, revision, userState.leetcodeHot100Done, userState.problemStates, userState.problems, userState.skills]);
+
+  // Header stat cards (已解 / 正确率 / 连续达标) — computed from the real user store.
+  const headerStats = useMemo(() => {
+    void revision;
+    const rawStates = userState.problemStates;
+    const states = Array.isArray(rawStates)
+      ? rawStates
+      : rawStates && typeof rawStates === "object"
+        ? Object.values(rawStates)
+        : [];
+    let solved = 0;
+    const scores = [];
+    states.forEach((state) => {
+      if (!state) return;
+      if (state.completed) solved += 1;
+      const score = Number(state.lastScore);
+      if (Number.isFinite(score)) scores.push(score);
+    });
+    const accuracy = scores.length
+      ? Math.round(scores.reduce((sum, value) => sum + value, 0) / scores.length)
+      : null;
+    let streak = 0;
+    try {
+      streak = getStreak(userState.entries || [], userState.checkIns || [], new Date(), userState.economy?.frozenDays || []);
+    } catch {
+      streak = 0;
+    }
+    return { solved, accuracy, streak };
+  }, [revision, userState.problemStates, userState.entries, userState.checkIns]);
 
   useEffect(() => {
     api?.sync?.();
@@ -170,6 +200,7 @@ export function useProblemsPageModel() {
 
   return {
     view,
+    headerStats,
     searchQuery,
     setSearchQuery,
     showProblemForm,

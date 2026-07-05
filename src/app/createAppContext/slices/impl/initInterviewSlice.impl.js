@@ -361,6 +361,7 @@ export function initInterviewSliceImpl(shared, ctx) {
   const summarizeAttachment = interviewFeedbackController.summarizeAttachment;
   const getSerializableInterviewTranscript = interviewFeedbackController.getSerializableTranscript;
   const localInterviewFeedback = interviewFeedbackController.localFeedback;
+  const localStructuredInterviewFeedback = interviewFeedbackController.localStructuredFeedback;
   const normalizeInterviewFeedback = interviewFeedbackController.normalizeFeedback;
   const parseInterviewFeedbackEvaluation = interviewFeedbackController.parseFeedbackEvaluation;
   const localInterviewHint = interviewFeedbackController.localHint;
@@ -375,7 +376,7 @@ export function initInterviewSliceImpl(shared, ctx) {
     normalizeModel: (model) => sliceRefs.normalizeLlmModel?.(model) || model,
     getType: getInterviewType,
     getSerializableTranscript: getSerializableInterviewTranscript,
-    localFeedback: localInterviewFeedback,
+    localFeedback: localStructuredInterviewFeedback,
     localHint: localInterviewHint,
     getMaxFollowups: getInterviewMaxFollowups,
     getLocalizedProblemField,
@@ -588,7 +589,7 @@ export function initInterviewSliceImpl(shared, ctx) {
     clearQuestionTimer: () => clearInterviewQuestionTimer(),
     requestFeedback: (...args) => requestInterviewFeedback(...args),
     normalizeFeedback: (...args) => normalizeInterviewFeedback(...args),
-    localFeedback: (...args) => localInterviewFeedback(...args),
+    localFeedback: (...args) => localStructuredInterviewFeedback(...args),
     recordPractice: (...args) => recordInterviewPractice(...args),
     persistSnapshot: () => persistInterviewSessionSnapshot(),
     renderQuestionPanel: () => renderInterviewQuestionPanel(),

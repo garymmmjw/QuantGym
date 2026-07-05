@@ -1,4 +1,4 @@
-import { EmptyState } from "../../components/common/EmptyState.jsx";
+import { useEffect, useRef } from "react";
 import { ProblemCard } from "./ProblemCard.jsx";
 import {
   ProblemCollectionGrid,
@@ -10,41 +10,155 @@ import {
 } from "./ProblemChromePanels.jsx";
 import { ProblemDetail } from "./ProblemDetail.jsx";
 import { ProblemRankingList } from "./ProblemRankingList.jsx";
+import { getProblemCatalogStats } from "./problemDisplayLabels.js";
 import { useProblemsPageModel } from "./problemsHooks.js";
 
 export function ProblemsPageContent() {
   const model = useProblemsPageModel();
   const { view } = model;
-  const list = view.list;
   const chrome = view.chrome;
   const viewMode = view.filters?.viewMode || "all";
+  const isEnglish = Boolean(view.isEnglish);
+
+  // Keep the latest list snapshot so the split layout can render the list
+  // beside the detail panel (the view model swaps to detail-only mode).
+  const lastListRef = useRef(null);
+  if (view.mode === "list" && view.list) lastListRef.current = view.list;
+  const listData = view.mode === "list" ? view.list : lastListRef.current;
+  const detail = view.mode === "detail" ? view.detail : null;
+  const activeId = detail?.id || "";
+
+  // Patch the cached rows with live completed/favorite state from the detail.
+  const listItems = (listData?.items || []).map((item) => (
+    detail && item.id === detail.id
+      ? { ...item, completed: detail.completed, favorite: detail.favorite }
+      : item
+  ));
+  const activeListItem = listItems.find((item) => item.id === activeId) || null;
+  const shownCount = listData?.totalProblems ?? listItems.length;
+
+  // Design keeps a problem selected at all times: auto-open the first row
+  // whenever the browser is in plain list mode.
+  const autoOpenRef = useRef("");
+  useEffect(() => {
+    if (view.mode !== "list") {
+      autoOpenRef.current = "";
+      return;
+    }
+    const first = view.list?.items?.[0];
+    if (!first || autoOpenRef.current === first.id) return;
+    autoOpenRef.current = first.id;
+    model.openProblem(first.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
+  const openProblemFromList = (problemId) => {
+    model.openProblem(problemId);
+    if (typeof window !== "undefined" && window.innerWidth <= 760) {
+      window.setTimeout(() => {
+        const node = document.getElementById("problemDetail");
+        if (!node) return;
+        window.scrollTo({
+          top: node.getBoundingClientRect().top + window.scrollY - 70,
+          behavior: "smooth"
+        });
+      }, 120);
+    }
+  };
+
+  const handlePaginationEvent = (event) => {
+    model.handlePagination(event);
+    // Pagination lives beside an always-open detail: surface the new page.
+    if (event?.type !== "keydown" || event?.key === "Enter") {
+      model.returnToList();
+    }
+  };
+
+  const resetAllFilters = () => {
+    model.setSearchQuery("");
+    model.applyFilter({
+      type: "navigation",
+      filters: { source: "all", company: "all", theme: "all", difficulty: "all", viewMode: "all", detailId: "" }
+    });
+    model.returnToList();
+  };
+
+  // "navigation" filter actions keep the current detail open, which would
+  // leave the cached list column stale — force a fresh list afterwards.
+  const applyFilterFromPanel = (action) => {
+    model.applyFilter(action);
+    if (action?.type === "navigation") model.returnToList();
+  };
+
+  const catalogStats = getProblemCatalogStats();
+  const subtitle = catalogStats.total > 0
+    ? (isEnglish
+      ? `${catalogStats.total.toLocaleString("en-US")} problems · ${catalogStats.banks} question banks · mental math / probability / calculus / derivatives & coding`
+      : `${catalogStats.total.toLocaleString("en-US")} 道题 · ${catalogStats.banks} 个题库 · 覆盖速算 / 概率 / 微积分 / 衍生品与编程`)
+    : (isEnglish
+      ? "Practice probability, expectation, games and quant interview fundamentals."
+      : "系统练习概率、期望、博弈和 quant 面试基础题。");
+  const stats = model.headerStats || { solved: 0, accuracy: null, streak: 0 };
 
   return (
     <section className="problem-section qg-training-page qg-problems-page">
       <div className="problem-workspace-grid qg-problem-browser">
         <main className="problem-main-column">
-          <div className="problem-page-header">
+          <div className="problem-page-header qg-problems-header">
             <div className="problem-page-copy">
-              <span className="rank-label">题库</span>
-              <h2>题目</h2>
-              <p>系统练习概率、期望、博弈和 quant 面试基础题。</p>
+              <span className="rank-label">TRAINING · 题库</span>
+              <h2>题目 <span className="qg-problems-title-en">Problems</span></h2>
+              <p>{subtitle}</p>
             </div>
-            <img src="/assets/generated/playful-precision/mascot-calculator-v2.png" alt="" loading="lazy" />
-            <div className="problem-actions">
+            <div className="qg-problems-stats" aria-label={isEnglish ? "Practice stats" : "刷题统计"}>
+              <div className="qg-problems-stat">
+                <span>{isEnglish ? "Solved" : "已解"}</span>
+                <b>{stats.solved}</b>
+              </div>
+              <div className="qg-problems-stat is-acc">
+                <span>{isEnglish ? "Accuracy" : "正确率"}</span>
+                <b>{stats.accuracy != null ? <>{stats.accuracy}<i>%</i></> : "--"}</b>
+              </div>
+              <div className="qg-problems-stat is-streak">
+                <span>{isEnglish ? "Streak" : "连续达标"}</span>
+                <b>{isEnglish ? `${stats.streak} d` : `${stats.streak} 天`}</b>
+              </div>
+            </div>
+          </div>
+
+          <section className="problem-theme-panel qg-problems-filter-card" aria-label={isEnglish ? "Search and filters" : "搜索与筛选"}>
+            <div className="problem-actions qg-problems-search-row">
               <i data-lucide="search" />
               <input
                 id="problemSearch"
                 type="search"
-                placeholder="搜索题目"
+                placeholder="搜索题目名称 / 知识点…"
                 value={model.searchQuery}
                 onChange={(event) => model.setSearchQuery(event.target.value)}
                 onKeyDown={model.handleSearchKeydown}
               />
+              {model.searchQuery ? (
+                <button
+                  type="button"
+                  className="qg-search-clear"
+                  aria-label={isEnglish ? "Clear search" : "清除搜索"}
+                  onClick={() => model.setSearchQuery("")}
+                >
+                  ×
+                </button>
+              ) : null}
               <button className="icon-button ghost hidden" id="addProblemBtn" type="button" title="添加题目" aria-label="添加题目">
                 <i data-lucide="book-plus" />
               </button>
             </div>
-          </div>
+            <ProblemFilterPanel
+              chrome={chrome}
+              filters={view.filters || {}}
+              isEnglish={isEnglish}
+              onApplyFilter={applyFilterFromPanel}
+            />
+          </section>
+
           <form id="problemForm" className={`problem-form${model.showProblemForm ? "" : " hidden"}`} onSubmit={model.submitProblemForm}>
             <input id="problemTitleEn" type="text" placeholder="English title" value={model.problemForm.titleEn} onChange={(e) => model.setProblemForm({ ...model.problemForm, titleEn: e.target.value })} />
             <input id="problemTitleZh" type="text" placeholder="中文标题" value={model.problemForm.titleZh} onChange={(e) => model.setProblemForm({ ...model.problemForm, titleZh: e.target.value })} />
@@ -82,9 +196,12 @@ export function ProblemsPageContent() {
               导入
             </button>
           </form>
+
+          {/* Legacy blocks kept in the DOM for functional continuity, hidden by the replica skin. */}
           <section
             className={`leetcode-hot-panel problem-collections-panel${chrome?.collections?.leetcodeExpanded ? " is-expanded" : ""}`}
             aria-labelledby="problemCollectionsTitle"
+            hidden
           >
             <div className="problem-collections-heading">
               <div>
@@ -98,7 +215,7 @@ export function ProblemsPageContent() {
                 entries={chrome?.collections?.entries || []}
                 filters={view.filters || {}}
                 leetcodeExpanded={chrome?.collections?.leetcodeExpanded}
-                isEnglish={view.isEnglish}
+                isEnglish={isEnglish}
                 onCollectionClick={model.handleCollectionClick}
               />
             </div>
@@ -111,15 +228,16 @@ export function ProblemsPageContent() {
                 items={chrome?.collections?.leetcode?.items || []}
                 doneIds={chrome?.collections?.leetcode?.doneIds || []}
                 expanded={chrome?.collections?.leetcodeExpanded}
-                isEnglish={view.isEnglish}
+                isEnglish={isEnglish}
                 t={model.t}
                 emptyText={chrome?.collections?.leetcode?.emptyText}
                 onToggleDone={model.toggleLeetcodeHotDone}
               />
             </div>
           </section>
-          <section className="problem-practice-zone" aria-label="刷题列表">
-            <div className="problem-browser-toolbar">
+
+          <section className="problem-practice-zone qg-problem-split" aria-label="刷题列表">
+            <div className="problem-browser-toolbar" hidden>
               <div
                 className="problem-view-tabs"
                 role="tablist"
@@ -146,9 +264,6 @@ export function ProblemsPageContent() {
                 全部题源
               </button>
             </div>
-            <section className="problem-theme-panel" aria-label="标签筛选">
-              <ProblemFilterPanel chrome={chrome} onApplyFilter={model.applyFilter} />
-            </section>
             <section id="problemRanking" className={`problem-ranking${view.mode === "ranking" ? "" : " hidden"}`} aria-label="题目排行榜">
               <div className="problem-ranking-header">
                 <div>
@@ -167,40 +282,60 @@ export function ProblemsPageContent() {
                 ) : null}
               </div>
             </section>
-            <div
-              id="problemList"
-              className={`problem-list${view.mode === "list" ? "" : " hidden"}`}
-            >
-              {view.mode === "list" && list?.emptyText ? <EmptyState title={list.emptyText} /> : null}
-              {view.mode === "list" && list?.items?.map((item) => (
-                <ProblemCard
-                  key={item.id}
-                  item={item}
-                  isEnglish={view.isEnglish}
-                  t={model.t}
-                  onOpen={model.openProblem}
-                  onToggleCompleted={model.toggleCompleted}
-                  onToggleSaved={model.toggleSaved}
+            <div className={`qg-problem-list-card${view.mode === "ranking" ? " hidden" : ""}`}>
+              <div className="qg-problem-list-head">
+                <div className="qg-problem-list-count">
+                  {isEnglish ? "Showing " : "显示 "}
+                  <b>{shownCount}</b>
+                  {isEnglish ? " problems" : " 题"}
+                </div>
+                <div className="qg-problem-list-sort">
+                  <i data-lucide="arrow-up-down" />
+                  {isEnglish ? "Default order" : "默认排序"}
+                </div>
+              </div>
+              <div id="problemList" className={`problem-list${view.mode === "ranking" ? " hidden" : ""}`}>
+                {listData?.emptyText ? (
+                  <div className="qg-problems-empty">
+                    <img src="/assets/generated/playful-precision/mascot-oops.png" alt="" />
+                    <strong>{listData.emptyText}</strong>
+                    <p>{isEnglish ? "Try another difficulty or topic, or clear the filters to browse everything." : "换个难度或主题试试，或清除筛选看全部题库。"}</p>
+                    <button type="button" onClick={resetAllFilters}>{isEnglish ? "Clear filters" : "清除筛选"}</button>
+                  </div>
+                ) : null}
+                {listItems.map((item, index) => (
+                  <ProblemCard
+                    key={item.id}
+                    item={item}
+                    index={((listData?.page || 1) - 1) * (listData?.pageSize || 24) + index + 1}
+                    isActive={item.id === activeId}
+                    isEnglish={isEnglish}
+                    t={model.t}
+                    onOpen={openProblemFromList}
+                    onToggleCompleted={model.toggleCompleted}
+                    onToggleSaved={model.toggleSaved}
+                  />
+                ))}
+              </div>
+              <nav
+                id="problemPagination"
+                className={`problem-pagination${view.mode !== "ranking" && listData?.pagination?.visible ? "" : " hidden"}`}
+                aria-label="题目分页"
+              >
+                <ProblemPaginationNav
+                  pagination={listData?.pagination}
+                  isEnglish={isEnglish}
+                  onNavigate={handlePaginationEvent}
                 />
-              ))}
+              </nav>
             </div>
-            <nav
-              id="problemPagination"
-              className={`problem-pagination${view.mode === "list" && list?.pagination?.visible ? "" : " hidden"}`}
-              aria-label="题目分页"
-            >
-              <ProblemPaginationNav
-                pagination={list?.pagination}
-                isEnglish={view.isEnglish}
-                onNavigate={model.handlePagination}
-              />
-            </nav>
             <article id="problemDetail" className={`problem-detail${view.mode === "detail" ? "" : " hidden"}`} aria-live="polite">
               {view.mode === "detail" ? (
                 <ProblemDetail
                   detail={view.detail}
+                  listItem={activeListItem}
                   t={model.t}
-                  isEnglish={view.isEnglish}
+                  isEnglish={isEnglish}
                   renderInto={model.mountRichText}
                   formatDate={model.formatDate}
                   onBack={model.returnToList}
@@ -217,7 +352,7 @@ export function ProblemsPageContent() {
             </article>
           </section>
         </main>
-        <aside className="problem-side-rail">
+        <aside className="problem-side-rail" hidden>
           <section className="problem-completion-panel" aria-label="题目完成进度">
             <div className="effect-panel-heading">
               <div>

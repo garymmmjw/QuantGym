@@ -34,7 +34,7 @@ export function TodoShell() {
             data-todo-handler="react-native-v2"
             onClick={toggleDock}
           >
-            <i data-lucide="list-checks"></i>
+            <i data-lucide="zap"></i>
             <span id="todoDockButtonLabel">今日待办</span>
             <strong id="todoDockCount">0</strong>
           </button>
@@ -44,7 +44,7 @@ export function TodoShell() {
                 <span className="rank-label" id="todoDockEyebrow">TODAY</span>
                 <h2 id="todoDockTitle">To-do list</h2>
               </div>
-              <button id="todoDockCloseBtn" className="icon-button ghost" type="button" aria-label="关闭待办" onClick={closeDock}>
+              <button id="todoDockCloseBtn" className="icon-button ghost" type="button" aria-label="关闭待办" data-i18n-aria-label="todoDockClose" onClick={closeDock}>
                 <i data-lucide="x"></i>
               </button>
             </div>

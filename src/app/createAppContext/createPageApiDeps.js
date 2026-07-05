@@ -557,6 +557,7 @@ windowRef
     getInterviewType,
     getSkillScore,
     getQuantScore,
+    getRank,
     getSkillPracticeStats,
     getAllSkillPracticeStats,
     skillRadarRuntime,

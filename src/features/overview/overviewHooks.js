@@ -2,12 +2,30 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { locationDefs } from "../../prep-data.js";
+import { skillDefs } from "../../skills.js";
+import { getRank } from "../../modules/skills/data.js";
 import {
   getCountryLabel,
   getRegionLabel,
   normalizeCountry,
   normalizeRegionForCountry
 } from "../../modules/account/data.js";
+
+// Design-spec Chinese labels for the overview "刷题进度" rows.
+const PROGRESS_LABELS_ZH = {
+  all: "全部题库",
+  "leetcode-hot": "LeetCode Hot 100",
+  probabilityExpectation: "概率 / 期望",
+  option: "期权 / 衍生品"
+};
+
+const WEEKDAY_SHORT_ZH = ["一", "二", "三", "四", "五", "六", "日"];
+
+function parseDayKey(key) {
+  const [year, month, day] = String(key || "").split("-").map(Number);
+  if (!year || !month || !day) return null;
+  return new Date(year, month - 1, day);
+}
 
 export function useOverviewPageModel() {
   const appServices = useAppServices();
@@ -24,7 +42,10 @@ export function useOverviewPageModel() {
     void revision;
     void userState.skills;
     void userState.entries;
-    return api?.getSummary?.() || { score: 0, rank: "", entryCount: 0, weeklyXp: 0, streak: 0 };
+    const base = api?.getSummary?.() || { score: 0, rank: "", entryCount: 0, weeklyXp: 0, streak: 0 };
+    // The page-api deps miss getRank, leaving rank empty — derive it from the
+    // real score with the same rank table the rest of the app uses.
+    return { ...base, rank: base.rank || getRank(Number(base.score) || 0) };
   }, [api, revision, userState.entries, userState.skills]);
 
   const tickerNews = useMemo(() => {
@@ -44,14 +65,35 @@ export function useOverviewPageModel() {
     void revision;
     void userState.problems;
     void userState.problemStates;
-    return api?.getProblemProgress?.() || [];
-  }, [api, revision, userState.problemStates, userState.problems]);
+    const items = api?.getProblemProgress?.() || [];
+    if (isEnglish) return items;
+    return items.map((item) => ({
+      ...item,
+      label: PROGRESS_LABELS_ZH[item.key] || skillDefs[item.key]?.subtitle || item.label
+    }));
+  }, [api, isEnglish, revision, userState.problemStates, userState.problems]);
 
   const dailyXpBars = useMemo(() => {
     void revision;
     void userState.entries;
-    return api?.getDailyXpBars?.() || [];
-  }, [api, revision, userState.entries]);
+    const raw = api?.getDailyXpBars?.() || [];
+    if (!raw.length) return raw;
+    const todayKey = raw[raw.length - 1]?.key;
+    const mapped = raw.map((item, index) => {
+      const date = parseDayKey(item.key);
+      if (!date) return { ...item, dow: index, isToday: index === raw.length - 1 };
+      const dow = (date.getDay() + 6) % 7;
+      return {
+        ...item,
+        dow,
+        label: isEnglish ? item.label : WEEKDAY_SHORT_ZH[dow],
+        isToday: item.key === todayKey
+      };
+    });
+    // Design shows a Monday-first week; a rolling 7-day window covers each
+    // weekday exactly once, so reorder by weekday.
+    return [...mapped].sort((left, right) => left.dow - right.dow);
+  }, [api, isEnglish, revision, userState.entries]);
 
   const heatmap = useMemo(() => {
     void revision;

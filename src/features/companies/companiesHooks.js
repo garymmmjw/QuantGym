@@ -52,6 +52,7 @@ export function useCompaniesPageModel() {
     getLocationsLabel: appServices.getCompanyLocationsLabel,
     practiceCompany: appServices.practiceCompanyProblems,
     openCareers: appServices.openExternalUrl,
+    openModule: (moduleId) => appServices.services?.switchModule?.(moduleId),
     refreshIcons: appServices.services?.refreshIcons
   };
 }

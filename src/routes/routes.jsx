@@ -27,11 +27,13 @@ const ToolsPage = lazy(() => import("../pages/ToolsPage.jsx").then((m) => ({ def
 const PlanPage = lazy(() => import("../pages/PlanPage.jsx").then((m) => ({ default: m.PlanPage })));
 const PkPage = lazy(() => import("../pages/PkPage.jsx").then((m) => ({ default: m.PkPage })));
 const PokerPage = lazy(() => import("../pages/PokerPage.jsx").then((m) => ({ default: m.PokerPage })));
+const LeaguePage = lazy(() => import("../pages/LeaguePage.jsx").then((m) => ({ default: m.LeaguePage })));
 
 const REACT_PAGES = {
   overview: OverviewPage,
   plan: PlanPage,
   skills: SkillsPage,
+  league: LeaguePage,
   interview: InterviewPage,
   problems: ProblemsPage,
   tools: ToolsPage,

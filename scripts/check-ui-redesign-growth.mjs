@@ -49,7 +49,7 @@ for (const marker of [
   "qg-growth-page",
   "qg-overview-page",
   "qg-overview-hero",
-  "qg-overview-progress",
+  "qg-overview-heatmap",
   "qg-overview-leaderboard",
   "/assets/generated/playful-precision/mascot-hero-v5-clean.png"
 ]) {
@@ -69,7 +69,7 @@ for (const marker of [
 for (const marker of [
   "qg-growth-page",
   "qg-skills-page",
-  "qg-skills-score",
+  "qg-skills-headline-stats",
   "qg-skills-radar",
   "qg-skill-grid",
   "/assets/generated/playful-precision/avatar-focused-v2.png"
@@ -89,7 +89,7 @@ for (const marker of [
   ".qg-growth-page",
   ".qg-overview-page",
   ".qg-overview-hero",
-  ".qg-overview-progress",
+  ".qg-overview-heatmap",
   ".qg-overview-leaderboard",
   ".qg-plan-page",
   ".qg-plan-board",

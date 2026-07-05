@@ -1,0 +1,3901 @@
+/* Design-replication additions (training group) — matches UI 设计提升.zip design specs.
+   Scoped, token-driven (--qg-*), imported after base playful CSS so it wins ties.
+   One agent owns this file per group to avoid parallel-edit conflicts. */
+
+/* ==========================================================================
+   模拟面试 / Interview page — align session console to the "Playful Precision"
+   in-session design mockup (LIGHT exam room: white 22px cards floating on the
+   page background; only the top bar is dark). All rules scoped under the page
+   wrapper; console visuals only, real data/handlers untouched.
+   ========================================================================== */
+
+@keyframes qg-mi-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(208, 82, 75, 0.5);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(208, 82, 75, 0);
+  }
+}
+
+@keyframes qg-mi-wave {
+  0%,
+  100% {
+    height: 6px;
+  }
+  50% {
+    height: 20px;
+  }
+}
+
+/* Design keyframes miRise/miFill (QuantGym 模拟面试.dc.html): block/message
+   entrance + rubric bar fill. Transform/opacity only. */
+@keyframes qg-mi-rise {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes qg-mi-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---- Entrance motion (plays once per mount of each stable block; data
+   refreshes re-render in place and do not restart these) ----------------- */
+body.is-authenticated .app-route-root .qg-interview-page .interview-setup {
+  animation: qg-mi-rise 0.3s ease both;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-console-head {
+  animation: qg-mi-rise 0.3s ease both;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-panel {
+  animation: qg-mi-rise 0.3s ease 0.05s both;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-io-card {
+  animation: qg-mi-rise 0.3s ease 0.08s both;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-form {
+  animation: qg-mi-rise 0.3s ease 0.12s both;
+}
+
+/* Score card rises when it first appears (feedback panel mounts on first
+   scored answer). */
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-panel {
+  animation: qg-mi-rise 0.3s ease both;
+}
+
+/* New transcript bubbles only — InterviewTranscript marks messages appended
+   after mount with .is-entering, so history never replays. The base rule
+   disables the legacy interviewTurnIn (styles.css), which would otherwise
+   replay every history bubble when the transcript mounts. */
+body.is-authenticated .app-route-root .qg-interview-page .interview-transcript .message-turn {
+  animation: none;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-transcript .message-turn.is-entering {
+  animation: qg-mi-rise 0.3s ease both;
+}
+
+/* Rubric dimension bars fill from 0 to their score when the score card
+   appears. Bars keep their inline width; scaleX animates from the left. */
+body.is-authenticated .app-route-root .qg-interview-page .interview-rubric-track i {
+  transform-origin: left center;
+  animation: qg-mi-fill 0.6s ease 0.12s both;
+}
+
+/* Same fill for the question-panel dimension bars (width via --score). */
+body.is-authenticated .app-route-root .qg-interview-page .interview-dimension-bars i::after {
+  transform-origin: left center;
+  animation: qg-mi-fill 0.5s ease both;
+}
+
+/* ---- Setup screen refinements ---------------------------------------- */
+body.is-authenticated .app-route-root .qg-interview-page .interview-setup-top strong {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-setup-field .segment.active,
+body.is-authenticated .app-route-root .qg-interview-page .interview-setup-field .segment[aria-pressed="true"] {
+  color: var(--qg-brand-ink);
+  font-weight: 800;
+}
+
+/* In-session: the exam room is immersive — no page hero above the console. */
+body.is-authenticated.interview-immersive .app-route-root .qg-interview-page .section-heading {
+  display: none;
+}
+
+/* ---- Exam header (dark floating bar, 18px radius) --------------------- */
+body.is-authenticated .app-route-root .qg-interview-page .interview-console-head {
+  flex-wrap: wrap;
+  row-gap: 10px;
+  gap: 14px;
+  padding: 13px 18px;
+  border-radius: 18px;
+  background: linear-gradient(120deg, #1b1a38 0%, #2d2a5c 100%);
+  border-bottom: 0;
+  box-shadow: 0 16px 34px -20px rgba(27, 26, 56, 0.6);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-console-head-main {
+  flex: 0 1 auto;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page #interviewSessionTitle {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page #interviewQuestionStatus {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(165, 163, 212, 0.92);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-exit-btn {
+  gap: 7px;
+  padding: 8px 13px;
+  min-height: 36px;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #c9c8ec;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-exit-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* Question-number progress dots (1 2 3) centered in the dark bar */
+body.is-authenticated .app-route-root .qg-interview-page .interview-head-dots {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-head-dots span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-family: var(--qg-font-number);
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
+  color: #a5a3d4;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-head-dots span.is-current {
+  background: #ffffff;
+  color: #2d2a5c;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-head-dots span.is-done {
+  background: rgba(84, 221, 155, 0.25);
+  color: #8ff0c0;
+}
+
+/* Direction chip (design: target icon + company/direction, always on dark bar) */
+body.is-authenticated .app-route-root .qg-interview-page .interview-head-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-head-chip img {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-head-chip span {
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-family: var(--qg-font-number);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-timer svg {
+  width: 15px;
+  height: 15px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-timer.is-low {
+  border-color: rgba(255, 140, 130, 0.5);
+  background: rgba(208, 82, 75, 0.25);
+  color: #ffc7c2;
+}
+
+/* Panel is always visible in the design — the drawer toggle is redundant. */
+body.is-authenticated .app-route-root .qg-interview-page .interview-panel-toggle {
+  display: none !important;
+}
+
+/* ==========================================================================
+   LEFT COLUMN — question panel: current-question card + progress card
+   (legacy renders it as an off-canvas drawer; force it back into the grid)
+   ========================================================================== */
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-panel {
+  display: flex !important;
+  position: static !important;
+  flex-direction: column;
+  gap: 16px;
+  width: auto !important;
+  min-width: 0;
+  height: auto !important;
+  max-height: none !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: none !important;
+  overflow: visible !important;
+  z-index: auto !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-panel-empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 30px 20px;
+  border-radius: 22px;
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05), 0 14px 32px -24px rgba(74, 67, 214, 0.35);
+  color: var(--qg-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-panel-empty img {
+  width: 108px;
+  height: auto;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-panel-empty p {
+  margin: 0;
+}
+
+/* Current question card */
+body.is-authenticated .app-route-root .qg-interview-page .interview-current-card {
+  border-radius: 22px;
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05), 0 14px 32px -24px rgba(74, 67, 214, 0.35);
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-current-head {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-current-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-diff-pill {
+  display: inline-flex;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--qg-muted);
+  background: var(--qg-track);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-diff-pill.is-easy {
+  color: #0f9d63;
+  background: #e3f7ee;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-diff-pill.is-medium {
+  color: #b3610a;
+  background: #fff3dd;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-diff-pill.is-hard {
+  color: #d0524b;
+  background: #fdeceb;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-topic-pill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-q-counter {
+  margin-left: auto;
+  font-family: var(--qg-font-number);
+  font-size: 12px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-current-head h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-current-body {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 18px 22px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-current-prompt {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-hint-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 13px;
+  border-radius: 11px;
+  background: #fff8ec;
+  border: 1px solid #ffe6bd;
+  color: #a35c07;
+  font-family: var(--qg-font-ui);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-hint-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-current-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-tags-label {
+  margin-right: 2px;
+  font-size: 11px;
+  color: var(--qg-muted-3);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-tag-chip {
+  padding: 4px 10px;
+  border-radius: 9px;
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* Progress card (practice panel + stats + accordion) */
+body.is-authenticated .app-route-root .qg-interview-page .interview-panel-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05), 0 14px 32px -24px rgba(74, 67, 214, 0.35);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-panel-head strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-panel-head span {
+  font-family: var(--qg-font-number);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-panel-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-panel-stats span {
+  display: grid;
+  gap: 3px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: var(--qg-surface-3);
+  border: 1px solid var(--qg-border);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-panel-stats span small {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-panel-stats span strong {
+  font-family: var(--qg-font-number);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-item {
+  border: 1px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface-2);
+  color: var(--qg-text);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-item:hover,
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-item:focus-visible {
+  border-color: color-mix(in srgb, var(--qg-brand) 40%, var(--qg-border));
+  background: var(--qg-surface-3);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-item.is-current {
+  border-color: color-mix(in srgb, var(--qg-brand) 55%, var(--qg-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--qg-brand) 12%, transparent);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-main strong {
+  color: var(--qg-text);
+  font-size: 12.5px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-main small,
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-detail small {
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-detail p {
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-score {
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-number);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-question-item.is-scored .interview-question-score {
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff) !important;
+  color: #ffffff;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-dimension-bars span {
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-dimension-bars i {
+  background: var(--qg-track);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-dimension-bars i::after {
+  background: linear-gradient(90deg, #5b5ff5, #8a7bff);
+}
+
+/* ==========================================================================
+   RIGHT COLUMN — tabbed workspace card (语音转写 / 代码 / 白板) + feedback
+   ========================================================================== */
+body.is-authenticated .app-route-root .qg-interview-page .interview-io-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-io-card {
+  border-radius: 22px;
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05), 0 14px 32px -24px rgba(74, 67, 214, 0.35);
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-io-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: #f4f3fb;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-io-tab {
+  flex: 1;
+  padding: 9px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--qg-muted);
+  font-family: var(--qg-font-ui);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-io-tab.is-active {
+  background: var(--qg-surface);
+  color: #5b5ff5;
+  box-shadow: 0 2px 8px -3px rgba(74, 67, 214, 0.4);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-io-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+/* Voice recorder row */
+body.is-authenticated .app-route-root .qg-interview-page .interview-voice-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 15px;
+  background: var(--qg-surface-3);
+  border: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-voice-mic {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 50%;
+  background: #5b5ff5;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-voice-mic svg {
+  width: 20px;
+  height: 20px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-voice-row.is-recording .interview-voice-mic {
+  background: #d0524b;
+  animation: qg-mi-pulse 1.4s ease-in-out infinite;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-voice-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-voice-copy strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-voice-copy small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--qg-muted-2);
+  font-weight: 500;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-voice-waves {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 22px;
+  margin-top: 5px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-voice-waves i {
+  width: 4px;
+  height: var(--wave-h, 8px);
+  border-radius: 3px;
+  background: #5b5ff5;
+  animation-name: qg-mi-wave;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-voice-time {
+  font-family: var(--qg-font-number);
+  font-size: 12.5px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+/* Code scratchpad pane */
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-editor {
+  border-radius: 13px;
+  overflow: hidden;
+  border: 1px solid #26253f;
+  background: #1c1b30;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-chrome {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 13px;
+  background: #26253f;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-dot.is-red {
+  background: #ff6058;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-dot.is-amber {
+  background: #ffbd2e;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-dot.is-green {
+  background: #28c840;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-chrome small {
+  margin-left: 8px;
+  font-size: 11px;
+  color: #8f8db8;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-input {
+  display: block;
+  width: 100%;
+  min-height: 190px;
+  padding: 14px 16px;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  color: #cdd6f4 !important;
+  font-family: "Space Grotesk", "SF Mono", ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.85;
+  resize: vertical;
+  box-shadow: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-input::placeholder {
+  color: #7a88b8;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-clear {
+  padding: 9px 16px;
+  border-radius: 11px;
+  background: var(--qg-surface);
+  border: 1px solid #e0dffb;
+  color: #5b5ff5;
+  font-family: var(--qg-font-ui);
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-code-actions small {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+/* Whiteboard pane */
+body.is-authenticated .app-route-root .qg-interview-page .interview-board-wrap {
+  position: relative;
+  height: 230px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-board-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  border: 1px dashed #d9d8ec;
+  background:
+    repeating-linear-gradient(0deg, #fbfbfd, #fbfbfd 23px, #eef0f6 24px),
+    repeating-linear-gradient(90deg, #fbfbfd, #fbfbfd 23px, #eef0f6 24px);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-board-hint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--qg-muted-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-board-canvas.has-strokes + .interview-board-hint {
+  opacity: 0;
+}
+
+/* ---- AI interviewer feedback card ------------------------------------ */
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-panel {
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05), 0 14px 32px -24px rgba(74, 67, 214, 0.35);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-head img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-title {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-title strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-title small {
+  font-size: 11.5px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-score-wrap {
+  text-align: right;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-score-wrap strong {
+  display: block;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.1;
+  color: #5b5ff5;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-score-wrap small {
+  display: block;
+  font-size: 10.5px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-rubric {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-rubric-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-rubric-meta span {
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-rubric-meta b {
+  font-family: var(--qg-font-number);
+  font-weight: 600;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-rubric-track {
+  height: 7px;
+  border-radius: 20px;
+  background: var(--qg-track);
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-rubric-track i {
+  display: block;
+  height: 100%;
+  border-radius: 20px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-rubric-track i.is-high {
+  background: linear-gradient(90deg, #16a06a, #54dd9b);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-rubric-track i.is-mid {
+  background: linear-gradient(90deg, #5b5ff5, #8a7bff);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-rubric-track i.is-low {
+  background: linear-gradient(90deg, #ff9f2e, #ffbf5e);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-tip {
+  margin-top: 13px;
+  padding: 12px 14px;
+  border-radius: 13px;
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-tip-label {
+  font-weight: 700;
+  color: #5b5ff5;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-tip-body {
+  display: inline;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-tip-body p {
+  display: inline;
+  margin: 0;
+}
+
+/* ==========================================================================
+   TRANSCRIPT — kill the legacy frosted-glass leak; design chat bubbles
+   ========================================================================== */
+body.is-authenticated .app-route-root .qg-interview-page .interview-transcript {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Long unbreakable content (inline math, long tokens) must not widen the
+   grid track and push bubbles out of the viewport. */
+body.is-authenticated .app-route-root .qg-interview-page .message-turn,
+body.is-authenticated .app-route-root .qg-interview-page .message-stack {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message {
+  overflow-wrap: anywhere;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message mjx-container,
+body.is-authenticated .app-route-root .qg-interview-page .message pre,
+body.is-authenticated .app-route-root .qg-interview-page .message code {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message-turn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 10px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message-turn.is-grouped {
+  margin-top: 0;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message-turn.user {
+  align-items: flex-end;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message-avatar {
+  display: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message-turn.user .message-stack {
+  align-items: flex-end;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message {
+  width: max-content;
+  max-width: min(85%, 640px);
+  padding: 10px 13px;
+  border: 0;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--qg-track) !important;
+  color: #3f3e5e;
+  font-size: 12.5px;
+  line-height: 1.55;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message.user {
+  max-width: min(85%, 640px);
+  border: 0;
+  border-radius: 14px 14px 4px 14px;
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff) !important;
+  color: #ffffff;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message.message-report,
+body.is-authenticated .app-route-root .qg-interview-page .message.message-reference {
+  width: 100%;
+  max-width: 100%;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message-meta {
+  padding: 0 4px;
+  color: var(--qg-muted-2);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message-turn.user .message-meta {
+  display: block;
+  text-align: right;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message .rich-text strong,
+body.is-authenticated .app-route-root .qg-interview-page .message .rich-text h4,
+body.is-authenticated .app-route-root .qg-interview-page .message .rich-text h5,
+body.is-authenticated .app-route-root .qg-interview-page .message .rich-text h6,
+body.is-authenticated .app-route-root .qg-interview-page .message mjx-container {
+  color: inherit;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-action-chip {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--qg-border-2);
+  border-radius: 999px;
+  background: var(--qg-surface);
+  color: var(--qg-text);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* Inline score card inside transcript messages — legacy glass card is
+   hard-coded light; re-skin with tokens so both themes stay readable. */
+body.is-authenticated .app-route-root .qg-interview-page .message .interview-feedback-card {
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05), 0 14px 32px -24px rgba(74, 67, 214, 0.35);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message .interview-feedback-hero {
+  border-bottom: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message .interview-feedback-main h5,
+body.is-authenticated .app-route-root .qg-interview-page .message .interview-feedback-missing h5 {
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message .interview-feedback-main p,
+body.is-authenticated .app-route-root .qg-interview-page .message .interview-feedback-missing ul {
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message .interview-feedback-dim-inline span {
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .message .interview-feedback-dim-inline em {
+  color: var(--qg-text);
+}
+
+/* ---- Chat input row -------------------------------------------------- */
+body.is-authenticated .app-route-root .qg-interview-page .interview-chat-input:focus-within {
+  border-color: rgba(125, 123, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(91, 95, 245, 0.18);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-attach-plus {
+  border: 1px solid var(--qg-border-2);
+  background: var(--qg-surface-2);
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-send-button {
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #ffffff;
+  border: 0;
+  box-shadow: 0 4px 14px -6px rgba(91, 95, 245, 0.9);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-send-button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+/* ---- Bottom action bar (persistent) ----------------------------------- */
+body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border-top: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .primary-button {
+  border: 0;
+  border-radius: 15px;
+  padding: 14px 18px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 15px;
+  box-shadow: 0 4px 0 #3f39c9;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .primary-button.interview-next-cta {
+  flex: 1 1 220px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .primary-button:not(:disabled):active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #3f39c9;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .primary-button:disabled {
+  opacity: 0.55;
+  box-shadow: 0 4px 0 color-mix(in srgb, #3f39c9 55%, transparent);
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .secondary-button {
+  border-radius: 15px;
+  border: 1.5px solid #e0dffb;
+  background: var(--qg-surface);
+  color: #5b5ff5;
+  font-weight: 700;
+  padding: 14px 18px;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .secondary-button:not(:disabled):hover {
+  border-color: #c8c7f7;
+  background: var(--qg-surface-3);
+  color: #4b4fe0;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .secondary-button:disabled {
+  border-color: var(--qg-border);
+  color: #c3c2d8;
+}
+
+body.is-authenticated .app-route-root .qg-interview-page .interview-finish-btn {
+  margin-left: auto;
+}
+
+/* ==========================================================================
+   Dark theme — token-driven; brand accents brightened for contrast
+   ========================================================================== */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-io-tabs {
+  background: var(--qg-surface-2);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-io-tab.is-active {
+  background: var(--qg-surface-3);
+  color: var(--qg-brand-ink);
+  box-shadow: 0 2px 8px -3px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .message {
+  color: var(--qg-text-2);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-hint-btn {
+  background: rgba(255, 159, 46, 0.14);
+  border-color: rgba(255, 159, 46, 0.35);
+  color: #ffbf5e;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-diff-pill.is-easy {
+  color: #54dd9b;
+  background: rgba(22, 160, 106, 0.18);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-diff-pill.is-medium {
+  color: #ffbf5e;
+  background: rgba(255, 159, 46, 0.16);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-diff-pill.is-hard {
+  color: #ff9d96;
+  background: rgba(208, 82, 75, 0.18);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-score-wrap strong,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-tip-label {
+  color: var(--qg-brand-ink);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .secondary-button {
+  border-color: var(--qg-border-2);
+  background: var(--qg-surface);
+  color: var(--qg-brand-ink);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .secondary-button:not(:disabled):hover {
+  background: var(--qg-surface-3);
+  border-color: var(--qg-border-2);
+  color: #ffffff;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .secondary-button:disabled {
+  color: var(--qg-muted-3);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-code-clear {
+  border-color: var(--qg-border-2);
+  color: var(--qg-brand-ink);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page #interviewAnswer,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-code-input {
+  background: transparent !important;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-board-canvas {
+  border-color: var(--qg-border-2);
+  background:
+    repeating-linear-gradient(0deg, #1b1a30, #1b1a30 23px, #242243 24px),
+    repeating-linear-gradient(90deg, #1b1a30, #1b1a30 23px, #242243 24px);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-interview-page .interview-action-chip {
+  background: var(--qg-surface-2);
+  border-color: var(--qg-border-2);
+  color: var(--qg-text-2);
+}
+
+/* ---- Mobile ------------------------------------------------------------ */
+@media (max-width: 720px) {
+  body.is-authenticated .app-route-root .qg-interview-page .interview-transcript {
+    min-height: 240px;
+    padding: 4px 2px 4px 0;
+  }
+
+  body.is-authenticated .app-route-root .qg-interview-page .interview-finish-btn {
+    margin-left: 0;
+    flex: 1 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-interview-page .interview-send-button,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-complete-actions .primary-button,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-voice-mic,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-voice-waves i,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-setup,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-console-head,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-question-panel,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-io-card,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-form,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-feedback-panel,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-transcript .message-turn.is-entering,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-rubric-track i,
+  body.is-authenticated .app-route-root .qg-interview-page .interview-dimension-bars i::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   题目 / Problems page — align to the "Playful Precision" 题库 design mockup.
+   Header + stat cards, single filter card (难度/主题/来源), split list + sticky
+   gradient detail. All rules scoped under .qg-problems-page; real data and
+   handlers untouched — legacy blocks stay in the DOM but are hidden.
+   ========================================================================== */
+
+@keyframes qg-problems-rise {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Design keyframes qgFill (QuantGym 题目.dc.html): bar fill, scaleX only. */
+@keyframes qg-problems-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---- Entrance motion: header / filter / list rise once on route mount
+   (stable containers — data refreshes re-render in place, no replay).
+   The sticky detail card already rises via qg-problems-rise below. ------- */
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-header {
+  animation: qg-problems-rise 0.3s ease both;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-filter-card {
+  animation: qg-problems-rise 0.3s ease 0.05s both;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-list-card {
+  animation: qg-problems-rise 0.3s ease 0.08s both;
+}
+
+/* Progress bars (completion / company panels) fill from 0 when shown. */
+body.is-authenticated .app-route-root .qg-problems-page .effect-progress-row i > span,
+body.is-authenticated .app-route-root .qg-problems-page .problem-company-progress i {
+  transform-origin: left center;
+  animation: qg-problems-fill 0.6s ease both;
+}
+
+/* ---- Workspace: single column, legacy chrome hidden -------------------- */
+body.is-authenticated .app-route-root .qg-problems-page .problem-workspace-grid.qg-problem-browser {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-side-rail,
+body.is-authenticated .app-route-root .qg-problems-page .problem-collections-panel,
+body.is-authenticated .app-route-root .qg-problems-page .problem-browser-toolbar,
+body.is-authenticated .app-route-root .qg-problems-page .problem-theme-heading {
+  display: none !important;
+}
+
+/* ---- Header: plain text block + stat cards ----------------------------- */
+body.is-authenticated .app-route-root .qg-problems-page .problem-page-header.qg-problems-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 0 !important;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-problems-page .problem-page-header.qg-problems-header {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-header .problem-page-copy {
+  gap: 6px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-header .rank-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-header .problem-page-copy h2 {
+  max-width: none;
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-title-en {
+  color: var(--qg-brand);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-header .problem-page-copy p {
+  margin: 2px 0 0;
+  max-width: 640px;
+  font-size: 13.5px;
+  color: var(--qg-muted);
+  font-weight: 500;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-stat {
+  padding: 11px 16px;
+  border-radius: 16px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04), 0 12px 26px -20px rgba(74, 67, 214, 0.35);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-stat > span {
+  display: block;
+  font-size: 11px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-stat > b {
+  display: block;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 1.3;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-stat > b i {
+  font-style: normal;
+  font-size: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-stat.is-acc > b {
+  color: #0f9d63;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-problems-page .qg-problems-stat.is-acc > b {
+  color: #3fd39a;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-stat.is-streak {
+  background: linear-gradient(150deg, #fff3dd, #ffe9c7);
+  border: 1px solid #ffe0ad;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-stat.is-streak > span {
+  color: #a35c07;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-stat.is-streak > b {
+  color: #b3610a;
+}
+
+/* ---- Filter card: search row + 难度/主题/来源 pill rows ----------------- */
+body.is-authenticated .app-route-root .qg-problems-page .problem-theme-panel.qg-problems-filter-card {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: var(--qg-shadow-card);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100% !important;
+  padding: 10px 14px;
+  border: 1px solid var(--qg-border);
+  border-radius: 13px;
+  background: var(--qg-surface-2);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-search-row svg {
+  margin-left: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--qg-muted-2);
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-search-row input {
+  width: 100%;
+  min-height: 24px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--qg-text);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-search-clear {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 50%;
+  background: #e7e6f2;
+  color: var(--qg-muted);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-problems-page .qg-search-clear {
+  background: var(--qg-track);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-filter-row-label {
+  width: 34px;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--qg-muted-3);
+  letter-spacing: 0.1em;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-theme-filter,
+body.is-authenticated .app-route-root .qg-problems-page .problem-difficulty-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-theme-chip,
+body.is-authenticated .app-route-root .qg-problems-page .problem-difficulty-filter .segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 0;
+  padding: 7px 13px;
+  border-radius: 11px;
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-ui);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-theme-chip small,
+body.is-authenticated .app-route-root .qg-problems-page .problem-difficulty-filter .segment small {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-theme-chip:hover,
+body.is-authenticated .app-route-root .qg-problems-page .problem-difficulty-filter .segment:hover {
+  border-color: var(--qg-brand);
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-theme-chip.active,
+body.is-authenticated .app-route-root .qg-problems-page .problem-difficulty-filter .segment.active {
+  border-color: transparent;
+  background: var(--qg-brand);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+/* ---- Split zone: list card + sticky detail ----------------------------- */
+body.is-authenticated .app-route-root .qg-problems-page .problem-practice-zone.qg-problem-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-list-card {
+  border-radius: 20px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: var(--qg-shadow-card);
+  overflow: hidden;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-list-count {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-list-count b {
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  color: var(--qg-brand);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-list-sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--qg-muted);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-list-sort svg {
+  width: 15px;
+  height: 15px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+/* ---- List rows ---------------------------------------------------------- */
+body.is-authenticated .app-route-root .qg-problems-page .problem-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 0;
+  padding: 12px 16px;
+  border: 0;
+  border-top: 1px solid var(--qg-border);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-list .problem-card:first-child {
+  border-top: 0;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-card:hover,
+body.is-authenticated .app-route-root .qg-problems-page .problem-card:focus-visible {
+  border-color: var(--qg-border);
+  background: var(--qg-surface-3);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-card.is-active,
+body.is-authenticated .app-route-root .qg-problems-page .problem-card.is-active:hover {
+  background: var(--qg-brand-soft);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-num {
+  width: 26px;
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-main {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-card h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--qg-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-solved {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #dcf3e9;
+  color: #0f9d63;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-problems-page .qg-problem-solved {
+  background: color-mix(in srgb, #0f9d63 28%, transparent);
+  color: #58e0a5;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-sub {
+  margin-top: 1px;
+  font-size: 12px;
+  color: var(--qg-muted-3);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-card .problem-tag {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 3px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-card .problem-tag.difficulty {
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-card .problem-tag.difficulty.easy {
+  background: #e3f7ee;
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-card .problem-tag.difficulty.medium {
+  background: #fff3dd;
+  color: #b3610a;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-card .problem-tag.difficulty.hard {
+  background: #fdeceb;
+  color: #d0524b;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-problems-page .problem-card .problem-tag.difficulty.easy {
+  background: color-mix(in srgb, #16a06a 22%, transparent);
+  color: #4fd6a0;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-problems-page .problem-card .problem-tag.difficulty.medium {
+  background: color-mix(in srgb, #ff9f2e 20%, transparent);
+  color: #ffbf70;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-problems-page .problem-card .problem-tag.difficulty.hard {
+  background: color-mix(in srgb, #d0524b 24%, transparent);
+  color: #ff9089;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-acc {
+  width: 40px;
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+  text-align: right;
+}
+
+/* ---- Empty state -------------------------------------------------------- */
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 46px 30px;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-empty img {
+  width: 96px;
+  height: auto;
+  opacity: 0.95;
+  filter: drop-shadow(0 14px 20px rgba(74, 67, 214, 0.2));
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-empty strong {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-empty p {
+  margin: 0;
+  max-width: 240px;
+  font-size: 12.5px;
+  color: var(--qg-muted);
+  font-weight: 500;
+  line-height: 1.55;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problems-empty button {
+  margin-top: 10px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 12px;
+  background: var(--qg-brand);
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ---- Pagination (kept for the 24/page data source, styled to blend) ---- */
+body.is-authenticated .app-route-root .qg-problems-page .problem-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--qg-border);
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-pagination-summary {
+  font-size: 12px;
+  color: var(--qg-muted);
+  font-weight: 600;
+  margin-right: auto;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-page-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--qg-border);
+  border-radius: 10px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-page-button svg {
+  width: 13px;
+  height: 13px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-page-button.active {
+  border-color: transparent;
+  background: var(--qg-brand);
+  color: #ffffff;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-page-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-pagination-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-pagination-jump label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-pagination-jump input {
+  width: 52px;
+  padding: 5px 8px;
+  border: 1px solid var(--qg-border);
+  border-radius: 9px;
+  background: var(--qg-surface);
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: 12px;
+}
+
+/* ---- Detail card: sticky, gradient head -------------------------------- */
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail {
+  position: sticky;
+  top: 14px;
+  display: block;
+  gap: 0;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: var(--qg-shadow-card);
+  overflow: hidden;
+  animation: qg-problems-rise 0.3s ease both;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-detail-head {
+  padding: 18px 18px 16px;
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-detail-head.is-easy {
+  background: linear-gradient(135deg, #16a06a, #3fb985);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-detail-head.is-medium {
+  background: linear-gradient(135deg, #e8892a, #ff9f2e);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-detail-head.is-hard {
+  background: linear-gradient(135deg, #d0524b, #e56b64);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-detail-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 9px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-diff {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 700;
+  flex: 0 0 auto;
+  background: #eef0ff;
+  color: #5b5ff5;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-diff.is-easy {
+  background: #e3f7ee;
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-diff.is-medium {
+  background: #fff3dd;
+  color: #b3610a;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-diff.is-hard {
+  background: #fdeceb;
+  color: #d0524b;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-tag {
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #ffffff;
+  max-width: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-sub {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 500;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-problem-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+}
+
+/* Legacy detail toolbar (back / prev / next / actions) hidden by design */
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail .problem-detail-top {
+  display: none !important;
+}
+
+/* Question block reads as plain prompt text */
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block {
+  margin: 0;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block.qg-block-question {
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block.qg-block-question h3 {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block .problem-detail-body {
+  color: var(--qg-text-2);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-tag-row span {
+  padding: 4px 10px;
+  border-radius: 9px;
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* Hint / answer blocks: soft cards in the 参考解析 style */
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block.qg-block-hint,
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block.qg-block-answer {
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--qg-border);
+  border-radius: 13px;
+  background: var(--qg-surface-3);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block.qg-block-hint h3,
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block.qg-block-answer h3 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block.is-locked {
+  min-height: 132px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block.is-locked .problem-detail-body {
+  max-height: 96px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-lock-overlay {
+  inset: 12px;
+  padding: 14px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--qg-surface) 62%, transparent);
+  color: var(--qg-text);
+  gap: 7px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-lock-overlay strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-lock-overlay small {
+  color: var(--qg-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-lock-icon {
+  width: 34px;
+  height: 34px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-lock-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Stats row: 通过率 / 尝试 / 常考 */
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-stats {
+  display: flex;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--qg-border);
+  border-bottom: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-stats > div {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-stats span {
+  display: block;
+  font-size: 10.5px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-stats b {
+  display: block;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-stats b.is-firm {
+  margin-top: 3px;
+  font-family: var(--qg-font-ui);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Notes */
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-notes {
+  width: 100%;
+  min-height: 64px;
+  box-sizing: border-box;
+  resize: vertical;
+  padding: 11px 13px;
+  border: 1px solid var(--qg-border);
+  border-radius: 13px;
+  background: var(--qg-surface-2);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--qg-text);
+  outline: none;
+}
+
+/* CTA row */
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row {
+  display: flex;
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-solve {
+  flex: 1;
+  padding: 13px;
+  border: none;
+  border-radius: 14px;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  color: #ffffff;
+  cursor: pointer;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  box-shadow: 0 4px 0 #3f39c9;
+  transition: transform 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-solve.is-done {
+  background: linear-gradient(180deg, #2ec38a, #16a06a);
+  box-shadow: 0 4px 0 #0d7a4e;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-solve:active {
+  transform: translateY(3px);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-bookmark {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  padding: 13px 15px;
+  border-radius: 14px;
+  background: var(--qg-surface);
+  border: 1.5px solid #e0dffb;
+  color: #5b5ff5;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-bookmark svg {
+  width: 17px;
+  height: 17px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-bookmark.active {
+  background: var(--qg-brand-soft);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-problems-page .qg-detail-bookmark {
+  border-color: var(--qg-border-2);
+  color: var(--qg-brand-ink);
+}
+
+/* Discussion: compact, tucked under the CTA */
+body.is-authenticated .app-route-root .qg-problems-page .problem-social-panel {
+  gap: 12px;
+  margin: 2px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-social-header h3 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-social-header p {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--qg-muted);
+  font-weight: 500;
+}
+
+/* ---- Ranking panel (hidden tab, kept functional) ------------------------ */
+body.is-authenticated .app-route-root .qg-problems-page .problem-ranking {
+  border-radius: 20px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: var(--qg-shadow-card);
+  padding: 16px 18px;
+}
+
+/* ---- Responsive --------------------------------------------------------- */
+@media (max-width: 1180px) {
+  body.is-authenticated .app-route-root .qg-problems-page .problem-main-column {
+    display: grid;
+  }
+
+  body.is-authenticated .app-route-root .qg-problems-page .problem-practice-zone.qg-problem-split,
+  body.is-authenticated .app-route-root .qg-problems-page .problem-page-header.qg-problems-header,
+  body.is-authenticated .app-route-root .qg-problems-page .problem-theme-panel.qg-problems-filter-card {
+    order: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .qg-problems-page .problem-detail {
+    position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-problems-page .problem-card .problem-tag[data-q-topic],
+  body.is-authenticated .app-route-root .qg-problems-page .problem-card .problem-tag.topic,
+  body.is-authenticated .app-route-root .qg-problems-page .qg-problem-acc {
+    display: none !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-problems-page .qg-filter-row .problem-theme-filter,
+  body.is-authenticated .app-route-root .qg-problems-page .qg-filter-row .problem-difficulty-filter {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-problems-page .problem-card,
+  body.is-authenticated .app-route-root .qg-problems-page .problem-theme-chip,
+  body.is-authenticated .app-route-root .qg-problems-page .problem-detail,
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-solve,
+  body.is-authenticated .app-route-root .qg-problems-page .qg-problems-header,
+  body.is-authenticated .app-route-root .qg-problems-page .qg-problems-filter-card,
+  body.is-authenticated .app-route-root .qg-problems-page .qg-problem-list-card,
+  body.is-authenticated .app-route-root .qg-problems-page .effect-progress-row i > span,
+  body.is-authenticated .app-route-root .qg-problems-page .problem-company-progress i {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ============================================================ */
+/* Tools · Mental Math setup — Playful Precision replica        */
+/* ============================================================ */
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-setup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-hero-card .mental-session-stats[hidden] {
+  display: none !important;
+}
+
+/* ---- Hero card (purple gradient + mascot) ------------------- */
+body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 220px;
+  padding: 34px 32px;
+  border: none;
+  border-radius: 26px;
+  background: linear-gradient(135deg, #5b5ff5 0%, #7161f2 55%, #8a63e8 100%);
+  color: #fff;
+  box-shadow: 0 22px 48px -24px rgba(91, 95, 245, 0.7);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-card::before {
+  content: "";
+  position: absolute;
+  right: -30px;
+  bottom: -30px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16), transparent 65%);
+  pointer-events: none;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-card::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  bottom: 2px;
+  align-self: auto;
+  justify-self: auto;
+  width: 150px;
+  height: 150px;
+  background: url("/assets/generated/playful-precision/mascot-calculator-v2.png") center / contain no-repeat;
+  filter: drop-shadow(0 16px 24px rgba(20, 16, 60, 0.4));
+  animation: qg-training-float 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-hero-card .mental-hero-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 62%;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-hero-card .mental-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-hero-card h2 {
+  margin: 14px 0 8px;
+  color: #fff;
+  font-size: 32px;
+  line-height: 1.12;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-hero-card p {
+  margin: 0;
+  max-width: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ---- Config card ------------------------------------------- */
+body.is-authenticated .app-route-root .qg-tools-page .mental-config-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 22px 24px;
+  border: 1px solid var(--qg-border);
+  border-radius: 26px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05), 0 16px 34px -24px rgba(74, 67, 214, 0.4);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-config-block {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-config-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--qg-muted-2);
+}
+
+/* operation-type chips (2-col grid) */
+body.is-authenticated .app-route-root .qg-tools-page .mental-op-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-op-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 12px 10px;
+  border: 1.5px solid var(--qg-border);
+  border-radius: 13px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-ui);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-op-chip .mental-op-sym {
+  font-family: var(--qg-font-number);
+  font-size: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-op-chip:hover {
+  border-color: var(--qg-brand);
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-op-chip.active {
+  border-color: var(--qg-brand);
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+}
+
+/* question-count chips */
+body.is-authenticated .app-route-root .qg-tools-page .mental-count-grid {
+  display: flex;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-count-chip {
+  flex: 1;
+  padding: 11px;
+  border: 1.5px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-number);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-count-chip:hover {
+  border-color: var(--qg-brand);
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-count-chip.active {
+  border-color: var(--qg-brand);
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-count-select-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* stat pills */
+body.is-authenticated .app-route-root .qg-tools-page .mental-stat-pills {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-stat-pill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface-3);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-stat-pill-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-stat-pill-value {
+  font-family: var(--qg-font-number);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+/* start CTA */
+body.is-authenticated .app-route-root .qg-tools-page .mental-start-cta {
+  margin-top: auto;
+  padding: 16px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #fff;
+  font-family: var(--qg-font-ui);
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 5px 0 #3f39c9, 0 16px 28px -12px rgba(91, 95, 245, 0.7);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-start-cta:hover {
+  transform: translateY(-1px);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-start-cta:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #3f39c9;
+}
+
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-tools-page .mental-hero-card .mental-hero-copy {
+    max-width: 70%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-card::after {
+    animation: none;
+  }
+  body.is-authenticated .app-route-root .qg-tools-page .mental-op-chip,
+  body.is-authenticated .app-route-root .qg-tools-page .mental-count-chip,
+  body.is-authenticated .app-route-root .qg-tools-page .mental-start-cta {
+    transition: none;
+  }
+}
+
+/* ============================================================
+   POKER — Playful Precision "Poker Lab" replica
+   Scope: body.is-authenticated .app-route-root .qg-poker-page
+   Dark "felt table" world in both themes (matches design).
+   ============================================================ */
+
+/* --- Top-level lab layout: felt+action on the left, 300px rail --- */
+body.is-authenticated .app-route-root .qg-poker-page {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  color: #e8e9f5;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-lab {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 16px;
+  align-items: start;
+}
+
+/* The right rail now hosts the real lobby panel (room link, seats, chat, ledger). */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* --- Felt card (table container) --- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card {
+  overflow: hidden;
+  border: 1px solid #23263a;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #191b26, #12141c);
+  box-shadow: 0 22px 48px -26px rgba(0, 0, 0, 0.7);
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  row-gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #23263a;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: rgba(91, 95, 245, 0.16);
+  color: #a9adff;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-format {
+  font-size: 13px;
+  font-weight: 700;
+  color: #c7c9e0;
+}
+
+/* Override base room-meta pill styling inside the felt header */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-head-meta.poker-now-room-meta {
+  grid-column: auto !important;
+  grid-row: auto !important;
+  margin-left: auto;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  color: #9a9db8 !important;
+  text-align: right !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-meta-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-height: 30px !important;
+  padding: 6px 11px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: #1d2030 !important;
+  color: #9a9db8 !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  font-style: normal !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-meta-pill span {
+  color: inherit !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-meta-num {
+  font-family: var(--qg-font-number) !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-head-meta .poker-leave-table-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-height: 30px !important;
+  padding: 6px 11px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: #1d2030 !important;
+  color: #9a9db8 !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-head-meta .poker-leave-table-button i,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-head-meta .poker-leave-table-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* --- Reshape the nested table-world: only the felt table shows --- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .qg-poker-table-world {
+  position: relative !important;
+  display: block !important;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 18px 22px 8px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .qg-poker-table-world::before {
+  display: none !important;
+}
+
+/* Hide chrome the design header already replaces */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-now-brand,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-tournament-strip,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-side-rail {
+  display: none !important;
+}
+
+/* --- The oval felt table --- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-table-panel {
+  grid-column: auto !important;
+  grid-row: auto !important;
+  display: block !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-table {
+  position: relative !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: 400px !important;
+  min-height: 400px !important;
+  max-height: 400px !important;
+  margin: 0 auto !important;
+  border: 8px solid #0c1017 !important;
+  border-radius: 200px / 150px !important;
+  background:
+    radial-gradient(120% 120% at 50% 30%, #1f6d4f 0%, #155840 55%, #0f4130 100%) !important;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.5),
+    0 10px 30px -12px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-table::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 14px !important;
+  border-radius: 190px / 140px !important;
+  border: 1.5px dashed rgba(255, 255, 255, 0.08) !important;
+  pointer-events: none !important;
+}
+
+/* Table meta chip + pot chip */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-table-meta {
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 999px !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+  color: #c9cbe0 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-pot {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 15px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 20px !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+  color: #ffd479 !important;
+  font-family: var(--qg-font-number) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-table-watermark {
+  color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* Community + hole cards */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-board {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-board .poker-card,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-hole-cards .poker-card {
+  width: 42px !important;
+  height: 58px !important;
+  border-radius: 8px !important;
+  background: #fbfbff !important;
+  box-shadow: 0 6px 12px -4px rgba(0, 0, 0, 0.5) !important;
+  font-family: var(--qg-font-number) !important;
+  font-weight: 700 !important;
+}
+
+/* Seat badge look (dark plaque with initials avatar + stack) */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat {
+  padding: 8px 11px !important;
+  border: 1px solid #2a2e42 !important;
+  border-radius: 14px !important;
+  background: rgba(12, 16, 23, 0.82) !important;
+  color: rgba(255, 255, 255, 0.86) !important;
+  box-shadow: 0 16px 22px -18px rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.human,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.active {
+  border-color: rgba(91, 95, 245, 0.7) !important;
+  box-shadow:
+    0 0 0 3px rgba(91, 95, 245, 0.18),
+    0 16px 22px -18px rgba(0, 0, 0, 0.9) !important;
+}
+
+/* --- Hand-type line under the felt --- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-handline {
+  margin: 0 !important;
+  padding: 12px 22px 14px !important;
+  text-align: center !important;
+  font-size: 12.5px !important;
+  color: #8f92ad !important;
+  font-weight: 600 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-handline strong {
+  color: #7fe0b0 !important;
+  font-weight: 700 !important;
+}
+
+/* ============================================================
+   ACTION BAR — restyled to the design's timer + 3 buttons + chips
+   ============================================================ */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-bottom-hud {
+  grid-column: auto !important;
+  grid-row: auto !important;
+  display: block !important;
+  padding: 15px 18px !important;
+  border: 1px solid #23263a !important;
+  border-radius: 20px !important;
+  background: #171925 !important;
+}
+
+/* Verbose prompt collapses into the timer row label */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-game-prompt {
+  display: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 13px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+/* Timer / progress row built from the turn prompt */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-turn-prompt {
+  position: relative !important;
+  order: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 0 0 0 0 !important;
+  text-align: right !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #8f92ad !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-turn-prompt::before {
+  content: "";
+  flex: 1;
+  height: 6px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #5b5ff5 0%, #8a7bff 64%, #23263a 64%, #23263a 100%);
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-turn-prompt::after {
+  content: "行动时间 0:14";
+  white-space: nowrap;
+  color: #8f92ad;
+  font-weight: 600;
+}
+
+/* Primary Fold / Call / Raise trio */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid {
+  order: 1 !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button {
+  min-height: 52px !important;
+  padding: 14px !important;
+  border: 1px solid transparent !important;
+  border-radius: 14px !important;
+  font-family: var(--qg-font-ui) !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  color: #fff !important;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button[data-poker-action="fold"] {
+  order: 0 !important;
+  border-color: #3a2030 !important;
+  background: #241820 !important;
+  color: #e08a95 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button[data-poker-action="call"] {
+  order: 1 !important;
+  border-color: #2a3a30 !important;
+  background: #182420 !important;
+  color: #7fe0b0 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button[data-poker-action="raise"] {
+  order: 2 !important;
+  border: 0 !important;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 0 #3f39c9 !important;
+}
+
+/* All-in stays available but tucked to the size chips row */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button[data-poker-action="allin"] {
+  grid-column: 1 / -1 !important;
+  order: 3 !important;
+  min-height: 40px !important;
+  border: 1px solid #2a2e42 !important;
+  background: #1d2030 !important;
+  color: #c3c5ff !important;
+  font-size: 12px !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button:not(:disabled):active {
+  transform: translateY(2px);
+}
+
+/* Size chips + slider row */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-quick-bets {
+  order: 2 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-quick-bets button {
+  padding: 6px 10px !important;
+  border: 1px solid #2a2e42 !important;
+  border-radius: 9px !important;
+  background: #1d2030 !important;
+  color: #9a9db8 !important;
+  font-family: var(--qg-font-ui) !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-quick-bets button:hover:not(:disabled) {
+  border-color: #5b5ff5 !important;
+  background: rgba(91, 95, 245, 0.2) !important;
+  color: #c3c5ff !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-quick-bets button:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed;
+}
+
+/* Raise-to numeric control -> compact value on the right */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-raise-control {
+  order: 3 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  grid-template-columns: none !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #8f92ad !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-raise-control input {
+  min-height: 38px !important;
+  width: 100% !important;
+  padding: 0 12px !important;
+  border: 1px solid #2a2e42 !important;
+  border-radius: 10px !important;
+  background: #1d2030 !important;
+  color: #e8e9f5 !important;
+  font-family: var(--qg-font-number) !important;
+  font-weight: 700 !important;
+}
+
+/* Next-hand + feedback stay, restyled dark */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-actions {
+  order: 4 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-actions button {
+  border-color: #2a2e42 !important;
+  background: #1d2030 !important;
+  color: #c3c5ff !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback {
+  order: 5 !important;
+  color: #9a9db8 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback:empty {
+  display: none !important;
+}
+
+/* ============================================================
+   RIGHT RAIL — Equity / GTO coach / Hand history
+   ============================================================ */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail-card {
+  border: 1px solid #23263a;
+  border-radius: 20px;
+  background: #171925;
+  padding: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail-card h3 {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #c7c9e0;
+}
+
+/* Equity donut */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-equity {
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-equity h3 {
+  margin-bottom: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-donut {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: conic-gradient(#5b5ff5 0% var(--qg-equity), #23263a var(--qg-equity) 100%);
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-donut-core {
+  position: absolute;
+  inset: 11px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #171925;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-donut-core strong {
+  display: block;
+  font-family: var(--qg-font-number);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  color: #f1f0fb;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-donut-core span {
+  display: block;
+  margin-top: 2px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #8f92ad;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-equity-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-equity-stats > div {
+  flex: 1;
+  padding: 9px;
+  border-radius: 12px;
+  background: #1d2030;
+  text-align: left;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-equity-stats small {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8f92ad;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-equity-stats strong {
+  display: block;
+  font-family: var(--qg-font-number);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-stat-pos {
+  color: #7fe0b0;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-stat-warn {
+  color: #ffd479;
+}
+
+/* GTO coach card */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach {
+  background: linear-gradient(160deg, #1b1e2e, #171925);
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-head img {
+  width: 30px;
+  height: 30px;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-head h3 {
+  font-size: 13px;
+  font-weight: 800;
+  color: #e8e9f5;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-advice {
+  margin: 0;
+  padding: 11px 13px;
+  border: 1px solid rgba(91, 95, 245, 0.28);
+  border-radius: 13px;
+  background: rgba(91, 95, 245, 0.12);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #c9cbe6;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-advice span {
+  color: #a9adff;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-freq {
+  display: flex;
+  gap: 6px;
+  margin-top: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-freq > div {
+  flex: 1;
+  padding: 8px;
+  border-radius: 11px;
+  background: #1d2030;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-freq > div.is-primary {
+  background: rgba(91, 95, 245, 0.2);
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-freq small {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8f92ad;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-freq > div.is-primary small {
+  color: #a9adff;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-freq strong {
+  display: block;
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+  color: #9a9db8;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-freq .qg-poker-freq-mute {
+  color: #6c6f8a;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-coach-freq > div.is-primary strong {
+  color: #c3c5ff;
+}
+
+/* Hand history card */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-history h3 {
+  margin-bottom: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-history-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 11.5px;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-history-id {
+  flex: 0 0 auto;
+  width: 30px;
+  font-family: var(--qg-font-number);
+  color: #6c6f8a;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-history-desc {
+  flex: 1;
+  min-width: 0;
+  color: #9a9db8;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-history-res {
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-history-res.is-win {
+  color: #7fe0b0;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-history-res.is-loss {
+  color: #e08a95;
+}
+
+/* ============================================================
+   TOOLS DRAWER — lobby + preflop solver kept below the lab
+   ============================================================ */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-tools .poker-solver-panel {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  padding: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-tools .poker-lobby-panel {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  padding: 16px !important;
+  border: 1px solid #23263a !important;
+  border-radius: 20px !important;
+  background: #171925 !important;
+  color: #c7c9e0 !important;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1080px) {
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-lab {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-tools .poker-solver-panel,
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-tools .poker-lobby-panel {
+    grid-column: 1 !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-table {
+    height: 330px !important;
+    min-height: 330px !important;
+    max-height: 330px !important;
+  }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button {
+    transition: none !important;
+  }
+}
+
+/* ============================================================
+   POKER — seat ring + felt containment refinements
+   ============================================================ */
+/* Keep the whole table world clipped so seat plaques never spill
+   past the felt card edge. */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .qg-poker-table-world {
+  overflow: hidden !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-table-panel {
+  overflow: visible !important;
+}
+
+/* Give the felt some breathing room for the seat ring inside the card */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .qg-poker-table-world {
+  padding: 58px 66px 22px !important;
+}
+
+/* Elongated 6-max-style felt that fills the available width */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-table {
+  border-radius: 46% / 50% !important;
+}
+
+/* Compact seat plaques so five-to-six fit the ring cleanly */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat {
+  width: max-content !important;
+  min-width: 0 !important;
+  max-width: 150px !important;
+  font-size: 11px !important;
+}
+
+/* Re-anchor the seat ring around the elongated oval (top / sides).
+   Nine open + hero seats collapse gracefully; positions clamp
+   inside the felt via the clipped world. */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(1) { left: 50% !important; bottom: 6px !important; top: auto !important; transform: translateX(-50%) !important; }
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(2) { left: 20% !important; top: -34px !important; bottom: auto !important; transform: translateX(-50%) !important; }
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(3) { left: 50% !important; top: -44px !important; bottom: auto !important; transform: translateX(-50%) !important; }
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(4) { left: 80% !important; top: -34px !important; bottom: auto !important; transform: translateX(-50%) !important; }
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(5) { left: 2px !important; top: 42% !important; bottom: auto !important; transform: translateY(-50%) !important; }
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(6) { right: 2px !important; left: auto !important; top: 42% !important; bottom: auto !important; transform: translateY(-50%) !important; }
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(7) { left: 12% !important; top: 8px !important; bottom: auto !important; transform: translateX(-50%) !important; }
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(8) { right: 12% !important; left: auto !important; top: 8px !important; bottom: auto !important; transform: translateX(50%) !important; }
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(9) { left: 30% !important; bottom: 6px !important; top: auto !important; transform: translateX(-50%) !important; }
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(10) { right: 30% !important; left: auto !important; bottom: 6px !important; top: auto !important; transform: translateX(50%) !important; }
+
+/* ============================================================
+   POKER — seated human "hero" plaque: compact, pinned bottom-center
+   so it echoes the design's purple hero pill without covering board.
+   ============================================================ */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.human {
+  z-index: 3 !important;
+  left: 50% !important;
+  bottom: 2px !important;
+  top: auto !important;
+  transform: translateX(-50%) !important;
+  gap: 6px !important;
+  padding: 7px 12px 7px 8px !important;
+  border-radius: 16px !important;
+  border-color: rgba(91, 95, 245, 0.75) !important;
+  background: linear-gradient(135deg, rgba(91, 95, 245, 0.9), rgba(125, 108, 255, 0.9)) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 20px -8px rgba(91, 95, 245, 0.7) !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.human .poker-hole-cards .poker-card {
+  width: 30px !important;
+  height: 42px !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.human .poker-seat-top strong,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.human .poker-seat-stack span {
+  color: #fff !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.human .poker-seat-top span {
+  color: #e5e6ff !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.human button {
+  margin-top: 2px !important;
+  padding: 3px 8px !important;
+  font-size: 10px !important;
+}
+
+/* ==========================================================================
+   PK page — Playful Precision replica
+   ========================================================================== */
+body.is-authenticated .app-route-root .qg-pk-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* --- Header ---------------------------------------------------------------- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-page-head-lede {
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--qg-danger) 14%, var(--qg-surface));
+  color: var(--qg-danger);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-page-head h2 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-kicker-accent {
+  color: var(--qg-danger);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-page-sub {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-head-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-head-stat {
+  display: grid;
+  gap: 2px;
+  padding: 11px 16px;
+  border-radius: 16px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-head-stat small {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-head-stat strong {
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--qg-text);
+  line-height: 1.2;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-head-stat-you {
+  color: var(--qg-brand-ink) !important;
+}
+
+/* --- Grid ------------------------------------------------------------------ */
+body.is-authenticated .app-route-root .qg-pk-page .pk-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* --- Arena ----------------------------------------------------------------- */
+body.is-authenticated .app-route-root .qg-pk-page .qg-pk-arena {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  min-height: 430px;
+  padding: 22px;
+  border: 1px solid var(--qg-border);
+  border-radius: 22px;
+  background: var(--qg-surface);
+  box-shadow: var(--qg-shadow-card);
+}
+
+/* VS scoreboard (presentational) */
+body.is-authenticated .app-route-root .qg-pk-page .pk-scoreboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--qg-border);
+  border-radius: 18px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-vs {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  background: transparent;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-vs-opp {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-vs-badge {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff);
+  color: #fff;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-vs-badge-opp {
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-vs-opp .pk-vs-badge {
+  order: 2;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-vs-meta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  background: transparent;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-vs-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qg-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-vs-note {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-vs-mark {
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--qg-danger);
+}
+
+/* Problem */
+body.is-authenticated .app-route-root .qg-pk-page .pk-problem {
+  flex: 1;
+  min-height: 150px;
+  padding: 20px;
+  border: 1px solid var(--qg-border);
+  border-radius: 18px;
+  background: var(--qg-surface-2);
+  color: var(--qg-text);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+/* Form */
+body.is-authenticated .app-route-root .qg-pk-page .pk-form {
+  display: grid;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page #pkAnswer {
+  width: 100%;
+  min-height: 120px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface);
+  color: var(--qg-text);
+  font-family: var(--qg-font-ui);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page #pkAnswer::placeholder {
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-form-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Red "match" button — the design's primary CTA */
+body.is-authenticated .app-route-root .qg-pk-page .pk-match-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 13px 24px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #e0655e, var(--qg-danger));
+  color: #fff;
+  font-family: var(--qg-font-ui);
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #a03d38, 0 14px 24px -10px rgba(208, 82, 75, 0.6);
+  transition: transform 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-match-btn:active {
+  transform: translateY(3px);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-match-btn i {
+  width: 18px;
+  height: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-submit-btn {
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+}
+
+/* --- Side: history card ---------------------------------------------------- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-history-card {
+  padding: 17px 19px;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-history-title {
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-feed {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-feed::before {
+  content: none;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-feed-item {
+  padding: 10px 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface-2);
+  color: var(--qg-text-2);
+  font-size: 12.5px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+/* Empty state inside the history card */
+body.is-authenticated .app-route-root .qg-pk-page .pk-feed-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 8px 4px 4px;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-feed-empty img {
+  width: 118px;
+  height: auto;
+  filter: drop-shadow(0 14px 22px rgba(74, 67, 214, 0.28));
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-feed-empty-title {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-feed-empty-sub {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--qg-muted);
+}
+
+/* --- Side: dark rules card ------------------------------------------------- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-rules-card {
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #1b1a38, #2d2a5c);
+  color: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-rules-kicker {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #b9b8e0;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-rules-body {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.7;
+  color: #dcdbf2;
+}
+
+/* --- Responsive ------------------------------------------------------------ */
+@media (max-width: 900px) {
+  body.is-authenticated .app-route-root .qg-pk-page .pk-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-pk-page .pk-match-btn {
+    transition: none !important;
+  }
+}

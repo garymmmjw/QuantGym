@@ -1,0 +1,287 @@
+/* Playful Precision feedback layer (toast + celebration) — ported from UI 设计提升.zip qg-state.js.
+   Owned by the feedback chain; loaded after shell styles.
+   All animations are transform/opacity only and are disabled under prefers-reduced-motion. */
+
+:root {
+  --qg-fb-toast-bg: #221f44;
+  --qg-fb-toast-border: #3a3670;
+  --qg-fb-toast-text: #ffffff;
+  --qg-fb-toast-sub: #b9b8e0;
+  --qg-fb-toast-shadow: 0 18px 40px -14px rgba(10, 8, 40, 0.55);
+  --qg-fb-overlay: rgba(16, 14, 36, 0.62);
+  --qg-fb-card-grad: linear-gradient(160deg, #2a2856, #1b1a38);
+  --qg-fb-card-border: #443f7d;
+  --qg-fb-card-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.8);
+  --qg-fb-kicker: #ffbf5e;
+  --qg-fb-btn-grad: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  --qg-fb-btn-shadow: 0 4px 0 #3f39c9, 0 14px 26px -10px rgba(91, 95, 245, 0.7);
+}
+
+:root[data-qg-theme="dark"],
+[data-qg-theme="dark"] {
+  --qg-fb-toast-bg: #282550;
+  --qg-fb-toast-border: #454180;
+  --qg-fb-toast-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.75);
+  --qg-fb-overlay: rgba(8, 7, 20, 0.72);
+  --qg-fb-card-grad: linear-gradient(160deg, #312e63, #201e42);
+  --qg-fb-card-border: #524c94;
+}
+
+/* ---------- keyframes (design truth: qg-state.js L94-99) ---------- */
+@keyframes qgFbToastIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes qgFbToastOut {
+  to { opacity: 0; transform: translateY(8px) scale(0.97); }
+}
+
+@keyframes qgFbPopIn {
+  from { opacity: 0; transform: scale(0.82); }
+  60% { transform: scale(1.04); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes qgFbFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes qgFbConfetti {
+  from { transform: translateY(-30px) rotate(0deg); opacity: 1; }
+  to { transform: translateY(300px) rotate(540deg); opacity: 0; }
+}
+
+@keyframes qgFbMascotHop {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ---------- toast stack ---------- */
+.qg-fb-toasts {
+  position: fixed;
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  z-index: 99990;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+  pointer-events: none;
+  font-family: var(--qg-font-ui, "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif);
+}
+
+.qg-fb-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(320px, calc(100vw - 36px));
+  padding: 11px 16px 11px 11px;
+  border-radius: 16px;
+  background: var(--qg-fb-toast-bg);
+  color: var(--qg-fb-toast-text);
+  border: 1px solid var(--qg-fb-toast-border);
+  box-shadow: var(--qg-fb-toast-shadow);
+  animation: qgFbToastIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  cursor: pointer;
+}
+
+.qg-fb-toast.is-leaving {
+  animation: qgFbToastOut 0.22s ease both;
+}
+
+.qg-fb-toast-img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.qg-fb-toast-glyph {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff);
+  flex: 0 0 auto;
+  font-size: 16px;
+  font-style: normal;
+  color: #fff;
+}
+
+.qg-fb-toast-glyph.is-gold {
+  background: linear-gradient(135deg, #ff9f2e, #ffbf5e);
+}
+
+.qg-fb-toast-body {
+  min-width: 0;
+  display: block;
+}
+
+.qg-fb-toast-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.qg-fb-toast-sub {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--qg-fb-toast-sub);
+  margin-top: 1px;
+}
+
+.qg-fb-toast-xp {
+  flex: 0 0 auto;
+  margin-left: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255, 159, 46, 0.18);
+  color: #ffbf5e;
+  font-weight: 800;
+  font-size: 12px;
+  font-family: var(--qg-font-number, "Space Grotesk", monospace);
+}
+
+/* ---------- celebration modal ---------- */
+.qg-fb-celebrate {
+  position: fixed;
+  inset: 0;
+  z-index: 99991;
+  display: grid;
+  place-items: center;
+  background: var(--qg-fb-overlay);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: qgFbFadeIn 0.2s ease both;
+  font-family: var(--qg-font-ui, "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif);
+  transition: opacity 0.2s ease;
+}
+
+.qg-fb-celebrate.is-closing {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.qg-fb-celebrate-card {
+  position: relative;
+  overflow: hidden;
+  width: min(92vw, 380px);
+  border-radius: 28px;
+  background: var(--qg-fb-card-grad);
+  border: 1px solid var(--qg-fb-card-border);
+  box-shadow: var(--qg-fb-card-shadow);
+  padding: 34px 28px 26px;
+  text-align: center;
+  color: #fff;
+  animation: qgFbPopIn 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.qg-fb-confetti {
+  position: absolute;
+  border-radius: 3px;
+  /* top/left/size/color/duration/delay assigned inline per particle */
+  animation-name: qgFbConfetti;
+  animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  animation-iteration-count: infinite;
+}
+
+.qg-fb-celebrate-img {
+  position: relative;
+  width: 150px;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.5));
+  animation: qgFbMascotHop 2.4s ease-in-out infinite;
+}
+
+.qg-fb-celebrate-kicker {
+  position: relative;
+  display: block;
+  margin-top: 14px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--qg-fb-kicker);
+}
+
+.qg-fb-celebrate-title {
+  position: relative;
+  display: block;
+  margin-top: 6px;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.qg-fb-celebrate-sub {
+  position: relative;
+  display: block;
+  margin-top: 7px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--qg-fb-toast-sub);
+  font-weight: 600;
+}
+
+.qg-fb-celebrate-btn {
+  position: relative;
+  margin-top: 20px;
+  padding: 13px 26px;
+  border: none;
+  border-radius: 15px;
+  background: var(--qg-fb-btn-grad);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 800;
+  font-size: 14.5px;
+  cursor: pointer;
+  box-shadow: var(--qg-fb-btn-shadow);
+}
+
+/* Keep the toast stack clear of the mobile bottom tab bar. */
+@media (max-width: 768px) {
+  .qg-fb-toasts {
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ---------- accessibility: kill all feedback motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .qg-fb-toast,
+  .qg-fb-toast.is-leaving,
+  .qg-fb-celebrate,
+  .qg-fb-celebrate-card,
+  .qg-fb-celebrate-img,
+  .qg-fb-confetti {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .qg-fb-confetti {
+    display: none;
+  }
+}
+
+/* Frozen (freeze-card bridged) days in the streak calendar — honest marking,
+   distinct from real check-ins. */
+body.is-authenticated .streak-day.is-frozen {
+  background: #e3f2fd;
+  color: #2f7fc0;
+}
+
+body.is-authenticated .streak-day.is-frozen .streak-day-fire {
+  font-size: 11px;
+  line-height: 1;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .streak-day.is-frozen {
+  background: #1c2a45;
+  color: #7db4e8;
+}

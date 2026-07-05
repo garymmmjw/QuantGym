@@ -19,6 +19,12 @@ export function getNewsSourceType(item = {}, inferSourceType = inferNewsSourceTy
   return normalizeNewsSourceType(item.sourceType || inferSourceType(item));
 }
 
+const NEWS_TOPIC_ORDER = ["quantFirms", "marketStructure", "aiInfra", "recruiting"];
+
+export function getNewsTopicKey(item = {}) {
+  return NEWS_TOPIC_ORDER.find((topic) => newsMatchesTopic(item, topic)) || "";
+}
+
 export function isSocialNewsSource(sourceType) {
   return isSocialNewsType(sourceType);
 }

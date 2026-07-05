@@ -16,6 +16,7 @@ export const MODULE_MANIFEST = [
   { id: "overview", hash: "#overview", path: "/", labelKey: "overview", navGroup: "overview", protected: true, stage2Priority: 20, navTab: true },
   { id: "plan", hash: "#plan", path: "/plan", labelKey: "plan", navGroup: "growth", protected: true, stage2Priority: 18, navTab: true },
   { id: "skills", hash: "#skills", path: "/skills", labelKey: "skills", navGroup: "growth", protected: true, stage2Priority: 17, navTab: true },
+  { id: "league", hash: "#league", path: "/league", labelKey: "league", navGroup: "growth", protected: true, stage2Priority: 21, navTab: true },
   { id: "interview", hash: "#interview", path: "/interview", labelKey: "interview", navGroup: "training", protected: true, stage2Priority: 16, navTab: true },
   { id: "problems", hash: "#problems", path: "/problems", labelKey: "problems", navGroup: "training", protected: true, stage2Priority: 15, navTab: true },
   { id: "tools", hash: "#tools", path: "/tools", labelKey: "tools", navGroup: "training", protected: true, stage2Priority: 14, navTab: true },

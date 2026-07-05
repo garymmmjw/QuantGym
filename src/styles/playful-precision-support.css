@@ -240,6 +240,52 @@ body.is-authenticated .app-route-root .qg-support-page textarea:focus {
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--qg-brand) 14%, transparent);
 }
 
+/* File inputs nested in button-style labels open via the label — hide the raw control */
+body.is-authenticated .app-route-root .qg-support-page .file-button input[type="file"],
+body.is-authenticated .app-route-root .qg-support-page .settings-file-button input[type="file"],
+body.is-authenticated .app-route-root .qg-support-page .avatar-upload input[type="file"] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  border: 0 !important;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+/* Standalone file inputs (e.g. account resume) keep a themed native picker button */
+body.is-authenticated .app-route-root .qg-support-page input[type="file"] {
+  display: flex;
+  align-items: center;
+  color: var(--qg-muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-support-page input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--qg-border-2);
+  border-radius: 11px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-ui);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-support-page input[type="file"]::file-selector-button:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 60%, var(--qg-border-2));
+  background: color-mix(in srgb, var(--qg-brand) 16%, var(--qg-surface));
+}
+
 body.is-authenticated .app-route-root .qg-support-page .segmented,
 body.is-authenticated .app-route-root .qg-support-page .view-tabs,
 body.is-authenticated .app-route-root .qg-support-page .community-feed-tabs,
@@ -375,7 +421,7 @@ body.is-authenticated .app-route-root .qg-experiences-page .experience-side-pane
   padding: 18px;
 }
 
-body.is-authenticated .app-route-root .qg-experiences-page .experience-side-panel > div,
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form-stats > div,
 body.is-authenticated .app-route-root .qg-library-page .library-stats span,
 body.is-authenticated .app-route-root .qg-companies-page .company-detail-grid span {
   display: grid;
@@ -387,7 +433,7 @@ body.is-authenticated .app-route-root .qg-companies-page .company-detail-grid sp
   background: var(--qg-surface-2);
 }
 
-body.is-authenticated .app-route-root .qg-experiences-page .experience-side-panel strong,
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form-stats strong,
 body.is-authenticated .app-route-root .qg-library-page .library-stats strong,
 body.is-authenticated .app-route-root .qg-companies-page .company-detail-grid b,
 body.is-authenticated .app-route-root .qg-account-page .account-meta-panel dd {

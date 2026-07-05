@@ -1,4 +1,5 @@
 import { copyText } from '../../lib/clipboard.js';
+import { awardCoinsForXp } from '../economy/index.js';
 import { flashButtonLabel } from '../../ui/domText.js';
 import { launchInterviewConfetti } from './confetti.js';
 import { buildInterviewFavorite } from './favorites.js';
@@ -90,6 +91,7 @@ export function createInterviewResultsController(deps = {}) {
     });
     userState.skills[practice.category] = Math.max(0, (userState.skills[practice.category] || 0) + practice.xpGain);
     userState.entries.push(practice.entry);
+    awardCoinsForXp(userState, practice.xpGain, { source: "interview" });
     deps.updateProblemState?.(problem.id, (current) => applyInterviewPracticeProblemState(current, practice));
     const sessionPatch = buildInterviewPracticeSessionPatch(getInterviewState().session, practice, feedback);
     if (sessionPatch) {

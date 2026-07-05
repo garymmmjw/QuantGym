@@ -18,7 +18,8 @@ export function getInterviewStatusViewModel(options = {}) {
   const modeLabel = session.mode === "live"
     ? (useZh ? "真实面试" : "Live mock")
     : (useZh ? "训练练习" : "Practice");
-  const typeLabel = typeDefs[session.type]?.label || "Interview";
+  const typeDef = typeDefs[session.type];
+  const typeLabel = (useZh ? typeDef?.labelZh : typeDef?.label) || typeDef?.label || "Interview";
   const title = onboarding
     ? (useZh ? "AI 面试官配置" : "AI interviewer setup")
     : `${modeLabel} · ${typeLabel}`;

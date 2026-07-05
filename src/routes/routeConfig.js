@@ -5,6 +5,7 @@ export const REACT_PAGE_IDS = new Set([
   "overview",
   "plan",
   "skills",
+  "league",
   "interview",
   "problems",
   "tools",

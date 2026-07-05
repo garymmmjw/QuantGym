@@ -8,6 +8,30 @@ import {
 import { skillDefs } from '../../skills.js';
 import { timestampOrZero } from '../../lib/date.js';
 
+export const PREP_TASK_STATUSES = ["todo", "doing", "done"];
+
+export function normalizePrepTaskStatus(value) {
+  // 兼容旧布尔数据：true → 'done'，false/缺失/未知 → 'todo'
+  if (value === true || value === "done") return "done";
+  if (value === "doing") return "doing";
+  return "todo";
+}
+
+export function isPrepTaskDone(value) {
+  return normalizePrepTaskStatus(value) === "done";
+}
+
+function normalizeCompletedTasks(raw) {
+  if (!raw || typeof raw !== "object") return {};
+  const normalized = {};
+  Object.entries(raw).forEach(([key, value]) => {
+    const status = normalizePrepTaskStatus(value);
+    // 'todo' 是缺省态，不落库，等价于旧数据的 false/缺失
+    if (status !== "todo") normalized[key] = status;
+  });
+  return normalized;
+}
+
 export function normalizeStudyPlan(raw = null, deps = {}) {
   const makeId = deps.makeId || (() => `${Date.now()}-${Math.random()}`);
   if (!raw || !Array.isArray(raw.items)) return null;
@@ -66,7 +90,7 @@ export function normalizePrepPlan(raw = null, deps = {}) {
     diagnosticStatus,
     diagnosticScore: Math.max(0, Math.min(prepDiagnosticQuestions.length, Number(raw.diagnosticScore || 0))),
     diagnosticScores,
-    completedTasks: raw.completedTasks && typeof raw.completedTasks === "object" ? raw.completedTasks : {},
+    completedTasks: normalizeCompletedTasks(raw.completedTasks),
     taskOverrides,
     customTasks,
     createdAt: raw.createdAt || new Date().toISOString(),
@@ -173,24 +197,30 @@ export function getPrepDailyTasks(plan, deps = {}) {
   const preparedTasks = tasks.slice(0, limit).map((task) => {
     const key = `${dateKey}:${task.id}`;
     const override = plan.taskOverrides?.[key] || {};
+    const status = normalizePrepTaskStatus(plan.completedTasks[key]);
     return {
       ...task,
       title: override.title || task.title,
       detail: override.detail || task.detail,
       minutes: override.minutes || task.minutes,
       skill: task.query || task.action,
-      done: Boolean(plan.completedTasks[key]),
+      status,
+      done: status === "done",
       deletable: false
     };
   });
   const customTasks = (plan.customTasks || [])
     .filter((task) => task.date === dateKey)
-    .map((task) => ({
-      ...task,
-      skill: task.query || task.action || "custom",
-      done: Boolean(plan.completedTasks[`${dateKey}:${task.id}`]),
-      deletable: true
-    }));
+    .map((task) => {
+      const status = normalizePrepTaskStatus(plan.completedTasks[`${dateKey}:${task.id}`]);
+      return {
+        ...task,
+        skill: task.query || task.action || "custom",
+        status,
+        done: status === "done",
+        deletable: true
+      };
+    });
   return [...preparedTasks, ...customTasks];
 }
 

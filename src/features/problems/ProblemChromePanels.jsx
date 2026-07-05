@@ -1,5 +1,10 @@
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { getPaginationWindow } from "../../modules/problems/pagination.js";
+import {
+  getProblemSourceChips,
+  localizeCategoryLabel,
+  localizeDifficultyLabel
+} from "./problemDisplayLabels.js";
 
 function CompanyMark({ company, initials }) {
   return (
@@ -92,45 +97,89 @@ export function ProblemLeetcodeHotList({ items = [], doneIds = [], expanded, isE
   });
 }
 
-export function ProblemFilterPanel({ chrome, onApplyFilter }) {
+export function ProblemFilterPanel({ chrome, filters = {}, isEnglish, onApplyFilter }) {
   if (!chrome) return null;
   const { theme, difficulty } = chrome;
+  const sourceChips = getProblemSourceChips();
+  const activeSource = filters.source || "all";
+
+  const themeLabel = (entry) => (
+    entry.key === "all"
+      ? (isEnglish ? "All" : "全部")
+      : localizeCategoryLabel(entry.key, isEnglish) || entry.label
+  );
+  const difficultyLabel = (entry) => (
+    entry.key === "all"
+      ? (isEnglish ? "All" : "全部")
+      : localizeDifficultyLabel(entry.key, isEnglish) || entry.label
+  );
 
   return (
     <>
-      <div className="problem-theme-heading">
+      <div className="problem-theme-heading" hidden>
         <strong>标签筛选</strong>
         <span id="problemThemeSummary">{theme.summary}</span>
       </div>
-      <div id="problemThemeFilter" className="problem-theme-filter" role="listbox" aria-label="题目主题筛选">
-        {theme.entries.map((entry) => (
-          <button
-            key={entry.key}
-            type="button"
-            className={`problem-theme-chip${theme.active === entry.key ? " active" : ""}`}
-            data-problem-theme={entry.key}
-            onClick={() => onApplyFilter({ type: "theme", value: entry.key })}
-          >
-            <span>{entry.label}</span>
-            <small>{entry.count}</small>
-          </button>
-        ))}
+      <div className="qg-filter-row" data-q-filter>
+        <span className="qg-filter-row-label">{isEnglish ? "LEVEL" : "难度"}</span>
+        <div className="problem-difficulty-filter" id="problemDifficultyFilter" role="tablist" aria-label="题目难度筛选">
+          {difficulty.entries.map((entry) => (
+            <button
+              key={entry.key}
+              type="button"
+              className={`segment${difficulty.active === entry.key ? " active" : ""}`}
+              data-problem-difficulty={entry.key}
+              aria-pressed={difficulty.active === entry.key}
+              title={entry.title}
+              onClick={() => onApplyFilter({ type: "difficulty", value: entry.key })}
+            >
+              {difficultyLabel(entry)}
+              <small>{entry.count}</small>
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="problem-difficulty-filter" id="problemDifficultyFilter" role="tablist" aria-label="题目难度筛选">
-        {difficulty.entries.map((entry) => (
+      <div className="qg-filter-row" data-q-filter>
+        <span className="qg-filter-row-label">{isEnglish ? "TOPIC" : "主题"}</span>
+        <div id="problemThemeFilter" className="problem-theme-filter" role="listbox" aria-label="题目主题筛选">
+          {theme.entries.map((entry) => (
+            <button
+              key={entry.key}
+              type="button"
+              className={`problem-theme-chip${theme.active === entry.key ? " active" : ""}`}
+              data-problem-theme={entry.key}
+              title={`${entry.count}`}
+              onClick={() => onApplyFilter({ type: "theme", value: entry.key })}
+            >
+              <span>{themeLabel(entry)}</span>
+              <small>{entry.count}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="qg-filter-row" data-q-filter>
+        <span className="qg-filter-row-label">{isEnglish ? "SOURCE" : "来源"}</span>
+        <div id="problemSourceFilter" className="problem-theme-filter qg-problem-source-filter" role="listbox" aria-label="题目来源筛选">
           <button
-            key={entry.key}
             type="button"
-            className={`segment${difficulty.active === entry.key ? " active" : ""}`}
-            data-problem-difficulty={entry.key}
-            aria-pressed={difficulty.active === entry.key}
-            title={entry.title}
-            onClick={() => onApplyFilter({ type: "difficulty", value: entry.key })}
+            className={`problem-theme-chip${activeSource === "all" ? " active" : ""}`}
+            data-problem-source="all"
+            onClick={() => onApplyFilter({ type: "clearSource" })}
           >
-            {entry.label}
-            <small>{entry.count}</small>
+            <span>{isEnglish ? "All" : "全部"}</span>
           </button>
-        ))}
+          {sourceChips.map((chip) => (
+            <button
+              key={chip.slug}
+              type="button"
+              className={`problem-theme-chip${activeSource === chip.slug ? " active" : ""}`}
+              data-problem-source={chip.slug}
+              onClick={() => onApplyFilter({ type: "navigation", filters: { source: chip.slug } })}
+            >
+              <span>{chip.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </>
   );

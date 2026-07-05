@@ -1,0 +1,3238 @@
+/* Design-replication additions (support-b group) — matches UI 设计提升.zip design specs.
+   Scoped, token-driven (--qg-*), imported after base playful CSS so it wins ties.
+   One agent owns this file per group to avoid parallel-edit conflicts. */
+
+/* ============================================================
+   Jobs page — 求职 (design: QuantGym 求职.dc.html)
+   ============================================================ */
+
+/* --- Header: flat kicker + title + subtitle + type tabs (no hero mascot) --- */
+body.is-authenticated .app-route-root .qg-jobs-page .section-heading.jobs-header {
+  align-items: flex-end;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .section-heading.jobs-header::after {
+  content: none;
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-header-copy {
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: color-mix(in srgb, #2f7fc0 14%, var(--qg-surface));
+  color: #2f7fc0;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-jobs-page .jobs-kicker,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-jobs-page .jobs-kicker {
+  background: color-mix(in srgb, #2f7fc0 26%, var(--qg-surface));
+  color: #7ec0ee;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-header-copy h2 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-title-accent {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-header-copy small {
+  display: block;
+  margin-top: 7px;
+  max-width: none;
+  color: var(--qg-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+/* Type tabs: brand-filled active pill, outlined idle (design segmented control) */
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-header .view-tabs {
+  flex: 0 0 auto;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-header .view-tabs .tab {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-header .view-tabs .tab.active {
+  border-color: transparent;
+  background: var(--qg-brand);
+  color: #ffffff;
+  box-shadow: 0 8px 18px -12px rgba(91, 95, 245, 0.7);
+}
+
+/* Dark mode: base support css re-applies the hero radial gradient on
+   .section-heading with a theme-scoped selector; neutralise it so the
+   header sits flat on the page background like the design. */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-jobs-page .section-heading.jobs-header,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-jobs-page .section-heading.jobs-header {
+  background: none;
+}
+
+/* --- Two-column layout: job list + tracking sidebar (design line 37) --- */
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* --- Jobs list: single column of rich cards --- */
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  grid-template-columns: none;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-card {
+  gap: 0;
+  padding: 17px 19px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--qg-brand) 30%, var(--qg-border));
+  box-shadow: 0 16px 32px -18px rgba(74, 67, 214, 0.45);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-card:focus-visible {
+  outline: 2px solid var(--qg-brand);
+  outline-offset: 2px;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-card-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  min-width: 0;
+}
+
+/* Logo tile */
+body.is-authenticated .app-route-root .qg-jobs-page .job-logo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: linear-gradient(160deg, #6d70f8, var(--qg-brand));
+  color: #ffffff;
+  font-family: var(--qg-font-number);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-main {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-company {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-type-badge {
+  flex: 0 0 auto;
+  padding: 2px 9px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-type-badge.fulltime {
+  background: color-mix(in srgb, var(--qg-success) 16%, var(--qg-surface));
+  color: var(--qg-success);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page h3.job-title {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-location svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+  stroke-width: 1.9;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-posted {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 0;
+  padding: 3px 9px;
+  border-radius: 8px;
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Right action column */
+body.is-authenticated .app-route-root .qg-jobs-page .job-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-ats {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page a.job-apply-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 15px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #6d70f8, var(--qg-brand));
+  color: #ffffff;
+  font-family: var(--qg-font-ui);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 3px 0 #3f39c9;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page a.job-apply-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #3f39c9;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-save-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-ui);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .job-save-btn:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 40%, var(--qg-border));
+  color: var(--qg-brand-ink);
+}
+
+/* --- Sidebar column: tracker panel + match banner (design lines 62-86) --- */
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker {
+  padding: 18px;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05), 0 14px 32px -24px rgba(74, 67, 214, 0.35);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-total {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-group-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-count {
+  margin-left: auto;
+  color: var(--qg-muted-3);
+  font-family: var(--qg-font-number);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-items {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 11px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface-3);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-logo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: #ffffff;
+  font-family: var(--qg-font-number);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-item-company {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-item-stage {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-tracker-pill {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* Match banner: dark gradient card with trophy mascot (design line 83-86) */
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-match-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: linear-gradient(160deg, #1b1a38, #2d2a5c);
+  color: #ffffff;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-match-banner img {
+  width: 52px;
+  height: auto;
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-match-kicker {
+  margin-bottom: 3px;
+  color: #b9b8e0;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-match-copy {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-match-accent {
+  color: #a9adff;
+}
+
+/* --- Responsive: keep the design's compact three-part card row on phones,
+   letting the title row and meta line wrap instead of overlapping --- */
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-jobs-page .section-heading.jobs-header {
+    align-items: stretch;
+  }
+
+  body.is-authenticated .app-route-root .qg-jobs-page .jobs-header .view-tabs {
+    width: 100%;
+  }
+
+  body.is-authenticated .app-route-root .qg-jobs-page .jobs-header .view-tabs .tab {
+    flex: 1 1 auto;
+  }
+
+  body.is-authenticated .app-route-root .qg-jobs-page .job-title-row {
+    flex-wrap: wrap;
+  }
+
+  body.is-authenticated .app-route-root .qg-jobs-page .job-meta {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+
+  body.is-authenticated .app-route-root .qg-jobs-page .job-posted {
+    flex: 0 1 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-jobs-page .job-card,
+  body.is-authenticated .app-route-root .qg-jobs-page a.job-apply-btn {
+    transition-duration: 1ms;
+  }
+
+  body.is-authenticated .app-route-root .qg-jobs-page .job-card:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   Companies page — 公司 (design: QuantGym 公司.dc.html)
+   Master-detail layout per design: left company list rows,
+   right detail panel (gradient hero, rounds, topics/resources,
+   jobs CTA). Practice/careers buttons live in the detail panel.
+   ============================================================ */
+
+/* --- Flat header: kicker + bilingual title + subtitle + tier segmented (no hero mascot) --- */
+body.is-authenticated .app-route-root .qg-companies-page .section-heading.companies-header {
+  align-items: flex-end;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .section-heading.companies-header::after {
+  content: none;
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .companies-header > div {
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .companies-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: color-mix(in srgb, #2f7fc0 14%, var(--qg-surface));
+  color: #2f7fc0;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-companies-page .companies-kicker,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-companies-page .companies-kicker {
+  background: color-mix(in srgb, #2f7fc0 26%, var(--qg-surface));
+  color: #7ec0ee;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .companies-header h2 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .companies-title-en {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .companies-header small {
+  display: block;
+  margin-top: 7px;
+  max-width: none;
+  color: var(--qg-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+/* Design has no tier segmented control — hide it, hooks stay live */
+body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter {
+  display: none !important;
+}
+
+/* --- Master-detail grid (design [data-co-grid]: 320px + 1fr, gap 16) --- */
+body.is-authenticated .app-route-root .qg-companies-page .company-master-grid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* --- Left column: selectable company rows --- */
+body.is-authenticated .app-route-root .qg-companies-page .company-list-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-list-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--qg-border);
+  border-radius: 15px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+  color: var(--qg-text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-list-row:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 32%, var(--qg-border));
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-list-row.active {
+  border-color: #c9c7f5;
+  background: var(--qg-brand-soft);
+  box-shadow: 0 10px 24px -16px rgba(91, 95, 245, 0.5);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-companies-page .company-list-row.active {
+  border-color: #4c4894;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-list-logo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: var(--company-color, var(--qg-brand));
+  color: #ffffff;
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-list-main {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-list-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-list-sub {
+  display: block;
+  overflow: hidden;
+  color: var(--qg-muted-3);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-list-arrow {
+  flex: 0 0 auto;
+  color: #d0cfe0;
+  font-size: 20px;
+  line-height: 1;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-companies-page .company-list-arrow {
+  color: var(--qg-muted-3);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-list-row.active .company-list-arrow {
+  color: var(--qg-brand-ink);
+}
+
+/* --- Right column: detail panel --- */
+body.is-authenticated .app-route-root .qg-companies-page .company-detail-panel {
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid var(--qg-border);
+  border-radius: 22px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05), 0 16px 34px -24px rgba(74, 67, 214, 0.4);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-companies-page .company-detail-panel {
+  box-shadow: var(--qg-shadow-card);
+}
+
+/* Gradient hero head (design: companyColor → #2d2a5c) */
+body.is-authenticated .app-route-root .qg-companies-page .company-detail-hero {
+  padding: 22px;
+  background: linear-gradient(135deg, var(--company-color, #1b1a38), #2d2a5c);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-hero-logo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  font-family: var(--qg-font-number);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-hero-id {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-hero-name {
+  margin: 0;
+  color: #ffffff;
+  font-family: var(--qg-font-ui);
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-hero-tagline {
+  margin: 2px 0 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-hero-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-save-btn,
+body.is-authenticated .app-route-root .qg-companies-page .company-site-btn {
+  padding: 9px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-save-btn:hover,
+body.is-authenticated .app-route-root .qg-companies-page .company-site-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-save-btn.is-saved {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.32);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  row-gap: 10px;
+  margin-top: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-hero-stats strong {
+  display: block;
+  color: #ffffff;
+  font-family: var(--qg-font-number);
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-hero-stats span {
+  display: block;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-hero-stats .is-match strong {
+  color: #7fe0b0;
+}
+
+/* Detail body */
+body.is-authenticated .app-route-root .qg-companies-page .company-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 22px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-about {
+  margin: 0;
+  color: var(--qg-text-2);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.7;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-block-title {
+  margin-bottom: 9px;
+  color: var(--qg-brand-ink);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+/* Interview-style stepped rounds */
+body.is-authenticated .app-route-root .qg-companies-page .company-round-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-round-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface-3);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-round-num {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-round-name {
+  flex: 1;
+  min-width: 0;
+  color: #3f3e5e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-companies-page .company-round-name {
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-round-tag {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* Hot topics + related resources, two adaptive columns */
+body.is-authenticated .app-route-root .qg-companies-page .company-topics-resources {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-topic-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-topic-chips span {
+  padding: 5px 11px;
+  border-radius: 10px;
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-resource-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-resource-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid var(--qg-border);
+  border-radius: 11px;
+  background: var(--qg-surface-3);
+  color: var(--qg-text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-resource-row:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 36%, var(--qg-border));
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-resource-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 3px;
+  background: var(--qg-warning);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-resource-dot.is-brand {
+  background: var(--qg-brand);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-resource-label {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-resource-arrow {
+  flex: 0 0 auto;
+  color: var(--qg-brand-ink);
+  font-weight: 700;
+}
+
+/* Jobs CTA (3D press) + practice shortcut */
+body.is-authenticated .app-route-root .qg-companies-page .company-detail-cta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-jobs-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #3f39c9;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-jobs-cta:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #3f39c9;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-practice-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 16px;
+  border: 1.5px solid var(--qg-border-2);
+  border-radius: 14px;
+  background: var(--qg-surface);
+  color: var(--qg-brand-ink);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: 0 3px 0 var(--qg-border);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-practice-link:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 40%, var(--qg-border-2));
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-practice-link:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-practice-link i,
+body.is-authenticated .app-route-root .qg-companies-page .company-practice-link svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* --- Responsive: stack list above detail (design @820px, offset for app chrome) --- */
+@media (max-width: 960px) {
+  body.is-authenticated .app-route-root .qg-companies-page .company-master-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  body.is-authenticated .app-route-root .qg-companies-page .companies-header {
+    align-items: stretch;
+  }
+
+  body.is-authenticated .app-route-root .qg-companies-page .company-hero-top {
+    flex-wrap: wrap;
+  }
+
+  body.is-authenticated .app-route-root .qg-companies-page .company-hero-id {
+    flex: 1 1 0;
+    min-width: min(100%, 190px);
+  }
+
+  body.is-authenticated .app-route-root .qg-companies-page .company-hero-actions {
+    flex: 1 1 100%;
+  }
+
+  body.is-authenticated .app-route-root .qg-companies-page .company-detail-body {
+    padding: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-companies-page .company-list-row,
+  body.is-authenticated .app-route-root .qg-companies-page .company-jobs-cta,
+  body.is-authenticated .app-route-root .qg-companies-page .company-practice-link {
+    transition-duration: 1ms;
+  }
+}
+
+/* ============================================================
+   Library page — 资料库 (design: QuantGym 资料库.dc.html)
+   Flat header (kicker + bilingual title + subtitle + search),
+   filter chips, single book-shelf grid of vertical cover cards,
+   mascot empty state. Week-card removed (was placeholder data);
+   stats + continue-reading kept in DOM but hidden to match design.
+   ============================================================ */
+
+/* Neutralise the legacy global `.library-section` panel background (from the
+   pre-redesign styles.css, which sets it with !important) so the page sits on
+   the token-driven base surface and reads correctly in both light and dark
+   themes, matching the design. */
+body.is-authenticated .app-route-root .library-section.qg-library-page {
+  background: transparent !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* --- Reset the inherited hero-panel styling on the topbar --- */
+body.is-authenticated .app-route-root .qg-library-page .library-topbar.library-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  grid-template-columns: none;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-topbar.library-header::before,
+body.is-authenticated .app-route-root .qg-library-page .library-topbar.library-header::after {
+  content: none;
+  display: none;
+}
+
+/* Dark mode: base support css re-applies the hero gradient via a
+   [data-qg-theme="dark"] rule that out-specifies the reset above.
+   Neutralise it with a matching theme-scoped selector. */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-library-page .library-topbar.library-header,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-library-page .library-topbar.library-header {
+  background: none;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-header-copy {
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: color-mix(in srgb, #2f7fc0 14%, var(--qg-surface));
+  color: #2f7fc0;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-library-page .library-kicker,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-library-page .library-kicker {
+  background: color-mix(in srgb, #2f7fc0 26%, var(--qg-surface));
+  color: #7ec0ee;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-header-copy h1 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-title-en {
+  color: #2f7fc0;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-library-page .library-title-en,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-library-page .library-title-en {
+  color: #7ec0ee;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-header-copy p {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--qg-muted);
+}
+
+/* --- Search box on the right of the header --- */
+body.is-authenticated .app-route-root .qg-library-page .library-header .library-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 220px;
+  max-width: 320px;
+  padding: 10px 15px;
+  border: 1px solid var(--qg-border-2);
+  border-radius: 14px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-header .library-search i,
+body.is-authenticated .app-route-root .qg-library-page .library-header .library-search svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-header .library-search input {
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--qg-font-ui);
+  font-size: 13.5px;
+  color: var(--qg-text);
+}
+
+/* --- Filter chips: brand-filled active, outlined idle --- */
+body.is-authenticated .app-route-root .qg-library-page .library-kind-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-kind-tabs .library-chip {
+  min-height: 0;
+  padding: 8px 15px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 130ms ease, border-color 130ms ease, color 130ms ease, background 130ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-kind-tabs .library-chip:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 35%, var(--qg-border));
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-kind-tabs .library-chip.active {
+  border-color: transparent;
+  background: #2f7fc0;
+  color: #ffffff;
+  box-shadow: 0 8px 18px -12px rgba(47, 127, 192, 0.7);
+}
+
+/* --- Hide sections the design omits (kept in DOM for element registrations) --- */
+body.is-authenticated .app-route-root .qg-library-page .library-hero-row,
+body.is-authenticated .app-route-root .qg-library-page .library-stats,
+body.is-authenticated .app-route-root .qg-library-page .library-continue {
+  display: none !important;
+}
+
+/* --- Single book-shelf: books + question grids flow as one continuous grid --- */
+body.is-authenticated .app-route-root .qg-library-page .library-shelf {
+  display: grid;
+  gap: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-block {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* Design has one continuous mixed grid without section headings. */
+body.is-authenticated .app-route-root .qg-library-page .library-block-label {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 16px;
+}
+
+/* --- Shelf entrance: cards rise in once on route mount (design keyframes
+   lbRise: .28s cubic-bezier(.2,.8,.2,1), opacity 0 / translateY(12px) → 1 / 0).
+   The page component keeps `.is-entering` on the section only for the
+   entrance window, so filter switches / data refreshes never replay it
+   (per design source, filter changes have no extra animation). --- */
+@keyframes qgLibShelfRise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card {
+  animation: qgLibShelfRise 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card:nth-child(2) { animation-delay: 40ms; }
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card:nth-child(3) { animation-delay: 80ms; }
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card:nth-child(4) { animation-delay: 120ms; }
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card:nth-child(5) { animation-delay: 160ms; }
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card:nth-child(6) { animation-delay: 200ms; }
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card:nth-child(7) { animation-delay: 240ms; }
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card:nth-child(8) { animation-delay: 280ms; }
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card:nth-child(9) { animation-delay: 320ms; }
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card:nth-child(10) { animation-delay: 360ms; }
+body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card:nth-child(n + 11) { animation-delay: 400ms; }
+
+/* --- Vertical cover card (design: cover on top, kind pill, title, meta, footer) --- */
+body.is-authenticated .app-route-root .qg-library-page .library-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  grid-template-columns: none;
+  min-width: 0;
+  padding: 14px 14px 13px;
+  border: 1px solid var(--qg-border);
+  border-radius: 18px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, #2f7fc0 32%, var(--qg-border));
+  box-shadow: 0 18px 34px -18px rgba(47, 127, 192, 0.4);
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card:focus-visible {
+  outline: 2px solid var(--qg-brand);
+  outline-offset: 2px;
+}
+
+/* Cover button = the 3:4 poster with the kind pill */
+body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  background: var(--qg-track);
+  box-shadow: none;
+  cursor: pointer;
+  transition: none;
+}
+
+/* Kill the legacy spine gradient + 3D flip hover on the cover. */
+body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button::before,
+body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button::after {
+  content: none;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card:hover .library-cover-button,
+body.is-authenticated .app-route-root .qg-library-page .library-card:focus-visible .library-cover-button {
+  transform: none;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Reading progress strip pinned to the cover bottom (design: 4px gradient) */
+body.is-authenticated .app-route-root .qg-library-page .library-cover-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: 0;
+  display: block;
+  width: auto;
+  height: 4px;
+  max-width: none;
+  padding: 0;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-cover-progress-fill {
+  position: static;
+  display: block;
+  height: 100%;
+  max-width: none;
+  padding: 0;
+  border-radius: 0;
+  background: linear-gradient(90deg, #5b5ff5, #8a7bff);
+}
+
+/* Kind pill (top-left of cover). The legacy sheet pins `.library-cover-button
+   span` to right/bottom, so explicitly release those edges and keep the badge
+   shrink-wrapped to its label. */
+body.is-authenticated .app-route-root .qg-library-page .library-kind-pill,
+body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button span.library-kind-pill {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: auto;
+  bottom: auto;
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  max-width: calc(100% - 16px);
+  min-height: 0;
+  padding: 4px 9px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+}
+
+/* 教材 (textbook): design #e7f2fb / #2f7fc0 */
+body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button span.library-kind-pill.kind-textbook {
+  background: #e7f2fb;
+  color: #2f7fc0;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button span.library-kind-pill.kind-textbook,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button span.library-kind-pill.kind-textbook {
+  background: color-mix(in srgb, #2f7fc0 26%, var(--qg-surface));
+  color: #7ec0ee;
+}
+
+/* 趣题 (puzzle): design #fff3dd / #b3610a */
+body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button span.library-kind-pill.kind-puzzle {
+  background: #fff3dd;
+  color: #b3610a;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button span.library-kind-pill.kind-puzzle,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-library-page .library-card .library-cover-button span.library-kind-pill.kind-puzzle {
+  background: color-mix(in srgb, #f0a34a 22%, var(--qg-surface));
+  color: #f0a34a;
+}
+
+/* Copy block */
+body.is-authenticated .app-route-root .qg-library-page .library-card-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card-copy h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--qg-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card-copy p {
+  display: block;
+  margin: 0;
+  min-height: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Meta row (category / language): plain 10.5px muted text, no chips */
+body.is-authenticated .app-route-root .qg-library-page .library-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card-meta span {
+  display: inline;
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--qg-muted-3);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+/* Footer action row pinned to the bottom of the card:
+   read-state text on the left, 去刷题 pill on the right */
+body.is-authenticated .app-route-root .qg-library-page .library-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card-stat {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+/* Design opens books by tapping the cover; the extra 阅读 button stays in the
+   DOM for behaviour but is not part of the design footer. */
+body.is-authenticated .app-route-root .qg-library-page .library-card-actions .library-read-btn {
+  display: none !important;
+}
+
+/* 去刷题 chip — the base support layer forces white/outlined secondary
+   buttons with !important, so match its weight here. */
+body.is-authenticated .app-route-root .qg-library-page .library-card-actions .secondary-button.compact {
+  min-height: 0;
+  padding: 5px 10px !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: var(--qg-brand-soft) !important;
+  color: var(--qg-brand-ink) !important;
+  box-shadow: none !important;
+  font-size: 11px;
+  font-weight: 700;
+  transition: transform 120ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card-actions .secondary-button.compact:hover {
+  transform: translateY(-1px);
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card-actions .secondary-button.compact i,
+body.is-authenticated .app-route-root .qg-library-page .library-card-actions .secondary-button.compact svg {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card-note {
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+/* --- Mascot empty state (design: centered mascot + heading + hint) --- */
+body.is-authenticated .app-route-root .qg-library-page .library-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 44px 16px;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-empty-state.hidden {
+  display: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-empty-mascot {
+  width: 110px;
+  height: auto;
+  opacity: 0.95;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-empty-state .library-empty {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-empty-hint {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+/* --- Responsive --- */
+/* The base support layer collapses .library-grid to a single column below
+   760px; the design keeps a two-column cover grid on phones. */
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .qg-library-page .library-shelf .library-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .qg-library-page .library-topbar.library-header {
+    align-items: stretch;
+  }
+
+  body.is-authenticated .app-route-root .qg-library-page .library-header .library-search {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-library-page .library-card,
+  body.is-authenticated .app-route-root .qg-library-page .library-kind-tabs .library-chip,
+  body.is-authenticated .app-route-root .qg-library-page .library-card-actions .secondary-button.compact {
+    transition-duration: 1ms;
+  }
+
+  body.is-authenticated .app-route-root .qg-library-page.is-entering .library-grid .library-card {
+    animation: none;
+  }
+
+  body.is-authenticated .app-route-root .qg-library-page .library-card:hover {
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------
+   Library reader overlay (design: dark scrim + 880px rounded panel,
+   cover thumbnail header, gradient 去刷本书题目 CTA)
+   ------------------------------------------------------------ */
+body.is-authenticated .app-route-root .library-reader-overlay {
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(16, 14, 36, 0.66) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  /* Design: animation:lbFade .18s ease both — replays each open because the
+     `.hidden` state is display:none, which resets the animation. */
+  animation: qgLibFade 180ms ease both;
+}
+
+@keyframes qgLibFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+body.is-authenticated .app-route-root .library-reader-overlay.hidden {
+  display: none !important;
+}
+
+body.is-authenticated .app-route-root .library-reader-shell {
+  width: min(96vw, 880px);
+  height: min(92vh, 760px);
+  margin: 0;
+  border: 1px solid var(--qg-border-2);
+  border-radius: 24px;
+  background: var(--qg-surface) !important;
+  box-shadow: 0 50px 110px -30px rgba(10, 8, 40, 0.75);
+  animation: qgLibReaderRise 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes qgLibReaderRise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body.is-authenticated .app-route-root .library-reader-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 13px;
+  row-gap: 8px;
+  flex-wrap: wrap;
+  min-height: 0;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--qg-border);
+  background: none;
+}
+
+body.is-authenticated .app-route-root .library-reader-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex: 1;
+  min-width: 140px;
+}
+
+/* Design header shows the书封 thumbnail instead of the icon mark. */
+body.is-authenticated .app-route-root .library-reader-mark {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .library-reader-cover {
+  width: 34px;
+  height: 46px;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+body.is-authenticated .app-route-root .library-reader-heading {
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .library-reader-header h3 {
+  margin: 0;
+  max-width: none;
+  overflow: hidden;
+  color: var(--qg-text);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .library-reader-header .rank-label {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--qg-muted-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+body.is-authenticated .app-route-root .library-reader-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .library-reader-drill {
+  padding: 9px 15px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #ffffff;
+  font-family: var(--qg-font-ui, inherit);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #3f39c9;
+  transition: transform 120ms ease;
+}
+
+body.is-authenticated .app-route-root .library-reader-drill:hover {
+  transform: translateY(-1px);
+}
+
+body.is-authenticated .app-route-root .library-reader-actions .secondary-button,
+body.is-authenticated .app-route-root .library-reader-actions .icon-button {
+  min-height: 34px;
+  border: 1px solid var(--qg-border);
+  border-radius: 10px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .library-reader-actions .icon-button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+}
+
+body.is-authenticated .app-route-root .library-reader-actions .secondary-button:hover,
+body.is-authenticated .app-route-root .library-reader-actions .icon-button:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 35%, var(--qg-border));
+  background: var(--qg-surface);
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .library-reader-stage {
+  min-height: 0;
+  padding: 22px;
+  background: var(--qg-surface-2) !important;
+}
+
+body.is-authenticated .app-route-root .library-reader-frame {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface);
+  box-shadow: 0 10px 30px -18px rgba(27, 26, 56, 0.25);
+}
+
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .library-reader-overlay {
+    padding: 10px;
+  }
+
+  body.is-authenticated .app-route-root .library-reader-shell {
+    width: 100%;
+    height: min(94vh, 760px);
+    border-radius: 18px;
+  }
+
+  body.is-authenticated .app-route-root .library-reader-stage {
+    padding: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .library-reader-overlay,
+  body.is-authenticated .app-route-root .library-reader-shell {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Courses page — 课程 (design: QuantGym 课程.dc.html)
+   Flat kicker header, topic filter chips, gradient-thumb cards,
+   and a horizontal learning-path timeline.
+   ============================================================ */
+
+/* --- Header: flat kicker + accented title + subtitle (no mascot panel) --- */
+body.is-authenticated .app-route-root .qg-courses-page .section-heading.courses-header {
+  align-items: flex-end;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .section-heading.courses-header::after {
+  content: none;
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-header-copy {
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: color-mix(in srgb, #16879a 14%, var(--qg-surface));
+  color: #16879a;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-courses-page .courses-kicker,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-courses-page .courses-kicker {
+  background: color-mix(in srgb, #16879a 28%, var(--qg-surface));
+  color: #5ed0d0;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-header-copy h2 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-title-accent {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-header-copy small {
+  display: block;
+  margin-top: 6px;
+  max-width: 720px;
+  color: var(--qg-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+/* --- Topic filter chips --- */
+body.is-authenticated .app-route-root .qg-courses-page .courses-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 15px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 140ms ease, background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-filter-chip:hover {
+  border-color: color-mix(in srgb, #16879a 45%, var(--qg-border));
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-filter-chip.is-active {
+  border-color: transparent;
+  background: #16879a;
+  color: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-filter-chip:active {
+  transform: translateY(1px);
+}
+
+/* --- Course grid: 3 columns like the design --- */
+body.is-authenticated .app-route-root .qg-courses-page .course-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card {
+  gap: 12px;
+  padding: 0 0 15px;
+  overflow: hidden;
+  border-radius: 18px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px -18px rgba(74, 67, 214, 0.45);
+}
+
+/* --- Gradient thumbnail header with topic label + mark + play badge --- */
+body.is-authenticated .app-route-root .qg-courses-page .course-card-thumb {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 118px;
+  padding: 15px;
+  color: #fff;
+  background: linear-gradient(150deg, #16879a, color-mix(in srgb, #16879a 72%, #000 6%));
+}
+
+/* Decorative accent palette keyed by data-course-accent */
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="a"] .course-card-thumb {
+  background: linear-gradient(150deg, #16879a, #10707f);
+}
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="b"] .course-card-thumb {
+  background: linear-gradient(150deg, #1aa06a, #148f5c);
+}
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="c"] .course-card-thumb {
+  background: linear-gradient(150deg, #d6a41c, #c48a12);
+}
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="d"] .course-card-thumb {
+  background: linear-gradient(150deg, #d95d54, #c94a44);
+}
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="e"] .course-card-thumb {
+  background: linear-gradient(150deg, #6d70f8, #5b5ff5);
+}
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="f"] .course-card-thumb {
+  background: linear-gradient(150deg, #2f9be0, #2685c6);
+}
+body.is-authenticated .app-route-root .qg-courses-page .course-card[data-course-accent="g"] .course-card-thumb {
+  background: linear-gradient(150deg, #ff9f2e, #f08a12);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-cat {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.92;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-mark {
+  font-family: var(--qg-font-number);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-play {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #16879a;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-play i,
+body.is-authenticated .app-route-root .qg-courses-page .course-card-play svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* --- Text + meta inside the card body (pad the non-thumb content) --- */
+body.is-authenticated .app-route-root .qg-courses-page .course-card > h3,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .problem-meta,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .course-card-status,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .problem-prompt,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .course-source-bar,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .course-player,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .course-actions,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .course-note-field,
+body.is-authenticated .app-route-root .qg-courses-page .course-card > .problem-card-footer {
+  margin-left: 15px;
+  margin-right: 15px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card > h3 {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-status-dot.is-active {
+  background: #16879a;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #16879a 22%, transparent);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card-status-dot.is-done {
+  background: var(--qg-success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--qg-success) 22%, transparent);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-card.is-course-done .course-card-play {
+  color: var(--qg-success);
+}
+
+/* --- Learning-path panel: bottom timeline --- */
+body.is-authenticated .app-route-root .qg-courses-page .courses-path-panel {
+  gap: 16px;
+  padding: 20px 22px;
+  border-radius: 22px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-path-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .courses-path-head p {
+  margin: 5px 0 0;
+  font-size: 12.5px;
+  color: var(--qg-muted);
+}
+
+/* Horizontal stepper when there are path items */
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item {
+  position: relative;
+  flex: 1 1 220px;
+  grid-template-columns: 34px minmax(0, 1fr) auto auto;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item.is-done {
+  border-color: color-mix(in srgb, var(--qg-success) 40%, var(--qg-border));
+  background: var(--qg-surface-3);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-item .course-path-index {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #16879a;
+  color: #fff;
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-item.is-done .course-path-index {
+  background: var(--qg-success);
+}
+
+/* --- Responsive --- */
+@media (max-width: 1080px) {
+  body.is-authenticated .app-route-root .qg-courses-page .course-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  body.is-authenticated .app-route-root .qg-courses-page .course-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .courses-header-copy h2 {
+    font-size: 25px;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-list.is-timeline .course-path-item {
+    flex-basis: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-courses-page .course-card,
+  body.is-authenticated .app-route-root .qg-courses-page .courses-filter-chip {
+    transition-duration: 1ms;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .course-card:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   Memory / Notes page — 资料笔记 (design: QuantGym 资料笔记.dc.html)
+   Flat kicker + bilingual title + gradient "新建笔记" button, then a
+   two-column workspace: left = notes sidebar (资料 list), right = a
+   large detail card (记忆 history). Real data only — lists render
+   from the live model and may be empty.
+   ============================================================ */
+
+/* --- Header: flat kicker + bilingual title + gradient new-note button --- */
+body.is-authenticated .app-route-root .qg-memory-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-header-copy {
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: color-mix(in srgb, #16879a 14%, var(--qg-surface));
+  color: #16879a;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-memory-page .memory-kicker,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-memory-page .memory-kicker {
+  background: color-mix(in srgb, #16879a 26%, var(--qg-surface));
+  color: #5fc7d6;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-title {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-title-accent {
+  color: var(--qg-brand-ink);
+}
+
+/* New-note button: chunky brand gradient with 3D press (matches design) */
+body.is-authenticated .app-route-root .qg-memory-page .memory-new-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #6d70f8, var(--qg-brand));
+  color: #ffffff;
+  font-family: var(--qg-font-ui);
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #3f39c9;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-new-btn:hover {
+  transform: translateY(1px);
+  box-shadow: 0 3px 0 #3f39c9;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-new-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #3f39c9;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-new-btn i,
+body.is-authenticated .app-route-root .qg-memory-page .memory-new-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* --- Workspace: two columns (notes sidebar + detail card) --- */
+body.is-authenticated .app-route-root .qg-memory-page .memory-workspace {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* Left column: notes sidebar */
+body.is-authenticated .app-route-root .qg-memory-page .resource-panel.memory-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .panel-heading {
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .panel-heading h2 {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* Suppress the base mascot slot on the sidebar heading (design has none) */
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .panel-heading::after {
+  content: none;
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Notes list: single column of tappable rows (override base 2-col grid) */
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  grid-template-columns: none;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-item {
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.03);
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-item:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--qg-brand) 32%, var(--qg-border));
+  box-shadow: 0 8px 20px -14px rgba(91, 95, 245, 0.5);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-top {
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .resource-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--qg-brand);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-top strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-item .pill {
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-item p {
+  margin: 0;
+  overflow: hidden;
+  color: var(--qg-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* --- Right column: detail card (记忆 history) --- */
+body.is-authenticated .app-route-root .qg-memory-page .history-section.memory-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .section-heading {
+  min-height: 0;
+  padding: 20px 24px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--qg-border);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+/* Detail header has no mascot (design is a clean note header) */
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .section-heading::after {
+  content: none;
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail-title {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail-kicker {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail-title h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+/* History list inside the card: single column, generous padding */
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  grid-template-columns: none;
+  padding: 20px 24px 22px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .history-item {
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .history-top strong {
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .history-top span {
+  padding: 2px 9px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .history-item p {
+  margin: 0;
+  color: var(--qg-text-2);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* Empty state centered inside the detail card */
+body.is-authenticated .app-route-root .qg-memory-page .memory-detail .history-list .empty-state {
+  margin: 8px auto;
+}
+
+/* --- Responsive: collapse to one column --- */
+@media (max-width: 900px) {
+  body.is-authenticated .app-route-root .qg-memory-page .memory-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.is-authenticated .app-route-root .qg-memory-page .memory-title {
+    font-size: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-memory-page .memory-new-btn,
+  body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-item {
+    transition-duration: 1ms;
+  }
+
+  body.is-authenticated .app-route-root .qg-memory-page .memory-new-btn:hover,
+  body.is-authenticated .app-route-root .qg-memory-page .memory-new-btn:active,
+  body.is-authenticated .app-route-root .qg-memory-page .memory-side .resource-item:hover {
+    transform: none;
+  }
+}
+
+/* ============================================================
+   Account page — 账户 (design: QuantGym 账户.dc.html)
+   Flat header (kicker+title+subtitle), left identity+meta column,
+   right profile + login/security column.
+   ============================================================ */
+
+/* --- Flat header: remove hero banner + mascot, keep kicker/title/subtitle --- */
+body.is-authenticated .app-route-root .qg-account-page .section-heading.account-header {
+  align-items: flex-end;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .section-heading.account-header::after {
+  content: none;
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-header > div {
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-header h2 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-header small {
+  display: block;
+  margin-top: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--qg-muted);
+}
+
+/* --- Grid: left identity/meta column (320px) + right form column (1fr) --- */
+body.is-authenticated .app-route-root .qg-account-page .account-grid {
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-side-stack,
+body.is-authenticated .app-route-root .qg-account-page .account-main-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* --- Identity card (avatar, name, sub, rank chip, avatar picker) --- */
+body.is-authenticated .app-route-root .qg-account-page .account-identity-card {
+  display: block;
+  padding: 24px;
+  border-radius: 22px;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-identity-card .account-avatar-preview {
+  display: inline-grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto;
+  padding: 8px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 50%;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 30px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-identity-card .account-avatar-preview img {
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-identity-name {
+  margin-top: 12px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-identity-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-identity-chips {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-rank-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* --- Avatar picker: divider, label, preset thumbnails, upload/url controls --- */
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-picker {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--qg-border);
+  text-align: left;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-picker-label {
+  margin-bottom: 9px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-grid {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-thumb {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 5px;
+  box-sizing: border-box;
+  border: 2.5px solid var(--qg-border);
+  border-radius: 50%;
+  background: var(--qg-surface-2);
+  cursor: pointer;
+  transition: border-color 140ms ease, transform 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-thumb:hover {
+  transform: translateY(-1px);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-thumb.is-active {
+  border-color: var(--qg-brand);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-actions {
+  margin-top: 12px;
+}
+
+/* --- Meta panel ("账户信息") = compact data overview list --- */
+body.is-authenticated .app-route-root .qg-account-page .account-meta-panel {
+  padding: 17px 19px;
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-meta-panel h3 {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-meta-panel dl {
+  display: grid;
+  gap: 0;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-meta-panel dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 2px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-meta-panel dt {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-meta-panel dd {
+  font-family: var(--qg-font-number);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--qg-text);
+}
+
+/* --- Right column panels: profile + security --- */
+body.is-authenticated .app-route-root .qg-account-page .account-profile-panel,
+body.is-authenticated .app-route-root .qg-account-page .account-security-panel {
+  display: block;
+  padding: 22px 24px;
+  border-radius: 22px;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-panel-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-profile-panel .account-panel-title {
+  margin-bottom: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-fields,
+body.is-authenticated .app-route-root .qg-account-page .account-security-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-fields label,
+body.is-authenticated .app-route-root .qg-account-page .account-security-fields label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--qg-muted-2);
+}
+
+/* keep multi-line inputs (resume file) full width */
+body.is-authenticated .app-route-root .qg-account-page .account-field-resume {
+  grid-column: 1 / -1;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-fields #accountResumeMeta {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-save-btn {
+  margin-top: 16px;
+  padding: 12px 22px;
+  min-height: 0;
+  border-radius: 13px;
+  font-size: 13.5px;
+}
+
+/* --- Security panel --- */
+body.is-authenticated .app-route-root .qg-account-page .account-security-panel .account-panel-title {
+  margin-bottom: 4px;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-security-meta {
+  margin-bottom: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-security-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-logout-btn.secondary-button.danger {
+  min-height: 0;
+  padding: 0;
+  border: 0 !important;
+  background: none !important;
+  color: var(--qg-danger) !important;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* --- Responsive: stack columns --- */
+@media (max-width: 1180px) {
+  body.is-authenticated .app-route-root .qg-account-page .account-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-account-page .account-avatar-thumb {
+    transition: none;
+  }
+  body.is-authenticated .app-route-root .qg-account-page .account-avatar-thumb:hover {
+    transform: none;
+  }
+}
+
+/* =========================================================================
+   Settings page — Playful Precision replica (single-column card stack)
+   Design ref: "QuantGym 设置.dc.html" (max-width 760, kicker + stacked cards)
+   ========================================================================= */
+body.is-authenticated .app-route-root .qg-settings-page.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+}
+
+/* --- page header ---------------------------------------------------------*/
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-kicker {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 11px;
+  margin-bottom: 10px;
+  border-radius: 20px;
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-head h2 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-head h2::after {
+  display: none;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-sub {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--qg-muted);
+  font-weight: 500;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-status {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+/* --- override base two-column grid → single column stack -----------------*/
+body.is-authenticated .app-route-root .qg-settings-page .settings-grid.qg-settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+}
+
+/* --- card shell ----------------------------------------------------------*/
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px;
+  border-radius: 22px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: var(--qg-shadow-card);
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card > h3,
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card-head h3::after {
+  display: none;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-card-note {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card-head > div {
+  min-width: 0;
+}
+
+/* --- preferences: language row + divider + fields grid -------------------*/
+body.is-authenticated .app-route-root .qg-settings-page .qg-card-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px 24px;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-row-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-row-desc {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-row-control {
+  display: block;
+  margin: 0;
+  min-width: 180px;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-row-control select {
+  min-width: 180px;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-divider {
+  height: 1px;
+  background: var(--qg-border);
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-settings-fields label {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--qg-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-card-prefs > .primary-button {
+  width: 100%;
+}
+
+/* --- cloud sync card -----------------------------------------------------*/
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-head {
+  align-items: center;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--qg-success);
+  flex: 0 0 auto;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-line {
+  margin-top: 4px;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-sync-now.secondary-button {
+  flex: 0 0 auto;
+  border: 0 !important;
+  color: #ffffff !important;
+  background: linear-gradient(180deg, #2ec38a, #16a06a) !important;
+  box-shadow: 0 3px 0 #0d7a4e !important;
+  padding: 0 20px;
+}
+
+/* --- backup card actions -------------------------------------------------*/
+body.is-authenticated .app-route-root .qg-settings-page .settings-actions.qg-backup-actions,
+body.is-authenticated .app-route-root .qg-settings-page .settings-actions.qg-danger-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-backup-actions .primary-button,
+body.is-authenticated .app-route-root .qg-settings-page .qg-backup-actions .file-button,
+body.is-authenticated .app-route-root .qg-settings-page .qg-danger-actions .secondary-button {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0 20px;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-backup-actions .settings-file-button.file-button {
+  display: inline-flex;
+  width: auto;
+}
+
+/* --- danger zone card ----------------------------------------------------*/
+body.is-authenticated .app-route-root .qg-settings-page .qg-card-danger {
+  border: 1.5px solid color-mix(in srgb, var(--qg-danger) 42%, var(--qg-border));
+  background: color-mix(in srgb, var(--qg-danger) 5%, var(--qg-surface));
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-danger-title {
+  color: var(--qg-danger);
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-danger-actions .danger-action.secondary-button {
+  color: var(--qg-danger) !important;
+  border: 1.5px solid color-mix(in srgb, var(--qg-danger) 42%, var(--qg-border)) !important;
+  background: var(--qg-surface) !important;
+}
+body.is-authenticated .app-route-root .qg-settings-page .qg-logout-btn.secondary-button {
+  color: var(--qg-muted) !important;
+}
+
+/* --- responsive: collapse fields + rows on narrow viewports -------------*/
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-settings-page .qg-settings-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.is-authenticated .app-route-root .qg-settings-page .qg-settings-row-control,
+  body.is-authenticated .app-route-root .qg-settings-page .qg-settings-row-control select {
+    width: 100%;
+    min-width: 0;
+  }
+  body.is-authenticated .app-route-root .qg-settings-page .qg-sync-now.secondary-button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-settings-page .qg-settings-card,
+  body.is-authenticated .app-route-root .qg-settings-page .qg-sync-now.secondary-button {
+    transition: none !important;
+  }
+}
+
+/* library-progress */
+/* ============================================================
+   Library reading progress (user decision #8)
+   Self-reported position: reader footer control 「我读到…」,
+   card stat 「已读 x% · 继续阅读」, and the 继续阅读 rail fed by
+   real localStorage records (user id + entry id).
+   ============================================================ */
+
+/* Un-hide the 继续阅读 rail once real reading records exist — the base
+   replica block above hides `.library-continue` with !important because
+   the static design omitted it. */
+body.is-authenticated .app-route-root .qg-library-page .library-continue.qg-has-progress:not([hidden]) {
+  display: grid !important;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-continue .library-block-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-continue .library-block-heading h2 {
+  margin: 2px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--qg-text);
+}
+
+/* Horizontal shelf of compact cards, most recent first. */
+body.is-authenticated .app-route-root .qg-library-page .library-continue .library-cover-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 168px;
+  justify-content: start;
+  gap: 16px;
+  margin: 0;
+  padding: 2px 2px 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-continue .library-empty-inline {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+/* Card stat when the user has declared progress: 「已读 x% · 继续阅读」 */
+body.is-authenticated .app-route-root .qg-library-page .library-card-stat.has-progress {
+  color: var(--qg-brand-ink);
+  font-weight: 700;
+}
+
+/* --- Reader footer: declared-position control ---------------------------
+   The shell keeps the legacy grid (header + stage); add a third auto row
+   so the footer never squeezes the stage. */
+body.is-authenticated .app-route-root .library-reader-shell {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+body.is-authenticated .app-route-root .library-reader-progress {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 11px 18px;
+  border-top: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+  font-family: var(--qg-font-ui);
+}
+
+body.is-authenticated .app-route-root .library-reader-progress-label {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--qg-text);
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .library-reader-progress-pages {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--qg-text-2);
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .library-reader-progress-page-input {
+  width: 64px;
+  min-height: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--qg-border-2);
+  border-radius: 9px;
+  background: var(--qg-surface);
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .library-reader-progress-page-input:focus-visible {
+  outline: 2px solid var(--qg-brand);
+  outline-offset: 1px;
+}
+
+/* Percent slider — 6px gradient track per design (联赛/资料库 footer bar). */
+body.is-authenticated .app-route-root .library-reader-progress-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  min-width: 120px;
+  height: 6px;
+  margin: 0;
+  border: 0;
+  border-radius: 20px;
+  background:
+    linear-gradient(90deg, #5b5ff5, #8a7bff) 0 0 / var(--qg-progress-pct, 0%) 100% no-repeat,
+    var(--qg-track);
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .library-reader-progress-slider:focus-visible {
+  outline: 2px solid var(--qg-brand);
+  outline-offset: 4px;
+}
+
+body.is-authenticated .app-route-root .library-reader-progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #5b5ff5;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(27, 26, 56, 0.3);
+}
+
+body.is-authenticated .app-route-root .library-reader-progress-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #5b5ff5;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(27, 26, 56, 0.3);
+}
+
+body.is-authenticated .app-route-root .library-reader-progress-readout {
+  min-width: 42px;
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--qg-brand-ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Honest copy: progress is hand-marked by the user, never auto-tracked. */
+body.is-authenticated .app-route-root .library-reader-progress-note {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .library-reader-progress {
+    padding: 10px 12px;
+  }
+
+  body.is-authenticated .app-route-root .library-reader-progress-note {
+    flex-basis: 100%;
+    margin-left: 0;
+    white-space: normal;
+  }
+}

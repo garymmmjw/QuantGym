@@ -54,6 +54,16 @@ export function usePlanPageModel() {
     bump();
   }, [api, bump]);
 
+  const advanceTask = useCallback((taskId) => {
+    api?.advanceTask?.(taskId);
+    bump();
+  }, [api, bump]);
+
+  const migrateDoingTasks = useCallback((taskIds) => {
+    api?.migrateDoingTasks?.(taskIds);
+    bump();
+  }, [api, bump]);
+
   const openTask = useCallback((action, query) => {
     api?.openTask?.(action, query);
   }, [api]);
@@ -89,13 +99,17 @@ export function usePlanPageModel() {
 
   return {
     t,
+    isEnglish: appServices.getLanguage?.() === "en",
     view,
+    userState,
     setup,
     updateSetup,
     resetSetupFromView,
     createPlan,
     openEditor,
     toggleTask,
+    advanceTask,
+    migrateDoingTasks,
     openTask,
     startDiagnostic,
     diagnosticAnswers,

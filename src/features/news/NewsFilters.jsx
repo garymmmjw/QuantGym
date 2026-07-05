@@ -24,11 +24,11 @@ export function NewsFilters({
 
   return (
     <div className="news-filter-row">
-      <div id="newsTopicFilter" className="segmented news-topic-filter" role="tablist" aria-label={t("newsTopicFilterAria")}>
+      <div id="newsTopicFilter" className="news-cat-row news-topic-filter" role="tablist" aria-label={t("newsTopicFilterAria")}>
         {TOPIC_OPTIONS.map((topic) => (
           <button
             key={topic}
-            className={`segment${topicFilter === topic ? " active" : ""}`}
+            className={`news-cat-chip${topicFilter === topic ? " active" : ""}`}
             type="button"
             data-news-topic={topic}
             aria-selected={topicFilter === topic}
@@ -38,11 +38,11 @@ export function NewsFilters({
           </button>
         ))}
       </div>
-      <div id="newsSourceFilter" className="segmented news-source-filter" role="tablist" aria-label={t("newsSourceFilterAria")}>
+      <div id="newsSourceFilter" className="news-cat-row news-src-row news-source-filter" role="tablist" aria-label={t("newsSourceFilterAria")}>
         {SOURCE_OPTIONS.map((source) => (
           <button
             key={source}
-            className={`segment${sourceFilter === source ? " active" : ""}`}
+            className={`news-cat-chip news-src-chip${sourceFilter === source ? " active" : ""}`}
             type="button"
             data-news-source-filter={source}
             aria-selected={sourceFilter === source}

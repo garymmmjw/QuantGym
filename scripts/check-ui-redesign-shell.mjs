@@ -55,7 +55,7 @@ for (const marker of [
   "qg-auth-screen",
   "qg-auth-brand",
   "qg-auth-card",
-  "/assets/generated/playful-precision/brand-q-mark.webp",
+  "auth-brand-q-badge",
   "/assets/generated/playful-precision/mascot-hero-v5-clean.png"
 ]) {
   expect(authShell.includes(marker), `AuthShell.jsx missing ${marker}`);
@@ -68,7 +68,7 @@ for (const marker of [
   ".qg-auth-screen",
   ".qg-auth-card",
   "body.is-authenticated.sidebar-collapsed #appShell.qg-app-shell",
-  "@media (max-width: 760px)",
+  "@media (max-width: 860px)",
   "@media (prefers-reduced-motion: reduce)"
 ]) {
   expect(shellCss.includes(marker), `shell CSS missing ${marker}`);

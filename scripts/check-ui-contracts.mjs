@@ -274,6 +274,16 @@ const routeContracts = {
       "pkRevealBtn",
       "pkFeed"
     ]
+  },
+  league: {
+    page: "LeaguePage.jsx",
+    content: "LeaguePageContent",
+    selectors: [
+      "leaguePageTitle",
+      "leagueStandings",
+      "leagueLearningMap",
+      "leagueRewardShop"
+    ]
   }
 };
 

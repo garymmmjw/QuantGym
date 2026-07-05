@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
+import { CoderSticker } from "../shared/CoderSticker.jsx";
 import { readFileAsDataUrl, readFileAsText } from "../../lib/files.js";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 
@@ -13,6 +14,40 @@ const EMPTY_RESOURCE_FORM = {
   previewData: ""
 };
 
+/* Category colors follow the design note dots (per resource type). */
+const RESOURCE_TYPE_META = {
+  note: { label: "笔记", color: "#5b5ff5" },
+  tex: { label: "TeX", color: "#8a63e8" },
+  image: { label: "图片", color: "#ff9f2e" },
+  link: { label: "链接", color: "#2f9be0" }
+};
+
+const NOTE_TAGS = [
+  ["all", "全部"],
+  ["概率", "概率"],
+  ["衍生品", "衍生品"],
+  ["速算", "速算"],
+  ["求职", "求职"]
+];
+
+function resourceTypeMeta(type) {
+  return RESOURCE_TYPE_META[type] || { label: String(type || "笔记").toUpperCase(), color: "#5b5ff5" };
+}
+
+function wordCount(text) {
+  return String(text || "").replace(/\s+/g, "").length;
+}
+
+/* List rows preview clean prose (design shows no markdown/formula markers). */
+function previewText(text) {
+  return String(text || "")
+    .replace(/\$\$[^]*?\$\$/g, " ")
+    .split(/\n+/)
+    .map((line) => line.replace(/^#{1,6}\s+/, "").replace(/^[-*·•]\s+/, "").trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
 export function MemoryPageContent() {
   const appServices = useAppServices();
   const pageApi = usePageApi();
@@ -21,17 +56,48 @@ export function MemoryPageContent() {
   const userState = useUserStateStore((state) => state.value || {});
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(EMPTY_RESOURCE_FORM);
+  const [editingId, setEditingId] = useState(null);
+  const [query, setQuery] = useState("");
+  const [tag, setTag] = useState("all");
+  const [selectedId, setSelectedId] = useState(null);
   const resourceTitleRef = useRef(null);
   const resourceFileRef = useRef(null);
 
   const entries = useMemo(() => (userState.entries || []).slice().reverse().slice(0, 12), [userState.entries]);
   const resources = useMemo(() => api.getResources(), [userState.resources, api]);
+  const orderedResources = useMemo(() => resources.slice().reverse(), [resources]);
+  const filteredResources = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return orderedResources.filter((resource) => {
+      const hay = `${resource.title || ""} ${resource.content || ""}`.toLowerCase();
+      if (tag !== "all" && !hay.includes(tag.toLowerCase())) return false;
+      if (q && !hay.includes(q)) return false;
+      return true;
+    });
+  }, [orderedResources, query, tag]);
+  const selected = useMemo(
+    () => orderedResources.find((resource) => resource.id === selectedId) || filteredResources[0] || null,
+    [orderedResources, filteredResources, selectedId]
+  );
 
-  useScopedRefreshIcons(pageApi.refreshIcons, ".memory-section", [entries, resources, showForm]);
+  useScopedRefreshIcons(pageApi.refreshIcons, ".qg-memory-page", [entries, resources, showForm, selected, tag, query]);
 
   useEffect(() => {
     if (showForm) resourceTitleRef.current?.focus();
   }, [showForm]);
+
+  const formatNoteDate = (iso) => {
+    if (!iso) return "";
+    const then = new Date(iso);
+    if (Number.isNaN(then.getTime())) return String(iso);
+    const dayStart = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const days = Math.round((dayStart(new Date()) - dayStart(then)) / 86400000);
+    if (days <= 0) return "今天";
+    if (days === 1) return "昨天";
+    if (days < 7) return `${days} 天前`;
+    if (days < 14) return "上周";
+    return pageApi.formatDate?.(iso) || then.toLocaleDateString();
+  };
 
   const parseResourceSources = (text) => {
     const urls = String(text || "").split(/\n+/).map((line) => line.trim()).filter((line) => /^https?:\/\//i.test(line));
@@ -93,40 +159,141 @@ export function MemoryPageContent() {
     const content = form.content.trim();
     if (!title || !content) return;
     const sources = parseResourceSources(form.sources || content);
-    api.setResources([
-      ...api.getResources(),
-      {
-        id: pageApi.makeId?.(),
-        title,
-        type: form.type,
-        content,
-        sources,
-        dataUrl: form.previewData || "",
-        date: new Date().toISOString()
-      }
-    ]);
+    const existing = api.getResources();
+    if (editingId && existing.some((resource) => resource.id === editingId)) {
+      api.setResources(existing.map((resource) => (resource.id === editingId
+        ? {
+          ...resource,
+          title,
+          type: form.type,
+          content,
+          sources,
+          dataUrl: form.previewData || "",
+          date: new Date().toISOString()
+        }
+        : resource)));
+      setSelectedId(editingId);
+    } else {
+      const id = pageApi.makeId?.();
+      api.setResources([
+        ...existing,
+        {
+          id,
+          title,
+          type: form.type,
+          content,
+          sources,
+          dataUrl: form.previewData || "",
+          date: new Date().toISOString()
+        }
+      ]);
+      if (id) setSelectedId(id);
+    }
     pageApi.saveState?.();
     setForm(EMPTY_RESOURCE_FORM);
+    setEditingId(null);
     if (resourceFileRef.current) resourceFileRef.current.value = "";
     setShowForm(false);
   };
 
+  const startEditSelected = () => {
+    if (!selected) return;
+    setForm({
+      title: selected.title || "",
+      type: selected.type || "note",
+      content: selected.content || "",
+      sources: (selected.sources || []).map((source) => source.url).filter(Boolean).join("\n"),
+      previewData: selected.dataUrl || ""
+    });
+    setEditingId(selected.id);
+    setShowForm(true);
+  };
+
+  const toggleStarSelected = () => {
+    if (!selected) return;
+    api.setResources(api.getResources().map((resource) => (resource.id === selected.id
+      ? { ...resource, starred: !resource.starred }
+      : resource)));
+    pageApi.saveState?.();
+  };
+
+  const selectNote = (id) => setSelectedId(id);
+
+  const renderNoteBlocks = (resource) => {
+    const text = String(resource.content || "");
+    if (resource.type === "tex") {
+      return text.split(/\n{2,}/).map((chunk) => chunk.trim()).filter(Boolean).map((chunk, index) => (
+        <div key={index} className="memory-block memory-block-f">{chunk}</div>
+      ));
+    }
+    return text.split(/\n+/).map((line) => line.trim()).filter(Boolean).map((line, index) => {
+      if (/^#{1,6}\s+/.test(line)) {
+        return <div key={index} className="memory-block memory-block-h">{line.replace(/^#{1,6}\s+/, "")}</div>;
+      }
+      if (/^\$\$[^]*\$\$$/.test(line)) {
+        return <div key={index} className="memory-block memory-block-f">{line.replace(/^\$\$|\$\$$/g, "").trim()}</div>;
+      }
+      if (/^[-*·•]\s+/.test(line)) {
+        return <div key={index} className="memory-block memory-block-li">{`· ${line.replace(/^[-*·•]\s+/, "")}`}</div>;
+      }
+      return <div key={index} className="memory-block memory-block-p">{line}</div>;
+    });
+  };
+
+  const selectedMeta = selected ? resourceTypeMeta(selected.type) : null;
+  const selectedEmbed = selected?.sources?.find((source) => source.embeddable);
+
   return (
     <div className="qg-support-page qg-memory-page">
-      <section className="tool-grid single-column">
-        <div className="resource-panel">
-          <div className="panel-heading">
-            <h2>{t("memoryResources") || "资料"}</h2>
-            <button
-              className="icon-button ghost"
-              id="addResourceBtn"
-              type="button"
-              title={t("addResource") || "添加资料"}
-              aria-label={t("addResource") || "添加资料"}
-              onClick={() => setShowForm((v) => !v)}
-            >
-              <i data-lucide="paperclip" />
-            </button>
+      <header className="memory-header">
+        <div className="memory-header-copy">
+          <span className="memory-kicker">RESOURCES · 资料笔记</span>
+          <h1 className="memory-title">
+            资料笔记 <span className="memory-title-accent">Notes</span>
+          </h1>
+        </div>
+        <button
+          className="memory-new-btn"
+          id="addResourceBtn"
+          type="button"
+          title="新建笔记"
+          aria-label="新建笔记"
+          onClick={() => {
+            if (!showForm) {
+              setEditingId(null);
+              setForm(EMPTY_RESOURCE_FORM);
+            }
+            setShowForm((v) => !v);
+          }}
+        >
+          <span className="memory-new-plus" aria-hidden="true">＋</span>
+          新建笔记
+        </button>
+      </header>
+      <section className="memory-workspace">
+        <div className="resource-panel memory-side">
+          <div className="memory-search">
+            <i data-lucide="search" aria-hidden="true" />
+            <input
+              type="search"
+              placeholder="搜索笔记…"
+              aria-label="搜索笔记"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <div className="memory-tags">
+            {NOTE_TAGS.map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className={`memory-tag${tag === id ? " is-active" : ""}`}
+                aria-pressed={tag === id}
+                onClick={() => setTag(id)}
+              >
+                {label}
+              </button>
+            ))}
           </div>
           <form id="resourceForm" className={`resource-form${showForm ? "" : " hidden"}`} onSubmit={addResource}>
               <input
@@ -169,55 +336,125 @@ export function MemoryPageContent() {
               <button className="secondary-button" type="submit"><i data-lucide="save" />{t("save")}</button>
             </form>
           <div id="resourceList" className="resource-list">
-            {!resources.length ? <EmptyState title={t("resourcesEmpty")} /> : resources.slice().reverse().map((resource) => (
-              <article key={resource.id} className="resource-item" data-resource-id={resource.id}>
-                <div className="resource-top">
-                  <strong>{resource.title}</strong>
-                  <span className="pill">{String(resource.type).toUpperCase()}</span>
-                </div>
-                <p>{resource.content}</p>
-                {resource.sources?.find((source) => source.embeddable)?.embedUrl ? (
-                  <div className="resource-player">
-                    <iframe
-                      src={resource.sources.find((source) => source.embeddable)?.embedUrl}
-                      title={`${resource.title} - ${resource.sources.find((source) => source.embeddable)?.provider}`}
-                      loading="lazy"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    />
+            {!filteredResources.length ? <EmptyState title={t("resourcesEmpty")} /> : filteredResources.map((resource) => {
+              const meta = resourceTypeMeta(resource.type);
+              const isSelected = selected?.id === resource.id;
+              return (
+                <article
+                  key={resource.id}
+                  className={`resource-item${isSelected ? " is-selected" : ""}`}
+                  data-resource-id={resource.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isSelected}
+                  onClick={() => selectNote(resource.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      selectNote(resource.id);
+                    }
+                  }}
+                >
+                  <div className="resource-top">
+                    <span className="resource-dot" style={{ background: meta.color }} aria-hidden="true" />
+                    <strong>{resource.title}</strong>
                   </div>
-                ) : null}
-                {resource.sources?.length ? (
-                  <div className="resource-source-links">
-                    {resource.sources.map((source) => (
-                      <a key={source.id || source.url} href={pageApi.safeExternalUrl?.(source.url) || source.url} target="_blank" rel="noreferrer">
-                        {source.provider || t("openOriginal")}
-                      </a>
-                    ))}
-                  </div>
-                ) : null}
-                {resource.dataUrl ? <img className="resource-image" src={resource.dataUrl} alt={resource.title} /> : null}
-              </article>
-            ))}
+                  <p>{previewText(resource.content)}</p>
+                  <div className="resource-meta">{formatNoteDate(resource.date)} · {wordCount(resource.content)} 字</div>
+                </article>
+              );
+            })}
           </div>
         </div>
-      </section>
-      <section className="history-section">
-        <div className="section-heading">
-          <h2>{t("memoryHistory") || "记忆"}</h2>
-          <button
-            className="icon-button ghost"
-            id="clearTodayBtn"
-            type="button"
-            title={t("clearLatestEntry") || "删除最新记录"}
-            aria-label={t("clearLatestEntry") || "删除最新记录"}
-            onClick={() => api.undoLatestEntry?.()}
-          >
-            <i data-lucide="undo-2" />
-          </button>
-        </div>
-        <div id="historyList" className="history-list">
-          {!entries.length ? <EmptyState title={t("historyEmpty") || "还没有记录。"} /> : entries.map((entry) => (
+        <div className="history-section memory-detail">
+          <div className="section-heading">
+            <div className="memory-detail-title">
+              <div className="memory-note-meta">
+                {selected ? (
+                  <>
+                    <span className="memory-note-tag" style={{ background: selectedMeta.color }}>{selectedMeta.label}</span>
+                    <span className="memory-note-date">最近编辑 {formatNoteDate(selected.date)}</span>
+                  </>
+                ) : (
+                  <span className="memory-detail-kicker">最近记忆</span>
+                )}
+              </div>
+              <h2>{selected ? selected.title : (t("memoryHistory") || "记忆")}</h2>
+            </div>
+            <div className="memory-note-actions">
+              {selected ? (
+                <>
+                  <button
+                    className="memory-icon-btn"
+                    type="button"
+                    title="编辑笔记"
+                    aria-label="编辑笔记"
+                    onClick={startEditSelected}
+                  >
+                    <i data-lucide="pencil-line" />
+                  </button>
+                  <button
+                    className={`memory-icon-btn${selected.starred ? " is-starred" : ""}`}
+                    type="button"
+                    title="收藏笔记"
+                    aria-label="收藏笔记"
+                    aria-pressed={!!selected.starred}
+                    onClick={toggleStarSelected}
+                  >
+                    <i data-lucide="star" />
+                  </button>
+                </>
+              ) : null}
+              <button
+                className="icon-button ghost memory-icon-btn"
+                id="clearTodayBtn"
+                type="button"
+                title={t("clearLatestEntry") || "删除最新记录"}
+                aria-label={t("clearLatestEntry") || "删除最新记录"}
+                onClick={() => api.undoLatestEntry?.()}
+              >
+                <i data-lucide="undo-2" />
+              </button>
+            </div>
+          </div>
+          {selected ? (
+            <div className="memory-note-body">
+              {selected.dataUrl ? <img className="resource-image" src={selected.dataUrl} alt={selected.title} /> : null}
+              {renderNoteBlocks(selected)}
+              {selectedEmbed?.embedUrl ? (
+                <div className="resource-player">
+                  <iframe
+                    src={selectedEmbed.embedUrl}
+                    title={`${selected.title} - ${selectedEmbed.provider}`}
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              ) : null}
+              {selected.sources?.length ? (
+                <div className="memory-links">
+                  <span className="memory-links-label">关联</span>
+                  {selected.sources.map((source) => (
+                    <a
+                      key={source.id || source.url}
+                      className="memory-link-chip"
+                      href={pageApi.safeExternalUrl?.(source.url) || source.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <span className="memory-link-dot" aria-hidden="true" />
+                      {source.provider || t("openOriginal")}
+                    </a>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          <div id="historyList" className="history-list">
+          {!entries.length
+            ? (selected ? null : <EmptyState title={t("historyEmpty") || "还没有记录。"} />)
+            : entries.map((entry) => (
             <article key={entry.id} className="history-item" data-history-id={entry.id}>
               <div className="history-top">
                 <strong>{pageApi.formatDate?.(entry.date) || entry.date}</strong>
@@ -233,8 +470,10 @@ export function MemoryPageContent() {
               </div>
             </article>
           ))}
+          </div>
         </div>
       </section>
+      <CoderSticker page="memory" />
     </div>
   );
 }

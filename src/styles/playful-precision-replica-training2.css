@@ -1,0 +1,2146 @@
+/* Design-replication additions (playful-precision-replica-training2.css) — matches UI 设计提升.zip design specs.
+   Loaded after its sibling replica sheet; may override earlier rules. */
+
+/* ============================================================
+   TOOLS · Mental Math (速算) + Market Game (报价) replica pass 2
+   Scope: body.is-authenticated .app-route-root .qg-tools-page
+   ============================================================ */
+
+@keyframes qg-mm-rise {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---- Hero: left-aligned copy (design anchors copy at the card's left padding) ---- */
+body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-card {
+  align-items: flex-start;
+}
+
+/* ---- Hero: keep the purple brand gradient in dark mode (design is theme-independent) ---- */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-card {
+  border: none;
+  background: linear-gradient(135deg, #5b5ff5 0%, #7161f2 55%, #8a63e8 100%);
+  box-shadow: 0 22px 48px -24px rgba(91, 95, 245, 0.7);
+}
+
+/* ---- Hero: keep the floating calculator mascot on tablet/mobile ---- */
+@media (max-width: 1180px) {
+  body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-card::after {
+    display: block;
+  }
+}
+
+/* ---- Config chips: design dark render keeps the light active chip ---- */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-tools-page .mental-op-chip.active,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-tools-page .mental-count-chip.active {
+  border-color: #5b5ff5;
+  background: #eef0ff;
+  color: #5b5ff5;
+}
+
+/* ---- 训练记录 sparkline: theme via tokens (kills the white box in dark) ---- */
+body.is-authenticated .app-route-root .qg-tools-page .mental-sparkline {
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-sparkline text {
+  fill: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-sparkline circle {
+  fill: var(--qg-surface);
+}
+
+/* ============================================================
+   Drill arena — play chrome (ring timer / 第 x/n 题 / streak pill)
+   ============================================================ */
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-live {
+  display: grid;
+  gap: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-live.mental-oa-live-hidden {
+  display: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-ring {
+  position: relative;
+  flex: 0 0 auto;
+  width: 58px;
+  height: 58px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-ring .mental-ring-track {
+  fill: none;
+  stroke: var(--qg-track);
+  stroke-width: 5;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-ring .mental-ring-fill {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s linear, stroke 0.3s;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-ring .mental-ring-time {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-mid {
+  display: grid;
+  flex: 1;
+  gap: 6px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--qg-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-meta .mental-oa-acc b {
+  color: #0f9d63;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-progress-rail {
+  height: 8px;
+  border-radius: 20px;
+  background: var(--qg-track);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-progress-rail i {
+  background: linear-gradient(90deg, #5b5ff5, #8a7bff);
+  transition: width 0.3s ease;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-streak-pill {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  padding: 7px 12px 7px 8px;
+  border: 1px solid #ffe0ad;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #fff3dd, #ffe9c7);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-streak-pill img {
+  width: 20px;
+  height: 20px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-streak-pill span {
+  color: #b3610a;
+  font-family: var(--qg-font-number);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ---- Question card with 口算 kicker ---- */
+body.is-authenticated .app-route-root .qg-tools-page .drill-question-card {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  overflow: hidden;
+  padding: 44px 24px;
+  border: 1px solid var(--qg-border);
+  border-radius: 24px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05), 0 18px 40px -26px rgba(74, 67, 214, 0.4);
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .drill-kicker {
+  color: var(--qg-muted-3);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .drill-question {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: clamp(34px, 6vw, 54px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  text-align: center;
+}
+
+/* ---- Answer options: 2-col large answer cards ---- */
+body.is-authenticated .app-route-root .qg-tools-page .drill-answer {
+  display: grid;
+  gap: 14px;
+  align-items: stretch;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .drill-options {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .drill-option {
+  min-height: 0;
+  padding: 22px 14px;
+  border: 2px solid var(--qg-border);
+  border-radius: 18px;
+  background: var(--qg-surface);
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: 26px;
+  font-weight: 700;
+  box-shadow: 0 4px 0 var(--qg-border);
+  transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .drill-option:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .drill-option:hover:not(:disabled),
+body.is-authenticated .app-route-root .qg-tools-page .drill-option:focus-visible:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--qg-brand);
+  outline: none;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .drill-option:disabled:not(.correct):not(.incorrect) {
+  background: var(--qg-surface-2);
+  color: var(--qg-muted-3);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .drill-option.correct {
+  border-color: #16a06a;
+  background: #e9f9f1;
+  color: #0f7a4d;
+  box-shadow: 0 4px 0 #b9e6cf;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .drill-option.incorrect {
+  border-color: #e2857f;
+  background: #fdeceb;
+  color: #b23f38;
+  box-shadow: 0 4px 0 #f3cfcc;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .drill-actions {
+  justify-content: center;
+}
+
+/* ============================================================
+   本局完成 — session-complete result card (design isDone view)
+   ============================================================ */
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-view {
+  display: grid;
+  align-self: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  text-align: center;
+  animation: qg-mm-rise 0.4s ease both;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-card {
+  position: relative;
+  overflow: hidden;
+  padding: 34px 28px 30px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #5b5ff5, #7161f2 55%, #8a63e8);
+  color: #fff;
+  box-shadow: 0 22px 48px -22px rgba(91, 95, 245, 0.7);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(400px 200px at 50% -10%, rgba(255, 255, 255, 0.25), transparent 60%);
+  pointer-events: none;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-card > * {
+  position: relative;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-card img {
+  width: 120px;
+  height: auto;
+  filter: drop-shadow(0 16px 24px rgba(20, 16, 60, 0.4));
+  animation: qg-training-float 4.5s ease-in-out infinite;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-tag {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.9;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-title {
+  margin-top: 4px;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-stats {
+  display: flex;
+  justify-content: center;
+  gap: 26px;
+  margin-top: 20px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-stats i {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-stats b {
+  display: block;
+  font-family: var(--qg-font-number);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-stats b small {
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-stats span {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-xp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid #ffe0ad;
+  border-radius: 16px;
+  background: #fff3dd;
+  color: #a35c07;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-xp img {
+  width: 22px;
+  height: 22px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-actions {
+  display: flex;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-actions button {
+  flex: 1;
+  cursor: pointer;
+  font-family: var(--qg-font-ui);
+  font-size: 15px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-actions .mental-done-again {
+  padding: 15px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 4px 0 #3f39c9;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-actions .mental-done-again:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #3f39c9;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-actions .mental-done-switch {
+  padding: 15px;
+  border: 1.5px solid #e0dffb;
+  border-radius: 16px;
+  background: var(--qg-surface);
+  color: #5b5ff5;
+  font-weight: 700;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-tools-page .mental-done-actions .mental-done-switch {
+  border-color: #3a3763;
+  color: #b9b8ff;
+}
+
+/* ============================================================
+   报价 Market Game — full design layout
+   ============================================================ */
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-games-panel.qg-market-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* header row: badge + title + score/round stat chips */
+body.is-authenticated .app-route-root .qg-tools-page .mg-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: #e3f7ee;
+  color: #0f9d63;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-title {
+  margin: 0;
+  color: var(--qg-text);
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-title span {
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-sub {
+  margin: 6px 0 0;
+  color: var(--qg-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-head-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-stat-chip {
+  display: grid;
+  min-width: 86px;
+  padding: 11px 16px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-stat-chip span {
+  color: var(--qg-muted-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-stat-chip strong {
+  justify-self: start;
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-stat-chip strong#marketGameScore {
+  color: var(--qg-brand-ink);
+}
+
+/* main grid: question card + 300px rail (collapses at 880px, like design) */
+body.is-authenticated .app-route-root .qg-tools-page .mg-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-grid .market-game-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  min-height: 380px;
+  padding: 26px;
+  border: 1px solid var(--qg-border);
+  border-radius: 22px;
+  background: var(--qg-surface);
+  box-shadow: var(--qg-shadow-card);
+}
+
+/* question block (keeps legacy #marketGamePrompt/.game-prompt hooks) */
+body.is-authenticated .app-route-root .qg-tools-page .mg-grid .game-prompt {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--qg-text);
+  line-height: 1.5;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-kicker {
+  display: block;
+  color: var(--qg-muted-2);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-question {
+  margin-top: 8px;
+  color: var(--qg-text);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-question b {
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: 22px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-meta {
+  display: block;
+  margin-top: 6px;
+  color: var(--qg-muted-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* BID / ASK quote cards */
+body.is-authenticated .app-route-root .qg-tools-page .mg-grid .market-quote-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-quote-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1.5px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-quote-card .mg-quote-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-quote-card.is-bid .mg-quote-label {
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-quote-card.is-ask .mg-quote-label {
+  color: #d0524b;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-quote-card input {
+  width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: 30px;
+  font-weight: 700;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-tools-page .mg-quote-card input {
+  background: transparent;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-quote-card input::placeholder {
+  color: var(--qg-muted-3);
+}
+
+/* reveal / feedback box */
+body.is-authenticated .app-route-root .qg-tools-page .mg-grid .game-feedback {
+  min-height: 0;
+  border-radius: 14px;
+  color: var(--qg-text-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.65;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-grid .game-feedback:empty {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-grid .game-feedback.mg-fb-ok {
+  padding: 15px 17px;
+  border: 1.5px solid #bfe9d4;
+  background: rgba(46, 195, 138, 0.08);
+  animation: qg-mg-rise 0.25s ease both;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-grid .game-feedback.mg-fb-bad {
+  padding: 15px 17px;
+  border: 1.5px solid #f3c4c0;
+  background: rgba(208, 82, 75, 0.07);
+  animation: qg-mg-rise 0.25s ease both;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-grid .game-feedback.mg-fb-warn {
+  color: #d0524b;
+  font-weight: 700;
+}
+
+/* CTA row: 提交报价 (brand 3D) + 下一题 (green 3D) */
+body.is-authenticated .app-route-root .qg-tools-page .mg-grid .market-game-card .game-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page #submitMarketQuoteBtn,
+body.is-authenticated .app-route-root .qg-tools-page #nextMarketGameBtn {
+  flex: 1;
+  min-height: 0;
+  padding: 14px !important;
+  border: none !important;
+  border-radius: 14px !important;
+  color: #fff !important;
+  font-family: var(--qg-font-ui);
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page #submitMarketQuoteBtn {
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5) !important;
+  box-shadow: 0 4px 0 #3f39c9 !important;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page #submitMarketQuoteBtn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #3f39c9 !important;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page #nextMarketGameBtn {
+  background: linear-gradient(180deg, #2ec38a, #16a06a) !important;
+  box-shadow: 0 4px 0 #0d7a4e !important;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page #nextMarketGameBtn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #0d7a4e !important;
+}
+
+/* sidebar: 本局流水 + 交易员心法 + poker launch */
+body.is-authenticated .app-route-root .qg-tools-page .mg-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-card {
+  padding: 17px 19px;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05);
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-card h4 {
+  margin: 0 0 11px;
+  color: var(--qg-text);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border-radius: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-badge {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-badge.ok {
+  background: #e3f7ee;
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-badge.bad {
+  background: #fdeceb;
+  color: #d0524b;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--qg-text);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-pts {
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-pts.ok {
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-pts.bad {
+  color: #d0524b;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-log-empty {
+  padding: 6px 2px;
+  color: var(--qg-muted-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-tip-card {
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #1b1a38, #2d2a5c);
+  color: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-tip-card span {
+  display: block;
+  margin-bottom: 8px;
+  color: #b9b8e0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-tip-card p {
+  margin: 0;
+  color: #dcdbf2;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mg-side .poker-game-card {
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05);
+}
+
+/* ---- responsive ---- */
+@media (max-width: 880px) {
+  body.is-authenticated .app-route-root .qg-tools-page .mg-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-card::after {
+    right: 8px;
+    bottom: 0;
+    width: 128px;
+    height: 128px;
+  }
+
+  body.is-authenticated .app-route-root .qg-tools-page .mental-oa-top {
+    gap: 10px;
+  }
+
+  body.is-authenticated .app-route-root .qg-tools-page .mental-oa-meta {
+    font-size: 11px;
+  }
+
+  body.is-authenticated .app-route-root .qg-tools-page .mental-oa-meta span {
+    white-space: nowrap;
+  }
+
+  body.is-authenticated .app-route-root .qg-tools-page .drill-question-card {
+    padding: 34px 18px;
+  }
+
+  body.is-authenticated .app-route-root .qg-tools-page .mental-done-stats {
+    gap: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-tools-page .mental-done-view,
+  body.is-authenticated .app-route-root .qg-tools-page .mg-grid .game-feedback.mg-fb-ok,
+  body.is-authenticated .app-route-root .qg-tools-page .mg-grid .game-feedback.mg-fb-bad {
+    animation: none;
+  }
+
+  body.is-authenticated .app-route-root .qg-tools-page .mental-done-card img {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   POKER · replica pass 2 — right-rail lobby skin, dark panel
+   leaks, action-bar timer/slider, pot pill, mobile felt.
+   Scope: body.is-authenticated .app-route-root .qg-poker-page
+   (design is the same dark card set in both themes, so no
+   data-qg-theme fork is needed; !important fights legacy styles.css)
+   ============================================================ */
+
+/* ---- Right rail: LOG/LEDGER lobby panel gets the design dark card ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel {
+  position: static !important;
+  padding: 16px !important;
+  border: 1px solid #23263a !important;
+  border-radius: 20px !important;
+  background: #171925 !important;
+  color: #c7c9e0 !important;
+  box-shadow: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-head strong {
+  color: #e8e9f5 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-head span {
+  color: #8f92ad !important;
+  font-size: 11.5px !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel label,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel .poker-room-link,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel .poker-seat-form {
+  color: #8f92ad !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel select,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel input[type="text"],
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel input[type="number"] {
+  border: 1px solid #2a2e42 !important;
+  border-radius: 10px !important;
+  background: #1d2030 !important;
+  color: #e8e9f5 !important;
+  box-shadow: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel input::placeholder {
+  color: #6c6f8a !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel .secondary-button,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel .poker-panel-content button,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel .poker-player-actions button {
+  border: 1px solid #2a2e42 !important;
+  background: #1d2030 !important;
+  color: #c3c5ff !important;
+  box-shadow: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel .primary-button {
+  border: 0 !important;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 0 #3f39c9 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel button:hover:not(:disabled) {
+  border-color: #3a3f5c !important;
+  background: #232739 !important;
+  box-shadow: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-lobby-panel .primary-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #7a7dfa, #6468f6) !important;
+  box-shadow: 0 4px 0 #3f39c9 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-compliance-note {
+  color: #6c6f8a !important;
+}
+
+/* ---- Panel tabs + tab content: kill the legacy light blocks (both themes) ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-panel-tabs {
+  border: 1px solid #2a2e42 !important;
+  background: #1d2030 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-panel-tabs button {
+  background: transparent !important;
+  color: #9a9db8 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-panel-tabs button.active {
+  background: rgba(91, 95, 245, 0.2) !important;
+  color: #c3c5ff !important;
+  box-shadow: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-chat-message,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-history-item,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-player-row,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-ledger-table,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-ledger-events,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-empty-state {
+  border: 1px solid #2a2e42 !important;
+  background: #1d2030 !important;
+  color: #9a9db8 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-panel-title strong,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-history-item header strong,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-player-row strong,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-player-row b {
+  color: #e8e9f5 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-panel-title span,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-chat-message span,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-history-item header span,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-player-row span,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-ledger-events span,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-ledger-head span,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-ledger-row span {
+  color: #8f92ad !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-chat-message p,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-history-item p {
+  color: #c7c9e0 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-history-item details,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-history-item details div span {
+  color: #9a9db8 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-panel-title.compact {
+  border-top-color: #2a2e42 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-chat-form input,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-settings-form input {
+  border: 1px solid #2a2e42 !important;
+  border-radius: 10px !important;
+  background: #1d2030 !important;
+  color: #e8e9f5 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-settings-form label,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-rail .poker-check-row {
+  color: #8f92ad !important;
+}
+
+/* ---- Right rail: empty history-card line ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-history-empty {
+  margin: 0;
+  font-size: 11.5px;
+  color: #8f92ad;
+}
+
+/* ---- Action bar: timer row loses the legacy white pill ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-turn-prompt {
+  background: transparent !important;
+  border: 0 !important;
+  min-height: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ---- Action bar: chips + slider + amount live on one row (design L89-95) ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .qg-poker-betrow {
+  order: 2 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .qg-poker-betrow .poker-quick-bets {
+  order: 0 !important;
+  display: flex !important;
+  gap: 6px !important;
+  flex: 0 0 auto !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .qg-poker-betrow .poker-raise-control {
+  order: 1 !important;
+  flex: 1 1 220px !important;
+  min-width: 200px !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .qg-poker-raise-label {
+  display: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-raise-control input.qg-poker-bet-range {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 5px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  accent-color: #5b5ff5 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-raise-control input[type="number"] {
+  flex: 0 0 84px !important;
+  width: 84px !important;
+  text-align: right !important;
+  font-size: 13px !important;
+}
+
+/* ---- Action bar: selected size chip (design L200-202) ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-quick-bets button.active {
+  border-color: #5b5ff5 !important;
+  background: rgba(91, 95, 245, 0.2) !important;
+  color: #c3c5ff !important;
+}
+
+/* ---- Action bar: good / ok / bad feedback states (design L209-211) ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback.good {
+  padding: 11px 13px !important;
+  border: 1px solid #1f6d4f !important;
+  border-radius: 13px !important;
+  background: rgba(22, 160, 106, 0.14) !important;
+  color: #7fe0b0 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback.ok {
+  padding: 11px 13px !important;
+  border: 1px solid #5a4416 !important;
+  border-radius: 13px !important;
+  background: rgba(255, 159, 46, 0.12) !important;
+  color: #ffd479 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback.bad {
+  padding: 11px 13px !important;
+  border: 1px solid #5a2230 !important;
+  border-radius: 13px !important;
+  background: rgba(208, 82, 75, 0.14) !important;
+  color: #e08a95 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+/* ---- Felt: pot pill sits BELOW the board, reads 「底池 <amt>」 (design L55-63) ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-pot {
+  top: calc(34% + 76px) !important;
+  bottom: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-pot::before {
+  content: "底池" !important;
+  margin-right: 0 !important;
+  color: #c9cbe0 !important;
+  font-family: var(--qg-font-ui) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+/* Stage meta chip moves up where the old pot pill sat, clear of the board */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-table-meta {
+  top: 13% !important;
+}
+
+/* ---- Felt: seat action buttons drop the legacy white chip ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat > button,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-empty-seat-actions button {
+  border: 1px solid #2a2e42 !important;
+  border-radius: 9px !important;
+  background: #1d2030 !important;
+  color: #c3c5ff !important;
+  font-size: 10.5px !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.human > button {
+  border-color: transparent !important;
+  background: rgba(255, 255, 255, 0.16) !important;
+  color: #fff !important;
+}
+
+/* ---- Mobile: felt keeps design proportions (≤640px felt margins 14px) ---- */
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .qg-poker-table-world {
+    padding: 44px 12px 14px !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-board .poker-card,
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-hole-cards .poker-card {
+    width: 34px !important;
+    height: 48px !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat {
+    max-width: 112px !important;
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(2) {
+    left: 16% !important;
+    top: -30px !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(4) {
+    left: 84% !important;
+    top: -30px !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(7) {
+    left: 8% !important;
+    top: 2px !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(8) {
+    right: 8% !important;
+    top: 2px !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-pot {
+    top: calc(34% + 62px) !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .qg-poker-betrow {
+    align-items: stretch !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .qg-poker-betrow .poker-quick-bets {
+    flex-wrap: wrap !important;
+  }
+}
+
+/* ---- Mobile/tablet: legacy hides empty SIT seats (<=780px); the design
+   keeps the seat ring visible, and the compact plaques above now fit ---- */
+@media (max-width: 780px) {
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.empty {
+    display: grid !important;
+  }
+}
+
+/* ---- Mobile: tighter 390px seat ring so ten plaques never collide ---- */
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat {
+    width: auto !important;
+    max-width: 96px !important;
+    min-height: 0 !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    padding: 5px 7px !important;
+    font-size: 9.5px !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat .poker-seat-top span,
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat small {
+    display: none !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat .poker-seat-top strong {
+    font-size: 10px !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat > button,
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-empty-seat-actions button {
+    min-height: 22px !important;
+    padding: 2px 6px !important;
+    font-size: 9px !important;
+  }
+
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(3) { left: 50% !important; top: -40px !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(2) { left: 15% !important; top: -26px !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(4) { left: 85% !important; top: -26px !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(7) { left: 2px !important; top: 24% !important; transform: none !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(8) { right: 2px !important; left: auto !important; top: 24% !important; transform: none !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(5) { left: 2px !important; top: 56% !important; transform: none !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(6) { right: 2px !important; left: auto !important; top: 56% !important; transform: none !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(9) { left: 18% !important; bottom: 2px !important; top: auto !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(10) { right: 18% !important; left: auto !important; bottom: 2px !important; top: auto !important; }
+}
+
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat .poker-seat-number {
+    display: none !important;
+  }
+}
+
+/* ---- Desktop seat ring: separate the doubled top/bottom plaques ---- */
+@media (min-width: 641px) {
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(2) { left: 24% !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(4) { left: 76% !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(7) { left: 5% !important; top: 24px !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(8) { right: 5% !important; top: 24px !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(9) { left: 24% !important; }
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat:nth-child(10) { right: 24% !important; }
+}
+
+/* ============================================================
+   PK 对战 — Playful Precision replica pass 2
+   Scope: body.is-authenticated .app-route-root .qg-pk-page
+   Implements the design's lobby / battle / reveal state machine
+   (QuantGym PK.dc.html) on top of the replica-training base.
+   ============================================================ */
+
+@keyframes qg-pk-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@keyframes qg-pk-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Phase blocks are always in the DOM (legacy ids) — honour [hidden]. */
+body.is-authenticated .app-route-root .qg-pk-page [hidden] {
+  display: none !important;
+}
+
+/* ---- Win-rate pill: green number (design #0f9d63) ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-head-stat-rate {
+  color: #0f9d63 !important;
+}
+
+/* ---- Arena card: flush edge-to-edge states, no inner padding ---- */
+body.is-authenticated .app-route-root .qg-pk-page .qg-pk-arena {
+  gap: 0;
+  padding: 0;
+  border-radius: 22px;
+  overflow: hidden;
+  background: var(--qg-surface);
+}
+
+/* Dark design keeps the card a flat surface (kill training.css gradient). */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-pk-page .qg-pk-arena {
+  background: var(--qg-surface);
+}
+
+/* ---- Lobby ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-lobby {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-lobby img {
+  width: 150px;
+  height: auto;
+  filter: drop-shadow(0 18px 28px rgba(74, 67, 214, 0.3));
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-lobby-title {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-lobby-sub {
+  max-width: 340px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.65;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-lobby-note {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--qg-danger);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-lobby .pk-match-btn {
+  margin-top: 6px;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 16px;
+  font-size: 15.5px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-match-btn.is-matching {
+  background: var(--qg-muted-2);
+  box-shadow: none;
+  cursor: default;
+  animation: qg-pk-pulse 1.2s ease infinite;
+}
+
+/* ---- Battle: header row ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  row-gap: 8px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-ava {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-ava-you {
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff);
+  color: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-vs {
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--qg-danger);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-opp {
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-opp-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--qg-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-opp-note {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-timer {
+  margin-left: auto;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-timer.is-low {
+  color: var(--qg-danger);
+}
+
+/* ---- Battle: countdown track ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-timer-track {
+  height: 5px;
+  background: var(--qg-track);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-timer-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #ff9f2e, #d0524b);
+  transition: width 1s linear;
+}
+
+/* ---- Battle: body (meta + question + free answer) ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 26px 26px 24px;
+  min-height: 0;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-q-meta {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--qg-muted-2);
+  text-transform: uppercase;
+}
+
+/* Question text is plain typography in the design — strip the legacy box. */
+body.is-authenticated .app-route-root .qg-pk-page .pk-problem.pk-q-text {
+  flex: 0 1 auto;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--qg-text);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  white-space: pre-wrap;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle .pk-form {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle #pkAnswer {
+  min-height: 96px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-form-hint {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+/* ---- Reveal ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 36px 24px;
+  text-align: center;
+  animation: qg-pk-rise 0.3s ease both;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal > img {
+  width: 130px;
+  height: auto;
+  filter: drop-shadow(0 16px 26px rgba(74, 67, 214, 0.3));
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-kicker {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-kicker.is-win {
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-kicker.is-loss {
+  color: var(--qg-danger);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-sub {
+  max-width: 380px;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-pills {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-delta {
+  padding: 7px 14px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-score {
+  padding: 7px 14px;
+  border-radius: 20px;
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-score-num {
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-again-btn {
+  padding: 13px 22px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #fff;
+  font-family: var(--qg-font-ui);
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #3f39c9;
+  transition: transform 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-again-btn:active {
+  transform: translateY(3px);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-ghost-btn {
+  padding: 13px 20px;
+  border: 1.5px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-ui);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Neutralise the old 46x46 icon-square styling on the reveal button. */
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-btn {
+  width: auto;
+  height: auto;
+  padding: 13px 20px;
+  border-radius: 14px;
+}
+
+/* Reference-answer feed inside the reveal panel (id #pkFeed preserved). */
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-feed {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  max-width: 560px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface-2);
+  box-shadow: none;
+  text-align: left;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-feed .pk-feed-item {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--qg-text-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal-feed .pk-feed-item:first-child {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--qg-muted-2);
+}
+
+/* ---- Sidebar: 近期战绩 rows (badge + name/meta + delta) ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  transition: background 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-row:hover {
+  background: var(--qg-surface-3);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-badge {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-badge.is-win {
+  background: #e3f7ee;
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-badge.is-loss {
+  background: #fdeceb;
+  color: #d0524b;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-pk-page .pk-hist-badge.is-win {
+  background: rgba(15, 157, 99, 0.18);
+  color: #4ecf9a;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-pk-page .pk-hist-badge.is-loss {
+  background: rgba(208, 82, 75, 0.18);
+  color: #f0857e;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-main {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-opp {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--qg-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-meta {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-delta {
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-delta.is-win {
+  color: #0f9d63;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-delta.is-loss {
+  color: #d0524b;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-pk-page .pk-hist-delta.is-win {
+  color: #4ecf9a;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-pk-page .pk-hist-delta.is-loss {
+  color: #f0857e;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-hist-empty {
+  margin: 0;
+  padding: 6px 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+/* ---- Grid: design uses a fixed 320px rail ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-grid {
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  body.is-authenticated .app-route-root .qg-pk-page .pk-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-pk-page .pk-battle-body {
+    padding: 20px 18px 18px;
+  }
+
+  body.is-authenticated .app-route-root .qg-pk-page .pk-problem.pk-q-text {
+    font-size: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-pk-page .pk-match-btn.is-matching,
+  body.is-authenticated .app-route-root .qg-pk-page .pk-reveal {
+    animation: none !important;
+  }
+}
+
+/* ============================================================
+   Motion pass — 速算/报价 (mm-/mg-), Poker (pkGlow), PK (pkShake/pkGlow)
+   Keyframe values copied from the design sources:
+   QuantGym 速算.dc.html (mmFloat/mmPop/mmSpin), QuantGym 报价.dc.html
+   (mgRise), QuantGym Poker.dc.html (pkGlow), QuantGym PK.dc.html (pkShake).
+   Perf: transform/opacity only, except the design's own pkGlow ring
+   (box-shadow on a tiny dedicated pill/pseudo, exactly as the design).
+   Everything here is also killed globally under prefers-reduced-motion
+   by playful-precision-training.css; the block at the end re-asserts it.
+   ============================================================ */
+
+/* design: @keyframes mmFloat{0%,100%{translateY(0)}50%{translateY(-10px)}} */
+@keyframes qg-mm-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* design: @keyframes mmPop{0%{scale(.7);opacity:0}70%{scale(1.06)}100%{scale(1);opacity:1}} */
+@keyframes qg-mm-pop {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* design: @keyframes mmSpin{to{rotate(360deg)}} — one full turn; the
+   countdown ring's resting anchor is -90deg, so spin -90 → 270. */
+@keyframes qg-mm-spin {
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(270deg);
+  }
+}
+
+/* design: @keyframes mgRise{from{opacity:0;translateY(10px)}to{opacity:1;translateY(0)}} */
+@keyframes qg-mg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* design: @keyframes pkShake{0%,100%{translateX(0)}25%{translateX(-4px)}75%{translateX(4px)}} */
+@keyframes qg-pk-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* design: @keyframes pkGlow{0%,100%{box-shadow:0 0 0 0 rgba(91,95,245,.5)}50%{box-shadow:0 0 0 8px rgba(91,95,245,0)}} */
+@keyframes qg-pk-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(91, 95, 245, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(91, 95, 245, 0);
+  }
+}
+
+/* ---- 速算: hero + trophy mascots use the exact design float (-10px) ---- */
+body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-card::after {
+  animation: qg-mm-float 5s ease-in-out infinite;
+}
+
+body.is-authenticated .app-route-root .qg-tools-page .mental-done-card img {
+  animation: qg-mm-float 4.5s ease-in-out infinite;
+}
+
+/* ---- 速算: answer feedback pop — plays when the model marks the correct
+   option after a real answer/skip event (class flips on the live button) ---- */
+body.is-authenticated .app-route-root .qg-tools-page .drill-option.correct {
+  animation: qg-mm-pop 0.3s ease;
+}
+
+/* Streak counter pops on every real answer (span is re-keyed per streak). */
+body.is-authenticated .app-route-root .qg-tools-page .mental-streak-pill span {
+  animation: qg-mm-pop 0.3s ease;
+}
+
+/* ---- 速算: countdown ring slowly spins only while a session runs ---- */
+body.is-authenticated .app-route-root .qg-tools-page .mental-oa-ring.is-running svg {
+  animation: qg-mm-spin 10s linear infinite;
+}
+
+/* ---- 报价: section entrance — mounted once with the route, so this
+   plays exactly once and never replays on data refresh ---- */
+body.is-authenticated .app-route-root .qg-tools-page .mental-games-panel.qg-market-section {
+  animation: qg-mg-rise 0.3s ease both;
+}
+
+/* ---- Poker: action feedback rises in when a real table event lands ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback.good,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback.ok,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback.bad {
+  animation: qg-pk-rise 0.3s ease both;
+}
+
+/* ---- Poker: raise CTA glows while the hero can actually act (design
+   pkGlow). The glow lives on a pseudo so the 3D box-shadow (legacy
+   !important) keeps rendering underneath. ---- */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button[data-poker-action="raise"] {
+  position: relative !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button[data-poker-action="raise"]:not(:disabled)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  pointer-events: none;
+  animation: qg-pk-glow 1.4s ease-in-out infinite;
+}
+
+/* ---- PK: VS badge glow while a battle is live ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-battle-vs {
+  padding: 2px 7px;
+  border-radius: 20px;
+  animation: qg-pk-glow 1.4s ease-in-out infinite;
+}
+
+/* ---- PK: defeat shake / victory glow, driven by the real match result
+   (.is-win/.is-loss are set from the settled battle outcome) ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal.is-loss > img {
+  animation: qg-pk-shake 0.4s ease 0.25s 2;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-reveal.is-win .pk-reveal-delta {
+  animation: qg-pk-glow 1.4s ease-in-out infinite;
+}
+
+/* ---- Reduced motion: every animation added in this pass goes silent ---- */
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-card::after,
+  body.is-authenticated .app-route-root .qg-tools-page .mental-done-card img,
+  body.is-authenticated .app-route-root .qg-tools-page .drill-option.correct,
+  body.is-authenticated .app-route-root .qg-tools-page .mental-streak-pill span,
+  body.is-authenticated .app-route-root .qg-tools-page .mental-oa-ring.is-running svg,
+  body.is-authenticated .app-route-root .qg-tools-page .mental-games-panel.qg-market-section,
+  body.is-authenticated .app-route-root .qg-tools-page .mg-grid .game-feedback.mg-fb-ok,
+  body.is-authenticated .app-route-root .qg-tools-page .mg-grid .game-feedback.mg-fb-bad,
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback.good,
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback.ok,
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .game-feedback.bad,
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-actionwrap .poker-action-grid button[data-poker-action="raise"]:not(:disabled)::after,
+  body.is-authenticated .app-route-root .qg-pk-page .pk-battle-vs,
+  body.is-authenticated .app-route-root .qg-pk-page .pk-reveal.is-loss > img,
+  body.is-authenticated .app-route-root .qg-pk-page .pk-reveal.is-win .pk-reveal-delta {
+    animation: none !important;
+  }
+}
+
+/* pk-options */
+/* ---- PK 数值题四选项网格（用户决策 #6）。精确值抄自设计稿
+   QuantGym PK.dc.html 的 opts 区块：容器 grid
+   repeat(auto-fit,minmax(min(100%,220px),1fr)) gap 11px margin-top auto；
+   按钮 padding 15px 16px、radius 14、14.5px/700、border 1.5px var(--border)、
+   bg var(--surface-2)、transition all .13s ease、按下 translateY(2px)；
+   选中态 = 品牌渐变 + 0 4px 0 #3f39c9。对/错反馈沿用既有动效
+   （qg-mm-pop / qg-pk-shake），且都在 prefers-reduced-motion 下关闭。 ---- */
+body.is-authenticated .app-route-root .qg-pk-page .pk-options-wrap {
+  display: grid;
+  gap: 12px;
+  margin-top: auto;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-option {
+  padding: 15px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--qg-border);
+  background: var(--qg-surface-2);
+  color: var(--qg-text);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.13s ease;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-option:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
+/* 点选后其余选项静默淡出，反馈按钮保持满饱和。 */
+body.is-authenticated .app-route-root .qg-pk-page .pk-option:disabled {
+  cursor: default;
+}
+
+body.is-authenticated
+  .app-route-root
+  .qg-pk-page
+  .pk-option:disabled:not(.is-correct):not(.is-wrong):not(.is-answer) {
+  opacity: 0.55;
+}
+
+/* 答对：设计稿选中态（品牌渐变 + 3D 底），沿用速算 qg-mm-pop 动效。 */
+body.is-authenticated .app-route-root .qg-pk-page .pk-option.is-correct {
+  border-color: transparent;
+  background: linear-gradient(180deg, #6d70f8, var(--qg-brand));
+  color: #fff;
+  box-shadow: 0 4px 0 #3f39c9;
+  animation: qg-mm-pop 0.3s ease;
+}
+
+/* 答错：设计稿红渐变（匹配按钮同族色）+ 既有 qg-pk-shake。 */
+body.is-authenticated .app-route-root .qg-pk-page .pk-option.is-wrong {
+  border-color: transparent;
+  background: linear-gradient(180deg, #e0655e, #d0524b);
+  color: #fff;
+  box-shadow: 0 4px 0 #a03d38;
+  animation: qg-pk-shake 0.4s ease;
+}
+
+/* 答错时把真实答案点亮（配色与近期战绩胜场徽章同族）。 */
+body.is-authenticated .app-route-root .qg-pk-page .pk-option.is-answer {
+  border-color: rgba(15, 157, 99, 0.45);
+  background: #e3f7ee;
+  color: #0f9d63;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-pk-page .pk-option.is-answer {
+  border-color: rgba(78, 207, 154, 0.45);
+  background: rgba(15, 157, 99, 0.18);
+  color: #4ecf9a;
+}
+
+body.is-authenticated .app-route-root .qg-pk-page .pk-options-hint {
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-pk-page .pk-option,
+  body.is-authenticated .app-route-root .qg-pk-page .pk-option.is-correct,
+  body.is-authenticated .app-route-root .qg-pk-page .pk-option.is-wrong {
+    transition: none;
+    animation: none !important;
+  }
+}
+/* /pk-options */
+
+/* ============================================================
+   SHOP COSMETIC — 鲨鱼牌手皮肤 (poker-skin).
+   The `.qg-poker-skin` class + mascot img only exist in the DOM
+   when the signed-in user owns the item (isItemOwned gate in
+   PokerSeatGrid). The mascot is absolutely positioned so the
+   seat plaque's grid layout is untouched.
+   ============================================================ */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.qg-poker-skin {
+  overflow: visible !important;
+}
+
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.qg-poker-skin .qg-poker-skin-ava {
+  position: absolute;
+  left: -36px;
+  bottom: -6px;
+  z-index: 2;
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5));
+  pointer-events: none;
+  animation: qg-poker-skin-in 420ms cubic-bezier(0.34, 1.4, 0.5, 1) both;
+}
+
+/* Folded / eliminated hero: the mascot dims with the plaque */
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.qg-poker-skin.folded .qg-poker-skin-ava,
+body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.qg-poker-skin.eliminated .qg-poker-skin-ava {
+  opacity: 0.45;
+}
+
+@keyframes qg-poker-skin-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) rotate(-14deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(-8deg);
+  }
+}
+
+@media (max-width: 860px) {
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.qg-poker-skin .qg-poker-skin-ava {
+    left: -26px;
+    bottom: -4px;
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-poker-page .qg-poker-felt-card .poker-seat.qg-poker-skin .qg-poker-skin-ava {
+    animation: none !important;
+  }
+}
+/* /poker-skin cosmetic */

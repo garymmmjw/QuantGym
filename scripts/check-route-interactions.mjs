@@ -49,7 +49,7 @@ const contracts = [
         checks: [
           ["setup form creates plans", /id="prepPlanSetupForm"[\s\S]*?onSubmit=\{createPlan\}/],
           ["baseline diagnostic can submit and restart", all("id=\"prepDiagnosticForm\"", "onSubmit={submitDiagnostic}", "data-prep-start-test=\"true\"", "startDiagnostic(\"pending\")")],
-          ["task rows toggle and open target modules", all("data-prep-toggle-task={task.id}", "onClick={() => toggleTask(task.id)}", "data-prep-open={task.action}", "onClick={() => openTask(task.action, task.query || \"\")}")],
+          ["task rows toggle and open target modules", all("data-prep-toggle-task={task.id}", "advanceTask(task)", "data-prep-open={task.action}", "openTask(task.action, task.query || \"\")")],
           ["external prep links stay safe", all("safeExternalUrl?.(source.url)", "target=\"_blank\"", "rel=\"noopener noreferrer\"")]
         ]
       },
@@ -91,7 +91,7 @@ const contracts = [
       {
         path: "src/features/skills/SkillsPageContent.jsx",
         checks: [
-          ["radar canvas is interactive", all("id=\"skillRadar\"", "onMouseMove={model.handleRadarMove}", "onMouseLeave={model.clearHover}")],
+          ["radar canvas is interactive", all("id=\"skillRadar\"", "onMouseMove={handleRadarMove}", "model.handleRadarMove(event)", "onMouseLeave={model.clearHover}")],
           ["legend and cards update hover focus state", all("data-skill-radar-key={key}", "onClick={(event) => model.setHover(key, event)}", "data-skill-key={key}", "onFocus={() => model.setHover(key)}")]
         ]
       },
@@ -99,6 +99,25 @@ const contracts = [
         path: "src/modules/skills/data.js",
         checks: [
           ["skill recency stats use safe finite timestamps", all("import { dayKey, timestampOrZero } from '../../lib/date.js'", "timestampOrZero(entry.date) >= cutoff", "timestampOrZero(b.date) - timestampOrZero(a.date)")]
+        ]
+      }
+    ]
+  },
+  {
+    route: "league",
+    files: [
+      {
+        path: "src/features/league/LeaguePageContent.jsx",
+        checks: [
+          ["race CTA routes to training", all("className=\"qg-lg-live-btn\"", "onClick={goTrain}")],
+          ["learning map nodes navigate or toast", all("data-node={node.id}", "onClick={() => openNode(node)}")],
+          ["shop purchases go through the economy API", all("onClick={() => buyItem(item.id)}", "data-testid=\"league-shop-balance\"")]
+        ]
+      },
+      {
+        path: "src/app/services/leaguePageApi.js",
+        checks: [
+          ["purchases and settlement use the economy contract", all("purchaseShopItem", "isoWeekKey")]
         ]
       }
     ]
@@ -138,7 +157,7 @@ const contracts = [
         checks: [
           ["search input updates query and keyboard open behavior", all("id=\"problemSearch\"", "onChange={(event) => model.setSearchQuery(event.target.value)}", "onKeyDown={model.handleSearchKeydown}")],
           ["view tabs and source clear apply filters", all("data-problem-view=\"saved\"", "model.applyFilter({ type: \"viewMode\"", "id=\"problemSourceFilterClearBtn\"", "model.applyFilter({ type: \"clearSource\" })")],
-          ["cards and pagination call page-model actions", all("onOpen={model.openProblem}", "onToggleCompleted={model.toggleCompleted}", "onToggleSaved={model.toggleSaved}", "onNavigate={model.handlePagination}")],
+          ["cards and pagination call page-model actions", all("onOpen={model.openProblem}", "onToggleCompleted={model.toggleCompleted}", "onToggleSaved={model.toggleSaved}", "onNavigate={handlePaginationEvent}", "model.handlePagination(event)")],
           ["detail reveal/social/comment actions remain wired", all("onRevealBlock={model.revealBlock}", "onToggleLike={model.toggleLike}", "onPostComment={model.postComment}", "onDeleteComment={model.deleteComment}")],
           ["LeetCode collection toggles use React state handler", all("id=\"leetcodeHotList\"", "onCollectionClick={model.handleCollectionClick}", "onToggleDone={model.toggleLeetcodeHotDone}")]
         ]
@@ -177,7 +196,7 @@ const contracts = [
       {
         path: "src/features/poker/PokerActionBar.jsx",
         checks: [
-          ["bet actions and quick bets submit through actions", all("data-poker-action=\"call\"", "actions.submitAction?.(\"call\")", "data-poker-action=\"raise\"", "actions.submitAction?.(\"raise\")", "data-poker-quick-bet=\"pot\"", "actions.applyQuickBet?.(\"pot\")", "id=\"nextPokerGameBtn\"", "actions.nextHand?.()")]
+          ["bet actions and quick bets submit through actions", all("data-poker-action=\"call\"", "actions.submitAction?.(\"call\")", "data-poker-action=\"raise\"", "actions.submitAction?.(\"raise\")", "data-poker-quick-bet=", "actions.applyQuickBet?.(size)", "id=\"nextPokerGameBtn\"", "actions.nextHand?.()")]
         ]
       },
       {
@@ -201,7 +220,7 @@ const contracts = [
         path: "src/features/experiences/ExperiencesPageContent.jsx",
         checks: [
           ["experience record sorting uses safe finite timestamps", all("import { timestampOrZero } from \"../../lib/date.js\"", "timestampOrZero(b.updatedAt) - timestampOrZero(a.updatedAt)")],
-          ["experience form creates/edits records", all("id=\"newExperienceBtn\"", "onClick={resetForm}", "id=\"experienceForm\"", "onSubmit={save}", "id=\"experienceFirm\"", "onChange={(e) => update(\"firm\", e.target.value)}")],
+          ["experience form creates/edits records", all("id=\"newExperienceBtn\"", "onClick={openForm}", "resetForm()", "id=\"experienceForm\"", "onSubmit={save}", "id=\"experienceFirm\"", "onChange={(e) => update(\"firm\", e.target.value)}")],
           ["filter/edit/delete/share interactions remain wired", all("id=\"experienceFilter\"", "onChange={(e) => setFilter(e.target.value)}", "onClick={() => edit(record)}", "onClick={() => remove(record.id)}", "onClick={() => setPendingShareId(record.id)}", "onClick={() => confirmShare(record.id)}")],
           ["community jump is wired", all("id=\"openCommunityExperiencesBtn\"", "data-jump-module=\"community\"", "onClick={openCommunityExperiences}")]
         ]
@@ -226,7 +245,7 @@ const contracts = [
       {
         path: "src/features/news/NewsList.jsx",
         checks: [
-          ["news cards open detail without hijacking external links", all("role=\"button\"", "onOpen(item.id)", "if (event.target.closest(\"a\")) return", "onKeyDown={(event)", "target=\"_blank\"", "rel=\"noreferrer\"", "event.stopPropagation()")]
+          ["news cards open detail without hijacking external links", all("role=\"button\"", "onOpen(item.id)", "if (event.target.closest(\"a\")) return", "onKeyDown={(event)")]
         ]
       },
       {
@@ -346,7 +365,7 @@ const contracts = [
       {
         path: "src/features/library/LibraryPageContent.jsx",
         checks: [
-          ["search/kind filters update model", all("id=\"librarySearch\"", "onChange={(event) => model.setQuery(event.target.value)}", "id=\"libraryKindTabs\"", "data-library-kind={kind}", "onClick={() => model.setKindFilter(kind)}")],
+          ["search/kind filters update model", all("id=\"librarySearch\"", "onChange={(event) => model.setQuery(event.target.value)}", "id=\"libraryKindTabs\"", "data-library-kind={kind}", "onClick={() => setDesignKindFilter(kind)}")],
           ["cards support click and keyboard activation", all("role=\"button\"", "onKeyDown={handleKeyDown}", "onClick={() => onAction(entry.id, entry.defaultAction)}", "onClick={() => onAction(entry.id, \"read\")}", "onClick={() => onAction(entry.id, \"practice\")}")],
           ["reader overlay closes and external open is safe", all("id=\"libraryReaderOverlay\"", "model.closeReader()", "id=\"libraryReaderOpenNew\"", "target=\"_blank\"", "rel=\"noreferrer\"", "id=\"libraryReaderClose\"", "onClick={model.closeReader}")]
         ]

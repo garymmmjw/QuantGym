@@ -1,4 +1,5 @@
 import { dayKey, shiftDate } from '../lib/date.js';
+import { showStreakCheckInToast } from './qgFeedback.js';
 
 export function createStreakUiState(initialState = {}) {
   let open = Boolean(initialState.open);
@@ -80,8 +81,10 @@ export function renderStreakCalendar(elements = {}, options = {}) {
     streak = 0,
     checked = false,
     locale = "zh-CN",
-    text = (key) => key
+    text = (key) => key,
+    frozenDays = []
   } = options;
+  const frozenSet = new Set(Array.isArray(frozenDays) ? frozenDays : []);
   if (!elements.streakCalendarGrid || !elements.streakCalendarWeekdays) return;
   const daySet = getActivityDaySet(entries, checkIns);
   const days = buildStreakCalendarDays();
@@ -95,22 +98,24 @@ export function renderStreakCalendar(elements = {}, options = {}) {
 
   elements.streakCalendarGrid.innerHTML = "";
   days.forEach(({ date, key }) => {
-    const lit = daySet.has(key);
-    const beforeLit = daySet.has(dayKey(shiftDate(date, -1)));
-    const afterLit = daySet.has(dayKey(shiftDate(date, 1)));
+    const frozen = frozenSet.has(key);
+    const lit = daySet.has(key) || frozen;
+    const beforeLit = daySet.has(dayKey(shiftDate(date, -1))) || frozenSet.has(dayKey(shiftDate(date, -1)));
+    const afterLit = daySet.has(dayKey(shiftDate(date, 1))) || frozenSet.has(dayKey(shiftDate(date, 1)));
     const cell = document.createElement("span");
     cell.className = [
       "streak-day",
       lit ? "is-lit" : "",
+      frozen ? "is-frozen" : "",
       lit && beforeLit ? "connect-left" : "",
       lit && afterLit ? "connect-right" : "",
       key === dayKey(new Date()) ? "is-today" : "",
       key === freshKey ? "is-fresh" : ""
     ].filter(Boolean).join(" ");
-    cell.title = key;
+    cell.title = frozen ? `${key} · 冻结卡抵挡日` : key;
     cell.innerHTML = `
       <span class="streak-day-number">${date.getDate()}</span>
-      <span class="streak-day-fire" aria-hidden="true"></span>
+      <span class="streak-day-fire" aria-hidden="true">${frozen ? "❄" : ""}</span>
     `;
     elements.streakCalendarGrid.appendChild(cell);
   });
@@ -140,34 +145,16 @@ export function buildStreakCalendarDays(today = new Date()) {
 
 export function showCheckInToast(streak, options = {}) {
   const {
-    text = (key) => key,
-    escapeHtml = (value) => String(value),
     getTimer = () => null,
-    setTimer = () => {}
+    setTimer = () => {},
+    locale
   } = options;
-  let toast = document.querySelector(".checkin-toast");
-  if (!toast) {
-    toast = document.createElement("div");
-    toast.className = "checkin-toast";
-    toast.setAttribute("role", "status");
-    toast.setAttribute("aria-live", "polite");
-    document.body.appendChild(toast);
-  }
-  toast.innerHTML = `
-    <span class="stat-art stat-art-fire" aria-hidden="true"></span>
-    <span>
-      <strong>${escapeHtml(text("checkInToastTitle"))}</strong>
-      <small>${escapeHtml(text("checkInToastDetail", { count: streak }))}</small>
-    </span>
-  `;
-  toast.classList.remove("show");
-  toast.offsetWidth;
-  toast.classList.add("show");
+  // Visual upgrade: delegate to the Playful Precision feedback layer
+  // (design-styled toast with mascot-fire-v2 and the real streak count).
   const timer = getTimer();
   if (timer) window.clearTimeout(timer);
-  setTimer(window.setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3400));
+  setTimer(null);
+  showStreakCheckInToast(streak, { locale });
 }
 
 export function animateStreakCount(elements = {}, previous = 0, next = 0) {

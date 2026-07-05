@@ -12,11 +12,12 @@ import {
   getMentalMathXpGain
 } from "../../modules/tools/session.js";
 import { normalizeMentalMathRecords } from "../../modules/tools/data.js";
+import { awardCoinsForXp } from "../../modules/economy/index.js";
 
-const DRILL_MODES = ["numberLogic", "arithmetic", "percent", "square", "ev"];
+const DRILL_MODES = ["add", "sub", "mul", "div", "mixed"];
 
 export function createToolsPageApi(deps = {}) {
-  let drillMode = "numberLogic";
+  let drillMode = "add";
   let drillSession = null;
   let currentDrill = null;
   let currentMarketGame = makeMarketGameRound({ makeId: deps.makeId });
@@ -25,13 +26,18 @@ export function createToolsPageApi(deps = {}) {
 
   function getDrillModeLabel(mode = drillMode) {
     const labels = {
+      add: "加法",
+      sub: "减法",
+      mul: "乘法",
+      div: "除法",
+      mixed: "混合",
       numberLogic: "Number Logic",
       arithmetic: "Arithmetic",
       percent: deps.t?.("mentalPercent") || "百分比",
       square: deps.t?.("mentalSquare") || "平方",
       ev: "EV"
     };
-    return labels[mode] || labels.numberLogic;
+    return labels[mode] || labels.add;
   }
 
   function ensureDrillSession() {
@@ -165,6 +171,7 @@ export function createToolsPageApi(deps = {}) {
         xpGain,
         usedSeconds
       }));
+      awardCoinsForXp(state, xpGain, { source: "mental-math" });
       deps.saveState?.();
       deps.renderSummary?.();
       deps.renderSkills?.();

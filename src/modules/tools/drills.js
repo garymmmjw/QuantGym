@@ -2,6 +2,28 @@ import { formatNumber } from "../../lib/number.js";
 import { randomChoice, randomInt } from "../../lib/random.js";
 
 export function makeDrill(mode) {
+  if (mode === "mixed") return makeDrill(randomChoice(["add", "sub", "mul", "div"]));
+  if (mode === "add") {
+    const a = randomInt(12, 89);
+    const b = randomInt(12, 89);
+    return makeChoiceDrill(`${a} + ${b} = ?`, a + b, `${a} + ${b} = ${a + b}`, { spread: 9, integer: true });
+  }
+  if (mode === "sub") {
+    const a = randomInt(30, 99);
+    const b = randomInt(10, a);
+    return makeChoiceDrill(`${a} − ${b} = ?`, a - b, `${a} − ${b} = ${a - b}`, { spread: 8, integer: true });
+  }
+  if (mode === "mul") {
+    const a = randomInt(6, 19);
+    const b = randomInt(3, 14);
+    return makeChoiceDrill(`${a} × ${b} = ?`, a * b, `${a} × ${b} = ${a * b}`, { spread: 14, integer: true });
+  }
+  if (mode === "div") {
+    const divisor = randomInt(3, 12);
+    const answer = randomInt(3, 12);
+    const dividend = divisor * answer;
+    return makeChoiceDrill(`${dividend} ÷ ${divisor} = ?`, answer, `${divisor} × ${answer} = ${dividend}`, { spread: 4, integer: true });
+  }
   if (mode === "numberLogic") return makeNumberLogicDrill();
   if (mode === "arithmetic") return makeArithmeticDrill();
   if (mode === "square") {

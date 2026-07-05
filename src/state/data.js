@@ -1,4 +1,5 @@
 import { timestampOrZero } from '../lib/date.js';
+import { mergeEconomy, normalizeBonusXp, normalizeEconomy } from '../modules/economy/index.js';
 
 export function normalizeState(rawState = {}, deps = {}) {
   const {
@@ -53,6 +54,8 @@ export function normalizeState(rawState = {}, deps = {}) {
     courses: normalizeCourses(rawState?.courses),
     streakCount: Math.max(0, Number(rawState?.streakCount || 0)),
     checkIns: Array.isArray(rawState?.checkIns) ? rawState.checkIns.filter((item) => item?.date) : [],
+    economy: normalizeEconomy(rawState),
+    bonusXp: normalizeBonusXp(rawState?.bonusXp),
     leaderboard: normalizeLeaderboardSettings(rawState?.leaderboard),
     problems: mergeProblems(
       base.problems || [],
@@ -129,6 +132,8 @@ export function mergeCloudState(remoteState = {}, localState = {}, deps = {}) {
     courses: mergeCourses(remote.courses, local.courses),
     streakCount: Math.max(Number(remote.streakCount || 0), Number(local.streakCount || 0)),
     checkIns: mergeRecords(remote.checkIns, local.checkIns),
+    economy: mergeEconomy(remote.economy, local.economy, { remoteUpdatedAt: remote.updatedAt, localUpdatedAt: local.updatedAt }),
+    bonusXp: Math.max(normalizeBonusXp(remote.bonusXp), normalizeBonusXp(local.bonusXp)),
     problems: mergeProblems(remote.problems, local.problems),
     news: mergeNews(remote.news, local.news),
     leaderboard: local.leaderboard || remote.leaderboard || defaultLeaderboardSettings(),

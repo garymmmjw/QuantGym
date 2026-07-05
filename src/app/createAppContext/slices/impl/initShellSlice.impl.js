@@ -150,8 +150,10 @@ export function initShellSliceImpl(shared, ctx) {
 
 
   const els = {};
-  const showAuthMessage = (message) => {
-    if (els.authMessage) els.authMessage.textContent = message;
+  const showAuthMessage = (message, isError = false) => {
+    if (!els.authMessage) return;
+    els.authMessage.textContent = message;
+    els.authMessage.classList.toggle("is-error", Boolean(isError && message));
   };
   const setButtonLabel = (selector, label) => setButtonLabelView(selector, label);
   const setText = (selector, text) => setTextView(selector, text);
