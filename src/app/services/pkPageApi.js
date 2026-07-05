@@ -3,6 +3,7 @@ import {
   buildPkRevealFeed,
   createPkMatch
 } from "../../modules/pk/session.js";
+import { awardCoinsForXp } from "../../modules/economy/index.js";
 
 const IDLE = {
   opponentName: "Online Quant",
@@ -66,6 +67,7 @@ export function createPkPageApi(deps = {}) {
 
       state.skills[result.category] = Math.max(0, (state.skills[result.category] || 0) + result.xpGain);
       state.entries.push(result.entry);
+      awardCoinsForXp(state, result.xpGain, { source: "pk" });
       deps.saveState?.();
       deps.renderAll?.();
       syncStore();

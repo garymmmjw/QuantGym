@@ -54,7 +54,7 @@ export function createSkillsMetricsProvider(deps) {
       return getWeeklyXpValue(getEntries());
     },
     getStreak() {
-      return getStreakValue(getEntries(), getCheckIns());
+      return getStreakValue(getEntries(), getCheckIns(), new Date(), getState().economy?.frozenDays || []);
     },
     getSkillPracticeStats(skillKey) {
       return getSkillPracticeStatsValue(skillKey, getState(), {

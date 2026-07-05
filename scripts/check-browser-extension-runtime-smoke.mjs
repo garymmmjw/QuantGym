@@ -20,6 +20,9 @@ const calls = {
   storageSets: [],
   tabQueries: [],
   openedTabs: [],
+  tabUpdates: [],
+  captureVisibleTab: [],
+  sentMessages: [],
   scriptExecutions: []
 };
 
@@ -27,7 +30,7 @@ async function runSmoke() {
   const popupHtml = readRequired("browser-extension/popup.html");
   const popupJs = readRequired("browser-extension/popup.js");
   const ids = [...popupHtml.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
-  for (const id of ["sourceHost", "problemTitle", "problemMeta", "problemPrompt", "boardUrl", "collectBtn", "copyBtn", "status"]) {
+  for (const id of ["sourceHost", "problemTitle", "problemMeta", "problemPrompt", "boardUrl", "recordBtn", "copyBtn", "status"]) {
     assert(ids.includes(id), `popup.html is missing #${id}`);
   }
 
@@ -65,17 +68,35 @@ async function runSmoke() {
       }
     },
     tabs: {
+      onUpdated: createTabUpdatedEvent(),
       async query(query) {
         calls.tabQueries.push({ ...query });
         return [{
           id: 77,
+          windowId: 11,
           title: "Two Sum - LeetCode",
           url: pageLocation.href
         }];
       },
-      async create({ url }) {
-        calls.openedTabs.push(url);
-        return { id: 88, url };
+      async captureVisibleTab(windowId, options = {}) {
+        calls.captureVisibleTab.push({ windowId, options: { ...options } });
+        return "data:image/jpeg;base64,ZmFrZS12aWV3cG9ydA==";
+      },
+      async create(options = {}) {
+        const tab = { id: 88 + calls.openedTabs.length, url: options.url, active: options.active !== false };
+        calls.openedTabs.push({ ...options, id: tab.id });
+        setTimeout(() => {
+          chrome.tabs.onUpdated.dispatch(tab.id, { status: "complete" }, tab);
+        }, 0);
+        return tab;
+      },
+      async sendMessage(tabId, message) {
+        calls.sentMessages.push({ tabId, message });
+        return { ok: true };
+      },
+      async update(tabId, options = {}) {
+        calls.tabUpdates.push({ tabId, options: { ...options } });
+        return { id: tabId, ...options };
       }
     },
     scripting: {
@@ -140,12 +161,18 @@ async function runSmoke() {
   checks.copyJsonWroteClipboard = copiedProblem.titleEn === "Two Sum" && copiedProblem.sourceUrl === pageLocation.href;
   checks.capturePayloadHasTags = Array.isArray(copiedProblem.tags) && copiedProblem.tags.includes("Array");
 
-  await els.collectBtn.click();
-  const opened = new URL(calls.openedTabs.at(-1));
-  const decodedCapture = decodePayload(opened.searchParams.get("capture"));
-  checks.collectOpenedQuantGym = opened.origin === "https://beta.quantgym.app";
-  checks.capturePayloadHasTitle = decodedCapture.titleEn === "Two Sum";
-  checks.capturePayloadHasSourceUrl = decodedCapture.sourceUrl === pageLocation.href;
+  await els.recordBtn.click();
+  const opened = new URL(calls.openedTabs.at(-1)?.url || "");
+  const sent = calls.sentMessages.at(-1);
+  checks.viewportCaptureCalled = calls.captureVisibleTab.length === 1;
+  checks.viewportCaptureUsesJpeg = calls.captureVisibleTab[0]?.options?.format === "jpeg";
+  checks.bridgeTabOpened = opened.origin === "https://beta.quantgym.app";
+  checks.bridgeTabOpenedInactiveFirst = calls.openedTabs.at(-1)?.active === false;
+  checks.bridgeTabActivatedAfterMessage = calls.tabUpdates.some((item) => item.tabId === sent?.tabId && item.options.active === true);
+  checks.bridgeMessageSent = sent?.message?.type === "quantgym:viewport-capture";
+  checks.bridgePayloadHasScreenshot = /^data:image\/jpeg;base64,/.test(sent?.message?.payload?.screenshot?.dataUrl || "");
+  checks.bridgePayloadHasTitle = sent?.message?.payload?.pageTitle === "Two Sum - LeetCode";
+  checks.bridgePayloadHasSourceUrl = sent?.message?.payload?.sourceUrl === pageLocation.href;
 
   els.boardUrl.value = "https://beta.quantgym.app/practice?from=extension";
   await els.boardUrl.dispatchEvent({ type: "change" });
@@ -163,7 +190,7 @@ async function runSmoke() {
 	  await els.boardUrl.dispatchEvent({ type: "change" });
 	  checks.loopbackHttpBoardUrlAllowed = storageState.boardUrl === "http://127.0.0.1:5173/local-board" && els.boardUrl.value === "http://127.0.0.1:5173/local-board";
 
-	  pageDocument.setProblem({
+  pageDocument.setProblem({
     title: "Long Option Pricing Question",
     h1: "Long Option Pricing Question",
     prompt: `${"Delta hedging ".repeat(700)}Explain the rebalancing policy.`,
@@ -172,13 +199,11 @@ async function runSmoke() {
   });
   pageLocation.href = "https://example.com/questions/long-option";
   pageLocation.hostname = "example.com";
-  const openedBeforeLongCapture = calls.openedTabs.length;
   await context.captureCurrentTab();
-  await els.collectBtn.click();
+  await els.copyBtn.click();
   const longCopiedProblem = JSON.parse(clipboardText);
-  checks.longCaptureFallsBackToClipboard = calls.openedTabs.length === openedBeforeLongCapture
-    && longCopiedProblem.titleEn === "Long Option Pricing Question";
-  checks.longCaptureStatusUpdated = /JSON/.test(els.status.textContent);
+  checks.longCaptureCopiesJson = longCopiedProblem.titleEn === "Long Option Pricing Question";
+  checks.longCaptureStatusUpdated = /已复制/.test(els.status.textContent);
 
   assertAllChecks("popup actions");
 }
@@ -244,6 +269,21 @@ function createProblemPageDocument(problem) {
     }
   };
   return api;
+}
+
+function createTabUpdatedEvent() {
+  const listeners = new Set();
+  return {
+    addListener(listener) {
+      listeners.add(listener);
+    },
+    removeListener(listener) {
+      listeners.delete(listener);
+    },
+    dispatch(tabId, changeInfo, tab) {
+      for (const listener of listeners) listener(tabId, changeInfo, tab);
+    }
+  };
 }
 
 class FakeElement {
@@ -361,6 +401,9 @@ const summary = {
     storageSets: calls.storageSets.length,
     tabQueries: calls.tabQueries.length,
     openedTabs: calls.openedTabs.length,
+    tabUpdates: calls.tabUpdates.length,
+    captureVisibleTab: calls.captureVisibleTab.length,
+    sentMessages: calls.sentMessages.length,
     scriptExecutions: calls.scriptExecutions.length
   },
   checks,

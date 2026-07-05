@@ -107,10 +107,9 @@ export function createAuthUiRuntime(deps = {}) {
     if (!googleAccounts) {
       if (googleInitRetries < (deps.maxGoogleInitRetries || 12)) {
         googleInitRetries += 1;
-        deps.showAuthMessage?.(text("authGoogleLoading"));
         windowRef.setTimeout?.(initGoogleLogin, deps.googleRetryDelayMs || 500);
       } else {
-        deps.showAuthMessage?.(text("authGoogleLoadFailed"));
+        deps.showAuthMessage?.(text("authGoogleLoadFailed"), true);
       }
       return;
     }
@@ -136,7 +135,6 @@ export function createAuthUiRuntime(deps = {}) {
       text: "continue_with",
       width: buttonWidth
     });
-    deps.showAuthMessage?.(text("authGoogleEnabled"));
   }
 
   function dispose() {

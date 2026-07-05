@@ -1,0 +1,32 @@
+{
+  "id": 365,
+  "date": "2026-06-30",
+  "surface": "deployed Postgres health",
+  "status": "pass",
+  "durationMs": 1837,
+  "healthUrl": "https://api.quantgym.app/api/health",
+  "responseStatus": 200,
+  "database": {
+    "backend": "postgres",
+    "writable": true,
+    "foreignKeys": true,
+    "schemaTables": 12
+  },
+  "checks": {
+    "healthUrlHttpsDns": true,
+    "publicApiHostProduction": true,
+    "healthFetchOk": true,
+    "healthOk": true,
+    "databaseObjectPresent": true,
+    "backendReported": true,
+    "deployedBackendPostgres": true,
+    "deployedBackendSqlite": false,
+    "writableReported": true,
+    "foreignKeysReported": true,
+    "schemaTablesReported": true,
+    "summaryRedacted": true
+  },
+  "failures": [],
+  "warnings": [],
+  "healthOk": true
+}

@@ -7,11 +7,87 @@ import {
 import { getLibraryPracticeNavigation } from "../../modules/library/navigation.js";
 import { probePdfUrl } from "../../modules/library/readerProbe.js";
 
+// User decision #8 — self-reported reading progress. The PDF renders inside a
+// cross-origin iframe, so the app cannot observe the real page number; the
+// reader footer instead lets the user declare "我读到第 N 页 / x%". Records live
+// in localStorage keyed by user id + entry id and never pretend to be
+// automatic tracking.
+const LIBRARY_PROGRESS_KEY_PREFIX = "qgLibraryProgress";
+
 export function createLibraryPageApi(deps = {}) {
   let reader = { open: false };
 
   function isEnglish() {
     return deps.getLanguage?.() === "en";
+  }
+
+  function getProgressStorage() {
+    try {
+      return (deps.windowRef || globalThis.window)?.localStorage || null;
+    } catch {
+      return null;
+    }
+  }
+
+  function getProgressUserId() {
+    return deps.appState?.currentUser?.id || "guest";
+  }
+
+  function progressStorageKey(entryId) {
+    return `${LIBRARY_PROGRESS_KEY_PREFIX}:${getProgressUserId()}:${entryId}`;
+  }
+
+  function clampPercent(value) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return 0;
+    return Math.min(100, Math.max(0, Math.round(num)));
+  }
+
+  function getEntryPageCount(entry) {
+    const count = Number(entry?.pageCount ?? entry?.pages ?? 0);
+    return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+  }
+
+  function readProgressRecord(entryId) {
+    const storage = getProgressStorage();
+    if (!storage || !entryId) return null;
+    try {
+      const raw = storage.getItem(progressStorageKey(entryId));
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+      const page = Math.floor(Number(parsed.page));
+      const updatedAt = Number(parsed.updatedAt);
+      return {
+        percent: clampPercent(parsed.percent),
+        page: Number.isFinite(page) && page > 0 ? page : 0,
+        updatedAt: Number.isFinite(updatedAt) && updatedAt > 0 ? updatedAt : 0
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function writeProgressRecord(entryId, record) {
+    const storage = getProgressStorage();
+    if (!storage || !entryId) return null;
+    try {
+      storage.setItem(progressStorageKey(entryId), JSON.stringify(record));
+      return record;
+    } catch {
+      return null;
+    }
+  }
+
+  // Reader opened => remember "最近阅读" time while keeping whatever position
+  // the user has declared so far.
+  function touchProgressRecord(entryId) {
+    const existing = readProgressRecord(entryId);
+    return writeProgressRecord(entryId, {
+      percent: existing?.percent || 0,
+      page: existing?.page || 0,
+      updatedAt: Date.now()
+    });
   }
 
   function getLabels() {
@@ -102,27 +178,43 @@ export function createLibraryPageApi(deps = {}) {
     const entries = deps.getVisibleLibraryEntries?.() || [];
     const books = entries.filter((entry) => entry.kind === "book");
     const questionSets = entries.filter((entry) => entry.kind === "questionSet");
-    const continueReading = entries.filter((entry) => hasRead(entry)).slice(0, 7);
+    // 继续阅读 = entries this user actually opened/marked (real localStorage
+    // records), most recent first — not just "everything readable".
+    const continueReading = entries
+      .map((entry) => ({ entry, record: readProgressRecord(entry.id) }))
+      .filter(({ entry, record }) => hasRead(entry) && record && record.updatedAt > 0)
+      .sort((a, b) => b.record.updatedAt - a.record.updatedAt)
+      .slice(0, 7)
+      .map(({ entry }) => entry);
     const labels = getLabels();
     const bookCount = allEntries.filter((entry) => entry.kind === "book").length;
     const setCount = allEntries.filter((entry) => entry.kind === "questionSet").length;
 
-    const mapEntry = (entry, compact = false) => ({
-      id: entry.id,
-      kind: entry.kind,
-      compact,
-      title: getTitle(entry),
-      subtitle: getSubtitle(entry),
-      kindLabel: getKindLabel(entry),
-      coverUrl: entry.coverUrl || "assets/generated/brand-q-mark.webp?v=premium-system-2",
-      category: entry.category || "Quant",
-      language: entry.language || "EN + ZH",
-      problemCount: entry.problemCount || 0,
-      readable: hasRead(entry),
-      practicable: hasPractice(entry),
-      defaultAction: hasRead(entry) ? "read" : "practice",
-      cardActionLabel: hasRead(entry) ? labels.read : labels.practice
-    });
+    const mapEntry = (entry, compact = false) => {
+      const record = readProgressRecord(entry.id);
+      return {
+        id: entry.id,
+        kind: entry.kind,
+        compact,
+        title: getTitle(entry),
+        subtitle: getSubtitle(entry),
+        kindLabel: getKindLabel(entry),
+        coverUrl: entry.coverUrl || "assets/generated/brand-q-mark.webp?v=premium-system-2",
+        category: entry.category || "Quant",
+        language: entry.language || "EN + ZH",
+        problemCount: entry.problemCount || 0,
+        readable: hasRead(entry),
+        practicable: hasPractice(entry),
+        defaultAction: hasRead(entry) ? "read" : "practice",
+        cardActionLabel: hasRead(entry) ? labels.read : labels.practice,
+        // Self-reported progress (user decision #8): percent 0-100 declared by
+        // the user in the reader footer; 0 means "no declared position yet".
+        progress: record?.percent || 0,
+        progressPage: record?.page || 0,
+        pageCount: getEntryPageCount(entry),
+        lastReadAt: record?.updatedAt || 0
+      };
+    };
 
     return {
       kindFilter: deps.libraryFilterState?.getKind?.() || "all",
@@ -166,6 +258,8 @@ export function createLibraryPageApi(deps = {}) {
 
       if (entry.readType === "external") {
         window.open(toReaderUrl(entry.readUrl), "_blank", "noopener,noreferrer");
+        // External reads still count as "最近阅读" for the continue rail.
+        touchProgressRecord(entry.id);
         return { ok: true, external: true, view: getViewModel() };
       }
 
@@ -174,6 +268,9 @@ export function createLibraryPageApi(deps = {}) {
       reader = {
         open: true,
         isOpening: true,
+        entryId: entry.id,
+        pageCount: getEntryPageCount(entry),
+        progress: readProgressRecord(entry.id) || { percent: 0, page: 0, updatedAt: 0 },
         title,
         meta,
         coverUrl: entry.coverUrl || "",
@@ -198,6 +295,10 @@ export function createLibraryPageApi(deps = {}) {
           openUrl: url,
           embedUrl: entry.readType === "pdf" ? formatPdfEmbedUrl(url) : url
         };
+        // Successful open => record "最近阅读" timestamp (position stays as the
+        // user last declared it).
+        const touched = touchProgressRecord(entry.id);
+        if (touched) reader = { ...reader, progress: touched };
       } catch (error) {
         reader = { open: false };
         return {
@@ -213,6 +314,35 @@ export function createLibraryPageApi(deps = {}) {
     closeReader() {
       reader = { open: false };
       return getViewModel();
+    },
+
+    // User declares "我读到第 N 页" (books with a page count) or a percent
+    // (everything else). Persists to localStorage under user id + entry id.
+    setReadingProgress(entryId, { percent, page } = {}) {
+      const entry = (deps.getLibraryEntries?.() || []).find((item) => item.id === entryId);
+      if (!entry) return { ok: false, view: getViewModel() };
+      const pageCount = getEntryPageCount(entry);
+      let nextPage = 0;
+      let nextPercent = clampPercent(percent);
+      const parsedPage = Math.floor(Number(page));
+      if (pageCount > 0 && Number.isFinite(parsedPage) && parsedPage > 0) {
+        nextPage = Math.min(pageCount, parsedPage);
+        nextPercent = clampPercent((nextPage / pageCount) * 100);
+      }
+      const record = writeProgressRecord(entryId, {
+        percent: nextPercent,
+        page: nextPage,
+        updatedAt: Date.now()
+      });
+      if (!record) return { ok: false, view: getViewModel() };
+      if (reader.open && reader.entryId === entryId) {
+        reader = { ...reader, progress: record };
+      }
+      return { ok: true, progress: record, view: getViewModel() };
+    },
+
+    getReadingProgress(entryId) {
+      return readProgressRecord(entryId);
     },
 
     openPractice(sourceSlug) {

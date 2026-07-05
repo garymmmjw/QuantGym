@@ -11,7 +11,7 @@ export function InterviewPageContent() {
   const setupMode = setup.mode === "live" ? "live" : "practice";
 
   return (
-    <section className="interview-section">
+    <section className="interview-section qg-training-page qg-interview-page">
       <div className="section-heading">
         <div>
           <h2>模拟面试</h2>
@@ -20,9 +20,9 @@ export function InterviewPageContent() {
       </div>
       <div id="interviewGrid" className={gridClass}>
         <div className="interview-setup-shark" id="interviewSetupShark" aria-hidden="true">
-          <img src="assets/generated/shark-hero-clean.png?v=original-clean-1" alt="" loading="lazy" draggable="false" />
+          <img src="/assets/generated/playful-precision/mascot-interview.png" alt="" loading="lazy" draggable="false" />
         </div>
-        <div id="interviewSetup" className={`interview-setup${isSession ? " hidden" : ""}`}>
+        <div id="interviewSetup" className={`interview-setup qg-interview-setup${isSession ? " hidden" : ""}`}>
           <div className="interview-setup-top">
             <div>
               <strong>开始一场模拟面试</strong>

@@ -1,0 +1,223 @@
+{
+  "sourceZip": "UI 设计提升.zip",
+  "generatedAt": "2026-07-03T15:02:40.290209+00:00",
+  "assetCount": 36,
+  "assets": [
+    {
+      "source": "assets/avatar-focused-v2.png",
+      "dest": "assets/generated/playful-precision/avatar-focused-v2.png",
+      "bytes": 2656274,
+      "sha256": "6ba9f673df0f9668a31f9e3a029e16b3574a4083eeaa10c5d7870cee7edbdb58"
+    },
+    {
+      "source": "assets/avatar-happy-v2.png",
+      "dest": "assets/generated/playful-precision/avatar-happy-v2.png",
+      "bytes": 2407409,
+      "sha256": "d072defce393d37075fb929dc37e2c197aba5e88ea19b3f0f00337b44901e273"
+    },
+    {
+      "source": "assets/avatar-wink-v2.png",
+      "dest": "assets/generated/playful-precision/avatar-wink-v2.png",
+      "bytes": 1083669,
+      "sha256": "ae66c96279b8ee4958907a69ff6e3786a2d915a81a6c00891402135bb89b262b"
+    },
+    {
+      "source": "assets/avatar-wow-v2.png",
+      "dest": "assets/generated/playful-precision/avatar-wow-v2.png",
+      "bytes": 2468397,
+      "sha256": "c09d7df365c8c35120972633e71256130f0e4ff35d4e0725c6d5536cd0f54f4d"
+    },
+    {
+      "source": "assets/badge-gold.webp",
+      "dest": "assets/generated/playful-precision/badge-gold.webp",
+      "bytes": 11308,
+      "sha256": "3a20c91c64f1288ba3b77ebca03337203413f88225b918854fd4c1bbc1e15fde"
+    },
+    {
+      "source": "assets/badge-level-1.webp",
+      "dest": "assets/generated/playful-precision/badge-level-1.webp",
+      "bytes": 17806,
+      "sha256": "ecf764fef8bc34e0baac03d8f5966d3e73e9bb6191fee7ba1f87a7ae1d55f990"
+    },
+    {
+      "source": "assets/badge-streak-7.webp",
+      "dest": "assets/generated/playful-precision/badge-streak-7.webp",
+      "bytes": 12182,
+      "sha256": "7adb9f7db4edc21e0c121ac470ff0f873450a0de42e2a765db4dd43f2a08efa4"
+    },
+    {
+      "source": "assets/badge-top-rank.webp",
+      "dest": "assets/generated/playful-precision/badge-top-rank.webp",
+      "bytes": 14044,
+      "sha256": "9b67b3d8b9c016e3626cef0efa6a54716e71ed5920cec19df62e01bc8f168835"
+    },
+    {
+      "source": "assets/brand-q-mark.webp",
+      "dest": "assets/generated/playful-precision/brand-q-mark.webp",
+      "bytes": 43564,
+      "sha256": "7cde420e5ef040d6b66ceb4e41f5b0f70edae4f0d646cbdc05f51fc3307144c9"
+    },
+    {
+      "source": "assets/brand-quantgym-logo.webp",
+      "dest": "assets/generated/playful-precision/brand-quantgym-logo.webp",
+      "bytes": 27982,
+      "sha256": "99fd6c35ea8d4a00d4d4dbddfdab8a6e7b6695e1ba75abee1cfd7e272978ce49"
+    },
+    {
+      "source": "assets/feature-learn.webp",
+      "dest": "assets/generated/playful-precision/feature-learn.webp",
+      "bytes": 76360,
+      "sha256": "0fb1334dc1a8abdf8d4a1e0f813df4c8d481e20fad77c38806e4af3be85805ce"
+    },
+    {
+      "source": "assets/feature-practice.webp",
+      "dest": "assets/generated/playful-precision/feature-practice.webp",
+      "bytes": 72880,
+      "sha256": "23b9a09256f512aab54e87a872d59c16418280bbc0c85b8770a745adf2a88faf"
+    },
+    {
+      "source": "assets/feature-quest.webp",
+      "dest": "assets/generated/playful-precision/feature-quest.webp",
+      "bytes": 71990,
+      "sha256": "c8f678fdf778a0fbb6eee045e3b41671f0317dbc6b68ba10c60142bfd22c8db7"
+    },
+    {
+      "source": "assets/mascot-calculator-v2.png",
+      "dest": "assets/generated/playful-precision/mascot-calculator-v2.png",
+      "bytes": 1673802,
+      "sha256": "00f5f072d53efff467029cfaf93a8c57017875e200d7ddc9a82e3c326cbad063"
+    },
+    {
+      "source": "assets/mascot-fire-v2.png",
+      "dest": "assets/generated/playful-precision/mascot-fire-v2.png",
+      "bytes": 1862199,
+      "sha256": "a62f9e26e0f56c77fbd724f6ff6c34876547f4e950915af04960a38cf8ceb6e0"
+    },
+    {
+      "source": "assets/mascot-hero-v5-clean.png",
+      "dest": "assets/generated/playful-precision/mascot-hero-v5-clean.png",
+      "bytes": 2126662,
+      "sha256": "4a21ed4adf1d06636915cc35a2483302bfec87083798123eb7c35b9b32064d53"
+    },
+    {
+      "source": "assets/mascot-interview.png",
+      "dest": "assets/generated/playful-precision/mascot-interview.png",
+      "bytes": 1243686,
+      "sha256": "62a21d4ff2db6b6f384cbdcc5d484e9d50b44c574d22d2c35afd40e83cd0b54f"
+    },
+    {
+      "source": "assets/mascot-laptop-v2.png",
+      "dest": "assets/generated/playful-precision/mascot-laptop-v2.png",
+      "bytes": 2013979,
+      "sha256": "367b7ea4880c0e243979fdd142c23ae35b4d20c1f0e832ab02f478d69d3a4840"
+    },
+    {
+      "source": "assets/mascot-levelup.png",
+      "dest": "assets/generated/playful-precision/mascot-levelup.png",
+      "bytes": 1834426,
+      "sha256": "03e52bdf0b698092015dfcca3de45e6ba752319d84d9bbcc8b807e82c092f753"
+    },
+    {
+      "source": "assets/mascot-oops.png",
+      "dest": "assets/generated/playful-precision/mascot-oops.png",
+      "bytes": 1329680,
+      "sha256": "f0e29140a6fb5ccf665fba2527f6ff3736ee1cfe7086f34a5bd820311c2a14d2"
+    },
+    {
+      "source": "assets/mascot-poker.png",
+      "dest": "assets/generated/playful-precision/mascot-poker.png",
+      "bytes": 1416021,
+      "sha256": "ca3d20d5736405ecce02d0627e9804aadc014c83c62481050046e7cbb7f5e28b"
+    },
+    {
+      "source": "assets/mascot-search.png",
+      "dest": "assets/generated/playful-precision/mascot-search.png",
+      "bytes": 1282148,
+      "sha256": "40db9d45b9938fa866d7b5a79a50bd796c40c2edcda89ce1bcf0cb8e413d3a12"
+    },
+    {
+      "source": "assets/mascot-sleep.png",
+      "dest": "assets/generated/playful-precision/mascot-sleep.png",
+      "bytes": 591743,
+      "sha256": "7266ff36e024a4eb1e944217a3729a364ecae6f0d62eaadd8e5f76b2f2bf878b"
+    },
+    {
+      "source": "assets/mascot-teacher-v2.png",
+      "dest": "assets/generated/playful-precision/mascot-teacher-v2.png",
+      "bytes": 1427857,
+      "sha256": "925957b86284afcec78a04fcea07430dc724a630a3617988859c09d386d7453e"
+    },
+    {
+      "source": "assets/mascot-trophy-v2.png",
+      "dest": "assets/generated/playful-precision/mascot-trophy-v2.png",
+      "bytes": 1935605,
+      "sha256": "8713c1847822bbb4629e63ee6135e18a316eedd946929ab1d3755403ddf17b00"
+    },
+    {
+      "source": "assets/reward-crown.webp",
+      "dest": "assets/generated/playful-precision/reward-crown.webp",
+      "bytes": 13522,
+      "sha256": "00b070c7afbd951dfde6e5890483fa959cd773568ff84547271abfdedcef8e8a"
+    },
+    {
+      "source": "assets/reward-dumbbell.webp",
+      "dest": "assets/generated/playful-precision/reward-dumbbell.webp",
+      "bytes": 12334,
+      "sha256": "0a227b2d1e2570a36f00f2ec33537b8560d7d4302e81f942e317911b1b410bc8"
+    },
+    {
+      "source": "assets/reward-fire.webp",
+      "dest": "assets/generated/playful-precision/reward-fire.webp",
+      "bytes": 5216,
+      "sha256": "5f323b3c163d7d85e137260b371c52a9305f6c8e8ad1db924c6ba65d3efee0ed"
+    },
+    {
+      "source": "assets/reward-gem-small.webp",
+      "dest": "assets/generated/playful-precision/reward-gem-small.webp",
+      "bytes": 10626,
+      "sha256": "b510943f1379f4572c3df56e8efaf4e7750e6d939f76bb33f6d194b8a418159f"
+    },
+    {
+      "source": "assets/reward-growth.webp",
+      "dest": "assets/generated/playful-precision/reward-growth.webp",
+      "bytes": 8746,
+      "sha256": "7a8de02744842dd128f7123d57772d0465fe3f237b7e8034d4b5a5eb5f263350"
+    },
+    {
+      "source": "assets/reward-lightning.webp",
+      "dest": "assets/generated/playful-precision/reward-lightning.webp",
+      "bytes": 10184,
+      "sha256": "bad5eec17beac267f6dd97cb99efac9cbf7d6e51167adb7546b1c3d68be52924"
+    },
+    {
+      "source": "assets/reward-medal-gold.webp",
+      "dest": "assets/generated/playful-precision/reward-medal-gold.webp",
+      "bytes": 10678,
+      "sha256": "cbdf270157baa8f30875227954e2a20708687bb881a5df7128cfe0b9529e0a36"
+    },
+    {
+      "source": "assets/reward-stopwatch.webp",
+      "dest": "assets/generated/playful-precision/reward-stopwatch.webp",
+      "bytes": 17806,
+      "sha256": "39265f0742ece34f89f980f9c22d9799499df1b3d2528b70fea1597f6e29fea2"
+    },
+    {
+      "source": "assets/reward-target.webp",
+      "dest": "assets/generated/playful-precision/reward-target.webp",
+      "bytes": 17708,
+      "sha256": "4fd13cf9c71279cf4614771b0c5741e6e36aefe97287c74cd183bdd97efbccda"
+    },
+    {
+      "source": "assets/reward-trophy.webp",
+      "dest": "assets/generated/playful-precision/reward-trophy.webp",
+      "bytes": 10664,
+      "sha256": "e0360186d8bca2508bfbef9709d00c4ef7f7c1ed01214ab3e43e29d1a100e7e3"
+    },
+    {
+      "source": "assets/reward-xp.webp",
+      "dest": "assets/generated/playful-precision/reward-xp.webp",
+      "bytes": 7162,
+      "sha256": "1b4970cd69cf5bd287116f351d32755cb61398c20268f382eabd5e285603ad5c"
+    }
+  ]
+}

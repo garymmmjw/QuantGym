@@ -1,5 +1,6 @@
 const DEFAULT_BOARD_URL = "https://beta.quantgym.app/";
-const MAX_CAPTURE_URL_LENGTH = 7000;
+const BRIDGE_MESSAGE_TYPE = "quantgym:viewport-capture";
+const VIEWPORT_CAPTURE_TIMEOUT_MS = 8000;
 
 let capturedProblem = null;
 
@@ -9,7 +10,7 @@ const els = {
   problemMeta: document.getElementById("problemMeta"),
   problemPrompt: document.getElementById("problemPrompt"),
   boardUrl: document.getElementById("boardUrl"),
-  collectBtn: document.getElementById("collectBtn"),
+  recordBtn: document.getElementById("recordBtn"),
   copyBtn: document.getElementById("copyBtn"),
   status: document.getElementById("status")
 };
@@ -26,23 +27,41 @@ els.boardUrl.addEventListener("change", async () => {
   await chrome.storage.local.set({ boardUrl });
 });
 
-els.collectBtn.addEventListener("click", async () => {
+els.recordBtn.addEventListener("click", async () => {
   if (!capturedProblem) return;
-  const boardUrl = normalizeBoardUrl(els.boardUrl.value);
-  els.boardUrl.value = boardUrl;
-  await chrome.storage.local.set({ boardUrl });
-  const target = new URL(boardUrl);
-  target.searchParams.set("capture", encodePayload(capturedProblem));
-
-  if (target.toString().length > MAX_CAPTURE_URL_LENGTH) {
-    await copyProblemJson();
-    els.status.textContent = "题干较长，已复制 JSON。";
-    return;
-  }
-
-  await chrome.tabs.create({ url: target.toString() });
-  els.status.textContent = "已打开 Quant Board。";
+  await recordViewportProblem();
 });
+
+async function recordViewportProblem() {
+  els.recordBtn.disabled = true;
+  els.status.textContent = "正在读取当前屏幕...";
+
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id) throw new Error("No active tab");
+
+    const screenshotDataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {
+      format: "jpeg",
+      quality: 88
+    });
+    const boardUrl = normalizeBoardUrl(els.boardUrl.value);
+    els.boardUrl.value = boardUrl;
+    await chrome.storage.local.set({ boardUrl });
+
+    const targetTab = await chrome.tabs.create({ url: boardUrl, active: false });
+    await waitForTabComplete(targetTab.id);
+    await sendBridgeMessage(targetTab.id, {
+      type: BRIDGE_MESSAGE_TYPE,
+      payload: buildViewportCapturePayload(tab, screenshotDataUrl)
+    });
+    await chrome.tabs.update(targetTab.id, { active: true });
+    els.status.textContent = "已发送到 QuantGym，正在识别。";
+  } catch {
+    els.status.textContent = "记录失败。请确认当前页面可见，并已打开 QuantGym。";
+  } finally {
+    els.recordBtn.disabled = false;
+  }
+}
 
 els.copyBtn.addEventListener("click", copyProblemJson);
 
@@ -64,7 +83,7 @@ async function captureCurrentTab() {
     els.problemTitle.textContent = "无法读取当前页面";
     els.problemPrompt.textContent = "请在 LeetCode、题库或普通网页题目页面打开扩展。";
     els.status.textContent = "Chrome 内部页面和部分受限页面不可捕获。";
-    els.collectBtn.disabled = true;
+    els.recordBtn.disabled = true;
     els.copyBtn.disabled = true;
   }
 }
@@ -86,13 +105,58 @@ async function copyProblemJson() {
   els.status.textContent = "已复制。";
 }
 
-function encodePayload(payload) {
-  const bytes = new TextEncoder().encode(JSON.stringify(payload));
-  let binary = "";
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
+function buildViewportCapturePayload(tab, screenshotDataUrl) {
+  const problem = capturedProblem || {};
+  const pageTitle = tab.title || problem.titleEn || problem.titleZh || "";
+  const sourceUrl = tab.url || problem.sourceUrl || "";
+  const pageText = [
+    problem.titleEn || problem.titleZh || pageTitle,
+    problem.promptEn || problem.promptZh || ""
+  ].filter(Boolean).join("\n\n").slice(0, 12000);
+
+  return {
+    version: 1,
+    source: "quantgym-collector",
+    sourceUrl,
+    pageTitle,
+    capturedAt: new Date().toISOString(),
+    screenshot: {
+      dataUrl: screenshotDataUrl,
+      type: "image/jpeg"
+    },
+    pageContext: problem,
+    pageText
+  };
+}
+
+async function sendBridgeMessage(tabId, message) {
+  try {
+    return await chrome.tabs.sendMessage(tabId, message);
+  } catch {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["quantgym-bridge.js"]
+    });
+    return chrome.tabs.sendMessage(tabId, message);
+  }
+}
+
+function waitForTabComplete(tabId, timeoutMs = VIEWPORT_CAPTURE_TIMEOUT_MS) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      chrome.tabs.onUpdated?.removeListener?.(listener);
+      resolve();
+    };
+    const listener = (updatedTabId, changeInfo = {}) => {
+      if (updatedTabId === tabId && changeInfo.status === "complete") finish();
+    };
+    const timer = setTimeout(finish, timeoutMs);
+    chrome.tabs.onUpdated?.addListener?.(listener);
   });
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function normalizeBoardUrl(value) {

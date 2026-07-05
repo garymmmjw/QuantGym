@@ -3,6 +3,10 @@ import {
   markActivityCheckIn
 } from '../state/activity.js';
 import {
+  showStreakBrokenToast,
+  showStreakFreezeToast
+} from './qgFeedback.js';
+import {
   animateStreakCount,
   createStreakUiState,
   queueCheckInCelebration,
@@ -60,6 +64,7 @@ export function createStreakController(deps = {}) {
   }
 
   function queueCelebration(checkInResult) {
+    notifyFreezeOutcome(checkInResult);
     queueCheckInCelebration(checkInResult, {
       windowRef: deps.windowRef,
       updateCheckInPill: updatePill,
@@ -71,6 +76,17 @@ export function createStreakController(deps = {}) {
       animateCount,
       showToast
     });
+  }
+
+  function notifyFreezeOutcome(checkInResult) {
+    const freeze = checkInResult?.freeze;
+    if (!freeze) return;
+    const locale = deps.getLocale?.();
+    if (freeze.applied) {
+      showStreakFreezeToast(freeze, { streak: checkInResult.next, locale });
+    } else if (freeze.broken && freeze.streakLost > 0) {
+      showStreakBrokenToast(freeze, { locale });
+    }
   }
 
   function hasCheckedInToday() {
@@ -92,6 +108,7 @@ export function createStreakController(deps = {}) {
     renderStreakCalendar(getElements(), {
       entries: state.entries,
       checkIns: state.checkIns,
+      frozenDays: state.economy?.frozenDays || [],
       freshKey: uiState.getFreshKey(),
       streak: deps.getStreak?.(),
       checked: hasCheckedInToday(),
@@ -104,6 +121,7 @@ export function createStreakController(deps = {}) {
     showCheckInToast(streak, {
       text: deps.t,
       escapeHtml: deps.escapeHtml,
+      locale: deps.getLocale?.(),
       getTimer: () => uiState.getToastTimer(),
       setTimer: (timer) => {
         uiState.setToastTimer(timer);

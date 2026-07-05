@@ -16,8 +16,29 @@ export function extractKeywords(text) {
   return [...new Set(words)].slice(0, 18);
 }
 
+/** Parse a numeric ground-truth answer: plain numbers ("42", "-0.5") and simple fractions ("3/8"). */
+export function parsePkNumericAnswer(text) {
+  const raw = String(text || "").trim();
+  const plain = raw.match(/^[-+]?\d+(?:\.\d+)?$/);
+  if (plain) return Number(raw);
+  const fraction = raw.match(/^([-+]?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+  if (fraction && Number(fraction[2]) !== 0) return Number(fraction[1]) / Number(fraction[2]);
+  return null;
+}
+
 export function scorePkAnswer(problem, answer, elapsed, deps = {}) {
   const getLocalizedProblemField = deps.getLocalizedProblemField || ((item, field) => item?.[field] || "");
+  // Numeric ground truth → exact equivalence beats keyword heuristics: a
+  // correct numeric answer wins outright, a wrong one loses outright.
+  const truth = parsePkNumericAnswer(getLocalizedProblemField(problem, "answer", false))
+    ?? parsePkNumericAnswer(getLocalizedProblemField(problem, "answer", true));
+  const given = parsePkNumericAnswer(answer);
+  if (truth !== null && given !== null) {
+    const tolerance = Math.max(Math.abs(truth) * 1e-6, 1e-9);
+    const correct = Math.abs(given - truth) <= tolerance;
+    const timeBonusNumeric = elapsed <= 60 ? 10 : elapsed <= 180 ? 6 : elapsed <= 300 ? 3 : 0;
+    return correct ? Math.min(100, 88 + timeBonusNumeric) : Math.round(Math.max(5, 22 - Math.min(10, elapsed / 60)));
+  }
   const source = [
     getLocalizedProblemField(problem, "answer", false),
     getLocalizedProblemField(problem, "answer", true),

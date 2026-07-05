@@ -3,11 +3,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
 const deployedMode = args.includes("--deployed");
+const copySnippet = args.includes("--copy-snippet") || args.includes("--clipboard");
+const openDeployed = args.includes("--open-deployed") || args.includes("--open");
 const configUrl = clean(
   getArgValue("--config-url")
   || getArgValue("--deployed-config")
@@ -26,6 +29,9 @@ const verifyCommand = target === "deployed"
 const outputPath = path.join(root, "artifacts", "google-id-token-helper.html");
 const localUrl = "http://127.0.0.1:5179/artifacts/google-id-token-helper.html";
 const deployedOrigin = target === "deployed" && configUrl ? new URL(configUrl).origin : "";
+const consoleSnippet = target === "deployed"
+  ? deployedConsoleSnippet(clientId, { target, verifyCommand, deployedOrigin })
+  : "";
 
 if (!clientId) {
   console.error("Google Client ID is missing. Set QUANTGYM_GOOGLE_CLIENT_ID, pass --client-id, or provide a config.js with googleClientId.");
@@ -36,9 +42,16 @@ fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 fs.writeFileSync(
   outputPath,
   target === "deployed"
-    ? deployedHelperHtml(clientId, { target, verifyCommand, deployedOrigin })
+    ? deployedHelperHtml(clientId, { target, verifyCommand, deployedOrigin, consoleSnippet })
     : localHelperHtml(clientId, { target, verifyCommand })
 );
+
+const clipboardResult = target === "deployed" && copySnippet
+  ? copyTextToClipboard(consoleSnippet)
+  : null;
+const openResult = target === "deployed" && openDeployed
+  ? openUrl(deployedOrigin)
+  : null;
 
 console.log(JSON.stringify({
   status: "created",
@@ -49,9 +62,13 @@ console.log(JSON.stringify({
   clientIdSource: argClientId ? "argument" : (envClientId ? "environment" : (configUrl || "local config.js")),
   clientIdSet: true,
   verifyCommand,
+  clipboard: clipboardResult || undefined,
+  openedDeployedSite: openResult || undefined,
   nextSteps: target === "deployed"
     ? [
-        `Open ${localUrl} for the generated external-browser instructions.`,
+        clipboardResult?.copied
+          ? "The deployed Console snippet is already on your clipboard."
+          : `Open ${localUrl} for the generated external-browser instructions.`,
         `Open ${deployedOrigin} in the browser account that can sign in with Google.`,
         "Paste the generated Console snippet into that deployed page, then click the injected Google sign-in button.",
         `Paste the copied token into ${verifyCommand} before it expires. The verifier checks token structure, audience, and expiry before calling the deployed provider login endpoint.`
@@ -223,7 +240,7 @@ function localHelperHtml(googleClientId, details) {
 }
 
 function deployedHelperHtml(googleClientId, details) {
-  const consoleSnippet = deployedConsoleSnippet(googleClientId, details);
+  const consoleSnippet = details.consoleSnippet || deployedConsoleSnippet(googleClientId, details);
   const escapedClientId = JSON.stringify(googleClientId);
   const escapedOrigin = JSON.stringify(details.deployedOrigin);
   const escapedVerifyCommand = JSON.stringify(details.verifyCommand);
@@ -471,6 +488,65 @@ function deployedConsoleSnippet(googleClientId, details) {
     width: 320
   });
 })();`;
+}
+
+function copyTextToClipboard(text) {
+  const candidates = process.platform === "darwin"
+    ? [["pbcopy", []]]
+    : process.platform === "win32"
+      ? [["powershell.exe", ["-NoProfile", "-Command", "Set-Clipboard"]]]
+      : [
+          ["wl-copy", []],
+          ["xclip", ["-selection", "clipboard"]],
+          ["xsel", ["--clipboard", "--input"]]
+        ];
+  for (const [command, commandArgs] of candidates) {
+    const result = spawnSync(command, commandArgs, {
+      input: text,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"]
+    });
+    if (!result.error && result.status === 0) {
+      return {
+        copied: true,
+        command,
+        content: "deployed console snippet",
+        tokenWrittenToDisk: false
+      };
+    }
+  }
+  return {
+    copied: false,
+    reason: "No supported clipboard command was available. Use the helper page Copy Console snippet button instead.",
+    tokenWrittenToDisk: false
+  };
+}
+
+function openUrl(url) {
+  const targetUrl = clean(url);
+  if (!targetUrl) return { opened: false, reason: "No deployed origin was available." };
+  const command = process.platform === "darwin"
+    ? "open"
+    : process.platform === "win32"
+      ? "cmd"
+      : "xdg-open";
+  const commandArgs = process.platform === "win32"
+    ? ["/c", "start", "", targetUrl]
+    : [targetUrl];
+  const result = spawnSync(command, commandArgs, {
+    stdio: "ignore"
+  });
+  if (!result.error && result.status === 0) {
+    return {
+      opened: true,
+      url: targetUrl
+    };
+  }
+  return {
+    opened: false,
+    url: targetUrl,
+    reason: result.error?.message || `Command exited with status ${result.status}`
+  };
 }
 
 function loadEnvFromProjectRoot() {

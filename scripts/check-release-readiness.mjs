@@ -22,6 +22,10 @@ const browserRouteSmokeSummaryPath = path.join(
   `quantgym-browser-route-smoke-release-${process.pid}.json`
 );
 const baseChildEnv = buildChildEnv();
+const productionBoundaryOverrides = buildProductionBoundaryOverrides(baseChildEnv);
+const productionBoundaryEnv = Object.keys(productionBoundaryOverrides).length
+  ? buildChildEnv(productionBoundaryOverrides)
+  : baseChildEnv;
 
 const gates = [
   { name: "git diff --check", command: "git", args: ["diff", "--check"] },
@@ -30,6 +34,15 @@ const gates = [
   { name: "Stage 2 full", command: "npm", args: ["run", "check:stage2:full"] },
   { name: "Stage 2 strict", command: "npm", args: ["run", "check:stage2:strict"] },
   { name: "Browser evidence", command: "npm", args: ["run", "check:browser-evidence"], parseJson: true },
+  {
+    name: "Production boundaries",
+    command: "npm",
+    args: ["run", "verify:production-boundaries", "--", "--summary", "docs/browser-audit-screenshots/319-production-boundaries-local-services-summary.json"],
+    parseJson: true,
+    allowPartial: allowPartialProduction,
+    env: productionBoundaryEnv,
+    manageLocalBoundaryServices: Object.keys(productionBoundaryOverrides).length === 0
+  },
   {
     name: "Migration completion audit",
     command: "npm",
@@ -64,21 +77,29 @@ const gates = [
   { name: "Module ownership", command: "npm", args: ["run", "check:module-ownership"], parseJson: true },
   { name: "Chrome store readiness", command: "npm", args: ["run", "check:chrome-store-readiness"], parseJson: true },
   { name: "Chrome store publication fixture", command: "npm", args: ["run", "check:chrome-store-publication:fixture"], parseJson: true },
+  { name: "Chrome store publication packet", command: "npm", args: ["run", "build:chrome-store-publication-packet"], parseJson: true },
   { name: "Render API build filter fixture", command: "npm", args: ["run", "check:render-api-build-filter:fixture"], parseJson: true },
   { name: "Render API build filter packet", command: "npm", args: ["run", "build:render-api-build-filter-packet"], parseJson: true },
   { name: "Browser extension runtime smoke", command: "npm", args: ["run", "check:browser-extension:runtime-smoke"], parseJson: true },
+  { name: "Viewport capture web bridge", command: "npm", args: ["run", "check:viewport-capture:web-bridge"], parseJson: true },
+  { name: "Viewport capture LLM fixture", command: "npm", args: ["run", "check:viewport-capture-llm:fixture"], parseJson: true },
   { name: "Render LLM deploy compatibility", command: "npm", args: ["run", "check:render-llm-deploy"], parseJson: true },
   { name: "Google token helper flow", command: "npm", args: ["run", "check:google-token-helper"], parseJson: true },
   { name: "Media storage runtime smoke", command: "npm", args: ["run", "check:media-storage:runtime-smoke"], parseJson: true },
   { name: "Media storage production fixture", command: "npm", args: ["run", "check:media-storage:production-fixture"], parseJson: true },
+  { name: "Media storage packet", command: "npm", args: ["run", "build:media-storage-packet"], parseJson: true },
   { name: "Ops alert runtime smoke", command: "npm", args: ["run", "check:ops-alerts:runtime-smoke"], parseJson: true },
   { name: "Ops alert production fixture", command: "npm", args: ["run", "check:ops-alerts:production-fixture"], parseJson: true },
+  { name: "Ops alert edge packet", command: "npm", args: ["run", "build:ops-alert-edge-packet"], parseJson: true },
   { name: "Jobs source runtime smoke", command: "npm", args: ["run", "check:jobs-source:runtime-smoke"], parseJson: true },
   { name: "Jobs source production fixture", command: "npm", args: ["run", "check:jobs-source:production-fixture"], parseJson: true },
   { name: "Jobs public ATS static feed", command: "npm", args: ["run", "check:jobs-feed:static"], parseJson: true },
+  { name: "Jobs feed publication packet", command: "npm", args: ["run", "build:jobs-feed:publication-packet"], parseJson: true },
   { name: "Question-bank rights", command: "npm", args: ["run", "check:question-bank-rights"], parseJson: true },
   { name: "Question-bank rights public smoke", command: "npm", args: ["run", "check:question-bank-rights:public-smoke"], parseJson: true },
   { name: "Question-bank rights release blockers", command: "npm", args: ["run", "check:question-bank-rights:release-blockers"], parseJson: true },
+  { name: "Question-bank release catalog", command: "npm", args: ["run", "check:question-bank-release-catalog"], parseJson: true },
+  { name: "Question-bank rights packet", command: "npm", args: ["run", "build:question-bank-rights-packet"], parseJson: true },
   { name: "Apex/WWW domain", command: "npm", args: ["run", "check:apex-www-domain"], parseJson: true },
   {
     name: "External launch blockers",
@@ -87,17 +108,18 @@ const gates = [
     parseJson: true
   },
   { name: "Postgres cutover export smoke", command: "npm", args: ["run", "check:postgres-cutover:export-smoke"], parseJson: true },
+  { name: "API Postgres runtime adapter", command: "npm", args: ["run", "check:api-postgres-runtime-adapter"], parseJson: true },
+  {
+    name: "Deployed Postgres health",
+    command: "npm",
+    args: ["run", "check:postgres-cutover:deployed-health"],
+    parseJson: true,
+    allowPartial: allowPartialProduction
+  },
+  { name: "Postgres cutover packet", command: "npm", args: ["run", "build:postgres-cutover-packet"], parseJson: true },
   { name: "Postgres cutover", command: "npm", args: ["run", "check:postgres-cutover"], parseJson: true },
   { name: "Static build", command: "npm", args: ["run", "build"] },
   { name: "Static build config", command: "npm", args: ["run", "check:static-build-config", "--", "--no-build"], parseJson: true },
-  {
-    name: "Production boundaries",
-    command: "npm",
-    args: ["run", "verify:production-boundaries"],
-    parseJson: true,
-    allowPartial: allowPartialProduction,
-    manageLocalBoundaryServices: true
-  },
   { name: "UI contracts", command: "npm", args: ["run", "check:ui-contracts", "--", "--skip-release-summary-content"] }
 ];
 
@@ -134,7 +156,7 @@ async function runGate(gate) {
   let child = null;
   try {
     if (gate.manageLocalBoundaryServices) {
-      localBoundaryServices = await maybeStartLocalBoundaryServices();
+      localBoundaryServices = await maybeStartLocalBoundaryServices(gate.env || baseChildEnv);
     }
     child = await runGateProcess(gate, timeoutMs);
   } catch (error) {
@@ -243,12 +265,13 @@ function promoteGateSummary(gate) {
 }
 
 function runGateProcess(gate, timeoutMs) {
+  const childEnv = gate.env || baseChildEnv;
   if (!gate.streamStderr && !gate.streamStdout) {
     return spawnSync(gate.command, gate.args, {
       cwd: root,
       encoding: "utf8",
       maxBuffer: 1024 * 1024 * 20,
-      env: baseChildEnv,
+      env: childEnv,
       timeout: timeoutMs,
       killSignal: "SIGTERM"
     });
@@ -257,7 +280,7 @@ function runGateProcess(gate, timeoutMs) {
   return new Promise((resolve) => {
     const child = spawn(gate.command, gate.args, {
       cwd: root,
-      env: baseChildEnv,
+      env: childEnv,
       stdio: ["ignore", "pipe", "pipe"]
     });
     let stdout = "";
@@ -299,14 +322,14 @@ function runGateProcess(gate, timeoutMs) {
   });
 }
 
-async function maybeStartLocalBoundaryServices() {
+async function maybeStartLocalBoundaryServices(childEnv = baseChildEnv) {
   if (!allowPartialProduction) return null;
   if (process.env.QUANTGYM_RELEASE_MANAGE_LOCAL_BOUNDARY_SERVICES === "0") return null;
 
   const runtimeConfig = loadLocalRuntimeConfig();
   const boundaryEnv = {
     ...loadEnvFromProjectRoot(),
-    ...baseChildEnv
+    ...childEnv
   };
   const apiEndpoint = clean(boundaryEnv.QUANTGYM_CLOUD_API_ENDPOINT || boundaryEnv.CLOUD_API_ENDPOINT || runtimeConfig.cloudApiEndpoint);
   const llmEndpoint = clean(boundaryEnv.QUANTGYM_LLM_ENDPOINT || boundaryEnv.LLM_ENDPOINT || runtimeConfig.llmEndpoint);
@@ -564,6 +587,23 @@ function loadEnvFromProjectRoot() {
     values[key] = value;
   }
   return values;
+}
+
+function buildProductionBoundaryOverrides(env) {
+  const mappings = [
+    ["QUANTGYM_RELEASE_PRODUCTION_CLOUD_API_ENDPOINT", "QUANTGYM_CLOUD_API_ENDPOINT"],
+    ["QUANTGYM_RELEASE_PRODUCTION_LLM_ENDPOINT", "QUANTGYM_LLM_ENDPOINT"],
+    ["QUANTGYM_RELEASE_PRODUCTION_GOOGLE_CLIENT_ID", "QUANTGYM_GOOGLE_CLIENT_ID"],
+    ["QUANTGYM_RELEASE_PRODUCTION_GOOGLE_ID_TOKEN", "QUANTGYM_GOOGLE_ID_TOKEN"],
+    ["QUANTGYM_RELEASE_PRODUCTION_LLM_BEARER_TOKEN", "QUANTGYM_LLM_BEARER_TOKEN"],
+    ["QUANTGYM_RELEASE_PRODUCTION_LLM_MODEL", "QUANTGYM_LLM_MODEL"]
+  ];
+  const overrides = {};
+  for (const [source, target] of mappings) {
+    const value = clean(env[source]);
+    if (value) overrides[target] = value;
+  }
+  return overrides;
 }
 
 function buildChildEnv(extra = {}) {

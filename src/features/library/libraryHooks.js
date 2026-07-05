@@ -5,6 +5,7 @@ export function useLibraryPageModel() {
   const appServices = useAppServices();
   const pageApi = usePageApi();
   const api = usePageApi("library");
+  const t = appServices.t || ((key) => key);
   const [revision, setRevision] = useState(0);
   const [alertMessage, setAlertMessage] = useState("");
 
@@ -47,6 +48,14 @@ export function useLibraryPageModel() {
     bump();
   }, [api, bump]);
 
+  // Self-reported reading position (user decision #8): the reader footer
+  // saves 「我读到第 N 页 / x%」 through here into localStorage.
+  const setReadingProgress = useCallback((entryId, progress) => {
+    const result = api?.setReadingProgress?.(entryId, progress);
+    bump();
+    return result;
+  }, [api, bump]);
+
   const handleAction = useCallback(async (entryId, action) => {
     const result = await api?.handleCardAction?.(entryId, action);
     if (result && typeof result.then === "function") {
@@ -76,8 +85,10 @@ export function useLibraryPageModel() {
     setKindFilter,
     openReader,
     closeReader,
+    setReadingProgress,
     handleAction,
     alertMessage,
-    refreshIcons
+    refreshIcons,
+    t
   };
 }

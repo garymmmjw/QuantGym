@@ -2,16 +2,19 @@
 export const interviewTypeDefs = {
   oa: {
     label: "Online Assessment",
+    labelZh: "笔试 OA",
     categories: ["leetcode", "probabilityExpectation", "statistics", "calculus", "algebra", "linearAlgebra", "optimization", "complexNumbers", "pandasNumpy", "mentalMath"],
     minutes: 5
   },
   technical: {
     label: "Technical Interview",
+    labelZh: "技术面",
     categories: ["leetcode", "cppProgramming", "pandasNumpy", "probabilityExpectation", "statistics", "calculus", "algebra", "linearAlgebra", "optimization", "complexNumbers", "machineLearning", "deepLearning", "market", "option"],
     minutes: 8
   },
   behavioral: {
     label: "Behavioral Interview",
+    labelZh: "行为面",
     categories: [],
     minutes: 4
   }

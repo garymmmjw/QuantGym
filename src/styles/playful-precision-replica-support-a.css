@@ -1,0 +1,3012 @@
+/* Design-replication additions (support-a group) — matches UI 设计提升.zip design specs.
+   Scoped, token-driven (--qg-*), imported after base playful CSS so it wins ties.
+   One agent owns this file per group to avoid parallel-edit conflicts. */
+
+/* ===== News page — matches "QuantGym 新闻" design reference ===== */
+
+/* Dark kicker pill above the heading title */
+body.is-authenticated .app-route-root .qg-news-page .section-heading .news-heading-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: var(--qg-text);
+  color: var(--qg-surface);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .section-heading .news-heading-kicker-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.25);
+}
+
+/* Featured (头条) hero card — purple gradient, built from the top real news item */
+body.is-authenticated .app-route-root .qg-news-page .news-featured {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  padding: 24px;
+  border: 0;
+  border-radius: var(--qg-radius-panel);
+  background: linear-gradient(130deg, #5b5ff5, #7161f2 60%, #8a63e8);
+  color: #fff;
+  box-shadow: 0 22px 48px -26px rgba(91, 95, 245, 0.7);
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 26px 54px -24px rgba(91, 95, 245, 0.78);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured:focus-visible {
+  outline: 3px solid color-mix(in srgb, #fff 70%, transparent);
+  outline-offset: 3px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured-glow {
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 65%);
+  pointer-events: none;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured-body {
+  position: relative;
+  z-index: 1;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured-title {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured-summary {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.9);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured-src {
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured-time {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-featured.read {
+  opacity: 0.92;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-news-page .news-featured {
+    transition: none;
+  }
+  body.is-authenticated .app-route-root .qg-news-page .news-featured:hover {
+    transform: none;
+  }
+}
+
+/* --- News flat header: no panel card, no mascot watermark --- */
+body.is-authenticated .app-route-root .qg-news-page .section-heading {
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-news-page .section-heading {
+  background: none;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .section-heading::after {
+  content: none;
+  background-image: none;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .section-heading h2 {
+  margin: 0;
+  font-family: var(--qg-font-ui);
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-title-accent {
+  color: var(--qg-brand);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-heading-tagline {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--qg-muted);
+}
+
+/* Keep the live "收录 N - 最近 …" stats node functional but visually hidden (design has none) */
+body.is-authenticated .app-route-root .qg-news-page .news-heading-meta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Header right side: search box + icon actions */
+body.is-authenticated .app-route-root .qg-news-page .news-heading-side {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 1 1 260px;
+  max-width: 460px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 220px;
+  max-width: 340px;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-search i,
+body.is-authenticated .app-route-root .qg-news-page .news-search svg {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-search input {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--qg-font-ui);
+  font-size: 13.5px;
+  color: var(--qg-text);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-news-page .news-search input {
+  background: transparent;
+}
+
+/* --- Category chip rows (replace the segmented tracks) --- */
+body.is-authenticated .app-route-root .qg-news-page .news-filter-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-cat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-cat-chip {
+  min-height: 0;
+  padding: 8px 15px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-cat-chip:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 36%, var(--qg-border));
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-cat-chip.active {
+  border-color: transparent;
+  background: var(--qg-text);
+  color: var(--qg-surface);
+  box-shadow: none;
+}
+
+/* Secondary source-filter row: smaller chips */
+body.is-authenticated .app-route-root .qg-news-page .news-src-chip {
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+/* Legacy intel board stays in the DOM for its ids but is not part of the design */
+body.is-authenticated .app-route-root .qg-news-page .news-intel-board {
+  display: none;
+}
+
+/* --- Body grid: feed column + sidebar column (matches design auto-fit grid) --- */
+body.is-authenticated .app-route-root .qg-news-page .news-body-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-feed-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Feed is a single vertical stream (kills legacy 2-col grid) */
+body.is-authenticated .app-route-root .qg-news-page .news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* --- Compact row cards --- */
+body.is-authenticated .app-route-root .qg-news-page .news-card {
+  display: block;
+  min-height: 0;
+  padding: 15px 17px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -18px rgba(74, 67, 214, 0.45);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--qg-brand) 45%, transparent);
+  outline-offset: 2px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-card.read {
+  opacity: 0.88;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-cat-tag {
+  flex: 0 0 auto;
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #fff;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-cat-tag.tone-firms { background: #5b5ff5; }
+body.is-authenticated .app-route-root .qg-news-page .news-cat-tag.tone-market { background: #ff9f2e; }
+body.is-authenticated .app-route-root .qg-news-page .news-cat-tag.tone-tech { background: #2f9be0; }
+body.is-authenticated .app-route-root .qg-news-page .news-cat-tag.tone-hire { background: #16a06a; }
+body.is-authenticated .app-route-root .qg-news-page .news-cat-tag.tone-other { background: #8988a8; }
+
+body.is-authenticated .app-route-root .qg-news-page .news-src {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-time {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-card-title {
+  margin: 0 0 5px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-card-summary {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--qg-muted);
+}
+
+/* --- Sidebar panels --- */
+body.is-authenticated .app-route-root .qg-news-page .news-side-panel {
+  padding: 18px 20px;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-side-title {
+  margin-bottom: 14px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+/* Top sources */
+body.is-authenticated .app-route-root .qg-news-page .news-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-source-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-source-logo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-source-logo.tone-0 {
+  background: var(--qg-text);
+  color: var(--qg-surface);
+}
+body.is-authenticated .app-route-root .qg-news-page .news-source-logo.tone-1 { background: #d0524b; }
+body.is-authenticated .app-route-root .qg-news-page .news-source-logo.tone-2 { background: #5b5ff5; }
+body.is-authenticated .app-route-root .qg-news-page .news-source-logo.tone-3 { background: #ff9f2e; }
+body.is-authenticated .app-route-root .qg-news-page .news-source-logo.tone-4 { background: #16a06a; }
+
+body.is-authenticated .app-route-root .qg-news-page .news-source-info {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-source-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-source-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-follow-btn {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 5px 12px;
+  border: 1px solid #e0dffb;
+  border-radius: 20px;
+  background: var(--qg-surface);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-ui);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-follow-btn.is-on {
+  border-color: #e3f7ee;
+  background: #e3f7ee;
+  color: #0f9d63;
+}
+
+/* Daily digest CTA (fixed warm palette in both themes, per design) */
+body.is-authenticated .app-route-root .qg-news-page .news-digest-panel {
+  border-color: #ffe0ad;
+  background: linear-gradient(160deg, #fff3dd, #ffe9c7);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-digest-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-digest-head img {
+  width: 26px;
+  height: 26px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-digest-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #7a4a08;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-digest-copy {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.6;
+  color: #8a5a12;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-digest-btn {
+  width: 100%;
+  padding: 11px;
+  border: 0;
+  border-radius: 12px;
+  background: #b3610a;
+  color: #fff;
+  font-family: var(--qg-font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Related drills */
+body.is-authenticated .app-route-root .qg-news-page .news-drill-panel .news-side-title {
+  margin-bottom: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-drill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-drill-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 11px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface-3);
+  text-decoration: none;
+  color: var(--qg-text);
+  transition: border-color 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-drill-row:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 30%, var(--qg-border));
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-drill-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-drill-dot.dot-orange { background: #ff9f2e; }
+body.is-authenticated .app-route-root .qg-news-page .news-drill-dot.dot-brand { background: var(--qg-brand); }
+
+body.is-authenticated .app-route-root .qg-news-page .news-drill-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-drill-go {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--qg-brand-ink);
+}
+
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .qg-news-page .section-heading {
+    align-items: stretch;
+    gap: 12px;
+    padding: 0;
+    border-radius: 0;
+  }
+  body.is-authenticated .app-route-root .qg-news-page .news-heading-side {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: none;
+    flex-wrap: wrap;
+  }
+  /* Design's mobile search spans the full row; icon actions drop below it */
+  body.is-authenticated .app-route-root .qg-news-page .news-search {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  body.is-authenticated .app-route-root .qg-news-page .news-heading-side .problem-actions {
+    width: auto; /* legacy styles.css forces 100% at this breakpoint */
+    margin-left: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-news-page .news-card,
+  body.is-authenticated .app-route-root .qg-news-page .news-cat-chip,
+  body.is-authenticated .app-route-root .qg-news-page .news-follow-btn,
+  body.is-authenticated .app-route-root .qg-news-page .news-drill-row {
+    transition: none;
+  }
+  body.is-authenticated .app-route-root .qg-news-page .news-card:hover {
+    transform: none;
+  }
+}
+
+/* ===== Experiences page — matches "QuantGym 面经" design reference ===== */
+
+/* Kicker pill above the title uses the soft-track look from the design */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-kicker {
+  border: none;
+  background: var(--qg-track);
+  color: var(--qg-brand-ink);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+/* Bilingual heading: 面经 (ink) + Interview Notes (brand) */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-title-line {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-title-line span {
+  color: var(--qg-brand);
+}
+
+/* Header "写面经" CTA — pill shape matching the design */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-write-btn {
+  flex: 0 0 auto;
+  padding: 12px 18px;
+  font-size: 14px;
+}
+
+/* Company filter chips row (derived from the user's real records) */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-company-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-company-chip {
+  padding: 8px 15px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-company-chip:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 40%, var(--qg-border));
+  color: var(--qg-text-2);
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-company-chip.is-active {
+  border-color: transparent;
+  background: #7161f2;
+  color: #ffffff;
+}
+
+/* Feed cards stack in a single column like the design list */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+/* Card head: logo + title stack + outcome pill + actions */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-head {
+  align-items: center;
+  gap: 11px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-actions {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-actions .icon-button {
+  width: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 10px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-actions .icon-button svg {
+  width: 14px;
+  height: 14px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-logo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: #ffffff;
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-title h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--qg-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-title small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--qg-muted-2);
+}
+
+/* Outcome status pill (offer / in-progress / rejected tones) */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-outcome-pill {
+  flex: 0 0 auto;
+  padding: 4px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-outcome-pill.tone-offer {
+  color: var(--qg-success);
+  background: color-mix(in srgb, var(--qg-success) 14%, transparent);
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-outcome-pill.tone-wip {
+  color: var(--qg-brand-ink);
+  background: var(--qg-brand-soft);
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-outcome-pill.tone-rej {
+  color: var(--qg-muted);
+  background: var(--qg-track);
+}
+
+/* Shared / private badge row */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-badges span {
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-badges .shared {
+  color: var(--qg-success);
+  background: color-mix(in srgb, var(--qg-success) 14%, transparent);
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-badges .private {
+  color: var(--qg-muted);
+  background: var(--qg-track);
+}
+
+/* Tag chips (+ trailing social counters, like the design's post footer row) */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-tags span {
+  min-height: 0;
+  padding: 3px 9px;
+  border-radius: 8px;
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Card body summary text */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-body {
+  display: grid;
+  gap: 10px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-body strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--qg-muted-2);
+  letter-spacing: 0.01em;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-body p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--qg-text-2);
+}
+
+/* Sidebar: "面经最多的公司" rank panel */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-rank-panel,
+body.is-authenticated .app-route-root .qg-experiences-page .experience-hot-panel {
+  padding: 18px 20px;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: var(--qg-shadow-card);
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-rank-title {
+  margin-bottom: 14px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-rank-list {
+  display: grid;
+  gap: 11px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-rank-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-rank-index {
+  width: 16px;
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+  color: #c3c2d8;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-rank-logo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  color: #ffffff;
+  font-family: var(--qg-font-number);
+  font-size: 11px;
+  font-weight: 700;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-rank-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qg-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-rank-count {
+  flex: 0 0 auto;
+  font-family: var(--qg-font-number);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--qg-muted);
+}
+
+/* Sidebar: "高频考点" hot-topics panel — the design hardcodes the light
+   lavender gradient, so it stays light even under the dark theme */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-hot-panel {
+  border-color: #e0dffb;
+  background: linear-gradient(160deg, #eef0ff, #f6f0ff);
+  box-shadow: none;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-hot-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #3a38a8;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-hot-title img {
+  width: 26px;
+  height: 26px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-hot-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-hot-tags span {
+  padding: 6px 12px;
+  border: 1px solid #e0dffb;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #5b5ff5;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Page rhythm matches the design column gap (16px) */
+body.is-authenticated .app-route-root .qg-experiences-page {
+  gap: 16px;
+}
+
+/* Bare header — the design title block sits directly on the page background
+   (no card, no gradient, no mascot), CTA bottom-aligned with the title */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-header {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-experiences-page .experience-header {
+  background: none;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-header::after {
+  content: none;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-header p {
+  margin: 6px 0 0;
+  max-width: 680px;
+  color: var(--qg-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+/* Two-column main grid: posts feed (left) + rank/hot side cards (right) */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-main-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* Side column is a bare stack — rank & hot panels are the standalone cards */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-side-panel {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Slim list toolbar (keeps the stage filter without the card chrome) */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-list-toolbar {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-list-toolbar h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--qg-muted);
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-list-toolbar select {
+  width: auto;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 30px 0 12px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  justify-self: auto;
+}
+
+/* Feed cards: 18px radius, 17/19 padding, lift on hover (design post cards) */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card {
+  border-radius: 18px;
+  padding: 17px 19px;
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04), 0 12px 28px -22px rgba(74, 67, 214, 0.35);
+  transition: transform 0.14s ease;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Social counters (likes / comments of the shared community post) */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-social {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--qg-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-social span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-social svg {
+  width: 15px;
+  height: 15px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-social .experience-social-up svg {
+  color: var(--qg-brand);
+}
+
+/* Form footer stats (record / shared counters + community jump) */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form-stats {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form-stats > div {
+  flex: 1 1 140px;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form-stats button {
+  flex: 1 1 100%;
+}
+
+/* Empty state: dashed card with the focused mascot */
+body.is-authenticated .app-route-root .qg-experiences-page .experience-list .empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 32px 20px;
+  border: 1px dashed var(--qg-border);
+  border-radius: 18px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-size: 13px;
+  text-align: center;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-list .empty-state::before {
+  content: "";
+  width: 72px;
+  height: 72px;
+  background: url("/assets/generated/playful-precision/avatar-focused-v2.png") center / contain no-repeat;
+}
+body.is-authenticated .app-route-root .qg-experiences-page .experience-list .empty-state strong {
+  color: var(--qg-text-2);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .qg-experiences-page .experience-header {
+    align-items: flex-start;
+    padding: 0;
+    border-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-experiences-page .experience-company-chip,
+  body.is-authenticated .app-route-root .qg-experiences-page .experience-card {
+    transition: none;
+  }
+  body.is-authenticated .app-route-root .qg-experiences-page .experience-card:hover {
+    transform: none;
+  }
+}
+
+/* ===== Community page — matches "QuantGym 论坛" design reference ===== */
+
+/* Green "COMMUNITY · 社区" kicker pill above the hero title */
+body.is-authenticated .app-route-root .qg-community-page .section-heading .community-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--qg-success) 14%, transparent);
+  color: var(--qg-success);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+/* Subtitle under the title matches the design's muted one-liner */
+body.is-authenticated .app-route-root .qg-community-page .section-heading #communitySummary {
+  display: block;
+  margin-top: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--qg-muted);
+}
+
+/* Plain text header: no hero card, no mascot (design sits on the page background) */
+body.is-authenticated .app-route-root .qg-community-page .section-heading {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .section-heading::after {
+  content: none;
+}
+
+/* support.css re-applies the hero gradient in dark mode with a :root prefix — cancel it here too */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-community-page .section-heading {
+  background: none;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .section-heading h2 {
+  font-family: var(--qg-font-ui);
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .section-heading h2 .community-title-accent {
+  color: var(--qg-brand);
+}
+
+/* Header right actions: filter pills + "＋ 发帖" 3D press button */
+body.is-authenticated .app-route-root .qg-community-page .forum-heading-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .community-feed-tabs {
+  gap: 4px;
+  padding: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--qg-track);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .community-feed-tabs .segment {
+  min-height: 0;
+  padding: 7px 14px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .community-feed-tabs .segment.active {
+  background: var(--qg-surface);
+  color: var(--qg-brand-ink);
+  box-shadow: 0 2px 6px -2px rgba(74, 67, 214, 0.35);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-post-cta {
+  padding: 11px 17px;
+  border: none;
+  border-radius: 13px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #3f39c9;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-post-cta:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #3f39c9;
+}
+
+/* Main + sidebar grid (design: auto-fit two columns, single column on narrow) */
+body.is-authenticated .app-route-root .qg-community-page .forum-workspace {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* Thread list: single column stack */
+body.is-authenticated .app-route-root .qg-community-page .community-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Forum thread card: vote rail + content */
+body.is-authenticated .app-route-root .qg-community-page .forum-thread {
+  display: flex;
+  gap: 14px;
+  min-width: 0;
+  padding: 15px 17px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px -18px rgba(74, 67, 214, 0.4);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-vote {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 auto;
+  padding-top: 2px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-vote .vote-btn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #c3c2d8;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-vote .vote-btn:active {
+  transform: translateY(1px);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-vote .vote-btn.is-voted {
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-vote .vote-btn svg,
+body.is-authenticated .app-route-root .qg-community-page .forum-vote .vote-btn i {
+  width: 16px;
+  height: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-vote .vote-count {
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-vote .vote-count.is-voted {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-main {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 5px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-topic-chip {
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #ffffff;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-hot-badge {
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #fdeceb;
+  color: #d0524b;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--qg-text);
+  overflow-wrap: anywhere;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--qg-muted);
+  overflow-wrap: anywhere;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread .community-experience-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread .community-experience-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--qg-success);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread .community-experience-label svg {
+  width: 13px;
+  height: 13px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread .community-media {
+  margin-top: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 9px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-author {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-ava {
+  display: inline-grid;
+  place-items: center;
+  overflow: hidden;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  font-family: var(--qg-font-number);
+  font-size: 9px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-ava img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-replies-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: var(--qg-font-ui);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-replies-toggle:hover {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-replies-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-tools {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-tools .icon-button {
+  width: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  border: 0 !important;
+  border-radius: 8px;
+  background: transparent !important;
+  color: var(--qg-muted-3) !important;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-tools .icon-button:hover {
+  background: var(--qg-track) !important;
+  color: var(--qg-brand-ink) !important;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-tools .icon-button svg {
+  width: 15px;
+  height: 15px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-thread .community-comments {
+  margin-top: 10px;
+}
+
+/* Comment rows: legacy styles.css paints them rgba(255,255,255,.38) which glows in dark mode */
+body.is-authenticated .app-route-root .qg-community-page .community-comment {
+  padding: 9px 10px;
+  border: 1px solid var(--qg-border);
+  border-radius: 10px;
+  background: var(--qg-surface);
+  color: var(--qg-text-2);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .community-comment strong {
+  color: var(--qg-text);
+  font-weight: 700;
+}
+
+/* Sidebar panels: 热门板块 / 本周活跃 */
+body.is-authenticated .app-route-root .qg-community-page .forum-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-panel {
+  padding: 18px 20px;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-panel-title {
+  margin-bottom: 13px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-board-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-board-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-board-row:hover {
+  background: var(--qg-surface-3);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-board-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-board-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-board-count {
+  font-family: var(--qg-font-number);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-user-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-user-ava {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  font-family: var(--qg-font-number);
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-user-ava img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-user-main {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-user-role {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-user-xp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--qg-font-number);
+  font-size: 12px;
+  font-weight: 700;
+  color: #b3610a;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-user-xp img {
+  width: 16px;
+  height: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-empty-line {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--qg-muted-3);
+}
+
+/* Empty feed: mascot card */
+body.is-authenticated .app-route-root .qg-community-page .forum-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 36px 20px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-empty::before {
+  content: "";
+  width: 96px;
+  height: 96px;
+  background: url("/assets/generated/playful-precision/mascot-sleep.png") center / contain no-repeat;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-empty .empty-copy {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .forum-empty small {
+  font-size: 12.5px;
+  color: var(--qg-muted);
+}
+
+/* XP number keeps design's amber tone in dark mode too, but slightly brighter for contrast */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-community-page .forum-user-xp {
+  color: #d98b34;
+}
+
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .qg-community-page .section-heading {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  body.is-authenticated .app-route-root .qg-community-page .forum-heading-actions {
+    width: 100%;
+  }
+
+  body.is-authenticated .app-route-root .qg-community-page .community-feed-tabs {
+    width: auto;
+    flex: 0 1 auto;
+    overflow: visible;
+  }
+}
+
+/* ===== Messages page (聊天 / Chat) — matches "QuantGym 聊天" design reference ===== */
+
+/* Minimal heading: kicker pill + bilingual title, no mascot / no visible subtitle */
+body.is-authenticated .app-route-root .qg-messages-page .messages-heading {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+body.is-authenticated .app-route-root .qg-messages-page .messages-heading::after {
+  content: none;
+}
+body.is-authenticated .app-route-root .qg-messages-page .messages-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: var(--qg-track);
+  color: var(--qg-brand-ink);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+body.is-authenticated .app-route-root .qg-messages-page .messages-heading h2 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+body.is-authenticated .app-route-root .qg-messages-page .messages-heading h2 span {
+  color: var(--qg-brand);
+}
+/* Keep the summary node (contract id) but hide it — design shows no subtitle */
+body.is-authenticated .app-route-root .qg-messages-page .messages-summary-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Chat shell: 290px list + fluid thread, single rounded card */
+body.is-authenticated .app-route-root .qg-messages-page .messages-chat {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  min-height: 0;
+  height: min(640px, calc(100dvh - 210px));
+  border: 1px solid var(--qg-border);
+  border-radius: 24px;
+  background: var(--qg-surface);
+  box-shadow: var(--qg-shadow-card);
+  overflow: hidden;
+}
+
+/* ---- Left pane: thread list ---- */
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  border-right: 1px solid var(--qg-border);
+  background: var(--qg-surface-2);
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 16px 16px 12px;
+  padding: 10px 13px;
+  border: 1px solid var(--qg-border);
+  border-radius: 12px;
+  background: var(--qg-surface);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-search-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  color: var(--qg-muted-2);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-search-icon svg {
+  width: 16px;
+  height: 16px;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-search-placeholder {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+  padding: 0 10px 10px;
+  overflow-y: auto;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 0;
+  padding: 10px 11px;
+  border: 1px solid transparent;
+  border-radius: 13px;
+  background: transparent;
+  color: var(--qg-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-item.active,
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-item:hover,
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-item:focus-visible {
+  border-color: transparent;
+  background: var(--qg-brand-soft);
+  outline: none;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-top strong {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qg-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-time {
+  flex: 0 0 auto;
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-body small {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--qg-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-unread {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--qg-brand);
+  color: #ffffff;
+  font-family: var(--qg-font-number);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---- Right pane: conversation ---- */
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  background: var(--qg-surface);
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--qg-border);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-back {
+  display: none;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--qg-border);
+  border-radius: 11px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 14px;
+  font-weight: 700;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-meta {
+  flex: 1;
+  min-width: 0;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-meta strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-meta small {
+  display: block;
+  margin-top: 1px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--qg-muted);
+}
+/* Active conversation shows the live "在线" tone; empty header stays muted */
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-header:has(.message-conversation-avatar) .message-conversation-meta small {
+  color: var(--qg-success);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-more {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--qg-border);
+  border-radius: 11px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  cursor: pointer;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-more svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Message stream */
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-body {
+  display: flex;
+  flex-direction: column;
+  align-content: start;
+  gap: 14px;
+  min-height: 0;
+  padding: 20px;
+  overflow-y: auto;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .direct-message {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  max-width: 100%;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message.mine {
+  flex-direction: row-reverse;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 11px;
+  font-weight: 700;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-col {
+  display: flex;
+  flex-direction: column;
+  max-width: 74%;
+  align-items: flex-start;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message.mine .direct-message-col {
+  align-items: flex-end;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message p {
+  margin: 0;
+  padding: 11px 14px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  border-bottom-left-radius: 5px;
+  background: var(--qg-surface);
+  color: var(--qg-text-2);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message.mine p {
+  border: 0;
+  border-radius: 16px;
+  border-bottom-right-radius: 5px;
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff);
+  color: #ffffff;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message small {
+  margin-top: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--qg-muted-2);
+}
+
+/* Composer: quick-reply chips + input row */
+body.is-authenticated .app-route-root .qg-messages-page .message-composer {
+  display: block;
+  padding: 12px 16px;
+  border-top: 1px solid var(--qg-border);
+  border-bottom: 0;
+  background: var(--qg-surface);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-composer-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-composer-chip {
+  padding: 6px 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-composer-chip:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--qg-brand) 34%, var(--qg-border));
+  color: var(--qg-brand-ink);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-composer-chip:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-composer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 15px;
+  border: 1px solid var(--qg-border);
+  border-radius: 15px;
+  background: var(--qg-surface-2);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-composer-row input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: var(--qg-font-ui);
+  font-size: 14px;
+  color: var(--qg-text);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-composer-row .icon-button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px;
+  border: 0 !important;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff) !important;
+  color: #ffffff !important;
+  cursor: pointer;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-composer-row .icon-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Responsive: single-pane switch driven by data-mobile-view */
+@media (max-width: 860px) {
+  body.is-authenticated .app-route-root .qg-messages-page .messages-chat {
+    grid-template-columns: 1fr;
+    height: min(720px, calc(100dvh - 200px));
+  }
+  body.is-authenticated .app-route-root .qg-messages-page .messages-chat[data-mobile-view="thread"] .message-thread-list {
+    display: none;
+  }
+  body.is-authenticated .app-route-root .qg-messages-page .messages-chat[data-mobile-view="list"] .message-conversation {
+    display: none;
+  }
+  body.is-authenticated .app-route-root .qg-messages-page .message-thread-list {
+    border-right: 0;
+  }
+  body.is-authenticated .app-route-root .qg-messages-page .message-thread-back {
+    display: grid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-messages-page .message-thread-item,
+  body.is-authenticated .app-route-root .qg-messages-page .message-composer-chip {
+    transition: none;
+  }
+}
+
+/* ===== Network page — matches "QuantGym 人脉" design reference ===== */
+
+/* --- Hero header: flat (not a panel), kicker + title + subtitle + stat pills --- */
+body.is-authenticated .app-route-root .qg-network-page .qg-net-hero {
+  align-items: flex-end;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-hero::after {
+  content: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-hero-main {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--qg-success) 16%, var(--qg-surface));
+  color: var(--qg-success);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-title {
+  margin: 0;
+  font-size: clamp(24px, 3.4vw, 29px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-title span {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-subtitle {
+  display: block;
+  margin-top: 6px;
+  max-width: 640px;
+  color: var(--qg-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-hero-side {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-stat {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  min-width: 74px;
+  padding: 11px 16px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-stat-accent {
+  border-color: color-mix(in srgb, var(--qg-brand) 30%, var(--qg-border));
+  background: linear-gradient(150deg, var(--qg-brand-soft), var(--qg-brand-soft-2));
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-stat-label {
+  color: var(--qg-muted-2);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-stat-accent .qg-net-stat-label {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-stat-value {
+  font-family: var(--qg-font-number);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-stat-accent .qg-net-stat-value {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-add {
+  align-self: center;
+  height: 100%;
+}
+
+/* --- Two-column body: relationship graph + people list --- */
+body.is-authenticated .app-route-root .qg-network-page .qg-net-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* --- Relationship graph card --- */
+body.is-authenticated .app-route-root .qg-network-page .qg-net-graph {
+  padding: 18px;
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-graph-title {
+  margin-bottom: 6px;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-graph-stage {
+  position: relative;
+  height: 340px;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-graph-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-node {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%);
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-node-avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--qg-surface);
+  border-radius: 14px;
+  color: #fff;
+  font-family: var(--qg-font-number);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 8px 18px -8px rgba(27, 26, 56, 0.4);
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-node-name {
+  margin-top: 4px;
+  color: var(--qg-text-2);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-node-self {
+  top: 170px;
+  left: 200px;
+  z-index: 2;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-node-mascot {
+  width: 66px;
+  height: 66px;
+  border: 3px solid var(--qg-surface);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 12px 26px -10px rgba(91, 95, 245, 0.7);
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-node-mascot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--qg-brand-soft);
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-node-self-label {
+  margin-top: 5px;
+  padding: 3px 11px;
+  border-radius: 20px;
+  background: var(--qg-brand);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* --- People column: filters + list --- */
+body.is-authenticated .app-route-root .qg-network-page .qg-net-people {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-chip {
+  min-height: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--qg-border);
+  border-radius: 11px;
+  background: var(--qg-surface) !important;
+  color: var(--qg-muted) !important;
+  font-family: var(--qg-font-ui);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-chip.is-active {
+  border-color: transparent;
+  background: var(--qg-success) !important;
+  color: #fff !important;
+}
+
+/* Force single-column stacked list (override base 2-col grid) */
+body.is-authenticated .app-route-root .qg-network-page .network-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .network-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 14px 16px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(150deg, #6d70f8, var(--qg-brand));
+  color: #fff;
+  font-family: var(--qg-font-number);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-main {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-main .network-card-top h3 {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-main .network-card-top small {
+  display: block;
+  margin-top: 1px;
+  color: var(--qg-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 3px;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-main > p {
+  margin-top: 3px;
+  color: var(--qg-muted-2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-meta .network-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--qg-success) 16%, var(--qg-surface));
+  color: var(--qg-success);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-meta .pill {
+  min-height: 0;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+/* --- Responsive: stack graph above people on narrow viewports --- */
+@media (max-width: 900px) {
+  body.is-authenticated .app-route-root .qg-network-page .qg-net-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  body.is-authenticated .app-route-root .qg-network-page .qg-net-hero {
+    align-items: flex-start;
+  }
+  body.is-authenticated .app-route-root .qg-network-page .qg-net-hero-side {
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-network-page .qg-net-chip {
+    transition: none;
+  }
+}
+
+/* ===== Resume page — matches "QuantGym 简历" design reference ===== */
+
+/* Suppress the base mascot watermark on this page's heading (design header has none) */
+body.is-authenticated .app-route-root .qg-resume-page .section-heading::after {
+  content: none;
+  background-image: none;
+}
+
+/* Top bar: title block on the left, ATS pill + export on the right */
+body.is-authenticated .app-route-root .qg-resume-page .resume-topbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-heading {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-heading h2 {
+  margin: 0;
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-title-accent {
+  color: var(--qg-brand);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-heading small {
+  display: block;
+  margin-top: 6px;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ATS score pill with conic progress ring */
+body.is-authenticated .app-route-root .qg-resume-page .resume-ats-pill {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  border-radius: var(--qg-radius-control);
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  box-shadow: var(--qg-shadow-card);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ats-ring {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: conic-gradient(var(--qg-success) 0% 82%, var(--qg-track) 82% 100%);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ats-value {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--qg-surface);
+  display: grid;
+  place-items: center;
+  font-family: var(--qg-font-number);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--qg-success);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ats-copy {
+  display: grid;
+  gap: 1px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ats-label {
+  font-size: 11px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ats-grade {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--qg-success);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-export {
+  padding: 12px 18px;
+  border-radius: var(--qg-radius-control);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-export i {
+  width: 16px;
+  height: 16px;
+}
+
+/* Workbench grid: fixed left rail + flexible preview */
+body.is-authenticated .app-route-root .qg-resume-page .resume-workbench {
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Left cards share a compact panel look */
+body.is-authenticated .app-route-root .qg-resume-page .resume-side .resume-panel {
+  border-radius: 20px;
+  padding: 16px 18px;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-panel-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-add {
+  font-size: 11.5px;
+  color: var(--qg-brand);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Template swatch chips */
+body.is-authenticated .app-route-root .qg-resume-page .resume-template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-template-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 6px;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid var(--qg-border);
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-template-chip.is-active {
+  border-color: var(--tpl-accent);
+  color: var(--tpl-accent);
+  background: color-mix(in srgb, var(--tpl-accent) 9%, var(--qg-surface));
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-template-swatch {
+  width: 100%;
+  height: 20px;
+  border-radius: 6px;
+}
+
+/* Section rows with grip + count + eye toggle */
+body.is-authenticated .app-route-root .qg-resume-page .resume-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-section-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--qg-surface-3);
+  border: 1px solid var(--qg-border);
+  cursor: pointer;
+  transition: opacity 0.14s ease, background 0.14s ease;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-section-row.is-hidden {
+  opacity: 0.55;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-grip {
+  width: 14px;
+  height: 14px;
+  color: var(--qg-muted-2);
+  cursor: grab;
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-section-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--qg-text);
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-section-count {
+  font-size: 11px;
+  color: var(--qg-muted-2);
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-section-eye {
+  display: inline-flex;
+  color: var(--qg-brand);
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-section-eye.is-off {
+  color: var(--qg-muted-2);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-section-eye i {
+  width: 15px;
+  height: 15px;
+}
+
+/* AI polish suggestions card (dark) */
+body.is-authenticated .app-route-root .qg-resume-page .resume-ai-card {
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(160deg, #1b1a38, #2d2a5c);
+  color: #fff;
+  padding: 16px 18px;
+  box-shadow: var(--qg-shadow-card);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ai-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ai-head img {
+  width: 28px;
+  height: 28px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ai-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ai-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ai-list li {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c9c8ec;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-ai-dot {
+  color: #ffd479;
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+
+/* ===== Right side: resume preview document + editor ===== */
+body.is-authenticated .app-route-root .qg-resume-page .resume-preview-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  border-radius: 16px;
+  background: var(--qg-surface-3);
+  border: 1px solid var(--qg-border);
+  padding: 22px;
+  box-shadow: inset 0 2px 12px rgba(27, 26, 56, 0.05);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-resume-page .resume-preview-wrap {
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+  border-radius: 6px;
+  box-shadow: 0 18px 44px -20px rgba(27, 26, 56, 0.4);
+  padding: 38px 40px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-header {
+  border-bottom: 2.5px solid var(--tpl-accent);
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-name {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-role {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tpl-accent);
+  margin-top: 2px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 9px;
+  font-size: 11.5px;
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-block {
+  margin-bottom: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-block:last-child {
+  margin-bottom: 0;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-h {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tpl-accent);
+  margin-bottom: 7px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-strong {
+  font-weight: 700;
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-date {
+  color: var(--qg-muted);
+  font-family: var(--qg-font-number);
+  flex: 0 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-sub {
+  color: var(--qg-muted);
+  margin-top: 2px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-item {
+  margin-bottom: 9px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-item:last-child {
+  margin-bottom: 0;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-bullets {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  color: var(--qg-text-2);
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-skill {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--tpl-accent);
+  background: color-mix(in srgb, var(--tpl-accent) 12%, transparent);
+}
+
+/* Editable content region kept below the preview (drives review + save) */
+body.is-authenticated .app-route-root .qg-resume-page .resume-editor {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-editor-label {
+  color: var(--qg-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-editor textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+}
+
+body.is-authenticated .app-route-root .qg-resume-page .resume-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Responsive: collapse to single column */
+@media (max-width: 1180px) {
+  body.is-authenticated .app-route-root .qg-resume-page .resume-workbench {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-resume-page .resume-template-chip,
+  body.is-authenticated .app-route-root .qg-resume-page .resume-section-row {
+    transition: none;
+  }
+}

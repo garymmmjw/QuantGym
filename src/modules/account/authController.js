@@ -36,10 +36,9 @@ export function createAccountAuthController(deps = {}) {
     elements.registerForm?.classList?.toggle?.("hidden", !isRegister);
     elements.resetPasswordForm?.classList?.toggle?.("hidden", !isReset);
     if (elements.loginForm) elements.loginForm.dataset.authStep = isPassword ? "password" : "email";
-    elements.loginPassword?.classList?.toggle?.("hidden", !isPassword);
+    elements.loginPassword?.classList?.remove?.("hidden");
     if (elements.loginPassword) {
       elements.loginPassword.required = isPassword;
-      if (!isPassword) elements.loginPassword.value = "";
     }
     if (email && elements.loginEmail) elements.loginEmail.value = email;
     if (email && elements.registerEmail) elements.registerEmail.value = email;
@@ -92,7 +91,7 @@ export function createAccountAuthController(deps = {}) {
     const elements = getElements();
     const email = getLoginEmail();
     if (!email || !email.includes("@")) {
-      deps.showAuthMessage?.(text("authNeedEmail"));
+      deps.showAuthMessage?.(text("authNeedEmail"), true);
       return false;
     }
     setEmailAuthStep("reset", email);
@@ -112,10 +111,13 @@ export function createAccountAuthController(deps = {}) {
     const elements = getElements();
     const email = getLoginEmail();
     if (!email || !email.includes("@")) {
-      deps.showAuthMessage?.(text("authNeedEmail"));
+      deps.showAuthMessage?.(text("authNeedEmail"), true);
       return false;
     }
     if (elements.loginForm?.dataset.authStep === "password") {
+      return loginLocal();
+    }
+    if (elements.loginPassword?.value) {
       return loginLocal();
     }
     if (findLocalAccount(email)) {
@@ -132,11 +134,11 @@ export function createAccountAuthController(deps = {}) {
     const appState = getAppState();
     const email = deps.normalizeEmail?.(elements.registerEmail.value) || "";
     if (!email || !email.includes("@")) {
-      deps.showAuthMessage?.(text("authNeedEmail"));
+      deps.showAuthMessage?.(text("authNeedEmail"), true);
       return;
     }
     if (appState.auth.accounts.some((account) => deps.normalizeEmail?.(account.email) === email)) {
-      deps.showAuthMessage?.(text("authDuplicateEmail"));
+      deps.showAuthMessage?.(text("authDuplicateEmail"), true);
       return;
     }
 
@@ -151,9 +153,9 @@ export function createAccountAuthController(deps = {}) {
     } catch (error) {
       if (!error?.status) {
         elements.registerForm.dataset.verificationOptional = "true";
-        deps.showAuthMessage?.(text("authCloudVerificationUnavailable"));
+        deps.showAuthMessage?.(text("authCloudVerificationUnavailable"), true);
       } else {
-        deps.showAuthMessage?.(deps.getVerificationErrorMessage?.(error));
+        deps.showAuthMessage?.(deps.getVerificationErrorMessage?.(error), true);
       }
       deps.setRegisterCodeButtonBusy?.(false);
     }
@@ -162,7 +164,7 @@ export function createAccountAuthController(deps = {}) {
   async function sendPasswordResetCode() {
     const email = getResetPasswordEmail();
     if (!email || !email.includes("@")) {
-      deps.showAuthMessage?.(text("authNeedEmail"));
+      deps.showAuthMessage?.(text("authNeedEmail"), true);
       return;
     }
 
@@ -175,9 +177,9 @@ export function createAccountAuthController(deps = {}) {
       deps.showAuthMessage?.(text("authPasswordResetCodeSent", { email, delivery, devCode }));
     } catch (error) {
       if (!error?.status) {
-        deps.showAuthMessage?.(text("authResetCloudUnavailable"));
+        deps.showAuthMessage?.(text("authResetCloudUnavailable"), true);
       } else {
-        deps.showAuthMessage?.(getPasswordResetErrorMessage(error, deps));
+        deps.showAuthMessage?.(getPasswordResetErrorMessage(error, deps), true);
       }
       deps.setResetPasswordCodeButtonBusy?.(false);
     }
@@ -194,16 +196,16 @@ export function createAccountAuthController(deps = {}) {
       const verificationOptional = elements.registerForm.dataset.verificationOptional === "true";
 
       if (!name || !email || password.length < 6) {
-        deps.showAuthMessage?.(text("authMissingRegisterFields"));
+        deps.showAuthMessage?.(text("authMissingRegisterFields"), true);
         return;
       }
       if (!verificationCode && !verificationOptional) {
-        deps.showAuthMessage?.(text("authNeedVerificationCode"));
+        deps.showAuthMessage?.(text("authNeedVerificationCode"), true);
         return;
       }
 
       if (appState.auth.accounts.some((account) => deps.normalizeEmail?.(account.email) === email)) {
-        deps.showAuthMessage?.(text("authDuplicateEmail"));
+        deps.showAuthMessage?.(text("authDuplicateEmail"), true);
         return;
       }
 
@@ -244,7 +246,7 @@ export function createAccountAuthController(deps = {}) {
           return;
         } catch (error) {
           if (error?.status) {
-            deps.showAuthMessage?.(deps.getVerificationErrorMessage?.(error));
+            deps.showAuthMessage?.(deps.getVerificationErrorMessage?.(error), true);
             return;
           }
           deps.showAuthMessage?.(text("authCloudLocalCreated"));
@@ -257,7 +259,7 @@ export function createAccountAuthController(deps = {}) {
       elements.registerForm.reset();
       deps.renderSession?.();
     } catch (error) {
-      deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error));
+      deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error), true);
     }
   }
 
@@ -292,27 +294,27 @@ export function createAccountAuthController(deps = {}) {
         return;
       } catch (error) {
         if (isBlockingCloudAuthError(error)) {
-          deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error));
+          deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error), true);
           return;
         }
         if (!account && error?.status && error.status !== 401) {
-          deps.showAuthMessage?.(text("authCloudNoLocal"));
+          deps.showAuthMessage?.(text("authCloudNoLocal"), true);
           return;
         }
         if (!account && error?.status === 401) {
-          deps.showAuthMessage?.(text("authCloudLoginFailed"));
+          deps.showAuthMessage?.(text("authCloudLoginFailed"), true);
           return;
         }
       }
 
       if (!account) {
-        deps.showAuthMessage?.(text("authNoLocalAccount"));
+        deps.showAuthMessage?.(text("authNoLocalAccount"), true);
         return;
       }
 
       const passwordHash = await deps.hashPassword?.(email, password);
       if (passwordHash !== account.passwordHash) {
-        deps.showAuthMessage?.(text("authWrongPassword"));
+        deps.showAuthMessage?.(text("authWrongPassword"), true);
         return;
       }
 
@@ -336,7 +338,7 @@ export function createAccountAuthController(deps = {}) {
       deps.showAuthMessage?.("");
       deps.renderSession?.();
     } catch (error) {
-      deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error));
+      deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error), true);
     }
   }
 
@@ -370,7 +372,7 @@ export function createAccountAuthController(deps = {}) {
       deps.showAuthMessage?.(text("authPasswordResetSynced"));
       deps.renderSession?.();
     } catch (error) {
-      deps.showAuthMessage?.(getPasswordResetErrorMessage(error, deps));
+      deps.showAuthMessage?.(getPasswordResetErrorMessage(error, deps), true);
     }
   }
 

@@ -107,6 +107,22 @@ body.is-authenticated .route-loading-side span {
   border-radius: 8px;
 }
 
+/* Dark theme: the route loading skeleton hard-codes white cards + light
+   placeholders, which flash bright on every dark-mode route change. */
+:root[data-qg-theme="dark"] body.is-authenticated .route-loading-main,
+:root[data-qg-theme="dark"] body.is-authenticated .route-loading-side {
+  border-color: var(--qg-border);
+  background: var(--qg-surface);
+  box-shadow: var(--qg-shadow-card);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .route-loading-pill,
+:root[data-qg-theme="dark"] body.is-authenticated .route-loading-title,
+:root[data-qg-theme="dark"] body.is-authenticated .route-loading-line,
+:root[data-qg-theme="dark"] body.is-authenticated .route-loading-side span {
+  background: var(--qg-track);
+}
+
 @keyframes routeLoadingSweep {
   to {
     transform: translateX(100%);

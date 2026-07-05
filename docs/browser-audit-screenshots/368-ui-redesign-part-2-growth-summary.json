@@ -1,0 +1,168 @@
+{
+  "status": "pass",
+  "baseUrl": "http://127.0.0.1:5174",
+  "screenshots": [
+    "docs/browser-audit-screenshots/368-ui-redesign-part-2-overview-desktop.png",
+    "docs/browser-audit-screenshots/368-ui-redesign-part-2-overview-mobile.png",
+    "docs/browser-audit-screenshots/368-ui-redesign-part-2-plan-setup-desktop.png",
+    "docs/browser-audit-screenshots/368-ui-redesign-part-2-plan-dashboard-desktop.png",
+    "docs/browser-audit-screenshots/368-ui-redesign-part-2-plan-mobile.png",
+    "docs/browser-audit-screenshots/368-ui-redesign-part-2-skills-desktop.png",
+    "docs/browser-audit-screenshots/368-ui-redesign-part-2-skills-mobile.png",
+    "docs/browser-audit-screenshots/368-ui-redesign-part-2-skills-dark.png"
+  ],
+  "checks": [
+    {
+      "name": "overview-desktop",
+      "status": "pass",
+      "bytes": 516796,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "growthPageVisible": true,
+        "overviewHeroVisible": true,
+        "overviewMascotReady": true,
+        "planSetupVisible": false,
+        "planDashboardVisible": false,
+        "skillsRadarVisible": false,
+        "skillsCoachReady": false,
+        "radarNonBlankPixels": 0,
+        "requireRadar": false
+      }
+    },
+    {
+      "name": "overview-mobile",
+      "status": "pass",
+      "bytes": 196975,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "growthPageVisible": true,
+        "overviewHeroVisible": true,
+        "overviewMascotReady": true,
+        "planSetupVisible": false,
+        "planDashboardVisible": false,
+        "skillsRadarVisible": false,
+        "skillsCoachReady": false,
+        "radarNonBlankPixels": 0,
+        "requireRadar": false
+      }
+    },
+    {
+      "name": "plan-setup-desktop",
+      "status": "pass",
+      "bytes": 222901,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/plan",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "growthPageVisible": true,
+        "overviewHeroVisible": false,
+        "overviewMascotReady": false,
+        "planSetupVisible": true,
+        "planDashboardVisible": false,
+        "skillsRadarVisible": false,
+        "skillsCoachReady": false,
+        "radarNonBlankPixels": 0,
+        "requireRadar": false
+      }
+    },
+    {
+      "name": "plan-dashboard-desktop",
+      "status": "pass",
+      "bytes": 261405,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/plan",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "growthPageVisible": true,
+        "overviewHeroVisible": false,
+        "overviewMascotReady": false,
+        "planSetupVisible": false,
+        "planDashboardVisible": true,
+        "skillsRadarVisible": false,
+        "skillsCoachReady": false,
+        "radarNonBlankPixels": 0,
+        "requireRadar": false
+      }
+    },
+    {
+      "name": "plan-mobile",
+      "status": "pass",
+      "bytes": 84062,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/plan",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "growthPageVisible": true,
+        "overviewHeroVisible": false,
+        "overviewMascotReady": false,
+        "planSetupVisible": false,
+        "planDashboardVisible": true,
+        "skillsRadarVisible": false,
+        "skillsCoachReady": false,
+        "radarNonBlankPixels": 0,
+        "requireRadar": false
+      }
+    },
+    {
+      "name": "skills-desktop",
+      "status": "pass",
+      "bytes": 317146,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/skills",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "growthPageVisible": true,
+        "overviewHeroVisible": false,
+        "overviewMascotReady": false,
+        "planSetupVisible": false,
+        "planDashboardVisible": false,
+        "skillsRadarVisible": true,
+        "skillsCoachReady": true,
+        "radarNonBlankPixels": 276788,
+        "requireRadar": true
+      }
+    },
+    {
+      "name": "skills-mobile",
+      "status": "pass",
+      "bytes": 113100,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/skills",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "growthPageVisible": true,
+        "overviewHeroVisible": false,
+        "overviewMascotReady": false,
+        "planSetupVisible": false,
+        "planDashboardVisible": false,
+        "skillsRadarVisible": true,
+        "skillsCoachReady": false,
+        "radarNonBlankPixels": 276788,
+        "requireRadar": true
+      }
+    },
+    {
+      "name": "skills-dark",
+      "status": "pass",
+      "bytes": 326615,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/skills",
+        "theme": "dark",
+        "horizontalOverflowPx": 0,
+        "growthPageVisible": true,
+        "overviewHeroVisible": false,
+        "overviewMascotReady": false,
+        "planSetupVisible": false,
+        "planDashboardVisible": false,
+        "skillsRadarVisible": true,
+        "skillsCoachReady": true,
+        "radarNonBlankPixels": 276788,
+        "requireRadar": true
+      }
+    }
+  ]
+}

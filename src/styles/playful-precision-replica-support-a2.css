@@ -1,0 +1,720 @@
+/* Design-replication additions (playful-precision-replica-support-a2.css) — matches UI 设计提升.zip design specs.
+   Loaded after its sibling replica sheet; may override earlier rules. */
+
+/* ===== Messages page (聊天 / Chat) — Shark AI bot thread + list/thread detail parity ===== */
+
+/* Kill legacy ≤1120px truncation (styles.css sets max-height:240px + bottom hairline) */
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-list {
+  max-height: none;
+  border-bottom: 0;
+}
+
+/* Search box hosts a real input now */
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-search-input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: var(--qg-font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--qg-text);
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-search-input,
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-search-input:focus {
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-search-input::placeholder {
+  color: var(--qg-muted-2);
+}
+/* Dark theme: support layer repaints inputs with surface-2 at higher specificity — keep ours transparent */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-messages-page .message-thread-search-input,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-messages-page .message-composer-row input {
+  background: transparent;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-no-result {
+  margin: 8px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--qg-muted-2);
+}
+
+/* List rows: name hugs the AI chip, time flows to the right edge */
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-top strong {
+  flex: 0 1 auto;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-time {
+  margin-left: auto;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-ai {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: #5b5ff5;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-messages-page .message-thread-ai {
+  color: var(--qg-brand-ink);
+}
+
+/* Avatar wrap + green presence dot */
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-avatar-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-online {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #4ade80;
+  border: 2px solid var(--qg-surface-2);
+}
+
+/* Saturated per-person avatar tones (design palette), white initials */
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-avatar[data-tone="0"],
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-avatar[data-tone="0"],
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-avatar[data-tone="0"] {
+  background: #ff9f2e;
+  color: #ffffff;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-avatar[data-tone="1"],
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-avatar[data-tone="1"],
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-avatar[data-tone="1"] {
+  background: #5b5ff5;
+  color: #ffffff;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-avatar[data-tone="2"],
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-avatar[data-tone="2"],
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-avatar[data-tone="2"] {
+  background: #e0562e;
+  color: #ffffff;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-avatar[data-tone="3"],
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-avatar[data-tone="3"],
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-avatar[data-tone="3"] {
+  background: #0f9d63;
+  color: #ffffff;
+}
+
+/* Conversation header: name row is flex so the gradient bot badge sits beside it */
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-meta strong {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-badge {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #5b5ff5, #7d6cff);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* Grouped consecutive messages: avatar only on the last one, others indent 39px */
+body.is-authenticated .app-route-root .qg-messages-page .direct-message.is-grouped .direct-message-col {
+  margin-left: 39px;
+}
+
+/* Bot recommendation card (今日推荐) */
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-card {
+  margin-top: 8px;
+  padding: 13px 15px;
+  border-radius: 14px;
+  background: var(--qg-surface);
+  border: 1px solid #e6eefb;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-card-tag {
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #5b5ff5;
+  letter-spacing: 0.06em;
+}
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-messages-page .direct-message-card-tag {
+  color: var(--qg-brand-ink);
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-card-formula {
+  padding: 6px 0;
+  font-family: var(--qg-font-number);
+  font-size: 15px;
+  color: var(--qg-text);
+  text-align: center;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-card-primary {
+  flex: 1;
+  padding: 9px;
+  border: none;
+  border-radius: 10px;
+  background: #5b5ff5;
+  color: #ffffff;
+  font-family: var(--qg-font-ui);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-card-save {
+  padding: 9px 13px;
+  border-radius: 10px;
+  background: var(--qg-surface);
+  border: 1px solid #e0dffb;
+  color: #5b5ff5;
+  font-family: var(--qg-font-ui);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-messages-page .direct-message-card-save {
+  color: var(--qg-brand-ink);
+}
+
+/* Bubbles carry no per-message timestamp in the design */
+body.is-authenticated .app-route-root .qg-messages-page .direct-message small {
+  display: none;
+}
+
+/* Typing indicator (three bouncing dots) */
+@keyframes qg-chat-dot {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-typing {
+  display: flex;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--qg-surface);
+  border: 1px solid var(--qg-border);
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c3c2d8;
+  animation: qg-chat-dot 1s infinite;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-typing span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message-typing span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-messages-page .direct-message-typing span {
+  background: var(--qg-muted-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-messages-page .direct-message-typing span {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* Send button: exact 40x40 square (support layer forces min-height 42px) */
+body.is-authenticated .app-route-root .qg-messages-page .message-composer-row .icon-button {
+  min-height: 40px;
+  height: 40px;
+}
+
+/* Fallback empty state follows the global .qg-empty-state pattern */
+body.is-authenticated .app-route-root .qg-messages-page .empty-state {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: clamp(28px, 6vw, 56px);
+  text-align: center;
+  color: var(--qg-muted);
+  font-size: 13px;
+}
+body.is-authenticated .app-route-root .qg-messages-page .empty-state strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--qg-text-2);
+}
+body.is-authenticated .app-route-root .qg-messages-page .empty-state img {
+  width: 96px;
+  max-width: 40%;
+  height: auto;
+}
+
+/* ===== Network page (人脉) — replica polish over the base replica sheet ===== */
+
+/* Dark: support layer repaints .section-heading with a themed surface gradient at
+   :root[data-qg-theme] specificity — keep the hero flat on --qg-bg like the design */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-network-page .qg-net-hero {
+  background: none;
+  box-shadow: none;
+}
+
+/* Hero accent stat pill (可内推): soft lavender border + muted label per design */
+body.is-authenticated .app-route-root .qg-network-page .qg-net-stat-accent {
+  border-color: #e0dffb;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-stat-accent .qg-net-stat-label {
+  color: #7a79b8;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-network-page .qg-net-stat-accent {
+  border-color: color-mix(in srgb, var(--qg-brand) 24%, var(--qg-border));
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-network-page .qg-net-stat-accent .qg-net-stat-label {
+  color: var(--qg-brand-ink);
+}
+
+/* Graph mascot node: true center of the stage (nodes are %-positioned now) */
+body.is-authenticated .app-route-root .qg-network-page .qg-net-node-self {
+  top: 50%;
+  left: 50%;
+}
+
+/* Person card: compact vertically-centered row like the design
+   (legacy styles.css forces min-height: 210px on .network-card) */
+body.is-authenticated .app-route-root .qg-network-page .network-card {
+  align-items: center;
+  min-height: 0;
+}
+
+/* Top row: name block fills, ghost icon actions hug the right edge */
+body.is-authenticated .app-route-root .qg-network-page .network-card .network-card-top {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .network-card .network-card-top > div {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .network-card .icon-button {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  border-radius: 10px;
+}
+
+/* “＋ 连接 / 已连接” CTA (design btnStyle) */
+body.is-authenticated .app-route-root .qg-network-page .qg-net-connect {
+  flex: 0 0 auto;
+  align-self: center;
+  min-height: 0;
+  padding: 9px 15px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #ffffff;
+  font-family: var(--qg-font-ui);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.4;
+  box-shadow: 0 3px 0 #3f39c9;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-connect.is-connected {
+  border: 1px solid #cdeede;
+  background: #e3f7ee;
+  color: #0f9d63;
+  box-shadow: none;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-network-page .qg-net-connect.is-connected {
+  border-color: color-mix(in srgb, var(--qg-success) 35%, var(--qg-surface));
+  background: color-mix(in srgb, var(--qg-success) 18%, var(--qg-surface));
+  color: var(--qg-success);
+}
+
+/* Status pill tones — design tags: green 可内推 / purple 活跃 / orange 校友 */
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-meta .network-status.is-tone-purple {
+  background: #eef0ff;
+  color: #5b5ff5;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-meta .network-status.is-tone-orange {
+  background: #fff3dd;
+  color: #b3610a;
+}
+
+body.is-authenticated .app-route-root .qg-network-page .qg-net-card-meta .network-status.is-tone-gray {
+  background: var(--qg-chip);
+  color: var(--qg-muted);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-network-page .qg-net-card-meta .network-status.is-tone-purple {
+  background: color-mix(in srgb, var(--qg-brand) 22%, var(--qg-surface));
+  color: var(--qg-brand-ink);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-network-page .qg-net-card-meta .network-status.is-tone-orange {
+  background: color-mix(in srgb, #e8a13d 20%, var(--qg-surface));
+  color: #e8a13d;
+}
+
+/* Empty state: carded mascot empty state (global .qg-empty-state pattern) */
+body.is-authenticated .app-route-root .qg-network-page .network-list .qg-empty-state strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--qg-text-2);
+}
+
+/* ===== Resume page (简历工作台) — replica polish over the base replica sheet ===== */
+
+/* Template accent fallback: base sheet consumes var(--tpl-accent) everywhere
+   (doc header rule, section titles, skill chips, active template chip) but never
+   defines it. React writes the live value inline; keep a brand-toned default. */
+body.is-authenticated .app-route-root .qg-resume-page {
+  --tpl-accent: var(--qg-brand);
+}
+
+/* Breadcrumb chip: JOBS category light-blue (design keeps the same literal in dark) */
+body.is-authenticated .app-route-root .qg-resume-page .resume-eyebrow,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-resume-page .resume-eyebrow {
+  background: #e7f2fb;
+  color: #2f7fc0;
+}
+
+/* Design header carries no summary line under the h1 (keep the #resumeSummary node
+   for languageText.js lookups; just hide it) */
+body.is-authenticated .app-route-root .qg-resume-page .resume-heading small {
+  display: none;
+}
+
+/* Dark: support layer repaints .section-heading with a surface gradient at
+   :root[data-qg-theme] specificity — the design heading stays flat on --qg-bg */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-resume-page .resume-heading {
+  background: none;
+  box-shadow: none;
+}
+
+/* Section rows render as real <button>s for a11y — flatten UA button chrome
+   (base sheet styled them as divs) */
+body.is-authenticated .app-route-root .qg-resume-page .resume-section-row {
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  appearance: none;
+  font-family: var(--qg-font-ui);
+  text-align: left;
+  color: var(--qg-text);
+}
+
+/* AI card: design spacing between head and list is the head's 8px margin only
+   (.resume-side .resume-panel adds a 12px grid gap on the other panels) */
+body.is-authenticated .app-route-root .qg-resume-page .resume-side .resume-ai-card {
+  gap: 0;
+}
+
+/* Highlights body line (design: color var(--text-2), no extra styling) */
+body.is-authenticated .app-route-root .qg-resume-page .resume-doc-text {
+  color: var(--qg-text-2);
+}
+
+/* =========================================================================
+   SHOP COSMETICS — 商店装扮真实生效面。
+   Every selector below only matches when a cosmetic is owned: either a JSX
+   class the feature adds after an `isItemOwned` check (`.qg-frame-avatar`,
+   `.qg-sticker-*`, `.qg-coder-sticker`, `.qg-dm-sticker` markup) or the
+   body-level marker `body.qg-owns-frame` (leaderboard rows are outside the
+   cosmetics surface's JSX ownership, so CSS keys off the marker instead).
+   Unowned users produce none of these hooks → zero visual trace.
+   ========================================================================= */
+
+/* --- frame: 庆典彩带头像框（渐变描边 + 彩带角标） -------------------------- */
+body.is-authenticated .app-route-root .qg-frame-avatar,
+body.qg-owns-frame.is-authenticated .app-route-root .qg-overview-leaderboard .leaderboard-item.current .leaderboard-avatar,
+body.qg-owns-frame.is-authenticated .app-route-root .qg-overview-leaderboard .leaderboard-podium-card.is-current .podium-avatar {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Rounded media stays clipped by its own radius once overflow is released */
+body.is-authenticated .app-route-root .qg-frame-avatar img,
+body.qg-owns-frame.is-authenticated .app-route-root .qg-overview-leaderboard .leaderboard-item.current .leaderboard-avatar img,
+body.qg-owns-frame.is-authenticated .app-route-root .qg-overview-leaderboard .leaderboard-podium-card.is-current .podium-avatar img {
+  border-radius: inherit;
+}
+
+/* Gradient ring (border-box mask keeps the centre transparent) */
+body.is-authenticated .app-route-root .qg-frame-avatar::before,
+body.qg-owns-frame.is-authenticated .app-route-root .qg-overview-leaderboard .leaderboard-item.current .leaderboard-avatar::before,
+body.qg-owns-frame.is-authenticated .app-route-root .qg-overview-leaderboard .leaderboard-podium-card.is-current .podium-avatar::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(from 210deg, #ff9f2e, #ff5d8f, #7d6cff, #2f9be0, #ffd166, #ff9f2e);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* 彩带角标 pinned to the top-right shoulder of the avatar */
+body.is-authenticated .app-route-root .qg-frame-avatar::after,
+body.qg-owns-frame.is-authenticated .app-route-root .qg-overview-leaderboard .leaderboard-item.current .leaderboard-avatar::after,
+body.qg-owns-frame.is-authenticated .app-route-root .qg-overview-leaderboard .leaderboard-podium-card.is-current .podium-avatar::after {
+  content: "🎀";
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  z-index: 3;
+  font-size: 11px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(23, 20, 60, 0.35));
+  pointer-events: none;
+}
+
+/* Tiny 18px forum-meta avatar: slimmer ring + smaller bow */
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-ava.qg-frame-avatar::before {
+  inset: -1.5px;
+  padding: 1.5px;
+}
+body.is-authenticated .app-route-root .qg-community-page .forum-thread-ava.qg-frame-avatar::after {
+  top: -6px;
+  right: -6px;
+  font-size: 9px;
+}
+
+/* Podium hero (48px circle): a touch more presence */
+body.qg-owns-frame.is-authenticated .app-route-root .qg-overview-leaderboard .leaderboard-podium-card.is-current .podium-avatar::before {
+  inset: -3px;
+  padding: 2.5px;
+}
+body.qg-owns-frame.is-authenticated .app-route-root .qg-overview-leaderboard .leaderboard-podium-card.is-current .podium-avatar::after {
+  font-size: 13px;
+  top: -8px;
+  right: -6px;
+}
+
+/* --- teacher: 贴纸选择器（聊天 + 论坛共用弹层） ---------------------------- */
+/* Anchor contexts: the chat composer form and the forum action-row wrapper */
+body.is-authenticated .app-route-root .qg-messages-page .message-composer {
+  position: relative;
+}
+body.is-authenticated .app-route-root .qg-community-page .qg-sticker-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+body.is-authenticated .app-route-root .qg-sticker-btn.is-open {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-sticker-pop {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 30;
+  width: min(312px, calc(100vw - 44px));
+  padding: 10px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 20px 44px -20px rgba(23, 20, 60, 0.45);
+}
+body.is-authenticated .app-route-root .qg-messages-page .qg-sticker-pop {
+  right: 12px;
+  bottom: calc(100% - 4px);
+}
+/* Forum composer sits directly below the sticky page heading — open the
+   panel DOWNWARD so it never slides under the heading */
+body.is-authenticated .app-route-root .qg-community-page .qg-sticker-anchor .qg-sticker-pop {
+  right: auto;
+  left: 0;
+  top: calc(100% + 10px);
+  bottom: auto;
+  z-index: 40;
+}
+
+body.is-authenticated .app-route-root .qg-sticker-pop-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 2px 8px;
+}
+body.is-authenticated .app-route-root .qg-sticker-pop-head strong {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--qg-muted);
+  letter-spacing: 0.02em;
+}
+body.is-authenticated .app-route-root .qg-sticker-pop-close {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--qg-track);
+  color: var(--qg-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+body.is-authenticated .app-route-root .qg-sticker-pop-close:hover {
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+body.is-authenticated .app-route-root .qg-sticker-cell {
+  display: block;
+  padding: 6px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 130ms ease, border-color 130ms ease, transform 130ms ease;
+}
+body.is-authenticated .app-route-root .qg-sticker-cell:hover {
+  border-color: var(--qg-border);
+  background: var(--qg-track);
+  transform: translateY(-1px);
+}
+body.is-authenticated .app-route-root .qg-sticker-cell img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+}
+
+/* Sticker rendered inside a direct-message bubble column */
+body.is-authenticated .app-route-root .qg-messages-page .qg-dm-sticker {
+  display: block;
+  width: 104px;
+  height: 104px;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 14px rgba(23, 20, 60, 0.2));
+}
+body.is-authenticated .app-route-root .qg-messages-page .direct-message.mine .qg-dm-sticker {
+  margin-left: auto;
+}
+
+/* Forum feed: a sticker post renders as a compact transparent PNG, not a
+   full-width photo card */
+body.is-authenticated .app-route-root .qg-community-page .community-media.qg-media-sticker {
+  width: fit-content;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body.is-authenticated .app-route-root .qg-community-page .community-media.qg-media-sticker img {
+  width: 128px;
+  height: 128px;
+  border-radius: 0;
+  object-fit: contain;
+  background: transparent !important;
+  filter: drop-shadow(0 8px 14px rgba(23, 20, 60, 0.18));
+}
+
+/* --- coder: 键盘侠鲨鱼角落贴纸（简历 / 资料笔记，可关闭） ------------------ */
+body.is-authenticated .app-route-root .qg-coder-sticker {
+  position: fixed;
+  right: 18px;
+  bottom: 88px; /* clears the floating 今日待办 pill */
+  z-index: 40;
+  width: 96px;
+  pointer-events: none;
+}
+body.is-authenticated .app-route-root .qg-coder-sticker img {
+  display: block;
+  width: 100%;
+  transform: rotate(-6deg);
+  filter: drop-shadow(0 10px 18px rgba(23, 20, 60, 0.28));
+  animation: qg-coder-bob 3.4s ease-in-out infinite;
+}
+body.is-authenticated .app-route-root .qg-coder-sticker-close {
+  position: absolute;
+  top: -4px;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--qg-border);
+  border-radius: 50%;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 4px 10px -4px rgba(23, 20, 60, 0.35);
+}
+body.is-authenticated .app-route-root .qg-coder-sticker-close:hover {
+  color: var(--qg-text);
+}
+
+@keyframes qg-coder-bob {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-6px) rotate(-4deg); }
+}
+
+/* Dark theme: popover shadows read heavier, sticker shadows lighter */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-sticker-pop {
+  box-shadow: 0 22px 48px -18px rgba(0, 0, 0, 0.65);
+}
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-coder-sticker-close {
+  box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.6);
+}
+
+/* Mobile (≤860px): keep the corner sticker clear of the bottom nav and
+   shrink the sticker grid */
+@media (max-width: 860px) {
+  body.is-authenticated .app-route-root .qg-coder-sticker {
+    width: 72px;
+    right: 12px;
+    bottom: 84px;
+  }
+  body.is-authenticated .app-route-root .qg-sticker-pop {
+    width: min(280px, calc(100vw - 32px));
+  }
+  body.is-authenticated .app-route-root .qg-messages-page .qg-dm-sticker {
+    width: 88px;
+    height: 88px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-coder-sticker img {
+    animation: none !important;
+  }
+  body.is-authenticated .app-route-root .qg-sticker-cell {
+    transition: none;
+  }
+}

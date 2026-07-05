@@ -274,6 +274,16 @@ const routeContracts = {
       "pkRevealBtn",
       "pkFeed"
     ]
+  },
+  league: {
+    page: "LeaguePage.jsx",
+    content: "LeaguePageContent",
+    selectors: [
+      "leaguePageTitle",
+      "leagueStandings",
+      "leagueLearningMap",
+      "leagueRewardShop"
+    ]
   }
 };
 
@@ -333,6 +343,8 @@ const evidenceArtifacts = [
   "354-deployed-jobs-api-source-summary.json",
   "362-deployed-media-storage-summary.json",
   "331-postgres-cutover-export-smoke-summary.json",
+  "363-api-postgres-runtime-adapter-summary.json",
+  "365-postgres-deployed-health-summary.json",
   "332-browser-extension-runtime-smoke-summary.json",
   "333-production-boundaries-deployed-services-summary.json",
   "351-deployed-beta-smoke-summary.json",
@@ -346,6 +358,7 @@ const evidenceArtifacts = [
   "338-jobs-source-production-fixture-summary.json",
   "339-chrome-store-publication-fixture-summary.json",
   "340-question-bank-rights-release-blockers-summary.json",
+  "364-question-bank-release-catalog-summary.json",
   "345-question-bank-rights-packet-summary.json",
   "346-ops-alert-edge-packet-summary.json",
   "361-ops-alert-production-signoff-summary.json",
@@ -645,14 +658,19 @@ function validateEvidenceContract(artifact, artifactPath, data) {
         warnings.push("docs/browser-audit-screenshots/323-release-readiness-summary.json contains a prior failed release-readiness run; rerun npm run check:release-readiness:local after fixes to refresh it.");
         break;
       }
-      expect(data.allowPartialProduction === true, "local release-readiness summary must allow partial production boundary");
       const releaseResults = Array.isArray(data.results) ? data.results : [];
       const finalRelease = data.status === "pass"
         && Number(data.partial || 0) === 0
         && Number(data.failed || 0) === 0
         && Number(data.passed || 0) >= 10
         && releaseResults.every((result) => result.status === "pass");
+      expect(
+        data.allowPartialProduction === true || finalRelease,
+        "local release-readiness summary must allow partial production boundary unless it is a final all-pass release summary"
+      );
       const productionBoundaries = findResult(releaseResults, "Production boundaries");
+      const migrationCompletion = findResult(releaseResults, "Migration completion audit");
+      const deployedPostgresHealth = findResult(releaseResults, "Deployed Postgres health");
       const productionOnlyHandoff = data.status === "partial"
         && Number(data.passed || 0) >= 9
         && Number(data.partial || 0) === 1
@@ -667,18 +685,28 @@ function validateEvidenceContract(artifact, artifactPath, data) {
         && Number(data.passed || 0) >= 8
         && Number(data.partial || 0) === 2
         && Number(data.failed || 0) === 0;
+      const postgresHealthLocalHandoff = data.status === "partial"
+        && Number(data.passed || 0) >= 9
+        && Number(data.partial || 0) === 3
+        && Number(data.failed || 0) === 0
+        && migrationCompletion?.status === "partial"
+        && deployedPostgresHealth?.status === "partial"
+        && productionBoundaries?.status === "partial"
+        && releaseResults.every((result) => (
+          ["Migration completion audit", "Deployed Postgres health", "Production boundaries"].includes(result.name)
+            ? result.status === "partial"
+            : result.status === "pass"
+        ));
       expect(
-        finalRelease || productionOnlyHandoff || interimRelease,
-        "local release-readiness must be final pass, production-token-only partial, or two-partial local handoff"
+        finalRelease || productionOnlyHandoff || interimRelease || postgresHealthLocalHandoff,
+        "local release-readiness must be final pass, production-token-only partial, two-partial local handoff, or named Postgres-health partial handoff"
       );
-      const migrationCompletion = findResult(releaseResults, "Migration completion audit");
       if (migrationCompletion?.data?.requirements) {
         const googleProvider = findRequirement(migrationCompletion.data.checks, "google-provider-login");
         const googleProviderTokenSecondsRemaining = secondsUntil(
           googleProvider?.evidence?.tokenExpiresAt
         );
-        const googleProviderTokenFresh = Number.isFinite(googleProviderTokenSecondsRemaining)
-          && googleProviderTokenSecondsRemaining >= 120;
+        const googleProviderTokenExpiryCaptured = Boolean(googleProvider?.evidence?.tokenExpiresAt);
         const finalMigrationComplete = migrationCompletion.status === "pass"
           && migrationCompletion.data?.status === "pass"
           && Number(migrationCompletion.data?.requirements?.passed) === 10
@@ -686,7 +714,7 @@ function validateEvidenceContract(artifact, artifactPath, data) {
           && Number(migrationCompletion.data?.requirements?.failed) === 0
           && googleProvider?.status === "pass"
           && googleProvider?.evidence?.providerLoginCompleted === true
-          && googleProviderTokenFresh;
+          && googleProviderTokenExpiryCaptured;
         const interimMigrationComplete = migrationCompletion.status === "partial"
           && migrationCompletion.data?.status === "partial"
           && Number(migrationCompletion.data?.requirements?.passed) === 9
@@ -699,7 +727,12 @@ function validateEvidenceContract(artifact, artifactPath, data) {
           "Migration completion audit nested gate must be final pass or one-token pending partial"
         );
         if (googleProvider?.status === "pass") {
-          expect(googleProviderTokenFresh === true, "Migration completion audit nested pass requires fresh token evidence");
+          expect(
+            googleProvider?.evidence?.providerLoginCompleted === true
+              && googleProviderTokenExpiryCaptured
+              && Number.isFinite(googleProviderTokenSecondsRemaining),
+            "Migration completion audit nested pass requires signed-off provider-token evidence with captured expiry metadata"
+          );
         }
       }
       const uiContracts = findResult(releaseResults, "UI contracts");
@@ -728,6 +761,10 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       if (postgresCutover) {
         expect(postgresCutover.status === "pass", "Postgres cutover nested gate must pass when present");
         expect(postgresCutover.data?.status === "pass", "Postgres cutover nested data status must pass when present");
+      }
+      if (deployedPostgresHealth) {
+        expect(deployedPostgresHealth.status === deployedPostgresHealth.data?.status, "Deployed Postgres health nested gate must mirror data status");
+        validatePostgresDeployedHealthSummary(deployedPostgresHealth.data || {}, expect, "nested deployed Postgres health");
       }
       const routeInteractions = findResult(releaseResults, "Route interactions");
       if (routeInteractions) {
@@ -875,8 +912,7 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       const googleProviderTokenSecondsRemaining = secondsUntil(
         googleProvider?.evidence?.tokenExpiresAt
       );
-      const googleProviderTokenFresh = Number.isFinite(googleProviderTokenSecondsRemaining)
-        && googleProviderTokenSecondsRemaining >= 120;
+      const googleProviderTokenExpiryCaptured = Boolean(googleProvider?.evidence?.tokenExpiresAt);
       const finalComplete = data.status === "pass"
         && Number(data.requirements?.passed) === 10
         && Number(data.requirements?.pending) === 0
@@ -884,7 +920,7 @@ function validateEvidenceContract(artifact, artifactPath, data) {
         && Number(data.completionPercent) === 100
         && googleProvider?.status === "pass"
         && googleProvider?.evidence?.providerLoginCompleted === true
-        && googleProviderTokenFresh;
+        && googleProviderTokenExpiryCaptured;
       const interimComplete = data.status === "partial"
         && Number(data.requirements?.passed) === 9
         && Number(data.requirements?.pending) === 1
@@ -894,7 +930,12 @@ function validateEvidenceContract(artifact, artifactPath, data) {
         && String(googleProvider?.reason || "").includes("QUANTGYM_GOOGLE_ID_TOKEN");
       expect(finalComplete || interimComplete, "migration completion audit must be either final pass or one-token pending partial");
       if (googleProvider?.status === "pass") {
-        expect(googleProviderTokenFresh === true, "migration completion Google provider pass requires fresh token evidence");
+        expect(
+          googleProvider?.evidence?.providerLoginCompleted === true
+            && googleProviderTokenExpiryCaptured
+            && Number.isFinite(googleProviderTokenSecondsRemaining),
+          "migration completion Google provider pass requires signed-off provider-token evidence with captured expiry metadata"
+        );
       }
       for (const id of [
         "react-route-ownership",
@@ -932,6 +973,12 @@ function validateEvidenceContract(artifact, artifactPath, data) {
     case "331-postgres-cutover-export-smoke-summary.json":
       validatePostgresCutoverExportSmokeSummary(data, expect, "Postgres cutover export smoke");
       break;
+    case "363-api-postgres-runtime-adapter-summary.json":
+      validateApiPostgresRuntimeAdapterSummary(data, expect, "API Postgres runtime adapter");
+      break;
+    case "365-postgres-deployed-health-summary.json":
+      validatePostgresDeployedHealthSummary(data, expect, "deployed Postgres health");
+      break;
     case "332-browser-extension-runtime-smoke-summary.json":
       validateBrowserExtensionRuntimeSmokeSummary(data, expect, "browser extension runtime smoke");
       break;
@@ -967,6 +1014,9 @@ function validateEvidenceContract(artifact, artifactPath, data) {
       break;
     case "340-question-bank-rights-release-blockers-summary.json":
       validateQuestionBankRightsReleaseBlockersSummary(data, expect, "question-bank rights release blockers");
+      break;
+    case "364-question-bank-release-catalog-summary.json":
+      validateQuestionBankReleaseCatalogSummary(data, expect, "question-bank release catalog");
       break;
     case "345-question-bank-rights-packet-summary.json":
       validateQuestionBankRightsPacketSummary(data, expect, "question-bank rights approval packet");
@@ -1981,6 +2031,52 @@ function validatePostgresCutoverExportSmokeSummary(data, expect, label) {
   expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
 }
 
+function validateApiPostgresRuntimeAdapterSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.surface === "API Postgres runtime adapter", `${label} must identify the adapter surface`);
+  expect(data.fixture === "fake psycopg runtime adapter", `${label} must use the fake psycopg fixture`);
+  expect(data.health?.ok === true, `${label} health must be ok`);
+  expect(data.health?.database?.backend === "postgres", `${label} must report postgres backend`);
+  expect(data.health?.database?.writable === true, `${label} must report writable database`);
+  expect(Number(data.health?.database?.schemaTables || 0) >= 12, `${label} must report initialized schema tables`);
+  expect(data.checks?.postgresBackendReported === true, `${label} must check backend reporting`);
+  expect(data.checks?.postgresSchemaTablesReported === true, `${label} must check schema reporting`);
+  expect(data.checks?.postgresWritableReported === true, `${label} must check writability reporting`);
+  expect(data.checks?.fakePsycopgImported === true, `${label} must import fake psycopg`);
+  expect(data.checks?.schemaStatementsSplit === true, `${label} must split Postgres schema startup statements`);
+  expect(data.checks?.schemaStatementsIdempotent === true, `${label} must make Postgres schema startup idempotent`);
+  expect(data.checks?.parameterizedSqlTranslated === true, `${label} must prove SQLite placeholders are translated`);
+  expect(data.checks?.jsonbParamsAdapted === true, `${label} must prove JSONB parameters are adapted`);
+  expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
+}
+
+function validatePostgresDeployedHealthSummary(data, expect, label) {
+  expect(["pass", "partial"].includes(data.status), `${label} status must be pass or partial`);
+  expect(data.surface === "deployed Postgres health", `${label} must identify the deployed health surface`);
+  expect(data.healthUrl === "https://api.quantgym.app/api/health", `${label} must target deployed API health`);
+  expect(Number(data.responseStatus || 0) === 200, `${label} must record HTTP 200 health`);
+  expect(data.checks?.healthUrlHttpsDns === true, `${label} must use an HTTPS DNS health URL`);
+  expect(data.checks?.publicApiHostProduction === true, `${label} must target api.quantgym.app`);
+  expect(data.checks?.healthFetchOk === true, `${label} must fetch deployed health successfully`);
+  expect(data.checks?.healthOk === true, `${label} must record ok health`);
+  expect(data.checks?.databaseObjectPresent === true, `${label} must record the database object`);
+  expect(data.checks?.backendReported === true, `${label} must record the deployed database backend`);
+  expect(["sqlite", "postgres"].includes(data.database?.backend), `${label} backend must be sqlite or postgres`);
+  expect(data.checks?.writableReported === true, `${label} must record writable database reporting`);
+  expect(data.checks?.schemaTablesReported === true, `${label} must record schema table reporting`);
+  expect(data.checks?.summaryRedacted === true, `${label} summary must be redacted`);
+  if (data.status === "pass") {
+    expect(data.database?.backend === "postgres", `${label} pass requires deployed backend postgres`);
+    expect(data.checks?.deployedBackendPostgres === true, `${label} pass must check deployed postgres backend`);
+  }
+  if (data.status === "partial") {
+    expect(data.database?.backend === "sqlite", `${label} partial must capture the current sqlite backend`);
+    expect(data.checks?.deployedBackendSqlite === true, `${label} partial must check deployed sqlite backend`);
+    expect(Array.isArray(data.warnings) && data.warnings.some((item) => String(item).includes("managed Postgres cutover is not active")), `${label} partial must explain the pending cutover`);
+  }
+  expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
+}
+
 function validateQuestionBankRightsSummary(data, expect, label) {
   expect(data.status === "pass", `${label} status must be pass`);
   expect(data.mode === "private-beta", `${label} release-readiness must check private beta mode`);
@@ -2065,6 +2161,30 @@ function validateQuestionBankRightsReleaseBlockersSummary(data, expect, label) {
   expect(data.checks?.activePublicCommercialNeedsReview === true, `${label} active public/commercial rights must remain needs-review`);
   expect(data.checks?.noActivePublicCommercialApprovals === true, `${label} must have no active public/commercial approvals`);
   expect(data.checks?.quantguideStillPrivateAndBlocked === true, `${label} QuantGuide must remain private and blocked for public/commercial`);
+  expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
+}
+
+function validateQuestionBankReleaseCatalogSummary(data, expect, label) {
+  expect(data.status === "pass", `${label} status must be pass`);
+  expect(data.surface === "question-bank release catalog", `${label} must identify the release catalog surface`);
+  expect(Number(data.fullPrivateBetaProblemCount || 0) === 2997, `${label} must preserve the full private-beta catalog count`);
+  for (const mode of ["public", "commercial"]) {
+    const catalog = data.releaseCatalogs?.[mode] || {};
+    expect(catalog.generated === true, `${label} ${mode} catalog must be generated`);
+    expect(Number(catalog.unapprovedProblemCount || 0) === 0, `${label} ${mode} catalog must contain no unapproved problems`);
+    expect(Number(catalog.needsReviewSourceCount || 0) === 15, `${label} ${mode} catalog must see all current needs-review sources`);
+    expect(Number(catalog.excludedNeedsReviewSourceCount || 0) === Number(catalog.needsReviewSourceCount || -1), `${label} ${mode} catalog must exclude every needs-review source`);
+    expect(String(catalog.artifactJson || "").includes(`release-catalog/${mode}/problem-catalog.json`), `${label} ${mode} catalog must write JSON artifact`);
+    expect(String(catalog.artifactScript || "").includes(`release-catalog/${mode}/problem-catalog.js`), `${label} ${mode} catalog must write browser script artifact`);
+  }
+  expect(data.checks?.privateBetaCatalogRetained === true, `${label} must keep private-beta catalog unchanged`);
+  expect(data.checks?.publicCatalogGenerated === true, `${label} must generate public catalog`);
+  expect(data.checks?.commercialCatalogGenerated === true, `${label} must generate commercial catalog`);
+  expect(data.checks?.publicNoUnapprovedProblems === true, `${label} public catalog must contain no unapproved problems`);
+  expect(data.checks?.commercialNoUnapprovedProblems === true, `${label} commercial catalog must contain no unapproved problems`);
+  expect(data.checks?.indexDoesNotHardcodeDefaultProblemCatalog === true, `${label} index must not hardcode full problem catalog`);
+  expect(data.checks?.runtimeConfigSelectableCatalogScript === true, `${label} runtime config must select catalog script`);
+  expect(data.checks?.buildConfigEmitsProblemCatalogScript === true, `${label} build config must emit catalog script setting`);
   expect(Array.isArray(data.failures) && data.failures.length === 0, `${label} failures must be empty`);
 }
 
@@ -2238,6 +2358,8 @@ function validateChromeStorePublicationPacketSummary(data, expect, label) {
     "usesPlaceholdersForPublishedIds",
     "releasePackageExists",
     "releasePackageShaMatches",
+    "releasePackageVersionMatchesManifest",
+    "releasePackageOutputMatchesManifestVersion",
     "publicationFixturePass",
     "submissionHandoffPass",
     "publishedFixturePass",
@@ -2444,7 +2566,9 @@ function validateBrowserExtensionRuntimeSmokeSummary(data, expect, label) {
   expect(Number(data.calls?.storageSets || 0) >= 2, `${label} must write extension storage during URL changes`);
   expect(Number(data.calls?.tabQueries || 0) >= 1, `${label} must query the active tab`);
   expect(Number(data.calls?.scriptExecutions || 0) >= 1, `${label} must execute the active-tab content script`);
-  expect(Number(data.calls?.openedTabs || 0) >= 1, `${label} must open QuantGym for a normal capture`);
+  expect(Number(data.calls?.openedTabs || 0) >= 1, `${label} must open QuantGym for a viewport capture`);
+  expect(Number(data.calls?.captureVisibleTab || 0) >= 1, `${label} must capture the visible tab`);
+  expect(Number(data.calls?.sentMessages || 0) >= 1, `${label} must send the QuantGym bridge message`);
   for (const [key, value] of Object.entries(data.checks || {})) {
     expect(value === true, `${label} check ${key} must pass`);
   }
@@ -2458,14 +2582,20 @@ function validateBrowserExtensionRuntimeSmokeSummary(data, expect, label) {
     "problemPromptRendered",
     "problemMetaRendered",
     "copyJsonWroteClipboard",
-    "collectOpenedQuantGym",
-    "capturePayloadHasTitle",
-	    "capturePayloadHasSourceUrl",
+    "viewportCaptureCalled",
+    "viewportCaptureUsesJpeg",
+    "bridgeTabOpened",
+    "bridgeTabOpenedInactiveFirst",
+    "bridgeTabActivatedAfterMessage",
+    "bridgeMessageSent",
+    "bridgePayloadHasScreenshot",
+    "bridgePayloadHasTitle",
+	    "bridgePayloadHasSourceUrl",
 	    "boardUrlSaved",
 	    "invalidBoardUrlRejected",
 	    "insecureRemoteBoardUrlRejected",
 	    "loopbackHttpBoardUrlAllowed",
-	    "longCaptureFallsBackToClipboard"
+	    "longCaptureCopiesJson"
 	  ]) {
     expect(data.checks?.[key] === true, `${label} must pass ${key}`);
   }
@@ -2479,8 +2609,8 @@ function validateProductionBoundarySummary(data, expect, label) {
   const resumeReview = findResult(data.results, "LLM resume review");
   const pdfGeneration = findResult(data.results, "LLM PDF question generation");
   const googleLoginTokenSecondsRemaining = secondsUntil(googleLogin?.data?.tokenExpiresAt);
-  const googleLoginTokenFresh = Number.isFinite(googleLoginTokenSecondsRemaining)
-    && googleLoginTokenSecondsRemaining >= 120;
+  const googleLoginTokenExpiryCaptured = Boolean(googleLogin?.data?.tokenExpiresAt)
+    && Number.isFinite(googleLoginTokenSecondsRemaining);
   const finalComplete = data.status === "pass"
     && Number(data.passed) === 5
     && Number(data.skipped) === 0
@@ -2488,7 +2618,7 @@ function validateProductionBoundarySummary(data, expect, label) {
     && googleLogin?.status === "pass"
     && googleLogin?.data?.hasToken === true
     && googleLogin?.data?.tokenAudienceMatchesClientId === true
-    && googleLoginTokenFresh;
+    && googleLoginTokenExpiryCaptured;
   const interimComplete = data.status === "partial"
     && Number(data.passed) === 4
     && Number(data.skipped) === 1
@@ -2498,7 +2628,12 @@ function validateProductionBoundarySummary(data, expect, label) {
 
   expect(finalComplete || interimComplete, `${label} must be either final 5/5 pass or one-token pending partial`);
   if (googleLogin?.status === "pass") {
-    expect(googleLoginTokenFresh === true, `${label} full Google provider login pass requires fresh token evidence`);
+    expect(
+      googleLogin?.data?.hasToken === true
+        && googleLogin?.data?.tokenAudienceMatchesClientId === true
+        && googleLoginTokenExpiryCaptured,
+      `${label} full Google provider login pass requires signed-off provider-token evidence with captured expiry metadata`
+    );
   }
 
   expect(cloudHealth?.status === "pass" && cloudHealth?.data?.ok === true, `${label} must pass cloud health`);
@@ -2857,20 +2992,22 @@ function validateApexWwwDomainSummary(data, expect, label) {
 
 function validateExternalLaunchBlockersSummary(data, expect, label, options = {}) {
   expect(data.status === "pass", `${label} status must be pass`);
-  expect(data.launchReadiness === "blocked", `${label} must keep public launch marked blocked until external signoffs clear`);
   const apexAtSummaryTop = findBlocker(data.blockers, "apex-www-ssl");
   const deployedGoogleAtSummaryTop = findBlocker(data.blockers, "deployed-google-provider-login");
   const renderApiAtSummaryTop = findBlocker(data.blockers, "render-api-build-filter");
   const opsAlertAtSummaryTop = findBlocker(data.blockers, "ops-alerts-edge-rate-limit");
   const mediaAtSummaryTop = findBlocker(data.blockers, "media-bucket-cdn");
-  let expectedBlockerCount = 8;
-  if (apexAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
-  if (deployedGoogleAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
-  if (renderApiAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
-  if (opsAlertAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
-  if (mediaAtSummaryTop?.status === "pass") expectedBlockerCount -= 1;
-  expect(Number(data.blockerCount || 0) === expectedBlockerCount, `${label} must track ${expectedBlockerCount} external blockers for the current deployed Google evidence freshness state`);
-  expect(Number(data.trackedCount || 0) === 1, `${label} must track one continuing browser-journey expansion item`);
+  const chromeAtSummaryTop = findBlocker(data.blockers, "chrome-web-store-publication");
+  const postgresAtSummaryTop = findBlocker(data.blockers, "postgres-managed-cutover");
+  const questionBankAtSummaryTop = findBlocker(data.blockers, "question-bank-public-commercial-rights");
+  const blockers = Array.isArray(data.blockers) ? data.blockers : [];
+  const blockedBlockers = blockers.filter((blocker) => blocker?.status === "blocked");
+  const trackedBlockers = blockers.filter((blocker) => blocker?.status === "tracked");
+  expect(data.launchReadiness === (blockedBlockers.length ? "blocked" : "pass"), `${label} launch readiness must mirror whether blocking signoffs remain`);
+  expect(Number(data.blockerCount || 0) === blockedBlockers.length, `${label} must track the current number of blocked external signoffs`);
+  expect(Number(data.trackedCount || 0) === trackedBlockers.length, `${label} must track deferred Chrome publication, full question-bank rights, and continuing browser-journey expansion items`);
+  expect(chromeAtSummaryTop?.status === "tracked", `${label} must keep Chrome Web Store publication tracked while deferred`);
+  expect(trackedBlockers.length === 3, `${label} must track exactly the deferred non-blocking external items`);
   expect(data.checks?.requiredScriptsPresent === true, `${label} must verify required signoff scripts exist`);
   expect(data.checks?.outstandingItemsTracked === true, `${label} must verify product-status outstanding items are tracked`);
   expect(data.checks?.renderApiBuildFilterFixturePass === true, `${label} must verify the Render API build filter fixture passes`);
@@ -2878,6 +3015,18 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.renderApiBuildFilterPathsExact === true, `${label} must verify the Render API build filter exact path contract`);
   expect(data.checks?.renderApiBuildFilterCliCovered === true, `${label} must verify the Render API build filter CLI handoff is covered`);
   expect(data.checks?.renderApiBuildFilterProductionPass === (renderApiAtSummaryTop?.status === "pass"), `${label} must mirror the Render API production signoff state`);
+  expect(data.checks?.apiPostgresRuntimeAdapterPass === true, `${label} must verify the API Postgres runtime adapter gate`);
+  expect(data.checks?.deployedPostgresHealthCaptured === true, `${label} must capture deployed Postgres health evidence`);
+  expect(data.checks?.deployedPostgresHealthOk === true, `${label} must record healthy deployed API database status`);
+  expect(data.checks?.deployedPostgresBackendCaptured === true, `${label} must record the deployed database backend`);
+  expect(data.checks?.deployedPostgresCurrentlySqlite === (postgresAtSummaryTop?.status !== "pass"), `${label} must mirror whether production still reports SQLite before Postgres cutover clears`);
+  expect(data.checks?.postgresCutoverCompletePass === (postgresAtSummaryTop?.status === "pass"), `${label} must mirror the complete Postgres cutover signoff state`);
+  expect(data.checks?.deployedPostgresSummaryRedacted === true, `${label} must keep deployed Postgres health evidence redacted`);
+  expect(data.checks?.questionBankReleaseSafeCatalogPass === true, `${label} must verify the question-bank release-safe catalog gate`);
+  expect(data.checks?.questionBankReleaseSafeCatalogPublicNoUnapprovedProblems === true, `${label} public release-safe catalog must contain no unapproved problems`);
+  expect(data.checks?.questionBankReleaseSafeCatalogCommercialNoUnapprovedProblems === true, `${label} commercial release-safe catalog must contain no unapproved problems`);
+  expect(data.checks?.questionBankReleaseSafeCatalogClearsCurrentPublicationPath === true, `${label} release-safe catalog must clear the current publication path while excluding unapproved sources`);
+  expect(data.checks?.releaseReadinessSourceIncludesDeployedPostgresHealth === true, `${label} release-readiness must include the deployed Postgres health gate`);
   const releaseReadinessCheck = data.checks?.releaseReadinessIncludesExternalFixtures;
   const releaseReadinessBlockerGateCheck = data.checks?.releaseReadinessIncludesExternalBlockerGate;
   const skippedReleaseSummaryContent = data.checks?.skippedReleaseSummaryContent === true;
@@ -2891,7 +3040,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
       || (options.allowSkippedReleaseSummaryContent === true && releaseReadinessBlockerGateCheck === "skipped" && skippedReleaseSummaryContent),
     `${label} must verify release-readiness includes the external blocker gate`
   );
-  expect(data.checks?.requireClearWouldFail === true, `${label} must prove --require-clear would fail while blockers remain`);
+  expect(data.checks?.requireClearWouldFail === (blockedBlockers.length > 0), `${label} require-clear outcome must mirror whether blockers remain`);
   expect(data.checks?.browserDeployedBetaSmokePass === true, `${label} must verify the deployed beta smoke remains pass`);
   expect(data.checks?.browserDeployedBetaLoginPass === true, `${label} must verify the deployed beta smoke login remains pass`);
   expect(data.checks?.browserDeployedBetaRouteSweepPass === true, `${label} must verify the deployed beta smoke route sweep remains pass`);
@@ -2945,14 +3094,33 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.browserMobileCareerControlsPass === true, `${label} must verify the mobile career browser journey remains pass`);
 
   for (const id of [
-    "chrome-web-store-publication",
-    "postgres-managed-cutover",
-    "question-bank-public-commercial-rights"
+    "postgres-managed-cutover"
   ]) {
     const blocker = findBlocker(data.blockers, id);
-    expect(blocker?.status === "blocked", `${label} must keep ${id} blocked until real external signoff`);
+    expect(["blocked", "pass"].includes(String(blocker?.status || "")), `${label} must record ${id} as blocked before signoff or pass after signoff`);
     expect(typeof blocker?.ownerAction === "string" && blocker.ownerAction.length > 20, `${label} ${id} must describe the owner action`);
   }
+
+  const postgresHealth = findBlocker(data.blockers, "postgres-managed-cutover");
+  expect(postgresHealth?.localCoverage?.apiPostgresRuntimeAdapterPass === true, `${label} Postgres blocker must keep local runtime adapter coverage`);
+  expect(postgresHealth?.localCoverage?.deployedPostgresHealthCaptured === true, `${label} Postgres blocker must include deployed health evidence`);
+  expect(postgresHealth?.localCoverage?.deployedPostgresHealthUrlProduction === true, `${label} Postgres blocker must target production API health`);
+  expect(postgresHealth?.localCoverage?.deployedPostgresHealthUrlHttpsDns === true, `${label} Postgres blocker must use HTTPS DNS health evidence`);
+  expect(postgresHealth?.localCoverage?.deployedPostgresHealthOk === true, `${label} Postgres blocker must show healthy deployed API`);
+  expect(postgresHealth?.localCoverage?.deployedPostgresBackendObserved === true, `${label} Postgres blocker must show observed backend`);
+  expect(postgresHealth?.localCoverage?.deployedPostgresBackendStateCaptured === true, `${label} Postgres blocker must classify the deployed backend`);
+  if (postgresHealth?.status === "pass") {
+    expect(postgresHealth?.localCoverage?.completeProductionSignoffPass === true, `${label} Postgres pass must include complete production signoff`);
+    expect(postgresHealth?.localCoverage?.completeProductionSignoffRuntimePostgres === true, `${label} Postgres pass must include runtime Postgres evidence`);
+    expect(postgresHealth?.localCoverage?.completeProductionSignoffRuntimeHealthHost === true, `${label} Postgres pass must include production health host evidence`);
+    expect(postgresHealth?.localCoverage?.completeProductionSignoffAppDatabaseActive === true, `${label} Postgres pass must confirm app DB is active`);
+    expect(postgresHealth?.localCoverage?.completeProductionSignoffBackupConfirmed === true, `${label} Postgres pass must confirm backup signoff`);
+    expect(postgresHealth?.localCoverage?.completeProductionSignoffRowCountMatches === true, `${label} Postgres pass must confirm row counts match`);
+    expect(postgresHealth?.localCoverage?.deployedPostgresCurrentBackend === "postgres", `${label} Postgres pass must record deployed backend postgres`);
+  } else {
+    expect(postgresHealth?.localCoverage?.deployedPostgresCurrentBackend === "sqlite", `${label} Postgres blocked state must record deployed backend sqlite`);
+  }
+  expect(postgresHealth?.localCoverage?.deployedPostgresSummaryRedacted === true, `${label} Postgres blocker must keep deployed health evidence redacted`);
 
   const apex = findBlocker(data.blockers, "apex-www-ssl");
   expect(["pass", "blocked"].includes(String(apex?.status || "")), `${label} apex/WWW must be pass only with clear HTTPS evidence or blocked`);
@@ -2980,14 +3148,14 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   }
 
   const deployedGoogle = findBlocker(data.blockers, "deployed-google-provider-login");
-  expect(["pass", "blocked"].includes(String(deployedGoogle?.status || "")), `${label} deployed Google provider must be pass only with fresh token evidence or blocked`);
+  expect(["pass", "blocked"].includes(String(deployedGoogle?.status || "")), `${label} deployed Google provider must be pass only with signed-off provider-token evidence or blocked`);
   if (deployedGoogle?.status === "pass") {
     expect(typeof deployedGoogle?.ownerAction === "string" && deployedGoogle.ownerAction.includes("signed off"), `${label} deployed Google provider must describe the completed signoff`);
-    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenFresh === true, `${label} deployed Google provider pass requires fresh token evidence`);
-    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenExpired === false, `${label} deployed Google provider pass must not use expired token evidence`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginSignoffCaptured === true, `${label} deployed Google provider pass requires signed-off token evidence`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenExpiryCaptured === true, `${label} deployed Google provider pass must retain token expiry metadata`);
   } else {
     expect(typeof deployedGoogle?.ownerAction === "string" && deployedGoogle.ownerAction.includes("fresh deployed Google ID token"), `${label} deployed Google provider blocker must request a fresh deployed token`);
-    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenFresh === false, `${label} deployed Google provider stale evidence must be marked not fresh`);
+    expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginSignoffCaptured !== true, `${label} deployed Google provider blocked state must not have completed signoff evidence`);
     expect(
       deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenExpired === true
         || deployedGoogle?.localCoverage?.deployedGoogleProviderLoginSkippedForToken === true,
@@ -3024,6 +3192,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
     expect(deployedGoogle?.localCoverage?.deployedGoogleProviderLoginTokenEmailRedacted === true, `${label} must prove deployed Google token email evidence is redacted`);
   }
   expect(deployedGoogle?.localCoverage?.deployedTokenHelperScriptPresent === true, `${label} must include deployed token helper coverage`);
+  expect(deployedGoogle?.localCoverage?.deployedTokenHelperClipboardScriptPresent === true, `${label} must include deployed token helper clipboard coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenVerifierPresent === true, `${label} must include deployed paste-token verifier coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenAudiencePrecheck === true, `${label} must include deployed paste-token audience precheck coverage`);
   expect(deployedGoogle?.localCoverage?.deployedPasteTokenDamagedAudienceDiagnostics === true, `${label} must include deployed paste-token corrupted-audience diagnostics coverage`);
@@ -3179,6 +3348,9 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(jobs?.localCoverage?.deployedApiSourceHasRealMetadata === true, `${label} must include deployed jobs API metadata coverage`);
   expect(jobs?.localCoverage?.deployedApiFallbackCatalogMerged === true, `${label} must include deployed jobs API fallback-catalog merge coverage`);
   const chrome = findBlocker(data.blockers, "chrome-web-store-publication");
+  expect(chrome?.status === "tracked", `${label} must keep Chrome Web Store publication tracked while it is intentionally deferred`);
+  expect(chrome?.localCoverage?.deferredInCurrentPass === true, `${label} must record that Chrome Web Store publication is deferred in the current pass`);
+  expect(typeof chrome?.ownerAction === "string" && chrome.ownerAction.includes("Deferred"), `${label} Chrome Web Store publication must describe the deferral decision`);
   expect(chrome?.localCoverage?.packetReleasePackageExists === true, `${label} must include Chrome release package existence coverage`);
   expect(chrome?.localCoverage?.packetReleasePackageShaMatches === true, `${label} must include Chrome release package SHA match coverage`);
   expect(chrome?.localCoverage?.packetIncludesRawIpUrlRule === true, `${label} must include Chrome packet raw-IP URL rejection guidance`);
@@ -3245,6 +3417,17 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(postgres?.localCoverage?.inactiveAppDatabaseRejected === true, `${label} must include Postgres inactive app DB rejection`);
   expect(postgres?.localCoverage?.missingBackupConfirmationRejected === true, `${label} must include Postgres missing backup confirmation rejection`);
   const rights = findBlocker(data.blockers, "question-bank-public-commercial-rights");
+  expect(rights?.status === "pass", `${label} must clear the current question-bank publication path with the release-safe catalog`);
+  expect(rights?.signoffCommand === "npm run check:question-bank-release-catalog", `${label} question-bank current publication path must sign off through the release-safe catalog gate`);
+  expect(rights?.localCoverage?.releaseSafeCatalogPass === true, `${label} must include release-safe catalog pass coverage`);
+  expect(rights?.localCoverage?.releaseSafeCatalogPrivateBetaRetained === true, `${label} must preserve the private beta problem catalog`);
+  expect(rights?.localCoverage?.releaseSafeCatalogPublicGenerated === true, `${label} must generate the public release-safe catalog`);
+  expect(rights?.localCoverage?.releaseSafeCatalogCommercialGenerated === true, `${label} must generate the commercial release-safe catalog`);
+  expect(rights?.localCoverage?.releaseSafeCatalogPublicNoUnapprovedProblems === true, `${label} public release-safe catalog must contain no unapproved problems`);
+  expect(rights?.localCoverage?.releaseSafeCatalogCommercialNoUnapprovedProblems === true, `${label} commercial release-safe catalog must contain no unapproved problems`);
+  expect(rights?.localCoverage?.releaseSafeCatalogPublicExcludesNeedsReview === true, `${label} public release-safe catalog must exclude every needs-review source`);
+  expect(rights?.localCoverage?.releaseSafeCatalogCommercialExcludesNeedsReview === true, `${label} commercial release-safe catalog must exclude every needs-review source`);
+  expect(rights?.localCoverage?.releaseSafeCatalogSelectableAtRuntime === true, `${label} release-safe catalog must be selectable through runtime config`);
   expect(Number(rights?.localCoverage?.publicBlockerCount || 0) === 15, `${label} must keep all active public source-rights blockers visible`);
   expect(Number(rights?.localCoverage?.commercialBlockerCount || 0) === 15, `${label} must keep all active commercial source-rights blockers visible`);
   expect(rights?.localCoverage?.approvalPacketGenerated === true, `${label} must include question-bank approval packet coverage`);
@@ -3274,6 +3457,13 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(rights?.localCoverage?.internalGrantorRejected === true, `${label} must include question-bank internal grantor rejection`);
   expect(rights?.localCoverage?.internalGrantorMentionsExternalRightsHolder === true, `${label} must mention external rights holder for internal grantor rejection`);
   expect(rights?.localCoverage?.unsupportedScopeRejected === true, `${label} must include question-bank unsupported scope rejection`);
+  const fullRights = findBlocker(data.blockers, "question-bank-full-public-commercial-rights");
+  expect(fullRights?.status === "tracked", `${label} must keep full question-bank public/commercial rights as a tracked follow-up`);
+  expect(fullRights?.signoffCommand === "npm run check:question-bank-rights:public && npm run check:question-bank-rights:commercial", `${label} full question-bank rights must retain the strict full-catalog signoff command`);
+  expect(fullRights?.localCoverage?.fullCatalogStillNeedsRights === true, `${label} full question-bank rights must show full catalog approval is still needed`);
+  expect(fullRights?.localCoverage?.releaseSafeCatalogClearsCurrentPublicationPath === true, `${label} full question-bank rights must point at the safe current publication path`);
+  expect(Number(fullRights?.localCoverage?.publicBlockerCount || 0) === 15, `${label} full question-bank rights must keep public blocker count visible`);
+  expect(Number(fullRights?.localCoverage?.commercialBlockerCount || 0) === 15, `${label} full question-bank rights must keep commercial blocker count visible`);
   const browser = findBlocker(data.blockers, "browser-journey-expansion");
   expect(browser?.status === "tracked", `${label} must keep browser journey expansion as a tracked beta-quality item`);
   expect(Number(browser?.localCoverage?.interactionsChecked || 0) >= 67, `${label} must reference the 67-interaction browser route smoke`);

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useOverviewPageModel } from "./overviewHooks.js";
 
 function LeaderboardTrend({ delta }) {
@@ -31,6 +31,37 @@ function medalClass(rank) {
   return "plain";
 }
 
+function LeaderboardPodiumCard({ row, model }) {
+  const you = model.t("leaderboardYou") || "你";
+  return (
+    <div className={`leaderboard-podium-card place-${row.place}${row.isCurrent ? " is-current" : ""}`}>
+      {row.place === 1 ? (
+        <img
+          className="podium-crown"
+          src="/assets/generated/playful-precision/reward-crown.webp"
+          alt=""
+          width="34"
+          height="34"
+          loading="lazy"
+        />
+      ) : (
+        <span className={`podium-rank-badge medal-${medalClass(row.place)}`}>{row.place}</span>
+      )}
+      <span
+        className={`podium-avatar${row.picture ? " has-image" : ""}`}
+        style={{ "--avatar-hue": String(model.hashStringToHue(row.id || row.name)) }}
+      >
+        {row.picture ? <img src={row.picture} alt="" loading="lazy" /> : model.getInitials(row.name)}
+      </span>
+      <div className="podium-name">
+        {row.isCurrent ? <>{row.name}<span className="podium-you"> · {you}</span></> : row.name}
+      </div>
+      <div className="podium-sub">{[row.rank, row.locationLabel].filter(Boolean).join(" · ")}</div>
+      <div className="podium-score">{model.formatScore(row.score)}</div>
+    </div>
+  );
+}
+
 export function OverviewPageContent() {
   const model = useOverviewPageModel();
   const { leaderboard } = model;
@@ -42,6 +73,75 @@ export function OverviewPageContent() {
   const updateLeaderboardCountry = (event) => model.updateLeaderboard({ country: event.target.value });
   const updateLeaderboardRegion = (event) => model.updateLeaderboard({ region: event.target.value });
   const updateLeaderboard = model.updateLeaderboard;
+
+  // Spins the refresh icon only while a real leaderboard refresh is in flight.
+  const [isLeaderboardRefreshing, setLeaderboardRefreshing] = useState(false);
+  const handleRefreshLeaderboard = async () => {
+    if (isLeaderboardRefreshing) return;
+    setLeaderboardRefreshing(true);
+    try {
+      await model.refreshLeaderboard();
+    } finally {
+      setLeaderboardRefreshing(false);
+    }
+  };
+
+  // Achievements — derived from real user state, not seeded. Fresh accounts see them locked.
+  const totalSolved = model.problemProgress.reduce((max, item) => Math.max(max, item.done || 0), 0);
+  const myPlace = leaderboard.rows.find((row) => row.isCurrent)?.place || null;
+  const asset = "/assets/generated/playful-precision/";
+
+  // Today quests — derived from the real study plan when present; otherwise the
+  // standard daily quest checklist is shown in its incomplete state.
+  const defaultQuests = [
+    { id: "daily-problem", icon: "list-checks", title: "完成每日一题", sub: "概率 · 中等难度", xp: 20 },
+    { id: "mental-90", icon: "calculator", title: "Mental Math 达到 90% 正确率", sub: "限时挑战", xp: 30 },
+    { id: "review-cards", icon: "notebook-pen", title: "复习 3 张资料卡", sub: "间隔记忆", xp: 15 },
+    { id: "poker-session", icon: "spade", title: "完成一手扑克决策复盘", sub: "决策直觉", xp: 25 },
+    { id: "read-exp", icon: "newspaper", title: "读一篇市场面经", sub: "Quant Wire", xp: 10 }
+  ];
+  const planItems = model.todayPlan?.items || [];
+  const quests = planItems.length
+    ? planItems.map((item, index) => ({
+      id: item.id || `plan-${index}`,
+      icon: defaultQuests[index % defaultQuests.length].icon,
+      title: item.title,
+      sub: item.detail || (item.minutes ? `${item.minutes} 分钟` : ""),
+      xp: defaultQuests[index % defaultQuests.length].xp,
+      done: Boolean(item.done)
+    }))
+    : defaultQuests.map((quest) => ({ ...quest, done: false }));
+  const questsDone = quests.filter((quest) => quest.done).length;
+  const questPct = quests.length ? Math.round((questsDone / quests.length) * 100) : 0;
+  const questsLeft = quests.length - questsDone;
+  const goalSubText = questsLeft === 0
+    ? "奖励 +50 XP 已入账"
+    : `再完成 ${questsLeft} 项 · +50 XP`;
+  const heroTaskLine = questsLeft === 0
+    ? "今天的训练任务已全部完成。去自由训练，或到计划里排明天的节奏。"
+    : `今天还有 ${questsLeft} 个训练任务在等你。保持节奏，段位与 XP 会替你说话。`;
+
+  // Weekly rhythm — Monday-first bars come pre-sorted from the hooks layer.
+  const weekDots = model.dailyXpBars.map((item) => ({
+    key: item.key || item.label,
+    active: (item.xp || 0) > 0
+  }));
+  const trainedDays = weekDots.filter((dot) => dot.active).length;
+  const todayXp = model.dailyXpBars.find((item) => item.isToday)?.xp || 0;
+  const weekTotalXp = model.dailyXpBars.reduce((sum, item) => sum + (item.xp || 0), 0);
+  const weekAvgXp = model.dailyXpBars.length ? Math.round(weekTotalXp / model.dailyXpBars.length) : 0;
+  const heatTrainingCount = model.heatmap
+    ? model.heatmap.days.reduce((sum, day) => sum + (!day.future && day.level > 0 ? 1 : 0), 0)
+    : 0;
+  const achievements = [
+    { key: "starter", label: "初出茅庐", note: "Lv.1 达成", img: `${asset}badge-level-1.webp`, glow: "rgba(74,67,214,.22)", unlocked: (model.summary.entryCount || 0) > 0 || (model.summary.score || 0) > 0 },
+    { key: "streak7", label: "七日连胜", note: "连续 7 天", img: `${asset}badge-streak-7.webp`, glow: "rgba(255,122,61,.28)", unlocked: (model.summary.streak || 0) >= 7, progress: Math.min(1, (model.summary.streak || 0) / 7) },
+    { key: "gold", label: "黄金勋章", note: "正确率 90%", img: `${asset}badge-gold.webp`, glow: "rgba(255,159,46,.3)", unlocked: false },
+    { key: "topWeek", label: "登顶周榜", note: "地区第一", img: `${asset}badge-top-rank.webp`, glow: "rgba(74,67,214,.22)", unlocked: myPlace === 1 },
+    { key: "century", label: "百题达人", note: `${totalSolved} / 100`, img: `${asset}badge-gold.webp`, glow: "rgba(255,159,46,.3)", unlocked: totalSolved >= 100, progress: Math.min(1, totalSolved / 100) },
+    { key: "master", label: "大师段位", note: "敬请期待", img: null, unlocked: false }
+  ];
+  const unlockedCount = achievements.filter((item) => item.unlocked).length;
 
   useEffect(() => {
     const bindings = [
@@ -72,8 +172,8 @@ export function OverviewPageContent() {
   }, [updateLeaderboard]);
 
   return (
-    <div className="overview-route-page">
-      <section className="news-ticker" aria-label="Quant 新闻滚动条" data-i18n-aria-label="newsTickerLabel">
+    <div className="overview-route-page qg-growth-page qg-overview-page">
+      <section className="news-ticker qg-overview-ticker" aria-label="Quant 新闻滚动条" data-i18n-aria-label="newsTickerLabel">
         <div className="ticker-label">
           <i data-lucide="radio" />
           <span data-i18n="newsTickerTitle">{model.t("newsTickerTitle") || "Quant Wire"}</span>
@@ -103,21 +203,54 @@ export function OverviewPageContent() {
         </div>
       </section>
 
-      <section className="quanty-hero">
+      <section className="quanty-hero qg-overview-hero">
         <div className="quanty-hero-copy">
-          <span className="hero-kicker">Welcome back, Quant</span>
-          <h2 id="heroTypewriter">Sharpen your quant edge today.</h2>
-          <div className="hero-actions hidden" aria-hidden="true">
+          <span className="hero-kicker hero-streak-kicker">
+            <img src="/assets/generated/playful-precision/reward-fire.webp" alt="" width="18" height="18" loading="lazy" />
+            连续 {model.summary.streak} 天 · 欢迎回来，{model.summary.displayName || "Quant"}
+          </span>
+          <h2 id="heroTypewriter">把你的 <span className="hero-brand-word">quant</span> 练到锋利。</h2>
+          <p className="hero-task-line">{heroTaskLine}</p>
+          <div className="hero-actions">
             <button
               className="primary-button"
               id="generateStudyPlanBtn"
               type="button"
-              tabIndex={-1}
               onClick={model.generateTodayStudyPlan}
             >
-              <i data-lucide="calendar-check-2" />
-              进入备战计划
+              开始今日训练
+              <i data-lucide="arrow-right" />
             </button>
+            <button
+              className="secondary-button hero-plan-button"
+              type="button"
+              onClick={() => model.openModule("plan")}
+            >
+              查看学习计划
+            </button>
+          </div>
+          <div className="hero-stat-chips">
+            <div className="hero-stat-chip">
+              <img src="/assets/generated/playful-precision/badge-level-1.webp" alt="" width="24" height="24" loading="lazy" />
+              <div>
+                <small>当前段位</small>
+                <b>{model.summary.rank}</b>
+              </div>
+            </div>
+            <div className="hero-stat-chip">
+              <img src="/assets/generated/playful-precision/reward-xp.webp" alt="" width="24" height="24" loading="lazy" />
+              <div>
+                <small>本周 XP</small>
+                <b>{model.summary.weeklyXp}</b>
+              </div>
+            </div>
+            <div className="hero-stat-chip">
+              <img src="/assets/generated/playful-precision/reward-target.webp" alt="" width="24" height="24" loading="lazy" />
+              <div>
+                <small>已解题目</small>
+                <b>{totalSolved}</b>
+              </div>
+            </div>
           </div>
           <div className={`today-plan-card${model.todayPlan ? "" : " hidden"}`} id="todayPlanCard">
             {model.todayPlan ? (
@@ -146,17 +279,35 @@ export function OverviewPageContent() {
           </div>
         </div>
         <div className="shark-stage" id="sharkStage">
+          <span className="stage-glow" aria-hidden="true" />
+          <span className="stage-ring stage-ring-outer" aria-hidden="true" />
+          <span className="stage-ring stage-ring-inner" aria-hidden="true" />
+          <span className="stage-shadow" aria-hidden="true" />
           <div className="shark-bubble" id="sharkBubble" role="status" aria-live="polite" />
           <button className="shark-interactive" id="sharkInteractive" type="button" aria-label="戳一下 Quanty">
             <span className="shark-glow" aria-hidden="true" />
             <img
-              src="assets/generated/shark-hero-clean.png?v=original-clean-1"
+              src="/assets/generated/playful-precision/mascot-hero-v5-clean.png"
               alt=""
               loading="lazy"
               id="heroShark"
               draggable="false"
             />
           </button>
+          <div className="hero-float-chip hero-float-streak" aria-hidden="true">
+            <img src="/assets/generated/playful-precision/reward-fire.webp" alt="" width="28" height="28" loading="lazy" />
+            <div>
+              <b>{model.summary.streak}</b>
+              <small>连续天数</small>
+            </div>
+          </div>
+          <div className="hero-float-chip hero-float-xp" aria-hidden="true">
+            <img src="/assets/generated/playful-precision/reward-xp.webp" alt="" width="28" height="28" loading="lazy" />
+            <div>
+              <b>+{todayXp}</b>
+              <small>今日 XP</small>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -181,49 +332,117 @@ export function OverviewPageContent() {
         ))}
       </section>
 
-      <section className="summary-band">
-        <div className="summary-copy">
-          <div className="rank-row">
-            <span className="rank-label">当前段位</span>
-            <strong id="rankName">{model.summary.rank}</strong>
+      <section className="summary-band qg-overview-summary" aria-label="学习统计">
+        <div className="qg-stat-card qg-stat-rank">
+          <div className="qg-stat-top">
+            <img src="/assets/generated/playful-precision/badge-level-1.webp" alt="" width="46" height="46" loading="lazy" />
+            <div>
+              <small>当前段位</small>
+              <strong id="rankName">{model.summary.rank}</strong>
+            </div>
           </div>
-          <div className="total-xp">
-            <span id="totalXp">{model.formatScore(model.summary.score)}</span>
-            <span>分 / 100</span>
+          <div className="qg-stat-track">
+            <span style={{ width: `${Math.max(3, Math.min(100, Number(model.summary.score) || 0))}%` }} />
+          </div>
+          <div className="qg-stat-note">
+            综合评分 <span id="totalXp">{model.formatScore(model.summary.score)}</span> / 100
           </div>
         </div>
-        <div className="summary-metrics" aria-label="学习统计">
-          <div className="metric-card metric-streak">
-            <span id="streakCount">{model.summary.streak}</span>
-            <small>连续天数</small>
+        <div className="qg-stat-card qg-stat-streak">
+          <div className="qg-stat-top">
+            <img src="/assets/generated/playful-precision/reward-fire.webp" alt="" width="46" height="46" loading="lazy" />
+            <div>
+              <small>连续天数</small>
+              <strong><span id="streakCount">{model.summary.streak}</span> <em>天</em></strong>
+            </div>
           </div>
-          <div className="metric-card metric-records">
-            <span id="entryCount">{model.summary.entryCount}</span>
-            <small>记录</small>
+          <div className="qg-week-dots" aria-hidden="true">
+            {weekDots.map((dot) => (
+              <span key={dot.key} className={dot.active ? "is-active" : ""} />
+            ))}
           </div>
-          <div className="metric-card metric-xp">
-            <span id="weeklyXp">{model.summary.weeklyXp}</span>
-            <small>7 日 XP</small>
+          <div className="qg-stat-note">本周已训练 {trainedDays} / 7 天</div>
+        </div>
+        <div className="qg-stat-card qg-stat-xp">
+          <div className="qg-stat-top">
+            <img src="/assets/generated/playful-precision/reward-xp.webp" alt="" width="46" height="46" loading="lazy" />
+            <div>
+              <small>7 日 XP</small>
+              <strong id="weeklyXp">{model.summary.weeklyXp}</strong>
+            </div>
+          </div>
+          <div className="qg-stat-track warm">
+            <span style={{ width: `${Math.max(3, Math.min(100, Math.round(((Number(model.summary.weeklyXp) || 0) / 700) * 100)))}%` }} />
+          </div>
+          <div className="qg-stat-note">
+            共 <span id="entryCount">{model.summary.entryCount}</span> 条训练记录
+          </div>
+        </div>
+        <div className="qg-stat-card qg-stat-goal">
+          <div
+            className="qg-goal-ring"
+            style={{ background: `conic-gradient(#fff 0% ${questPct}%, rgba(255, 255, 255, 0.26) ${questPct}% 100%)` }}
+          >
+            <span>{questsDone}/{quests.length}</span>
+          </div>
+          <div>
+            <b>今日目标</b>
+            <small>{goalSubText}</small>
           </div>
         </div>
       </section>
 
-      <section className="overview-effect-grid" aria-label="训练进度可视化">
-        <article className="overview-effect-panel problem-progress-panel">
+      <section className="qg-overview-quests" aria-label="今日任务">
+        <div className="qg-quests-head">
+          <div className="qg-quests-title">
+            <img src="/assets/generated/playful-precision/reward-target.webp" alt="" width="36" height="36" loading="lazy" />
+            <div>
+              <strong>今日任务</strong>
+              <small>全部完成即可解锁连胜奖励 +50 XP</small>
+            </div>
+          </div>
+          <div className="qg-quests-progress">
+            <i aria-hidden="true"><span style={{ width: `${questPct}%` }} /></i>
+            <b>{questsDone}/{quests.length}</b>
+          </div>
+        </div>
+        <div className="qg-quest-list">
+          {quests.map((quest) => (
+            <div className={`qg-quest-row${quest.done ? " is-done" : ""}`} key={quest.id}>
+              <span className="qg-quest-badge" aria-hidden="true">
+                <i data-lucide={quest.done ? "check" : quest.icon} />
+              </span>
+              <div className="qg-quest-copy">
+                <strong>{quest.title}</strong>
+                <small>{quest.sub}</small>
+              </div>
+              <span className="qg-quest-xp">+{quest.xp} XP</span>
+              <span className="qg-quest-check" aria-hidden="true">
+                <i data-lucide="check" />
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="overview-effect-grid qg-overview-effects" aria-label="训练进度可视化">
+        <article className="overview-effect-panel problem-progress-panel qg-overview-progress">
           <div className="effect-panel-heading">
             <div>
-              <span className="rank-label">PROGRESS</span>
-              <h2>Problem completion</h2>
+              <h2>刷题进度</h2>
             </div>
-            <button
-              className="icon-button ghost"
-              type="button"
-              title="打开题库"
-              aria-label="打开题库"
-              onClick={() => model.openModule("problems")}
-            >
-              <i data-lucide="arrow-up-right" />
-            </button>
+            <div className="effect-head-side">
+              <span className="effect-head-stat">已解 {totalSolved} 题</span>
+              <button
+                className="icon-button ghost"
+                type="button"
+                title="打开题库"
+                aria-label="打开题库"
+                onClick={() => model.openModule("problems")}
+              >
+                <i data-lucide="arrow-up-right" />
+              </button>
+            </div>
           </div>
           <div id="overviewProblemProgress" className="effect-progress-group">
             {model.problemProgress.map((item) => (
@@ -233,8 +452,14 @@ export function OverviewPageContent() {
                 style={{ "--value": String(item.percent), "--accent-index": String(item.accentIndex) }}
               >
                 <div>
-                  <strong>{item.label}</strong>
-                  <span>{item.done} / {item.total}</span>
+                  <span className="progress-row-name">
+                    <span className="progress-dot" aria-hidden="true" />
+                    <strong>{item.label}</strong>
+                  </span>
+                  <span className="progress-row-nums">
+                    <span>{item.done} / {item.total}</span>
+                    <b>{item.percent}%</b>
+                  </span>
                 </div>
                 <i aria-hidden="true"><span /></i>
               </div>
@@ -242,16 +467,23 @@ export function OverviewPageContent() {
           </div>
         </article>
 
-        <article className="overview-effect-panel daily-xp-panel">
+        <article className="overview-effect-panel daily-xp-panel qg-overview-rhythm">
           <div className="effect-panel-heading">
             <div>
-              <span className="rank-label">DAILY XP</span>
-              <h2>Experience rhythm</h2>
+              <h2>本周节奏</h2>
+            </div>
+            <div className="rhythm-head-stat">
+              <b>{weekTotalXp} <em>XP</em></b>
+              <small>日均 {weekAvgXp}</small>
             </div>
           </div>
           <div id="overviewXpBars" className="daily-xp-bars" aria-label="每日经验值柱状图">
             {model.dailyXpBars.map((item) => (
-              <div className="daily-xp-bar" key={item.label} style={{ "--h": `${item.height}%` }}>
+              <div
+                className={`daily-xp-bar${item.isToday ? " is-today" : ""}`}
+                key={item.key || item.label}
+                style={{ "--h": `${item.height}%` }}
+              >
                 <strong>{item.xp}</strong>
                 <i />
                 <span>{item.label}</span>
@@ -260,11 +492,22 @@ export function OverviewPageContent() {
           </div>
         </article>
 
-        <article className="overview-effect-panel contribution-panel">
+        <article className="overview-effect-panel contribution-panel qg-overview-heatmap">
           <div className="effect-panel-heading">
-            <div>
-              <span className="rank-label">CONSISTENCY</span>
-              <h2>Contribution heatmap</h2>
+            <div className="heatmap-heading-copy">
+              <h2>贡献热力图</h2>
+              <span className="effect-head-stat">
+                最近 {model.heatmap?.weekCount || 12} 周 · 共 {heatTrainingCount} 次训练
+              </span>
+            </div>
+            <div className="heat-legend" aria-hidden="true">
+              少
+              <i className="heat-swatch heat-l0" />
+              <i className="heat-swatch heat-l1" />
+              <i className="heat-swatch heat-l2" />
+              <i className="heat-swatch heat-l3" />
+              <i className="heat-swatch heat-l4" />
+              多
             </div>
           </div>
           <div id="overviewContributionHeatmap" className="contribution-heatmap" aria-label="贡献热力图">
@@ -305,16 +548,13 @@ export function OverviewPageContent() {
                     </span>
                   ))}
                 </div>
-                <div className="contribution-range-label">
-                  {model.t("streakLast12Weeks") || "近 12 周"} - {model.heatmap.startLabel} - {model.heatmap.endLabel}
-                </div>
               </>
             ) : null}
           </div>
         </article>
       </section>
 
-      <section className="workspace-grid overview-ranking-grid">
+      <section className="workspace-grid overview-ranking-grid qg-overview-ranking">
         <form
           className="log-panel hidden"
           id="logForm"
@@ -348,21 +588,13 @@ export function OverviewPageContent() {
           </div>
           <div id="analysisPreview" className="analysis-preview" aria-live="polite" />
         </form>
-        <aside className="leaderboard-panel">
+        <aside className="leaderboard-panel qg-overview-leaderboard">
           <div className="panel-heading">
-            <h2>排行榜</h2>
-            <button
-              className="icon-button ghost"
-              id="refreshLeaderboardBtn"
-              type="button"
-              title="刷新排行榜"
-              aria-label="刷新排行榜"
-              onClick={model.refreshLeaderboard}
-            >
-              <i data-lucide="trophy" />
-            </button>
-          </div>
-          <div className="leaderboard-controls" aria-label="排行榜设置">
+            <div className="leaderboard-title">
+              <img src="/assets/generated/playful-precision/reward-trophy.webp" alt="" width="32" height="32" loading="lazy" />
+              <h2>排行榜</h2>
+            </div>
+            <div className="leaderboard-controls" aria-label="排行榜设置">
             <label className="leaderboard-control">
               指标
               <select
@@ -425,32 +657,100 @@ export function OverviewPageContent() {
                 ))}
               </select>
             </label>
+            <button
+              className={`icon-button ghost${isLeaderboardRefreshing ? " is-refreshing" : ""}`}
+              id="refreshLeaderboardBtn"
+              type="button"
+              title="刷新排行榜"
+              aria-label="刷新排行榜"
+              aria-busy={isLeaderboardRefreshing || undefined}
+              onClick={handleRefreshLeaderboard}
+            >
+              <i data-lucide="refresh-cw" />
+            </button>
+            </div>
           </div>
           <div id="leaderboardList" className="leaderboard-list">
-            {leaderboard.rows.length ? leaderboard.rows.map((row) => (
-              <div className={`leaderboard-item${row.isCurrent ? " current" : ""}`} key={row.id}>
-                <strong className={`leaderboard-rank ${medalClass(row.place)}`}>{row.place}</strong>
-                <span
-                  className={`leaderboard-avatar${row.picture ? " has-image" : ""}`}
-                  style={{ "--avatar-hue": String(model.hashStringToHue(row.id || row.name)) }}
-                >
-                  {row.picture ? <img src={row.picture} alt="" loading="lazy" /> : model.getInitials(row.name)}
-                </span>
-                <div className="leaderboard-identity">
-                  <span>{row.isCurrent ? `${row.name} · ${model.t("leaderboardYou") || "你"}` : row.name}</span>
-                  <small>{[row.rank, row.locationLabel].filter(Boolean).join(" · ")}</small>
+            {leaderboard.rows.length ? (
+              <>
+                <div className="leaderboard-podium">
+                  {leaderboard.rows.slice(0, 3).map((row) => (
+                    <LeaderboardPodiumCard key={row.id} row={row} model={model} />
+                  ))}
                 </div>
-                <b className="leaderboard-score">
-                  <span>{model.formatScore(row.score)}</span>
-                  <small>{model.t("leaderboardScoreUnit") || ""}</small>
-                </b>
-                <LeaderboardTrend delta={row.trend} />
-              </div>
-            )) : (
+                {leaderboard.rows.slice(3).map((row) => (
+                  <div className={`leaderboard-item${row.isCurrent ? " current" : ""}`} key={row.id}>
+                    <strong className={`leaderboard-rank ${medalClass(row.place)}`}>{row.place}</strong>
+                    <span
+                      className={`leaderboard-avatar${row.picture ? " has-image" : ""}`}
+                      style={{ "--avatar-hue": String(model.hashStringToHue(row.id || row.name)) }}
+                    >
+                      {row.picture ? <img src={row.picture} alt="" loading="lazy" /> : model.getInitials(row.name)}
+                    </span>
+                    <div className="leaderboard-identity">
+                      <span>{row.isCurrent ? `${row.name} · ${model.t("leaderboardYou") || "你"}` : row.name}</span>
+                      <small>{[row.rank, row.locationLabel].filter(Boolean).join(" · ")}</small>
+                    </div>
+                    <b className="leaderboard-score">
+                      <span>{model.formatScore(row.score)}</span>
+                      <small>{model.t("leaderboardScoreUnit") || ""}</small>
+                    </b>
+                    <LeaderboardTrend delta={row.trend} />
+                  </div>
+                ))}
+              </>
+            ) : (
               <p className="leaderboard-empty">{model.t("leaderboardEmpty") || "暂无排行数据。"}</p>
             )}
           </div>
         </aside>
+      </section>
+
+      <section className="overview-achievements qg-overview-achievements" aria-label="成就徽章">
+        <div className="overview-achievements-head">
+          <div>
+            <span className="overview-achievements-title">成就徽章</span>
+            <span className="overview-achievements-count">{unlockedCount} / {achievements.length} 已解锁</span>
+          </div>
+          <button
+            className="achievements-more"
+            type="button"
+            onClick={() => model.openModule("skills")}
+          >
+            查看全部 ›
+          </button>
+        </div>
+        <div className="overview-achievements-grid">
+          {achievements.map((item) => (
+            <div
+              key={item.key}
+              className={`achievement-card${item.unlocked ? " is-unlocked" : " is-locked"}`}
+            >
+              {item.unlocked && item.img ? (
+                <img
+                  className="achievement-badge"
+                  src={item.img}
+                  alt=""
+                  width="58"
+                  height="58"
+                  loading="lazy"
+                  style={{ filter: item.glow ? `drop-shadow(0 8px 14px ${item.glow})` : undefined }}
+                />
+              ) : (
+                <span className="achievement-lock" aria-hidden="true">
+                  <i data-lucide="lock" />
+                </span>
+              )}
+              <div className="achievement-label">{item.label}</div>
+              <div className="achievement-note">{item.note}</div>
+              {!item.unlocked && typeof item.progress === "number" ? (
+                <div className="achievement-progress">
+                  <span style={{ width: `${Math.round(item.progress * 100)}%` }} />
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="community-panel overview-community hidden" aria-hidden="true">

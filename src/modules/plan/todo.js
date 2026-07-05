@@ -1,6 +1,8 @@
 import {
   normalizePrepPlan,
-  normalizeStudyPlan
+  normalizePrepTaskStatus,
+  normalizeStudyPlan,
+  PREP_TASK_STATUSES
 } from './data.js';
 import { isoOrNow } from '../../lib/date.js';
 
@@ -150,7 +152,89 @@ export function togglePrepTaskCompletion(options = {}) {
   const dateKey = getDateKey(localDateKey);
   const key = `${dateKey}:${taskId}`;
   const completedTasks = { ...(normalizedPrepPlan.completedTasks || {}) };
-  completedTasks[key] = !completedTasks[key];
+  // 三态下的开关语义：done ↔ 非 done（todo/doing 一律推到 done）
+  if (normalizePrepTaskStatus(completedTasks[key]) === "done") {
+    delete completedTasks[key];
+  } else {
+    completedTasks[key] = "done";
+  }
+  return {
+    changed: true,
+    prepPlan: {
+      ...normalizedPrepPlan,
+      completedTasks,
+      updatedAt: getNowIso(now)
+    }
+  };
+}
+
+const PREP_TASK_STATUS_CYCLE = {
+  todo: "doing",
+  doing: "done",
+  done: "todo"
+};
+
+export function advancePrepTaskStatus(options = {}) {
+  const {
+    prepPlan,
+    taskId,
+    makeId,
+    localDateKey,
+    toStatus,
+    now = new Date()
+  } = options;
+  if (!taskId) return { changed: false };
+  const normalizedPrepPlan = normalizePrepPlan(prepPlan, { makeId, localDateKey });
+  if (!normalizedPrepPlan) return { changed: false };
+  const dateKey = getDateKey(localDateKey);
+  const key = `${dateKey}:${taskId}`;
+  const completedTasks = { ...(normalizedPrepPlan.completedTasks || {}) };
+  const current = normalizePrepTaskStatus(completedTasks[key]);
+  const next = PREP_TASK_STATUSES.includes(toStatus)
+    ? toStatus
+    : PREP_TASK_STATUS_CYCLE[current];
+  if (next === current) return { changed: false };
+  if (next === "todo") {
+    delete completedTasks[key];
+  } else {
+    completedTasks[key] = next;
+  }
+  return {
+    changed: true,
+    status: next,
+    prepPlan: {
+      ...normalizedPrepPlan,
+      completedTasks,
+      updatedAt: getNowIso(now)
+    }
+  };
+}
+
+export function markPrepTasksDoing(options = {}) {
+  const {
+    prepPlan,
+    taskIds = [],
+    makeId,
+    localDateKey,
+    now = new Date()
+  } = options;
+  const ids = (Array.isArray(taskIds) ? taskIds : [])
+    .map((id) => String(id || "").trim())
+    .filter(Boolean);
+  if (!ids.length) return { changed: false };
+  const normalizedPrepPlan = normalizePrepPlan(prepPlan, { makeId, localDateKey });
+  if (!normalizedPrepPlan) return { changed: false };
+  const dateKey = getDateKey(localDateKey);
+  const completedTasks = { ...(normalizedPrepPlan.completedTasks || {}) };
+  let changed = false;
+  ids.forEach((taskId) => {
+    const key = `${dateKey}:${taskId}`;
+    // 只把仍是 todo 的任务并入 doing，不回退 done
+    if (normalizePrepTaskStatus(completedTasks[key]) !== "todo") return;
+    completedTasks[key] = "doing";
+    changed = true;
+  });
+  if (!changed) return { changed: false };
   return {
     changed: true,
     prepPlan: {

@@ -1,23 +1,35 @@
+import {
+  getProblemRowNumber,
+  getProblemTitlePair,
+  localizeCategoryLabel,
+  localizeDifficultyLabel
+} from "./problemDisplayLabels.js";
+
 export function ProblemCard({
   item,
+  index,
+  isActive,
   isEnglish,
   t,
   onOpen,
-  onToggleCompleted,
-  onToggleSaved
+  // Kept in the signature for API compatibility: completion/bookmark actions
+  // now live in the detail panel per the Playful Precision design.
+  onToggleCompleted, // eslint-disable-line no-unused-vars
+  onToggleSaved // eslint-disable-line no-unused-vars
 }) {
-  const completeLabel = item.completed
-    ? (isEnglish ? "Mark unfinished" : "标记为未完成")
-    : (isEnglish ? "Mark completed" : "标记完成");
-  const saveLabel = item.favorite ? t("removeSaved") : t("saveForReview");
+  const { main, sub } = getProblemTitlePair(item.id, item.title, isEnglish);
+  const rowNumber = getProblemRowNumber(item.id, index);
+  const topicLabel = localizeCategoryLabel(item.category, isEnglish);
+  const difficultyLabel = localizeDifficultyLabel(item.difficulty, isEnglish);
 
   return (
     <article
-      className="problem-card"
+      className={`problem-card${isActive ? " is-active" : ""}`}
       data-problem-id={item.id}
       tabIndex={0}
       role="button"
       aria-label={`${t("openProblem")}: ${item.title}`}
+      aria-current={isActive ? "true" : undefined}
       onClick={() => onOpen(item.id)}
       onKeyDown={(event) => {
         if (event.key !== "Enter" && event.key !== " ") return;
@@ -25,68 +37,25 @@ export function ProblemCard({
         onOpen(item.id);
       }}
     >
-      <h3>{item.title}</h3>
-      <button
-        type="button"
-        className={`problem-complete-button problem-complete-corner${item.completed ? " active" : ""}`}
-        title={completeLabel}
-        aria-label={completeLabel}
-        onClick={(event) => {
-          event.stopPropagation();
-          onToggleCompleted(item.id);
-        }}
-      >
-        <i data-lucide={item.completed ? "check-circle-2" : "circle"} />
-      </button>
-      <div className="problem-meta">
-        {item.bookName ? <span className="problem-tag source">{item.bookName}</span> : null}
-        {item.companies.map((company) => (
-          <span key={company.id || company.name} className="problem-tag company">{company.name}</span>
-        ))}
-        <span className="problem-tag topic">{item.category}</span>
-        <span className={`problem-tag difficulty ${item.difficultyClass}`}>{item.difficulty}</span>
-        {item.tags.map((tag, index) => (
-          <span key={`${tag}-${index}`} className="problem-tag skill">{tag}</span>
-        ))}
-        {item.lastScore != null && Number.isFinite(Number(item.lastScore)) ? (
-          <span className="problem-tag score">
-            {t("lastScore")}
-            {" "}
-            {Math.round(Number(item.lastScore))}
-            /100
-          </span>
-        ) : null}
-      </div>
-      <div className="problem-prompt">{item.preview}</div>
-      <div className="problem-card-footer">
-        <div className="problem-card-metrics">
-          <span className="problem-card-metric">
-            <i data-lucide="heart" />
-            <span>{item.likeCount}</span>
-          </span>
-          <span className="problem-card-metric">
-            <i data-lucide="message-square" />
-            <span>{item.commentCount}</span>
-          </span>
+      <span className="qg-problem-num" aria-hidden="true">{rowNumber}</span>
+      <div className="qg-problem-main">
+        <div className="qg-problem-title-row">
+          <h3>{main}</h3>
+          {item.completed ? (
+            <span className="qg-problem-solved" title={isEnglish ? "Solved" : "已解决"}>✓</span>
+          ) : null}
         </div>
-        <button
-          type="button"
-          className={`problem-save-button${item.favorite ? " active" : ""}`}
-          title={saveLabel}
-          aria-label={saveLabel}
-          onClick={(event) => {
-            event.stopPropagation();
-            onToggleSaved(item.id);
-          }}
-        >
-          <i data-lucide={item.favorite ? "bookmark-check" : "bookmark"} />
-        </button>
-        <span className="problem-card-open">
-          {t("viewFullProblem")}
-          {" "}
-          <i data-lucide="chevron-right" />
-        </span>
+        {sub ? <div className="qg-problem-sub">{sub}</div> : null}
       </div>
+      {topicLabel ? (
+        <span className="problem-tag topic" data-q-topic>{topicLabel}</span>
+      ) : null}
+      <span className={`problem-tag difficulty ${item.difficultyClass}`}>{difficultyLabel}</span>
+      <span className="qg-problem-acc" data-q-acc aria-hidden="true">
+        {item.lastScore != null && Number.isFinite(Number(item.lastScore))
+          ? `${Math.round(Number(item.lastScore))}%`
+          : ""}
+      </span>
     </article>
   );
 }

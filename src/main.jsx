@@ -1,18 +1,30 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.jsx";
+import "./styles/playful-precision-tokens.css";
 import "./styles/react-route-overrides.css";
+import "./styles/playful-precision-shell.css";
+import "./styles/playful-precision-growth.css";
+import "./styles/playful-precision-training.css";
+import "./styles/playful-precision-support.css";
+import "./styles/playful-precision-replica-growth.css";
+import "./styles/playful-precision-replica-training.css";
+import "./styles/playful-precision-replica-training2.css";
+import "./styles/playful-precision-replica-support-a.css";
+import "./styles/playful-precision-replica-support-a2.css";
+import "./styles/playful-precision-replica-support-b.css";
+import "./styles/playful-precision-replica-support-b2.css";
+import "./styles/playful-precision-replica-auth.css";
+import "./styles/playful-precision-replica-league.css";
+import "./styles/playful-precision-feedback.css";
+
+const DEFAULT_PROBLEM_CATALOG_SCRIPT = "/data/problem-catalog.js?v=2";
 
 const runtimeDataScripts = [
   {
     key: "QUANTGYM_CONFIG",
     src: "/config.js",
     isReady: (value) => value && typeof value === "object"
-  },
-  {
-    key: "quantProblemCatalog",
-    src: "/data/problem-catalog.js?v=2",
-    isReady: Array.isArray
   },
   {
     key: "quantLibraryCatalog",
@@ -42,7 +54,23 @@ function loadRuntimeScript(src) {
 }
 
 async function ensureRuntimeData() {
-  const missing = runtimeDataScripts.filter((item) => !item.isReady(getRuntimeGlobal(item.key)));
+  const configScript = runtimeDataScripts[0];
+  if (!configScript.isReady(getRuntimeGlobal(configScript.key))) {
+    await loadRuntimeScript(configScript.src);
+  }
+  const config = getRuntimeGlobal("QUANTGYM_CONFIG") || {};
+  const problemCatalogScript = typeof config.problemCatalogScript === "string" && config.problemCatalogScript.trim()
+    ? config.problemCatalogScript.trim()
+    : DEFAULT_PROBLEM_CATALOG_SCRIPT;
+  const scripts = [
+    {
+      key: "quantProblemCatalog",
+      src: problemCatalogScript,
+      isReady: Array.isArray
+    },
+    ...runtimeDataScripts.slice(1)
+  ];
+  const missing = scripts.filter((item) => !item.isReady(getRuntimeGlobal(item.key)));
   await Promise.all(missing.map((item) => loadRuntimeScript(item.src)));
 }
 

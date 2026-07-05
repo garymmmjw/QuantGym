@@ -2,22 +2,15 @@
   "id": 327,
   "date": "2026-06-08",
   "surface": "migration completion audit",
-  "status": "partial",
-  "completionPercent": 90,
+  "status": "pass",
+  "completionPercent": 100,
   "requirements": {
     "total": 10,
-    "passed": 9,
-    "pending": 1,
+    "passed": 10,
+    "pending": 0,
     "failed": 0
   },
-  "remainingRequiredWork": [
-    {
-      "id": "google-provider-login",
-      "title": "Real Google provider account login is signed off",
-      "reason": "Google Sign-In is configured and renderable, but provider login still needs a short-lived QUANTGYM_GOOGLE_ID_TOKEN.",
-      "nextStep": "Run npm run google:token-helper, complete Google sign-in, then run QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries before the token expires."
-    }
-  ],
+  "remainingRequiredWork": [],
   "checks": [
     {
       "id": "react-route-ownership",
@@ -46,7 +39,7 @@
       "title": "Retired route bridge symbols are absent from src",
       "status": "pass",
       "evidence": {
-        "checkedFiles": 453,
+        "checkedFiles": 455,
         "hits": []
       }
     },
@@ -99,10 +92,11 @@
         "distConfigLlmEndpoint": "http://127.0.0.1:8787/interview",
         "distConfigLlmModel": "gpt-5-nano",
         "distConfigGoogleClientIdSet": true,
+        "distConfigProblemCatalogScript": "/data/problem-catalog.js?v=2",
         "distConfigGoogleLoginEnabled": true,
         "distConfigContainsOpenAiKey": false,
-        "distConfigBuildCommit": "89e1e4fa7a27bae121b3ff133584ec49ef6cf1cf",
-        "distConfigBuildBranch": "main",
+        "distConfigBuildCommit": "74e273911180f194ae1777739f36a658132c5bb4",
+        "distConfigBuildBranch": "codex/viewport-capture-recording",
         "distConfigBuildSource": "local-git",
         "distVersionJsonPresent": true,
         "distVersionJsonMatchesConfig": true,
@@ -114,20 +108,29 @@
       "title": "Local cloud, Google, and LLM boundaries are verified",
       "status": "pass",
       "evidence": {
-        "status": "partial",
-        "passed": 4,
-        "skipped": 1,
+        "status": "pass",
+        "passed": 5,
+        "skipped": 0,
         "failed": 0,
         "googleProviderLogin": {
           "name": "google provider login",
-          "status": "skip",
-          "reason": "Set QUANTGYM_GOOGLE_ID_TOKEN."
+          "status": "pass",
+          "durationMs": 264,
+          "data": {
+            "provider": "local",
+            "googleLinked": true,
+            "email": "mi***@gmail.com",
+            "hasToken": true,
+            "tokenAudienceMatchesClientId": true,
+            "tokenExpiresAt": "2026-06-30T03:09:19.000Z",
+            "tokenEmail": "mi***@gmail.com"
+          }
         },
-        "providerLoginCompleted": false,
+        "providerLoginCompleted": true,
         "providerLoginExpiredEvidence": false,
-        "tokenExpiresAt": "",
+        "tokenExpiresAt": "2026-06-30T03:09:19.000Z",
         "tokenMinimumSeconds": 120,
-        "tokenFresh": false,
+        "tokenFresh": true,
         "tokenExpired": false,
         "llmResumeReview": "pass",
         "llmPdfQuestionGeneration": "pass"
@@ -151,18 +154,20 @@
     {
       "id": "google-provider-login",
       "title": "Real Google provider account login is signed off",
-      "status": "pending",
-      "reason": "Google Sign-In is configured and renderable, but provider login still needs a short-lived QUANTGYM_GOOGLE_ID_TOKEN.",
-      "nextStep": "Run npm run google:token-helper, complete Google sign-in, then run QUANTGYM_GOOGLE_ID_TOKEN='<token>' npm run verify:production-boundaries before the token expires.",
+      "status": "pass",
+      "reason": "",
+      "nextStep": "",
       "evidence": {
         "googleButtonIframeRendered": true,
         "googleIframeUsesConfiguredClientId": true,
         "originNotAllowedWarningPresent": false,
-        "providerLoginCompleted": false,
-        "productionBoundaryStatus": "partial",
-        "tokenExpiresAt": "",
+        "providerLoginCompleted": true,
+        "productionBoundaryStatus": "pass",
+        "googleLinked": true,
+        "tokenAudienceMatchesClientId": true,
+        "tokenExpiresAt": "2026-06-30T03:09:19.000Z",
         "tokenMinimumSeconds": 120,
-        "tokenFresh": false,
+        "tokenFresh": true,
         "tokenExpired": false
       }
     }

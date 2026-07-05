@@ -1,0 +1,1129 @@
+/* Design-replication additions (growth group) — matches UI 设计提升.zip design specs.
+   Scoped, token-driven (--qg-*), imported after base playful CSS so it wins ties.
+   One agent owns this file per group to avoid parallel-edit conflicts. */
+
+/* ===== Plan page — "计划 Plan" (Playful Precision) ===== */
+
+/* Header: GROWTH kicker pill + "计划 Plan" title */
+body.is-authenticated .app-route-root .qg-plan-page .prep-plan-header {
+  align-items: flex-end;
+}
+
+body.is-authenticated .app-route-root .qg-plan-page .prep-plan-header .qg-plan-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: start;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+body.is-authenticated .app-route-root .qg-plan-page .prep-plan-header h2 {
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+body.is-authenticated .app-route-root .qg-plan-page .prep-plan-header .qg-plan-title-accent {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-plan-page .prep-plan-header p {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+body.is-authenticated .app-route-root .qg-plan-page .prep-plan-header .qg-plan-edit-btn {
+  min-height: 40px;
+  border-radius: 14px;
+}
+
+/* Board panel head with hint */
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-board-head {
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-board-head h3 {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-board-hint {
+  flex: 0 0 auto;
+  color: var(--qg-muted);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Theme-adaptive literals from the design (light values are the design truth) */
+body.is-authenticated .app-route-root .qg-plan-page {
+  --qg-plan-ring-empty: #dedcf0;
+  --qg-plan-dot-empty: #dedcf0;
+  --qg-plan-dot-todo: #c3c2d8;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-plan-page {
+  --qg-plan-ring-empty: #3a3763;
+  --qg-plan-dot-empty: #3a3763;
+  --qg-plan-dot-todo: #76749c;
+}
+
+/* Header actions: edit button + week nav pill */
+body.is-authenticated .app-route-root .qg-plan-page .prep-plan-header > .qg-plan-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-plan-page .qg-plan-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+}
+
+body.is-authenticated .app-route-root .qg-plan-page .qg-plan-week-nav-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--qg-border);
+  border-radius: 9px;
+  background: var(--qg-surface);
+  color: var(--qg-muted);
+  font-family: var(--qg-font-ui);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-plan-page .qg-plan-week-nav-btn:hover {
+  border-color: var(--qg-border-2);
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-plan-page .qg-plan-week-nav-label {
+  color: var(--qg-text);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* 7-day week strip with progress rings */
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-day {
+  min-width: 0;
+  padding: 12px 6px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+  text-align: center;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-day.today {
+  border-color: #c9c7f5;
+  background: linear-gradient(160deg, #eef0ff, #f6f0ff);
+  box-shadow: 0 12px 26px -16px rgba(91, 95, 245, 0.5);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-day-dow {
+  display: block;
+  color: var(--qg-muted-3);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-day.today .qg-plan-day-dow {
+  color: #5b5ff5;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-day-date {
+  display: block;
+  margin: 2px 0 8px;
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-day.today .qg-plan-day-date {
+  color: #3a38a8;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-day-ring {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  margin: 0 auto;
+  border-radius: 50%;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-day-ring-inner {
+  position: absolute;
+  inset: 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--qg-surface);
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-day.today .qg-plan-day-ring-inner {
+  background: #f4f2ff;
+  color: #3a38a8;
+}
+
+/* Kanban board grid: two equal halves (kanban | timeline + streak) */
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-board {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .prep-work-panel {
+  border-radius: 22px;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Kanban columns */
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-column {
+  min-width: 0;
+  min-height: 280px;
+  padding: 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface-3);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-column-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-column-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--qg-plan-dot-todo, #c3c2d8);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-column-dot.doing {
+  background: var(--qg-brand);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-column-dot.done {
+  background: var(--qg-success);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-column-title {
+  color: var(--qg-text);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-column-count {
+  margin-left: auto;
+  color: var(--qg-muted-2);
+  font-family: var(--qg-font-number);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-column-body {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 40px;
+}
+
+/* Board task card */
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card {
+  display: grid;
+  gap: 6px;
+  padding: 11px 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 13px;
+  background: var(--qg-surface);
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -12px rgba(74, 67, 214, 0.4);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card.done {
+  opacity: 0.7;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card-toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card-check {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--qg-success) 22%, var(--qg-surface));
+  color: var(--qg-success);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card-check i {
+  width: 11px;
+  height: 11px;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card-title {
+  color: var(--qg-text);
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card.done .qg-plan-card-title {
+  color: var(--qg-muted);
+  text-decoration: line-through;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card-xp {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: #fff3dd;
+  color: #b3610a;
+  font-family: var(--qg-font-number);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--qg-brand-ink);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card-go:hover {
+  text-decoration: underline;
+}
+
+/* Today timeline card */
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--qg-border);
+  border-radius: 22px;
+  background: var(--qg-surface);
+  box-shadow: var(--qg-shadow-card);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-title {
+  margin-bottom: 14px;
+  color: var(--qg-text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-list {
+  display: flex;
+  flex-direction: column;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-row {
+  display: flex;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-rail {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-dot {
+  flex: 0 0 auto;
+  width: 11px;
+  height: 11px;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: var(--qg-plan-dot-empty, #dedcf0);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-row.done .qg-plan-timeline-dot {
+  background: var(--qg-success);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-row.active .qg-plan-timeline-dot {
+  background: var(--qg-brand);
+  box-shadow: 0 0 0 4px rgba(91, 95, 245, 0.18);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-line {
+  flex: 1;
+  width: 2px;
+  background: var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-row:last-child .qg-plan-timeline-line {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-body {
+  min-width: 0;
+  padding-bottom: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-row:last-child .qg-plan-timeline-body {
+  padding-bottom: 0;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-time {
+  color: var(--qg-muted-3);
+  font-family: var(--qg-font-number);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-name {
+  margin: 1px 0;
+  color: var(--qg-text);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-row.done .qg-plan-timeline-name {
+  color: #9aa0b0;
+  text-decoration: line-through;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-timeline-sub {
+  color: var(--qg-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+/* Streak banner (design keeps the warm palette in dark mode too) */
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-streak {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid #ffe0ad;
+  border-radius: 22px;
+  background: linear-gradient(150deg, #fff3dd, #ffe9c7);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-streak img {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-streak-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-streak-count {
+  color: #b3610a;
+  font-family: var(--qg-font-number);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-streak-sub {
+  margin-top: 2px;
+  color: #a35c07;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-streak-bars {
+  display: flex;
+  gap: 4px;
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-streak-bars span {
+  width: 8px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-streak-bars span.on {
+  background: linear-gradient(180deg, #ff9f2e, #ff7a3d);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card,
+  body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card-toggle {
+    transition: none;
+  }
+
+  body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-card:hover {
+    transform: none;
+  }
+}
+
+/* Narrow viewports: keep the 7-day strip and the 3 kanban columns (design
+   compresses instead of stacking); only tighten paddings. */
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .qg-plan-page .qg-plan-header-actions {
+    justify-content: flex-start;
+  }
+
+  body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-week-strip {
+    gap: 6px;
+  }
+
+  body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-day {
+    padding: 10px 4px;
+    border-radius: 14px;
+  }
+
+  body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-columns {
+    gap: 8px;
+  }
+
+  body.is-authenticated .app-route-root .qg-plan-dashboard .qg-plan-column {
+    padding: 8px;
+  }
+}
+
+/* ============================================================= */
+/* Skills — replica of the "能力值 / 能力雷达" design: header with   */
+/* stat pills, radar + skill-row list, coach card + summary.      */
+/* ============================================================= */
+
+/* Header band: bare (no card chrome) — kicker + title left, stat pills right */
+body.is-authenticated .app-route-root .qg-skills-page .section-heading.qg-skills-heading {
+  align-items: flex-end;
+  flex-wrap: wrap;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-heading > div {
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-kicker {
+  margin-bottom: 2px;
+  padding: 5px 11px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-heading #skillsPageTitle {
+  font-family: var(--qg-font-ui);
+  font-size: 29px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-title-en {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-heading #skillsPageSubtitle {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page div.qg-skills-headline-stats {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-stat {
+  display: grid;
+  gap: 3px;
+  min-width: 96px;
+  padding: 11px 16px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-stat-brand {
+  border-color: color-mix(in srgb, var(--qg-brand) 24%, var(--qg-border));
+  background: linear-gradient(150deg, var(--qg-brand-soft), var(--qg-brand-soft-2));
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-stat span {
+  color: var(--qg-muted-2);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-stat-brand span {
+  color: color-mix(in srgb, var(--qg-brand-ink) 78%, var(--qg-muted));
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-stat strong {
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-stat-brand strong {
+  color: var(--qg-brand-ink);
+}
+
+/* Main split: radar card (left) + skill rows (right) */
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-main {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+
+/* Radar caption row (你的能力 / 目标段位) */
+body.is-authenticated .app-route-root .qg-skills-page .skill-radar-caption {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .skill-radar-caption span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--qg-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .skill-radar-caption-you i {
+  width: 14px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--qg-brand);
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .skill-radar-caption-target i {
+  width: 14px;
+  height: 0;
+  border-top: 2px dashed color-mix(in srgb, var(--qg-brand) 45%, var(--qg-border-2));
+}
+
+/* Radar card: minimal per design — no header block, no inner panel */
+body.is-authenticated .app-route-root .qg-skills-page .skill-radar-header {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-radar {
+  padding: 20px;
+  border-radius: 22px;
+  background: var(--qg-surface);
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .skill-radar-canvas-wrap {
+  min-height: auto;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none !important;
+}
+
+/* Skill row list — reshape the legend rows into rich rows with bars */
+body.is-authenticated .app-route-root .qg-skills-page .skill-radar-legend.qg-skills-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-self: stretch;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-rows .skill-radar-legend-row.qg-skill-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) auto auto auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 4px 10px;
+  min-height: 0;
+  padding: 13px 15px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.04);
+  text-align: left;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-rows .skill-radar-legend-row.qg-skill-row.is-active,
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-rows .skill-radar-legend-row.qg-skill-row:hover,
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-rows .skill-radar-legend-row.qg-skill-row:focus-visible {
+  border-color: color-mix(in srgb, var(--qg-brand) 42%, var(--qg-border));
+  background: color-mix(in srgb, var(--qg-surface) 88%, var(--qg-brand-soft));
+  transform: translateY(-1px);
+  outline: none;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-icon {
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-family: var(--qg-font-number);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-body {
+  grid-row: 1;
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--qg-text);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-sub {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--qg-muted-2);
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Hide the tiny legend dot in the row layout (color carried by icon/bar) */
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-rows .qg-skill-row .legend-dot {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-score {
+  grid-row: 1;
+  justify-self: end;
+  min-width: 30px;
+  font-family: var(--qg-font-number);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-align: right;
+}
+
+/* Weekly rise/fall pill between name and score */
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-trend {
+  grid-row: 1;
+  justify-self: end;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-family: var(--qg-font-number);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-trend.is-up {
+  color: #0f9d63;
+  background: #e3f7ee;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-trend.is-down {
+  color: #d0524b;
+  background: #fdeceb;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-trend.is-up {
+  color: #5fd8a4;
+  background: #17352a;
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-trend.is-down {
+  color: #f0918a;
+  background: #3a2224;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-cta {
+  grid-row: 1;
+  justify-self: end;
+  padding: 6px 11px;
+  border: 1px solid var(--qg-border);
+  border-radius: 9px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-cta:hover {
+  transform: translateY(-1px);
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-track {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  display: block;
+  height: 7px;
+  margin-top: 2px;
+  border-radius: 20px;
+  background: var(--qg-track);
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-row-fill {
+  display: block;
+  height: 100%;
+  border-radius: 20px;
+}
+
+/* Footer split: dark coach card + 4-week trend card */
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-footer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 16px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-coach {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #1b1a38, #2d2a5c);
+  color: #ffffff;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-coach-avatar {
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-coach-body {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-coach-kicker {
+  color: #b9b8e0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-coach-copy {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-coach-copy b,
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-coach-copy span {
+  color: #a9adff;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-coach-cta {
+  justify-self: start;
+  margin-top: 7px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #3f39c9, 0 10px 20px -10px rgba(91, 95, 245, 0.7);
+  transition: transform 120ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-coach-cta:active {
+  transform: translateY(2px);
+}
+
+/* 近 4 周趋势 card */
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-trend {
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: 0 1px 2px rgba(27, 26, 56, 0.05);
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-trend h3 {
+  margin-bottom: 13px;
+  color: var(--qg-text);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-trend-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 90px;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-trend-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-trend-slot {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-trend-bar {
+  display: block;
+  width: 70%;
+  border-radius: 7px 7px 3px 3px;
+  background: linear-gradient(180deg, #cfcef6, #e4e3fb);
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-trend-bar.is-current {
+  background: linear-gradient(180deg, #5b5ff5, #8a7bff);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-skills-page .qg-skills-trend-bar {
+  background: linear-gradient(180deg, #4b4886, #38356a);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-skills-page .qg-skills-trend-bar.is-current {
+  background: linear-gradient(180deg, #7d7bff, #8a7bff);
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-trend-label {
+  color: var(--qg-muted-3);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+/* Off-design blocks kept in the DOM for runtime bindings, hidden visually */
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-summary,
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-detail-head,
+body.is-authenticated .app-route-root .qg-skills-page .qg-skill-grid {
+  display: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-summary {
+  display: grid;
+  align-content: space-between;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: var(--qg-shadow-card);
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-summary #skillsScoreCopy {
+  color: var(--qg-muted);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-summary-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-summary-meta span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-summary-meta b {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--qg-text);
+  font-family: var(--qg-font-number);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-summary-meta small {
+  color: var(--qg-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+/* Detail-grid section label above the per-dimension cards */
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-detail-head {
+  display: grid;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-detail-head h3 {
+  color: var(--qg-text);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+body.is-authenticated .app-route-root .qg-skills-page .qg-skills-detail-head small {
+  color: var(--qg-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Responsive: stack the split columns */
+@media (max-width: 1020px) {
+  body.is-authenticated .app-route-root .qg-skills-page .qg-skills-main,
+  body.is-authenticated .app-route-root .qg-skills-page .qg-skills-footer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .qg-skills-page .section-heading.qg-skills-heading {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  body.is-authenticated .app-route-root .qg-skills-page .qg-skills-coach {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-skills-page .qg-skills-rows .qg-skill-row {
+    transition: none;
+  }
+  body.is-authenticated .app-route-root .qg-skills-page .qg-skills-rows .qg-skill-row.is-active,
+  body.is-authenticated .app-route-root .qg-skills-page .qg-skills-rows .qg-skill-row:hover {
+    transform: none;
+  }
+}

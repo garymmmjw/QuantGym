@@ -49,7 +49,7 @@ console.log(JSON.stringify(summary, null, 2));
 if (failures.length) process.exitCode = 1;
 
 function checkManifestShape() {
-  expect(MODULE_MANIFEST.length === 21, `MODULE_MANIFEST should contain 21 routeable modules, found ${MODULE_MANIFEST.length}.`);
+  expect(MODULE_MANIFEST.length === 22, `MODULE_MANIFEST should contain 22 routeable modules, found ${MODULE_MANIFEST.length}.`);
   for (const field of ["id", "hash", "path", "labelKey", "navGroup", "protected", "stage2Priority"]) {
     const missing = MODULE_MANIFEST.filter((entry) => entry[field] === undefined).map((entry) => entry.id || "(missing id)");
     expect(missing.length === 0, `MODULE_MANIFEST entries missing ${field}: ${missing.join(", ")}`);

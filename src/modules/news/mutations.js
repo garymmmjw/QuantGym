@@ -1,3 +1,5 @@
+import { awardCoinsForXp } from '../economy/index.js';
+
 export function upsertNewsItems(existingNews = [], items = [], options = {}) {
   const normalizeItem = options.normalizeItem || ((item) => item);
   const isLowQuality = options.isLowQuality || (() => false);
@@ -41,6 +43,7 @@ export function applyNewsReadReward(state, id, options = {}) {
     duration: 0
   };
   state.entries.push(entry);
+  awardCoinsForXp(state, entry.totalXp, { source: "news-read" });
 
   return { changed: true, item, skills, gains, entry };
 }

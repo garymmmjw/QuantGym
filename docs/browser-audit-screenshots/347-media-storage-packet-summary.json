@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "generatedAt": "2026-06-21T11:29:29.333Z",
+  "generatedAt": "2026-06-30T03:05:17.426Z",
   "outDir": "/Users/miujiawei/Desktop/QuantGym/artifacts/media-storage/readiness-packet",
   "filesWritten": [
     "artifacts/media-storage/readiness-packet/README.md",
@@ -12,7 +12,7 @@
   "evidence": {
     "runtimeSmokePass": true,
     "productionFixturePass": true,
-    "productionNegativeFixtureCount": 23,
+    "productionNegativeFixtureCount": 25,
     "liveFixtureStatus": "pass",
     "liveFailureRejected": true,
     "liveFixtureContentTypePreserved": true,

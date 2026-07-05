@@ -15,6 +15,7 @@ const packageFiles = [
   "popup.html",
   "popup.css",
   "popup.js",
+  "quantgym-bridge.js",
   "README.md",
   "icons/icon16.png",
   "icons/icon32.png",

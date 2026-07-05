@@ -1,0 +1,418 @@
+{
+  "status": "pass",
+  "durationMs": 87600,
+  "browser": "Google Chrome via playwright-core",
+  "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "baseUrl": "http://127.0.0.1:55134",
+  "routes": {
+    "checked": 21,
+    "passed": 21,
+    "failed": 0,
+    "results": [
+      {
+        "id": "overview",
+        "path": "/",
+        "status": "pass",
+        "selectors": [
+          "#heroTypewriter",
+          "#overviewProblemProgress",
+          "#leaderboardMetricSelect"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1124,
+          "horizontalOverflowPx": 0,
+          "pathname": "/"
+        }
+      },
+      {
+        "id": "plan",
+        "path": "/plan",
+        "status": "pass",
+        "selectors": [
+          "#prepPlanSetupForm",
+          "#prepPlanDashboard"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 632,
+          "horizontalOverflowPx": 0,
+          "pathname": "/plan"
+        }
+      },
+      {
+        "id": "skills",
+        "path": "/skills",
+        "status": "pass",
+        "selectors": [
+          "#skillsPageTitle",
+          "#skillRadar"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1757,
+          "horizontalOverflowPx": 0,
+          "pathname": "/skills"
+        }
+      },
+      {
+        "id": "interview",
+        "path": "/interview",
+        "status": "pass",
+        "selectors": [
+          "#interviewSetup",
+          "#startInterviewBtn"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 417,
+          "horizontalOverflowPx": 0,
+          "pathname": "/interview"
+        }
+      },
+      {
+        "id": "problems",
+        "path": "/problems",
+        "status": "pass",
+        "selectors": [
+          "#problemSearch",
+          "#problemList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 3066,
+          "horizontalOverflowPx": 0,
+          "pathname": "/problems"
+        }
+      },
+      {
+        "id": "tools",
+        "path": "/tools",
+        "status": "pass",
+        "selectors": [
+          "#startDrillSessionBtn",
+          "#drillQuestion"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 876,
+          "horizontalOverflowPx": 0,
+          "pathname": "/tools"
+        }
+      },
+      {
+        "id": "poker",
+        "path": "/poker",
+        "status": "pass",
+        "selectors": [
+          "#pokerLobbySummary",
+          "#pokerTable"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 2575,
+          "horizontalOverflowPx": 0,
+          "pathname": "/poker"
+        }
+      },
+      {
+        "id": "experiences",
+        "path": "/experiences",
+        "status": "pass",
+        "selectors": [
+          "#newExperienceBtn",
+          "#experienceForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 712,
+          "horizontalOverflowPx": 0,
+          "pathname": "/experiences"
+        }
+      },
+      {
+        "id": "news",
+        "path": "/news",
+        "status": "pass",
+        "selectors": [
+          "#newsTopicFilter",
+          "#newsList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1575,
+          "horizontalOverflowPx": 0,
+          "pathname": "/news"
+        }
+      },
+      {
+        "id": "community",
+        "path": "/community",
+        "status": "pass",
+        "selectors": [
+          "#communityForm",
+          "#communityText"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 208,
+          "horizontalOverflowPx": 0,
+          "pathname": "/community"
+        }
+      },
+      {
+        "id": "messages",
+        "path": "/messages",
+        "status": "pass",
+        "selectors": [
+          "#messageThreadList",
+          "#messageComposerForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 250,
+          "horizontalOverflowPx": 0,
+          "pathname": "/messages"
+        }
+      },
+      {
+        "id": "network",
+        "path": "/network",
+        "status": "pass",
+        "selectors": [
+          "#addNetworkBtn",
+          "#networkForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 203,
+          "horizontalOverflowPx": 0,
+          "pathname": "/network"
+        }
+      },
+      {
+        "id": "resume",
+        "path": "/resume",
+        "status": "pass",
+        "selectors": [
+          "#resumeForm",
+          "#resumeText"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 262,
+          "horizontalOverflowPx": 0,
+          "pathname": "/resume"
+        }
+      },
+      {
+        "id": "jobs",
+        "path": "/jobs",
+        "status": "pass",
+        "selectors": [
+          "#jobsSummary",
+          "#jobsList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1066,
+          "horizontalOverflowPx": 0,
+          "pathname": "/jobs"
+        }
+      },
+      {
+        "id": "companies",
+        "path": "/companies",
+        "status": "pass",
+        "selectors": [
+          "#companiesPageTitle",
+          "#companyTierFilter"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 2512,
+          "horizontalOverflowPx": 0,
+          "pathname": "/companies"
+        }
+      },
+      {
+        "id": "library",
+        "path": "/library",
+        "status": "pass",
+        "selectors": [
+          "#librarySearch",
+          "#libraryBookGrid"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 2527,
+          "horizontalOverflowPx": 0,
+          "pathname": "/library"
+        }
+      },
+      {
+        "id": "courses",
+        "path": "/courses",
+        "status": "pass",
+        "selectors": [
+          "#learningPathTitle",
+          "#courseList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1513,
+          "horizontalOverflowPx": 0,
+          "pathname": "/courses"
+        }
+      },
+      {
+        "id": "memory",
+        "path": "/memory",
+        "status": "pass",
+        "selectors": [
+          "#addResourceBtn",
+          "#resourceForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 176,
+          "horizontalOverflowPx": 0,
+          "pathname": "/memory"
+        }
+      },
+      {
+        "id": "settings",
+        "path": "/settings",
+        "status": "pass",
+        "selectors": [
+          "#settingsForm",
+          "#settingsLanguageSelect"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 527,
+          "horizontalOverflowPx": 0,
+          "pathname": "/settings"
+        }
+      },
+      {
+        "id": "account",
+        "path": "/account",
+        "status": "pass",
+        "selectors": [
+          "#accountForm",
+          "#accountNameInput"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 421,
+          "horizontalOverflowPx": 0,
+          "pathname": "/account"
+        }
+      },
+      {
+        "id": "pk",
+        "path": "/pk",
+        "status": "pass",
+        "selectors": [
+          "#startPkBtn",
+          "#pkProblem"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 200,
+          "horizontalOverflowPx": 0,
+          "pathname": "/pk"
+        }
+      }
+    ]
+  },
+  "interactions": {
+    "checked": 1,
+    "passed": 1,
+    "failed": 0,
+    "results": [
+      {
+        "name": "pk match, submit, reveal, and record persistence",
+        "status": "pass",
+        "opponentName": "Options Challenger",
+        "problemPreview": "骰上骰\n\n我们有一枚公平的 $6-$ 面骰。先掷一次，记朝上的点数为 $N$。然后我们掷 $N$ 枚公平的 $6-$ 面骰，并把所有 $N$ 枚骰子的朝上点数相加。将这个和记为 $M$。最后，我们掷 $M$ 枚公平的 $6-$ 面骰，并将朝",
+        "recordPersisted": true,
+        "revealed": true
+      }
+    ]
+  },
+  "unauthenticated": {
+    "name": "protected route redirects to auth and local email auth works",
+    "status": "pass",
+    "localEmailAuth": {
+      "email": "browser-auth-1783099314507-hnw464@quantgym.local",
+      "redirectedToLogin": true,
+      "accountStatusChecked": true,
+      "registrationFormShown": true,
+      "verificationOptional": true,
+      "registered": true,
+      "accountPersisted": true,
+      "logoutReturnedToAuth": true,
+      "passwordStepShown": true,
+      "reloginSucceeded": true,
+      "resetFormShown": true,
+      "resetCodeSent": true,
+      "resetSucceeded": true,
+      "resetOldPasswordRejected": true,
+      "resetNewPasswordLoginSucceeded": true,
+      "accountId": "8139e197-4be6-4569-a02b-f812f9312e21",
+      "reloginPath": "/"
+    },
+    "path": "/login",
+    "redirectPath": "/login"
+  },
+  "consoleErrors": [],
+  "ignoredConsoleErrors": [],
+  "pageErrors": [],
+  "responseErrors": [],
+  "warnings": [],
+  "failures": []
+}

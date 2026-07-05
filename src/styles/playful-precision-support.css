@@ -1,0 +1,1101 @@
+body.is-authenticated .app-route-root .qg-support-page,
+body.is-authenticated .app-route-root .qg-support-page * {
+  box-sizing: border-box;
+}
+
+body.is-authenticated .app-route-root .qg-support-page {
+  display: grid;
+  gap: 18px;
+  width: 100%;
+  margin: 0 !important;
+  color: var(--qg-text);
+  font-family: var(--qg-font-ui) !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0 !important;
+}
+
+body.is-authenticated .app-route-root .qg-support-page h2,
+body.is-authenticated .app-route-root .qg-support-page h3,
+body.is-authenticated .app-route-root .qg-support-page h4,
+body.is-authenticated .app-route-root .qg-support-page p {
+  margin: 0;
+  color: var(--qg-text);
+  letter-spacing: 0;
+}
+
+body.is-authenticated .app-route-root .qg-support-page h2 {
+  font-family: var(--qg-font-number);
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+body.is-authenticated .app-route-root .qg-support-page h3 {
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1.18;
+}
+
+body.is-authenticated .app-route-root .qg-support-page h4 {
+  font-size: 15px;
+  font-weight: 850;
+  line-height: 1.22;
+}
+
+body.is-authenticated .app-route-root .qg-support-page p,
+body.is-authenticated .app-route-root .qg-support-page small {
+  color: var(--qg-muted);
+  line-height: 1.55;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .hidden {
+  display: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .section-heading,
+body.is-authenticated .app-route-root .qg-support-page .experience-header,
+body.is-authenticated .app-route-root .qg-support-page .library-topbar,
+body.is-authenticated .app-route-root .qg-support-page .panel-heading,
+body.is-authenticated .app-route-root .qg-support-page .library-block-heading,
+body.is-authenticated .app-route-root .qg-support-page .experience-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .section-heading,
+body.is-authenticated .app-route-root .qg-support-page .experience-header,
+body.is-authenticated .app-route-root .qg-support-page .library-topbar {
+  position: relative;
+  overflow: hidden;
+  min-height: 112px;
+  padding: 22px;
+  border: 1px solid var(--qg-border);
+  border-radius: 24px;
+  background:
+    radial-gradient(440px 220px at 96% 0%, color-mix(in srgb, var(--qg-brand) 16%, transparent), transparent 72%),
+    linear-gradient(145deg, var(--qg-surface) 0%, var(--qg-surface-3) 100%);
+  box-shadow: var(--qg-shadow-card);
+}
+
+body.is-authenticated .app-route-root .qg-support-page .section-heading::after,
+body.is-authenticated .app-route-root .qg-support-page .experience-header::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 94px;
+  height: 94px;
+  background: url("/assets/generated/playful-precision/avatar-focused-v2.png") center / contain no-repeat;
+  opacity: 0.78;
+  filter: drop-shadow(0 12px 16px rgba(91, 95, 245, 0.18));
+  pointer-events: none;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .section-heading::after,
+body.is-authenticated .app-route-root .qg-library-page .library-topbar::after,
+body.is-authenticated .app-route-root .qg-courses-page .section-heading::after {
+  background-image: url("/assets/generated/playful-precision/mascot-laptop-v2.png");
+}
+
+body.is-authenticated .app-route-root .qg-community-page .section-heading::after,
+body.is-authenticated .app-route-root .qg-messages-page .section-heading::after,
+body.is-authenticated .app-route-root .qg-network-page .section-heading::after {
+  background-image: url("/assets/generated/playful-precision/avatar-happy-v2.png");
+}
+
+body.is-authenticated .app-route-root .qg-jobs-page .section-heading::after,
+body.is-authenticated .app-route-root .qg-companies-page .section-heading::after,
+body.is-authenticated .app-route-root .qg-resume-page .section-heading::after {
+  background-image: url("/assets/generated/playful-precision/mascot-teacher-v2.png");
+}
+
+body.is-authenticated .app-route-root .qg-settings-page .section-heading::after,
+body.is-authenticated .app-route-root .qg-account-page .section-heading::after,
+body.is-authenticated .app-route-root .qg-memory-page .panel-heading::after {
+  background-image: url("/assets/generated/playful-precision/brand-q-mark.webp");
+}
+
+body.is-authenticated .app-route-root .qg-support-page .section-heading > div,
+body.is-authenticated .app-route-root .qg-support-page .experience-header > div,
+body.is-authenticated .app-route-root .qg-support-page .library-topbar > * {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .section-heading small,
+body.is-authenticated .app-route-root .qg-support-page .experience-header p {
+  display: block;
+  margin-top: 7px;
+  max-width: 680px;
+  font-size: 13px;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .rank-label,
+body.is-authenticated .app-route-root .qg-support-page .experience-kicker,
+body.is-authenticated .app-route-root .qg-support-page .pill,
+body.is-authenticated .app-route-root .qg-support-page .muted-pill,
+body.is-authenticated .app-route-root .qg-support-page .library-chip,
+body.is-authenticated .app-route-root .qg-support-page .Tag,
+body.is-authenticated .app-route-root .qg-support-page .tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 28px;
+  padding: 5px 10px;
+  border: 1px solid var(--qg-border);
+  border-radius: 999px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .primary-button,
+body.is-authenticated .app-route-root .qg-support-page .secondary-button,
+body.is-authenticated .app-route-root .qg-support-page .icon-button,
+body.is-authenticated .app-route-root .qg-support-page button {
+  font-family: var(--qg-font-ui) !important;
+  letter-spacing: 0 !important;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .primary-button,
+body.is-authenticated .app-route-root .qg-support-page .secondary-button,
+body.is-authenticated .app-route-root .qg-support-page .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border-radius: 14px;
+  font-weight: 850;
+  line-height: 1;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .primary-button {
+  border: 0 !important;
+  background: linear-gradient(180deg, #7073ff 0%, var(--qg-brand) 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 0 #3f39c9, 0 16px 28px -14px rgba(91, 95, 245, 0.62) !important;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .secondary-button,
+body.is-authenticated .app-route-root .qg-support-page .icon-button {
+  border: 1px solid var(--qg-border-2) !important;
+  background: var(--qg-surface) !important;
+  color: var(--qg-text-2) !important;
+  box-shadow: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .icon-button {
+  flex: 0 0 auto;
+  width: 42px;
+  min-width: 42px;
+  padding: 0;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .primary-button:active,
+body.is-authenticated .app-route-root .qg-support-page .secondary-button:active,
+body.is-authenticated .app-route-root .qg-support-page .icon-button:active,
+body.is-authenticated .app-route-root .qg-support-page button:active {
+  transform: translateY(2px);
+}
+
+body.is-authenticated .app-route-root .qg-support-page input,
+body.is-authenticated .app-route-root .qg-support-page select,
+body.is-authenticated .app-route-root .qg-support-page textarea {
+  min-width: 0;
+  border: 1px solid var(--qg-border-2);
+  border-radius: 14px;
+  background: var(--qg-surface);
+  color: var(--qg-text);
+  font-family: var(--qg-font-ui) !important;
+  font-size: 14px;
+  font-weight: 750;
+  letter-spacing: 0;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-support-page input,
+body.is-authenticated .app-route-root .qg-support-page select {
+  min-height: 42px;
+  padding: 0 12px;
+}
+
+body.is-authenticated .app-route-root .qg-support-page textarea {
+  padding: 12px;
+  resize: vertical;
+}
+
+body.is-authenticated .app-route-root .qg-support-page input:focus,
+body.is-authenticated .app-route-root .qg-support-page select:focus,
+body.is-authenticated .app-route-root .qg-support-page textarea:focus {
+  border-color: color-mix(in srgb, var(--qg-brand) 62%, var(--qg-border-2));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--qg-brand) 14%, transparent);
+}
+
+/* File inputs nested in button-style labels open via the label — hide the raw control */
+body.is-authenticated .app-route-root .qg-support-page .file-button input[type="file"],
+body.is-authenticated .app-route-root .qg-support-page .settings-file-button input[type="file"],
+body.is-authenticated .app-route-root .qg-support-page .avatar-upload input[type="file"] {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  border: 0 !important;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+/* Standalone file inputs (e.g. account resume) keep a themed native picker button */
+body.is-authenticated .app-route-root .qg-support-page input[type="file"] {
+  display: flex;
+  align-items: center;
+  color: var(--qg-muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body.is-authenticated .app-route-root .qg-support-page input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  min-height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--qg-border-2);
+  border-radius: 11px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-ui);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+body.is-authenticated .app-route-root .qg-support-page input[type="file"]::file-selector-button:hover {
+  border-color: color-mix(in srgb, var(--qg-brand) 60%, var(--qg-border-2));
+  background: color-mix(in srgb, var(--qg-brand) 16%, var(--qg-surface));
+}
+
+body.is-authenticated .app-route-root .qg-support-page .segmented,
+body.is-authenticated .app-route-root .qg-support-page .view-tabs,
+body.is-authenticated .app-route-root .qg-support-page .community-feed-tabs,
+body.is-authenticated .app-route-root .qg-support-page .library-kind-tabs,
+body.is-authenticated .app-route-root .qg-support-page .course-source-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 4px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-track);
+}
+
+body.is-authenticated .app-route-root .qg-support-page .segment,
+body.is-authenticated .app-route-root .qg-support-page .tab,
+body.is-authenticated .app-route-root .qg-support-page .library-chip,
+body.is-authenticated .app-route-root .qg-support-page .course-source-bar button {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--qg-muted);
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-support-page .segment.active,
+body.is-authenticated .app-route-root .qg-support-page .tab.active,
+body.is-authenticated .app-route-root .qg-support-page .library-chip.active,
+body.is-authenticated .app-route-root .qg-support-page .course-source-bar button.active {
+  background: var(--qg-surface);
+  color: var(--qg-brand-ink);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7), 0 7px 18px -14px rgba(27, 26, 56, 0.44);
+}
+
+body.is-authenticated .app-route-root .qg-support-page .experience-form,
+body.is-authenticated .app-route-root .qg-support-page .experience-side-panel,
+body.is-authenticated .app-route-root .qg-support-page .experience-card,
+body.is-authenticated .app-route-root .qg-support-page .news-intel-board,
+body.is-authenticated .app-route-root .qg-support-page .news-form,
+body.is-authenticated .app-route-root .qg-support-page .news-detail,
+body.is-authenticated .app-route-root .qg-support-page .news-card,
+body.is-authenticated .app-route-root .qg-support-page .community-form,
+body.is-authenticated .app-route-root .qg-support-page .community-card,
+body.is-authenticated .app-route-root .qg-support-page .messages-layout,
+body.is-authenticated .app-route-root .qg-support-page .network-form,
+body.is-authenticated .app-route-root .qg-support-page .network-card,
+body.is-authenticated .app-route-root .qg-support-page .resume-panel,
+body.is-authenticated .app-route-root .qg-support-page .job-card,
+body.is-authenticated .app-route-root .qg-support-page .company-overview-card,
+body.is-authenticated .app-route-root .qg-support-page .library-reading-card,
+body.is-authenticated .app-route-root .qg-support-page .library-stats,
+body.is-authenticated .app-route-root .qg-support-page .library-block,
+body.is-authenticated .app-route-root .qg-support-page .library-continue,
+body.is-authenticated .app-route-root .qg-support-page .library-card,
+body.is-authenticated .app-route-root .qg-support-page .learning-path-panel,
+body.is-authenticated .app-route-root .qg-support-page .course-card,
+body.is-authenticated .app-route-root .qg-support-page .resource-panel,
+body.is-authenticated .app-route-root .qg-support-page .resource-item,
+body.is-authenticated .app-route-root .qg-support-page .history-section,
+body.is-authenticated .app-route-root .qg-support-page .history-item,
+body.is-authenticated .app-route-root .qg-support-page .settings-panel,
+body.is-authenticated .app-route-root .qg-support-page .account-panel {
+  border: 1px solid var(--qg-border);
+  border-radius: 22px;
+  background: var(--qg-surface);
+  box-shadow: var(--qg-shadow-card);
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-workspace,
+body.is-authenticated .app-route-root .qg-resume-page .resume-grid,
+body.is-authenticated .app-route-root .qg-settings-page .settings-grid,
+body.is-authenticated .app-route-root .qg-account-page .account-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 18px;
+  align-items: start;
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form,
+body.is-authenticated .app-route-root .qg-network-page .network-form,
+body.is-authenticated .app-route-root .qg-settings-page .settings-panel,
+body.is-authenticated .app-route-root .qg-account-page .account-panel,
+body.is-authenticated .app-route-root .qg-resume-page .resume-panel {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  padding: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-fields,
+body.is-authenticated .app-route-root .qg-network-page .network-form,
+body.is-authenticated .app-route-root .qg-settings-page #settingsForm,
+body.is-authenticated .app-route-root .qg-account-page #accountForm {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form label,
+body.is-authenticated .app-route-root .qg-network-page .network-form label,
+body.is-authenticated .app-route-root .qg-resume-page .resume-panel label,
+body.is-authenticated .app-route-root .qg-settings-page .settings-panel label,
+body.is-authenticated .app-route-root .qg-account-page .account-panel label,
+body.is-authenticated .app-route-root .qg-courses-page .course-note-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--qg-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form > label,
+body.is-authenticated .app-route-root .qg-experiences-page .experience-safety,
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form-actions,
+body.is-authenticated .app-route-root .qg-network-page .network-form textarea,
+body.is-authenticated .app-route-root .qg-network-page .network-form button,
+body.is-authenticated .app-route-root .qg-settings-page .settings-panel button,
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-row,
+body.is-authenticated .app-route-root .qg-account-page .account-panel button,
+body.is-authenticated .app-route-root .qg-account-page .account-panel label:has(#accountResumeFile) {
+  grid-column: 1 / -1;
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-side-panel {
+  position: sticky;
+  top: 88px;
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form-stats > div,
+body.is-authenticated .app-route-root .qg-library-page .library-stats span,
+body.is-authenticated .app-route-root .qg-companies-page .company-detail-grid span {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form-stats strong,
+body.is-authenticated .app-route-root .qg-library-page .library-stats strong,
+body.is-authenticated .app-route-root .qg-companies-page .company-detail-grid b,
+body.is-authenticated .app-route-root .qg-account-page .account-meta-panel dd {
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 26px;
+  line-height: 1;
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-list-toolbar {
+  padding: 14px 16px;
+  border: 1px solid var(--qg-border);
+  border-radius: 20px;
+  background: var(--qg-surface);
+  box-shadow: var(--qg-shadow-card);
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-list,
+body.is-authenticated .app-route-root .qg-community-page .community-list,
+body.is-authenticated .app-route-root .qg-network-page .network-list,
+body.is-authenticated .app-route-root .qg-jobs-page .jobs-list,
+body.is-authenticated .app-route-root .qg-companies-page .company-overview-list,
+body.is-authenticated .app-route-root .qg-library-page .library-grid,
+body.is-authenticated .app-route-root .qg-courses-page .course-list,
+body.is-authenticated .app-route-root .qg-memory-page .resource-list,
+body.is-authenticated .app-route-root .qg-memory-page .history-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card,
+body.is-authenticated .app-route-root .qg-community-page .community-card,
+body.is-authenticated .app-route-root .qg-network-page .network-card,
+body.is-authenticated .app-route-root .qg-jobs-page .job-card,
+body.is-authenticated .app-route-root .qg-companies-page .company-overview-card,
+body.is-authenticated .app-route-root .qg-courses-page .course-card,
+body.is-authenticated .app-route-root .qg-memory-page .resource-item,
+body.is-authenticated .app-route-root .qg-memory-page .history-item {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-intel-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+  gap: 16px;
+  align-items: center;
+  padding: 18px;
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-intel-board::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  bottom: 12px;
+  width: 118px;
+  height: 118px;
+  background: url("/assets/generated/playful-precision/mascot-search.png") center / contain no-repeat;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-intel-copy,
+body.is-authenticated .app-route-root .qg-news-page .news-intel-stats,
+body.is-authenticated .app-route-root .qg-news-page .news-social-hint {
+  position: relative;
+  z-index: 1;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-intel-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-intel-stat {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-intel-stat strong {
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 22px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-list {
+  display: grid;
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-news-page .news-form textarea,
+body.is-authenticated .app-route-root .qg-news-page .news-form .form-row {
+  grid-column: 1 / -1;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .community-form {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .community-form::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  width: 116px;
+  height: 116px;
+  background: url("/assets/generated/playful-precision/avatar-wink-v2.png") center / contain no-repeat;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+body.is-authenticated .app-route-root .qg-community-page #communityText {
+  min-height: 132px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .community-compose-actions,
+body.is-authenticated .app-route-root .qg-community-page .community-actions,
+body.is-authenticated .app-route-root .qg-experiences-page .experience-form-actions,
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-actions,
+body.is-authenticated .app-route-root .qg-experiences-page .experience-share-row,
+body.is-authenticated .app-route-root .qg-jobs-page .view-tabs,
+body.is-authenticated .app-route-root .qg-companies-page .company-card-actions,
+body.is-authenticated .app-route-root .qg-courses-page .course-actions,
+body.is-authenticated .app-route-root .qg-settings-page .settings-actions,
+body.is-authenticated .app-route-root .qg-account-page .avatar-button-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .community-head,
+body.is-authenticated .app-route-root .qg-network-page .network-card-top,
+body.is-authenticated .app-route-root .qg-experiences-page .experience-card-head,
+body.is-authenticated .app-route-root .qg-companies-page .company-card-head,
+body.is-authenticated .app-route-root .qg-memory-page .resource-top,
+body.is-authenticated .app-route-root .qg-memory-page .history-top,
+body.is-authenticated .app-route-root .qg-account-page .account-admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-community-page .community-comments {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-community-page .community-comment-form,
+body.is-authenticated .app-route-root .qg-messages-page .message-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .messages-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.35fr) minmax(0, 0.65fr);
+  min-height: 650px;
+  overflow: hidden;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-list {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px;
+  overflow: auto;
+  border-right: 1px solid var(--qg-border);
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 58px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--qg-text);
+  text-align: left;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-item.active,
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-item:hover,
+body.is-authenticated .app-route-root .qg-messages-page .message-thread-item:focus-visible {
+  border-color: color-mix(in srgb, var(--qg-brand) 34%, var(--qg-border));
+  background: var(--qg-brand-soft);
+  outline: none;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-header,
+body.is-authenticated .app-route-root .qg-messages-page .message-composer {
+  padding: 14px;
+  border-bottom: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-composer {
+  border-top: 1px solid var(--qg-border);
+  border-bottom: 0;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .message-conversation-body {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px;
+  background:
+    radial-gradient(340px 200px at 100% 0%, color-mix(in srgb, var(--qg-brand) 10%, transparent), transparent 70%),
+    var(--qg-surface);
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .direct-message {
+  display: grid;
+  gap: 5px;
+  max-width: min(76%, 560px);
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .direct-message p {
+  padding: 11px 13px;
+  border-radius: 16px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .direct-message.mine {
+  justify-self: end;
+  justify-items: end;
+}
+
+body.is-authenticated .app-route-root .qg-messages-page .direct-message.mine p {
+  background: var(--qg-brand);
+  color: #ffffff;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-topbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface);
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-search input {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-hero-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.42fr) minmax(0, 0.58fr);
+  gap: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-reading-card,
+body.is-authenticated .app-route-root .qg-library-page .library-stats,
+body.is-authenticated .app-route-root .qg-library-page .library-block,
+body.is-authenticated .app-route-root .qg-library-page .library-continue {
+  padding: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+  padding: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-cover-button {
+  position: relative;
+  display: grid;
+  min-height: 150px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 16px;
+  background: var(--qg-track);
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-cover-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+body.is-authenticated .app-route-root .qg-library-page .library-card-actions,
+body.is-authenticated .app-route-root .qg-library-page .library-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .learning-path-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-list,
+body.is-authenticated .app-route-root .qg-courses-page .course-actions {
+  display: grid;
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-path-item {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-player,
+body.is-authenticated .app-route-root .qg-memory-page .resource-player {
+  overflow: hidden;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-track);
+  aspect-ratio: 16 / 9;
+}
+
+body.is-authenticated .app-route-root .qg-courses-page .course-player iframe,
+body.is-authenticated .app-route-root .qg-memory-page .resource-player iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .tool-grid,
+body.is-authenticated .app-route-root .qg-memory-page .history-section {
+  margin: 0;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .resource-panel,
+body.is-authenticated .app-route-root .qg-memory-page .history-section {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .resource-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .resource-form textarea,
+body.is-authenticated .app-route-root .qg-memory-page .resource-form button {
+  grid-column: 1 / -1;
+}
+
+body.is-authenticated .app-route-root .qg-memory-page .resource-image {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-settings-page .settings-actions {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+body.is-authenticated .app-route-root .qg-settings-page .settings-actions .secondary-button,
+body.is-authenticated .app-route-root .qg-settings-page .settings-actions .file-button {
+  width: 100%;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-row {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-preview {
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 82px;
+  border: 1px solid var(--qg-border);
+  border-radius: 22px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  font-family: var(--qg-font-number);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .avatar-actions {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-side-stack {
+  display: grid;
+  gap: 14px;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-meta-panel dl,
+body.is-authenticated .app-route-root .qg-account-page .account-admin-metrics {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+body.is-authenticated .app-route-root .qg-account-page .account-meta-panel dl > div,
+body.is-authenticated .app-route-root .qg-account-page .account-admin-metrics > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 16px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-account-page dt,
+body.is-authenticated .app-route-root .qg-account-page dd {
+  margin: 0;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-overview-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-card-head {
+  align-items: flex-start;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-card-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-progress-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--qg-track);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page .company-progress-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--qg-brand) 0%, #20b686 100%);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-support-page .section-heading,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-support-page .experience-header,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-support-page .library-topbar {
+  background:
+    radial-gradient(440px 220px at 96% 0%, color-mix(in srgb, var(--qg-brand) 18%, transparent), transparent 72%),
+    linear-gradient(145deg, var(--qg-surface) 0%, var(--qg-surface-2) 100%);
+}
+
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-support-page input,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-support-page select,
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-support-page textarea {
+  background: var(--qg-surface-2);
+}
+
+@media (max-width: 1180px) {
+  body.is-authenticated .app-route-root .qg-experiences-page .experience-workspace,
+  body.is-authenticated .app-route-root .qg-resume-page .resume-grid,
+  body.is-authenticated .app-route-root .qg-settings-page .settings-grid,
+  body.is-authenticated .app-route-root .qg-account-page .account-grid,
+  body.is-authenticated .app-route-root .qg-news-page .news-intel-board,
+  body.is-authenticated .app-route-root .qg-library-page .library-hero-row {
+    grid-template-columns: 1fr;
+  }
+
+  body.is-authenticated .app-route-root .qg-experiences-page .experience-side-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .qg-support-page {
+    gap: 14px;
+  }
+
+  body.is-authenticated .app-route-root .qg-support-page h2 {
+    font-size: 30px;
+  }
+
+  body.is-authenticated .app-route-root .qg-support-page .section-heading,
+  body.is-authenticated .app-route-root .qg-support-page .experience-header,
+  body.is-authenticated .app-route-root .qg-support-page .library-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    min-height: 0;
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  body.is-authenticated .app-route-root .qg-support-page .section-heading::after,
+  body.is-authenticated .app-route-root .qg-support-page .experience-header::after {
+    width: 68px;
+    height: 68px;
+  }
+
+  body.is-authenticated .app-route-root .qg-experiences-page .experience-fields,
+  body.is-authenticated .app-route-root .qg-network-page .network-form,
+  body.is-authenticated .app-route-root .qg-settings-page #settingsForm,
+  body.is-authenticated .app-route-root .qg-account-page #accountForm,
+  body.is-authenticated .app-route-root .qg-experiences-page .experience-list,
+  body.is-authenticated .app-route-root .qg-community-page .community-list,
+  body.is-authenticated .app-route-root .qg-network-page .network-list,
+  body.is-authenticated .app-route-root .qg-jobs-page .jobs-list,
+  body.is-authenticated .app-route-root .qg-companies-page .company-overview-list,
+  body.is-authenticated .app-route-root .qg-library-page .library-grid,
+  body.is-authenticated .app-route-root .qg-courses-page .course-list,
+  body.is-authenticated .app-route-root .qg-memory-page .resource-list,
+  body.is-authenticated .app-route-root .qg-memory-page .history-list,
+  body.is-authenticated .app-route-root .qg-news-page .news-intel-stats,
+  body.is-authenticated .app-route-root .qg-news-page .news-form,
+  body.is-authenticated .app-route-root .qg-library-page .library-stats,
+  body.is-authenticated .app-route-root .qg-library-page .library-card,
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-item,
+  body.is-authenticated .app-route-root .qg-memory-page .resource-form,
+  body.is-authenticated .app-route-root .qg-companies-page .company-detail-grid,
+  body.is-authenticated .app-route-root .qg-account-page .account-avatar-row {
+    grid-template-columns: 1fr;
+  }
+
+  body.is-authenticated .app-route-root .qg-support-page .segmented,
+  body.is-authenticated .app-route-root .qg-support-page .view-tabs,
+  body.is-authenticated .app-route-root .qg-support-page .community-feed-tabs,
+  body.is-authenticated .app-route-root .qg-support-page .library-kind-tabs,
+  body.is-authenticated .app-route-root .qg-support-page .course-source-bar {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  body.is-authenticated .app-route-root .qg-news-page .news-topic-filter,
+  body.is-authenticated .app-route-root .qg-news-page .news-source-filter {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  body.is-authenticated .app-route-root .qg-news-page .news-topic-filter .segment,
+  body.is-authenticated .app-route-root .qg-news-page .news-source-filter .segment {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .learning-path-panel {
+    grid-template-columns: 1fr;
+  }
+
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-list,
+  body.is-authenticated .app-route-root .qg-courses-page .course-path-list .empty-state {
+    width: 100%;
+    min-width: 0;
+  }
+
+  body.is-authenticated .app-route-root .qg-messages-page .messages-layout {
+    grid-template-columns: 1fr;
+    min-height: 720px;
+  }
+
+  body.is-authenticated .app-route-root .qg-messages-page .message-thread-list {
+    max-height: 240px;
+    border-right: 0;
+    border-bottom: 1px solid var(--qg-border);
+  }
+
+  body.is-authenticated .app-route-root .qg-messages-page .direct-message {
+    max-width: 88%;
+  }
+
+  body.is-authenticated .app-route-root .qg-community-page .community-comment-form,
+  body.is-authenticated .app-route-root .qg-messages-page .message-composer {
+    grid-template-columns: minmax(0, 1fr) 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-support-page *,
+  body.is-authenticated .app-route-root .qg-support-page *::before,
+  body.is-authenticated .app-route-root .qg-support-page *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 1ms !important;
+  }
+}

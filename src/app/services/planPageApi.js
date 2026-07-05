@@ -18,7 +18,11 @@ import {
   applyPlanUpdateResult,
   createPrepPlanEditorState
 } from "../../modules/plan/state.js";
-import { togglePrepTaskCompletion } from "../../modules/plan/todo.js";
+import {
+  advancePrepTaskStatus,
+  markPrepTasksDoing,
+  togglePrepTaskCompletion
+} from "../../modules/plan/todo.js";
 
 export function createPlanPageApi(deps = {}) {
   const editorState = createPrepPlanEditorState(false);
@@ -97,7 +101,9 @@ export function createPlanPageApi(deps = {}) {
       diagnosticQuestions: prepDiagnosticQuestions,
       diagnosticScores,
       diagnosticQuestionCount: prepDiagnosticQuestions.length,
-      doneCount: tasks.filter((task) => task.done).length
+      doneCount: tasks.filter((task) => task.status === "done").length,
+      doingCount: tasks.filter((task) => task.status === "doing").length,
+      todoCount: tasks.filter((task) => task.status === "todo").length
     };
   }
 
@@ -138,6 +144,28 @@ export function createPlanPageApi(deps = {}) {
       const result = togglePrepTaskCompletion({
         prepPlan: deps.getState?.().prepPlan,
         taskId,
+        makeId: deps.makeId,
+        localDateKey: deps.localDateKey
+      });
+      applyResult(result, { rebuildStudyPlan: true });
+      return getViewModel();
+    },
+
+    advanceTask(taskId) {
+      const result = advancePrepTaskStatus({
+        prepPlan: deps.getState?.().prepPlan,
+        taskId,
+        makeId: deps.makeId,
+        localDateKey: deps.localDateKey
+      });
+      applyResult(result, { rebuildStudyPlan: true });
+      return getViewModel();
+    },
+
+    migrateDoingTasks(taskIds = []) {
+      const result = markPrepTasksDoing({
+        prepPlan: deps.getState?.().prepPlan,
+        taskIds,
         makeId: deps.makeId,
         localDateKey: deps.localDateKey
       });

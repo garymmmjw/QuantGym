@@ -50,11 +50,13 @@ export function applyAppLanguageText(options = {}) {
     ["resume", t("resume")],
     ["jobs", t("jobs")],
     ["companies", t("companies")],
-    ["library", language === "en" ? "Library" : "书城"],
+    ["library", language === "en" ? "Library" : "资料库"],
     ["courses", t("courses")],
     ["skills", t("skills")],
+    ["league", t("league")],
     ["tools", t("tools")],
     ["memory", t("memory")],
+    ["account", t("account")],
     ["settings", t("settings")]
   ].forEach(([key, value]) => button(`[data-module-tab="${key}"]`, value));
 
@@ -65,10 +67,10 @@ export function applyAppLanguageText(options = {}) {
   text(".problem-ranking-header p", t("problemRankingHint"));
   text("#skillsPageTitle", t("skills"));
   text("#skillsPageSubtitle", t("skillPageSubtitle"));
-  text("#skillsScoreLabel", t("quantScore"));
+  text("#skillsScoreLabel", t("skillsTierLabel"));
   text("#skillsScoreCopy", t("skillScoreCopy"));
   text("#skillsEntriesLabel", t("practiceRecords"));
-  text("#skillsAverageLabel", t("averageScore"));
+  text("#skillsAverageLabel", t("skillsWeeklyGainLabel"));
   text("#skillsWeakestLabel", t("weakestSkill"));
   text("#skillRadarTitle", t("skillRadarTitle"));
   text("#skillRadarHint", t("skillRadarHint"));
@@ -114,9 +116,6 @@ export function applyAppLanguageText(options = {}) {
   text('[data-library-kind="book"]', language === "en" ? "Books" : "书籍");
   text('[data-library-kind="questionSet"]', language === "en" ? "Question Sets" : "题单");
   text("#libraryContinueTitle", language === "en" ? "Continue Reading" : "继续阅读");
-  text("#libraryBookTitle", language === "en" ? "Books" : "书籍");
-  text("#libraryQuestionTitle", language === "en" ? "Question Sets" : "题单");
-  text("#libraryEmpty", language === "en" ? "No matching books or question sets." : "没有匹配的书籍或题单。");
 
   text(".problem-page-copy .rank-label", t("problemEyebrow"));
   text(".problem-page-copy h2", t("problemTitle"));
@@ -134,16 +133,12 @@ export function applyAppLanguageText(options = {}) {
   }
   texts(".settings-panel h3", [t("preferences"), t("data")]);
 
-  text(".account-section h2", t("accountInfo"));
-  text(".account-meta-panel h3", t("accountInfo"));
   if (elements.accountMessage && !/已更新|updated/i.test(elements.accountMessage.textContent)) {
     elements.accountMessage.textContent = t("accountMessage");
   }
-  texts(".account-meta-panel dt", [t("provider"), t("createdAt"), t("currentRank")]);
 
   [
     ["accountNameInput", t("nickname")],
-    ["accountEmailInput", t("email")],
     ["accountCountrySelect", t("country")],
     ["accountRegionSelect", t("region")],
     ["accountGraduationTermInput", t("graduationTerm")],

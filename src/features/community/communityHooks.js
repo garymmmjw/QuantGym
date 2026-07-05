@@ -41,6 +41,18 @@ export function useCommunityPageModel() {
     appServices.services?.refreshIcons?.({ root: document.querySelector(".community-section") || document });
   }, [api, text, mediaPreview, appServices, t]);
 
+  /* 讲师鲨鱼贴纸 (shop item `teacher`): a sticker post is a REAL post whose
+     media points at an existing mascot asset; it flows through the exact same
+     addPost path as photo/video attachments. Ownership is gated in the page. */
+  const attachSticker = useCallback((sticker) => {
+    if (!sticker?.src) return;
+    setMediaPreview({
+      dataUrl: sticker.src,
+      type: "image",
+      name: `贴纸 · ${sticker.label || sticker.id}`
+    });
+  }, []);
+
   const attachMedia = useCallback(async (file) => {
     if (!file) return;
     if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) return;
@@ -72,6 +84,7 @@ export function useCommunityPageModel() {
     mediaPreview,
     clearMedia: () => setMediaPreview(null),
     attachMedia,
+    attachSticker,
     submitPost,
     toggleLike: (id) => api?.toggleLike?.(id),
     addComment: (id, value) => api?.addComment?.(id, value),

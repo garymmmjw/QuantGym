@@ -62,6 +62,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--replace", action="store_true", help="Emit TRUNCATE ... CASCADE before inserting rows.")
     parser.add_argument("--confirm-replace", action="store_true", help="Required with --execute --replace.")
     parser.add_argument("--execute", action="store_true", help="Execute generated SQL with psql.")
+    parser.add_argument("--init-schema", action="store_true", help="Run the Postgres schema before executing the import.")
+    parser.add_argument("--execute-driver", choices=["psql", "psycopg"], default="psql", help="Execution driver for --execute. psycopg avoids requiring the psql CLI.")
     parser.add_argument("--database-url", default=os.environ.get("QUANTGYM_POSTGRES_DATABASE_URL") or os.environ.get("DATABASE_URL") or "", help="Postgres connection URL for --execute.")
     parser.add_argument("--psql-bin", default=os.environ.get("PSQL_BIN", "psql"), help="psql executable path.")
     return parser.parse_args()
@@ -90,7 +92,7 @@ def main() -> int:
         sql_written = True
         sql_bytes = out_path.stat().st_size
         if args.execute:
-            execution = execute_with_psql(args, out_path, failures)
+            execution = execute_import(args, schema_sql, out_path, failures)
 
     summary = {
         "status": "fail" if failures else "pass",
@@ -375,15 +377,25 @@ def referenced_tables_precede_dependents(pg_schema: dict[str, Any], order: list[
     return True
 
 
-def execute_with_psql(args: argparse.Namespace, sql_path: Path, failures: list[str]) -> dict[str, Any]:
+def execute_import(args: argparse.Namespace, schema_sql: str, sql_path: Path, failures: list[str]) -> dict[str, Any]:
     if not args.database_url:
         failures.append("--execute requires --database-url or QUANTGYM_POSTGRES_DATABASE_URL.")
-        return {"requested": True, "executed": False}
+        return {"requested": True, "executed": False, "driver": args.execute_driver, "initSchema": bool(args.init_schema)}
     if args.replace and not args.confirm_replace:
         failures.append("--execute --replace requires --confirm-replace.")
-        return {"requested": True, "executed": False}
+        return {"requested": True, "executed": False, "driver": args.execute_driver, "initSchema": bool(args.init_schema)}
+    if args.execute_driver == "psycopg":
+        return execute_with_psycopg(args, schema_sql, sql_path, failures)
+    return execute_with_psql(args, sql_path, failures)
+
+
+def execute_with_psql(args: argparse.Namespace, sql_path: Path, failures: list[str]) -> dict[str, Any]:
+    command = [args.psql_bin, args.database_url, "-v", "ON_ERROR_STOP=1"]
+    if args.init_schema:
+        command.extend(["-c", idempotent_schema_sql(Path(args.schema).expanduser().read_text(encoding="utf-8"))])
+    command.extend(["-f", str(sql_path)])
     run = subprocess.run(
-        [args.psql_bin, args.database_url, "-v", "ON_ERROR_STOP=1", "-f", str(sql_path)],
+        command,
         cwd=PROJECT_ROOT,
         text=True,
         stdout=subprocess.PIPE,
@@ -394,12 +406,67 @@ def execute_with_psql(args: argparse.Namespace, sql_path: Path, failures: list[s
         failures.append(f"psql import failed with exit code {run.returncode}.")
     return {
         "requested": True,
+        "driver": "psql",
+        "initSchema": bool(args.init_schema),
         "executed": run.returncode == 0,
         "exitCode": run.returncode,
         "databaseUrlSet": True,
         "stdoutTail": tail(run.stdout),
         "stderrTail": tail(run.stderr),
     }
+
+
+def execute_with_psycopg(args: argparse.Namespace, schema_sql: str, sql_path: Path, failures: list[str]) -> dict[str, Any]:
+    try:
+        import psycopg  # type: ignore[import-not-found]
+    except Exception as exc:
+        failures.append(f"psycopg import driver is unavailable: {exc}")
+        return {
+            "requested": True,
+            "driver": "psycopg",
+            "initSchema": bool(args.init_schema),
+            "executed": False,
+            "databaseUrlSet": True,
+        }
+    try:
+        sql = sql_path.read_text(encoding="utf-8")
+        with psycopg.connect(args.database_url, autocommit=True) as conn:
+            with conn.cursor() as cur:
+                if args.init_schema:
+                    cur.execute(idempotent_schema_sql(schema_sql))
+                cur.execute(sql)
+    except Exception as exc:
+        failures.append(f"psycopg import failed: {exc}")
+        return {
+            "requested": True,
+            "driver": "psycopg",
+            "initSchema": bool(args.init_schema),
+            "executed": False,
+            "databaseUrlSet": True,
+        }
+    return {
+        "requested": True,
+        "driver": "psycopg",
+        "initSchema": bool(args.init_schema),
+        "executed": True,
+        "databaseUrlSet": True,
+    }
+
+
+def idempotent_schema_sql(sql: str) -> str:
+    text = re.sub(
+        r"\bCREATE\s+TABLE\s+(?!IF\s+NOT\s+EXISTS\b)",
+        "CREATE TABLE IF NOT EXISTS ",
+        str(sql or ""),
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        r"\bCREATE\s+INDEX\s+(?!IF\s+NOT\s+EXISTS\b)",
+        "CREATE INDEX IF NOT EXISTS ",
+        text,
+        flags=re.IGNORECASE,
+    )
+    return text
 
 
 def find_truncated_tables(tables: dict[str, Any]) -> list[str]:

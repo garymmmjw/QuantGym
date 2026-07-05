@@ -46,6 +46,12 @@ expect(Boolean(distConfig.cloudApiEndpoint), "dist config cloud API endpoint is 
 expect(Boolean(distConfig.llmEndpoint), "dist config LLM endpoint is missing");
 expect(Boolean(distConfig.llmModel), "dist config LLM model is missing");
 expect(Boolean(distConfig.googleClientId), "dist config Google Client ID is missing");
+expect(Boolean(distConfig.problemCatalogScript), "dist config problem catalog script is missing");
+expect(
+  String(distConfig.problemCatalogScript || "").startsWith("/data/")
+    || String(distConfig.problemCatalogScript || "").startsWith("https://"),
+  "dist config problem catalog script must be site-relative /data/ or HTTPS."
+);
 expect(distConfig.googleLoginEnabled === true, "dist config Google login is not enabled");
 expect(distConfigContainsOpenAiKey === false, "dist config embeds an OpenAI key marker");
 expect(/^[0-9a-f]{7,40}$/i.test(String(distConfig.buildCommit || "")), "dist config build commit is missing or invalid");
@@ -64,6 +70,7 @@ const summary = {
     distConfigLlmEndpoint: clean(distConfig.llmEndpoint),
     distConfigLlmModel: clean(distConfig.llmModel),
     distConfigGoogleClientIdSet: Boolean(distConfig.googleClientId),
+    distConfigProblemCatalogScript: clean(distConfig.problemCatalogScript),
     distConfigGoogleLoginEnabled: distConfig.googleLoginEnabled === true,
     distConfigContainsOpenAiKey,
     distConfigBuildCommit: clean(distConfig.buildCommit),

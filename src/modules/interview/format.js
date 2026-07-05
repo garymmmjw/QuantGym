@@ -105,9 +105,10 @@ export function parseInterviewFeedbackEvaluation(text) {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
-  const labeled = lines.find((line) => /^(评价|evaluation)\s*[:：]/i.test(line));
+  const headingOnly = /^(维度分|dimensions?|缺失|missing(?:\s+pieces)?)\s*[:：]\s*$/i;
+  const labeled = lines.find((line) => /^(评价|evaluation)\s*[:：]/i.test(line) && !headingOnly.test(line));
   const olderLine = lines.find((line) => /^(改进|fix|亮点|good)\s*[:：]/i.test(line));
-  const fallback = lines.find((line) => !/^(得分|评分|score)\s*[:：]/i.test(line));
+  const fallback = lines.find((line) => !/^(得分|评分|score)\s*[:：]/i.test(line) && !headingOnly.test(line) && !/^[-•·]\s*$/.test(line));
   return stripInterviewFeedbackLabel(labeled || olderLine || fallback || "").slice(0, 900);
 }
 

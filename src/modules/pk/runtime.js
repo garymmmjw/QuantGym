@@ -3,6 +3,7 @@ import {
   buildPkRevealFeed,
   createPkMatch
 } from './session.js';
+import { awardCoinsForXp } from '../economy/index.js';
 import { renderPkFeed as renderPkFeedView } from './feed.js';
 
 export function createPkRuntime(deps = {}) {
@@ -64,6 +65,7 @@ export function createPkRuntime(deps = {}) {
 
     state.skills[result.category] = Math.max(0, (state.skills[result.category] || 0) + result.xpGain);
     state.entries.push(result.entry);
+    awardCoinsForXp(state, result.xpGain, { source: "pk" });
     deps.saveState?.();
 
     renderFeed(result.feed);

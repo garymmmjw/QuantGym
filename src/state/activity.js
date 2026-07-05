@@ -1,4 +1,5 @@
 import { dayKey } from "../lib/date.js";
+import { applyStreakFreeze } from "../modules/economy/index.js";
 
 export function hasCheckedInOnDate(checkIns = [], date = new Date()) {
   const target = dayKey(date);
@@ -13,6 +14,9 @@ export function markActivityCheckIn(state = {}, options = {}) {
     now = new Date()
   } = options;
   if (!enabled || hasCheckedInOnDate(state.checkIns, now)) return null;
+  // First activity of the day: consume freeze cards to bridge missed days
+  // BEFORE writing today's check-in (economy design §3).
+  const freeze = applyStreakFreeze(state, { now });
   const previousStreak = Number(displayedStreak);
   const previous = Number.isFinite(previousStreak) ? previousStreak : getStreak();
   const today = dayKey(now);
@@ -26,5 +30,5 @@ export function markActivityCheckIn(state = {}, options = {}) {
     }
   ];
   state.streakCount = getStreak();
-  return { previous, next: state.streakCount, day: today };
+  return { previous, next: state.streakCount, day: today, freeze };
 }

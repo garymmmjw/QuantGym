@@ -1,0 +1,316 @@
+{
+  "status": "pass",
+  "baseUrl": "http://127.0.0.1:5174",
+  "screenshots": [
+    "docs/browser-audit-screenshots/369-ui-redesign-part-3-interview-desktop.png",
+    "docs/browser-audit-screenshots/369-ui-redesign-part-3-interview-mobile.png",
+    "docs/browser-audit-screenshots/369-ui-redesign-part-3-problems-desktop.png",
+    "docs/browser-audit-screenshots/369-ui-redesign-part-3-problems-mobile.png",
+    "docs/browser-audit-screenshots/369-ui-redesign-part-3-tools-desktop.png",
+    "docs/browser-audit-screenshots/369-ui-redesign-part-3-tools-mobile.png",
+    "docs/browser-audit-screenshots/369-ui-redesign-part-3-poker-desktop.png",
+    "docs/browser-audit-screenshots/369-ui-redesign-part-3-poker-mobile.png",
+    "docs/browser-audit-screenshots/369-ui-redesign-part-3-pk-desktop.png",
+    "docs/browser-audit-screenshots/369-ui-redesign-part-3-pk-mobile.png"
+  ],
+  "checks": [
+    {
+      "name": "interview-desktop",
+      "status": "pass",
+      "bytes": 348507,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/interview",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "trainingPageVisible": true,
+        "criticalVisible": {
+          "#startInterviewBtn": true,
+          ".qg-interview-setup": true
+        },
+        "imagesReady": {
+          ".interview-setup-shark img": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 669
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 900
+        }
+      }
+    },
+    {
+      "name": "interview-mobile",
+      "status": "pass",
+      "bytes": 180246,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/interview",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "trainingPageVisible": true,
+        "criticalVisible": {
+          "#startInterviewBtn": true,
+          ".qg-interview-setup": true
+        },
+        "imagesReady": {
+          ".interview-setup-shark img": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 879
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 990
+        }
+      }
+    },
+    {
+      "name": "problems-desktop",
+      "status": "pass",
+      "bytes": 403421,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/problems",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "trainingPageVisible": true,
+        "criticalVisible": {
+          "#problemSearch": true,
+          "#problemList": true,
+          "#problemCompletionProgress": true
+        },
+        "imagesReady": {
+          ".problem-page-header > img": true
+        },
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 4773
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 4929
+        }
+      }
+    },
+    {
+      "name": "problems-mobile",
+      "status": "pass",
+      "bytes": 147808,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/problems",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "trainingPageVisible": true,
+        "criticalVisible": {
+          "#problemSearch": true,
+          "#problemList": true
+        },
+        "imagesReady": {
+          ".problem-page-header > img": true
+        },
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 12334
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 12445
+        }
+      }
+    },
+    {
+      "name": "tools-desktop",
+      "status": "pass",
+      "bytes": 294539,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/tools",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "trainingPageVisible": true,
+        "criticalVisible": {
+          "#startDrillSessionBtn": true,
+          "#drillQuestion": true,
+          "#drillOptions": true,
+          "#submitMarketQuoteBtn": true
+        },
+        "imagesReady": {},
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 1353
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 1509
+        }
+      }
+    },
+    {
+      "name": "tools-mobile",
+      "status": "pass",
+      "bytes": 92772,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/tools",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "trainingPageVisible": true,
+        "criticalVisible": {
+          "#startDrillSessionBtn": true,
+          "#drillQuestion": true,
+          "#drillOptions": true
+        },
+        "imagesReady": {},
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 2663
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 2774
+        }
+      }
+    },
+    {
+      "name": "poker-desktop",
+      "status": "pass",
+      "bytes": 455603,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/poker",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "trainingPageVisible": true,
+        "criticalVisible": {
+          "#pokerTable": true,
+          "#pokerSeatGrid": true,
+          "#pokerLobbySummary": true,
+          "#pokerPreflopMatrix": true
+        },
+        "imagesReady": {},
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 2270
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 2426
+        }
+      }
+    },
+    {
+      "name": "poker-mobile",
+      "status": "pass",
+      "bytes": 150290,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/poker",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "trainingPageVisible": true,
+        "criticalVisible": {
+          "#pokerTable": true,
+          "#pokerSeatGrid": true,
+          "#pokerLeaveTableBtn": true
+        },
+        "imagesReady": {},
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 3861
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 3972
+        }
+      }
+    },
+    {
+      "name": "pk-desktop",
+      "status": "pass",
+      "bytes": 193860,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/pk",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "trainingPageVisible": true,
+        "criticalVisible": {
+          "#startPkBtn": true,
+          "#pkProblem": true,
+          "#pkForm": true,
+          "#pkFeed": true
+        },
+        "imagesReady": {},
+        "pageRect": {
+          "x": 282,
+          "y": 96,
+          "width": 1053,
+          "height": 725
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 1365,
+          "height": 900
+        }
+      }
+    },
+    {
+      "name": "pk-mobile",
+      "status": "pass",
+      "bytes": 92126,
+      "diagnostics": {
+        "url": "http://127.0.0.1:5174/pk",
+        "theme": "light",
+        "horizontalOverflowPx": 0,
+        "trainingPageVisible": true,
+        "criticalVisible": {
+          "#startPkBtn": true,
+          "#pkProblem": true,
+          "#pkForm": true
+        },
+        "imagesReady": {},
+        "pageRect": {
+          "x": 96,
+          "y": 71,
+          "width": 284,
+          "height": 1033
+        },
+        "appRect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 1144
+        }
+      }
+    }
+  ]
+}
