@@ -19,6 +19,12 @@ const legacyRemovalMap = JSON.parse(
     "utf8",
   ),
 );
+const packageJson = JSON.parse(
+  await readFile(new URL("../package.json", import.meta.url), "utf8"),
+);
+const packageLock = JSON.parse(
+  await readFile(new URL("../package-lock.json", import.meta.url), "utf8"),
+);
 
 const exactFamilyIds = [
   "shell-auth",
@@ -35,6 +41,71 @@ const exactLegacyRoots = [
   "src/App.jsx", "src/catalog-data.js", "src/constants.js", "src/i18n.js", "src/main.js", "src/main.jsx",
   "src/prep-data.js", "src/router.js", "src/skills.js", "index.html", "config.js",
   "data/leetcode-hot-100.js", "data/library-catalog.js", "data/problem-catalog.js", "styles.css",
+];
+const exactFamilies = [
+  {
+    id: "shell-auth",
+    removeInPhase: 1,
+    priority: 60,
+    globs: ["src/components/shell/**", "src/layouts/**", "src/router/**", "src/routes/**", "src/App.jsx", "src/main.jsx", "src/ui/appShellController.js", "src/ui/authRuntime.js", "src/styles/playful-precision-shell.css", "src/styles/playful-precision-replica-auth.css"],
+    targetDomains: ["core", "account", "design-system"],
+    replacementPaths: ["src/core/router", "src/core/providers", "src/domains/account", "src/design-system/patterns", "src/pages/v2"],
+    exitChecks: ["new shell starts without legacy bootstrap", "auth credentials are not persisted in browser storage"],
+  },
+  {
+    id: "daily-training",
+    removeInPhase: 2,
+    priority: 50,
+    globs: ["src/features/overview/**", "src/features/plan/**", "src/features/problems/**", "src/modules/overview/**", "src/modules/plan/**", "src/modules/problems/**", "src/pages/OverviewPage.jsx", "src/pages/PlanPage.jsx", "src/pages/ProblemsPage.jsx", "src/app/services/overviewPageApi.js", "src/app/services/planPageApi.js", "src/app/services/problemsPageApi.js"],
+    targetDomains: ["plan", "problems", "training"],
+    replacementPaths: ["src/domains/plan", "src/domains/problems", "src/domains/training", "src/pages/training"],
+    exitChecks: ["daily training e2e passes", "duplicate local and server training state is removed"],
+  },
+  {
+    id: "interview-tools",
+    removeInPhase: 3,
+    priority: 50,
+    globs: ["src/features/interview/**", "src/features/tools/**", "src/modules/interview/**", "src/modules/tools/**", "src/pages/InterviewPage.jsx", "src/pages/ToolsPage.jsx", "src/app/services/interviewPageApi.js", "src/app/services/toolsPageApi.js"],
+    targetDomains: ["interview", "training"],
+    replacementPaths: ["src/domains/interview", "src/domains/training", "src/pages/training"],
+    exitChecks: ["AI job recovery e2e passes", "legacy interview and tools controllers are absent"],
+  },
+  {
+    id: "growth-competition",
+    removeInPhase: 4,
+    priority: 50,
+    globs: ["src/features/skills/**", "src/features/league/**", "src/features/pk/**", "src/features/poker/**", "src/modules/skills/**", "src/modules/economy/**", "src/modules/pk/**", "src/modules/poker/**", "src/pages/SkillsPage.jsx", "src/pages/LeaguePage.jsx", "src/pages/PkPage.jsx", "src/pages/PokerPage.jsx"],
+    targetDomains: ["skills", "league", "economy", "poker", "training"],
+    replacementPaths: ["src/domains/skills", "src/domains/league", "src/domains/economy", "src/domains/poker"],
+    exitChecks: ["ledger-backed reward journeys pass", "competition routes use no client-owned balances"],
+  },
+  {
+    id: "remaining-domains",
+    removeInPhase: 5,
+    priority: 50,
+    globs: ["src/features/account/**", "src/features/community/**", "src/features/companies/**", "src/features/courses/**", "src/features/experiences/**", "src/features/jobs/**", "src/features/library/**", "src/features/memory/**", "src/features/messages/**", "src/features/network/**", "src/features/news/**", "src/features/resume/**", "src/features/settings/**", "src/pages/AccountPage.jsx", "src/pages/CommunityPage.jsx", "src/pages/CompaniesPage.jsx", "src/pages/CoursesPage.jsx", "src/pages/ExperiencesPage.jsx", "src/pages/JobsPage.jsx", "src/pages/LibraryPage.jsx", "src/pages/MemoryPage.jsx", "src/pages/MessagesPage.jsx", "src/pages/NetworkPage.jsx", "src/pages/NewsPage.jsx", "src/pages/ResumePage.jsx", "src/pages/SettingsPage.jsx"],
+    targetDomains: ["account", "career", "community", "resources"],
+    replacementPaths: ["src/domains/account", "src/domains/career", "src/domains/community", "src/domains/resources"],
+    exitChecks: ["all Phase 5 route journeys pass", "old feature controllers for migrated routes are absent"],
+  },
+  {
+    id: "static-runtime-entry",
+    removeInPhase: 6,
+    priority: 70,
+    globs: ["index.html", "config.js", "data/leetcode-hot-100.js", "data/library-catalog.js", "data/problem-catalog.js"],
+    targetDomains: ["core", "shared", "server-content"],
+    replacementPaths: ["src/core/bootstrap", "src/shared/api", "data/leetcode-hot-100.json", "data/library-catalog.json", "data/problem-catalog.json"],
+    exitChecks: ["index.html loads only the typed v2 bootstrap", "root runtime config is removed or generated from validated public config", "browser loads no catalog through classic global data scripts"],
+  },
+  {
+    id: "runtime-glue",
+    removeInPhase: 6,
+    priority: 10,
+    globs: ["src/api/**", "src/app/**", "src/components/common/**", "src/features/shared/**", "src/hooks/**", "src/lib/**", "src/modules/**", "src/pages/*Page.jsx", "src/router/**", "src/routes/**", "src/state/**", "src/stores/**", "src/styles/**", "src/ui/**", "src/App.jsx", "src/catalog-data.js", "src/constants.js", "src/i18n.js", "src/main.js", "src/main.jsx", "src/prep-data.js", "src/router.js", "src/skills.js", "styles.css"],
+    targetDomains: ["core", "shared", "design-system"],
+    replacementPaths: ["src/core", "src/shared", "src/design-system", "src/pages/v2"],
+    exitChecks: ["legacy adapter is absent", "old store bridge and event bus are absent", "duplicate CSS is absent"],
+  },
 ];
 
 const gitTrackedFiles = (root) => {
@@ -104,6 +175,16 @@ test("the checked-in removal map has exactly seven complete families and covers 
   }
 
   assert.deepEqual(validateLegacyRemovalMap(legacyRemovalMap, gitTrackedFiles(projectRoot)), []);
+});
+
+test("freezes every removal-family record independently", () => {
+  assert.deepEqual(legacyRemovalMap.families, exactFamilies);
+});
+
+test("declares the installed AST parser as an exact direct development dependency", () => {
+  assert.equal(packageJson.devDependencies.rolldown, "1.0.3");
+  assert.equal(packageLock.packages[""].devDependencies.rolldown, "1.0.3");
+  assert.equal(packageLock.packages["node_modules/rolldown"].version, "1.0.3");
 });
 
 test("only legacy browser-global JavaScript catalogs are deletion inputs", () => {
@@ -370,6 +451,57 @@ test("reports every non-import boundary rule and scopes fetch and DOM exceptions
   });
 });
 
+test("detects TypeScript import-equals references to legacy modules", async () => {
+  await withFixture({
+    "src/core/import-equals.ts": [
+      'import client = require("@/api/client");',
+      "void client;",
+    ].join("\n"),
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), [{
+      file: "src/core/import-equals.ts",
+      rule: "legacyImport",
+      evidence: "@/api/client",
+    }]);
+  });
+});
+
+test("detects domain DOM calls through nested member chains", async () => {
+  await withFixture({
+    "src/domains/training/document-body.ts": "document.body.querySelector('#root');\n",
+    "src/domains/training/window-document.ts": "window.document.querySelector('#root');\n",
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), [
+      {
+        file: "src/domains/training/document-body.ts",
+        rule: "domainDom",
+        evidence: "document.",
+      },
+      {
+        file: "src/domains/training/window-document.ts",
+        rule: "domainDom",
+        evidence: "document.",
+      },
+    ]);
+  });
+});
+
+test("recognizes legacy identifiers used as JSX element names", async () => {
+  await withFixture({
+    "src/core/legacy-provider.tsx": [
+      "export const LegacyProvider = () => (",
+      "  <AppServicesContext.Provider value={null} />",
+      ");",
+    ].join("\n"),
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), [{
+      file: "src/core/legacy-provider.tsx",
+      rule: "legacySymbol",
+      evidence: "AppServicesContext",
+    }]);
+  });
+});
+
 test("does not treat commented or string-quoted import examples as dependencies", async () => {
   await withFixture({
     "src/core/examples.ts": [
@@ -419,6 +551,56 @@ test("rejects symbolic links inside a v2 scan root instead of skipping their cod
   });
 });
 
+test("resolves an import alias outside scan roots before checking legacy ownership", async () => {
+  await withFixture({
+    "src/api/client.js": "export const client = true;\n",
+    "src/core/use-bridge.ts": 'import "@/bridge/client";\n',
+  }, async (root) => {
+    await symlink("api", path.join(root, "src/bridge"));
+
+    assert.deepEqual(await findBoundaryViolations(root), [{
+      file: "src/core/use-bridge.ts",
+      rule: "legacyImport",
+      evidence: "@/bridge/client",
+    }]);
+  });
+});
+
+test("rejects a scan root that is itself a symbolic link", async () => {
+  await withFixture({
+    "core-target/entry.ts": "export const entry = true;\n",
+  }, async (root) => {
+    await mkdir(path.join(root, "src"), { recursive: true });
+    await symlink("../core-target", path.join(root, "src/core"));
+
+    assert.deepEqual(await findBoundaryViolations(root), [{
+      file: "src/core",
+      rule: "scanSymlink",
+      evidence: "symbolic links are not allowed under v2 scan roots",
+    }]);
+  });
+});
+
+test("rejects an existing import whose realpath escapes the repository", async () => {
+  const outsideRoot = await mkdtemp(path.join(tmpdir(), "quantgym-v2-outside-"));
+  try {
+    await writeFile(path.join(outsideRoot, "module.js"), "export const outside = true;\n", "utf8");
+    await withFixture({
+      "src/core/use-outside.ts": 'import "@/escape/module.js";\n',
+    }, async (root) => {
+      await symlink(outsideRoot, path.join(root, "src/escape"));
+
+      assert.deepEqual(await findBoundaryViolations(root), [{
+        file: "src/core/use-outside.ts",
+        rule: "outsideImport",
+        evidence: "@/escape/module.js",
+      }]);
+    });
+  } finally {
+    await rm(outsideRoot, { recursive: true, force: true });
+  }
+});
+
 test("distinguishes regex literals, template expressions, and nested JSX prose", async () => {
   await withFixture({
     "src/core/regex-before-boundaries.ts": [
@@ -447,6 +629,64 @@ test("distinguishes regex literals, template expressions, and nested JSX prose",
       { file: "src/core/template-expression.ts", rule: "legacyImport", evidence: "@/app/runtime" },
       { file: "src/pages/v2/generic.tsx", rule: "directFetch", evidence: "fetch(" },
     ]);
+  });
+});
+
+test("ignores rule-shaped ordinary JSX text when a prop is followed by a parenthesized child", async () => {
+  await withFixture({
+    "src/domains/training/jsx-prose.tsx": [
+      "export const Example = () => (",
+      '  <section aria-label="boundary example">',
+      "    (createAppContext fetch('/api') document.querySelector('#root'))",
+      "  </section>",
+      ");",
+    ].join("\n"),
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), []);
+  });
+});
+
+test("detects real calls after nested TSX generic constraints", async () => {
+  await withFixture({
+    "src/core/nested-generic.tsx": [
+      "export const identity = <T extends { items: Array<{ id: string }> }>(value: T) => value;",
+      "fetch('/api/core');",
+    ].join("\n"),
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), [{
+      file: "src/core/nested-generic.tsx",
+      rule: "directFetch",
+      evidence: "fetch(",
+    }]);
+  });
+});
+
+test("separates regex and comment text from calls inside template expressions", async () => {
+  await withFixture({
+    "src/core/syntax-contexts.ts": [
+      "if (true) {} /[/*]/.test('value');",
+      'const value = `${import("@/api/client")}`;',
+      "/* require('@/state/store'); fetch('/ignored'); */",
+      "fetch('/api/core');",
+      "void value;",
+    ].join("\n"),
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), [
+      { file: "src/core/syntax-contexts.ts", rule: "directFetch", evidence: "fetch(" },
+      { file: "src/core/syntax-contexts.ts", rule: "legacyImport", evidence: "@/api/client" },
+    ]);
+  });
+});
+
+test("returns a deterministic violation when typed source cannot be parsed", async () => {
+  await withFixture({
+    "src/core/broken.tsx": "export const broken = <section>;\n",
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), [{
+      file: "src/core/broken.tsx",
+      rule: "parseError",
+      evidence: "rolldown could not parse tsx source",
+    }]);
   });
 });
 
