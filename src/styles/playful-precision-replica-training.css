@@ -2283,9 +2283,20 @@ body.is-authenticated .app-route-root .qg-problems-page .qg-problem-detail-body 
   padding: 16px 18px;
 }
 
-/* Legacy detail toolbar (back / prev / next / actions) hidden by design */
+/* Detail navigation utility row */
 body.is-authenticated .app-route-root .qg-problems-page .problem-detail .problem-detail-top {
-  display: none !important;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--qg-border);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row .secondary-button {
+  min-height: 44px;
+  white-space: nowrap;
 }
 
 /* Question block reads as plain prompt text */
@@ -2443,8 +2454,26 @@ body.is-authenticated .app-route-root .qg-problems-page .qg-detail-notes {
 
 /* CTA row */
 body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr);
+  gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row > button {
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page [data-problem-action="mock-interview"] {
+  min-height: 44px;
+  background: var(--qg-brand);
+  color: #ffffff;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row button:focus-visible,
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--qg-brand) 62%, transparent);
+  outline-offset: 2px;
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .qg-detail-solve {
@@ -2550,6 +2579,24 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-ranking {
 }
 
 @media (max-width: 640px) {
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row > button {
+    flex: 1 1 calc(50% - 4px);
+  }
+
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row [data-problem-action="mock-interview"] {
+    flex-basis: 100%;
+  }
+
   body.is-authenticated .app-route-root .qg-problems-page .problem-collections-heading {
     align-items: start;
     flex-direction: column;
@@ -2587,7 +2634,9 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-ranking {
   body.is-authenticated .app-route-root .qg-problems-page .problem-view-tabs .segment,
   body.is-authenticated .app-route-root .qg-problems-page .problem-browser-toolbar .secondary-button,
   body.is-authenticated .app-route-root .qg-problems-page .problem-collection-card,
-  body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-done {
+  body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-done,
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row button,
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row button {
     transition-duration: 1ms;
   }
 

@@ -119,8 +119,7 @@ export function ProblemDetail({
       </header>
 
       <div className="qg-problem-detail-body">
-        {/* Legacy toolbar retained for functionality; visually hidden by the replica skin. */}
-        <div className="problem-detail-top">
+        <div className="problem-detail-top qg-detail-utility-row">
           <button className="secondary-button" type="button" onClick={onBack}>
             <i data-lucide="arrow-left" />
             {" "}
@@ -151,31 +150,6 @@ export function ProblemDetail({
             >
               <i data-lucide="chevron-right" />
               {isEnglish ? "Next" : "下一题"}
-            </button>
-          </div>
-          <div className="problem-detail-actions">
-            <button
-              type="button"
-              className={`secondary-button problem-detail-complete${detail.completed ? " active" : ""}`}
-              onClick={() => onToggleCompleted(detail.id)}
-            >
-              <i data-lucide={detail.completed ? "check-circle-2" : "circle"} />
-              {" "}
-              {completeLabel}
-            </button>
-            <button
-              type="button"
-              className={`secondary-button problem-detail-save${detail.favorite ? " active" : ""}`}
-              onClick={() => onToggleSaved(detail.id)}
-            >
-              <i data-lucide={detail.favorite ? "bookmark-check" : "bookmark"} />
-              {" "}
-              {detail.favorite ? t("savedForReview") : t("saveForReview")}
-            </button>
-            <button className="primary-button" type="button" onClick={() => onSelectInterview(detail.id)}>
-              <i data-lucide="messages-square" />
-              {" "}
-              {t("useForMock")}
             </button>
           </div>
         </div>
@@ -243,24 +217,33 @@ export function ProblemDetail({
           onChange={handleNoteChange}
         />
 
-        <div className="qg-detail-cta-row">
+        <div className="problem-detail-actions qg-detail-cta-row">
           <button
             type="button"
-            className={`qg-detail-solve${detail.completed ? " is-done" : ""}`}
+            className={`secondary-button problem-detail-complete${detail.completed ? " active" : ""}`}
+            aria-pressed={detail.completed}
             onClick={() => onToggleCompleted(detail.id)}
           >
-            {detail.completed
-              ? (isEnglish ? "Solved ✓" : "已解决 ✓")
-              : (isEnglish ? "Done · Mark solved" : "做完了 · 标记已解")}
+            <i data-lucide={detail.completed ? "check-circle-2" : "circle"} />
+            {completeLabel}
           </button>
           <button
             type="button"
-            className={`qg-detail-bookmark${detail.favorite ? " active" : ""}`}
-            title={detail.favorite ? t("savedForReview") : t("saveForReview")}
-            aria-label={detail.favorite ? t("savedForReview") : t("saveForReview")}
+            className={`secondary-button problem-detail-save${detail.favorite ? " active" : ""}`}
+            aria-pressed={detail.favorite}
             onClick={() => onToggleSaved(detail.id)}
           >
             <i data-lucide={detail.favorite ? "bookmark-check" : "bookmark"} />
+            {detail.favorite ? t("savedForReview") : t("saveForReview")}
+          </button>
+          <button
+            type="button"
+            className="primary-button"
+            data-problem-action="mock-interview"
+            onClick={() => onSelectInterview(detail.id)}
+          >
+            <i data-lucide="messages-square" />
+            {t("useForMock")}
           </button>
         </div>
 

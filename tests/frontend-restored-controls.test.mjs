@@ -145,3 +145,62 @@ test("restores Problems discovery, ranking, and Hot 100 semantics", () => {
     /grid-template-columns\s*:\s*1fr/
   ]);
 });
+
+test("exposes one Problems utility row and one complete action dock", () => {
+  const source = read("src/features/problems/ProblemDetail.jsx");
+  const css = read("src/styles/playful-precision-replica-training.css");
+
+  assert.equal((source.match(/className="problem-detail-top qg-detail-utility-row"/g) || []).length, 1);
+  assert.equal((source.match(/className="problem-detail-actions qg-detail-cta-row"/g) || []).length, 1);
+  assert.equal((source.match(/data-problem-action="mock-interview"/g) || []).length, 1);
+  assert.equal((source.match(/onClick=\{\(\) => onToggleCompleted\(detail\.id\)\}/g) || []).length, 1);
+  assert.equal((source.match(/onClick=\{\(\) => onToggleSaved\(detail\.id\)\}/g) || []).length, 1);
+  assert.equal((source.match(/onClick=\{\(\) => onSelectInterview\(detail\.id\)\}/g) || []).length, 1);
+  assert.match(source, /className=\{`secondary-button problem-detail-complete/);
+  assert.match(source, /className=\{`secondary-button problem-detail-save/);
+  assert.match(source, /problem-detail-complete[\s\S]*?aria-pressed=\{detail\.completed\}/);
+  assert.match(source, /problem-detail-save[\s\S]*?aria-pressed=\{detail\.favorite\}/);
+  assert.doesNotMatch(source, /visually hidden/);
+
+  const utilityRules = ruleBodies(css, ".qg-problems-page .problem-detail .problem-detail-top");
+  assert.ok(utilityRules.length > 0, "missing CSS selector: .qg-problems-page .problem-detail .problem-detail-top");
+  assert.ok(utilityRules.every((body) => !/display\s*:\s*none/.test(body)));
+  assert.ok(utilityRules.some((body) => /display\s*:\s*flex/.test(body)));
+  assert.ok(utilityRules.some((body) => /flex-wrap\s*:\s*nowrap/.test(body)));
+
+  const dockRules = ruleBodies(css, ".qg-problems-page .qg-detail-cta-row");
+  assert.ok(dockRules.length > 0, "missing CSS selector: .qg-problems-page .qg-detail-cta-row");
+  assert.ok(dockRules.every((body) => !/display\s*:\s*none/.test(body)));
+  assert.ok(dockRules.some((body) => /display\s*:\s*grid/.test(body)));
+
+  assertRuleWith(css, ".qg-problems-page .qg-detail-cta-row > button", [
+    /min-height\s*:\s*44px/,
+    /white-space\s*:\s*nowrap/
+  ]);
+  assertRuleWith(css, '.qg-problems-page [data-problem-action="mock-interview"]', [
+    /min-height\s*:\s*44px/,
+    /background\s*:\s*var\(--qg-brand\)/
+  ]);
+  assert.match(css, /\.qg-detail-utility-row button:focus-visible,[\s\S]*?\.qg-detail-cta-row button:focus-visible/);
+
+  const problemsMobile = atRuleBodies(css, "@media (max-width: 640px)")
+    .find((body) => body.includes(".qg-detail-utility-row"));
+  assert.ok(problemsMobile, "missing Problems detail mobile media block");
+  assertRuleWith(problemsMobile, ".qg-problems-page .qg-detail-cta-row", [
+    /display\s*:\s*flex/,
+    /flex-wrap\s*:\s*wrap/
+  ]);
+  assertRuleWith(problemsMobile, '.qg-problems-page .qg-detail-cta-row [data-problem-action="mock-interview"]', [
+    /flex-basis\s*:\s*100%/
+  ]);
+
+  const reducedMotion = atRuleBodies(css, "@media (prefers-reduced-motion: reduce)")
+    .find((body) => body.includes(".qg-detail-utility-row button"));
+  assert.ok(reducedMotion, "missing Problems detail reduced-motion rule");
+  assertRuleWith(reducedMotion, ".qg-problems-page .qg-detail-utility-row button", [
+    /transition-duration\s*:\s*1ms/
+  ]);
+  assertRuleWith(reducedMotion, ".qg-problems-page .qg-detail-cta-row button", [
+    /transition-duration\s*:\s*1ms/
+  ]);
+});
