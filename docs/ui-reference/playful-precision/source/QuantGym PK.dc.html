@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+@keyframes pkPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes pkRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pkShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+[data-pk-grid]{display:grid;grid-template-columns:1fr 320px;gap:16px}
+@media(max-width:900px){[data-pk-grid]{grid-template-columns:1fr}}
+</style>
+<script src="./qg-state.js"></script>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<div data-screen-label="PK 对战" style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:#fdeceb;color:#d0524b;font-size:11.5px;font-weight:700;margin-bottom:10px">TRAINING · 实时对战</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">PK <span style="color:#d0524b">对战</span></h1>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">同一道题 · 拼准确更拼速度 · 赢局吃对手 Rating</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="padding:11px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04)"><div style="font-size:11px;color:var(--muted-2);font-weight:600">Rating</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:18px;color:var(--brand-ink)">{{ rating }}</div></div>
+      <div style="padding:11px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04)"><div style="font-size:11px;color:var(--muted-2);font-weight:600">战绩</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:18px">{{ recordText }}</div></div>
+      <div style="padding:11px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04)"><div style="font-size:11px;color:var(--muted-2);font-weight:600">胜率</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:18px;color:#0f9d63">{{ winRate }}</div></div>
+    </div>
+  </div>
+
+  <div data-pk-grid style="align-items:start">
+    <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);overflow:hidden;min-height:430px;display:flex;flex-direction:column">
+
+      <sc-if value="{{ isLobby }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px 24px;text-align:center">
+        <img src="assets/mascot-hero-v5-clean.png" alt="" style="width:150px;height:auto;filter:drop-shadow(0 18px 28px rgba(74,67,214,.3))">
+        <div style="font-size:20px;font-weight:800;letter-spacing:-.01em">{{ lobbyTitle }}</div>
+        <div style="font-size:13px;color:var(--muted);font-weight:500;max-width:340px;line-height:1.65">系统会按 Rating 匹配同段位对手。同题同时作答，答对且更快者胜；胜 +18 起步、负 −12 起步，按分差浮动。</div>
+        <button type="button" onClick="{{ startMatch }}" style="{{ matchBtnStyle }}" style-active="transform:translateY(3px)">{{ matchBtnLabel }}</button>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isBattle }}">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;row-gap:8px">
+        <span style="display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#5b5ff5,#7d6cff);color:#fff;font-family:'Space Grotesk';font-weight:700;font-size:12px">你</span>
+        <span style="font-family:'Space Grotesk';font-weight:700;font-size:15px;color:#d0524b">VS</span>
+        <span style="{{ oppAvaStyle }}">{{ oppInitials }}</span>
+        <div style="min-width:0"><div style="font-weight:700;font-size:13.5px">{{ oppName }}</div><div style="font-size:11px;color:var(--muted-2);font-weight:600">Rating {{ oppRating }} · {{ oppStatus }}</div></div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <span style="font-family:'Space Grotesk';font-weight:700;font-size:16px;color:{{ timerColor }}">{{ timeLeft }}s</span>
+        </div>
+      </div>
+      <div style="height:5px;background:var(--track)"><div style="height:100%;width:{{ timerPct }}%;background:linear-gradient(90deg,#ff9f2e,#d0524b);transition:width 1s linear"></div></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:16px;padding:26px 26px 24px">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.1em;color:var(--muted-2)">{{ qMeta }}</div>
+        <div style="font-size:19px;font-weight:800;line-height:1.55;letter-spacing:-.01em">{{ qText }}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:11px;margin-top:auto">
+          <sc-for list="{{ opts }}" as="o" hint-placeholder-count="4">
+            <button type="button" onClick="{{ o.onPick }}" style="{{ o.style }}" style-active="transform:translateY(2px)">{{ o.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isReveal }}">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:36px 24px;text-align:center;animation:pkRise .3s ease both">
+        <img src="{{ resImg }}" alt="" style="width:130px;height:auto;filter:drop-shadow(0 16px 26px rgba(74,67,214,.3))">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.12em;color:{{ resKickerColor }}">{{ resKicker }}</div>
+        <div style="font-size:24px;font-weight:800;letter-spacing:-.01em">{{ resTitle }}</div>
+        <div style="font-size:13.5px;color:var(--muted);font-weight:600;line-height:1.6;max-width:380px">{{ resSub }}</div>
+        <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center">
+          <span style="padding:7px 14px;border-radius:20px;background:var(--brand-soft);color:var(--brand-ink);font-family:'Space Grotesk';font-weight:700;font-size:13px">{{ resDelta }}</span>
+          <span style="padding:7px 14px;border-radius:20px;background:var(--track);color:var(--muted);font-weight:700;font-size:12.5px">你 {{ myAnsText }} · 对手 {{ oppAnsText }}</span>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <button type="button" onClick="{{ startMatch }}" style="padding:13px 22px;border:none;border-radius:14px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(3px)">再来一局</button>
+          <button type="button" onClick="{{ backLobby }}" style="padding:13px 20px;border-radius:14px;background:var(--surface);color:var(--brand-ink);border:1.5px solid var(--border);font-family:inherit;font-weight:700;font-size:14px;cursor:pointer">回大厅</button>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:17px 19px">
+        <div style="font-size:13.5px;font-weight:800;margin-bottom:12px">近期战绩</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <sc-for list="{{ history }}" as="h" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px" style-hover="background:var(--surface-3)">
+              <span style="{{ h.badge }}">{{ h.res }}</span>
+              <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ h.opp }}</div><div style="font-size:10.5px;color:var(--muted-3);font-weight:600">{{ h.meta }}</div></div>
+              <span style="{{ h.deltaStyle }}">{{ h.delta }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="border-radius:20px;background:linear-gradient(135deg,#1b1a38,#2d2a5c);color:#fff;padding:18px 20px">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;color:#b9b8e0;margin-bottom:8px">段位规则</div>
+        <div style="font-size:13px;font-weight:600;line-height:1.7;color:#dcdbf2">Rating 每 ±100 为一档。连胜 3 局起有额外加成；PK 获胜计入今日训练，也会推动联赛周榜。</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { phase:'lobby', matching:false, qIdx:0, picked:null, oppPicked:false, timeLeft:30, result:null, history:[
+    { opp:'Mina Patel', res:'胜', meta:'概率 · 用时 14s', delta:'+21' },
+    { opp:'Leo Wang', res:'胜', meta:'速算 · 用时 9s', delta:'+18' },
+    { opp:'Dan Ito', res:'负', meta:'期权 · 超时', delta:'−12' },
+    { opp:'Sofia Kim', res:'胜', meta:'逻辑 · 用时 22s', delta:'+19' },
+    { opp:'Kenji Sato', res:'负', meta:'统计 · 答错', delta:'−14' },
+  ], rating:1486, wins:23, losses:14 };
+
+  opps(){ return [
+    { name:'Ari Chen', initials:'AC', rating:1512, bg:'#fff3dd', fg:'#b3610a', speed:[8,20] },
+    { name:'Elena Ruiz', initials:'ER', rating:1465, bg:'#f6f0ff', fg:'#8a63e8', speed:[10,24] },
+    { name:'Tom Zhao', initials:'TZ', rating:1449, bg:'#eafaf3', fg:'#16879a', speed:[12,26] },
+  ]; }
+
+  qs(){ return [
+    { meta:'概率 · 中等', text:'连抛一枚均匀硬币，先出现 HT 序列与先出现 HH 序列，哪个期望更早？', opts:['HT 更早','HH 更早','一样早','无法比较'], ans:0 },
+    { meta:'速算 · 限时', text:'17 × 23 − 19 × 21 = ?', opts:['−8','8','−4','12'], ans:1 },
+    { meta:'期权 · 中等', text:'其他不变，波动率上升时，平值看涨期权的 Delta 最接近怎样变化？', opts:['趋向 0.5','趋向 1','趋向 0','不变'], ans:0 },
+    { meta:'逻辑 · 中等', text:'12 个外观相同的球，1 个重量异常，天平最少几次保证找出并知轻重？', opts:['3 次','4 次','2 次','5 次'], ans:0 },
+  ]; }
+
+  componentDidMount(){ if(window.QG) this._unsub=QG.onChange(()=>this.forceUpdate()); }
+  componentWillUnmount(){ this.stopTimer(); if(this._unsub) this._unsub(); }
+  stopTimer(){ if(this._t){ clearInterval(this._t); this._t=null; } if(this._oppT){ clearTimeout(this._oppT); this._oppT=null; } }
+
+  startMatch(){
+    if(this.state.matching) return;
+    this.setState({ matching:true });
+    setTimeout(()=>{
+      const opp=this.opps()[Math.floor(Math.random()*3)];
+      this._opp=opp;
+      const qIdx=Math.floor(Math.random()*this.qs().length);
+      const oppTime=opp.speed[0]+Math.random()*(opp.speed[1]-opp.speed[0]);
+      this.stopTimer();
+      this.setState({ phase:'battle', matching:false, qIdx, picked:null, oppPicked:false, timeLeft:30, result:null });
+      this._start=Date.now();
+      this._t=setInterval(()=>{
+        const left=this.state.timeLeft-1;
+        if(left<=0){ this.settle(null); return; }
+        this.setState({ timeLeft:left });
+      },1000);
+      this._oppT=setTimeout(()=>{ if(this.state.phase==='battle') this.setState({ oppPicked:true }); }, oppTime*1000);
+      this._oppTime=oppTime;
+    }, 900);
+  }
+
+  pick(i){
+    if(this.state.picked!=null || this.state.phase!=='battle') return;
+    this.setState({ picked:i });
+    setTimeout(()=>this.settle(i), 600);
+  }
+
+  settle(myPick){
+    if(this.state.phase!=='battle') return;
+    this.stopTimer();
+    const q=this.qs()[this.state.qIdx];
+    const opp=this._opp||this.opps()[0];
+    const myTime=(Date.now()-this._start)/1000;
+    const myRight=myPick===q.ans;
+    const oppRight=Math.random()<0.62;
+    const oppTime=this._oppTime||15;
+    let win;
+    if(myPick==null) win=false;
+    else if(myRight&&!oppRight) win=true;
+    else if(!myRight&&oppRight) win=false;
+    else if(myRight&&oppRight) win=myTime<=oppTime;
+    else win=false;
+    const delta=win?(18+Math.floor(Math.random()*6)):-(12+Math.floor(Math.random()*4));
+    const hist=[{ opp:opp.name, res:win?'胜':'负', meta:q.meta.split(' ·')[0]+' · '+(myPick==null?'超时':(myRight?('用时 '+Math.round(myTime)+'s'):'答错')), delta:(win?'+':'−')+Math.abs(delta) }].concat(this.state.history).slice(0,6);
+    this.setState({ phase:'reveal', result:{ win, delta, myPick, oppRight, oppPick: oppRight?q.ans:(q.ans+1)%q.opts.length, timeout:myPick==null }, history:hist, rating:this.state.rating+delta, wins:this.state.wins+(win?1:0), losses:this.state.losses+(win?0:1) });
+    if(window.QG){
+      if(win) QG.award(15,'PK 获胜 · '+opp.name,{ sub:'Rating +'+delta });
+      else QG.toast('惜败 · '+opp.name,{ img:'assets/mascot-oops.png', sub:'Rating '+delta+' · 再来一局翻盘', ms:2800 });
+    }
+  }
+
+  renderVals(){
+    const S=this.state;
+    const q=this.qs()[S.qIdx];
+    const opp=this._opp||this.opps()[0];
+    const total=S.wins+S.losses;
+    const opts=q.opts.map((label,i)=>{
+      const on=S.picked===i;
+      return { label, onPick:()=>this.pick(i),
+        style:'padding:15px 16px;border-radius:14px;font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer;text-align:center;transition:all .13s ease;border:1.5px solid '+(on?'transparent':'var(--border)')+';background:'+(on?'linear-gradient(180deg,#6d70f8,#5b5ff5)':'var(--surface-2)')+';color:'+(on?'#fff':'var(--text)')+(on?';box-shadow:0 4px 0 #3f39c9':'') };
+    });
+    const r=S.result||{};
+    const history=S.history.map(h=>({ ...h,
+      badge:'display:grid;place-items:center;width:26px;height:26px;border-radius:9px;font-size:11px;font-weight:800;flex:0 0 auto;'+(h.res==='胜'?'background:#e3f7ee;color:#0f9d63':'background:#fdeceb;color:#d0524b'),
+      deltaStyle:"font-family:'Space Grotesk';font-weight:700;font-size:12.5px;flex:0 0 auto;color:"+(h.delta[0]==='+'?'#0f9d63':'#d0524b') }));
+    return {
+      rating:S.rating.toLocaleString('en-US'), recordText:S.wins+' 胜 '+S.losses+' 负',
+      winRate: total?Math.round(S.wins/total*100)+'%':'—',
+      isLobby:S.phase==='lobby', isBattle:S.phase==='battle', isReveal:S.phase==='reveal',
+      lobbyTitle:S.matching?'正在匹配对手…':'准备好一决高下了吗？',
+      matchBtnLabel:S.matching?'匹配中 · 按 Rating 配对':'开始匹配 →',
+      matchBtnStyle:'margin-top:6px;padding:15px 30px;border:none;border-radius:16px;font-family:inherit;font-weight:800;font-size:15.5px;cursor:pointer;color:#fff;transition:transform .12s ease;'+(S.matching?'background:var(--muted-2);animation:pkPulse 1.2s ease infinite':'background:linear-gradient(180deg,#e0655e,#d0524b);box-shadow:0 4px 0 #a03d38,0 14px 24px -10px rgba(208,82,75,.6)'),
+      startMatch:()=>this.startMatch(), backLobby:()=>{ this.stopTimer(); this.setState({ phase:'lobby', matching:false }); },
+      oppName:opp.name, oppInitials:opp.initials, oppRating:opp.rating,
+      oppStatus:S.oppPicked?'已提交 ✓':'思考中…',
+      oppAvaStyle:"display:grid;place-items:center;width:36px;height:36px;border-radius:50%;font-family:'Space Grotesk';font-weight:700;font-size:12px;background:"+opp.bg+';color:'+opp.fg,
+      timeLeft:S.timeLeft, timerPct:Math.round(S.timeLeft/30*100), timerColor:S.timeLeft<=10?'#d0524b':'var(--brand-ink)',
+      qMeta:q.meta, qText:q.text, opts,
+      resImg: r.win?'assets/mascot-trophy-v2.png':'assets/mascot-oops.png',
+      resKicker: r.win?'VICTORY':'DEFEAT', resKickerColor: r.win?'#0f9d63':'#d0524b',
+      resTitle: r.win?'你赢下了这局！':(r.timeout?'超时判负':'惜败一局'),
+      resSub: r.win?'答对且更快。连胜 3 局将触发额外 Rating 加成。':'别急，PK 的成长曲线就是输赢交替。回看这道题，或直接再来一局。',
+      resDelta:'Rating '+(r.win?'+':'')+(r.delta||0),
+      myAnsText: r.timeout?'未作答':(q.opts[r.myPick]||'—'), oppAnsText: q.opts[r.oppPick]||'—',
+      history,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+[data-co-grid]{display:grid;grid-template-columns:320px 1fr;gap:16px}
+@media(max-width:820px){[data-co-grid]{grid-template-columns:1fr}}
+</style>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<script src="./qg-state.js"></script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><path d="M28 74V32a3 3 0 0 1 3-3h20a3 3 0 0 1 3 3v42M54 74V46h14a3 3 0 0 1 3 3v25" fill="none" stroke="#fff" stroke-width="5"/><path d="M24 74h52" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div>
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:#e7f2fb;color:#2f7fc0;font-size:11.5px;font-weight:700;margin-bottom:10px">JOBS · 公司档案</div>
+    <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">公司 <span style="color:#5b5ff5">Companies</span></h1>
+    <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">头部做市商 & 基金档案 · 面试风格 / 高频考点 / 在招职位一目了然</p>
+  </div>
+
+  <div data-co-grid style="align-items:start">
+
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <sc-for list="{{ list }}" as="c" hint-placeholder-count="6">
+        <div onClick="{{ c.onClick }}" style="{{ c.rowStyle }}">
+          <div style="{{ c.logoStyle }}">{{ c.abbr }}</div>
+          <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800">{{ c.name }}</div><div style="font-size:11.5px;color:var(--muted-3);font-weight:600">{{ c.focus }} · {{ c.open }} 在招</div></div>
+          <span style="{{ c.arrowStyle }}">›</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div data-co-detail style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05),0 16px 34px -24px rgba(74,67,214,.4);overflow:hidden">
+      <div style="{{ d.headStyle }}">
+        <div style="display:flex;align-items:center;gap:15px">
+          <div style="display:grid;place-items:center;width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,.16);font-family:'Space Grotesk';font-weight:700;font-size:20px;color:#fff;flex:0 0 auto">{{ d.abbr }}</div>
+          <div style="flex:1">
+            <div style="font-size:23px;font-weight:800;color:#fff">{{ d.name }}</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:600;margin-top:2px">{{ d.tagline }}</div>
+          </div>
+          <button type="button" style="padding:9px 15px;border-radius:12px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;flex:0 0 auto">＋ 收藏</button>
+        </div>
+        <div style="display:flex;gap:22px;margin-top:18px;flex-wrap:wrap;row-gap:10px">
+          <div><div style="font-family:'Space Grotesk';font-size:19px;font-weight:700;color:#fff">{{ d.founded }}</div><div style="font-size:10.5px;color:rgba(255,255,255,.75);font-weight:600">成立</div></div>
+          <div><div style="font-family:'Space Grotesk';font-size:19px;font-weight:700;color:#fff">{{ d.hq }}</div><div style="font-size:10.5px;color:rgba(255,255,255,.75);font-weight:600">总部</div></div>
+          <div><div style="font-family:'Space Grotesk';font-size:19px;font-weight:700;color:#fff">{{ d.open }}</div><div style="font-size:10.5px;color:rgba(255,255,255,.75);font-weight:600">在招职位</div></div>
+          <div><div style="font-family:'Space Grotesk';font-size:19px;font-weight:700;color:#7fe0b0">{{ d.match }}%</div><div style="font-size:10.5px;color:rgba(255,255,255,.75);font-weight:600">匹配度</div></div>
+        </div>
+      </div>
+
+      <div style="padding:20px 22px;display:flex;flex-direction:column;gap:18px">
+        <p style="margin:0;font-size:13.5px;line-height:1.7;color:var(--text-2)">{{ d.about }}</p>
+
+        <div>
+          <div style="font-size:12px;font-weight:800;letter-spacing:.06em;color:#5b5ff5;margin-bottom:9px">面试风格</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ d.rounds }}" as="r" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:12px;background:var(--surface-3);border:1px solid var(--border)">
+                <span style="display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:var(--brand-soft);color:#5b5ff5;font-family:'Space Grotesk';font-weight:700;font-size:12px;flex:0 0 auto">{{ r.n }}</span>
+                <span style="flex:1;font-size:13px;font-weight:600;color:#3f3e5e">{{ r.name }}</span>
+                <span style="{{ r.tagStyle }}">{{ r.tag }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px">
+          <div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:.06em;color:#5b5ff5;margin-bottom:9px">高频考点</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <sc-for list="{{ d.topics }}" as="t" hint-placeholder-count="4"><span style="padding:5px 11px;border-radius:10px;background:var(--track);color:var(--muted);font-size:11.5px;font-weight:600">{{ t }}</span></sc-for>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:800;letter-spacing:.06em;color:#5b5ff5;margin-bottom:9px">关联资源</div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:11px;background:var(--surface-3);border:1px solid var(--border);font-size:12px;font-weight:600"><span style="width:7px;height:7px;border-radius:3px;background:#ff9f2e;flex:0 0 auto"></span><span style="flex:1">{{ d.res1 }}</span><span style="color:#5b5ff5;font-weight:700">›</span></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:11px;background:var(--surface-3);border:1px solid var(--border);font-size:12px;font-weight:600"><span style="width:7px;height:7px;border-radius:3px;background:#5b5ff5;flex:0 0 auto"></span><span style="flex:1">{{ d.res2 }}</span><span style="color:#5b5ff5;font-weight:700">›</span></div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" style="align-self:flex-start;display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border:none;border-radius:14px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(3px);box-shadow:0 1px 0 #3f39c9">查看 {{ d.open }} 个在招职位 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sel:'jane' };
+
+  data(){
+    return [
+      {id:'jane',abbr:'JS',name:'Jane Street',c:'var(--text)',focus:'交易 / 研究',open:6,founded:'2000',hq:'纽约',match:88,tagline:'OCaml 驱动的自营交易巨头',
+        about:'以概率直觉、脑筋急转弯和「出声思考」文化著称，重视第一性原理与团队协作，技术栈以 OCaml 为核心。',
+        rounds:[['1','在线测评 · 概率 + 逻辑','OA'],['2','电话面 · 脑筋急转弯','思维'],['3','Superday · 市场直觉题','终面'],['4','交易游戏 · EV 决策','实战']],
+        topics:['醉酒乘客','期望博弈','对称性','市场直觉'],res1:'Jane Street 面经合集 · 42 篇',res2:'脑筋急转弯专题 · 绿皮书'},
+      {id:'optiver',abbr:'OP',name:'Optiver',c:'#e0562e',focus:'做市 · 速算',open:5,founded:'1986',hq:'阿姆斯特丹',match:92,tagline:'速算为王的欧洲做市商',
+        about:'以严苛的限时心算测试闻名，强调压力下的计算稳定性与做市报价直觉，是速算训练者的头号目标。',
+        rounds:[['1','8 分钟限时速算 · 80 题','速算'],['2','概率与期望口算','概率'],['3','做市模拟报价','做市'],['4','终面 · Motivation','文化']],
+        topics:['限时速算','两位数乘法','做市报价','期望'],res1:'Optiver 速算轮真题 · 去练',res2:'Mental Math 冲刺计划'},
+      {id:'citadel',abbr:'CS',name:'Citadel Securities',c:'#0b6ea8',focus:'做市 · 统计',open:4,founded:'2002',hq:'纽约',match:81,tagline:'全球最大电子做市商之一',
+        about:'偏重统计、随机过程与机器学习，注重数据处理与建模的严谨性，工程与研究并重。',
+        rounds:[['1','在线测评 · 统计 + 编程','OA'],['2','技术面 · 随机过程','技术'],['3','建模案例 · 回归诊断','案例'],['4','终面 · 系统与协作','终面']],
+        topics:['布朗运动','鞅','回归诊断','Python'],res1:'Stat 110 战略练习 · 184 题',res2:'随机过程学习路径'},
+      {id:'imc',abbr:'IMC',name:'IMC Trading',c:'#c8102e',focus:'做市 · 交易游戏',open:3,founded:'1989',hq:'阿姆斯特丹',match:79,tagline:'交易游戏文化浓厚的做市商',
+        about:'群面速算加扑克式博弈决策，考察压力下的 EV 计算、风险偏好与仓位管理纪律。',
+        rounds:[['1','群面速算','速算'],['2','扑克博弈决策','博弈'],['3','交易游戏','实战'],['4','终面 · 复盘','终面']],
+        topics:['扑克 EV','仓位管理','速算','风险偏好'],res1:'Poker 训练场 · 去练',res2:'IMC 面经 · 交易游戏'},
+      {id:'drw',abbr:'DRW',name:'DRW',c:'#2f9be0',focus:'自营 · 工程',open:4,founded:'1992',hq:'芝加哥',match:74,tagline:'工程驱动的多元自营交易',
+        about:'偏工程与数据：时间序列特征、回测框架、低延迟系统设计，对 C++ 与系统能力要求较高。',
+        rounds:[['1','编程测评 · C++/Python','OA'],['2','时间序列 + 回测','技术'],['3','系统设计 · 低延迟','系统'],['4','终面','终面']],
+        topics:['时间序列','回测框架','C++','低延迟'],res1:'市场微观结构讲义',res2:'DRW 面经 · 系统设计'},
+      {id:'sig',abbr:'SIG',name:'Susquehanna',c:'#16a06a',focus:'期权 · 扑克',open:3,founded:'1987',hq:'费城',match:83,tagline:'把扑克写进培训手册的期权做市商',
+        about:'以扑克文化训练概率与决策直觉，期权定价与 EV 思维是核心，新人培训包含大量博弈训练。',
+        rounds:[['1','在线测评 · 概率','OA'],['2','扑克 & EV 决策','博弈'],['3','期权定价直觉','期权'],['4','终面','终面']],
+        topics:['扑克 EV','期权定价','概率','决策'],res1:'Poker 训练场 · 去练',res2:'期权定价 · Hull'},
+    ];
+  }
+
+  renderVals(){
+    const S=this.state;
+    const list=this.data().map(c=>{
+      const on=c.id===S.sel;
+      return {
+        name:c.name, focus:c.focus, open:c.open, abbr:c.abbr,
+        onClick:()=>{
+          this.setState({sel:c.id});
+          if(window.innerWidth<=820){ setTimeout(()=>{ const el=document.querySelector('[data-co-detail]'); if(el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 70, behavior:'smooth' }); },80); }
+        },
+        rowStyle:'display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:15px;cursor:pointer;transition:all .14s ease;border:1px solid '+(on?'#c9c7f5':'var(--border)')+';background:'+(on?'var(--brand-soft)':'var(--surface)')+';box-shadow:'+(on?'0 10px 24px -16px rgba(91,95,245,.5)':'0 1px 2px rgba(27,26,56,.04)'),
+        logoStyle:"display:grid;place-items:center;width:44px;height:44px;border-radius:13px;flex:0 0 auto;font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#fff;background:"+c.c,
+        arrowStyle:'font-size:20px;color:'+(on?'#5b5ff5':'#d0cfe0')+';flex:0 0 auto',
+      };
+    });
+
+    const c=this.data().find(x=>x.id===S.sel);
+    const d={
+      abbr:c.abbr, name:c.name, tagline:c.tagline, founded:c.founded, hq:c.hq, open:c.open, match:c.match, about:c.about,
+      topics:c.topics, res1:c.res1, res2:c.res2,
+      headStyle:'padding:22px;background:linear-gradient(135deg,'+c.c+',#2d2a5c)',
+      rounds:c.rounds.map(r=>({ n:r[0], name:r[1], tag:r[2],
+        tagStyle:'padding:3px 9px;border-radius:20px;background:var(--brand-soft);color:#5b5ff5;font-size:10.5px;font-weight:700;flex:0 0 auto' })),
+    };
+
+    return { list, d };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+@keyframes mgRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+[data-mg-grid]{display:grid;grid-template-columns:1fr 300px;gap:16px}
+@media(max-width:880px){[data-mg-grid]{grid-template-columns:1fr}}
+</style>
+<script src="./qg-state.js"></script>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<div data-screen-label="报价游戏" style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:#e3f7ee;color:#0f9d63;font-size:11.5px;font-weight:700;margin-bottom:10px">TOOLS · 做市直觉训练</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">报价 <span style="color:#0f9d63">Market Game</span></h1>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">对不确定量报出 Bid / Ask · 夹住真值且价差越窄，分越高</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="padding:11px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04)"><div style="font-size:11px;color:var(--muted-2);font-weight:600">本局得分</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:18px;color:var(--brand-ink)">{{ score }}</div></div>
+      <div style="padding:11px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04)"><div style="font-size:11px;color:var(--muted-2);font-weight:600">回合</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:18px">{{ roundText }}</div></div>
+    </div>
+  </div>
+
+  <div data-mg-grid style="align-items:start">
+    <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);padding:26px;min-height:380px;display:flex;flex-direction:column;gap:18px">
+
+      <sc-if value="{{ isDone }}">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;animation:mgRise .3s ease both">
+        <img src="{{ doneImg }}" alt="" style="width:130px;height:auto;filter:drop-shadow(0 16px 26px rgba(74,67,214,.3))">
+        <div style="font-size:24px;font-weight:800">本局结束 · {{ score }} 分</div>
+        <div style="font-size:13.5px;color:var(--muted);font-weight:600;line-height:1.6;max-width:360px">{{ doneLine }}</div>
+        <button type="button" onClick="{{ restart }}" style="margin-top:8px;padding:14px 26px;border:none;border-radius:15px;background:linear-gradient(180deg,#2ec38a,#16a06a);color:#fff;font-family:inherit;font-weight:800;font-size:14.5px;cursor:pointer;box-shadow:0 4px 0 #0d7a4e;transition:transform .12s ease" style-active="transform:translateY(3px)">再来一局</button>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isPlay }}">
+      <div>
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.1em;color:var(--muted-2)">MAKE A MARKET · 第 {{ roundNum }} 题</div>
+        <div style="font-size:20px;font-weight:800;line-height:1.5;letter-spacing:-.01em;margin-top:8px">{{ qText }}</div>
+        <div style="font-size:12px;color:var(--muted-2);font-weight:600;margin-top:6px">单位：{{ qUnit }} · 参考区间 {{ qRange }}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:14px">
+        <div style="padding:16px;border-radius:16px;background:var(--surface-2);border:1.5px solid var(--border)">
+          <div style="font-size:11.5px;font-weight:800;color:#0f9d63;letter-spacing:.08em;margin-bottom:8px">BID · 你愿意买入的价</div>
+          <input type="number" value="{{ bid }}" onInput="{{ onBid }}" placeholder="如 60" style="width:100%;box-sizing:border-box;border:none;outline:none;background:transparent;font-family:'Space Grotesk';font-size:30px;font-weight:700;color:var(--text)">
+        </div>
+        <div style="padding:16px;border-radius:16px;background:var(--surface-2);border:1.5px solid var(--border)">
+          <div style="font-size:11.5px;font-weight:800;color:#d0524b;letter-spacing:.08em;margin-bottom:8px">ASK · 你愿意卖出的价</div>
+          <input type="number" value="{{ ask }}" onInput="{{ onAsk }}" placeholder="如 85" style="width:100%;box-sizing:border-box;border:none;outline:none;background:transparent;font-family:'Space Grotesk';font-size:30px;font-weight:700;color:var(--text)">
+        </div>
+      </div>
+      <sc-if value="{{ invalid }}"><div style="font-size:12.5px;font-weight:700;color:#d0524b">⚠ Ask 必须高于 Bid，且都为正数——先把市场报合法。</div></sc-if>
+      <sc-if value="{{ revealed }}">
+      <div style="{{ revBox }}">
+        <div style="font-size:13px;font-weight:800">{{ revTitle }}</div>
+        <div style="font-size:12.5px;font-weight:600;line-height:1.65;margin-top:5px;color:var(--text-2)">真值 <b style="font-family:'Space Grotesk'">{{ trueVal }}</b> · 你的市场 <b style="font-family:'Space Grotesk'">{{ bid }} @ {{ ask }}</b>（价差 {{ spread }}）<br>{{ revLine }}</div>
+      </div>
+      </sc-if>
+      <div style="display:flex;gap:10px;margin-top:auto">
+        <sc-if value="{{ canQuote }}"><button type="button" onClick="{{ submit }}" style="flex:1;padding:14px;border:none;border-radius:14px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:800;font-size:14.5px;cursor:pointer;box-shadow:0 4px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(3px)">提交报价</button></sc-if>
+        <sc-if value="{{ revealed }}"><button type="button" onClick="{{ next }}" style="flex:1;padding:14px;border:none;border-radius:14px;background:linear-gradient(180deg,#2ec38a,#16a06a);color:#fff;font-family:inherit;font-weight:800;font-size:14.5px;cursor:pointer;box-shadow:0 4px 0 #0d7a4e;transition:transform .12s ease" style-active="transform:translateY(3px)">{{ nextLabel }}</button></sc-if>
+      </div>
+      </sc-if>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:17px 19px">
+        <div style="font-size:13.5px;font-weight:800;margin-bottom:11px">本局流水</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <sc-for list="{{ log }}" as="l" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:11px">
+              <span style="{{ l.badge }}">{{ l.mark }}</span>
+              <div style="flex:1;min-width:0;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ l.name }}</div>
+              <span style="{{ l.ptsStyle }}">{{ l.pts }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ logEmpty }}"><div style="font-size:12px;color:var(--muted-2);font-weight:600;padding:6px 2px">还没有成交记录，先报一个市场。</div></sc-if>
+        </div>
+      </div>
+      <div style="border-radius:20px;background:linear-gradient(135deg,#1b1a38,#2d2a5c);color:#fff;padding:18px 20px">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;color:#b9b8e0;margin-bottom:8px">交易员心法</div>
+        <div style="font-size:13px;font-weight:600;line-height:1.7;color:#dcdbf2">先定锚再定价差：想清 50% 置信区间，Bid/Ask 就是它的边界。报太窄会被真值打穿，报太宽赚不到分——和真实做市一样。</div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:820}}">
+class Component extends DCLogic {
+  state = { idx:0, bid:'', ask:'', revealed:false, lastPts:0, score:0, log:[], done:false };
+
+  qs(){ return [
+    { name:'一年的秒数', text:'一年（365 天）总共有多少百万秒？', unit:'百万秒', range:'10 – 60', true:31.5, width:50 },
+    { name:'扑克红桃A', text:'洗匀的一副 52 张牌，红桃 A 出现在前 10 张的概率是多少？', unit:'%', range:'0 – 100', true:19.2, width:100 },
+    { name:'100! 末尾零', text:'100 的阶乘（100!）末尾有多少个连续的 0？', unit:'个', range:'0 – 60', true:24, width:60 },
+    { name:'沪→纽距离', text:'上海到纽约的直线（大圆）距离约是多少百公里？', unit:'百公里', range:'50 – 200', true:119, width:150 },
+    { name:'骰子期望×10', text:'两枚均匀骰子点数之和的期望值，乘以 10 是多少？', unit:'', range:'20 – 120', true:70, width:100 },
+  ]; }
+
+  submit(){
+    const b=parseFloat(this.state.bid), a=parseFloat(this.state.ask);
+    if(!(b>0)||!(a>0)||a<=b) return;
+    const q=this.qs()[this.state.idx];
+    const capture=b<=q.true&&q.true<=a;
+    const spread=a-b;
+    const pts=capture?Math.max(5,Math.round(30-spread/q.width*50)):-10;
+    const log=[{name:q.name,pts:(pts>0?'+':'')+pts,ok:capture}].concat(this.state.log);
+    this.setState({revealed:true,lastPts:pts,score:this.state.score+pts,log});
+  }
+
+  next(){
+    if(this.state.idx>=this.qs().length-1){
+      this.setState({done:true});
+      if(window.QG){
+        const xp=Math.max(10,this.state.score);
+        QG.award(xp,'报价游戏完赛 · '+this.state.score+' 分',{sub:'做市直觉 +1'});
+      }
+      return;
+    }
+    this.setState({idx:this.state.idx+1,bid:'',ask:'',revealed:false});
+  }
+
+  renderVals(){
+    const S=this.state, q=this.qs()[S.idx];
+    const b=parseFloat(S.bid), a=parseFloat(S.ask);
+    const filled=S.bid!==''&&S.ask!=='';
+    const invalid=filled&&(!(b>0)||!(a>0)||a<=b);
+    const capture=S.revealed&&b<=q.true&&q.true<=a;
+    const log=S.log.map(l=>({name:l.name,pts:l.pts,mark:l.ok?'✓':'✕',
+      badge:'display:grid;place-items:center;width:24px;height:24px;border-radius:8px;font-size:11px;font-weight:800;flex:0 0 auto;'+(l.ok?'background:#e3f7ee;color:#0f9d63':'background:#fdeceb;color:#d0524b'),
+      ptsStyle:"font-family:'Space Grotesk';font-weight:700;font-size:12.5px;flex:0 0 auto;color:"+(l.pts[0]==='+'?'#0f9d63':'#d0524b')}));
+    return {
+      score:S.score, roundText:(Math.min(S.idx+1,5))+' / 5', roundNum:S.idx+1,
+      isPlay:!S.done, isDone:S.done,
+      qText:q.text, qUnit:q.unit||'数值', qRange:q.range,
+      bid:S.bid, ask:S.ask,
+      onBid:(e)=>this.setState({bid:e.target.value}), onAsk:(e)=>this.setState({ask:e.target.value}),
+      invalid, canQuote:!S.revealed, revealed:S.revealed,
+      submit:()=>this.submit(), next:()=>this.next(),
+      nextLabel:S.idx>=4?'结算本局':'下一题 →',
+      trueVal:q.true, spread:filled?Math.round((a-b)*10)/10:'—',
+      revBox:'padding:15px 17px;border-radius:14px;animation:mgRise .25s ease both;border:1.5px solid '+(capture?'#bfe9d4':'#f3c4c0')+';background:'+(capture?'rgba(46,195,138,.08)':'rgba(208,82,75,.07)'),
+      revTitle:capture?('夹住了真值 · '+(S.lastPts>0?'+':'')+S.lastPts+' 分'):'被打穿了 · −10 分',
+      revLine:capture?'对手方在你的价差内成交，价差越窄这单越值钱。':'真值落在市场之外——锚没定准。下一题先想置信区间再报价。',
+      restart:()=>this.setState({idx:0,bid:'',ask:'',revealed:false,score:0,log:[],done:false}),
+      doneImg:S.score>=60?'assets/mascot-trophy-v2.png':'assets/mascot-calculator-v2.png',
+      doneLine:S.score>=60?'稳健的做市商水准：锚准、价差克制。XP 已按得分入账。':'多练估算锚点：先写下 50% 置信区间，再收窄报价。XP 已入账。',
+      log, logEmpty:log.length===0,
+    };
+  }
+}
+</script>
+</body>
+</html>

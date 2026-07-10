@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "archive": "UI 设计提升.zip",
+  "archiveBytes": 77395412,
+  "archiveSha256": "021874463c5351d4a92e2b8d71f15f0ee3326d39d7a3989c30b1e423a0a283cc",
+  "assetManifest": "assets/generated/playful-precision/manifest.json",
+  "assetManifestSha256": "58846c97d2f7a315c4cf6bc31338c3f39afd8ab4d2d2290c241a1fa025e62ce9",
+  "productionAssetCount": 36,
+  "textFileCount": 30,
+  "textFiles": [
+    {
+      "path": "QuantGym PK.dc.html",
+      "bytes": 17915,
+      "sha256": "62272e240284b6ab266c028d259f9bcfc5befc5902e56004d0335c2b8f7dbdb9"
+    },
+    {
+      "path": "QuantGym Poker.dc.html",
+      "bytes": 17604,
+      "sha256": "d105bf4a542e454d5599187fc132b971780bbfd008b4a14ba9502e4e1a66d0a1"
+    },
+    {
+      "path": "QuantGym UI 升级计划 v2.dc.html",
+      "bytes": 24147,
+      "sha256": "0ff50adb54d1df91cabc8d79b999442f60af938a807b3050f3b54784790a8704"
+    },
+    {
+      "path": "QuantGym UI 升级计划.dc.html",
+      "bytes": 37715,
+      "sha256": "a07467b6110cdbc1b5ffc5d6d22ab01b6b36a2f51987807475974a7d32e08db1"
+    },
+    {
+      "path": "QuantGym 人脉.dc.html",
+      "bytes": 10258,
+      "sha256": "fdfbaa88fc25def8ef8629a9910cdbbe99fccff84bbb5e419c0cc5b7672d292b"
+    },
+    {
+      "path": "QuantGym 公司.dc.html",
+      "bytes": 14271,
+      "sha256": "8a727621ff8adc6e4969fc4828b72f1f56d37abdea869e4851cc34d566390eae"
+    },
+    {
+      "path": "QuantGym 总览.dc.html",
+      "bytes": 91435,
+      "sha256": "901603b4bbf9e573968a96e7d274c7d156e58f3c24835181fd89d4a1db330fcc"
+    },
+    {
+      "path": "QuantGym 报价.dc.html",
+      "bytes": 13244,
+      "sha256": "d30c1d2f608644fc4be07a6e8f3573cdc224e5570975096cc597ac44fc176c60"
+    },
+    {
+      "path": "QuantGym 新闻.dc.html",
+      "bytes": 13480,
+      "sha256": "fb2ebfadeac089e99f5fec885519d3b6eb41929d67cab38d75b9119ab6bb07d2"
+    },
+    {
+      "path": "QuantGym 模拟面试.dc.html",
+      "bytes": 24645,
+      "sha256": "e2883e2922e305fac89ad3300382d6977c856296312b07106651dff2aa844b62"
+    },
+    {
+      "path": "QuantGym 求职.dc.html",
+      "bytes": 12641,
+      "sha256": "d09e12334535705bc15bae69e79476808439732b9556f7085d71dd65f504f02c"
+    },
+    {
+      "path": "QuantGym 登录.dc.html",
+      "bytes": 13682,
+      "sha256": "173e10b95b788ec3f512982429165affe9171fe33f80dbe575f2a9b3a87119a7"
+    },
+    {
+      "path": "QuantGym 简历.dc.html",
+      "bytes": 12756,
+      "sha256": "51d9d00682954d552ad4b59b20cb5fc11ce4dec8ef9993ae4d5aeb2b329e0625"
+    },
+    {
+      "path": "QuantGym 聊天.dc.html",
+      "bytes": 16897,
+      "sha256": "3f8d9ce5d310a2f8446f93eed7199563974992a2bab2d4544ef86c7d1b1b150a"
+    },
+    {
+      "path": "QuantGym 联赛.dc.html",
+      "bytes": 21171,
+      "sha256": "83e1f682e3a4069420d3f5c7c585cfddabc810ed61ca8bbe9a63a3a978e88ba4"
+    },
+    {
+      "path": "QuantGym 能力值.dc.html",
+      "bytes": 12831,
+      "sha256": "621b27a9fee968d26bb4bd6d0bb62752a5ceef7635464ef1375f9e3a8c453a42"
+    },
+    {
+      "path": "QuantGym 计划.dc.html",
+      "bytes": 14059,
+      "sha256": "e9ce9d6acb1afa23f21d61e774a2170b2dfd54b5c8a6292e1e8967bbd2643a7a"
+    },
+    {
+      "path": "QuantGym 论坛.dc.html",
+      "bytes": 12920,
+      "sha256": "eec18ca6e097cf82bfc18f03bfbb777bf42035844afe115503f8b1a7b1b560cc"
+    },
+    {
+      "path": "QuantGym 设置.dc.html",
+      "bytes": 10306,
+      "sha256": "d998251824f5cc23aebb836bbc61c4cedd5d8e95f0c918b0dfdf641610025b3a"
+    },
+    {
+      "path": "QuantGym 课程.dc.html",
+      "bytes": 12879,
+      "sha256": "2a1b6ff0846919ebee60ff971ced209edd45da8cd955beada385baaa0b87e959"
+    },
+    {
+      "path": "QuantGym 账户.dc.html",
+      "bytes": 12041,
+      "sha256": "a9acdea0e1a9fd15409bb78a5458e3a68db6a68f44f34b79922f66458cd143f1"
+    },
+    {
+      "path": "QuantGym 资料库.dc.html",
+      "bytes": 15683,
+      "sha256": "720e6d5e3ddc53cb967ca4296fabf3dc24fcdab2e8cdc2304705b451e0eb9d86"
+    },
+    {
+      "path": "QuantGym 资料笔记.dc.html",
+      "bytes": 14500,
+      "sha256": "dcad0d5b7f064c1c6b03c845325b284cbaab0e63224d66b0b9dc9e84959ef96c"
+    },
+    {
+      "path": "QuantGym 速算.dc.html",
+      "bytes": 18296,
+      "sha256": "4a232d32aa8027503b3f52c14eee2270f7562e572aad270880ae9eb92a2a0cdb"
+    },
+    {
+      "path": "QuantGym 面经.dc.html",
+      "bytes": 12180,
+      "sha256": "02e7fdd47f90fca74448a7f6fae82acaac4f2089e0554c0342819c55f81698c9"
+    },
+    {
+      "path": "QuantGym 题目.dc.html",
+      "bytes": 29536,
+      "sha256": "fa63c79b00b6e6fa1c5afcee491bcafaeb345764ae5f52fade8b8fbe80167824"
+    },
+    {
+      "path": "README.md",
+      "bytes": 5838,
+      "sha256": "d427a2673a4d6a81559eb4fd5977147cf15e2ce066016409bb6bd9002c6fb9fa"
+    },
+    {
+      "path": "qg-state.js",
+      "bytes": 19259,
+      "sha256": "41f749f078cd2b18b2e995b9106836a6ea1c2399294ec5e2da8fa0f5b0504ea9"
+    },
+    {
+      "path": "support.js",
+      "bytes": 60151,
+      "sha256": "e0650b109ec8f78ccc370fa27762b0c485cee4f208156a671f346e8544fc2214"
+    },
+    {
+      "path": "吉祥物生成任务书.md",
+      "bytes": 3815,
+      "sha256": "db00ae0e4410e6d674c0c75687fd3b47b77b001f8d9320a70764bba9d0fdeed2"
+    }
+  ],
+  "excludedPrefixes": [
+    "assets/",
+    "uploads/"
+  ]
+}

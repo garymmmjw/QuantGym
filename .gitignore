@@ -14,6 +14,9 @@ dist/
 
 # Local Codex/agent tooling should not travel with the app repo.
 .agents/
+.superpowers/
+UI 设计提升.zip
+assets 2/
 skills-lock.json
 
 # Build and QA outputs.

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+[data-ac-grid]{display:grid;grid-template-columns:320px 1fr;gap:16px}
+@media(max-width:860px){[data-ac-grid]{grid-template-columns:1fr}}
+</style>
+<script src="./qg-state.js"></script>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<div data-screen-label="账户" style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div>
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:var(--brand-soft);color:var(--brand-ink);font-size:11.5px;font-weight:700;margin-bottom:10px">ACCOUNT · 云同步已开启</div>
+    <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">账户</h1>
+    <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">个人资料 · 头像 · 登录与安全</p>
+  </div>
+
+  <div data-ac-grid style="align-items:start">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);padding:24px;text-align:center">
+        <img src="{{ avatar }}" alt="头像" style="width:96px;height:96px;object-fit:contain;border-radius:50%;background:var(--brand-soft);padding:8px;box-sizing:border-box">
+        <div style="font-size:18px;font-weight:800;margin-top:12px">Quant</div>
+        <div style="font-size:12px;color:var(--muted-2);font-weight:600;margin-top:3px">quant@gmail.com · 上海</div>
+        <div style="display:flex;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <span style="padding:5px 12px;border-radius:20px;background:var(--brand-soft);color:var(--brand-ink);font-size:11.5px;font-weight:800;font-family:'Space Grotesk'">Lv.{{ lv }} · {{ tier }}</span>
+          <span style="padding:5px 12px;border-radius:20px;background:#fff3dd;color:#b3610a;font-size:11.5px;font-weight:800;font-family:'Space Grotesk'">🔥 {{ streak }} 天</span>
+        </div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="font-size:11.5px;font-weight:700;color:var(--muted-2);margin-bottom:9px;text-align:left">选择头像</div>
+          <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap">
+            <sc-for list="{{ avatars }}" as="a" hint-placeholder-count="4">
+              <img src="{{ a.src }}" alt="" onClick="{{ a.onPick }}" style="{{ a.style }}">
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:17px 19px">
+        <div style="font-size:13.5px;font-weight:800;margin-bottom:11px">数据概览</div>
+        <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 2px"><span style="font-size:12.5px;color:var(--muted);font-weight:600">{{ s.k }}</span><span style="font-family:'Space Grotesk';font-weight:700;font-size:14px">{{ s.v }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);padding:22px 24px">
+        <div style="font-size:15px;font-weight:800;margin-bottom:16px">个人资料</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px">
+          <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:700;color:var(--muted-2);margin-bottom:6px">昵称</span><input value="{{ name }}" onInput="{{ onName }}" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-2);font-family:inherit;font-size:13.5px;font-weight:600;color:var(--text);outline:none" style-focus="border-color:#5b5ff5"></label>
+          <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:700;color:var(--muted-2);margin-bottom:6px">所在城市</span><input value="{{ city }}" onInput="{{ onCity }}" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-2);font-family:inherit;font-size:13.5px;font-weight:600;color:var(--text);outline:none" style-focus="border-color:#5b5ff5"></label>
+          <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:700;color:var(--muted-2);margin-bottom:6px">目标方向</span><input value="{{ goal }}" onInput="{{ onGoal }}" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-2);font-family:inherit;font-size:13.5px;font-weight:600;color:var(--text);outline:none" style-focus="border-color:#5b5ff5"></label>
+          <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:700;color:var(--muted-2);margin-bottom:6px">邮箱（登录名）</span><input value="quant@gmail.com" disabled style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--track);font-family:inherit;font-size:13.5px;font-weight:600;color:var(--muted-2)"></label>
+        </div>
+        <button type="button" onClick="{{ saveProfile }}" style="margin-top:16px;padding:12px 22px;border:none;border-radius:13px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:800;font-size:13.5px;cursor:pointer;box-shadow:0 3px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(2px)">保存资料</button>
+      </div>
+
+      <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);padding:22px 24px">
+        <div style="font-size:15px;font-weight:800;margin-bottom:4px">登录与安全</div>
+        <div style="font-size:12px;color:var(--muted-2);font-weight:600;margin-bottom:16px">已绑定 Google 登录 · 上次登录 今天 09:12 · 上海</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px">
+          <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:700;color:var(--muted-2);margin-bottom:6px">当前密码</span><input type="password" value="{{ pw0 }}" onInput="{{ onPw0 }}" placeholder="••••••••" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-2);font-family:inherit;font-size:13.5px;color:var(--text);outline:none" style-focus="border-color:#5b5ff5"></label>
+          <label style="display:block"><span style="display:block;font-size:11.5px;font-weight:700;color:var(--muted-2);margin-bottom:6px">新密码（≥8 位，含字母数字）</span><input type="password" value="{{ pw1 }}" onInput="{{ onPw1 }}" placeholder="设置新密码" style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface-2);font-family:inherit;font-size:13.5px;color:var(--text);outline:none" style-focus="border-color:#5b5ff5"></label>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap">
+          <button type="button" onClick="{{ changePw }}" style="{{ pwBtnStyle }}" style-active="transform:translateY(2px)">修改密码</button>
+          <a href="./QuantGym 登录.dc.html" style="font-size:12.5px;font-weight:700;color:#d0524b;text-decoration:none">退出登录 →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:880}}">
+class Component extends DCLogic {
+  state = { name:'Quant', city:'上海', goal:'量化研究 / 交易 2027 届', avatar:'assets/avatar-happy-v2.png', pw0:'', pw1:'' };
+
+  componentDidMount(){
+    try{ const s=JSON.parse(localStorage.getItem('qg-profile')||'null'); if(s) this.setState(s); }catch(e){}
+    if(window.QG) this._unsub=QG.onChange(()=>this.forceUpdate());
+  }
+  componentWillUnmount(){ if(this._unsub) this._unsub(); }
+  persist(patch){ this.setState(patch, ()=>{ try{ const {name,city,goal,avatar}=this.state; localStorage.setItem('qg-profile',JSON.stringify({name,city,goal,avatar})); }catch(e){} }); }
+
+  renderVals(){
+    const S=this.state;
+    const sh=window.QG?QG.get():{xp:2480,streak:12,solved:342,gems:480};
+    const lv=window.QG?QG.level():{lv:7,tier:'Analyst II'};
+    const avatars=['assets/avatar-happy-v2.png','assets/avatar-focused-v2.png','assets/avatar-wink-v2.png','assets/avatar-wow-v2.png'].map(src=>({
+      src, onPick:()=>{ this.persist({avatar:src}); if(window.QG) QG.toast('头像已更新',{img:src,ms:1800}); },
+      style:'width:52px;height:52px;object-fit:contain;border-radius:50%;cursor:pointer;padding:5px;box-sizing:border-box;transition:all .14s ease;background:var(--surface-2);border:2.5px solid '+(S.avatar===src?'#5b5ff5':'var(--border)'),
+    }));
+    const pwOk=S.pw0.length>0&&S.pw1.length>=8&&/[a-zA-Z]/.test(S.pw1)&&/\d/.test(S.pw1);
+    return {
+      avatar:S.avatar, avatars, lv:lv.lv, tier:lv.tier, streak:sh.streak,
+      name:S.name, city:S.city, goal:S.goal,
+      onName:(e)=>this.setState({name:e.target.value}), onCity:(e)=>this.setState({city:e.target.value}), onGoal:(e)=>this.setState({goal:e.target.value}),
+      saveProfile:()=>{ this.persist({}); if(window.QG) QG.toast('资料已保存',{sub:'已同步到云端',ms:2000}); },
+      pw0:S.pw0, pw1:S.pw1, onPw0:(e)=>this.setState({pw0:e.target.value}), onPw1:(e)=>this.setState({pw1:e.target.value}),
+      changePw:()=>{ if(!pwOk){ if(window.QG) QG.toast('新密码不符合要求',{emoji:'!',tone:'gold',sub:'至少 8 位，需同时包含字母和数字',ms:2600}); return; } this.setState({pw0:'',pw1:''}); if(window.QG) QG.toast('密码已修改',{sub:'下次登录使用新密码',ms:2200}); },
+      pwBtnStyle:'padding:12px 22px;border:none;border-radius:13px;font-family:inherit;font-weight:800;font-size:13.5px;cursor:pointer;transition:transform .12s ease;color:#fff;'+(pwOk?'background:linear-gradient(180deg,#6d70f8,#5b5ff5);box-shadow:0 3px 0 #3f39c9':'background:var(--muted-2)'),
+      stats:[
+        {k:'累计 XP',v:sh.xp.toLocaleString('en-US')},
+        {k:'已解题目',v:sh.solved},
+        {k:'训练币',v:sh.gems||0},
+        {k:'连胜',v:sh.streak+' 天'},
+        {k:'注册时间',v:'2026 · 3'},
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

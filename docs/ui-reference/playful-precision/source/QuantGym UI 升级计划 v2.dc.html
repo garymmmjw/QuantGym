@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#f3f3fa}
+  ::selection{background:#d9d8ff}
+</style>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><path d="M24 50h20l8-16 12 32 8-16h4" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</template>
+<div style="min-height:100vh;background:radial-gradient(1100px 560px at 10% -12%,#ecebff 0%,transparent 52%),radial-gradient(900px 520px at 100% 0%,#e9f0ff 0%,transparent 50%),linear-gradient(180deg,#f6f6fc,#f2f2f9);font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:#1b1a38;padding:44px 24px 80px">
+  <div style="max-width:880px;margin:0 auto">
+
+    <div style="position:relative;overflow:hidden;border-radius:28px;background:linear-gradient(130deg,#5b5ff5 0%,#7161f2 55%,#8a63e8 100%);color:#fff;padding:38px 36px;box-shadow:0 24px 50px -24px rgba(91,95,245,.7)">
+      <div style="position:absolute;right:-10px;bottom:-18px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 65%)"></div>
+      <img src="assets/mascot-trophy-v2.png" alt="" style="position:absolute;right:20px;bottom:-6px;width:150px;height:auto;filter:drop-shadow(0 18px 26px rgba(20,16,60,.4));opacity:.96">
+      <div style="position:relative;max-width:580px">
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border-radius:20px;background:rgba(255,255,255,.16);font-size:11.5px;font-weight:700;letter-spacing:.06em">产品设计 · UI ROADMAP v2</div>
+        <h1 style="margin:14px 0 10px;font-size:36px;line-height:1.1;font-weight:800;letter-spacing:-.02em">下一程<br>深色 · 移动端 · 联动 · 护城河</h1>
+        <p style="margin:0 0 18px;font-size:14.5px;line-height:1.6;color:rgba(255,255,255,.9);max-width:470px">16 个桌面浅色模块已全部落地并接入「总览」导航。v2 聚焦：补齐深色与移动端、把跨模块联动做成真交互、深化游戏化，并沉淀组件库以便接入真前端。</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:12px;background:rgba(255,255,255,.16);font-size:12.5px;font-weight:700"><span style="font-family:'Space Grotesk'">16 / 16</span> 模块已交付</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:12px;background:rgba(255,255,255,.16);font-size:12.5px;font-weight:700"><span style="font-family:'Space Grotesk'">5</span> 下一程阶段</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:12px;background:rgba(255,255,255,.16);font-size:12.5px;font-weight:700"><span style="font-family:'Space Grotesk'">{{ prog.total }}</span> 个任务</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;padding:20px 24px;border-radius:20px;background:#fff;border:1px solid #ecebf7;box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 30px -22px rgba(74,67,214,.35)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="position:relative;width:52px;height:52px;flex:0 0 auto">
+          <svg viewBox="0 0 44 44" style="width:100%;height:100%;transform:rotate(-90deg)">
+            <circle cx="22" cy="22" r="19" fill="none" stroke="#eeedfa" stroke-width="5"></circle>
+            <circle cx="22" cy="22" r="19" fill="none" stroke="#5b5ff5" stroke-width="5" stroke-linecap="round" stroke-dasharray="119.38" stroke-dashoffset="{{ prog.offset }}" style="transition:stroke-dashoffset .35s ease"></circle>
+          </svg>
+          <div style="position:absolute;inset:0;display:grid;place-items:center;font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#5b5ff5">{{ prog.pct }}%</div>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:14.5px;font-weight:800">下一程 · 进度追踪</span><span style="font-size:12px;color:#9998b6;font-weight:600">勾选任务即可记录进度（本地保存）</span></div>
+          <div style="margin-top:8px;height:9px;border-radius:20px;background:#eeedfa;overflow:hidden"><div style="height:100%;width:{{ prog.pct }}%;border-radius:20px;background:linear-gradient(90deg,#5b5ff5,#8a7bff);transition:width .35s ease"></div></div>
+        </div>
+        <div style="text-align:right;flex:0 0 auto"><div style="font-family:'Space Grotesk';font-weight:700;font-size:22px">{{ prog.done }}<span style="font-size:13px;color:#a3a2bd">/{{ prog.total }}</span></div><div style="font-size:11px;color:#9998b6;font-weight:600">已完成</div></div>
+      </div>
+    </div>
+
+    <section style="margin-top:16px;padding:24px 26px;border-radius:22px;background:linear-gradient(160deg,#f2fbf6,#eefaf3);border:1px solid #cdeede;box-shadow:0 1px 2px rgba(27,26,56,.05)">
+      <div style="display:flex;align-items:center;gap:11px;margin-bottom:15px">
+        <div style="display:grid;place-items:center;width:32px;height:32px;border-radius:11px;background:linear-gradient(135deg,#16a06a,#3fb985);color:#fff;font-size:16px;flex:0 0 auto">✓</div>
+        <div style="flex:1"><div style="font-size:16px;font-weight:800;letter-spacing:-.01em">已交付 · 16 个模块</div><div style="font-size:11.5px;color:#5a8a72;font-weight:600">Playful Precision 系统 · 真实数据驱动 · 已接入总览导航</div></div>
+        <span style="padding:5px 11px;border-radius:20px;font-family:'Space Grotesk';font-size:12px;font-weight:700;background:#dcf3e9;color:#0f9d63;flex:0 0 auto">DONE</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:11px">
+        <sc-for list="{{ delivered }}" as="g" hint-placeholder-count="5">
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <span style="font-size:11px;font-weight:800;letter-spacing:.1em;color:#9db3a8;width:74px;flex:0 0 auto;padding-top:6px">{{ g.label }}</span>
+            <div style="flex:1;display:flex;flex-wrap:wrap;gap:7px">
+              <sc-for list="{{ g.mods }}" as="m" hint-placeholder-count="4"><span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:11px;background:#fff;border:1px solid #d9efe4;font-size:12.5px;font-weight:700;color:#2c5a45"><span style="display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:#dcf3e9;color:#0f9d63;font-size:9px;font-weight:800">✓</span>{{ m }}</span></sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px">
+      <div style="padding:20px 22px;border-radius:20px;background:#fff;border:1px solid #ecebf7;box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 30px -22px rgba(74,67,214,.35)">
+        <div style="font-size:12px;font-weight:700;color:#5b5ff5;letter-spacing:.06em;margin-bottom:8px">现状 STATUS</div>
+        <p style="margin:0;font-size:13.5px;line-height:1.65;color:#5c5b7e">全部 16 个功能页已用新系统重做，桌面浅色版完成，导航连贯。仍待补齐：深色主题、移动端、跨模块的真实联动，以及可复用组件库的沉淀。</p>
+      </div>
+      <div style="padding:20px 22px;border-radius:20px;background:#fff;border:1px solid #ecebf7;box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 30px -22px rgba(74,67,214,.35)">
+        <div style="font-size:12px;font-weight:700;color:#16a06a;letter-spacing:.06em;margin-bottom:8px">目标 GOAL</div>
+        <p style="margin:0;font-size:13.5px;line-height:1.65;color:#5c5b7e">让 QuantGym 在任意设备与明暗环境下都同样精致；把「去练 / 关联」变成真跳转与共享状态；用游戏化拉开差距；并让每个模块可直接交接给真前端。</p>
+      </div>
+    </div>
+
+    <sc-for list="{{ phases }}" as="p" hint-placeholder-count="5">
+      <section style="margin-top:16px;padding:26px;border-radius:22px;background:#fff;border:1px solid #ecebf7;box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <div style="{{ p.badgeStyle }}">{{ p.n }}</div>
+          <div style="flex:1"><div style="font-size:19px;font-weight:800;letter-spacing:-.01em">{{ p.title }}</div><div style="font-size:12.5px;color:#9998b6;font-weight:600">{{ p.en }}</div></div>
+          <span style="{{ p.prioStyle }}">{{ p.prio }}</span>
+        </div>
+        <p style="margin:0 0 14px;font-size:13.5px;line-height:1.6;color:#5c5b7e">{{ p.intro }}</p>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ p.items }}" as="it" hint-placeholder-count="4">
+            <div onClick="{{ it.onToggle }}" style="display:flex;gap:13px;padding:13px 4px;border-top:1px solid #f4f3fa;cursor:pointer;transition:background .12s ease" style-hover="background:#faf9ff">
+              <span style="{{ it.boxStyle }}">{{ it.mark }}</span>
+              <div style="flex:1;min-width:0">
+                <div style="{{ it.nameStyle }}">{{ it.name }}</div>
+                <div style="font-size:12.5px;color:#8988a8;line-height:1.55;font-weight:500;margin-top:2px">{{ it.desc }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+
+    <section style="margin-top:16px;padding:26px;border-radius:22px;background:#fff;border:1px solid #ecebf7;box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
+        <div style="display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,#5b5ff5,#7d6cff);color:#fff;font-family:'Space Grotesk';font-weight:700;font-size:14px">→</div>
+        <div style="flex:1"><div style="font-size:19px;font-weight:800;letter-spacing:-.01em">建议节奏</div><div style="font-size:12.5px;color:#9998b6;font-weight:600">Suggested sequencing · 单人推进的顺序与粗估</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:11px">
+        <div style="display:flex;gap:14px;align-items:stretch"><div style="display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto;border-radius:50%;background:#fdeceb;color:#d0524b;font-family:'Space Grotesk';font-weight:700;font-size:13px">1</div><div style="flex:1;padding:14px 16px;border-radius:14px;background:#faf9ff;border:1px solid #eeedf8"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-weight:800;font-size:14px">深色 + 移动端（阶段 A）</span><span style="margin-left:auto;font-family:'Space Grotesk';font-size:11.5px;font-weight:700;color:#d0524b">1–2 周</span></div><div style="font-size:12.5px;color:#6d6c8e;line-height:1.55;font-weight:500">你当初定的「最后统一 pass」，现在正是时候。先立深色令牌与移动断点，再逐屏适配。</div></div></div>
+        <div style="display:flex;gap:14px;align-items:stretch"><div style="display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto;border-radius:50%;background:#eef0ff;color:#5b5ff5;font-family:'Space Grotesk';font-weight:700;font-size:13px">2</div><div style="flex:1;padding:14px 16px;border-radius:14px;background:#faf9ff;border:1px solid #eeedf8"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-weight:800;font-size:14px">跨模块联动（阶段 B）</span><span style="margin-left:auto;font-family:'Space Grotesk';font-size:11.5px;font-weight:700;color:#5b5ff5">1–2 周</span></div><div style="font-size:12.5px;color:#6d6c8e;line-height:1.55;font-weight:500">建全局状态单一数据源，把各处「去练 / 关联」变成真跳转，产品第一次「转起来」。</div></div></div>
+        <div style="display:flex;gap:14px;align-items:stretch"><div style="display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto;border-radius:50%;background:#fff3dd;color:#b3610a;font-family:'Space Grotesk';font-weight:700;font-size:13px">3</div><div style="flex:1;padding:14px 16px;border-radius:14px;background:#faf9ff;border:1px solid #eeedf8"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-weight:800;font-size:14px">游戏化深化（阶段 C）</span><span style="margin-left:auto;font-family:'Space Grotesk';font-size:11.5px;font-weight:700;color:#b3610a">2–3 周</span></div><div style="font-size:12.5px;color:#6d6c8e;line-height:1.55;font-weight:500">段位联赛、学习地图、奖励商店——差异化护城河，放在联动之后收益最大。</div></div></div>
+        <div style="display:flex;gap:14px;align-items:stretch"><div style="display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto;border-radius:50%;background:#e7f2fb;color:#2f7fc0;font-family:'Space Grotesk';font-weight:700;font-size:13px">4</div><div style="flex:1;padding:14px 16px;border-radius:14px;background:#faf9ff;border:1px solid #eeedf8"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-weight:800;font-size:14px">系统级 & 沉淀（阶段 D · E）</span><span style="margin-left:auto;font-family:'Space Grotesk';font-size:11.5px;font-weight:700;color:#2f7fc0">持续</span></div><div style="font-size:12.5px;color:#6d6c8e;line-height:1.55;font-weight:500">⌘K、通知、引导、骨架屏、可访问性，以及组件库沉淀与前端交接，穿插推进。</div></div></div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:18px;padding-top:16px;border-top:1px solid #f0eff8">
+        <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#6d6c8e;font-weight:600"><span style="padding:2px 8px;border-radius:20px;font-family:'Space Grotesk';font-size:10.5px;font-weight:700;background:#fdeceb;color:#d0524b">P0</span> 立即做</span>
+        <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#6d6c8e;font-weight:600"><span style="padding:2px 8px;border-radius:20px;font-family:'Space Grotesk';font-size:10.5px;font-weight:700;background:#eef0ff;color:#5b5ff5">P1</span> 重要</span>
+        <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:#6d6c8e;font-weight:600"><span style="padding:2px 8px;border-radius:20px;font-family:'Space Grotesk';font-size:10.5px;font-weight:700;background:#f2f1fb;color:#8988a8">P2</span> 有余力再做</span>
+      </div>
+    </section>
+
+    <div style="margin-top:16px;display:flex;align-items:center;gap:18px;padding:24px 28px;border-radius:22px;background:linear-gradient(130deg,#1b1a38,#2d2a5c);color:#fff;box-shadow:0 20px 44px -22px rgba(27,26,56,.6)">
+      <img src="assets/mascot-calculator-v2.png" alt="" style="width:76px;height:auto;flex:0 0 auto;filter:drop-shadow(0 12px 20px rgba(0,0,0,.4))">
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.06em;color:#b9b8e0;margin-bottom:4px">建议下一步 · NEXT</div>
+        <div style="font-size:16px;font-weight:800;line-height:1.45;letter-spacing:-.01em">第四程已落地 ✓：P0 全模块手机精修（密集页 + 训练页 + 聊天单栏）· P1 冻结卡真生效与计划卡片直达 · P2 通知中心 / 新手引导 / 切页进度条 / reduced-motion / mascot-oops 空状态。<br>路线图 A–D 全部完成，剩余为增量优化（骨架屏 shimmer、对手积分模拟、次级 CTA 真跳转）。</div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:26px;font-size:12px;color:#a3a2bd;font-weight:600">QuantGym · Playful Precision Design System · UI Roadmap v2 · {{ today }}</div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  KEY = 'qg-roadmap-v2-progress';
+  state = { checked: {} };
+
+  componentDidMount(){
+    try {
+      const raw = localStorage.getItem(this.KEY);
+      if (raw) this.setState({ checked: JSON.parse(raw) || {} });
+    } catch(e){}
+  }
+
+  toggle(id){
+    this.setState(s => {
+      const checked = { ...s.checked, [id]: !s.checked[id] };
+      try { localStorage.setItem(this.KEY, JSON.stringify(checked)); } catch(e){}
+      return { checked };
+    });
+  }
+
+  phaseData(){
+    return [
+      { n:'A', title:'深色模式 + 移动端', en:'Dark + Mobile · 你保留到最后的统一 pass', prio:'P0', hue:'#5b5ff5,#7d6cff',
+        intro:'一次横向改造，全站 16 屏受益。先立令牌与断点，再逐屏适配——Poker 已是深色，可作为暗色基准。',
+        items:[
+          {id:'a1',name:'深色主题令牌与全站切换',desc:'背景 / 文字 / 边框 / 品牌紫在暗色下的映射，顶栏一键切换并记忆偏好。'},
+          {id:'a2',name:'移动端导航：侧边栏 → 底部 Tab',desc:'总览侧边栏收进底部 5 项 Tab，二级页用返回栏，触控目标 ≥44px。'},
+          {id:'a3',name:'响应式布局：多栏 → 单列堆叠',desc:'题目/公司/资料笔记的主从两栏，在窄屏折叠为可切换的单列。'},
+          {id:'a4',name:'训练页重点适配',desc:'Mental Math 大按钮、Poker 牌桌、模拟面试考场、聊天全屏——手机上的核心体验。'},
+        ] },
+      { n:'B', title:'跨模块联动做成真交互', en:'Cross-module wiring · 让产品第一次转起来', prio:'P0–P1', hue:'#5b5ff5,#7d6cff',
+        intro:'当前各模块内部交互已完整，但模块之间的「去练 / 关联」还是静态。补上共享状态与真实跳转。',
+        items:[
+          {id:'b1',name:'全局状态单一数据源',desc:'XP / 连胜 / 段位 / 已解题数集中管理，各页读同一份，任何页面完成都同步更新。'},
+          {id:'b2',name:'题目 ↔ 笔记 ↔ 课程 ↔ 聊天 真跳转',desc:'详情页的关联链接真正导航到目标模块并带上下文（题号 / 章节 / 话题）。'},
+          {id:'b3',name:'计划看板回写训练完成状态',desc:'在训练页完成任务后，计划看板的卡片自动移动到「已完成」并结算 XP。'},
+          {id:'b4',name:'能力值弱项 → 直达题库筛选',desc:'点雷达图的弱项维度，直接跳到题目页并预置对应主题 / 难度筛选。'},
+        ] },
+      { n:'C', title:'游戏化深化', en:'Gamification · 差异化护城河', prio:'P1', hue:'#ff9f2e,#ff7a3d',
+        intro:'素材（鲨鱼 / 徽章 / 奖励）已齐备。把动机系统做深，是相对题库工具的核心壁垒。',
+        items:[
+          {id:'c1',name:'段位联赛（赛季升 / 降级）',desc:'每周分组竞技，赛季结算升降级，联动现有段位与排行榜。'},
+          {id:'c2',name:'连胜冻结 / 修复',desc:'连胜冻结卡与「昨日补救」，降低断签挫败，提升留存。'},
+          {id:'c3',name:'学习地图（关卡路径）',desc:'把题库 / 课程编成闯关路径，节点解锁 + 里程碑奖励。'},
+          {id:'c4',name:'奖励商店 + 成就馆',desc:'用 XP 兑换鲨鱼皮肤 / 主题；成就带稀有度与陈列馆。'},
+          {id:'c5',name:'升级庆祝弹窗 + 好友 PK',desc:'升段 / 破纪录的庆祝动效；与好友的速算 / 答题实时对战。'},
+        ] },
+      { n:'D', title:'系统级 & 旗舰页增强', en:'System-wide polish', prio:'P1', hue:'#5b5ff5,#7d6cff',
+        intro:'贯穿全站的体验地基，做一次全站受益。',
+        items:[
+          {id:'d1',name:'⌘K 命令面板',desc:'跨模块搜索题目 / 公司 / 笔记并一键跳转，键盘优先。'},
+          {id:'d2',name:'通知中心 + Toast 反馈',desc:'统一的成功 / 提醒 Toast，与连胜、赛季、投递状态打通。'},
+          {id:'d3',name:'新手引导 Onboarding',desc:'首次进入的目标设定 + 分步引导，用鲨鱼带路。'},
+          {id:'d4',name:'骨架屏 + 鲨鱼空状态',desc:'与卡片同形的微光骨架替代转圈；空态用吉祥物给出下一步 CTA。'},
+          {id:'d5',name:'可访问性打磨',desc:'焦点环、键盘导航、对比度（部分浅灰偏低）、prefers-reduced-motion。'},
+        ] },
+      { n:'E', title:'组件库沉淀 & 前端交接', en:'Design system handoff', prio:'P1–P2', hue:'#16879a,#1aa39a',
+        intro:'当前每屏一个独立文件、内联样式；沉淀为可复用组件与令牌后，接入真前端最省力。',
+        items:[
+          {id:'e1',name:'内联样式 → 可复用组件 + 令牌',desc:'抽出按钮 / 卡片 / 进度 / 统计块 / 列表行 / 徽章 / 输入等，色阶间距圆角阴影字阶统一为变量。'},
+          {id:'e2',name:'组件清单 + 交互 / 动效规范文档',desc:'一页速查：每个组件的状态、用法、动效时长与曲线。'},
+          {id:'e3',name:'真前端接入包',desc:'一屏一组件的映射说明与数据契约，方便直接落到你的前端框架。'},
+        ] },
+    ];
+  }
+
+  renderVals(){
+    const S = this.state;
+    const badgeBase = "display:grid;place-items:center;width:36px;height:36px;border-radius:12px;color:#fff;font-family:'Space Grotesk';font-weight:700;font-size:15px;flex:0 0 auto;background:linear-gradient(135deg,";
+    const prioMap = {
+      'P0':'background:#fdeceb;color:#d0524b',
+      'P0–P1':'background:#fdeceb;color:#d0524b',
+      'P1':'background:#eef0ff;color:#5b5ff5',
+      'P1–P2':'background:#eef0ff;color:#5b5ff5',
+    };
+
+    let total = 0, done = 0;
+    const phases = this.phaseData().map(p => {
+      const items = p.items.map(it => {
+        total++; const on = !!S.checked[it.id]; if (on) done++;
+        return {
+          name: it.name, desc: it.desc, mark: on ? '✓' : '',
+          onToggle: () => this.toggle(it.id),
+          boxStyle: 'display:grid;place-items:center;width:22px;height:22px;border-radius:7px;flex:0 0 auto;margin-top:1px;font-size:12px;font-weight:800;transition:all .14s ease;'
+            + (on ? 'background:#5b5ff5;color:#fff;border:1.5px solid #5b5ff5' : 'background:#fff;color:transparent;border:1.5px solid #d9d8ea'),
+          nameStyle: 'font-size:14.5px;font-weight:700;letter-spacing:-.01em;'
+            + (on ? 'color:#a3a2bd;text-decoration:line-through' : 'color:#1f1e3d'),
+        };
+      });
+      return {
+        n: p.n, title: p.title, en: p.en, intro: p.intro, prio: p.prio, items,
+        badgeStyle: badgeBase + p.hue + ')',
+        prioStyle: 'padding:5px 11px;border-radius:20px;font-family:' + "'Space Grotesk'" + ';font-size:12px;font-weight:700;flex:0 0 auto;' + (prioMap[p.prio] || prioMap['P1']),
+      };
+    });
+
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    const circ = 119.38;
+
+    const delivered = [
+      { label:'成长 GROWTH', mods:['计划','能力值'] },
+      { label:'训练 TRAINING', mods:['模拟面试','题目','Mental Math','Poker','面经'] },
+      { label:'社群 COMMUNITY', mods:['新闻','论坛','聊天','人脉'] },
+      { label:'求职 JOBS', mods:['简历','求职','公司'] },
+      { label:'资源 RESOURCES', mods:['课程','资料笔记'] },
+    ];
+
+    const d = new Date();
+    const today = d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0');
+
+    return {
+      phases, delivered, today,
+      prog: { done, total, pct, offset: (circ * (1 - pct/100)).toFixed(2) },
+    };
+  }
+}
+</script>
+</body>
+</html>

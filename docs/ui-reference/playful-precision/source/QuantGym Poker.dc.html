@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  @keyframes pkGlow{0%,100%{box-shadow:0 0 0 0 rgba(91,95,245,.5)}50%{box-shadow:0 0 0 8px rgba(91,95,245,0)}}
+  [data-pk-root]{display:grid;grid-template-columns:1fr 300px;gap:16px}
+  [data-pk-table]{height:400px;margin:22px 22px 8px}
+  @media(max-width:920px){[data-pk-root]{grid-template-columns:1fr}}
+  @media(max-width:640px){[data-pk-table]{height:330px;margin:14px 14px 6px}}
+</style>
+<script src="./qg-state.js"></script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#12141c"/><path d="M50 26l16 16c8 8 8 20 0 27a13 13 0 0 1-16 2 13 13 0 0 1-16-2c-8-7-8-19 0-27z" fill="#5b5ff5"/></svg>
+</template>
+<div data-pk-root style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:#e8e9f5;align-items:start">
+
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div style="border-radius:24px;overflow:hidden;border:1px solid #23263a;background:linear-gradient(180deg,#191b26,#12141c);box-shadow:0 22px 48px -26px rgba(0,0,0,.7)">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid #23263a;flex-wrap:wrap;row-gap:8px">
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:rgba(91,95,245,.16);color:#a9adff;font-size:11.5px;font-weight:700">TRAINING · Poker Lab</div>
+        <div style="font-size:13px;font-weight:700;color:#c7c9e0">6-Max · No-Limit Hold'em</div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <span style="padding:6px 11px;border-radius:10px;background:#1d2030;font-size:11.5px;font-weight:600;color:#9a9db8">盲注 50 / 100</span>
+          <span style="padding:6px 11px;border-radius:10px;background:#1d2030;font-family:'Space Grotesk';font-size:11.5px;font-weight:600;color:#9a9db8">Hand #4821</span>
+        </div>
+      </div>
+
+      <div data-pk-table style="position:relative;border-radius:180px;background:radial-gradient(120% 120% at 50% 30%,#1f6d4f 0%,#155840 55%,#0f4130 100%);border:8px solid #0c1017;box-shadow:inset 0 0 60px rgba(0,0,0,.5),0 10px 30px -12px rgba(0,0,0,.6)">
+        <div style="position:absolute;inset:14px;border-radius:170px;border:1.5px dashed rgba(255,255,255,.08)"></div>
+
+        <sc-for list="{{ villains }}" as="v" hint-placeholder-count="5">
+          <div style="{{ v.seatStyle }}">
+            <div style="{{ v.badgeStyle }}">
+              <div style="display:flex;align-items:center;gap:7px">
+                <div style="{{ v.avatarStyle }}">{{ v.initials }}</div>
+                <div style="min-width:0"><div style="font-size:11.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:78px">{{ v.name }}</div><div style="font-family:'Space Grotesk';font-size:11px;color:#7fe0b0;font-weight:600">{{ v.stack }}</div></div>
+              </div>
+              <sc-if value="{{ v.hasBet }}"><div style="{{ v.betStyle }}">{{ v.bet }}</div></sc-if>
+            </div>
+            <sc-if value="{{ v.dealer }}"><div style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#fff;color:#12141c;display:grid;place-items:center;font-family:'Space Grotesk';font-size:11px;font-weight:700;border:2px solid #d0d0e0">D</div></sc-if>
+          </div>
+        </sc-for>
+
+        <div style="position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);text-align:center">
+          <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px">
+            <sc-for list="{{ board }}" as="c" hint-placeholder-count="5"><div style="{{ c.style }}"><span>{{ c.rank }}</span><span style="{{ c.suitStyle }}">{{ c.suit }}</span></div></sc-for>
+          </div>
+          <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 15px;border-radius:20px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12)">
+            <span style="font-size:11px;color:#c9cbe0;font-weight:600">底池</span>
+            <span style="font-family:'Space Grotesk';font-size:16px;font-weight:700;color:#ffd479">{{ pot }}</span>
+          </div>
+        </div>
+
+        <div style="position:absolute;bottom:6px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="display:flex;gap:8px">
+            <sc-for list="{{ hero.cards }}" as="c" hint-placeholder-count="2"><div style="{{ c.style }}"><span>{{ c.rank }}</span><span style="{{ c.suitStyle }}">{{ c.suit }}</span></div></sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px;padding:6px 13px 6px 7px;border-radius:14px;background:linear-gradient(135deg,#5b5ff5,#7d6cff);box-shadow:0 8px 20px -8px rgba(91,95,245,.7)">
+            <img src="assets/avatar-focused-v2.png" alt="" style="width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.15)">
+            <div><div style="font-size:12px;font-weight:800;line-height:1.1">你 · BTN</div><div style="font-family:'Space Grotesk';font-size:11.5px;font-weight:600;color:#e5e6ff">12,400</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:12px 22px 8px;text-align:center"><span style="font-size:12.5px;color:#8f92ad;font-weight:600">你的牌型：</span><span style="font-size:13px;color:#7fe0b0;font-weight:700">{{ hero.handName }}</span></div>
+    </div>
+
+    <div style="border-radius:20px;border:1px solid #23263a;background:#171925;padding:15px 18px;display:flex;flex-direction:column;gap:13px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1;height:6px;border-radius:20px;background:#23263a;overflow:hidden"><div style="height:100%;width:64%;border-radius:20px;background:linear-gradient(90deg,#5b5ff5,#8a7bff)"></div></div>
+        <span style="font-size:11.5px;color:#8f92ad;font-weight:600">行动时间 0:14</span>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button type="button" onClick="{{ act.fold }}" style="{{ foldStyle }}">弃牌 Fold</button>
+        <button type="button" onClick="{{ act.call }}" style="{{ callStyle }}">跟注 Call 300</button>
+        <button type="button" onClick="{{ act.raise }}" style="{{ raiseStyle }}">加注 Raise {{ betAmt }}</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;gap:6px">
+          <sc-for list="{{ sizeChips }}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+        </div>
+        <input type="range" min="300" max="12400" step="100" value="{{ bet }}" onInput="{{ onBet }}" style="flex:1;accent-color:#5b5ff5;height:5px">
+        <span style="font-family:'Space Grotesk';font-size:13px;font-weight:700;color:#e8e9f5;width:56px;text-align:right">{{ betAmt }}</span>
+      </div>
+      <sc-if value="{{ feedback }}">
+      <div style="{{ feedbackStyle }}"><span style="width:16px;height:16px;display:inline-flex;flex:0 0 auto">{{ feedbackIcon }}</span><span>{{ feedbackText }}</span></div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div style="border-radius:20px;border:1px solid #23263a;background:#171925;padding:18px;text-align:center">
+      <div style="font-size:12.5px;font-weight:700;color:#c7c9e0;margin-bottom:14px">胜率 Equity</div>
+      <div style="position:relative;width:120px;height:120px;margin:0 auto">
+        <div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(#5b5ff5 0% {{ equity }}%,#23263a {{ equity }}% 100%)"></div>
+        <div style="position:absolute;inset:11px;border-radius:50%;background:#171925;display:grid;place-items:center">
+          <div><div style="font-family:'Space Grotesk';font-size:30px;font-weight:700;line-height:1">{{ equity }}%</div><div style="font-size:10.5px;color:#8f92ad;font-weight:600;margin-top:2px">vs 对手范围</div></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <div style="flex:1;padding:9px;border-radius:12px;background:#1d2030"><div style="font-size:10px;color:#8f92ad;font-weight:600">底池赔率</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#7fe0b0">27%</div></div>
+        <div style="flex:1;padding:9px;border-radius:12px;background:#1d2030"><div style="font-size:10px;color:#8f92ad;font-weight:600">牌型强度</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#ffd479">强</div></div>
+      </div>
+    </div>
+
+    <div style="border-radius:20px;border:1px solid #23263a;background:linear-gradient(160deg,#1b1e2e,#171925);padding:16px 18px">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px"><img src="assets/avatar-wink-v2.png" alt="" style="width:30px;height:30px"><div style="font-size:13px;font-weight:800;color:#e8e9f5">GTO 教练建议</div></div>
+      <div style="padding:11px 13px;border-radius:13px;background:rgba(91,95,245,.12);border:1px solid rgba(91,95,245,.28);font-size:12.5px;line-height:1.6;color:#c9cbe6"><span style="color:#a9adff;font-weight:700">价值下注 · </span>顶两对领先大部分跟注范围，建议加注 2/3 底池（≈450）榨取价值，避免被听牌白嫖转牌。</div>
+      <div style="display:flex;gap:6px;margin-top:11px">
+        <div style="flex:1;text-align:center;padding:8px;border-radius:11px;background:#1d2030"><div style="font-size:10px;color:#8f92ad;font-weight:600">Fold</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#6c6f8a">2%</div></div>
+        <div style="flex:1;text-align:center;padding:8px;border-radius:11px;background:#1d2030"><div style="font-size:10px;color:#8f92ad;font-weight:600">Call</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#9a9db8">23%</div></div>
+        <div style="flex:1;text-align:center;padding:8px;border-radius:11px;background:rgba(91,95,245,.2)"><div style="font-size:10px;color:#a9adff;font-weight:600">Raise</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#c3c5ff">75%</div></div>
+      </div>
+    </div>
+
+    <div style="border-radius:20px;border:1px solid #23263a;background:#171925;padding:16px 18px">
+      <div style="font-size:12.5px;font-weight:700;color:#c7c9e0;margin-bottom:11px">手牌记录</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <sc-for list="{{ history }}" as="h" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:9px;font-size:11.5px"><span style="font-family:'Space Grotesk';color:#6c6f8a;width:30px;flex:0 0 auto">{{ h.id }}</span><span style="flex:1;color:#9a9db8">{{ h.desc }}</span><span style="{{ h.resStyle }}">{{ h.res }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { action:null, bet:450, feedback:null };
+
+  icon(name){
+    const R=React.createElement;
+    const w=(ch)=>R('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round',style:{width:'100%',height:'100%',display:'block'}},ch);
+    if(name==='check') return w([R('path',{d:'M4.5 12.5l5 5 10-11',key:'a'})]);
+    if(name==='warn') return w([R('path',{d:'M12 4l9 16H3z',key:'a'}),R('path',{d:'M12 10v4',key:'b'}),R('path',{d:'M12 17h.01',key:'c'})]);
+    return w([R('circle',{cx:12,cy:12,r:8,key:'c'})]);
+  }
+
+  card(rank,suit){
+    const red = suit==='♥'||suit==='♦';
+    return { rank, suit,
+      style:'display:flex;flex-direction:column;align-items:center;justify-content:center;width:42px;height:58px;border-radius:8px;background:#fbfbff;color:'+(red?'#d64550':'#1b1a2e')+";font-family:'Space Grotesk';font-weight:700;font-size:17px;line-height:1;box-shadow:0 6px 12px -4px rgba(0,0,0,.5)",
+      suitStyle:'font-size:15px;color:'+(red?'#d64550':'#1b1a2e') };
+  }
+
+  seatPos(){
+    return [
+      {top:'8%',left:'20%'},{top:'2%',left:'50%'},{top:'8%',left:'80%'},
+      {top:'44%',left:'6%'},{top:'44%',left:'94%'},
+    ];
+  }
+
+  set(k,v){ this.setState({[k]:v}); }
+  choose(a){
+    const good = a==='raise';
+    const first = !this.state.action;
+    this.setState({ action:a, feedback: good?'good':(a==='call'?'ok':'bad') });
+    if(window.QG && first){
+      if(good) QG.award(8, '扑克决策正确', { sub:'GTO 主线 · 价值加注' });
+      QG.completeQuest('poker-session', { sub:'决策复盘完成' });
+    }
+  }
+
+  renderVals(){
+    const S=this.state;
+    const pos=this.seatPos();
+    const vs=[
+      {name:'Ari Chen',stack:'9,800',initials:'AC',bet:'300',dealer:false},
+      {name:'Mina Patel',stack:'14,100',initials:'MP',bet:'',dealer:true},
+      {name:'Leo Wang',stack:'6,250',initials:'LW',bet:'300',dealer:false},
+      {name:'Sofia Kim',stack:'11,600',initials:'SK',bet:'',dealer:false},
+      {name:'Dan Ito',stack:'8,050',initials:'DI',bet:'',dealer:false},
+    ];
+    const villains=vs.map((v,i)=>({
+      name:v.name, stack:v.stack, initials:v.initials, dealer:v.dealer, hasBet:!!v.bet, bet:v.bet,
+      seatStyle:'position:absolute;top:'+pos[i].top+';left:'+pos[i].left+';transform:translate(-50%,-50%)',
+      badgeStyle:'position:relative;display:flex;flex-direction:column;gap:6px;padding:8px 11px;border-radius:14px;background:rgba(12,16,23,.82);border:1px solid #2a2e42;backdrop-filter:blur(4px)',
+      avatarStyle:"display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#2a2e46;color:#b9bce0;font-family:'Space Grotesk';font-size:11px;font-weight:700;flex:0 0 auto",
+      betStyle:"position:absolute;bottom:-13px;left:50%;transform:translateX(-50%);padding:2px 9px;border-radius:20px;background:#ffd479;color:#3a2a06;font-family:'Space Grotesk';font-size:11px;font-weight:700;white-space:nowrap",
+    }));
+
+    const board=[this.card('A','♠'),this.card('K','♦'),this.card('7','♣'),this.card('Q','♠'),this.card('2','♥')].map((c,i)=>{
+      if(i>=3){ c.style=c.style.replace('#fbfbff','#e9eaf2'); }
+      return c;
+    });
+    const hero={ cards:[this.card('A','♥'),this.card('K','♠')], handName:'两对 · Aces & Kings（顶两对）' };
+
+    const chipStyle=(active)=>'padding:6px 10px;border-radius:9px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;border:1px solid '+(active?'#5b5ff5':'#2a2e42')+';background:'+(active?'rgba(91,95,245,.2)':'#1d2030')+';color:'+(active?'#c3c5ff':'#9a9db8');
+    const sizes=[['⅓ 底池',300],['½ 底池',450],['⅔ 底池',600],['Pot',900]];
+    const sizeChips=sizes.map(s=>({label:s[0],style:chipStyle(S.bet===s[1]),onClick:()=>this.set('bet',s[1])}));
+
+    const btnBase='flex:1;padding:14px;border-radius:14px;font-family:inherit;font-weight:700;font-size:13.5px;cursor:pointer;transition:transform .12s ease;';
+    const foldStyle=btnBase+'border:1px solid #3a2030;background:'+(S.action==='fold'?'#4a2230':'#241820')+';color:#e08a95';
+    const callStyle=btnBase+'border:1px solid #2a3a30;background:'+(S.action==='call'?'#22402f':'#182420')+';color:#7fe0b0';
+    const raiseStyle=btnBase+'border:none;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;box-shadow:0 4px 0 #3f39c9'+(S.action==='raise'?';animation:pkGlow 1.4s ease-in-out infinite':'');
+
+    const fb={good:['#7fe0b0','rgba(22,160,106,.14)','#1f6d4f','check','漂亮！顶两对价值加注，正是 GTO 主线（75% 频率）。'],
+      ok:['#ffd479','rgba(255,159,46,.12)','#5a4416','warn','跟注不亏，但错过了价值——这手牌加注能榨取更多筹码。'],
+      bad:['#e08a95','rgba(208,82,75,.14)','#5a2230','warn','弃牌过紧了。顶两对在这个牌面几乎总是领先，应下注取价值。']}[S.feedback];
+
+    const history=[
+      {id:'#4820',desc:'BTN 3-bet · 对手弃牌',res:'+900',win:true},
+      {id:'#4819',desc:'翻牌听花 · 转牌未中',res:'−450',win:false},
+      {id:'#4818',desc:'AA 满注 vs KK',res:'+3,200',win:true},
+      {id:'#4817',desc:'BB 防守 · 河牌诈唬成功',res:'+1,100',win:true},
+    ].map(h=>({id:h.id,desc:h.desc,res:h.res,resStyle:"font-family:'Space Grotesk';font-weight:700;flex:0 0 auto;color:"+(h.win?'#7fe0b0':'#e08a95')}));
+
+    return {
+      villains, board, hero, pot:'1,350', equity:72,
+      sizeChips, bet:S.bet, betAmt:S.bet.toLocaleString('en-US'),
+      onBet:(e)=>this.set('bet',parseInt(e.target.value,10)),
+      foldStyle, callStyle, raiseStyle,
+      act:{ fold:()=>this.choose('fold'), call:()=>this.choose('call'), raise:()=>this.choose('raise') },
+      feedback:!!S.feedback,
+      feedbackText: fb?fb[4]:'', feedbackIcon:this.icon(fb?fb[3]:'check'),
+      feedbackStyle: fb?('display:flex;align-items:center;gap:9px;padding:11px 13px;border-radius:13px;font-size:12.5px;font-weight:600;line-height:1.5;color:'+fb[0]+';background:'+fb[1]+';border:1px solid '+fb[2]):'',
+      history,
+    };
+  }
+}
+</script>
+</body>
+</html>

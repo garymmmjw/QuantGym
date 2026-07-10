@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+</style>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<script src="./qg-state.js"></script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><path d="M26 30h48v30H46L34 72V60H26z" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:#e3f7ee;color:#0f9d63;font-size:11.5px;font-weight:700;margin-bottom:10px">COMMUNITY · 论坛</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">论坛 <span style="color:#5b5ff5">Forum</span></h1>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">和同路人讨论刷题、面试与职业选择</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--track)">
+        <sc-for list="{{ sorts }}" as="s" hint-placeholder-count="3"><button type="button" onClick="{{ s.onClick }}" style="{{ s.style }}">{{ s.label }}</button></sc-for>
+      </div>
+      <button type="button" style="padding:11px 17px;border:none;border-radius:13px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:700;font-size:13.5px;cursor:pointer;box-shadow:0 4px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(3px);box-shadow:0 1px 0 #3f39c9">＋ 发帖</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ threads }}" as="t" hint-placeholder-count="6">
+        <div style="display:flex;gap:14px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04);padding:15px 17px;transition:transform .14s ease,box-shadow .14s ease" style-hover="transform:translateY(-2px);box-shadow:0 12px 26px -18px rgba(74,67,214,.4)">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto;padding-top:2px">
+            <button type="button" onClick="{{ t.onUp }}" style="{{ t.upStyle }}"><span style="width:16px;height:16px;display:inline-flex">{{ upIcon }}</span></button>
+            <span style="{{ t.countStyle }}">{{ t.votes }}</span>
+            <button type="button" style="width:26px;height:26px;border-radius:8px;border:none;background:transparent;color:#c3c2d8;cursor:pointer;display:grid;place-items:center"><span style="width:16px;height:16px;display:inline-flex;transform:rotate(180deg)">{{ upIcon }}</span></button>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px"><span style="{{ t.topicStyle }}">{{ t.topic }}</span><sc-if value="{{ t.hot }}"><span style="padding:2px 8px;border-radius:20px;background:#fdeceb;color:#d0524b;font-size:10px;font-weight:700">🔥 热议</span></sc-if></div>
+            <div style="font-size:15px;font-weight:700;line-height:1.4">{{ t.title }}</div>
+            <div style="font-size:12.5px;color:var(--muted);line-height:1.55;font-weight:500;margin-top:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ t.excerpt }}</div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:9px;font-size:11.5px;color:var(--muted-3);font-weight:600">
+              <span style="display:inline-flex;align-items:center;gap:6px"><span style="{{ t.avaStyle }}">{{ t.aInit }}</span>{{ t.author }}</span>
+              <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:14px;height:14px;display:inline-flex">{{ cmtIcon }}</span>{{ t.replies }} 回复</span>
+              <span>· {{ t.time }}</span>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:18px 20px">
+        <div style="font-size:13.5px;font-weight:800;margin-bottom:13px">热门板块</div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <sc-for list="{{ boards }}" as="b" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:11px;cursor:pointer;transition:background .12s ease" style-hover="background:var(--surface-3)">
+              <span style="{{ b.dotStyle }}"></span><span style="flex:1;font-size:13px;font-weight:600">{{ b.name }}</span><span style="font-family:'Space Grotesk';font-size:11.5px;color:var(--muted-3);font-weight:600">{{ b.count }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:18px 20px">
+        <div style="font-size:13.5px;font-weight:800;margin-bottom:13px">本周活跃</div>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <sc-for list="{{ users }}" as="u" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:11px">
+              <div style="{{ u.avaStyle }}">{{ u.init }}</div>
+              <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">{{ u.name }}</div><div style="font-size:11px;color:var(--muted-3);font-weight:600">{{ u.role }}</div></div>
+              <span style="display:inline-flex;align-items:center;gap:4px;font-family:'Space Grotesk';font-size:12px;font-weight:700;color:#b3610a"><img src="assets/reward-xp.webp" alt="" style="width:16px;height:16px">{{ u.xp }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sort:'hot', voted:{} };
+
+  icon(name){
+    const R=React.createElement;
+    const w=(ch)=>R('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round',style:{width:'100%',height:'100%',display:'block'}},ch);
+    const P=(d)=>R('path',{d,key:d.slice(0,6)});
+    if(name==='up') return w([P('M12 20V8'),P('M6 12l6-6 6 6')]);
+    if(name==='cmt') return w([P('M20 14.5a3 3 0 0 1-3 3H9l-4 3V6.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3z')]);
+    return w([R('circle',{cx:12,cy:12,r:8,key:'c'})]);
+  }
+
+  data(){
+    return [
+      {id:'t1',topic:'速算',tc:'#ff9f2e',hot:true,title:'Optiver 速算轮怎么练到 90%+？分享我的三周计划',excerpt:'从 62% 到 93% 的过程：每天两组限时 80 题，重点练两位数乘法与分数近似，附我的错题分类表。',author:'Ari Chen',aInit:'AC',ac:'#b3610a',replies:64,time:'3 小时前',votes:218},
+      {id:'t2',topic:'脑筋急转弯',tc:'#5b5ff5',hot:true,title:'醉酒乘客最优雅的证明是哪种？',excerpt:'对称性一句话就能说清，但面试官追问「谁在做对称选择」时怎么答最严谨？开个讨论。',author:'Mina Patel',aInit:'MP',ac:'#5b5ff5',replies:47,time:'6 小时前',votes:176},
+      {id:'t3',topic:'职业',tc:'#16a06a',hot:false,title:'做市 vs 量化研究，应届该怎么选？',excerpt:'两个方向都拿到 Offer，纠结中。想听听已经入行的前辈聊聊日常、成长曲线和天花板。',author:'Leo Wang',aInit:'LW',ac:'#16a06a',replies:38,time:'昨天',votes:142},
+      {id:'t4',topic:'衍生品',tc:'#8a63e8',hot:false,title:'Hull 哪几章面试最该精读？',excerpt:'时间有限，想集中火力。个人感觉 13（BSM）、15（希腊字母）、19（波动率微笑）最高频，大家补充。',author:'Sofia Kim',aInit:'SK',ac:'#0f9d63',replies:29,time:'昨天',votes:118},
+      {id:'t5',topic:'编程',tc:'#2f9be0',hot:false,title:'HFT 岗位到底更看 C++ 还是 Python？',excerpt:'研究用 Python，生产用 C++ 似乎是共识，但面试到底考到多深？分享几家真实的 coding 轮难度。',author:'Dan Ito',aInit:'DI',ac:'#2f9be0',replies:52,time:'2 天前',votes:97},
+      {id:'t6',topic:'概率',tc:'#d0524b',hot:false,title:'求推荐：随机过程从零到面试够用的路线',excerpt:'统计基础还行，但鞅、布朗运动、Ito 引理总是记不牢。有没有循序渐进的题单 + 教材组合？',author:'Nora Ren',aInit:'NR',ac:'#d0524b',replies:33,time:'3 天前',votes:85},
+    ];
+  }
+
+  renderVals(){
+    const S=this.state;
+    const sorts=[['hot','热门'],['new','最新'],['top','精华']].map(s=>({ label:s[1], onClick:()=>this.setState({sort:s[0]}),
+      style:'padding:7px 14px;border:none;border-radius:9px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;'+(S.sort===s[0]?'background:var(--surface);color:#5b5ff5;box-shadow:0 2px 6px -2px rgba(74,67,214,.35)':'background:transparent;color:var(--muted)') }));
+
+    let list=this.data().slice();
+    if(S.sort==='top') list.sort((a,b)=>b.votes-a.votes);
+    if(S.sort==='new') list.reverse();
+
+    const threads=list.map(t=>{
+      const v=S.voted[t.id]?1:0;
+      return {
+        topic:t.topic, hot:t.hot, title:t.title, excerpt:t.excerpt, author:t.author, replies:t.replies, time:t.time, aInit:t.aInit,
+        votes:t.votes+v,
+        onUp:()=>this.setState(s=>({voted:{...s.voted,[t.id]:!s.voted[t.id]}})),
+        upStyle:'width:26px;height:26px;border-radius:8px;border:none;cursor:pointer;display:grid;place-items:center;transition:all .12s ease;'+(v?'background:var(--brand-soft);color:#5b5ff5':'background:transparent;color:#c3c2d8'),
+        countStyle:"font-family:'Space Grotesk';font-size:13px;font-weight:700;color:"+(v?'#5b5ff5':'var(--muted)'),
+        topicStyle:'padding:3px 9px;border-radius:8px;font-size:10.5px;font-weight:700;color:#fff;background:'+t.tc,
+        avaStyle:"display:inline-grid;place-items:center;width:18px;height:18px;border-radius:6px;font-family:'Space Grotesk';font-size:9px;font-weight:700;color:#fff;background:"+t.ac,
+      };
+    });
+
+    const boards=[['速算 Mental Math','#ff9f2e',412],['概率 & 随机','#5b5ff5',689],['衍生品定价','#8a63e8',254],['求职 & 面经','#16a06a',531],['职业发展','#2f9be0',198]].map(b=>({
+      name:b[0], count:b[2], dotStyle:'width:9px;height:9px;border-radius:3px;flex:0 0 auto;background:'+b[1],
+    }));
+
+    const users=[['Ari Chen','AC','#b3610a','Trader I','4,280'],['Mina Patel','MP','#5b5ff5','Analyst III','3,610'],['Sofia Kim','SK','#0f9d63','Analyst II','2,940'],['Leo Wang','LW','#2f9be0','Analyst I','2,180']].map(u=>({
+      name:u[0], init:u[1], role:u[3], xp:u[4],
+      avaStyle:"display:grid;place-items:center;width:34px;height:34px;border-radius:10px;flex:0 0 auto;font-family:'Space Grotesk';font-weight:700;font-size:12px;color:#fff;background:"+u[2],
+    }));
+
+    return { upIcon:this.icon('up'), cmtIcon:this.icon('cmt'), sorts, threads, boards, users };
+  }
+}
+</script>
+</body>
+</html>

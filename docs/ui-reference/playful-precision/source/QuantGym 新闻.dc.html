@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+</style>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<script src="./qg-state.js"></script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><rect x="24" y="26" width="52" height="48" rx="5" fill="none" stroke="#fff" stroke-width="5"/><path d="M32 38h24M32 48h24M32 58h14" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:#1b1a38;color:#fff;font-size:11.5px;font-weight:700;margin-bottom:10px"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.25)"></span>COMMUNITY · Quant Wire</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">新闻 <span style="color:#5b5ff5">News</span></h1>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">量化圈要闻 · 做市 / 招聘 / 监管 / 宏观 · 每日更新</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04);flex:1 1 220px;max-width:340px"><span style="width:18px;height:18px;display:inline-flex;color:#a5a4c2">{{ searchIcon }}</span><input placeholder="搜索要闻 / 机构…" style="border:none;outline:none;background:transparent;font-family:inherit;font-size:13.5px;width:100%;color:var(--text)"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <sc-for list="{{ cats }}" as="c" hint-placeholder-count="6"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start">
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="position:relative;border-radius:22px;overflow:hidden;background:linear-gradient(130deg,#5b5ff5,#7161f2 60%,#8a63e8);color:#fff;padding:24px;box-shadow:0 22px 48px -26px rgba(91,95,245,.7)">
+        <div style="position:absolute;right:-30px;top:-30px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 65%)"></div>
+        <div style="position:relative">
+          <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 11px;border-radius:20px;background:rgba(255,255,255,.2);font-size:11px;font-weight:700;margin-bottom:12px">{{ feat.cat }} · 头条</div>
+          <h2 style="margin:0 0 8px;font-size:22px;font-weight:800;line-height:1.35">{{ feat.title }}</h2>
+          <p style="margin:0 0 14px;font-size:13.5px;line-height:1.65;color:rgba(255,255,255,.9)">{{ feat.summary }}</p>
+          <div style="display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600"><span style="padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.2)">{{ feat.src }}</span><span style="color:rgba(255,255,255,.75)">{{ feat.time }}</span></div>
+        </div>
+      </div>
+
+      <sc-for list="{{ feed }}" as="a" hint-placeholder-count="6">
+        <div onClick="{{ a.onClick }}" style="{{ a.style }}" style-hover="transform:translateY(-2px);box-shadow:0 14px 30px -18px rgba(74,67,214,.45)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+            <span style="{{ a.catStyle }}">{{ a.cat }}</span>
+            <span style="font-size:12px;font-weight:700;color:#5b5ff5">{{ a.src }}</span>
+            <span style="margin-left:auto;font-size:11.5px;color:var(--muted-3);font-weight:600">{{ a.time }}</span>
+          </div>
+          <div style="font-size:15px;font-weight:700;line-height:1.4;margin-bottom:5px">{{ a.title }}</div>
+          <div style="font-size:12.5px;color:var(--muted);line-height:1.6;font-weight:500">{{ a.summary }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:18px 20px">
+        <div style="font-size:13.5px;font-weight:800;margin-bottom:14px">热门来源</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ sources }}" as="s" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:11px">
+              <div style="{{ s.logoStyle }}">{{ s.abbr }}</div>
+              <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">{{ s.name }}</div><div style="font-size:11px;color:var(--muted-3);font-weight:600">{{ s.count }} 篇 · {{ s.cat }}</div></div>
+              <button type="button" style="{{ s.followStyle }}">{{ s.follow }}</button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border-radius:20px;background:linear-gradient(160deg,#fff3dd,#ffe9c7);border:1px solid #ffe0ad;padding:18px 20px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px"><img src="assets/reward-lightning.webp" alt="" style="width:26px;height:26px"><div style="font-size:13.5px;font-weight:800;color:#7a4a08">今日速读</div></div>
+        <p style="margin:0 0 12px;font-size:12.5px;line-height:1.6;color:#8a5a12;font-weight:500">3 分钟看完今日 12 条要闻的 AI 摘要，读完 +10 XP。</p>
+        <button type="button" style="width:100%;padding:11px;border:none;border-radius:12px;background:#b3610a;color:#fff;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer">生成今日速读 →</button>
+      </div>
+
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:18px 20px">
+        <div style="font-size:13.5px;font-weight:800;margin-bottom:12px">关联题库</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:12px;background:var(--surface-3);border:1px solid var(--border)"><span style="width:8px;height:8px;border-radius:3px;background:#ff9f2e;flex:0 0 auto"></span><span style="font-size:12.5px;font-weight:600;flex:1">Optiver 速算轮真题</span><span style="font-size:11px;color:#5b5ff5;font-weight:700">去练 ›</span></div>
+          <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:12px;background:var(--surface-3);border:1px solid var(--border)"><span style="width:8px;height:8px;border-radius:3px;background:#5b5ff5;flex:0 0 auto"></span><span style="font-size:12.5px;font-weight:600;flex:1">波动率与对冲专题</span><span style="font-size:11px;color:#5b5ff5;font-weight:700">去练 ›</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { cat:'all' };
+
+  icon(name){
+    const R=React.createElement;
+    const w=(ch)=>R('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.9,strokeLinecap:'round',strokeLinejoin:'round',style:{width:'100%',height:'100%',display:'block'}},ch);
+    if(name==='search') return w([R('circle',{cx:11,cy:11,r:7,key:'c'}),R('line',{x1:20,y1:20,x2:16.2,y2:16.2,key:'l'})]);
+    return w([R('circle',{cx:12,cy:12,r:8,key:'c'})]);
+  }
+
+  catMeta(k){ return ({market:['做市','#5b5ff5'],hiring:['招聘','#16a06a'],reg:['监管','#d0524b'],macro:['宏观','#ff9f2e'],tech:['科技','#2f9be0']})[k]||['其他','#8988a8']; }
+
+  news(){
+    return [
+      {cat:'market',src:'Bloomberg',time:'2 小时前',title:'Jane Street 2025 年交易净收入创历史新高',summary:'受益于波动率上行与亚洲扩张，公司全年交易净收入同比大幅增长，并计划扩招量化研究与交易岗。'},
+      {cat:'tech',src:'Data Center Dynamics',time:'4 小时前',title:'Citadel 在东京扩建低延迟数据中心',summary:'押注亚洲做市与跨市场套利，新机房主打微秒级撮合延迟，靠近交易所主机托管区。'},
+      {cat:'hiring',src:'Quant Wire',time:'今天 09:20',title:'Optiver 更新校招流程：新增限时速算轮',summary:'新一轮校招在群面前加入 8 分钟限时心算测试，强调压力下的计算稳定性与准确率。'},
+      {cat:'macro',src:'Risk.net',time:'昨天',title:'做市商如何应对隔夜波动率跳升',summary:'隔夜 gap 风险抬升令对冲成本上行，头部做市商转向更动态的库存与 gamma 管理策略。'},
+      {cat:'market',src:'Bloomberg',time:'昨天',title:'HRT 与 Squarepoint 抢滩东京，人才争夺升温',summary:'两家机构在东京同步扩张，量化研究员与低延迟工程师薪酬水涨船高。'},
+      {cat:'hiring',src:'eFinancial',time:'2 天前',title:'2026 实习季：概率与脑筋急转弯权重上升',summary:'多家做市商反馈，今年更看重候选人的概率直觉与结构化表达，而非纯编程题。'},
+      {cat:'reg',src:'Reuters',time:'3 天前',title:'SEC 就高频交易延迟套利征询公众意见',summary:'监管关注交易所数据分发的公平性，或影响做市商的托管与行情订阅安排。'},
+    ];
+  }
+
+  renderVals(){
+    const S=this.state;
+    const cats=[['all','全部'],['market','做市'],['hiring','招聘'],['reg','监管'],['macro','宏观'],['tech','科技']].map(c=>({
+      label:c[1], onClick:()=>this.setState({cat:c[0]}),
+      style:'padding:8px 15px;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid '+(S.cat===c[0]?'transparent':'var(--border)')+';background:'+(S.cat===c[0]?'var(--text)':'var(--surface)')+';color:'+(S.cat===c[0]?'#fff':'var(--muted)')+';transition:all .14s ease',
+    }));
+
+    const all=this.news();
+    const feat0=all[0];
+    const feat={ cat:this.catMeta(feat0.cat)[0], title:feat0.title, summary:feat0.summary, src:feat0.src, time:feat0.time };
+
+    const rest = S.cat==='all'? all.slice(1) : all.filter(n=>n.cat===S.cat);
+    const feed=rest.map(n=>{ const m=this.catMeta(n.cat); return {
+      cat:m[0], src:n.src, time:n.time, title:n.title, summary:n.summary,
+      onClick:()=>{},
+      style:'padding:15px 17px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04);cursor:pointer;transition:transform .14s ease,box-shadow .14s ease',
+      catStyle:'padding:3px 9px;border-radius:8px;font-size:10.5px;font-weight:700;color:#fff;background:'+m[1],
+    }; });
+
+    const sources=[
+      {name:'Bloomberg',abbr:'B',count:38,cat:'做市',c:'var(--text)'},
+      {name:'Risk.net',abbr:'R',count:21,cat:'宏观',c:'#d0524b'},
+      {name:'Quant Wire',abbr:'Q',count:64,cat:'招聘',c:'#5b5ff5'},
+      {name:'Reuters',abbr:'RT',count:29,cat:'监管',c:'#ff9f2e'},
+      {name:'eFinancial',abbr:'eF',count:17,cat:'招聘',c:'#16a06a'},
+    ].map((s,i)=>({
+      name:s.name, abbr:s.abbr, count:s.count, cat:s.cat,
+      logoStyle:"display:grid;place-items:center;width:36px;height:36px;border-radius:11px;flex:0 0 auto;font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#fff;background:"+s.c,
+      follow: i<2?'已订阅':'订阅',
+      followStyle:'padding:5px 12px;border-radius:20px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;flex:0 0 auto;border:1px solid '+(i<2?'#e3f7ee':'#e0dffb')+';background:'+(i<2?'#e3f7ee':'var(--surface)')+';color:'+(i<2?'#0f9d63':'#5b5ff5'),
+    }));
+
+    return { searchIcon:this.icon('search'), cats, feat, feed, sources };
+  }
+}
+</script>
+</body>
+</html>

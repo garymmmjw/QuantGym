@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=Newsreader:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  @keyframes miRise{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes miPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(208,82,75,.5)}50%{transform:scale(1.05);box-shadow:0 0 0 10px rgba(208,82,75,0)}}
+  @keyframes miWave{0%,100%{height:6px}50%{height:20px}}
+  @keyframes miFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+</style>
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+</style>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<script src="./qg-state.js"></script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><path d="M50 30a9 9 0 0 1 9 9v10a9 9 0 0 1-18 0V39a9 9 0 0 1 9-9zM34 49a16 16 0 0 0 32 0M50 65v8" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:center;gap:14px;padding:13px 18px;border-radius:18px;background:linear-gradient(120deg,#1b1a38,#2d2a5c);color:#fff;box-shadow:0 16px 34px -20px rgba(27,26,56,.6);flex-wrap:wrap;row-gap:10px">
+    <button type="button" style="display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:11px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#c9c8ec;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer"><span style="width:15px;height:15px;display:inline-flex">{{ exitIcon }}</span> 退出考场</button>
+    <div style="display:flex;flex-direction:column"><div style="font-size:14px;font-weight:800;letter-spacing:-.01em">模拟面试 · Round 2</div><div style="font-size:11px;color:#a5a3d4;font-weight:600">概率 / 脑筋急转弯 · AI 面试官</div></div>
+    <div style="flex:1;display:flex;justify-content:center;gap:7px">
+      <sc-for list="{{ dots }}" as="d" hint-placeholder-count="5"><span style="{{ d.style }}">{{ d.n }}</span></sc-for>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14)"><img src="assets/reward-target.webp" alt="" style="width:18px;height:18px"><span style="font-size:12.5px;font-weight:700">{{ q.company }}</span></div>
+    <div style="{{ timerStyle }}"><span style="width:15px;height:15px;display:inline-flex">{{ clockIcon }}</span> <span style="font-family:'Space Grotesk';font-weight:700;font-size:15px">{{ clock }}</span></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px;align-items:start">
+
+    <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35);overflow:hidden">
+      <div style="padding:18px 22px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+          <span style="{{ q.diffStyle }}">{{ q.diffLabel }}</span>
+          <span style="padding:4px 10px;border-radius:20px;background:var(--brand-soft);color:#5b5ff5;font-size:11.5px;font-weight:700">{{ q.topic }}</span>
+          <span style="margin-left:auto;font-family:'Space Grotesk';font-size:12px;color:var(--muted-2);font-weight:600">Q{{ human.qi }} / {{ total }}</span>
+        </div>
+        <h2 style="margin:0;font-size:20px;font-weight:800;line-height:1.3">{{ q.title }}</h2>
+      </div>
+      <div style="padding:18px 22px;display:flex;flex-direction:column;gap:15px">
+        <p style="margin:0;font-size:14px;line-height:1.7;color:var(--text)">{{ q.prompt }}</p>
+        <div style="padding:16px 18px;border-radius:14px;background:var(--surface-2);border:1px solid #edecf6;font-family:'Newsreader',Georgia,serif;font-size:17px;color:var(--text);text-align:center;line-height:1.7">{{ q.formula }}</div>
+        <div>
+          <button type="button" onClick="{{ toggleHints }}" style="display:inline-flex;align-items:center;gap:8px;padding:8px 13px;border-radius:11px;background:#fff8ec;border:1px solid #ffe6bd;color:#a35c07;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer"><span style="width:15px;height:15px;display:inline-flex">{{ bulbIcon }}</span> {{ hintLabel }}</button>
+          <sc-if value="{{ showHints }}">
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ q.hints }}" as="h" hint-placeholder-count="2"><div style="display:flex;gap:9px;padding:11px 13px;border-radius:12px;background:#fffaf0;border:1px solid #ffe9c9"><span style="font-family:'Space Grotesk';font-weight:700;color:#d98a1f;font-size:12px;flex:0 0 auto">{{ h.n }}</span><span style="font-size:12.5px;color:#7a5a2a;line-height:1.55">{{ h.t }}</span></div></sc-for>
+          </div>
+          </sc-if>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;padding-top:6px;border-top:1px solid var(--border)">
+          <span style="font-size:11px;color:#a9a8c4;font-weight:700;letter-spacing:.08em;margin-right:2px">考点</span>
+          <sc-for list="{{ q.tags }}" as="t" hint-placeholder-count="3"><span style="padding:4px 10px;border-radius:9px;background:var(--track);color:var(--muted);font-size:11.5px;font-weight:600">{{ t }}</span></sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35);overflow:hidden">
+        <div style="display:flex;gap:4px;padding:6px;background:#f4f3fb">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3"><button type="button" onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+        </div>
+
+        <sc-if value="{{ isVoice }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:10px;max-height:230px;overflow-y:auto">
+            <sc-for list="{{ q.transcript }}" as="m" hint-placeholder-count="4">
+              <div style="{{ m.rowStyle }}">
+                <div style="{{ m.bubbleStyle }}">{{ m.text }}</div>
+                <div style="{{ m.metaStyle }}">{{ m.who }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:15px;background:var(--surface-3);border:1px solid var(--border)">
+            <button type="button" onClick="{{ toggleRec }}" style="{{ micStyle }}"><span style="width:20px;height:20px;display:inline-flex">{{ micIcon }}</span></button>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700">{{ recLabel }}</div>
+              <sc-if value="{{ recording }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:flex-end;gap:3px;height:22px;margin-top:5px">
+                <sc-for list="{{ waves }}" as="w" hint-placeholder-count="9"><span style="{{ w }}"></span></sc-for>
+              </div>
+              </sc-if>
+              <sc-if value="{{ notRecording }}"><div style="font-size:11.5px;color:var(--muted-2);font-weight:500;margin-top:2px">点击麦克风开始作答，AI 将实时转写并评分</div></sc-if>
+            </div>
+            <span style="font-family:'Space Grotesk';font-size:12.5px;color:var(--muted-2);font-weight:600">{{ recTime }}</span>
+          </div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ isCode }}">
+        <div style="padding:14px 16px">
+          <div style="border-radius:13px;overflow:hidden;border:1px solid #26253f;background:#1c1b30;font-family:'Space Grotesk','SF Mono',ui-monospace,monospace">
+            <div style="display:flex;align-items:center;gap:6px;padding:9px 13px;background:#26253f"><span style="width:10px;height:10px;border-radius:50%;background:#ff6058"></span><span style="width:10px;height:10px;border-radius:50%;background:#ffbd2e"></span><span style="width:10px;height:10px;border-radius:50%;background:#28c840"></span><span style="margin-left:8px;font-size:11px;color:#8f8db8">solution.py</span></div>
+            <div style="padding:14px 16px;font-size:13px;line-height:1.85;color:#cdd6f4">
+              <div><span style="color:#c792ea">def</span> <span style="color:#82aaff">max_dice_ev</span>():</div>
+              <div style="padding-left:20px"><span style="color:#7a88b8"># E[max] = Σ x·P(max=x)</span></div>
+              <div style="padding-left:20px">total = <span style="color:#f78c6c">0</span></div>
+              <div style="padding-left:20px"><span style="color:#c792ea">for</span> x <span style="color:#c792ea">in</span> <span style="color:#82aaff">range</span>(<span style="color:#f78c6c">1</span>, <span style="color:#f78c6c">7</span>):</div>
+              <div style="padding-left:40px">p = (<span style="color:#f78c6c">2</span>*x<span style="color:#89ddff">-</span><span style="color:#f78c6c">1</span>) <span style="color:#89ddff">/</span> <span style="color:#f78c6c">36</span></div>
+              <div style="padding-left:40px">total <span style="color:#89ddff">+=</span> x <span style="color:#89ddff">*</span> p</div>
+              <div style="padding-left:20px"><span style="color:#c792ea">return</span> total  <span style="color:#7a88b8"># 4.472</span></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:9px;margin-top:11px"><button type="button" style="padding:9px 16px;border:none;border-radius:11px;background:#5b5ff5;color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer">运行</button><button type="button" style="padding:9px 16px;border-radius:11px;background:var(--surface);border:1px solid #e0dffb;color:#5b5ff5;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer">重置</button><span style="margin-left:auto;align-self:center;font-size:12px;color:#0f9d63;font-weight:700">✓ 输出 4.472</span></div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ isBoard }}">
+        <div style="padding:14px 16px"><div style="height:210px;border-radius:14px;background:repeating-linear-gradient(0deg,#fbfbfd,#fbfbfd 23px,#eef0f6 24px),repeating-linear-gradient(90deg,#fbfbfd,#fbfbfd 23px,#eef0f6 24px);border:1px dashed #d9d8ec;display:grid;place-items:center;color:var(--muted-2);font-size:12.5px;font-weight:600">白板 · 拖动书写推导过程</div></div>
+        </sc-if>
+      </div>
+
+      <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35);padding:18px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <img src="assets/avatar-focused-v2.png" alt="" style="width:34px;height:34px">
+          <div style="flex:1"><div style="font-size:14px;font-weight:800">AI 面试官反馈</div><div style="font-size:11.5px;color:var(--muted-2);font-weight:600">实时评估 · 仅你可见</div></div>
+          <div style="text-align:right"><div style="font-family:'Space Grotesk';font-weight:700;font-size:22px;color:#5b5ff5">{{ q.score }}</div><div style="font-size:10.5px;color:var(--muted-2);font-weight:600">综合评分</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <sc-for list="{{ q.rubric }}" as="r" hint-placeholder-count="4">
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:5px"><span style="color:var(--text-2)">{{ r.name }}</span><span style="font-family:'Space Grotesk';color:var(--muted)">{{ r.val }}</span></div>
+              <div style="height:7px;border-radius:20px;background:var(--track);overflow:hidden"><div style="{{ r.barStyle }}"></div></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="margin-top:13px;padding:12px 14px;border-radius:13px;background:var(--surface);border:1px solid var(--border);font-size:12.5px;line-height:1.6;color:var(--muted)"><span style="font-weight:700;color:#5b5ff5">建议 · </span>{{ q.tip }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px">
+    <button type="button" onClick="{{ prev }}" style="{{ prevStyle }}">← 上一题</button>
+    <button type="button" onClick="{{ next }}" style="flex:1;padding:14px;border:none;border-radius:15px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(3px);box-shadow:0 1px 0 #3f39c9">{{ nextLabel }}</button>
+    <button type="button" onClick="{{ finish }}" style="padding:14px 18px;border-radius:15px;background:var(--surface);border:1.5px solid #e0dffb;color:#5b5ff5;font-family:inherit;font-weight:700;cursor:pointer">结束并查看报告</button>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { qi:0, tab:'voice', recording:false, showHints:false, secs:15*60, recSecs:0 };
+
+  componentDidMount(){ this._t=setInterval(()=>{ this.setState(s=>({ secs:Math.max(0,s.secs-1), recSecs: s.recording? s.recSecs+1 : s.recSecs })); },1000); }
+  componentWillUnmount(){ if(this._t) clearInterval(this._t); }
+
+  icon(name){
+    const R=React.createElement;
+    const w=(ch)=>R('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.9,strokeLinecap:'round',strokeLinejoin:'round',style:{width:'100%',height:'100%',display:'block'}},ch);
+    const P=(d)=>R('path',{d,key:d.slice(0,6)});
+    if(name==='exit') return w([P('M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3'),P('M10 17l-5-5 5-5'),P('M5 12h11')]);
+    if(name==='clock') return w([R('circle',{cx:12,cy:12,r:9,key:'c'}),P('M12 7v5l3 2')]);
+    if(name==='bulb') return w([P('M9 18h6'),P('M10 21h4'),P('M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.2 1 2h6c0-.8.3-1.3 1-2A6 6 0 0 0 12 3z')]);
+    if(name==='mic') return w([R('rect',{x:9,y:3,width:6,height:11,rx:3,key:'r'}),P('M6 11a6 6 0 0 0 12 0'),P('M12 17v4')]);
+    return w([R('circle',{cx:12,cy:12,r:8,key:'c'})]);
+  }
+
+  data(){
+    return [
+      { company:'Optiver', diff:'Medium', topic:'概率 · 期望', score:'8.4',
+        title:'掷两颗均匀骰子，其最大值的期望是多少？',
+        prompt:'口头推导即可，随后请把思路写成代码验证。注意先给出分布，再求期望，并说明与「最小值期望」的对称关系。',
+        formula:'E[max] = Σ x · P(max = x),  P(max = x) = (2x − 1) / 36',
+        hints:[{n:'1',t:'先求 P(max ≤ x) = (x/6)²，再差分得到 P(max = x)。'},{n:'2',t:'E[max] + E[min] = 7（对称），可交叉验证。'}],
+        tags:['分布函数','期望','对称性'],
+        transcript:[
+          {who:'AI 面试官',text:'请先描述最大值的分布，再计算期望。',me:false},
+          {who:'你',text:'P(max ≤ x) = (x/6)²，所以 P(max = x) = (2x−1)/36。',me:true},
+          {who:'AI 面试官',text:'很好，那期望是多少？',me:false},
+          {who:'你',text:'Σ x(2x−1)/36 = 161/36 ≈ 4.47。',me:true},
+        ],
+        rubric:[['结构化思维',88],['概率直觉',82],['表达清晰度',79],['计算准确度',92]],
+        tip:'开口前先花 5 秒说明「我打算先求分布再求期望」，面试官会更容易跟上你的思路。' },
+      { company:'Jane Street', diff:'Hard', topic:'脑筋急转弯', score:'7.6',
+        title:'醉酒乘客：第 100 位乘客坐到自己座位的概率？',
+        prompt:'100 名乘客对号入座，第 1 位喝醉随机坐；此后每人若座位空着就坐自己的，否则随机。求第 100 位坐到自己座位的概率。',
+        formula:'P(第 100 位坐对) = 1 / 2',
+        hints:[{n:'1',t:'关注 1 号座与 100 号座——最终只会有这两种结局。'},{n:'2',t:'用对称性论证，而非枚举。'}],
+        tags:['对称性','递归','不变量'],
+        transcript:[
+          {who:'AI 面试官',text:'不要枚举，试着用对称性说明。',me:false},
+          {who:'你',text:'任何冲突最终都在 1 号座和 100 号座之间二选一，二者等概率。',me:true},
+          {who:'AI 面试官',text:'为什么是等概率？',me:false},
+          {who:'你',text:'第一个「随机坐」的人首次碰到 1 号或 100 号时对称，所以是 1/2。',me:true},
+        ],
+        rubric:[['结构化思维',80],['概率直觉',86],['表达清晰度',72],['计算准确度',78]],
+        tip:'你抓到了对称性，但论证可以更完整：明确指出「谁」在做那个对称选择。' },
+      { company:'Citadel', diff:'Medium', topic:'市场 · 衍生品', score:'8.1',
+        title:'用 Black–Scholes 给欧式看涨定价，Delta 是什么？',
+        prompt:'写出 BS 看涨公式，解释各项含义；说明 Delta 的定义与对冲意义，以及它随标的价格如何变化。',
+        formula:'C = S·N(d₁) − K·e^(−rT)·N(d₂),   Δ = ∂C/∂S = N(d₁)',
+        hints:[{n:'1',t:'Delta = N(d₁)，介于 0 和 1 之间。'},{n:'2',t:'Delta 对冲：持有 −Δ 份标的可局部中性化价格风险。'}],
+        tags:['Black–Scholes','Delta 对冲','风险中性'],
+        transcript:[
+          {who:'AI 面试官',text:'先写出看涨的定价公式。',me:false},
+          {who:'你',text:'C = S·N(d₁) − K·e^(−rT)·N(d₂)。',me:true},
+          {who:'AI 面试官',text:'Delta 呢？它随 S 怎么变？',me:false},
+          {who:'你',text:'Δ = N(d₁)，S 上升时 Δ 趋近 1，深度虚值趋近 0。',me:true},
+        ],
+        rubric:[['结构化思维',84],['金融直觉',85],['表达清晰度',80],['计算准确度',83]],
+        tip:'补一句「Gamma 衡量 Delta 的变化率」，能体现你对希腊字母体系的整体理解。' },
+    ];
+  }
+
+  set(k,v){ this.setState({[k]:v}); }
+  toggleRec(){ this.setState(s=>({ recording:!s.recording, recSecs: s.recording? s.recSecs : 0 })); }
+  go(d){
+    if(d>0 && this.state.qi>=this.data().length-1){ this.submitRound(); return; }
+    this.setState(s=>{ const qi=Math.min(this.data().length-1,Math.max(0,s.qi+d)); return { qi, showHints:false, recording:false, recSecs:0 }; });
+  }
+
+  submitRound(){
+    if(!window.QG) return;
+    if(this._submitted){ QG.toast('本轮已提交', { sub:'评分报告已在总览同步' }); return; }
+    this._submitted=true;
+    QG.award(60, '模拟面试 Round 完成', { sub:'3 题 · 平均评分 8.0' });
+    QG.setPlan('mock','done');
+    setTimeout(()=>QG.celebrate({ kicker:'ROUND CLEAR', title:'模拟面试完成', sub:'评分报告已生成 · 计划看板已自动更新', img:'assets/mascot-interview.png', cta:'继续训练' }), 500);
+  }
+
+  renderVals(){
+    const S=this.state;
+    const arr=this.data();
+    const q0=arr[S.qi];
+    const diffMap={Easy:['#0f9d63','#e3f7ee'],Medium:['#b3610a','#fff3dd'],Hard:['#d0524b','#fdeceb']}[q0.diff];
+    const q={ company:q0.company, topic:q0.topic, title:q0.title, prompt:q0.prompt, formula:q0.formula,
+      score:q0.score, tip:q0.tip, tags:q0.tags, hints:q0.hints,
+      diffLabel:({Easy:'简单',Medium:'中等',Hard:'困难'})[q0.diff],
+      diffStyle:'display:inline-flex;padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:700;color:'+diffMap[0]+';background:'+diffMap[1],
+      transcript:q0.transcript.map(m=>({ text:m.text, who:m.who,
+        rowStyle:'display:flex;flex-direction:column;align-items:'+(m.me?'flex-end':'flex-start')+';gap:3px',
+        bubbleStyle:'max-width:85%;padding:10px 13px;border-radius:14px;font-size:12.5px;line-height:1.5;'+(m.me?'background:linear-gradient(135deg,#5b5ff5,#7d6cff);color:#fff;border-bottom-right-radius:4px':'background:var(--track);color:#3f3e5e;border-bottom-left-radius:4px'),
+        metaStyle:'font-size:10px;color:var(--muted-2);font-weight:600;padding:0 4px' })),
+      rubric:q0.rubric.map(r=>({ name:r[0], val:r[1], barStyle:'height:100%;width:'+r[1]+'%;border-radius:20px;background:linear-gradient(90deg,'+(r[1]>=85?'#16a06a,#54dd9b':r[1]>=75?'#5b5ff5,#8a7bff':'#ff9f2e,#ffbf5e')+')' })),
+    };
+
+    const tab=(id,label)=>({ label, onClick:()=>this.set('tab',id), style:'flex:1;padding:9px;border:none;border-radius:10px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .14s ease;'+(S.tab===id?'background:var(--surface);color:#5b5ff5;box-shadow:0 2px 8px -3px rgba(74,67,214,.4)':'background:transparent;color:var(--muted)') });
+    const tabs=[tab('voice','语音转写'),tab('code','代码'),tab('board','白板')];
+
+    const waves=[6,14,20,10,18,8,16,12,7].map((h,i)=>'width:4px;border-radius:3px;background:#5b5ff5;height:'+h+'px;animation:miWave '+(0.7+i*0.07)+'s ease-in-out infinite;animation-delay:'+(i*0.05)+'s');
+
+    const mm=(s)=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+    const dots=arr.map((_,i)=>({ n:i+1, style:'display:grid;place-items:center;width:24px;height:24px;border-radius:50%;font-family:'+"'Space Grotesk'"+';font-size:12px;font-weight:700;'+(i===S.qi?'background:var(--surface);color:#2d2a5c':i<S.qi?'background:rgba(84,221,155,.25);color:#8ff0c0':'background:rgba(255,255,255,.1);color:#a5a3d4') }));
+
+    const low=S.secs<=120;
+    return {
+      exitIcon:this.icon('exit'), clockIcon:this.icon('clock'), bulbIcon:this.icon('bulb'), micIcon:this.icon('mic'),
+      dots, q, total:arr.length, human:{qi:S.qi+1},
+      clock:mm(S.secs),
+      timerStyle:'display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:12px;border:1px solid '+(low?'rgba(255,140,130,.5)':'rgba(255,255,255,.14)')+';background:'+(low?'rgba(208,82,75,.25)':'rgba(255,255,255,.1)')+';color:'+(low?'#ffc7c2':'#fff'),
+      tabs, isVoice:S.tab==='voice', isCode:S.tab==='code', isBoard:S.tab==='board',
+      toggleHints:()=>this.set('showHints',!S.showHints), showHints:S.showHints, hintLabel:S.showHints?'收起提示':'查看提示',
+      toggleRec:()=>this.toggleRec(), recording:S.recording, notRecording:!S.recording,
+      recLabel:S.recording?'正在聆听…':'开始作答',
+      recTime:mm(S.recSecs),
+      micStyle:'display:grid;place-items:center;width:46px;height:46px;border-radius:50%;border:none;cursor:pointer;flex:0 0 auto;color:#fff;transition:all .15s ease;'+(S.recording?'background:#d0524b;animation:miPulse 1.4s ease-in-out infinite':'background:#5b5ff5'),
+      waves,
+      prev:()=>this.go(-1), next:()=>this.go(1),
+      prevStyle:'padding:14px 18px;border-radius:15px;background:var(--surface);border:1.5px solid '+(S.qi===0?'var(--border)':'#e0dffb')+';color:'+(S.qi===0?'#c3c2d8':'#5b5ff5')+';font-family:inherit;font-weight:700;cursor:'+(S.qi===0?'default':'pointer'),
+      nextLabel:S.qi>=arr.length-1?'提交本轮':'下一题 →',
+      finish:()=>this.submitRound(),
+    };
+  }
+}
+</script>
+</body>
+</html>

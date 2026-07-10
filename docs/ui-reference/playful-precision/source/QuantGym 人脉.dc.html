@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+</style>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><circle cx="30" cy="34" r="9" fill="#fff"/><circle cx="70" cy="34" r="9" fill="#fff"/><circle cx="50" cy="68" r="9" fill="#fff"/><path d="M34 40l14 22M66 40L52 62M38 34h24" stroke="#fff" stroke-width="4"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:#e3f7ee;color:#0f9d63;font-size:11.5px;font-weight:700;margin-bottom:10px">COMMUNITY · 人脉</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">人脉 <span style="color:#5b5ff5">Network</span></h1>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">同路的量化人 · 校友 / 同题库 / 目标公司 · 找到内推与学习搭子</p>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="padding:11px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04)"><div style="font-size:11px;color:var(--muted-2);font-weight:600">我的人脉</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:20px">128</div></div>
+      <div style="padding:11px 16px;border-radius:16px;background:linear-gradient(150deg,#eef0ff,#f6f0ff);border:1px solid #e0dffb"><div style="font-size:11px;color:#7a79b8;font-weight:600">可内推</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:20px;color:#5b5ff5">17</div></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start">
+    <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:18px;overflow:hidden">
+      <div style="font-size:13.5px;font-weight:800;margin-bottom:6px">关系图谱</div>
+      <div style="position:relative;height:340px">
+        <svg viewBox="0 0 400 340" style="position:absolute;inset:0;width:100%;height:100%">
+          <sc-for list="{{ edges }}" as="e" hint-placeholder-count="6"><line x1="200" y1="170" x2="{{ e.x }}" y2="{{ e.y }}" stroke="{{ e.color }}" stroke-width="{{ e.w }}"></line></sc-for>
+        </svg>
+        <sc-for list="{{ graphNodes }}" as="n" hint-placeholder-count="6">
+          <div style="{{ n.wrapStyle }}">
+            <div style="{{ n.avaStyle }}">{{ n.init }}</div>
+            <div style="font-size:10.5px;font-weight:700;text-align:center;margin-top:4px;white-space:nowrap;color:var(--text-2)">{{ n.name }}</div>
+          </div>
+        </sc-for>
+        <div style="position:absolute;top:170px;left:200px;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;z-index:2">
+          <div style="width:66px;height:66px;border-radius:20px;overflow:hidden;box-shadow:0 12px 26px -10px rgba(91,95,245,.7);border:3px solid #fff"><img src="assets/avatar-happy-v2.png" alt="" style="width:100%;height:100%;object-fit:cover;background:var(--brand-soft)"></div>
+          <div style="margin-top:5px;padding:3px 11px;border-radius:20px;background:#5b5ff5;color:#fff;font-size:11px;font-weight:700">你 · Quant</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ chips }}" as="c" hint-placeholder-count="4"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+      </div>
+      <sc-for list="{{ people }}" as="p" hint-placeholder-count="5">
+        <div style="display:flex;align-items:center;gap:13px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04);padding:14px 16px">
+          <div style="{{ p.avaStyle }}">{{ p.init }}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:7px"><span style="font-size:14px;font-weight:800">{{ p.name }}</span><span style="{{ p.tagStyle }}">{{ p.tag }}</span></div>
+            <div style="font-size:12px;color:var(--muted);font-weight:600;margin-top:1px">{{ p.role }} · {{ p.company }}</div>
+            <div style="font-size:11px;color:var(--muted-3);font-weight:600;margin-top:3px">{{ p.mutual }} 位共同好友 · {{ p.note }}</div>
+          </div>
+          <button type="button" onClick="{{ p.onClick }}" style="{{ p.btnStyle }}">{{ p.btnLabel }}</button>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { filter:'all', connected:{} };
+
+  renderVals(){
+    const S=this.state;
+
+    const gDefs=[
+      {init:'AC',name:'Ari Chen',ang:-90,r:120,c:'#b3610a',w:3},
+      {init:'MP',name:'Mina',ang:-30,r:135,c:'#5b5ff5',w:2.5},
+      {init:'SK',name:'Sofia',ang:30,r:115,c:'#0f9d63',w:2},
+      {init:'LW',name:'Leo',ang:90,r:130,c:'#2f9be0',w:2.5},
+      {init:'DI',name:'Dan',ang:150,r:120,c:'#8a63e8',w:1.5},
+      {init:'NR',name:'Nora',ang:210,r:132,c:'#d0524b',w:2},
+    ];
+    const cx=200, cy=170;
+    const pos=gDefs.map(g=>{ const a=g.ang*Math.PI/180; return { x:cx+Math.cos(a)*g.r, y:cy+Math.sin(a)*g.r, ...g }; });
+    const edges=pos.map(p=>({ x:p.x.toFixed(0), y:p.y.toFixed(0), color:p.c+'55', w:p.w }));
+    const graphNodes=pos.map(p=>({
+      init:p.init, name:p.name,
+      wrapStyle:'position:absolute;top:'+p.y.toFixed(0)+'px;left:'+p.x.toFixed(0)+'px;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;z-index:1',
+      avaStyle:"display:grid;place-items:center;width:44px;height:44px;border-radius:14px;font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#fff;box-shadow:0 8px 18px -8px rgba(27,26,56,.4);border:2px solid #fff;background:"+p.c,
+    }));
+
+    const chips=[['all','全部'],['alumni','校友'],['company','目标公司'],['bank','同题库']].map(c=>({
+      label:c[1], onClick:()=>this.setState({filter:c[0]}),
+      style:'padding:8px 14px;border-radius:11px;font-family:inherit;font-size:12.5px;font-weight:700;cursor:pointer;border:1px solid '+(S.filter===c[0]?'transparent':'var(--border)')+';background:'+(S.filter===c[0]?'#16a06a':'var(--surface)')+';color:'+(S.filter===c[0]?'#fff':'var(--muted)'),
+    }));
+
+    const pDefs=[
+      {id:'p1',init:'AC',name:'Ari Chen',c:'#b3610a',role:'Trader I',company:'Optiver',mutual:12,note:'同为速算冲刺小组',tag:'可内推',tc:'#0f9d63',tb:'#e3f7ee',cat:'company'},
+      {id:'p2',init:'MP',name:'Mina Patel',c:'#5b5ff5',role:'Analyst III',company:'Jane Street',mutual:8,note:'刷同一份概率题单',tag:'活跃',tc:'#5b5ff5',tb:'#eef0ff',cat:'bank'},
+      {id:'p3',init:'SK',name:'Sofia Kim',c:'#0f9d63',role:'Analyst II',company:'Citadel',mutual:15,note:'交大金融工程校友',tag:'校友',tc:'#b3610a',tb:'#fff3dd',cat:'alumni'},
+      {id:'p4',init:'RW',name:'Rui Wu',c:'#8a63e8',role:'PhD 在读',company:'MIT',mutual:5,note:'研究随机最优控制',tag:'校友',tc:'#b3610a',tb:'#fff3dd',cat:'alumni'},
+      {id:'p5',init:'JT',name:'Jamie Tan',c:'#2f9be0',role:'Quant Dev',company:'IMC',mutual:9,note:'可帮内推暑期实习',tag:'可内推',tc:'#0f9d63',tb:'#e3f7ee',cat:'company'},
+    ];
+    const people=pDefs.filter(p=>S.filter==='all'||p.cat===S.filter).map(p=>{
+      const on=S.connected[p.id];
+      return {
+        init:p.init, name:p.name, role:p.role, company:p.company, mutual:p.mutual, note:p.note, tag:p.tag,
+        avaStyle:"display:grid;place-items:center;width:48px;height:48px;border-radius:14px;flex:0 0 auto;font-family:'Space Grotesk';font-weight:700;font-size:15px;color:#fff;background:"+p.c,
+        tagStyle:'padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;color:'+p.tc+';background:'+p.tb,
+        onClick:()=>this.setState(s=>({connected:{...s.connected,[p.id]:!s.connected[p.id]}})),
+        btnLabel:on?'已连接':'＋ 连接',
+        btnStyle:'padding:9px 15px;border-radius:12px;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;flex:0 0 auto;'+(on?'background:#e3f7ee;color:#0f9d63;border:1px solid #cdeede':'background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;border:none;box-shadow:0 3px 0 #3f39c9'),
+      };
+    });
+
+    return { edges, graphNodes, chips, people };
+  }
+}
+</script>
+</body>
+</html>
