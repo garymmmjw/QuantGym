@@ -486,6 +486,67 @@ test("detects domain DOM calls through nested member chains", async () => {
   });
 });
 
+test("detects document member access without requiring a call", async () => {
+  await withFixture({
+    "src/domains/training/document-method-alias.ts": [
+      "const select = document.querySelector;",
+      "void select;",
+    ].join("\n"),
+    "src/domains/training/document-body-read.ts": [
+      "const body = document.body;",
+      "void body;",
+    ].join("\n"),
+    "src/domains/training/document-title-assignment.ts": [
+      'const value = "QuantGym";',
+      "document.title = value;",
+    ].join("\n"),
+    "src/domains/training/document-optional-read.ts": [
+      "const dataset = document?.body?.dataset;",
+      "void dataset;",
+    ].join("\n"),
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), [
+      {
+        file: "src/domains/training/document-body-read.ts",
+        rule: "domainDom",
+        evidence: "document.",
+      },
+      {
+        file: "src/domains/training/document-method-alias.ts",
+        rule: "domainDom",
+        evidence: "document.",
+      },
+      {
+        file: "src/domains/training/document-optional-read.ts",
+        rule: "domainDom",
+        evidence: "document.",
+      },
+      {
+        file: "src/domains/training/document-title-assignment.ts",
+        rule: "domainDom",
+        evidence: "document.",
+      },
+    ]);
+  });
+});
+
+test("keeps the window DOM rule scoped to addEventListener calls", async () => {
+  await withFixture({
+    "src/domains/training/window-members.ts": [
+      "const width = window.innerWidth;",
+      "window.removeEventListener('resize', () => {});",
+      "void width;",
+    ].join("\n"),
+    "src/domains/training/window-listener.ts": "window.addEventListener('resize', () => {});\n",
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), [{
+      file: "src/domains/training/window-listener.ts",
+      rule: "domainDom",
+      evidence: "window.addEventListener(",
+    }]);
+  });
+});
+
 test("recognizes legacy identifiers used as JSX element names", async () => {
   await withFixture({
     "src/core/legacy-provider.tsx": [
@@ -498,6 +559,29 @@ test("recognizes legacy identifiers used as JSX element names", async () => {
       file: "src/core/legacy-provider.tsx",
       rule: "legacySymbol",
       evidence: "AppServicesContext",
+    }]);
+  });
+});
+
+test("recognizes private legacy identifiers without matching property strings", async () => {
+  await withFixture({
+    "src/core/private-legacy.ts": [
+      "class Cache {",
+      "  #storeBridge = null;",
+      "  read() { return this.#storeBridge; }",
+      "}",
+      "void Cache;",
+    ].join("\n"),
+    "src/core/property-strings.ts": [
+      'const values = { "storeBridge": true, "#storeBridge": true };',
+      'const selected = values["storeBridge"];',
+      "void selected;",
+    ].join("\n"),
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), [{
+      file: "src/core/private-legacy.ts",
+      rule: "legacySymbol",
+      evidence: "storeBridge",
     }]);
   });
 });

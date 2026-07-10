@@ -115,7 +115,10 @@ const analyzeAst = (source, file) => {
       if (specifier !== null) specifiers.push(specifier);
     }
 
-    if (["Identifier", "JSXIdentifier"].includes(node.type) && LEGACY_IDENTIFIERS.has(node.name)) {
+    if (
+      ["Identifier", "JSXIdentifier", "PrivateIdentifier"].includes(node.type)
+      && LEGACY_IDENTIFIERS.has(node.name)
+    ) {
       addViolation("legacySymbol", node.name);
     }
 
@@ -125,6 +128,16 @@ const analyzeAst = (source, file) => {
     if (node.type === "TemplateLiteral") {
       const value = staticStringValue(node);
       if (value?.startsWith("quantgym:")) addViolation("eventBus", JSON.stringify(value));
+    }
+
+    if (file.startsWith("src/domains/") && node.type === "MemberExpression") {
+      const memberName = memberExpressionName(node);
+      if (
+        memberName?.startsWith("document.")
+        || memberName?.startsWith("window.document.")
+      ) {
+        addViolation("domainDom", "document.");
+      }
     }
 
     if (node.type !== "CallExpression") return;
@@ -137,15 +150,6 @@ const analyzeAst = (source, file) => {
     if (identifierCallee === "fetch") addViolation("directFetch", "fetch(");
     if (["window.fetch", "globalThis.fetch"].includes(memberCallee)) {
       addViolation("directFetch", `${memberCallee}(`);
-    }
-    if (
-      file.startsWith("src/domains/")
-      && (
-        memberCallee?.startsWith("document.")
-        || memberCallee?.startsWith("window.document.")
-      )
-    ) {
-      addViolation("domainDom", "document.");
     }
     if (file.startsWith("src/domains/") && memberCallee === "window.addEventListener") {
       addViolation("domainDom", "window.addEventListener(");
