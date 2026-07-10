@@ -1657,6 +1657,7 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-collections-hea
 
 body.is-authenticated .app-route-root .qg-problems-page .problem-collection-grid {
   display: grid;
+  grid-template-columns: none;
   grid-auto-flow: column;
   grid-auto-columns: minmax(210px, 1fr);
   gap: 10px;
@@ -1667,14 +1668,123 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-collection-grid
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .problem-collection-card {
+  --collection-accent: var(--qg-brand);
+  grid-template-columns: 44px minmax(0, 1fr) 34px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  aspect-ratio: auto;
   min-height: 92px;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface-2);
+  color: var(--qg-text);
+  box-shadow: none;
   scroll-snap-align: start;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-card.active {
+  border-color: var(--qg-brand);
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-art {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-art span {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-copy {
+  gap: 4px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-copy em {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-copy strong,
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-bottom > span strong {
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-copy small,
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-bottom,
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-bottom small {
+  color: var(--qg-muted);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-card.active .problem-collection-copy strong,
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-card.active .problem-collection-bottom > span strong {
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-bottom {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  gap: 6px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-bottom > i {
+  background: var(--qg-surface-3);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-bottom > i span {
+  background: var(--qg-brand);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-go {
+  position: static;
+  grid-column: 3;
+  grid-row: 1;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+  color: var(--qg-brand-ink);
+  box-shadow: none;
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-list:not(.hidden) {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-item {
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface-2);
+  color: var(--qg-text);
+  box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-item.is-done {
+  border-color: var(--qg-brand);
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-main strong {
+  color: var(--qg-text);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-main span {
+  color: var(--qg-muted);
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .problem-browser-toolbar {
@@ -1709,6 +1819,24 @@ body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-done,
 body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-link {
   min-width: 44px;
   min-height: 44px;
+  border: 1px solid var(--qg-border);
+  background: var(--qg-surface);
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-done:hover,
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-done:focus-visible,
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-link:hover,
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-link:focus-visible {
+  border-color: var(--qg-brand);
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-item.is-done .leetcode-hot-done {
+  border-color: var(--qg-brand);
+  background: var(--qg-brand);
+  color: var(--qg-surface);
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .problem-view-tabs .segment:focus-visible,
