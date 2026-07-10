@@ -581,3 +581,160 @@ export function validateAcceptanceCatalog(catalog = {}, contract = {}) {
   }
   return [...new Set(failures)];
 }
+
+const normalizeRepoPath = (value) => String(value || "")
+  .replaceAll("\\", "/")
+  .replace(/^\.\/+/, "")
+  .replace(/\/{2,}/g, "/")
+  .replace(/\/$/, "");
+
+const isSafeRepoPattern = (value) => {
+  if (!isNonEmptyString(value)) return false;
+  const normalized = normalizeRepoPath(value);
+  return normalized.length > 0
+    && !normalized.startsWith("/")
+    && !/^[A-Za-z]:\//.test(normalized)
+    && !normalized.split("/").includes("..");
+};
+
+const repoPathContains = (parent, candidate) => (
+  candidate === parent || candidate.startsWith(`${parent}/`)
+);
+
+const globToRegExp = (glob) => {
+  const normalized = normalizeRepoPath(glob);
+  let pattern = "^";
+  for (let index = 0; index < normalized.length; index += 1) {
+    const character = normalized[index];
+    if (character === "*" && normalized[index + 1] === "*") {
+      pattern += ".*";
+      index += 1;
+    } else if (character === "*") {
+      pattern += "[^/]*";
+    } else if (character === "?") {
+      pattern += "[^/]";
+    } else {
+      pattern += character.replace(/[|\\{}()[\]^$+?.]/g, "\\$&");
+    }
+  }
+  return new RegExp(`${pattern}$`);
+};
+
+const validateNonEmptyStringArray = (value, label, failures, { paths = false } = {}) => {
+  if (!Array.isArray(value) || value.length === 0) {
+    failures.push(`${label} must be a non-empty array`);
+    return [];
+  }
+  const normalized = [];
+  for (const [index, item] of value.entries()) {
+    if (!isNonEmptyString(item)) {
+      failures.push(`${label}[${index}] must be a non-empty string`);
+      continue;
+    }
+    if (paths && !isSafeRepoPattern(item)) {
+      failures.push(`${label}[${index}] must be a safe repository-relative path`);
+      continue;
+    }
+    normalized.push(paths ? normalizeRepoPath(item) : item);
+  }
+  return normalized;
+};
+
+export function validateLegacyRemovalMap(removalMap = {}, trackedFiles = []) {
+  const failures = [];
+  if (removalMap.version !== 1) failures.push("legacy removal map version must be 1");
+  const legacyRoots = validateNonEmptyStringArray(
+    removalMap.legacyRoots,
+    "legacyRoots",
+    failures,
+    { paths: true },
+  );
+  if (new Set(legacyRoots).size !== legacyRoots.length) {
+    failures.push("legacyRoots must not contain duplicates");
+  }
+  if (!Array.isArray(removalMap.families) || removalMap.families.length === 0) {
+    failures.push("families must be a non-empty array");
+  }
+  if (!Array.isArray(trackedFiles)) failures.push("trackedFiles must be an array");
+
+  const families = (Array.isArray(removalMap.families) ? removalMap.families : []).map((family, index) => {
+    const label = isNonEmptyString(family?.id) ? family.id : `families[${index}]`;
+    if (!isNonEmptyString(family?.id)) failures.push(`${label} id must be a non-empty string`);
+    if (!Number.isInteger(family?.removeInPhase) || family.removeInPhase < 1 || family.removeInPhase > 6) {
+      failures.push(`${label} removeInPhase must be an integer from 1 through 6`);
+    }
+    if (!Number.isInteger(family?.priority)) failures.push(`${label} priority must be an integer`);
+    const globs = validateNonEmptyStringArray(family?.globs, `${label} globs`, failures, { paths: true });
+    const targetDomains = validateNonEmptyStringArray(
+      family?.targetDomains,
+      `${label} targetDomains`,
+      failures,
+    );
+    const replacementPaths = validateNonEmptyStringArray(
+      family?.replacementPaths,
+      `${label} replacementPaths`,
+      failures,
+      { paths: true },
+    );
+    const exitChecks = validateNonEmptyStringArray(family?.exitChecks, `${label} exitChecks`, failures);
+    return {
+      id: family?.id,
+      label,
+      priority: family?.priority,
+      globs,
+      targetDomains,
+      replacementPaths,
+      exitChecks,
+      matchers: globs.map(globToRegExp),
+    };
+  });
+  const familyIds = families.map(({ id }) => id).filter(isNonEmptyString);
+  for (const id of new Set(familyIds)) {
+    if (familyIds.filter((candidate) => candidate === id).length > 1) {
+      failures.push(`duplicate removal family id ${id}`);
+    }
+  }
+
+  const replacementPaths = families.flatMap((family) => family.replacementPaths);
+  const normalizedTrackedFiles = [...new Set(
+    (Array.isArray(trackedFiles) ? trackedFiles : [])
+      .filter(isNonEmptyString)
+      .map(normalizeRepoPath)
+      .filter(Boolean),
+  )].sort();
+  const trackedLegacyFiles = normalizedTrackedFiles.filter((file) => (
+    legacyRoots.some((legacyRoot) => repoPathContains(legacyRoot, file))
+    && !replacementPaths.some((replacementPath) => repoPathContains(replacementPath, file))
+  ));
+
+  const matchedByFamily = new Map(families.map((family) => [family, []]));
+  for (const file of trackedLegacyFiles) {
+    const matchingFamilies = families.filter((family) => (
+      family.matchers.some((matcher) => matcher.test(file))
+    ));
+    for (const family of matchingFamilies) matchedByFamily.get(family).push(file);
+    if (matchingFamilies.length === 0) {
+      failures.push(`${file} has no removal family owner`);
+      continue;
+    }
+    const validOwners = matchingFamilies.filter(({ priority }) => Number.isInteger(priority));
+    if (validOwners.length === 0) continue;
+    const highestPriority = Math.max(...validOwners.map(({ priority }) => priority));
+    const highestPriorityOwners = validOwners
+      .filter(({ priority }) => priority === highestPriority)
+      .map(({ label }) => label)
+      .sort();
+    if (highestPriorityOwners.length > 1) {
+      failures.push(
+        `${file} has tied highest-priority owners: ${highestPriorityOwners.join(", ")}`,
+      );
+    }
+  }
+
+  for (const family of families) {
+    if (matchedByFamily.get(family).length === 0) {
+      failures.push(`${family.label} matches no tracked legacy files`);
+    }
+  }
+  return [...new Set(failures)].sort();
+}

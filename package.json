@@ -18,6 +18,7 @@
     "check:migration-completion": "node scripts/check-migration-completion.mjs",
     "check:ui-contracts": "node scripts/check-ui-contracts.mjs",
     "check:frontend-upgrade-contracts": "node scripts/check-frontend-upgrade-contracts.mjs",
+    "check:frontend-v2-boundaries": "node scripts/check-frontend-v2-boundaries.mjs",
     "check:ui-redesign-foundation": "node scripts/check-ui-redesign-foundation.mjs",
     "check:ui-redesign-shell": "node scripts/check-ui-redesign-shell.mjs",
     "check:ui-redesign-growth": "node scripts/check-ui-redesign-growth.mjs",
