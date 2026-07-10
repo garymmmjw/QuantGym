@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 
 import {
   buildAcceptanceCatalog,
   validateAcceptanceCatalog,
+  validateApprovedAcceptancePolicy,
   validateDesignSystemContract,
   validateSurfaceContracts,
 } from "../scripts/lib/frontend-upgrade-contracts.mjs";
@@ -617,6 +622,25 @@ const independentFutureSharedStateIds = [
   "shared-state:network-recovery:permission-denied-retry",
 ];
 
+const independentSharedEvidenceRecords = Object.entries(independentSharedStatesBySurface)
+  .flatMap(([surfaceId, states]) => {
+    const surface = independentSurfaces.find((item) => item.id === surfaceId);
+    return states.map((state) => {
+      const id = `shared-state:${surfaceId.split(":")[1]}:${state}`;
+      const future = independentFutureSharedStateIds.includes(id);
+      return {
+        id,
+        surfaceId,
+        state,
+        acceptanceIds: future ? [surface.acceptanceChecks[2]] : surface.acceptanceChecks.slice(0, 2),
+        source: "docs/browser-audit-screenshots/370-frontend-upgrade-shared-state-baseline-summary.json",
+        expectedStatus: future ? "future-gate" : "legacy-baseline",
+        targetPhase: future ? 1 : 0,
+        ...(future ? { targetCommand: `npm run test:e2e:v2 -- --grep @${id}` } : {}),
+      };
+    });
+  });
+
 const cloneSurfaceContract = () => structuredClone(independentSurfaceContract);
 
 const surfaceById = (contract, surfaceId) => (
@@ -901,6 +925,7 @@ test("freezes the 150-case route matrix rule", () => {
 
 test("freezes 32 shared-state evidence cases with exactly six Phase 1 future gates", () => {
   const sharedStates = APPROVED_ACCEPTANCE_POLICY.evidenceCases.sharedStates;
+  assert.deepEqual(sharedStates, independentSharedEvidenceRecords);
   assert.equal(sharedStates.length, 32);
   assert.equal(new Set(sharedStates.map((item) => item.id)).size, 32);
   assert.deepEqual(
@@ -919,6 +944,29 @@ test("freezes 32 shared-state evidence cases with exactly six Phase 1 future gat
   assert.ok(sharedStates.filter((item) => item.expectedStatus === "legacy-baseline").every((item) => item.targetPhase === 0));
   assert.ok(sharedStates.filter((item) => item.expectedStatus === "future-gate").every((item) => item.targetPhase === 1));
 });
+
+const sharedEvidenceFieldMutations = [
+  ["surfaceId", (records) => { records[0].surfaceId = "system:desktop-shell"; }],
+  ["state", (records) => { records[0].state = "substituted-registration-state"; }],
+  ["acceptanceIds", (records) => { records[0].acceptanceIds = ["visual:substituted", "a11y:substituted"]; }],
+  ["source", (records) => { records[0].source = "docs/browser-audit-screenshots/substituted-summary.json"; }],
+  ["targetCommand", (records) => {
+    records.find((item) => item.expectedStatus === "future-gate").targetCommand = "npm run substituted-future-gate";
+  }],
+];
+
+for (const [field, mutate] of sharedEvidenceFieldMutations) {
+  test(`rejects a same-count shared-evidence ${field} substitution`, () => {
+    const invalid = structuredClone(APPROVED_ACCEPTANCE_POLICY);
+    mutate(invalid.evidenceCases.sharedStates);
+
+    const failures = validateApprovedAcceptancePolicy(invalid);
+    assert.ok(
+      failures.some((item) => item.includes(`shared-state evidence ${field} mismatch`)),
+      `expected a ${field} mismatch; got ${failures.join(" | ")}`,
+    );
+  });
+}
 
 test("freezes exact Phase 0 core-flow interactions and result locators for all 22 routes", () => {
   const coreFlows = APPROVED_ACCEPTANCE_POLICY.evidenceCases.coreFlows;
@@ -958,6 +1006,56 @@ test("builds and validates a deterministic catalog with exact status policy", ()
   assert.ok(first.entries
     .filter((item) => item.expectedStatus === "legacy-baseline")
     .every((item) => item.phase0Evidence !== null));
+});
+
+test("returns field-specific catalog diagnostics for noncanonical surface acceptance IDs", () => {
+  const invalidContract = cloneSurfaceContract();
+  surfaceById(invalidContract, "route:overview").acceptanceChecks[2] = "e2e:substituted-overview-journey";
+  const catalog = buildAcceptanceCatalog(independentSurfaceContract);
+  let failures;
+
+  assert.doesNotThrow(() => {
+    failures = validateAcceptanceCatalog(catalog, invalidContract);
+  });
+  assert.ok(failures.some((item) => item.includes("route:overview acceptanceChecks")));
+  assert.ok(failures.some((item) => item.includes("e2e:substituted-overview-journey")));
+});
+
+test("checker aggregates invalid surface acceptance and catalog diagnostics without crashing", async () => {
+  const repositoryRoot = fileURLToPath(new URL("../", import.meta.url));
+  const fixtureRoot = await mkdtemp(path.join(tmpdir(), "quantgym-contract-checker-"));
+  const invalidContract = cloneSurfaceContract();
+  surfaceById(invalidContract, "route:overview").acceptanceChecks[2] = "e2e:substituted-overview-journey";
+  const invalidCatalog = buildAcceptanceCatalog(independentSurfaceContract);
+  invalidCatalog.entries[0].targetPhase = 9;
+  const writeJson = async (relativePath, value) => {
+    const target = path.join(fixtureRoot, relativePath);
+    await mkdir(path.dirname(target), { recursive: true });
+    await writeFile(target, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  };
+
+  try {
+    await Promise.all([
+      writeJson("docs/frontend-upgrade/design-system-contract.json", validDesignSystem),
+      writeJson("docs/frontend-upgrade/phase-registry.json", independentPhaseRegistry),
+      writeJson("docs/frontend-upgrade/surface-contracts.json", invalidContract),
+      writeJson("docs/frontend-upgrade/acceptance-catalog.json", invalidCatalog),
+      writeJson("docs/ui-reference/playful-precision/source-manifest.json", designManifest),
+    ]);
+    const result = spawnSync(
+      process.execPath,
+      ["scripts/check-frontend-upgrade-contracts.mjs", "--root", fixtureRoot],
+      { cwd: repositoryRoot, encoding: "utf8" },
+    );
+
+    assert.equal(result.status, 1, `checker output:\n${result.stdout}\n${result.stderr}`);
+    assert.match(result.stderr, /FAIL: route:overview acceptanceChecks/);
+    assert.match(result.stderr, /FAIL: visual:auth:light-dark targetPhase mismatch/);
+    assert.match(result.stderr, /FAIL: .*e2e:substituted-overview-journey/);
+    assert.doesNotMatch(result.stderr, /Cannot build acceptance catalog/);
+  } finally {
+    await rm(fixtureRoot, { recursive: true, force: true });
+  }
 });
 
 test("prevents evidence-backed acceptance downgrade", () => {

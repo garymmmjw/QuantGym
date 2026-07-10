@@ -12,7 +12,14 @@ import { APPROVED_ACCEPTANCE_POLICY } from "./lib/frontend-upgrade-approved-acce
 import { APPROVED_MUTATION_INVENTORY } from "./lib/frontend-upgrade-approved-mutations.mjs";
 import { MODULE_MANIFEST } from "../src/modules/manifest.js";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const rootFlagIndex = process.argv.indexOf("--root");
+if (rootFlagIndex >= 0 && !process.argv[rootFlagIndex + 1]) {
+  throw new Error("--root requires a directory path");
+}
+const root = rootFlagIndex >= 0
+  ? path.resolve(process.argv[rootFlagIndex + 1])
+  : defaultRoot;
 const readJson = async (relativePath) => JSON.parse(
   await readFile(path.join(root, relativePath), "utf8"),
 );
@@ -26,11 +33,20 @@ const [designSystem, phaseRegistry, surfaceContract, acceptanceCatalog, designMa
 ]);
 
 const manifestIds = MODULE_MANIFEST.map((item) => item.id);
+const safelyValidate = (label, validate) => {
+  try {
+    return validate();
+  } catch (error) {
+    return [`${label} validation failed unexpectedly: ${error.message}`];
+  }
+};
 const failures = [
-  ...validateDesignSystemContract(designSystem),
-  ...validatePhaseRegistry(phaseRegistry, manifestIds),
-  ...validateSurfaceContracts(surfaceContract, phaseRegistry, designManifest, manifestIds),
-  ...validateAcceptanceCatalog(acceptanceCatalog, surfaceContract),
+  ...safelyValidate("design system", () => validateDesignSystemContract(designSystem)),
+  ...safelyValidate("phase registry", () => validatePhaseRegistry(phaseRegistry, manifestIds)),
+  ...safelyValidate("surface contracts", () => (
+    validateSurfaceContracts(surfaceContract, phaseRegistry, designManifest, manifestIds)
+  )),
+  ...safelyValidate("acceptance catalog", () => validateAcceptanceCatalog(acceptanceCatalog, surfaceContract)),
 ];
 
 if (failures.length > 0) {

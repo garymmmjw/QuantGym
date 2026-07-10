@@ -402,14 +402,43 @@ const targetCommandFor = (policyEntry) => {
   return `node scripts/check-browser-route-smoke.mjs --summary ${APPROVED_ACCEPTANCE_POLICY.evidenceCases.coreFlows[0].source}`;
 };
 
+const validateDeclaredSurfaceAcceptanceIds = (contract = {}) => {
+  const failures = [];
+  const expectedBySurfaceId = new Map(
+    CANONICAL_SURFACE_INVENTORY.map((surface) => [surface.id, surface.acceptanceChecks]),
+  );
+  for (const surface of Array.isArray(contract?.surfaces) ? contract.surfaces : []) {
+    const expectedIds = expectedBySurfaceId.get(surface?.id);
+    if (!expectedIds || !Array.isArray(surface?.acceptanceChecks)) continue;
+    for (const id of surface.acceptanceChecks) {
+      if (!expectedIds.includes(id)) {
+        failures.push(`${surface.id} acceptanceChecks contains unapproved ID ${id}`);
+      }
+    }
+    for (const id of expectedIds) {
+      if (!surface.acceptanceChecks.includes(id)) {
+        failures.push(`${surface.id} acceptanceChecks is missing approved ID ${id}`);
+      }
+    }
+  }
+  return failures;
+};
+
 export function buildAcceptanceCatalog(contract = {}) {
   const declaredIds = new Set((Array.isArray(contract?.surfaces) ? contract.surfaces : [])
     .flatMap((surface) => Array.isArray(surface?.acceptanceChecks) ? surface.acceptanceChecks : []));
   const policySurfaceIds = new Set(APPROVED_ACCEPTANCE_POLICY.catalogEntries
     .filter((item) => ["visual", "axe", "journey"].includes(item.kind))
     .map((item) => item.id));
-  if (declaredIds.size > 0 && !sortedJsonEqual([...declaredIds], [...policySurfaceIds])) {
-    throw new Error("Cannot build acceptance catalog from non-canonical surface acceptance IDs");
+  const details = validateDeclaredSurfaceAcceptanceIds(contract);
+  if (declaredIds.size > 0 && (
+    details.length > 0 || !sortedJsonEqual([...declaredIds], [...policySurfaceIds])
+  )) {
+    throw new Error(
+      details.length > 0
+        ? details.join("; ")
+        : "surface acceptance ID set does not match the approved policy",
+    );
   }
   return {
     version: 1,
@@ -462,6 +491,34 @@ export function validateApprovedAcceptancePolicy(policy = APPROVED_ACCEPTANCE_PO
   if (sharedStates.filter((item) => item.expectedStatus === "future-gate" && item.targetPhase === 1).length !== 6) {
     failures.push("approved shared-state evidence policy must contain six Phase 1 future gates");
   }
+  const canonicalSharedStates = APPROVED_ACCEPTANCE_POLICY.evidenceCases.sharedStates;
+  const sharedStateById = new Map(sharedStates.map((item) => [item?.id, item]));
+  const canonicalSharedStateById = new Map(canonicalSharedStates.map((item) => [item.id, item]));
+  if (!jsonEqual(sharedStates.map((item) => item?.id), canonicalSharedStates.map((item) => item.id))) {
+    failures.push("shared-state evidence ID order mismatch");
+  }
+  for (const expected of canonicalSharedStates) {
+    const actual = sharedStateById.get(expected.id);
+    if (!actual) {
+      failures.push(`missing shared-state evidence record ${expected.id}`);
+      continue;
+    }
+    for (const field of [
+      "surfaceId", "state", "acceptanceIds", "source", "expectedStatus", "targetPhase", "targetCommand",
+    ]) {
+      if (!canonicalJsonEqual(actual[field], expected[field])) {
+        failures.push(`shared-state evidence ${field} mismatch for ${expected.id}`);
+      }
+    }
+    if (!canonicalJsonEqual(actual, expected)) {
+      failures.push(`shared-state evidence record mismatch for ${expected.id}`);
+    }
+  }
+  for (const actual of sharedStates) {
+    if (isNonEmptyString(actual?.id) && !canonicalSharedStateById.has(actual.id)) {
+      failures.push(`orphan shared-state evidence record ${actual.id}`);
+    }
+  }
 
   const coreFlows = Array.isArray(policy?.evidenceCases?.coreFlows) ? policy.evidenceCases.coreFlows : [];
   if (coreFlows.length !== 22 || new Set(coreFlows.map((item) => item?.routeId)).size !== 22) {
@@ -491,7 +548,16 @@ export function validateAcceptanceCatalog(catalog = {}, contract = {}) {
   for (const id of new Set(actualIds)) {
     if (actualIds.filter((item) => item === id).length > 1) failures.push(`duplicate acceptance catalog id ${id}`);
   }
-  const expected = buildAcceptanceCatalog(contract);
+  let expected;
+  try {
+    expected = buildAcceptanceCatalog(contract);
+  } catch (error) {
+    const contractFailures = validateDeclaredSurfaceAcceptanceIds(contract);
+    failures.push(...(contractFailures.length > 0
+      ? contractFailures
+      : [`acceptance catalog contract mismatch: ${error.message}`]));
+    expected = buildAcceptanceCatalog();
+  }
   const expectedById = new Map(expected.entries.map((entry) => [entry.id, entry]));
   const actualById = new Map(entries.map((entry) => [entry?.id, entry]));
   for (const expectedEntry of expected.entries) {
