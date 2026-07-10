@@ -186,7 +186,7 @@ export function CompaniesPageContent() {
               : "Top market maker & fund profiles · interview style, hot topics, and open roles at a glance"}
           </small>
         </div>
-        <div id="companyTierFilter" className="segmented" role="tablist" aria-label={model.t("companyTierFilterAria")}>
+        <div id="companyTierFilter" className="segmented" role="group" aria-label={model.t("companyTierFilterAria")}>
           {TIERS.map((tier) => (
             <button
               key={tier}
@@ -194,7 +194,6 @@ export function CompaniesPageContent() {
               type="button"
               data-company-tier={tier}
               aria-pressed={model.tierFilter === tier}
-              aria-selected={model.tierFilter === tier}
               onClick={() => model.setTierFilter(tier)}
             >
               {tier === "all" ? model.t("allCompanies") : `Tier ${tier.toUpperCase()}`}
