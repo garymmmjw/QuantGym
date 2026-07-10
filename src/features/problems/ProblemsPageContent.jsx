@@ -197,11 +197,10 @@ export function ProblemsPageContent() {
             </button>
           </form>
 
-          {/* Legacy blocks kept in the DOM for functional continuity, hidden by the replica skin. */}
+          {/* Discovery controls retain the existing collection and Hot 100 behavior. */}
           <section
             className={`leetcode-hot-panel problem-collections-panel${chrome?.collections?.leetcodeExpanded ? " is-expanded" : ""}`}
             aria-labelledby="problemCollectionsTitle"
-            hidden
           >
             <div className="problem-collections-heading">
               <div>
@@ -237,19 +236,34 @@ export function ProblemsPageContent() {
           </section>
 
           <section className="problem-practice-zone qg-problem-split" aria-label="刷题列表">
-            <div className="problem-browser-toolbar" hidden>
+            <div className="problem-browser-toolbar">
               <div
                 className="problem-view-tabs"
-                role="tablist"
+                role="group"
                 aria-label="题目浏览方式"
                 onClick={(event) => {
                   const button = event.target.closest("[data-problem-view]");
                   if (button) model.applyFilter({ type: "viewMode", value: button.dataset.problemView });
                 }}
               >
-                <button className={`segment${viewMode === "all" ? " active" : ""}`} type="button" data-problem-view="all">全部题目</button>
-                <button className={`segment${viewMode === "saved" ? " active" : ""}`} type="button" data-problem-view="saved">我的收藏</button>
-                <button className={`segment${viewMode === "ranking" ? " active" : ""}`} type="button" data-problem-view="ranking">热门排行</button>
+                <button
+                  className={`segment${viewMode === "all" ? " active" : ""}`}
+                  type="button"
+                  data-problem-view="all"
+                  aria-pressed={viewMode === "all"}
+                >全部题目</button>
+                <button
+                  className={`segment${viewMode === "saved" ? " active" : ""}`}
+                  type="button"
+                  data-problem-view="saved"
+                  aria-pressed={viewMode === "saved"}
+                >我的收藏</button>
+                <button
+                  className={`segment${viewMode === "ranking" ? " active" : ""}`}
+                  type="button"
+                  data-problem-view="ranking"
+                  aria-pressed={viewMode === "ranking"}
+                >热门排行</button>
               </div>
               <span id="problemInteractionStatus" className="problem-interaction-status" aria-live="polite">
                 {chrome?.toolbar?.interactionStatus || ""}

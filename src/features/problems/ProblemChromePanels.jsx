@@ -39,6 +39,9 @@ export function ProblemCollectionGrid({ entries = [], filters = {}, leetcodeExpa
         type="button"
         className={`problem-collection-card accent-${entry.accent}${active ? " active" : ""}`}
         data-problem-collection={entry.id}
+        aria-pressed={active}
+        aria-expanded={entry.mode === "leetcode" ? Boolean(leetcodeExpanded) : undefined}
+        aria-controls={entry.mode === "leetcode" ? "leetcodeHotList" : undefined}
         style={{ "--value": `${percent}%` }}
         onClick={onCollectionClick}
       >
@@ -72,6 +75,7 @@ export function ProblemLeetcodeHotList({ items = [], doneIds = [], expanded, isE
           type="button"
           data-leetcode-hot-toggle={item.id}
           aria-label={isDone ? t("leetcodeHotUndo") : t("leetcodeHotMarkDone")}
+          aria-pressed={isDone}
           onClick={() => onToggleDone(item.id)}
         >
           <i data-lucide={isDone ? "check" : "circle"} />
