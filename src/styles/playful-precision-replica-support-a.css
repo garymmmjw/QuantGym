@@ -1173,6 +1173,7 @@ body.is-authenticated .app-route-root .qg-community-page .section-heading {
 
 body.is-authenticated .app-route-root .qg-community-page .section-heading::after {
   content: none;
+  background-image: none;
 }
 
 /* support.css re-applies the hero gradient in dark mode with a :root prefix — cancel it here too */

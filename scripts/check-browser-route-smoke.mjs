@@ -5403,6 +5403,17 @@ async function runCommunityPostFlow(page, baseUrl) {
   try {
     await page.goto(`${baseUrl}/community`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
+    const headingDecoration = await page.locator(".qg-community-page .section-heading").evaluate((node) => {
+      const style = window.getComputedStyle(node, "::after");
+      return {
+        content: style.content,
+        backgroundImage: style.backgroundImage
+      };
+    });
+    if (headingDecoration.content !== "none" || headingDecoration.backgroundImage !== "none") {
+      throw new Error(`Community flat heading retained a pseudo-element decoration: ${JSON.stringify(headingDecoration)}`);
+    }
+    result.headingDecorationSuppressed = true;
     await openCommunityComposer(page);
 
     await page.locator("#communityText").fill(postText);

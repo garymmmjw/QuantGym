@@ -313,6 +313,12 @@ test("preview resource abort classification is limited to cancelled static GETs"
     assert.equal(browserRouteTargets.isExpectedPreviewResourceAbort(record, previewOrigin, evidence), true, pathname);
     assert.equal(browserRouteTargets.isExpectedPreviewResourceAbort(record, previewOrigin), false, `${pathname} requires lifecycle evidence`);
   }
+  assert.equal(browserRouteTargets.isExpectedPreviewResourceAbort({
+    kind: "requestfailed",
+    method: "GET",
+    errorText: "net::ERR_ABORTED",
+    url: `${previewOrigin}/assets/avatar-happy-v2.png`
+  }, previewOrigin, { successfulResponse: true }), false, "response headers alone cannot excuse a static image abort");
   const rejected = [
     { kind: "requestfailed", method: "POST", errorText: "net::ERR_ABORTED", url: `${previewOrigin}/assets/main.js` },
     { kind: "requestfailed", method: "GET", errorText: "net::ERR_FAILED", url: `${previewOrigin}/assets/main.js` },
@@ -366,6 +372,25 @@ test("preview resource abort classification is limited to cancelled static GETs"
   assert.match(imageProbe, /if \(frame\.isDetached\(\)\) return null/);
   assert.match(imageProbe, /catch \{\s*return null;\s*\}/);
   assert.match(source, /beginTeardown\(\)/);
+});
+
+test("Community flat heading clears its inherited mascot background", () => {
+  const css = fs.readFileSync(path.join(root, "src/styles/playful-precision-replica-support-a.css"), "utf8");
+  const selector = "body.is-authenticated .app-route-root .qg-community-page .section-heading::after";
+  const start = css.indexOf(selector);
+  const end = css.indexOf("}", start);
+  assert.ok(start >= 0 && end > start, "Community heading pseudo-element override must remain discoverable");
+  const rule = css.slice(start, end + 1);
+  assert.match(rule, /content\s*:\s*none/);
+  assert.match(rule, /background(?:-image)?\s*:\s*none/);
+
+  const smoke = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  const flowStart = smoke.indexOf("async function runCommunityPostFlow");
+  const flowEnd = smoke.indexOf("async function runCommunityMediaPostFlow", flowStart);
+  assert.ok(flowStart >= 0 && flowEnd > flowStart, "Community browser flow must remain discoverable");
+  const flow = smoke.slice(flowStart, flowEnd);
+  assert.match(flow, /getComputedStyle\(node,\s*["']::after["']\)/);
+  assert.match(flow, /headingDecorationSuppressed\s*=\s*true/);
 });
 
 test("pending failure classifications drain within a bounded deadline", async () => {
