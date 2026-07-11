@@ -8323,18 +8323,24 @@ async function runAccountEmailChangeReauthFlow(page, baseUrl) {
       return !auth.currentUserId;
     }, null, { timeout: 10000 });
 
+    const oldEmailCloudFallback = expectOfflineCloudLoginFailure(page, "account old-email cloud fallback");
     await submitLocalLogin(page, oldEmail, password);
     await page.waitForFunction(() => {
       const auth = JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}");
       const message = document.querySelector("#authMessage")?.textContent || "";
       return !auth.currentUserId && /没有找到这个本地账户|No local account found|云端没有找到这个邮箱|Cloud could not find this email/i.test(message);
     }, null, { timeout: 10000 });
+    await oldEmailCloudFallback.wait();
     result.oldEmailRejected = true;
 
     result.step = "relogin with new email";
     await page.locator("#loginPassword").fill("");
+    const newEmailPrimaryCloudFallback = expectOfflineCloudLoginFailure(page, "account new-email primary cloud fallback");
+    const newEmailSessionCloudFallback = expectOfflineCloudLoginFailure(page, "account new-email session cloud fallback");
     await submitLocalLogin(page, newEmail, password);
     await waitForAuthenticatedShell(page);
+    await newEmailPrimaryCloudFallback.wait();
+    await newEmailSessionCloudFallback.wait();
     await expectStoredLocalAccountEmail(page, {
       userId,
       email: newEmail,
@@ -8354,6 +8360,25 @@ async function runAccountEmailChangeReauthFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   }
   return result;
+}
+
+function expectOfflineCloudLoginFailure(page, id) {
+  const collector = collectorByPage.get(page);
+  if (!collector) throw new Error(`${id} requires an attached page collector.`);
+  const url = `${CANONICAL_BROWSER_BUILD_CONFIG.apiEndpoint.replace(/\/$/, "")}/auth/login`;
+  return collector.expectFirstPartyFailure({
+    id,
+    network: {
+      kind: "requestfailed",
+      method: "POST",
+      errorText: "net::ERR_CONNECTION_REFUSED",
+      url
+    },
+    console: {
+      url,
+      text: "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    }
+  });
 }
 
 async function submitLocalLogin(page, email, password) {
@@ -10035,6 +10060,7 @@ function attachPageCollectors(page, firstPartyOrigins) {
   const expectations = [];
   const requestLifecycles = new WeakMap();
   const successfulResponseRequests = new WeakSet();
+  let navigationGeneration = 0;
   let contextClosing = false;
   const collector = {
     beginTeardown() {
@@ -10064,6 +10090,9 @@ function attachPageCollectors(page, firstPartyOrigins) {
     }
   };
   collectorByPage.set(page, collector);
+  page.on("framenavigated", (frame) => {
+    if (frame === page.mainFrame()) navigationGeneration += 1;
+  });
   page.on("request", (request) => {
     let frame = null;
     try {
@@ -10071,10 +10100,14 @@ function attachPageCollectors(page, firstPartyOrigins) {
     } catch {
       frame = null;
     }
+    if (request.isNavigationRequest() && frame === page.mainFrame()) {
+      navigationGeneration += 1;
+    }
     requestLifecycles.set(request, {
       frame,
       frameUrl: frame?.url() || "",
-      pageUrl: page.url()
+      pageUrl: page.url(),
+      navigationGeneration
     });
   });
   page.on("console", (message) => {
@@ -10143,7 +10176,8 @@ function attachPageCollectors(page, firstPartyOrigins) {
       frameDetached = true;
     }
     const navigationChanged = Boolean(lifecycle && (
-      currentFrameUrl !== lifecycle.frameUrl
+      navigationGeneration !== lifecycle.navigationGeneration
+      || currentFrameUrl !== lifecycle.frameUrl
       || (lifecycle.frame === page.mainFrame() && page.url() !== lifecycle.pageUrl)
     ));
     if (isExpectedPreviewResourceAbort(record, previewOrigin, {
@@ -10158,7 +10192,21 @@ function attachPageCollectors(page, firstPartyOrigins) {
       expectedFirstPartyFailures.push({ id, ...record });
       return;
     }
-    responseErrors.push(record);
+    responseErrors.push({
+      ...record,
+      diagnostics: {
+        contextClosing,
+        frameDetached,
+        navigationChanged,
+        successfulResponse: successfulResponseRequests.has(request),
+        navigationGenerationAtRequest: lifecycle?.navigationGeneration,
+        navigationGenerationAtFailure: navigationGeneration,
+        pageUrlAtRequest: lifecycle?.pageUrl || "",
+        pageUrlAtFailure: page.url(),
+        frameUrlAtRequest: lifecycle?.frameUrl || "",
+        frameUrlAtFailure: currentFrameUrl
+      }
+    });
   });
   return collector;
 }

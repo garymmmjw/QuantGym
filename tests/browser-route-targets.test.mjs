@@ -252,6 +252,7 @@ test("preview resource abort classification is limited to cancelled static GETs"
     "cancelled preview resources must be classified in the requestfailed collector"
   );
   assert.match(source, /page\.on\("request",/);
+  assert.match(source, /navigationGeneration/);
   assert.match(source, /successfulResponseRequests\.has\(request\)/);
   assert.match(source, /beginTeardown\(\)/);
 });
@@ -267,6 +268,18 @@ test("interview local fallback failures are scoped to the exact hint and feedbac
   assert.equal((flow.match(/url:\s*"http:\/\/127\.0\.0\.1:59991\/interview"/g) || []).length, 2);
   assert.equal((flow.match(/text:\s*"Failed to load resource: net::ERR_CONNECTION_REFUSED"/g) || []).length, 2);
   assert.equal((flow.match(/\.wait\(\)/g) || []).length >= 2, true);
+});
+
+test("account email reauthentication scopes all three offline cloud-login fallbacks", () => {
+  const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  const start = source.indexOf("async function runAccountEmailChangeReauthFlow");
+  const end = source.indexOf("async function submitLocalLogin", start);
+  assert.ok(start >= 0 && end > start, "account email reauthentication flow must remain discoverable");
+  const flow = source.slice(start, end);
+  assert.match(flow, /expectOfflineCloudLoginFailure\(page, "account old-email cloud fallback"\)/);
+  assert.match(flow, /expectOfflineCloudLoginFailure\(page, "account new-email primary cloud fallback"\)/);
+  assert.match(flow, /expectOfflineCloudLoginFailure\(page, "account new-email session cloud fallback"\)/);
+  assert.equal((flow.match(/\.wait\(\)/g) || []).length >= 3, true);
 });
 
 test("expected console matching requires an exact scoped first-party message", () => {
