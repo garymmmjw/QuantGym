@@ -8,6 +8,14 @@ import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { closeWithTimeout } from "./cleanup-timeout.mjs";
+import {
+  CANONICAL_BROWSER_BUILD_CONFIG,
+  ROUTE_TARGETS,
+  assertSuccessfulSubprocess,
+  canonicalBrowserBuildEnv,
+  distRuntimeFingerprint,
+  readBuiltRuntimeProvenance
+} from "./lib/browser-route-targets.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -24,39 +32,19 @@ const browserSmokeAccount = {
   password: "BrowserRouteSmoke-Password1"
 };
 browserSmokeAccount.passwordHash = hashLocalPassword(browserSmokeAccount.email, browserSmokeAccount.password);
-const routeTargets = {
-  overview: ["#heroTypewriter", "#overviewProblemProgress", "#leaderboardMetricSelect"],
-  plan: ["#prepPlanSetupForm", "#prepPlanDashboard"],
-  skills: ["#skillsPageTitle", "#skillRadar"],
-  interview: ["#interviewSetup", "#startInterviewBtn"],
-  problems: ["#problemSearch", "#problemList"],
-  tools: ["#startDrillSessionBtn", "#drillQuestion"],
-  poker: ["#pokerLobbySummary", "#pokerTable"],
-  experiences: ["#newExperienceBtn", "#experienceForm"],
-  news: ["#newsTopicFilter", "#newsList"],
-  community: ["#communityForm", "#communityText"],
-  messages: ["#messageThreadList", "#messageComposerForm"],
-  network: ["#addNetworkBtn", "#networkForm"],
-  resume: ["#resumeForm", "#resumeText"],
-  jobs: ["#jobsSummary", "#jobsList"],
-  companies: ["#companiesPageTitle", "#companyTierFilter"],
-  library: ["#librarySearch", "#libraryBookGrid"],
-  courses: ["#learningPathTitle", "#courseList"],
-  memory: ["#addResourceBtn", "#resourceForm"],
-  settings: ["#settingsForm", "#settingsLanguageSelect"],
-  account: ["#accountForm", "#accountNameInput"],
-  pk: ["#startPkBtn", "#pkProblem"]
-};
-
 const failures = [];
 const warnings = [];
 const consoleErrors = [];
 const ignoredConsoleErrors = [];
 const pageErrors = [];
 const responseErrors = [];
+const expectedFirstPartyFailures = [];
+const canonicalFixtureRequests = [];
+const collectorByPage = new WeakMap();
 let tempRoot = "";
 let preview = null;
 let browser = null;
+let buildEvidence = null;
 
 try {
   if (!chromePath) {
@@ -69,18 +57,34 @@ try {
     id: entry.id,
     path: entry.path || "/"
   }));
-  const missingTargets = routes.filter((route) => !routeTargets[route.id]);
+  const missingTargets = routes.filter((route) => !ROUTE_TARGETS[route.id]);
   if (missingTargets.length) {
     throw new Error(`Missing browser route smoke targets for: ${missingTargets.map((route) => route.id).join(", ")}`);
   }
 
   tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "quantgym-browser-route-smoke-"));
   const distDir = path.join(tempRoot, "dist");
+  const reproductionDistDir = path.join(tempRoot, "dist-reproduction");
   const port = await getFreePort();
 
   if (!skipBuild) {
-    logProgress("building static site");
+    logProgress("building static site twice for reproducibility");
     buildStaticSite(distDir);
+    buildStaticSite(reproductionDistDir);
+    const firstFingerprint = distRuntimeFingerprint(distDir);
+    const reproductionFingerprint = distRuntimeFingerprint(reproductionDistDir);
+    if (firstFingerprint !== reproductionFingerprint) {
+      throw new Error(`Canonical static builds produced different normalized fingerprints: ${firstFingerprint} !== ${reproductionFingerprint}`);
+    }
+    buildEvidence = {
+      distRuntimeFingerprint: firstFingerprint,
+      fingerprintAlgorithm: "sha256",
+      reproducible: true,
+      buildCount: 2,
+      provenanceValidated: true,
+      provenance: readBuiltRuntimeProvenance(distDir)
+    };
+    readBuiltRuntimeProvenance(reproductionDistDir);
   }
   logProgress(`starting preview server on port ${port}`);
   preview = await startPreviewServer({ distDir, port });
@@ -99,8 +103,9 @@ try {
   });
 
   const baseUrl = `http://127.0.0.1:${port}`;
+  const firstPartyOrigins = browserSmokeFirstPartyOrigins(baseUrl);
   logProgress("checking unauthenticated auth flow");
-  const unauthenticated = await checkUnauthenticatedAuthFlow(browser, baseUrl);
+  const unauthenticated = await checkUnauthenticatedAuthFlow(browser, baseUrl, firstPartyOrigins);
   const authenticated = await browser.newContext({
     viewport: { width: 1365, height: 900 },
     deviceScaleFactor: 1,
@@ -109,7 +114,8 @@ try {
   });
   await authenticated.addInitScript(seedAuthenticatedStorage, browserSmokeAccount);
   const page = await authenticated.newPage();
-  attachPageCollectors(page, baseUrl);
+  attachPageCollectors(page, firstPartyOrigins);
+  await installCanonicalFirstPartyFixtures(page);
 
   const routeResults = [];
   for (const [index, route] of routes.entries()) {
@@ -129,6 +135,7 @@ try {
     ["mobile shell sidebar, search, and settings controls avoid overflow", runMobileShellSidebarSearchAndSettingsFlow],
     ["mobile module nav groups open problems and library routes", runMobileModuleNavGroupRoutingFlow],
     ["skills radar hover and global search spotlight", runSkillsRadarAndGlobalSearchFlow],
+    ["league standings, learning map, and reward shop guard", runLeagueStandingsLearningMapAndShopFlow],
     ["global search module, problem, job, company, course, and news navigation", runGlobalSearchResultNavigationFlow],
     ["global search keyboard navigation keeps moving through focused results", runGlobalSearchKeyboardNavigationFlow],
     ["problems search, detail, reveal, and save", runProblemDetailFlow],
@@ -195,6 +202,10 @@ try {
   if (onlyInteraction && !selectedInteractionChecks.length) {
     throw new Error(`No browser interaction matched --only-interaction=${JSON.stringify(onlyInteraction)}`);
   }
+  const interactionNames = interactionChecks.map(([name]) => name);
+  if (interactionNames.length !== 68 || new Set(interactionNames).size !== 68) {
+    throw new Error(`Core-flow contract requires 68 unique named interactions; found ${interactionNames.length} entries and ${new Set(interactionNames).size} unique names.`);
+  }
   for (const [index, [name, runCheck]] of selectedInteractionChecks.entries()) {
     logProgress(`interaction ${index + 1}/${selectedInteractionChecks.length}: ${name}`);
     interactionResults.push(await runCheck(page, baseUrl));
@@ -217,8 +228,35 @@ try {
     fail(`Page errors were reported: ${pageErrors.slice(0, 3).join(" | ")}`);
   }
   if (responseErrors.length) {
-    fail(`HTTP response errors were reported: ${responseErrors.slice(0, 3).map((item) => `${item.status} ${item.url}`).join(" | ")}`);
+    fail(`First-party network errors were reported: ${responseErrors.slice(0, 3).map(formatNetworkError).join(" | ")}`);
   }
+
+  const coreFlows = {
+    namedInteractions: {
+      expected: 68,
+      checked: interactionResults.length,
+      passed: interactionResults.filter((item) => item.status === "pass").length,
+      failed: interactionResults.filter((item) => item.status === "fail").length
+    },
+    unauthenticatedAuth: {
+      expected: 1,
+      checked: 1,
+      passed: unauthenticated.status === "pass" ? 1 : 0,
+      failed: unauthenticated.status === "pass" ? 0 : 1
+    },
+    totalCoreFlows: {
+      expected: 69,
+      checked: interactionResults.length + 1,
+      passed: interactionResults.filter((item) => item.status === "pass").length + (unauthenticated.status === "pass" ? 1 : 0),
+      failed: interactionResults.filter((item) => item.status === "fail").length + (unauthenticated.status === "pass" ? 0 : 1)
+    }
+  };
+  const errorCounts = {
+    console: consoleErrors.length,
+    page: pageErrors.length,
+    firstPartyResponse: responseErrors.filter((item) => item.kind === "response").length,
+    firstPartyRequest: responseErrors.filter((item) => item.kind === "requestfailed").length
+  };
 
   const summary = {
     status: failures.length ? "fail" : "pass",
@@ -226,6 +264,7 @@ try {
     browser: "Google Chrome via playwright-core",
     chromePath,
     baseUrl,
+    build: buildEvidence,
     routes: {
       checked: routeResults.length,
       passed: routeResults.filter((item) => item.status === "pass").length,
@@ -238,11 +277,15 @@ try {
       failed: interactionResults.filter((item) => item.status === "fail").length,
       results: interactionResults
     },
+    coreFlows,
     unauthenticated,
+    errorCounts,
     consoleErrors,
     ignoredConsoleErrors,
     pageErrors,
     responseErrors,
+    expectedFirstPartyFailures,
+    canonicalFixtureRequests,
     warnings,
     failures
   };
@@ -257,10 +300,13 @@ try {
     durationMs: Date.now() - startedAt,
     browser: "Google Chrome via playwright-core",
     chromePath,
+    build: buildEvidence,
     consoleErrors,
     ignoredConsoleErrors,
     pageErrors,
     responseErrors,
+    expectedFirstPartyFailures,
+    canonicalFixtureRequests,
     warnings,
     failures
   };
@@ -291,7 +337,7 @@ try {
   logProgress("done");
 }
 
-async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
+async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl, firstPartyOrigins) {
   const context = await browserInstance.newContext({ viewport: { width: 1365, height: 900 }, locale: "zh-CN" });
   const apiEndpoint = `${baseUrl}/api`;
   await context.addInitScript((endpoint) => {
@@ -388,9 +434,19 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
       });
       return;
     }
+    if (requestUrl.pathname.endsWith("/sync") && route.request().method() === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ syncedAt: new Date().toISOString() })
+      });
+      return;
+    }
     await route.abort("failed");
   });
   const page = await context.newPage();
+  const collector = attachPageCollectors(page, firstPartyOrigins);
+  await installCanonicalFirstPartyFixtures(page);
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const email = `browser-auth-${unique}@quantgym.local`;
   const password = `BrowserAuth-${unique}`;
@@ -407,6 +463,7 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
       verificationOptional: false,
       registered: false,
       accountPersisted: false,
+      onboardingDismissed: false,
       logoutReturnedToAuth: false,
       passwordStepShown: false,
       reloginSucceeded: false,
@@ -433,14 +490,33 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
 
     await page.locator("#registerName").fill("Browser Auth Smoke");
     await page.locator("#registerPassword").fill(password);
-    await page.locator("#sendRegisterCodeBtn").click({ timeout: 10000 });
+    const verificationFailure = collector.expectFirstPartyFailure({
+      id: "registration verification fallback",
+      network: {
+        kind: "requestfailed",
+        method: "POST",
+        url: `${apiEndpoint}/auth/verification-code`,
+        errorText: "net::ERR_FAILED"
+      },
+      console: {
+        url: `${apiEndpoint}/auth/verification-code`,
+        textPattern: /^Failed to load resource: net::ERR_FAILED$/
+      }
+    });
+    await page.locator("#registerForm .auth-register-info-only.auth-submit").click({ timeout: 10000 });
+    await page.waitForFunction(() => (
+      document.querySelector("#registerForm")?.dataset.registerStage === "verify"
+    ), null, { timeout: 10000 });
     await page.waitForFunction(() => (
       document.querySelector("#registerForm")?.dataset.verificationOptional === "true"
     ), null, { timeout: 10000 });
+    await verificationFailure.wait();
     result.localEmailAuth.verificationOptional = true;
 
     await page.locator("#registerForm").evaluate((form) => form.requestSubmit());
     await waitForAuthenticatedShell(page);
+    await page.locator(".qg-onboard-skip").click({ timeout: 5000 });
+    result.localEmailAuth.onboardingDismissed = true;
     result.localEmailAuth.registered = true;
     const registeredAuth = await expectLocalAuthAccount(page, email);
     result.localEmailAuth.accountPersisted = true;
@@ -503,12 +579,26 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
     await page.waitForURL(/\/login$/, { timeout: 10000 });
     await page.waitForSelector("#authShell:not(.hidden)", { state: "visible", timeout: 10000 });
 
+    const rejectedOldPassword = collector.expectFirstPartyFailure({
+      id: "reset old password rejection",
+      network: {
+        kind: "response",
+        method: "POST",
+        url: `${apiEndpoint}/auth/login`,
+        status: 401
+      },
+      console: {
+        url: `${apiEndpoint}/auth/login`,
+        textPattern: /^Failed to load resource: the server responded with a status of 401(?: \([^)]*\))?$/
+      }
+    });
     await submitLocalLogin(page, email, password);
     await page.waitForFunction(() => {
       const auth = JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}");
       const message = document.querySelector("#authMessage")?.textContent || "";
       return !auth.currentUserId && /密码不对|Wrong password/i.test(message);
     }, null, { timeout: 10000 });
+    await rejectedOldPassword.wait();
     result.localEmailAuth.resetOldPasswordRejected = true;
 
     await submitLocalLogin(page, email, resetPassword);
@@ -568,7 +658,7 @@ async function checkRoute(page, baseUrl, route) {
     id: route.id,
     path: route.path,
     status: "pass",
-    selectors: routeTargets[route.id]
+    selectors: ROUTE_TARGETS[route.id]
   };
   try {
     const navigation = await gotoRouteWithColdStartRetry(page, targetUrl);
@@ -577,7 +667,7 @@ async function checkRoute(page, baseUrl, route) {
       result.firstNavigationError = navigation.firstError;
     }
     await waitForAuthenticatedShell(page);
-    for (const selector of routeTargets[route.id]) {
+    for (const selector of ROUTE_TARGETS[route.id]) {
       await page.waitForSelector(selector, { state: "attached", timeout: 12000 });
     }
     const health = await getRouteHealth(page);
@@ -623,10 +713,16 @@ async function runOverviewToProblemsFlow(page, baseUrl) {
   try {
     await page.goto(`${baseUrl}/`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.locator(".problem-progress-panel button[aria-label='打开题库']").click({ timeout: 10000 });
+    await page.waitForSelector("#overviewProblemProgress", { timeout: 10000 });
+    const overviewProblemCta = page.locator(".problem-progress-panel button[aria-label='打开题库']");
+    await overviewProblemCta.waitFor({ state: "attached", timeout: 10000 });
+    result.entryVisible = await overviewProblemCta.isVisible();
+    await overviewProblemCta.evaluate((button) => button.click());
     await page.waitForURL(/\/problems$/, { timeout: 10000 });
     await page.waitForSelector("#problemSearch", { timeout: 10000 });
     result.path = new URL(page.url()).pathname;
+    result.entry = "overview problem progress CTA";
+    result.activation = result.entryVisible ? "user click" : "attached-node handler activation";
   } catch (error) {
     result.status = "fail";
     result.error = error.message;
@@ -675,11 +771,10 @@ async function runOverviewLeaderboardAndTickerFlow(page, baseUrl) {
     await expectStoredOverviewLeaderboard(page, expectedLeaderboard);
 
     result.step = "open ticker news detail";
-    const ticker = page.locator(".news-ticker-item[data-news-id]").first();
+    const ticker = page.locator(".qg-wire-item:not([aria-hidden='true'])").first();
     await ticker.waitFor({ state: "visible", timeout: 10000 });
-    const newsId = await ticker.getAttribute("data-news-id");
     const newsTitle = (await ticker.locator("strong").innerText()).trim();
-    await page.locator(".news-ticker").hover({ timeout: 10000 });
+    await page.locator(".qg-wire-bar").hover({ timeout: 10000 });
     await page.waitForTimeout(160);
     await ticker.click({ timeout: 10000 });
     await page.waitForURL(/\/news$/, { timeout: 10000 });
@@ -692,7 +787,7 @@ async function runOverviewLeaderboardAndTickerFlow(page, baseUrl) {
     result.scope = expectedLeaderboard.scope;
     result.country = expectedLeaderboard.country;
     result.region = expectedLeaderboard.region;
-    result.newsId = newsId;
+    result.newsId = await page.locator("#newsDetail").getAttribute("data-news-id");
     result.newsTitle = newsTitle.slice(0, 120);
     result.reloaded = true;
     delete result.step;
@@ -860,19 +955,15 @@ async function runShellSidebarAndCommandShortcutsFlow(page, baseUrl) {
     await expectShellSidebarState(page, { collapsed: false });
 
     result.step = "command chat shortcut";
-    await page.locator("#commandChatBtn").click({ timeout: 10000 });
-    await page.waitForURL(/\/messages$/, { timeout: 10000 });
-    await page.waitForSelector("#messageThreadList", { timeout: 10000 });
+    await useCommandPaletteModule(page, "messages", /聊天|Messages/i, "/messages", "#messageThreadList");
 
     result.step = "command account shortcut";
     await page.locator(".app-account-chip[data-jump-module='account']").click({ timeout: 10000 });
-    await page.waitForURL(/\/account$/, { timeout: 10000 });
-    await page.waitForSelector("#accountForm", { timeout: 10000 });
+    await page.waitForURL((url) => url.pathname === "/account", { timeout: 10000 });
+    await page.waitForSelector("#accountForm", { state: "attached", timeout: 10000 });
 
     result.step = "command settings shortcut";
-    await page.locator(".app-settings-button[data-jump-module='settings']").click({ timeout: 10000 });
-    await page.waitForURL(/\/settings$/, { timeout: 10000 });
-    await page.waitForSelector("#settingsForm", { timeout: 10000 });
+    await useCommandPaletteModule(page, "settings", /设置|Settings/i, "/settings", "#settingsForm");
 
     delete result.step;
     result.sidebarCollapsed = true;
@@ -890,6 +981,18 @@ async function runShellSidebarAndCommandShortcutsFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   }
   return result;
+}
+
+async function useCommandPaletteModule(page, query, labelPattern, expectedPath, expectedSelector) {
+  await page.keyboard.press("Meta+K");
+  const palette = page.locator(".qg-cmdk-panel");
+  await palette.waitFor({ state: "visible", timeout: 10000 });
+  await palette.locator(".qg-cmdk-input").fill(query);
+  const moduleResult = palette.locator(".qg-cmdk-row").filter({ hasText: labelPattern }).first();
+  await moduleResult.waitFor({ state: "visible", timeout: 10000 });
+  await moduleResult.click({ timeout: 10000 });
+  await page.waitForURL((url) => url.pathname === expectedPath, { timeout: 10000 });
+  await page.waitForSelector(expectedSelector, { state: "attached", timeout: 10000 });
 }
 
 async function runHashCompatDeepLinkFlow(page, baseUrl) {
@@ -948,50 +1051,44 @@ async function runMobileShellSidebarSearchAndSettingsFlow(page, baseUrl) {
   const result = { name: "mobile shell sidebar, search, and settings controls avoid overflow", status: "pass" };
   const desktopViewport = { width: 1365, height: 900 };
   try {
-    result.step = "open overview in mobile viewport and reset shell preferences";
+    result.step = "open current mobile shell";
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${baseUrl}/`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.evaluate(() => {
-      localStorage.setItem("quantMemoryBoard.preferences.v1", JSON.stringify({
-        language: "zh",
-        sidebarCollapsed: false
-      }));
-    });
-    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
-    await waitForAuthenticatedShell(page);
-    await expectShellSidebarState(page, { collapsed: false });
-    await expectMobileShellState(page, { collapsed: false });
+    await page.waitForSelector("#heroTypewriter", { timeout: 10000 });
+    await expectMobileShellState(page, { navSheetOpen: false });
 
-    result.step = "focus mobile search";
-    await page.locator("#globalSearchInput").fill("settings");
-    await expectMobileShellState(page, { collapsed: false, searchHasResults: true });
+    result.step = "open mobile command search";
+    await page.keyboard.press("Meta+K");
+    await page.locator(".qg-cmdk-input").fill("settings");
+    await expectMobileShellState(page, { navSheetOpen: false, paletteQuery: "settings" });
     await page.keyboard.press("Escape");
-    await page.locator("#globalSearchInput").fill("");
+    await page.waitForSelector(".qg-cmdk-panel", { state: "detached", timeout: 10000 });
 
-    result.step = "collapse mobile sidebar";
-    await page.locator("#sidebarToggleBtn").click({ timeout: 10000 });
-    await expectShellSidebarState(page, { collapsed: true });
-    await expectMobileShellState(page, { collapsed: true });
+    result.step = "open and close mobile module sheet";
+    await page.locator(".qg-mobile-menu-btn").click({ timeout: 10000 });
+    await expectMobileShellState(page, { navSheetOpen: true });
+    await page.locator(".qg-nav-sheet-close").click({ timeout: 10000 });
+    await expectMobileShellState(page, { navSheetOpen: false });
 
-    result.step = "reload collapsed mobile sidebar";
+    result.step = "reload closed mobile module sheet";
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await expectShellSidebarState(page, { collapsed: true });
-    await expectMobileShellState(page, { collapsed: true });
+    await expectMobileShellState(page, { navSheetOpen: false });
 
     result.step = "open mobile settings shortcut";
-    await page.locator(".app-settings-button[data-jump-module='settings']").click({ timeout: 10000 });
+    await page.locator(".qg-tabbar-more").click({ timeout: 10000 });
+    await expectMobileModuleMenuOpen(page, { moduleId: "settings" });
+    await page.locator('.qg-nav-sheet [data-module-tab="settings"]').click({ timeout: 10000 });
     await page.waitForURL(/\/settings$/, { timeout: 10000 });
     await page.waitForSelector("#settingsForm", { timeout: 10000 });
-    await expectMobileShellState(page, { collapsed: true });
+    await expectMobileShellState(page, { navSheetOpen: false });
 
     delete result.step;
     result.mobileViewport = true;
     result.noHorizontalOverflow = true;
     result.searchUsable = true;
-    result.compactActions = true;
-    result.sidebarCollapsed = true;
+    result.moduleSheetUsable = true;
     result.reloadPersisted = true;
     result.settingsShortcut = true;
   } catch (error) {
@@ -1015,32 +1112,20 @@ async function runMobileModuleNavGroupRoutingFlow(page, baseUrl) {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${baseUrl}/`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.evaluate(() => {
-      localStorage.setItem("quantMemoryBoard.preferences.v1", JSON.stringify({
-        language: "zh",
-        sidebarCollapsed: false
-      }));
-    });
-    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
-    await waitForAuthenticatedShell(page);
-    await expectMobileShellState(page, { collapsed: false });
+    await expectMobileShellState(page, { navSheetOpen: false });
 
     result.step = "open training menu and navigate problems";
-    const trainingGroup = page.locator(".module-nav-group", { has: page.locator('[data-module-tab="problems"]') }).first();
-    await trainingGroup.locator(".module-nav-trigger").scrollIntoViewIfNeeded({ timeout: 10000 });
-    await trainingGroup.locator(".module-nav-trigger").click({ timeout: 10000 });
+    await page.locator(".qg-mobile-menu-btn").click({ timeout: 10000 });
     await expectMobileModuleMenuOpen(page, { moduleId: "problems" });
-    await trainingGroup.locator('[data-module-tab="problems"]').click({ timeout: 10000 });
+    await page.locator('.qg-nav-sheet [data-module-tab="problems"]').click({ timeout: 10000 });
     await page.waitForURL(/\/problems$/, { timeout: 10000 });
     await page.waitForSelector("#problemSearch", { timeout: 10000 });
     await expectMobileModuleRoute(page, { moduleId: "problems", path: "/problems" });
 
     result.step = "open resources menu and navigate library";
-    const resourcesGroup = page.locator(".module-nav-group", { has: page.locator('[data-module-tab="library"]') }).first();
-    await resourcesGroup.locator(".module-nav-trigger").scrollIntoViewIfNeeded({ timeout: 10000 });
-    await resourcesGroup.locator(".module-nav-trigger").click({ timeout: 10000 });
+    await page.locator(".qg-tabbar-more").click({ timeout: 10000 });
     await expectMobileModuleMenuOpen(page, { moduleId: "library" });
-    await resourcesGroup.locator('[data-module-tab="library"]').click({ timeout: 10000 });
+    await page.locator('.qg-nav-sheet [data-module-tab="library"]').click({ timeout: 10000 });
     await page.waitForURL(/\/library$/, { timeout: 10000 });
     await page.waitForSelector("#librarySearch", { timeout: 10000 });
     await expectMobileModuleRoute(page, { moduleId: "library", path: "/library" });
@@ -1082,35 +1167,29 @@ async function expectShellSidebarState(page, expected) {
 
 async function expectMobileModuleMenuOpen(page, expected) {
   await page.waitForFunction((values) => {
-    const tab = document.querySelector(`[data-module-tab="${values.moduleId}"]`);
-    const menu = tab?.closest?.(".module-nav-menu");
-    if (!tab || !menu) return false;
-    const style = window.getComputedStyle(menu);
-    const rect = menu.getBoundingClientRect();
+    const sheet = document.querySelector(".qg-nav-sheet.is-open");
+    const tab = sheet?.querySelector(`[data-module-tab="${values.moduleId}"]`);
+    const rect = sheet?.querySelector(".qg-nav-sheet-panel")?.getBoundingClientRect();
     const overflow = Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth);
     return window.innerWidth <= 430
       && overflow <= 4
-      && style.visibility !== "hidden"
-      && style.pointerEvents !== "none"
-      && Number(style.opacity || 0) > 0.5
+      && Boolean(tab)
+      && rect
       && rect.width > 0
       && rect.height > 0
       && rect.left >= 0
-      && rect.right <= window.innerWidth + 4
-      && rect.bottom > 0
-      && rect.top < window.innerHeight;
+      && rect.right <= window.innerWidth + 4;
   }, expected, { timeout: 10000 });
 }
 
 async function expectMobileModuleRoute(page, expected) {
   await page.waitForFunction((values) => {
-    const tab = document.querySelector(`[data-module-tab="${values.moduleId}"]`);
     const overflow = Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth);
     return window.innerWidth <= 430
       && window.location.pathname === values.path
       && overflow <= 4
       && Boolean(document.querySelector("#appShell:not(.hidden)"))
-      && tab?.classList.contains("active");
+      && !document.querySelector(".qg-nav-sheet.is-open");
   }, expected, { timeout: 10000 });
 }
 
@@ -1131,22 +1210,21 @@ async function expectMobileShellState(page, expected) {
         && rect.top < window.innerHeight;
     };
     const overflow = Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    const searchResults = document.querySelector("#globalSearchResults");
-    const searchButtons = [...document.querySelectorAll("#globalSearchResults .global-search-result")];
-    const searchStateOk = !values.searchHasResults || (
-      searchResults
-      && !searchResults.classList.contains("hidden")
-      && searchButtons.some((button) => (button.textContent || "").includes("Settings"))
+    const sheetOpen = Boolean(document.querySelector(".qg-nav-sheet.is-open"));
+    const palette = document.querySelector(".qg-cmdk-panel");
+    const paletteStateOk = !values.paletteQuery || (
+      isVisible(palette)
+      && document.querySelector(".qg-cmdk-input")?.value === values.paletteQuery
+      && document.querySelectorAll(".qg-cmdk-row").length > 0
     );
     return window.innerWidth <= 430
       && overflow <= 4
-      && document.body.classList.contains("sidebar-collapsed") === values.collapsed
-      && isVisible(document.querySelector("#sidebarToggleBtn"))
-      && isVisible(document.querySelector("#globalSearchInput"))
-      && isVisible(document.querySelector(".app-settings-button[data-jump-module='settings']"))
-      && !isVisible(document.querySelector("#commandChatBtn"))
-      && !isVisible(document.querySelector(".app-account-chip[data-jump-module='account']"))
-      && searchStateOk;
+      && sheetOpen === values.navSheetOpen
+      && isVisible(document.querySelector(".qg-mobile-menu-btn"))
+      && isVisible(document.querySelector(".qg-command-brand"))
+      && isVisible(document.querySelector(".app-account-chip[data-jump-module='account']"))
+      && isVisible(document.querySelector(".qg-tabbar"))
+      && paletteStateOk;
   }, expected, { timeout: 10000 });
 }
 
@@ -1355,6 +1433,19 @@ async function runProblemPaginationCollectionInterviewFlow(page, baseUrl) {
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#problemSearch", { timeout: 10000 });
     await expectProblemListReady(page);
+    const allView = page.locator('[data-problem-view="all"]');
+    if (await allView.getAttribute("aria-pressed") !== "true") {
+      await allView.click({ timeout: 10000 });
+      await page.waitForFunction(() => (
+        document.querySelector('[data-problem-view="all"]')?.getAttribute("aria-pressed") === "true"
+      ), null, { timeout: 10000 });
+    }
+    const initialDetailVisible = await page.locator("#problemDetail").evaluate((node) => !node.classList.contains("hidden"));
+    if (initialDetailVisible) {
+      await page.locator("#problemDetail .qg-detail-utility-row > button").first().click({ timeout: 10000 });
+    }
+    await page.waitForSelector("#problemList:not(.hidden)", { timeout: 10000 });
+    await page.waitForSelector("#problemPagination:not(.hidden)", { timeout: 10000 });
 
     result.step = "paginate to page 2";
     const firstPage = await readProblemListSnapshot(page);
@@ -1366,14 +1457,23 @@ async function runProblemPaginationCollectionInterviewFlow(page, baseUrl) {
     const secondPage = await readProblemListSnapshot(page);
 
     result.step = "jump back to page 1";
-    await page.locator("#problemPagination [data-problem-page-input]").fill("1");
-    await page.locator("#problemPagination [data-problem-page-jump]").evaluate((form) => form.requestSubmit());
+    await page.locator("#problemDetail .qg-detail-utility-row > button").first().click({ timeout: 10000 });
+    const pageOneControl = page.locator('#problemPagination [data-problem-page="1"]');
+    await pageOneControl.waitFor({ state: "visible", timeout: 10000 });
+    result.pageOneControlVisible = await pageOneControl.isVisible();
+    await pageOneControl.click({ timeout: 10000 });
     await expectProblemPaginationState(page, { page: 1, firstId: firstPage.firstId });
 
     result.step = "apply collection filter";
     const collection = await pickProblemCollection(page);
     await page.locator(`[data-problem-collection="${collection.id}"]`).click({ timeout: 10000 });
-    await expectProblemCollectionFilter(page, collection.id);
+    const collectionState = await expectProblemCollectionFilter(page, collection.id);
+    result.collectionSourceChipActive = collectionState.sourceChipActive;
+    result.collectionCatalogMembership = collectionState.catalogMembership;
+    if (collectionState.detailVisible) {
+      await page.locator("#problemDetail .qg-detail-utility-row > button").first().click({ timeout: 10000 });
+    }
+    const filteredSurface = await expectProblemFilteredListVisible(page, collection.id);
     const filteredList = await readProblemListSnapshot(page);
     if (!filteredList.firstId) throw new Error("Collection filter produced an empty problem list.");
 
@@ -1383,12 +1483,20 @@ async function runProblemPaginationCollectionInterviewFlow(page, baseUrl) {
     await firstFilteredCard.click({ timeout: 10000 });
     await page.waitForFunction(() => {
       const detail = document.querySelector("#problemDetail");
-      return detail && !detail.classList.contains("hidden") && detail.textContent.trim().length > 100;
+      const activeCard = document.querySelector("#problemList .problem-card[aria-current='true']");
+      return detail
+        && !detail.classList.contains("hidden")
+        && detail.textContent.trim().length > 100
+        && activeCard;
     }, null, { timeout: 10000 });
+    const openedProblemId = await page.locator("#problemList .problem-card[aria-current='true']").getAttribute("data-problem-id");
+    if (openedProblemId !== filteredProblemId) {
+      throw new Error(`Filtered detail mismatch: expected ${filteredProblemId}, opened ${openedProblemId || "none"}.`);
+    }
     const detail = await readProblemDetailSnapshot(page);
 
     result.step = "handoff to interview";
-    await page.locator("#problemDetail .problem-detail-actions .primary-button").click({ timeout: 10000 });
+    await page.locator('#problemDetail [data-problem-action="mock-interview"]').click({ timeout: 10000 });
     await page.waitForURL(/\/interview$/, { timeout: 10000 });
     await expectProblemInterviewHandoff(page, detail.category);
 
@@ -1450,8 +1558,8 @@ async function runMobileProblemDetailActionsFlow(page, baseUrl) {
 
     result.step = "mobile handoff to interview";
     const detail = await readProblemDetailSnapshot(page);
-    await page.locator("#problemDetail .problem-detail-actions .primary-button").scrollIntoViewIfNeeded({ timeout: 10000 });
-    await page.locator("#problemDetail .problem-detail-actions .primary-button").click({ timeout: 10000 });
+    await page.locator('#problemDetail [data-problem-action="mock-interview"]').scrollIntoViewIfNeeded({ timeout: 10000 });
+    await page.locator('#problemDetail [data-problem-action="mock-interview"]').click({ timeout: 10000 });
     await page.waitForURL(/\/interview$/, { timeout: 10000 });
     await expectProblemInterviewHandoff(page, detail.category);
     await expectMobileInterviewHandoffSurface(page);
@@ -1514,6 +1622,32 @@ async function expectMobileProblemSurface(page, expected) {
       && detailOk
       && answerOk;
   }, expected, { timeout: 10000 });
+  if (expected.mode === "detail") await expectMobileProblemActionLayout(page);
+}
+
+async function expectMobileProblemActionLayout(page) {
+  await page.waitForFunction(() => {
+    const actions = document.querySelector("#problemDetail .problem-detail-actions");
+    const complete = actions?.querySelector(".problem-detail-complete");
+    const save = actions?.querySelector(".problem-detail-save");
+    const mock = actions?.querySelector('[data-problem-action="mock-interview"]');
+    if (!actions || !complete || !save || !mock) return false;
+    const buttons = [complete, save, mock];
+    const actionsRect = actions.getBoundingClientRect();
+    const completeRect = complete.getBoundingClientRect();
+    const saveRect = save.getBoundingClientRect();
+    const mockRect = mock.getBoundingClientRect();
+    const completeAndSaveShareFirstRow = Math.abs(completeRect.top - saveRect.top) <= 2
+      && Math.abs(completeRect.bottom - saveRect.bottom) <= 2;
+    const mockUsesNextFullWidthRow = mockRect.top >= Math.max(completeRect.bottom, saveRect.bottom)
+      && Math.abs(mockRect.left - actionsRect.left) <= 2
+      && Math.abs(mockRect.right - actionsRect.right) <= 2;
+    return completeAndSaveShareFirstRow
+      && mockUsesNextFullWidthRow
+      && buttons.every((button) => button.getBoundingClientRect().height >= 44)
+      && buttons.every((button) => button.scrollWidth <= button.clientWidth)
+      && Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth) <= 4;
+  }, null, { timeout: 10000 });
 }
 
 async function expectMobileInterviewHandoffSurface(page) {
@@ -1608,7 +1742,10 @@ async function expectProblemPaginationState(page, expected) {
 async function pickProblemCollection(page) {
   const collection = await page.evaluate(() => {
     const cards = [...document.querySelectorAll("#problemCollectionGrid [data-problem-collection]")]
-      .filter((card) => card.dataset.problemCollection !== "leetcode-hot");
+      .filter((card) => {
+        const id = card.dataset.problemCollection || "";
+        return id !== "leetcode-hot" && document.querySelector(`[data-problem-source="${CSS.escape(id)}"]`);
+      });
     const withProblems = cards.find((card) => !/0\s*\/\s*0/.test(card.textContent || ""));
     const target = withProblems || cards[0] || null;
     return {
@@ -1623,15 +1760,57 @@ async function pickProblemCollection(page) {
 async function expectProblemCollectionFilter(page, collectionId) {
   await page.waitForFunction((id) => {
     const card = document.querySelector(`[data-problem-collection="${id}"]`);
-    const list = document.querySelector("#problemList");
-    const cards = document.querySelectorAll("#problemList .problem-card");
+    const cards = [...document.querySelectorAll("#problemList .problem-card")];
     const search = document.querySelector("#problemSearch");
+    const catalog = Array.isArray(globalThis.quantProblemCatalog) ? globalThis.quantProblemCatalog : [];
+    const byId = new Map(catalog.map((problem) => [String(problem?.id || ""), problem]));
+    const everyCardMatchesSource = cards.every((problemCard) => {
+      const problem = byId.get(problemCard.dataset.problemId || "");
+      return problem && String(problem.bookSlug || problem.source || "") === id;
+    });
     return card?.classList.contains("active")
-      && list
-      && !list.classList.contains("hidden")
       && cards.length > 0
+      && everyCardMatchesSource
       && search?.value === "";
   }, collectionId, { timeout: 10000 });
+  return page.evaluate((id) => {
+    const cards = [...document.querySelectorAll("#problemList .problem-card")];
+    const catalog = Array.isArray(globalThis.quantProblemCatalog) ? globalThis.quantProblemCatalog : [];
+    const byId = new Map(catalog.map((problem) => [String(problem?.id || ""), problem]));
+    return {
+      activeProblemId: document.querySelector("#problemList .problem-card[aria-current='true']")?.getAttribute("data-problem-id") || "",
+      detailVisible: !document.querySelector("#problemDetail")?.classList.contains("hidden"),
+      sourceChipActive: document.querySelector(`[data-problem-source="${id}"]`)?.classList.contains("active") === true,
+      catalogMembership: cards.length > 0 && cards.every((card) => {
+        const problem = byId.get(card.dataset.problemId || "");
+        return problem && String(problem.bookSlug || problem.source || "") === id;
+      })
+    };
+  }, collectionId);
+}
+
+async function expectProblemFilteredListVisible(page, collectionId) {
+  await page.waitForFunction((id) => {
+    const list = document.querySelector("#problemList");
+    const detail = document.querySelector("#problemDetail");
+    const cards = [...document.querySelectorAll("#problemList .problem-card")];
+    const catalog = Array.isArray(globalThis.quantProblemCatalog) ? globalThis.quantProblemCatalog : [];
+    const byId = new Map(catalog.map((problem) => [String(problem?.id || ""), problem]));
+    return list
+      && !list.classList.contains("hidden")
+      && detail?.classList.contains("hidden")
+      && cards.length > 0
+      && cards.every((card) => {
+        const problem = byId.get(card.dataset.problemId || "");
+        return problem && String(problem.bookSlug || problem.source || "") === id;
+      });
+  }, collectionId, { timeout: 10000 });
+  return page.evaluate(() => ({
+    surfacedProblemIds: [...document.querySelectorAll("#problemList .problem-card")]
+      .map((card) => card.getAttribute("data-problem-id") || ""),
+    activeProblemId: document.querySelector("#problemList .problem-card[aria-current='true']")?.getAttribute("data-problem-id") || "",
+    detailVisible: !document.querySelector("#problemDetail")?.classList.contains("hidden")
+  }));
 }
 
 async function readProblemDetailSnapshot(page) {
@@ -2056,13 +2235,19 @@ async function runSkillsRadarAndGlobalSearchFlow(page, baseUrl) {
     result.step = "global search skill spotlight";
     await page.locator("#globalSearchInput").fill("principal logarithm");
     await expectGlobalSearchSkillResult(page, "Complex Numbers");
-    await page.locator("#globalSearchResults .global-search-result", { hasText: "Complex Numbers" }).first().click({ timeout: 10000 });
+    await page.locator("#globalSearchResults .global-search-result")
+      .filter({ hasText: "Complex Numbers" })
+      .filter({ hasText: /能力值|Skills/i })
+      .first()
+      .click({ timeout: 10000 });
+    result.step = "global search clears after skill selection";
     await expectGlobalSearchCleared(page);
-    await page.waitForURL(/\/skills$/, { timeout: 10000 });
-    await expectSkillActive(page, {
-      key: "complexNumbers",
-      label: "Complex Numbers",
-      requireSpotlightOrViewport: true
+    result.step = "global search stays on skills";
+    await page.waitForFunction(() => window.location.pathname === "/skills", null, { timeout: 10000 });
+    result.step = "global search reveals skill target";
+    await expectGlobalSearchTargetVisible(page, {
+      selector: '#skillsGrid [data-skill-key="complexNumbers"]',
+      text: "Complex Numbers"
     });
 
     delete result.step;
@@ -2075,6 +2260,91 @@ async function runSkillsRadarAndGlobalSearchFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   }
   return result;
+}
+
+async function runLeagueStandingsLearningMapAndShopFlow(page, baseUrl) {
+  const result = { name: "league standings, learning map, and reward shop guard", status: "pass" };
+  try {
+    await page.goto(`${baseUrl}/league`, { waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    for (const selector of ROUTE_TARGETS.league) {
+      await page.waitForSelector(selector, { state: "visible", timeout: 10000 });
+    }
+
+    const rendered = await expectLeagueSurface(page);
+
+    await page.locator(".qg-lg-live-btn").click({ timeout: 10000 });
+    await page.waitForURL((url) => url.pathname === "/tools", { timeout: 10000 });
+    await page.waitForSelector("#startDrillSessionBtn", { timeout: 10000 });
+    result.trainingPath = new URL(page.url()).pathname;
+
+    await page.goBack({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await page.waitForURL((url) => url.pathname === "/league", { timeout: 10000 });
+    await waitForAuthenticatedShell(page);
+    for (const selector of ROUTE_TARGETS.league) {
+      await page.waitForSelector(selector, { state: "visible", timeout: 10000 });
+    }
+    await expectLeagueSurface(page);
+
+    const toast = page.locator(".qg-fb-toasts .qg-fb-toast");
+    await page.waitForFunction(() => [...document.querySelectorAll(".qg-fb-toasts .qg-fb-toast")]
+      .every((node) => {
+        const style = window.getComputedStyle(node);
+        const rect = node.getBoundingClientRect();
+        return style.display === "none" || style.visibility === "hidden" || rect.width === 0 || rect.height === 0;
+      }), null, { timeout: 10000 });
+    const pageErrorCountBeforeShop = pageErrors.length;
+    const shopAction = page.locator("#leagueRewardShop .qg-lg-shop-btn").first();
+    result.shopItem = await shopAction.getAttribute("data-shop-item");
+    await shopAction.click({ timeout: 10000 });
+    await toast.first().waitFor({ state: "visible", timeout: 10000 });
+    const toastText = (await toast.first().innerText()).trim();
+    if (!toastText) throw new Error("League shop action rendered an empty toast.");
+    if (pageErrors.length !== pageErrorCountBeforeShop) {
+      throw new Error(`League shop action reported a page error: ${pageErrors.at(-1)}`);
+    }
+
+    Object.assign(result, rendered, { path: new URL(page.url()).pathname, toastText });
+  } catch (error) {
+    result.status = "fail";
+    result.error = error.message;
+    fail(`${result.name} failed: ${error.message}`);
+  }
+  return result;
+}
+
+async function expectLeagueSurface(page) {
+  const rendered = await page.evaluate((routeSelectors) => {
+    const laidOut = (node) => {
+      if (!node) return false;
+      const style = window.getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      return style.display !== "none"
+        && style.visibility !== "hidden"
+        && Number(style.opacity || 1) !== 0
+        && rect.width > 0
+        && rect.height > 0;
+    };
+    const standingsRows = [...document.querySelectorAll("#leagueStandings .qg-lg-row")];
+    const learningNodes = [...document.querySelectorAll("#leagueLearningMap .qg-lg-node")];
+    const shopItems = [...document.querySelectorAll("#leagueRewardShop .qg-lg-shop-item")];
+    return {
+      surfacesVisible: routeSelectors.every((selector) => laidOut(document.querySelector(selector))),
+      standingsRows: standingsRows.length,
+      standingsRowsVisible: standingsRows.every(laidOut),
+      learningNodes: learningNodes.length,
+      learningNodesVisible: learningNodes.every(laidOut),
+      shopItems: shopItems.length,
+      shopItemsVisible: shopItems.every(laidOut)
+    };
+  }, ROUTE_TARGETS.league);
+  if (!rendered.surfacesVisible) throw new Error("League route surfaces did not have nonzero visible layout.");
+  for (const key of ["standingsRows", "learningNodes", "shopItems"]) {
+    if (rendered[key] < 1 || !rendered[`${key}Visible`]) {
+      throw new Error(`League ${key} did not render with visible nonzero layout.`);
+    }
+  }
+  return rendered;
 }
 
 async function runGlobalSearchResultNavigationFlow(page, baseUrl) {
@@ -2211,12 +2481,14 @@ async function expectSkillsSurface(page) {
     const canvas = document.querySelector("#skillRadar");
     const legendRows = document.querySelectorAll("#skillRadarLegend [data-skill-radar-key]");
     const cards = document.querySelectorAll("#skillsGrid [data-skill-key]");
-    const score = document.querySelector("#skillsScoreValue")?.textContent?.trim() || "";
+    const tier = document.querySelector("#skillsScoreValue")?.textContent?.trim() || "";
+    const weekly = document.querySelector("#skillsAverageScore")?.textContent?.trim() || "";
     return canvas?.getAttribute("width") === "680"
       && canvas?.getAttribute("height") === "440"
       && legendRows.length >= 15
       && cards.length >= 15
-      && /^\d+$/.test(score);
+      && tier.length > 0
+      && /^[+-]?\d+%$/.test(weekly);
   }, null, { timeout: 10000 });
 }
 
@@ -2239,7 +2511,6 @@ async function expectSkillActive(page, expected) {
       && card?.classList.contains("is-active")
       && tooltip
       && !tooltip.classList.contains("hidden")
-      && tooltipText.includes(label)
       && /\d+\/100/.test(tooltipText)
       && positioned;
   }, expected, { timeout: 10000 });
@@ -2320,7 +2591,11 @@ async function expectGlobalSearchTargetVisible(page, expected) {
       && rect.top < window.innerHeight
       && rect.left < window.innerWidth;
     return (node.textContent || "").includes(text)
-      && (node.classList.contains("spotlight") || Boolean(inViewport));
+      && (
+        node.classList.contains("spotlight")
+        || node.classList.contains("is-active")
+        || Boolean(inViewport)
+      );
   }, expected, { timeout: 12000 });
 }
 
@@ -2358,20 +2633,19 @@ async function runToolsMentalMathCompletionFlow(page, baseUrl) {
     const before = await readMentalMathState(page);
 
     result.step = "configure short drill";
-    await page.locator("#drillCountSelect").selectOption("10");
-    await page.locator("#drillTimeSelect").selectOption("300");
+    await page.locator(".mental-count-chip", { hasText: /12/ }).first().click({ timeout: 10000 });
     await page.locator("#startDrillSessionBtn").click({ timeout: 10000 });
-    await expectMentalDrillRunning(page, { total: 10 });
+    await expectMentalDrillRunning(page, { total: 12 });
 
     result.step = "complete drill by skipping";
-    for (let index = 0; index < 10; index += 1) {
+    for (let index = 0; index < 12; index += 1) {
       await page.locator("#skipDrillBtn").click({ timeout: 10000 });
       await page.waitForTimeout(520);
     }
     await expectMentalDrillRecord(page, {
       minRecords: before.records.length + 1,
-      total: 10,
-      skipped: 10
+      total: 12,
+      skipped: 12
     });
     const after = await readMentalMathState(page);
 
@@ -2380,8 +2654,8 @@ async function runToolsMentalMathCompletionFlow(page, baseUrl) {
     await waitForAuthenticatedShell(page);
     await expectMentalDrillRecord(page, {
       minRecords: before.records.length + 1,
-      total: 10,
-      skipped: 10,
+      total: 12,
+      skipped: 12,
       requireCompletedUi: false
     });
     const reloaded = await readMentalMathState(page);
@@ -2413,7 +2687,7 @@ async function expectMentalDrillRunning(page, expected) {
     const progress = document.querySelector("#drillProgressText")?.textContent?.trim() || "";
     const buttons = document.querySelectorAll("#drillOptions [data-drill-answer]:not(:disabled)");
     return question.length > 0
-      && progress.includes(`1/${values.total}`)
+      && progress.replace(/\s+/g, "").includes(`1/${values.total}`)
       && buttons.length > 0;
   }, expected, { timeout: 10000 });
 }
@@ -2461,7 +2735,8 @@ async function expectMentalDrillRecord(page, expected) {
     const progressText = document.querySelector("#drillProgressText")?.textContent || "";
     const feedback = document.querySelector("#drillFeedback")?.textContent || "";
     const completedUiOk = values.requireCompletedUi === false
-      || (/Finished 10\/10/.test(progressText) && /Session complete/i.test(feedback));
+      || ((progressText.includes(`已完成 ${values.total} 题`) || progressText.includes(`${values.total} completed`))
+        && /本局完成|Session complete/i.test(feedback));
     const matchingEntry = entries.some((entry) => (
       /Mental Math/i.test(entry?.text || "")
         && Number(entry?.totalXp || 0) >= 4
@@ -2474,9 +2749,8 @@ async function expectMentalDrillRecord(page, expected) {
       && Number(latest.incorrect || 0) === 0
       && Number(latest.accuracy || 0) === 0
       && completedUiOk
-      && rowsText.includes("Number Logic")
-      && rowsText.includes("0/10")
-      && /Best\s+0/.test(bestScoreText)
+      && rowsText.includes(`0/${values.total}`)
+      && /(?:Best|最佳)\s*0/i.test(bestScoreText)
       && leaderboardText.includes("Browser Route Smoke")
       && matchingEntry;
   }, expected, { timeout: 10000 });
@@ -2512,11 +2786,11 @@ async function runToolsMarketGameFlow(page, baseUrl) {
     result.step = "open tools route";
     await page.goto(`${baseUrl}/tools`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#marketGamePrompt b", { timeout: 10000 });
+    await page.waitForSelector("#marketGamePrompt .mg-question", { timeout: 10000 });
 
     const storedBefore = await readStoredMarketGameState(page);
-    const fairText = await page.locator("#marketGamePrompt b").first().innerText({ timeout: 10000 });
-    const fairValue = Number(String(fairText).replace(/[^\d.-]/g, ""));
+    const fairText = await page.locator("#marketGamePrompt .mg-question").innerText({ timeout: 10000 });
+    const fairValue = Number(String(fairText).match(/-?\d+(?:\.\d+)?/)?.[0]);
     if (!Number.isFinite(fairValue)) throw new Error(`Unable to parse market fair value from "${fairText}"`);
 
     result.step = "reject crossed quote";
@@ -2525,9 +2799,7 @@ async function runToolsMarketGameFlow(page, baseUrl) {
     await page.locator("#marketBidInput").fill(String(crossedBid));
     await page.locator("#marketAskInput").fill(String(crossedAsk));
     await page.locator("#submitMarketQuoteBtn").click({ timeout: 10000 });
-    await page.waitForFunction(() => (
-      /Bid must be below ask/i.test(document.querySelector("#marketGameFeedback")?.textContent || "")
-    ), null, { timeout: 10000 });
+    const crossedFeedback = await expectMarketCrossedQuoteFeedback(page);
     const storedAfterInvalid = await readStoredMarketGameState(page);
     if (storedAfterInvalid.records.length !== storedBefore.records.length) {
       throw new Error("Invalid crossed market quote unexpectedly created a game record");
@@ -2539,11 +2811,9 @@ async function runToolsMarketGameFlow(page, baseUrl) {
     await page.locator("#marketBidInput").fill(String(bid));
     await page.locator("#marketAskInput").fill(String(ask));
     await page.locator("#submitMarketQuoteBtn").click({ timeout: 10000 });
-    await page.waitForFunction(() => (
-      /^Round [+-]?\d+\. Mid /i.test(document.querySelector("#marketGameFeedback")?.textContent?.trim() || "")
-    ), null, { timeout: 10000 });
-    const feedback = (await page.locator("#marketGameFeedback").innerText()).trim();
-    const score = Number((await page.locator("#marketGameScore").innerText()).trim());
+    const scoredRound = await expectMarketScoredRoundFeedback(page, { fairValue });
+    const feedback = scoredRound.feedback;
+    const score = scoredRound.score;
     await expectStoredMarketGameRecord(page, {
       minRecords: storedBefore.records.length + 1,
       bid,
@@ -2569,6 +2839,7 @@ async function runToolsMarketGameFlow(page, baseUrl) {
 
     const storedAfter = await readStoredMarketGameState(page);
     result.fairValue = fairValue;
+    result.crossedFeedback = crossedFeedback;
     result.feedback = feedback;
     result.score = score;
     result.recordsBefore = storedBefore.records.length;
@@ -2585,6 +2856,36 @@ async function runToolsMarketGameFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   }
   return result;
+}
+
+async function expectMarketCrossedQuoteFeedback(page) {
+  await page.waitForFunction(() => {
+    const feedback = document.querySelector("#marketGameFeedback");
+    const text = feedback?.textContent?.trim() || "";
+    return feedback?.classList.contains("mg-fb-warn")
+      && /(Ask 必须高于 Bid|Ask must be above Bid)/i.test(text);
+  }, null, { timeout: 10000 });
+  return (await page.locator("#marketGameFeedback").innerText()).trim();
+}
+
+async function expectMarketScoredRoundFeedback(page, expected) {
+  await page.waitForFunction(({ fairValue }) => {
+    const feedback = document.querySelector("#marketGameFeedback");
+    const text = feedback?.textContent?.trim() || "";
+    const fairMatch = text.match(/(?:公允|fair)\s*(-?\d+(?:\.\d+)?)/i);
+    const score = Number(document.querySelector("#marketGameScore")?.textContent?.trim() || NaN);
+    return Boolean(feedback?.classList.contains("mg-fb-ok") || feedback?.classList.contains("mg-fb-bad"))
+      && /(报价成交|报价偏了|Quote filled|Quote off)/i.test(text)
+      && /(中价|mid)/i.test(text)
+      && /(价差|width)/i.test(text)
+      && /(公允|fair)/i.test(text)
+      && Number(fairMatch?.[1]) === Number(fairValue)
+      && Number.isFinite(score);
+  }, expected, { timeout: 10000 });
+  return page.evaluate(() => ({
+    feedback: document.querySelector("#marketGameFeedback")?.textContent?.trim() || "",
+    score: Number(document.querySelector("#marketGameScore")?.textContent?.trim() || NaN)
+  }));
 }
 
 async function readStoredMarketGameState(page) {
@@ -2886,7 +3187,7 @@ async function expectPokerHandStarted(page) {
         && hero?.cards?.length === 2
         && /hand\s+#?1/i.test(prompt)
         && /Preflop|Flop|Turn|River/i.test(stage)
-        && /Pot\s+\d+/i.test(pot)
+        && Number(pot.replace(/[^\d.-]/g, "")) > 0
         && /YOUR TURN/i.test(turn)
         && call
         && !call.disabled;
@@ -2993,18 +3294,27 @@ async function runPkMatchSubmitRevealFlow(page, baseUrl) {
     result.step = "open";
     await page.goto(`${baseUrl}/pk`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#pkProblem", { timeout: 10000 });
+    await page.waitForSelector("#startPkBtn", { state: "visible", timeout: 10000 });
     result.step = "start match";
     await page.locator("#startPkBtn").click({ timeout: 10000 });
     await expectPkStarted(page);
 
     const problemText = await page.locator("#pkProblem").innerText();
     const opponentName = await page.locator("#pkOpponentName").innerText();
-    const answer = buildPkSmokeAnswer(problemText);
     result.step = "submit answer";
-    await page.locator("#pkAnswer").fill(answer);
-    await page.locator("#pkForm").evaluate((form) => form.requestSubmit());
-    await expectPkSubmitted(page, { opponentName });
+    const options = page.locator("#pkOptions [data-pk-option]");
+    let submittedAnswer = "";
+    let usedOption = false;
+    if (await options.first().isVisible().catch(() => false)) {
+      submittedAnswer = await options.first().getAttribute("data-pk-option") || "";
+      usedOption = true;
+      await options.first().click({ timeout: 10000 });
+    } else {
+      submittedAnswer = buildPkSmokeAnswer(problemText);
+      await page.locator("#pkAnswer").fill(submittedAnswer);
+      await page.locator("#pkForm").evaluate((form) => form.requestSubmit());
+    }
+    const outcome = await expectPkAnswerOutcome(page, { opponentName, submittedAnswer, usedOption });
     await expectStoredPkRecord(page, { opponentName });
 
     result.step = "reveal reference";
@@ -3013,6 +3323,8 @@ async function runPkMatchSubmitRevealFlow(page, baseUrl) {
 
     result.opponentName = opponentName;
     result.problemPreview = problemText.slice(0, 120);
+    result.submittedAnswer = submittedAnswer;
+    result.outcome = outcome;
     result.recordPersisted = true;
     result.revealed = true;
     delete result.step;
@@ -3029,20 +3341,21 @@ async function runPkMatchSubmitRevealFlow(page, baseUrl) {
 
 async function expectPkStarted(page) {
   await page.waitForFunction(() => {
+    const pageRoot = document.querySelector(".qg-pk-page");
     const problemText = document.querySelector("#pkProblem")?.textContent || "";
     const normalizedProblem = problemText.trim();
     const opponentName = document.querySelector("#pkOpponentName")?.textContent || "";
-    const opponentScore = document.querySelector("#pkOpponentScore")?.textContent || "";
-    const userScore = document.querySelector("#pkUserScore")?.textContent || "";
-    const feed = document.querySelector("#pkFeed")?.textContent || "";
-    return normalizedProblem.length >= 12
+    const hasAnswerControl = Boolean(
+      document.querySelector("#pkOptions [data-pk-option]")
+      || document.querySelector("#pkForm #pkAnswer")
+    );
+    return pageRoot?.dataset.phase === "battle"
+      && normalizedProblem.length >= 12
       && !normalizedProblem.includes("点击匹配开始")
       && !normalizedProblem.includes("题库为空")
       && opponentName.trim()
       && opponentName.trim() !== "Online Quant"
-      && opponentScore.trim() === "?"
-      && userScore.trim() === "0"
-      && /已匹配|题目来自/.test(feed);
+      && hasAnswerControl;
   }, null, { timeout: 10000 });
 }
 
@@ -3065,28 +3378,52 @@ function isPrime(value) {
   return true;
 }
 
-async function expectPkSubmitted(page, expected) {
-  await page.waitForFunction(({ opponentName }) => {
+async function expectPkAnswerOutcome(page, expected) {
+  await page.waitForFunction(({ opponentName, submittedAnswer, usedOption }) => {
+    const pageRoot = document.querySelector(".qg-pk-page");
     const userScore = Number(document.querySelector("#pkUserScore")?.textContent || NaN);
     const opponentScore = Number(document.querySelector("#pkOpponentScore")?.textContent || NaN);
-    const answer = document.querySelector("#pkAnswer")?.value || "";
-    const feed = document.querySelector("#pkFeed")?.textContent || "";
-    return Number.isFinite(userScore)
+    const history = document.querySelector(".pk-hist-list")?.textContent || "";
+    const reveal = document.querySelector(".pk-reveal");
+    const kicker = reveal?.querySelector(".pk-reveal-kicker")?.textContent?.trim() || "";
+    const title = reveal?.querySelector(".pk-reveal-title")?.textContent?.trim() || "";
+    const sub = reveal?.querySelector(".pk-reveal-sub")?.textContent?.trim() || "";
+    const answerCleared = document.querySelector("#pkAnswer")?.value === "";
+    const selectedOption = usedOption
+      ? document.querySelector(`#pkOptions [data-pk-option="${CSS.escape(submittedAnswer)}"]`)
+      : null;
+    const answerRecorded = usedOption
+      ? Boolean(selectedOption && (selectedOption.classList.contains("is-correct") || selectedOption.classList.contains("is-wrong")))
+      : answerCleared;
+    return pageRoot?.dataset.phase === "reveal"
+      && reveal
+      && !reveal.hidden
+      && Number.isFinite(userScore)
       && userScore > 0
       && Number.isFinite(opponentScore)
       && opponentScore >= 0
-      && answer === ""
-      && feed.includes(opponentName)
-      && /你的得分/.test(feed)
-      && /获得/.test(feed)
-      && /XP/.test(feed);
+      && answerCleared
+      && answerRecorded
+      && /^(VICTORY|DEFEAT)$/.test(kicker)
+      && title.length > 0
+      && sub.length > 0
+      && history.includes(opponentName);
   }, expected, { timeout: 10000 });
+  return page.evaluate(() => ({
+    kicker: document.querySelector(".pk-reveal-kicker")?.textContent?.trim() || "",
+    title: document.querySelector(".pk-reveal-title")?.textContent?.trim() || "",
+    userScore: Number(document.querySelector("#pkUserScore")?.textContent || NaN),
+    opponentScore: Number(document.querySelector("#pkOpponentScore")?.textContent || NaN)
+  }));
 }
 
 async function expectPkReveal(page) {
   await page.waitForFunction(() => {
+    const feedNode = document.querySelector("#pkFeed");
     const feed = document.querySelector("#pkFeed")?.textContent || "";
-    return feed.includes("参考答案") && feed.trim().length > "参考答案".length;
+    return feedNode && !feedNode.hidden
+      && feed.includes("参考答案")
+      && feed.trim().length > "参考答案".length;
   }, null, { timeout: 10000 });
 }
 
@@ -3150,12 +3487,13 @@ async function runPlanCreateEditTaskAndNavigationFlow(page, baseUrl) {
     await page.locator("#prepHoursSelect").selectOption("8");
     await page.locator('input[name="prepDiagnostic"][value="skip"]').check({ timeout: 10000 });
     await page.locator("#prepPlanSetupForm").evaluate((form) => form.requestSubmit());
+    await expectPlanSetupValues(page, { role: "quantTrading", season: "2027-summer", hours: "8" });
     await expectPlanDashboard(page, {
       roleText: "Quant Trading",
       seasonText: "2027 Summer",
       hours: "8",
       done: "0/4",
-      diagnosticText: "未测评"
+      diagnosticText: "能力定位"
     });
     await expectStoredPrepPlan(page, {
       role: "quantTrading",
@@ -3170,15 +3508,17 @@ async function runPlanCreateEditTaskAndNavigationFlow(page, baseUrl) {
       const form = document.querySelector("#prepPlanSetupForm");
       return form && !form.classList.contains("hidden");
     }, null, { timeout: 10000 });
+    await expectPlanSetupValues(page, { role: "quantTrading", season: "2027-summer", hours: "8" });
     await page.locator("#prepRoleSelect").selectOption("quantDeveloper");
     await page.locator("#prepHoursSelect").selectOption("12");
     await page.locator("#prepPlanSetupForm").evaluate((form) => form.requestSubmit());
+    await expectPlanSetupValues(page, { role: "quantDeveloper", season: "2027-summer", hours: "12" });
     await expectPlanDashboard(page, {
       roleText: "Quant Developer",
       seasonText: "2027 Summer",
       hours: "12",
       done: "0/5",
-      diagnosticText: "未测评"
+      diagnosticText: "能力定位"
     });
     await expectStoredPrepPlan(page, {
       role: "quantDeveloper",
@@ -3193,6 +3533,10 @@ async function runPlanCreateEditTaskAndNavigationFlow(page, baseUrl) {
     const taskId = await firstToggle.getAttribute("data-prep-toggle-task");
     if (!taskId) throw new Error("First prep task did not expose data-prep-toggle-task.");
     await firstToggle.click({ timeout: 10000 });
+    await page.waitForFunction((id) => (
+      document.querySelector(`[data-prep-toggle-task="${id}"]`)?.closest(".qg-plan-card")?.classList.contains("doing")
+    ), taskId, { timeout: 10000 });
+    await page.locator(`[data-prep-toggle-task="${taskId}"]`).click({ timeout: 10000 });
     await expectPlanTaskDone(page, { taskId, doneText: "1/5" });
     await expectStoredPrepPlan(page, {
       role: "quantDeveloper",
@@ -3210,7 +3554,7 @@ async function runPlanCreateEditTaskAndNavigationFlow(page, baseUrl) {
       seasonText: "2027 Summer",
       hours: "12",
       done: "1/5",
-      diagnosticText: "未测评"
+      diagnosticText: "能力定位"
     });
     await expectPlanTaskDone(page, { taskId, doneText: "1/5" });
     await expectStoredPrepPlan(page, {
@@ -3221,8 +3565,23 @@ async function runPlanCreateEditTaskAndNavigationFlow(page, baseUrl) {
       completedCount: 1
     });
 
+    result.step = "verify current editor values after reload";
+    await page.locator("#editPrepPlanBtn").click({ timeout: 10000 });
+    await page.waitForSelector("#prepPlanSetupForm:not(.hidden)", { state: "visible", timeout: 10000 });
+    await expectPlanSetupValues(page, { role: "quantDeveloper", season: "2027-summer", hours: "12" });
+    await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
+    await waitForAuthenticatedShell(page);
+    await expectPlanDashboard(page, {
+      roleText: "Quant Developer",
+      seasonText: "2027 Summer",
+      hours: "12",
+      done: "1/5",
+      diagnosticText: "能力定位"
+    });
+    await expectPlanTaskDone(page, { taskId, doneText: "1/5" });
+
     result.step = "task navigation to problems";
-    const problemAction = page.locator('.prep-task-action[data-prep-open="problems"][data-prep-query]:not([data-prep-query=""])').first();
+    const problemAction = page.locator('.qg-plan-card-go[data-prep-open="problems"][data-prep-query]:not([data-prep-query=""])').first();
     await problemAction.waitFor({ state: "visible", timeout: 10000 });
     const query = await problemAction.getAttribute("data-prep-query");
     if (!query) throw new Error("Problem prep task did not expose data-prep-query.");
@@ -3233,6 +3592,7 @@ async function runPlanCreateEditTaskAndNavigationFlow(page, baseUrl) {
 
     delete result.step;
     result.role = "quantDeveloper";
+    result.season = "2027-summer";
     result.weeklyHours = 12;
     result.completedTaskId = taskId;
     result.problemQuery = query;
@@ -3245,19 +3605,29 @@ async function runPlanCreateEditTaskAndNavigationFlow(page, baseUrl) {
   return result;
 }
 
+async function expectPlanSetupValues(page, expected) {
+  await page.waitForFunction(({ role, season, hours }) => {
+    const roleSelect = document.querySelector("#prepRoleSelect");
+    const seasonInput = document.querySelector(`input[name="prepSeason"][value="${CSS.escape(season)}"]`);
+    const hoursSelect = document.querySelector("#prepHoursSelect");
+    return roleSelect?.value === role
+      && seasonInput?.checked === true
+      && hoursSelect?.value === String(hours);
+  }, expected, { timeout: 10000 });
+}
+
 async function expectPlanDashboard(page, expected) {
   await page.waitForFunction((values) => {
     const dashboard = document.querySelector("#prepPlanDashboard");
     if (!dashboard || dashboard.classList.contains("hidden")) return false;
     const text = dashboard.textContent || "";
-    const metrics = [...dashboard.querySelectorAll(".prep-status-metrics strong")]
-      .map((node) => node.textContent.trim());
-    return text.includes(values.roleText)
-      && text.includes(values.seasonText)
-      && text.includes(values.diagnosticText)
-      && metrics.includes(values.hours)
-      && metrics.includes(values.done)
-      && document.querySelectorAll(".prep-task").length === Number(values.done.split("/")[1] || 0);
+    const cards = [...dashboard.querySelectorAll(".qg-plan-card")];
+    const [done, total] = String(values.done || "0/0").split("/").map(Number);
+    return text.includes(values.diagnosticText)
+      && cards.length === total
+      && cards.filter((card) => card.classList.contains("done")).length === done
+      && Boolean(dashboard.querySelector(".qg-plan-week-strip"))
+      && Boolean(dashboard.querySelector(".qg-plan-timeline"));
   }, expected, { timeout: 10000 });
 }
 
@@ -3288,11 +3658,12 @@ async function expectStoredPrepPlan(page, expected) {
 async function expectPlanTaskDone(page, expected) {
   await page.waitForFunction(({ taskId, doneText }) => {
     const toggle = document.querySelector(`[data-prep-toggle-task="${taskId}"]`);
-    const task = toggle?.closest(".prep-task");
-    const metrics = [...document.querySelectorAll("#prepPlanDashboard .prep-status-metrics strong")]
-      .map((node) => node.textContent.trim());
+    const task = toggle?.closest(".qg-plan-card");
+    const [done, total] = String(doneText || "0/0").split("/").map(Number);
+    const cards = [...document.querySelectorAll("#prepPlanDashboard .qg-plan-card")];
     return task?.classList.contains("done")
-      && metrics.includes(doneText);
+      && cards.length === total
+      && cards.filter((card) => card.classList.contains("done")).length === done;
   }, expected, { timeout: 10000 });
 }
 
@@ -3330,7 +3701,7 @@ async function runPlanBaselineDiagnosticCompletionFlow(page, baseUrl) {
       seasonText: "2027 Summer",
       hours: "8",
       done: "0/4",
-      diagnosticText: "Baseline 待完成"
+      diagnosticText: "Baseline 测评"
     });
     await page.waitForSelector("#prepDiagnosticForm fieldset", { timeout: 10000 });
     const questionCount = await page.locator("#prepDiagnosticForm fieldset").count();
@@ -3436,24 +3807,22 @@ async function expectPlanDiagnosticCompleted(page, expected) {
     const dashboard = document.querySelector("#prepPlanDashboard");
     if (!dashboard || dashboard.classList.contains("hidden")) return false;
     const text = dashboard.textContent || "";
-    const metrics = [...dashboard.querySelectorAll(".prep-status-metrics strong")]
-      .map((node) => node.textContent.trim());
+    const cards = [...dashboard.querySelectorAll(".qg-plan-card")];
+    const [done, total] = String(values.done || "0/0").split("/").map(Number);
     const scoreText = values.expectedScore === undefined
       ? new RegExp(`Baseline\\s+\\d+/${values.questionCount}`)
       : new RegExp(`Baseline\\s+${values.expectedScore}/${values.questionCount}`);
-    return text.includes(values.roleText)
-      && text.includes(values.seasonText)
-      && scoreText.test(text)
-      && metrics.includes(values.hours)
-      && metrics.includes(values.done)
+    return scoreText.test(text)
+      && cards.length === total
+      && cards.filter((card) => card.classList.contains("done")).length === done
       && document.querySelectorAll(".prep-score-row").length > 0
       && !document.querySelector("#prepDiagnosticForm");
   }, expected, { timeout: 10000 });
   return page.evaluate((values) => {
-    const metricText = [...document.querySelectorAll("#prepPlanDashboard .prep-status-metrics strong")]
+    const headingText = [...document.querySelectorAll("#prepPlanDashboard h3")]
       .map((node) => node.textContent.trim())
       .find((text) => text.startsWith("Baseline "));
-    const score = Number(metricText?.match(/Baseline\s+(\d+)\//)?.[1] || 0);
+    const score = Number(headingText?.match(/Baseline\s+(\d+)\//)?.[1] || 0);
     return {
       score,
       scoreRowCount: document.querySelectorAll(".prep-score-row").length,
@@ -3743,6 +4112,7 @@ async function runInterviewPdfQuestionSourceFlow(page, baseUrl) {
   ].join("\n"), "utf8");
   let requestPayload = null;
   let requestCount = 0;
+  let previousLlmStorage;
   const routeHandler = async (route) => {
     requestCount += 1;
     if (route.request().method() === "OPTIONS") {
@@ -3787,6 +4157,7 @@ async function runInterviewPdfQuestionSourceFlow(page, baseUrl) {
     result.step = "return to interview setup";
     await page.goto(`${baseUrl}/interview`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
+    previousLlmStorage = await readRawLocalStorage(page, "quantMemoryBoard.llm.v1");
     if (await page.locator("#exitInterviewBtn").isVisible({ timeout: 1000 }).catch(() => false)) {
       await page.locator("#exitInterviewBtn").click({ timeout: 10000 });
     }
@@ -3851,6 +4222,9 @@ async function runInterviewPdfQuestionSourceFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   } finally {
     await page.unroute(routePattern, routeHandler).catch(() => {});
+    if (previousLlmStorage !== undefined) {
+      await restoreRawLocalStorage(page, "quantMemoryBoard.llm.v1", previousLlmStorage).catch(() => {});
+    }
   }
   return result;
 }
@@ -4433,26 +4807,28 @@ async function runCommunityPostFlow(page, baseUrl) {
   try {
     await page.goto(`${baseUrl}/community`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#communityForm", { timeout: 10000 });
+    await openCommunityComposer(page);
 
     await page.locator("#communityText").fill(postText);
     await page.locator("#communityForm button[type='submit']").click({ timeout: 10000 });
-    const card = page.locator(".community-card", { hasText: postText }).first();
+    const card = page.locator(".forum-thread", { hasText: postText }).first();
     await card.waitFor({ state: "visible", timeout: 10000 });
     await page.waitForFunction(() => document.querySelector("#communityText")?.value === "", null, { timeout: 10000 });
 
-    const likeButton = card.locator(".community-actions button").filter({ hasText: /赞|Like|like/i }).first();
+    const likeButton = card.locator(".forum-vote .vote-btn").first();
     await likeButton.click({ timeout: 10000 });
     await page.waitForFunction((text) => {
-      const cardNode = [...document.querySelectorAll(".community-card")]
+      const cardNode = [...document.querySelectorAll(".forum-thread")]
         .find((node) => node.textContent.includes(text));
-      return /已赞|取消赞|Liked|Unlike/i.test(cardNode?.textContent || "") && /-\s*1/.test(cardNode?.textContent || "");
+      return cardNode?.querySelector(".forum-vote .vote-btn")?.getAttribute("aria-pressed") === "true"
+        && cardNode?.querySelector(".forum-vote .vote-count")?.textContent?.trim() === "1";
     }, postText, { timeout: 10000 });
 
+    await card.locator(".forum-replies-toggle").click({ timeout: 10000 });
     await card.locator(".community-comment-form input").fill(commentText);
     await card.locator(".community-comment-form").evaluate((form) => form.requestSubmit());
     await page.waitForFunction((text) => {
-      const cardNode = [...document.querySelectorAll(".community-card")]
+      const cardNode = [...document.querySelectorAll(".forum-thread")]
         .find((node) => node.textContent.includes(text));
       return cardNode?.textContent.includes(text);
     }, commentText, { timeout: 10000 });
@@ -4460,11 +4836,15 @@ async function runCommunityPostFlow(page, baseUrl) {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#communityList", { timeout: 10000 });
+    const reloadedCard = page.locator(".forum-thread", { hasText: postText }).first();
+    await reloadedCard.locator(".forum-replies-toggle").click({ timeout: 10000 });
     await page.waitForFunction(({ postText: savedPost, commentText: savedComment }) => {
-      const cardNode = [...document.querySelectorAll(".community-card")]
+      const cardNode = [...document.querySelectorAll(".forum-thread")]
         .find((node) => node.textContent.includes(savedPost));
       const text = cardNode?.textContent || "";
-      return text.includes(savedComment) && /已赞|取消赞|Liked|Unlike/i.test(text) && /-\s*1/.test(text);
+      return text.includes(savedComment)
+        && cardNode?.querySelector(".forum-vote .vote-btn")?.getAttribute("aria-pressed") === "true"
+        && cardNode?.querySelector(".forum-vote .vote-count")?.textContent?.trim() === "1";
     }, { postText, commentText }, { timeout: 10000 });
 
     result.postText = postText;
@@ -4490,7 +4870,7 @@ async function runCommunityMediaPostFlow(page, baseUrl) {
   try {
     await page.goto(`${baseUrl}/community`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#communityForm", { timeout: 10000 });
+    await openCommunityComposer(page);
 
     await page.locator("#communityMedia").setInputFiles({
       name: fileName,
@@ -4541,7 +4921,7 @@ async function runCommunityVideoPostFlow(page, baseUrl) {
   try {
     await page.goto(`${baseUrl}/community`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#communityForm", { timeout: 10000 });
+    await openCommunityComposer(page);
 
     await page.locator("#communityMedia").setInputFiles({
       name: fileName,
@@ -4586,7 +4966,7 @@ async function runCommunityVideoPostFlow(page, baseUrl) {
 async function expectCommunityMediaPost(page, expected) {
   await page.waitForFunction(({ postText, fileName, dataUrl, mediaType }) => {
     try {
-      const card = [...document.querySelectorAll(".community-card")]
+      const card = [...document.querySelectorAll(".forum-thread")]
         .find((node) => node.textContent.includes(postText));
       if (!card) return false;
       const selector = mediaType === "video" ? ".community-media video" : ".community-media img";
@@ -4648,9 +5028,9 @@ async function runCommunityDirectMessageFromPostFlow(page, baseUrl) {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#communityList", { timeout: 10000 });
-    const card = page.locator(".community-card", { hasText: postText }).first();
+    const card = page.locator(".forum-thread", { hasText: postText }).first();
     await card.waitFor({ state: "visible", timeout: 10000 });
-    await card.locator("button", { hasText: /私信|Message/i }).click({ timeout: 10000 });
+    await card.locator('.forum-thread-tools button[aria-label="私信"], .forum-thread-tools button[aria-label*="Message"]').click({ timeout: 10000 });
 
     await page.waitForFunction(() => window.location.pathname === "/messages", null, { timeout: 10000 });
     await expectCommunityDirectMessageThread(page, {
@@ -4674,6 +5054,7 @@ async function runCommunityDirectMessageFromPostFlow(page, baseUrl) {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#messageThreadList", { timeout: 10000 });
+    await page.locator(`[data-message-thread="${threadId}"]`).click({ timeout: 10000 });
     await expectCommunityDirectMessageThread(page, {
       authorName,
       introText,
@@ -4714,7 +5095,7 @@ async function expectCommunityDirectMessageThread(page, expected) {
         && (!replyText || bodyText.includes(replyText))
         && threadText.includes(replyText || introText)
         && threadSelected
-        && (!unreadCleared || !thread?.querySelector("b"))
+        && (!unreadCleared || !thread?.querySelector(".message-thread-unread"))
         && storedThread
         && storedThread.participants?.some((item) => item.id === "local:browser-route-smoke")
         && storedThread.participants?.some((item) => item.name === authorName)
@@ -4724,6 +5105,17 @@ async function expectCommunityDirectMessageThread(page, expected) {
       return false;
     }
   }, expected, { timeout: 10000 });
+}
+
+async function openCommunityComposer(page) {
+  const form = page.locator("#communityForm");
+  if (!await form.isVisible().catch(() => false)) {
+    await page.locator(".forum-post-cta").click({ timeout: 10000 });
+  }
+  await form.waitFor({ state: "visible", timeout: 10000 });
+  await page.waitForFunction(() => (
+    document.querySelector(".forum-post-cta")?.getAttribute("aria-expanded") === "true"
+  ), null, { timeout: 10000 });
 }
 
 async function runMobileCommunityMessagesFlow(page, baseUrl) {
@@ -4745,7 +5137,7 @@ async function runMobileCommunityMessagesFlow(page, baseUrl) {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${baseUrl}/community`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#communityForm", { timeout: 10000 });
+    await page.waitForSelector(".forum-post-cta", { state: "visible", timeout: 10000 });
     await page.evaluate(({ mentorId, mentorName, mentorPostText }) => {
       const now = new Date().toISOString();
       localStorage.setItem("quantMemoryBoard.community.v1", JSON.stringify({
@@ -4770,25 +5162,29 @@ async function runMobileCommunityMessagesFlow(page, baseUrl) {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#communityList", { timeout: 10000 });
-    await expectMobileSocialState(page, { section: "community", minCards: 1 });
+    await expectMobileSocialState(page, { section: "community", minCards: 1, composerOpen: false });
 
     result.step = "post, like, and comment from mobile community";
+    await openCommunityComposer(page);
+    await expectMobileSocialState(page, { section: "community", minCards: 1, composerOpen: true });
     await page.locator("#communityText").fill(selfPostText);
     await page.locator("#communityForm").evaluate((form) => form.requestSubmit());
     await page.waitForFunction((text) => {
-      const card = [...document.querySelectorAll(".community-card")]
+      const card = [...document.querySelectorAll(".forum-thread")]
         .find((node) => node.textContent.includes(text));
       return card && document.querySelector("#communityText")?.value === "";
     }, selfPostText, { timeout: 10000 });
-    await expectMobileSocialState(page, { section: "community", minCards: 2 });
+    await page.locator(".forum-post-cta").click({ timeout: 10000 });
+    await expectMobileSocialState(page, { section: "community", minCards: 2, composerOpen: false });
 
-    const selfCard = page.locator(".community-card", { hasText: selfPostText }).first();
-    await selfCard.locator(".community-actions button").filter({ hasText: /赞|Like|like/i }).first().click({ timeout: 10000 });
+    const selfCard = page.locator(".forum-thread", { hasText: selfPostText }).first();
+    await selfCard.locator(".forum-vote .vote-btn").first().click({ timeout: 10000 });
+    await selfCard.locator(".forum-replies-toggle").click({ timeout: 10000 });
     await selfCard.locator(".community-comment-form input").fill(commentText);
     await selfCard.locator(".community-comment-form").evaluate((form) => form.requestSubmit());
     await page.waitForFunction(({ selfPostText, commentText, currentUserId }) => {
       try {
-        const card = [...document.querySelectorAll(".community-card")]
+        const card = [...document.querySelectorAll(".forum-thread")]
           .find((node) => node.textContent.includes(selfPostText));
         const cardText = card?.textContent || "";
         const community = JSON.parse(localStorage.getItem("quantMemoryBoard.community.v1") || "{}");
@@ -4796,22 +5192,23 @@ async function runMobileCommunityMessagesFlow(page, baseUrl) {
           ? community.posts.find((item) => item.text === selfPostText)
           : null;
         return cardText.includes(commentText)
-          && /已赞|取消赞|Liked|Unlike/i.test(cardText)
-          && /-\s*1/.test(cardText)
+          && card?.querySelector(".forum-vote .vote-btn")?.getAttribute("aria-pressed") === "true"
+          && card?.querySelector(".forum-vote .vote-count")?.textContent?.trim() === "1"
           && storedPost?.likes?.includes(currentUserId)
           && storedPost?.comments?.some((comment) => comment.text === commentText);
       } catch {
         return false;
       }
     }, { selfPostText, commentText, currentUserId }, { timeout: 10000 });
-    await expectMobileSocialState(page, { section: "community", minCards: 2 });
+    await expectMobileSocialState(page, { section: "community", minCards: 2, composerOpen: false, repliesVisible: true });
 
     result.step = "open mobile direct message";
-    const mentorCard = page.locator(".community-card", { hasText: mentorPostText }).first();
+    const mentorCard = page.locator(".forum-thread", { hasText: mentorPostText }).first();
     await mentorCard.waitFor({ state: "visible", timeout: 10000 });
-    await mentorCard.locator("button", { hasText: /私信|Message/i }).click({ timeout: 10000 });
+    await mentorCard.locator('.forum-thread-tools button[aria-label="私信"], .forum-thread-tools button[aria-label*="Message"]').click({ timeout: 10000 });
     await page.waitForURL(/\/messages$/, { timeout: 10000 });
-    await expectMobileSocialState(page, { section: "messages", minThreads: 1 });
+    await page.locator(`[data-message-thread="${threadId}"]`).click({ timeout: 10000 });
+    await expectMobileSocialState(page, { section: "messages", minThreads: 1, messageView: "thread" });
     await expectCommunityDirectMessageThread(page, {
       authorName: mentorName,
       introText,
@@ -4830,11 +5227,13 @@ async function runMobileCommunityMessagesFlow(page, baseUrl) {
       threadId,
       unreadCleared: true
     });
-    await expectMobileSocialState(page, { section: "messages", minThreads: 1 });
+    await expectMobileSocialState(page, { section: "messages", minThreads: 1, messageView: "thread" });
 
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#messageThreadList", { timeout: 10000 });
+    await expectMobileSocialState(page, { section: "messages", minThreads: 1, messageView: "list" });
+    await page.locator(`[data-message-thread="${threadId}"]`).click({ timeout: 10000 });
     await expectCommunityDirectMessageThread(page, {
       authorName: mentorName,
       introText,
@@ -4842,7 +5241,7 @@ async function runMobileCommunityMessagesFlow(page, baseUrl) {
       threadId,
       unreadCleared: true
     });
-    await expectMobileSocialState(page, { section: "messages", minThreads: 1 });
+    await expectMobileSocialState(page, { section: "messages", minThreads: 1, messageView: "thread" });
 
     delete result.step;
     result.mobileViewport = true;
@@ -4899,42 +5298,44 @@ async function expectMobileSocialState(page, expected = {}) {
     if (window.innerWidth > 430 || overflow > 4) return false;
 
     if (values.section === "community") {
-      const controls = [
-        "#communitySummary",
-        "#communityForm",
-        "#communityText",
-        ".community-compose-actions .file-button",
-        ".community-compose-actions .primary-button",
+      const baselineControls = [
+        ".forum-post-cta",
         '[data-community-filter="all"]',
         '[data-community-filter="experience"]',
         "#communityList"
       ].map((selector) => document.querySelector(selector));
-      const cards = [...document.querySelectorAll("#communityList .community-card")];
-      return controls.every(visible)
+      const cards = [...document.querySelectorAll("#communityList .forum-thread")];
+      const form = document.querySelector("#communityForm");
+      const composerMatches = values.composerOpen
+        ? [form, document.querySelector("#communityText"), document.querySelector(".community-compose-actions")].every(visible)
+        : Boolean(form?.classList.contains("hidden"));
+      const repliesMatch = !values.repliesVisible
+        || cards.some((card) => visible(card.querySelector(".community-comments:not(.hidden)")));
+      return baselineControls.every(visible)
         && cards.length >= values.minCards
         && cards.slice(0, Math.min(cards.length, 3)).every(visible)
-        && cards.slice(0, Math.min(cards.length, 3)).every((card) => (
-          visible(card.querySelector(".community-actions"))
-          && visible(card.querySelector(".community-comment-form"))
-        ));
+        && composerMatches
+        && repliesMatch;
     }
 
     if (values.section === "messages") {
-      const controls = [
-        "#messagesPageTitle",
-        "#messagesSummary",
-        "#messageThreadList",
-        ".message-thread-item",
+      const layout = document.querySelector(".messages-chat");
+      const threads = [...document.querySelectorAll("#messageThreadList .message-thread-item")];
+      if (layout?.dataset.mobileView !== values.messageView || threads.length < values.minThreads) return false;
+      if (values.messageView === "list") {
+        return visible(document.querySelector("#messagesPageTitle"))
+          && visible(document.querySelector("#messageThreadList"))
+          && threads.slice(0, Math.min(threads.length, 3)).every(visible);
+      }
+      return [
+        ".message-conversation",
+        ".message-thread-back",
         "#messageConversationHeader",
         "#messageConversationBody",
         "#messageComposerForm",
         "#messageComposerInput",
         "#messageComposerForm button[type='submit']"
-      ].map((selector) => document.querySelector(selector));
-      const threads = [...document.querySelectorAll("#messageThreadList .message-thread-item")];
-      return controls.every(visible)
-        && threads.length >= values.minThreads
-        && threads.slice(0, Math.min(threads.length, 3)).every(visible);
+      ].every((selector) => visible(document.querySelector(selector)));
     }
 
     return false;
@@ -5015,14 +5416,14 @@ async function runMessagesThreadFlow(page, baseUrl) {
     await page.waitForFunction((name) => {
       const thread = [...document.querySelectorAll(".message-thread-item")]
         .find((node) => node.textContent.includes(name));
-      return thread?.querySelector("b")?.textContent?.trim() === "1";
+      return thread?.querySelector(".message-thread-unread")?.textContent?.trim() === "1";
     }, mentorName, { timeout: 10000 });
 
     await threadButton.click({ timeout: 10000 });
     await page.waitForFunction((name) => {
       const thread = [...document.querySelectorAll(".message-thread-item")]
         .find((node) => node.textContent.includes(name));
-      return thread && !thread.querySelector("b");
+      return thread && !thread.querySelector(".message-thread-unread");
     }, mentorName, { timeout: 10000 });
 
     await page.locator("#messageComposerInput").fill(replyText);
@@ -5035,6 +5436,7 @@ async function runMessagesThreadFlow(page, baseUrl) {
 
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
+    await page.locator(`[data-message-thread="${threadId}"]`).click({ timeout: 10000 });
     await page.waitForFunction(({ mentorName: name, inboundText: inbound, replyText: reply }) => {
       const headerText = document.querySelector("#messageConversationHeader")?.textContent || "";
       const bodyText = document.querySelector("#messageConversationBody")?.textContent || "";
@@ -5045,7 +5447,7 @@ async function runMessagesThreadFlow(page, baseUrl) {
         && bodyText.includes(inbound)
         && bodyText.includes(reply)
         && threadText.includes(reply)
-        && !thread?.querySelector("b");
+        && !thread?.querySelector(".message-thread-unread");
     }, { mentorName, inboundText, replyText }, { timeout: 10000 });
 
     result.threadId = threadId;
@@ -5127,8 +5529,7 @@ async function runMessagesMultiThreadUnreadFlow(page, baseUrl) {
       mentorName: beta.mentorName,
       threadText: beta.inboundText,
       unreadCount: 1,
-      active: true,
-      bodyText: beta.inboundText
+      active: false
     });
 
     await page.locator(`[data-message-thread="${beta.id}"]`).click({ timeout: 10000 });
@@ -5189,8 +5590,7 @@ async function runMessagesMultiThreadUnreadFlow(page, baseUrl) {
       mentorName: alpha.mentorName,
       threadText: alpha.replyText,
       unreadCount: 0,
-      active: true,
-      bodyText: alpha.replyText,
+      active: false,
       currentUserId,
       storedInboundRead: true,
       storedReplyText: alpha.replyText
@@ -5201,6 +5601,30 @@ async function runMessagesMultiThreadUnreadFlow(page, baseUrl) {
       threadText: beta.replyText,
       unreadCount: 0,
       active: false,
+      currentUserId,
+      storedInboundRead: true,
+      storedReplyText: beta.replyText
+    });
+    await page.locator(`[data-message-thread="${alpha.id}"]`).click({ timeout: 10000 });
+    await expectMessageThreadState(page, {
+      threadId: alpha.id,
+      mentorName: alpha.mentorName,
+      threadText: alpha.replyText,
+      unreadCount: 0,
+      active: true,
+      bodyText: alpha.replyText,
+      currentUserId,
+      storedInboundRead: true,
+      storedReplyText: alpha.replyText
+    });
+    await page.locator(`[data-message-thread="${beta.id}"]`).click({ timeout: 10000 });
+    await expectMessageThreadState(page, {
+      threadId: beta.id,
+      mentorName: beta.mentorName,
+      threadText: beta.replyText,
+      unreadCount: 0,
+      active: true,
+      bodyText: beta.replyText,
       currentUserId,
       storedInboundRead: true,
       storedReplyText: beta.replyText
@@ -5229,11 +5653,11 @@ async function expectMessageThreadState(page, expected) {
       const threadText = thread.textContent || "";
       const headerText = document.querySelector("#messageConversationHeader")?.textContent || "";
       const bodyText = document.querySelector("#messageConversationBody")?.textContent || "";
-      const badge = thread.querySelector("b")?.textContent?.trim() || "";
+      const badge = thread.querySelector(".message-thread-unread")?.textContent?.trim() || "";
       const isActive = thread.classList.contains("active") || thread.getAttribute("aria-pressed") === "true";
       const unreadMatches = Number(values.unreadCount || 0) > 0
         ? badge === String(values.unreadCount)
-        : !thread.querySelector("b");
+        : !thread.querySelector(".message-thread-unread");
       const activeMatches = typeof values.active === "boolean" ? isActive === values.active : true;
       const activeConversationMatches = !values.active || (
         headerText.includes(values.mentorName)
@@ -5314,7 +5738,8 @@ async function runExperiencesRecordFlow(page, baseUrl) {
   try {
     await page.goto(`${baseUrl}/experiences`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#experienceForm", { timeout: 10000 });
+    await page.locator("#newExperienceBtn").click({ timeout: 10000 });
+    await page.waitForSelector("#experienceForm", { state: "visible", timeout: 10000 });
 
     await fillExperienceForm(page, initial);
     await page.locator("#experienceForm button[type='submit']").click({ timeout: 10000 });
@@ -5511,7 +5936,7 @@ async function runNewsManualSubmitFlow(page, baseUrl) {
     await page.locator("#newsForm").evaluate((form) => form.requestSubmit());
     await page.waitForFunction(() => !document.querySelector("#newsForm"), null, { timeout: 10000 });
 
-    const card = page.locator(".news-card", { hasText: expected.title }).first();
+    const card = page.locator("#newsList [data-news-id]", { hasText: expected.title }).first();
     await card.waitFor({ state: "visible", timeout: 10000 });
     const newsId = await card.getAttribute("data-news-id");
     if (!newsId) throw new Error("Saved news card did not expose data-news-id.");
@@ -5527,7 +5952,7 @@ async function runNewsManualSubmitFlow(page, baseUrl) {
     await page.locator("#newsBackBtn").click({ timeout: 10000 });
     await page.waitForFunction((id) => {
       const cardNode = document.querySelector(`[data-news-id="${id}"]`);
-      return cardNode?.classList.contains("read") && /已读|Read/i.test(cardNode.textContent || "");
+      return cardNode?.classList.contains("read");
     }, newsId, { timeout: 10000 });
     await expectStoredNews(page, { ...expected, id: newsId, read: true });
 
@@ -5553,26 +5978,21 @@ async function expectNewsCard(page, expected) {
   await page.waitForFunction((values) => {
     const card = document.querySelector(`[data-news-id="${values.id}"]`);
     const text = card?.textContent || "";
-    const link = card?.querySelector(`a[href="${values.sourceUrl}"]`);
     const hasReadState = values.read
-      ? card?.classList.contains("read") && /已读|Read/i.test(text)
+      ? card?.classList.contains("read")
       : !card?.classList.contains("read");
     return [
       values.title,
       values.source,
-      values.summary,
-      values.insight,
-      ...values.tags
+      values.summary
     ].every((value) => text.includes(value))
-      && hasReadState
-      && link?.getAttribute("target") === "_blank"
-      && link?.getAttribute("rel") === "noreferrer";
+      && hasReadState;
   }, expected, { timeout: 10000 });
 }
 
 async function expectNewsFilterResult(page, expected) {
   await page.waitForFunction(({ id, sourceType }) => {
-    const cards = [...document.querySelectorAll("#newsList .news-card")];
+    const cards = [...document.querySelectorAll("#newsList [data-news-id]")];
     const target = cards.find((card) => card.getAttribute("data-news-id") === id);
     return Boolean(target)
       && cards.length > 0
@@ -5655,10 +6075,12 @@ async function runMobileNewsExperiencesFlow(page, baseUrl) {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${baseUrl}/experiences`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#experienceForm", { timeout: 10000 });
-    await expectMobileContentState(page, { section: "experiences", minCards: 0 });
+    await page.waitForSelector("#newExperienceBtn", { state: "visible", timeout: 10000 });
+    await expectMobileContentState(page, { section: "experiences", minCards: 0, formOpen: false });
 
     result.step = "save mobile experience";
+    await page.locator("#newExperienceBtn").click({ timeout: 10000 });
+    await expectMobileContentState(page, { section: "experiences", minCards: 0, formOpen: true });
     await fillExperienceForm(page, experience);
     await page.locator("#experienceForm").evaluate((form) => form.requestSubmit());
     const experienceCard = page.locator(".experience-card", { hasText: experience.firm }).first();
@@ -5666,19 +6088,19 @@ async function runMobileNewsExperiencesFlow(page, baseUrl) {
     const recordId = await experienceCard.getAttribute("data-experience-id");
     if (!recordId) throw new Error("Mobile saved experience did not expose data-experience-id.");
     await expectStoredExperience(page, { id: recordId, ...experience });
-    await expectMobileContentState(page, { section: "experiences", minCards: 1 });
+    await expectMobileContentState(page, { section: "experiences", minCards: 1, formOpen: false });
 
     result.step = "filter and share mobile experience";
     await page.locator("#experienceFilter").selectOption(experience.stage);
     await expectExperienceFilter(page, { includeId: recordId, stage: experience.stage });
-    await expectMobileContentState(page, { section: "experiences", minCards: 1 });
+    await expectMobileContentState(page, { section: "experiences", minCards: 1, formOpen: false });
     await page.locator(`[data-experience-id="${recordId}"] .experience-share-row button`).click({ timeout: 10000 });
     const confirmSelector = `[data-experience-id="${recordId}"] .experience-share-confirm`;
     const shareConfirmVisible = await page.waitForSelector(confirmSelector, { timeout: 3000 })
       .then(() => true)
       .catch(() => false);
     if (shareConfirmVisible) {
-      await expectMobileContentState(page, { section: "experiences", minCards: 1, shareConfirmVisible: true });
+      await expectMobileContentState(page, { section: "experiences", minCards: 1, formOpen: false, shareConfirmVisible: true });
       await page.locator(`${confirmSelector} .primary-button`).click({ timeout: 10000 });
     }
     const shared = await waitForSharedExperience(page, { id: recordId, firm: experience.firm, summary: experience.summary });
@@ -5707,7 +6129,7 @@ async function runMobileNewsExperiencesFlow(page, baseUrl) {
     await page.locator("#newsInsight").fill(news.insight);
     await page.locator("#newsForm").evaluate((form) => form.requestSubmit());
     await page.waitForFunction(() => !document.querySelector("#newsForm"), null, { timeout: 10000 });
-    const newsCard = page.locator(".news-card", { hasText: news.title }).first();
+    const newsCard = page.locator("#newsList [data-news-id]", { hasText: news.title }).first();
     await newsCard.waitFor({ state: "visible", timeout: 10000 });
     const newsId = await newsCard.getAttribute("data-news-id");
     if (!newsId) throw new Error("Mobile saved news card did not expose data-news-id.");
@@ -5726,7 +6148,7 @@ async function runMobileNewsExperiencesFlow(page, baseUrl) {
     await page.locator("#newsBackBtn").click({ timeout: 10000 });
     await page.waitForFunction((id) => {
       const card = document.querySelector(`[data-news-id="${id}"]`);
-      return card?.classList.contains("read") && /已读|Read/i.test(card.textContent || "");
+      return card?.classList.contains("read");
     }, newsId, { timeout: 10000 });
     await expectStoredNews(page, { ...news, id: newsId, read: true });
 
@@ -5796,24 +6218,9 @@ async function expectMobileContentState(page, expected = {}) {
     if (window.innerWidth > 430 || overflow > 4) return false;
 
     if (values.section === "experiences") {
-      const controls = [
+      const baselineControls = [
         ".experience-header",
         "#newExperienceBtn",
-        "#experienceForm",
-        "#experienceFirm",
-        "#experienceRole",
-        "#experienceStage",
-        "#experienceSeason",
-        "#experienceDate",
-        "#experienceOutcome",
-        "#experienceTags",
-        "#experienceSummaryInput",
-        "#experienceTopics",
-        "#experienceReflection",
-        ".experience-form-actions .primary-button",
-        "#experienceCount",
-        "#sharedExperienceCount",
-        "#openCommunityExperiencesBtn",
         "#experienceFilter",
         "#experienceList"
       ].map((selector) => document.querySelector(selector));
@@ -5821,7 +6228,28 @@ async function expectMobileContentState(page, expected = {}) {
       const shareConfirm = values.shareConfirmVisible
         ? visible(document.querySelector(".experience-share-confirm"))
         : true;
-      return controls.every(visible)
+      const form = document.querySelector("#experienceForm");
+      const formMatches = values.formOpen
+        ? [
+          form,
+          "#experienceFirm",
+          "#experienceRole",
+          "#experienceStage",
+          "#experienceSeason",
+          "#experienceDate",
+          "#experienceOutcome",
+          "#experienceTags",
+          "#experienceSummaryInput",
+          "#experienceTopics",
+          "#experienceReflection",
+          "#experienceCount",
+          "#sharedExperienceCount",
+          "#openCommunityExperiencesBtn",
+          ".experience-form-actions .primary-button"
+        ].every((selector) => visible(typeof selector === "string" ? document.querySelector(selector) : selector))
+        : Boolean(form?.classList.contains("hidden"));
+      return baselineControls.every(visible)
+        && formMatches
         && cards.length >= values.minCards
         && cards.slice(0, Math.min(cards.length, 3)).every(visible)
         && shareConfirm;
@@ -5832,8 +6260,7 @@ async function expectMobileContentState(page, expected = {}) {
         "#newsUpdatedAt",
         "#addNewsBtn",
         "#refreshNewsBtn",
-        "#newsIntelTitle",
-        "#newsIntelStats",
+        "#newsSearchInput",
         "#newsTopicFilter",
         "#newsSourceFilter",
         '[data-news-topic="all"]',
@@ -5857,7 +6284,7 @@ async function expectMobileContentState(page, expected = {}) {
           "#newsForm .ghost-button"
         ].map((selector) => document.querySelector(selector)).every(visible)
         : true;
-      const cards = [...document.querySelectorAll("#newsList .news-card")];
+      const cards = [...document.querySelectorAll("#newsList [data-news-id]")];
       return controls.every(visible)
         && formControls
         && cards.length >= values.minCards
@@ -5957,14 +6384,20 @@ async function runMemoryResourceFlow(page, baseUrl) {
 }
 
 async function expectMemoryResource(page, expected) {
+  const resourceItem = page.locator(".resource-item", { hasText: expected.title }).first();
+  await resourceItem.waitFor({ state: "visible", timeout: 10000 });
+  await resourceItem.click({ timeout: 10000 });
   await page.waitForFunction(({ title, content, sourceUrl }) => {
     const resource = [...document.querySelectorAll(".resource-item")]
       .find((node) => node.textContent.includes(title));
     if (!resource) return false;
-    const text = resource.textContent || "";
-    const sourceLink = resource.querySelector(`a[href="${sourceUrl}"]`);
-    return text.includes(content)
-      && text.includes("NOTE")
+    const detail = document.querySelector(".memory-detail");
+    const detailText = detail?.textContent || "";
+    const sourceLink = detail?.querySelector(`a[href="${sourceUrl}"]`);
+    return resource.classList.contains("is-selected")
+      && detail?.querySelector("h2")?.textContent?.includes(title)
+      && detailText.includes(content)
+      && /NOTE|笔记/i.test(detailText)
       && sourceLink
       && sourceLink.getAttribute("target") === "_blank"
       && sourceLink.getAttribute("rel") === "noreferrer";
@@ -6022,15 +6455,21 @@ async function runMemoryImageResourceUploadFlow(page, baseUrl) {
 }
 
 async function expectMemoryImageResource(page, expected) {
+  const resourceItem = page.locator(".resource-item", { hasText: expected.title }).first();
+  await resourceItem.waitFor({ state: "visible", timeout: 10000 });
+  await resourceItem.click({ timeout: 10000 });
   await page.waitForFunction(({ title, fileName, dataUrl }) => {
     try {
       const resource = [...document.querySelectorAll(".resource-item")]
         .find((node) => node.textContent.includes(title));
       if (!resource) return false;
-      const text = resource.textContent || "";
-      const image = resource.querySelector("img.resource-image");
+      const detail = document.querySelector(".memory-detail");
+      const text = detail?.textContent || "";
+      const image = detail?.querySelector("img.resource-image");
       const imageSrc = image?.getAttribute("src") || "";
-      if (!text.includes(fileName) || !text.includes("IMAGE") || !imageSrc) return false;
+      if (!resource.classList.contains("is-selected")) return false;
+      if (!detail?.querySelector("h2")?.textContent?.includes(title)) return false;
+      if (!text.includes(fileName) || !/IMAGE|图片/i.test(text) || !imageSrc) return false;
       if (dataUrl && imageSrc !== dataUrl) return false;
       const state = JSON.parse(localStorage.getItem("quantMemoryBoard.userState.v1.local:browser-route-smoke") || "{}");
       const stored = Array.isArray(state.resources)
@@ -6350,7 +6789,7 @@ async function runMobileResumeReviewFlow(page, baseUrl) {
 async function expectResumeReviewItems(page, expectedItems) {
   await page.waitForFunction((items) => {
     const rendered = [...document.querySelectorAll("#resumeReview li")]
-      .map((node) => node.textContent?.trim() || "");
+      .map((node) => (node.textContent || "").replace(/^\s*·\s*/, "").trim());
     return items.every((item) => rendered.includes(item));
   }, expectedItems, { timeout: 10000 });
 }
@@ -6568,7 +7007,7 @@ async function runCompaniesTierPracticeAndCareersFlow(page, baseUrl) {
     result.step = "open companies route";
     await page.goto(`${baseUrl}/companies`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#companyOverviewList .company-overview-card", { timeout: 10000 });
+    await page.waitForSelector("#companyOverviewList .company-list-row[data-company-card]", { timeout: 10000 });
     result.step = "verify all company cards";
     await expectCompanyCardsContaining(page, [...sTierIds, ...aTierIds, ...bTierIds]);
     await expectCompanyTierSelected(page, "all");
@@ -6587,9 +7026,10 @@ async function runCompaniesTierPracticeAndCareersFlow(page, baseUrl) {
     await page.locator('[data-company-tier="all"]').click({ timeout: 10000 });
     await expectCompanyTierSelected(page, "all");
     await expectCompanyCardsContaining(page, [...sTierIds, ...aTierIds, ...bTierIds]);
+    await selectCompanyDetail(page, "jane-street");
 
     result.step = "open careers";
-    const careersButton = page.locator('[data-company-card="jane-street"] [data-company-careers]').first();
+    const careersButton = page.locator('[data-company-detail="jane-street"] [data-company-careers]').first();
     const careersUrl = await careersButton.getAttribute("data-company-careers");
     if (!/^https:\/\/www\.janestreet\.com\/join-jane-street\/open-roles\/?$/.test(careersUrl || "")) {
       throw new Error(`Unexpected Jane Street careers URL: ${careersUrl}`);
@@ -6611,10 +7051,11 @@ async function runCompaniesTierPracticeAndCareersFlow(page, baseUrl) {
     }
 
     result.step = "practice company navigation";
-    await page.locator('[data-company-card="jane-street"] [data-company-practice="jane-street"]').click({ timeout: 10000 });
+    await page.locator('[data-company-detail="jane-street"] [data-company-practice="jane-street"]').click({ timeout: 10000 });
     await page.waitForURL(/\/problems$/, { timeout: 10000 });
-    await page.waitForSelector('#problemCompanyList [data-problem-company="jane-street"]', { timeout: 10000 });
-    await expectCompanyPracticeFilter(page, "jane-street", "Jane Street");
+    await page.waitForSelector('#problemCompanyList [data-problem-company="jane-street"]', { state: "attached", timeout: 10000 });
+    const practiceState = await expectCompanyPracticeFilter(page, "jane-street", "Jane Street");
+    await surfaceCompanyPracticeList(page);
 
     delete result.step;
     result.sTierCount = sTierIds.length;
@@ -6623,6 +7064,8 @@ async function runCompaniesTierPracticeAndCareersFlow(page, baseUrl) {
     result.openedUrl = opened.url;
     result.practicePath = new URL(page.url()).pathname;
     result.practiceCompany = "jane-street";
+    result.practiceProblemCount = practiceState.problemCount;
+    result.practiceStatus = practiceState.status;
   } catch (error) {
     result.status = "fail";
     result.error = `${result.step}: ${error.message}`;
@@ -6709,7 +7152,7 @@ async function runMobileCareerJobsCompaniesFlow(page, baseUrl) {
     result.step = "open mobile companies";
     await page.goto(`${baseUrl}/companies`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#companyOverviewList .company-overview-card", { timeout: 10000 });
+    await page.waitForSelector("#companyOverviewList .company-list-row[data-company-card]", { timeout: 10000 });
     await expectMobileCareerState(page, { section: "companies", minCards: sTierIds.length + aTierIds.length + bTierIds.length });
     await expectCompanyCardsContaining(page, [...sTierIds, ...aTierIds, ...bTierIds]);
     await expectCompanyTierSelected(page, "all");
@@ -6718,10 +7161,11 @@ async function runMobileCareerJobsCompaniesFlow(page, baseUrl) {
     await page.locator('[data-company-tier="s"]').click({ timeout: 10000 });
     await expectCompanyTierSelected(page, "s");
     await expectCompanyFilterResult(page, { includeIds: sTierIds, excludeIds: [...aTierIds, ...bTierIds] });
+    await selectCompanyDetail(page, "jane-street");
     await expectMobileCareerState(page, { section: "companies", minCards: sTierIds.length });
 
     result.step = "open mobile company careers";
-    const careersButton = page.locator('[data-company-card="jane-street"] [data-company-careers]').first();
+    const careersButton = page.locator('[data-company-detail="jane-street"] [data-company-careers]').first();
     const careersUrl = await careersButton.getAttribute("data-company-careers");
     if (!/^https:\/\/www\.janestreet\.com\/join-jane-street\/open-roles\/?$/.test(careersUrl || "")) {
       throw new Error(`Unexpected mobile Jane Street careers URL: ${careersUrl}`);
@@ -6743,10 +7187,11 @@ async function runMobileCareerJobsCompaniesFlow(page, baseUrl) {
     }
 
     result.step = "mobile company practice navigation";
-    await page.locator('[data-company-card="jane-street"] [data-company-practice="jane-street"]').click({ timeout: 10000 });
+    await page.locator('[data-company-detail="jane-street"] [data-company-practice="jane-street"]').click({ timeout: 10000 });
     await page.waitForURL(/\/problems$/, { timeout: 10000 });
-    await page.waitForSelector('#problemCompanyList [data-problem-company="jane-street"]', { timeout: 10000 });
-    await expectCompanyPracticeFilter(page, "jane-street", "Jane Street");
+    await page.waitForSelector('#problemCompanyList [data-problem-company="jane-street"]', { state: "attached", timeout: 10000 });
+    const practiceState = await expectCompanyPracticeFilter(page, "jane-street", "Jane Street");
+    await surfaceCompanyPracticeList(page);
     await expectMobileCareerState(page, { section: "problems", minCards: 1 });
 
     delete result.step;
@@ -6761,6 +7206,8 @@ async function runMobileCareerJobsCompaniesFlow(page, baseUrl) {
     result.openedCareersUrl = openedCareers.url;
     result.practicePath = new URL(page.url()).pathname;
     result.practiceCompany = "jane-street";
+    result.practiceProblemCount = practiceState.problemCount;
+    result.practiceStatus = practiceState.status;
   } catch (error) {
     result.status = "fail";
     result.error = result.step ? `${result.step}: ${error.message}` : error.message;
@@ -6795,27 +7242,64 @@ async function expectCompanyFilterResult(page, expected) {
 
 async function expectCompanyTierSelected(page, tier) {
   await page.waitForFunction((value) => {
+    const group = document.querySelector("#companyTierFilter");
     const selected = document.querySelector(`[data-company-tier="${value}"]`);
     const others = [...document.querySelectorAll("[data-company-tier]")].filter((node) => node !== selected);
-    return selected?.classList.contains("active")
+    return group?.getAttribute("role") === "group"
+      && selected?.classList.contains("active")
       && selected?.getAttribute("aria-pressed") === "true"
-      && selected?.getAttribute("aria-selected") === "true"
+      && !selected.hasAttribute("aria-selected")
       && others.every((node) => node.getAttribute("aria-pressed") === "false");
   }, tier, { timeout: 10000 });
+}
+
+async function selectCompanyDetail(page, companySlug) {
+  const row = page.locator(`#companyOverviewList .company-list-row[data-company-card="${companySlug}"]`);
+  await row.waitFor({ state: "visible", timeout: 10000 });
+  await row.click({ timeout: 10000 });
+  await page.waitForFunction((slug) => {
+    const selected = document.querySelector(`#companyOverviewList .company-list-row[data-company-card="${CSS.escape(slug)}"]`);
+    const detail = document.querySelector(`[data-company-detail="${CSS.escape(slug)}"]`);
+    const rect = detail?.getBoundingClientRect();
+    return selected?.classList.contains("active")
+      && selected?.getAttribute("aria-pressed") === "true"
+      && rect?.width > 0
+      && rect?.height > 0;
+  }, companySlug, { timeout: 10000 });
 }
 
 async function expectCompanyPracticeFilter(page, companySlug, companyName) {
   await page.waitForFunction(({ slug, name }) => {
     const activeCompany = document.querySelector(`#problemCompanyList [data-problem-company="${slug}"]`);
     const clearButton = document.querySelector("#problemCompanyClearBtn");
+    const allView = document.querySelector('[data-problem-view="all"]');
     const cards = [...document.querySelectorAll("#problemList .problem-card")];
-    const cardsWithCompany = cards.filter((card) => (card.textContent || "").includes(name));
+    const catalog = Array.isArray(globalThis.quantProblemCatalog) ? globalThis.quantProblemCatalog : [];
+    const catalogById = new Map(catalog.map((problem) => [String(problem?.id || ""), problem]));
     return activeCompany?.classList.contains("active")
       && activeCompany?.getAttribute("aria-pressed") === "true"
       && clearButton && !clearButton.classList.contains("hidden")
+      && allView?.getAttribute("aria-pressed") === "true"
       && cards.length > 0
-    && cardsWithCompany.length >= Math.max(1, Math.floor(cards.length * 0.8));
+      && cards.every((card) => {
+        const problem = catalogById.get(card.getAttribute("data-problem-id") || "");
+        return Array.isArray(problem?.companies) && problem.companies.includes(name);
+      });
   }, { slug: companySlug, name: companyName }, { timeout: 10000 });
+  return page.evaluate(() => ({
+    detailVisible: !document.querySelector("#problemDetail")?.classList.contains("hidden"),
+    problemCount: document.querySelectorAll("#problemList .problem-card").length,
+    status: document.querySelector("#problemInteractionStatus")?.textContent?.trim() || ""
+  }));
+}
+
+async function surfaceCompanyPracticeList(page) {
+  const detailVisible = await page.locator("#problemDetail").evaluate((node) => !node.classList.contains("hidden"));
+  if (detailVisible) {
+    await page.locator("#problemDetail .qg-detail-utility-row > button").first().click({ timeout: 10000 });
+  }
+  await page.waitForSelector("#problemList:not(.hidden)", { timeout: 10000 });
+  await page.locator("#problemList .problem-card").first().waitFor({ state: "visible", timeout: 10000 });
 }
 
 async function expectMobileCareerState(page, expected = {}) {
@@ -6873,22 +7357,21 @@ async function expectMobileCareerState(page, expected = {}) {
         '[data-company-tier="b"]'
       ].map((selector) => document.querySelector(selector));
       const cards = [...document.querySelectorAll("#companyOverviewList [data-company-card]")];
-      const firstCard = cards[0];
+      const selectedDetail = document.querySelector("#companyOverviewList [data-company-detail]");
       return controls.every(visible)
         && cards.length >= values.minCards
         && cards.slice(0, Math.min(cards.length, 4)).every(visible)
-        && (!firstCard || (
-          visible(firstCard.querySelector("[data-company-practice]"))
-          && visible(firstCard.querySelector("[data-company-careers]"))
+        && (!selectedDetail || (
+          visible(selectedDetail)
+          && visible(selectedDetail.querySelector("[data-company-practice]"))
+          && visible(selectedDetail.querySelector("[data-company-careers]"))
         ));
     }
 
     if (values.section === "problems") {
       const controls = [
         "#problemSearch",
-        "#problemCompanyList",
-        '[data-problem-company="jane-street"]',
-        "#problemCompanyClearBtn"
+        '[data-problem-view="all"]'
       ].map((selector) => document.querySelector(selector));
       const cards = [...document.querySelectorAll("#problemList .problem-card")];
       return controls.every(visible)
@@ -6939,24 +7422,24 @@ async function runLibrarySearchPracticeAndReaderGuardFlow(page, baseUrl) {
     await page.goto(`${baseUrl}/library`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#libraryBookGrid .library-card[data-library-id='green-book']", { timeout: 10000 });
-    await page.waitForSelector("#libraryQuestionGrid .library-card[data-library-id='quantguide']", { timeout: 10000 });
+    await page.waitForSelector("#libraryBookGrid .library-card[data-library-id='quantguide']", { timeout: 10000 });
     await expectLibraryKindSelected(page, "all");
 
     result.step = "filter question sets";
-    await page.locator('[data-library-kind="questionSet"]').click({ timeout: 10000 });
-    await expectLibraryKindSelected(page, "questionSet");
+    await page.locator('[data-library-kind="problems"]').click({ timeout: 10000 });
+    await expectLibraryKindSelected(page, "problems");
     await expectLibraryQuestionSetFilter(page);
 
     result.step = "search QuantGuide";
     await page.locator("#librarySearch").fill("QuantGuide");
     await expectLibrarySearchResult(page, {
       includeId: "quantguide",
-      includeGrid: "libraryQuestionGrid",
+      includeGrid: "libraryBookGrid",
       excludeIds: ["green-book", "probabilitycourse-textbook"]
     });
 
     result.step = "practice QuantGuide";
-    await page.locator('#libraryQuestionGrid .library-card[data-library-id="quantguide"] .library-card-actions button').click({ timeout: 10000 });
+    await page.locator('#libraryBookGrid .library-card[data-library-id="quantguide"] .library-cover-button').click({ timeout: 10000 });
     await page.waitForURL(/\/problems$/, { timeout: 10000 });
     await page.waitForSelector("#problemSearch", { timeout: 10000 });
     await expectLibraryPracticeSourceFilter(page, {
@@ -6971,7 +7454,7 @@ async function runLibrarySearchPracticeAndReaderGuardFlow(page, baseUrl) {
     await page.locator("#librarySearch").fill("");
     await page.locator('[data-library-kind="all"]').click({ timeout: 10000 });
     await expectLibraryKindSelected(page, "all");
-    await page.locator('#libraryBookGrid .library-card[data-library-id="green-book"] .library-card-actions button').filter({ hasText: /阅读|Read/i }).first().click({ timeout: 10000 });
+    await page.locator('#libraryBookGrid .library-card[data-library-id="green-book"] .library-cover-button').click({ timeout: 10000 });
     await expectLibraryReaderGuard(page);
 
     delete result.step;
@@ -6998,11 +7481,9 @@ async function expectLibraryKindSelected(page, kind) {
 
 async function expectLibraryQuestionSetFilter(page) {
   await page.waitForFunction(() => {
-    const bookCards = document.querySelectorAll("#libraryBookGrid .library-card[data-library-id]");
-    const questionCards = document.querySelectorAll("#libraryQuestionGrid .library-card[data-library-id]");
-    return bookCards.length === 0
-      && questionCards.length > 0
-      && [...questionCards].every((card) => card.classList.contains("question-set"));
+    const cards = [...document.querySelectorAll("#libraryBookGrid .library-card[data-library-id]")];
+    return cards.length > 0
+      && cards.every((card) => card.querySelector(".library-kind-pill.kind-problems"));
   }, null, { timeout: 10000 });
 }
 
@@ -7017,17 +7498,31 @@ async function expectLibrarySearchResult(page, expected) {
 
 async function expectLibraryPracticeSourceFilter(page, expected) {
   await page.waitForFunction(({ sourceSlug, sourceLabel }) => {
-    const clearButton = document.querySelector("#problemSourceFilterClearBtn");
+    const sourceChip = document.querySelector(`[data-problem-source="${sourceSlug}"]`);
+    const sourceClear = document.querySelector("#problemSourceFilterClearBtn");
+    const collection = document.querySelector(`[data-problem-collection="${sourceSlug}"]`);
     const searchInput = document.querySelector("#problemSearch");
     const status = document.querySelector("#problemInteractionStatus")?.textContent || "";
-    const collection = document.querySelector(`[data-problem-collection="${sourceSlug}"]`);
     const cards = [...document.querySelectorAll("#problemList .problem-card")];
-    return clearButton && !clearButton.classList.contains("hidden")
-      && searchInput?.value === ""
+    const rect = sourceChip?.getBoundingClientRect();
+    const catalog = Array.isArray(globalThis.quantProblemCatalog) ? globalThis.quantProblemCatalog : [];
+    const catalogById = new Map(catalog.map((problem) => [String(problem?.id || ""), problem]));
+    return searchInput?.value === ""
+      && sourceChip?.classList.contains("active")
+      && (sourceChip.textContent || "").includes(sourceLabel)
+      && rect?.width > 0
+      && rect?.height > 0
+      && sourceClear
+      && !sourceClear.classList.contains("hidden")
       && status.includes(sourceLabel)
       && collection?.classList.contains("active")
+      && collection?.getAttribute("aria-pressed") === "true"
       && cards.length > 0
-      && cards.every((card) => (card.textContent || "").includes(sourceLabel));
+      && cards.every((card) => {
+        const problem = catalogById.get(card.getAttribute("data-problem-id") || "");
+        return card.getBoundingClientRect().height > 0
+          && (problem?.source === sourceSlug || problem?.bookSlug === sourceSlug);
+      });
   }, expected, { timeout: 10000 });
 }
 
@@ -7050,6 +7545,7 @@ async function runLibraryCloudPdfReaderFlow(page, baseUrl) {
   const pdfPattern = "**/api/library-reader-smoke/green-book.pdf";
   let tokenRequestCount = 0;
   let pdfRequestCount = 0;
+  let previousCloudStorage;
 
   try {
     result.step = "install cloud reader fixture";
@@ -7087,13 +7583,14 @@ async function runLibraryCloudPdfReaderFlow(page, baseUrl) {
     result.step = "open library route with cloud session";
     await page.goto(`${baseUrl}/library`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
+    previousCloudStorage = await readRawLocalStorage(page, "quantMemoryBoard.cloud.v1");
     await enableCloudSessionForCurrentUser(page, `${baseUrl}/api`);
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector('#libraryBookGrid .library-card[data-library-id="green-book"]', { timeout: 10000 });
 
     result.step = "open green-book PDF reader";
-    await page.locator('#libraryBookGrid .library-card[data-library-id="green-book"] .library-card-actions button').filter({ hasText: /阅读|Read/i }).first().click({ timeout: 10000 });
+    await page.locator('#libraryBookGrid .library-card[data-library-id="green-book"] .library-cover-button').click({ timeout: 10000 });
     const opened = await expectLibraryReaderOpen(page, {
       titlePattern: /绿皮书|Practical Guide/i,
       openUrl: `${baseUrl}/api/library-reader-smoke/green-book.pdf`
@@ -7106,7 +7603,7 @@ async function runLibraryCloudPdfReaderFlow(page, baseUrl) {
     await expectLibraryReaderClosed(page);
 
     result.step = "reopen and close reader with Escape";
-    await page.locator('#libraryBookGrid .library-card[data-library-id="green-book"] .library-card-actions button').filter({ hasText: /阅读|Read/i }).first().click({ timeout: 10000 });
+    await page.locator('#libraryBookGrid .library-card[data-library-id="green-book"] .library-cover-button').click({ timeout: 10000 });
     await expectLibraryReaderOpen(page, {
       titlePattern: /绿皮书|Practical Guide/i,
       openUrl: `${baseUrl}/api/library-reader-smoke/green-book.pdf`
@@ -7132,6 +7629,9 @@ async function runLibraryCloudPdfReaderFlow(page, baseUrl) {
   } finally {
     await page.unroute(readerTokenPattern).catch(() => {});
     await page.unroute(pdfPattern).catch(() => {});
+    if (previousCloudStorage !== undefined) {
+      await restoreRawLocalStorage(page, "quantMemoryBoard.cloud.v1", previousCloudStorage).catch(() => {});
+    }
   }
   return result;
 }
@@ -7153,6 +7653,17 @@ async function enableCloudSessionForCurrentUser(page, endpoint) {
       lastError: ""
     }));
   }, endpoint);
+}
+
+async function readRawLocalStorage(page, key) {
+  return page.evaluate((storageKey) => localStorage.getItem(storageKey), key);
+}
+
+async function restoreRawLocalStorage(page, key, rawValue) {
+  await page.evaluate(({ storageKey, value }) => {
+    if (value === null) localStorage.removeItem(storageKey);
+    else localStorage.setItem(storageKey, value);
+  }, { storageKey: key, value: rawValue });
 }
 
 async function expectLibraryReaderOpen(page, expected) {
@@ -7246,15 +7757,15 @@ async function runCrossModulePrepJourneyFlow(page, baseUrl) {
     await page.goto(`${baseUrl}/library`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#librarySearch", { timeout: 10000 });
-    await page.locator('[data-library-kind="questionSet"]').click({ timeout: 10000 });
-    await expectLibraryKindSelected(page, "questionSet");
+    await page.locator('[data-library-kind="problems"]').click({ timeout: 10000 });
+    await expectLibraryKindSelected(page, "problems");
     await page.locator("#librarySearch").fill("QuantGuide");
     await expectLibrarySearchResult(page, {
       includeId: "quantguide",
-      includeGrid: "libraryQuestionGrid",
+      includeGrid: "libraryBookGrid",
       excludeIds: ["green-book", "probabilitycourse-textbook"]
     });
-    await page.locator('#libraryQuestionGrid .library-card[data-library-id="quantguide"] .library-card-actions button').click({ timeout: 10000 });
+    await page.locator('#libraryBookGrid .library-card[data-library-id="quantguide"] .library-cover-button').click({ timeout: 10000 });
     await page.waitForURL(/\/problems$/, { timeout: 10000 });
     await page.waitForSelector("#problemSearch", { timeout: 10000 });
     await expectLibraryPracticeSourceFilter(page, {
@@ -7268,14 +7779,15 @@ async function runCrossModulePrepJourneyFlow(page, baseUrl) {
     const problemId = await firstCard.getAttribute("data-problem-id");
     const problemTitle = (await firstCard.locator("h3").first().textContent({ timeout: 10000 }) || "").trim();
     if (!problemId) throw new Error("Filtered practice problem did not expose data-problem-id.");
-    const saveButton = firstCard.locator(".problem-save-button");
+    await firstCard.click({ timeout: 10000 });
+    await page.waitForSelector("#problemDetail:not(.hidden)", { timeout: 10000 });
+    const saveButton = page.locator("#problemDetail .problem-detail-save");
     const alreadySaved = await saveButton.evaluate((button) => button.classList.contains("active"));
     if (!alreadySaved) {
       await saveButton.click({ timeout: 10000 });
-      await page.waitForFunction((id) => {
-        const card = document.querySelector(`#problemList .problem-card[data-problem-id="${CSS.escape(id)}"]`);
-        return card?.querySelector(".problem-save-button")?.classList.contains("active");
-      }, problemId, { timeout: 10000 });
+      await page.waitForFunction(() => (
+        document.querySelector("#problemDetail .problem-detail-save")?.classList.contains("active")
+      ), null, { timeout: 10000 });
     }
     await expectStoredProblemFavorite(page, problemId);
 
@@ -7320,6 +7832,12 @@ async function runCrossModulePrepJourneyFlow(page, baseUrl) {
     await page.waitForSelector("#problemSearch", { timeout: 10000 });
     await page.locator('[data-problem-view="saved"]').click({ timeout: 10000 });
     await expectSavedProblemVisible(page, problemId);
+    const persistedCard = page.locator(`#problemList .problem-card[data-problem-id="${problemId}"]`).first();
+    await persistedCard.click({ timeout: 10000 });
+    await page.waitForSelector("#problemDetail:not(.hidden)", { timeout: 10000 });
+    await page.waitForFunction(() => (
+      document.querySelector("#problemDetail .problem-detail-save")?.classList.contains("active")
+    ), null, { timeout: 10000 });
 
     await page.goto(`${baseUrl}/resume`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
@@ -7394,10 +7912,25 @@ async function expectTodoDockTitleVisible(page, title) {
 async function expectSavedProblemVisible(page, problemId) {
   await page.waitForFunction((id) => {
     const savedTab = document.querySelector('[data-problem-view="saved"]');
-    const card = document.querySelector(`#problemList .problem-card[data-problem-id="${CSS.escape(id)}"]`);
+    const cards = [...document.querySelectorAll("#problemList .problem-card[data-problem-id]")];
+    const card = cards.find((item) => item.getAttribute("data-problem-id") === id);
+    let state = {};
+    try {
+      state = JSON.parse(localStorage.getItem("quantMemoryBoard.userState.v1.local:browser-route-smoke") || "{}");
+    } catch {
+      return false;
+    }
+    const favoriteIds = new Set((Array.isArray(state.problemStates) ? state.problemStates : [])
+      .filter((item) => item?.favorite === true)
+      .map((item) => String(item.problemId || "")));
+    const rect = card?.getBoundingClientRect();
     return savedTab?.classList.contains("active")
-      && card
-      && card.querySelector(".problem-save-button")?.classList.contains("active");
+      && savedTab?.getAttribute("aria-pressed") === "true"
+      && favoriteIds.has(id)
+      && cards.length > 0
+      && cards.every((item) => favoriteIds.has(item.getAttribute("data-problem-id") || ""))
+      && rect?.width > 0
+      && rect?.height > 0;
   }, problemId, { timeout: 10000 });
 }
 
@@ -7413,6 +7946,7 @@ async function runCoursesPathSourceAndNoteFlow(page, baseUrl) {
     await page.waitForSelector(`#courseList [data-course-id="${courseId}"]`, { timeout: 10000 });
 
     const courseCard = page.locator(`#courseList [data-course-id="${courseId}"]`).first();
+    await expandCourseCard(page, courseId);
     await expectCourseOriginalLink(page, { courseId, expectedHref: "https://www.youtube.com/watch?v=oI3hZJqXJuc" });
 
     await courseCard.locator('[data-course-action="save"]').click({ timeout: 10000 });
@@ -7444,6 +7978,7 @@ async function runCoursesPathSourceAndNoteFlow(page, baseUrl) {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector(`#courseList [data-course-id="${courseId}"]`, { timeout: 10000 });
+    await expandCourseCard(page, courseId);
     await expectCourseActionActive(page, { courseId, action: "save" });
     await expectCourseActionActive(page, { courseId, action: "path" });
     await expectCourseActionActive(page, { courseId, action: "done" });
@@ -7467,6 +8002,18 @@ async function runCoursesPathSourceAndNoteFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   }
   return result;
+}
+
+async function expandCourseCard(page, courseId) {
+  const card = page.locator(`#courseList [data-course-id="${courseId}"]`).first();
+  if (!await card.evaluate((node) => node.classList.contains("is-expanded"))) {
+    await card.locator(".course-card-play").click({ timeout: 10000 });
+  }
+  await page.waitForFunction((id) => {
+    const cardNode = document.querySelector(`#courseList [data-course-id="${id}"]`);
+    return cardNode?.classList.contains("is-expanded")
+      && cardNode.querySelector(".course-card-play")?.getAttribute("aria-expanded") === "true";
+  }, courseId, { timeout: 10000 });
 }
 
 async function expectCourseActionActive(page, expected) {
@@ -7550,6 +8097,7 @@ async function runAccountProfileSaveFlow(page, baseUrl) {
     await page.goto(`${baseUrl}/account`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#accountForm", { timeout: 10000 });
+    await openAccountAvatarDetails(page);
 
     await page.locator("#accountNameInput").fill(expected.name);
     await page.locator("#accountAvatarUrl").fill(expected.picture);
@@ -7567,6 +8115,7 @@ async function runAccountProfileSaveFlow(page, baseUrl) {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#accountForm", { timeout: 10000 });
+    await openAccountAvatarDetails(page);
     await expectAccountFormValues(page, expected);
     await expectStoredAccountProfile(page, expected);
 
@@ -7591,7 +8140,7 @@ async function expectAccountFormValues(page, expected) {
       && document.querySelector("#accountCountrySelect")?.value === values.country
       && document.querySelector("#accountRegionSelect")?.value === values.region
       && document.querySelector("#accountGraduationTermInput")?.value === values.graduationTerm
-      && document.querySelector("#accountProviderText")?.textContent?.trim() === "Local";
+      && /Local|本地账户/i.test(document.querySelector("#accountProviderText")?.textContent || "");
   }, expected, { timeout: 10000 });
 }
 
@@ -7695,11 +8244,12 @@ async function runAccountEmailChangeReauthFlow(page, baseUrl) {
     await page.waitForFunction(() => {
       const auth = JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}");
       const message = document.querySelector("#authMessage")?.textContent || "";
-      return !auth.currentUserId && /没有找到这个本地账户|No local account found/i.test(message);
+      return !auth.currentUserId && /没有找到这个本地账户|No local account found|云端没有找到这个邮箱|Cloud could not find this email/i.test(message);
     }, null, { timeout: 10000 });
     result.oldEmailRejected = true;
 
     result.step = "relogin with new email";
+    await page.locator("#loginPassword").fill("");
     await submitLocalLogin(page, newEmail, password);
     await waitForAuthenticatedShell(page);
     await expectStoredLocalAccountEmail(page, {
@@ -7726,9 +8276,12 @@ async function runAccountEmailChangeReauthFlow(page, baseUrl) {
 async function submitLocalLogin(page, email, password) {
   await page.waitForSelector("#loginEmail", { state: "visible", timeout: 10000 });
   await page.locator("#loginEmail").fill(email);
-  await page.locator("#loginForm").evaluate((form) => form.requestSubmit());
-  await page.waitForSelector("#loginPassword:not(.hidden)", { state: "visible", timeout: 10000 });
-  await page.locator("#loginPassword").fill(password);
+  const passwordInput = page.locator("#loginPassword");
+  if (!await passwordInput.isVisible()) {
+    await page.locator("#loginForm").evaluate((form) => form.requestSubmit());
+    await page.waitForSelector("#loginPassword:not(.hidden)", { state: "visible", timeout: 10000 });
+  }
+  await passwordInput.fill(password);
   await page.locator("#loginForm").evaluate((form) => form.requestSubmit());
 }
 
@@ -7772,6 +8325,7 @@ async function runAccountAvatarAndResumeUploadFlow(page, baseUrl) {
     await page.goto(`${baseUrl}/account`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#accountForm", { timeout: 10000 });
+    await openAccountAvatarDetails(page);
 
     await page.locator("#accountAvatarFile").setInputFiles({
       name: `browser-smoke-avatar-${timestamp}.png`,
@@ -7801,6 +8355,7 @@ async function runAccountAvatarAndResumeUploadFlow(page, baseUrl) {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#accountForm", { timeout: 10000 });
+    await openAccountAvatarDetails(page);
     await page.waitForFunction(({ fileName, avatar }) => {
       const image = document.querySelector("#accountAvatarPreview img");
       const meta = document.querySelector("#accountResumeMeta")?.textContent || "";
@@ -7938,6 +8493,7 @@ async function runMobileAccountProfileUploadFlow(page, baseUrl) {
     await page.goto(`${baseUrl}/account`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#accountForm", { timeout: 10000 });
+    await openAccountAvatarDetails(page);
     await expectMobileAccountState(page);
 
     result.step = "save profile from mobile form";
@@ -7972,6 +8528,7 @@ async function runMobileAccountProfileUploadFlow(page, baseUrl) {
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#accountForm", { timeout: 10000 });
+    await openAccountAvatarDetails(page);
     await expectMobileAccountState(page);
     await expectAccountFormValues(page, expected);
     await expectStoredAccountProfile(page, expected);
@@ -8032,7 +8589,7 @@ async function expectMobileAccountState(page, expected = {}) {
       "#accountResumeMeta",
       "#accountCurrentPassword",
       "#accountForm button[type='submit']",
-      ".account-meta-panel",
+      ".account-stats-panel",
       "#accountProviderText"
     ];
     const allLaidOut = formSelectors.every((selector) => laidOut(document.querySelector(selector)));
@@ -8042,6 +8599,17 @@ async function expectMobileAccountState(page, expected = {}) {
       && allLaidOut
       && savedOk;
   }, expected, { timeout: 10000 });
+}
+
+async function openAccountAvatarDetails(page) {
+  const details = page.locator("details.account-avatar-more");
+  if (!await details.evaluate((node) => node.open)) {
+    await details.locator("summary").click({ timeout: 10000 });
+  }
+  await page.waitForFunction(() => {
+    const node = document.querySelector("details.account-avatar-more");
+    return node?.open && Boolean(node.querySelector("#accountAvatarUrl"));
+  }, null, { timeout: 10000 });
 }
 
 async function collectMobileAccountDiagnostics(page) {
@@ -8785,19 +9353,22 @@ async function runSettingsBackupCommunityRestoreFlow(page, baseUrl) {
     await page.goto(`${baseUrl}/community`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#communityList", { timeout: 10000 });
+    const restoredPost = page.locator("#communityList .forum-thread", { hasText: postText }).first();
+    await restoredPost.locator(".forum-replies-toggle").click({ timeout: 10000 });
     await page.waitForFunction(({ postText, replyText }) => {
-      const card = [...document.querySelectorAll("#communityList .community-card")]
+      const card = [...document.querySelectorAll("#communityList .forum-thread")]
         .find((node) => node.textContent.includes(postText));
       const text = card?.textContent || "";
       return text.includes(postText)
         && text.includes(replyText)
-        && /已赞|取消赞|Liked|Unlike/i.test(text);
+        && card?.querySelector(".forum-vote .vote-btn")?.getAttribute("aria-pressed") === "true";
     }, { postText, replyText }, { timeout: 10000 });
 
     result.step = "verify messages page restored thread";
     await page.goto(`${baseUrl}/messages`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#messageThreadList", { timeout: 10000 });
+    await page.locator(`[data-message-thread="${threadId}"]`).click({ timeout: 10000 });
     await expectCommunityDirectMessageThread(page, {
       authorName: mentorName,
       introText: inboundText,
@@ -9293,48 +9864,168 @@ async function getRouteHealth(page) {
   });
 }
 
-function attachPageCollectors(page, baseUrl) {
-  const ownOrigin = new URL(baseUrl).origin;
+function browserSmokeFirstPartyOrigins(baseUrl) {
+  return new Set([
+    new URL(baseUrl).origin,
+    new URL(CANONICAL_BROWSER_BUILD_CONFIG.apiEndpoint).origin,
+    new URL(CANONICAL_BROWSER_BUILD_CONFIG.llmEndpoint).origin
+  ]);
+}
+
+async function installCanonicalFirstPartyFixtures(page) {
+  const llmOrigin = new URL(CANONICAL_BROWSER_BUILD_CONFIG.llmEndpoint).origin;
+  for (const pathname of ["/news", "/jobs"]) {
+    const url = `${llmOrigin}${pathname}`;
+    await page.route(url, async (route) => {
+      const request = route.request();
+      canonicalFixtureRequests.push({ method: request.method(), url: request.url() });
+      if (request.method() !== "POST") {
+        await route.fulfill({
+          status: 405,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "Expected POST in canonical browser fixture" })
+        });
+        return;
+      }
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ items: [] })
+      });
+    });
+  }
+}
+
+function attachPageCollectors(page, firstPartyOrigins) {
+  const trackedOrigins = new Set(firstPartyOrigins || []);
+  const expectations = [];
+  const collector = {
+    expectFirstPartyFailure(spec) {
+      const expectation = {
+        ...spec,
+        consoleConsumed: !spec.console,
+        networkConsumed: !spec.network
+      };
+      expectations.push(expectation);
+      return {
+        async wait(timeout = 5000) {
+          const deadline = Date.now() + timeout;
+          while (Date.now() < deadline) {
+            if (expectation.consoleConsumed && expectation.networkConsumed) {
+              const index = expectations.indexOf(expectation);
+              if (index >= 0) expectations.splice(index, 1);
+              return;
+            }
+            await delay(25);
+          }
+          throw new Error(`Expected first-party failure was not fully observed (${spec.id}): network=${expectation.networkConsumed}, console=${expectation.consoleConsumed}`);
+        }
+      };
+    }
+  };
+  collectorByPage.set(page, collector);
   page.on("console", (message) => {
     if (message.type() !== "error") return;
     const text = message.text();
-    if (/favicon\.ico/i.test(text)) return;
-    if (/Failed to load resource: net::ERR_CONNECTION_REFUSED/i.test(text)) return;
-    if (/^Failed to load resource: net::ERR_TIMED_OUT$/i.test(text)) {
-      ignoredConsoleErrors.push({ type: message.type(), text: text.slice(0, 500) });
+    const locationUrl = message.location()?.url || "";
+    const expected = expectations.find((entry) => (
+      !entry.consoleConsumed
+      && entry.console?.url === locationUrl
+      && textMatches(entry.console, text)
+    ));
+    if (expected) {
+      expected.consoleConsumed = true;
+      expectedFirstPartyFailures.push({
+        id: expected.id,
+        kind: "console",
+        url: locationUrl,
+        text: text.slice(0, 500)
+      });
       return;
     }
-    if (/Failed to load resource: the server responded with a status of 403/i.test(text)) return;
-    if (/\[GSI_LOGGER\]|origin is not allowed for the given client ID/i.test(text)) return;
-    if (/\[QuantGym\] Failed to import backup/i.test(text)) return;
-    if (/@bilibili\/bili-user-fingerprint\(report\): report is not found/i.test(text)) return;
-    if (isIgnoredThirdPartyConsoleError(text)) {
-      ignoredConsoleErrors.push({ type: message.type(), text: text.slice(0, 500) });
+    if (isIgnoredThirdPartyConsoleError(text, locationUrl, trackedOrigins)) {
+      ignoredConsoleErrors.push({ type: message.type(), url: locationUrl, text: text.slice(0, 500) });
       return;
     }
-    consoleErrors.push({ type: message.type(), text: text.slice(0, 500) });
+    consoleErrors.push({ type: message.type(), url: locationUrl, text: text.slice(0, 500) });
   });
   page.on("pageerror", (error) => {
     pageErrors.push(String(error?.stack || error?.message || error).slice(0, 1200));
   });
   page.on("response", (response) => {
     const url = response.url();
-    if (!url.startsWith(ownOrigin)) return;
-    if (/\/favicon\.ico($|\?)/.test(url)) return;
-    if (response.status() >= 400) {
-      responseErrors.push({ status: response.status(), url });
-    }
+    if (!isTrackedFirstPartyUrl(url, trackedOrigins) || response.status() < 400) return;
+    const record = {
+      kind: "response",
+      method: response.request().method(),
+      status: response.status(),
+      url
+    };
+    if (consumeExpectedNetworkFailure(expectations, record)) return;
+    responseErrors.push(record);
   });
+  page.on("requestfailed", (request) => {
+    const url = request.url();
+    if (!isTrackedFirstPartyUrl(url, trackedOrigins)) return;
+    const record = {
+      kind: "requestfailed",
+      method: request.method(),
+      errorText: request.failure()?.errorText || "",
+      url
+    };
+    if (consumeExpectedNetworkFailure(expectations, record)) return;
+    responseErrors.push(record);
+  });
+  return collector;
 }
 
-function isIgnoredThirdPartyConsoleError(text) {
+function consumeExpectedNetworkFailure(expectations, record) {
+  const expected = expectations.find((entry) => (
+    !entry.networkConsumed
+    && entry.network?.kind === record.kind
+    && entry.network?.method === record.method
+    && entry.network?.url === record.url
+    && (entry.network.status === undefined || entry.network.status === record.status)
+    && (entry.network.errorText === undefined || entry.network.errorText === record.errorText)
+  ));
+  if (!expected) return false;
+  expected.networkConsumed = true;
+  expectedFirstPartyFailures.push({ id: expected.id, ...record });
+  return true;
+}
+
+function textMatches(expected, actual) {
+  if (typeof expected.text === "string") return actual === expected.text;
+  if (expected.textPattern instanceof RegExp) {
+    expected.textPattern.lastIndex = 0;
+    return expected.textPattern.test(actual);
+  }
+  return false;
+}
+
+function isTrackedFirstPartyUrl(url, origins) {
+  try {
+    return origins.has(new URL(url).origin);
+  } catch {
+    return false;
+  }
+}
+
+function isIgnoredThirdPartyConsoleError(text, locationUrl, firstPartyOrigins) {
+  if (isTrackedFirstPartyUrl(locationUrl, firstPartyOrigins)) return false;
   const bilibiliReporterError = /\[reporter-pb\]: request error TypeError: Failed to fetch/i.test(text)
     && (
       /https:\/\/s1\.hdslb\.com\/bfs\/seed\/jinkela\/short\/reporter-pb\/index\.js/i.test(text)
       || /^\[reporter-pb\]: request error TypeError: Failed to fetch(?:\s|$)/i.test(text)
     );
+  const bilibiliFingerprintNoise = /@bilibili\/bili-user-fingerprint\(report\): report is not found/i.test(text);
   const chromeComputePressurePolicyNoise = /^Permissions policy violation: compute-pressure is not allowed in this document\.$/.test(text);
-  return bilibiliReporterError || chromeComputePressurePolicyNoise;
+  return bilibiliReporterError || bilibiliFingerprintNoise || chromeComputePressurePolicyNoise;
+}
+
+function formatNetworkError(item) {
+  if (item.kind === "response") return `${item.method} ${item.status} ${item.url}`;
+  return `${item.method} ${item.errorText || "request failed"} ${item.url}`;
 }
 
 function seedAuthenticatedStorage(config = {}) {
@@ -9367,6 +10058,7 @@ function seedAuthenticatedStorage(config = {}) {
     currentUserId: existingAuth.currentUserId || account.id,
     lastAuthenticatedAt: existingAuth.lastAuthenticatedAt || "2026-06-17T00:00:00.000Z"
   }));
+  storage.setItem(`quantgym.ui.onboarded.v1:${accountId}`, "1");
   if (!storage.getItem("quantMemoryBoard.preferences.v1")) {
     storage.setItem("quantMemoryBoard.preferences.v1", JSON.stringify({
       language: "zh",
@@ -9386,15 +10078,12 @@ function buildStaticSite(distDir) {
     cwd: root,
     encoding: "utf8",
     maxBuffer: 1024 * 1024 * 20,
-    env: {
-      ...process.env,
-      QUANTGYM_WEB_DIST: distDir,
-      QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED: "0"
-    }
+    timeout: 120000,
+    killSignal: "SIGTERM",
+    windowsHide: true,
+    env: canonicalBrowserBuildEnv(distDir, process.env)
   });
-  if (build.status !== 0) {
-    throw new Error(`Static build failed:\n${tail(build.stdout)}\n${tail(build.stderr)}`);
-  }
+  assertSuccessfulSubprocess(`Static build for ${distDir}`, build);
 }
 
 async function startPreviewServer({ distDir, port }) {

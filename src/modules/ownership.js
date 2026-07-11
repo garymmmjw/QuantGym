@@ -42,6 +42,15 @@ export const MODULE_OWNERSHIP = [
     browserSmokeInteractions: ["skills radar hover and global search spotlight"]
   },
   {
+    id: "league",
+    owner: "growth",
+    navGroup: "growth",
+    page: "src/pages/LeaguePage.jsx",
+    featureEntry: "src/features/league/LeaguePageContent.jsx",
+    stateDomains: ["userState", "league", "economy"],
+    browserSmokeInteractions: ["league standings, learning map, and reward shop guard"]
+  },
+  {
     id: "interview",
     owner: "training",
     navGroup: "training",

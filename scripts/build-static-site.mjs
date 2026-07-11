@@ -6,10 +6,10 @@ import { execSync } from "node:child_process";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDir, "..");
-loadEnvFromProjectRoot();
+if (process.env.QUANTGYM_WEB_IGNORE_DOTENV !== "1") loadEnvFromProjectRoot();
 const outputDir = path.resolve(projectRoot, process.env.QUANTGYM_WEB_DIST || "dist");
 const strict = process.argv.includes("--strict") || process.env.QUANTGYM_WEB_STRICT === "1";
-const runtimeConfig = loadRuntimeConfig();
+const runtimeConfig = process.env.QUANTGYM_WEB_IGNORE_RUNTIME_CONFIG === "1" ? {} : loadRuntimeConfig();
 
 const webConfig = {
   cloudApiEndpoint: value("QUANTGYM_WEB_API_ENDPOINT", "QUANTGYM_CLOUD_API_ENDPOINT", "CLOUD_API_ENDPOINT") || clean(runtimeConfig.cloudApiEndpoint),
