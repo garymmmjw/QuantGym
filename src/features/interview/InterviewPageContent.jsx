@@ -22,7 +22,11 @@ export function InterviewPageContent() {
         <div className="interview-setup-shark" id="interviewSetupShark" aria-hidden="true">
           <img src="/assets/generated/playful-precision/mascot-interview.png" alt="" loading="lazy" draggable="false" />
         </div>
-        <div id="interviewSetup" className={`interview-setup qg-interview-setup${isSession ? " hidden" : ""}`}>
+        <div
+          id="interviewSetup"
+          className={`interview-setup qg-interview-setup${isSession ? " hidden" : ""}`}
+          data-selected-problem-id={setup.selectedProblemId || ""}
+        >
           <div className="interview-setup-top">
             <div>
               <strong>开始一场模拟面试</strong>

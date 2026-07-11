@@ -2531,6 +2531,7 @@ body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row {
 
 body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row > button {
   flex: 1 1 auto;
+  min-width: max-content;
   min-height: 44px;
   padding-inline: 8px;
   white-space: nowrap;
@@ -2540,7 +2541,8 @@ body.is-authenticated .app-route-root .qg-problems-page [data-problem-action="mo
   min-height: 44px;
   border: 1px solid var(--qg-brand) !important;
   background: var(--qg-brand) !important;
-  color: #ffffff !important;
+  color: var(--qg-on-brand) !important;
+  transition: transform 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
   box-shadow: none !important;
 }
 

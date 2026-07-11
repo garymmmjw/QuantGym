@@ -525,6 +525,15 @@ body.is-authenticated .app-route-root .qg-companies-page .section-heading.compan
   overflow: visible;
 }
 
+/* The shared support layer re-applies its hero gradient in dark mode at a
+   higher specificity. Keep the approved Companies composition flat in both
+   themes, just like the Jobs header above. */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-companies-page .section-heading.companies-header,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-companies-page .section-heading.companies-header {
+  background: none;
+  box-shadow: none;
+}
+
 body.is-authenticated .app-route-root .qg-companies-page .section-heading.companies-header::after {
   content: none;
   display: none;

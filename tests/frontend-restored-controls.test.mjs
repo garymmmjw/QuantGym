@@ -53,6 +53,28 @@ function assertRuleWith(css, selector, patterns) {
   );
 }
 
+function cssCustomProperty(css, selector, property) {
+  const body = ruleBodies(css, selector)[0] || "";
+  const escapedProperty = property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = body.match(new RegExp(`${escapedProperty}\\s*:\\s*(#[0-9a-f]{6})`, "i"));
+  assert.ok(match, `missing ${property} in ${selector}`);
+  return match[1];
+}
+
+function contrastRatio(first, second) {
+  const luminance = (hex) => {
+    const channels = [1, 3, 5].map((index) => Number.parseInt(hex.slice(index, index + 2), 16) / 255);
+    const linear = channels.map((value) => (
+      value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+    ));
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+  };
+  const firstLuminance = luminance(first);
+  const secondLuminance = luminance(second);
+  return (Math.max(firstLuminance, secondLuminance) + 0.05)
+    / (Math.min(firstLuminance, secondLuminance) + 0.05);
+}
+
 test("restores Companies tier filtering with button-group semantics", () => {
   const source = read("src/features/companies/CompaniesPageContent.jsx");
   const css = read("src/styles/playful-precision-replica-support-b.css");
@@ -79,6 +101,10 @@ test("restores Companies tier filtering with button-group semantics", () => {
     /outline\s*:\s*3px solid var\(--qg-brand\)/,
     /outline-offset\s*:\s*2px/
   ]);
+  assert.match(
+    css,
+    /:root\[data-qg-theme="dark"\][^{]+\.qg-companies-page \.section-heading\.companies-header,\s*\[data-qg-theme="dark"\][^{]+\.qg-companies-page \.section-heading\.companies-header\s*\{[^}]*background\s*:\s*none[^}]*box-shadow\s*:\s*none/
+  );
   for (const selector of [
     ".qg-companies-page .company-save-btn",
     ".qg-companies-page .company-site-btn",
@@ -222,6 +248,7 @@ test("exposes one Problems utility row and one complete action dock", () => {
   const source = read("src/features/problems/ProblemDetail.jsx");
   const pageSource = read("src/features/problems/ProblemsPageContent.jsx");
   const css = read("src/styles/playful-precision-replica-training.css");
+  const tokens = read("src/styles/playful-precision-tokens.css");
 
   assert.equal((source.match(/className="problem-detail-top qg-detail-utility-row"/g) || []).length, 1);
   assert.equal((source.match(/className="problem-detail-actions qg-detail-cta-row"/g) || []).length, 1);
@@ -262,6 +289,7 @@ test("exposes one Problems utility row and one complete action dock", () => {
 
   assertRuleWith(css, ".qg-problems-page .qg-detail-cta-row > button", [
     /flex\s*:\s*1 1 auto/,
+    /min-width\s*:\s*max-content/,
     /min-height\s*:\s*44px/,
     /padding-inline\s*:\s*8px/,
     /white-space\s*:\s*nowrap/
@@ -270,9 +298,17 @@ test("exposes one Problems utility row and one complete action dock", () => {
     /min-height\s*:\s*44px/,
     /border\s*:\s*1px solid var\(--qg-brand\)\s*!important/,
     /background\s*:\s*var\(--qg-brand\)\s*!important/,
-    /color\s*:\s*#ffffff\s*!important/,
+    /color\s*:\s*var\(--qg-on-brand\)\s*!important/,
+    /transition\s*:\s*transform 140ms ease,\s*border-color 140ms ease,\s*box-shadow 140ms ease/,
     /box-shadow\s*:\s*none\s*!important/
   ]);
+  for (const selector of [":root", '[data-qg-theme="dark"]']) {
+    const ratio = contrastRatio(
+      cssCustomProperty(tokens, selector, "--qg-on-brand"),
+      cssCustomProperty(tokens, selector, "--qg-brand")
+    );
+    assert.ok(ratio >= 4.5, `${selector} mock-interview contrast is ${ratio.toFixed(2)}:1`);
+  }
   assertRuleWith(css, ".qg-problems-page .qg-detail-utility-row .secondary-button", [
     /border\s*:\s*1px solid var\(--qg-border\)\s*!important/,
     /background\s*:\s*var\(--qg-surface-2\)\s*!important/,

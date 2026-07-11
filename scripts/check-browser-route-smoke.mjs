@@ -8,6 +8,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { closeWithTimeout } from "./cleanup-timeout.mjs";
+import { interviewTypeDefs } from "../src/modules/interview/defs.js";
 import {
   CANONICAL_BROWSER_BUILD_CONFIG,
   ROUTE_TARGETS,
@@ -54,6 +55,40 @@ const RUNTIME_CONFIG_STORAGE_KEYS = Object.freeze([
   "quantMemoryBoard.cloud.v1",
   "quantMemoryBoard.auth.v1"
 ]);
+const RESTORED_VISUAL_PREFLIGHT_VIEWPORTS = Object.freeze([
+  Object.freeze({ label: "1440x900", width: 1440, height: 900 }),
+  Object.freeze({ label: "1280x720", width: 1280, height: 720 }),
+  Object.freeze({ label: "390x844", width: 390, height: 844 })
+]);
+const RESTORED_VISUAL_PREFLIGHT_THEMES = Object.freeze(["light", "dark"]);
+const RESTORED_VISUAL_PREFLIGHT_CHECK_KEYS = Object.freeze({
+  Companies: Object.freeze([
+    "headerFlat",
+    "noHorizontalOverflow",
+    "tierGroupVisible",
+    "tierTargets",
+    "tierLabelsFit",
+    "activeCueVisible",
+    "focusVisible",
+    "focusContrast",
+    "focusUnclipped",
+    "ctaTargets",
+    "ctaLabelsFit"
+  ]),
+  Problems: Object.freeze([
+    "oneActionDock",
+    "noHorizontalOverflow",
+    "actionsWithinViewport",
+    "touchTargets",
+    "labelsFit",
+    "mobileRowsValid",
+    "nonColorSavedCue",
+    "focusVisible",
+    "focusContrast",
+    "focusUnclipped",
+    "contrastRatio"
+  ])
+});
 let tempRoot = "";
 let preview = null;
 let browser = null;
@@ -1516,19 +1551,22 @@ async function runProblemPaginationCollectionInterviewFlow(page, baseUrl) {
     if (openedProblemId !== filteredProblemId) {
       throw new Error(`Filtered detail mismatch: expected ${filteredProblemId}, opened ${openedProblemId || "none"}.`);
     }
-    const detail = await readProblemDetailSnapshot(page);
+    const detail = await readProblemDetailSnapshot(page, filteredProblemId);
 
     result.step = "handoff to interview";
     await page.locator('#problemDetail [data-problem-action="mock-interview"]').click({ timeout: 10000 });
     await page.waitForURL(/\/interview$/, { timeout: 10000 });
-    await expectProblemInterviewHandoff(page, detail.category);
+    const handoff = await expectProblemInterviewHandoff(page, detail);
 
     delete result.step;
     result.page1FirstId = firstPage.firstId;
     result.page2FirstId = secondPage.firstId;
     result.collectionId = collection.id;
     result.filteredProblemId = filteredProblemId;
-    result.detailCategory = detail.category;
+    result.detailCategory = detail.categoryKey;
+    result.handoffSelectedProblemId = handoff.selectedProblemId;
+    result.handoffCategoryKey = handoff.categoryKey;
+    result.handoffType = handoff.type;
     result.paginationNavigated = true;
     result.collectionFilterActive = true;
     result.interviewHandoff = true;
@@ -1570,26 +1608,40 @@ async function runMobileProblemDetailActionsFlow(page, baseUrl) {
     await page.waitForSelector("#problemDetail .problem-detail-block.is-unlocked", { timeout: 10000 });
     await expectMobileProblemSurface(page, { mode: "detail", answerRevealed: true });
     const saveButton = page.locator("#problemDetail .problem-detail-save");
-    const before = await saveButton.evaluate((node) => node.classList.contains("active"));
     await saveButton.scrollIntoViewIfNeeded({ timeout: 10000 });
+    const before = await saveButton.evaluate((node) => node.getAttribute("aria-pressed") === "true");
+    if (before) {
+      await saveButton.click({ timeout: 10000 });
+      await page.waitForFunction(() => (
+        document.querySelector("#problemDetail .problem-detail-save")?.getAttribute("aria-pressed") === "false"
+      ), null, { timeout: 10000 });
+    }
     await saveButton.click({ timeout: 10000 });
-    await page.waitForFunction((wasActive) => {
+    await page.waitForFunction(() => {
       const button = document.querySelector("#problemDetail .problem-detail-save");
-      return button && button.classList.contains("active") !== wasActive;
-    }, before, { timeout: 10000 });
+      return button?.getAttribute("aria-pressed") === "true"
+        && button.classList.contains("active")
+        && Boolean(button.querySelector('[data-lucide="bookmark-check"]'));
+    }, null, { timeout: 10000 });
     await expectMobileProblemSurface(page, { mode: "detail", answerRevealed: true });
 
+    result.step = "verify Problems visual preflight matrix";
+    result.visualPreflight = await collectProblemsVisualPreflight(page);
+
     result.step = "mobile handoff to interview";
-    const detail = await readProblemDetailSnapshot(page);
+    const detail = await readProblemDetailSnapshot(page, problemId);
     await page.locator('#problemDetail [data-problem-action="mock-interview"]').scrollIntoViewIfNeeded({ timeout: 10000 });
     await page.locator('#problemDetail [data-problem-action="mock-interview"]').click({ timeout: 10000 });
     await page.waitForURL(/\/interview$/, { timeout: 10000 });
-    await expectProblemInterviewHandoff(page, detail.category);
+    const handoff = await expectProblemInterviewHandoff(page, detail);
     await expectMobileInterviewHandoffSurface(page);
 
     delete result.step;
     result.mobileViewport = true;
     result.problemId = problemId || "";
+    result.handoffSelectedProblemId = handoff.selectedProblemId;
+    result.handoffCategoryKey = handoff.categoryKey;
+    result.handoffType = handoff.type;
     result.detailOpened = true;
     result.answerRevealed = true;
     result.saveToggled = true;
@@ -1836,30 +1888,494 @@ async function expectProblemFilteredListVisible(page, collectionId) {
   }));
 }
 
-async function readProblemDetailSnapshot(page) {
-  return page.evaluate(() => ({
-    title: document.querySelector("#problemDetail h2")?.textContent?.trim() || "",
-    category: document.querySelector("#problemDetail .problem-meta .pill")?.textContent?.trim() || "",
-    position: document.querySelector("#problemDetail .problem-detail-position")?.textContent?.trim() || ""
-  }));
+async function readProblemDetailSnapshot(page, expectedProblemId = "") {
+  const snapshot = await page.evaluate((problemId) => {
+    const activeProblemId = document.querySelector("#problemList .problem-card[aria-current='true']")
+      ?.getAttribute("data-problem-id") || "";
+    const catalog = Array.isArray(globalThis.quantProblemCatalog) ? globalThis.quantProblemCatalog : [];
+    const problem = catalog.find((item) => String(item?.id || "") === activeProblemId);
+    return {
+      problemId: activeProblemId,
+      title: document.querySelector("#problemDetail h2")?.textContent?.trim() || "",
+      categoryKey: String(problem?.category || "").trim(),
+      categoryLabel: document.querySelector("#problemDetail .qg-problem-detail-tags .qg-detail-tag")?.textContent?.trim() || "",
+      position: document.querySelector("#problemDetail .problem-detail-position")?.textContent?.trim() || ""
+    };
+  }, expectedProblemId);
+  if (!snapshot.problemId) throw new Error("Problem detail did not expose a selected problem ID.");
+  if (expectedProblemId && snapshot.problemId !== expectedProblemId) {
+    throw new Error(`Problem detail selected ${snapshot.problemId} instead of ${expectedProblemId}.`);
+  }
+  if (!snapshot.categoryKey) {
+    throw new Error(`Problem detail ${snapshot.problemId} did not expose a catalog category key.`);
+  }
+  const preferredTypes = ["oa", "technical", "behavioral"];
+  const expectedType = preferredTypes.find((type) => interviewTypeDefs[type]?.categories?.includes(snapshot.categoryKey)) || "";
+  if (!expectedType) {
+    throw new Error(`Problem detail ${snapshot.problemId} category ${snapshot.categoryKey} has no interview type.`);
+  }
+  return { ...snapshot, expectedType };
 }
 
-async function expectProblemInterviewHandoff(page, expectedCategory) {
-  await page.waitForFunction((category) => {
+async function expectProblemInterviewHandoff(page, expected) {
+  if (!expected?.problemId || !expected?.categoryKey || !expected?.expectedType) {
+    throw new Error("Problem interview handoff requires a nonempty problem ID, category key, and interview type.");
+  }
+  await page.waitForFunction(({ problemId, categoryKey, expectedType }) => {
     const setup = document.querySelector("#interviewSetup");
     const source = document.querySelector("#interviewSourceSelect");
+    const type = document.querySelector("#interviewTypeSelect");
     const summary = document.querySelector("#interviewSummary")?.textContent || "";
-    const activeCategories = [...document.querySelectorAll("#interviewCategoryPicker .interview-category-chip.active")]
-      .map((item) => item.textContent?.trim() || "")
-      .filter(Boolean);
+    const activeCategory = setup?.querySelector(
+      `#interviewCategoryPicker [data-interview-category="${CSS.escape(categoryKey)}"].active`
+    );
+    const activeCategories = [...setup?.querySelectorAll(
+      "#interviewCategoryPicker [data-interview-category].active"
+    ) || []];
     return setup
       && !setup.classList.contains("hidden")
+      && setup.getAttribute("data-selected-problem-id") === problemId
       && source?.value === "full"
+      && type?.value === expectedType
       && /题库抽题|Question bank/i.test(summary)
-      && activeCategories.length > 0
-      && !activeCategories.includes("随机")
-      && (!category || activeCategories.some((label) => label === category || label.includes(category) || category.includes(label)));
-  }, expectedCategory, { timeout: 10000 });
+      && activeCategories.length === 1
+      && activeCategories[0] === activeCategory
+      && activeCategory?.getAttribute("aria-pressed") === "true";
+  }, expected, { timeout: 10000 });
+  return page.evaluate(({ categoryKey }) => {
+    const setup = document.querySelector("#interviewSetup");
+    const expectedCategory = setup?.querySelector(
+      `#interviewCategoryPicker [data-interview-category="${CSS.escape(categoryKey)}"].active`
+    );
+    return {
+      selectedProblemId: setup?.getAttribute("data-selected-problem-id") || "",
+      categoryKey: expectedCategory?.getAttribute("data-interview-category") || "",
+      type: document.querySelector("#interviewTypeSelect")?.value || ""
+    };
+  }, expected);
+}
+
+async function collectCompaniesVisualPreflight(page) {
+  return withRestoredVisualPreflightState(page, async () => {
+    const matrix = [];
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    for (const viewport of RESTORED_VISUAL_PREFLIGHT_VIEWPORTS) {
+      for (const theme of RESTORED_VISUAL_PREFLIGHT_THEMES) {
+        await applyRestoredVisualPreflightState(page, viewport, theme);
+        await page.keyboard.press("Tab");
+        await page.locator('#companyTierFilter [data-company-tier="all"]').focus();
+        const snapshot = await page.evaluate(({ viewportLabel, themeName }) => {
+          const rectFor = (node) => {
+            const rect = node?.getBoundingClientRect();
+            return rect ? {
+              left: Math.round(rect.left * 100) / 100,
+              right: Math.round(rect.right * 100) / 100,
+              top: Math.round(rect.top * 100) / 100,
+              bottom: Math.round(rect.bottom * 100) / 100,
+              width: Math.round(rect.width * 100) / 100,
+              height: Math.round(rect.height * 100) / 100
+            } : null;
+          };
+          const visible = (node) => {
+            if (!node) return false;
+            const style = getComputedStyle(node);
+            const rect = node.getBoundingClientRect();
+            return style.display !== "none"
+              && style.visibility !== "hidden"
+              && Number(style.opacity || 1) !== 0
+              && rect.width > 0
+              && rect.height > 0;
+          };
+          const luminance = (value) => {
+            const channels = (String(value || "").match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+            if (channels.length !== 3) return Number.NaN;
+            const linear = channels.map((channel) => {
+              const normalized = channel / 255;
+              return normalized <= 0.04045
+                ? normalized / 12.92
+                : ((normalized + 0.055) / 1.055) ** 2.4;
+            });
+            return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+          };
+          const contrast = (first, second) => {
+            const firstLuminance = luminance(first);
+            const secondLuminance = luminance(second);
+            return (Math.max(firstLuminance, secondLuminance) + 0.05)
+              / (Math.min(firstLuminance, secondLuminance) + 0.05);
+          };
+          const focusRingUnclipped = (node, style) => {
+            if (!node || !style) return false;
+            const rect = node.getBoundingClientRect();
+            const extent = Math.max(0, Number.parseFloat(style.outlineWidth) || 0)
+              + Math.max(0, Number.parseFloat(style.outlineOffset) || 0);
+            const ring = {
+              left: rect.left - extent,
+              right: rect.right + extent,
+              top: rect.top - extent,
+              bottom: rect.bottom + extent
+            };
+            if (ring.left < -1 || ring.top < -1 || ring.right > window.innerWidth + 1 || ring.bottom > window.innerHeight + 1) {
+              return false;
+            }
+            for (let ancestor = node.parentElement; ancestor; ancestor = ancestor.parentElement) {
+              const ancestorStyle = getComputedStyle(ancestor);
+              const ancestorRect = ancestor.getBoundingClientRect();
+              const clipsX = /^(?:auto|scroll|hidden|clip)$/.test(ancestorStyle.overflowX);
+              const clipsY = /^(?:auto|scroll|hidden|clip)$/.test(ancestorStyle.overflowY);
+              if (clipsX && (ring.left < ancestorRect.left - 1 || ring.right > ancestorRect.right + 1)) return false;
+              if (clipsY && (ring.top < ancestorRect.top - 1 || ring.bottom > ancestorRect.bottom + 1)) return false;
+            }
+            return true;
+          };
+          const header = document.querySelector(".qg-companies-page .companies-header");
+          const tierGroup = document.querySelector("#companyTierFilter");
+          const tiers = [...tierGroup?.querySelectorAll("[data-company-tier]") || []];
+          const activeTier = tierGroup?.querySelector('[data-company-tier="all"]');
+          const activeCheck = activeTier?.querySelector(".qg-active-check");
+          const ctas = [
+            ".company-save-btn",
+            ".company-site-btn",
+            ".company-jobs-cta",
+            ".company-practice-link"
+          ].map((selector) => document.querySelector(`.qg-companies-page ${selector}`));
+          const headerStyle = header ? getComputedStyle(header) : null;
+          const focusStyle = activeTier ? getComputedStyle(activeTier) : null;
+          const checkStyle = activeCheck ? getComputedStyle(activeCheck) : null;
+          const focusBackdrop = tierGroup ? getComputedStyle(tierGroup).backgroundColor : "";
+          const focusContrast = contrast(focusStyle?.outlineColor, focusBackdrop);
+          const focusUnclipped = focusRingUnclipped(activeTier, focusStyle);
+          const overflowPx = Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth);
+          const tierRects = tiers.map(rectFor);
+          const ctaRects = ctas.map(rectFor);
+          const checks = {
+            headerFlat: headerStyle?.backgroundImage === "none" && headerStyle?.boxShadow === "none",
+            noHorizontalOverflow: overflowPx <= 4,
+            tierGroupVisible: visible(tierGroup) && tiers.length === 4,
+            tierTargets: tierRects.every((rect) => rect?.height >= 44),
+            tierLabelsFit: tiers.every((tier) => tier.scrollWidth <= tier.clientWidth),
+            activeCueVisible: activeTier?.getAttribute("aria-pressed") === "true"
+              && visible(activeCheck)
+              && checkStyle?.opacity === "1",
+            focusVisible: Number.parseFloat(focusStyle?.outlineWidth || "0") >= 3
+              && Number.parseFloat(focusStyle?.outlineOffset || "0") >= 2
+              && focusStyle?.outlineStyle !== "none",
+            focusContrast: Number.isFinite(focusContrast) && focusContrast >= 3,
+            focusUnclipped,
+            ctaTargets: ctas.every(visible) && ctaRects.every((rect) => rect?.height >= 44),
+            ctaLabelsFit: ctas.every((cta) => cta.scrollWidth <= cta.clientWidth)
+          };
+          return {
+            viewport: viewportLabel,
+            theme: themeName,
+            overflowPx,
+            headerBackgroundImage: headerStyle?.backgroundImage || "",
+            headerBoxShadow: headerStyle?.boxShadow || "",
+            tierGroup: rectFor(tierGroup),
+            tierTargets: tierRects,
+            activeCheck: rectFor(activeCheck),
+            focus: {
+              outlineWidth: focusStyle?.outlineWidth || "",
+              outlineOffset: focusStyle?.outlineOffset || "",
+              outlineColor: focusStyle?.outlineColor || "",
+              backdropColor: focusBackdrop,
+              contrastRatio: Math.round(focusContrast * 100) / 100,
+              unclipped: focusUnclipped
+            },
+            ctaTargets: ctaRects,
+            checks
+          };
+        }, { viewportLabel: viewport.label, themeName: theme });
+        assertRestoredVisualPreflightSnapshot("Companies", snapshot);
+        matrix.push(snapshot);
+      }
+    }
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await applyRestoredVisualPreflightState(page, RESTORED_VISUAL_PREFLIGHT_VIEWPORTS.at(-1), "dark");
+    const reducedMotion = await page.evaluate(() => {
+      const durationMs = (value) => Math.max(0, ...String(value || "0s").split(",").map((entry) => {
+        const item = entry.trim();
+        return item.endsWith("ms") ? Number.parseFloat(item) : Number.parseFloat(item) * 1000;
+      }).filter(Number.isFinite));
+      const nodes = [
+        document.querySelector('#companyTierFilter [data-company-tier="all"]'),
+        document.querySelector(".qg-companies-page .company-list-row"),
+        document.querySelector(".qg-companies-page .company-jobs-cta"),
+        document.querySelector(".qg-companies-page .company-practice-link")
+      ].filter(Boolean);
+      const durations = nodes.map((node) => durationMs(getComputedStyle(node).transitionDuration));
+      return {
+        maxTransitionMs: Math.max(0, ...durations),
+        movementDisabled: durations.every((duration) => duration <= 1.01)
+      };
+    });
+    if (!reducedMotion.movementDisabled) {
+      throw new Error(`Companies reduced-motion preflight failed: ${JSON.stringify(reducedMotion)}`);
+    }
+    return { matrix, reducedMotion };
+  });
+}
+
+async function collectProblemsVisualPreflight(page) {
+  return withRestoredVisualPreflightState(page, async () => {
+    const matrix = [];
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    for (const viewport of RESTORED_VISUAL_PREFLIGHT_VIEWPORTS) {
+      for (const theme of RESTORED_VISUAL_PREFLIGHT_THEMES) {
+        await applyRestoredVisualPreflightState(page, viewport, theme);
+        await page.keyboard.press("Tab");
+        await page.locator('#problemDetail [data-problem-action="mock-interview"]').focus();
+        const snapshot = await page.evaluate(({ viewportLabel, themeName }) => {
+          const rectFor = (node) => {
+            const rect = node?.getBoundingClientRect();
+            return rect ? {
+              left: Math.round(rect.left * 100) / 100,
+              right: Math.round(rect.right * 100) / 100,
+              top: Math.round(rect.top * 100) / 100,
+              bottom: Math.round(rect.bottom * 100) / 100,
+              width: Math.round(rect.width * 100) / 100,
+              height: Math.round(rect.height * 100) / 100
+            } : null;
+          };
+          const colorChannels = (value) => (String(value || "").match(/[\d.]+/g) || [])
+            .slice(0, 3)
+            .map(Number);
+          const luminance = (value) => {
+            const channels = colorChannels(value).map((channel) => channel / 255);
+            if (channels.length !== 3) return Number.NaN;
+            const linear = channels.map((channel) => (
+              channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+            ));
+            return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+          };
+          const contrast = (first, second) => {
+            const firstLuminance = luminance(first);
+            const secondLuminance = luminance(second);
+            return (Math.max(firstLuminance, secondLuminance) + 0.05)
+              / (Math.min(firstLuminance, secondLuminance) + 0.05);
+          };
+          const effectiveOpaqueBackground = (node) => {
+            for (let current = node; current; current = current.parentElement) {
+              const color = getComputedStyle(current).backgroundColor;
+              const channels = String(color || "").match(/[\d.]+/g) || [];
+              const alpha = channels.length >= 4 ? Number(channels[3]) : (channels.length >= 3 ? 1 : 0);
+              if (alpha >= 0.99) return color;
+            }
+            return getComputedStyle(document.documentElement).backgroundColor;
+          };
+          const focusRingUnclipped = (node, style) => {
+            if (!node || !style) return false;
+            const rect = node.getBoundingClientRect();
+            const extent = Math.max(0, Number.parseFloat(style.outlineWidth) || 0)
+              + Math.max(0, Number.parseFloat(style.outlineOffset) || 0);
+            const ring = {
+              left: rect.left - extent,
+              right: rect.right + extent,
+              top: rect.top - extent,
+              bottom: rect.bottom + extent
+            };
+            if (ring.left < -1 || ring.top < -1 || ring.right > window.innerWidth + 1 || ring.bottom > window.innerHeight + 1) {
+              return false;
+            }
+            for (let ancestor = node.parentElement; ancestor; ancestor = ancestor.parentElement) {
+              const ancestorStyle = getComputedStyle(ancestor);
+              const ancestorRect = ancestor.getBoundingClientRect();
+              const clipsX = /^(?:auto|scroll|hidden|clip)$/.test(ancestorStyle.overflowX);
+              const clipsY = /^(?:auto|scroll|hidden|clip)$/.test(ancestorStyle.overflowY);
+              if (clipsX && (ring.left < ancestorRect.left - 1 || ring.right > ancestorRect.right + 1)) return false;
+              if (clipsY && (ring.top < ancestorRect.top - 1 || ring.bottom > ancestorRect.bottom + 1)) return false;
+            }
+            return true;
+          };
+          const actions = document.querySelector("#problemDetail .qg-detail-cta-row");
+          const complete = actions?.querySelector(".problem-detail-complete");
+          const save = actions?.querySelector(".problem-detail-save");
+          const mock = actions?.querySelector('[data-problem-action="mock-interview"]');
+          const buttons = [complete, save, mock];
+          const actionsRect = rectFor(actions);
+          const buttonRects = buttons.map(rectFor);
+          const [completeRect, saveRect, mockRect] = buttonRects;
+          const mockStyle = mock ? getComputedStyle(mock) : null;
+          const contrastRatio = contrast(mockStyle?.color, mockStyle?.backgroundColor);
+          const focusStyle = mockStyle;
+          const focusBackdrop = effectiveOpaqueBackground(actions);
+          const focusContrast = contrast(focusStyle?.outlineColor, focusBackdrop);
+          const focusUnclipped = focusRingUnclipped(mock, focusStyle);
+          const labelMetricFor = (button) => {
+            if (!button) return null;
+            const buttonRect = button.getBoundingClientRect();
+            const buttonStyle = getComputedStyle(button);
+            const availableLeft = buttonRect.left
+              + (Number.parseFloat(buttonStyle.borderLeftWidth) || 0)
+              + (Number.parseFloat(buttonStyle.paddingLeft) || 0);
+            const availableRight = buttonRect.right
+              - (Number.parseFloat(buttonStyle.borderRightWidth) || 0)
+              - (Number.parseFloat(buttonStyle.paddingRight) || 0);
+            const contentRects = [...button.childNodes].flatMap((node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                if (node.classList.contains("ui-ripple")) return [];
+                const rect = node.getBoundingClientRect();
+                return rect.width > 0 ? [rect] : [];
+              }
+              if (node.nodeType !== Node.TEXT_NODE || !node.textContent.trim()) return [];
+              const range = document.createRange();
+              range.selectNodeContents(node);
+              return [...range.getClientRects()].filter((rect) => rect.width > 0);
+            });
+            const contentLeft = Math.min(...contentRects.map((rect) => rect.left));
+            const contentRight = Math.max(...contentRects.map((rect) => rect.right));
+            const contentOverflowPx = contentRects.length
+              ? Math.max(0, availableLeft - contentLeft, contentRight - availableRight)
+              : Number.POSITIVE_INFINITY;
+            return {
+              label: button.innerText.trim(),
+              scrollWidth: button.scrollWidth,
+              clientWidth: button.clientWidth,
+              scrollOverflowPx: Math.max(0, button.scrollWidth - button.clientWidth),
+              contentLeft: Math.round(contentLeft * 100) / 100,
+              contentRight: Math.round(contentRight * 100) / 100,
+              availableLeft: Math.round(availableLeft * 100) / 100,
+              availableRight: Math.round(availableRight * 100) / 100,
+              overflowPx: Math.round(contentOverflowPx * 100) / 100
+            };
+          };
+          const labelMetrics = buttons.map(labelMetricFor);
+          const overflowPx = Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth);
+          const mobileRowsValid = window.innerWidth !== 390 || (
+            Math.abs((completeRect?.top || 0) - (saveRect?.top || 0)) <= 2
+            && (mockRect?.top || 0) >= Math.max(completeRect?.bottom || 0, saveRect?.bottom || 0)
+            && Math.abs((mockRect?.left || 0) - (actionsRect?.left || 0)) <= 2
+            && Math.abs((mockRect?.right || 0) - (actionsRect?.right || 0)) <= 2
+          );
+          const checks = {
+            oneActionDock: document.querySelectorAll("#problemDetail .qg-detail-cta-row").length === 1,
+            noHorizontalOverflow: overflowPx <= 4,
+            actionsWithinViewport: Boolean(actionsRect)
+              && actionsRect.left >= -1
+              && actionsRect.right <= window.innerWidth + 4,
+            touchTargets: buttonRects.every((rect) => rect?.height >= 44),
+            labelsFit: labelMetrics.every((metric) => metric && metric.overflowPx <= 0.5),
+            mobileRowsValid,
+            nonColorSavedCue: save?.getAttribute("aria-pressed") === "true"
+              && save.classList.contains("active")
+              && Boolean(save.querySelector('[data-lucide="bookmark-check"]')),
+            focusVisible: Number.parseFloat(focusStyle?.outlineWidth || "0") >= 3
+              && Number.parseFloat(focusStyle?.outlineOffset || "0") >= 2
+              && focusStyle?.outlineStyle !== "none",
+            focusContrast: Number.isFinite(focusContrast) && focusContrast >= 3,
+            focusUnclipped,
+            contrastRatio: Number.isFinite(contrastRatio) && contrastRatio >= 4.5
+          };
+          return {
+            viewport: viewportLabel,
+            theme: themeName,
+            overflowPx,
+            actionDock: actionsRect,
+            actionTargets: buttonRects,
+            labelMetrics,
+            mockForeground: mockStyle?.color || "",
+            mockBackground: mockStyle?.backgroundColor || "",
+            contrastRatio: Math.round(contrastRatio * 100) / 100,
+            focus: {
+              outlineWidth: focusStyle?.outlineWidth || "",
+              outlineOffset: focusStyle?.outlineOffset || "",
+              outlineColor: focusStyle?.outlineColor || "",
+              backdropColor: focusBackdrop,
+              contrastRatio: Math.round(focusContrast * 100) / 100,
+              unclipped: focusUnclipped
+            },
+            checks
+          };
+        }, { viewportLabel: viewport.label, themeName: theme });
+        assertRestoredVisualPreflightSnapshot("Problems", snapshot);
+        matrix.push(snapshot);
+      }
+    }
+
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await applyRestoredVisualPreflightState(page, RESTORED_VISUAL_PREFLIGHT_VIEWPORTS.at(-1), "dark");
+    const reducedMotion = await page.evaluate(() => {
+      const durationMs = (value) => Math.max(0, ...String(value || "0s").split(",").map((entry) => {
+        const item = entry.trim();
+        return item.endsWith("ms") ? Number.parseFloat(item) : Number.parseFloat(item) * 1000;
+      }).filter(Number.isFinite));
+      const buttons = [...document.querySelectorAll("#problemDetail .qg-detail-cta-row button")];
+      const detail = document.querySelector("#problemDetail");
+      const durations = buttons.map((button) => durationMs(getComputedStyle(button).transitionDuration));
+      const animationNames = [detail, ...buttons]
+        .filter(Boolean)
+        .flatMap((node) => getComputedStyle(node).animationName.split(",").map((name) => name.trim()));
+      return {
+        maxTransitionMs: Math.max(0, ...durations),
+        animationNames,
+        movementDisabled: durations.every((duration) => duration <= 1.01)
+          && animationNames.every((name) => !name || name === "none")
+      };
+    });
+    if (!reducedMotion.movementDisabled) {
+      throw new Error(`Problems reduced-motion preflight failed: ${JSON.stringify(reducedMotion)}`);
+    }
+    return { matrix, reducedMotion };
+  });
+}
+
+async function withRestoredVisualPreflightState(page, run) {
+  const originalViewport = page.viewportSize() || { width: 1365, height: 900 };
+  const originalState = await page.evaluate(() => ({
+    theme: document.documentElement.getAttribute("data-qg-theme"),
+    scrollX: window.scrollX,
+    scrollY: window.scrollY,
+    originalReducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  }));
+  const originalFocus = await page.evaluateHandle(() => document.activeElement);
+  try {
+    return await run();
+  } finally {
+    try {
+      await page.emulateMedia({
+        reducedMotion: originalState.originalReducedMotion ? "reduce" : "no-preference"
+      }).catch(() => {});
+      await page.setViewportSize(originalViewport).catch(() => {});
+      await page.evaluate((state) => new Promise((resolve) => {
+        if (state.theme === null) document.documentElement.removeAttribute("data-qg-theme");
+        else document.documentElement.setAttribute("data-qg-theme", state.theme);
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      }), originalState).catch(() => {});
+      await originalFocus.evaluate((node) => {
+        if (node instanceof HTMLElement && node.isConnected) node.focus({ preventScroll: true });
+      }).catch(() => {});
+      await page.evaluate(({ scrollX, scrollY }) => window.scrollTo(scrollX, scrollY), originalState).catch(() => {});
+    } finally {
+      await originalFocus.dispose().catch(() => {});
+    }
+  }
+}
+
+async function applyRestoredVisualPreflightState(page, viewport, theme) {
+  await page.setViewportSize({ width: viewport.width, height: viewport.height });
+  await page.evaluate((themeName) => new Promise((resolve) => {
+    if (themeName === "dark") document.documentElement.setAttribute("data-qg-theme", "dark");
+    else document.documentElement.removeAttribute("data-qg-theme");
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }), theme);
+}
+
+function assertRestoredVisualPreflightSnapshot(surface, snapshot) {
+  const expectedChecks = RESTORED_VISUAL_PREFLIGHT_CHECK_KEYS[surface];
+  if (!expectedChecks) throw new Error(`Unknown restored visual preflight surface: ${surface}`);
+  const checks = snapshot?.checks;
+  const actualKeys = checks && typeof checks === "object" ? Object.keys(checks) : [];
+  const missingChecks = expectedChecks.filter((name) => !actualKeys.includes(name));
+  const unexpectedChecks = actualKeys.filter((name) => !expectedChecks.includes(name));
+  const failedChecks = expectedChecks.filter((name) => checks?.[name] !== true);
+  if (missingChecks.length || unexpectedChecks.length || failedChecks.length) {
+    const reasons = [
+      failedChecks.length ? `failed=${failedChecks.join(",")}` : "",
+      missingChecks.length ? `missing=${missingChecks.join(",")}` : "",
+      unexpectedChecks.length ? `unexpected=${unexpectedChecks.join(",")}` : ""
+    ].filter(Boolean).join("; ");
+    throw new Error(`${surface} ${snapshot?.viewport || "unknown"}/${snapshot?.theme || "unknown"} visual preflight failed: ${reasons} · ${JSON.stringify(snapshot)}`);
+  }
 }
 
 async function collectProblemPaginationDiagnostics(page) {
@@ -7082,6 +7598,9 @@ async function runCompaniesTierPracticeAndCareersFlow(page, baseUrl) {
     await expectCompanyCardsContaining(page, [...sTierIds, ...aTierIds, ...bTierIds]);
     await expectCompanyTierSelected(page, "all");
 
+    result.step = "verify Companies visual preflight matrix";
+    result.visualPreflight = await collectCompaniesVisualPreflight(page);
+
     result.step = "filter Tier S";
     await page.locator('[data-company-tier="s"]').click({ timeout: 10000 });
     await expectCompanyTierSelected(page, "s");
@@ -7091,6 +7610,20 @@ async function runCompaniesTierPracticeAndCareersFlow(page, baseUrl) {
     await page.locator('[data-company-tier="a"]').click({ timeout: 10000 });
     await expectCompanyTierSelected(page, "a");
     await expectCompanyFilterResult(page, { includeIds: aTierIds, excludeIds: [...sTierIds, ...bTierIds] });
+
+    result.step = "preserve Tier A across SPA route round trip";
+    await page.locator('#moduleNav [data-module-tab="jobs"]').click({ timeout: 10000 });
+    await page.waitForURL((url) => url.pathname === "/jobs", { timeout: 10000 });
+    await page.waitForSelector("#jobsList", { state: "visible", timeout: 10000 });
+    await page.locator('#moduleNav [data-module-tab="companies"]').click({ timeout: 10000 });
+    await page.waitForURL((url) => url.pathname === "/companies", { timeout: 10000 });
+    await page.waitForSelector(
+      "#companyOverviewList .company-list-row[data-company-card]",
+      { state: "visible", timeout: 10000 }
+    );
+    await expectCompanyTierSelected(page, "a");
+    await expectCompanyFilterResult(page, { includeIds: aTierIds, excludeIds: [...sTierIds, ...bTierIds] });
+    result.tierRouteRoundTripPersisted = true;
 
     result.step = "reset all companies";
     await page.locator('[data-company-tier="all"]').click({ timeout: 10000 });

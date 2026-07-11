@@ -96,6 +96,65 @@ test("restored-journey smoke uses stable selectors and exact mobile action geome
   assert.match(source, /mockRect\.top\s*>=\s*Math\.max\(completeRect\.bottom, saveRect\.bottom\)/);
 });
 
+test("problem interview handoff requires the exact selected problem and category key", () => {
+  const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  const detailStart = source.indexOf("async function readProblemDetailSnapshot");
+  const detailEnd = source.indexOf("async function expectProblemInterviewHandoff", detailStart);
+  const handoffEnd = source.indexOf("async function collectProblemPaginationDiagnostics", detailEnd);
+  assert.ok(detailStart >= 0 && detailEnd > detailStart && handoffEnd > detailEnd);
+  const detailHelper = source.slice(detailStart, detailEnd);
+  const handoffHelper = source.slice(detailEnd, handoffEnd);
+  assert.doesNotMatch(detailHelper, /\.problem-meta \.pill/);
+  assert.doesNotMatch(detailHelper, /\|\|\s*problemId/);
+  assert.match(detailHelper, /globalThis\.quantProblemCatalog/);
+  assert.match(detailHelper, /categoryKey/);
+  assert.match(handoffHelper, /data-selected-problem-id/);
+  assert.match(handoffHelper, /data-interview-category/);
+  assert.match(handoffHelper, /#interviewTypeSelect/);
+  assert.match(handoffHelper, /activeCategories\.length\s*===\s*1/);
+  assert.doesNotMatch(handoffHelper, /!category\s*\|\|/);
+
+  const interviewApi = fs.readFileSync(path.join(root, "src/app/services/interviewPageApi.js"), "utf8");
+  const interviewPage = fs.readFileSync(path.join(root, "src/features/interview/InterviewPageContent.jsx"), "utf8");
+  assert.match(interviewApi, /selectedProblemId:\s*runtime\.selectedProblemId\s*\|\|\s*""/);
+  assert.match(interviewPage, /data-selected-problem-id=\{setup\.selectedProblemId\s*\|\|\s*""\}/);
+});
+
+test("canonical smoke records the required restored-control visual preflight matrix", () => {
+  const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  assert.match(source, /const RESTORED_VISUAL_PREFLIGHT_VIEWPORTS = Object\.freeze/);
+  for (const viewport of [
+    /label:\s*"1440x900",\s*width:\s*1440,\s*height:\s*900/,
+    /label:\s*"1280x720",\s*width:\s*1280,\s*height:\s*720/,
+    /label:\s*"390x844",\s*width:\s*390,\s*height:\s*844/
+  ]) {
+    assert.match(source, viewport);
+  }
+  assert.match(source, /const RESTORED_VISUAL_PREFLIGHT_THEMES = Object\.freeze\(\["light", "dark"\]\)/);
+  assert.match(source, /async function collectCompaniesVisualPreflight/);
+  assert.match(source, /async function collectProblemsVisualPreflight/);
+  assert.match(source, /page\.emulateMedia\(\{ reducedMotion:\s*"reduce" \}\)/);
+  assert.match(source, /contrastRatio\s*>=\s*4\.5/);
+  assert.match(source, /focusContrast\s*>=\s*3/);
+  assert.match(source, /focusUnclipped/);
+  assert.match(source, /data-lucide=["']bookmark-check["']/);
+  assert.match(source, /originalReducedMotion/);
+  assert.match(source, /originalFocus/);
+  assert.match(source, /scrollX/);
+  assert.match(source, /expectedChecks/);
+
+  const companiesStart = source.indexOf("async function runCompaniesTierPracticeAndCareersFlow");
+  const companiesEnd = source.indexOf("async function runMobileCareerJobsCompaniesFlow", companiesStart);
+  const problemsStart = source.indexOf("async function runMobileProblemDetailActionsFlow");
+  const problemsEnd = source.indexOf("async function expectMobileProblemSurface", problemsStart);
+  const companiesFlow = source.slice(companiesStart, companiesEnd);
+  assert.match(companiesFlow, /result\.visualPreflight\s*=\s*await collectCompaniesVisualPreflight\(page\)/);
+  assert.match(companiesFlow, /#moduleNav \[data-module-tab=["']jobs["']\]/);
+  assert.match(companiesFlow, /#moduleNav \[data-module-tab=["']companies["']\]/);
+  assert.match(companiesFlow, /tierRouteRoundTripPersisted\s*=\s*true/);
+  assert.match(source.slice(problemsStart, problemsEnd), /result\.visualPreflight\s*=\s*await collectProblemsVisualPreflight\(page\)/);
+});
+
 test("browser smoke preserves behavioral intent instead of visibility-only checks", () => {
   const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
   assert.match(source, /\[data-overview-problems-cta\]/);
