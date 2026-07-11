@@ -148,6 +148,86 @@ export function assertSuccessfulSubprocess(label, result) {
   throw new Error(details.join("\n"));
 }
 
+export function isExpectedPreviewResourceAbort(record = {}, previewOrigin = "", evidence = {}) {
+  if (record.kind !== "requestfailed"
+    || record.method !== "GET"
+    || record.errorText !== "net::ERR_ABORTED") {
+    return false;
+  }
+  try {
+    const url = new URL(record.url);
+    const expectedOrigin = new URL(previewOrigin).origin;
+    if (url.origin !== expectedOrigin) return false;
+    if (url.pathname === "/api/library-reader-smoke/green-book.pdf") {
+      return evidence.successfulResponse === true;
+    }
+    const isStaticResource = url.pathname === "/favicon.svg" || url.pathname.startsWith("/assets/");
+    return isStaticResource && (
+      evidence.navigationChanged === true
+      || evidence.frameDetached === true
+      || evidence.contextClosing === true
+    );
+  } catch {
+    return false;
+  }
+}
+
+export async function readRawBrowserStorageSnapshot(page, options = {}) {
+  const localStorageKeys = [...new Set(options.localStorageKeys || [])];
+  const sessionStorageKeys = [...new Set(options.sessionStorageKeys || [])];
+  return page.evaluate(({ localKeys, sessionKeys }) => ({
+    localStorage: Object.fromEntries(localKeys.map((key) => [key, localStorage.getItem(key)])),
+    sessionStorage: Object.fromEntries(sessionKeys.map((key) => [key, sessionStorage.getItem(key)]))
+  }), { localKeys: localStorageKeys, sessionKeys: sessionStorageKeys });
+}
+
+export async function restoreRawBrowserStorageSnapshot(page, snapshot = {}) {
+  const localEntries = Object.entries(snapshot.localStorage || {});
+  const sessionEntries = Object.entries(snapshot.sessionStorage || {});
+  await page.evaluate(({ localValues, sessionValues }) => {
+    const restore = (storage, entries) => {
+      for (const [key, value] of entries) {
+        if (value === null) storage.removeItem(key);
+        else storage.setItem(key, value);
+      }
+    };
+    restore(localStorage, localValues);
+    restore(sessionStorage, sessionValues);
+  }, { localValues: localEntries, sessionValues: sessionEntries });
+}
+
+export async function readRawLocalStorageSnapshot(page, keys) {
+  const snapshot = await readRawBrowserStorageSnapshot(page, { localStorageKeys: keys });
+  return snapshot.localStorage;
+}
+
+export async function restoreRawLocalStorageSnapshot(page, snapshot) {
+  await restoreRawBrowserStorageSnapshot(page, { localStorage: snapshot });
+}
+
+export function matchesExpectedConsoleMessage(expected = {}, message = {}, firstPartyOrigins = new Set()) {
+  const origins = firstPartyOrigins instanceof Set ? firstPartyOrigins : new Set(firstPartyOrigins || []);
+  if (expected.firstParty) {
+    try {
+      if (!origins.has(new URL(message.url).origin)) return false;
+    } catch {
+      return false;
+    }
+  }
+  if (expected.url !== undefined && expected.url !== message.url) return false;
+  if (expected.urlPattern instanceof RegExp) {
+    expected.urlPattern.lastIndex = 0;
+    if (!expected.urlPattern.test(String(message.url || ""))) return false;
+  }
+  const actualText = String(message.text || "");
+  if (typeof expected.text === "string") return actualText === expected.text;
+  if (expected.textPattern instanceof RegExp) {
+    expected.textPattern.lastIndex = 0;
+    return expected.textPattern.test(actualText);
+  }
+  return false;
+}
+
 function parseBuiltConfig(configPath) {
   let source;
   try {

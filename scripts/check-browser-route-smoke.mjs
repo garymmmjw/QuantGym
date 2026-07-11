@@ -14,7 +14,13 @@ import {
   assertSuccessfulSubprocess,
   canonicalBrowserBuildEnv,
   distRuntimeFingerprint,
-  readBuiltRuntimeProvenance
+  isExpectedPreviewResourceAbort,
+  matchesExpectedConsoleMessage,
+  readRawBrowserStorageSnapshot,
+  readRawLocalStorageSnapshot,
+  readBuiltRuntimeProvenance,
+  restoreRawBrowserStorageSnapshot,
+  restoreRawLocalStorageSnapshot
 } from "./lib/browser-route-targets.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -41,6 +47,12 @@ const responseErrors = [];
 const expectedFirstPartyFailures = [];
 const canonicalFixtureRequests = [];
 const collectorByPage = new WeakMap();
+const interviewRuntimeStorageByPage = new WeakMap();
+const RUNTIME_CONFIG_STORAGE_KEYS = Object.freeze([
+  "quantMemoryBoard.llm.v1",
+  "quantMemoryBoard.cloud.v1",
+  "quantMemoryBoard.auth.v1"
+]);
 let tempRoot = "";
 let preview = null;
 let browser = null;
@@ -114,7 +126,7 @@ try {
   });
   await authenticated.addInitScript(seedAuthenticatedStorage, browserSmokeAccount);
   const page = await authenticated.newPage();
-  attachPageCollectors(page, firstPartyOrigins);
+  const authenticatedCollector = attachPageCollectors(page, firstPartyOrigins);
   await installCanonicalFirstPartyFixtures(page);
 
   const routeResults = [];
@@ -213,6 +225,7 @@ try {
   }
 
   logProgress("closing authenticated browser context");
+  authenticatedCollector.beginTeardown();
   const authenticatedClosed = await closeWithTimeout("authenticated browser context", () => authenticated.close(), 15000).catch((error) => {
     warnings.push(error.message);
     return false;
@@ -615,6 +628,7 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl, firstParty
     result.error = error.message;
     fail(`Unauthenticated auth flow failed: ${error.message}`);
   } finally {
+    collector.beginTeardown();
     await context.close();
   }
   return result;
@@ -2314,6 +2328,28 @@ async function runLeagueStandingsLearningMapAndShopFlow(page, baseUrl) {
 }
 
 async function expectLeagueSurface(page) {
+  await page.waitForFunction((routeSelectors) => {
+    const laidOut = (node) => {
+      if (!node) return false;
+      const style = window.getComputedStyle(node);
+      const rect = node.getBoundingClientRect();
+      return style.display !== "none"
+        && style.visibility !== "hidden"
+        && Number(style.opacity || 1) !== 0
+        && rect.width > 0
+        && rect.height > 0;
+    };
+    const standingsRows = [...document.querySelectorAll("#leagueStandings .qg-lg-row")];
+    const learningNodes = [...document.querySelectorAll("#leagueLearningMap .qg-lg-node")];
+    const shopItems = [...document.querySelectorAll("#leagueRewardShop .qg-lg-shop-item")];
+    return routeSelectors.every((selector) => laidOut(document.querySelector(selector)))
+      && standingsRows.length > 0
+      && standingsRows.every(laidOut)
+      && learningNodes.length > 0
+      && learningNodes.every(laidOut)
+      && shopItems.length > 0
+      && shopItems.every(laidOut);
+  }, ROUTE_TARGETS.league, { timeout: 10000 });
   const rendered = await page.evaluate((routeSelectors) => {
     const laidOut = (node) => {
       if (!node) return false;
@@ -3893,6 +3929,7 @@ async function runInterviewPracticeExitResumeFlow(page, baseUrl) {
     "improve it with a hash map or dynamic programming where appropriate, and test edge cases."
   ].join(" ");
   try {
+    await captureInterviewRuntimeStorage(page);
     result.step = "open interview setup";
     await page.goto(`${baseUrl}/interview`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
@@ -3918,17 +3955,35 @@ async function runInterviewPracticeExitResumeFlow(page, baseUrl) {
     await expectInterviewQuestionReady(page, "Q1/2");
 
     result.step = "hint and reveal";
+    const collector = collectorByPage.get(page);
+    if (!collector) throw new Error("Interview fallback flow requires an attached page collector.");
+    const hintOfflineFailure = collector.expectFirstPartyFailure({
+      id: "interview hint offline fallback",
+      console: {
+        url: "http://127.0.0.1:59991/interview",
+        text: "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+      }
+    });
     const questionTitle = await page.locator("#interviewQuestionStatus").innerText();
     const hintBaselineLength = await page.locator("#interviewTranscript").evaluate((node) => node.textContent.length);
     await page.locator("#hintInterviewBtn:not(.hidden)").click({ timeout: 10000 });
     await expectInterviewHint(page, hintBaselineLength);
+    await hintOfflineFailure.wait();
     await page.locator("#revealAnswerBtn:not(.hidden)").click({ timeout: 10000 });
     await expectInterviewReference(page);
 
     result.step = "submit practice answer";
+    const feedbackOfflineFailure = collector.expectFirstPartyFailure({
+      id: "interview feedback offline fallback",
+      console: {
+        url: "http://127.0.0.1:59991/interview",
+        text: "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+      }
+    });
     await page.locator("#interviewAnswer").fill(answer);
     await page.locator("#interviewForm").evaluate((form) => form.requestSubmit());
     await expectInterviewAnswered(page);
+    await feedbackOfflineFailure.wait();
 
     result.step = "save favorite";
     await page.locator("#saveInterviewFavoriteBtn:not(.hidden)").click({ timeout: 10000 });
@@ -4112,7 +4167,6 @@ async function runInterviewPdfQuestionSourceFlow(page, baseUrl) {
   ].join("\n"), "utf8");
   let requestPayload = null;
   let requestCount = 0;
-  let previousLlmStorage;
   const routeHandler = async (route) => {
     requestCount += 1;
     if (route.request().method() === "OPTIONS") {
@@ -4157,7 +4211,6 @@ async function runInterviewPdfQuestionSourceFlow(page, baseUrl) {
     result.step = "return to interview setup";
     await page.goto(`${baseUrl}/interview`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    previousLlmStorage = await readRawLocalStorage(page, "quantMemoryBoard.llm.v1");
     if (await page.locator("#exitInterviewBtn").isVisible({ timeout: 1000 }).catch(() => false)) {
       await page.locator("#exitInterviewBtn").click({ timeout: 10000 });
     }
@@ -4222,9 +4275,7 @@ async function runInterviewPdfQuestionSourceFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   } finally {
     await page.unroute(routePattern, routeHandler).catch(() => {});
-    if (previousLlmStorage !== undefined) {
-      await restoreRawLocalStorage(page, "quantMemoryBoard.llm.v1", previousLlmStorage).catch(() => {});
-    }
+    await restoreInterviewRuntimeStorage(page);
   }
   return result;
 }
@@ -6649,8 +6700,10 @@ async function runResumeLlmReviewFlow(page, baseUrl) {
   ];
   let requestCount = 0;
   let requestPayload = null;
+  let runtimeConfigStorage;
 
   try {
+    runtimeConfigStorage = await readRawLocalStorageSnapshot(page, ["quantMemoryBoard.llm.v1"]);
     await page.route(routePattern, async (route) => {
       requestCount += 1;
       requestPayload = route.request().postDataJSON();
@@ -6694,6 +6747,9 @@ async function runResumeLlmReviewFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   } finally {
     await page.unroute(routePattern).catch(() => {});
+    if (runtimeConfigStorage) {
+      await restoreRawLocalStorageSnapshot(page, runtimeConfigStorage);
+    }
   }
   return result;
 }
@@ -6718,8 +6774,10 @@ async function runMobileResumeReviewFlow(page, baseUrl) {
   ];
   let requestCount = 0;
   let requestPayload = null;
+  let runtimeConfigStorage;
 
   try {
+    runtimeConfigStorage = await readRawLocalStorageSnapshot(page, ["quantMemoryBoard.llm.v1"]);
     await page.route(routePattern, async (route) => {
       requestCount += 1;
       requestPayload = route.request().postDataJSON();
@@ -6781,6 +6839,9 @@ async function runMobileResumeReviewFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   } finally {
     await page.unroute(routePattern).catch(() => {});
+    if (runtimeConfigStorage) {
+      await restoreRawLocalStorageSnapshot(page, runtimeConfigStorage);
+    }
     await page.setViewportSize(desktopViewport).catch(() => {});
   }
   return result;
@@ -7630,7 +7691,7 @@ async function runLibraryCloudPdfReaderFlow(page, baseUrl) {
     await page.unroute(readerTokenPattern).catch(() => {});
     await page.unroute(pdfPattern).catch(() => {});
     if (previousCloudStorage !== undefined) {
-      await restoreRawLocalStorage(page, "quantMemoryBoard.cloud.v1", previousCloudStorage).catch(() => {});
+      await restoreRawLocalStorage(page, "quantMemoryBoard.cloud.v1", previousCloudStorage);
     }
   }
   return result;
@@ -7664,6 +7725,22 @@ async function restoreRawLocalStorage(page, key, rawValue) {
     if (value === null) localStorage.removeItem(storageKey);
     else localStorage.setItem(storageKey, value);
   }, { storageKey: key, value: rawValue });
+}
+
+async function captureInterviewRuntimeStorage(page) {
+  if (interviewRuntimeStorageByPage.has(page)) return;
+  const snapshot = await readRawBrowserStorageSnapshot(page, {
+    localStorageKeys: ["quantMemoryBoard.llm.v1"],
+    sessionStorageKeys: ["quantgym-interview-session-v2"]
+  });
+  interviewRuntimeStorageByPage.set(page, snapshot);
+}
+
+async function restoreInterviewRuntimeStorage(page) {
+  if (!interviewRuntimeStorageByPage.has(page)) return;
+  const snapshot = interviewRuntimeStorageByPage.get(page);
+  await restoreRawBrowserStorageSnapshot(page, snapshot);
+  interviewRuntimeStorageByPage.delete(page);
 }
 
 async function expectLibraryReaderOpen(page, expected) {
@@ -7751,8 +7828,10 @@ async function runCrossModulePrepJourneyFlow(page, baseUrl) {
     cloudEndpoint: "http://127.0.0.1:8799/api",
     googleClientId: "cross-module-browser-smoke.apps.googleusercontent.com"
   };
+  let runtimeConfigStorage;
 
   try {
+    runtimeConfigStorage = await readRawLocalStorageSnapshot(page, RUNTIME_CONFIG_STORAGE_KEYS);
     result.step = "practice from Library into Problems";
     await page.goto(`${baseUrl}/library`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
@@ -7861,6 +7940,10 @@ async function runCrossModulePrepJourneyFlow(page, baseUrl) {
     result.status = "fail";
     result.error = `${result.step}: ${error.message}`;
     fail(`${result.name} failed: ${error.message}`);
+  } finally {
+    if (runtimeConfigStorage) {
+      await restoreRawLocalStorageSnapshot(page, runtimeConfigStorage);
+    }
   }
   return result;
 }
@@ -8790,7 +8873,9 @@ async function runSettingsPersistenceFlow(page, baseUrl) {
   const cloudEndpoint = "http://127.0.0.1:8798/api";
   const googleClientId = "browser-route-smoke.apps.googleusercontent.com";
   const model = "gpt-5-mini";
+  let runtimeConfigStorage;
   try {
+    runtimeConfigStorage = await readRawLocalStorageSnapshot(page, RUNTIME_CONFIG_STORAGE_KEYS);
     result.step = "save runtime config";
     await page.goto(`${baseUrl}/settings`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
@@ -8840,6 +8925,10 @@ async function runSettingsPersistenceFlow(page, baseUrl) {
     result.status = "fail";
     result.error = result.step ? `${result.step}: ${error.message}` : error.message;
     fail(`${result.name} failed: ${error.message}`);
+  } finally {
+    if (runtimeConfigStorage) {
+      await restoreRawLocalStorageSnapshot(page, runtimeConfigStorage);
+    }
   }
   return result;
 }
@@ -8848,7 +8937,9 @@ async function runSettingsCloudSyncNoSessionGuardFlow(page, baseUrl) {
   const result = { name: "settings sync cloud without session shows guarded status", status: "pass" };
   const syncRequests = [];
   const syncRoutePattern = "**/api/sync**";
+  let runtimeConfigStorage;
   try {
+    runtimeConfigStorage = await readRawLocalStorageSnapshot(page, RUNTIME_CONFIG_STORAGE_KEYS);
     await page.route(syncRoutePattern, async (route) => {
       const requestUrl = new URL(route.request().url());
       syncRequests.push({
@@ -8913,6 +9004,9 @@ async function runSettingsCloudSyncNoSessionGuardFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   } finally {
     await page.unroute(syncRoutePattern).catch(() => {});
+    if (runtimeConfigStorage) {
+      await restoreRawLocalStorageSnapshot(page, runtimeConfigStorage);
+    }
   }
   return result;
 }
@@ -8926,7 +9020,20 @@ async function runSettingsCloudSyncSuccessFlow(page, baseUrl) {
   const syncedAt = new Date(timestamp + 1000).toISOString();
   const syncRequests = [];
   const syncRoutePattern = "**/api/sync**";
+  let runtimeConfigStorage;
   try {
+    const currentUserId = await page.evaluate((fallbackUserId) => {
+      try {
+        return JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}").currentUserId || fallbackUserId;
+      } catch {
+        return fallbackUserId;
+      }
+    }, browserSmokeAccount.id);
+    runtimeConfigStorage = await readRawLocalStorageSnapshot(page, [
+      ...RUNTIME_CONFIG_STORAGE_KEYS,
+      "quantMemoryBoard.community.v1",
+      `quantMemoryBoard.userState.v1.${currentUserId}`
+    ]);
     await page.route(syncRoutePattern, async (route) => {
       const request = route.request();
       const requestUrl = new URL(request.url());
@@ -9070,6 +9177,9 @@ async function runSettingsCloudSyncSuccessFlow(page, baseUrl) {
     fail(`${result.name} failed: ${error.message}`);
   } finally {
     await page.unroute(syncRoutePattern).catch(() => {});
+    if (runtimeConfigStorage) {
+      await restoreRawLocalStorageSnapshot(page, runtimeConfigStorage);
+    }
   }
   return result;
 }
@@ -9458,10 +9568,20 @@ async function runSettingsInvalidBackupGuardFlow(page, baseUrl) {
     await expectStoredInvalidBackupGuardState(page, expected);
 
     result.step = "reject malformed JSON backup";
+    const collector = collectorByPage.get(page);
+    if (!collector) throw new Error("Settings invalid backup guard requires an attached page collector.");
+    const malformedConsole = collector.expectFirstPartyFailure({
+      id: "settings malformed backup rejection",
+      console: {
+        firstParty: true,
+        textPattern: /^\[QuantGym\] Failed to import backup SyntaxError: Unexpected end of JSON input(?:\n[\s\S]*)?$/
+      }
+    });
     const malformedMessage = await importInvalidSettingsBackupAndAcceptAlert(page, {
       name: `settings-invalid-json-${timestamp}.json`,
       buffer: Buffer.from("{\"version\":2,\"state\":", "utf8")
     });
+    await malformedConsole.wait();
     if (!/备份文件无法读取|backup file/i.test(malformedMessage)) {
       throw new Error(`Unexpected malformed backup alert: ${malformedMessage}`);
     }
@@ -9469,10 +9589,18 @@ async function runSettingsInvalidBackupGuardFlow(page, baseUrl) {
     result.malformedJsonRejected = true;
 
     result.step = "reject non-object JSON backup";
+    const nonObjectConsole = collector.expectFirstPartyFailure({
+      id: "settings non-object backup rejection",
+      console: {
+        firstParty: true,
+        textPattern: /^\[QuantGym\] Failed to import backup Error: Backup payload must be a JSON object\.(?:\n[\s\S]*)?$/
+      }
+    });
     const arrayMessage = await importInvalidSettingsBackupAndAcceptAlert(page, {
       name: `settings-array-backup-${timestamp}.json`,
       buffer: Buffer.from(JSON.stringify([{ resume: { text: "array backup should not import" } }]), "utf8")
     });
+    await nonObjectConsole.wait();
     if (!/备份文件无法读取|backup file/i.test(arrayMessage)) {
       throw new Error(`Unexpected array backup alert: ${arrayMessage}`);
     }
@@ -9496,7 +9624,9 @@ async function runMobileSettingsConfigBackupControlsFlow(page, baseUrl) {
   const cloudEndpoint = "http://127.0.0.1:8798/api";
   const googleClientId = `mobile-settings-${timestamp}.apps.googleusercontent.com`;
   const model = "gpt-5-mini";
+  let runtimeConfigStorage;
   try {
+    runtimeConfigStorage = await readRawLocalStorageSnapshot(page, RUNTIME_CONFIG_STORAGE_KEYS);
     result.step = "open mobile settings";
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`${baseUrl}/settings`, { waitUntil: "domcontentloaded", timeout: 25000 });
@@ -9549,6 +9679,9 @@ async function runMobileSettingsConfigBackupControlsFlow(page, baseUrl) {
     }));
     fail(`${result.name} failed: ${error.message}`);
   } finally {
+    if (runtimeConfigStorage) {
+      await restoreRawLocalStorageSnapshot(page, runtimeConfigStorage);
+    }
     await page.setViewportSize(desktopViewport).catch(() => {});
   }
   return result;
@@ -9898,8 +10031,15 @@ async function installCanonicalFirstPartyFixtures(page) {
 
 function attachPageCollectors(page, firstPartyOrigins) {
   const trackedOrigins = new Set(firstPartyOrigins || []);
+  const previewOrigin = trackedOrigins.values().next().value || "";
   const expectations = [];
+  const requestLifecycles = new WeakMap();
+  const successfulResponseRequests = new WeakSet();
+  let contextClosing = false;
   const collector = {
+    beginTeardown() {
+      contextClosing = true;
+    },
     expectFirstPartyFailure(spec) {
       const expectation = {
         ...spec,
@@ -9924,14 +10064,29 @@ function attachPageCollectors(page, firstPartyOrigins) {
     }
   };
   collectorByPage.set(page, collector);
+  page.on("request", (request) => {
+    let frame = null;
+    try {
+      frame = request.frame();
+    } catch {
+      frame = null;
+    }
+    requestLifecycles.set(request, {
+      frame,
+      frameUrl: frame?.url() || "",
+      pageUrl: page.url()
+    });
+  });
   page.on("console", (message) => {
     if (message.type() !== "error") return;
     const text = message.text();
     const locationUrl = message.location()?.url || "";
     const expected = expectations.find((entry) => (
       !entry.consoleConsumed
-      && entry.console?.url === locationUrl
-      && textMatches(entry.console, text)
+      && matchesExpectedConsoleMessage(entry.console, {
+        url: locationUrl,
+        text
+      }, trackedOrigins)
     ));
     if (expected) {
       expected.consoleConsumed = true;
@@ -9954,7 +10109,11 @@ function attachPageCollectors(page, firstPartyOrigins) {
   });
   page.on("response", (response) => {
     const url = response.url();
-    if (!isTrackedFirstPartyUrl(url, trackedOrigins) || response.status() < 400) return;
+    if (!isTrackedFirstPartyUrl(url, trackedOrigins)) return;
+    if (response.status() < 400) {
+      successfulResponseRequests.add(response.request());
+      return;
+    }
     const record = {
       kind: "response",
       method: response.request().method(),
@@ -9974,6 +10133,31 @@ function attachPageCollectors(page, firstPartyOrigins) {
       url
     };
     if (consumeExpectedNetworkFailure(expectations, record)) return;
+    const lifecycle = requestLifecycles.get(request);
+    let frameDetached = false;
+    let currentFrameUrl = "";
+    try {
+      frameDetached = Boolean(lifecycle?.frame?.isDetached());
+      currentFrameUrl = lifecycle?.frame?.url() || "";
+    } catch {
+      frameDetached = true;
+    }
+    const navigationChanged = Boolean(lifecycle && (
+      currentFrameUrl !== lifecycle.frameUrl
+      || (lifecycle.frame === page.mainFrame() && page.url() !== lifecycle.pageUrl)
+    ));
+    if (isExpectedPreviewResourceAbort(record, previewOrigin, {
+      navigationChanged,
+      frameDetached,
+      contextClosing,
+      successfulResponse: successfulResponseRequests.has(request)
+    })) {
+      const id = new URL(url).pathname === "/api/library-reader-smoke/green-book.pdf"
+        ? "preview PDF abort after successful response"
+        : "preview navigation resource abort";
+      expectedFirstPartyFailures.push({ id, ...record });
+      return;
+    }
     responseErrors.push(record);
   });
   return collector;
@@ -9992,15 +10176,6 @@ function consumeExpectedNetworkFailure(expectations, record) {
   expected.networkConsumed = true;
   expectedFirstPartyFailures.push({ id: expected.id, ...record });
   return true;
-}
-
-function textMatches(expected, actual) {
-  if (typeof expected.text === "string") return actual === expected.text;
-  if (expected.textPattern instanceof RegExp) {
-    expected.textPattern.lastIndex = 0;
-    return expected.textPattern.test(actual);
-  }
-  return false;
 }
 
 function isTrackedFirstPartyUrl(url, origins) {

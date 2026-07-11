@@ -123,6 +123,180 @@ test("canonical smoke reports 68 named interactions plus one auth preflight", ()
   assert.match(source, /reproducible/);
 });
 
+test("browser smoke waits for League entry motion before asserting layout", () => {
+  const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  const start = source.indexOf("async function expectLeagueSurface");
+  const end = source.indexOf("async function runGlobalSearchResultNavigationFlow", start);
+  assert.ok(start >= 0 && end > start, "League surface helper must remain discoverable");
+  const helper = source.slice(start, end);
+  const waitIndex = helper.indexOf("page.waitForFunction");
+  const snapshotIndex = helper.indexOf("page.evaluate");
+  assert.ok(waitIndex >= 0, "League surface helper must wait for nonzero visible layout");
+  assert.ok(snapshotIndex > waitIndex, "League surface helper must wait before taking its layout snapshot");
+  assert.match(helper, /standingsRows\.length\s*>\s*0/);
+  assert.match(helper, /learningNodes\.length\s*>\s*0/);
+  assert.match(helper, /shopItems\.length\s*>\s*0/);
+});
+
+test("browser smoke restores temporary runtime configuration between journeys", () => {
+  const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  const functionBlock = (name, nextName) => {
+    const start = source.indexOf(`async function ${name}`);
+    const end = source.indexOf(`async function ${nextName}`, start + 1);
+    assert.ok(start >= 0 && end > start, `${name} must remain discoverable`);
+    return source.slice(start, end);
+  };
+  const independentlyIsolated = [
+    ["runResumeLlmReviewFlow", "runMobileResumeReviewFlow"],
+    ["runMobileResumeReviewFlow", "expectResumeReviewItems"],
+    ["runCrossModulePrepJourneyFlow", "ensureTodoDockOpen"],
+    ["runSettingsPersistenceFlow", "runSettingsCloudSyncNoSessionGuardFlow"],
+    ["runSettingsCloudSyncNoSessionGuardFlow", "runSettingsCloudSyncSuccessFlow"],
+    ["runSettingsCloudSyncSuccessFlow", "runSettingsBackupImportResetFlow"],
+    ["runMobileSettingsConfigBackupControlsFlow", "readSettingsPersistenceValues"]
+  ];
+  for (const [name, nextName] of independentlyIsolated) {
+    const block = functionBlock(name, nextName);
+    assert.match(block, /readRawLocalStorageSnapshot\(page,/,
+      `${name} must capture runtime configuration before mutating it`);
+    assert.match(block, /finally\s*\{[\s\S]*restoreRawLocalStorageSnapshot\(page,/,
+      `${name} must restore runtime configuration in finally`);
+  }
+  assert.match(
+    functionBlock("runInterviewPracticeExitResumeFlow", "runMobileInterviewAdvancedSetupFlow"),
+    /captureInterviewRuntimeStorage\(page\)/
+  );
+  assert.match(
+    functionBlock("runInterviewPdfQuestionSourceFlow", "clickInterviewAction"),
+    /finally\s*\{[\s\S]*restoreInterviewRuntimeStorage\(page\)/
+  );
+  assert.match(source, /quantgym-interview-session-v2/);
+  assert.doesNotMatch(source, /restoreRawLocalStorageSnapshot\(page,[^;\n]+\)\.catch\(/);
+  assert.doesNotMatch(source, /restoreInterviewRuntimeStorage\(page\)\.catch\(\(\)\s*=>\s*\{\}\)/);
+
+  const cloudSyncSuccess = functionBlock("runSettingsCloudSyncSuccessFlow", "runSettingsBackupImportResetFlow");
+  assert.match(cloudSyncSuccess, /quantMemoryBoard\.community\.v1/);
+  assert.match(cloudSyncSuccess, /quantMemoryBoard\.userState\.v1\./);
+});
+
+test("browser storage snapshots round-trip missing and existing local/session keys", async () => {
+  assert.equal(typeof browserRouteTargets.readRawBrowserStorageSnapshot, "function");
+  assert.equal(typeof browserRouteTargets.restoreRawBrowserStorageSnapshot, "function");
+  const localValues = new Map([["local-existing", "local-before"], ["local-extra", "keep"]]);
+  const sessionValues = new Map([["session-existing", "session-before"]]);
+  const page = fakeStoragePage(localValues, sessionValues);
+  const snapshot = await browserRouteTargets.readRawBrowserStorageSnapshot(page, {
+    localStorageKeys: ["local-existing", "local-missing"],
+    sessionStorageKeys: ["session-existing", "session-missing"]
+  });
+  assert.deepEqual(snapshot, {
+    localStorage: { "local-existing": "local-before", "local-missing": null },
+    sessionStorage: { "session-existing": "session-before", "session-missing": null }
+  });
+
+  localValues.set("local-existing", "local-after");
+  localValues.set("local-missing", "temporary");
+  sessionValues.set("session-existing", "session-after");
+  sessionValues.set("session-missing", "temporary");
+  await browserRouteTargets.restoreRawBrowserStorageSnapshot(page, snapshot);
+  assert.equal(localValues.get("local-existing"), "local-before");
+  assert.equal(localValues.has("local-missing"), false);
+  assert.equal(localValues.get("local-extra"), "keep");
+  assert.equal(sessionValues.get("session-existing"), "session-before");
+  assert.equal(sessionValues.has("session-missing"), false);
+
+  await assert.rejects(
+    browserRouteTargets.restoreRawBrowserStorageSnapshot({
+      evaluate: async () => { throw new Error("restore failed"); }
+    }, snapshot),
+    /restore failed/
+  );
+});
+
+test("preview resource abort classification is limited to cancelled static GETs", () => {
+  assert.equal(typeof browserRouteTargets.isExpectedPreviewResourceAbort, "function");
+  const previewOrigin = "http://127.0.0.1:4173";
+  const expected = [
+    ["/favicon.svg", { navigationChanged: true }],
+    ["/assets/avatar-focused-v2.png", { frameDetached: true }],
+    ["/assets/generated/playful-precision/reward-xp.webp?cache=1", { contextClosing: true }],
+    ["/api/library-reader-smoke/green-book.pdf", { successfulResponse: true }]
+  ];
+  for (const [pathname, evidence] of expected) {
+    const record = {
+      kind: "requestfailed",
+      method: "GET",
+      errorText: "net::ERR_ABORTED",
+      url: `${previewOrigin}${pathname}`
+    };
+    assert.equal(browserRouteTargets.isExpectedPreviewResourceAbort(record, previewOrigin, evidence), true, pathname);
+    assert.equal(browserRouteTargets.isExpectedPreviewResourceAbort(record, previewOrigin), false, `${pathname} requires lifecycle evidence`);
+  }
+  const rejected = [
+    { kind: "requestfailed", method: "POST", errorText: "net::ERR_ABORTED", url: `${previewOrigin}/assets/main.js` },
+    { kind: "requestfailed", method: "GET", errorText: "net::ERR_FAILED", url: `${previewOrigin}/assets/main.js` },
+    { kind: "requestfailed", method: "GET", errorText: "net::ERR_ABORTED", url: `${previewOrigin}/api/sync` },
+    { kind: "requestfailed", method: "GET", errorText: "net::ERR_ABORTED", url: "http://127.0.0.1:8790/assets/main.js" },
+    { kind: "response", method: "GET", status: 404, url: `${previewOrigin}/assets/main.js` }
+  ];
+  for (const record of rejected) {
+    assert.equal(browserRouteTargets.isExpectedPreviewResourceAbort(record, previewOrigin), false, JSON.stringify(record));
+  }
+  const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  const requestFailedStart = source.indexOf('page.on("requestfailed"');
+  const collectorEnd = source.indexOf("return collector;", requestFailedStart);
+  assert.ok(requestFailedStart >= 0 && collectorEnd > requestFailedStart, "requestfailed collector must remain discoverable");
+  assert.match(
+    source.slice(requestFailedStart, collectorEnd),
+    /isExpectedPreviewResourceAbort\(record, previewOrigin,\s*\{/,
+    "cancelled preview resources must be classified in the requestfailed collector"
+  );
+  assert.match(source, /page\.on\("request",/);
+  assert.match(source, /successfulResponseRequests\.has\(request\)/);
+  assert.match(source, /beginTeardown\(\)/);
+});
+
+test("interview local fallback failures are scoped to the exact hint and feedback requests", () => {
+  const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  const start = source.indexOf("async function runInterviewPracticeExitResumeFlow");
+  const end = source.indexOf("async function runMobileInterviewAdvancedSetupFlow", start);
+  assert.ok(start >= 0 && end > start, "interview practice flow must remain discoverable");
+  const flow = source.slice(start, end);
+  assert.match(flow, /id:\s*"interview hint offline fallback"/);
+  assert.match(flow, /id:\s*"interview feedback offline fallback"/);
+  assert.equal((flow.match(/url:\s*"http:\/\/127\.0\.0\.1:59991\/interview"/g) || []).length, 2);
+  assert.equal((flow.match(/text:\s*"Failed to load resource: net::ERR_CONNECTION_REFUSED"/g) || []).length, 2);
+  assert.equal((flow.match(/\.wait\(\)/g) || []).length >= 2, true);
+});
+
+test("expected console matching requires an exact scoped first-party message", () => {
+  assert.equal(typeof browserRouteTargets.matchesExpectedConsoleMessage, "function");
+  const firstPartyOrigins = new Set(["http://127.0.0.1:4173"]);
+  const expectation = {
+    firstParty: true,
+    text: "[QuantGym] Failed to import backup Error: Backup payload must be a JSON object."
+  };
+  assert.equal(browserRouteTargets.matchesExpectedConsoleMessage(expectation, {
+    url: "http://127.0.0.1:4173/assets/main.js",
+    text: expectation.text
+  }, firstPartyOrigins), true);
+  assert.equal(browserRouteTargets.matchesExpectedConsoleMessage(expectation, {
+    url: "https://third-party.example/widget.js",
+    text: expectation.text
+  }, firstPartyOrigins), false);
+  assert.equal(browserRouteTargets.matchesExpectedConsoleMessage(expectation, {
+    url: "http://127.0.0.1:4173/assets/main.js",
+    text: `${expectation.text} extra`
+  }, firstPartyOrigins), false);
+  assert.equal(browserRouteTargets.matchesExpectedConsoleMessage({
+    firstParty: true,
+    textPattern: /^\[QuantGym\] Failed to import backup SyntaxError: Unexpected end of JSON input$/
+  }, {
+    url: "http://127.0.0.1:4173/assets/main.js",
+    text: "[QuantGym] Failed to import backup SyntaxError: Unexpected end of JSON input"
+  }, firstPartyOrigins), true);
+});
+
 test("dist runtime fingerprint changes for every non-provenance path or byte change", () => {
   assert.equal(typeof browserRouteTargets.distRuntimeFingerprint, "function");
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "quantgym-dist-fingerprint-sensitive-"));
@@ -153,6 +327,45 @@ test("dist runtime fingerprint changes for every non-provenance path or byte cha
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 });
+
+function fakeStoragePage(localValues, sessionValues) {
+  return {
+    async evaluate(callback, argument) {
+      const localDescriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+      const sessionDescriptor = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
+      Object.defineProperty(globalThis, "localStorage", {
+        configurable: true,
+        value: mapStorage(localValues)
+      });
+      Object.defineProperty(globalThis, "sessionStorage", {
+        configurable: true,
+        value: mapStorage(sessionValues)
+      });
+      try {
+        return await callback(argument);
+      } finally {
+        if (localDescriptor) Object.defineProperty(globalThis, "localStorage", localDescriptor);
+        else delete globalThis.localStorage;
+        if (sessionDescriptor) Object.defineProperty(globalThis, "sessionStorage", sessionDescriptor);
+        else delete globalThis.sessionStorage;
+      }
+    }
+  };
+}
+
+function mapStorage(values) {
+  return {
+    getItem(key) {
+      return values.has(key) ? values.get(key) : null;
+    },
+    setItem(key, value) {
+      values.set(key, String(value));
+    },
+    removeItem(key) {
+      values.delete(key);
+    }
+  };
+}
 
 function writeDistFixture(distDir, options = {}) {
   const provenance = options.provenance || {
