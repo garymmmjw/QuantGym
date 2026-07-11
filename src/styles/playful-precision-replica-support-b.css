@@ -587,6 +587,10 @@ body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter {
 }
 
 body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 44px;
   padding: 8px 13px;
   border: 0;
@@ -598,6 +602,27 @@ body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .seg
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
+  position: relative;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment .qg-active-check {
+  display: inline-grid;
+  place-items: center;
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment[aria-pressed="true"] .qg-active-check {
+  opacity: 1;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment .qg-active-check svg {
+  width: 12px;
+  height: 12px;
 }
 
 body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment.active {
@@ -607,7 +632,7 @@ body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .seg
 }
 
 body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--qg-brand) 62%, transparent);
+  outline: 3px solid var(--qg-brand);
   outline-offset: 2px;
 }
 
@@ -778,6 +803,7 @@ body.is-authenticated .app-route-root .qg-companies-page .company-hero-actions {
 
 body.is-authenticated .app-route-root .qg-companies-page .company-save-btn,
 body.is-authenticated .app-route-root .qg-companies-page .company-site-btn {
+  min-height: 44px;
   padding: 9px 15px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
@@ -992,6 +1018,7 @@ body.is-authenticated .app-route-root .qg-companies-page .company-jobs-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
   padding: 12px 20px;
   border: none;
   border-radius: 14px;
@@ -1015,6 +1042,7 @@ body.is-authenticated .app-route-root .qg-companies-page .company-practice-link 
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  min-height: 44px;
   padding: 11px 16px;
   border: 1.5px solid var(--qg-border-2);
   border-radius: 14px;
@@ -1065,7 +1093,8 @@ body.is-authenticated .app-route-root .qg-companies-page .company-practice-link 
 
   body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment {
     min-width: 0;
-    padding-inline: 6px;
+    padding-inline: 4px;
+    font-size: 11px;
   }
 
   body.is-authenticated .app-route-root .qg-companies-page .company-hero-top {

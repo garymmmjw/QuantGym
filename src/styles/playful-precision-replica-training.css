@@ -1630,6 +1630,7 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-collections-pan
   border: 1px solid var(--qg-border);
   border-radius: 20px;
   background: var(--qg-surface);
+  box-shadow: none;
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .problem-collections-heading {
@@ -1664,6 +1665,9 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-collection-grid
   overflow-x: auto;
   overscroll-behavior-inline: contain;
   scroll-snap-type: x proximity;
+  scroll-padding-inline: 5px;
+  padding: 5px;
+  margin: -5px;
   scrollbar-width: thin;
 }
 
@@ -1749,6 +1753,8 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-collection-bott
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .problem-collection-go {
+  display: grid;
+  place-items: center;
   position: static;
   grid-column: 3;
   grid-row: 1;
@@ -1758,6 +1764,23 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-collection-go {
   background: var(--qg-surface);
   color: var(--qg-brand-ink);
   box-shadow: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-go-default,
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-go-selected {
+  display: inline-grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-go-selected,
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-card.active .problem-collection-go-default {
+  display: none;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-collection-card.active .problem-collection-go-selected {
+  display: inline-grid;
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-list:not(.hidden) {
@@ -1804,11 +1827,36 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-view-tabs {
   display: flex;
   gap: 6px;
   overflow-x: auto;
+  scroll-padding-inline: 5px;
+  padding: 5px;
+  margin: -5px;
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .problem-view-tabs .segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: 44px;
   white-space: nowrap;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-view-tabs .qg-active-check {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  opacity: 0;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-view-tabs [aria-pressed="true"] .qg-active-check {
+  opacity: 1;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .problem-view-tabs .qg-active-check svg {
+  width: 14px;
+  height: 14px;
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .problem-browser-toolbar .secondary-button {
@@ -1841,8 +1889,9 @@ body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-item.is-do
 
 body.is-authenticated .app-route-root .qg-problems-page .problem-view-tabs .segment:focus-visible,
 body.is-authenticated .app-route-root .qg-problems-page .problem-collection-card:focus-visible,
-body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-done:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--qg-brand) 62%, transparent);
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-done:focus-visible,
+body.is-authenticated .app-route-root .qg-problems-page .leetcode-hot-link:focus-visible {
+  outline: 3px solid var(--qg-brand);
   outline-offset: 2px;
 }
 
@@ -2475,13 +2524,15 @@ body.is-authenticated .app-route-root .qg-problems-page .qg-detail-notes {
 
 /* CTA row */
 body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.2fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row > button {
+  flex: 1 1 auto;
   min-height: 44px;
+  padding-inline: 8px;
   white-space: nowrap;
 }
 
@@ -2495,7 +2546,7 @@ body.is-authenticated .app-route-root .qg-problems-page [data-problem-action="mo
 
 body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row button:focus-visible,
 body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--qg-brand) 62%, transparent);
+  outline: 3px solid var(--qg-brand);
   outline-offset: 2px;
 }
 

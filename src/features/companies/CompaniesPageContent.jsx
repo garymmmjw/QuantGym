@@ -178,7 +178,9 @@ export function CompaniesPageContent() {
         <div>
           <span className="companies-kicker">{model.isEnglish ? "JOBS · Company profiles" : "JOBS · 公司档案"}</span>
           <h2 id="companiesPageTitle">
-            {model.t("companies")} <span className="companies-title-en">Companies</span>
+            {model.isEnglish ? "Companies" : (
+              <>{model.t("companies")} <span className="companies-title-en">Companies</span></>
+            )}
           </h2>
           <small id="companiesSummary">
             {zh
@@ -196,6 +198,7 @@ export function CompaniesPageContent() {
               aria-pressed={model.tierFilter === tier}
               onClick={() => model.setTierFilter(tier)}
             >
+              <span className="qg-active-check" aria-hidden="true"><i data-lucide="check" /></span>
               {tier === "all" ? model.t("allCompanies") : `Tier ${tier.toUpperCase()}`}
             </button>
           ))}

@@ -20,9 +20,9 @@ function CompanyMark({ company, initials }) {
 
 export function ProblemCollectionGrid({ entries = [], filters = {}, leetcodeExpanded, isEnglish, onCollectionClick }) {
   const modeLabel = (entry) => {
-    if (entry.mode === "leetcode") return "Featured list";
-    if (entry.mode === "source") return "Source set";
-    return "Topic set";
+    if (entry.mode === "leetcode") return isEnglish ? "Featured list" : "精选题单";
+    if (entry.mode === "source") return isEnglish ? "Source set" : "题源集合";
+    return isEnglish ? "Topic set" : "主题集合";
   };
 
   return entries.map((entry) => {
@@ -56,7 +56,10 @@ export function ProblemCollectionGrid({ entries = [], filters = {}, leetcodeExpa
           <small>{isEnglish ? "completed" : "完成进度"}</small>
           <i aria-hidden="true"><span /></i>
         </span>
-        <span className="problem-collection-go" aria-hidden="true"><i data-lucide="arrow-up-right" /></span>
+        <span className="problem-collection-go" aria-hidden="true">
+          <span className="problem-collection-go-default"><i data-lucide="arrow-up-right" /></span>
+          <span className="problem-collection-go-selected"><i data-lucide="check" /></span>
+        </span>
       </button>
     );
   });

@@ -2862,7 +2862,7 @@ body.is-authenticated .app-route-root .qg-overview-achievements .achievements-mo
   text-decoration: underline;
 }
 
-/* Post-verify polish: hero brand word, mobile quest titles wrap, hide stray jump icon */
+/* Post-verify polish: hero brand word, mobile quest titles wrap, keep the progress handoff usable */
 body.is-authenticated .app-route-root .overview-route-page.qg-overview-page #heroTypewriter .hero-brand-word {
   color: var(--qg-brand-ink);
 }
@@ -2875,8 +2875,10 @@ body.is-authenticated .app-route-root .overview-route-page.qg-overview-page #her
   }
 }
 
-body.is-authenticated .app-route-root .overview-route-page.qg-overview-page .overview-effect-panel .icon-button.ghost {
-  display: none;
+body.is-authenticated .app-route-root .overview-route-page.qg-overview-page .problem-progress-panel .icon-button.ghost {
+  display: inline-grid;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 /* ================================================================== */

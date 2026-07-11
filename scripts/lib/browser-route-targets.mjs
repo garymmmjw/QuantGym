@@ -172,6 +172,83 @@ export function isExpectedPreviewResourceAbort(record = {}, previewOrigin = "", 
   }
 }
 
+export function attachPreviewResourceSettlement(page, previewOrigin = "", options = {}) {
+  if (!page || typeof page.on !== "function") {
+    throw new TypeError("Preview resource settlement requires a page-like event emitter.");
+  }
+  const normalizedPreviewOrigin = normalizeOrigin(previewOrigin);
+  const quietWindowMs = normalizedDuration(options.quietWindowMs, 150);
+  const schedule = typeof options.setTimeout === "function"
+    ? options.setTimeout
+    : globalThis.setTimeout.bind(globalThis);
+  const cancel = typeof options.clearTimeout === "function"
+    ? options.clearTimeout
+    : globalThis.clearTimeout.bind(globalThis);
+  const pendingRequests = new Set();
+  const waiters = new Set();
+
+  const notifyWaiters = () => {
+    for (const notify of [...waiters]) notify();
+  };
+  const beginRequest = (request) => {
+    if (!isPreviewStaticResourceRequest(request, normalizedPreviewOrigin)) return;
+    const sizeBefore = pendingRequests.size;
+    pendingRequests.add(request);
+    if (pendingRequests.size !== sizeBefore) notifyWaiters();
+  };
+  const finishRequest = (request) => {
+    if (pendingRequests.delete(request)) notifyWaiters();
+  };
+
+  page.on("request", beginRequest);
+  page.on("requestfinished", finishRequest);
+  page.on("requestfailed", finishRequest);
+
+  return {
+    waitForSettled(timeout = 5000) {
+      const timeoutMs = normalizedDuration(timeout, 5000);
+      return new Promise((resolve, reject) => {
+        let completed = false;
+        let quietTimer = null;
+        let timeoutTimer = null;
+        const cleanup = () => {
+          waiters.delete(refreshQuietWindow);
+          if (quietTimer !== null) cancel(quietTimer);
+          if (timeoutTimer !== null) cancel(timeoutTimer);
+        };
+        const complete = (callback) => {
+          if (completed) return;
+          completed = true;
+          cleanup();
+          callback();
+        };
+        const refreshQuietWindow = () => {
+          if (completed) return;
+          if (quietTimer !== null) {
+            cancel(quietTimer);
+            quietTimer = null;
+          }
+          if (pendingRequests.size === 0) {
+            quietTimer = schedule(() => complete(resolve), quietWindowMs);
+          }
+        };
+
+        waiters.add(refreshQuietWindow);
+        timeoutTimer = schedule(() => {
+          const pendingUrls = [...pendingRequests]
+            .slice(0, 5)
+            .map(requestUrl)
+            .filter(Boolean);
+          complete(() => reject(new Error(
+            `Preview resources did not settle within ${timeoutMs}ms: ${pendingUrls.join(" | ") || "unknown request"}`
+          )));
+        }, timeoutMs);
+        refreshQuietWindow();
+      });
+    }
+  };
+}
+
 export async function readRawBrowserStorageSnapshot(page, options = {}) {
   const localStorageKeys = [...new Set(options.localStorageKeys || [])];
   const sessionStorageKeys = [...new Set(options.sessionStorageKeys || [])];
@@ -226,6 +303,39 @@ export function matchesExpectedConsoleMessage(expected = {}, message = {}, first
     return expected.textPattern.test(actualText);
   }
   return false;
+}
+
+function isPreviewStaticResourceRequest(request, previewOrigin) {
+  if (!previewOrigin || typeof request?.method !== "function" || typeof request?.url !== "function") return false;
+  try {
+    if (request.method() !== "GET") return false;
+    const url = new URL(request.url());
+    return url.origin === previewOrigin
+      && (url.pathname === "/favicon.svg" || url.pathname.startsWith("/assets/"));
+  } catch {
+    return false;
+  }
+}
+
+function requestUrl(request) {
+  try {
+    return String(request?.url?.() || "");
+  } catch {
+    return "";
+  }
+}
+
+function normalizeOrigin(value) {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return "";
+  }
+}
+
+function normalizedDuration(value, fallback) {
+  const duration = Number(value);
+  return Number.isFinite(duration) && duration >= 0 ? duration : fallback;
 }
 
 function parseBuiltConfig(configPath) {

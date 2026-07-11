@@ -198,6 +198,7 @@ export function useOverviewPageModel() {
 
   return {
     t: api?.t || appServices.t || ((key) => key),
+    isEnglish,
     summary,
     tickerNews,
     todayPlan,

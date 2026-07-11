@@ -11,6 +11,7 @@ import { closeWithTimeout } from "./cleanup-timeout.mjs";
 import {
   CANONICAL_BROWSER_BUILD_CONFIG,
   ROUTE_TARGETS,
+  attachPreviewResourceSettlement,
   assertSuccessfulSubprocess,
   canonicalBrowserBuildEnv,
   distRuntimeFingerprint,
@@ -220,7 +221,15 @@ try {
   }
   for (const [index, [name, runCheck]] of selectedInteractionChecks.entries()) {
     logProgress(`interaction ${index + 1}/${selectedInteractionChecks.length}: ${name}`);
-    interactionResults.push(await runCheck(page, baseUrl));
+    const interactionResult = await runCheck(page, baseUrl);
+    try {
+      await authenticatedCollector.waitForPreviewResourcesSettled();
+    } catch (error) {
+      interactionResult.status = "fail";
+      interactionResult.resourceSettleError = error.message;
+      fail(`${name} left preview resources unsettled: ${error.message}`);
+    }
+    interactionResults.push(interactionResult);
     logProgress(`interaction ${index + 1}/${selectedInteractionChecks.length}: ${name} ${interactionResults.at(-1)?.status || "done"}`);
   }
 
@@ -728,15 +737,15 @@ async function runOverviewToProblemsFlow(page, baseUrl) {
     await page.goto(`${baseUrl}/`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
     await page.waitForSelector("#overviewProblemProgress", { timeout: 10000 });
-    const overviewProblemCta = page.locator(".problem-progress-panel button[aria-label='打开题库']");
-    await overviewProblemCta.waitFor({ state: "attached", timeout: 10000 });
+    const overviewProblemCta = page.locator("[data-overview-problems-cta]");
+    await overviewProblemCta.waitFor({ state: "visible", timeout: 10000 });
     result.entryVisible = await overviewProblemCta.isVisible();
-    await overviewProblemCta.evaluate((button) => button.click());
+    await overviewProblemCta.click();
     await page.waitForURL(/\/problems$/, { timeout: 10000 });
     await page.waitForSelector("#problemSearch", { timeout: 10000 });
     result.path = new URL(page.url()).pathname;
     result.entry = "overview problem progress CTA";
-    result.activation = result.entryVisible ? "user click" : "attached-node handler activation";
+    result.activation = "user click";
   } catch (error) {
     result.status = "fail";
     result.error = error.message;
@@ -8529,6 +8538,7 @@ async function runAccountNonAdminCloudNoAdminRequestsFlow(page, baseUrl) {
 
   const adminRequests = [];
   const tempPage = await context.newPage();
+  const tempCollector = attachPageCollectors(tempPage, browserSmokeFirstPartyOrigins(baseUrl));
   await tempPage.route("**/api/**", async (route) => {
     const requestUrl = new URL(route.request().url());
     if (requestUrl.pathname.includes("/api/admin/")) {
@@ -8549,6 +8559,7 @@ async function runAccountNonAdminCloudNoAdminRequestsFlow(page, baseUrl) {
       body: JSON.stringify({ ok: true, state: {}, problemStates: [], community: {} })
     });
   });
+  await installCanonicalFirstPartyFixtures(tempPage);
 
   try {
     await tempPage.goto(`${baseUrl}/account`, { waitUntil: "domcontentloaded", timeout: 25000 });
@@ -8570,6 +8581,15 @@ async function runAccountNonAdminCloudNoAdminRequestsFlow(page, baseUrl) {
     result.adminRequests = adminRequests;
     fail(`${result.name} failed: ${error.message}`);
   } finally {
+    try {
+      await tempCollector.waitForPreviewResourcesSettled();
+    } catch (error) {
+      result.status = "fail";
+      result.resourceSettleError = error.message;
+      result.error ||= error.message;
+      fail(`${result.name} left preview resources unsettled: ${error.message}`);
+    }
+    tempCollector.beginTeardown();
     await context.close().catch(() => {});
   }
   return result;
@@ -10001,7 +10021,9 @@ async function waitForAuthenticatedShell(page) {
       && style.display !== "none"
       && (!authShell || authShell.classList.contains("hidden"));
   }, null, { timeout: 15000 });
-  await page.waitForTimeout(150);
+  const collector = collectorByPage.get(page);
+  if (!collector) throw new Error("Page collectors must be attached before waiting for the authenticated shell.");
+  await collector.waitForPreviewResourcesSettled();
 }
 
 async function getRouteHealth(page) {
@@ -10057,6 +10079,7 @@ async function installCanonicalFirstPartyFixtures(page) {
 function attachPageCollectors(page, firstPartyOrigins) {
   const trackedOrigins = new Set(firstPartyOrigins || []);
   const previewOrigin = trackedOrigins.values().next().value || "";
+  const previewResourceSettlement = attachPreviewResourceSettlement(page, previewOrigin);
   const expectations = [];
   const requestLifecycles = new WeakMap();
   const successfulResponseRequests = new WeakSet();
@@ -10065,6 +10088,9 @@ function attachPageCollectors(page, firstPartyOrigins) {
   const collector = {
     beginTeardown() {
       contextClosing = true;
+    },
+    async waitForPreviewResourcesSettled(timeout = 5000) {
+      await previewResourceSettlement.waitForSettled(timeout);
     },
     expectFirstPartyFailure(spec) {
       const expectation = {

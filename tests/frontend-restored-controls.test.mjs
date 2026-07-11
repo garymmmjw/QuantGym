@@ -57,8 +57,10 @@ test("restores Companies tier filtering with button-group semantics", () => {
   const source = read("src/features/companies/CompaniesPageContent.jsx");
   const css = read("src/styles/playful-precision-replica-support-b.css");
   assert.match(source, /id="companyTierFilter" className="segmented" role="group"/);
+  assert.match(source, /model\.isEnglish\s*\?\s*"Companies"\s*:\s*\(\s*<>\s*\{model\.t\("companies"\)\}/);
   assert.match(source, /data-company-tier=\{tier\}/);
   assert.match(source, /aria-pressed=\{model\.tierFilter === tier\}/);
+  assert.match(source, /className="qg-active-check" aria-hidden="true">\s*<i data-lucide="check" \/>/);
   assert.doesNotMatch(source, /aria-selected=\{model\.tierFilter === tier\}/);
   const filterRules = ruleBodies(css, ".qg-companies-page #companyTierFilter");
   assert.ok(filterRules.length > 0, "missing CSS selector: .qg-companies-page #companyTierFilter");
@@ -66,7 +68,31 @@ test("restores Companies tier filtering with button-group semantics", () => {
   assert.ok(filterRules.some((body) => /display\s*:\s*grid/.test(body)));
   assert.match(css, /#companyTierFilter \.segment[\s\S]*?min-height\s*:\s*44px/);
   assert.match(css, /#companyTierFilter \.segment:focus-visible/);
+  assertRuleWith(css, ".qg-companies-page #companyTierFilter .segment .qg-active-check", [
+    /position\s*:\s*absolute/,
+    /opacity\s*:\s*0/
+  ]);
+  assertRuleWith(css, '.qg-companies-page #companyTierFilter .segment[aria-pressed="true"] .qg-active-check', [
+    /opacity\s*:\s*1/
+  ]);
+  assertRuleWith(css, ".qg-companies-page #companyTierFilter .segment:focus-visible", [
+    /outline\s*:\s*3px solid var\(--qg-brand\)/,
+    /outline-offset\s*:\s*2px/
+  ]);
+  for (const selector of [
+    ".qg-companies-page .company-save-btn",
+    ".qg-companies-page .company-site-btn",
+    ".qg-companies-page .company-jobs-cta",
+    ".qg-companies-page .company-practice-link"
+  ]) {
+    assertRuleWith(css, selector, [/min-height\s*:\s*44px/]);
+  }
   assert.match(css, /@media \(max-width: 560px\)[\s\S]*?#companyTierFilter[\s\S]*?repeat\(4, minmax\(0, 1fr\)\)/);
+  const mobileCss = atRuleBodies(css, "@media (max-width: 560px)").join("\n");
+  assertRuleWith(mobileCss, ".qg-companies-page #companyTierFilter .segment", [
+    /font-size\s*:\s*11px/,
+    /padding-inline\s*:\s*4px/
+  ]);
 });
 
 test("restores Problems discovery, ranking, and Hot 100 semantics", () => {
@@ -80,6 +106,11 @@ test("restores Problems discovery, ranking, and Hot 100 semantics", () => {
   assert.match(page, /data-problem-view="saved"\s+aria-pressed=\{viewMode === "saved"\}/);
   assert.match(page, /data-problem-view="ranking"\s+aria-pressed=\{viewMode === "ranking"\}/);
   assert.match(chrome, /data-problem-collection=\{entry\.id\}[\s\S]*?aria-pressed=\{active\}/);
+  assert.match(chrome, /className="problem-collection-go-default"[\s\S]*?data-lucide="arrow-up-right"/);
+  assert.match(chrome, /className="problem-collection-go-selected"[\s\S]*?data-lucide="check"/);
+  assert.match(chrome, /if \(entry\.mode === "leetcode"\) return isEnglish \? "Featured list" : "精选题单"/);
+  assert.match(chrome, /if \(entry\.mode === "source"\) return isEnglish \? "Source set" : "题源集合"/);
+  assert.match(chrome, /return isEnglish \? "Topic set" : "主题集合"/);
   assert.match(chrome, /aria-expanded=\{entry\.mode === "leetcode" \? Boolean\(leetcodeExpanded\) : undefined\}/);
   assert.match(chrome, /aria-controls=\{entry\.mode === "leetcode" \? "leetcodeHotList" : undefined\}/);
   assert.match(chrome, /data-leetcode-hot-toggle=\{item\.id\}[\s\S]*?aria-pressed=\{isDone\}/);
@@ -96,7 +127,9 @@ test("restores Problems discovery, ranking, and Hot 100 semantics", () => {
     /grid-template-columns\s*:\s*none/,
     /grid-auto-flow\s*:\s*column/,
     /grid-auto-columns\s*:\s*minmax\(210px, 1fr\)/,
-    /scroll-snap-type\s*:\s*x/
+    /scroll-snap-type\s*:\s*x/,
+    /padding\s*:\s*5px/,
+    /scroll-padding-inline\s*:\s*5px/
   ]);
   assertRuleWith(css, ".qg-problems-page .problem-collection-card", [
     /aspect-ratio\s*:\s*auto/,
@@ -119,11 +152,50 @@ test("restores Problems discovery, ranking, and Hot 100 semantics", () => {
     /background\s*:\s*var\(--qg-surface\)/,
     /color\s*:\s*var\(--qg-brand-ink\)/
   ]);
+  assertRuleWith(css, ".qg-problems-page .leetcode-hot-link:focus-visible", [
+    /outline\s*:\s*3px solid var\(--qg-brand\)/,
+    /outline-offset\s*:\s*2px/
+  ]);
   assertRuleWith(css, ".qg-problems-page .problem-collection-card.active", [
     /border-color\s*:\s*var\(--qg-brand\)/,
     /background\s*:\s*var\(--qg-brand-soft\)/,
     /color\s*:\s*var\(--qg-brand-ink\)/
   ]);
+  assertRuleWith(css, ".qg-problems-page .problem-collections-panel", [
+    /box-shadow\s*:\s*none/
+  ]);
+  assertRuleWith(css, ".qg-problems-page .problem-view-tabs", [
+    /padding\s*:\s*5px/,
+    /scroll-padding-inline\s*:\s*5px/
+  ]);
+  assert.equal((page.match(/className="qg-active-check" aria-hidden="true">\s*<i data-lucide="check" \/>/g) || []).length, 3);
+  assertRuleWith(css, ".qg-problems-page .problem-view-tabs .qg-active-check", [
+    /opacity\s*:\s*0/
+  ]);
+  assertRuleWith(css, ".qg-problems-page .problem-view-tabs .qg-active-check svg", [
+    /width\s*:\s*14px/,
+    /height\s*:\s*14px/
+  ]);
+  assertRuleWith(css, '.qg-problems-page .problem-view-tabs [aria-pressed="true"] .qg-active-check', [
+    /opacity\s*:\s*1/
+  ]);
+  assertRuleWith(css, ".qg-problems-page .problem-collection-go-selected", [
+    /display\s*:\s*none/
+  ]);
+  assertRuleWith(css, ".qg-problems-page .problem-collection-go", [
+    /display\s*:\s*grid/
+  ]);
+  assertRuleWith(css, ".qg-problems-page .problem-collection-card.active .problem-collection-go-selected", [
+    /display\s*:\s*inline-grid/
+  ]);
+  assert.match(page, /model\.t\("problemCollectionsTitle"\)/);
+  assert.match(page, /model\.t\("problemCollectionsHint"\)/);
+  assert.match(page, /model\.t\("allProblems"\)/);
+  assert.match(page, /model\.t\("savedProblems"\)/);
+  assert.match(page, /model\.t\("popularProblems"\)/);
+  assert.match(page, /model\.t\("problemRankingTitle"\)/);
+  assert.match(page, /model\.t\("problemRankingHint"\)/);
+  assert.match(page, /isEnglish \? "All sources" : "全部题源"/);
   assertRuleWith(css, ".qg-problems-page .leetcode-hot-item.is-done", [
     /border-color\s*:\s*var\(--qg-brand\)/,
     /background\s*:\s*var\(--qg-brand-soft\)/
@@ -183,10 +255,15 @@ test("exposes one Problems utility row and one complete action dock", () => {
   const dockRules = ruleBodies(css, ".qg-problems-page .qg-detail-cta-row");
   assert.ok(dockRules.length > 0, "missing CSS selector: .qg-problems-page .qg-detail-cta-row");
   assert.ok(dockRules.every((body) => !/display\s*:\s*none/.test(body)));
-  assert.ok(dockRules.some((body) => /display\s*:\s*grid/.test(body)));
+  assert.ok(dockRules.some((body) => (
+    /display\s*:\s*flex/.test(body)
+    && /flex-wrap\s*:\s*wrap/.test(body)
+  )));
 
   assertRuleWith(css, ".qg-problems-page .qg-detail-cta-row > button", [
+    /flex\s*:\s*1 1 auto/,
     /min-height\s*:\s*44px/,
+    /padding-inline\s*:\s*8px/,
     /white-space\s*:\s*nowrap/
   ]);
   assertRuleWith(css, '.qg-problems-page [data-problem-action="mock-interview"]', [

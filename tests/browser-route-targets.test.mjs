@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { EventEmitter } from "node:events";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -97,7 +98,22 @@ test("restored-journey smoke uses stable selectors and exact mobile action geome
 
 test("browser smoke preserves behavioral intent instead of visibility-only checks", () => {
   const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
-  assert.match(source, /\.problem-progress-panel button\[aria-label=["']打开题库["']\]/);
+  assert.match(source, /\[data-overview-problems-cta\]/);
+  const overviewStart = source.indexOf("async function runOverviewToProblemsFlow");
+  const overviewEnd = source.indexOf("async function runOverviewLeaderboardAndTickerFlow", overviewStart);
+  assert.ok(overviewStart >= 0 && overviewEnd > overviewStart, "Overview CTA flow must remain discoverable");
+  const overviewFlow = source.slice(overviewStart, overviewEnd);
+  assert.match(overviewFlow, /waitFor\(\{\s*state:\s*["']visible["']/);
+  assert.match(overviewFlow, /overviewProblemCta\.click\(\)/);
+  assert.doesNotMatch(overviewFlow, /evaluate\(\(button\)\s*=>\s*button\.click\(\)\)/);
+  assert.doesNotMatch(overviewFlow, /attached-node handler activation/);
+  const growthCss = fs.readFileSync(path.join(root, "src/styles/playful-precision-growth.css"), "utf8");
+  assert.match(
+    growthCss,
+    /\.problem-progress-panel \.icon-button\.ghost\s*\{[\s\S]*?display\s*:\s*inline-grid[\s\S]*?min-width\s*:\s*44px[\s\S]*?min-height\s*:\s*44px/
+  );
+  const overviewHook = fs.readFileSync(path.join(root, "src/features/overview/overviewHooks.js"), "utf8");
+  assert.match(overviewHook, /return\s*\{\s*\n\s*t:[^\n]+\n\s*isEnglish,/);
   assert.match(source, /function expectMarketCrossedQuoteFeedback/);
   assert.match(source, /function expectMarketScoredRoundFeedback/);
   assert.match(source, /function expectPkAnswerOutcome/);
@@ -251,10 +267,126 @@ test("preview resource abort classification is limited to cancelled static GETs"
     /isExpectedPreviewResourceAbort\(record, previewOrigin,\s*\{/,
     "cancelled preview resources must be classified in the requestfailed collector"
   );
-  assert.match(source, /page\.on\("request",/);
+  assert.match(source, /attachPreviewResourceSettlement\(page, previewOrigin\)/);
+  assert.match(source, /async waitForPreviewResourcesSettled\(/);
+  const shellStart = source.indexOf("async function waitForAuthenticatedShell");
+  const shellEnd = source.indexOf("async function getRouteHealth", shellStart);
+  assert.ok(shellStart >= 0 && shellEnd > shellStart, "authenticated shell helper must remain discoverable");
+  assert.match(source.slice(shellStart, shellEnd), /waitForPreviewResourcesSettled/);
+  const interactionLoop = source.slice(
+    source.indexOf("for (const [index, [name, runCheck]]"),
+    source.indexOf('logProgress("closing authenticated browser context")')
+  );
+  assert.match(interactionLoop, /waitForPreviewResourcesSettled/);
   assert.match(source, /navigationGeneration/);
   assert.match(source, /successfulResponseRequests\.has\(request\)/);
   assert.match(source, /beginTeardown\(\)/);
+});
+
+test("preview resource settlement follows request finish and failure events and resets its quiet window", async () => {
+  assert.equal(typeof browserRouteTargets.attachPreviewResourceSettlement, "function");
+  const clock = new ManualTimerClock();
+  const page = new EventEmitter();
+  const previewOrigin = "http://127.0.0.1:4173";
+  const settlement = browserRouteTargets.attachPreviewResourceSettlement(page, previewOrigin, {
+    quietWindowMs: 150,
+    setTimeout: clock.setTimeout.bind(clock),
+    clearTimeout: clock.clearTimeout.bind(clock)
+  });
+  const firstAsset = fakeBrowserRequest(`${previewOrigin}/assets/main.js`);
+  const secondAsset = fakeBrowserRequest(`${previewOrigin}/favicon.svg`);
+
+  page.emit("request", firstAsset);
+  let resolved = false;
+  const waiting = settlement.waitForSettled(1000).then(() => {
+    resolved = true;
+  });
+  clock.advance(200);
+  await Promise.resolve();
+  assert.equal(resolved, false, "a pending asset must keep settlement blocked");
+
+  page.emit("requestfinished", firstAsset);
+  clock.advance(100);
+  page.emit("request", secondAsset);
+  clock.advance(200);
+  await Promise.resolve();
+  assert.equal(resolved, false, "a new asset must reset an in-progress quiet window");
+
+  page.emit("requestfailed", secondAsset);
+  clock.advance(149);
+  await Promise.resolve();
+  assert.equal(resolved, false, "the full quiet window must elapse after failure settlement");
+  clock.advance(1);
+  await waiting;
+  assert.equal(resolved, true);
+});
+
+test("preview resource settlement filters request scope and reports pending URLs on timeout", async () => {
+  assert.equal(typeof browserRouteTargets.attachPreviewResourceSettlement, "function");
+  const previewOrigin = "http://127.0.0.1:4173";
+
+  const filterClock = new ManualTimerClock();
+  const filterPage = new EventEmitter();
+  const filteredSettlement = browserRouteTargets.attachPreviewResourceSettlement(filterPage, previewOrigin, {
+    quietWindowMs: 150,
+    setTimeout: filterClock.setTimeout.bind(filterClock),
+    clearTimeout: filterClock.clearTimeout.bind(filterClock)
+  });
+  let filteredResolved = false;
+  const filteredWait = filteredSettlement.waitForSettled(1000).then(() => {
+    filteredResolved = true;
+  });
+  filterClock.advance(100);
+  filterPage.emit("request", fakeBrowserRequest(`${previewOrigin}/api/sync`));
+  filterPage.emit("request", fakeBrowserRequest(`${previewOrigin}/assets/post.js`, { method: "POST" }));
+  filterPage.emit("request", fakeBrowserRequest("http://127.0.0.1:8790/assets/api.js"));
+  filterClock.advance(49);
+  await Promise.resolve();
+  assert.equal(filteredResolved, false);
+  filterClock.advance(1);
+  await filteredWait;
+  assert.equal(filteredResolved, true, "untracked requests must not reset the preview-static quiet window");
+
+  const timeoutClock = new ManualTimerClock();
+  const timeoutPage = new EventEmitter();
+  const timedSettlement = browserRouteTargets.attachPreviewResourceSettlement(timeoutPage, previewOrigin, {
+    quietWindowMs: 150,
+    setTimeout: timeoutClock.setTimeout.bind(timeoutClock),
+    clearTimeout: timeoutClock.clearTimeout.bind(timeoutClock)
+  });
+  const stuckAsset = fakeBrowserRequest(`${previewOrigin}/assets/stuck.js?cache=1`);
+  timeoutPage.emit("request", stuckAsset);
+  const rejection = assert.rejects(
+    timedSettlement.waitForSettled(300),
+    /Preview resources did not settle within 300ms: .*\/assets\/stuck\.js\?cache=1/
+  );
+  timeoutClock.advance(300);
+  await rejection;
+});
+
+test("authenticated shell waits require collectors and the isolated Account page settles before teardown", () => {
+  const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  const shellStart = source.indexOf("async function waitForAuthenticatedShell");
+  const shellEnd = source.indexOf("async function getRouteHealth", shellStart);
+  assert.ok(shellStart >= 0 && shellEnd > shellStart, "authenticated shell helper must remain discoverable");
+  const shell = source.slice(shellStart, shellEnd);
+  assert.match(shell, /const collector = collectorByPage\.get\(page\)/);
+  assert.match(shell, /if \(!collector\) throw new Error/);
+  assert.doesNotMatch(shell, /\?\./, "collector absence must not silently bypass resource settlement");
+
+  const flowStart = source.indexOf("async function runAccountNonAdminCloudNoAdminRequestsFlow");
+  const flowEnd = source.indexOf("async function runMobileAccountProfileUploadFlow", flowStart);
+  assert.ok(flowStart >= 0 && flowEnd > flowStart, "isolated Account flow must remain discoverable");
+  const flow = source.slice(flowStart, flowEnd);
+  assert.match(flow, /const tempCollector = attachPageCollectors\(tempPage, browserSmokeFirstPartyOrigins\(baseUrl\)\)/);
+  assert.match(flow, /await installCanonicalFirstPartyFixtures\(tempPage\)/);
+  assert.match(flow, /await tempCollector\.waitForPreviewResourcesSettled\(\)/);
+  assert.match(flow, /tempCollector\.beginTeardown\(\)/);
+  assert.ok(
+    flow.indexOf("await tempCollector.waitForPreviewResourcesSettled()") < flow.indexOf("tempCollector.beginTeardown()")
+      && flow.indexOf("tempCollector.beginTeardown()") < flow.indexOf("await context.close()"),
+    "the isolated page must settle, enter teardown mode, and only then close"
+  );
 });
 
 test("interview local fallback failures are scoped to the exact hint and feedback requests", () => {
@@ -364,6 +496,50 @@ function fakeStoragePage(localValues, sessionValues) {
       }
     }
   };
+}
+
+function fakeBrowserRequest(url, options = {}) {
+  return {
+    method: () => options.method || "GET",
+    url: () => url
+  };
+}
+
+class ManualTimerClock {
+  constructor() {
+    this.now = 0;
+    this.nextId = 1;
+    this.timers = new Map();
+  }
+
+  setTimeout(callback, delay = 0) {
+    const id = this.nextId;
+    this.nextId += 1;
+    this.timers.set(id, {
+      at: this.now + Math.max(0, Number(delay) || 0),
+      callback
+    });
+    return id;
+  }
+
+  clearTimeout(id) {
+    this.timers.delete(id);
+  }
+
+  advance(duration) {
+    const target = this.now + Math.max(0, Number(duration) || 0);
+    while (true) {
+      const due = [...this.timers.entries()]
+        .filter(([, timer]) => timer.at <= target)
+        .sort((left, right) => left[1].at - right[1].at || left[0] - right[0])[0];
+      if (!due) break;
+      const [id, timer] = due;
+      this.timers.delete(id);
+      this.now = timer.at;
+      timer.callback();
+    }
+    this.now = target;
+  }
 }
 
 function mapStorage(values) {

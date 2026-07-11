@@ -436,8 +436,9 @@ export function OverviewPageContent() {
               <button
                 className="icon-button ghost"
                 type="button"
-                title="打开题库"
-                aria-label="打开题库"
+                title={model.isEnglish ? "Open problems" : "打开题库"}
+                aria-label={model.isEnglish ? "Open problems" : "打开题库"}
+                data-overview-problems-cta
                 onClick={() => model.openModule("problems")}
               >
                 <i data-lucide="arrow-up-right" />

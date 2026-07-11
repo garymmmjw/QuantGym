@@ -211,11 +211,11 @@ export function ProblemsPageContent() {
             <div className="problem-collections-heading">
               <div>
                 <span className="rank-label">PLAYLISTS</span>
-                <h3 id="problemCollectionsTitle">题单集合</h3>
+                <h3 id="problemCollectionsTitle">{model.t("problemCollectionsTitle")}</h3>
               </div>
-              <p>从常刷集合直接进入题库；LeetCode 会展开原题清单并记录完成状态。</p>
+              <p>{model.t("problemCollectionsHint")}</p>
             </div>
-            <div id="problemCollectionGrid" className="problem-collection-grid" aria-label="题单集合">
+            <div id="problemCollectionGrid" className="problem-collection-grid" aria-label={model.t("problemCollectionsTitle")}>
               <ProblemCollectionGrid
                 entries={chrome?.collections?.entries || []}
                 filters={view.filters || {}}
@@ -241,12 +241,12 @@ export function ProblemsPageContent() {
             </div>
           </section>
 
-          <section className="problem-practice-zone qg-problem-split" aria-label="刷题列表">
+          <section className="problem-practice-zone qg-problem-split" aria-label={isEnglish ? "Problem practice list" : "刷题列表"}>
             <div className="problem-browser-toolbar">
               <div
                 className="problem-view-tabs"
                 role="group"
-                aria-label="题目浏览方式"
+                aria-label={isEnglish ? "Problem view" : "题目浏览方式"}
                 onClick={(event) => {
                   const button = event.target.closest("[data-problem-view]");
                   if (button) model.applyFilter({ type: "viewMode", value: button.dataset.problemView });
@@ -257,19 +257,28 @@ export function ProblemsPageContent() {
                   type="button"
                   data-problem-view="all"
                   aria-pressed={viewMode === "all"}
-                >全部题目</button>
+                >
+                  <span className="qg-active-check" aria-hidden="true"><i data-lucide="check" /></span>
+                  {model.t("allProblems")}
+                </button>
                 <button
                   className={`segment${viewMode === "saved" ? " active" : ""}`}
                   type="button"
                   data-problem-view="saved"
                   aria-pressed={viewMode === "saved"}
-                >我的收藏</button>
+                >
+                  <span className="qg-active-check" aria-hidden="true"><i data-lucide="check" /></span>
+                  {model.t("savedProblems")}
+                </button>
                 <button
                   className={`segment${viewMode === "ranking" ? " active" : ""}`}
                   type="button"
                   data-problem-view="ranking"
                   aria-pressed={viewMode === "ranking"}
-                >热门排行</button>
+                >
+                  <span className="qg-active-check" aria-hidden="true"><i data-lucide="check" /></span>
+                  {model.t("popularProblems")}
+                </button>
               </div>
               <span id="problemInteractionStatus" className="problem-interaction-status" aria-live="polite">
                 {chrome?.toolbar?.interactionStatus || ""}
@@ -281,14 +290,14 @@ export function ProblemsPageContent() {
                 onClick={() => model.applyFilter({ type: "clearSource" })}
               >
                 <i data-lucide="rotate-ccw" />
-                全部题源
+                {isEnglish ? "All sources" : "全部题源"}
               </button>
             </div>
-            <section id="problemRanking" className={`problem-ranking${view.mode === "ranking" ? "" : " hidden"}`} aria-label="题目排行榜">
+            <section id="problemRanking" className={`problem-ranking${view.mode === "ranking" ? "" : " hidden"}`} aria-label={model.t("problemRankingTitle")}>
               <div className="problem-ranking-header">
                 <div>
-                  <h3>题目排行榜</h3>
-                  <p>按点赞与讨论热度排序，找到值得优先复习的题目。</p>
+                  <h3>{model.t("problemRankingTitle")}</h3>
+                  <p>{model.t("problemRankingHint")}</p>
                 </div>
               </div>
               <div id="problemRankingList" className="problem-ranking-list">
