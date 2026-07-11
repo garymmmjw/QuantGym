@@ -148,11 +148,16 @@ test("canonical smoke records the required restored-control visual preflight mat
   const problemsStart = source.indexOf("async function runMobileProblemDetailActionsFlow");
   const problemsEnd = source.indexOf("async function expectMobileProblemSurface", problemsStart);
   const companiesFlow = source.slice(companiesStart, companiesEnd);
+  const problemsFlow = source.slice(problemsStart, problemsEnd);
   assert.match(companiesFlow, /result\.visualPreflight\s*=\s*await collectCompaniesVisualPreflight\(page\)/);
   assert.match(companiesFlow, /#moduleNav \[data-module-tab=["']jobs["']\]/);
   assert.match(companiesFlow, /#moduleNav \[data-module-tab=["']companies["']\]/);
   assert.match(companiesFlow, /tierRouteRoundTripPersisted\s*=\s*true/);
-  assert.match(source.slice(problemsStart, problemsEnd), /result\.visualPreflight\s*=\s*await collectProblemsVisualPreflight\(page\)/);
+  assert.match(problemsFlow, /result\.visualPreflight\s*=\s*await collectProblemsVisualPreflight\(page\)/);
+  assert.match(problemsFlow, /if\s*\(before\)\s*\{[\s\S]*?saveButton\.click/);
+  assert.match(problemsFlow, /result\.saveInitiallyActive\s*=\s*before/);
+  assert.match(problemsFlow, /result\.saveToggled\s*=\s*true/);
+  assert.match(problemsFlow, /result\.saveStateReady\s*=\s*true/);
 });
 
 test("browser smoke preserves behavioral intent instead of visibility-only checks", () => {
@@ -295,6 +300,7 @@ test("preview resource abort classification is limited to cancelled static GETs"
     ["/favicon.svg", { navigationChanged: true }],
     ["/assets/avatar-focused-v2.png", { frameDetached: true }],
     ["/assets/generated/playful-precision/reward-xp.webp?cache=1", { contextClosing: true }],
+    ["/assets/avatar-happy-v2.png", { domImageRemoved: true }],
     ["/api/library-reader-smoke/green-book.pdf", { successfulResponse: true }]
   ];
   for (const [pathname, evidence] of expected) {
@@ -339,7 +345,56 @@ test("preview resource abort classification is limited to cancelled static GETs"
   assert.match(interactionLoop, /waitForPreviewResourcesSettled/);
   assert.match(source, /navigationGeneration/);
   assert.match(source, /successfulResponseRequests\.has\(request\)/);
+  assert.match(source, /domImageReferenceAtRequest/);
+  assert.match(source, /domImageRemoved/);
+  assert.match(source, /pendingFailureClassifications/);
+  assert.match(source, /contextClosingAtFailure/);
+  assert.match(source, /navigationGenerationAtFailure/);
+  assert.match(source, /domImageReferenceAtRequest === true\s*&& domImageReferenceAtFailure === false/);
+  const failureSnapshotStart = source.indexOf("let frameDetachedAtFailure");
+  const failureSnapshotEnd = source.indexOf("const navigationChangedAtFailure", failureSnapshotStart);
+  assert.ok(failureSnapshotStart >= 0 && failureSnapshotEnd > failureSnapshotStart, "failure-time frame snapshot must remain discoverable");
+  assert.ok(
+    (source.slice(failureSnapshotStart, failureSnapshotEnd).match(/try\s*\{/g) || []).length >= 3,
+    "frame detached, frame URL, and main-frame observations must fail independently"
+  );
+  const imageProbeStart = source.indexOf("async function frameReferencesImageUrl");
+  const expectedFailureStart = source.indexOf("function consumeExpectedNetworkFailure", imageProbeStart);
+  assert.ok(imageProbeStart >= 0 && expectedFailureStart > imageProbeStart, "image reference probe must remain discoverable");
+  const imageProbe = source.slice(imageProbeStart, expectedFailureStart);
+  assert.match(imageProbe, /if \(!frame\) return null/);
+  assert.match(imageProbe, /if \(frame\.isDetached\(\)\) return null/);
+  assert.match(imageProbe, /catch \{\s*return null;\s*\}/);
   assert.match(source, /beginTeardown\(\)/);
+});
+
+test("pending failure classifications drain within a bounded deadline", async () => {
+  assert.equal(typeof browserRouteTargets.waitForPendingTasks, "function");
+  const completed = new Set([Promise.resolve("done")]);
+  await browserRouteTargets.waitForPendingTasks(completed, 100, "test classifications");
+  assert.equal(completed.size, 0);
+
+  const stalled = new Set([new Promise(() => {})]);
+  await assert.rejects(
+    browserRouteTargets.waitForPendingTasks(stalled, 15, "test classifications"),
+    /Timed out waiting for 1 test classifications/
+  );
+});
+
+test("authenticated teardown drains failure classifications before the final error verdict", () => {
+  const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  const closeStart = source.indexOf('logProgress("closing authenticated browser context")');
+  const errorVerdict = source.indexOf("if (consoleErrors.length)", closeStart);
+  assert.ok(closeStart >= 0 && errorVerdict > closeStart, "authenticated teardown and error verdict must remain discoverable");
+  const teardown = source.slice(closeStart, errorVerdict);
+  const closeIndex = teardown.indexOf('closeWithTimeout("authenticated browser context"');
+  const drainIndex = teardown.indexOf("authenticatedCollector.waitForFailureClassifications");
+  assert.ok(closeIndex >= 0 && drainIndex > closeIndex, "failure classifications must drain after context close and before the verdict");
+  assert.match(teardown, /if \(!authenticatedClosed\)\s*\{[\s\S]*?fail\(/);
+  assert.ok(
+    (source.match(/await [^;\n]*waitForFailureClassifications/g) || []).length >= 3,
+    "main, unauthenticated, and isolated contexts must all drain teardown classifications"
+  );
 });
 
 test("preview resource settlement follows request finish and failure events and resets its quiet window", async () => {
@@ -441,6 +496,8 @@ test("authenticated shell waits require collectors and the isolated Account page
   assert.match(flow, /await installCanonicalFirstPartyFixtures\(tempPage\)/);
   assert.match(flow, /await tempCollector\.waitForPreviewResourcesSettled\(\)/);
   assert.match(flow, /tempCollector\.beginTeardown\(\)/);
+  assert.doesNotMatch(flow, /context\.close\(\)\.catch\(\(\) => \{\}\)/);
+  assert.match(flow, /isolated context cleanup failed/);
   assert.ok(
     flow.indexOf("await tempCollector.waitForPreviewResourcesSettled()") < flow.indexOf("tempCollector.beginTeardown()")
       && flow.indexOf("tempCollector.beginTeardown()") < flow.indexOf("await context.close()"),

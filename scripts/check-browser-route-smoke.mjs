@@ -22,7 +22,8 @@ import {
   readRawLocalStorageSnapshot,
   readBuiltRuntimeProvenance,
   restoreRawBrowserStorageSnapshot,
-  restoreRawLocalStorageSnapshot
+  restoreRawLocalStorageSnapshot,
+  waitForPendingTasks
 } from "./lib/browser-route-targets.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -275,7 +276,14 @@ try {
     return false;
   });
   if (!authenticatedClosed) {
-    warnings.push("authenticated browser context cleanup timed out after 15000ms");
+    const message = "authenticated browser context cleanup timed out after 15000ms";
+    warnings.push(message);
+    fail(message);
+  }
+  try {
+    await authenticatedCollector.waitForFailureClassifications();
+  } catch (error) {
+    fail(`Authenticated collector did not finish classifying teardown failures: ${error.message}`);
   }
 
   if (consoleErrors.length) {
@@ -674,6 +682,13 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl, firstParty
   } finally {
     collector.beginTeardown();
     await context.close();
+    try {
+      await collector.waitForFailureClassifications();
+    } catch (error) {
+      result.status = "fail";
+      result.error ||= error.message;
+      fail(`Unauthenticated auth collector did not finish classifying teardown failures: ${error.message}`);
+    }
   }
   return result;
 }
@@ -1610,11 +1625,15 @@ async function runMobileProblemDetailActionsFlow(page, baseUrl) {
     const saveButton = page.locator("#problemDetail .problem-detail-save");
     await saveButton.scrollIntoViewIfNeeded({ timeout: 10000 });
     const before = await saveButton.evaluate((node) => node.getAttribute("aria-pressed") === "true");
+    result.saveInitiallyActive = before;
     if (before) {
       await saveButton.click({ timeout: 10000 });
-      await page.waitForFunction(() => (
-        document.querySelector("#problemDetail .problem-detail-save")?.getAttribute("aria-pressed") === "false"
-      ), null, { timeout: 10000 });
+      await page.waitForFunction(() => {
+        const button = document.querySelector("#problemDetail .problem-detail-save");
+        return button?.getAttribute("aria-pressed") === "false"
+          && !button.classList.contains("active")
+          && !button.querySelector('[data-lucide="bookmark-check"]');
+      }, null, { timeout: 10000 });
     }
     await saveButton.click({ timeout: 10000 });
     await page.waitForFunction(() => {
@@ -1623,6 +1642,8 @@ async function runMobileProblemDetailActionsFlow(page, baseUrl) {
         && button.classList.contains("active")
         && Boolean(button.querySelector('[data-lucide="bookmark-check"]'));
     }, null, { timeout: 10000 });
+    result.saveToggled = true;
+    result.saveStateReady = true;
     await expectMobileProblemSurface(page, { mode: "detail", answerRevealed: true });
 
     result.step = "verify Problems visual preflight matrix";
@@ -1644,7 +1665,6 @@ async function runMobileProblemDetailActionsFlow(page, baseUrl) {
     result.handoffType = handoff.type;
     result.detailOpened = true;
     result.answerRevealed = true;
-    result.saveToggled = true;
     result.interviewHandoff = true;
     result.noHorizontalOverflow = true;
   } catch (error) {
@@ -9123,7 +9143,20 @@ async function runAccountNonAdminCloudNoAdminRequestsFlow(page, baseUrl) {
       fail(`${result.name} left preview resources unsettled: ${error.message}`);
     }
     tempCollector.beginTeardown();
-    await context.close().catch(() => {});
+    try {
+      await context.close();
+    } catch (error) {
+      result.status = "fail";
+      result.error ||= error.message;
+      fail(`${result.name} isolated context cleanup failed: ${error.message}`);
+    }
+    try {
+      await tempCollector.waitForFailureClassifications();
+    } catch (error) {
+      result.status = "fail";
+      result.error ||= error.message;
+      fail(`${result.name} collector did not finish classifying teardown failures: ${error.message}`);
+    }
   }
   return result;
 }
@@ -10616,15 +10649,25 @@ function attachPageCollectors(page, firstPartyOrigins) {
   const expectations = [];
   const requestLifecycles = new WeakMap();
   const successfulResponseRequests = new WeakSet();
+  const pendingFailureClassifications = new Set();
   let navigationGeneration = 0;
   let contextClosing = false;
+  const waitForFailureClassifications = (timeout = 5000) => waitForPendingTasks(
+    pendingFailureClassifications,
+    timeout,
+    "preview failure classifications"
+  );
   const collector = {
     beginTeardown() {
       contextClosing = true;
     },
     async waitForPreviewResourcesSettled(timeout = 5000) {
-      await previewResourceSettlement.waitForSettled(timeout);
+      const timeoutMs = Number.isFinite(Number(timeout)) ? Math.max(0, Number(timeout)) : 5000;
+      const deadline = Date.now() + timeoutMs;
+      await previewResourceSettlement.waitForSettled(timeoutMs);
+      await waitForFailureClassifications(Math.max(0, deadline - Date.now()));
     },
+    waitForFailureClassifications,
     expectFirstPartyFailure(spec) {
       const expectation = {
         ...spec,
@@ -10662,11 +10705,17 @@ function attachPageCollectors(page, firstPartyOrigins) {
     if (request.isNavigationRequest() && frame === page.mainFrame()) {
       navigationGeneration += 1;
     }
+    const resourceType = request.resourceType();
+    const domImageReferenceAtRequest = resourceType === "image"
+      ? frameReferencesImageUrl(frame, request.url())
+      : Promise.resolve(null);
     requestLifecycles.set(request, {
       frame,
       frameUrl: frame?.url() || "",
       pageUrl: page.url(),
-      navigationGeneration
+      navigationGeneration,
+      resourceType,
+      domImageReferenceAtRequest
     });
   });
   page.on("console", (message) => {
@@ -10726,48 +10775,122 @@ function attachPageCollectors(page, firstPartyOrigins) {
     };
     if (consumeExpectedNetworkFailure(expectations, record)) return;
     const lifecycle = requestLifecycles.get(request);
-    let frameDetached = false;
-    let currentFrameUrl = "";
-    try {
-      frameDetached = Boolean(lifecycle?.frame?.isDetached());
-      currentFrameUrl = lifecycle?.frame?.url() || "";
-    } catch {
-      frameDetached = true;
-    }
-    const navigationChanged = Boolean(lifecycle && (
-      navigationGeneration !== lifecycle.navigationGeneration
-      || currentFrameUrl !== lifecycle.frameUrl
-      || (lifecycle.frame === page.mainFrame() && page.url() !== lifecycle.pageUrl)
-    ));
-    if (isExpectedPreviewResourceAbort(record, previewOrigin, {
-      navigationChanged,
-      frameDetached,
-      contextClosing,
-      successfulResponse: successfulResponseRequests.has(request)
-    })) {
-      const id = new URL(url).pathname === "/api/library-reader-smoke/green-book.pdf"
-        ? "preview PDF abort after successful response"
-        : "preview navigation resource abort";
-      expectedFirstPartyFailures.push({ id, ...record });
-      return;
-    }
-    responseErrors.push({
-      ...record,
-      diagnostics: {
-        contextClosing,
-        frameDetached,
-        navigationChanged,
-        successfulResponse: successfulResponseRequests.has(request),
-        navigationGenerationAtRequest: lifecycle?.navigationGeneration,
-        navigationGenerationAtFailure: navigationGeneration,
-        pageUrlAtRequest: lifecycle?.pageUrl || "",
-        pageUrlAtFailure: page.url(),
-        frameUrlAtRequest: lifecycle?.frameUrl || "",
-        frameUrlAtFailure: currentFrameUrl
+    const contextClosingAtFailure = contextClosing;
+    const navigationGenerationAtFailure = navigationGeneration;
+    const pageUrlAtFailure = page.url();
+    const successfulResponseAtFailure = successfulResponseRequests.has(request);
+    let frameDetachedAtFailure = null;
+    let frameUrlAtFailure = null;
+    let mainFrameAtFailure = false;
+    if (lifecycle?.frame) {
+      try {
+        frameDetachedAtFailure = lifecycle.frame.isDetached();
+      } catch {
+        frameDetachedAtFailure = null;
       }
+      try {
+        frameUrlAtFailure = lifecycle.frame.url();
+      } catch {
+        frameUrlAtFailure = null;
+      }
+      try {
+        mainFrameAtFailure = lifecycle.frame === page.mainFrame();
+      } catch {
+        mainFrameAtFailure = false;
+      }
+    }
+    const navigationChangedAtFailure = Boolean(lifecycle && (
+      navigationGenerationAtFailure !== lifecycle.navigationGeneration
+      || (frameUrlAtFailure !== null && frameUrlAtFailure !== lifecycle.frameUrl)
+      || (mainFrameAtFailure && pageUrlAtFailure !== lifecycle.pageUrl)
+    ));
+    const domImageReferenceAtFailureObservation = lifecycle?.resourceType === "image"
+      ? frameReferencesImageUrl(lifecycle.frame, url)
+      : Promise.resolve(null);
+    const classification = (async () => {
+      const [domImageReferenceAtRequest, domImageReferenceAtFailure] = await Promise.all([
+        lifecycle?.domImageReferenceAtRequest || null,
+        domImageReferenceAtFailureObservation
+      ]);
+      const domImageRemoved = domImageReferenceAtRequest === true
+        && domImageReferenceAtFailure === false;
+      const evidence = {
+        navigationChanged: navigationChangedAtFailure,
+        frameDetached: frameDetachedAtFailure,
+        contextClosing: contextClosingAtFailure,
+        successfulResponse: successfulResponseAtFailure,
+        domImageRemoved
+      };
+      if (isExpectedPreviewResourceAbort(record, previewOrigin, {
+        navigationChanged: navigationChangedAtFailure,
+        frameDetached: frameDetachedAtFailure,
+        contextClosing: contextClosingAtFailure,
+        successfulResponse: successfulResponseAtFailure,
+        domImageRemoved
+      })) {
+        const pathname = new URL(url).pathname;
+        const id = pathname === "/api/library-reader-smoke/green-book.pdf"
+          ? "preview PDF abort after successful response"
+          : domImageRemoved
+            ? "preview image source removed"
+            : "preview navigation resource abort";
+        expectedFirstPartyFailures.push({
+          id,
+          ...record,
+          diagnostics: {
+            ...evidence,
+            domImageReferenceAtRequest,
+            domImageReferenceAtFailure
+          }
+        });
+        return;
+      }
+      responseErrors.push({
+        ...record,
+        diagnostics: {
+          ...evidence,
+          domImageReferenceAtRequest,
+          domImageReferenceAtFailure,
+          navigationGenerationAtRequest: lifecycle?.navigationGeneration,
+          navigationGenerationAtFailure,
+          pageUrlAtRequest: lifecycle?.pageUrl || "",
+          pageUrlAtFailure,
+          frameUrlAtRequest: lifecycle?.frameUrl || "",
+          frameUrlAtFailure
+        }
+      });
+    })().catch((error) => {
+      responseErrors.push({
+        ...record,
+        diagnostics: {
+          classificationError: error?.message || String(error)
+        }
+      });
     });
+    pendingFailureClassifications.add(classification);
+    void classification.finally(() => pendingFailureClassifications.delete(classification));
   });
   return collector;
+}
+
+async function frameReferencesImageUrl(frame, targetUrl) {
+  if (!frame) return null;
+  try {
+    if (frame.isDetached()) return null;
+    return await frame.evaluate((candidateUrl) => (
+      [...document.images].some((image) => [image.currentSrc, image.src]
+        .filter(Boolean)
+        .some((value) => {
+          try {
+            return new URL(value, window.location.href).href === candidateUrl;
+          } catch {
+            return false;
+          }
+        }))
+    ), targetUrl);
+  } catch {
+    return null;
+  }
 }
 
 function consumeExpectedNetworkFailure(expectations, record) {

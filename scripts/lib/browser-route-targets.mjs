@@ -166,9 +166,38 @@ export function isExpectedPreviewResourceAbort(record = {}, previewOrigin = "", 
       evidence.navigationChanged === true
       || evidence.frameDetached === true
       || evidence.contextClosing === true
+      || evidence.domImageRemoved === true
     );
   } catch {
     return false;
+  }
+}
+
+export async function waitForPendingTasks(pendingTasks, timeout = 5000, label = "pending tasks") {
+  if (!pendingTasks || typeof pendingTasks.size !== "number" || typeof pendingTasks[Symbol.iterator] !== "function") {
+    throw new TypeError("Pending task settlement requires a set-like iterable.");
+  }
+  const timeoutMs = normalizedDuration(timeout, 5000);
+  const deadline = Date.now() + timeoutMs;
+  while (pendingTasks.size > 0) {
+    const remainingMs = deadline - Date.now();
+    if (remainingMs <= 0) {
+      throw new Error(`Timed out waiting for ${pendingTasks.size} ${label} after ${timeoutMs}ms.`);
+    }
+    const snapshot = [...pendingTasks];
+    let timeoutTimer = null;
+    const completed = await Promise.race([
+      Promise.all(snapshot).then(() => true),
+      new Promise((resolve) => {
+        timeoutTimer = setTimeout(() => resolve(false), remainingMs);
+      })
+    ]).finally(() => {
+      if (timeoutTimer !== null) clearTimeout(timeoutTimer);
+    });
+    if (!completed) {
+      throw new Error(`Timed out waiting for ${pendingTasks.size} ${label} after ${timeoutMs}ms.`);
+    }
+    for (const task of snapshot) pendingTasks.delete(task);
   }
 }
 
