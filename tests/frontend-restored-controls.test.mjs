@@ -167,6 +167,11 @@ test("exposes one Problems utility row and one complete action dock", () => {
   assert.ok(utilityRules.every((body) => !/display\s*:\s*none/.test(body)));
   assert.ok(utilityRules.some((body) => /display\s*:\s*flex/.test(body)));
   assert.ok(utilityRules.some((body) => /flex-wrap\s*:\s*nowrap/.test(body)));
+  assertRuleWith(css, ".qg-problems-page .qg-detail-utility-row .problem-detail-navigation", [
+    /width\s*:\s*auto/,
+    /min-width\s*:\s*0/,
+    /margin-left\s*:\s*auto/
+  ]);
 
   const dockRules = ruleBodies(css, ".qg-problems-page .qg-detail-cta-row");
   assert.ok(dockRules.length > 0, "missing CSS selector: .qg-problems-page .qg-detail-cta-row");
@@ -179,13 +184,45 @@ test("exposes one Problems utility row and one complete action dock", () => {
   ]);
   assertRuleWith(css, '.qg-problems-page [data-problem-action="mock-interview"]', [
     /min-height\s*:\s*44px/,
-    /background\s*:\s*var\(--qg-brand\)/
+    /border\s*:\s*1px solid var\(--qg-brand\)\s*!important/,
+    /background\s*:\s*var\(--qg-brand\)\s*!important/,
+    /color\s*:\s*#ffffff\s*!important/,
+    /box-shadow\s*:\s*none\s*!important/
+  ]);
+  assertRuleWith(css, ".qg-problems-page .qg-detail-utility-row .secondary-button", [
+    /border\s*:\s*1px solid var\(--qg-border\)\s*!important/,
+    /background\s*:\s*var\(--qg-surface-2\)\s*!important/,
+    /color\s*:\s*var\(--qg-text\)\s*!important/
+  ]);
+  assertRuleWith(css, ".qg-problems-page .qg-detail-cta-row .secondary-button", [
+    /border\s*:\s*1px solid var\(--qg-border\)\s*!important/,
+    /background\s*:\s*var\(--qg-surface-2\)\s*!important/,
+    /color\s*:\s*var\(--qg-text\)\s*!important/
+  ]);
+  assertRuleWith(css, ".qg-problems-page .qg-detail-cta-row .problem-detail-complete.active", [
+    /border-color\s*:\s*var\(--qg-brand\)\s*!important/,
+    /background\s*:\s*var\(--qg-brand-soft\)\s*!important/,
+    /color\s*:\s*var\(--qg-brand-ink\)\s*!important/
+  ]);
+  assertRuleWith(css, ".qg-problems-page .qg-detail-cta-row .problem-detail-save.active", [
+    /border-color\s*:\s*var\(--qg-brand\)\s*!important/,
+    /background\s*:\s*var\(--qg-brand-soft\)\s*!important/,
+    /color\s*:\s*var\(--qg-brand-ink\)\s*!important/
   ]);
   assert.match(css, /\.qg-detail-utility-row button:focus-visible,[\s\S]*?\.qg-detail-cta-row button:focus-visible/);
 
   const problemsMobile = atRuleBodies(css, "@media (max-width: 640px)")
     .find((body) => body.includes(".qg-detail-utility-row"));
   assert.ok(problemsMobile, "missing Problems detail mobile media block");
+  assertRuleWith(problemsMobile, ".qg-problems-page .problem-detail .problem-detail-top.qg-detail-utility-row", [
+    /align-items\s*:\s*stretch/,
+    /flex-direction\s*:\s*column/
+  ]);
+  assertRuleWith(problemsMobile, ".qg-problems-page .qg-detail-utility-row .problem-detail-navigation", [
+    /width\s*:\s*100%/,
+    /min-width\s*:\s*0/,
+    /margin-left\s*:\s*0/
+  ]);
   assertRuleWith(problemsMobile, ".qg-problems-page .qg-detail-cta-row", [
     /display\s*:\s*flex/,
     /flex-wrap\s*:\s*wrap/
@@ -193,6 +230,32 @@ test("exposes one Problems utility row and one complete action dock", () => {
   assertRuleWith(problemsMobile, '.qg-problems-page .qg-detail-cta-row [data-problem-action="mock-interview"]', [
     /flex-basis\s*:\s*100%/
   ]);
+  for (const selector of [
+    ".qg-problems-page .qg-detail-cta-row > .problem-detail-complete",
+    ".qg-problems-page .qg-detail-cta-row > .problem-detail-save"
+  ]) {
+    assertRuleWith(problemsMobile, selector, [
+      /min-width\s*:\s*0/,
+      /padding-inline\s*:\s*6px/,
+      /gap\s*:\s*4px/,
+      /font-size\s*:\s*12px/,
+      /line-height\s*:\s*1\.2/,
+      /white-space\s*:\s*normal/
+    ]);
+  }
+  for (const selector of [
+    ".qg-problems-page .qg-detail-cta-row > .problem-detail-complete svg",
+    ".qg-problems-page .qg-detail-cta-row > .problem-detail-save svg"
+  ]) {
+    assertRuleWith(problemsMobile, selector, [
+      /width\s*:\s*14px/,
+      /height\s*:\s*14px/,
+      /flex\s*:\s*0 0 auto/
+    ]);
+  }
+
+  assert.doesNotMatch(source, /qg-detail-(?:solve|bookmark)/);
+  assert.doesNotMatch(css, /qg-detail-(?:solve|bookmark)/);
 
   const reducedMotion = atRuleBodies(css, "@media (prefers-reduced-motion: reduce)")
     .find((body) => body.includes(".qg-detail-utility-row button"));

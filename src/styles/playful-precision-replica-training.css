@@ -2299,6 +2299,27 @@ body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row .
   white-space: nowrap;
 }
 
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row .problem-detail-navigation {
+  width: auto;
+  min-width: 0;
+  margin-left: auto;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row .secondary-button,
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row .secondary-button {
+  border: 1px solid var(--qg-border) !important;
+  background: var(--qg-surface-2) !important;
+  color: var(--qg-text) !important;
+  box-shadow: none !important;
+}
+
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row .problem-detail-complete.active,
+body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row .problem-detail-save.active {
+  border-color: var(--qg-brand) !important;
+  background: var(--qg-brand-soft) !important;
+  color: var(--qg-brand-ink) !important;
+}
+
 /* Question block reads as plain prompt text */
 body.is-authenticated .app-route-root .qg-problems-page .problem-detail-block {
   margin: 0;
@@ -2466,66 +2487,16 @@ body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row > but
 
 body.is-authenticated .app-route-root .qg-problems-page [data-problem-action="mock-interview"] {
   min-height: 44px;
-  background: var(--qg-brand);
-  color: #ffffff;
+  border: 1px solid var(--qg-brand) !important;
+  background: var(--qg-brand) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
 }
 
 body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row button:focus-visible,
 body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row button:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--qg-brand) 62%, transparent);
   outline-offset: 2px;
-}
-
-body.is-authenticated .app-route-root .qg-problems-page .qg-detail-solve {
-  flex: 1;
-  padding: 13px;
-  border: none;
-  border-radius: 14px;
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 14px;
-  color: #ffffff;
-  cursor: pointer;
-  background: linear-gradient(180deg, #6d70f8, #5b5ff5);
-  box-shadow: 0 4px 0 #3f39c9;
-  transition: transform 0.12s ease;
-}
-
-body.is-authenticated .app-route-root .qg-problems-page .qg-detail-solve.is-done {
-  background: linear-gradient(180deg, #2ec38a, #16a06a);
-  box-shadow: 0 4px 0 #0d7a4e;
-}
-
-body.is-authenticated .app-route-root .qg-problems-page .qg-detail-solve:active {
-  transform: translateY(3px);
-}
-
-body.is-authenticated .app-route-root .qg-problems-page .qg-detail-bookmark {
-  flex: 0 0 auto;
-  display: inline-grid;
-  place-items: center;
-  padding: 13px 15px;
-  border-radius: 14px;
-  background: var(--qg-surface);
-  border: 1.5px solid #e0dffb;
-  color: #5b5ff5;
-  font-family: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-body.is-authenticated .app-route-root .qg-problems-page .qg-detail-bookmark svg {
-  width: 17px;
-  height: 17px;
-}
-
-body.is-authenticated .app-route-root .qg-problems-page .qg-detail-bookmark.active {
-  background: var(--qg-brand-soft);
-}
-
-:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-problems-page .qg-detail-bookmark {
-  border-color: var(--qg-border-2);
-  color: var(--qg-brand-ink);
 }
 
 /* Discussion: compact, tucked under the CTA */
@@ -2579,9 +2550,15 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-ranking {
 }
 
 @media (max-width: 640px) {
-  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row {
+  body.is-authenticated .app-route-root .qg-problems-page .problem-detail .problem-detail-top.qg-detail-utility-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-utility-row .problem-detail-navigation {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
   }
 
   body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row {
@@ -2591,6 +2568,23 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-ranking {
 
   body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row > button {
     flex: 1 1 calc(50% - 4px);
+  }
+
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row > .problem-detail-complete,
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row > .problem-detail-save {
+    min-width: 0;
+    padding-inline: 6px;
+    gap: 4px;
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row > .problem-detail-complete svg,
+  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row > .problem-detail-save svg {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
   }
 
   body.is-authenticated .app-route-root .qg-problems-page .qg-detail-cta-row [data-problem-action="mock-interview"] {
@@ -2643,7 +2637,6 @@ body.is-authenticated .app-route-root .qg-problems-page .problem-ranking {
   body.is-authenticated .app-route-root .qg-problems-page .problem-card,
   body.is-authenticated .app-route-root .qg-problems-page .problem-theme-chip,
   body.is-authenticated .app-route-root .qg-problems-page .problem-detail,
-  body.is-authenticated .app-route-root .qg-problems-page .qg-detail-solve,
   body.is-authenticated .app-route-root .qg-problems-page .qg-problems-header,
   body.is-authenticated .app-route-root .qg-problems-page .qg-problems-filter-card,
   body.is-authenticated .app-route-root .qg-problems-page .qg-problem-list-card,
