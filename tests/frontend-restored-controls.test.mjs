@@ -148,6 +148,7 @@ test("restores Problems discovery, ranking, and Hot 100 semantics", () => {
 
 test("exposes one Problems utility row and one complete action dock", () => {
   const source = read("src/features/problems/ProblemDetail.jsx");
+  const pageSource = read("src/features/problems/ProblemsPageContent.jsx");
   const css = read("src/styles/playful-precision-replica-training.css");
 
   assert.equal((source.match(/className="problem-detail-top qg-detail-utility-row"/g) || []).length, 1);
@@ -161,6 +162,12 @@ test("exposes one Problems utility row and one complete action dock", () => {
   assert.match(source, /problem-detail-complete[\s\S]*?aria-pressed=\{detail\.completed\}/);
   assert.match(source, /problem-detail-save[\s\S]*?aria-pressed=\{detail\.favorite\}/);
   assert.doesNotMatch(source, /visually hidden/);
+  assert.match(
+    pageSource,
+    /const returnToListFromDetail = \(\) => \{[\s\S]*?autoOpenRef\.current = listData\?\.items\?\.\[0\]\?\.id \|\| "";[\s\S]*?model\.returnToList\(\);[\s\S]*?\};/
+  );
+  assert.match(pageSource, /onBack=\{returnToListFromDetail\}/);
+  assert.doesNotMatch(pageSource, /onBack=\{model\.returnToList\}/);
 
   const utilityRules = ruleBodies(css, ".qg-problems-page .problem-detail .problem-detail-top");
   assert.ok(utilityRules.length > 0, "missing CSS selector: .qg-problems-page .problem-detail .problem-detail-top");

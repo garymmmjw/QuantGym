@@ -52,6 +52,12 @@ export function ProblemsPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
+  const returnToListFromDetail = () => {
+    // Explicit Back must win over the automatic first-row selection.
+    autoOpenRef.current = listData?.items?.[0]?.id || "";
+    model.returnToList();
+  };
+
   const openProblemFromList = (problemId) => {
     model.openProblem(problemId);
     if (typeof window !== "undefined" && window.innerWidth <= 760) {
@@ -352,7 +358,7 @@ export function ProblemsPageContent() {
                   isEnglish={isEnglish}
                   renderInto={model.mountRichText}
                   formatDate={model.formatDate}
-                  onBack={model.returnToList}
+                      onBack={returnToListFromDetail}
                   onOpenProblem={model.openProblem}
                   onToggleCompleted={model.toggleCompleted}
                   onToggleSaved={model.toggleSaved}
