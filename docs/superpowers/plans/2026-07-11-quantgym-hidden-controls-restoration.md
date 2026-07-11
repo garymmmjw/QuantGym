@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Restore the six hidden Problems and Companies journeys inside the current Playful Precision UI, then finish the fully passing 69-interaction Phase 0 core-flow baseline.
+**Goal:** Restore the six hidden Problems and Companies journeys inside the current Playful Precision UI, then finish the fully passing 69-flow Phase 0 baseline: 68 named interactions plus the separately serialized unauthenticated auth preflight.
 
 **Architecture:** Restore only the entry layer. Problems receives a compact discovery band plus one detail action dock; Companies re-exposes its existing tier filter in the current header. Existing hooks, services, state, routes, persistence, data, and handoff controllers remain authoritative. The active Task 5 smoke/build work stays unstaged during product Tasks 1-3 and is owned by Task 4.
 
@@ -48,7 +48,7 @@ src/styles/playful-precision-replica-training.css
   Problems discovery band, utility row, action dock, responsive and reduced-motion rules.
 
 scripts/check-browser-route-smoke.mjs
-  Current-UI selectors and all 69 core-flow interactions. Already contains unstaged Task 5 rebaseline work.
+  Current-UI selectors, 68 named interactions, and the separate auth preflight. Already contains unstaged Task 5 rebaseline work.
 
 docs/browser-audit-screenshots/370-frontend-upgrade-core-flow-baseline-summary.json
   Passing Task 5 evidence generated only after the complete canonical run.
@@ -720,8 +720,8 @@ Do not stage the active Task 5 smoke/build/evidence files.
 
 **Interfaces:**
 
-- Consumes: the restored selectors, existing 69 exact interaction names, explicit build-isolation flags, full-dist fingerprint helper, and Task 3 core-flow evidence mapping.
-- Produces: a passing 22-route/69-interaction `370` summary with zero unexpected console, page, or first-party response errors and a stable canonical dist fingerprint.
+- Consumes: the restored selectors, 68 exact interaction names, the separate unauthenticated auth preflight, explicit build-isolation flags, full-dist fingerprint helper, and Task 3 core-flow evidence mapping.
+- Produces: a passing 22-route `370` summary with 68/68 named interactions plus 1/1 auth preflight (69/69 core flows), zero unexpected console, page, or first-party response errors, and a stable canonical dist fingerprint.
 
 - [ ] **Step 1: Capture the six focused RED interactions before changing their smoke steps**
 
@@ -777,11 +777,19 @@ Required Problems flow changes:
 - retain exact collection/filter, ranking score/order/detail/return, Hot 100 persistence, route handoff, setup state, and mobile-overflow assertions;
 - do not convert any restored check to visibility-only.
 
+Required audit hardening before GREEN:
+
+- restore any behavioral assertion weakened by the in-progress rebaseline, including the Overview CTA, Market feedback content, PK result/feed/outcome, Plan role/season/hours, Library selected-source membership, and cross-module Saved-view persistence;
+- build the canonical smoke child from controlled inputs rather than forwarding ambient Google, model, catalog-source, or strict-mode overrides;
+- collect failures from the preview, configured API, and configured LLM origins without blanket-suppressing connection-refused or 403 messages;
+- require nonempty valid build provenance and agreement between built `config.js` and root `version.json`;
+- add a durable 390 px assertion that Complete and Save share the first row and each satisfies `scrollWidth <= clientWidth`.
+
 - [ ] **Step 3: Run the six focused interactions and confirm GREEN**
 
 Run the six commands from Step 1 again with `-green` summary paths.
 
-Expected for each: `routes.passed=22`, selected interaction `status="pass"`, and zero console, page, or first-party response errors.
+Expected for each: `routes.passed=22`, selected interaction `status="pass"`, unauthenticated auth preflight `status="pass"`, and zero console, page, or first-party response errors.
 
 - [ ] **Step 4: Run the static and repository checks**
 
@@ -817,7 +825,8 @@ Expected:
 
 - status `pass`;
 - routes `22/22`;
-- interactions `69/69`, including League and all six restored journeys;
+- named interactions `68/68`, including League and all six restored journeys;
+- unauthenticated auth preflight `1/1`, for `69/69` total core flows;
 - zero unexpected console errors;
 - zero page errors;
 - zero first-party response errors;
@@ -870,6 +879,6 @@ Do not stage any unrelated source-workspace screenshot or local design-archive f
 After Task 4:
 
 1. Generate one review package from the commit before Task 1 through the final Task 4 commit.
-2. Review product scope, accessibility, responsive behavior, light/dark parity, state preservation, and all 69 evidence records.
+2. Review product scope, accessibility, responsive behavior, light/dark parity, state preservation, and all 69 core-flow evidence records (68 named interactions plus auth preflight).
 3. Fix every Critical or Important finding with regression-first TDD and re-review.
 4. Continue to Phase 0 Task 6 only after this restoration and Task 5 both receive an Approved verdict.

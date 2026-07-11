@@ -203,7 +203,7 @@ Then implement the minimum product changes and reach GREEN in this order:
 Required final evidence:
 
 - all six restored interactions pass;
-- all 69 core interactions pass;
+- all 68 named interactions and the separate auth preflight pass (69 total core flows);
 - all 22 routes pass;
 - no unexpected console, page, or first-party response error;
 - route interaction and UI redesign checks pass;
@@ -220,5 +220,5 @@ The restoration is ready for Task 5 review only when:
 3. No duplicate Complete, Save, Mock Interview, or tier-filter control is exposed.
 4. Existing persistence and handoff semantics are unchanged.
 5. Focus, touch targets, contrast, dark mode, and reduced motion meet the design contract.
-6. The canonical 69-interaction core-flow baseline is fully passing.
+6. The canonical baseline is fully passing: 68/68 named interactions plus the separately serialized unauthenticated auth preflight, for 69/69 total core flows.
 7. Task 5 remains QA/evidence plus the explicitly approved entry-layer restoration; no unrelated feature change is included.
