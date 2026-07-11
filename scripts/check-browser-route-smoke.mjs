@@ -750,6 +750,9 @@ async function checkRoute(page, baseUrl, route) {
     if (health.overlayVisible) throw new Error("Vite/runtime overlay is visible.");
     if (health.bodyTextLength < 80) throw new Error(`Route body text is unexpectedly small (${health.bodyTextLength}).`);
     if (health.horizontalOverflowPx > 4) throw new Error(`Document horizontal overflow is ${health.horizontalOverflowPx}px.`);
+    const collector = collectorByPage.get(page);
+    if (!collector) throw new Error("Page collectors must be attached before a route can finish loading.");
+    await collector.waitForPreviewResourcesSettled();
   } catch (error) {
     result.status = "fail";
     result.error = error.message;
@@ -6497,7 +6500,22 @@ async function waitForSharedExperience(page, expected) {
       return false;
     }
   }, expected, { timeout: 10000 });
-  return handle.evaluate((value) => value);
+  const shared = await handle.evaluate((value) => value);
+  await page.waitForURL(/\/community$/, { timeout: 10000 });
+  await waitForAuthenticatedShell(page);
+  await page.waitForSelector("#communityList", { timeout: 10000 });
+  await page.waitForFunction(({ firm, summary, postId }) => {
+    const thread = [...document.querySelectorAll("#communityList .forum-thread")]
+      .find((node) => (node.textContent || "").includes(firm));
+    const text = thread?.textContent || "";
+    if (!text.includes(summary)) return false;
+    const community = JSON.parse(localStorage.getItem("quantMemoryBoard.community.v1") || "{}");
+    return community.posts?.some((post) => post.id === postId);
+  }, { ...expected, postId: shared.postId }, { timeout: 10000 });
+  const collector = collectorByPage.get(page);
+  if (!collector) throw new Error("Page collectors must be attached before shared Community content can finish loading.");
+  await collector.waitForPreviewResourcesSettled();
+  return shared;
 }
 
 async function expectExperienceDeleted(page, recordId) {

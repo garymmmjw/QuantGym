@@ -393,6 +393,23 @@ test("Community flat heading clears its inherited mascot background", () => {
   assert.match(flow, /headingDecorationSuppressed\s*=\s*true/);
 });
 
+test("experience sharing waits for the Community surface and chunks before leaving", () => {
+  const source = fs.readFileSync(path.join(root, "scripts/check-browser-route-smoke.mjs"), "utf8");
+  const helperStart = source.indexOf("async function waitForSharedExperience");
+  const helperEnd = source.indexOf("async function expectExperienceDeleted", helperStart);
+  assert.ok(helperStart >= 0 && helperEnd > helperStart, "shared experience helper must remain discoverable");
+  const helper = source.slice(helperStart, helperEnd);
+  const storageIndex = helper.indexOf("page.waitForFunction");
+  const routeIndex = helper.indexOf("page.waitForURL");
+  const surfaceIndex = helper.indexOf("#communityList");
+  const collectorIndex = helper.indexOf("collectorByPage.get(page)");
+  const settleIndex = helper.indexOf("waitForPreviewResourcesSettled");
+  assert.ok(storageIndex >= 0 && routeIndex > storageIndex, "storage persistence must precede Community route readiness");
+  assert.ok(surfaceIndex > routeIndex, "the shared Community post must render before the flow continues");
+  assert.ok(collectorIndex > surfaceIndex && settleIndex > collectorIndex, "Community-owned chunks must settle before leaving");
+  assert.match(helper, /if \(!collector\) throw new Error/);
+});
+
 test("pending failure classifications drain within a bounded deadline", async () => {
   assert.equal(typeof browserRouteTargets.waitForPendingTasks, "function");
   const completed = new Set([Promise.resolve("done")]);
@@ -512,6 +529,16 @@ test("authenticated shell waits require collectors and the isolated Account page
   assert.match(shell, /const collector = collectorByPage\.get\(page\)/);
   assert.match(shell, /if \(!collector\) throw new Error/);
   assert.doesNotMatch(shell, /\?\./, "collector absence must not silently bypass resource settlement");
+
+  const routeStart = source.indexOf("async function checkRoute");
+  const routeEnd = source.indexOf("async function gotoRouteWithColdStartRetry", routeStart);
+  assert.ok(routeStart >= 0 && routeEnd > routeStart, "route check must remain discoverable");
+  const routeCheck = source.slice(routeStart, routeEnd);
+  const healthIndex = routeCheck.indexOf("const health = await getRouteHealth(page)");
+  const settleIndex = routeCheck.indexOf("await collector.waitForPreviewResourcesSettled()", healthIndex);
+  assert.ok(healthIndex >= 0 && settleIndex > healthIndex, "route-owned chunks must settle after route content and health checks");
+  assert.match(routeCheck.slice(healthIndex, settleIndex), /const collector = collectorByPage\.get\(page\)/);
+  assert.match(routeCheck.slice(healthIndex, settleIndex), /if \(!collector\) throw new Error/);
 
   const flowStart = source.indexOf("async function runAccountNonAdminCloudNoAdminRequestsFlow");
   const flowEnd = source.indexOf("async function runMobileAccountProfileUploadFlow", flowStart);
