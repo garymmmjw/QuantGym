@@ -1,0 +1,1336 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-12T05:59:54.956Z",
+  "status": "captured-with-findings",
+  "filteredRun": false,
+  "durationMs": 116558,
+  "expectedRuns": 12,
+  "runs": {
+    "checked": 12,
+    "succeeded": 12,
+    "failed": 0
+  },
+  "targets": {
+    "lcpMs": 2500,
+    "inpFieldP75Ms": 200,
+    "cls": 0.1,
+    "initialJsGzipBytes": 184320,
+    "ordinaryRouteChunkGzipBytes": 102400,
+    "horizontalOverflowPx": 0
+  },
+  "fieldInpBaseline": {
+    "status": "unavailable-before-v2-rum",
+    "substitute": "lab interaction latency is recorded but is not labelled as field INP"
+  },
+  "methodology": {
+    "cache": "cold browser context per run",
+    "environment": "local isolated production preview",
+    "theme": "light",
+    "performanceObserver": [
+      "largest-contentful-paint",
+      "layout-shift"
+    ],
+    "labInteractionSample": "single local interaction followed by the next two animation frames; not field INP or P75"
+  },
+  "metadata": {
+    "browser": "Google Chrome via playwright-core",
+    "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "chromeVersion": "149.0.7827.201",
+    "locale": "zh-CN",
+    "buildMode": "isolated-production-preview",
+    "distRuntimeFingerprint": "998c41ec1d7fd97a89b7d460c4eb6428aa5116e32cc9db008fd79a4de40595f8",
+    "fingerprintAlgorithm": "sha256",
+    "provenance": {
+      "buildCommit": "3a227b1719bb4b5e1577c3369ea87c293a2693b8",
+      "buildBranch": "codex/frontend-v2-preview",
+      "buildSource": "local-git"
+    },
+    "buildEnvironment": {
+      "QUANTGYM_WEB_API_ENDPOINT": "http://127.0.0.1:8790/api",
+      "QUANTGYM_WEB_GOOGLE_CLIENT_ID": "",
+      "QUANTGYM_WEB_GOOGLE_LOGIN_ENABLED": "false",
+      "QUANTGYM_WEB_IGNORE_DOTENV": "1",
+      "QUANTGYM_WEB_IGNORE_RUNTIME_CONFIG": "1",
+      "QUANTGYM_WEB_LLM_ENDPOINT": "http://127.0.0.1:8787/interview",
+      "QUANTGYM_WEB_LLM_MODEL": "gpt-5-nano",
+      "QUANTGYM_WEB_PROBLEM_CATALOG_SCRIPT": "/data/problem-catalog.js?v=2",
+      "QUANTGYM_WEB_DIST": "<temporary-dist>"
+    }
+  },
+  "findings": [
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 7684,
+      "target": 2500,
+      "caseId": "auth--light--laptop--cold",
+      "surfaceId": "system:auth",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 5404,
+      "target": 2500,
+      "caseId": "auth--light--mobile--cold",
+      "surfaceId": "system:auth",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:cls",
+      "metric": "cls",
+      "value": 0.14613,
+      "target": 0.1,
+      "caseId": "auth--light--mobile--cold",
+      "surfaceId": "system:auth",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 9128,
+      "target": 2500,
+      "caseId": "overview--light--laptop--cold",
+      "surfaceId": "route:overview",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 10780,
+      "target": 2500,
+      "caseId": "overview--light--mobile--cold",
+      "surfaceId": "route:overview",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 5916,
+      "target": 2500,
+      "caseId": "problems--light--laptop--cold",
+      "surfaceId": "route:problems",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 6576,
+      "target": 2500,
+      "caseId": "problems--light--mobile--cold",
+      "surfaceId": "route:problems",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 6832,
+      "target": 2500,
+      "caseId": "interview--light--laptop--cold",
+      "surfaceId": "route:interview",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 6360,
+      "target": 2500,
+      "caseId": "interview--light--mobile--cold",
+      "surfaceId": "route:interview",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 5776,
+      "target": 2500,
+      "caseId": "league--light--laptop--cold",
+      "surfaceId": "route:league",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 8648,
+      "target": 2500,
+      "caseId": "league--light--mobile--cold",
+      "surfaceId": "route:league",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 5968,
+      "target": 2500,
+      "caseId": "messages--light--laptop--cold",
+      "surfaceId": "route:messages",
+      "kind": "performance"
+    },
+    {
+      "id": "performance:lcp",
+      "metric": "lcp",
+      "value": 5664,
+      "target": 2500,
+      "caseId": "messages--light--mobile--cold",
+      "surfaceId": "route:messages",
+      "kind": "performance"
+    },
+    {
+      "id": "bundle:initial-js-gzip",
+      "kind": "bundle",
+      "value": 282659,
+      "target": 184320
+    }
+  ],
+  "captureFailures": [],
+  "results": [
+    {
+      "id": "auth--light--laptop--cold",
+      "routeId": "auth",
+      "surfaceId": "system:auth",
+      "path": "/login",
+      "theme": "light",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 7684,
+          "target": 2500,
+          "caseId": "auth--light--laptop--cold",
+          "surfaceId": "system:auth",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 2.1,
+          "responseMs": 0.8,
+          "domContentLoadedMs": 6492.8,
+          "loadEventMs": 6764.7,
+          "durationMs": 6764.7,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 7684,
+        "lcpMs": 7684,
+        "cls": 0,
+        "resourceCount": 25,
+        "transferredBytes": 6941014,
+        "decodedBodyBytes": 19316635,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 10,
+          "other": 11,
+          "img": 2
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "auth email input to two animation frames",
+        "labInteractionLatencyMs": 19.4
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "auth--light--mobile--cold",
+      "routeId": "auth",
+      "surfaceId": "system:auth",
+      "path": "/login",
+      "theme": "light",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 5404,
+          "target": 2500,
+          "caseId": "auth--light--mobile--cold",
+          "surfaceId": "system:auth",
+          "kind": "performance"
+        },
+        {
+          "id": "performance:cls",
+          "metric": "cls",
+          "value": 0.14613,
+          "target": 0.1,
+          "caseId": "auth--light--mobile--cold",
+          "surfaceId": "system:auth",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 2.2,
+          "responseMs": 0.3,
+          "domContentLoadedMs": 4276.5,
+          "loadEventMs": 4565.1,
+          "durationMs": 4565.1,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 4836,
+        "lcpMs": 5404,
+        "cls": 0.14613,
+        "resourceCount": 25,
+        "transferredBytes": 6941014,
+        "decodedBodyBytes": 19316635,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 10,
+          "other": 11,
+          "img": 2
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "auth email input to two animation frames",
+        "labInteractionLatencyMs": 17.4
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "overview--light--laptop--cold",
+      "routeId": "overview",
+      "surfaceId": "route:overview",
+      "path": "/",
+      "theme": "light",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 9128,
+          "target": 2500,
+          "caseId": "overview--light--laptop--cold",
+          "surfaceId": "route:overview",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 2.2,
+          "responseMs": 0.3,
+          "domContentLoadedMs": 4852.5,
+          "loadEventMs": 5135,
+          "durationMs": 5135,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 6436,
+        "lcpMs": 9128,
+        "cls": 0.0203,
+        "resourceCount": 42,
+        "transferredBytes": 12310880,
+        "decodedBodyBytes": 24703766,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 12,
+          "other": 11,
+          "img": 14,
+          "fetch": 2,
+          "css": 1
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "todo dock open to two animation frames",
+        "labInteractionLatencyMs": 14.4,
+        "observedExpandedState": "true"
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "overview--light--mobile--cold",
+      "routeId": "overview",
+      "surfaceId": "route:overview",
+      "path": "/",
+      "theme": "light",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 10780,
+          "target": 2500,
+          "caseId": "overview--light--mobile--cold",
+          "surfaceId": "route:overview",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 1.5,
+          "responseMs": 0.3,
+          "domContentLoadedMs": 6612.1,
+          "loadEventMs": 6947.1,
+          "durationMs": 6947.1,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 8128,
+        "lcpMs": 10780,
+        "cls": 0.01452,
+        "resourceCount": 39,
+        "transferredBytes": 9632500,
+        "decodedBodyBytes": 22026286,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 12,
+          "other": 11,
+          "img": 11,
+          "fetch": 2,
+          "css": 1
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "mobile module sheet open to two animation frames",
+        "labInteractionLatencyMs": 18.5,
+        "observedExpandedState": "true"
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "problems--light--laptop--cold",
+      "routeId": "problems",
+      "surfaceId": "route:problems",
+      "path": "/problems",
+      "theme": "light",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 5916,
+          "target": 2500,
+          "caseId": "problems--light--laptop--cold",
+          "surfaceId": "route:problems",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 2.4,
+          "responseMs": 0.3,
+          "domContentLoadedMs": 4409.5,
+          "loadEventMs": 4676.5,
+          "durationMs": 4676.5,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 5904,
+        "lcpMs": 5916,
+        "cls": 0.00002,
+        "resourceCount": 36,
+        "transferredBytes": 10098989,
+        "decodedBodyBytes": 22499500,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 14,
+          "other": 11,
+          "img": 6,
+          "fetch": 2,
+          "css": 1
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "todo dock open to two animation frames",
+        "labInteractionLatencyMs": 8.2,
+        "observedExpandedState": "true"
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "problems--light--mobile--cold",
+      "routeId": "problems",
+      "surfaceId": "route:problems",
+      "path": "/problems",
+      "theme": "light",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 6576,
+          "target": 2500,
+          "caseId": "problems--light--mobile--cold",
+          "surfaceId": "route:problems",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 1.4,
+          "responseMs": 0.3,
+          "domContentLoadedMs": 4411.5,
+          "loadEventMs": 4676.8,
+          "durationMs": 4676.8,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 5852,
+        "lcpMs": 6576,
+        "cls": 0,
+        "resourceCount": 34,
+        "transferredBytes": 7434953,
+        "decodedBodyBytes": 19836064,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 14,
+          "other": 11,
+          "img": 4,
+          "fetch": 2,
+          "css": 1
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "mobile module sheet open to two animation frames",
+        "labInteractionLatencyMs": 10.9,
+        "observedExpandedState": "true"
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "interview--light--laptop--cold",
+      "routeId": "interview",
+      "surfaceId": "route:interview",
+      "path": "/interview",
+      "theme": "light",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 6832,
+          "target": 2500,
+          "caseId": "interview--light--laptop--cold",
+          "surfaceId": "route:interview",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 2.4,
+          "responseMs": 0.5,
+          "domContentLoadedMs": 4921,
+          "loadEventMs": 5192.6,
+          "durationMs": 5192.6,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 6384,
+        "lcpMs": 6832,
+        "cls": 0.00002,
+        "resourceCount": 35,
+        "transferredBytes": 11339576,
+        "decodedBodyBytes": 23735000,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 12,
+          "other": 11,
+          "img": 7,
+          "fetch": 2,
+          "css": 1
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "todo dock open to two animation frames",
+        "labInteractionLatencyMs": 10.9,
+        "observedExpandedState": "true"
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "interview--light--mobile--cold",
+      "routeId": "interview",
+      "surfaceId": "route:interview",
+      "path": "/interview",
+      "theme": "light",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 6360,
+          "target": 2500,
+          "caseId": "interview--light--mobile--cold",
+          "surfaceId": "route:interview",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 1.1,
+          "responseMs": 0.3,
+          "domContentLoadedMs": 4437.8,
+          "loadEventMs": 6831.3,
+          "durationMs": 6831.3,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 5892,
+        "lcpMs": 6360,
+        "cls": 0,
+        "resourceCount": 33,
+        "transferredBytes": 8675540,
+        "decodedBodyBytes": 21071564,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 12,
+          "other": 11,
+          "img": 5,
+          "fetch": 2,
+          "css": 1
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "mobile module sheet open to two animation frames",
+        "labInteractionLatencyMs": 14.6,
+        "observedExpandedState": "true"
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "league--light--laptop--cold",
+      "routeId": "league",
+      "surfaceId": "route:league",
+      "path": "/league",
+      "theme": "light",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 5776,
+          "target": 2500,
+          "caseId": "league--light--laptop--cold",
+          "surfaceId": "route:league",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 6.6,
+          "responseMs": 0.5,
+          "domContentLoadedMs": 3429.3,
+          "loadEventMs": 3740.5,
+          "durationMs": 3740.5,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 4988,
+        "lcpMs": 5776,
+        "cls": 0.00086,
+        "resourceCount": 44,
+        "transferredBytes": 21204841,
+        "decodedBodyBytes": 33582001,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 12,
+          "other": 11,
+          "img": 16,
+          "fetch": 2,
+          "css": 1
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "todo dock open to two animation frames",
+        "labInteractionLatencyMs": 9.7,
+        "observedExpandedState": "true"
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "league--light--mobile--cold",
+      "routeId": "league",
+      "surfaceId": "route:league",
+      "path": "/league",
+      "theme": "light",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 8648,
+          "target": 2500,
+          "caseId": "league--light--mobile--cold",
+          "surfaceId": "route:league",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 2.1,
+          "responseMs": 0.4,
+          "domContentLoadedMs": 6512.1,
+          "loadEventMs": 6781.1,
+          "durationMs": 6781.1,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 7992,
+        "lcpMs": 8648,
+        "cls": 0.00344,
+        "resourceCount": 42,
+        "transferredBytes": 18540805,
+        "decodedBodyBytes": 30918565,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 12,
+          "other": 11,
+          "img": 14,
+          "fetch": 2,
+          "css": 1
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "mobile module sheet open to two animation frames",
+        "labInteractionLatencyMs": 12.3,
+        "observedExpandedState": "true"
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "messages--light--laptop--cold",
+      "routeId": "messages",
+      "surfaceId": "route:messages",
+      "path": "/messages",
+      "theme": "light",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 5968,
+          "target": 2500,
+          "caseId": "messages--light--laptop--cold",
+          "surfaceId": "route:messages",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 2.1,
+          "responseMs": 0.3,
+          "domContentLoadedMs": 4028.4,
+          "loadEventMs": 6734.8,
+          "durationMs": 6734.8,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 5532,
+        "lcpMs": 5968,
+        "cls": 0.00003,
+        "resourceCount": 39,
+        "transferredBytes": 14909021,
+        "decodedBodyBytes": 27289259,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 15,
+          "other": 11,
+          "img": 7,
+          "fetch": 2,
+          "css": 2
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "todo dock open to two animation frames",
+        "labInteractionLatencyMs": 12.6,
+        "observedExpandedState": "true"
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    },
+    {
+      "id": "messages--light--mobile--cold",
+      "routeId": "messages",
+      "surfaceId": "route:messages",
+      "path": "/messages",
+      "theme": "light",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "coldContext": true,
+      "status": "captured",
+      "findings": [
+        {
+          "id": "performance:lcp",
+          "metric": "lcp",
+          "value": 5664,
+          "target": 2500,
+          "caseId": "messages--light--mobile--cold",
+          "surfaceId": "route:messages",
+          "kind": "performance"
+        }
+      ],
+      "metrics": {
+        "navigationTiming": {
+          "dnsMs": 0,
+          "connectMs": 0,
+          "ttfbMs": 2.5,
+          "responseMs": 0.7,
+          "domContentLoadedMs": 3734.1,
+          "loadEventMs": 4049,
+          "durationMs": 4049,
+          "transferredBytes": 1820
+        },
+        "fcpMs": 5232,
+        "lcpMs": 5664,
+        "cls": 0,
+        "resourceCount": 38,
+        "transferredBytes": 14901559,
+        "decodedBodyBytes": 27282097,
+        "observers": {
+          "lcpSupported": true,
+          "layoutShiftSupported": true,
+          "errors": []
+        },
+        "resourceInitiators": {
+          "link": 2,
+          "script": 15,
+          "other": 11,
+          "img": 6,
+          "fetch": 2,
+          "css": 2
+        },
+        "horizontalOverflowPx": 0,
+        "labInteractionLabel": "mobile module sheet open to two animation frames",
+        "labInteractionLatencyMs": 15.9,
+        "observedExpandedState": "true"
+      },
+      "errors": {
+        "console": [],
+        "page": [],
+        "firstPartyResponse": [],
+        "firstPartyRequest": []
+      }
+    }
+  ],
+  "bundle": {
+    "chunkCount": 47,
+    "initialChunks": [
+      "assets/app-state-api-DYG3qwzo.js",
+      "assets/app-ui-DGloI4Zj.js",
+      "assets/feature-interview-core-D_l5pt8h.js",
+      "assets/feature-poker-core-Dzr3Cq_d.js",
+      "assets/feature-problems-core-Cu3goIb7.js",
+      "assets/feature-support-core-D_xiQFHQ.js",
+      "assets/index-DHnZUfoz.js",
+      "assets/rolldown-runtime-QTnfLwEv.js",
+      "assets/vendor-react-CIxEorsV.js",
+      "assets/vendor-react-dom-B49trWfG.js",
+      "assets/vendor-router-e5SST-Jf.js",
+      "config.js",
+      "data/leetcode-hot-100.js",
+      "data/library-catalog.js"
+    ],
+    "initialJsRawBytes": 918976,
+    "initialJsGzipBytes": 282659,
+    "largestRouteChunkGzipBytes": 9932,
+    "chunks": [
+      {
+        "path": "assets/AccountPage-CUlQQ1Ht.js",
+        "rawBytes": 17638,
+        "gzipBytes": 5608,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/app-state-api-DYG3qwzo.js",
+        "rawBytes": 106912,
+        "gzipBytes": 33646,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/app-static-data-CWbmdZoS.js",
+        "rawBytes": 101984,
+        "gzipBytes": 39313,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/app-ui-DGloI4Zj.js",
+        "rawBytes": 62893,
+        "gzipBytes": 20872,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/CoderSticker-B-q0Y53Y.js",
+        "rawBytes": 968,
+        "gzipBytes": 585,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/CommunityPage-BcJAVYy5.js",
+        "rawBytes": 13735,
+        "gzipBytes": 4836,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/CompaniesPage-Bn4C42R1.js",
+        "rawBytes": 19678,
+        "gzipBytes": 6399,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/cosmetics-yiH3Lq4u.js",
+        "rawBytes": 1441,
+        "gzipBytes": 731,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/CoursesPage-BexJsj0Q.js",
+        "rawBytes": 10755,
+        "gzipBytes": 3561,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/createAppServices-DdNl6clw.js",
+        "rawBytes": 203942,
+        "gzipBytes": 58399,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/EmptyState-dibNs7tG.js",
+        "rawBytes": 250,
+        "gzipBytes": 197,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/ExperiencesPage-CQAFConp.js",
+        "rawBytes": 13418,
+        "gzipBytes": 4383,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/feature-interview-core-D_l5pt8h.js",
+        "rawBytes": 129099,
+        "gzipBytes": 43392,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/feature-poker-core-Dzr3Cq_d.js",
+        "rawBytes": 70237,
+        "gzipBytes": 21634,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/feature-problems-core-Cu3goIb7.js",
+        "rawBytes": 83282,
+        "gzipBytes": 24597,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/feature-support-core-D_xiQFHQ.js",
+        "rawBytes": 137716,
+        "gzipBytes": 41800,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/index-DHnZUfoz.js",
+        "rawBytes": 60254,
+        "gzipBytes": 16363,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/InterviewPage-B09WBkBK.js",
+        "rawBytes": 30795,
+        "gzipBytes": 8573,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/JobsPage-DBVA9058.js",
+        "rawBytes": 7178,
+        "gzipBytes": 2760,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/LeaguePage-B02wJnxP.js",
+        "rawBytes": 9468,
+        "gzipBytes": 2823,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/LibraryPage-BOwIPE_p.js",
+        "rawBytes": 12334,
+        "gzipBytes": 3677,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/MemoryPage-CaRUWiWl.js",
+        "rawBytes": 11000,
+        "gzipBytes": 3981,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/MessagesPage-Y6ky4vvo.js",
+        "rawBytes": 11292,
+        "gzipBytes": 3776,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/NetworkPage-DSpg-8vN.js",
+        "rawBytes": 8526,
+        "gzipBytes": 2978,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/NewsPage-B4TKUo7Y.js",
+        "rawBytes": 19468,
+        "gzipBytes": 5926,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/OverviewPage-BclmPRtV.js",
+        "rawBytes": 30463,
+        "gzipBytes": 8680,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/PkPage-CYJXHl1E.js",
+        "rawBytes": 14741,
+        "gzipBytes": 5198,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/PlanPage-D0lTXPuO.js",
+        "rawBytes": 18740,
+        "gzipBytes": 5518,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/PokerPage-CNDInFdM.js",
+        "rawBytes": 33872,
+        "gzipBytes": 9054,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/problemDisplayLabels-7w38O5AS.js",
+        "rawBytes": 2305,
+        "gzipBytes": 1170,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/ProblemsPage-tUTauG3L.js",
+        "rawBytes": 36426,
+        "gzipBytes": 9932,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/ResumePage-oOvRDk6r.js",
+        "rawBytes": 8540,
+        "gzipBytes": 2958,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/rolldown-runtime-QTnfLwEv.js",
+        "rawBytes": 694,
+        "gzipBytes": 423,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/SettingsPage-B0pqVLfb.js",
+        "rawBytes": 14645,
+        "gzipBytes": 4911,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/SkillsPage-DHZelu3U.js",
+        "rawBytes": 16320,
+        "gzipBytes": 5840,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/StickerPicker-D76xijh8.js",
+        "rawBytes": 912,
+        "gzipBytes": 450,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/Tag-8cvSLAfL.js",
+        "rawBytes": 199,
+        "gzipBytes": 185,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/ToolsPage-D1IBIQ22.js",
+        "rawBytes": 19800,
+        "gzipBytes": 5575,
+        "initial": false,
+        "ordinaryRouteChunk": true
+      },
+      {
+        "path": "assets/useScopedRefreshIcons-DdmfzNcT.js",
+        "rawBytes": 277,
+        "gzipBytes": 228,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/useSyncModuleRoute-CzHsPhaE.js",
+        "rawBytes": 268,
+        "gzipBytes": 221,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/vendor-react-CIxEorsV.js",
+        "rawBytes": 7899,
+        "gzipBytes": 3006,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/vendor-react-dom-B49trWfG.js",
+        "rawBytes": 181789,
+        "gzipBytes": 56396,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "assets/vendor-router-e5SST-Jf.js",
+        "rawBytes": 41240,
+        "gzipBytes": 14569,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "config.js",
+        "rawBytes": 457,
+        "gzipBytes": 320,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "data/leetcode-hot-100.js",
+        "rawBytes": 27001,
+        "gzipBytes": 3714,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "data/library-catalog.js",
+        "rawBytes": 9503,
+        "gzipBytes": 1927,
+        "initial": true,
+        "ordinaryRouteChunk": false
+      },
+      {
+        "path": "data/problem-catalog.js",
+        "rawBytes": 12462278,
+        "gzipBytes": 2728191,
+        "initial": false,
+        "ordinaryRouteChunk": false
+      }
+    ]
+  }
+}

@@ -8,9 +8,13 @@ import {
   FRONTEND_UPGRADE_ROUTE_FIXTURES,
   PERFORMANCE_BASELINE_TARGETS,
   buildPerformanceCases,
-  summarizeCaptureStatus
+  summarizeCaptureStatus,
+  validatePerformanceMetrics
 } from "./lib/frontend-upgrade-baseline.mjs";
-import { createFrontendUpgradeBrowserHarness } from "./lib/frontend-upgrade-browser-harness.mjs";
+import {
+  createFrontendUpgradeBrowserHarness,
+  isAllowedFrontendUpgradeConsoleError
+} from "./lib/frontend-upgrade-browser-harness.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -59,7 +63,13 @@ if (bundle) findings.push(...bundleBudgetFindings(bundle));
 const filteredRun = Boolean(onlyPattern);
 const status = filteredRun
   ? (captureFailures.length ? "fail" : "partial")
-  : summarizeCaptureStatus({ captureFailures, findings });
+  : summarizeCaptureStatus({
+      captureFailures,
+      findings,
+      expected: allCases.length,
+      checked: results.length,
+      succeeded: results.filter((item) => item.status === "captured").length
+    });
 const summary = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
@@ -104,7 +114,7 @@ const summary = {
 fs.mkdirSync(path.dirname(summaryPath), { recursive: true });
 fs.writeFileSync(summaryPath, `${JSON.stringify(summary, null, 2)}\n`);
 log(`wrote ${path.relative(root, summaryPath)}`);
-if (captureFailures.length) process.exitCode = 1;
+if (status === "fail") process.exitCode = 1;
 
 async function capturePerformanceCase(performanceCase) {
   const context = await browser.newContext({
@@ -145,8 +155,10 @@ async function capturePerformanceCase(performanceCase) {
     await page.evaluate(async () => document.fonts.ready);
     await page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
     await page.waitForTimeout(1200);
-    const interaction = await measureLabInteraction(page, performanceCase.authenticated);
     const metrics = await readPerformanceMetrics(page);
+    const metricIssues = validatePerformanceMetrics(metrics);
+    if (metricIssues.length) throw new Error(`Required performance metrics unavailable: ${metricIssues.join(", ")}`);
+    const interaction = await measureLabInteraction(page, performanceCase.labInteraction);
     const runtimeErrors = errors.snapshot();
     if (runtimeErrors.console.length || runtimeErrors.page.length || runtimeErrors.firstPartyResponse.length || runtimeErrors.firstPartyRequest.length) {
       throw new Error(`Runtime errors detected: ${JSON.stringify(runtimeErrors)}`);
@@ -172,29 +184,29 @@ async function capturePerformanceCase(performanceCase) {
   return result;
 }
 
-async function measureLabInteraction(page, authenticated) {
-  if (!authenticated) {
-    return page.locator("#loginEmail").evaluate(async (input) => {
+async function measureLabInteraction(page, interaction) {
+  await page.waitForSelector(interaction.selector, { state: "visible" });
+  if (interaction.kind === "input") {
+    return page.locator(interaction.selector).evaluate(async (input, details) => {
       const start = performance.now();
       input.focus();
       input.value = "baseline-latency@quantgym.local";
       input.dispatchEvent(new Event("input", { bubbles: true }));
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      return { labInteractionLabel: "auth email input to two animation frames", labInteractionLatencyMs: round(performance.now() - start) };
+      return { labInteractionLabel: details.label, labInteractionLatencyMs: round(performance.now() - start) };
       function round(value) { return Math.round(value * 100) / 100; }
-    });
+    }, interaction);
   }
-  await page.waitForSelector("#todoDockButton", { state: "visible" });
-  return page.locator("#todoDockButton").evaluate(async (button) => {
+  return page.locator(interaction.selector).evaluate(async (button, details) => {
     const start = performance.now();
     button.click();
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     return {
-      labInteractionLabel: "todo dock open to two animation frames",
+      labInteractionLabel: details.label,
       labInteractionLatencyMs: Math.round((performance.now() - start) * 100) / 100,
-      observedExpandedState: button.getAttribute("aria-expanded")
+      observedExpandedState: details.observedAttribute ? button.getAttribute(details.observedAttribute) : null
     };
-  });
+  }, interaction);
 }
 
 async function readPerformanceMetrics(page) {
@@ -221,6 +233,11 @@ async function readPerformanceMetrics(page) {
       resourceCount: resources.length,
       transferredBytes: resources.reduce((sum, entry) => sum + (entry.transferSize || 0), 0),
       decodedBodyBytes: resources.reduce((sum, entry) => sum + (entry.decodedBodySize || 0), 0),
+      observers: {
+        lcpSupported: state.lcpSupported === true,
+        layoutShiftSupported: state.layoutShiftSupported === true,
+        errors: Array.isArray(state.observerErrors) ? state.observerErrors : []
+      },
       resourceInitiators: resources.reduce((counts, entry) => {
         counts[entry.initiatorType || "other"] = (counts[entry.initiatorType || "other"] || 0) + 1;
         return counts;
@@ -232,21 +249,33 @@ async function readPerformanceMetrics(page) {
 }
 
 function installPerformanceObservers() {
-  globalThis.__quantgymPerformanceBaseline = { lcpMs: 0, cls: 0 };
+  globalThis.__quantgymPerformanceBaseline = {
+    lcpMs: 0,
+    cls: 0,
+    lcpSupported: false,
+    layoutShiftSupported: false,
+    observerErrors: []
+  };
   try {
     new PerformanceObserver((list) => {
       const entries = list.getEntries();
       const last = entries[entries.length - 1];
       if (last) globalThis.__quantgymPerformanceBaseline.lcpMs = last.startTime;
     }).observe({ type: "largest-contentful-paint", buffered: true });
-  } catch {}
+    globalThis.__quantgymPerformanceBaseline.lcpSupported = true;
+  } catch (error) {
+    globalThis.__quantgymPerformanceBaseline.observerErrors.push(`lcp:${error?.message || String(error)}`);
+  }
   try {
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         if (!entry.hadRecentInput) globalThis.__quantgymPerformanceBaseline.cls += entry.value;
       }
     }).observe({ type: "layout-shift", buffered: true });
-  } catch {}
+    globalThis.__quantgymPerformanceBaseline.layoutShiftSupported = true;
+  } catch (error) {
+    globalThis.__quantgymPerformanceBaseline.observerErrors.push(`layout-shift:${error?.message || String(error)}`);
+  }
 }
 
 function performanceFindings(performanceCase, metrics) {
@@ -307,8 +336,10 @@ function normalizeAssetPath(value) {
 function collectRuntimeErrors(page) {
   const records = { console: [], page: [], firstPartyResponse: [], firstPartyRequest: [] };
   page.on("console", (message) => {
-    if (message.type() !== "error" || isAllowedConsoleError(message.text())) return;
-    records.console.push({ text: message.text(), location: message.location() });
+    if (message.type() !== "error") return;
+    const location = message.location();
+    if (isAllowedFrontendUpgradeConsoleError(message.text(), location.url, trackedOrigins())) return;
+    records.console.push({ text: message.text(), location });
   });
   page.on("pageerror", (error) => records.page.push({ message: error.message, stack: error.stack || "" }));
   page.on("response", (response) => {
@@ -327,9 +358,8 @@ function isTracked(url) {
   } catch { return false; }
 }
 
-function isAllowedConsoleError(text) {
-  return /(?:\[reporter-pb\]: request error TypeError: Failed to fetch|@bilibili\/bili-user-fingerprint\(report\): report is not found)/i.test(text)
-    || /^Permissions policy violation: compute-pressure is not allowed in this document\.$/.test(text);
+function trackedOrigins() {
+  return [harness?.baseUrl, "http://127.0.0.1:8790", "http://127.0.0.1:8787"].filter(Boolean);
 }
 
 async function installFixtures(context) {

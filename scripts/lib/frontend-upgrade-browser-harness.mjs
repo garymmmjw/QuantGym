@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { closeWithTimeout } from "../cleanup-timeout.mjs";
 import {
+  CANONICAL_BROWSER_BUILD_CONFIG,
   assertSuccessfulSubprocess,
   canonicalBrowserBuildEnv,
   distRuntimeFingerprint,
@@ -20,6 +21,21 @@ export { distRuntimeFingerprint };
 
 export function sha256File(filePath) {
   return createHash("sha256").update(fs.readFileSync(filePath)).digest("hex");
+}
+
+export function isAllowedFrontendUpgradeConsoleError(text, locationUrl, firstPartyOrigins = []) {
+  const origins = new Set((firstPartyOrigins || []).flatMap((value) => {
+    try {
+      return [new URL(value).origin];
+    } catch {
+      return [];
+    }
+  }));
+  try {
+    if (origins.has(new URL(locationUrl).origin)) return false;
+  } catch {}
+  return /(?:\[reporter-pb\]: request error TypeError: Failed to fetch|@bilibili\/bili-user-fingerprint\(report\): report is not found)/i.test(text)
+    || /^Permissions policy violation: compute-pressure is not allowed in this document\.$/.test(text);
 }
 
 export function buildFrontendUpgradeHarnessEnv(distDir, ambientEnv = process.env) {
@@ -37,6 +53,13 @@ export function buildPreviewArgs(distDir, port) {
     String(distDir),
     "--strictPort"
   ];
+}
+
+export function recordFrontendUpgradeBuildEnvironment(env = {}) {
+  return {
+    ...Object.fromEntries(Object.keys(CANONICAL_BROWSER_BUILD_CONFIG.env).map((key) => [key, String(env[key] ?? "")])),
+    QUANTGYM_WEB_DIST: "<temporary-dist>"
+  };
 }
 
 export async function createFrontendUpgradeBrowserHarness(options = {}) {
@@ -90,7 +113,7 @@ export async function createFrontendUpgradeBrowserHarness(options = {}) {
       distDir,
       port,
       baseUrl,
-      buildEnv: pickRecordedBuildEnv(buildEnv),
+      buildEnv: recordFrontendUpgradeBuildEnvironment(buildEnv),
       buildOutput: { stdout: build.stdout || "", stderr: build.stderr || "" },
       chromePath,
       fingerprint,
@@ -190,10 +213,6 @@ function getFreePort() {
       server.close(() => resolve(address.port));
     });
   });
-}
-
-function pickRecordedBuildEnv(env) {
-  return Object.fromEntries(Object.entries(env).filter(([key]) => key.startsWith("QUANTGYM_WEB_")));
 }
 
 function delay(ms) {

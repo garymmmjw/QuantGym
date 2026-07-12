@@ -359,6 +359,25 @@ export function buildPerformanceCases(routeFixtures = FRONTEND_UPGRADE_ROUTE_FIX
       authenticated: fixture.authenticated,
       selectors: fixture.selectors,
       primaryActionSelector: fixture.primaryActionSelector,
+      labInteraction: Object.freeze(!fixture.authenticated
+        ? {
+            kind: "input",
+            selector: "#loginEmail",
+            label: "auth email input to two animation frames"
+          }
+        : viewportId === "mobile"
+          ? {
+              kind: "click",
+              selector: ".qg-tabbar-more",
+              label: "mobile module sheet open to two animation frames",
+              observedAttribute: "aria-expanded"
+            }
+          : {
+              kind: "click",
+              selector: "#todoDockButton",
+              label: "todo dock open to two animation frames",
+              observedAttribute: "aria-expanded"
+            }),
       theme: "light",
       viewport: BASELINE_VIEWPORTS[viewportId],
       coldContext: true
@@ -366,19 +385,85 @@ export function buildPerformanceCases(routeFixtures = FRONTEND_UPGRADE_ROUTE_FIX
   });
 }
 
-export function summarizeCaptureStatus({ captureFailures = [], findings = [] } = {}) {
+export function summarizeCaptureStatus({
+  captureFailures = [],
+  findings = [],
+  expected,
+  checked,
+  succeeded,
+  expectedReview,
+  generatedReview
+} = {}) {
   if (captureFailures.length > 0) return "fail";
+  if (Number.isInteger(expected) && (checked !== expected || succeeded !== expected)) return "fail";
+  if (Number.isInteger(expectedReview) && generatedReview !== expectedReview) return "fail";
   if (findings.length > 0) return "captured-with-findings";
   return "pass";
 }
 
+export function validatePerformanceMetrics(metrics = {}) {
+  const issues = [];
+  if (metrics.observers?.lcpSupported !== true) issues.push("lcp-observer-unavailable");
+  if (metrics.observers?.layoutShiftSupported !== true) issues.push("layout-shift-observer-unavailable");
+  if (!metrics.navigationTiming) issues.push("navigation-timing-unavailable");
+  if (!(Number(metrics.fcpMs) > 0)) issues.push("fcp-unavailable");
+  if (!(Number(metrics.lcpMs) > 0)) issues.push("lcp-unavailable");
+  for (const error of metrics.observers?.errors || []) issues.push(`observer-error:${error}`);
+  return issues;
+}
+
 function shared(surface, state, details) {
+  const presentation = sharedPresentation(surface, state, details);
   return Object.freeze({
     id: `shared-state:${surface}:${state}`,
     surfaceId: `system:${surface}`,
     state,
-    ...details
+    ...details,
+    ...presentation
   });
+}
+
+function sharedPresentation(surface, state, details) {
+  const routeTitle = ".app-route-root h1, .app-route-root h2, .app-route-root h3";
+  const settingsTitle = ".qg-settings-page h2, .section-heading h2";
+  if (surface === "auth") {
+    return {
+      titleSelector: state === "password-reset" ? "#resetPasswordForm .auth-reset-title" : "#authTitle",
+      primaryActionSelector: state === "registration-error"
+        ? "#registerForm .auth-submit.auth-register-info-only"
+        : state === "password-reset"
+          ? "#resetPasswordForm button[type='submit']"
+          : "#loginForm button[type='submit']"
+    };
+  }
+  if (surface === "desktop-shell") {
+    return { titleSelector: routeTitle, primaryActionSelector: details.focusTarget || "#sidebarToggleBtn" };
+  }
+  if (surface === "mobile-shell") {
+    return { titleSelector: routeTitle, primaryActionSelector: details.focusTarget || ".qg-tabbar-more" };
+  }
+  if (surface === "global-search") {
+    return { titleSelector: ".qg-cmdk-panel", primaryActionSelector: details.focusTarget || ".qg-cmdk-input" };
+  }
+  if (surface === "notifications-toast") {
+    return {
+      titleSelector: routeTitle,
+      primaryActionSelector: state.includes("toast") || state === "reduced-motion" ? ".qg-fb-toast" : "#qgNotifBtn"
+    };
+  }
+  if (surface === "todo") {
+    return {
+      titleSelector: "#todoDockTitle",
+      primaryActionSelector: state.includes("mobile") ? "#todoDockButton" : details.focusTarget || "#todoDockButton"
+    };
+  }
+  if (surface === "theme-language") {
+    return { titleSelector: settingsTitle, primaryActionSelector: details.focusTarget || "#settingsLanguageSelect" };
+  }
+  if (surface === "network-recovery") {
+    return { titleSelector: settingsTitle, primaryActionSelector: details.focusTarget || details.expected.selector };
+  }
+  throw new Error(`Missing shared-state presentation for ${surface}:${state}`);
 }
 
 function interaction(id) {

@@ -17,6 +17,7 @@ import {
 import { CANONICAL_SURFACE_INVENTORY } from "./lib/frontend-upgrade-approved-surfaces.mjs";
 import {
   createFrontendUpgradeBrowserHarness,
+  isAllowedFrontendUpgradeConsoleError,
   sha256File
 } from "./lib/frontend-upgrade-browser-harness.mjs";
 
@@ -44,7 +45,9 @@ const routeFindings = [];
 const sharedFindings = [];
 const routeCaptureFailures = [];
 const sharedCaptureFailures = [];
+const globalCaptureFailures = [];
 const reviewImages = [];
+let activeCapturePhase = "harness";
 
 prepareOutputDirectories();
 
@@ -58,6 +61,7 @@ try {
   });
   chromeVersion = await browser.version();
 
+  activeCapturePhase = "route";
   const routeCases = filterCases(routeCasesAll);
   log(`capturing ${routeCases.length}/${routeCasesAll.length} route matrix cases`);
   const capturedRoutes = await captureBatch(routeCases, "route", 3, 5);
@@ -67,6 +71,7 @@ try {
     if (result.status === "capture-failed") routeCaptureFailures.push(compactFailure(result));
   }
 
+  activeCapturePhase = "shared-state";
   const sharedCases = filterCases(sharedPartition.current);
   log(`capturing ${sharedCases.length}/${sharedPartition.current.length} current shared states`);
   const capturedShared = await captureBatch(sharedCases, "shared-state", 2, 1);
@@ -75,31 +80,57 @@ try {
     sharedFindings.push(...result.findings);
     if (result.status === "capture-failed") sharedCaptureFailures.push(compactFailure(result));
   }
+  activeCapturePhase = "complete";
 } catch (error) {
-  routeCaptureFailures.push({ id: "harness", error: error?.stack || error?.message || String(error) });
+  const failure = { id: `${activeCapturePhase}-batch`, error: error?.stack || error?.message || String(error) };
+  if (activeCapturePhase === "route") routeCaptureFailures.push(failure);
+  else if (activeCapturePhase === "shared-state") sharedCaptureFailures.push(failure);
+  else globalCaptureFailures.push(failure);
 } finally {
   if (browser) {
     const browserClosed = await closeWithTimeout("frontend-upgrade baseline browser", () => browser.close(), 15000).catch((error) => {
-      routeCaptureFailures.push({ id: "browser-cleanup", error: error.message });
+      globalCaptureFailures.push({ id: "browser-cleanup", error: error.message });
       return false;
     });
-    if (!browserClosed) routeCaptureFailures.push({ id: "browser-cleanup", error: "Browser close timed out." });
+    if (!browserClosed) globalCaptureFailures.push({ id: "browser-cleanup", error: "Browser close timed out." });
   }
   if (harness) {
     await harness.cleanup().catch((error) => {
-      routeCaptureFailures.push({ id: "harness-cleanup", error: error.message });
+      globalCaptureFailures.push({ id: "harness-cleanup", error: error.message });
     });
   }
 }
 
 const filteredRun = Boolean(onlyPattern || limit);
 reviewImages.sort((left, right) => left.reviewId.localeCompare(right.reviewId));
+const routeReviewImages = reviewImages.filter((item) => item.kind === "route");
+const sharedReviewImages = reviewImages.filter((item) => item.kind === "shared-state");
+const visualCaptureFailures = [...globalCaptureFailures, ...routeCaptureFailures];
+const sharedStateCaptureFailures = [...globalCaptureFailures, ...sharedCaptureFailures];
+const routeSucceeded = routeResults.filter((item) => item.status === "captured").length;
+const sharedSucceeded = sharedResults.filter((item) => item.status === "captured").length;
 const visualStatus = filteredRun
-  ? (routeCaptureFailures.length ? "fail" : "partial")
-  : summarizeCaptureStatus({ captureFailures: routeCaptureFailures, findings: routeFindings });
+  ? (visualCaptureFailures.length ? "fail" : "partial")
+  : summarizeCaptureStatus({
+      captureFailures: visualCaptureFailures,
+      findings: routeFindings,
+      expected: routeCasesAll.length,
+      checked: routeResults.length,
+      succeeded: routeSucceeded,
+      expectedReview: 23,
+      generatedReview: routeReviewImages.length
+    });
 const sharedStatus = filteredRun
-  ? (sharedCaptureFailures.length ? "fail" : "partial")
-  : summarizeCaptureStatus({ captureFailures: sharedCaptureFailures, findings: sharedFindings });
+  ? (sharedStateCaptureFailures.length ? "fail" : "partial")
+  : summarizeCaptureStatus({
+      captureFailures: sharedStateCaptureFailures,
+      findings: sharedFindings,
+      expected: sharedPartition.current.length,
+      checked: sharedResults.length,
+      succeeded: sharedSucceeded,
+      expectedReview: 6,
+      generatedReview: sharedReviewImages.length
+    });
 const metadata = buildMetadata();
 
 const visualSummary = {
@@ -111,19 +142,19 @@ const visualSummary = {
   expectedCaptures: routeCasesAll.length,
   captures: {
     checked: routeResults.length,
-    succeeded: routeResults.filter((item) => item.status === "captured").length,
-    failed: routeCaptureFailures.length
+    succeeded: routeSucceeded,
+    failed: visualCaptureFailures.length
   },
   metadata,
   axe: { version: axeVersion, tags: BASELINE_AXE_TAGS },
   findings: routeFindings,
   seriousCriticalFindings: routeFindings.filter((item) => item.kind === "axe" && ["serious", "critical"].includes(item.impact)),
-  captureFailures: routeCaptureFailures,
+  captureFailures: visualCaptureFailures,
   cases: routeResults,
-  reviewImages: reviewImages.filter((item) => item.kind === "route"),
+  reviewImages: routeReviewImages,
   reviewManifest: {
     expected: 23,
-    generated: reviewImages.filter((item) => item.kind === "route").length
+    generated: routeReviewImages.length
   }
 };
 
@@ -147,21 +178,21 @@ const sharedSummary = {
   expectedFutureGates: sharedPartition.future.length,
   currentCaptures: {
     checked: sharedResults.length,
-    succeeded: sharedResults.filter((item) => item.status === "captured").length,
-    failed: sharedCaptureFailures.length
+    succeeded: sharedSucceeded,
+    failed: sharedStateCaptureFailures.length
   },
   futureGateCounts: { checked: futureGates.length, passed: 0 },
   metadata,
   axe: { version: axeVersion, tags: BASELINE_AXE_TAGS },
   findings: sharedFindings,
   seriousCriticalFindings: sharedFindings.filter((item) => item.kind === "axe" && ["serious", "critical"].includes(item.impact)),
-  captureFailures: sharedCaptureFailures,
+  captureFailures: sharedStateCaptureFailures,
   currentCases: sharedResults,
   futureGates,
-  reviewImages: reviewImages.filter((item) => item.kind === "shared-state"),
+  reviewImages: sharedReviewImages,
   reviewManifest: {
     expected: 6,
-    generated: reviewImages.filter((item) => item.kind === "shared-state").length
+    generated: sharedReviewImages.length
   }
 };
 
@@ -169,7 +200,7 @@ writeJson(visualSummaryPath, visualSummary);
 writeJson(sharedSummaryPath, sharedSummary);
 log(`wrote ${path.relative(root, visualSummaryPath)} and ${path.relative(root, sharedSummaryPath)}`);
 
-if (routeCaptureFailures.length || sharedCaptureFailures.length) {
+if (visualStatus === "fail" || sharedStatus === "fail") {
   process.exitCode = 1;
 }
 
@@ -180,6 +211,7 @@ async function captureOne({ kind, captureCase }) {
     `${safeFileName(captureCase.id)}.png`
   );
   const errors = createErrorCollector();
+  const resolvedSelectors = resolveCaptureSelectors(kind, captureCase);
   const reducedMotion = captureCase.state?.includes("reduced-motion") || captureCase.setup?.id?.includes("reduced-motion");
   const context = await browser.newContext({
     viewport: { width: captureCase.viewport?.width || BASELINE_VIEWPORTS[captureCase.viewportId].width, height: captureCase.viewport?.height || BASELINE_VIEWPORTS[captureCase.viewportId].height },
@@ -206,6 +238,7 @@ async function captureOne({ kind, captureCase }) {
     theme: captureCase.theme,
     viewport: captureCase.viewport || BASELINE_VIEWPORTS[captureCase.viewportId],
     acceptanceIds: captureCase.acceptanceIds,
+    selectors: resolvedSelectors,
     status: "captured",
     findings: []
   };
@@ -233,7 +266,11 @@ async function captureOne({ kind, captureCase }) {
     });
     await page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
     await settleRenderableImages(page);
-    const measurements = await measurePage(page, captureCase);
+    const measurements = await measurePage(
+      page,
+      resolvedSelectors,
+      captureCase.authenticated ?? captureCase.surfaceId !== "system:auth"
+    );
     if (!measurements.shellVisible) throw new Error("Expected shell is not visible.");
     if (measurements.overlayVisible) throw new Error("Vite/runtime overlay is visible.");
     if (measurements.bodyTextLength <= 80) throw new Error(`Body text is too small (${measurements.bodyTextLength}).`);
@@ -326,8 +363,9 @@ function createErrorCollector() {
       page.on("console", (message) => {
         if (message.type() !== "error") return;
         const text = message.text();
-        if (isAllowedConsoleError(text)) return;
-        records.console.push({ text, location: message.location() });
+        const location = message.location();
+        if (isAllowedFrontendUpgradeConsoleError(text, location.url, trackedFirstPartyOrigins())) return;
+        records.console.push({ text, location });
       });
       page.on("pageerror", (error) => records.page.push({ message: error.message, stack: error.stack || "" }));
       page.on("response", (response) => {
@@ -356,9 +394,8 @@ function isTrackedFirstParty(url) {
   }
 }
 
-function isAllowedConsoleError(text) {
-  return (/(?:\[reporter-pb\]: request error TypeError: Failed to fetch|@bilibili\/bili-user-fingerprint\(report\): report is not found)/i.test(text))
-    || /^Permissions policy violation: compute-pressure is not allowed in this document\.$/.test(text);
+function trackedFirstPartyOrigins() {
+  return [harness?.baseUrl, "http://127.0.0.1:8790", "http://127.0.0.1:8787"].filter(Boolean);
 }
 
 async function installLocalServiceFixtures(context, baseUrl) {
@@ -462,6 +499,7 @@ async function openGlobalSearch(page) {
 async function assertExpectedState(page, captureCase) {
   const { expected } = captureCase;
   const locator = page.locator(expected.selector).first();
+  await locator.waitFor({ state: "attached", timeout: 10000 });
   await locator.waitFor({ state: expected.visible === false ? "hidden" : "visible", timeout: 10000 });
   if (expected.text) {
     const text = (await locator.textContent()) || "";
@@ -513,7 +551,7 @@ async function settleRenderableImages(page) {
   });
 }
 
-async function measurePage(page, captureCase) {
+async function measurePage(page, selectors, authenticated) {
   return page.evaluate(({ titleSelector, primaryActionSelector, authenticated }) => {
     const visible = (node) => {
       if (!node) return false;
@@ -548,22 +586,24 @@ async function measurePage(page, captureCase) {
       incompleteVisibleImages
     };
   }, {
-    titleSelector: captureCase.titleSelector || defaultSharedTitleSelector(captureCase),
-    primaryActionSelector: captureCase.primaryActionSelector || defaultSharedPrimarySelector(captureCase),
-    authenticated: captureCase.authenticated ?? captureCase.surfaceId !== "system:auth"
+    titleSelector: selectors.title,
+    primaryActionSelector: selectors.primaryAction,
+    authenticated
   });
 }
 
-function defaultSharedTitleSelector(captureCase) {
-  if (captureCase.surfaceId === "system:auth") return "#authShell h2";
-  if (captureCase.surfaceId === "system:todo") return "#todoDockTitle";
-  return ".app-route-root h1, .app-route-root h2, .app-route-root h3, .qg-cmdk-panel";
-}
-
-function defaultSharedPrimarySelector(captureCase) {
-  if (captureCase.surfaceId === "system:auth") return "#loginForm button[type='submit']";
-  if (captureCase.focusTarget) return captureCase.focusTarget;
-  return ".app-route-root button, .qg-cmdk-row, #todoDockButton";
+function resolveCaptureSelectors(kind, captureCase) {
+  return kind === "route"
+    ? {
+        targets: [...captureCase.selectors],
+        title: captureCase.titleSelector,
+        primaryAction: captureCase.primaryActionSelector
+      }
+    : {
+        expected: captureCase.expected.selector,
+        title: captureCase.titleSelector,
+        primaryAction: captureCase.primaryActionSelector
+      };
 }
 
 function compactAxeViolation(violation) {
