@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "environment": "preview-v2",
+  "branch": { "name": "codex/frontend-v2-preview", "mustExistLocally": true, "mustExistOnOrigin": true },
+  "resources": {
+    "pagesProject": "quantgym-v2-preview",
+    "apiService": "quantgym-v2-preview-api",
+    "llmService": "quantgym-v2-preview-llm",
+    "postgres": "quantgym-v2-preview-postgres",
+    "r2Bucket": "quantgym-v2-preview-media"
+  },
+  "origins": {
+    "web": { "valueFrom": "QUANTGYM_PREVIEW_WEB_URL", "requiredResourceToken": "quantgym-v2-preview" },
+    "api": { "valueFrom": "QUANTGYM_PREVIEW_API_ORIGIN", "requiredResourceToken": "quantgym-v2-preview-api" },
+    "apiBasePath": "/api/v2",
+    "apiHealthPath": "/api/v2/health",
+    "llmInternalHealthPath": "/health",
+    "forbiddenHosts": ["beta.quantgym.app", "api.quantgym.app", "llm.quantgym.app", "media.quantgym.app"]
+  },
+  "services": {
+    "web": { "provider": "cloudflare-pages", "visibility": "public", "artifact": "minimal-static-probe", "publishesProductData": false },
+    "api": { "provider": "render", "visibility": "public", "healthPath": "/api/v2/health", "serviceValue": "api" },
+    "llm": { "provider": "render", "visibility": "internal", "healthPath": "/health", "serviceValue": "llm", "browserDirectAccess": false }
+  },
+  "postgres": {
+    "provider": "render",
+    "sslRequired": true,
+    "initialSchema": "empty",
+    "phase1SchemaOwner": "alembic",
+    "independentDatabase": true,
+    "independentRole": true,
+    "applicationBinding": "reserved-until-phase-1"
+  },
+  "r2": {
+    "provider": "cloudflare-r2",
+    "public": false,
+    "r2DevEnabled": false,
+    "credentialScope": "single-bucket-read-write",
+    "testPrefix": "readiness-smoke/",
+    "lifecycleDays": 7,
+    "applicationBinding": "reserved-until-phase-1"
+  },
+  "policies": {
+    "reuseProductionDatabase": false,
+    "reuseProductionBucket": false,
+    "reuseProductionEnvironmentGroup": false,
+    "importLegacyV1": false,
+    "dualWrite": false,
+    "seedPolicy": "empty-or-synthetic",
+    "corsPolicy": "preview-web-origin-only"
+  },
+  "environmentVariablesByScope": {
+    "cloudflarePages": ["QUANTGYM_PREVIEW_ENVIRONMENT", "QUANTGYM_PREVIEW_SERVICE", "QUANTGYM_PREVIEW_COMMIT", "QUANTGYM_PREVIEW_BRANCH", "QUANTGYM_PREVIEW_API_BASE"],
+    "renderApi": ["QUANTGYM_PREVIEW_ENVIRONMENT", "QUANTGYM_PREVIEW_SERVICE", "QUANTGYM_PREVIEW_COMMIT", "QUANTGYM_PREVIEW_LLM_INTERNAL_URL", "QUANTGYM_PREVIEW_CORS_ORIGIN"],
+    "renderLlm": ["QUANTGYM_PREVIEW_ENVIRONMENT", "QUANTGYM_PREVIEW_SERVICE", "QUANTGYM_PREVIEW_COMMIT"],
+    "operatorSecrets": ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID", "RENDER_API_KEY", "QUANTGYM_PREVIEW_POSTGRES_URL", "QUANTGYM_PREVIEW_R2_ENDPOINT", "QUANTGYM_PREVIEW_R2_ACCESS_KEY_ID", "QUANTGYM_PREVIEW_R2_SECRET_ACCESS_KEY"],
+    "operatorEvidence": ["QUANTGYM_PREVIEW_WEB_URL", "QUANTGYM_PREVIEW_API_ORIGIN", "QUANTGYM_PREVIEW_EXPECTED_COMMIT", "QUANTGYM_PREVIEW_EXPECTED_BRANCH", "QUANTGYM_PREVIEW_PROVIDER_EVIDENCE_PATH"]
+  }
+}
