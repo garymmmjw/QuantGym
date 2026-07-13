@@ -161,6 +161,16 @@ const assertFailureIncludes = (contract, expected) => {
     `expected a failure containing ${JSON.stringify(expected)}; got ${failures.join(", ")}`,
   );
 };
+const assertValidationFailureWithoutThrow = (contract, expected) => {
+  let failures;
+  assert.doesNotThrow(() => {
+    failures = validatePreviewContract(contract);
+  });
+  assert.ok(
+    failures.includes(expected),
+    `expected exact failure ${JSON.stringify(expected)}; got ${failures.join(", ")}`,
+  );
+};
 
 test("the checked-in Preview contract matches the approved isolation contract exactly", () => {
   assert.deepEqual(checkedInContract, expectedContract);
@@ -179,6 +189,66 @@ test("the checked-in Preview contract matches the approved isolation contract ex
 test("validation is insensitive to object key insertion order", () => {
   assert.deepEqual(validatePreviewContract(reverseObjectKeys(expectedContract)), []);
 });
+
+test("reports a missing required field independently of isolation-policy checks", () => {
+  const invalid = cloneContract();
+  delete invalid.environment;
+
+  assertValidationFailureWithoutThrow(invalid, "contract.environment is required");
+});
+
+test("reports a wrong ordinary scalar independently of isolation-policy checks", () => {
+  const invalid = cloneContract();
+  invalid.services.web.provider = "alternate-pages-provider";
+
+  assertValidationFailureWithoutThrow(
+    invalid,
+    'contract.services.web.provider must equal "cloudflare-pages"',
+  );
+});
+
+test("reports an unapproved top-level key with its exact path", () => {
+  const invalidTopLevel = cloneContract();
+  invalidTopLevel.providerMetadata = {};
+  assertValidationFailureWithoutThrow(
+    invalidTopLevel,
+    "contract.providerMetadata is not approved",
+  );
+});
+
+test("reports an unapproved nested key with its exact path", () => {
+  const invalidNested = cloneContract();
+  invalidNested.services.api.deployTarget = "preview";
+  assertValidationFailureWithoutThrow(
+    invalidNested,
+    "contract.services.api.deployTarget is not approved",
+  );
+});
+
+for (const [label, mutate, diagnostic] of [
+  [
+    "branch object",
+    (contract) => { contract.branch = null; },
+    "contract.branch must be an object",
+  ],
+  [
+    "nested service object",
+    (contract) => { contract.services.web = []; },
+    "contract.services.web must be an object",
+  ],
+  [
+    "nested environment-variable array",
+    (contract) => { contract.environmentVariablesByScope.operatorEvidence = {}; },
+    "contract.environmentVariablesByScope.operatorEvidence must be an array",
+  ],
+]) {
+  test(`reports a malformed ${label} without throwing`, () => {
+    const invalid = cloneContract();
+    mutate(invalid);
+
+    assertValidationFailureWithoutThrow(invalid, diagnostic);
+  });
+}
 
 for (const host of expectedContract.origins.forbiddenHosts) {
   test(`rejects the forbidden beta or production hostname ${host}`, () => {
@@ -244,6 +314,19 @@ test("rejects credential-bearing URLs", () => {
   );
   assertFailureIncludes(queryCredential, "credentials");
 });
+
+for (const [label, value] of [
+  ["whitespace-prefixed HTTP URL", "  https://operator@quantgym-v2-preview.example.invalid"],
+  ["protocol-relative URL", "//operator@quantgym-v2-preview.example.invalid"],
+  ["Postgres URL", "postgres://operator@quantgym-v2-preview-postgres.example.invalid/database"],
+]) {
+  test(`rejects credentials in a ${label}`, () => {
+    const invalid = cloneContract();
+    invalid.origins.web.valueFrom = value;
+
+    assertFailureIncludes(invalid, "credentials");
+  });
+}
 
 test("rejects a browser-visible LLM URL and browser-direct LLM access", () => {
   const invalidUrl = cloneContract();
@@ -322,4 +405,15 @@ test("the checker validates a contract fixture without requiring branch or provi
   } finally {
     await rm(fixtureRoot, { recursive: true, force: true });
   }
+});
+
+test("the checker reports a missing --root value without a raw stack trace", () => {
+  const result = spawnSync(process.execPath, [checkerPath, "--root"], {
+    cwd: projectRoot,
+    encoding: "utf8",
+  });
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, "");
+  assert.equal(result.stderr, "FAIL: --root requires a directory path\n");
 });

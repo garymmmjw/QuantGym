@@ -203,11 +203,13 @@ const collectStringEntries = (value, path = "contract", entries = []) => {
   return entries;
 };
 
-const parseHttpUrl = (value) => {
-  if (typeof value !== "string" || !/^https?:\/\//i.test(value)) return null;
+const parseUrlCandidate = (value) => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  const protocolRelative = trimmed.startsWith("//");
+  if (!protocolRelative && !/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) return null;
   try {
-    const parsed = new URL(value);
-    return ["http:", "https:"].includes(parsed.protocol) ? parsed : null;
+    return new URL(protocolRelative ? `https:${trimmed}` : trimmed);
   } catch {
     return null;
   }
@@ -228,7 +230,7 @@ const forbiddenHostnameFor = (hostname) => {
 
 const validateUrlIsolation = (contract, failures) => {
   for (const { path, value } of collectStringEntries(contract)) {
-    const parsed = parseHttpUrl(value);
+    const parsed = parseUrlCandidate(value);
     if (parsed && (parsed.username || parsed.password || [...parsed.searchParams.keys()].some((key) => (
       SENSITIVE_QUERY_NAME.test(key)
     )))) {
