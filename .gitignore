@@ -10,6 +10,7 @@ api-server/library-pdfs/
 node_modules/
 *.log
 dist/
+dist-preview/
 .worktrees/
 
 # Local Codex/agent tooling should not travel with the app repo.
