@@ -23,6 +23,8 @@
     "build:frontend-upgrade:preview-web": "node scripts/build-frontend-upgrade-preview-web.mjs --out-dir dist-preview",
     "build:frontend-upgrade:provider-evidence": "node scripts/build-frontend-upgrade-provider-evidence.mjs",
     "serve:frontend-upgrade:preview-probe": "node scripts/serve-frontend-upgrade-preview-probe.mjs",
+    "test:frontend-upgrade:preview": "node --test tests/frontend-upgrade-preview-contracts.test.mjs tests/frontend-upgrade-preview-probe.test.mjs tests/frontend-upgrade-preview-live.test.mjs && python3 -m unittest discover -s tests -p 'test_frontend_upgrade_preview_postgres.py' -v",
+    "check:frontend-upgrade:preview:live": "node scripts/check-frontend-upgrade-preview-live.mjs",
     "check:frontend-v2-boundaries": "node scripts/check-frontend-v2-boundaries.mjs",
     "capture:frontend-upgrade-baseline": "node scripts/capture-frontend-upgrade-baseline.mjs",
     "capture:frontend-upgrade-performance": "node scripts/capture-frontend-upgrade-performance.mjs",
