@@ -27,7 +27,7 @@ const isPreviewPagesHostname = (hostname) => (
 
 const isPreviewLlmHostname = (hostname) => {
   const normalized = hostname.toLowerCase();
-  return /^quantgym-v2-preview-llm-[a-z0-9]+$/.test(normalized);
+  return normalized === "quantgym-v2-preview-llm";
 };
 
 const previewOrigin = (value) => {

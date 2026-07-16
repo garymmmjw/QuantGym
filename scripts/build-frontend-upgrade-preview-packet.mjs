@@ -286,9 +286,9 @@ linked-group values. Task 10 creates a separate Preview environment group. Pass 
 ID with --preview-environment-group-id; repeat the flag only for additional explicitly approved
 Preview groups. Every approved group must link only Preview services, and each service's complete
 linked-group set must be a subset of those IDs and disjoint from production groups. Service-level-
-only configuration remains valid; a production group array may be empty. Use the LLM Dashboard
-Service Address host quantgym-v2-preview-llm-<render-hash> and its assigned port, forming the
-origin as http://<service-address>; private services have no onrender.com public origin. Provider
+only configuration remains valid; a production group array may be empty. Use the exact LLM
+Dashboard Service Address host quantgym-v2-preview-llm and its assigned port, forming the origin as
+http://<service-address>; private services have no onrender.com public origin. Provider
 evidence binds the API's configured QUANTGYM_PREVIEW_LLM_INTERNAL_URL to that authenticated
 service address in memory. The probes read PORT, bind 0.0.0.0, and require the deployed commit to
 match RENDER_GIT_COMMIT. Service variables contain no provider operator credentials.

@@ -53,9 +53,9 @@ The API sets `QUANTGYM_PREVIEW_LLM_INTERNAL_URL` to the private LLM origin and
 `/api/v2/health`, calls the LLM only at `/health`, permits only the configured Preview origin, and
 does not grant CORS to `https://beta.quantgym.app` or unrelated origins. Both probes read Render's
 `PORT`, bind `0.0.0.0`, and require `QUANTGYM_PREVIEW_COMMIT` to match `RENDER_GIT_COMMIT`.
-Use the LLM Dashboard Service Address, whose host is
-`quantgym-v2-preview-llm-<render-hash>` with its assigned port. Form the internal origin as
-`http://<service-address>`; a private service must not use an `onrender.com` public origin.
+Use the exact LLM Dashboard Service Address, whose host is `quantgym-v2-preview-llm` with its
+assigned port. Form the internal origin as `http://<service-address>`; a private service must not
+use an `onrender.com` public origin.
 
 The API response reports booleans and the verified LLM commit. It never returns the internal LLM
 origin. The probes do not import `api-server/server.py`, read `api-server/postgres/schema.sql`, call

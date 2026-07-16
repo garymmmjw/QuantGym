@@ -78,7 +78,7 @@ const isPreviewPagesHostname = (hostname) => (
   hasHostnameSuffix(hostname.toLowerCase(), `${PREVIEW_PAGES}.pages.dev`)
 );
 const isPreviewLlmHostname = (hostname) => (
-  /^quantgym-v2-preview-llm-[a-z0-9]+$/.test(hostname.toLowerCase())
+  hostname.toLowerCase() === PREVIEW_LLM
 );
 
 const normalizeRenderPrivateOrigin = (value, label) => {

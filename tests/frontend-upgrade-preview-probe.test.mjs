@@ -217,9 +217,9 @@ test("the API probe verifies the internal LLM and returns no internal address", 
   assert.equal(api.output.stderr(), "");
 });
 
-test("the API accepts the hashed Render private-service address at startup", async (t) => {
+test("the API accepts the Render Dashboard private-service address at startup", async (t) => {
   const api = await spawnProbe("api", {
-    QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "http://quantgym-v2-preview-llm-ab1c:18080",
+    QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "http://quantgym-v2-preview-llm:10000",
     QUANTGYM_PREVIEW_CORS_ORIGIN: WEB_ORIGIN,
   });
   t.after(() => stopChild(api.child));
@@ -324,8 +324,8 @@ for (const [label, overrides, diagnostic] of [
   ["production loopback LLM URL", { NODE_ENV: "production", QUANTGYM_PREVIEW_SERVICE: "api", QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "http://127.0.0.1:18080", QUANTGYM_PREVIEW_CORS_ORIGIN: WEB_ORIGIN }, "LLM internal URL must use the Preview private service"],
   ["Render loopback LLM URL", { RENDER: "true", QUANTGYM_PREVIEW_SERVICE: "api", QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "http://127.0.0.1:18080", QUANTGYM_PREVIEW_CORS_ORIGIN: WEB_ORIGIN }, "LLM internal URL must use the Preview private service"],
   ["public Render LLM URL", { QUANTGYM_PREVIEW_SERVICE: "api", QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "https://quantgym-v2-preview-llm.onrender.com", QUANTGYM_PREVIEW_CORS_ORIGIN: WEB_ORIGIN }, "LLM internal URL must use the Preview private service"],
-  ["unhashed Render LLM URL", { QUANTGYM_PREVIEW_SERVICE: "api", QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "http://quantgym-v2-preview-llm:18080", QUANTGYM_PREVIEW_CORS_ORIGIN: WEB_ORIGIN }, "LLM internal URL must use the Preview private service"],
-  ["portless Render LLM URL", { QUANTGYM_PREVIEW_SERVICE: "api", QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "http://quantgym-v2-preview-llm-ab1c", QUANTGYM_PREVIEW_CORS_ORIGIN: WEB_ORIGIN }, "LLM internal URL must use the Preview private service"],
+  ["suffixed Render LLM URL", { QUANTGYM_PREVIEW_SERVICE: "api", QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "http://quantgym-v2-preview-llm-ab1c:18080", QUANTGYM_PREVIEW_CORS_ORIGIN: WEB_ORIGIN }, "LLM internal URL must use the Preview private service"],
+  ["portless Render LLM URL", { QUANTGYM_PREVIEW_SERVICE: "api", QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "http://quantgym-v2-preview-llm", QUANTGYM_PREVIEW_CORS_ORIGIN: WEB_ORIGIN }, "LLM internal URL must use the Preview private service"],
   ["unrelated LLM URL", { QUANTGYM_PREVIEW_SERVICE: "api", QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "https://llm.attacker.test", QUANTGYM_PREVIEW_CORS_ORIGIN: WEB_ORIGIN }, "LLM internal URL must use the Preview private service"],
   ["lookalike LLM URL", { QUANTGYM_PREVIEW_SERVICE: "api", QUANTGYM_PREVIEW_LLM_INTERNAL_URL: "https://evilquantgym-v2-preview-llm.attacker.test", QUANTGYM_PREVIEW_CORS_ORIGIN: WEB_ORIGIN }, "LLM internal URL must use the Preview private service"],
 ]) {
@@ -547,7 +547,7 @@ const validProviderFixture = () => ({
             env: "node",
             runtime: "node",
             region: "oregon",
-            url: "quantgym-v2-preview-llm-ab1c:18080",
+            url: "quantgym-v2-preview-llm:10000",
             envSpecificDetails: {
               buildCommand: RENDER_BUILD,
               startCommand: RENDER_START,
@@ -594,7 +594,7 @@ const validProviderFixture = () => ({
     envVars: {
       "render-preview-api-raw-id": [
         { envVar: { key: "NODE_VERSION", value: NODE_VERSION }, cursor: "node-api" },
-        { envVar: { key: "QUANTGYM_PREVIEW_LLM_INTERNAL_URL", value: "http://quantgym-v2-preview-llm-ab1c:18080" }, cursor: "llm-url-api" },
+        { envVar: { key: "QUANTGYM_PREVIEW_LLM_INTERNAL_URL", value: "http://quantgym-v2-preview-llm:10000" }, cursor: "llm-url-api" },
         { envVar: { key: "OPENAI_API_KEY", value: "render-env-secret" }, cursor: "secret-api" },
       ],
       "render-preview-llm-raw-id": [
@@ -992,7 +992,7 @@ test("provider evidence follows service env-var pagination and discards non-allo
         {
           envVar: {
             key: "QUANTGYM_PREVIEW_LLM_INTERNAL_URL",
-            value: "http://quantgym-v2-preview-llm-ab1c:18080",
+            value: "http://quantgym-v2-preview-llm:10000",
           },
           cursor: "api-llm-origin",
         },
@@ -1045,7 +1045,8 @@ for (const [label, mutate, diagnostic] of [
   ["LLM service runtime", (fixture) => { fixture.render.services[1].service.serviceDetails.runtime = "ruby"; }, "LLM service runtime"],
   ["Render service region", (fixture) => { fixture.render.services[1].service.serviceDetails.region = "singapore"; }, "Render Preview service region"],
   ["Render LLM service address", (fixture) => { fixture.render.services[1].service.serviceDetails.url = "https://quantgym-v2-preview-llm.onrender.com"; }, "Render LLM service address"],
-  ["Render API LLM binding", (fixture) => { fixture.render.envVars["render-preview-api-raw-id"][1].envVar.value = "http://quantgym-v2-preview-llm-other:18080"; }, "Render API LLM private-service binding"],
+  ["Render LLM suffixed service address", (fixture) => { fixture.render.services[1].service.serviceDetails.url = "quantgym-v2-preview-llm-ab1c:10000"; }, "Render LLM service address"],
+  ["Render API LLM binding", (fixture) => { fixture.render.envVars["render-preview-api-raw-id"][1].envVar.value = "http://quantgym-v2-preview-llm:10001"; }, "Render API LLM private-service binding"],
   ["missing Render API LLM binding", (fixture) => { fixture.render.envVars["render-preview-api-raw-id"] = fixture.render.envVars["render-preview-api-raw-id"].filter((entry) => entry.envVar.key !== "QUANTGYM_PREVIEW_LLM_INTERNAL_URL"); }, "Render API LLM internal URL must be configured exactly once"],
   ["Render Node version", (fixture) => { fixture.render.envVars["render-preview-api-raw-id"][0].envVar.value = "22"; }, "Render Node version"],
   ["missing Render Node version", (fixture) => { fixture.render.envVars["render-preview-llm-raw-id"] = []; }, "Render Node version"],
@@ -1643,7 +1644,8 @@ test("the tracked runbook carries the exact provider, isolation, and secret-hand
   assert.match(source, /--preview-environment-group-id PREVIEW_ENV_GROUP_ID/);
   assert.match(source, /NODE_VERSION=20\.20\.2.*directly on each service/is);
   assert.match(source, /same Render region/i);
-  assert.match(source, /quantgym-v2-preview-llm-<render-hash>/);
+  assert.match(source, /exact LLM Dashboard Service Address host quantgym-v2-preview-llm and its assigned port/i);
+  assert.doesNotMatch(source, /<render-hash>/);
   assert.match(source, /binds? that origin to the authenticated LLM private-service address/i);
   assert.match(source, /read-only Cloudflare R2 API.*does not expose.*credential scope/is);
   assert.match(source, /generate the operator packet before capturing provider evidence/i);
