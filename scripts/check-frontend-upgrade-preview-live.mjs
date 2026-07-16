@@ -523,7 +523,9 @@ const checkWeb = async ({ fetchImpl, webOrigin, apiOrigin, expectedCommit }) => 
   ]) {
     const result = await requestBytes({
       fetchImpl,
-      url: `${webOrigin}/${name}`,
+      // Cloudflare Pages canonically serves a top-level index.html at `/` and
+      // redirects `/index.html` to that extensionless route.
+      url: name === "index.html" ? `${webOrigin}/` : `${webOrigin}/${name}`,
       maxBytes,
       label: `Preview web ${name}`,
     });

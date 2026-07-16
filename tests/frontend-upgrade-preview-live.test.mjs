@@ -308,7 +308,7 @@ const startFixtureServer = async (fixture = {}) => {
       body,
     });
 
-    if (original.pathname === "/index.html") {
+    if (original.pathname === "/") {
       response.writeHead(200, {
         "content-type": "text/html; charset=utf-8",
         "cache-control": "no-store",
@@ -472,7 +472,7 @@ test("the aggregate proves exact live isolation and writes only a redacted summa
     assert.match(result.summary.minimalWebArtifactSha256, /^[a-f0-9]{64}$/);
     assert.ok(requests.some((request) => request.originalUrl === `${WEB_ORIGIN}/version.json`));
     assert.ok(requests.some((request) => request.originalUrl === `${WEB_ORIGIN}/config.json`));
-    assert.ok(requests.some((request) => request.originalUrl === `${WEB_ORIGIN}/index.html`));
+    assert.ok(requests.some((request) => request.originalUrl === `${WEB_ORIGIN}/`));
     assert.ok(requests.some((request) => request.originalUrl === `${API_ORIGIN}/api/v2/health`));
     assert.equal(requests.some((request) => {
       const requested = new URL(request.originalUrl);
