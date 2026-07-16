@@ -466,7 +466,7 @@ const validProviderFixture = () => ({
       messages: [],
     },
     productionPages: {
-      result: { id: "pages-production-raw-id", name: "quantgym" },
+      result: { id: "pages-production-raw-id", name: "quantgym-beta" },
       success: true,
     },
     previewR2: {
@@ -479,7 +479,7 @@ const validProviderFixture = () => ({
       success: true,
     },
     productionR2: {
-      result: { name: "quantgym-media-production", jurisdiction: "default" },
+      result: { name: "quantgym-media", jurisdiction: "default" },
       success: true,
     },
     lifecycle: {
@@ -680,13 +680,13 @@ const fixtureFetch = (fixture, requests = []) => async (input, init = {}) => {
   if (url.href === cloudflareUrl("/pages/projects/quantgym-v2-preview")) {
     return providerResponse(fixture.cloudflare.previewPages);
   }
-  if (url.href === cloudflareUrl("/pages/projects/quantgym")) {
+  if (url.href === cloudflareUrl("/pages/projects/quantgym-beta")) {
     return providerResponse(fixture.cloudflare.productionPages);
   }
   if (url.href === cloudflareUrl("/r2/buckets/quantgym-v2-preview-media")) {
     return providerResponse(fixture.cloudflare.previewR2);
   }
-  if (url.href === cloudflareUrl("/r2/buckets/quantgym-media-production")) {
+  if (url.href === cloudflareUrl("/r2/buckets/quantgym-media")) {
     return providerResponse(fixture.cloudflare.productionR2);
   }
   if (url.href === cloudflareUrl("/r2/buckets/quantgym-v2-preview-media/lifecycle")) {

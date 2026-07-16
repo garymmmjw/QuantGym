@@ -62,7 +62,7 @@ const hashes = Object.freeze({
   postgresDatabase: sha256("quantgym_v2_preview"),
   postgresRole: sha256("quantgym_v2_preview_role"),
   r2: r2IdentityHash(ACCOUNT_ID, PREVIEW_BUCKET, "default"),
-  productionR2: r2IdentityHash(ACCOUNT_ID, "quantgym-media-production", "default"),
+  productionR2: r2IdentityHash(ACCOUNT_ID, "quantgym-media", "default"),
 });
 
 const validEvidence = () => ({
@@ -593,7 +593,7 @@ for (const [label, mutate] of [
   ["raw provider response", (evidence) => { evidence.render.services[0].ownerId = "raw-workspace"; }],
   ["Pages production reuse", (evidence) => { evidence.cloudflare.productionPagesProjectIdHash = hashes.pages; }],
   ["R2 production reuse", (evidence) => { evidence.cloudflare.productionR2BucketIdentityHash = hashes.r2; }],
-  ["R2 non-Preview bucket", (evidence) => { evidence.cloudflare.r2.bucketName = "quantgym-media-production"; }],
+  ["R2 non-Preview bucket", (evidence) => { evidence.cloudflare.r2.bucketName = "quantgym-media"; }],
   ["R2 public bucket", (evidence) => { evidence.cloudflare.r2.private = false; }],
   ["R2 development URL enabled", (evidence) => { evidence.cloudflare.r2.r2DevEnabled = true; }],
   ["R2 broad credential scope", (evidence) => { evidence.cloudflare.r2.credentialScope = "account-read-write"; }],

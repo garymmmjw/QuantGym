@@ -126,9 +126,11 @@ const APPROVED_PREVIEW_CONTRACT = {
 const RESOURCE_KEYS = Object.keys(APPROVED_PREVIEW_CONTRACT.resources);
 const PRODUCTION_RESOURCE_NAMES = new Set([
   "quantgym",
+  "quantgym-beta",
   "quantgym-api",
   "quantgym-llm",
   "quantgym-postgres",
+  "quantgym-media",
   "quantgym-media-production",
 ]);
 const FORBIDDEN_HOSTS = APPROVED_PREVIEW_CONTRACT.origins.forbiddenHosts;

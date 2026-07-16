@@ -278,19 +278,21 @@ test("does not match a forbidden hostname as an unrelated hostname substring", (
   assert.ok(!failures.some((failure) => failure.includes("forbidden host")), failures.join(", "));
 });
 
-for (const [resource, productionName] of Object.entries({
-  pagesProject: "quantgym",
-  apiService: "quantgym-api",
-  llmService: "quantgym-llm",
-  postgres: "quantgym-postgres",
-  r2Bucket: "quantgym-media-production",
+for (const [resource, productionNames] of Object.entries({
+  pagesProject: ["quantgym", "quantgym-beta"],
+  apiService: ["quantgym-api"],
+  llmService: ["quantgym-llm"],
+  postgres: ["quantgym-postgres"],
+  r2Bucket: ["quantgym-media-production", "quantgym-media"],
 })) {
-  test(`rejects the production resource name for ${resource}`, () => {
-    const invalid = cloneContract();
-    invalid.resources[resource] = productionName;
+  for (const productionName of productionNames) {
+    test(`rejects the production resource name ${productionName} for ${resource}`, () => {
+      const invalid = cloneContract();
+      invalid.resources[resource] = productionName;
 
-    assertFailureIncludes(invalid, "production resource name");
-  });
+      assertFailureIncludes(invalid, "production resource name");
+    });
+  }
 }
 
 for (const resource of Object.keys(expectedContract.resources)) {
