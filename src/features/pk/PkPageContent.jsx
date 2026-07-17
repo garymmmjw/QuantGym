@@ -1,4 +1,5 @@
 import { usePkPageModel } from "./pkHooks.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 export function PkPageContent() {
   const model = usePkPageModel();
@@ -37,10 +38,9 @@ export function PkPageContent() {
         <div className="pk-arena qg-pk-arena" data-phase={phase}>
           {/* --- Lobby ------------------------------------------------------ */}
           <div className="pk-lobby" hidden={!isLobby}>
-            <img
-              src="/assets/generated/playful-precision/mascot-hero-v5-clean.png"
-              alt=""
-              loading="lazy"
+            <QuantyImage
+              asset="hero"
+              size="medium"
               draggable="false"
             />
             <div className="pk-lobby-title">{matching ? t("pkLobbyMatching") : t("pkLobbyReady")}</div>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { AUTH_KEY, USER_STATE_PREFIX } from "../../constants.js";
 import { isItemOwned } from "../../modules/economy/index.js";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 // Idle status copy written by the Google login runtime — the design keeps this
 // slot empty unless something actionable (an error) needs to be shown.
@@ -284,7 +285,13 @@ export function AuthShell() {
                   onClick={pokeAuthShark}
                 >
                   <span className="auth-cover-shark-glow" aria-hidden="true" />
-                  <img className="auth-cover-mascot" src="/assets/generated/playful-precision/mascot-hero-v5-clean.png" alt="" draggable="false" />
+                  <QuantyImage
+                    asset="hero"
+                    className="auth-cover-mascot"
+                    size="hero"
+                    priority
+                    draggable="false"
+                  />
                 </button>
               </div>
             </div>
@@ -348,7 +355,7 @@ export function AuthShell() {
               <button className="primary-button auth-submit auth-register-info-only" type="button" onClick={requestRegisterSubmit} data-i18n="createAccount">创建账户</button>
 
               <div className="auth-verify-head auth-register-verify-only" aria-hidden={registerStage !== "verify"}>
-                <img className="auth-verify-mascot" src="/assets/generated/playful-precision/mascot-search.png" alt="" draggable="false" />
+                <QuantyImage asset="search" className="auth-verify-mascot" size="small" draggable="false" />
                 <h3 className="auth-verify-title">查收验证码</h3>
                 <p className="auth-verify-sub">已发送 6 位验证码到<br /><b>{registerVerifyEmail || "你的邮箱"}</b></p>
                 <div className="auth-code-boxes" aria-hidden="true">

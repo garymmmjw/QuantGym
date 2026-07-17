@@ -8,6 +8,7 @@ import { getEffectiveTotalXp } from "../../modules/economy/index.js";
 import { CommandPalette } from "./CommandPalette.jsx";
 import { OnboardingTour } from "./OnboardingTour.jsx";
 import { RouteProgressBar } from "./RouteProgressBar.jsx";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
 
@@ -401,7 +402,7 @@ export function AppShellMain() {
             </div>
             <aside className="sidebar-helper qg-nav-helper" aria-label="Today guide">
               <div className="qg-nav-helper-row">
-                <img src="/assets/generated/playful-precision/avatar-focused-v2.png" alt="" loading="lazy" decoding="async" />
+                <QuantyImage asset="focused" size="avatar" />
                 <div className="qg-nav-helper-copy">
                   <strong>今日向导</strong>
                   <span>{helperText}</span>
@@ -497,7 +498,7 @@ export function AppShellMain() {
                   </div>
                   <div className="qg-notif-body">
                     <div className="qg-notif-empty">
-                      <img src="/assets/generated/playful-precision/avatar-happy-v2.png" alt="" loading="lazy" decoding="async" />
+                      <QuantyImage asset="happy" size="avatar" />
                       <strong>暂时没有新通知</strong>
                       <span>完成训练、升级、求职进展都会出现在这里</span>
                     </div>

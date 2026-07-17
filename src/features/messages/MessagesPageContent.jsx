@@ -3,14 +3,16 @@ import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { parseStickerText, stickerLabel, stickerMessageText, useOwnedCosmetic } from "../shared/cosmetics.js";
 import { StickerPicker } from "../shared/StickerPicker.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
+import { getQuantySrc, resolveLegacyQuantySrc } from "@/lib/quantyAssets.js";
 
 const quickReplies = (t) => [t("msgQuickReply1"), t("msgQuickReply2"), t("msgQuickReply3")];
 
 /* Built-in Shark AI coach thread — the design's always-on bot conversation */
 const BOT_ID = "bot-shark";
 const BOT_THREAD_ID = "thread-shark-bot";
-const BOT_AVATAR = "/assets/generated/playful-precision/avatar-happy-v2.png";
-const BOT_HEADER_AVATAR = "/assets/generated/playful-precision/avatar-focused-v2.png";
+const BOT_AVATAR = getQuantySrc("happy", 160);
+const BOT_HEADER_AVATAR = getQuantySrc("focused", 160);
 const botCannedReplies = (t) => [t("msgBotReply1"), t("msgBotReply2"), t("msgBotReply3")];
 
 const createInitialBotMessages = (t) => {
@@ -269,7 +271,7 @@ export function MessagesPageContent() {
           <div className="message-thread-scroll">
             {!threads.length ? (
               <div className="empty-state qg-empty-state">
-                <img src="/assets/generated/playful-precision/mascot-sleep.png" alt="" />
+                <QuantyImage asset="sleep" size="small" />
                 <strong>{t("messageEmpty")}</strong>
               </div>
             ) : null}
@@ -294,7 +296,7 @@ export function MessagesPageContent() {
                 >
                   <span className="message-thread-avatar-wrap">
                     <span className="message-thread-avatar avatar" data-tone={isBot ? undefined : toneFor(other?.id)}>
-                      {other?.avatar ? <img src={other.avatar} alt="" /> : initials}
+                      {other?.avatar ? <img src={resolveLegacyQuantySrc(other.avatar, 160)} alt="" /> : initials}
                     </span>
                     {online ? <span className="message-thread-online" aria-hidden="true" /> : null}
                   </span>
@@ -327,7 +329,7 @@ export function MessagesPageContent() {
                 <span className="message-conversation-avatar avatar" data-tone={activeIsBot ? undefined : toneFor(activeOther?.id)}>
                   {activeIsBot
                     ? <img src={BOT_HEADER_AVATAR} alt="" />
-                    : (activeOther?.avatar ? <img src={activeOther.avatar} alt="" /> : activeInitials)}
+                    : (activeOther?.avatar ? <img src={resolveLegacyQuantySrc(activeOther.avatar, 160)} alt="" /> : activeInitials)}
                 </span>
                 <div className="message-conversation-meta">
                   <strong>
@@ -359,7 +361,7 @@ export function MessagesPageContent() {
                     <div key={message.id} className={`direct-message ${mine ? "mine" : "theirs"}${grouped ? " is-grouped" : ""}`}>
                       {!mine && !grouped ? (
                         <span className="direct-message-avatar" data-tone={activeIsBot ? undefined : toneFor(activeOther?.id)}>
-                          {activeOther?.avatar ? <img src={activeOther.avatar} alt="" /> : activeInitials}
+                          {activeOther?.avatar ? <img src={resolveLegacyQuantySrc(activeOther.avatar, 160)} alt="" /> : activeInitials}
                         </span>
                       ) : null}
                       <div className="direct-message-col">
@@ -403,7 +405,7 @@ export function MessagesPageContent() {
               </>
             ) : (
               <div className="empty-state qg-empty-state">
-                <img src="/assets/generated/playful-precision/mascot-search.png" alt="" />
+                <QuantyImage asset="search" size="small" />
                 <strong>{t("msgEmptyThread")}</strong>
               </div>
             )}

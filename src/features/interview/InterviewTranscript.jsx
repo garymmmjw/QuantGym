@@ -8,8 +8,9 @@ import {
   isSafeRichMediaUrl
 } from "../../modules/interview/richText.js";
 import { InterviewRichText } from "./InterviewRichText.jsx";
+import { getQuantySrc } from "../../lib/quantyAssets.js";
 
-const COACH_AVATAR_SRC = "assets/generated/shark-avatar-happy.webp?v=premium-system-4";
+const COACH_AVATAR_SRC = getQuantySrc("happy", 160);
 
 export function InterviewTranscript({ messages = [], language = "zh", renderRichText, onAction, onActionValue }) {
   const containerRef = useRef(null);

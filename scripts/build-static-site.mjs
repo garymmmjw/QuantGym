@@ -117,7 +117,17 @@ function copyRuntimeStaticFiles(distDir) {
 
   const generatedAssetsDir = path.join(projectRoot, "assets", "generated");
   const distGeneratedAssetsDir = path.join(distDir, "assets", "generated");
-  fs.cpSync(generatedAssetsDir, distGeneratedAssetsDir, { recursive: true });
+  fs.cpSync(generatedAssetsDir, distGeneratedAssetsDir, {
+    recursive: true,
+    filter(sourcePath) {
+      const relativePath = path.relative(generatedAssetsDir, sourcePath).split(path.sep).join("/");
+      // Quanty PNGs are repair masters; responsive runtime variants live in
+      // the stable optimized/ directory so saved avatar URLs stay durable.
+      const isQuantyMaster = relativePath.startsWith("playful-precision/") && relativePath.endsWith(".png");
+      const isSupersededRootPng = relativePath === "shark-hero-clean.png";
+      return !isQuantyMaster && !isSupersededRootPng;
+    }
+  });
 
   const problemMediaDir = path.join(projectRoot, "assets", "problem-media");
   if (fs.existsSync(problemMediaDir)) {

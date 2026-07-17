@@ -1,4 +1,5 @@
 import { InterviewRichText } from "./InterviewRichText.jsx";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 const DIFFICULTY_DEFS = {
   easy: { label: "简单", className: "is-easy" },
@@ -34,7 +35,7 @@ export function InterviewQuestionPanel({
     return (
       <aside id="interviewQuestionPanel" className="interview-question-panel" aria-label="本轮面试题目">
         <div className="interview-question-panel-empty">
-          <img src="/assets/generated/playful-precision/mascot-interview.png" alt="" loading="lazy" draggable="false" />
+          <QuantyImage asset="interview" size="small" draggable="false" />
           <p>{panel?.emptyText || ""}</p>
         </div>
       </aside>

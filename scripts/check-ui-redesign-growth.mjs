@@ -51,7 +51,7 @@ for (const marker of [
   "qg-overview-hero",
   "qg-overview-heatmap",
   "qg-overview-leaderboard",
-  "/assets/generated/playful-precision/mascot-hero-v5-clean.png"
+  'asset="hero"'
 ]) {
   expect(overview.includes(marker), `OverviewPageContent.jsx missing ${marker}`);
 }
@@ -72,7 +72,7 @@ for (const marker of [
   "qg-skills-headline-stats",
   "qg-skills-radar",
   "qg-skill-grid",
-  "/assets/generated/playful-precision/avatar-focused-v2.png"
+  'asset="focused"'
 ]) {
   expect(skills.includes(marker), `SkillsPageContent.jsx missing ${marker}`);
 }

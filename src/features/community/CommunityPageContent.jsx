@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useCommunityPageModel } from "./communityHooks.js";
+import { resolveLegacyQuantySrc } from "@/lib/quantyAssets.js";
 import { useOwnedCosmetic } from "../shared/cosmetics.js";
 import { StickerPicker } from "../shared/StickerPicker.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
@@ -299,7 +300,7 @@ export function CommunityPageContent() {
                   <div className="forum-thread-meta">
                     <span className="forum-thread-author">
                       <span className={`forum-thread-ava${frameClassFor(post.authorId)}`} style={{ background: avatarColor(post.authorName) }}>
-                        {post.authorAvatar ? <img src={post.authorAvatar} alt="" /> : model.getInitials?.(post.authorName)}
+                        {post.authorAvatar ? <img src={resolveLegacyQuantySrc(post.authorAvatar, 160)} alt="" /> : model.getInitials?.(post.authorName)}
                       </span>
                       {post.authorName}
                     </span>
@@ -391,7 +392,7 @@ export function CommunityPageContent() {
               ) : activeUsers.map((user) => (
                 <div key={user.id} className="forum-user-row">
                   <div className={`forum-user-ava${frameClassFor(user.id)}`} style={{ background: avatarColor(user.name) }}>
-                    {user.avatar ? <img src={user.avatar} alt="" /> : model.getInitials?.(user.name)}
+                    {user.avatar ? <img src={resolveLegacyQuantySrc(user.avatar, 160)} alt="" /> : model.getInitials?.(user.name)}
                   </div>
                   <div className="forum-user-main">
                     <div className="forum-user-name">{user.name}</div>

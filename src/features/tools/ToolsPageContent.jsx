@@ -1,5 +1,6 @@
 import { useToolsPageModel } from "./toolsHooks.js";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 function MentalSparkline({ values = [], t }) {
   if (values.length < 2) {
@@ -324,7 +325,7 @@ export function ToolsPageContent() {
           {done ? (
             <div className="mental-done-view">
               <div className="mental-done-card">
-                <img src="/assets/generated/playful-precision/mascot-trophy-v2.png" alt="" />
+                <QuantyImage asset="trophy" size="small" />
                 <div className="mental-done-tag">{doneTag}</div>
                 <div className="mental-done-title">{model.t("toolsDoneTitle")}</div>
                 <div className="mental-done-stats">

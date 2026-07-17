@@ -63,8 +63,8 @@ expect(
 );
 
 for (const [page, markers] of Object.entries({
-  interview: ["qg-training-page", "qg-interview-page", "qg-interview-setup", "/assets/generated/playful-precision/mascot-interview.png"],
-  problems: ["qg-training-page", "qg-problems-page", "qg-problem-browser", "/assets/generated/playful-precision/mascot-oops.png"],
+  interview: ["qg-training-page", "qg-interview-page", "qg-interview-setup", 'asset="interview"'],
+  problems: ["qg-training-page", "qg-problems-page", "qg-problem-browser", 'asset="oops"'],
   tools: ["qg-training-page", "qg-tools-page", "qg-mental-arena"],
   poker: ["qg-training-page", "qg-poker-page", "qg-poker-table-world"],
   pk: ["qg-training-page", "qg-pk-page", "qg-pk-arena"]

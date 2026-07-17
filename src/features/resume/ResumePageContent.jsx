@@ -3,6 +3,7 @@ import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { CoderSticker } from "../shared/CoderSticker.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 const RESUME_TEMPLATES = [
   { id: "classic", name: "品牌紫", accent: "#5b5ff5" },
@@ -157,7 +158,7 @@ export function ResumePageContent() {
 
           <div className="resume-panel resume-ai-card">
             <div className="resume-ai-head">
-              <img src="/assets/generated/playful-precision/avatar-wink-v2.png" alt="" />
+              <QuantyImage asset="wink" size="avatar" />
               <div className="resume-ai-title">{t("resumeReviewTitle") || "AI 润色建议"}</div>
             </div>
             <div id="resumeReview" className="resume-review resume-ai-list">

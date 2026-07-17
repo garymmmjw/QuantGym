@@ -1105,7 +1105,12 @@ body.is-authenticated .app-route-root .qg-experiences-page .experience-list .emp
   content: "";
   width: 72px;
   height: 72px;
-  background: url("/assets/generated/playful-precision/avatar-focused-v2.png") center / contain no-repeat;
+  background:
+    image-set(
+      url("/assets/generated/playful-precision/optimized/avatar-focused-160.webp") 1x,
+      url("/assets/generated/playful-precision/optimized/avatar-focused-320.webp") 2x
+    )
+    center / contain no-repeat;
 }
 body.is-authenticated .app-route-root .qg-experiences-page .experience-list .empty-state strong {
   color: var(--qg-text-2);
@@ -1668,7 +1673,12 @@ body.is-authenticated .app-route-root .qg-community-page .forum-empty::before {
   content: "";
   width: 96px;
   height: 96px;
-  background: url("/assets/generated/playful-precision/mascot-sleep.png") center / contain no-repeat;
+  background:
+    image-set(
+      url("/assets/generated/playful-precision/optimized/sleep-160.webp") 1x,
+      url("/assets/generated/playful-precision/optimized/sleep-320.webp") 2x
+    )
+    center / contain no-repeat;
 }
 
 body.is-authenticated .app-route-root .qg-community-page .forum-empty .empty-copy {

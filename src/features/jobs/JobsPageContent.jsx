@@ -3,6 +3,7 @@ import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 import { getJobTimestamp } from "./jobDates.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 const FILTERS = ["all", "internship", "fulltime"];
 
@@ -258,7 +259,7 @@ export function JobsPageContent() {
           </div>
         </div>
         <div className="jobs-match-banner">
-          <img src="/assets/generated/playful-precision/mascot-trophy-v2.png" alt="" />
+          <QuantyImage asset="trophy" size="small" />
           <div>
             <div className="jobs-match-kicker">匹配度最高</div>
             <div className="jobs-match-copy">

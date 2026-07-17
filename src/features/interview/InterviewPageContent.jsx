@@ -1,6 +1,7 @@
 import { InterviewCategoryPicker } from "./InterviewCategoryPicker.jsx";
 import { InterviewConsole } from "./InterviewConsole.jsx";
 import { useInterviewPageModel } from "./interviewHooks.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 export function InterviewPageContent() {
   const model = useInterviewPageModel();
@@ -20,7 +21,7 @@ export function InterviewPageContent() {
       </div>
       <div id="interviewGrid" className={gridClass}>
         <div className="interview-setup-shark" id="interviewSetupShark" aria-hidden="true">
-          <img src="/assets/generated/playful-precision/mascot-interview.png" alt="" loading="lazy" draggable="false" />
+          <QuantyImage asset="interview" size="medium" draggable="false" />
         </div>
         <div
           id="interviewSetup"

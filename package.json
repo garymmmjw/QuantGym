@@ -34,6 +34,7 @@
     "check:ui-redesign-growth": "node scripts/check-ui-redesign-growth.mjs",
     "check:ui-redesign-training": "node scripts/check-ui-redesign-training.mjs",
     "check:ui-redesign-support": "node scripts/check-ui-redesign-support.mjs",
+    "check:quanty-assets": "node scripts/check-quanty-assets.mjs",
     "check:route-integrity": "node scripts/check-route-integrity.mjs",
     "check:route-interactions": "node scripts/check-route-interactions.mjs",
     "check:module-ownership": "node scripts/check-module-ownership.mjs",

@@ -11,6 +11,7 @@
 
 import { escapeHtml } from "../lib/text.js";
 import { localDateKey, timestampOrZero } from "../lib/date.js";
+import { getQuantySrc } from "../lib/quantyAssets.js";
 import { getLevelInfo } from "../modules/skills/data.js";
 import { getEffectiveTotalXp, normalizeBonusXp, ensureEconomy } from "../modules/economy/index.js";
 import { getPrepDailyTasks, normalizePrepPlan } from "../modules/plan/data.js";
@@ -18,11 +19,11 @@ import { getPrepDailyTasks, normalizePrepPlan } from "../modules/plan/data.js";
 const ASSET_BASE = "/assets/generated/playful-precision/";
 
 export const QG_FEEDBACK_ASSETS = {
-  fire: `${ASSET_BASE}mascot-fire-v2.png`,
+  fire: getQuantySrc("fire", 320),
   rewardFire: `${ASSET_BASE}reward-fire.webp`,
-  levelUp: `${ASSET_BASE}mascot-levelup.png`,
-  trophy: `${ASSET_BASE}mascot-trophy-v2.png`,
-  oops: `${ASSET_BASE}mascot-oops.png`
+  levelUp: getQuantySrc("levelup", 320),
+  trophy: getQuantySrc("trophy", 320),
+  oops: getQuantySrc("oops", 320)
 };
 
 const DAILY_ALL_CLEAR_BONUS_XP = 50;

@@ -1,6 +1,7 @@
 import { DEFAULT_GRADUATION_TERM } from '../../constants.js';
 import { locationDefs, regionEnLabels } from '../../prep-data.js';
 import { skillDefs } from '../../skills.js';
+import { resolveLegacyQuantySrc } from '../../lib/quantyAssets.js';
 
 export function normalizeGraduationTerm(value) {
   const term = String(value || "").trim();
@@ -75,7 +76,8 @@ export function normalizeAccount(account = {}) {
     ...account,
     country,
     region: normalizeRegionForCountry(account.region, country),
-    graduationTerm: normalizeGraduationTerm(account.graduationTerm)
+    graduationTerm: normalizeGraduationTerm(account.graduationTerm),
+    picture: resolveLegacyQuantySrc(account.picture, 160)
   };
 }
 

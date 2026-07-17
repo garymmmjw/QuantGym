@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSkillsPageModel } from "./skillsHooks.js";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 import {
   getSkillDisplayName,
   getSkillDisplayPair,
@@ -123,11 +124,10 @@ export function SkillsPageContent() {
                 {model.t("skillRadarHint") || "悬停到能力点或右侧分数，查看做题情况和平均得分。"}
               </small>
             </div>
-            <img
+            <QuantyImage
               className="skill-radar-coach"
-              src="/assets/generated/playful-precision/avatar-focused-v2.png"
-              alt=""
-              loading="lazy"
+              asset="focused"
+              size="small"
             />
           </div>
           <div className="skill-radar-visual">
@@ -230,11 +230,10 @@ export function SkillsPageContent() {
 
       <div className="qg-skills-footer">
         <article className="qg-skills-coach">
-          <img
+          <QuantyImage
             className="qg-skills-coach-avatar"
-            src="/assets/generated/playful-precision/avatar-focused-v2.png"
-            alt=""
-            loading="lazy"
+            asset="focused"
+            size="avatar"
           />
           <div className="qg-skills-coach-body">
             <span className="qg-skills-coach-kicker">弱项建议 · COACH</span>

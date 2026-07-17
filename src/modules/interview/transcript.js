@@ -9,7 +9,7 @@ import {
   renderRichText
 } from './richText.js';
 
-const COACH_AVATAR_SRC = "assets/generated/shark-avatar-happy.webp?v=premium-system-4";
+const COACH_AVATAR_SRC = getQuantySrc("happy", 160);
 
 export function getInterviewEmptyTranscriptText(language = "zh") {
   return language === "en"
@@ -125,3 +125,4 @@ export function renderInterviewTranscript(container, messages = [], options = {}
     options.scheduleMathTypeset?.(container);
   }
 }
+import { getQuantySrc } from "../../lib/quantyAssets.js";

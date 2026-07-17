@@ -64,6 +64,81 @@ body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-stage {
   width: min(300px, 60%) !important;
   margin-left: 0 !important;
   margin-right: auto !important;
+  animation: qg-auth-quanty-float 4.8s ease-in-out infinite;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-button {
+  isolation: isolate;
+  transform: none;
+}
+
+body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-button::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  right: 8%;
+  bottom: 3%;
+  left: 8%;
+  height: 18%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(8, 7, 28, 0.42), transparent 70%);
+  filter: blur(10px);
+  opacity: 0.72;
+  pointer-events: none;
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-button:hover,
+body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-button:focus-visible {
+  transform: none;
+}
+
+body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-button:hover::after,
+body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-button:focus-visible::after {
+  opacity: 0.94;
+  transform: scale(1.04);
+}
+
+body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-stage:has(.auth-cover-shark-button.is-poked) {
+  animation-play-state: paused;
+}
+
+body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-button.is-poked {
+  animation: qg-auth-quanty-poke 620ms cubic-bezier(.34, 1.56, .64, 1);
+}
+
+body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-button.is-poked .auth-cover-mascot {
+  animation: none !important;
+}
+
+body:not(.is-authenticated) .qg-auth-brand .auth-cover-mascot {
+  position: relative;
+  z-index: 1;
+  filter: none !important;
+  animation: none !important;
+  transform: none !important;
+  backface-visibility: hidden;
+}
+
+@keyframes qg-auth-quanty-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -8px, 0); }
+}
+
+@keyframes qg-auth-quanty-poke {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  28% { transform: translate3d(0, -18px, 0) rotate(-3deg); }
+  58% { transform: translate3d(0, 3px, 0) rotate(2deg); }
+  80% { transform: translate3d(0, -4px, 0) rotate(-1deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not(.is-authenticated) .qg-auth-brand .auth-cover-shark-stage {
+    animation: none !important;
+    transform: none !important;
+  }
 }
 
 /* Headline + subtitle block */
@@ -738,7 +813,12 @@ body:not(.is-authenticated) .qg-auth-card .auth-message.is-error {
   width: 300px;
   height: 300px;
   pointer-events: none;
-  background: url("/assets/generated/playful-precision/mascot-sleep.png") right bottom / contain no-repeat;
+  background:
+    image-set(
+      url("/assets/generated/playful-precision/optimized/sleep-320.webp") 1x,
+      url("/assets/generated/playful-precision/optimized/sleep-640.webp") 2x
+    )
+    right bottom / contain no-repeat;
   opacity: 0.6;
   filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.5));
 }

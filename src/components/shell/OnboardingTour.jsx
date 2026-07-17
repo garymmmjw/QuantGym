@@ -2,26 +2,27 @@ import { useEffect, useState } from "react";
 import { useAuthStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices } from "../../stores/usePageApi.js";
 import { useBodyScrollLock } from "./useBodyScrollLock.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 const ONBOARD_STORAGE_PREFIX = "quantgym.ui.onboarded.v1";
 
 const ONBOARD_STEPS = [
   {
-    img: "/assets/generated/playful-precision/mascot-hero-v5-clean.png",
+    asset: "hero",
     kicker: "WELCOME TO QUANTGYM",
     titleKey: "tourStep1Title",
     subKey: "tourStep1Sub",
     ctaKey: "tourNext"
   },
   {
-    img: "/assets/generated/playful-precision/mascot-teacher-v2.png",
+    asset: "teacher",
     kicker: "MODULE NAVIGATION",
     titleKey: "tourStep2Title",
     subKey: "tourStep2Sub",
     ctaKey: "tourNext"
   },
   {
-    img: "/assets/generated/playful-precision/mascot-search.png",
+    asset: "search",
     kicker: "COMMAND PALETTE",
     titleKey: "tourStep3Title",
     subKey: "tourStep3Sub",
@@ -93,7 +94,7 @@ export function OnboardingTour() {
       <div className="qg-onboard-card" role="dialog" aria-modal="true" aria-label={t("tourAria")}>
         <button className="qg-onboard-skip" type="button" onClick={finish}>{t("tourSkip")}</button>
         <div className="qg-onboard-art" aria-hidden="true">
-          <img src={current.img} alt="" decoding="async" />
+          <QuantyImage asset={current.asset} size="medium" />
         </div>
         <div className="qg-onboard-kicker">{current.kicker}</div>
         <div className="qg-onboard-title">{t(current.titleKey)}</div>

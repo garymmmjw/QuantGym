@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { usePageApi } from "../../stores/usePageApi.js";
 import { skillDefs } from "../../skills.js";
+import { getQuantySrc } from "../../lib/quantyAssets.js";
 import { buildPkAnswerOptions } from "./pkAnswerOptions.js";
 
 const BATTLE_SECONDS = 30;
@@ -332,8 +333,8 @@ export function usePkPageModel() {
     return {
       win,
       img: win
-        ? "/assets/generated/playful-precision/mascot-trophy-v2.png"
-        : "/assets/generated/playful-precision/mascot-oops.png",
+        ? getQuantySrc("trophy", 320)
+        : getQuantySrc("oops", 320),
       kicker: win ? "VICTORY" : "DEFEAT",
       title: win ? t("pkOutcomeWinTitle") : timeoutNoAnswer ? t("pkOutcomeTimeoutTitle") : t("pkOutcomeLoseTitle"),
       sub: win

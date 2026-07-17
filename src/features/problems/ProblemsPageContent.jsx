@@ -10,6 +10,7 @@ import {
 } from "./ProblemChromePanels.jsx";
 import { ProblemDetail } from "./ProblemDetail.jsx";
 import { ProblemRankingList } from "./ProblemRankingList.jsx";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 import { getProblemCatalogStats } from "./problemDisplayLabels.js";
 import { useProblemsPageModel } from "./problemsHooks.js";
 
@@ -326,7 +327,7 @@ export function ProblemsPageContent() {
               <div id="problemList" className={`problem-list${view.mode === "ranking" ? " hidden" : ""}`}>
                 {listData?.emptyText ? (
                   <div className="qg-problems-empty">
-                    <img src="/assets/generated/playful-precision/mascot-oops.png" alt="" />
+                    <QuantyImage asset="oops" size="small" />
                     <strong>{listData.emptyText}</strong>
                     <p>{isEnglish ? "Try another difficulty or topic, or clear the filters to browse everything." : "换个难度或主题试试，或清除筛选看全部题库。"}</p>
                     <button type="button" onClick={resetAllFilters}>{isEnglish ? "Clear filters" : "清除筛选"}</button>

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useOverviewPageModel } from "./overviewHooks.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
+import { resolveLegacyQuantySrc } from "@/lib/quantyAssets.js";
 
 function LeaderboardTrend({ delta }) {
   if (delta === null) {
@@ -51,7 +53,7 @@ function LeaderboardPodiumCard({ row, model }) {
         className={`podium-avatar${row.picture ? " has-image" : ""}`}
         style={{ "--avatar-hue": String(model.hashStringToHue(row.id || row.name)) }}
       >
-        {row.picture ? <img src={row.picture} alt="" loading="lazy" /> : model.getInitials(row.name)}
+        {row.picture ? <img src={resolveLegacyQuantySrc(row.picture, 160)} alt="" loading="lazy" /> : model.getInitials(row.name)}
       </span>
       <div className="podium-name">
         {row.isCurrent ? <>{row.name}<span className="podium-you"> · {you}</span></> : row.name}
@@ -286,10 +288,9 @@ export function OverviewPageContent() {
           <div className="shark-bubble" id="sharkBubble" role="status" aria-live="polite" />
           <button className="shark-interactive" id="sharkInteractive" type="button" aria-label="戳一下 Quanty">
             <span className="shark-glow" aria-hidden="true" />
-            <img
-              src="/assets/generated/playful-precision/mascot-hero-v5-clean.png"
-              alt=""
-              loading="lazy"
+            <QuantyImage
+              asset="hero"
+              size="hero"
               id="heroShark"
               draggable="false"
             />
@@ -686,7 +687,7 @@ export function OverviewPageContent() {
                       className={`leaderboard-avatar${row.picture ? " has-image" : ""}`}
                       style={{ "--avatar-hue": String(model.hashStringToHue(row.id || row.name)) }}
                     >
-                      {row.picture ? <img src={row.picture} alt="" loading="lazy" /> : model.getInitials(row.name)}
+                      {row.picture ? <img src={resolveLegacyQuantySrc(row.picture, 160)} alt="" loading="lazy" /> : model.getInitials(row.name)}
                     </span>
                     <div className="leaderboard-identity">
                       <span>{row.isCurrent ? `${row.name} · ${model.t("leaderboardYou") || "你"}` : row.name}</span>

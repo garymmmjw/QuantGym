@@ -87,7 +87,12 @@ body.is-authenticated .app-route-root .qg-support-page .experience-header::after
   flex: 0 0 auto;
   width: 94px;
   height: 94px;
-  background: url("/assets/generated/playful-precision/avatar-focused-v2.png") center / contain no-repeat;
+  background:
+    image-set(
+      url("/assets/generated/playful-precision/optimized/avatar-focused-160.webp") 1x,
+      url("/assets/generated/playful-precision/optimized/avatar-focused-320.webp") 2x
+    )
+    center / contain no-repeat;
   opacity: 0.78;
   filter: drop-shadow(0 12px 16px rgba(91, 95, 245, 0.18));
   pointer-events: none;
@@ -96,19 +101,28 @@ body.is-authenticated .app-route-root .qg-support-page .experience-header::after
 body.is-authenticated .app-route-root .qg-news-page .section-heading::after,
 body.is-authenticated .app-route-root .qg-library-page .library-topbar::after,
 body.is-authenticated .app-route-root .qg-courses-page .section-heading::after {
-  background-image: url("/assets/generated/playful-precision/mascot-laptop-v2.png");
+  background-image: image-set(
+    url("/assets/generated/playful-precision/optimized/laptop-160.webp") 1x,
+    url("/assets/generated/playful-precision/optimized/laptop-320.webp") 2x
+  );
 }
 
 body.is-authenticated .app-route-root .qg-community-page .section-heading::after,
 body.is-authenticated .app-route-root .qg-messages-page .section-heading::after,
 body.is-authenticated .app-route-root .qg-network-page .section-heading::after {
-  background-image: url("/assets/generated/playful-precision/avatar-happy-v2.png");
+  background-image: image-set(
+    url("/assets/generated/playful-precision/optimized/avatar-happy-160.webp") 1x,
+    url("/assets/generated/playful-precision/optimized/avatar-happy-320.webp") 2x
+  );
 }
 
 body.is-authenticated .app-route-root .qg-jobs-page .section-heading::after,
 body.is-authenticated .app-route-root .qg-companies-page .section-heading::after,
 body.is-authenticated .app-route-root .qg-resume-page .section-heading::after {
-  background-image: url("/assets/generated/playful-precision/mascot-teacher-v2.png");
+  background-image: image-set(
+    url("/assets/generated/playful-precision/optimized/teacher-160.webp") 1x,
+    url("/assets/generated/playful-precision/optimized/teacher-320.webp") 2x
+  );
 }
 
 body.is-authenticated .app-route-root .qg-settings-page .section-heading::after,
@@ -496,7 +510,12 @@ body.is-authenticated .app-route-root .qg-news-page .news-intel-board::after {
   bottom: 12px;
   width: 118px;
   height: 118px;
-  background: url("/assets/generated/playful-precision/mascot-search.png") center / contain no-repeat;
+  background:
+    image-set(
+      url("/assets/generated/playful-precision/optimized/search-160.webp") 1x,
+      url("/assets/generated/playful-precision/optimized/search-320.webp") 2x
+    )
+    center / contain no-repeat;
   opacity: 0.18;
   pointer-events: none;
 }
@@ -563,7 +582,12 @@ body.is-authenticated .app-route-root .qg-community-page .community-form::after 
   bottom: 12px;
   width: 116px;
   height: 116px;
-  background: url("/assets/generated/playful-precision/avatar-wink-v2.png") center / contain no-repeat;
+  background:
+    image-set(
+      url("/assets/generated/playful-precision/optimized/avatar-wink-160.webp") 1x,
+      url("/assets/generated/playful-precision/optimized/avatar-wink-320.webp") 2x
+    )
+    center / contain no-repeat;
   opacity: 0.14;
   pointer-events: none;
 }

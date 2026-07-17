@@ -2752,7 +2752,12 @@ body.is-authenticated .app-route-root .qg-tools-page .mental-hero.mental-hero-ca
   justify-self: auto;
   width: 150px;
   height: 150px;
-  background: url("/assets/generated/playful-precision/mascot-calculator-v2.png") center / contain no-repeat;
+  background:
+    image-set(
+      url("/assets/generated/playful-precision/optimized/calculator-160.webp") 1x,
+      url("/assets/generated/playful-precision/optimized/calculator-320.webp") 2x
+    )
+    center / contain no-repeat;
   filter: drop-shadow(0 16px 24px rgba(20, 16, 60, 0.4));
   animation: qg-training-float 5s ease-in-out infinite;
   pointer-events: none;

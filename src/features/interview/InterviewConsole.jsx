@@ -3,6 +3,7 @@ import { InterviewFavorites } from "./InterviewFavorites.jsx";
 import { InterviewQuestionPanel } from "./InterviewQuestionPanel.jsx";
 import { InterviewRichText } from "./InterviewRichText.jsx";
 import { InterviewTranscript } from "./InterviewTranscript.jsx";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 const WAVE_HEIGHTS = [6, 14, 20, 10, 18, 8, 16, 12, 7];
 
@@ -208,7 +209,7 @@ function InterviewConsoleInner({ session, model }) {
           {feedbackItem ? (
             <section className="interview-feedback-panel" aria-label="AI 面试官反馈">
               <div className="interview-feedback-head">
-                <img src="/assets/generated/playful-precision/avatar-focused-v2.png" alt="" loading="lazy" />
+                <QuantyImage asset="focused" size="avatar" />
                 <div className="interview-feedback-title">
                   <strong>AI 面试官反馈</strong>
                   <small>实时评估 · 仅你可见</small>

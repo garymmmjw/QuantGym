@@ -9,6 +9,7 @@ import { normalizeJobs } from "../../modules/jobs/data.js";
 import { normalizeCourses } from "../../modules/courses/data.js";
 import { sortNews } from "../../modules/news/data.js";
 import { useBodyScrollLock } from "./useBodyScrollLock.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 const MODULE_ICONS = {
   overview: "layout-dashboard",
@@ -272,7 +273,7 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
             </div>
           )) : (
             <div className="qg-cmdk-empty">
-              <img src="/assets/generated/playful-precision/mascot-search.png" alt="" loading="lazy" decoding="async" />
+              <QuantyImage asset="search" size="small" />
               <strong>{t("cmdkNoResult", { query: debouncedQuery.trim() })}</strong>
               <span>{t("cmdkNoResultHint")}</span>
             </div>

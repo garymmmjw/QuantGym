@@ -7,32 +7,32 @@
  */
 import { isItemOwned } from "../../modules/economy/index.js";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
+import { getQuantySrc } from "../../lib/quantyAssets.js";
 
 /** React hook: true when the signed-in user owns the one-time shop item. */
 export function useOwnedCosmetic(itemId) {
   return useUserStateStore((state) => isItemOwned(state.value, itemId));
 }
 
-const STICKER_ASSET_BASE = "/assets/generated/playful-precision";
-
 /**
  * 讲师鲨鱼表情包 (shop item `teacher`) — 12 stickers reusing the existing
- * Playful Precision mascot art. Ids map 1:1 to asset basenames.
+ * Playful Precision mascot art. Stable ids remain compatible with saved
+ * message tokens while the rendered source comes from the optimized set.
  */
 export const TEACHER_STICKERS = [
-  { id: "mascot-teacher-v2", label: "讲师开讲", labelKey: "stickerLabelTeacher" },
-  { id: "mascot-hero-v5-clean", label: "满血出场", labelKey: "stickerLabelHero" },
-  { id: "mascot-calculator-v2", label: "速算全开", labelKey: "stickerLabelCalculator" },
-  { id: "mascot-fire-v2", label: "手感火热", labelKey: "stickerLabelFire" },
-  { id: "mascot-levelup", label: "升级啦", labelKey: "stickerLabelLevelup" },
-  { id: "mascot-trophy-v2", label: "捧杯时刻", labelKey: "stickerLabelTrophy" },
-  { id: "mascot-poker", label: "牌桌鲨手", labelKey: "stickerLabelPoker" },
-  { id: "mascot-interview", label: "面试稳住", labelKey: "stickerLabelInterview" },
-  { id: "mascot-laptop-v2", label: "码力全开", labelKey: "stickerLabelLaptop" },
-  { id: "mascot-search", label: "找找思路", labelKey: "stickerLabelSearch" },
-  { id: "mascot-oops", label: "翻车了", labelKey: "stickerLabelOops" },
-  { id: "mascot-sleep", label: "先睡为敬", labelKey: "stickerLabelSleep" }
-].map((sticker) => ({ ...sticker, src: `${STICKER_ASSET_BASE}/${sticker.id}.png` }));
+  { id: "mascot-teacher-v2", asset: "teacher", label: "讲师开讲", labelKey: "stickerLabelTeacher" },
+  { id: "mascot-hero-v5-clean", asset: "hero", label: "满血出场", labelKey: "stickerLabelHero" },
+  { id: "mascot-calculator-v2", asset: "calculator", label: "速算全开", labelKey: "stickerLabelCalculator" },
+  { id: "mascot-fire-v2", asset: "fire", label: "手感火热", labelKey: "stickerLabelFire" },
+  { id: "mascot-levelup", asset: "levelup", label: "升级啦", labelKey: "stickerLabelLevelup" },
+  { id: "mascot-trophy-v2", asset: "trophy", label: "捧杯时刻", labelKey: "stickerLabelTrophy" },
+  { id: "mascot-poker", asset: "poker", label: "牌桌鲨手", labelKey: "stickerLabelPoker" },
+  { id: "mascot-interview", asset: "interview", label: "面试稳住", labelKey: "stickerLabelInterview" },
+  { id: "mascot-laptop-v2", asset: "laptop", label: "码力全开", labelKey: "stickerLabelLaptop" },
+  { id: "mascot-search", asset: "search", label: "找找思路", labelKey: "stickerLabelSearch" },
+  { id: "mascot-oops", asset: "oops", label: "翻车了", labelKey: "stickerLabelOops" },
+  { id: "mascot-sleep", asset: "sleep", label: "先睡为敬", labelKey: "stickerLabelSleep" }
+].map(({ asset, ...sticker }) => ({ ...sticker, src: getQuantySrc(asset, 320) }));
 
 /* zh `label` stays the visual default; resolve the localized label via i18n
  * (`labelKey`) so EN surfaces show English sticker names. */
