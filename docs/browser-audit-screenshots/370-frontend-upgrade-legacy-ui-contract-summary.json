@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-12T06:16:45.239Z",
+  "generatedAt": "2026-07-17T08:04:15.910Z",
   "status": "expected-legacy-findings",
   "command": "npm run check:ui-contracts",
   "rawCommandExit": 1,
-  "allowlistSha256": "e1a7d42a6d081eb3bfb530318b056f13411b2316298454d0ba6ce30fc15fd371",
+  "allowlistSha256": "99516aaf0c48df7699453aa92fc75376e39569dd3ba80f51f506a5032c2a3337",
   "findings": [
     {
       "path": "docs/browser-audit-screenshots/312-chrome-visual-route-smoke-summary.json",
@@ -56,6 +56,10 @@
     },
     {
       "path": "docs/browser-audit-screenshots/323-release-readiness-summary.json",
+      "message": "nested browser route smoke must verify mobile shell module sheet remains usable"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/323-release-readiness-summary.json",
       "message": "nested module ownership must cover every route module"
     },
     {
@@ -65,14 +69,6 @@
     {
       "path": "docs/browser-audit-screenshots/323-release-readiness-summary.json",
       "message": "nested module ownership must use browser smoke that checked every route"
-    },
-    {
-      "path": "docs/browser-audit-screenshots/328-browser-route-smoke-summary.json",
-      "message": "browser route smoke must check all routes"
-    },
-    {
-      "path": "docs/browser-audit-screenshots/328-browser-route-smoke-summary.json",
-      "message": "browser route smoke route pass count must match all routes"
     },
     {
       "path": "docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json",

@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-12T05:57:38.555Z",
+  "generatedAt": "2026-07-17T07:44:30.461Z",
   "status": "captured-with-findings",
   "filteredRun": false,
-  "durationMs": 682631,
+  "durationMs": 699340,
   "expectedCurrentCaptures": 26,
   "expectedFutureGates": 6,
   "currentCaptures": {
@@ -18,13 +18,13 @@
   "metadata": {
     "browser": "Google Chrome via playwright-core",
     "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "chromeVersion": "149.0.7827.201",
+    "chromeVersion": "150.0.7871.125",
     "buildMode": "isolated-production-preview",
     "locale": "zh-CN",
-    "distRuntimeFingerprint": "998c41ec1d7fd97a89b7d460c4eb6428aa5116e32cc9db008fd79a4de40595f8",
+    "distRuntimeFingerprint": "32ecdc18187916eacc9b68ad484996f308ef67c0629cf652b86d97daf55dff2d",
     "fingerprintAlgorithm": "sha256",
     "provenance": {
-      "buildCommit": "3a227b1719bb4b5e1577c3369ea87c293a2693b8",
+      "buildCommit": "2424c83ae7b73f29dee1fc381c85b4bb39d5d7af",
       "buildBranch": "codex/frontend-v2-preview",
       "buildSource": "local-git"
     },
@@ -2183,33 +2183,15 @@
         },
         {
           "target": [
-            ".qg-lg-board-title > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 8.6pt (11.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
             ".qg-lg-rank-pill"
           ],
           "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 8.6pt (11.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
-            ".qg-lg-cut.is-up[aria-hidden=\"true\"] > span"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.48 (foreground color: #0f9d63, background color: #ffffff, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
             "div[data-rank=\"1\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
           "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.46 (foreground color: #7a8090, background color: #eef0f4, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"1\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -2221,13 +2203,7 @@
           "target": [
             "div[data-rank=\"2\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"2\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -2239,13 +2215,7 @@
           "target": [
             "div[data-rank=\"3\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"3\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -2257,79 +2227,37 @@
           "target": [
             "div[data-rank=\"4\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"4\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "div[data-rank=\"5\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"5\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "div[data-rank=\"6\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"6\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "div[data-rank=\"7\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"7\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "div[data-rank=\"8\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"8\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            ".qg-lg-cut.is-down[aria-hidden=\"true\"] > span"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.2 (foreground color: #d0524b, background color: #ffffff, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "div[data-rank=\"9\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
           "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #c98a1e, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"9\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -2357,165 +2285,69 @@
         },
         {
           "target": [
-            ".is-current > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"expectation\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"expectation\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"mental-sprint\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"mental-sprint\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"stochastic\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"stochastic\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"options-intro\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"options-intro\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"combinatorics\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"combinatorics\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"interview-live\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"interview-live\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"boss-final\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"boss-final\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            ".qg-lg-shop-item:nth-child(1) > .qg-lg-shop-copy > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
             "button[data-shop-item=\"freeze\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             ".qg-lg-shop-item:nth-child(2) > .qg-lg-shop-copy > small"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "button[data-shop-item=\"poker-skin\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             ".qg-lg-shop-item:nth-child(3) > .qg-lg-shop-copy > small"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "button[data-shop-item=\"frame\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             ".qg-lg-shop-item:nth-child(4) > .qg-lg-shop-copy > small"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "button[data-shop-item=\"teacher\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             ".qg-lg-shop-item:nth-child(5) > .qg-lg-shop-copy > small"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "button[data-shop-item=\"coder\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             ".qg-lg-shop-item:nth-child(6) > .qg-lg-shop-copy > small"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "button[data-shop-item=\"sleep\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         }
       ]
     },
@@ -2544,7 +2376,7 @@
           "target": [
             "div[data-rank=\"2\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -2556,7 +2388,7 @@
           "target": [
             "div[data-rank=\"3\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -2568,7 +2400,7 @@
           "target": [
             "div[data-rank=\"4\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -2580,7 +2412,7 @@
           "target": [
             "div[data-rank=\"5\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -2592,7 +2424,7 @@
           "target": [
             "div[data-rank=\"6\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -2604,7 +2436,7 @@
           "target": [
             "div[data-rank=\"7\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -2616,7 +2448,7 @@
           "target": [
             "div[data-rank=\"8\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -5745,33 +5577,15 @@
         },
         {
           "target": [
-            ".qg-lg-board-title > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 8.6pt (11.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
             ".qg-lg-rank-pill"
           ],
           "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 8.6pt (11.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
-            ".qg-lg-cut.is-up[aria-hidden=\"true\"] > span"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.48 (foreground color: #0f9d63, background color: #ffffff, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
             "div[data-rank=\"1\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
           "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.46 (foreground color: #7a8090, background color: #eef0f4, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"1\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -5783,13 +5597,7 @@
           "target": [
             "div[data-rank=\"2\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"2\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -5801,13 +5609,7 @@
           "target": [
             "div[data-rank=\"3\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"3\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -5819,79 +5621,37 @@
           "target": [
             "div[data-rank=\"4\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"4\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "div[data-rank=\"5\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"5\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "div[data-rank=\"6\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"6\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "div[data-rank=\"7\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"7\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "div[data-rank=\"8\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"8\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            ".qg-lg-cut.is-down[aria-hidden=\"true\"] > span"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.2 (foreground color: #d0524b, background color: #ffffff, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "div[data-rank=\"9\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
           "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #c98a1e, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "div[data-rank=\"9\"] > .qg-lg-rowname > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -5919,165 +5679,69 @@
         },
         {
           "target": [
-            ".is-current > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"expectation\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"expectation\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"mental-sprint\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"mental-sprint\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"stochastic\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"stochastic\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"options-intro\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"options-intro\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"combinatorics\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"combinatorics\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"interview-live\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"interview-live\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"boss-final\"] > .qg-lg-node-text > .qg-lg-node-name"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            "button[data-node=\"boss-final\"] > .qg-lg-node-text > .qg-lg-node-sub"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
-            ".qg-lg-shop-item:nth-child(1) > .qg-lg-shop-copy > small"
-          ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
-        },
-        {
-          "target": [
             "button[data-shop-item=\"freeze\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             ".qg-lg-shop-item:nth-child(2) > .qg-lg-shop-copy > small"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "button[data-shop-item=\"poker-skin\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             ".qg-lg-shop-item:nth-child(3) > .qg-lg-shop-copy > small"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "button[data-shop-item=\"frame\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             ".qg-lg-shop-item:nth-child(4) > .qg-lg-shop-copy > small"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "button[data-shop-item=\"teacher\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             ".qg-lg-shop-item:nth-child(5) > .qg-lg-shop-copy > small"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "button[data-shop-item=\"coder\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             ".qg-lg-shop-item:nth-child(6) > .qg-lg-shop-copy > small"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
             "button[data-shop-item=\"sleep\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
         }
       ]
     },
@@ -6106,7 +5770,7 @@
           "target": [
             "div[data-rank=\"2\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -6118,7 +5782,7 @@
           "target": [
             "div[data-rank=\"3\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -6130,7 +5794,7 @@
           "target": [
             "div[data-rank=\"4\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -6142,7 +5806,7 @@
           "target": [
             "div[data-rank=\"5\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -6154,7 +5818,7 @@
           "target": [
             "div[data-rank=\"6\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -6166,7 +5830,7 @@
           "target": [
             "div[data-rank=\"7\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -6178,7 +5842,7 @@
           "target": [
             "div[data-rank=\"8\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
           ],
-          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
         },
         {
           "target": [
@@ -7287,8 +6951,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-auth-registration-error.png",
-        "bytes": 358652,
-        "sha256": "f1e5c699a98989de0b7d4944d669fbda5bf35087bc70683c36c009fb14c2c3c0"
+        "bytes": 332530,
+        "sha256": "7729ae7fd9fb8b587bec9aaefbffb15443df1f2eb3d2a6140dd8de353879cf9f"
       }
     },
     {
@@ -7435,8 +7099,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-auth-password-reset.png",
-        "bytes": 369127,
-        "sha256": "2e4ff421c19d2d57b2871d928f9bd2309456613d19e810a55af734bae0f442ab"
+        "bytes": 342785,
+        "sha256": "1edd1b5070d6e8cc9af4435c475e6fe8e733b04dfff7289c87353b9b4779d4de"
       }
     },
     {
@@ -7571,8 +7235,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-auth-keyboard-focus.png",
-        "bytes": 349648,
-        "sha256": "be198fc14ff9984eafed9cb8429dd0ea6df052856b458baae5aa26d76cd0dfa1"
+        "bytes": 324162,
+        "sha256": "30375fffed19f4b12e4f6626622863979feb4a8888dc7a0febd882d1bc6ad23a"
       }
     },
     {
@@ -7707,8 +7371,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-auth-reduced-motion.png",
-        "bytes": 352185,
-        "sha256": "55fcb8a7b3c896a35b48bc5fb4b76018336cbeb21815ce9dbc4703aa9e1cb53c"
+        "bytes": 326242,
+        "sha256": "3c06e48a78cde4cb46871e399ed3a06c32180b390c863e67883f2f8d76756649"
       }
     },
     {
@@ -8095,8 +7759,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-desktop-shell-collapsed-light.png",
-        "bytes": 575046,
-        "sha256": "eec10bb6c28b05ccf31c039fa32d591608e5388008a93e96c8719866485cc648"
+        "bytes": 578422,
+        "sha256": "7ac15d0fa1dd4193697be0812ae43c30422994f01c7e6291d36c64136346c38c"
       }
     },
     {
@@ -8411,8 +8075,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-desktop-shell-expanded-dark.png",
-        "bytes": 594365,
-        "sha256": "307ba4656c28986582568c5cbbd74a8c98f87d813be83833bc02ffea59f84469"
+        "bytes": 593077,
+        "sha256": "3629f85bcef01323198c2bf1a61361aee518346d0111bf6e9db9e4c3cb71e56e"
       }
     },
     {
@@ -8799,8 +8463,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-desktop-shell-keyboard-focus.png",
-        "bytes": 624574,
-        "sha256": "874276022b3a53a12ed1c0c12a4ba0bf3c9c2b5b90f8ead6e2dd21dd399bb6d6"
+        "bytes": 624773,
+        "sha256": "ed0272a11840b3a8f87f9681751b658b0d2cbc121aec17497de1b3535b9cb114"
       }
     },
     {
@@ -9115,8 +8779,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-desktop-shell-reduced-motion.png",
-        "bytes": 595035,
-        "sha256": "179911def0a7a238b27822349db18241cc6a5b75df73de88eeada77baeafddd1"
+        "bytes": 592482,
+        "sha256": "40f1350f58d60b3b528ea47f25cb677acccab87ba2944854b11098d146596ab3"
       }
     },
     {
@@ -9347,7 +9011,7 @@
         "fontStatus": "loaded",
         "horizontalOverflowPx": 0,
         "documentWidth": 390,
-        "documentHeight": 4310,
+        "documentHeight": 4194,
         "titleVisible": true,
         "titleText": "把你的 quant 练到锋利。",
         "primaryActionVisible": true,
@@ -9575,8 +9239,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-mobile-shell-drawer-open-light.png",
-        "bytes": 340687,
-        "sha256": "fb8ff40da3eb382b4ba7934c6904b9adbcdbbd8d27593d6911ddad754923ebd7"
+        "bytes": 301075,
+        "sha256": "9b9eb433a33d59b34191a65314d6d28bec40efbfde6329224dd00bf7d43470cc"
       }
     },
     {
@@ -9735,7 +9399,7 @@
         "fontStatus": "loaded",
         "horizontalOverflowPx": 0,
         "documentWidth": 390,
-        "documentHeight": 4310,
+        "documentHeight": 4194,
         "titleVisible": true,
         "titleText": "把你的 quant 练到锋利。",
         "primaryActionVisible": true,
@@ -9891,8 +9555,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-mobile-shell-drawer-open-dark.png",
-        "bytes": 340085,
-        "sha256": "6d21f546f88eacd5c62c3c800aabc4c29ddb7178d63797e447ccf336ce58584c"
+        "bytes": 304128,
+        "sha256": "20854e764da7b86280ba467d70d5eceeb7e1797d93fcd06dd48b8fd4843818eb"
       }
     },
     {
@@ -10093,7 +9757,7 @@
         "fontStatus": "loaded",
         "horizontalOverflowPx": 0,
         "documentWidth": 390,
-        "documentHeight": 4310,
+        "documentHeight": 4194,
         "titleVisible": true,
         "titleText": "把你的 quant 练到锋利。",
         "primaryActionVisible": true,
@@ -10291,8 +9955,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-mobile-shell-keyboard-focus.png",
-        "bytes": 447870,
-        "sha256": "87d4a41495e4006528028ca53440e1115984330ac41137bb6c83c7cec22a5d28"
+        "bytes": 407622,
+        "sha256": "fcf4cf69bb7bf5ce07b288ea4f5e65f70a405b457f340b60704da0eab87f8a4a"
       }
     },
     {
@@ -10451,7 +10115,7 @@
         "fontStatus": "loaded",
         "horizontalOverflowPx": 0,
         "documentWidth": 390,
-        "documentHeight": 4310,
+        "documentHeight": 4194,
         "titleVisible": true,
         "titleText": "把你的 quant 练到锋利。",
         "primaryActionVisible": true,
@@ -10607,8 +10271,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-mobile-shell-reduced-motion.png",
-        "bytes": 436363,
-        "sha256": "1f5656db2a286dd80f7467a7ca0557983d6b286550711f04fd2c98b7dec8ccdb"
+        "bytes": 398182,
+        "sha256": "2a2ede3bd5ff9114a0f8eaf074d691ef5f03c609de03d3459ecd77ab794155e9"
       }
     },
     {
@@ -11183,8 +10847,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-global-search-results-open.png",
-        "bytes": 498985,
-        "sha256": "aa2e0d6fd36b46c3822615c7fd1360d372c62408a04c17b829b9fcb5ba0c730f"
+        "bytes": 501132,
+        "sha256": "0bf371ef442b894a9d6ffed4fa8a014aa70ebcc56efaa39f1055d2e69026700b"
       }
     },
     {
@@ -11555,8 +11219,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-global-search-keyboard-focus.png",
-        "bytes": 500894,
-        "sha256": "c2a7df9d69d96250411c36fd3ad1c333b37e2e00d61e5e38e96d3e3b0d67a84a"
+        "bytes": 499622,
+        "sha256": "b1ad3e7c47c3f7d63f62c86af1af6490e7de577c7faee2b6cd2127440ed4a1d0"
       }
     },
     {
@@ -12055,8 +11719,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-global-search-empty.png",
-        "bytes": 512452,
-        "sha256": "e09e2655a4a8eb7598ad4935113dd69babb2984febca10d044bbcc9def669054"
+        "bytes": 515186,
+        "sha256": "03df9a35b49127ea9a6aa980aca023136a8b30a9903c10356347d15e1c20e2e9"
       }
     },
     {
@@ -12427,8 +12091,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-global-search-reduced-motion.png",
-        "bytes": 498438,
-        "sha256": "4a434d1066783b81a6ed0d9c5789c863a02868605fd5f9f6eb7b2184b3cbffa0"
+        "bytes": 496975,
+        "sha256": "f842e0c5ea0f9e52a5de9c403565c0f943a1b4bc47eb328b54610cbec6c7c07e"
       }
     },
     {
@@ -12482,33 +12146,15 @@
             },
             {
               "target": [
-                ".qg-lg-board-title > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 8.6pt (11.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
                 ".qg-lg-rank-pill"
               ],
               "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 8.6pt (11.5px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
-                ".qg-lg-cut.is-up[aria-hidden=\"true\"] > span"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.48 (foreground color: #0f9d63, background color: #ffffff, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
                 "div[data-rank=\"1\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
               "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.46 (foreground color: #7a8090, background color: #eef0f4, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "div[data-rank=\"1\"] > .qg-lg-rowname > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -12520,13 +12166,7 @@
               "target": [
                 "div[data-rank=\"2\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "div[data-rank=\"2\"] > .qg-lg-rowname > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -12538,13 +12178,7 @@
               "target": [
                 "div[data-rank=\"3\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "div[data-rank=\"3\"] > .qg-lg-rowname > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -12556,79 +12190,37 @@
               "target": [
                 "div[data-rank=\"4\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "div[data-rank=\"4\"] > .qg-lg-rowname > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 "div[data-rank=\"5\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "div[data-rank=\"5\"] > .qg-lg-rowname > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 "div[data-rank=\"6\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "div[data-rank=\"6\"] > .qg-lg-rowname > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 "div[data-rank=\"7\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "div[data-rank=\"7\"] > .qg-lg-rowname > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 "div[data-rank=\"8\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "div[data-rank=\"8\"] > .qg-lg-rowname > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                ".qg-lg-cut.is-down[aria-hidden=\"true\"] > span"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.2 (foreground color: #d0524b, background color: #ffffff, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 "div[data-rank=\"9\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
               "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #c98a1e, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "div[data-rank=\"9\"] > .qg-lg-rowname > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -12656,165 +12248,69 @@
             },
             {
               "target": [
-                ".is-current > .qg-lg-node-text > .qg-lg-node-sub"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"expectation\"] > .qg-lg-node-text > .qg-lg-node-name"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"expectation\"] > .qg-lg-node-text > .qg-lg-node-sub"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"mental-sprint\"] > .qg-lg-node-text > .qg-lg-node-name"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"mental-sprint\"] > .qg-lg-node-text > .qg-lg-node-sub"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"stochastic\"] > .qg-lg-node-text > .qg-lg-node-name"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"stochastic\"] > .qg-lg-node-text > .qg-lg-node-sub"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"options-intro\"] > .qg-lg-node-text > .qg-lg-node-name"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"options-intro\"] > .qg-lg-node-text > .qg-lg-node-sub"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"combinatorics\"] > .qg-lg-node-text > .qg-lg-node-name"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"combinatorics\"] > .qg-lg-node-text > .qg-lg-node-sub"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"interview-live\"] > .qg-lg-node-text > .qg-lg-node-name"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"interview-live\"] > .qg-lg-node-text > .qg-lg-node-sub"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"boss-final\"] > .qg-lg-node-text > .qg-lg-node-name"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                "button[data-node=\"boss-final\"] > .qg-lg-node-text > .qg-lg-node-sub"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
-                ".qg-lg-shop-item:nth-child(1) > .qg-lg-shop-copy > small"
-              ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
-            },
-            {
-              "target": [
                 "button[data-shop-item=\"freeze\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 ".qg-lg-shop-item:nth-child(2) > .qg-lg-shop-copy > small"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 "button[data-shop-item=\"poker-skin\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 ".qg-lg-shop-item:nth-child(3) > .qg-lg-shop-copy > small"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 "button[data-shop-item=\"frame\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 ".qg-lg-shop-item:nth-child(4) > .qg-lg-shop-copy > small"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 "button[data-shop-item=\"teacher\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 ".qg-lg-shop-item:nth-child(5) > .qg-lg-shop-copy > small"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 "button[data-shop-item=\"coder\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 ".qg-lg-shop-item:nth-child(6) > .qg-lg-shop-copy > small"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
                 "button[data-shop-item=\"sleep\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
             }
           ]
         }
@@ -12823,7 +12319,7 @@
         "pathname": "/league",
         "shellVisible": true,
         "overlayVisible": false,
-        "bodyTextLength": 1664,
+        "bodyTextLength": 1667,
         "fontStatus": "loaded",
         "horizontalOverflowPx": 0,
         "documentWidth": 1280,
@@ -12835,9 +12331,9 @@
         "incompleteVisibleImages": []
       },
       "axe": {
-        "passes": 23,
+        "passes": 24,
         "incomplete": 3,
-        "inapplicable": 40,
+        "inapplicable": 39,
         "violations": [
           {
             "id": "color-contrast",
@@ -12877,33 +12373,15 @@
               },
               {
                 "target": [
-                  ".qg-lg-board-title > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 8.6pt (11.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
                   ".qg-lg-rank-pill"
                 ],
                 "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 8.6pt (11.5px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
-                  ".qg-lg-cut.is-up[aria-hidden=\"true\"] > span"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.48 (foreground color: #0f9d63, background color: #ffffff, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
                   "div[data-rank=\"1\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
                 "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.46 (foreground color: #7a8090, background color: #eef0f4, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "div[data-rank=\"1\"] > .qg-lg-rowname > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -12915,13 +12393,7 @@
                 "target": [
                   "div[data-rank=\"2\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "div[data-rank=\"2\"] > .qg-lg-rowname > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -12933,13 +12405,7 @@
                 "target": [
                   "div[data-rank=\"3\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "div[data-rank=\"3\"] > .qg-lg-rowname > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -12951,79 +12417,37 @@
                 "target": [
                   "div[data-rank=\"4\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "div[data-rank=\"4\"] > .qg-lg-rowname > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   "div[data-rank=\"5\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "div[data-rank=\"5\"] > .qg-lg-rowname > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   "div[data-rank=\"6\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "div[data-rank=\"6\"] > .qg-lg-rowname > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   "div[data-rank=\"7\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "div[data-rank=\"7\"] > .qg-lg-rowname > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   "div[data-rank=\"8\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "div[data-rank=\"8\"] > .qg-lg-rowname > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  ".qg-lg-cut.is-down[aria-hidden=\"true\"] > span"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.2 (foreground color: #d0524b, background color: #ffffff, font size: 7.5pt (10px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   "div[data-rank=\"9\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
                 "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.67 (foreground color: #c98a1e, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "div[data-rank=\"9\"] > .qg-lg-rowname > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -13051,165 +12475,69 @@
               },
               {
                 "target": [
-                  ".is-current > .qg-lg-node-text > .qg-lg-node-sub"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"expectation\"] > .qg-lg-node-text > .qg-lg-node-name"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"expectation\"] > .qg-lg-node-text > .qg-lg-node-sub"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"mental-sprint\"] > .qg-lg-node-text > .qg-lg-node-name"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"mental-sprint\"] > .qg-lg-node-text > .qg-lg-node-sub"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"stochastic\"] > .qg-lg-node-text > .qg-lg-node-name"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"stochastic\"] > .qg-lg-node-text > .qg-lg-node-sub"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"options-intro\"] > .qg-lg-node-text > .qg-lg-node-name"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"options-intro\"] > .qg-lg-node-text > .qg-lg-node-sub"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"combinatorics\"] > .qg-lg-node-text > .qg-lg-node-name"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"combinatorics\"] > .qg-lg-node-text > .qg-lg-node-sub"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"interview-live\"] > .qg-lg-node-text > .qg-lg-node-name"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"interview-live\"] > .qg-lg-node-text > .qg-lg-node-sub"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"boss-final\"] > .qg-lg-node-text > .qg-lg-node-name"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.79 (foreground color: #9998b6, background color: #ffffff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  "button[data-node=\"boss-final\"] > .qg-lg-node-text > .qg-lg-node-sub"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.48 (foreground color: #a3a2bd, background color: #ffffff, font size: 7.9pt (10.5px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
-                  ".qg-lg-shop-item:nth-child(1) > .qg-lg-shop-copy > small"
-                ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
-              },
-              {
-                "target": [
                   "button[data-shop-item=\"freeze\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   ".qg-lg-shop-item:nth-child(2) > .qg-lg-shop-copy > small"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   "button[data-shop-item=\"poker-skin\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   ".qg-lg-shop-item:nth-child(3) > .qg-lg-shop-copy > small"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   "button[data-shop-item=\"frame\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   ".qg-lg-shop-item:nth-child(4) > .qg-lg-shop-copy > small"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   "button[data-shop-item=\"teacher\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   ".qg-lg-shop-item:nth-child(5) > .qg-lg-shop-copy > small"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   "button[data-shop-item=\"coder\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   ".qg-lg-shop-item:nth-child(6) > .qg-lg-shop-copy > small"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.7 (foreground color: #9998b6, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.63 (foreground color: #9b9ab7, background color: #fbfbfd, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
                   "button[data-shop-item=\"sleep\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.41 (foreground color: #9998b6, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.35 (foreground color: #9b9ab7, background color: #eeedfa, font size: 9.4pt (12.5px), font weight: bold). Expected contrast ratio of 4.5:1"
               }
             ]
           }
@@ -13223,8 +12551,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-notifications-toast-live-toast.png",
-        "bytes": 493654,
-        "sha256": "979b96ae26df18cba068e951256901c645bfc0a97b49e38fa2bf6e41a0d73f5b"
+        "bytes": 496139,
+        "sha256": "c21b631798c1f1e04a96ccc4536aad443b149b741822021fd7c8668b15499b0c"
       }
     },
     {
@@ -13274,7 +12602,7 @@
               "target": [
                 "div[data-rank=\"2\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -13286,7 +12614,7 @@
               "target": [
                 "div[data-rank=\"3\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -13298,7 +12626,7 @@
               "target": [
                 "div[data-rank=\"4\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -13310,7 +12638,7 @@
               "target": [
                 "div[data-rank=\"5\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -13322,7 +12650,7 @@
               "target": [
                 "div[data-rank=\"6\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -13334,7 +12662,7 @@
               "target": [
                 "div[data-rank=\"7\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -13346,7 +12674,7 @@
               "target": [
                 "div[data-rank=\"8\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
               ],
-              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+              "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
             },
             {
               "target": [
@@ -13475,7 +12803,7 @@
         "pathname": "/league",
         "shellVisible": true,
         "overlayVisible": false,
-        "bodyTextLength": 1664,
+        "bodyTextLength": 1667,
         "fontStatus": "loaded",
         "horizontalOverflowPx": 0,
         "documentWidth": 1280,
@@ -13525,7 +12853,7 @@
                 "target": [
                   "div[data-rank=\"2\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -13537,7 +12865,7 @@
                 "target": [
                   "div[data-rank=\"3\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.21 (foreground color: #5b5ff5, background color: #eef0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -13549,7 +12877,7 @@
                 "target": [
                   "div[data-rank=\"4\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -13561,7 +12889,7 @@
                 "target": [
                   "div[data-rank=\"5\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.68 (foreground color: #d0524b, background color: #fdeceb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -13573,7 +12901,7 @@
                 "target": [
                   "div[data-rank=\"6\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.74 (foreground color: #8a63e8, background color: #f6f0ff, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -13585,7 +12913,7 @@
                 "target": [
                   "div[data-rank=\"7\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 4.12 (foreground color: #b3610a, background color: #fff3dd, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.91 (foreground color: #16879a, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -13597,7 +12925,7 @@
                 "target": [
                   "div[data-rank=\"8\"] > .qg-lg-avatar[aria-hidden=\"true\"]"
                 ],
-                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.23 (foreground color: #0f9d63, background color: #eafaf3, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
+                "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.76 (foreground color: #2f7fc0, background color: #e7f2fb, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1"
               },
               {
                 "target": [
@@ -13731,8 +13059,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-notifications-toast-reduced-motion.png",
-        "bytes": 496380,
-        "sha256": "d987456047cde44670f7cc5eded426964f6c37cbca705dd01996dfa0d8b8d8f5"
+        "bytes": 498661,
+        "sha256": "bd1191f9f4e35bb86234ef0a8e815e3c9b7c880cd8ff1cf5870045e5db0fda6d"
       }
     },
     {
@@ -14119,8 +13447,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-todo-dock-open.png",
-        "bytes": 565209,
-        "sha256": "2c6e4a99a793030dc571ac30e5d3f122e5afd0ad863f11663d2365f70ff0b2af"
+        "bytes": 565959,
+        "sha256": "04b7cc53ec1c374573f074a419aa2d84afdf51e49d86046048451c5c260daaa6"
       }
     },
     {
@@ -14435,8 +13763,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-todo-editor-focus.png",
-        "bytes": 604281,
-        "sha256": "fc72b991a6a466b22dcf176cba6dbb07673b3afd54bbce679cf9584953737b4a"
+        "bytes": 541625,
+        "sha256": "eb78fa9ce3774b93fb0dc50cb7631bae01e3c85d44d38195374678b0951d8626"
       }
     },
     {
@@ -14659,7 +13987,7 @@
         "fontStatus": "loaded",
         "horizontalOverflowPx": 0,
         "documentWidth": 390,
-        "documentHeight": 4310,
+        "documentHeight": 4194,
         "titleVisible": false,
         "titleText": "",
         "primaryActionVisible": false,
@@ -14857,8 +14185,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-todo-empty-mobile.png",
-        "bytes": 446660,
-        "sha256": "a9d18929c6223f45a311b5131b2b523d4f19a9a0a1e41299a9e5ddc259787e29"
+        "bytes": 406743,
+        "sha256": "f644c7c8f55a0eb6abe3d976015d69344e838f0aa6e34b45153fd6647a2e993b"
       }
     },
     {
@@ -15039,7 +14367,7 @@
         "fontStatus": "loaded",
         "horizontalOverflowPx": 0,
         "documentWidth": 390,
-        "documentHeight": 4310,
+        "documentHeight": 4194,
         "titleVisible": false,
         "titleText": "",
         "primaryActionVisible": false,
@@ -15195,8 +14523,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-todo-reduced-motion-mobile.png",
-        "bytes": 436363,
-        "sha256": "1f5656db2a286dd80f7467a7ca0557983d6b286550711f04fd2c98b7dec8ccdb"
+        "bytes": 398182,
+        "sha256": "2a2ede3bd5ff9114a0f8eaf074d691ef5f03c609de03d3459ecd77ab794155e9"
       }
     },
     {
@@ -15463,8 +14791,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-theme-language-theme-focus.png",
-        "bytes": 251889,
-        "sha256": "c7920e4f3a3b84c7897c8000b8ce46aa76918674d7b87b6c2a7335fc444bcbda"
+        "bytes": 251905,
+        "sha256": "d65715f888dd2d6de18f767fea7be6ad74e0b600364322205e02c1715996f5b4"
       }
     },
     {
@@ -15575,8 +14903,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-theme-language-language-focus.png",
-        "bytes": 257060,
-        "sha256": "63a3cae07388794a11ca4be2c28eb8dc9bac0659a71bd40839df4a00031076e5"
+        "bytes": 257094,
+        "sha256": "914f248aaa5461c304ba08211221253e1e4daa399b2fd31a0bb30263d4c69f4c"
       }
     },
     {
@@ -15843,8 +15171,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-theme-language-mobile-controls.png",
-        "bytes": 157068,
-        "sha256": "87d921be4ed4a6ccf4019c7439a05c24cc6a90cfceb2aeb0d102a23c4fc03171"
+        "bytes": 156948,
+        "sha256": "df24cb6708e090d5d0b28a78f824dc3710dcc484bb21677160f37818ae0f0eba"
       }
     },
     {
@@ -15955,8 +15283,8 @@
       },
       "screenshot": {
         "path": "artifacts/frontend-upgrade/baseline/shared-states/shared-state-theme-language-reduced-motion-mobile.png",
-        "bytes": 163984,
-        "sha256": "8e47149c6553c614b50876a6445be4abee5746ea4679cffbac2b5855068bb474"
+        "bytes": 163904,
+        "sha256": "ebf782cf7b996321c6d7310e16580e2f464edfd0e87be28a162d41e14ea0bd23"
       }
     }
   ],
@@ -16044,8 +15372,8 @@
       "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-desktop-shell.jpg",
       "width": 1280,
       "height": 2846,
-      "bytes": 171664,
-      "sha256": "f03cdb7cdebbb54e57bfbf4358872cb26a5f604ee192d68c1f21211303667588",
+      "bytes": 171848,
+      "sha256": "ffd3094441d52a24636c46835e3039f0450890650e917be0b218a63109f74504",
       "quality": 72
     },
     {
@@ -16057,8 +15385,8 @@
       "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-global-search.jpg",
       "width": 1280,
       "height": 2850,
-      "bytes": 154121,
-      "sha256": "d220db6b5451fa7888e5b7ca35c1101599f27c31c23b780c902063d8a008d4ae",
+      "bytes": 154223,
+      "sha256": "dbf17ecbe9831d5b2387f98e2fc5997f0697c750185a3e94b7bcfff358365f7a",
       "quality": 72
     },
     {
@@ -16069,9 +15397,9 @@
       "outputFile": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-mobile-shell.jpg",
       "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-mobile-shell.jpg",
       "width": 390,
-      "height": 4310,
-      "bytes": 111837,
-      "sha256": "0e9e112f39e0a94f5e4857e4eeb3b4499eaf1bd64a4cfaedd53fb1f1b46c73e6",
+      "height": 4194,
+      "bytes": 107211,
+      "sha256": "308e634018e3ea376ff4e2cd5e4c67edbbbfc6ac6655f335be8c58426af09af3",
       "quality": 72
     },
     {
@@ -16083,8 +15411,8 @@
       "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-notifications-toast.jpg",
       "width": 1280,
       "height": 1766,
-      "bytes": 145945,
-      "sha256": "83a2906e8dda8744f606015cdab1346bc24ff189b747d923909d5d431b5f72c6",
+      "bytes": 148008,
+      "sha256": "66491eabc50db4a9104b601fa959563d0899575e1f1952bc48fafc4d7b18a660",
       "quality": 72
     },
     {
@@ -16096,8 +15424,8 @@
       "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-theme-language.jpg",
       "width": 1280,
       "height": 1380,
-      "bytes": 93334,
-      "sha256": "25dbfc7f1274a168fc1917c700dca4fc5ac089b9d3394b83de692627241e6ea4",
+      "bytes": 93365,
+      "sha256": "d7b2da1b27ecd023b4282c1b67c9b19a671352af190ee0f8401afef7097c692c",
       "quality": 72
     },
     {
@@ -16109,8 +15437,8 @@
       "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-todo.jpg",
       "width": 1280,
       "height": 2850,
-      "bytes": 174704,
-      "sha256": "67be61b73a203877652e4f23d2ffb744689376bbdd2c9afd1b7313c7eece036e",
+      "bytes": 174763,
+      "sha256": "a6971b7f2e7cc00a6dba151b31ee2e0912a0d11a3f37687162dda50c6e72903c",
       "quality": 72
     }
   ],

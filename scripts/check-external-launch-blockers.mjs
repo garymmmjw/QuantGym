@@ -1121,8 +1121,7 @@ const blockers = [
           && item.mobileViewport === true
           && item.noHorizontalOverflow === true
           && item.searchUsable === true
-          && item.compactActions === true
-          && item.sidebarCollapsed === true
+          && item.moduleSheetUsable === true
           && item.reloadPersisted === true
           && item.settingsShortcut === true;
       })(),

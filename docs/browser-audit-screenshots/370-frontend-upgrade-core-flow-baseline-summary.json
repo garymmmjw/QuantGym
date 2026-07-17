@@ -1,17 +1,17 @@
 {
   "status": "pass",
-  "durationMs": 608170,
+  "durationMs": 899311,
   "browser": "Google Chrome via playwright-core",
   "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "baseUrl": "http://127.0.0.1:62848",
+  "baseUrl": "http://127.0.0.1:58176",
   "build": {
-    "distRuntimeFingerprint": "998c41ec1d7fd97a89b7d460c4eb6428aa5116e32cc9db008fd79a4de40595f8",
+    "distRuntimeFingerprint": "32ecdc18187916eacc9b68ad484996f308ef67c0629cf652b86d97daf55dff2d",
     "fingerprintAlgorithm": "sha256",
     "reproducible": true,
     "buildCount": 2,
     "provenanceValidated": true,
     "provenance": {
-      "buildCommit": "38caf4768da42453c58e9d9be594701070c6f3b3",
+      "buildCommit": "2424c83ae7b73f29dee1fc381c85b4bb39d5d7af",
       "buildBranch": "codex/frontend-v2-preview",
       "buildSource": "local-git"
     }
@@ -138,7 +138,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 1292,
+          "bodyTextLength": 1290,
           "horizontalOverflowPx": 0,
           "pathname": "/tools"
         }
@@ -572,8 +572,8 @@
                 {
                   "left": 857.98,
                   "right": 996.66,
-                  "top": 483.55,
-                  "bottom": 527.55,
+                  "top": 483.61,
+                  "bottom": 527.61,
                   "width": 138.67,
                   "height": 44
                 },
@@ -670,8 +670,8 @@
                 {
                   "left": 857.98,
                   "right": 996.66,
-                  "top": 483.85,
-                  "bottom": 527.85,
+                  "top": 484.04,
+                  "bottom": 528.04,
                   "width": 138.67,
                   "height": 44
                 },
@@ -698,9 +698,9 @@
                 },
                 {
                   "label": "已收藏",
-                  "scrollWidth": 137,
+                  "scrollWidth": 146,
                   "clientWidth": 137,
-                  "scrollOverflowPx": 0,
+                  "scrollOverflowPx": 9,
                   "contentLeft": 890.31,
                   "contentRight": 964.31,
                   "availableLeft": 866.98,
@@ -768,8 +768,8 @@
                 {
                   "left": 928.66,
                   "right": 1040.33,
-                  "top": 444.01,
-                  "bottom": 488.01,
+                  "top": 444.14,
+                  "bottom": 488.14,
                   "width": 111.67,
                   "height": 44
                 },
@@ -796,9 +796,9 @@
                 },
                 {
                   "label": "已收藏",
-                  "scrollWidth": 110,
+                  "scrollWidth": 164,
                   "clientWidth": 110,
-                  "scrollOverflowPx": 0,
+                  "scrollOverflowPx": 54,
                   "contentLeft": 947.48,
                   "contentRight": 1021.48,
                   "availableLeft": 937.66,
@@ -866,8 +866,8 @@
                 {
                   "left": 928.66,
                   "right": 1040.33,
-                  "top": 444.14,
-                  "bottom": 488.14,
+                  "top": 444.23,
+                  "bottom": 488.23,
                   "width": 111.67,
                   "height": 44
                 },
@@ -894,9 +894,9 @@
                 },
                 {
                   "label": "已收藏",
-                  "scrollWidth": 110,
+                  "scrollWidth": 178,
                   "clientWidth": 110,
-                  "scrollOverflowPx": 0,
+                  "scrollOverflowPx": 68,
                   "contentLeft": 947.48,
                   "contentRight": 1021.48,
                   "availableLeft": 937.66,
@@ -964,8 +964,8 @@
                 {
                   "left": 199,
                   "right": 326,
-                  "top": 477.48,
-                  "bottom": 521.48,
+                  "top": 477.5,
+                  "bottom": 521.5,
                   "width": 127,
                   "height": 44
                 },
@@ -992,9 +992,9 @@
                 },
                 {
                   "label": "已收藏",
-                  "scrollWidth": 125,
+                  "scrollWidth": 188,
                   "clientWidth": 125,
-                  "scrollOverflowPx": 0,
+                  "scrollOverflowPx": 63,
                   "contentLeft": 235.5,
                   "contentRight": 289.5,
                   "availableLeft": 206,
@@ -1090,9 +1090,9 @@
                 },
                 {
                   "label": "已收藏",
-                  "scrollWidth": 125,
+                  "scrollWidth": 199,
                   "clientWidth": 125,
-                  "scrollOverflowPx": 0,
+                  "scrollOverflowPx": 74,
                   "contentLeft": 235.5,
                   "contentRight": 289.5,
                   "availableLeft": 206,
@@ -1191,7 +1191,7 @@
       {
         "name": "tools drill starts and accepts an answer",
         "status": "pass",
-        "question": "31 + 12 = ?"
+        "question": "75 + 35 = ?"
       },
       {
         "name": "tools mental math completes session and persists records",
@@ -1209,13 +1209,13 @@
       {
         "name": "tools market game rejects crossed quote, scores valid quote, and persists record",
         "status": "pass",
-        "fairValue": 90,
+        "fairValue": 105,
         "crossedFeedback": "⚠ Ask 必须高于 Bid——先把市场报合法。",
-        "feedback": "报价成交 · +25 分 —— 你的中价 90、价差 2，公允 90。又稳又窄，这单值钱。",
-        "score": 25,
+        "feedback": "报价成交 · +26 分 —— 你的中价 105、价差 2，公允 105。又稳又窄，这单值钱。",
+        "score": 26,
         "recordsBefore": 0,
         "recordsAfter": 1,
-        "marketSkill": 25,
+        "marketSkill": 26,
         "reloaded": true
       },
       {
@@ -1233,7 +1233,7 @@
         "handNumber": 1,
         "playerCount": 6,
         "actionLabel": "跟注 Call 20",
-        "currentHandLogCount": 12,
+        "currentHandLogCount": 13,
         "persisted": true
       },
       {
@@ -1248,13 +1248,13 @@
         "name": "pk match, submit, reveal, and record persistence",
         "status": "pass",
         "opponentName": "Options Challenger",
-        "problemPreview": "问题 22.7\n\n问题 22.7. 解释如何将出售外币的远期合约映射到标准期限的零息债券投资组合中，以进行 VaR 计算。",
-        "submittedAnswer": "Use probability, expectation, option pricing, variance, hedge ratio, market price, and explain the answer with a clean quantitative argument.",
+        "problemPreview": "十和十\n\nAdam 正在掷一个公平的 $10-$ 面骰。他可以反复掷，并且可以在任意时刻决定停止。如果每次掷出的值不是 $10$，他就把该点数加到自己的总金额中。如果掷出 10，他会失去所有钱。如果 Adam 采用最优策略，那么他应该在总金",
+        "submittedAnswer": "50",
         "outcome": {
           "kicker": "DEFEAT",
           "title": "惜败一局",
-          "userScore": 51,
-          "opponentScore": 84
+          "userScore": 22,
+          "opponentScore": 74
         },
         "recordPersisted": true,
         "revealed": true
@@ -1299,7 +1299,7 @@
       {
         "name": "interview attachment upload preview, transcript, and request payload",
         "status": "pass",
-        "fileName": "browser-smoke-interview-attachment-1783801649461.png",
+        "fileName": "browser-smoke-interview-attachment-1784273078533.png",
         "previewRendered": true,
         "transcriptAttachmentRendered": true,
         "requestAttachmentSent": true,
@@ -1308,8 +1308,8 @@
       {
         "name": "interview PDF source upload generates questions and starts session",
         "status": "pass",
-        "fileName": "browser-smoke-interview-source-1783801650070.pdf",
-        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1783801650070",
+        "fileName": "browser-smoke-interview-source-1784273079197.pdf",
+        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1784273079197",
         "requestCount": 1,
         "requestPdfPayloadSent": true,
         "generatedQuestionRendered": true
@@ -1322,7 +1322,7 @@
       {
         "name": "todo dock edit, complete, delete, and reload persistence",
         "status": "pass",
-        "taskId": "custom-350cbe42-c754-41fe-a161-a7a0752cd33f",
+        "taskId": "custom-3a0e7cab-e807-4acd-9d2e-731fa6bd332a",
         "edited": true,
         "completed": true,
         "reopened": true,
@@ -1334,31 +1334,31 @@
         "name": "community post, like, comment, and reload persistence",
         "status": "pass",
         "headingDecorationSuppressed": true,
-        "postText": "Browser smoke community post 1783801683151",
-        "commentText": "Browser smoke comment 1783801683151",
+        "postText": "Browser smoke community post 1784273123804",
+        "commentText": "Browser smoke comment 1784273123804",
         "reloaded": true
       },
       {
         "name": "community image post fallback and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community image post 1783801688308",
-        "fileName": "browser-smoke-community-1783801688308.png",
+        "postText": "Browser smoke community image post 1784273132516",
+        "fileName": "browser-smoke-community-1784273132516.png",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "community video post fallback and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community video post 1783801693338",
-        "fileName": "browser-smoke-community-1783801693338.webm",
+        "postText": "Browser smoke community video post 1784273139987",
+        "fileName": "browser-smoke-community-1784273139987.webm",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "community direct message from post opens messages thread",
         "status": "pass",
-        "authorName": "Community Mentor 1783801698419",
-        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1783801698419",
+        "authorName": "Community Mentor 1784273148535",
+        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1784273148535",
         "openedMessages": true,
         "threadPersisted": true,
         "replyPersisted": true
@@ -1373,14 +1373,14 @@
         "messageReplyPersisted": true,
         "messageReloadPersisted": true,
         "noHorizontalOverflow": true,
-        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1783801705906",
+        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1784273160414",
         "finalPath": "/messages"
       },
       {
         "name": "messages thread read, send, and reload persistence",
         "status": "pass",
-        "threadId": "thread-browser-route-smoke-1783801713759",
-        "mentorName": "Smoke Mentor 1783801713759",
+        "threadId": "thread-browser-route-smoke-1784273172892",
+        "mentorName": "Smoke Mentor 1784273172892",
         "replied": true,
         "reloaded": true
       },
@@ -1397,15 +1397,15 @@
       {
         "name": "experiences create, edit, share, delete, and reload persistence",
         "status": "pass",
-        "recordId": "09dadb21-3456-4f34-9bae-a407d4d8fc86",
-        "sharedPostId": "e0e68564-ea67-42ba-8c0b-447c06e33bfc",
+        "recordId": "d5508b08-3165-4d8a-ba9f-553b73894c0a",
+        "sharedPostId": "2b7289f9-d4da-42f7-8c11-0b1eebbae211",
         "deleted": true,
         "reloaded": true
       },
       {
         "name": "news manual submit, filter, detail, and reload persistence",
         "status": "pass",
-        "newsId": "news-browser-smoke-jane-street-official-update-1783801741202-https-www-janestreet-com-join-jane",
+        "newsId": "news-browser-smoke-jane-street-official-update-1784273217796-https-www-janestreet-com-join-jane",
         "sourceType": "official",
         "reloaded": true,
         "readPersisted": true
@@ -1421,30 +1421,30 @@
         "newsFiltersUsable": true,
         "newsDetailReadPersisted": true,
         "noHorizontalOverflow": true,
-        "recordId": "fe30c203-c89d-4096-b008-3dcf7ebfb322",
-        "sharedPostId": "60d82acd-0c8e-4993-8d02-10ec71187c21",
-        "newsId": "news-mobile-smoke-official-recruiting-update-1783801747705-https-www-janestreet-com-join-jane-s",
+        "recordId": "deddb55e-5a34-40bd-bdce-2f7dd1d02b6a",
+        "sharedPostId": "df40ee5f-602b-4f5d-944e-51df8500c1ef",
+        "newsId": "news-mobile-smoke-official-recruiting-update-1784273228627-https-www-janestreet-com-join-jane-s",
         "finalPath": "/news"
       },
       {
         "name": "memory resource add, source link, and reload persistence",
         "status": "pass",
-        "title": "Browser Smoke Resource 1783801757951",
+        "title": "Browser Smoke Resource 1784273244362",
         "sourceUrl": "https://www.youtube.com/@atypicalquant",
         "reloaded": true
       },
       {
         "name": "memory image resource upload fallback and reload persistence",
         "status": "pass",
-        "title": "Browser Smoke Image Resource 1783801763444",
-        "fileName": "browser-smoke-memory-1783801763444.png",
+        "title": "Browser Smoke Image Resource 1784273253396",
+        "fileName": "browser-smoke-memory-1784273253396.png",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "network contact add, edit, delete, and reload persistence",
         "status": "pass",
-        "contactName": "Browser Smoke Contact 1783801768962",
+        "contactName": "Browser Smoke Contact 1784273262911",
         "edited": true,
         "deleted": true
       },
@@ -1516,8 +1516,8 @@
                 {
                   "left": 1170,
                   "right": 1244,
-                  "top": 184.79,
-                  "bottom": 228.79,
+                  "top": 185.75,
+                  "bottom": 229.75,
                   "width": 74,
                   "height": 44
                 },
@@ -1628,8 +1628,8 @@
                 {
                   "left": 1170,
                   "right": 1244,
-                  "top": 185.13,
-                  "bottom": 229.13,
+                  "top": 185.75,
+                  "bottom": 229.75,
                   "width": 74,
                   "height": 44
                 },
@@ -1732,24 +1732,24 @@
                 {
                   "left": 930,
                   "right": 1004,
-                  "top": 185.72,
-                  "bottom": 229.72,
+                  "top": 185.54,
+                  "bottom": 229.54,
                   "width": 74,
                   "height": 44
                 },
                 {
                   "left": 1010,
                   "right": 1084,
-                  "top": 185.53,
-                  "bottom": 229.53,
+                  "top": 185.75,
+                  "bottom": 229.75,
                   "width": 74,
                   "height": 44
                 },
                 {
                   "left": 1090,
                   "right": 1164,
-                  "top": 185.5,
-                  "bottom": 229.5,
+                  "top": 185.7,
+                  "bottom": 229.7,
                   "width": 74,
                   "height": 44
                 },
@@ -1765,8 +1765,8 @@
               "activeCheck": {
                 "left": 989,
                 "right": 1001,
-                "top": 188.72,
-                "bottom": 200.72,
+                "top": 188.54,
+                "bottom": 200.54,
                 "width": 12,
                 "height": 12
               },
@@ -1844,24 +1844,24 @@
                 {
                   "left": 930,
                   "right": 1004,
-                  "top": 185.75,
-                  "bottom": 229.75,
+                  "top": 185.72,
+                  "bottom": 229.72,
                   "width": 74,
                   "height": 44
                 },
                 {
                   "left": 1010,
                   "right": 1084,
-                  "top": 185.62,
-                  "bottom": 229.62,
+                  "top": 185.75,
+                  "bottom": 229.75,
                   "width": 74,
                   "height": 44
                 },
                 {
                   "left": 1090,
                   "right": 1164,
-                  "top": 185.26,
-                  "bottom": 229.26,
+                  "top": 185.35,
+                  "bottom": 229.35,
                   "width": 74,
                   "height": 44
                 },
@@ -1877,8 +1877,8 @@
               "activeCheck": {
                 "left": 989,
                 "right": 1001,
-                "top": 188.75,
-                "bottom": 200.75,
+                "top": 188.72,
+                "bottom": 200.72,
                 "width": 12,
                 "height": 12
               },
@@ -1964,16 +1964,16 @@
                 {
                   "left": 108,
                   "right": 192,
-                  "top": 255.65,
-                  "bottom": 299.65,
+                  "top": 255.67,
+                  "bottom": 299.67,
                   "width": 84,
                   "height": 44
                 },
                 {
                   "left": 198,
                   "right": 282,
-                  "top": 255.2,
-                  "bottom": 299.2,
+                  "top": 255.11,
+                  "bottom": 299.11,
                   "width": 84,
                   "height": 44
                 },
@@ -2084,8 +2084,8 @@
                 {
                   "left": 198,
                   "right": 282,
-                  "top": 255.45,
-                  "bottom": 299.45,
+                  "top": 255.47,
+                  "bottom": 299.47,
                   "width": 84,
                   "height": 44
                 },
@@ -2208,8 +2208,8 @@
         "readerTokenRequests": 2,
         "pdfRequests": 4,
         "readerOpened": true,
-        "openNewHref": "http://127.0.0.1:62848/api/library-reader-smoke/green-book.pdf",
-        "embedUrl": "http://127.0.0.1:62848/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+        "openNewHref": "http://127.0.0.1:58176/api/library-reader-smoke/green-book.pdf",
+        "embedUrl": "http://127.0.0.1:58176/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
         "closedByButton": true,
         "closedByEscape": true
       },
@@ -2218,7 +2218,7 @@
         "status": "pass",
         "problemId": "quantguide-place-or-take",
         "problemTitle": "放置或取出",
-        "todoTitle": "Cross-module QuantGuide review 1783801822671: 放置或取出",
+        "todoTitle": "Cross-module QuantGuide review 1784273342025: 放置或取出",
         "resumeTextLength": 237,
         "settings": {
           "llmEndpoint": "http://127.0.0.1:8789/interview",
@@ -2240,7 +2240,7 @@
       {
         "name": "account profile save and reload persistence",
         "status": "pass",
-        "profileName": "Browser Smoke 1783801851820",
+        "profileName": "Browser Smoke 1784273385215",
         "country": "unitedStates",
         "region": "California",
         "graduationTerm": "2028-05",
@@ -2252,7 +2252,7 @@
         "wrongPasswordRejected": true,
         "oldEmailRejected": true,
         "oldEmail": "browser-route-smoke@quantgym.local",
-        "newEmail": "browser-route-smoke+email-1783801857653@quantgym.local",
+        "newEmail": "browser-route-smoke+email-1784273393330@quantgym.local",
         "passwordHashRotated": true,
         "reloginSucceeded": true,
         "reloginPath": "/"
@@ -2262,7 +2262,7 @@
         "status": "pass",
         "avatarDataUrl": true,
         "avatarCleared": true,
-        "resumeFileName": "browser-smoke-resume-1783801869827.txt",
+        "resumeFileName": "browser-smoke-resume-1784273411945.txt",
         "resumeTextLength": 215,
         "reloaded": true
       },
@@ -2283,8 +2283,8 @@
         "resumeUploadPersisted": true,
         "noHorizontalOverflow": true,
         "reloaded": true,
-        "profileName": "Mobile Account 1783801887765",
-        "resumeFileName": "mobile-account-resume-1783801887765.txt"
+        "profileName": "Mobile Account 1784273436457",
+        "resumeFileName": "mobile-account-resume-1784273436457.txt"
       },
       {
         "name": "settings language switch syncs URL and persists reload",
@@ -2356,7 +2356,7 @@
         "payloadIncludesCommunity": true,
         "payloadIncludesAccount": true,
         "statusUpdated": true,
-        "lastSyncAt": "2026-07-11T20:31:58.237Z"
+        "lastSyncAt": "2026-07-17T07:31:20.441Z"
       },
       {
         "name": "mobile settings config and backup controls avoid overflow",
@@ -2368,7 +2368,7 @@
         "exportDownloadWorks": true,
         "noHorizontalOverflow": true,
         "reloaded": true,
-        "exportedFilename": "quantgym-Mobile Account 1783801887765-2026-07-11.json"
+        "exportedFilename": "quantgym-Mobile Account 1784273436457-2026-07-17.json"
       },
       {
         "name": "settings rejects invalid backup files without changing state",
@@ -2386,16 +2386,16 @@
         "exportedThreadIncluded": true,
         "postRestored": true,
         "threadRestored": true,
-        "threadId": "thread-settings-backup-community-1783801935060"
+        "threadId": "thread-settings-backup-community-1784273507389"
       },
       {
         "name": "settings backup export, import, and reset state",
         "status": "pass",
         "resetPrompt": "清空当前账户的训练记录？已连接云端时也会同步为空。",
-        "exportedFilename": "quantgym-Mobile Account 1783801887765-2026-07-11.json",
-        "importedResumeFile": "settings-imported-resume-1783801947381.txt",
-        "importedResourceId": "settings-imported-resource-1783801947381",
-        "importedCourseId": "settings-imported-course-1783801947381",
+        "exportedFilename": "quantgym-Mobile Account 1784273436457-2026-07-17.json",
+        "importedResumeFile": "settings-imported-resume-1784273525400.txt",
+        "importedResourceId": "settings-imported-resource-1784273525400",
+        "importedCourseId": "settings-imported-course-1784273525400",
         "resetClearedImport": true
       }
     ]
@@ -2424,7 +2424,7 @@
     "name": "protected route redirects to auth and local email auth works",
     "status": "pass",
     "localEmailAuth": {
-      "email": "browser-auth-1783801358315-b9kacz@quantgym.local",
+      "email": "browser-auth-1784272660808-lc9n7r@quantgym.local",
       "redirectedToLogin": true,
       "accountStatusChecked": true,
       "registrationFormShown": true,
@@ -2440,7 +2440,7 @@
       "resetSucceeded": true,
       "resetOldPasswordRejected": true,
       "resetNewPasswordLoginSucceeded": true,
-      "accountId": "d9fedaa0-49e9-4f1e-a261-c644cbeb8004",
+      "accountId": "96e8f0e9-3335-4452-8198-1761b8b9b623",
       "reloginPath": "/"
     },
     "path": "/login",
@@ -2462,12 +2462,12 @@
       "kind": "requestfailed",
       "method": "POST",
       "errorText": "net::ERR_FAILED",
-      "url": "http://127.0.0.1:62848/api/auth/verification-code"
+      "url": "http://127.0.0.1:58176/api/auth/verification-code"
     },
     {
       "id": "registration verification fallback",
       "kind": "console",
-      "url": "http://127.0.0.1:62848/api/auth/verification-code",
+      "url": "http://127.0.0.1:58176/api/auth/verification-code",
       "text": "Failed to load resource: net::ERR_FAILED"
     },
     {
@@ -2475,12 +2475,12 @@
       "kind": "response",
       "method": "POST",
       "status": 401,
-      "url": "http://127.0.0.1:62848/api/auth/login"
+      "url": "http://127.0.0.1:58176/api/auth/login"
     },
     {
       "id": "reset old password rejection",
       "kind": "console",
-      "url": "http://127.0.0.1:62848/api/auth/login",
+      "url": "http://127.0.0.1:58176/api/auth/login",
       "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
     },
     {
@@ -2494,6 +2494,22 @@
       "kind": "console",
       "url": "http://127.0.0.1:59991/interview",
       "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "preview PDF abort after successful response",
+      "kind": "requestfailed",
+      "method": "GET",
+      "errorText": "net::ERR_ABORTED",
+      "url": "http://127.0.0.1:58176/api/library-reader-smoke/green-book.pdf",
+      "diagnostics": {
+        "navigationChanged": false,
+        "frameDetached": false,
+        "contextClosing": false,
+        "successfulResponse": true,
+        "domImageRemoved": false,
+        "domImageReferenceAtRequest": null,
+        "domImageReferenceAtFailure": null
+      }
     },
     {
       "id": "account old-email cloud fallback",
@@ -2537,14 +2553,14 @@
     {
       "id": "settings malformed backup rejection",
       "kind": "console",
-      "url": "http://127.0.0.1:62848/assets/app-state-api-DYG3qwzo.js",
-      "text": "[QuantGym] Failed to import backup SyntaxError: Unexpected end of JSON input\n    at JSON.parse (<anonymous>)\n    at vn (http://127.0.0.1:62848/assets/app-state-api-DYG3qwzo.js:1:62374)\n    at bn (http://127.0.0.1:62848/assets/app-state-api-DYG3qwzo.js:1:62938)\n    at async Object.o [as importState] (http://127.0.0.1:62848/assets/app-state-api-DYG3qwzo.js:1:66561)"
+      "url": "http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js",
+      "text": "[QuantGym] Failed to import backup SyntaxError: Unexpected end of JSON input\n    at JSON.parse (<anonymous>)\n    at Dn (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:64308)\n    at kn (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:64872)\n    at async Object.o [as importState] (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:68495)"
     },
     {
       "id": "settings non-object backup rejection",
       "kind": "console",
-      "url": "http://127.0.0.1:62848/assets/app-state-api-DYG3qwzo.js",
-      "text": "[QuantGym] Failed to import backup Error: Backup payload must be a JSON object.\n    at vn (http://127.0.0.1:62848/assets/app-state-api-DYG3qwzo.js:1:62400)\n    at bn (http://127.0.0.1:62848/assets/app-state-api-DYG3qwzo.js:1:62938)\n    at async Object.o [as importState] (http://127.0.0.1:62848/assets/app-state-api-DYG3qwzo.js:1:66561)"
+      "url": "http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js",
+      "text": "[QuantGym] Failed to import backup Error: Backup payload must be a JSON object.\n    at Dn (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:64334)\n    at kn (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:64872)\n    at async Object.o [as importState] (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:68495)"
     }
   ],
   "canonicalFixtureRequests": [

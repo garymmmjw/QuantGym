@@ -1,10 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
+import { createHash } from "node:crypto";
 
 const root = process.cwd();
 const assetRoot = path.join(root, "assets", "generated", "playful-precision");
 const optimizedRoot = path.join(assetRoot, "optimized");
+const designManifestPath = path.join(assetRoot, "manifest.json");
+const runtimeManifestPath = path.join(assetRoot, "quanty-runtime-manifest.json");
 const srcRoot = path.join(root, "src");
 const publicPagesRoot = path.join(root, "public", "pages");
 const quantyAssetModulePath = path.join(srcRoot, "lib", "quantyAssets.js");
@@ -13,26 +16,27 @@ const authShellPath = path.join(srcRoot, "components", "shell", "AuthShell.jsx")
 
 const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const derivativeWidths = Object.freeze([160, 320, 640]);
+const writeRuntimeManifest = process.argv.includes("--write-runtime-manifest");
 const pngStringLiteralPattern = /(["'`])([^"'`\r\n]*\.png(?:[?#][^"'`\r\n]*)?)\1/g;
 const sourceExtensions = new Set([".css", ".html", ".js", ".jsx", ".json", ".mjs", ".scss", ".ts", ".tsx"]);
 
 const quantyAssets = Object.freeze([
-  { name: "hero", slug: "hero-wave", master: "mascot-hero-v6-hq.png", width: 1114, height: 1412, newHq: true },
-  { name: "trophy", slug: "trophy", master: "mascot-trophy-v3-hq.png", width: 1113, height: 1414, newHq: true },
-  { name: "calculator", slug: "calculator", master: "mascot-calculator-v3-hq.png", width: 1112, height: 1415, newHq: true },
-  { name: "teacher", slug: "teacher", master: "mascot-teacher-v4-hq.png", width: 1106, height: 1422, newHq: true },
-  { name: "fire", slug: "fire", master: "mascot-fire-v3-hq.png", width: 1112, height: 1414, newHq: true },
-  { name: "laptop", slug: "laptop", master: "mascot-laptop-v3-hq.png", width: 1113, height: 1414, newHq: true },
-  { name: "levelup", slug: "levelup", master: "mascot-levelup-v2-hq.png", width: 1110, height: 1417, newHq: true },
-  { name: "happy", slug: "avatar-happy", master: "avatar-happy-v3-hq.png", width: 1113, height: 1414, newHq: true },
-  { name: "focused", slug: "avatar-focused", master: "avatar-focused-v3-hq.png", width: 1112, height: 1415, newHq: true },
-  { name: "wow", slug: "avatar-wow", master: "avatar-wow-v4-hq.png", width: 1112, height: 1414, newHq: true },
-  { name: "wink", slug: "avatar-wink", master: "avatar-wink-v2.png", width: 1100, height: 1400, newHq: false },
-  { name: "interview", slug: "interview", master: "mascot-interview.png", width: 1100, height: 1400, newHq: false },
-  { name: "oops", slug: "oops", master: "mascot-oops.png", width: 1100, height: 1400, newHq: false },
-  { name: "poker", slug: "poker", master: "mascot-poker.png", width: 1100, height: 1400, newHq: false },
-  { name: "search", slug: "search", master: "mascot-search.png", width: 1100, height: 1400, newHq: false },
-  { name: "sleep", slug: "sleep", master: "mascot-sleep.png", width: 1100, height: 1400, newHq: false }
+  { name: "hero", role: "auth-hero", category: "mascot", slug: "hero-wave", master: "mascot-hero-v6-hq.png", width: 1114, height: 1412, newHq: true },
+  { name: "trophy", role: "achievement-reward", category: "mascot", slug: "trophy", master: "mascot-trophy-v3-hq.png", width: 1113, height: 1414, newHq: true },
+  { name: "calculator", role: "calculator-practice", category: "mascot", slug: "calculator", master: "mascot-calculator-v3-hq.png", width: 1112, height: 1415, newHq: true },
+  { name: "teacher", role: "learning-coach", category: "mascot", slug: "teacher", master: "mascot-teacher-v4-hq.png", width: 1106, height: 1422, newHq: true },
+  { name: "fire", role: "streak-reward", category: "mascot", slug: "fire", master: "mascot-fire-v3-hq.png", width: 1112, height: 1414, newHq: true },
+  { name: "laptop", role: "workspace-study", category: "mascot", slug: "laptop", master: "mascot-laptop-v3-hq.png", width: 1113, height: 1414, newHq: true },
+  { name: "levelup", role: "level-up-reward", category: "mascot", slug: "levelup", master: "mascot-levelup-v2-hq.png", width: 1110, height: 1417, newHq: true },
+  { name: "happy", role: "avatar-happy", category: "avatar", slug: "avatar-happy", master: "avatar-happy-v3-hq.png", width: 1113, height: 1414, newHq: true },
+  { name: "focused", role: "avatar-focused", category: "avatar", slug: "avatar-focused", master: "avatar-focused-v3-hq.png", width: 1112, height: 1415, newHq: true },
+  { name: "wow", role: "avatar-surprised", category: "avatar", slug: "avatar-wow", master: "avatar-wow-v4-hq.png", width: 1112, height: 1414, newHq: true },
+  { name: "wink", role: "avatar-wink", category: "avatar", slug: "avatar-wink", master: "avatar-wink-v2.png", width: 1100, height: 1400, newHq: false },
+  { name: "interview", role: "interview-practice", category: "mascot", slug: "interview", master: "mascot-interview.png", width: 1100, height: 1400, newHq: false },
+  { name: "oops", role: "error-recovery", category: "mascot", slug: "oops", master: "mascot-oops.png", width: 1100, height: 1400, newHq: false },
+  { name: "poker", role: "poker-practice", category: "mascot", slug: "poker", master: "mascot-poker.png", width: 1100, height: 1400, newHq: false },
+  { name: "search", role: "search-empty-state", category: "mascot", slug: "search", master: "mascot-search.png", width: 1100, height: 1400, newHq: false },
+  { name: "sleep", role: "idle-empty-state", category: "mascot", slug: "sleep", master: "mascot-sleep.png", width: 1100, height: 1400, newHq: false }
 ]);
 
 const legacyQuantyFilenames = Object.freeze({
@@ -64,6 +68,10 @@ const webpSummaries = [];
 
 function repoPath(filePath) {
   return path.relative(root, filePath).split(path.sep).join("/");
+}
+
+function sha256(data) {
+  return createHash("sha256").update(data).digest("hex");
 }
 
 function fail(check, target, message, details = undefined) {
@@ -297,6 +305,14 @@ function decodePng(filePath, asset) {
   return {
     name: asset.name,
     master: asset.master,
+    width,
+    height,
+    bytes: data.length,
+    sha256: sha256(data),
+    alpha: {
+      present: true,
+      transparentBackground: cornerAlpha.length === 4 && cornerAlpha.every((alpha) => alpha === 0)
+    },
     dimensions: `${width}x${height}`,
     transparentRatio,
     foregroundRatio,
@@ -310,8 +326,10 @@ function uint24le(data, offset) {
   return data[offset] | (data[offset + 1] << 8) | (data[offset + 2] << 16);
 }
 
-function readWebpDimensions(data) {
+function readWebpMetadata(data) {
   let offset = 12;
+  let dimensions = null;
+  let hasAlpha = false;
   while (offset + 8 <= data.length) {
     const type = data.toString("ascii", offset, offset + 4);
     const chunkLength = data.readUInt32LE(offset + 4);
@@ -319,17 +337,22 @@ function readWebpDimensions(data) {
     const chunkEnd = payload + chunkLength;
     if (chunkEnd > data.length) return null;
     if (type === "VP8X" && chunkLength >= 10) {
-      return { width: uint24le(data, payload + 4) + 1, height: uint24le(data, payload + 7) + 1 };
+      dimensions = {
+        width: uint24le(data, payload + 4) + 1,
+        height: uint24le(data, payload + 7) + 1
+      };
+      hasAlpha ||= Boolean(data[payload] & 0x10);
     }
     if (type === "VP8L" && chunkLength >= 5 && data[payload] === 0x2f) {
       const b1 = data[payload + 1];
       const b2 = data[payload + 2];
       const b3 = data[payload + 3];
       const b4 = data[payload + 4];
-      return {
+      dimensions ||= {
         width: 1 + b1 + ((b2 & 0x3f) << 8),
         height: 1 + (b2 >> 6) + (b3 << 2) + ((b4 & 0x0f) << 10)
       };
+      hasAlpha ||= Boolean(b4 & 0x10);
     }
     if (
       type === "VP8 "
@@ -338,14 +361,15 @@ function readWebpDimensions(data) {
       && data[payload + 4] === 0x01
       && data[payload + 5] === 0x2a
     ) {
-      return {
+      dimensions ||= {
         width: data.readUInt16LE(payload + 6) & 0x3fff,
         height: data.readUInt16LE(payload + 8) & 0x3fff
       };
     }
+    if (type === "ALPH") hasAlpha = true;
     offset = chunkEnd + (chunkLength % 2);
   }
-  return null;
+  return dimensions ? { ...dimensions, hasAlpha } : null;
 }
 
 function checkWebp(filePath, asset, candidateWidth) {
@@ -377,18 +401,27 @@ function checkWebp(filePath, asset, candidateWidth) {
     });
   }
 
-  const dimensions = readWebpDimensions(data);
+  const metadata = readWebpMetadata(data);
   const expectedHeight = Math.ceil((asset.height * candidateWidth) / asset.width);
-  if (!dimensions) {
+  if (!metadata) {
     fail(check, target, "WebP canvas dimensions could not be decoded");
-  } else if (dimensions.width !== candidateWidth || dimensions.height !== expectedHeight) {
+  } else if (metadata.width !== candidateWidth || metadata.height !== expectedHeight) {
     fail(check, target, "unexpected responsive WebP dimensions", {
       expected: `${candidateWidth}x${expectedHeight}`,
-      actual: `${dimensions.width}x${dimensions.height}`
+      actual: `${metadata.width}x${metadata.height}`
     });
   }
+  if (metadata && !metadata.hasAlpha) {
+    fail(check, target, "responsive WebP must preserve the transparent mascot background");
+  }
 
-  return { width: candidateWidth, bytes: data.length };
+  return {
+    width: metadata?.width ?? candidateWidth,
+    height: metadata?.height ?? expectedHeight,
+    bytes: data.length,
+    sha256: sha256(data),
+    alpha: { present: Boolean(metadata?.hasAlpha) }
+  };
 }
 
 function walkSourceFiles(directory) {
@@ -499,6 +532,111 @@ function checkSourceContracts() {
   }
 }
 
+function buildRuntimeManifest() {
+  const designManifestData = readFile(designManifestPath, "runtime-manifest-source");
+  if (!designManifestData) return null;
+
+  let designManifest;
+  try {
+    designManifest = JSON.parse(designManifestData.toString("utf8"));
+  } catch (error) {
+    fail("runtime-manifest-source", repoPath(designManifestPath), "design reference manifest is not valid JSON", {
+      error: error.message
+    });
+    return null;
+  }
+
+  if (designManifest.assetCount !== 36 || !Array.isArray(designManifest.assets) || designManifest.assets.length !== 36) {
+    fail(
+      "runtime-manifest-source",
+      repoPath(designManifestPath),
+      "design reference manifest must retain its original 36-item inventory",
+      {
+        declaredAssetCount: designManifest.assetCount,
+        actualAssetCount: Array.isArray(designManifest.assets) ? designManifest.assets.length : null
+      }
+    );
+  }
+
+  const mastersByName = new Map(pngSummaries.map((summary) => [summary.name, summary]));
+  const variantsBySlug = new Map(webpSummaries.map((summary) => [summary.slug, summary.variants]));
+  if (mastersByName.size !== quantyAssets.length || variantsBySlug.size !== quantyAssets.length) return null;
+
+  return {
+    schemaVersion: 1,
+    kind: "quanty-runtime-assets",
+    hashAlgorithm: "sha256",
+    sourceDesignManifest: {
+      path: repoPath(designManifestPath),
+      assetCount: 36,
+      sha256: sha256(designManifestData)
+    },
+    variantWidths: [...derivativeWidths],
+    counts: {
+      logicalAssets: quantyAssets.length,
+      masters: quantyAssets.length,
+      optimizedVariants: quantyAssets.length * derivativeWidths.length
+    },
+    assets: quantyAssets.map((asset) => {
+      const master = mastersByName.get(asset.name);
+      const variants = variantsBySlug.get(asset.slug);
+      return {
+        logicalName: asset.name,
+        role: asset.role,
+        category: asset.category,
+        slug: asset.slug,
+        newHq: asset.newHq,
+        master: {
+          path: repoPath(path.join(assetRoot, asset.master)),
+          mimeType: "image/png",
+          width: master.width,
+          height: master.height,
+          bytes: master.bytes,
+          sha256: master.sha256,
+          alpha: master.alpha
+        },
+        variants: variants.map((variant) => ({
+          path: repoPath(path.join(optimizedRoot, `${asset.slug}-${variant.width}.webp`)),
+          mimeType: "image/webp",
+          width: variant.width,
+          height: variant.height,
+          bytes: variant.bytes,
+          sha256: variant.sha256,
+          alpha: variant.alpha
+        }))
+      };
+    })
+  };
+}
+
+function canonicalManifestText(manifest) {
+  return `${JSON.stringify(manifest, null, 2)}\n`;
+}
+
+function updateRuntimeManifest(manifest) {
+  try {
+    fs.writeFileSync(runtimeManifestPath, canonicalManifestText(manifest));
+  } catch (error) {
+    fail("runtime-manifest", repoPath(runtimeManifestPath), "runtime manifest could not be written", {
+      error: error.message
+    });
+  }
+}
+
+function checkRuntimeManifest(manifest) {
+  const actualData = readFile(runtimeManifestPath, "runtime-manifest");
+  if (!actualData) return;
+  const expectedText = canonicalManifestText(manifest);
+  const actualText = actualData.toString("utf8");
+  if (actualText !== expectedText) {
+    fail("runtime-manifest", repoPath(runtimeManifestPath), "runtime manifest has drifted from the validated asset inventory", {
+      expectedSha256: sha256(Buffer.from(expectedText)),
+      actualSha256: sha256(actualData),
+      updateCommand: "npm run check:quanty-assets -- --write-runtime-manifest"
+    });
+  }
+}
+
 for (const asset of quantyAssets) {
   const summary = decodePng(path.join(assetRoot, asset.master), asset);
   if (summary) pngSummaries.push(summary);
@@ -551,6 +689,10 @@ for (const asset of quantyAssets) {
 
 checkSourceContracts();
 
+const runtimeManifest = buildRuntimeManifest();
+if (runtimeManifest && writeRuntimeManifest && failures.length === 0) updateRuntimeManifest(runtimeManifest);
+if (runtimeManifest) checkRuntimeManifest(runtimeManifest);
+
 if (failures.length > 0) {
   console.error(JSON.stringify({
     status: "fail",
@@ -576,6 +718,14 @@ console.log(JSON.stringify({
     validated: webpSummaries.reduce((total, asset) => total + asset.variants.length, 0),
     widths: derivativeWidths,
     directoryEntryCount: optimizedEntries.length
+  },
+  runtimeManifest: {
+    path: repoPath(runtimeManifestPath),
+    sha256: sha256(Buffer.from(canonicalManifestText(runtimeManifest))),
+    sourceDesignAssetCount: runtimeManifest.sourceDesignManifest.assetCount,
+    logicalAssets: runtimeManifest.counts.logicalAssets,
+    masters: runtimeManifest.counts.masters,
+    optimizedVariants: runtimeManifest.counts.optimizedVariants
   },
   sourceContracts: {
     responsiveImageProps: ["srcSet", "sizes", "width", "height", "fetchPriority"],

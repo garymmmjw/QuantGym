@@ -25,11 +25,7 @@ const expectedAllowlist = {
     },
     {
       path: "docs/browser-audit-screenshots/323-release-readiness-summary.json",
-      message: "^(?:Route interactions nested gate must cover all routes when present|nested browser route smoke must check all routes|nested browser route smoke route pass count must match all routes|nested module ownership must cover every route module|nested module ownership manifest route count must match UI contracts|nested module ownership must use browser smoke that checked every route)$",
-    },
-    {
-      path: "docs/browser-audit-screenshots/328-browser-route-smoke-summary.json",
-      message: "^browser route smoke (?:must check all routes|route pass count must match all routes)$",
+      message: "^(?:Route interactions nested gate must cover all routes when present|nested browser route smoke must check all routes|nested browser route smoke route pass count must match all routes|nested browser route smoke must verify mobile shell module sheet remains usable|nested module ownership must cover every route module|nested module ownership manifest route count must match UI contracts|nested module ownership must use browser smoke that checked every route)$",
     },
     {
       path: "docs/browser-audit-screenshots/341-external-launch-blockers-summary.json",
@@ -71,11 +67,10 @@ const historicalFindings = [
   ["docs/browser-audit-screenshots/323-release-readiness-summary.json", "Route interactions nested gate must cover all routes when present"],
   ["docs/browser-audit-screenshots/323-release-readiness-summary.json", "nested browser route smoke must check all routes"],
   ["docs/browser-audit-screenshots/323-release-readiness-summary.json", "nested browser route smoke route pass count must match all routes"],
+  ["docs/browser-audit-screenshots/323-release-readiness-summary.json", "nested browser route smoke must verify mobile shell module sheet remains usable"],
   ["docs/browser-audit-screenshots/323-release-readiness-summary.json", "nested module ownership must cover every route module"],
   ["docs/browser-audit-screenshots/323-release-readiness-summary.json", "nested module ownership manifest route count must match UI contracts"],
   ["docs/browser-audit-screenshots/323-release-readiness-summary.json", "nested module ownership must use browser smoke that checked every route"],
-  ["docs/browser-audit-screenshots/328-browser-route-smoke-summary.json", "browser route smoke must check all routes"],
-  ["docs/browser-audit-screenshots/328-browser-route-smoke-summary.json", "browser route smoke route pass count must match all routes"],
   ["docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json", "deployed beta smoke must check all deployed routes"],
   ["docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json", "deployed beta smoke must pass all deployed routes"],
   ["docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json", "deployed beta smoke route result count must match expected routes"],

@@ -1153,9 +1153,8 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(mobileShellControls?.mobileViewport === true, `${label} must verify mobile shell viewport`);
   expect(mobileShellControls?.noHorizontalOverflow === true, `${label} must verify mobile shell has no horizontal overflow`);
   expect(mobileShellControls?.searchUsable === true, `${label} must verify mobile shell search remains usable`);
-  expect(mobileShellControls?.compactActions === true, `${label} must verify mobile shell compact action layout`);
-  expect(mobileShellControls?.sidebarCollapsed === true, `${label} must verify mobile shell sidebar collapse`);
-  expect(mobileShellControls?.reloadPersisted === true, `${label} must verify mobile shell sidebar reload persistence`);
+  expect(mobileShellControls?.moduleSheetUsable === true, `${label} must verify mobile shell module sheet remains usable`);
+  expect(mobileShellControls?.reloadPersisted === true, `${label} must verify mobile shell module sheet reload state`);
   expect(mobileShellControls?.settingsShortcut === true, `${label} must verify mobile shell settings shortcut navigation`);
   const mobileModuleNav = findResult(data.interactions?.results, "mobile module nav groups open problems and library routes");
   expect(mobileModuleNav?.status === "pass", `${label} must verify mobile module nav groups open Problems and Library routes`);

@@ -155,10 +155,8 @@ def build_reference(
         "textFiles": text_files,
         "excludedPrefixes": EXCLUDED_PREFIXES,
     }
-    (out_dir / "source-manifest.json").write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-        newline="\n",
+    (out_dir / "source-manifest.json").write_bytes(
+        (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     )
     return manifest
 

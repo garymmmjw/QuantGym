@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-07-12T05:59:54.956Z",
+  "generatedAt": "2026-07-17T07:46:44.556Z",
   "status": "captured-with-findings",
   "filteredRun": false,
-  "durationMs": 116558,
+  "durationMs": 107699,
   "expectedRuns": 12,
   "runs": {
     "checked": 12,
@@ -35,13 +35,13 @@
   "metadata": {
     "browser": "Google Chrome via playwright-core",
     "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "chromeVersion": "149.0.7827.201",
+    "chromeVersion": "150.0.7871.125",
     "locale": "zh-CN",
     "buildMode": "isolated-production-preview",
-    "distRuntimeFingerprint": "998c41ec1d7fd97a89b7d460c4eb6428aa5116e32cc9db008fd79a4de40595f8",
+    "distRuntimeFingerprint": "32ecdc18187916eacc9b68ad484996f308ef67c0629cf652b86d97daf55dff2d",
     "fingerprintAlgorithm": "sha256",
     "provenance": {
-      "buildCommit": "3a227b1719bb4b5e1577c3369ea87c293a2693b8",
+      "buildCommit": "2424c83ae7b73f29dee1fc381c85b4bb39d5d7af",
       "buildBranch": "codex/frontend-v2-preview",
       "buildSource": "local-git"
     },
@@ -61,7 +61,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 7684,
+      "value": 5684,
       "target": 2500,
       "caseId": "auth--light--laptop--cold",
       "surfaceId": "system:auth",
@@ -70,17 +70,8 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 5404,
+      "value": 5100,
       "target": 2500,
-      "caseId": "auth--light--mobile--cold",
-      "surfaceId": "system:auth",
-      "kind": "performance"
-    },
-    {
-      "id": "performance:cls",
-      "metric": "cls",
-      "value": 0.14613,
-      "target": 0.1,
       "caseId": "auth--light--mobile--cold",
       "surfaceId": "system:auth",
       "kind": "performance"
@@ -88,7 +79,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 9128,
+      "value": 6564,
       "target": 2500,
       "caseId": "overview--light--laptop--cold",
       "surfaceId": "route:overview",
@@ -97,7 +88,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 10780,
+      "value": 6776,
       "target": 2500,
       "caseId": "overview--light--mobile--cold",
       "surfaceId": "route:overview",
@@ -106,7 +97,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 5916,
+      "value": 6620,
       "target": 2500,
       "caseId": "problems--light--laptop--cold",
       "surfaceId": "route:problems",
@@ -115,7 +106,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 6576,
+      "value": 5452,
       "target": 2500,
       "caseId": "problems--light--mobile--cold",
       "surfaceId": "route:problems",
@@ -124,7 +115,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 6832,
+      "value": 5856,
       "target": 2500,
       "caseId": "interview--light--laptop--cold",
       "surfaceId": "route:interview",
@@ -133,7 +124,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 6360,
+      "value": 6236,
       "target": 2500,
       "caseId": "interview--light--mobile--cold",
       "surfaceId": "route:interview",
@@ -142,7 +133,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 5776,
+      "value": 6364,
       "target": 2500,
       "caseId": "league--light--laptop--cold",
       "surfaceId": "route:league",
@@ -151,7 +142,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 8648,
+      "value": 5456,
       "target": 2500,
       "caseId": "league--light--mobile--cold",
       "surfaceId": "route:league",
@@ -160,7 +151,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 5968,
+      "value": 5928,
       "target": 2500,
       "caseId": "messages--light--laptop--cold",
       "surfaceId": "route:messages",
@@ -169,7 +160,7 @@
     {
       "id": "performance:lcp",
       "metric": "lcp",
-      "value": 5664,
+      "value": 5236,
       "target": 2500,
       "caseId": "messages--light--mobile--cold",
       "surfaceId": "route:messages",
@@ -178,7 +169,7 @@
     {
       "id": "bundle:initial-js-gzip",
       "kind": "bundle",
-      "value": 282659,
+      "value": 283536,
       "target": 184320
     }
   ],
@@ -201,7 +192,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 7684,
+          "value": 5684,
           "target": 2500,
           "caseId": "auth--light--laptop--cold",
           "surfaceId": "system:auth",
@@ -212,19 +203,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 2.1,
-          "responseMs": 0.8,
-          "domContentLoadedMs": 6492.8,
-          "loadEventMs": 6764.7,
-          "durationMs": 6764.7,
-          "transferredBytes": 1820
+          "ttfbMs": 2.4,
+          "responseMs": 1.7,
+          "domContentLoadedMs": 4311,
+          "loadEventMs": 4659.5,
+          "durationMs": 4659.5,
+          "transferredBytes": 1819
         },
-        "fcpMs": 7684,
-        "lcpMs": 7684,
+        "fcpMs": 5092,
+        "lcpMs": 5684,
         "cls": 0,
-        "resourceCount": 25,
-        "transferredBytes": 6941014,
-        "decodedBodyBytes": 19316635,
+        "resourceCount": 24,
+        "transferredBytes": 3568502,
+        "decodedBodyBytes": 15948866,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -234,11 +225,11 @@
           "link": 2,
           "script": 10,
           "other": 11,
-          "img": 2
+          "img": 1
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "auth email input to two animation frames",
-        "labInteractionLatencyMs": 19.4
+        "labInteractionLatencyMs": 11.5
       },
       "errors": {
         "console": [],
@@ -264,17 +255,8 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 5404,
+          "value": 5100,
           "target": 2500,
-          "caseId": "auth--light--mobile--cold",
-          "surfaceId": "system:auth",
-          "kind": "performance"
-        },
-        {
-          "id": "performance:cls",
-          "metric": "cls",
-          "value": 0.14613,
-          "target": 0.1,
           "caseId": "auth--light--mobile--cold",
           "surfaceId": "system:auth",
           "kind": "performance"
@@ -284,19 +266,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 2.2,
-          "responseMs": 0.3,
-          "domContentLoadedMs": 4276.5,
-          "loadEventMs": 4565.1,
-          "durationMs": 4565.1,
-          "transferredBytes": 1820
+          "ttfbMs": 1.7,
+          "responseMs": 1.5,
+          "domContentLoadedMs": 3819.2,
+          "loadEventMs": 4155,
+          "durationMs": 4155,
+          "transferredBytes": 1819
         },
-        "fcpMs": 4836,
-        "lcpMs": 5404,
-        "cls": 0.14613,
-        "resourceCount": 25,
-        "transferredBytes": 6941014,
-        "decodedBodyBytes": 19316635,
+        "fcpMs": 4468,
+        "lcpMs": 5100,
+        "cls": 0,
+        "resourceCount": 24,
+        "transferredBytes": 3568502,
+        "decodedBodyBytes": 15948866,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -306,11 +288,11 @@
           "link": 2,
           "script": 10,
           "other": 11,
-          "img": 2
+          "img": 1
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "auth email input to two animation frames",
-        "labInteractionLatencyMs": 17.4
+        "labInteractionLatencyMs": 13.3
       },
       "errors": {
         "console": [],
@@ -336,7 +318,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 9128,
+          "value": 6564,
           "target": 2500,
           "caseId": "overview--light--laptop--cold",
           "surfaceId": "route:overview",
@@ -347,19 +329,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 2.2,
-          "responseMs": 0.3,
-          "domContentLoadedMs": 4852.5,
-          "loadEventMs": 5135,
-          "durationMs": 5135,
-          "transferredBytes": 1820
+          "ttfbMs": 1.5,
+          "responseMs": 0.4,
+          "domContentLoadedMs": 4737.1,
+          "loadEventMs": 6981.3,
+          "durationMs": 6981.3,
+          "transferredBytes": 1819
         },
-        "fcpMs": 6436,
-        "lcpMs": 9128,
-        "cls": 0.0203,
-        "resourceCount": 42,
-        "transferredBytes": 12310880,
-        "decodedBodyBytes": 24703766,
+        "fcpMs": 6564,
+        "lcpMs": 6564,
+        "cls": 0.02031,
+        "resourceCount": 39,
+        "transferredBytes": 3740189,
+        "decodedBodyBytes": 16138378,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -369,13 +351,13 @@
           "link": 2,
           "script": 12,
           "other": 11,
-          "img": 14,
+          "img": 11,
           "fetch": 2,
           "css": 1
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "todo dock open to two animation frames",
-        "labInteractionLatencyMs": 14.4,
+        "labInteractionLatencyMs": 11,
         "observedExpandedState": "true"
       },
       "errors": {
@@ -402,7 +384,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 10780,
+          "value": 6776,
           "target": 2500,
           "caseId": "overview--light--mobile--cold",
           "surfaceId": "route:overview",
@@ -413,19 +395,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 1.5,
-          "responseMs": 0.3,
-          "domContentLoadedMs": 6612.1,
-          "loadEventMs": 6947.1,
-          "durationMs": 6947.1,
-          "transferredBytes": 1820
+          "ttfbMs": 2.6,
+          "responseMs": 1.4,
+          "domContentLoadedMs": 5020.6,
+          "loadEventMs": 5373.4,
+          "durationMs": 5373.4,
+          "transferredBytes": 1819
         },
-        "fcpMs": 8128,
-        "lcpMs": 10780,
+        "fcpMs": 6776,
+        "lcpMs": 6776,
         "cls": 0.01452,
-        "resourceCount": 39,
-        "transferredBytes": 9632500,
-        "decodedBodyBytes": 22026286,
+        "resourceCount": 37,
+        "transferredBytes": 3713651,
+        "decodedBodyBytes": 16112440,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -435,13 +417,13 @@
           "link": 2,
           "script": 12,
           "other": 11,
-          "img": 11,
+          "img": 9,
           "fetch": 2,
           "css": 1
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "mobile module sheet open to two animation frames",
-        "labInteractionLatencyMs": 18.5,
+        "labInteractionLatencyMs": 15.3,
         "observedExpandedState": "true"
       },
       "errors": {
@@ -468,7 +450,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 5916,
+          "value": 6620,
           "target": 2500,
           "caseId": "problems--light--laptop--cold",
           "surfaceId": "route:problems",
@@ -479,19 +461,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 2.4,
-          "responseMs": 0.3,
-          "domContentLoadedMs": 4409.5,
-          "loadEventMs": 4676.5,
-          "durationMs": 4676.5,
-          "transferredBytes": 1820
+          "ttfbMs": 2,
+          "responseMs": 2.1,
+          "domContentLoadedMs": 4889.6,
+          "loadEventMs": 5227,
+          "durationMs": 5227,
+          "transferredBytes": 1819
         },
-        "fcpMs": 5904,
-        "lcpMs": 5916,
+        "fcpMs": 6620,
+        "lcpMs": 6620,
         "cls": 0.00002,
-        "resourceCount": 36,
-        "transferredBytes": 10098989,
-        "decodedBodyBytes": 22499500,
+        "resourceCount": 35,
+        "transferredBytes": 3662691,
+        "decodedBodyBytes": 16067939,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -501,13 +483,13 @@
           "link": 2,
           "script": 14,
           "other": 11,
-          "img": 6,
+          "img": 5,
           "fetch": 2,
           "css": 1
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "todo dock open to two animation frames",
-        "labInteractionLatencyMs": 8.2,
+        "labInteractionLatencyMs": 10.5,
         "observedExpandedState": "true"
       },
       "errors": {
@@ -534,7 +516,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 6576,
+          "value": 5452,
           "target": 2500,
           "caseId": "problems--light--mobile--cold",
           "surfaceId": "route:problems",
@@ -545,19 +527,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 1.4,
+          "ttfbMs": 2.5,
           "responseMs": 0.3,
-          "domContentLoadedMs": 4411.5,
-          "loadEventMs": 4676.8,
-          "durationMs": 4676.8,
-          "transferredBytes": 1820
+          "domContentLoadedMs": 3729.7,
+          "loadEventMs": 4068.4,
+          "durationMs": 4068.4,
+          "transferredBytes": 1819
         },
-        "fcpMs": 5852,
-        "lcpMs": 6576,
+        "fcpMs": 5452,
+        "lcpMs": 5452,
         "cls": 0,
-        "resourceCount": 34,
-        "transferredBytes": 7434953,
-        "decodedBodyBytes": 19836064,
+        "resourceCount": 33,
+        "transferredBytes": 3643035,
+        "decodedBodyBytes": 16048883,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -567,13 +549,13 @@
           "link": 2,
           "script": 14,
           "other": 11,
-          "img": 4,
+          "img": 3,
           "fetch": 2,
           "css": 1
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "mobile module sheet open to two animation frames",
-        "labInteractionLatencyMs": 10.9,
+        "labInteractionLatencyMs": 11.3,
         "observedExpandedState": "true"
       },
       "errors": {
@@ -600,7 +582,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 6832,
+          "value": 5856,
           "target": 2500,
           "caseId": "interview--light--laptop--cold",
           "surfaceId": "route:interview",
@@ -611,19 +593,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 2.4,
-          "responseMs": 0.5,
-          "domContentLoadedMs": 4921,
-          "loadEventMs": 5192.6,
-          "durationMs": 5192.6,
-          "transferredBytes": 1820
+          "ttfbMs": 1.1,
+          "responseMs": 0.4,
+          "domContentLoadedMs": 3542.8,
+          "loadEventMs": 3879.6,
+          "durationMs": 3879.6,
+          "transferredBytes": 1819
         },
-        "fcpMs": 6384,
-        "lcpMs": 6832,
+        "fcpMs": 5288,
+        "lcpMs": 5856,
         "cls": 0.00002,
-        "resourceCount": 35,
-        "transferredBytes": 11339576,
-        "decodedBodyBytes": 23735000,
+        "resourceCount": 34,
+        "transferredBytes": 3698517,
+        "decodedBodyBytes": 16098519,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -633,13 +615,13 @@
           "link": 2,
           "script": 12,
           "other": 11,
-          "img": 7,
+          "img": 6,
           "fetch": 2,
           "css": 1
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "todo dock open to two animation frames",
-        "labInteractionLatencyMs": 10.9,
+        "labInteractionLatencyMs": 13.6,
         "observedExpandedState": "true"
       },
       "errors": {
@@ -666,7 +648,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 6360,
+          "value": 6236,
           "target": 2500,
           "caseId": "interview--light--mobile--cold",
           "surfaceId": "route:interview",
@@ -677,19 +659,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 1.1,
-          "responseMs": 0.3,
-          "domContentLoadedMs": 4437.8,
-          "loadEventMs": 6831.3,
-          "durationMs": 6831.3,
-          "transferredBytes": 1820
+          "ttfbMs": 1.7,
+          "responseMs": 0.8,
+          "domContentLoadedMs": 4006.3,
+          "loadEventMs": 4344.2,
+          "durationMs": 4344.2,
+          "transferredBytes": 1819
         },
-        "fcpMs": 5892,
-        "lcpMs": 6360,
+        "fcpMs": 5736,
+        "lcpMs": 6236,
         "cls": 0,
-        "resourceCount": 33,
-        "transferredBytes": 8675540,
-        "decodedBodyBytes": 21071564,
+        "resourceCount": 32,
+        "transferredBytes": 3678861,
+        "decodedBodyBytes": 16079463,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -699,13 +681,13 @@
           "link": 2,
           "script": 12,
           "other": 11,
-          "img": 5,
+          "img": 4,
           "fetch": 2,
           "css": 1
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "mobile module sheet open to two animation frames",
-        "labInteractionLatencyMs": 14.6,
+        "labInteractionLatencyMs": 12.7,
         "observedExpandedState": "true"
       },
       "errors": {
@@ -732,7 +714,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 5776,
+          "value": 6364,
           "target": 2500,
           "caseId": "league--light--laptop--cold",
           "surfaceId": "route:league",
@@ -743,19 +725,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 6.6,
+          "ttfbMs": 2.8,
           "responseMs": 0.5,
-          "domContentLoadedMs": 3429.3,
-          "loadEventMs": 3740.5,
-          "durationMs": 3740.5,
-          "transferredBytes": 1820
+          "domContentLoadedMs": 3521.6,
+          "loadEventMs": 3842.6,
+          "durationMs": 3842.6,
+          "transferredBytes": 1819
         },
-        "fcpMs": 4988,
-        "lcpMs": 5776,
-        "cls": 0.00086,
-        "resourceCount": 44,
-        "transferredBytes": 21204841,
-        "decodedBodyBytes": 33582001,
+        "fcpMs": 5232,
+        "lcpMs": 6364,
+        "cls": 0.00008,
+        "resourceCount": 42,
+        "transferredBytes": 3894815,
+        "decodedBodyBytes": 16277036,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -765,13 +747,13 @@
           "link": 2,
           "script": 12,
           "other": 11,
-          "img": 16,
+          "img": 14,
           "fetch": 2,
           "css": 1
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "todo dock open to two animation frames",
-        "labInteractionLatencyMs": 9.7,
+        "labInteractionLatencyMs": 12,
         "observedExpandedState": "true"
       },
       "errors": {
@@ -798,7 +780,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 8648,
+          "value": 5456,
           "target": 2500,
           "caseId": "league--light--mobile--cold",
           "surfaceId": "route:league",
@@ -809,19 +791,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 2.1,
+          "ttfbMs": 1.4,
           "responseMs": 0.4,
-          "domContentLoadedMs": 6512.1,
-          "loadEventMs": 6781.1,
-          "durationMs": 6781.1,
-          "transferredBytes": 1820
+          "domContentLoadedMs": 3707.3,
+          "loadEventMs": 4065.8,
+          "durationMs": 4065.8,
+          "transferredBytes": 1819
         },
-        "fcpMs": 7992,
-        "lcpMs": 8648,
-        "cls": 0.00344,
-        "resourceCount": 42,
-        "transferredBytes": 18540805,
-        "decodedBodyBytes": 30918565,
+        "fcpMs": 5456,
+        "lcpMs": 5456,
+        "cls": 0,
+        "resourceCount": 41,
+        "transferredBytes": 3882621,
+        "decodedBodyBytes": 16265142,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -831,13 +813,13 @@
           "link": 2,
           "script": 12,
           "other": 11,
-          "img": 14,
+          "img": 13,
           "fetch": 2,
           "css": 1
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "mobile module sheet open to two animation frames",
-        "labInteractionLatencyMs": 12.3,
+        "labInteractionLatencyMs": 14.4,
         "observedExpandedState": "true"
       },
       "errors": {
@@ -864,7 +846,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 5968,
+          "value": 5928,
           "target": 2500,
           "caseId": "messages--light--laptop--cold",
           "surfaceId": "route:messages",
@@ -875,19 +857,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 2.1,
-          "responseMs": 0.3,
-          "domContentLoadedMs": 4028.4,
-          "loadEventMs": 6734.8,
-          "durationMs": 6734.8,
-          "transferredBytes": 1820
+          "ttfbMs": 2.3,
+          "responseMs": 2.3,
+          "domContentLoadedMs": 3689.4,
+          "loadEventMs": 4014.2,
+          "durationMs": 4014.2,
+          "transferredBytes": 1819
         },
-        "fcpMs": 5532,
-        "lcpMs": 5968,
+        "fcpMs": 5412,
+        "lcpMs": 5928,
         "cls": 0.00003,
-        "resourceCount": 39,
-        "transferredBytes": 14909021,
-        "decodedBodyBytes": 27289259,
+        "resourceCount": 37,
+        "transferredBytes": 3669693,
+        "decodedBodyBytes": 16055011,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -897,13 +879,13 @@
           "link": 2,
           "script": 15,
           "other": 11,
-          "img": 7,
+          "img": 5,
           "fetch": 2,
           "css": 2
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "todo dock open to two animation frames",
-        "labInteractionLatencyMs": 12.6,
+        "labInteractionLatencyMs": 14.7,
         "observedExpandedState": "true"
       },
       "errors": {
@@ -930,7 +912,7 @@
         {
           "id": "performance:lcp",
           "metric": "lcp",
-          "value": 5664,
+          "value": 5236,
           "target": 2500,
           "caseId": "messages--light--mobile--cold",
           "surfaceId": "route:messages",
@@ -941,19 +923,19 @@
         "navigationTiming": {
           "dnsMs": 0,
           "connectMs": 0,
-          "ttfbMs": 2.5,
-          "responseMs": 0.7,
-          "domContentLoadedMs": 3734.1,
-          "loadEventMs": 4049,
-          "durationMs": 4049,
-          "transferredBytes": 1820
+          "ttfbMs": 1.3,
+          "responseMs": 1.2,
+          "domContentLoadedMs": 3026.3,
+          "loadEventMs": 3360.4,
+          "durationMs": 3360.4,
+          "transferredBytes": 1819
         },
-        "fcpMs": 5232,
-        "lcpMs": 5664,
+        "fcpMs": 4744,
+        "lcpMs": 5236,
         "cls": 0,
-        "resourceCount": 38,
-        "transferredBytes": 14901559,
-        "decodedBodyBytes": 27282097,
+        "resourceCount": 36,
+        "transferredBytes": 3662231,
+        "decodedBodyBytes": 16047849,
         "observers": {
           "lcpSupported": true,
           "layoutShiftSupported": true,
@@ -963,13 +945,13 @@
           "link": 2,
           "script": 15,
           "other": 11,
-          "img": 6,
+          "img": 4,
           "fetch": 2,
           "css": 2
         },
         "horizontalOverflowPx": 0,
         "labInteractionLabel": "mobile module sheet open to two animation frames",
-        "labInteractionLatencyMs": 15.9,
+        "labInteractionLatencyMs": 11.7,
         "observedExpandedState": "true"
       },
       "errors": {
@@ -983,13 +965,13 @@
   "bundle": {
     "chunkCount": 47,
     "initialChunks": [
-      "assets/app-state-api-DYG3qwzo.js",
-      "assets/app-ui-DGloI4Zj.js",
-      "assets/feature-interview-core-D_l5pt8h.js",
-      "assets/feature-poker-core-Dzr3Cq_d.js",
-      "assets/feature-problems-core-Cu3goIb7.js",
-      "assets/feature-support-core-D_xiQFHQ.js",
-      "assets/index-DHnZUfoz.js",
+      "assets/app-state-api-BiON82Xa.js",
+      "assets/app-ui-CEiYk7rA.js",
+      "assets/feature-interview-core-DYBFmdni.js",
+      "assets/feature-poker-core-Bbsxed0e.js",
+      "assets/feature-problems-core-BPx_xddV.js",
+      "assets/feature-support-core-Bs945hql.js",
+      "assets/index-BcggoMk5.js",
       "assets/rolldown-runtime-QTnfLwEv.js",
       "assets/vendor-react-CIxEorsV.js",
       "assets/vendor-react-dom-B49trWfG.js",
@@ -998,21 +980,21 @@
       "data/leetcode-hot-100.js",
       "data/library-catalog.js"
     ],
-    "initialJsRawBytes": 918976,
-    "initialJsGzipBytes": 282659,
-    "largestRouteChunkGzipBytes": 9932,
+    "initialJsRawBytes": 920797,
+    "initialJsGzipBytes": 283536,
+    "largestRouteChunkGzipBytes": 9899,
     "chunks": [
       {
-        "path": "assets/AccountPage-CUlQQ1Ht.js",
-        "rawBytes": 17638,
-        "gzipBytes": 5608,
+        "path": "assets/AccountPage-BPx4a_5H.js",
+        "rawBytes": 17533,
+        "gzipBytes": 5610,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/app-state-api-DYG3qwzo.js",
-        "rawBytes": 106912,
-        "gzipBytes": 33646,
+        "path": "assets/app-state-api-BiON82Xa.js",
+        "rawBytes": 108876,
+        "gzipBytes": 34367,
         "initial": true,
         "ordinaryRouteChunk": false
       },
@@ -1024,51 +1006,51 @@
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/app-ui-DGloI4Zj.js",
-        "rawBytes": 62893,
-        "gzipBytes": 20872,
+        "path": "assets/app-ui-CEiYk7rA.js",
+        "rawBytes": 62825,
+        "gzipBytes": 20832,
         "initial": true,
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/CoderSticker-B-q0Y53Y.js",
-        "rawBytes": 968,
-        "gzipBytes": 585,
+        "path": "assets/CoderSticker-CG23cHLZ.js",
+        "rawBytes": 909,
+        "gzipBytes": 546,
         "initial": false,
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/CommunityPage-BcJAVYy5.js",
-        "rawBytes": 13735,
-        "gzipBytes": 4836,
+        "path": "assets/CommunityPage-BUi5QCr4.js",
+        "rawBytes": 13798,
+        "gzipBytes": 4866,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/CompaniesPage-Bn4C42R1.js",
+        "path": "assets/CompaniesPage-CpgCxaVX.js",
         "rawBytes": 19678,
-        "gzipBytes": 6399,
+        "gzipBytes": 6396,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/cosmetics-yiH3Lq4u.js",
-        "rawBytes": 1441,
-        "gzipBytes": 731,
+        "path": "assets/cosmetics-DQe7pV3q.js",
+        "rawBytes": 1595,
+        "gzipBytes": 754,
         "initial": false,
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/CoursesPage-BexJsj0Q.js",
+        "path": "assets/CoursesPage-CZBGDoeg.js",
         "rawBytes": 10755,
-        "gzipBytes": 3561,
+        "gzipBytes": 3559,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/createAppServices-DdNl6clw.js",
-        "rawBytes": 203942,
-        "gzipBytes": 58399,
+        "path": "assets/createAppServices-EkqvMSbe.js",
+        "rawBytes": 203943,
+        "gzipBytes": 58401,
         "initial": false,
         "ordinaryRouteChunk": false
       },
@@ -1080,128 +1062,128 @@
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/ExperiencesPage-CQAFConp.js",
+        "path": "assets/ExperiencesPage-jIXuuvv4.js",
         "rawBytes": 13418,
         "gzipBytes": 4383,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/feature-interview-core-D_l5pt8h.js",
-        "rawBytes": 129099,
-        "gzipBytes": 43392,
+        "path": "assets/feature-interview-core-DYBFmdni.js",
+        "rawBytes": 129064,
+        "gzipBytes": 43366,
         "initial": true,
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/feature-poker-core-Dzr3Cq_d.js",
+        "path": "assets/feature-poker-core-Bbsxed0e.js",
         "rawBytes": 70237,
-        "gzipBytes": 21634,
+        "gzipBytes": 21646,
         "initial": true,
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/feature-problems-core-Cu3goIb7.js",
+        "path": "assets/feature-problems-core-BPx_xddV.js",
         "rawBytes": 83282,
-        "gzipBytes": 24597,
+        "gzipBytes": 24594,
         "initial": true,
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/feature-support-core-D_xiQFHQ.js",
-        "rawBytes": 137716,
-        "gzipBytes": 41800,
+        "path": "assets/feature-support-core-Bs945hql.js",
+        "rawBytes": 137750,
+        "gzipBytes": 41814,
         "initial": true,
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/index-DHnZUfoz.js",
-        "rawBytes": 60254,
-        "gzipBytes": 16363,
+        "path": "assets/index-BcggoMk5.js",
+        "rawBytes": 60180,
+        "gzipBytes": 16561,
         "initial": true,
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/InterviewPage-B09WBkBK.js",
-        "rawBytes": 30795,
-        "gzipBytes": 8573,
+        "path": "assets/InterviewPage-DbGSzx5l.js",
+        "rawBytes": 30629,
+        "gzipBytes": 8574,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/JobsPage-DBVA9058.js",
-        "rawBytes": 7178,
-        "gzipBytes": 2760,
+        "path": "assets/JobsPage-BkkjpQ8G.js",
+        "rawBytes": 7139,
+        "gzipBytes": 2729,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/LeaguePage-B02wJnxP.js",
-        "rawBytes": 9468,
-        "gzipBytes": 2823,
+        "path": "assets/LeaguePage-BhL6lSK0.js",
+        "rawBytes": 9536,
+        "gzipBytes": 2872,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/LibraryPage-BOwIPE_p.js",
-        "rawBytes": 12334,
-        "gzipBytes": 3677,
+        "path": "assets/LibraryPage-D_zqXhrq.js",
+        "rawBytes": 12283,
+        "gzipBytes": 3656,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/MemoryPage-CaRUWiWl.js",
+        "path": "assets/MemoryPage-D9wX-aPO.js",
         "rawBytes": 11000,
-        "gzipBytes": 3981,
+        "gzipBytes": 3978,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/MessagesPage-Y6ky4vvo.js",
-        "rawBytes": 11292,
-        "gzipBytes": 3776,
+        "path": "assets/MessagesPage-EpfzdLTa.js",
+        "rawBytes": 11209,
+        "gzipBytes": 3785,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/NetworkPage-DSpg-8vN.js",
-        "rawBytes": 8526,
-        "gzipBytes": 2978,
+        "path": "assets/NetworkPage-CzRBv3_z.js",
+        "rawBytes": 8445,
+        "gzipBytes": 2941,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/NewsPage-B4TKUo7Y.js",
+        "path": "assets/NewsPage-Bj5mPNW6.js",
         "rawBytes": 19468,
-        "gzipBytes": 5926,
+        "gzipBytes": 5924,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/OverviewPage-BclmPRtV.js",
-        "rawBytes": 30463,
+        "path": "assets/OverviewPage-DvdesWpy.js",
+        "rawBytes": 30424,
         "gzipBytes": 8680,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/PkPage-CYJXHl1E.js",
-        "rawBytes": 14741,
-        "gzipBytes": 5198,
+        "path": "assets/PkPage-B9lXKqbM.js",
+        "rawBytes": 14597,
+        "gzipBytes": 5171,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/PlanPage-D0lTXPuO.js",
+        "path": "assets/PlanPage-DlHWXGDJ.js",
         "rawBytes": 18740,
-        "gzipBytes": 5518,
+        "gzipBytes": 5516,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/PokerPage-CNDInFdM.js",
-        "rawBytes": 33872,
-        "gzipBytes": 9054,
+        "path": "assets/PokerPage-DknKzyQh.js",
+        "rawBytes": 33782,
+        "gzipBytes": 9010,
         "initial": false,
         "ordinaryRouteChunk": true
       },
@@ -1213,16 +1195,16 @@
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/ProblemsPage-tUTauG3L.js",
-        "rawBytes": 36426,
-        "gzipBytes": 9932,
+        "path": "assets/ProblemsPage-BmKIrF3r.js",
+        "rawBytes": 36390,
+        "gzipBytes": 9899,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/ResumePage-oOvRDk6r.js",
-        "rawBytes": 8540,
-        "gzipBytes": 2958,
+        "path": "assets/ResumePage-Bvev6bkd.js",
+        "rawBytes": 8502,
+        "gzipBytes": 2930,
         "initial": false,
         "ordinaryRouteChunk": true
       },
@@ -1234,23 +1216,23 @@
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/SettingsPage-B0pqVLfb.js",
-        "rawBytes": 14645,
-        "gzipBytes": 4911,
+        "path": "assets/SettingsPage-BZKY8m0A.js",
+        "rawBytes": 14640,
+        "gzipBytes": 4910,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/SkillsPage-DHZelu3U.js",
-        "rawBytes": 16320,
-        "gzipBytes": 5840,
+        "path": "assets/SkillsPage-DABrzhoX.js",
+        "rawBytes": 16206,
+        "gzipBytes": 5795,
         "initial": false,
         "ordinaryRouteChunk": true
       },
       {
-        "path": "assets/StickerPicker-D76xijh8.js",
+        "path": "assets/StickerPicker-C0iOczTn.js",
         "rawBytes": 912,
-        "gzipBytes": 450,
+        "gzipBytes": 449,
         "initial": false,
         "ordinaryRouteChunk": false
       },
@@ -1262,9 +1244,9 @@
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/ToolsPage-D1IBIQ22.js",
-        "rawBytes": 19800,
-        "gzipBytes": 5575,
+        "path": "assets/ToolsPage-wjX_khOU.js",
+        "rawBytes": 19761,
+        "gzipBytes": 5572,
         "initial": false,
         "ordinaryRouteChunk": true
       },
@@ -1276,9 +1258,9 @@
         "ordinaryRouteChunk": false
       },
       {
-        "path": "assets/useSyncModuleRoute-CzHsPhaE.js",
+        "path": "assets/useSyncModuleRoute-CphBKYsD.js",
         "rawBytes": 268,
-        "gzipBytes": 221,
+        "gzipBytes": 223,
         "initial": false,
         "ordinaryRouteChunk": false
       },
@@ -1306,7 +1288,7 @@
       {
         "path": "config.js",
         "rawBytes": 457,
-        "gzipBytes": 320,
+        "gzipBytes": 321,
         "initial": true,
         "ordinaryRouteChunk": false
       },
