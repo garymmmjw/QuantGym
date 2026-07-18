@@ -1146,7 +1146,7 @@ test("package scripts expose the offline suite and live gate exactly", async () 
     liveSource,
     /PREVIEW_CHECK_PYTHON_PATH = "\/tmp\/quantgym-preview-check-venv\/bin\/python3"/,
   );
-  assert.doesNotMatch(liveSource, /spawnSync\(["'](?:git|python3)["']/);
+  assert.doesNotMatch(liveSource, /spawnSync\(["'](?:git|curl|python3)["']/);
   assert.match(liveSource, /REMOTE_REPOSITORY = "https:\/\/github\.com\/garymmmjw\/QuantGym\.git"/);
   assert.match(
     liveSource,
