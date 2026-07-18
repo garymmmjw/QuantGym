@@ -1,0 +1,23 @@
+.root {
+  display: block;
+  max-inline-size: min(100%, 18.75rem);
+  block-size: auto;
+  object-fit: contain;
+  filter: var(--qg-shadow-mascot-overlay);
+}
+
+.avatar {
+  inline-size: 4rem;
+}
+
+.small {
+  inline-size: 7.5rem;
+}
+
+.medium {
+  inline-size: 15rem;
+}
+
+.hero {
+  inline-size: min(100%, 18.75rem);
+}

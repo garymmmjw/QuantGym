@@ -1,0 +1,43 @@
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('../assets/fonts/PlusJakartaSans-wght.woff2') format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../assets/fonts/SpaceGrotesk-wght.woff2') format("woff2");
+}
+
+:root {
+  --qg-font-ui: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --qg-font-metrics: "Space Grotesk", "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --qg-font-size-caption: 0.75rem;
+  --qg-font-size-body-small: 0.875rem;
+  --qg-font-size-body: 1rem;
+  --qg-font-size-title-small: 1.25rem;
+  --qg-font-size-title: 1.5rem;
+  --qg-font-size-display: 2rem;
+  --qg-font-weight-medium: 500;
+  --qg-font-weight-semibold: 600;
+  --qg-font-weight-bold: 700;
+  --qg-font-weight-extrabold: 800;
+  --qg-line-height-tight: 1.2;
+  --qg-line-height-normal: 1.5;
+  --qg-line-height-relaxed: 1.65;
+}
+
+:where(html, body, button, input, select, textarea) {
+  font-family: var(--qg-font-ui);
+}
+
+:where([data-qg-metric]) {
+  font-family: var(--qg-font-metrics);
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,114 @@
+.root {
+  display: grid;
+  gap: 1rem;
+  color: var(--qg-text-primary);
+  font-family: var(--qg-font-ui);
+}
+
+.tabList {
+  display: flex;
+  min-inline-size: 0;
+  gap: 0.25rem;
+  border-block-end: 1px solid var(--qg-border-subtle);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tab {
+  position: relative;
+  min-block-size: var(--qg-control-height-default);
+  flex: 0 0 auto;
+  border: 0;
+  border-block-end: 2px solid var(--qg-border-subtle);
+  padding: 0.625rem 0.875rem;
+  background: none;
+  color: var(--qg-text-secondary);
+  font: inherit;
+  font-size: var(--qg-font-size-body-small);
+  font-weight: var(--qg-font-weight-semibold);
+  line-height: var(--qg-line-height-normal);
+  cursor: pointer;
+  transition:
+    background-color var(--qg-motion-micro-fast) var(--qg-motion-ease-standard),
+    border-color var(--qg-motion-micro-fast) var(--qg-motion-ease-standard),
+    color var(--qg-motion-micro-fast) var(--qg-motion-ease-standard);
+}
+
+.tab[aria-selected="true"] {
+  border-block-end-color: var(--qg-action-primary);
+  color: var(--qg-text-primary);
+}
+
+.panels {
+  min-inline-size: 0;
+}
+
+.panel {
+  border-radius: var(--qg-radius-compact);
+  color: var(--qg-text-primary);
+}
+
+:where([data-qg-motion="reduced"]) .tab {
+  transition: none;
+}
+
+.tab:focus-visible,
+.panel:focus-visible {
+  outline: none;
+  box-shadow: var(--qg-shadow-focus-ring);
+}
+
+.tab:disabled {
+  color: var(--qg-text-muted);
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.tab:hover:not(:disabled) {
+  background-color: var(--qg-action-primary-soft);
+  color: var(--qg-text-primary);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.root[data-orientation="vertical"] {
+  grid-template-columns: minmax(10rem, auto) minmax(0, 1fr);
+  align-items: start;
+}
+
+.root[data-orientation="vertical"] .tabList {
+  flex-direction: column;
+  border-block-end: 0;
+  border-inline-end: 1px solid var(--qg-border-subtle);
+  overflow: visible;
+}
+
+.root[data-orientation="vertical"] .tab {
+  inline-size: 100%;
+  justify-content: flex-start;
+  border-block-end: 0;
+  border-inline-end: 2px solid var(--qg-border-subtle);
+  text-align: start;
+}
+
+.root[data-orientation="vertical"] .tab[aria-selected="true"] {
+  border-inline-end-color: var(--qg-action-primary);
+}
+
+@media (width <= 640px) {
+  .tab {
+    min-block-size: var(--qg-touch-target-min);
+  }
+
+  .root[data-orientation="vertical"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab {
+    transition: none;
+  }
+}

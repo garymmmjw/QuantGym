@@ -1,0 +1,58 @@
+.root {
+  inline-size: var(--qg-skeleton-width);
+  block-size: var(--qg-skeleton-height);
+  border-radius: var(--qg-radius-compact);
+  background-color: var(--qg-border-subtle);
+  animation: qg-skeleton-pulse var(--qg-motion-panel) var(--qg-motion-ease-standard) infinite alternate;
+}
+
+.text {
+  border-radius: var(--qg-radius-compact);
+}
+
+.circle {
+  border-radius: var(--qg-radius-pill);
+}
+
+.multiLine {
+  display: grid;
+  block-size: auto;
+  gap: 0.625rem;
+  background: none;
+  animation: none;
+}
+
+.line {
+  display: block;
+  inline-size: 100%;
+  block-size: var(--qg-skeleton-height);
+  border-radius: var(--qg-radius-compact);
+  background-color: var(--qg-border-subtle);
+  animation: qg-skeleton-pulse var(--qg-motion-panel) var(--qg-motion-ease-standard) infinite alternate;
+}
+
+.lastLine {
+  inline-size: 72%;
+}
+
+@keyframes qg-skeleton-pulse {
+  from {
+    opacity: 0.45;
+  }
+
+  to {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root,
+  .line {
+    animation: none;
+  }
+}
+
+[data-qg-motion="reduced"] .root,
+[data-qg-motion="reduced"] .line {
+  animation: none;
+}

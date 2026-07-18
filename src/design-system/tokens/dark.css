@@ -1,0 +1,32 @@
+[data-qg-theme="dark"],
+:root[data-qg-theme="dark"] {
+  color-scheme: dark;
+
+  --qg-app-background: #111020;
+  --qg-surface-primary: #201f39;
+  --qg-surface-secondary: #1b1a30;
+  --qg-text-primary: #f1f0fb;
+  --qg-text-secondary: #cbc9e8;
+  --qg-text-muted: #a6a4cf;
+  --qg-border-subtle: #332f57;
+  --qg-border-control: #716d9c;
+  --qg-action-primary: #7d7bff;
+  --qg-action-primary-soft: #2a2856;
+  --qg-action-primary-ink: #b9b8ff;
+  --qg-on-action-primary: #141322;
+  --qg-status-success: #16a06a;
+  --qg-status-warning: #ff9f2e;
+  --qg-status-danger: #d0524b;
+  --qg-reward-xp: var(--qg-action-primary-ink);
+  --qg-reward-coin: var(--qg-status-warning);
+  --qg-focus-ring: var(--qg-action-primary);
+  --qg-overlay-backdrop: rgb(0 0 0 / 62%);
+  --qg-action-primary-gradient: linear-gradient(180deg, var(--qg-action-primary), #6d70f8);
+  --qg-shadow-focus-ring: 0 0 0 2px var(--qg-surface-primary), 0 0 0 5px var(--qg-focus-ring);
+  --qg-shadow-primary-action: 0 4px 0 #3f39c9, 0 14px 24px -10px rgb(125 123 255 / 55%);
+  --qg-shadow-primary-action-pressed: 0 1px 0 #3f39c9;
+  --qg-shadow-dialog: 0 16px 34px -14px rgb(0 0 0 / 65%);
+  --qg-shadow-command-surface: 0 16px 34px -14px rgb(0 0 0 / 65%);
+  --qg-shadow-notification: 0 16px 34px -14px rgb(0 0 0 / 65%);
+  --qg-shadow-mascot-overlay: drop-shadow(0 14px 20px rgb(0 0 0 / 40%));
+}

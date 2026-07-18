@@ -8,6 +8,7 @@ import { defineConfig, type Plugin } from "vite";
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const canonicalProjectRoot = realpathSync(projectRoot);
 const approvedAssetRoot = path.join(canonicalProjectRoot, "assets/generated/playful-precision");
+const approvedFontRoot = path.join(canonicalProjectRoot, "src/design-system/assets/fonts");
 const approvedSourceExtensions = new Set([".css", ".ts", ".tsx"]);
 
 type RuntimeAsset = {
@@ -117,7 +118,7 @@ const approvedSourceDirectories = [
   "src/shared/testing",
 ].map((relativePath) => canonicalSecureDirectory(path.join(canonicalProjectRoot, relativePath)));
 
-const approvedAssetPaths = new Set([
+const approvedDesignAssetPaths = [
   "assets/generated/playful-precision/brand-q-mark.webp",
   "assets/generated/playful-precision/brand-quantgym-logo.webp",
   ...approvedVariantRelativePaths,
@@ -127,7 +128,23 @@ const approvedAssetPaths = new Set([
     throw new Error(`V2_ASSET_OUTSIDE_APPROVED_ROOT: ${relativePath}`);
   }
   return canonicalPath;
-}));
+});
+
+const approvedFontPaths = [
+  "src/design-system/assets/fonts/PlusJakartaSans-wght.woff2",
+  "src/design-system/assets/fonts/SpaceGrotesk-wght.woff2",
+].map((relativePath) => {
+  const canonicalPath = canonicalSecureFile(path.join(projectRoot, relativePath));
+  if (!isAtOrUnder(approvedFontRoot, canonicalPath)) {
+    throw new Error(`V2_FONT_OUTSIDE_APPROVED_ROOT: ${relativePath}`);
+  }
+  return canonicalPath;
+});
+
+const approvedAssetPaths = new Set([
+  ...approvedDesignAssetPaths,
+  ...approvedFontPaths,
+]);
 
 type ModuleGuardPolicy = Readonly<{
   projectRoot: string;

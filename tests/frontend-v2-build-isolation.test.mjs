@@ -142,7 +142,7 @@ test("declares the isolated V2 commands and exact source program", async () => {
     ].map((name) => [name, packageJson.scripts[name]])),
     {
       "typecheck:v2": "tsc --project tsconfig.v2.json --noEmit",
-      "lint:v2": "eslint --max-warnings 0 --no-error-on-unmatched-pattern --config eslint.config.mjs 'src/{core,design-system,domains,pages/v2}/**/*.{ts,tsx}' 'src/shared/{api,i18n,lib,storage,testing}/**/*.{ts,tsx}' 'functions/**/*.ts' vite.v2.config.ts vitest.v2.config.ts",
+      "lint:v2": "eslint --max-warnings 0 --no-error-on-unmatched-pattern --config eslint.config.mjs 'src/{core,design-system,domains,pages/v2}/**/*.{ts,tsx}' 'src/shared/{api,i18n,lib,storage,testing}/**/*.{ts,tsx}' 'functions/**/*.ts' '.storybook/*.ts' vite.v2.config.ts vitest.v2.config.ts",
       "lint:styles:v2": "stylelint --config stylelint.config.mjs 'src/{core,shared,design-system,domains,pages/v2}/**/*.css' --allow-empty-input",
       "test:v2": "vitest --config vitest.v2.config.ts run",
       "build:v2": "node scripts/build-frontend-v2.mjs",
@@ -175,6 +175,8 @@ test("declares the isolated V2 commands and exact source program", async () => {
     "src/shared/testing/**/*.ts",
     "src/shared/testing/**/*.tsx",
     "functions/**/*.ts",
+    ".storybook/main.ts",
+    ".storybook/preview.ts",
     "vite.v2.config.ts",
     "vitest.v2.config.ts",
   ]);
@@ -222,6 +224,12 @@ test("uses v2.html as the sole Vite entry and guards the canonical module graph"
     "",
     path.join(projectRoot, "assets/generated/playful-precision/brand-q-mark.webp"),
   ));
+  for (const relativePath of [
+    "src/design-system/assets/fonts/PlusJakartaSans-wght.woff2",
+    "src/design-system/assets/fonts/SpaceGrotesk-wght.woff2",
+  ]) {
+    assert.doesNotThrow(() => guard.transform("", path.join(projectRoot, relativePath)));
+  }
   const runtimeManifest = await readJson(
     "assets/generated/playful-precision/quanty-runtime-manifest.json",
   );

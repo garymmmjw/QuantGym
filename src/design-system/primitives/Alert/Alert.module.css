@@ -1,0 +1,108 @@
+.root {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  border: 1px solid var(--qg-border-subtle);
+  border-radius: var(--qg-radius-card);
+  padding: 0.875rem;
+  background-color: var(--qg-surface-secondary);
+  color: var(--qg-text-primary);
+  font-family: var(--qg-font-ui);
+}
+
+.info {
+  border-color: var(--qg-action-primary);
+  background-color: var(--qg-action-primary-soft);
+}
+
+.success {
+  border-color: var(--qg-status-success);
+}
+
+.warning {
+  border-color: var(--qg-status-warning);
+}
+
+.danger {
+  border-color: var(--qg-status-danger);
+}
+
+.icon {
+  display: inline-flex;
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--qg-text-primary);
+  border-radius: var(--qg-radius-pill);
+  color: var(--qg-text-primary);
+  font-family: var(--qg-font-metrics);
+  font-size: var(--qg-font-size-caption);
+  font-weight: var(--qg-font-weight-bold);
+  line-height: 1;
+}
+
+.content {
+  min-inline-size: 0;
+}
+
+.title {
+  color: var(--qg-text-primary);
+  font-size: var(--qg-font-size-body-small);
+  font-weight: var(--qg-font-weight-bold);
+  line-height: var(--qg-line-height-normal);
+}
+
+.message {
+  color: var(--qg-text-secondary);
+  font-size: var(--qg-font-size-body-small);
+  line-height: var(--qg-line-height-relaxed);
+}
+
+.title + .message {
+  margin-block-start: 0.1875rem;
+}
+
+.action {
+  margin-block-start: 0.625rem;
+}
+
+.dismissButton {
+  display: inline-flex;
+  min-inline-size: var(--qg-touch-target-min);
+  min-block-size: var(--qg-touch-target-min);
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--qg-radius-control);
+  padding: 0;
+  background: none;
+  color: var(--qg-text-secondary);
+  font: inherit;
+  font-size: var(--qg-font-size-title-small);
+  cursor: pointer;
+  transition:
+    background-color var(--qg-motion-micro-fast) var(--qg-motion-ease-standard),
+    color var(--qg-motion-micro-fast) var(--qg-motion-ease-standard);
+}
+
+.dismissButton:hover {
+  background-color: var(--qg-surface-primary);
+  color: var(--qg-text-primary);
+}
+
+.dismissButton:focus-visible {
+  outline: none;
+  box-shadow: var(--qg-shadow-focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dismissButton {
+    transition: none;
+  }
+}
+
+[data-qg-motion="reduced"] .dismissButton {
+  transition: none;
+}

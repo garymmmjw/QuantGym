@@ -42,6 +42,8 @@
     "src/shared/testing/**/*.ts",
     "src/shared/testing/**/*.tsx",
     "functions/**/*.ts",
+    ".storybook/main.ts",
+    ".storybook/preview.ts",
     "vite.v2.config.ts",
     "vitest.v2.config.ts"
   ]
