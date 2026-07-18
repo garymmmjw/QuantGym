@@ -1,7 +1,8 @@
 # QuantGym Frontend Platform Upgrade Design
 
-Status: approved in conversation; pending written-spec review
+Status: approved for implementation
 Date: 2026-07-10
+Approved: 2026-07-18
 
 ## 1. Purpose
 
