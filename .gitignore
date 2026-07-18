@@ -23,6 +23,8 @@ skills-lock.json
 # Build and QA outputs.
 artifacts/*
 !artifacts/README.md
+# Phase 1 provider evidence is operator-local and may contain provider identifiers.
+artifacts/frontend-upgrade/phase-1-preview/provider-evidence.redacted.json
 artifacts/**/*.png
 artifacts/**/*.jpg
 artifacts/**/*.jpeg

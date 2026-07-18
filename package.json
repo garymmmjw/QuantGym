@@ -31,6 +31,8 @@
     "capture:frontend-upgrade:legacy-ui-findings": "node scripts/capture-legacy-ui-contract-findings.mjs",
     "test:frontend-upgrade:phase0": "node --test tests/frontend-upgrade-contracts.test.mjs tests/frontend-v2-boundaries.test.mjs tests/browser-route-targets.test.mjs tests/build-static-site-isolation.test.mjs tests/frontend-upgrade-baseline.test.mjs tests/frontend-upgrade-legacy-findings.test.mjs tests/frontend-upgrade-preview-contracts.test.mjs tests/frontend-upgrade-preview-probe.test.mjs tests/frontend-upgrade-preview-live.test.mjs tests/frontend-upgrade-phase0.test.mjs && python3 -B -m unittest discover -s tests -p 'test_*.py' -v",
     "check:frontend-upgrade:phase0": "node scripts/check-frontend-upgrade-phase0.mjs",
+    "test:frontend-upgrade:phase1": "node --test tests/frontend-upgrade-phase1*.test.mjs",
+    "check:frontend-upgrade:phase1:contracts": "node scripts/check-frontend-upgrade-phase1-contracts.mjs",
     "check:ui-redesign-foundation": "node scripts/check-ui-redesign-foundation.mjs",
     "check:ui-redesign-shell": "node scripts/check-ui-redesign-shell.mjs",
     "check:ui-redesign-growth": "node scripts/check-ui-redesign-growth.mjs",

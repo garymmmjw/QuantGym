@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "phase": 1,
+  "environment": "preview",
+  "branch": "codex/frontend-v2-preview",
+  "commits": {
+    "acceptedDeploymentAncestor": "7a85c2a43b24013d5a49969eca7b4a5f1d093640",
+    "acceptedEvidenceAncestor": "d4d263337728dab0156a9ee2aff4999d5085d77e",
+    "legacyCommit": "7a85c2a43b24013d5a49969eca7b4a5f1d093640",
+    "applicationCommitSource": "provider-evidence.applicationCommit",
+    "applicationCommitMustDifferFromLegacy": true
+  },
+  "postgresMajor": 18,
+  "governance": {
+    "operator": "Gary",
+    "budgetOwner": "Gary",
+    "dataResetOwner": "Gary",
+    "destroyOwner": "Gary",
+    "reviewDate": "2026-07-29"
+  },
+  "resources": {
+    "pagesProject": "quantgym-v2-preview",
+    "apiService": "quantgym-v2-preview-api",
+    "llmService": "quantgym-v2-preview-llm",
+    "postgres": "quantgym-v2-preview-postgres",
+    "r2Bucket": "quantgym-v2-preview-media",
+    "legacyPagesBranch": "legacy-compat",
+    "legacyPagesAlias": "legacy-compat.quantgym-v2-preview.pages.dev"
+  },
+  "topology": {
+    "browserApiBase": "/api/v2",
+    "edgeProxy": "cloudflare-pages-function",
+    "apiProvider": "render",
+    "llmVisibility": "internal",
+    "browserDirectUpstreamAllowed": false,
+    "edgeProofHeader": "X-QuantGym-Edge-Token"
+  },
+  "isolation": {
+    "productionResourcesAllowed": false,
+    "legacyDataImportAllowed": false,
+    "dualWriteAllowed": false,
+    "productionDatabaseSharingAllowed": false,
+    "productionBucketSharingAllowed": false,
+    "previewSyntheticDataOnly": true
+  },
+  "evidence": {
+    "namespace": "380-frontend-upgrade-phase-1-",
+    "providerEvidencePath": "artifacts/frontend-upgrade/phase-1-preview/provider-evidence.redacted.json",
+    "providerEvidenceMode": "0600",
+    "aggregateStatusCeiling": "ready-for-review"
+  }
+}
