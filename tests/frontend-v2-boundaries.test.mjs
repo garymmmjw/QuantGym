@@ -182,9 +182,9 @@ test("freezes every removal-family record independently", () => {
 });
 
 test("declares the installed AST parser as an exact direct development dependency", () => {
-  assert.equal(packageJson.devDependencies.rolldown, "1.0.3");
-  assert.equal(packageLock.packages[""].devDependencies.rolldown, "1.0.3");
-  assert.equal(packageLock.packages["node_modules/rolldown"].version, "1.0.3");
+  assert.equal(packageJson.devDependencies.rolldown, "1.1.5");
+  assert.equal(packageLock.packages[""].devDependencies.rolldown, "1.1.5");
+  assert.equal(packageLock.packages["node_modules/rolldown"].version, "1.1.5");
 });
 
 test("only legacy browser-global JavaScript catalogs are deletion inputs", () => {

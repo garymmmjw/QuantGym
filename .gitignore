@@ -11,6 +11,7 @@ node_modules/
 *.log
 dist/
 dist-preview/
+dist-v2/
 .worktrees/
 
 # Local Codex/agent tooling should not travel with the app repo.
