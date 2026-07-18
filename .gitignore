@@ -3,6 +3,8 @@ api-server/data/*.sqlite3-*
 api-server/__pycache__/
 api-server/library-pdfs/
 *.pyc
+__pycache__/
+.pytest_cache/
 .DS_Store
 .env
 .env.*

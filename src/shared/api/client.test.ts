@@ -114,8 +114,11 @@ describe("apiRequest", () => {
       "__Host-qg_csrf=0123456789abcdef0123456789abcdef",
     );
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
-      error: { code: "PREFERENCE_CONFLICT", message: "设置已在其他设备更新。" },
+      code: "PREFERENCE_CONFLICT",
+      message: "设置已在其他设备更新。",
+      fieldErrors: { version: ["版本已过期"] },
       requestId: "req_123",
+      retryable: false,
     }), {
       status: 409,
       headers: { "content-type": "application/json" },
@@ -125,7 +128,9 @@ describe("apiRequest", () => {
     await expect(request).rejects.toMatchObject({
       name: "ApiError",
       code: "PREFERENCE_CONFLICT",
+      fieldErrors: { version: ["版本已过期"] },
       requestId: "req_123",
+      retryable: false,
       status: 409,
     } satisfies Partial<ApiError>);
   });

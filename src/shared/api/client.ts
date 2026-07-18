@@ -101,9 +101,11 @@ export const apiRequest = async <ResponseBody>(
     const requestId = response.headers.get("x-request-id");
     if (isApiErrorEnvelope(payload)) {
       throw new ApiError({
-        code: payload.error.code,
-        message: payload.error.message,
+        code: payload.code,
+        fieldErrors: payload.fieldErrors,
+        message: payload.message,
         requestId: payload.requestId,
+        retryable: payload.retryable,
         status: response.status,
       });
     }

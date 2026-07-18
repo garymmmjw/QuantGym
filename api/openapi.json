@@ -1,0 +1,48 @@
+{
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "const": "ok",
+            "default": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "title": "HealthResponse",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "QuantGym API",
+    "version": "2.0.0-preview.1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v2/health": {
+      "get": {
+        "description": "Provider-safe liveness response with no resource or configuration details.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Check API process health",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}
