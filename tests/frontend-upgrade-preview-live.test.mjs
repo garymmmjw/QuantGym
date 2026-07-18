@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   TEST_ONLY_PREVIEW_LIVE,
+  TEST_ONLY_PREVIEW_LIVE_REMOTE,
   TEST_ONLY_PREVIEW_POSTGRES_RUNNER_SOURCE,
   runFrontendUpgradePreviewLiveCheck,
 } from "../scripts/check-frontend-upgrade-preview-live.mjs";
@@ -1062,6 +1063,69 @@ test("test-only R2 transport injection is unavailable outside NODE_ENV=test", as
   assert.equal(requests, 0);
 });
 
+test("live remote Git output accepts only the exact branch line", () => {
+  const { exactRemoteLine } = TEST_ONLY_PREVIEW_LIVE_REMOTE;
+  const canonical = `${COMMIT}\trefs/heads/${BRANCH}`;
+  for (const output of [canonical, `${canonical}\n`, `${canonical}\r\n`]) {
+    assert.equal(exactRemoteLine(output, COMMIT), true);
+  }
+  for (const output of [
+    ` ${canonical}`,
+    `${canonical} `,
+    `\n${canonical}\n`,
+    `${canonical}\n\n`,
+    `${canonical}\nextra`,
+    `${"d".repeat(40)}\trefs/heads/${BRANCH}\n`,
+  ]) {
+    assert.equal(exactRemoteLine(output, COMMIT), false);
+  }
+});
+
+test("live GitHub REST fallback is exact and never overrides a successful mismatch", () => {
+  const {
+    parseGitHubBranchSha,
+    remoteBranchExactFromResults,
+  } = TEST_ONLY_PREVIEW_LIVE_REMOTE;
+  const apiResult = (value, status = "200", processStatus = 0) => ({
+    status: processStatus,
+    stdout: `${JSON.stringify(value)}\n${status}`,
+  });
+  const validValue = {
+    ref: `refs/heads/${BRANCH}`,
+    object: { type: "commit", sha: COMMIT },
+  };
+  const validApi = apiResult(validValue);
+  assert.equal(parseGitHubBranchSha(validApi), COMMIT);
+  for (const result of [
+    apiResult(validValue, "301"),
+    apiResult(validValue, "404"),
+    apiResult({ ...validValue, ref: "refs/heads/main" }),
+    apiResult({ ...validValue, object: { type: "tag", sha: COMMIT } }),
+    apiResult({ ...validValue, object: { type: "commit", sha: COMMIT.toUpperCase() } }),
+    { status: 0, stdout: "not-json\n200" },
+    { status: 0, stdout: `${JSON.stringify(validValue)}\n200\n` },
+    { status: 1, stdout: `${JSON.stringify(validValue)}\n200` },
+    { status: 0, stdout: `${"x".repeat(256 * 1024)}\n200` },
+  ]) {
+    assert.equal(parseGitHubBranchSha(result), "");
+  }
+  const canonicalGit = {
+    status: 0,
+    stdout: `${COMMIT}\trefs/heads/${BRANCH}\n`,
+  };
+  const mismatchedGit = {
+    status: 0,
+    stdout: `${"d".repeat(40)}\trefs/heads/${BRANCH}\n`,
+  };
+  assert.equal(remoteBranchExactFromResults(canonicalGit, undefined, COMMIT), true);
+  assert.equal(remoteBranchExactFromResults(mismatchedGit, validApi, COMMIT), false);
+  assert.equal(remoteBranchExactFromResults({ status: 128, stdout: "" }, validApi, COMMIT), true);
+  assert.equal(
+    remoteBranchExactFromResults({ status: 128, stdout: "" }, apiResult(validValue, "301"), COMMIT),
+    false,
+  );
+});
+
 test("package scripts expose the offline suite and live gate exactly", async () => {
   const packageJson = JSON.parse(await readFile(path.join(repositoryRoot, "package.json"), "utf8"));
   assert.equal(
@@ -1077,13 +1141,24 @@ test("package scripts expose the offline suite and live gate exactly", async () 
     "utf8",
   );
   assert.match(liveSource, /TRUSTED_GIT_PATH = "\/usr\/bin\/git"/);
+  assert.match(liveSource, /TRUSTED_CURL_PATH = "\/usr\/bin\/curl"/);
   assert.match(
     liveSource,
     /PREVIEW_CHECK_PYTHON_PATH = "\/tmp\/quantgym-preview-check-venv\/bin\/python3"/,
   );
   assert.doesNotMatch(liveSource, /spawnSync\(["'](?:git|python3)["']/);
   assert.match(liveSource, /REMOTE_REPOSITORY = "https:\/\/github\.com\/garymmmjw\/QuantGym\.git"/);
+  assert.match(
+    liveSource,
+    /https:\/\/api\.github\.com\/repos\/garymmmjw\/QuantGym\/git\/ref\/heads\/codex\/frontend-v2-preview/,
+  );
+  assert.match(liveSource, /"-c", "http\.followRedirects=false"/);
   assert.match(liveSource, /"ls-remote", "--exit-code", REMOTE_REPOSITORY/);
+  assert.match(liveSource, /if \(remote\.status !== 0\)/);
+  assert.match(liveSource, /"--proto", "=https"/);
+  assert.match(liveSource, /"Cache-Control: no-cache"/);
+  assert.match(liveSource, /"Pragma: no-cache"/);
+  assert.doesNotMatch(liveSource, /"--location"|"--insecure"|http\.sslVerify=false/);
   assert.match(liveSource, /cwd: "\/"/);
   assert.match(liveSource, /"config", "--local", "--get-all", "remote\.origin\.url"/);
   assert.match(liveSource, /"status", "--porcelain=v1", "--untracked-files=all"/);

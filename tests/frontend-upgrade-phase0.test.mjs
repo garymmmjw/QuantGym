@@ -630,6 +630,8 @@ test("local Preview Git verification permits dirty gate evidence but rejects eve
       assert.equal(request.command, "/usr/bin/curl");
       assert.equal(request.cwd, "/");
       assert.equal(request.args.includes("--location"), false);
+      assert.equal(request.args.includes("Cache-Control: no-cache"), true);
+      assert.equal(request.args.includes("Pragma: no-cache"), true);
       assert.deepEqual(
         request.args.slice(request.args.indexOf("--write-out"), request.args.indexOf("--write-out") + 2),
         ["--write-out", "\n%{http_code}"],

@@ -37,6 +37,11 @@ const MAX_HTML_BYTES = 128 * 1024;
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const FUTURE_SKEW_MS = 5 * 60 * 1000;
 const TRUSTED_GIT_PATH = "/usr/bin/git";
+const TRUSTED_CURL_PATH = "/usr/bin/curl";
+const GITHUB_BRANCH_REF = `refs/heads/${BRANCH}`;
+const GITHUB_REF_API_URL = (
+  "https://api.github.com/repos/garymmmjw/QuantGym/git/ref/heads/codex/frontend-v2-preview"
+);
 const PREVIEW_CHECK_PYTHON_PATH = "/tmp/quantgym-preview-check-venv/bin/python3";
 const PREVIEW_RUNTIME_FILES = Object.freeze([
   "scripts/build-frontend-upgrade-preview-web.mjs",
@@ -140,6 +145,53 @@ const requireCommit = (value) => {
   if (!COMMIT_PATTERN.test(commit)) fail("expected commit is invalid");
   return commit;
 };
+
+const exactRemoteLine = (output, expectedCommit) => {
+  const actual = String(output || "");
+  const expected = `${expectedCommit}\t${GITHUB_BRANCH_REF}`;
+  return actual === expected || actual === `${expected}\n` || actual === `${expected}\r\n`;
+};
+
+const parseGitHubBranchSha = (result) => {
+  if (
+    result?.status !== 0
+    || typeof result.stdout !== "string"
+    || Buffer.byteLength(result.stdout, "utf8") > 256 * 1024
+  ) return "";
+  const statusDelimiter = result.stdout.lastIndexOf("\n");
+  if (statusDelimiter < 0 || result.stdout.slice(statusDelimiter + 1) !== "200") return "";
+  const responseBody = result.stdout.slice(0, statusDelimiter);
+  let value;
+  try {
+    value = JSON.parse(responseBody);
+  } catch {
+    return "";
+  }
+  if (
+    !value
+    || typeof value !== "object"
+    || Array.isArray(value)
+    || value.ref !== GITHUB_BRANCH_REF
+    || !value.object
+    || typeof value.object !== "object"
+    || Array.isArray(value.object)
+    || value.object.type !== "commit"
+    || !/^[a-f0-9]{40}$/.test(String(value.object.sha || ""))
+  ) return "";
+  return value.object.sha;
+};
+
+const remoteBranchExactFromResults = (remote, api, expectedCommit) => (
+  remote?.status === 0
+    ? exactRemoteLine(remote.stdout, expectedCommit)
+    : parseGitHubBranchSha(api) === expectedCommit
+);
+
+export const TEST_ONLY_PREVIEW_LIVE_REMOTE = Object.freeze({
+  exactRemoteLine,
+  parseGitHubBranchSha,
+  remoteBranchExactFromResults,
+});
 
 const requireTemporaryTestRoot = async (root) => {
   let rootRealPath;
@@ -859,7 +911,7 @@ const productionGitCheck = async ({ root, expectedCommit }) => {
   });
   // Running outside the repository prevents local url.*.insteadOf rules from
   // redirecting the literal GitHub URL to attacker-controlled local storage.
-  const runRemote = (args, timeout = 30_000) => spawnSync(git, args, {
+  const runRemote = (args, timeout = 10_000) => spawnSync(git, args, {
     cwd: "/",
     encoding: "utf8",
     timeout,
@@ -876,8 +928,34 @@ const productionGitCheck = async ({ root, expectedCommit }) => {
   const local = run(["rev-parse", "--verify", `refs/heads/${BRANCH}^{commit}`]);
   const origin = run(["rev-parse", "--verify", `refs/remotes/origin/${BRANCH}^{commit}`]);
   const remote = runRemote([
-    "ls-remote", "--exit-code", REMOTE_REPOSITORY, `refs/heads/${BRANCH}`,
+    "-c", "http.followRedirects=false",
+    "ls-remote", "--exit-code", REMOTE_REPOSITORY, GITHUB_BRANCH_REF,
   ]);
+  let api;
+  if (remote.status !== 0) {
+    const curl = await requireTrustedExecutable(TRUSTED_CURL_PATH, "Curl");
+    const runRemoteApi = (args, timeout = 20_000) => spawnSync(curl, args, {
+      cwd: "/",
+      encoding: "utf8",
+      timeout,
+      maxBuffer: 256 * 1024,
+      windowsHide: true,
+      env: gitEnvironment,
+    });
+    api = runRemoteApi([
+      "--disable",
+      "--fail", "--silent", "--show-error",
+      "--max-time", "15",
+      "--proto", "=https",
+      "--write-out", "\n%{http_code}",
+      "--header", "Accept: application/vnd.github+json",
+      "--header", "X-GitHub-Api-Version: 2022-11-28",
+      "--header", "Cache-Control: no-cache",
+      "--header", "Pragma: no-cache",
+      GITHUB_REF_API_URL,
+    ]);
+  }
+  const remoteBranchExact = remoteBranchExactFromResults(remote, api, expectedCommit);
   const localAncestor = run(["merge-base", "--is-ancestor", expectedCommit, "HEAD"]);
   const descendant = run([
     "diff", "--name-only", expectedCommit, "HEAD", "--", ".",
@@ -927,7 +1005,6 @@ const productionGitCheck = async ({ root, expectedCommit }) => {
   const indexRecords = indexFlags.stdout.split("\u0000").filter(Boolean);
   const fsmonitorRecords = fsmonitorFlags.stdout.split("\u0000").filter(Boolean);
   const originUrls = originUrl.stdout.trim().split(/\r?\n/).filter(Boolean);
-  const remoteLines = remote.stdout.trim().split(/\r?\n/).filter(Boolean);
   return {
     worktreeClean: worktree.status === 0 && worktree.stdout === "",
     originUrlExact: (
@@ -938,11 +1015,7 @@ const productionGitCheck = async ({ root, expectedCommit }) => {
     currentBranchExact: current.status === 0 && current.stdout.trim() === BRANCH,
     localBranchExists: local.status === 0,
     originBranchContainsCommit: origin.status === 0 && origin.stdout.trim() === expectedCommit,
-    remoteBranchExact: (
-      remote.status === 0
-      && remoteLines.length === 1
-      && remoteLines[0] === `${expectedCommit}\trefs/heads/${BRANCH}`
-    ),
+    remoteBranchExact,
     deployedCommitAncestorOfHead: localAncestor.status === 0,
     descendantChangesRestricted: descendant.status === 0 && descendant.stdout === "",
     replaceRefsAbsent: replaceRefs.status === 0 && replaceRefs.stdout === "",

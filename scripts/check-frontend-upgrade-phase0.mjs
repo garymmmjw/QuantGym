@@ -700,6 +700,8 @@ export function verifyPreviewGitState(root, expectedCommit, options = {}) {
         "--write-out", "\n%{http_code}",
         "--header", "Accept: application/vnd.github+json",
         "--header", "X-GitHub-Api-Version: 2022-11-28",
+        "--header", "Cache-Control: no-cache",
+        "--header", "Pragma: no-cache",
         GITHUB_REF_API_URL,
       ],
       cwd: "/",
