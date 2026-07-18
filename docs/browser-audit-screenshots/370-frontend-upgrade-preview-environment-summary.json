@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
   "status": "pass",
-  "checkedAt": "2026-07-18T07:59:44.936Z",
-  "evidenceCapturedAt": "2026-07-18T07:58:23.162Z",
-  "evidenceExpiresAt": "2026-07-25T07:58:23.162Z",
+  "checkedAt": "2026-07-18T08:10:45.606Z",
+  "evidenceCapturedAt": "2026-07-18T08:09:25.036Z",
+  "evidenceExpiresAt": "2026-07-25T08:09:25.036Z",
   "branch": "codex/frontend-v2-preview",
   "resourceIsolation": "pass",
   "applicationBindings": "deferred-to-phase1",
-  "providerEvidenceSha256": "54aed47b83f67578688d811d2b4735f722e4b4c9ba9c0be5c097bb25f2d024a8",
-  "minimalWebArtifactSha256": "71b007abf395fe6134a74098e6ba596925f7c81cf9fff8989142439cc0c4361b",
+  "providerEvidenceSha256": "4cf229f20ee096e8a2f02b0693fca13650db2e2da678062546cf8607614fe30f",
+  "minimalWebArtifactSha256": "d0c17f6241c5c4be9ef57ca6ef075fd89cac8acb85ede5c826c14751a926bed5",
   "hashes": {
     "webOriginHash": "23cb3c5331276d307edc6bfa20f76cef378e03839d63f078f58a36af2eaeec47",
     "apiOriginHash": "d3bcb2b80a16f4632413347ab67358c8495949b3d20b246acdb3aa916e4eb4ab",
@@ -53,7 +53,7 @@
       "selectOne": true,
       "sslForCurrentBackend": true
     },
-    "evidenceSha256": "54aed47b83f67578688d811d2b4735f722e4b4c9ba9c0be5c097bb25f2d024a8",
+    "evidenceSha256": "4cf229f20ee096e8a2f02b0693fca13650db2e2da678062546cf8607614fe30f",
     "failureCodes": [],
     "hashes": {
       "databaseHash": "ae7a8d08a1dd5114271d9ee7a0407080b24fa249adb9ae3788671b830899ccae",
@@ -69,7 +69,7 @@
     "schemaVersion": 1,
     "check": "frontend-v2-preview-r2",
     "status": "pass",
-    "evidenceSha256": "54aed47b83f67578688d811d2b4735f722e4b4c9ba9c0be5c097bb25f2d024a8",
+    "evidenceSha256": "4cf229f20ee096e8a2f02b0693fca13650db2e2da678062546cf8607614fe30f",
     "hashes": {
       "endpointAccountIdHash": "a69b661c3543d35f09e4fa03bf9f214f76efff05292b2fdea8e455915acd4eb1",
       "bucketIdentityHash": "c18f59cf6e040dbb3bd1f4e58fd7c526e56feae2ea206dc3beba469a4324f21c"
