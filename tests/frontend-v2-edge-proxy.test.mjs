@@ -354,6 +354,50 @@ describe("Phase 1 edge response boundary", () => {
     expect(responsePulls).toBe(3);
   });
 
+  it("preserves the callback's stronger no-referrer policy", async () => {
+    const response = await callProxy(
+      request("/api/v2/auth/google/callback?code=secret&state=secret"),
+      vi.fn(async () => new Response("failure", {
+        status: 400,
+        headers: { "referrer-policy": "no-referrer" },
+      })),
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+  });
+
+  it.each([
+    [
+      "upstream failure",
+      vi.fn(async () => { throw new Error("provider unavailable"); }),
+      "EDGE_UPSTREAM_UNAVAILABLE",
+    ],
+    [
+      "rejected redirect",
+      vi.fn(async () => new Response(null, {
+        status: 302,
+        headers: { location: "https://evil.example/callback" },
+      })),
+      "EDGE_UPSTREAM_REDIRECT_REJECTED",
+    ],
+    [
+      "rejected cookie",
+      vi.fn(async () => new Response("invalid cookie", {
+        headers: { "set-cookie": "other=value; Path=/; Secure; SameSite=Lax" },
+      })),
+      "EDGE_UPSTREAM_COOKIE_INVALID",
+    ],
+  ])("forces no-referrer on callback %s", async (_label, fetchImpl, expectedCode) => {
+    const response = await callProxy(
+      request("/api/v2/auth/google/callback?code=secret&state=secret"),
+      fetchImpl,
+    );
+
+    expect(await errorCode(response)).toBe(expectedCode);
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+  });
+
   it("preserves two valid Set-Cookie fields separately and in order", async () => {
     const upstreamHeaders = new Headers();
     const session = "__Host-qg_session=s1; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=3600";
@@ -477,5 +521,17 @@ describe("Pages Function exports", () => {
     expect(response.status).toBe(500);
     expect(await errorCode(response)).toBe("EDGE_INTERNAL_FAILURE");
     expect(response.headers.get("cache-control")).toBe("no-store");
+  });
+
+  it("forces no-referrer when callback middleware handles an unexpected exception", async () => {
+    const response = await securityMiddleware({
+      request: request("/api/v2/auth/google/callback?code=secret&state=secret"),
+      env,
+      next: vi.fn(async () => { throw new Error("do not expose me"); }),
+    });
+
+    expect(response.status).toBe(500);
+    expect(await errorCode(response)).toBe("EDGE_INTERNAL_FAILURE");
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
   });
 });

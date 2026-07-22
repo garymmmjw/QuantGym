@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import binascii
 import ipaddress
 import json
 import os
@@ -19,12 +21,25 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 PREVIEW_ORIGIN = "https://quantgym-v2-preview.pages.dev"
+GOOGLE_REDIRECT_URI = f"{PREVIEW_ORIGIN}/api/v2/auth/google/callback"
 _R2_HOST_PATTERN = re.compile(r"^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$")
+_KEY_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+_GOOGLE_CLIENT_ID_PATTERN = re.compile(
+    r"^[A-Za-z0-9-]{6,200}\.apps\.googleusercontent\.com$"
+)
 _ALLOWED_V2_ENVIRONMENT_KEYS = {
     "QUANTGYM_V2_ENVIRONMENT",
     "QUANTGYM_V2_DATABASE_URL",
     "QUANTGYM_V2_ALLOWED_ORIGINS",
     "QUANTGYM_V2_EDGE_SHARED_SECRET",
+    "QUANTGYM_V2_SESSION_SECRET",
+    "QUANTGYM_V2_CSRF_SIGNING_SECRET",
+    "QUANTGYM_V2_PKCE_ACTIVE_KEY_ID",
+    "QUANTGYM_V2_PKCE_ENCRYPTION_KEYS",
+    "QUANTGYM_V2_GOOGLE_CLIENT_ID",
+    "QUANTGYM_V2_GOOGLE_CLIENT_SECRET",
+    "QUANTGYM_V2_GOOGLE_REDIRECT_URI",
+    "QUANTGYM_V2_PASSWORD_RESET_DELIVERY_MODE",
     "QUANTGYM_V2_PAGES_PROJECT",
     "QUANTGYM_V2_API_SERVICE",
     "QUANTGYM_V2_LLM_SERVICE",
@@ -153,6 +168,49 @@ def _parse_origins(value: Any) -> Any:
     return tuple(part.strip() for part in text.split(",") if part.strip())
 
 
+def _reject_duplicate_json_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("PKCE encryption keys are invalid")
+        result[key] = value
+    return result
+
+
+def parse_pkce_encryption_keys(value: SecretStr | str) -> dict[str, str]:
+    """Parse a bounded AES-GCM keyring without including raw keys in errors."""
+
+    raw = value.get_secret_value() if isinstance(value, SecretStr) else value
+    try:
+        decoded = json.loads(raw, object_pairs_hook=_reject_duplicate_json_keys)
+    except (TypeError, ValueError, json.JSONDecodeError):
+        raise ValueError("PKCE encryption keys are invalid") from None
+    if not isinstance(decoded, dict) or not 1 <= len(decoded) <= 4:
+        raise ValueError("PKCE encryption keys are invalid")
+
+    validated: dict[str, str] = {}
+    for key_id, encoded_key in decoded.items():
+        if not isinstance(key_id, str) or _KEY_ID_PATTERN.fullmatch(key_id) is None:
+            raise ValueError("PKCE encryption keys are invalid")
+        if not isinstance(encoded_key, str) or encoded_key != encoded_key.strip():
+            raise ValueError("PKCE encryption keys are invalid")
+        try:
+            key_bytes = base64.b64decode(
+                encoded_key.encode("ascii"),
+                altchars=b"-_",
+                validate=True,
+            )
+        except (UnicodeEncodeError, binascii.Error, ValueError):
+            raise ValueError("PKCE encryption keys are invalid") from None
+        if (
+            len(key_bytes) != 32
+            or base64.urlsafe_b64encode(key_bytes).decode("ascii") != encoded_key
+        ):
+            raise ValueError("PKCE encryption keys are invalid")
+        validated[key_id] = encoded_key
+    return validated
+
+
 class Settings(BaseSettings):
     """Fail-closed configuration for the isolated Phase 1 Preview API."""
 
@@ -204,6 +262,64 @@ class Settings(BaseSettings):
             "QUANTGYM_EDGE_SHARED_SECRET",
             "QUANTGYM_V2_EDGE_SHARED_SECRET",
         )
+    )
+    session_secret: SecretStr = Field(
+        validation_alias=AliasChoices(
+            "session_secret",
+            "QUANTGYM_SESSION_SECRET",
+            "QUANTGYM_V2_SESSION_SECRET",
+        )
+    )
+    csrf_signing_secret: SecretStr = Field(
+        validation_alias=AliasChoices(
+            "csrf_signing_secret",
+            "QUANTGYM_CSRF_SIGNING_SECRET",
+            "QUANTGYM_V2_CSRF_SIGNING_SECRET",
+        )
+    )
+    pkce_active_key_id: str = Field(
+        validation_alias=AliasChoices(
+            "pkce_active_key_id",
+            "QUANTGYM_PKCE_ACTIVE_KEY_ID",
+            "QUANTGYM_V2_PKCE_ACTIVE_KEY_ID",
+        )
+    )
+    pkce_encryption_keys: SecretStr = Field(
+        validation_alias=AliasChoices(
+            "pkce_encryption_keys",
+            "QUANTGYM_PKCE_ENCRYPTION_KEYS",
+            "QUANTGYM_V2_PKCE_ENCRYPTION_KEYS",
+        )
+    )
+    google_client_id: str = Field(
+        repr=False,
+        validation_alias=AliasChoices(
+            "google_client_id",
+            "QUANTGYM_GOOGLE_CLIENT_ID",
+            "QUANTGYM_V2_GOOGLE_CLIENT_ID",
+        ),
+    )
+    google_client_secret: SecretStr = Field(
+        validation_alias=AliasChoices(
+            "google_client_secret",
+            "QUANTGYM_GOOGLE_CLIENT_SECRET",
+            "QUANTGYM_V2_GOOGLE_CLIENT_SECRET",
+        )
+    )
+    google_redirect_uri: Literal[GOOGLE_REDIRECT_URI] = Field(
+        default=GOOGLE_REDIRECT_URI,
+        validation_alias=AliasChoices(
+            "google_redirect_uri",
+            "QUANTGYM_GOOGLE_REDIRECT_URI",
+            "QUANTGYM_V2_GOOGLE_REDIRECT_URI",
+        ),
+    )
+    password_reset_delivery_mode: Literal["disabled"] = Field(
+        default="disabled",
+        validation_alias=AliasChoices(
+            "password_reset_delivery_mode",
+            "QUANTGYM_V2_PASSWORD_RESET_DELIVERY_MODE",
+        ),
     )
 
     pages_project: Literal["quantgym-v2-preview"] = Field(
@@ -339,6 +455,36 @@ class Settings(BaseSettings):
     def validate_edge_secret(cls, value: SecretStr) -> SecretStr:
         return _validate_secret(value, minimum=32)
 
+    @field_validator("session_secret", "csrf_signing_secret")
+    @classmethod
+    def validate_auth_signing_secret(cls, value: SecretStr) -> SecretStr:
+        return _validate_secret(value, minimum=32)
+
+    @field_validator("pkce_active_key_id")
+    @classmethod
+    def validate_pkce_key_id(cls, value: str) -> str:
+        if _KEY_ID_PATTERN.fullmatch(value) is None:
+            raise ValueError("PKCE active key ID is invalid")
+        return value
+
+    @field_validator("pkce_encryption_keys")
+    @classmethod
+    def validate_pkce_keys(cls, value: SecretStr) -> SecretStr:
+        parse_pkce_encryption_keys(value)
+        return value
+
+    @field_validator("google_client_id")
+    @classmethod
+    def validate_google_client_id(cls, value: str) -> str:
+        if _GOOGLE_CLIENT_ID_PATTERN.fullmatch(value) is None:
+            raise ValueError("Google OAuth client ID is invalid")
+        return value
+
+    @field_validator("google_client_secret")
+    @classmethod
+    def validate_google_client_secret(cls, value: SecretStr) -> SecretStr:
+        return _validate_secret(value, minimum=16)
+
     @field_validator("r2_access_key_id")
     @classmethod
     def validate_r2_access_key(cls, value: SecretStr) -> SecretStr:
@@ -370,6 +516,23 @@ class Settings(BaseSettings):
         ):
             raise ValueError("R2 endpoint must be an uncredentialed Cloudflare account origin")
         return f"https://{parsed.hostname.lower()}"
+
+    @model_validator(mode="after")
+    def require_independent_auth_secrets(self) -> Settings:
+        keyring = parse_pkce_encryption_keys(self.pkce_encryption_keys)
+        if self.pkce_active_key_id not in keyring:
+            raise ValueError("PKCE active key ID is unavailable")
+
+        independent_secrets = {
+            _secret_text(self.edge_shared_secret),
+            _secret_text(self.session_secret),
+            _secret_text(self.csrf_signing_secret),
+            _secret_text(self.google_client_secret),
+            *keyring.values(),
+        }
+        if len(independent_secrets) != 4 + len(keyring):
+            raise ValueError("authentication secrets must be independent")
+        return self
 
 
 @lru_cache(maxsize=1)

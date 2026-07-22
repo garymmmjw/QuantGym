@@ -2,6 +2,7 @@ import {
   applyEdgeResponsePolicy,
   edgeFailure,
   getSetCookieValues,
+  isGoogleCallbackRequest,
   type EdgePagesContext,
 } from "./_middleware";
 
@@ -347,7 +348,7 @@ const proxyResponseHeaders = (
   return headers;
 };
 
-export const proxyV2Request = async (
+const proxyV2RequestWithoutCallbackPolicy = async (
   request: Request,
   env: EdgeProxyEnvironment,
   fetchImpl: EdgeFetch = globalThis.fetch,
@@ -413,6 +414,17 @@ export const proxyV2Request = async (
     statusText: upstream.statusText,
     headers: proxyResponseHeaders(upstream, approvedSetCookies),
   }));
+};
+
+export const proxyV2Request = async (
+  request: Request,
+  env: EdgeProxyEnvironment,
+  fetchImpl: EdgeFetch = globalThis.fetch,
+): Promise<Response> => {
+  const response = await proxyV2RequestWithoutCallbackPolicy(request, env, fetchImpl);
+  return isGoogleCallbackRequest(request)
+    ? applyEdgeResponsePolicy(response, { forceNoReferrer: true })
+    : response;
 };
 
 export const onRequest = (context: EdgeProxyContext): Promise<Response> => (

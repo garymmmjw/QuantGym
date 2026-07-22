@@ -5,10 +5,15 @@ from typing import Any
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from api.app.config import Settings
+from api.app.config import GOOGLE_REDIRECT_URI, Settings
 
 
 EDGE_SECRET = "edge_" + "e" * 48
+SESSION_SECRET = "session_" + "n" * 48
+CSRF_SECRET = "csrf_" + "c" * 48
+GOOGLE_CLIENT_SECRET = "google_secret_" + "g" * 32
+PKCE_KEY = "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s="
+PKCE_KEYS = '{"preview-2026-07":"' + PKCE_KEY + '"}'
 R2_ACCESS_KEY = "r2_access_" + "a" * 24
 R2_SECRET_KEY = "r2_secret_" + "s" * 40
 DATABASE_PASSWORD = "database-password-that-must-stay-redacted"
@@ -26,6 +31,12 @@ def valid_settings_data() -> dict[str, Any]:
         "database_url": DATABASE_URL,
         "allowed_origins": (PREVIEW_ORIGIN,),
         "edge_shared_secret": EDGE_SECRET,
+        "session_secret": SESSION_SECRET,
+        "csrf_signing_secret": CSRF_SECRET,
+        "pkce_active_key_id": "preview-2026-07",
+        "pkce_encryption_keys": PKCE_KEYS,
+        "google_client_id": "123456-preview.apps.googleusercontent.com",
+        "google_client_secret": GOOGLE_CLIENT_SECRET,
         "pages_project": "quantgym-v2-preview",
         "api_service": "quantgym-v2-preview-api",
         "llm_service": "quantgym-v2-preview-llm",
@@ -44,6 +55,10 @@ def test_complete_preview_settings_are_typed_and_secret_safe() -> None:
     assert settings.allowed_origins == (PREVIEW_ORIGIN,)
     assert settings.database_url.get_secret_value() == DATABASE_URL
     assert settings.edge_shared_secret.get_secret_value() == EDGE_SECRET
+    assert settings.session_secret.get_secret_value() == SESSION_SECRET
+    assert settings.csrf_signing_secret.get_secret_value() == CSRF_SECRET
+    assert settings.google_redirect_uri == GOOGLE_REDIRECT_URI
+    assert settings.password_reset_delivery_mode == "disabled"
     assert settings.r2_access_key_id.get_secret_value() == R2_ACCESS_KEY
     assert settings.r2_secret_access_key.get_secret_value() == R2_SECRET_KEY
     assert settings.r2_max_bytes == 5 * 1024 * 1024
@@ -52,6 +67,10 @@ def test_complete_preview_settings_are_typed_and_secret_safe() -> None:
     assert DATABASE_PASSWORD not in repr(settings)
     assert R2_ENDPOINT not in repr(settings)
     assert R2_SECRET_KEY not in repr(settings)
+    assert SESSION_SECRET not in repr(settings)
+    assert CSRF_SECRET not in repr(settings)
+    assert GOOGLE_CLIENT_SECRET not in repr(settings)
+    assert PKCE_KEY not in repr(settings)
 
 
 def test_database_accepts_the_standard_postgres_tls_port() -> None:
@@ -210,6 +229,12 @@ def test_database_validation_errors_never_echo_the_dsn_password() -> None:
     [
         ("edge_shared_secret", "short"),
         ("edge_shared_secret", "x" * 40 + "\n"),
+        ("session_secret", "short"),
+        ("csrf_signing_secret", "short"),
+        ("google_client_secret", "short"),
+        ("pkce_active_key_id", "../unsafe"),
+        ("pkce_encryption_keys", "{}"),
+        ("google_client_id", "not-a-google-client"),
         ("r2_access_key_id", "short"),
         ("r2_secret_access_key", "short"),
         ("r2_max_bytes", 0),
@@ -223,6 +248,61 @@ def test_database_validation_errors_never_echo_the_dsn_password() -> None:
 def test_secret_and_r2_operational_limits_fail_closed(field: str, value: object) -> None:
     data = valid_settings_data()
     data[field] = value
+
+    with pytest.raises(ValidationError):
+        Settings.model_validate(data)
+
+
+@pytest.mark.parametrize(
+    "pkce_keyring",
+    [
+        '{"preview-2026-07":"' + PKCE_KEY + '","preview-2026-07":"' + PKCE_KEY + '"}',
+        '{"preview-2026-07":"not-a-key"}',
+        '{"../unsafe":"' + PKCE_KEY + '"}',
+        "[]",
+    ],
+)
+def test_pkce_keyring_rejects_ambiguous_or_unsafe_values(pkce_keyring: str) -> None:
+    data = valid_settings_data()
+    data["pkce_encryption_keys"] = pkce_keyring
+
+    with pytest.raises(ValidationError) as error:
+        Settings.model_validate(data)
+
+    assert PKCE_KEY not in str(error.value)
+
+
+def test_pkce_active_key_must_exist_in_the_keyring() -> None:
+    data = valid_settings_data()
+    data["pkce_active_key_id"] = "missing-key"
+
+    with pytest.raises(ValidationError, match="active key ID is unavailable"):
+        Settings.model_validate(data)
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["session_secret", "csrf_signing_secret", "google_client_secret"],
+)
+def test_authentication_secrets_must_be_independent(field: str) -> None:
+    data = valid_settings_data()
+    data[field] = EDGE_SECRET
+
+    with pytest.raises(ValidationError, match="authentication secrets must be independent"):
+        Settings.model_validate(data)
+
+
+def test_google_callback_uri_is_exact_and_cannot_be_redirected() -> None:
+    data = valid_settings_data()
+    data["google_redirect_uri"] = "https://attacker.invalid/callback"
+
+    with pytest.raises(ValidationError):
+        Settings.model_validate(data)
+
+
+def test_password_reset_delivery_cannot_enable_an_unapproved_provider() -> None:
+    data = valid_settings_data()
+    data["password_reset_delivery_mode"] = "smtp"
 
     with pytest.raises(ValidationError):
         Settings.model_validate(data)
@@ -249,6 +329,12 @@ def test_environment_aliases_support_the_preview_provider_contract(
         "QUANTGYM_POSTGRES_DATABASE_URL": DATABASE_URL,
         "QUANTGYM_ALLOWED_ORIGINS": PREVIEW_ORIGIN,
         "QUANTGYM_EDGE_SHARED_SECRET": EDGE_SECRET,
+        "QUANTGYM_SESSION_SECRET": SESSION_SECRET,
+        "QUANTGYM_CSRF_SIGNING_SECRET": CSRF_SECRET,
+        "QUANTGYM_PKCE_ACTIVE_KEY_ID": "preview-2026-07",
+        "QUANTGYM_PKCE_ENCRYPTION_KEYS": PKCE_KEYS,
+        "QUANTGYM_GOOGLE_CLIENT_ID": "123456-preview.apps.googleusercontent.com",
+        "QUANTGYM_GOOGLE_CLIENT_SECRET": GOOGLE_CLIENT_SECRET,
         "QUANTGYM_PREVIEW_R2_ENDPOINT": R2_ENDPOINT,
         "QUANTGYM_PREVIEW_R2_ACCESS_KEY_ID": R2_ACCESS_KEY,
         "QUANTGYM_PREVIEW_R2_SECRET_ACCESS_KEY": R2_SECRET_KEY,

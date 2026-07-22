@@ -8,6 +8,16 @@ export type EdgePagesFunction<Environment = Record<string, unknown>> = (
   context: EdgePagesContext<Environment>,
 ) => Response | Promise<Response>;
 
+const GOOGLE_CALLBACK_PATH = "/api/v2/auth/google/callback";
+
+export const isGoogleCallbackRequest = (request: Request): boolean => {
+  try {
+    return new URL(request.url).pathname === GOOGLE_CALLBACK_PATH;
+  } catch {
+    return false;
+  }
+};
+
 export const EDGE_SECURITY_HEADERS = Object.freeze({
   "content-security-policy": [
     "default-src 'self'",
@@ -96,13 +106,25 @@ const copyResponseHeaders = (source: Headers): Headers => {
   return result;
 };
 
-export const applyEdgeResponsePolicy = (response: Response): Response => {
+export const applyEdgeResponsePolicy = (
+  response: Response,
+  options: Readonly<{ forceNoReferrer?: boolean }> = {},
+): Response => {
   const headers = copyResponseHeaders(response.headers);
+  const upstreamRequiresNoReferrer = headers.get("referrer-policy")
+    ?.trim()
+    .toLowerCase() === "no-referrer";
   headers.set("cache-control", "no-store");
   headers.set("expires", "0");
   headers.set("pragma", "no-cache");
   for (const [name, value] of Object.entries(EDGE_SECURITY_HEADERS)) {
-    headers.set(name, value);
+    headers.set(
+      name,
+      name === "referrer-policy"
+        && (upstreamRequiresNoReferrer || options.forceNoReferrer === true)
+        ? "no-referrer"
+        : value,
+    );
   }
 
   return new Response(response.body, {
@@ -133,6 +155,12 @@ export const onRequest: EdgePagesFunction = async (context) => {
   try {
     return applyEdgeResponsePolicy(await context.next());
   } catch {
-    return edgeFailure(500, "EDGE_INTERNAL_FAILURE");
+    return edgeFailure(
+      500,
+      "EDGE_INTERNAL_FAILURE",
+      isGoogleCallbackRequest(context.request)
+        ? { "referrer-policy": "no-referrer" }
+        : {},
+    );
   }
 };

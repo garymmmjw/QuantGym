@@ -66,6 +66,12 @@ def error_response(
         "Cache-Control": "no-store",
         "X-Request-ID": request_id,
     }
+    if request.url.path == "/api/v2/auth/google/callback":
+        # Callback query strings can contain a one-time authorization code and
+        # state.  Apply this at the common error boundary so validation,
+        # routing, and unexpected failures cannot leak the callback URL as a
+        # Referer even when the endpoint body is never entered.
+        response_headers["Referrer-Policy"] = "no-referrer"
     return JSONResponse(
         status_code=status_code,
         headers=response_headers,
@@ -95,6 +101,14 @@ async def validation_error_handler(
     request: Request,
     error: RequestValidationError,
 ) -> JSONResponse:
+    if request.url.path == "/api/v2/auth/google/callback":
+        return error_response(
+            request,
+            status_code=400,
+            code="GOOGLE_OAUTH_FAILED",
+            message="Google 登录未能完成",
+            retryable=False,
+        )
     field_errors: FieldErrors = {}
     for item in error.errors():
         location = ".".join(str(part) for part in item.get("loc", ()) if part != "body")
