@@ -87,6 +87,12 @@ const APPROVED_SHADOW_TOKENS = new Set([
   "--qg-shadow-command-surface",
   "--qg-shadow-notification",
   "--qg-shadow-mascot-overlay",
+  "--qg-shadow-auth-atmosphere",
+  "--qg-shadow-auth-mark",
+  "--qg-shadow-auth-orbit-dot",
+  "--qg-shadow-auth-mascot",
+  "--qg-shadow-auth-card",
+  "--qg-shadow-auth-tab",
 ]);
 const CSS_WIDE_KEYWORDS = new Set([
   "inherit",

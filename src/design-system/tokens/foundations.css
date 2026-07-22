@@ -17,10 +17,35 @@
   --qg-radius-pill: 999px;
   --qg-touch-target-min: 44px;
   --qg-control-height-default: var(--qg-touch-target-min);
+  --qg-layer-underlay: -1;
   --qg-layer-base: 0;
+  --qg-layer-raised: 1;
   --qg-layer-sticky: 10;
   --qg-layer-navigation: 20;
   --qg-layer-overlay: 40;
   --qg-layer-dialog: 50;
   --qg-layer-notification: 60;
+}
+
+:where(*, *::before, *::after) {
+  box-sizing: border-box;
+}
+
+:where(html, body, #root) {
+  min-inline-size: 0;
+  min-block-size: 100%;
+}
+
+:where(html) {
+  background: var(--qg-app-background);
+}
+
+:where(body) {
+  margin: 0;
+  background: var(--qg-app-background);
+  color: var(--qg-text-primary);
+}
+
+:where(button, input, select, textarea) {
+  font: inherit;
 }

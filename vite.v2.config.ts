@@ -209,12 +209,48 @@ const v2ResolvedModuleGuard = (): Plugin<GuardApi> => {
   };
 };
 
+const v2DevelopmentSpaFallback = (): Plugin => ({
+  name: "quantgym-v2-development-spa-fallback",
+  apply: "serve",
+  enforce: "pre",
+  configureServer(server) {
+    server.middlewares.use((request, _response, next) => {
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        next();
+        return;
+      }
+
+      const requestUrl = new URL(request.url ?? "/", "http://localhost");
+      const isHtmlNavigation = requestUrl.pathname === "/"
+        || request.headers.accept?.includes("text/html") === true;
+      const isReservedDevelopmentPath = [
+        "/api/",
+        "/@",
+        "/__",
+        "/assets/",
+        "/node_modules/",
+        "/src/",
+      ].some((prefix) => requestUrl.pathname.startsWith(prefix));
+      const hasFileExtension = path.posix.basename(requestUrl.pathname).includes(".");
+      if (isHtmlNavigation && !isReservedDevelopmentPath && !hasFileExtension) {
+        request.url = `/v2.html${requestUrl.search}`;
+      }
+      next();
+    });
+  },
+});
+
 export default defineConfig({
   root: projectRoot,
   base: "/",
   publicDir: path.join(projectRoot, "public-v2"),
   appType: "spa",
-  plugins: [v2ResolvedModuleGuard(), react()],
+  optimizeDeps: {
+    // Vite's dev scanner otherwise discovers the legacy root HTML alongside
+    // v2.html and correctly trips the V2 module allowlist before this app loads.
+    entries: [path.join(projectRoot, "v2.html")],
+  },
+  plugins: [v2DevelopmentSpaFallback(), v2ResolvedModuleGuard(), react()],
   build: {
     outDir: path.join(projectRoot, "dist-v2"),
     emptyOutDir: true,

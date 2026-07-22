@@ -452,6 +452,7 @@ describe("Phase 1 edge response boundary", () => {
 
   it.each([
     ["safe application path", "/settings?from=login"],
+    ["branded OAuth recovery path", "/login?authError=GOOGLE_OAUTH_FAILED"],
     [
       "exact Google authorization endpoint",
       "https://accounts.google.com/o/oauth2/v2/auth?client_id=preview&response_type=code",
@@ -466,6 +467,25 @@ describe("Phase 1 edge response boundary", () => {
     expect(fetchImpl.mock.calls[0][1].redirect).toBe("manual");
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(location);
+  });
+
+  it("preserves the fixed Google callback recovery redirect and referrer policy", async () => {
+    const location = "/login?authError=AUTH_SERVICE_UNAVAILABLE";
+    const fetchImpl = vi.fn(async () => new Response(null, {
+      status: 303,
+      headers: {
+        location,
+        "referrer-policy": "no-referrer",
+      },
+    }));
+    const response = await callProxy(
+      request("/api/v2/auth/google/callback?code=secret&state=secret"),
+      fetchImpl,
+    );
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(location);
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
   });
 
   it.each([

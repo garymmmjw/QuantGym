@@ -2,14 +2,26 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from typing import Any
+from urllib.parse import urlencode
 
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse, Response
 
 
 FieldErrors = dict[str, list[str]]
+
+_GOOGLE_CALLBACK_PATH = "/api/v2/auth/google/callback"
+_GOOGLE_START_PATH = "/api/v2/auth/google/start"
+_GOOGLE_START_UI_CODES = frozenset(
+    {
+        "AUTH_CHALLENGE_RATE_LIMITED",
+        "AUTH_SERVICE_UNAVAILABLE",
+        "GOOGLE_OAUTH_CAPACITY_LIMITED",
+        "GOOGLE_OAUTH_UNAVAILABLE",
+    }
+)
 
 
 def _normalize_field_errors(
@@ -50,6 +62,46 @@ def request_id_for(request: Request) -> str:
     return str(getattr(request.state, "request_id", "req_unavailable"))
 
 
+def _google_browser_error_response(
+    request: Request,
+    *,
+    code: str,
+    headers: Mapping[str, str] | None,
+    status_code: int,
+) -> RedirectResponse | None:
+    """Return OAuth document navigations to one branded, non-reflective UI path."""
+
+    path = request.url.path
+    if path not in {_GOOGLE_START_PATH, _GOOGLE_CALLBACK_PATH}:
+        return None
+    if "text/html" not in request.headers.get("accept", "").casefold():
+        return None
+
+    if path == _GOOGLE_CALLBACK_PATH:
+        ui_code = (
+            "AUTH_SERVICE_UNAVAILABLE"
+            if status_code >= 500 or code == "AUTH_SERVICE_UNAVAILABLE"
+            else "GOOGLE_OAUTH_FAILED"
+        )
+    else:
+        ui_code = code if code in _GOOGLE_START_UI_CODES else "GOOGLE_OAUTH_UNAVAILABLE"
+
+    response_headers = {
+        "Cache-Control": "no-store",
+        "Pragma": "no-cache",
+        "Referrer-Policy": "no-referrer",
+        "X-Request-ID": request_id_for(request),
+    }
+    retry_after = dict(headers or {}).get("Retry-After")
+    if retry_after is not None and retry_after.isdecimal():
+        response_headers["Retry-After"] = retry_after
+    return RedirectResponse(
+        url=f"/login?{urlencode({'authError': ui_code})}",
+        status_code=303,
+        headers=response_headers,
+    )
+
+
 def error_response(
     request: Request,
     *,
@@ -59,14 +111,22 @@ def error_response(
     field_errors: Mapping[str, Sequence[str] | str] | None = None,
     retryable: bool = False,
     headers: Mapping[str, str] | None = None,
-) -> JSONResponse:
+) -> Response:
     request_id = request_id_for(request)
+    oauth_redirect = _google_browser_error_response(
+        request,
+        code=code,
+        headers=headers,
+        status_code=status_code,
+    )
+    if oauth_redirect is not None:
+        return oauth_redirect
     response_headers = {
         **dict(headers or {}),
         "Cache-Control": "no-store",
         "X-Request-ID": request_id,
     }
-    if request.url.path == "/api/v2/auth/google/callback":
+    if request.url.path == _GOOGLE_CALLBACK_PATH:
         # Callback query strings can contain a one-time authorization code and
         # state.  Apply this at the common error boundary so validation,
         # routing, and unexpected failures cannot leak the callback URL as a
@@ -85,7 +145,7 @@ def error_response(
     )
 
 
-async def api_error_handler(request: Request, error: ApiError) -> JSONResponse:
+async def api_error_handler(request: Request, error: ApiError) -> Response:
     return error_response(
         request,
         status_code=error.status_code,
@@ -100,8 +160,8 @@ async def api_error_handler(request: Request, error: ApiError) -> JSONResponse:
 async def validation_error_handler(
     request: Request,
     error: RequestValidationError,
-) -> JSONResponse:
-    if request.url.path == "/api/v2/auth/google/callback":
+) -> Response:
+    if request.url.path == _GOOGLE_CALLBACK_PATH:
         return error_response(
             request,
             status_code=400,
@@ -127,7 +187,7 @@ async def validation_error_handler(
 async def http_error_handler(
     request: Request,
     error: StarletteHTTPException,
-) -> JSONResponse:
+) -> Response:
     if error.status_code == 404:
         code, message = "NOT_FOUND", "请求的资源不存在"
     elif error.status_code == 405:
@@ -144,7 +204,7 @@ async def http_error_handler(
     )
 
 
-async def unhandled_error_handler(request: Request, _error: Exception) -> JSONResponse:
+async def unhandled_error_handler(request: Request, _error: Exception) -> Response:
     return error_response(
         request,
         status_code=500,

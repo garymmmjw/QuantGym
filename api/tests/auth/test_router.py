@@ -487,6 +487,27 @@ def test_google_start_returns_stable_rate_and_capacity_errors_with_retry_delay()
     assert capacity_limited.headers["retry-after"] == "30"
 
 
+def test_google_browser_start_failures_return_to_one_branded_allowlisted_path() -> None:
+    client, _auth, google = _client()
+    google.start_exception = GoogleOAuthStartRateLimitedError(17)
+
+    response = client.get(
+        "/api/v2/auth/google/start?redirectPath=%2Fpractice%3Fsecret%3Dvalue",
+        headers={"Accept": "text/html,application/xhtml+xml"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == (
+        "/login?authError=AUTH_CHALLENGE_RATE_LIMITED"
+    )
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert response.headers["retry-after"] == "17"
+    assert "secret" not in response.headers["location"]
+    assert "value" not in response.headers["location"]
+
+
 def test_google_callback_consumes_flow_creates_session_and_never_echoes_secrets() -> None:
     client, auth, google = _client()
     code = "provider-authorization-code"
@@ -538,6 +559,24 @@ def test_google_callback_maps_every_provider_failure_to_one_safe_error() -> None
     assert response.headers["referrer-policy"] == "no-referrer"
 
 
+def test_google_browser_callback_failures_return_to_branded_recovery_without_secrets() -> None:
+    client, _auth, google = _client()
+    google.callback_error = True
+
+    response = client.get(
+        "/api/v2/auth/google/callback?error=access_denied&state=hidden-state",
+        headers={"Accept": "text/html,application/xhtml+xml"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login?authError=GOOGLE_OAUTH_FAILED"
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert "access_denied" not in response.headers["location"]
+    assert "hidden-state" not in response.headers["location"]
+
+
 def test_google_callback_rejects_ambiguous_duplicate_state_without_using_flow() -> None:
     client, auth, google = _client()
 
@@ -580,6 +619,22 @@ def test_google_callback_length_limits_are_documented_and_fail_with_one_safe_err
     assert parameters["code"]["schema"]["anyOf"][0]["maxLength"] == 4096
     assert parameters["state"]["schema"]["anyOf"][0]["maxLength"] == 256
     assert parameters["error"]["schema"]["anyOf"][0]["maxLength"] == 256
+
+
+def test_google_browser_callback_validation_failures_also_return_to_branded_recovery() -> None:
+    client, _auth, google = _client()
+    secret_state = "s" * 257
+
+    response = client.get(
+        f"/api/v2/auth/google/callback?code=code&state={secret_state}",
+        headers={"Accept": "text/html"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login?authError=GOOGLE_OAUTH_FAILED"
+    assert secret_state not in str(response.headers)
+    assert google.calls == []
 
 
 def test_google_callback_is_bound_to_the_browser_that_started_the_flow() -> None:
@@ -634,6 +689,25 @@ def test_google_callback_unexpected_account_failure_is_safe_and_suppresses_refer
     assert response.headers["referrer-policy"] == "no-referrer"
     assert "secret-code" not in response.text
     assert "secret-state" not in response.text
+    assert "database detail" not in response.text
+
+
+def test_google_browser_callback_service_failure_returns_to_branded_retry() -> None:
+    client, auth, _google = _client()
+    auth.errors["google"] = RuntimeError("database detail that must stay private")
+
+    response = client.get(
+        "/api/v2/auth/google/callback?code=secret-code&state=secret-state",
+        headers={"Accept": "text/html"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"] == (
+        "/login?authError=AUTH_SERVICE_UNAVAILABLE"
+    )
+    assert "secret-code" not in str(response.headers)
+    assert "secret-state" not in str(response.headers)
     assert "database detail" not in response.text
 
 
