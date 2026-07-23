@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { BrowserRouter, useLocation } from "react-router-dom";
 
 const authMocks = vi.hoisted(() => ({
+  currentUserData: undefined as typeof authenticatedUser | undefined,
   currentUserIsPending: false,
   currentUserIsSuccess: false,
   forgot: vi.fn(),
@@ -25,6 +26,7 @@ vi.mock("../../domains/account/auth/auth.mutations", () => ({
 vi.mock("../../domains/account/auth/auth.queries", () => ({
   authQueryKeys: { me: ["auth", "me"] },
   useCurrentUserQuery: () => ({
+    data: authMocks.currentUserData,
     isPending: authMocks.currentUserIsPending,
     isSuccess: authMocks.currentUserIsSuccess,
   }),
@@ -134,6 +136,7 @@ const renderPage = () => {
 };
 
 beforeEach(() => {
+  authMocks.currentUserData = undefined;
   authMocks.currentUserIsPending = false;
   authMocks.currentUserIsSuccess = false;
   window.matchMedia = vi.fn(matchMedia);
@@ -147,6 +150,75 @@ describe("AuthPage", () => {
 
     expect(screen.getByRole("status", { name: "正在确认登录状态" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Complete authentication" })).not.toBeInTheDocument();
+  });
+
+  it("keeps forced reauthentication available even when the previous me result was successful", () => {
+    authMocks.currentUserData = authenticatedUser;
+    authMocks.currentUserIsSuccess = true;
+    window.history.replaceState(null, "", "/login?reauth=1");
+
+    renderPage();
+
+    expect(screen.getByRole("button", { name: "Complete authentication" })).toBeVisible();
+    expect(screen.getByTestId("location")).toHaveTextContent("/login?reauth=1");
+  });
+
+  it("preserves forced reauthentication across registration and password recovery", async () => {
+    const userEventDriver = userEvent.setup();
+    authMocks.currentUserData = authenticatedUser;
+    authMocks.currentUserIsSuccess = true;
+    window.history.replaceState(
+      null,
+      "",
+      "/login?redirect=%2Faccount&reauth=1",
+    );
+    renderPage();
+
+    await userEventDriver.click(screen.getByRole("button", { name: "Switch authentication mode" }));
+    await waitFor(() => {
+      expect(screen.getByTestId("auth-mode")).toHaveTextContent("register");
+      expect(new URLSearchParams(window.location.search).get("reauth")).toBe("1");
+      expect(new URLSearchParams(window.location.search).get("redirect")).toBe("/account");
+      expect(screen.getByTestId("location")).not.toHaveTextContent(/^\/account/u);
+    });
+
+    await userEventDriver.click(screen.getByRole("button", { name: "Open password recovery" }));
+    await waitFor(() => {
+      expect(new URLSearchParams(window.location.search).get("mode")).toBe("forgot");
+      expect(new URLSearchParams(window.location.search).get("reauth")).toBe("1");
+      expect(screen.getByRole("button", { name: "Return to login" })).toBeVisible();
+    });
+
+    await userEventDriver.click(screen.getByRole("button", { name: "Return to login" }));
+    await waitFor(() => {
+      expect(new URLSearchParams(window.location.search).get("mode")).toBeNull();
+      expect(new URLSearchParams(window.location.search).get("reauth")).toBe("1");
+      expect(screen.getByRole("button", { name: "Complete authentication" })).toBeVisible();
+    });
+  });
+
+  it("keeps an allowlisted Google failure visible over an existing session", async () => {
+    const userEventDriver = userEvent.setup();
+    authMocks.currentUserData = authenticatedUser;
+    authMocks.currentUserIsSuccess = true;
+    window.history.replaceState(
+      null,
+      "",
+      "/login?authError=GOOGLE_OAUTH_FAILED",
+    );
+    renderPage();
+
+    expect(screen.getByTestId("google-error")).toHaveTextContent("GOOGLE_OAUTH_FAILED");
+    expect(screen.getByTestId("location")).toHaveTextContent(
+      "/login?authError=GOOGLE_OAUTH_FAILED",
+    );
+
+    await userEventDriver.click(screen.getByRole("button", { name: "Open password recovery" }));
+    await waitFor(() => {
+      expect(new URLSearchParams(window.location.search).get("mode")).toBe("forgot");
+      expect(new URLSearchParams(window.location.search).get("reauth")).toBe("1");
+      expect(screen.getByRole("button", { name: "Return to login" })).toBeVisible();
+    });
   });
 
   it.each([

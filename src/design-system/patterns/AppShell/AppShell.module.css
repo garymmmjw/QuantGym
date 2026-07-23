@@ -1,0 +1,104 @@
+.shell {
+  display: grid;
+  grid-template-columns: var(--qg-shell-sidebar-width) minmax(0, 1fr);
+  min-inline-size: 0;
+  min-block-size: 100dvh;
+  color: var(--qg-text-primary);
+  background: var(--qg-shell-app-background);
+  transition: grid-template-columns var(--qg-motion-panel-fast) var(--qg-motion-ease-standard);
+}
+
+.shell[data-sidebar-collapsed="true"] {
+  grid-template-columns: var(--qg-shell-sidebar-collapsed-width) minmax(0, 1fr);
+}
+
+.column {
+  min-inline-size: 0;
+}
+
+.desktopSidebar,
+.desktopTopBar {
+  min-inline-size: 0;
+}
+
+.main {
+  min-inline-size: 0;
+  padding: clamp(var(--qg-space-5), 2.5vw, var(--qg-space-8));
+}
+
+.main:focus {
+  outline: none;
+}
+
+.content {
+  inline-size: min(100%, var(--qg-shell-content-max-width));
+  min-inline-size: 0;
+  margin-inline: auto;
+}
+
+.mobileHeader,
+.bottomNavigation {
+  display: none;
+}
+
+.skipLink {
+  position: fixed;
+  z-index: var(--qg-layer-notification);
+  top: var(--qg-space-3);
+  left: var(--qg-space-3);
+  padding: var(--qg-space-3) var(--qg-space-4);
+  color: var(--qg-on-action-primary);
+  font-weight: var(--qg-font-weight-bold);
+  text-decoration: none;
+  background: var(--qg-action-primary);
+  border-radius: var(--qg-radius-control);
+  box-shadow: var(--qg-shadow-command-surface);
+  transform: translateY(calc(-100% - var(--qg-space-6)));
+  transition: transform var(--qg-motion-micro) var(--qg-motion-ease-standard);
+}
+
+.skipLink:focus {
+  transform: translateY(0);
+}
+
+.liveAnnouncement {
+  position: fixed;
+  overflow: hidden;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: -1px;
+  clip-path: inset(50%);
+}
+
+@media (width <= 860px) {
+  .shell,
+  .shell[data-sidebar-collapsed="true"] {
+    display: block;
+  }
+
+  .desktopSidebar,
+  .desktopTopBar {
+    display: none;
+  }
+
+  .mobileHeader,
+  .bottomNavigation {
+    display: block;
+  }
+
+  .main {
+    padding: var(--qg-space-5) var(--qg-space-4) calc(82px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell,
+  .skipLink {
+    transition: none;
+  }
+}
+
+[data-qg-motion="reduced"] .shell,
+[data-qg-motion="reduced"] .skipLink {
+  transition: none;
+}

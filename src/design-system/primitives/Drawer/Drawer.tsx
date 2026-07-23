@@ -36,7 +36,7 @@ export const Drawer = ({
   returnFocusRef,
   className,
 }: DrawerProps) => {
-  const panelRef = useRef<HTMLElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const descriptionId = useId();
   const requestClose = () => onOpenChange(false);
@@ -58,7 +58,7 @@ export const Drawer = ({
 
   return createPortal(
     <div className={styles.backdrop} onMouseDown={handleBackdropClick}>
-      <aside
+      <div
         ref={panelRef}
         className={panelClassName}
         role="dialog"
@@ -74,7 +74,7 @@ export const Drawer = ({
           tabIndex={0}
           onFocus={focusLast}
         />
-        <header className={styles.header}>
+        <div className={styles.header}>
           <div className={styles.heading}>
             <h2 id={titleId} className={styles.title}>{title}</h2>
             {description === undefined
@@ -89,16 +89,16 @@ export const Drawer = ({
           >
             <span aria-hidden="true">×</span>
           </button>
-        </header>
+        </div>
         <div className={styles.body}>{children}</div>
-        {footer === undefined ? null : <footer className={styles.footer}>{footer}</footer>}
+        {footer === undefined ? null : <div className={styles.footer}>{footer}</div>}
         <span
           className={styles.focusGuard}
           data-modal-focus-guard="end"
           tabIndex={0}
           onFocus={focusFirst}
         />
-      </aside>
+      </div>
     </div>,
     document.body,
   );

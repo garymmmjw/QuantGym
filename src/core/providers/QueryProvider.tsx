@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 
+import { shouldRetryQuery } from "./queryRetry";
+
 type QueryProviderProps = Readonly<{
   children: ReactNode;
 }>;
@@ -8,7 +10,7 @@ type QueryProviderProps = Readonly<{
 const createQueryClient = () => new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,
+      retry: shouldRetryQuery,
       refetchOnWindowFocus: false,
       staleTime: 30_000,
     },

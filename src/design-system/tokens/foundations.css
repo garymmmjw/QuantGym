@@ -17,6 +17,9 @@
   --qg-radius-pill: 999px;
   --qg-touch-target-min: 44px;
   --qg-control-height-default: var(--qg-touch-target-min);
+  --qg-shell-sidebar-width: 252px;
+  --qg-shell-sidebar-collapsed-width: 76px;
+  --qg-shell-content-max-width: 1180px;
   --qg-layer-underlay: -1;
   --qg-layer-base: 0;
   --qg-layer-raised: 1;

@@ -167,7 +167,7 @@ test("@e2e:auth-session-and-recovery 重设令牌只从 fragment 读取并立即
 
 test("@e2e:auth-session-and-recovery Google 登录保持同源导航", async ({ page, baseURL }) => {
   await mockV2Api(page);
-  await page.goto("/login?redirect=%2Fpractice%3Ffrom%3Dgoogle");
+  await page.goto("/login?redirect=%2Finterview%3Ffrom%3Dgoogle");
 
   const googleRequestPromise = page.waitForRequest("**/api/v2/auth/google/start?**");
   await page.getByRole("button", { name: "使用 Google 继续", exact: true }).click();
@@ -176,15 +176,29 @@ test("@e2e:auth-session-and-recovery Google 登录保持同源导航", async ({ 
 
   expect(target.origin).toBe(new URL(baseURL ?? "http://localhost:42731").origin);
   expect(target.pathname).toBe("/api/v2/auth/google/start");
-  expect(target.searchParams.get("redirectPath")).toBe("/practice?from=google");
+  expect(target.searchParams.get("redirectPath")).toBe("/interview?from=google");
 
-  await page.goto("/practice?from=google");
-  await expect(page.getByRole("heading", { name: "QuantGym", exact: true })).toBeVisible();
-  await expect(page.getByText("全新的训练体验正在准备中。")).toBeVisible();
+  await page.route("**/api/v2/me", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(signedInUser),
+    });
+  });
+  await page.goto("/interview?from=google");
+  await expect(page.getByRole("heading", { name: "模拟面试", exact: true })).toBeVisible();
+  await expect(page.getByText("共享体验正在升级", { exact: true })).toBeVisible();
 });
 
 test("@e2e:auth-session-and-recovery Google 回调失败清除秘密并返回品牌恢复页", async ({ page }) => {
   await mockV2Api(page);
+  await page.route("**/api/v2/me", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(signedInUser),
+    });
+  });
   const state = "secret-provider-state";
   await page.goto(`/api/v2/auth/google/callback?error=access_denied&state=${state}`);
 
@@ -195,6 +209,30 @@ test("@e2e:auth-session-and-recovery Google 回调失败清除秘密并返回品
   await expect(page.getByRole("button", { name: "重新尝试 Google 登录" })).toBeVisible();
   expect(page.url()).not.toContain(state);
   expect(page.url()).not.toContain("access_denied");
+});
+
+test("@e2e:auth-session-and-recovery 强制重新认证不会从子流程回跳", async ({ page }) => {
+  await mockV2Api(page);
+  await page.route("**/api/v2/me", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(signedInUser),
+    });
+  });
+
+  await page.goto("/login?redirect=%2Faccount&reauth=1");
+  await expect(page.getByRole("heading", { name: "欢迎回来", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "忘记密码", exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?(?=.*mode=forgot)(?=.*reauth=1)/u);
+  await expect(page.getByRole("heading", { name: "重置密码", exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: /返回登录/u }).click();
+  await expect(page).toHaveURL(/\/login\?(?=.*reauth=1)(?!.*mode=)/u);
+  await page.getByRole("tab", { name: "注册", exact: true }).click();
+  await expect(page).toHaveURL(/\/login\?(?=.*mode=register)(?=.*reauth=1)/u);
+  await expect(page.getByRole("button", { name: "创建账号", exact: true })).toBeVisible();
 });
 
 test("@e2e:auth-session-and-recovery 认证视图与 URL、刷新及后退保持一致", async ({ page }) => {

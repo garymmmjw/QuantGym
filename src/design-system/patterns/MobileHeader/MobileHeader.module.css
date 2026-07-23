@@ -1,0 +1,132 @@
+.root {
+  position: sticky;
+  z-index: var(--qg-layer-navigation);
+  top: 0;
+  display: flex;
+  gap: var(--qg-space-1);
+  align-items: center;
+  min-inline-size: 0;
+  min-block-size: 64px;
+  padding: calc(var(--qg-space-2) + env(safe-area-inset-top)) var(--qg-space-3) var(--qg-space-2);
+  background: var(--qg-shell-header-background);
+  border-block-end: 1px solid var(--qg-border-subtle);
+}
+
+.iconButton,
+.themeButton,
+.account {
+  position: relative;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  min-inline-size: var(--qg-touch-target-min);
+  min-block-size: var(--qg-touch-target-min);
+  padding: 0;
+  color: var(--qg-text-muted);
+  background: var(--qg-surface-primary);
+  border: 1px solid var(--qg-border-subtle);
+  border-radius: var(--qg-radius-control);
+  cursor: pointer;
+}
+
+.iconButton svg,
+.themeButton svg {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.brand {
+  display: flex;
+  gap: var(--qg-space-2);
+  align-items: center;
+  min-inline-size: 0;
+  min-block-size: var(--qg-touch-target-min);
+  color: var(--qg-text-primary);
+  font-weight: var(--qg-font-weight-extrabold);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.brand img {
+  flex: 0 0 auto;
+  inline-size: 32px;
+  block-size: 32px;
+  object-fit: contain;
+}
+
+.brand span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand strong {
+  color: var(--qg-action-primary-text);
+}
+
+.spacer {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.reward {
+  display: flex;
+  flex: 0 0 auto;
+  gap: var(--qg-space-1);
+  align-items: center;
+  min-block-size: var(--qg-touch-target-min);
+  padding-inline: var(--qg-space-2);
+  color: var(--qg-reward-ink);
+  font-size: var(--qg-font-size-caption);
+  background: var(--qg-reward-surface);
+  border: 1px solid var(--qg-reward-border);
+  border-radius: var(--qg-radius-control);
+}
+
+.account {
+  overflow: hidden;
+  text-decoration: none;
+}
+
+.account img {
+  inline-size: 31px;
+  max-inline-size: none;
+  filter: none;
+}
+
+.iconButton:focus-visible,
+.themeButton:focus-visible,
+.account:focus-visible,
+.brand:focus-visible {
+  outline: none;
+  box-shadow: var(--qg-shadow-focus-ring);
+}
+
+.badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  min-inline-size: 18px;
+  block-size: 18px;
+  color: var(--qg-on-status-danger);
+  font-family: var(--qg-font-metrics);
+  font-size: 0.625rem;
+  font-weight: var(--qg-font-weight-bold);
+  background: var(--qg-status-danger);
+  border: 2px solid var(--qg-surface-primary);
+  border-radius: var(--qg-radius-pill);
+}
+
+@media (width <= 430px) {
+  .brand {
+    justify-content: center;
+    min-inline-size: var(--qg-touch-target-min);
+  }
+
+  .brand span,
+  .themeButton {
+    display: none;
+  }
+}

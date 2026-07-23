@@ -145,3 +145,15 @@
   from { transform: translateY(var(--qg-motion-distance)); }
   to { transform: translateY(0); }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .panel {
+    animation: none;
+  }
+}
+
+[data-qg-motion="reduced"] .backdrop,
+[data-qg-motion="reduced"] .panel {
+  animation: none;
+}

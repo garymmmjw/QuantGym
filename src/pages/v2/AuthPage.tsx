@@ -32,20 +32,6 @@ import {
 } from "../../domains/account/auth/auth.routing";
 import type { MeResponse } from "../../domains/account/auth/auth.schema";
 
-const useSystemTheme = () => {
-  useEffect(() => {
-    const root = document.documentElement;
-    if (root.dataset.qgTheme === "light" || root.dataset.qgTheme === "dark") return;
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const apply = () => {
-      root.dataset.qgTheme = media.matches ? "dark" : "light";
-    };
-    apply();
-    media.addEventListener("change", apply);
-    return () => media.removeEventListener("change", apply);
-  }, []);
-};
-
 const recoveryAnnouncement = (phase: AuthRecoveryPhase) => {
   switch (phase) {
     case "forgot":
@@ -62,7 +48,6 @@ const recoveryAnnouncement = (phase: AuthRecoveryPhase) => {
 type TransientAuthView = Extract<AuthRecoveryPhase, "forgot-sent" | "reset-success">;
 
 export default function AuthPage() {
-  useSystemTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -73,6 +58,13 @@ export default function AuthPage() {
   const googleErrorCode = useMemo(
     () => googleAuthErrorFromSearch(location.search),
     [location.search],
+  );
+  const forceReauthentication = useMemo(
+    () => (
+      new URLSearchParams(location.search).get("reauth") === "1"
+      || googleErrorCode !== undefined
+    ),
+    [googleErrorCode, location.search],
   );
   const routeIdentity = `${location.pathname}${location.search}`;
   const routedView = initialAuthView(location.pathname, location.search);
@@ -104,15 +96,17 @@ export default function AuthPage() {
       && currentUser.data !== null
       && currentUser.data !== undefined
       && location.pathname !== "/auth/reset"
+      && !forceReauthentication
     ) {
       navigate(redirectPath, { replace: true });
     }
-  }, [currentUser.data, currentUser.isSuccess, location.pathname, navigate, redirectPath]);
+  }, [currentUser.data, currentUser.isSuccess, forceReauthentication, location.pathname, navigate, redirectPath]);
 
   const authSearchFor = (mode: AuthMode | "forgot") => {
     const params = new URLSearchParams();
     if (mode !== "login") params.set("mode", mode);
     if (redirectPath !== DEFAULT_AUTH_REDIRECT) params.set("redirect", redirectPath);
+    if (forceReauthentication) params.set("reauth", "1");
     const search = params.toString();
     return search.length === 0 ? "" : `?${search}`;
   };
@@ -142,7 +136,9 @@ export default function AuthPage() {
     || view === "forgot-sent"
     || view === "reset"
     || view === "reset-success";
-  const isCheckingSession = currentUser.isPending && location.pathname !== "/auth/reset";
+  const isCheckingSession = currentUser.isPending
+    && location.pathname !== "/auth/reset"
+    && !forceReauthentication;
   const frameAnnouncement = announcement || (
     googleErrorCode === undefined ? "" : googleAuthErrorPresentation[googleErrorCode].message
   );

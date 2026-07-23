@@ -1,0 +1,13 @@
+.root {
+  position: relative;
+  z-index: var(--qg-layer-raised);
+  inline-size: 100%;
+  padding: var(--qg-space-3) var(--qg-space-4);
+  font-family: var(--qg-font-ui);
+}
+
+@media (width <= 860px) {
+  .root {
+    padding: var(--qg-space-2) var(--qg-space-3);
+  }
+}

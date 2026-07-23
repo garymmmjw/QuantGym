@@ -13,6 +13,7 @@
   --qg-action-primary: #7d7bff;
   --qg-action-primary-soft: #2a2856;
   --qg-action-primary-ink: #b9b8ff;
+  --qg-action-primary-text: #b9b8ff;
   --qg-on-action-primary: #141322;
   --qg-status-success: #16a06a;
   --qg-status-warning: #ff9f2e;
@@ -21,6 +22,21 @@
   --qg-reward-coin: var(--qg-status-warning);
   --qg-focus-ring: var(--qg-action-primary);
   --qg-overlay-backdrop: rgb(0 0 0 / 62%);
+  --qg-shell-app-background:
+    radial-gradient(68.75rem 35rem at 12% -10%, #241f45 0%, transparent 55%),
+    radial-gradient(56.25rem 32.5rem at 102% -4%, #1a2247 0%, transparent 52%),
+    linear-gradient(180deg, #121120 0%, var(--qg-app-background) 100%);
+  --qg-shell-sidebar-background: linear-gradient(180deg, #181731, #141222);
+  --qg-shell-header-background: #141322;
+  --qg-shell-navigation-hover: #2a2850;
+  --qg-reward-surface: #332816;
+  --qg-reward-border: #5f421d;
+  --qg-reward-ink: #ffbd66;
+  --qg-status-success-soft: #172d27;
+  --qg-status-warning-soft: #352816;
+  --qg-status-danger-soft: #3a2228;
+  /* stylelint-disable-next-line color-hex-length -- approved on-status literal */
+  --qg-on-status-danger: #fff;
   --qg-auth-brand-background: #14132b;
   --qg-auth-brand-atmosphere:
     radial-gradient(circle at 90% 2%, rgb(91 95 245 / 33%), transparent 32%),
