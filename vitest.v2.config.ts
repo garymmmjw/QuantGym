@@ -15,6 +15,7 @@ export default defineConfig({
       "src/core/**/*.test.{ts,tsx}",
       "src/design-system/**/*.test.{ts,tsx}",
       "src/domains/**/*.test.{ts,tsx}",
+      "src/legacy-preview/**/*.test.{ts,tsx}",
       "src/pages/v2/**/*.test.{ts,tsx}",
       "src/shared/**/*.test.{ts,tsx}",
     ],

@@ -23,6 +23,7 @@ export const EDGE_SECURITY_HEADERS = Object.freeze({
     "default-src 'self'",
     "base-uri 'none'",
     "frame-ancestors 'none'",
+    "frame-src https://legacy-compat.quantgym-v2-preview.pages.dev",
     "form-action 'self'",
     "object-src 'none'",
     "script-src 'self'",

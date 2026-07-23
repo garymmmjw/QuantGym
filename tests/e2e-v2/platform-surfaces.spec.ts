@@ -7,6 +7,11 @@ import {
   type Route,
 } from "playwright/test";
 
+import {
+  hideLegacyPreviewFrameForScreenshot,
+  mockLegacyPreviewFrame,
+} from "./legacy-frame.fixture";
+
 type PlatformTheme = "light" | "dark";
 type PlatformLanguage = "zh-CN" | "en";
 type FailureState =
@@ -74,6 +79,7 @@ type PlatformApiState = {
     theme: PlatformTheme;
     version: number;
   };
+  signedOut: boolean;
   todoListRequestCount: number;
   todos: TodoRecord[];
 };
@@ -100,6 +106,11 @@ const unreadNotification = (): NotificationRecord => ({
   kind: "training",
   readAt: null,
   title: "今日训练提醒",
+});
+
+const readNotification = (): NotificationRecord => ({
+  ...unreadNotification(),
+  readAt: fixedUpdatedAt,
 });
 
 const seededTodo = (): TodoRecord => ({
@@ -218,6 +229,15 @@ const responseFor = (request: Request, state: PlatformApiState) => {
 
   if (pathname === "/api/v2/me" && method === "GET") {
     state.meRequestCount += 1;
+    if (state.signedOut) {
+      return jsonResponse({
+        code: "AUTH_SESSION_REQUIRED",
+        fieldErrors: {},
+        message: "请先登录。",
+        requestId: "e2e-signed-out-request-id",
+        retryable: false,
+      }, 401, { "x-request-id": "e2e-signed-out-request-id" });
+    }
     return jsonResponse({
       displayName: "Gary",
       email: "gary@example.com",
@@ -364,6 +384,7 @@ const responseFor = (request: Request, state: PlatformApiState) => {
       state.logoutFailuresRemaining -= 1;
       return errorResponse("recoverable-error");
     }
+    state.signedOut = true;
     return jsonResponse({ status: "ok" });
   }
 
@@ -380,6 +401,7 @@ const mockPlatformApi = async (
   page: Page,
   options: PlatformApiOptions = {},
 ) => {
+  await mockLegacyPreviewFrame(page);
   const state: PlatformApiState = {
     calls: [],
     csrfToken,
@@ -393,6 +415,7 @@ const mockPlatformApi = async (
       theme: options.theme ?? "light",
       version: 1,
     },
+    signedOut: false,
     todoListRequestCount: 0,
     todos: options.todos?.map((item) => ({ ...item })) ?? [],
   };
@@ -761,6 +784,17 @@ test("@a11y:notifications-toast 通知中心与 Toast 通过 WCAG 自动门禁",
   await expectNoAxeViolations(page);
 });
 
+test("@a11y:notifications-read 已读通知在普通动效下通过 WCAG 自动门禁", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await mockPlatformApi(page, { notifications: [readNotification()] });
+  await page.goto("/");
+  await expectShellReady(page);
+  const dialog = await openNotifications(page);
+  await expect(dialog.getByText("今日训练提醒", { exact: true })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "标为已读", exact: true })).toHaveCount(0);
+  await expectNoAxeViolations(page);
+});
+
 test("@a11y:todo 今日待办编辑态通过 WCAG 自动门禁", async ({ page }) => {
   await mockPlatformApi(page, { todos: [seededTodo()] });
   await page.goto("/");
@@ -781,6 +815,7 @@ test("@visual:global-search:light-dark 全局搜索明暗主题视觉基线", as
     await dialog.getByRole("combobox", { name: "全局搜索", exact: true }).fill("计划");
     await expect(dialog.getByRole("option", { name: /计划/u })).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("data-qg-theme", theme);
+    await hideLegacyPreviewFrameForScreenshot(page);
     await expect(page).toHaveScreenshot(`global-search-${theme}-laptop.png`, { fullPage: true });
     await page.keyboard.press("Escape");
   }
@@ -799,6 +834,7 @@ test(
       const dialog = await openNotifications(page);
       await expect(dialog.getByText("今日训练提醒", { exact: true })).toBeVisible();
       await expect(page.locator("html")).toHaveAttribute("data-qg-theme", theme);
+      await hideLegacyPreviewFrameForScreenshot(page);
       await expect(page).toHaveScreenshot(
         `notifications-toast-${theme}-laptop.png`,
         { fullPage: true },
@@ -819,6 +855,7 @@ test("@visual:todo:light-dark 今日待办明暗主题视觉基线", async ({ pa
     const dialog = await openTodo(page);
     await expect(dialog.getByText("复习概率论", { exact: true })).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("data-qg-theme", theme);
+    await hideLegacyPreviewFrameForScreenshot(page);
     await expect(page).toHaveScreenshot(`todo-${theme}-laptop.png`, { fullPage: true });
     await dialog.getByRole("button", { name: "关闭今日待办", exact: true }).click();
   }

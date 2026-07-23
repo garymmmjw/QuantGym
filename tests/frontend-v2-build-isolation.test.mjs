@@ -22,6 +22,7 @@ import { loadConfigFromFile } from "vite";
 import {
   resolveBuildMetadata,
   validateV2PublicDirectory,
+  validateV2PublicDeploymentPolicy,
 } from "../scripts/build-frontend-v2.mjs";
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -142,8 +143,8 @@ test("declares the isolated V2 commands and exact source program", async () => {
     ].map((name) => [name, packageJson.scripts[name]])),
     {
       "typecheck:v2": "tsc --project tsconfig.v2.json --noEmit",
-      "lint:v2": "eslint --max-warnings 0 --no-error-on-unmatched-pattern --config eslint.config.mjs 'src/{core,design-system,domains,pages/v2}/**/*.{ts,tsx}' 'src/shared/{api,i18n,lib,storage,testing}/**/*.{ts,tsx}' 'functions/**/*.ts' '.storybook/*.ts' vite.v2.config.ts vitest.v2.config.ts",
-      "lint:styles:v2": "stylelint --config stylelint.config.mjs 'src/{core,shared,design-system,domains,pages/v2}/**/*.css' --allow-empty-input",
+      "lint:v2": "eslint --max-warnings 0 --no-error-on-unmatched-pattern --config eslint.config.mjs 'src/{core,design-system,domains,legacy-preview,pages/v2}/**/*.{ts,tsx}' 'src/shared/{api,i18n,lib,storage,testing}/**/*.{ts,tsx}' 'functions/**/*.ts' '.storybook/*.ts' vite.v2.config.ts vitest.v2.config.ts",
+      "lint:styles:v2": "stylelint --config stylelint.config.mjs 'src/{core,shared,design-system,domains,legacy-preview,pages/v2}/**/*.css' --allow-empty-input",
       "test:v2": "vitest --config vitest.v2.config.ts run",
       "build:v2": "node scripts/build-frontend-v2.mjs",
       "check:frontend-v2-build-isolation": "node --test tests/frontend-v2-build-isolation.test.mjs && node scripts/check-frontend-v2-boundaries.mjs",
@@ -162,6 +163,8 @@ test("declares the isolated V2 commands and exact source program", async () => {
     "src/design-system/**/*.tsx",
     "src/domains/**/*.ts",
     "src/domains/**/*.tsx",
+    "src/legacy-preview/**/*.ts",
+    "src/legacy-preview/**/*.tsx",
     "src/pages/v2/**/*.ts",
     "src/pages/v2/**/*.tsx",
     "src/shared/api/**/*.ts",
@@ -194,6 +197,7 @@ test("declares the isolated V2 commands and exact source program", async () => {
     "src/core/**/*.test.{ts,tsx}",
     "src/design-system/**/*.test.{ts,tsx}",
     "src/domains/**/*.test.{ts,tsx}",
+    "src/legacy-preview/**/*.test.{ts,tsx}",
     "src/pages/v2/**/*.test.{ts,tsx}",
     "src/shared/**/*.test.{ts,tsx}",
   ]);
@@ -215,7 +219,12 @@ test("uses v2.html as the sole Vite entry and guards the canonical module graph"
     (plugin) => plugin.name === "quantgym-v2-resolved-module-guard",
   );
   assert.ok(guard && typeof guard.transform === "function" && guard.api);
+  assert.equal(guard.api.legacyPreviewAllowed, true);
   assert.doesNotThrow(() => guard.transform("", path.join(projectRoot, "src/core/bootstrap/main.tsx")));
+  assert.doesNotThrow(() => guard.transform(
+    "",
+    path.join(projectRoot, "src/legacy-preview/LegacyRouteAdapter.tsx"),
+  ));
   assert.doesNotThrow(() => guard.transform(
     "",
     path.join(projectRoot, "assets/generated/playful-precision/optimized/hero-wave-320.webp"),
@@ -234,7 +243,6 @@ test("uses v2.html as the sole Vite entry and guards the canonical module graph"
     "assets/generated/playful-precision/quanty-runtime-manifest.json",
   );
   const forbiddenPaths = [
-    "src/main.jsx",
     "src/router.js",
     "config.js",
     "data/problem-catalog.js",
@@ -249,6 +257,44 @@ test("uses v2.html as the sole Vite entry and guards the canonical module graph"
       /V2_MODULE_OUTSIDE_ALLOWLIST/,
       relativePath,
     );
+  }
+  for (const removedPath of ["src/main.jsx", "src/App.jsx"]) {
+    assert.equal(
+      await lstat(path.join(projectRoot, removedPath)).catch(() => null),
+      null,
+      `${removedPath} must remain deleted after the Phase 1 shell cutover`,
+    );
+  }
+});
+
+test("production branch builds reject the Preview adapter at the canonical module guard", async () => {
+  const previousBranch = process.env.QUANTGYM_BUILD_BRANCH;
+  const previousSource = process.env.QUANTGYM_BUILD_SOURCE;
+  process.env.QUANTGYM_BUILD_BRANCH = "main";
+  process.env.QUANTGYM_BUILD_SOURCE = "test";
+  try {
+    const loaded = await loadConfigFromFile(
+      { command: "build", mode: "production" },
+      path.join(projectRoot, "vite.v2.config.ts"),
+      projectRoot,
+    );
+    const guard = loaded?.config.plugins?.find(
+      (plugin) => plugin.name === "quantgym-v2-resolved-module-guard",
+    );
+    assert.ok(guard && typeof guard.transform === "function" && guard.api);
+    assert.equal(guard.api.legacyPreviewAllowed, false);
+    assert.throws(
+      () => guard.transform(
+        "",
+        path.join(projectRoot, "src/legacy-preview/LegacyRouteAdapter.tsx"),
+      ),
+      /V2_MODULE_OUTSIDE_ALLOWLIST/,
+    );
+  } finally {
+    if (previousBranch === undefined) delete process.env.QUANTGYM_BUILD_BRANCH;
+    else process.env.QUANTGYM_BUILD_BRANCH = previousBranch;
+    if (previousSource === undefined) delete process.env.QUANTGYM_BUILD_SOURCE;
+    else process.env.QUANTGYM_BUILD_SOURCE = previousSource;
   }
 });
 
@@ -357,6 +403,35 @@ test("uses complete Cloudflare Pages provenance as the authoritative deployment 
     CF_PAGES_BRANCH: "codex/frontend-v2-preview",
     QUANTGYM_BUILD_SOURCE: "forged-provider",
   }, gitValue), /V2_CLOUDFLARE_SOURCE_OVERRIDE_MISMATCH/);
+
+  const localGitValue = (args) => (
+    args.includes("rev-parse")
+      ? "4444444444444444444444444444444444444444"
+      : "main"
+  );
+  assert.deepEqual(resolveBuildMetadata({}, localGitValue), {
+    commit: "4444444444444444444444444444444444444444",
+    branch: "main",
+    source: "local",
+  });
+  assert.throws(() => resolveBuildMetadata({
+    QUANTGYM_BUILD_BRANCH: "codex/frontend-v2-preview",
+  }, localGitValue), /V2_LOCAL_BRANCH_OVERRIDE_MISMATCH/);
+  assert.throws(() => resolveBuildMetadata({
+    QUANTGYM_BUILD_COMMIT: "5555555555555555555555555555555555555555",
+  }, localGitValue), /V2_LOCAL_COMMIT_OVERRIDE_MISMATCH/);
+  assert.throws(() => resolveBuildMetadata({
+    QUANTGYM_BUILD_SOURCE: "cloudflare-pages",
+  }, localGitValue), /V2_CLOUDFLARE_METADATA_REQUIRED/);
+  assert.deepEqual(resolveBuildMetadata({
+    QUANTGYM_BUILD_COMMIT: "5555555555555555555555555555555555555555",
+    QUANTGYM_BUILD_BRANCH: "codex/frontend-v2-preview",
+    QUANTGYM_BUILD_SOURCE: "test",
+  }, localGitValue), {
+    commit: "5555555555555555555555555555555555555555",
+    branch: "codex/frontend-v2-preview",
+    source: "test",
+  });
 });
 
 test("public-v2 accepts only the three reviewed regular control files", async () => {
@@ -382,6 +457,14 @@ test("public-v2 accepts only the three reviewed regular control files", async ()
       rm(outsideRoot, { recursive: true, force: true }),
     ]);
   }
+});
+
+test("allows the legacy frame policy only for the isolated Preview build", async () => {
+  await assert.doesNotReject(validateV2PublicDeploymentPolicy(true));
+  await assert.rejects(
+    validateV2PublicDeploymentPolicy(false),
+    /V2_PRODUCTION_LEGACY_FRAME_POLICY_FORBIDDEN/,
+  );
 });
 
 test("builds exactly one V2 HTML entry and deterministic public metadata", { timeout: 120_000 }, async () => {

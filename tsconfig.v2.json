@@ -29,6 +29,8 @@
     "src/design-system/**/*.tsx",
     "src/domains/**/*.ts",
     "src/domains/**/*.tsx",
+    "src/legacy-preview/**/*.ts",
+    "src/legacy-preview/**/*.tsx",
     "src/pages/v2/**/*.ts",
     "src/pages/v2/**/*.tsx",
     "src/shared/api/**/*.ts",

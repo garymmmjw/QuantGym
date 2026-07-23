@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +11,7 @@ const canonicalProjectRoot = realpathSync(projectRoot);
 const approvedAssetRoot = path.join(canonicalProjectRoot, "assets/generated/playful-precision");
 const approvedFontRoot = path.join(canonicalProjectRoot, "src/design-system/assets/fonts");
 const approvedSourceExtensions = new Set([".css", ".ts", ".tsx"]);
+export const LEGACY_PREVIEW_BRANCH = "codex/frontend-v2-preview";
 
 type RuntimeAsset = {
   variants: Array<{ path: string }>;
@@ -106,7 +108,7 @@ if (
   throw new Error("V2_ASSET_ALLOWLIST_INVALID");
 }
 
-const approvedSourceDirectories = [
+const baseApprovedSourceDirectories = [
   "src/core",
   "src/design-system",
   "src/domains",
@@ -117,6 +119,54 @@ const approvedSourceDirectories = [
   "src/shared/storage",
   "src/shared/testing",
 ].map((relativePath) => canonicalSecureDirectory(path.join(canonicalProjectRoot, relativePath)));
+
+export const resolveV2BuildBranch = (
+  environment: NodeJS.ProcessEnv = process.env,
+  readBranch: () => string = () => execFileSync(
+    "/usr/bin/git",
+    ["branch", "--show-current"],
+    {
+      cwd: canonicalProjectRoot,
+      encoding: "utf8",
+      env: {
+        HOME: environment.HOME ?? "",
+        PATH: "/usr/bin:/bin",
+        LANG: "C",
+        LC_ALL: "C",
+        GIT_CONFIG_NOSYSTEM: "1",
+        GIT_CONFIG_GLOBAL: "/dev/null",
+        GIT_NO_REPLACE_OBJECTS: "1",
+      },
+    },
+  ).trim(),
+) => {
+  const hasCloudflareCommit = environment.CF_PAGES_COMMIT_SHA !== undefined;
+  const hasCloudflareBranch = environment.CF_PAGES_BRANCH !== undefined;
+  if (hasCloudflareCommit !== hasCloudflareBranch) {
+    throw new Error("V2_CLOUDFLARE_METADATA_INCOMPLETE");
+  }
+  if (hasCloudflareBranch) return environment.CF_PAGES_BRANCH ?? "";
+  if (environment.QUANTGYM_BUILD_SOURCE === "cloudflare-pages") {
+    throw new Error("V2_CLOUDFLARE_METADATA_REQUIRED");
+  }
+
+  const repositoryBranch = readBranch();
+  if (environment.QUANTGYM_BUILD_SOURCE === "test") {
+    return environment.QUANTGYM_BUILD_BRANCH ?? repositoryBranch;
+  }
+  if (
+    environment.QUANTGYM_BUILD_BRANCH !== undefined
+    && environment.QUANTGYM_BUILD_BRANCH !== repositoryBranch
+  ) {
+    throw new Error("V2_LOCAL_BRANCH_OVERRIDE_MISMATCH");
+  }
+  return repositoryBranch;
+};
+
+export const isLegacyPreviewBuild = (
+  command: "build" | "serve",
+  branch: string,
+) => command === "serve" || branch === LEGACY_PREVIEW_BRANCH;
 
 const approvedDesignAssetPaths = [
   "assets/generated/playful-precision/brand-q-mark.webp",
@@ -187,12 +237,20 @@ type GuardApi = Readonly<{
   createModuleAssertion: typeof createModuleAssertion;
 }>;
 
-const v2ResolvedModuleGuard = (): Plugin<GuardApi> => {
+const v2ResolvedModuleGuard = (
+  legacyPreviewAllowed: boolean,
+): Plugin<GuardApi & { legacyPreviewAllowed: boolean }> => {
+  const sourceDirectories = legacyPreviewAllowed
+    ? [
+        ...baseApprovedSourceDirectories,
+        canonicalSecureDirectory(path.join(canonicalProjectRoot, "src/legacy-preview")),
+      ]
+    : baseApprovedSourceDirectories;
   const assertApprovedModule = createModuleAssertion({
     projectRoot: canonicalProjectRoot,
     entryPath: canonicalSecureFile(path.join(canonicalProjectRoot, "v2.html")),
     nodeModulesPath: canonicalSecureDirectory(path.join(canonicalProjectRoot, "node_modules")),
-    sourceDirectories: approvedSourceDirectories,
+    sourceDirectories,
     assetPaths: approvedAssetPaths,
   });
   return {
@@ -205,9 +263,32 @@ const v2ResolvedModuleGuard = (): Plugin<GuardApi> => {
     moduleParsed(moduleInfo) {
       assertApprovedModule(moduleInfo.id);
     },
-    api: { createModuleAssertion },
+    api: { createModuleAssertion, legacyPreviewAllowed },
   };
 };
+
+const rejectProductionLegacyPreviewChunks = (
+  legacyPreviewAllowed: boolean,
+): Plugin => ({
+  name: "quantgym-v2-production-legacy-preview-rejection",
+  apply: "build",
+  generateBundle(_options, bundle) {
+    if (legacyPreviewAllowed) return;
+    for (const [fileName, output] of Object.entries(bundle)) {
+      const source = output.type === "chunk"
+        ? `${output.facadeModuleId ?? ""}\n${output.code}`
+        : typeof output.source === "string"
+          ? output.source
+          : "";
+      if (
+        /(?:^|[/\\])legacy-preview(?:[/\\]|$)/.test(source)
+        || /legacy-compat\.quantgym-v2-preview\.pages\.dev/.test(source)
+      ) {
+        throw new Error(`V2_PRODUCTION_LEGACY_ADAPTER_CHUNK: ${fileName}`);
+      }
+    }
+  },
+});
 
 const v2DevelopmentSpaFallback = (): Plugin => ({
   name: "quantgym-v2-development-spa-fallback",
@@ -240,30 +321,39 @@ const v2DevelopmentSpaFallback = (): Plugin => ({
   },
 });
 
-export default defineConfig({
-  root: projectRoot,
-  base: "/",
-  publicDir: path.join(projectRoot, "public-v2"),
-  appType: "spa",
-  optimizeDeps: {
-    // Vite's dev scanner otherwise discovers the legacy root HTML alongside
-    // v2.html and correctly trips the V2 module allowlist before this app loads.
-    entries: [path.join(projectRoot, "v2.html")],
-  },
-  plugins: [v2DevelopmentSpaFallback(), v2ResolvedModuleGuard(), react()],
-  build: {
-    outDir: path.join(projectRoot, "dist-v2"),
-    emptyOutDir: true,
-    copyPublicDir: true,
-    sourcemap: false,
-    target: "es2022",
-    rollupOptions: {
-      input: path.join(projectRoot, "v2.html"),
-      output: {
-        entryFileNames: "assets/[name]-[hash].js",
-        chunkFileNames: "assets/[name]-[hash].js",
-        assetFileNames: "assets/[name]-[hash][extname]",
+export default defineConfig(({ command }) => {
+  const buildBranch = resolveV2BuildBranch();
+  const legacyPreviewAllowed = isLegacyPreviewBuild(command, buildBranch);
+  return {
+    root: projectRoot,
+    base: "/",
+    publicDir: path.join(projectRoot, "public-v2"),
+    appType: "spa",
+    optimizeDeps: {
+      // Vite's dev scanner otherwise discovers the legacy root HTML alongside
+      // v2.html and correctly trips the V2 module allowlist before this app loads.
+      entries: [path.join(projectRoot, "v2.html")],
+    },
+    plugins: [
+      v2DevelopmentSpaFallback(),
+      v2ResolvedModuleGuard(legacyPreviewAllowed),
+      rejectProductionLegacyPreviewChunks(legacyPreviewAllowed),
+      react(),
+    ],
+    build: {
+      outDir: path.join(projectRoot, "dist-v2"),
+      emptyOutDir: true,
+      copyPublicDir: true,
+      sourcemap: false,
+      target: "es2022",
+      rollupOptions: {
+        input: path.join(projectRoot, "v2.html"),
+        output: {
+          entryFileNames: "assets/[name]-[hash].js",
+          chunkFileNames: "assets/[name]-[hash].js",
+          assetFileNames: "assets/[name]-[hash][extname]",
+        },
       },
     },
-  },
+  };
 });

@@ -19,6 +19,9 @@ import { build } from "vite";
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const outputDirectory = path.join(projectRoot, "dist-v2");
 const publicDirectory = path.join(projectRoot, "public-v2");
+const LEGACY_PREVIEW_BRANCH = "codex/frontend-v2-preview";
+const LEGACY_PREVIEW_ALIAS = "legacy-compat.quantgym-v2-preview.pages.dev";
+const LEGACY_PREVIEW_CHUNK_MARKER = "data-legacy-preview-frame";
 const EXPECTED_PUBLIC_FILES = ["_headers", "_redirects", "_routes.json"];
 const EXPECTED_OUTPUT_ROOT_FILES = new Set([
   "404.html",
@@ -110,15 +113,40 @@ export const resolveBuildMetadata = (
     return { commit, branch, source: "cloudflare-pages" };
   }
 
+  const source = validateLabel("source", environment.QUANTGYM_BUILD_SOURCE ?? "local");
+  if (source === "cloudflare-pages") {
+    throw new Error("V2_CLOUDFLARE_METADATA_REQUIRED");
+  }
+  const repositoryCommit = validateCommit(gitValue(["rev-parse", "HEAD"]));
+  const repositoryBranch = validateLabel(
+    "branch",
+    gitValue(["branch", "--show-current"]) || "detached",
+  );
+  if (source !== "test") {
+    if (
+      environment.QUANTGYM_BUILD_COMMIT !== undefined
+      && environment.QUANTGYM_BUILD_COMMIT !== repositoryCommit
+    ) {
+      throw new Error("V2_LOCAL_COMMIT_OVERRIDE_MISMATCH");
+    }
+    if (
+      environment.QUANTGYM_BUILD_BRANCH !== undefined
+      && environment.QUANTGYM_BUILD_BRANCH !== repositoryBranch
+    ) {
+      throw new Error("V2_LOCAL_BRANCH_OVERRIDE_MISMATCH");
+    }
+  }
   const commit = validateCommit(
-    environment.QUANTGYM_BUILD_COMMIT ?? gitValue(["rev-parse", "HEAD"]),
+    source === "test"
+      ? environment.QUANTGYM_BUILD_COMMIT ?? repositoryCommit
+      : repositoryCommit,
   );
   const branch = validateLabel(
     "branch",
-    environment.QUANTGYM_BUILD_BRANCH
-      ?? (gitValue(["branch", "--show-current"]) || "detached"),
+    source === "test"
+      ? environment.QUANTGYM_BUILD_BRANCH ?? repositoryBranch
+      : repositoryBranch,
   );
-  const source = validateLabel("source", environment.QUANTGYM_BUILD_SOURCE ?? "local");
   return { commit, branch, source };
 };
 
@@ -166,6 +194,25 @@ export const validateV2PublicDirectory = async (directory = publicDirectory) => 
     const contents = await readFile(absolutePath, "utf8");
     if (contents.includes("\0")) throw new Error(`V2_PUBLIC_FILE_CONTENT_INVALID: ${entry.name}`);
     if (entry.name === "_routes.json") JSON.parse(contents);
+  }
+};
+
+export const validateV2PublicDeploymentPolicy = async (
+  legacyPreviewAllowed,
+  directory = publicDirectory,
+) => {
+  const headers = await readFile(path.join(directory, "_headers"), "utf8");
+  const legacyFrameDirective = (
+    `frame-src https://${LEGACY_PREVIEW_ALIAS}`
+  );
+  if (legacyPreviewAllowed) {
+    if (!headers.includes(legacyFrameDirective)) {
+      throw new Error("V2_PREVIEW_LEGACY_FRAME_POLICY_MISSING");
+    }
+    return;
+  }
+  if (headers.includes(LEGACY_PREVIEW_ALIAS)) {
+    throw new Error("V2_PRODUCTION_LEGACY_FRAME_POLICY_FORBIDDEN");
   }
 };
 
@@ -258,13 +305,32 @@ const writePublicMetadata = async (metadata) => {
   ]);
 };
 
-const scanOutput = async () => {
+const scanOutput = async ({ legacyPreviewAllowed }) => {
+  let legacyPreviewChunkCount = 0;
   for (const relativePath of await walkFiles(outputDirectory)) {
     if (!TEXT_OUTPUT_EXTENSIONS.has(path.extname(relativePath).toLowerCase())) continue;
     const source = await readFile(path.join(outputDirectory, relativePath), "utf8");
     for (const [label, pattern] of FORBIDDEN_OUTPUT_PATTERNS) {
       if (pattern.test(source)) throw new Error(`V2_OUTPUT_FORBIDDEN_${label.replaceAll(" ", "_").toUpperCase()}: ${relativePath}`);
     }
+    const containsLegacyPreview = (
+      source.includes(LEGACY_PREVIEW_ALIAS)
+      || source.includes(LEGACY_PREVIEW_CHUNK_MARKER)
+    );
+    if (containsLegacyPreview) {
+      if (!legacyPreviewAllowed) {
+        throw new Error(`V2_PRODUCTION_LEGACY_ADAPTER_CHUNK: ${relativePath}`);
+      }
+      if (
+        relativePath.endsWith(".js")
+        && source.includes(LEGACY_PREVIEW_ALIAS)
+      ) {
+        legacyPreviewChunkCount += 1;
+      }
+    }
+  }
+  if (legacyPreviewAllowed && legacyPreviewChunkCount !== 1) {
+    throw new Error(`V2_PREVIEW_LEGACY_ADAPTER_CHUNK_COUNT_INVALID: ${legacyPreviewChunkCount}`);
   }
 };
 
@@ -292,18 +358,20 @@ const writeIntegrityManifest = async () => {
 export const buildFrontendV2 = async () => {
   assertExactRuntime();
   const metadata = resolveBuildMetadata();
+  const legacyPreviewAllowed = metadata.branch === LEGACY_PREVIEW_BRANCH;
   await rm(outputDirectory, { recursive: true, force: true });
   await validateV2PublicDirectory();
+  await validateV2PublicDeploymentPolicy(legacyPreviewAllowed);
   await build({
     configFile: path.join(projectRoot, "vite.v2.config.ts"),
     mode: "production",
   });
   await renameSingleHtmlEntry();
   await writePublicMetadata(metadata);
-  await scanOutput();
+  await scanOutput({ legacyPreviewAllowed });
   await writeIntegrityManifest();
   await validateFinalOutputPaths();
-  await scanOutput();
+  await scanOutput({ legacyPreviewAllowed });
   console.log(`Frontend V2 build valid: ${metadata.commit} (${metadata.branch}, ${metadata.source}).`);
 };
 

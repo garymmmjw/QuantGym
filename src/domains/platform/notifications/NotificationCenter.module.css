@@ -100,7 +100,7 @@
 }
 
 .itemContent time {
-  color: var(--qg-text-muted);
+  color: var(--qg-text-secondary);
   font-family: var(--qg-font-metrics);
   font-size: var(--qg-font-size-caption);
 }
@@ -118,10 +118,6 @@
   background: var(--qg-action-primary);
   border-radius: var(--qg-radius-pill);
   box-shadow: 0 0 0 3px var(--qg-action-primary-soft);
-}
-
-.item[data-notification-read="true"] {
-  opacity: 0.76;
 }
 
 .recovery {
@@ -148,14 +144,4 @@
     inline-size: 100%;
     border-radius: 0;
   }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .item[data-notification-read="true"] {
-    opacity: 1;
-  }
-}
-
-[data-qg-motion="reduced"] .item[data-notification-read="true"] {
-  opacity: 1;
 }

@@ -126,7 +126,7 @@ export function AuthenticatedPlatformShell({
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>(null);
   const surfaceReturnFocusRef = useRef<HTMLElement>(null);
   const todoLauncherRef = useRef<HTMLButtonElement>(null);
-  const logoutRequestRef = useRef(false);
+  const logoutRequestRef = useRef<symbol | null>(null);
   const sessionBoundaryActiveRef = useRef(true);
   const previousOwnerScopeRef = useRef<string | null>(null);
   const preferenceOperationInFlightRef = useRef(false);
@@ -255,9 +255,15 @@ export function AuthenticatedPlatformShell({
   }, [finishLocalLogout, language, toast]);
 
   const signOut = useCallback(function requestSignOut() {
-    if (logoutMutation.isPending || logoutRequestRef.current) return;
+    if (!sessionBoundaryActiveRef.current || logoutRequestRef.current !== null) return;
     const requestOwnerScope = ownerScope;
-    logoutRequestRef.current = true;
+    const requestToken = Symbol("logout-request");
+    logoutRequestRef.current = requestToken;
+    const releaseRequest = () => {
+      if (logoutRequestRef.current === requestToken) {
+        logoutRequestRef.current = null;
+      }
+    };
     toast.dismissToast(logoutToastId);
     void verifyCurrentOwner()
       .then(() => {
@@ -265,11 +271,12 @@ export function AuthenticatedPlatformShell({
           !sessionBoundaryActiveRef.current
           || !currentCacheMatchesOwner(requestOwnerScope)
         ) {
-          logoutRequestRef.current = false;
+          releaseRequest();
           return;
         }
         logoutMutation.mutate(undefined, {
           onError: (error) => {
+            releaseRequest();
             if (
               !sessionBoundaryActiveRef.current
               || !currentCacheMatchesOwner(requestOwnerScope)
@@ -292,7 +299,7 @@ export function AuthenticatedPlatformShell({
             });
           },
           onSettled: () => {
-            logoutRequestRef.current = false;
+            releaseRequest();
           },
           onSuccess: () => {
             if (
@@ -305,7 +312,7 @@ export function AuthenticatedPlatformShell({
         });
       })
       .catch((error: unknown) => {
-        logoutRequestRef.current = false;
+        releaseRequest();
         if (
           !sessionBoundaryActiveRef.current
           || !currentCacheMatchesOwner(requestOwnerScope)

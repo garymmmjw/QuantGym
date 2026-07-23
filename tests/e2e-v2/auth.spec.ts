@@ -1,6 +1,8 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Request, type Route } from "playwright/test";
 
+import { mockLegacyPreviewFrame } from "./legacy-frame.fixture";
+
 type ApiCall = Readonly<{
   method: string;
   path: string;
@@ -75,6 +77,7 @@ const responseFor = (request: Request) => {
 };
 
 const mockV2Api = async (page: Page) => {
+  await mockLegacyPreviewFrame(page);
   const calls: ApiCall[] = [];
   await page.route("**/api/v2/**", async (route: Route) => {
     const request = route.request();
@@ -187,7 +190,8 @@ test("@e2e:auth-session-and-recovery Google 登录保持同源导航", async ({ 
   });
   await page.goto("/interview?from=google");
   await expect(page.getByRole("heading", { name: "模拟面试", exact: true })).toBeVisible();
-  await expect(page.getByText("共享体验正在升级", { exact: true })).toBeVisible();
+  await expect(page.getByText("兼容预览", { exact: true })).toBeVisible();
+  await expect(page.getByTitle("模拟面试 · 旧版兼容页面")).toBeVisible();
 });
 
 test("@e2e:auth-session-and-recovery Google 回调失败清除秘密并返回品牌恢复页", async ({ page }) => {

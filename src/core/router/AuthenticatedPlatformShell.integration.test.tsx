@@ -151,6 +151,42 @@ describe("AuthenticatedPlatformShell", () => {
     expect(queryClient.getQueryData(["plan-tasks"])).toBeUndefined();
   });
 
+  it("makes the logout retry actionable as soon as its recovery toast is visible", async () => {
+    let logoutAttemptCount = 0;
+    apiRequestMock.mockImplementation((path: string) => {
+      if (path === "/me") return Promise.resolve(currentUser);
+      if (path === "/notifications") {
+        return Promise.resolve({ items: [], nextCursor: null, unreadCount: 0 });
+      }
+      if (path === "/todos") return Promise.resolve({ items: [] });
+      if (path === "/auth/logout") {
+        logoutAttemptCount += 1;
+        if (logoutAttemptCount === 1) {
+          return Promise.reject(new ApiError({
+            code: "AUTH_SERVICE_UNAVAILABLE",
+            message: "认证服务暂时不可用。",
+            requestId: "request-logout-retry",
+            retryable: true,
+            status: 503,
+          }));
+        }
+        return Promise.resolve({ status: "ok" });
+      }
+      throw new Error(`UNHANDLED_TEST_API:${path}`);
+    });
+    const user = userEvent.setup();
+    renderShell();
+
+    await user.click(screen.getByRole("button", { name: "打开账户菜单" }));
+    await user.click(screen.getByRole("menuitem", { name: "退出登录" }));
+    expect(await screen.findByText("暂时无法退出")).toBeVisible();
+
+    await user.click(screen.getByRole("button", { name: "重试" }));
+
+    await waitFor(() => expect(logoutAttemptCount).toBe(2));
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/login"));
+  });
+
   it("keeps the mounted proof when the cookie rotates as owner verification completes", async () => {
     const user = userEvent.setup();
     renderShell();

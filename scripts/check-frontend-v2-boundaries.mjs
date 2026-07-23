@@ -34,6 +34,8 @@ const IMPORT_SOURCE_NODES = new Set([
   "ExportAllDeclaration",
 ]);
 const SCAN_SYMLINK_EVIDENCE = "symbolic links are not allowed under v2 scan roots";
+const LEGACY_PREVIEW_ROUTER_FILE = "src/core/router/router.tsx";
+const LEGACY_PREVIEW_ADAPTER_SPECIFIER = "../../legacy-preview/LegacyRouteAdapter";
 
 const normalizeRepoPath = (value) => String(value || "")
   .replaceAll("\\", "/")
@@ -328,7 +330,14 @@ export async function findBoundaryViolations(root) {
         specifier,
         legacyRoots,
       );
-      if (rule) violations.push({ file, rule, evidence: specifier });
+      const approvedPreviewAdapterImport = (
+        rule === "legacyImport"
+        && file === LEGACY_PREVIEW_ROUTER_FILE
+        && specifier === LEGACY_PREVIEW_ADAPTER_SPECIFIER
+      );
+      if (rule && !approvedPreviewAdapterImport) {
+        violations.push({ file, rule, evidence: specifier });
+      }
     }
   }
 

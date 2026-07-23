@@ -1,6 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Request, type Route } from "playwright/test";
 
+import {
+  hideLegacyPreviewFrameForScreenshot,
+  mockLegacyPreviewFrame,
+} from "./legacy-frame.fixture";
+
 type ShellTheme = "light" | "dark";
 type ShellLanguage = "zh-CN" | "en";
 type MeMode = "authenticated" | "permission" | "recoverable" | "signed-out" | "stale";
@@ -154,6 +159,7 @@ const responseFor = (request: Request, state: ShellApiState) => {
 };
 
 const mockV2Api = async (page: Page) => {
+  await mockLegacyPreviewFrame(page);
   const state: ShellApiState = {
     displayName: "Gary",
     meMode: "authenticated",
@@ -169,6 +175,14 @@ const mockV2Api = async (page: Page) => {
 const expectShellReady = async (page: Page, title: string) => {
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
   await expect(page.getByRole("main")).toHaveAttribute("id", "qg-main-content");
+};
+
+const expectLegacyFixtureReady = async (page: Page, title: string) => {
+  await expect(
+    page
+      .frameLocator("iframe[data-legacy-preview-frame]")
+      .getByRole("heading", { name: title, exact: true }),
+  ).toBeVisible();
 };
 
 const expectNoAxeViolations = async (page: Page) => {
@@ -294,7 +308,7 @@ test("@e2e:shell-breakpoint-no-overflow 临界桌面宽度和长用户名保持�
   api.displayName = "Gary with an exceptionally long display name";
   await page.goto("/");
   await expectShellReady(page, "总览");
-  await expect(page.getByRole("link", { name: "查看训练计划", exact: true })).toBeVisible();
+  await expect(page.getByText("兼容预览", { exact: true })).toBeVisible();
   const dimensions = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
@@ -454,13 +468,15 @@ test("@visual:desktop-shell:light-dark @visual:mobile-shell @visual:theme-langua
     await page.setViewportSize(visualCase.viewport);
     await page.goto("/");
     await expectShellReady(page, "总览");
-    await expect(page.getByRole("link", { name: "查看训练计划", exact: true })).toBeVisible();
+    await expect(page.getByText("兼容预览", { exact: true })).toBeVisible();
+    await expectLegacyFixtureReady(page, "总览");
     await expect(page.locator("html")).toHaveAttribute("data-qg-theme", visualCase.theme);
     const layout = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
     }));
     expect(layout.scrollWidth).toBe(layout.clientWidth);
+    await hideLegacyPreviewFrameForScreenshot(page);
     await expect(page).toHaveScreenshot(visualCase.name, { fullPage: true });
   }
 });

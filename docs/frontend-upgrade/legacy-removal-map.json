@@ -1,22 +1,13 @@
 {
   "version": 1,
   "legacyRoots": [
-    "src/api", "src/app", "src/components", "src/features", "src/hooks", "src/layouts", "src/lib",
+    "src/api", "src/app", "src/components", "src/features", "src/hooks", "src/layouts", "src/legacy-preview", "src/lib",
     "src/modules", "src/pages", "src/router", "src/routes", "src/state", "src/stores", "src/styles", "src/ui",
     "src/App.jsx", "src/catalog-data.js", "src/constants.js", "src/i18n.js", "src/main.js", "src/main.jsx",
     "src/prep-data.js", "src/router.js", "src/skills.js", "index.html", "config.js",
     "data/leetcode-hot-100.js", "data/library-catalog.js", "data/problem-catalog.js", "styles.css"
   ],
   "families": [
-    {
-      "id": "shell-auth",
-      "removeInPhase": 1,
-      "priority": 60,
-      "globs": ["src/components/shell/**", "src/layouts/**", "src/router/**", "src/routes/**", "src/App.jsx", "src/main.jsx", "src/ui/appShellController.js", "src/ui/authRuntime.js", "src/styles/playful-precision-shell.css", "src/styles/playful-precision-replica-auth.css"],
-      "targetDomains": ["core", "account", "design-system"],
-      "replacementPaths": ["src/core/router", "src/core/providers", "src/domains/account", "src/design-system/patterns", "src/pages/v2"],
-      "exitChecks": ["new shell starts without legacy bootstrap", "auth credentials are not persisted in browser storage"]
-    },
     {
       "id": "daily-training",
       "removeInPhase": 2,
@@ -66,7 +57,7 @@
       "id": "runtime-glue",
       "removeInPhase": 6,
       "priority": 10,
-      "globs": ["src/api/**", "src/app/**", "src/components/common/**", "src/features/shared/**", "src/hooks/**", "src/lib/**", "src/modules/**", "src/pages/*Page.jsx", "src/router/**", "src/routes/**", "src/state/**", "src/stores/**", "src/styles/**", "src/ui/**", "src/App.jsx", "src/catalog-data.js", "src/constants.js", "src/i18n.js", "src/main.js", "src/main.jsx", "src/prep-data.js", "src/router.js", "src/skills.js", "styles.css"],
+      "globs": ["src/api/**", "src/app/**", "src/components/common/**", "src/features/shared/**", "src/hooks/**", "src/legacy-preview/**", "src/lib/**", "src/modules/**", "src/pages/*Page.jsx", "src/router/**", "src/routes/**", "src/state/**", "src/stores/**", "src/styles/**", "src/ui/**", "src/App.jsx", "src/catalog-data.js", "src/constants.js", "src/i18n.js", "src/main.js", "src/main.jsx", "src/prep-data.js", "src/router.js", "src/skills.js", "styles.css"],
       "targetDomains": ["core", "shared", "design-system"],
       "replacementPaths": ["src/core", "src/shared", "src/design-system", "src/pages/v2"],
       "exitChecks": ["legacy adapter is absent", "old store bridge and event bus are absent", "duplicate CSS is absent"]

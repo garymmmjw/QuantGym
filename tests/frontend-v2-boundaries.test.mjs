@@ -27,7 +27,6 @@ const packageLock = JSON.parse(
 );
 
 const exactFamilyIds = [
-  "shell-auth",
   "daily-training",
   "interview-tools",
   "growth-competition",
@@ -36,22 +35,13 @@ const exactFamilyIds = [
   "runtime-glue",
 ];
 const exactLegacyRoots = [
-  "src/api", "src/app", "src/components", "src/features", "src/hooks", "src/layouts", "src/lib",
+  "src/api", "src/app", "src/components", "src/features", "src/hooks", "src/layouts", "src/legacy-preview", "src/lib",
   "src/modules", "src/pages", "src/router", "src/routes", "src/state", "src/stores", "src/styles", "src/ui",
   "src/App.jsx", "src/catalog-data.js", "src/constants.js", "src/i18n.js", "src/main.js", "src/main.jsx",
   "src/prep-data.js", "src/router.js", "src/skills.js", "index.html", "config.js",
   "data/leetcode-hot-100.js", "data/library-catalog.js", "data/problem-catalog.js", "styles.css",
 ];
 const exactFamilies = [
-  {
-    id: "shell-auth",
-    removeInPhase: 1,
-    priority: 60,
-    globs: ["src/components/shell/**", "src/layouts/**", "src/router/**", "src/routes/**", "src/App.jsx", "src/main.jsx", "src/ui/appShellController.js", "src/ui/authRuntime.js", "src/styles/playful-precision-shell.css", "src/styles/playful-precision-replica-auth.css"],
-    targetDomains: ["core", "account", "design-system"],
-    replacementPaths: ["src/core/router", "src/core/providers", "src/domains/account", "src/design-system/patterns", "src/pages/v2"],
-    exitChecks: ["new shell starts without legacy bootstrap", "auth credentials are not persisted in browser storage"],
-  },
   {
     id: "daily-training",
     removeInPhase: 2,
@@ -101,7 +91,7 @@ const exactFamilies = [
     id: "runtime-glue",
     removeInPhase: 6,
     priority: 10,
-    globs: ["src/api/**", "src/app/**", "src/components/common/**", "src/features/shared/**", "src/hooks/**", "src/lib/**", "src/modules/**", "src/pages/*Page.jsx", "src/router/**", "src/routes/**", "src/state/**", "src/stores/**", "src/styles/**", "src/ui/**", "src/App.jsx", "src/catalog-data.js", "src/constants.js", "src/i18n.js", "src/main.js", "src/main.jsx", "src/prep-data.js", "src/router.js", "src/skills.js", "styles.css"],
+    globs: ["src/api/**", "src/app/**", "src/components/common/**", "src/features/shared/**", "src/hooks/**", "src/legacy-preview/**", "src/lib/**", "src/modules/**", "src/pages/*Page.jsx", "src/router/**", "src/routes/**", "src/state/**", "src/stores/**", "src/styles/**", "src/ui/**", "src/App.jsx", "src/catalog-data.js", "src/constants.js", "src/i18n.js", "src/main.js", "src/main.jsx", "src/prep-data.js", "src/router.js", "src/skills.js", "styles.css"],
     targetDomains: ["core", "shared", "design-system"],
     replacementPaths: ["src/core", "src/shared", "src/design-system", "src/pages/v2"],
     exitChecks: ["legacy adapter is absent", "old store bridge and event bus are absent", "duplicate CSS is absent"],
@@ -161,7 +151,7 @@ const withFixture = async (files, callback, removalMap = legacyRemovalMap) => {
   }
 };
 
-test("the checked-in removal map has exactly seven complete families and covers tracked legacy files", () => {
+test("the checked-in removal map has exactly six remaining families and covers tracked legacy files", () => {
   assert.deepEqual(legacyRemovalMap.families.map(({ id }) => id), exactFamilyIds);
   assert.deepEqual(legacyRemovalMap.legacyRoots, exactLegacyRoots);
   assert.equal(new Set(legacyRemovalMap.families.map(({ id }) => id)).size, exactFamilyIds.length);
@@ -313,6 +303,26 @@ test("allows typed domains to import shared API code and keeps governed JSON imp
     "src/pages/v2/Routes.ts": 'import Overview from "@/pages/v2/Overview";\nexport default Overview;\n',
   }, async (root) => {
     assert.deepEqual(await findBoundaryViolations(root), []);
+  });
+});
+
+test("allows only the V2 router to lazy-load the isolated Preview adapter", async () => {
+  await withFixture({
+    "src/core/router/router.tsx": [
+      'const adapter = import("../../legacy-preview/LegacyRouteAdapter");',
+      "void adapter;",
+    ].join("\n"),
+    "src/core/forbidden-adapter.ts": [
+      'const adapter = import("../legacy-preview/LegacyRouteAdapter");',
+      "void adapter;",
+    ].join("\n"),
+    "src/legacy-preview/LegacyRouteAdapter.tsx": "export function LegacyRouteAdapter() { return null; }\n",
+  }, async (root) => {
+    assert.deepEqual(await findBoundaryViolations(root), [{
+      file: "src/core/forbidden-adapter.ts",
+      rule: "legacyImport",
+      evidence: "../legacy-preview/LegacyRouteAdapter",
+    }]);
   });
 });
 
