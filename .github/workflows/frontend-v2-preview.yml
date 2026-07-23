@@ -1,0 +1,122 @@
+name: Frontend V2 Preview
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-v2-preview-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+
+jobs:
+  node-gates:
+    name: Node and browser gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the complete review history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select the locked Node runtime
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
+        with:
+          node-version: 20.20.2
+          cache: npm
+          package-manager-cache: false
+
+      - name: Select the locked npm CLI
+        run: |
+          npm install --global npm@10.8.2
+          test "$(node --version)" = "v20.20.2"
+          test "$(npm --version)" = "10.8.2"
+
+      - name: Install locked JavaScript dependencies
+        run: npm ci
+
+      - name: Install the lockfile Playwright Chromium and system dependencies
+        run: npx --no-install playwright install --with-deps chromium
+
+      - name: Check TypeScript, JavaScript, and styles
+        run: |
+          npm run typecheck:v2
+          npm run lint:v2
+          npm run lint:styles:v2
+
+      - name: Run V2 and Phase 1 tests
+        run: |
+          npm run test:v2
+          npm run test:frontend-upgrade:phase1:node
+
+      - name: Run the complete 82-test Playwright suite
+        run: npm run test:e2e:v2 -- --retries=0
+
+      - name: Build and inspect the isolated V2 artifact
+        run: |
+          npm run build:v2
+          npm run check:frontend-v2-boundaries
+
+      - name: Verify frozen contracts and offline acceptance gates
+        run: |
+          npm run check:frontend-upgrade:phase1:contracts
+          npm run check:frontend-upgrade:phase1:legacy
+          npm run check:frontend-upgrade:phase1:auth -- --offline
+          npm run check:frontend-upgrade:phase1:surfaces -- --offline
+          npm run check:frontend-upgrade:phase1 -- --offline
+
+  python-gates:
+    name: Python API and migration gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the complete review history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select the locked Python runtime
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: 3.13.14
+          cache: pip
+          cache-dependency-path: api/requirements.lock.txt
+
+      - name: Select the locked Node runtime
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
+        with:
+          node-version: 20.20.2
+          cache: npm
+          package-manager-cache: false
+
+      - name: Verify the locked runtimes
+        run: |
+          python -c 'import sys; assert sys.version_info[:3] == (3, 13, 14), sys.version'
+          npm install --global npm@10.8.2
+          test "$(node --version)" = "v20.20.2"
+          test "$(npm --version)" = "10.8.2"
+
+      - name: Install locked JavaScript dependencies
+        run: npm ci
+
+      - name: Install hash-locked Python dependencies
+        run: python -m pip install --require-hashes -r api/requirements.lock.txt
+
+      - name: Run API and migration tests
+        run: |
+          python -m pytest api/tests
+          python -m alembic -c api/alembic.ini heads
+          python -B -m unittest discover -s tests -p 'test_frontend_upgrade_phase1_*.py' -v
+
+      - name: Verify generated OpenAPI
+        run: npm run check:openapi:v2
+        env:
+          QUANTGYM_PYTHON_313: python

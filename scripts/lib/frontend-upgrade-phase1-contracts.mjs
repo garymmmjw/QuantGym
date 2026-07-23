@@ -213,8 +213,11 @@ export const APPROVED_PHASE1_PROVIDER_EVIDENCE_SCHEMA = {
     "legacyCommit",
     "postgresMajor",
     "governance",
+    "phase0ProviderEvidenceSha256",
+    "prePushBaselineSha256",
     "productionControlBefore",
     "productionControlAfter",
+    "r2PolicyAttestations",
     "resourceFingerprints",
     "deployments",
     "bindings",
@@ -234,8 +237,30 @@ export const APPROVED_PHASE1_PROVIDER_EVIDENCE_SCHEMA = {
     legacyCommit: { const: ACCEPTED_PHASE0_DEPLOYMENT_COMMIT },
     postgresMajor: { const: 18 },
     governance: { $ref: "#/$defs/governance" },
+    phase0ProviderEvidenceSha256: { type: "string", pattern: "^[0-9a-f]{64}$" },
+    prePushBaselineSha256: { type: "string", pattern: "^[0-9a-f]{64}$" },
     productionControlBefore: { type: "string", pattern: "^[0-9a-f]{64}$" },
     productionControlAfter: { type: "string", pattern: "^[0-9a-f]{64}$" },
+    r2PolicyAttestations: {
+      type: "object",
+      additionalProperties: false,
+      required: [
+        "runtimeIdSha256",
+        "runtimePolicySha256",
+        "runtimeExpirationStatus",
+        "auditIdSha256",
+        "auditPolicySha256",
+        "auditExpirationStatus",
+      ],
+      properties: {
+        runtimeIdSha256: { type: "string", pattern: "^[0-9a-f]{64}$" },
+        runtimePolicySha256: { type: "string", pattern: "^[0-9a-f]{64}$" },
+        runtimeExpirationStatus: { const: "current" },
+        auditIdSha256: { type: "string", pattern: "^[0-9a-f]{64}$" },
+        auditPolicySha256: { type: "string", pattern: "^[0-9a-f]{64}$" },
+        auditExpirationStatus: { const: "short-lived" },
+      },
+    },
     resourceFingerprints: {
       type: "object",
       additionalProperties: false,
@@ -314,6 +339,9 @@ export const APPROVED_PHASE1_PROVIDER_EVIDENCE_SCHEMA = {
         "applicationDeploymentsAligned",
         "resourceIsolationVerified",
         "productionUnchanged",
+        "phase0IdentitiesLocked",
+        "prePushBaselineVerified",
+        "r2PoliciesVerified",
       ],
       properties: {
         pagesAutomaticDeploysDisabled: { const: true },
@@ -325,6 +353,9 @@ export const APPROVED_PHASE1_PROVIDER_EVIDENCE_SCHEMA = {
         applicationDeploymentsAligned: { const: true },
         resourceIsolationVerified: { const: true },
         productionUnchanged: { const: true },
+        phase0IdentitiesLocked: { const: true },
+        prePushBaselineVerified: { const: true },
+        r2PoliciesVerified: { const: true },
       },
     },
   },
@@ -1274,6 +1305,28 @@ export function validatePhase1ProviderEvidenceRelationships(sample = {}, nowMs =
   if (overlaps.length > 0) failures.push("Preview and Production resource fingerprints overlap");
   if (sample.productionControlBefore !== sample.productionControlAfter) {
     failures.push("Production control fingerprints differ");
+  }
+  for (const [label, value] of [
+    ["Phase 0 provider evidence", sample.phase0ProviderEvidenceSha256],
+    ["pre-push provider baseline", sample.prePushBaselineSha256],
+    ["runtime R2 access identity", sample.r2PolicyAttestations?.runtimeIdSha256],
+    ["runtime R2 policy", sample.r2PolicyAttestations?.runtimePolicySha256],
+    ["audit access identity", sample.r2PolicyAttestations?.auditIdSha256],
+    ["audit access policy", sample.r2PolicyAttestations?.auditPolicySha256],
+  ]) {
+    if (!/^[0-9a-f]{64}$/.test(value ?? "")) failures.push(`${label} fingerprint mismatch`);
+  }
+  if (
+    sample.r2PolicyAttestations?.runtimeIdSha256
+    === sample.r2PolicyAttestations?.auditIdSha256
+  ) {
+    failures.push("runtime and audit R2 access identities overlap");
+  }
+  if (sample.r2PolicyAttestations?.runtimeExpirationStatus !== "current") {
+    failures.push("runtime R2 access expiration status mismatch");
+  }
+  if (sample.r2PolicyAttestations?.auditExpirationStatus !== "short-lived") {
+    failures.push("audit access expiration status mismatch");
   }
   return [...new Set(failures)];
 }

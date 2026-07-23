@@ -14,8 +14,11 @@
     "legacyCommit",
     "postgresMajor",
     "governance",
+    "phase0ProviderEvidenceSha256",
+    "prePushBaselineSha256",
     "productionControlBefore",
     "productionControlAfter",
+    "r2PolicyAttestations",
     "resourceFingerprints",
     "deployments",
     "bindings",
@@ -55,6 +58,14 @@
     "governance": {
       "$ref": "#/$defs/governance"
     },
+    "phase0ProviderEvidenceSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "prePushBaselineSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
     "productionControlBefore": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
@@ -62,6 +73,42 @@
     "productionControlAfter": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
+    },
+    "r2PolicyAttestations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtimeIdSha256",
+        "runtimePolicySha256",
+        "runtimeExpirationStatus",
+        "auditIdSha256",
+        "auditPolicySha256",
+        "auditExpirationStatus"
+      ],
+      "properties": {
+        "runtimeIdSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "runtimePolicySha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "runtimeExpirationStatus": {
+          "const": "current"
+        },
+        "auditIdSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "auditPolicySha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "auditExpirationStatus": {
+          "const": "short-lived"
+        }
+      }
     },
     "resourceFingerprints": {
       "type": "object",
@@ -199,7 +246,10 @@
         "llmProbeConfigured",
         "applicationDeploymentsAligned",
         "resourceIsolationVerified",
-        "productionUnchanged"
+        "productionUnchanged",
+        "phase0IdentitiesLocked",
+        "prePushBaselineVerified",
+        "r2PoliciesVerified"
       ],
       "properties": {
         "pagesAutomaticDeploysDisabled": {
@@ -227,6 +277,15 @@
           "const": true
         },
         "productionUnchanged": {
+          "const": true
+        },
+        "phase0IdentitiesLocked": {
+          "const": true
+        },
+        "prePushBaselineVerified": {
+          "const": true
+        },
+        "r2PoliciesVerified": {
           "const": true
         }
       }

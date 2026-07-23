@@ -156,6 +156,87 @@ describe("auth mutations", () => {
 });
 
 describe("classifyAuthError", () => {
+  const phase1AuthRecoveryGates = [
+    "auth.sign-in",
+    "auth.register",
+    "auth.reset-password",
+    "auth.google-sign-in",
+  ].flatMap((operation) => [
+    {
+      error: new ApiError({
+        code: "AUTH_SERVICE_UNAVAILABLE",
+        message: "请求失败",
+        requestId: "req_recoverable",
+        retryable: true,
+        status: 503,
+      }),
+      expectedKind: "retryable",
+      expectedAction: "retry",
+      gateId: `mutation:${operation}:recoverable-error`,
+    },
+    {
+      error: new ApiError({
+        code: "AUTH_REQUEST_INVALID",
+        message: "请求失败",
+        requestId: "req_invalid",
+        status: 422,
+      }),
+      expectedKind: "invalid",
+      expectedAction: "correct-input",
+      gateId: `mutation:${operation}:non-recoverable-error`,
+    },
+    {
+      error: new TypeError("Failed to fetch"),
+      expectedKind: "offline",
+      expectedAction: "retry",
+      gateId: `mutation:${operation}:offline-draft`,
+    },
+    {
+      error: new ApiError({
+        code: "CSRF_ORIGIN_INVALID",
+        message: "请求失败",
+        requestId: "req_permission",
+        status: 403,
+      }),
+      expectedKind: "permission",
+      expectedAction: "refresh-permission",
+      gateId: `mutation:${operation}:permission-denied`,
+    },
+    {
+      error: new ApiError({
+        code: "STALE_VERSION",
+        message: "请求失败",
+        requestId: "req_conflict",
+        status: 409,
+      }),
+      expectedKind: "conflict",
+      expectedAction: "reload-current",
+      gateId: `mutation:${operation}:stale-version-conflict`,
+    },
+    {
+      error: new ApiError({
+        code: "AUTH_RETRY_REQUIRED",
+        message: "请求失败",
+        requestId: "req_retry",
+        retryable: true,
+        status: 503,
+      }),
+      expectedKind: "retryable",
+      expectedAction: "retry",
+      gateId: `mutation:${operation}:retry`,
+    },
+  ]);
+
+  it.each(phase1AuthRecoveryGates)(
+    "$gateId maps to the approved recovery action",
+    ({ error, expectedAction, expectedKind }) => {
+      expect(classifyAuthError(error)).toMatchObject({
+        kind: expectedKind,
+        recoveryAction: expectedAction,
+      });
+    },
+  );
+
   it("preserves programmatic field errors as a non-recoverable invalid result", () => {
     const result = classifyAuthError(new ApiError({
       code: "VALIDATION_ERROR",

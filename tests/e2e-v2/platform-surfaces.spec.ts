@@ -709,7 +709,7 @@ test(
 );
 
 test(
-  "@shared-state:notifications-toast:center-empty 通知中心空状态与 Toast 区域可同时存在且语义独立",
+  "@shared-state:notifications-toast:empty 通知中心空状态与 Toast 区域可同时存在且语义独立",
   async ({ page }) => {
     await mockPlatformApi(page);
     await page.goto("/");

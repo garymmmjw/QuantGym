@@ -21,19 +21,22 @@ const recoveryCases: readonly RecoveryCase[] = [
 ];
 
 describe("RecoveryPanel", () => {
-  it.each(recoveryCases)("maps $state to its fixed recovery action", async ({ callback, label, state }) => {
-    const user = userEvent.setup();
-    const handler = vi.fn();
+  it.each(recoveryCases)(
+    "mutation:session.retry:$state maps the session retry gate to its fixed recovery action",
+    async ({ callback, label, state }) => {
+      const user = userEvent.setup();
+      const handler = vi.fn();
 
-    render(<RecoveryPanel state={state} {...{ [callback]: handler }} />);
+      render(<RecoveryPanel state={state} {...{ [callback]: handler }} />);
 
-    const panel = screen.getByRole(
-      ["offline-draft", "retry"].includes(state) ? "status" : "alert",
-    );
-    expect(panel).toHaveAttribute("data-recovery-state", state);
-    await user.click(screen.getByRole("button", { name: label }));
-    expect(handler).toHaveBeenCalledOnce();
-  });
+      const panel = screen.getByRole(
+        ["offline-draft", "retry"].includes(state) ? "status" : "alert",
+      );
+      expect(panel).toHaveAttribute("data-recovery-state", state);
+      await user.click(screen.getByRole("button", { name: label }));
+      expect(handler).toHaveBeenCalledOnce();
+    },
+  );
 
   it("shows a request ID and supports fully replaceable user-facing copy", () => {
     render(

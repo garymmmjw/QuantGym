@@ -154,6 +154,9 @@ test("provider evidence locks governance, legacy deployment, controls, and isola
     "applicationDeploymentsAligned",
     "resourceIsolationVerified",
     "productionUnchanged",
+    "phase0IdentitiesLocked",
+    "prePushBaselineVerified",
+    "r2PoliciesVerified",
   ]);
   for (const key of providerSchema.properties.controls.required) {
     assert.equal(providerSchema.properties.controls.properties[key].const, true);
@@ -234,8 +237,18 @@ const providerEvidenceSample = () => {
       destroyOwner: "Gary",
       reviewDate: "2026-07-29",
     },
+    phase0ProviderEvidenceSha256: fingerprint("phase-zero-provider-evidence"),
+    prePushBaselineSha256: fingerprint("pre-push-provider-baseline"),
     productionControlBefore: productionControl,
     productionControlAfter: productionControl,
+    r2PolicyAttestations: {
+      runtimeIdSha256: fingerprint("runtime-r2-access"),
+      runtimePolicySha256: fingerprint("runtime-r2-policy"),
+      runtimeExpirationStatus: "current",
+      auditIdSha256: fingerprint("audit-r2-access"),
+      auditPolicySha256: fingerprint("audit-r2-policy"),
+      auditExpirationStatus: "short-lived",
+    },
     resourceFingerprints: {
       pages: fingerprint("preview-pages"),
       api: fingerprint("preview-api"),
@@ -280,6 +293,9 @@ const providerEvidenceSample = () => {
       applicationDeploymentsAligned: true,
       resourceIsolationVerified: true,
       productionUnchanged: true,
+      phase0IdentitiesLocked: true,
+      prePushBaselineVerified: true,
+      r2PoliciesVerified: true,
     },
   };
 };

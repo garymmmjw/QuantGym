@@ -376,47 +376,55 @@ test("@e2e:theme-language-persistence 本地偏好即时生效并由权威 me �
   }, preferenceStorageKey)).toEqual({ language: "en", theme: "dark" });
 });
 
-test("@e2e:offline-and-error-recovery 离线、可重试、冲突与权限状态均有固定恢复动作", async ({ context, page }) => {
-  const api = await mockV2Api(page);
-  await page.goto("/");
-  await expectShellReady(page, "总览");
+test(
+  "@e2e:offline-and-error-recovery "
+  + "@shared-state:network-recovery:offline-draft "
+  + "@shared-state:network-recovery:recoverable-error "
+  + "@shared-state:network-recovery:stale-conflict "
+  + "@shared-state:network-recovery:permission-denied-retry "
+  + "离线、可重试、冲突与权限状态均有固定恢复动作",
+  async ({ context, page }) => {
+    const api = await mockV2Api(page);
+    await page.goto("/");
+    await expectShellReady(page, "总览");
 
-  await context.setOffline(true);
-  const offlineBanner = page.locator('[data-network-status="offline"]');
-  await expect(offlineBanner).toBeVisible();
-  await expect(offlineBanner).toContainText("你的更改会先安全保留");
-  await context.setOffline(false);
-  await expect(offlineBanner).toHaveCount(0);
+    await context.setOffline(true);
+    const offlineBanner = page.locator('[data-network-status="offline"]');
+    await expect(offlineBanner).toBeVisible();
+    await expect(offlineBanner).toContainText("你的更改会先安全保留");
+    await context.setOffline(false);
+    await expect(offlineBanner).toHaveCount(0);
 
-  api.meMode = "recoverable";
-  await page.reload();
-  const recoverable = page.locator('[data-recovery-state="recoverable-error"]');
-  await expect(recoverable).toContainText("暂时无法连接");
-  await expect(recoverable).toContainText("e2e-recoverable-request-id");
-  api.meMode = "authenticated";
-  const requestsBeforeRetry = api.meRequestCount;
-  await recoverable.getByRole("button", { name: "重试", exact: true }).click();
-  await expect.poll(() => api.meRequestCount).toBeGreaterThan(requestsBeforeRetry);
-  await expectShellReady(page, "总览");
+    api.meMode = "recoverable";
+    await page.reload();
+    const recoverable = page.locator('[data-recovery-state="recoverable-error"]');
+    await expect(recoverable).toContainText("暂时无法连接");
+    await expect(recoverable).toContainText("e2e-recoverable-request-id");
+    api.meMode = "authenticated";
+    const requestsBeforeRetry = api.meRequestCount;
+    await recoverable.getByRole("button", { name: "重试", exact: true }).click();
+    await expect.poll(() => api.meRequestCount).toBeGreaterThan(requestsBeforeRetry);
+    await expectShellReady(page, "总览");
 
-  api.meMode = "stale";
-  await page.reload();
-  const stale = page.locator('[data-recovery-state="stale-version-conflict"]');
-  await expect(stale).toContainText("内容已在其他位置更新");
-  await expect(stale).toContainText("e2e-stale-request-id");
-  api.meMode = "authenticated";
-  await stale.getByRole("button", { name: "重新载入", exact: true }).click();
-  await expectShellReady(page, "总览");
+    api.meMode = "stale";
+    await page.reload();
+    const stale = page.locator('[data-recovery-state="stale-version-conflict"]');
+    await expect(stale).toContainText("内容已在其他位置更新");
+    await expect(stale).toContainText("e2e-stale-request-id");
+    api.meMode = "authenticated";
+    await stale.getByRole("button", { name: "重新载入", exact: true }).click();
+    await expectShellReady(page, "总览");
 
-  api.meMode = "permission";
-  await page.reload();
-  const permission = page.locator('[data-recovery-state="permission-denied"]');
-  await expect(permission).toContainText("你暂时没有权限执行此操作");
-  await expect(permission).toContainText("e2e-permission-request-id");
-  await permission.getByRole("button", { name: "重新登录", exact: true }).click();
-  await expect(page).toHaveURL(/\/login\?reauth=1$/u);
-  await expect(page.getByRole("heading", { name: "欢迎回来", exact: true })).toBeVisible();
-});
+    api.meMode = "permission";
+    await page.reload();
+    const permission = page.locator('[data-recovery-state="permission-denied"]');
+    await expect(permission).toContainText("你暂时没有权限执行此操作");
+    await expect(permission).toContainText("e2e-permission-request-id");
+    await permission.getByRole("button", { name: "重新登录", exact: true }).click();
+    await expect(page).toHaveURL(/\/login\?reauth=1$/u);
+    await expect(page.getByRole("heading", { name: "欢迎回来", exact: true })).toBeVisible();
+  },
+);
 
 test("@a11y:desktop-shell @a11y:theme-language 桌面明暗主题通过无障碍门禁", async ({ page }) => {
   await page.setViewportSize({ width: 1_280, height: 720 });
