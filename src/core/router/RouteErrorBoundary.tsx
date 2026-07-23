@@ -3,7 +3,6 @@ import { isRouteErrorResponse, useNavigate, useRevalidator, useRouteError } from
 
 import { RecoveryPanel, type RecoveryState } from "../../design-system/patterns/RecoveryPanel";
 import { ApiError } from "../../shared/api/errors";
-import { authQueryKeys } from "../../domains/account/auth/auth.queries";
 import { useI18n } from "../../shared/i18n";
 import { recoveryPresentationFor } from "../errors/recoveryPresentation";
 import styles from "./AuthenticatedShellRoute.module.css";
@@ -40,7 +39,7 @@ export function RouteErrorBoundary() {
   const presentation = recoveryPresentationFor(state, t);
   const retry = () => revalidator.revalidate();
   const signInAgain = () => {
-    queryClient.setQueryData(authQueryKeys.me, null);
+    queryClient.clear();
     navigate("/login?reauth=1", { replace: true });
   };
 

@@ -1,0 +1,202 @@
+.panel {
+  inline-size: min(100%, 430px);
+}
+
+.root {
+  display: grid;
+  gap: var(--qg-space-4);
+}
+
+.createForm,
+.editForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--qg-space-2);
+  align-items: start;
+}
+
+.editForm {
+  margin-block-start: var(--qg-space-2);
+}
+
+.launcher {
+  position: fixed;
+  z-index: var(--qg-layer-navigation);
+  right: var(--qg-space-5);
+  bottom: var(--qg-space-5);
+  display: inline-flex;
+  gap: var(--qg-space-2);
+  align-items: center;
+  min-block-size: var(--qg-touch-target-min);
+  padding: var(--qg-space-2) var(--qg-space-4);
+  color: var(--qg-on-action-primary);
+  font-weight: var(--qg-font-weight-bold);
+  background: var(--qg-action-primary);
+  border: 1px solid var(--qg-action-primary);
+  border-radius: var(--qg-radius-pill);
+  box-shadow: var(--qg-shadow-primary-action);
+  cursor: pointer;
+}
+
+.launcher svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.launcher strong {
+  display: grid;
+  place-items: center;
+  min-inline-size: 22px;
+  min-block-size: 22px;
+  color: var(--qg-text-primary);
+  font-size: var(--qg-font-size-caption);
+  background: var(--qg-surface-primary);
+  border-radius: var(--qg-radius-pill);
+}
+
+.launcher:focus-visible {
+  outline: none;
+  box-shadow: var(--qg-shadow-focus-ring);
+}
+
+.state,
+.offlineNote {
+  margin: 0;
+  padding: var(--qg-space-3);
+  color: var(--qg-text-secondary);
+  font-size: var(--qg-font-size-caption);
+  background: var(--qg-surface-secondary);
+  border: 1px solid var(--qg-border-subtle);
+  border-radius: var(--qg-radius-control);
+}
+
+.offlineNote {
+  color: var(--qg-status-warning);
+  background: var(--qg-status-warning-soft);
+  border-color: var(--qg-status-warning);
+}
+
+.recovery {
+  padding: var(--qg-space-3);
+}
+
+.recovery img {
+  display: none;
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  padding: var(--qg-space-8) var(--qg-space-4);
+  text-align: center;
+}
+
+.empty img {
+  inline-size: 92px;
+}
+
+.empty strong {
+  margin-block-start: var(--qg-space-3);
+}
+
+.empty p {
+  max-inline-size: 32ch;
+  margin: var(--qg-space-1) 0 0;
+  color: var(--qg-text-secondary);
+}
+
+.list {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  border-block-start: 1px solid var(--qg-border-subtle);
+}
+
+.taskRow,
+.pendingRow {
+  padding-block: var(--qg-space-4);
+  border-block-end: 1px solid var(--qg-border-subtle);
+}
+
+.taskHeading,
+.pendingRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--qg-space-2);
+  align-items: center;
+}
+
+.taskHeading > span {
+  overflow-wrap: anywhere;
+}
+
+.taskRow[data-completed="true"] .taskHeading > span {
+  color: var(--qg-text-muted);
+  text-decoration: line-through;
+}
+
+.checkbox {
+  display: grid;
+  place-items: center;
+  inline-size: var(--qg-touch-target-min);
+  block-size: var(--qg-touch-target-min);
+  padding: 0;
+  color: var(--qg-on-action-primary);
+  background: var(--qg-surface-primary);
+  border: 2px solid var(--qg-border-control);
+  border-radius: var(--qg-radius-control);
+  cursor: pointer;
+}
+
+.checkbox:focus-visible {
+  outline: none;
+  box-shadow: var(--qg-shadow-focus-ring);
+}
+
+.taskRow[data-completed="true"] .checkbox {
+  background: var(--qg-status-success);
+  border-color: var(--qg-status-success);
+}
+
+.taskHeading small,
+.pendingRow small {
+  color: var(--qg-status-warning);
+  font-size: var(--qg-font-size-caption);
+}
+
+.pendingDot {
+  inline-size: 10px;
+  block-size: 10px;
+  margin-inline: calc((var(--qg-touch-target-min) - 10px) / 2);
+  background: var(--qg-status-warning);
+  border-radius: var(--qg-radius-pill);
+}
+
+@media (width <= 860px) {
+  .launcher {
+    right: var(--qg-space-4);
+    bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (width <= 430px) {
+  .launcher span {
+    position: absolute;
+    overflow: hidden;
+    inline-size: 1px;
+    block-size: 1px;
+    clip-path: inset(50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .launcher {
+    transition: none;
+  }
+}
+
+[data-qg-motion="reduced"] .launcher {
+  transition: none;
+}

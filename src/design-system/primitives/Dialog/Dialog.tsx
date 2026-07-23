@@ -17,6 +17,7 @@ export type DialogProps = Readonly<{
   initialFocusRef?: RefObject<HTMLElement | null>;
   returnFocusRef?: RefObject<HTMLElement | null>;
   className?: string;
+  id?: string;
 }>;
 
 export const Dialog = ({
@@ -31,6 +32,7 @@ export const Dialog = ({
   initialFocusRef,
   returnFocusRef,
   className,
+  id,
 }: DialogProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -60,6 +62,7 @@ export const Dialog = ({
     >
       <div
         ref={panelRef}
+        id={id}
         className={panelClassName}
         role="dialog"
         aria-modal="true"

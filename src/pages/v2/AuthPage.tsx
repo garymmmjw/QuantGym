@@ -112,6 +112,7 @@ export default function AuthPage() {
   };
 
   const finishAuthentication = (user: MeResponse) => {
+    queryClient.clear();
     queryClient.setQueryData(authQueryKeys.me, user);
     setAnnouncement(`欢迎回来，${user.displayName}。正在进入训练空间。`);
     navigate(redirectPath, { replace: true });

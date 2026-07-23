@@ -49,6 +49,8 @@ export const issuePreAuthCsrf = async (): Promise<CsrfResponse> => {
 export const currentUserQueryOptions = () => queryOptions({
   queryFn: ({ signal }): Promise<MeResponse | null> => getCurrentUser(signal),
   queryKey: authQueryKeys.me,
+  refetchOnReconnect: "always",
+  refetchOnWindowFocus: "always",
   retry: false,
 });
 

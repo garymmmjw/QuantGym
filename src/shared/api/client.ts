@@ -1,4 +1,4 @@
-import { readCsrfToken } from "./csrf";
+import { readCsrfToken, validateCsrfProof } from "./csrf";
 import { ApiError, isApiErrorEnvelope } from "./errors";
 
 const API_BASE = "/api/v2";
@@ -7,6 +7,7 @@ const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 type ApiRequestOptions = Readonly<{
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
+  csrfProof?: string | null;
   headers?: Readonly<Record<string, string>>;
   signal?: AbortSignal;
 }>;
@@ -79,9 +80,11 @@ export const apiRequest = async <ResponseBody>(
 
   if (options.body !== undefined) headers.set("Content-Type", "application/json");
   if (STATE_CHANGING_METHODS.has(method)) {
-    const csrfToken = readCsrfToken();
+    const csrfToken = options.csrfProof === undefined
+      ? readCsrfToken()
+      : options.csrfProof;
     if (csrfToken === null) throw new Error("CSRF_TOKEN_REQUIRED");
-    headers.set("X-CSRF-Token", csrfToken);
+    headers.set("X-CSRF-Token", validateCsrfProof(csrfToken));
   }
 
   const init: RequestInit = {

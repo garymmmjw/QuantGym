@@ -10,8 +10,11 @@ import styles from "./MobileHeader.module.css";
 export type MobileHeaderProps = Readonly<{
   language: ShellLanguage;
   notificationCount?: number;
+  notificationsOpen?: boolean;
   onOpenDrawer: () => void;
   onOpenNotifications: () => void;
+  onOpenSearch: () => void;
+  searchOpen?: boolean;
   onToggleTheme: () => void;
   streakDays?: number;
   theme: ShellTheme;
@@ -21,8 +24,11 @@ export const MobileHeader = forwardRef<HTMLButtonElement, MobileHeaderProps>(fun
   {
     language,
     notificationCount = 0,
+    notificationsOpen = false,
     onOpenDrawer,
     onOpenNotifications,
+    onOpenSearch,
+    searchOpen = false,
     onToggleTheme,
     streakDays = 0,
     theme,
@@ -52,6 +58,20 @@ export const MobileHeader = forwardRef<HTMLButtonElement, MobileHeaderProps>(fun
         <strong data-qg-metric>{streakDays}</strong>
       </div>
       <button
+        aria-controls="qg-command-palette"
+        aria-expanded={searchOpen}
+        aria-haspopup="dialog"
+        aria-label={isChinese ? "打开全局搜索" : "Open global search"}
+        className={styles.iconButton}
+        onClick={onOpenSearch}
+        type="button"
+      >
+        <ShellIcon name="search" />
+      </button>
+      <button
+        aria-controls="qg-notification-center"
+        aria-expanded={notificationsOpen}
+        aria-haspopup="dialog"
         aria-label={isChinese ? "打开通知" : "Open notifications"}
         className={styles.iconButton}
         onClick={onOpenNotifications}

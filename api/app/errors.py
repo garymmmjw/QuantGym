@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, ConfigDict, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.responses import JSONResponse, RedirectResponse, Response
 
@@ -14,6 +15,17 @@ FieldErrors = dict[str, list[str]]
 
 _GOOGLE_CALLBACK_PATH = "/api/v2/auth/google/callback"
 _GOOGLE_START_PATH = "/api/v2/auth/google/start"
+_ERROR_RESPONSE_DESCRIPTIONS = {
+    400: "Invalid request",
+    401: "Authentication required",
+    403: "Request proof or permission denied",
+    404: "Resource not found",
+    409: "Version or idempotency conflict",
+    422: "Request validation failed",
+    429: "Request rate limited",
+    500: "Internal server error",
+    503: "Service unavailable",
+}
 _GOOGLE_START_UI_CODES = frozenset(
     {
         "AUTH_CHALLENGE_RATE_LIMITED",
@@ -22,6 +34,33 @@ _GOOGLE_START_UI_CODES = frozenset(
         "GOOGLE_OAUTH_UNAVAILABLE",
     }
 )
+
+
+class ErrorEnvelope(BaseModel):
+    """The one JSON error shape returned by every API error boundary."""
+
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    code: str
+    message: str
+    field_errors: FieldErrors = Field(alias="fieldErrors")
+    request_id: str = Field(alias="requestId")
+    retryable: bool
+
+
+def standard_error_responses(*status_codes: int) -> dict[int, dict[str, Any]]:
+    """Describe runtime error envelopes without changing endpoint behavior."""
+
+    return {
+        status_code: {
+            "description": _ERROR_RESPONSE_DESCRIPTIONS.get(
+                status_code,
+                "Request failed",
+            ),
+            "model": ErrorEnvelope,
+        }
+        for status_code in status_codes
+    }
 
 
 def _normalize_field_errors(
@@ -135,13 +174,13 @@ def error_response(
     return JSONResponse(
         status_code=status_code,
         headers=response_headers,
-        content={
-            "code": code,
-            "message": message,
-            "fieldErrors": _normalize_field_errors(field_errors),
-            "requestId": request_id,
-            "retryable": retryable,
-        },
+        content=ErrorEnvelope(
+            code=code,
+            message=message,
+            field_errors=_normalize_field_errors(field_errors),
+            request_id=request_id,
+            retryable=retryable,
+        ).model_dump(mode="json", by_alias=True),
     )
 
 

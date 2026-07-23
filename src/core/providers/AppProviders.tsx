@@ -5,7 +5,6 @@ import { AppErrorBoundary } from "../errors/AppErrorBoundary";
 import { recoveryPresentationFor } from "../errors/recoveryPresentation";
 import { appRouter } from "../router/router";
 import { useI18n } from "../../shared/i18n";
-import { authQueryKeys } from "../../domains/account/auth/auth.queries";
 import { QueryProvider } from "./QueryProvider";
 import { RuntimeProviders } from "./RuntimeProviders";
 
@@ -25,7 +24,7 @@ function ApplicationBoundary() {
           onReturn={() => window.location.assign("/")}
           onReset={reset}
           onSignIn={() => {
-            queryClient.setQueryData(authQueryKeys.me, null);
+            queryClient.clear();
             window.location.assign("/login?reauth=1");
           }}
         >

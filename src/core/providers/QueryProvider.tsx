@@ -15,6 +15,7 @@ const createQueryClient = () => new QueryClient({
       staleTime: 30_000,
     },
     mutations: {
+      networkMode: "always",
       retry: false,
     },
   },

@@ -164,6 +164,7 @@ function ToastItem({
     <li
       {...autoDismissHandlers}
       className={[styles.toast, styles[toast.tone]].join(" ")}
+      data-recovery-state={toast.recoveryState ?? undefined}
       data-toast-id={toast.id}
     >
       <article

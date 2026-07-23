@@ -9,6 +9,7 @@ import {
   classifyAuthError,
   useForgotPasswordMutation,
   useLoginMutation,
+  useLogoutMutation,
   useRegisterMutation,
   useResetPasswordMutation,
 } from "./auth.mutations";
@@ -27,6 +28,7 @@ const user = {
 } as const;
 const authResponse = { user } as const;
 const statusResponse = { status: "ok" } as const;
+const sessionCsrfProof = "session-proof-0123456789abcdef";
 
 const createHarness = () => {
   const queryClient = new QueryClient({
@@ -131,6 +133,25 @@ describe("auth mutations", () => {
     });
 
     expect(apiRequestMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("revokes the authenticated session without issuing a pre-auth challenge", async () => {
+    apiRequestMock.mockResolvedValueOnce(statusResponse);
+    const { wrapper } = createHarness();
+    const { result } = renderHook(
+      () => useLogoutMutation(sessionCsrfProof),
+      { wrapper },
+    );
+
+    await act(async () => {
+      await expect(result.current.mutateAsync()).resolves.toEqual(statusResponse);
+    });
+
+    expect(apiRequestMock).toHaveBeenCalledTimes(1);
+    expect(apiRequestMock).toHaveBeenCalledWith("/auth/logout", {
+      csrfProof: sessionCsrfProof,
+      method: "POST",
+    });
   });
 });
 

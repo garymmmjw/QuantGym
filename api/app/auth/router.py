@@ -13,7 +13,12 @@ from starlette.concurrency import run_in_threadpool
 
 from ..errors import ApiError
 from ..users.models import MeResponse
-from .csrf import CsrfRequestProof, CsrfToken, generate_csrf_token
+from .csrf import CsrfToken, generate_csrf_token
+from .dependencies import (
+    csrf_proof_from_request as _csrf_proof,
+    get_auth_service,
+    session_cookie_from_request,
+)
 from .google import (
     GoogleOAuthCallbackError,
     GoogleOAuthFlow,
@@ -39,34 +44,12 @@ from .service import (
 
 router = APIRouter(prefix="/api/v2/auth", tags=["authentication"])
 
-_CSRF_HEADER_NAME = b"x-csrf-token"
-_ORIGIN_HEADER_NAME = b"origin"
 _FORWARDED_FOR_HEADER_NAME = b"x-forwarded-for"
 _INVALID_PROOF_VALUE = "invalid"
 _MAX_SECRET_BOUNDARY_LENGTH = 512
 _NO_STORE = "no-store"
 _PRE_AUTH_COOKIE_MAX_AGE_SECONDS = 600
 _SESSION_COOKIE_MAX_AGE_SECONDS = 604_800
-
-
-def get_auth_service(request: Request) -> AuthService:
-    """Resolve the lifespan-owned service without constructing secrets in routes."""
-
-    service = getattr(request.app.state, "auth_service", None)
-    if service is None:
-        headers = (
-            {"Referrer-Policy": "no-referrer"}
-            if request.url.path.endswith("/auth/google/callback")
-            else None
-        )
-        raise ApiError(
-            status_code=503,
-            code="AUTH_SERVICE_UNAVAILABLE",
-            message="认证服务暂时不可用",
-            retryable=True,
-            headers=headers,
-        )
-    return cast(AuthService, service)
 
 
 def get_google_oauth_flow(request: Request) -> GoogleOAuthFlow:
@@ -342,21 +325,6 @@ def _auth_response(result: AuthResult) -> AuthResponse:
             retryable=True,
         )
     return AuthResponse(user=user)
-
-
-def _csrf_proof(request: Request) -> CsrfRequestProof:
-    origin = _single_header(request, _ORIGIN_HEADER_NAME)
-    header_token = _single_header(request, _CSRF_HEADER_NAME)
-    cookie_token = _single_cookie(request, CSRF_COOKIE_NAME)
-    return CsrfRequestProof.from_values(
-        origin=origin,
-        cookie_token=_secret_or_none(cookie_token),
-        header_token=_secret_or_none(header_token),
-    )
-
-
-def session_cookie_from_request(request: Request) -> SecretStr | None:
-    return _secret_or_none(_single_cookie(request, SESSION_COOKIE_NAME))
 
 
 def _single_header(request: Request, expected_name: bytes) -> str | None:

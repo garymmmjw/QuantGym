@@ -20,6 +20,7 @@ export type DrawerProps = Readonly<{
   initialFocusRef?: RefObject<HTMLElement | null>;
   returnFocusRef?: RefObject<HTMLElement | null>;
   className?: string;
+  id?: string;
 }>;
 
 export const Drawer = ({
@@ -35,6 +36,7 @@ export const Drawer = ({
   initialFocusRef,
   returnFocusRef,
   className,
+  id,
 }: DrawerProps) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -60,6 +62,7 @@ export const Drawer = ({
     <div className={styles.backdrop} onMouseDown={handleBackdropClick}>
       <div
         ref={panelRef}
+        id={id}
         className={panelClassName}
         role="dialog"
         aria-modal="true"

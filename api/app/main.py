@@ -17,8 +17,38 @@ from .health import router as health_router
 from .middleware.cors_errors import CorsErrorEnvelopeMiddleware
 from .middleware.callback_access_log import CallbackAccessLogRedactionMiddleware
 from .middleware.request_id import RequestIdMiddleware
+from .notifications.router import router as notifications_router
+from .plans.router import router as plans_router
+from .preferences.router import router as preferences_router
 from .security.edge import EdgeProofMiddleware
 from .users.router import router as users_router
+
+
+def _merge_session_and_csrf_security(document: dict[str, Any]) -> None:
+    """Express the runtime AND requirement that FastAPI emits as two alternatives."""
+
+    paths = document.get("paths")
+    if not isinstance(paths, dict):
+        return
+    separate_requirements = [
+        {"SessionCookie": []},
+        {"SessionCsrf": []},
+    ]
+    combined_requirement = [
+        {
+            "SessionCookie": [],
+            "SessionCsrf": [],
+        }
+    ]
+    for path_item in paths.values():
+        if not isinstance(path_item, dict):
+            continue
+        for operation in path_item.values():
+            if (
+                isinstance(operation, dict)
+                and operation.get("security") == separate_requirements
+            ):
+                operation["security"] = combined_requirement
 
 
 def create_app(
@@ -85,6 +115,9 @@ def create_app(
     application.include_router(health_router)
     application.include_router(auth_router)
     application.include_router(users_router)
+    application.include_router(preferences_router)
+    application.include_router(notifications_router)
+    application.include_router(plans_router)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.allowed_origins if settings else (PREVIEW_ORIGIN,)),
@@ -98,6 +131,15 @@ def create_app(
     application.add_middleware(EdgeProofMiddleware, token_provider=edge_token)
     application.add_middleware(RequestIdMiddleware)
     application.add_middleware(CallbackAccessLogRedactionMiddleware)
+
+    default_openapi = application.openapi
+
+    def documented_openapi() -> dict[str, Any]:
+        document = default_openapi()
+        _merge_session_and_csrf_security(document)
+        return document
+
+    application.openapi = documented_openapi
     return application
 
 

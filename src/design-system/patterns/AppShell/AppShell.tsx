@@ -14,11 +14,13 @@ export type AppShellProps = Readonly<{
   language: ShellLanguage;
   level?: number;
   notificationCount?: number;
+  notificationsOpen?: boolean;
   onLanguageChange: (language: ShellLanguage) => void;
   onOpenNotifications?: (() => void) | undefined;
   onOpenSearch?: (() => void) | undefined;
   onSignOut?: (() => void) | undefined;
   onToggleTheme: () => void;
+  searchOpen?: boolean;
   streakDays?: number;
   theme: ShellTheme;
   user: ShellUser;
@@ -29,11 +31,13 @@ export function AppShell({
   language,
   level = 1,
   notificationCount = 0,
+  notificationsOpen = false,
   onLanguageChange,
   onOpenNotifications,
   onOpenSearch,
   onSignOut,
   onToggleTheme,
+  searchOpen = false,
   streakDays = 0,
   theme,
   user,
@@ -77,6 +81,7 @@ export function AppShell({
             language={language}
             level={level}
             notificationCount={notificationCount}
+            notificationsOpen={notificationsOpen}
             onLanguageChange={onLanguageChange}
             onOpenNotifications={openNotifications}
             onOpenSearch={openSearch}
@@ -84,6 +89,7 @@ export function AppShell({
             onToggleSidebar={() => setSidebarCollapsed((current) => !current)}
             onToggleTheme={onToggleTheme}
             sidebarCollapsed={sidebarCollapsed}
+            searchOpen={searchOpen}
             streakDays={streakDays}
             theme={theme}
             user={user}
@@ -93,8 +99,11 @@ export function AppShell({
           <MobileHeader
             language={language}
             notificationCount={notificationCount}
+            notificationsOpen={notificationsOpen}
             onOpenDrawer={openDrawer}
             onOpenNotifications={openNotifications}
+            onOpenSearch={openSearch}
+            searchOpen={searchOpen}
             onToggleTheme={onToggleTheme}
             ref={menuButtonRef}
             streakDays={streakDays}
@@ -117,6 +126,7 @@ export function AppShell({
         navigationGroups={SHELL_NAVIGATION_GROUPS}
         onLanguageChange={onLanguageChange}
         onOpenChange={setDrawerOpen}
+        onSignOut={onSignOut}
         onToggleTheme={onToggleTheme}
         open={drawerOpen}
         returnFocusRef={drawerReturnFocusRef}

@@ -11,6 +11,7 @@ export type MobileDrawerProps = Readonly<{
   navigationGroups: readonly ShellNavigationGroup[];
   onLanguageChange: (language: ShellLanguage) => void;
   onOpenChange: (open: boolean) => void;
+  onSignOut?: (() => void) | undefined;
   onToggleTheme: () => void;
   open: boolean;
   returnFocusRef: RefObject<HTMLElement | null>;
@@ -22,6 +23,7 @@ export function MobileDrawer({
   navigationGroups,
   onLanguageChange,
   onOpenChange,
+  onSignOut,
   onToggleTheme,
   open,
   returnFocusRef,
@@ -47,6 +49,18 @@ export function MobileDrawer({
             <span aria-hidden="true">文</span>
             {isChinese ? "English" : "简体中文"}
           </button>
+          {onSignOut === undefined ? null : (
+            <button
+              type="button"
+              onClick={() => {
+                close();
+                onSignOut();
+              }}
+            >
+              <ShellIcon name="account" />
+              {isChinese ? "退出登录" : "Sign out"}
+            </button>
+          )}
         </div>
       )}
       onOpenChange={onOpenChange}

@@ -17,6 +17,7 @@ type ShellApiState = {
 };
 
 const preferenceStorageKey = "qg-v2-preferences";
+const csrfToken = "e2e_shell_csrf_abcdefghijklmnopqrstuvwxyz";
 
 const apiErrorFor = (mode: Exclude<MeMode, "authenticated">) => {
   if (mode === "signed-out") {
@@ -63,6 +64,9 @@ const responseFor = (request: Request, state: ShellApiState) => {
       return {
         status: 200,
         contentType: "application/json",
+        headers: {
+          "set-cookie": `__Host-qg_csrf=${csrfToken}; Path=/; Secure; SameSite=Lax`,
+        },
         body: JSON.stringify({
           displayName: state.displayName,
           email: "gary@example.com",
@@ -83,6 +87,57 @@ const responseFor = (request: Request, state: ShellApiState) => {
         requestId: error.requestId,
         retryable: error.retryable,
       }),
+    };
+  }
+  if (path === "/api/v2/preferences" && request.method() === "PATCH") {
+    const payload = request.postDataJSON() as {
+      language?: ShellLanguage;
+      theme?: ShellTheme;
+      version: number;
+    };
+    if (payload.version !== state.preferences.version) {
+      return {
+        status: 409,
+        contentType: "application/json",
+        body: JSON.stringify({
+          code: "PREFERENCE_CONFLICT",
+          fieldErrors: { version: ["偏好版本已变化"] },
+          message: "偏好设置已在其他位置更新。",
+          requestId: "e2e-preference-conflict",
+          retryable: false,
+        }),
+      };
+    }
+    state.preferences = {
+      language: payload.language ?? state.preferences.language,
+      theme: payload.theme ?? state.preferences.theme,
+      version: state.preferences.version + 1,
+    };
+    return {
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(state.preferences),
+    };
+  }
+  if (path === "/api/v2/notifications" && request.method() === "GET") {
+    return {
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [], nextCursor: null, unreadCount: 0 }),
+    };
+  }
+  if (path === "/api/v2/todos" && request.method() === "GET") {
+    return {
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ items: [] }),
+    };
+  }
+  if (path === "/api/v2/auth/logout" && request.method() === "POST") {
+    return {
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ status: "ok" }),
     };
   }
   return {

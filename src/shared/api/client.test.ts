@@ -59,6 +59,25 @@ describe("apiRequest", () => {
     expect(init.body).toBe(JSON.stringify({ theme: "dark" }));
   });
 
+  it("keeps a captured session proof when the live CSRF cookie changes later", async () => {
+    let cookieHeader = "__Host-qg_csrf=old-session-proof-0123456789abcdef";
+    vi.spyOn(document, "cookie", "get").mockImplementation(() => cookieHeader);
+    const capturedProof = readCsrfToken();
+    cookieHeader = "__Host-qg_csrf=new-session-proof-0123456789abcdef";
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await apiRequest<null>("/preferences", {
+      body: { theme: "dark" },
+      csrfProof: capturedProof,
+      method: "PATCH",
+    });
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(new Headers(init.headers).get("x-csrf-token"))
+      .toBe("old-session-proof-0123456789abcdef");
+  });
+
   it("fails closed when a mutation has no exact CSRF cookie", async () => {
     vi.spyOn(document, "cookie", "get").mockReturnValue("__Host-qg_session=session-only");
     const fetchMock = vi.fn();
@@ -68,6 +87,17 @@ describe("apiRequest", () => {
       method: "PATCH",
       headers: { "X-CSRF-Token": "caller-controlled-token" },
     })).rejects.toThrow("CSRF_TOKEN_REQUIRED");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid controlled CSRF proof before network access", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(apiRequest("/preferences", {
+      csrfProof: "invalid proof",
+      method: "PATCH",
+    })).rejects.toThrow("CSRF_TOKEN_INVALID");
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

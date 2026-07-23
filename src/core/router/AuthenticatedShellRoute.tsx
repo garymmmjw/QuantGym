@@ -1,22 +1,25 @@
 import { useEffect } from "react";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 
-import { AppShell } from "../../design-system/patterns/AppShell";
 import { NetworkBanner } from "../../design-system/patterns/NetworkBanner";
 import { RecoveryPanel, type RecoveryState } from "../../design-system/patterns/RecoveryPanel";
 import { Spinner } from "../../design-system/primitives/Spinner";
 import {
+  listPreferenceSyncDrafts,
   reconcilePreferencesFromMe,
   setLanguagePreference,
-  toggleThemePreference,
+  setThemePreference,
   usePreferences,
 } from "../../domains/platform/preferences";
 import { useCurrentUserQuery } from "../../domains/account/auth/auth.queries";
+import { readCsrfToken } from "../../shared/api/csrf";
 import { ApiError } from "../../shared/api/errors";
 import { useI18n } from "../../shared/i18n";
 import { useOnlineStatus } from "../../shared/lib/useOnlineStatus";
+import { createAccountScope } from "../../shared/lib/accountScope";
 import { recoveryPresentationFor } from "../errors/recoveryPresentation";
 import styles from "./AuthenticatedShellRoute.module.css";
+import { AuthenticatedPlatformShell } from "./AuthenticatedPlatformShell";
 
 const recoveryStateFor = (error: unknown, online: boolean): RecoveryState => {
   if (!online) return "offline-draft";
@@ -32,13 +35,17 @@ export function AuthenticatedShellRoute() {
   const navigate = useNavigate();
   const currentUser = useCurrentUserQuery();
   const online = useOnlineStatus();
-  const theme = usePreferences((state) => state.theme);
   const language = usePreferences((state) => state.language);
   const { t } = useI18n();
 
   useEffect(() => {
     if (currentUser.data !== null && currentUser.data !== undefined) {
       reconcilePreferencesFromMe(currentUser.data);
+      const ownerScope = createAccountScope(currentUser.data.email);
+      for (const draft of listPreferenceSyncDrafts(ownerScope)) {
+        if (draft.field === "theme") setThemePreference(draft.value);
+        else setLanguagePreference(draft.value);
+      }
     }
   }, [currentUser.data]);
 
@@ -83,13 +90,16 @@ export function AuthenticatedShellRoute() {
     return <Navigate replace to={`/login${params.size === 0 ? "" : `?${params.toString()}`}`} />;
   }
 
+  const sessionBoundaryKey = createAccountScope([
+    currentUser.data.email,
+    readCsrfToken() ?? "missing-csrf-proof",
+    currentUser.dataUpdatedAt > 0 ? "resolved" : "pending",
+  ].join(":"));
+
   return (
-    <AppShell
-      language={language}
-      onLanguageChange={setLanguagePreference}
-      onToggleTheme={toggleThemePreference}
-      theme={theme}
-      user={{ displayName: currentUser.data.displayName, email: currentUser.data.email }}
+    <AuthenticatedPlatformShell
+      currentUser={currentUser.data}
+      key={sessionBoundaryKey}
     >
       {!online ? (
         <NetworkBanner
@@ -102,6 +112,6 @@ export function AuthenticatedShellRoute() {
         />
       ) : null}
       <Outlet />
-    </AppShell>
+    </AuthenticatedPlatformShell>
   );
 }

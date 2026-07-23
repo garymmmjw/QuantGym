@@ -71,6 +71,7 @@ export function ToastProvider({
       id,
       message: input.message ?? null,
       revision: (duplicate?.revision ?? 0) + 1,
+      recoveryState: input.recoveryState ?? null,
       title: input.title,
       tone: input.tone ?? "info",
     };

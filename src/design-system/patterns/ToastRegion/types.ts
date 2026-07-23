@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { RecoveryState } from "../RecoveryPanel";
 
 export type ToastTone = "danger" | "info" | "success" | "warning";
 
@@ -14,6 +15,7 @@ export type ToastInput = Readonly<{
   durationMs?: number | null;
   id?: string;
   message?: ReactNode;
+  recoveryState?: RecoveryState;
   title: ReactNode;
   tone?: ToastTone;
 }>;
@@ -25,6 +27,7 @@ export type ToastRecord = Readonly<{
   id: string;
   message: ReactNode | null;
   revision: number;
+  recoveryState: RecoveryState | null;
   title: ReactNode;
   tone: ToastTone;
 }>;

@@ -121,6 +121,20 @@ describe("ToastRegion", () => {
     expect(screen.queryByText("同步失败")).not.toBeInTheDocument();
   });
 
+  it("exposes a mutation recovery state without changing live-region behavior", () => {
+    const api = renderToasts();
+    act(() => api.addToast({
+      durationMs: null,
+      recoveryState: "stale-version-conflict",
+      title: "偏好版本已变化",
+    }));
+
+    expect(screen.getByText("偏好版本已变化").closest("li")).toHaveAttribute(
+      "data-recovery-state",
+      "stale-version-conflict",
+    );
+  });
+
   it("pauses automatic dismissal while hovered and resumes with the remaining time", () => {
     vi.useFakeTimers();
     const api = renderToasts({ defaultDurationMs: 1_000 });

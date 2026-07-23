@@ -107,7 +107,7 @@ const zodFieldErrors = (error: ZodError): Readonly<Record<string, readonly strin
 };
 
 const kindForApiError = (error: ApiError): AuthMutationErrorKind => {
-  if (error.status === 403) return "permission";
+  if (error.status === 401 || error.status === 403) return "permission";
   if (error.status === 409) return "conflict";
   if (error.status === 429) return "rate";
   if (error.retryable || error.status >= 500) return "retryable";
@@ -211,9 +211,25 @@ export const resetPassword = (input: ResetPasswordInput) => runPreAuthMutation<R
   input,
 );
 
+export const logoutAccount = async (
+  csrfProof: string | null,
+): Promise<StatusResponse> => {
+  try {
+    const response = await apiRequest<StatusResponse>("/auth/logout", {
+      csrfProof,
+      method: "POST",
+    });
+    forgetCsrfToken();
+    return response;
+  } catch (error) {
+    throw classifyAuthError(error);
+  }
+};
+
 export const useLoginMutation = () => {
   return useMutation<AuthResponse, AuthMutationError, LoginInput>({
     mutationFn: loginAccount,
+    networkMode: "always",
     retry: false,
   });
 };
@@ -221,6 +237,7 @@ export const useLoginMutation = () => {
 export const useRegisterMutation = () => {
   return useMutation<AuthResponse, AuthMutationError, RegisterInput>({
     mutationFn: registerAccount,
+    networkMode: "always",
     retry: false,
   });
 };
@@ -231,6 +248,7 @@ export const useForgotPasswordMutation = () => useMutation<
   ForgotPasswordInput
 >({
   mutationFn: requestPasswordReset,
+  networkMode: "always",
   retry: false,
 });
 
@@ -240,5 +258,16 @@ export const useResetPasswordMutation = () => useMutation<
   ResetPasswordInput
 >({
   mutationFn: resetPassword,
+  networkMode: "always",
+  retry: false,
+});
+
+export const useLogoutMutation = (csrfProof: string | null) => useMutation<
+  StatusResponse,
+  AuthMutationError,
+  void
+>({
+  mutationFn: () => logoutAccount(csrfProof),
+  networkMode: "always",
   retry: false,
 });

@@ -8,8 +8,12 @@ const validateToken = (token: string, errorCode: string) => {
   return token;
 };
 
+export const validateCsrfProof = (token: string) => (
+  validateToken(token, "CSRF_TOKEN_INVALID")
+);
+
 export const rememberCsrfToken = (token: string) => {
-  fallbackCsrfToken = validateToken(token, "CSRF_TOKEN_INVALID");
+  fallbackCsrfToken = validateCsrfProof(token);
 };
 
 export const readCsrfToken = () => {

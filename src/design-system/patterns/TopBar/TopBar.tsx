@@ -7,6 +7,7 @@ export type TopBarProps = Readonly<{
   language: ShellLanguage;
   level?: number;
   notificationCount?: number;
+  notificationsOpen?: boolean;
   onLanguageChange: (language: ShellLanguage) => void;
   onOpenNotifications: () => void;
   onOpenSearch: () => void;
@@ -14,6 +15,7 @@ export type TopBarProps = Readonly<{
   onToggleSidebar: () => void;
   onToggleTheme: () => void;
   sidebarCollapsed: boolean;
+  searchOpen?: boolean;
   streakDays?: number;
   theme: ShellTheme;
   user: ShellUser;
@@ -23,6 +25,7 @@ export function TopBar({
   language,
   level = 1,
   notificationCount = 0,
+  notificationsOpen = false,
   onLanguageChange,
   onOpenNotifications,
   onOpenSearch,
@@ -30,6 +33,7 @@ export function TopBar({
   onToggleSidebar,
   onToggleTheme,
   sidebarCollapsed,
+  searchOpen = false,
   streakDays = 0,
   theme,
   user,
@@ -49,7 +53,14 @@ export function TopBar({
       >
         <ShellIcon name="panel" />
       </button>
-      <button className={styles.search} onClick={onOpenSearch} type="button">
+      <button
+        aria-controls="qg-command-palette"
+        aria-expanded={searchOpen}
+        aria-haspopup="dialog"
+        className={styles.search}
+        onClick={onOpenSearch}
+        type="button"
+      >
         <ShellIcon name="search" />
         <span>{isChinese ? "搜索题目、公司、课程，或跳转模块…" : "Search problems, companies, courses, or modules…"}</span>
         <kbd>⌘K</kbd>
@@ -64,6 +75,9 @@ export function TopBar({
         <strong data-qg-metric>Lv.{level}</strong>
       </div>
       <button
+        aria-controls="qg-notification-center"
+        aria-expanded={notificationsOpen}
+        aria-haspopup="dialog"
         aria-label={isChinese ? "打开通知" : "Open notifications"}
         className={styles.iconButton}
         onClick={onOpenNotifications}
