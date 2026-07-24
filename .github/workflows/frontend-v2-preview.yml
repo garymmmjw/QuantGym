@@ -51,6 +51,11 @@ jobs:
           npm run lint:v2
           npm run lint:styles:v2
 
+      - name: Build and inspect the isolated V2 artifact
+        run: |
+          npm run build:v2
+          npm run check:frontend-v2-boundaries
+
       - name: Run V2 and Phase 1 tests
         run: |
           npm run test:v2
@@ -58,11 +63,6 @@ jobs:
 
       - name: Run the complete 82-test Playwright suite
         run: npm run test:e2e:v2 -- --retries=0
-
-      - name: Build and inspect the isolated V2 artifact
-        run: |
-          npm run build:v2
-          npm run check:frontend-v2-boundaries
 
       - name: Verify frozen contracts and offline acceptance gates
         run: |

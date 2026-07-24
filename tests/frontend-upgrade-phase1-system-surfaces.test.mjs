@@ -379,6 +379,11 @@ test("CI installs the lockfile Chromium and executes the complete Playwright scr
     /npx --no-install playwright install --with-deps chromium/u,
   );
   assert.match(workflow, /run: npm run test:e2e:v2 -- --retries=0/u);
+  assert.match(
+    workflow,
+    /npm run build:v2[\s\S]*npm run test:frontend-upgrade:phase1:node/u,
+    "CI must build dist-v2 before Phase 1 Node tests inspect its runtime artifacts",
+  );
   const actionReferences = [...workflow.matchAll(/^\s*uses:\s*(\S+)\s*$/gmu)]
     .map((match) => match[1]);
   assert.ok(actionReferences.length >= 4);
