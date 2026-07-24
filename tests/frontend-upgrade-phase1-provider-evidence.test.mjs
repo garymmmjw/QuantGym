@@ -793,6 +793,30 @@ const fixtureFetch = (fixture, requests = []) => {
   };
 };
 
+const fixtureFetchWithStatus = (
+  fixture,
+  pathSuffix,
+  status,
+  observedResponses = [],
+) => {
+  const fallback = fixtureFetch(fixture);
+  return async (input, init) => {
+    if (new URL(input).pathname.endsWith(pathSuffix)) {
+      const providerError = response(
+        { success: false, errors: [{ message: "sensitive provider error body" }] },
+        { status },
+      );
+      observedResponses.push(providerError);
+      return providerError;
+    }
+    return fallback(input, init);
+  };
+};
+
+const fixtureFetchWith404 = (fixture, pathSuffix, observedResponses = []) => (
+  fixtureFetchWithStatus(fixture, pathSuffix, 404, observedResponses)
+);
+
 const providerEnvironment = () => ({
   NODE_ENV: "test",
   CLOUDFLARE_API_TOKEN: CF_TOKEN,
@@ -1079,6 +1103,198 @@ test("captures an independent 0600 pre-push baseline before the future commit is
       final.evidence.productionControlAfter,
     );
   });
+});
+
+test("Production R2 CORS 404 is an explicit unread default included in the control hash", async () => {
+  let missingCorsControlHash;
+  const observedResponses = [];
+  await withRoot(async (root) => {
+    const fixture = providerFixture();
+    const options = buildOptions(root, fixture);
+    options[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].fetchImpl = fixtureFetchWith404(
+      fixture,
+      "/r2/buckets/quantgym-media/cors",
+      observedResponses,
+    );
+    const result = await buildFrontendUpgradePhase1ProviderEvidence(options);
+    missingCorsControlHash = result.evidence.productionControlBefore;
+    assert.equal(
+      result.evidence.productionControlAfter,
+      missingCorsControlHash,
+    );
+    assert.equal(observedResponses.length, 2);
+    assert.ok(observedResponses.every((entry) => entry.bodyUsed === false));
+  });
+
+  await withRoot(async (root) => {
+    const configured = await captureFrontendUpgradePhase1PrePushBaseline(
+      buildOptions(root, providerFixture()),
+    );
+    assert.notEqual(
+      configured.baseline.productionControlSha256,
+      missingCorsControlHash,
+    );
+  });
+});
+
+test("Production R2 CORS absence and presence transitions are both rejected as drift", async () => {
+  for (const missingCall of [1, 2]) {
+    await withRoot(async (root) => {
+      const fixture = providerFixture();
+      const fallback = fixtureFetch(fixture);
+      let corsCalls = 0;
+      const options = buildOptions(root, fixture);
+      options[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].fetchImpl = async (input, init) => {
+        const url = new URL(input);
+        if (url.pathname.endsWith("/r2/buckets/quantgym-media/cors")) {
+          corsCalls += 1;
+          if (corsCalls === missingCall) {
+            return response({ success: false }, { status: 404 });
+          }
+        }
+        return fallback(input, init);
+      };
+      await assert.rejects(
+        buildFrontendUpgradePhase1ProviderEvidence(options),
+        /production provider controls changed since the pre-push baseline/u,
+      );
+      assert.equal(corsCalls, 2);
+    });
+  }
+});
+
+test("Production R2 CORS 404 fails if the immediate bucket recheck fails", async () => {
+  await withRoot(async (root) => {
+    const fixture = providerFixture();
+    const fallback = fixtureFetch(fixture);
+    const observedResponses = [];
+    let bucketReads = 0;
+    const options = buildOptions(root, fixture);
+    options[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].fetchImpl = async (input, init) => {
+      const url = new URL(input);
+      if (url.pathname.endsWith("/r2/buckets/quantgym-media/cors")) {
+        const notFound = response({ success: false }, { status: 404 });
+        observedResponses.push(notFound);
+        return notFound;
+      }
+      if (url.pathname.endsWith("/r2/buckets/quantgym-media")) {
+        bucketReads += 1;
+        if (bucketReads === 2) {
+          const notFound = response({ success: false }, { status: 404 });
+          observedResponses.push(notFound);
+          return notFound;
+        }
+      }
+      return fallback(input, init);
+    };
+    await assert.rejects(
+      buildFrontendUpgradePhase1ProviderEvidence(options),
+      /Cloudflare request failed \(status 404,/u,
+    );
+    assert.equal(bucketReads, 2);
+    assert.equal(observedResponses.length, 2);
+    assert.ok(observedResponses.every((entry) => entry.bodyUsed === false));
+  });
+});
+
+test("Production R2 CORS 404 requires the rechecked bucket identity and jurisdiction", async () => {
+  for (const [mutate, diagnostic] of [
+    [
+      (bucket) => {
+        bucket.result.name = "replacement-production-bucket";
+      },
+      /production R2 bucket recheck name/u,
+    ],
+    [
+      (bucket) => {
+        bucket.result.jurisdiction = "eu";
+      },
+      /production R2 bucket recheck jurisdiction/u,
+    ],
+  ]) {
+    await withRoot(async (root) => {
+      const fixture = providerFixture();
+      fixture.cloudflare.productionR2After = clone(fixture.cloudflare.productionR2);
+      mutate(fixture.cloudflare.productionR2After);
+      const options = buildOptions(root, fixture);
+      options[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].fetchImpl = fixtureFetchWith404(
+        fixture,
+        "/r2/buckets/quantgym-media/cors",
+      );
+      await assert.rejects(
+        buildFrontendUpgradePhase1ProviderEvidence(options),
+        diagnostic,
+      );
+    });
+  }
+});
+
+test("Production R2 CORS errors other than 404 remain fail-closed", async () => {
+  for (const status of [403, 500]) {
+    await withRoot(async (root) => {
+      const fixture = providerFixture();
+      const observedResponses = [];
+      const options = buildOptions(root, fixture);
+      options[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].fetchImpl = fixtureFetchWithStatus(
+        fixture,
+        "/r2/buckets/quantgym-media/cors",
+        status,
+        observedResponses,
+      );
+      await assert.rejects(
+        buildFrontendUpgradePhase1ProviderEvidence(options),
+        new RegExp(`Cloudflare request failed \\(status ${status},`, "u"),
+      );
+      assert.equal(observedResponses.length, 1);
+      assert.equal(observedResponses[0].bodyUsed, false);
+    });
+  }
+});
+
+test("Preview R2 CORS 404 remains fail-closed", async () => {
+  await withRoot(async (root) => {
+    const fixture = providerFixture();
+    const observedResponses = [];
+    const options = buildOptions(root, fixture);
+    options[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].fetchImpl = fixtureFetchWith404(
+      fixture,
+      "/r2/buckets/quantgym-v2-preview-media/cors",
+      observedResponses,
+    );
+    await assert.rejects(
+      buildFrontendUpgradePhase1ProviderEvidence(options),
+      /Cloudflare request failed \(status 404,/u,
+    );
+    assert.equal(observedResponses.length, 1);
+    assert.equal(observedResponses[0].bodyUsed, false);
+  });
+});
+
+test("404 from any other Production provider endpoint remains fail-closed", async () => {
+  for (const pathSuffix of [
+    "/pages/projects/quantgym-beta",
+    "/r2/buckets/quantgym-media",
+    "/r2/buckets/quantgym-media/lifecycle",
+    "/r2/buckets/quantgym-media/domains/managed",
+    "/r2/buckets/quantgym-media/domains/custom",
+  ]) {
+    await withRoot(async (root) => {
+      const fixture = providerFixture();
+      const observedResponses = [];
+      const options = buildOptions(root, fixture);
+      options[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].fetchImpl = fixtureFetchWith404(
+        fixture,
+        pathSuffix,
+        observedResponses,
+      );
+      await assert.rejects(
+        buildFrontendUpgradePhase1ProviderEvidence(options),
+        /Cloudflare request failed \(status 404,/u,
+      );
+      assert.equal(observedResponses.length, 1, pathSuffix);
+      assert.equal(observedResponses[0].bodyUsed, false, pathSuffix);
+    });
+  }
 });
 
 test("pre-push baseline rejects an expected commit already deployed to any Preview runtime", async () => {

@@ -68,6 +68,9 @@ const MAX_BASELINE_BYTES = 256 * 1024;
 const R2_BUCKET_ITEM_WRITE = "Workers R2 Storage Bucket Item Write";
 const R2_BUCKET_ITEM_READ = "Workers R2 Storage Bucket Item Read";
 const AUDIT_TOKEN_MAX_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
+const PRODUCTION_R2_CORS_NOT_CONFIGURED = Symbol(
+  "production-r2-cors-not-configured",
+);
 
 const GOVERNANCE = Object.freeze({
   operator: "Gary",
@@ -223,6 +226,7 @@ const requestJson = async ({
   fetchImpl,
   additionalHeaders = {},
   sensitiveValues,
+  acceptedNotFoundValue,
 }) => {
   let response;
   try {
@@ -241,6 +245,13 @@ const requestJson = async ({
   }
 
   const requestId = requestIdFor(provider, response, sensitiveValues);
+  if (
+    provider === "Cloudflare"
+    && response.status === 404
+    && acceptedNotFoundValue !== undefined
+  ) {
+    return acceptedNotFoundValue;
+  }
   if (!response.ok) {
     // Provider error bodies may echo credentials or resource metadata, so never read them.
     throw new Error(
@@ -797,6 +808,18 @@ const selectCors = (payload) => ({
   controlConfiguration: canonicalize(payload?.result ?? null),
 });
 
+const selectProductionCors = (payload) => (
+  payload === PRODUCTION_R2_CORS_NOT_CONFIGURED
+    ? {
+      rules: null,
+      controlConfiguration: {
+        configurationStatus: "not-configured",
+        providerObservation: "http-404",
+      },
+    }
+    : selectCors(payload)
+);
+
 const selectManagedDomain = (payload) => ({
   enabled: payload?.result?.enabled,
   controlConfiguration: canonicalize(payload?.result ?? null),
@@ -1302,6 +1325,15 @@ const createProviderReaders = ({
     additionalHeaders,
     sensitiveValues: cloudflareSensitiveValues,
   });
+  const productionR2CorsRequest = (additionalHeaders = {}) => requestJson({
+    provider: "Cloudflare",
+    url: `${cfBase}/r2/buckets/${PRODUCTION_R2}/cors`,
+    token: cloudflareToken,
+    fetchImpl,
+    additionalHeaders,
+    sensitiveValues: cloudflareSensitiveValues,
+    acceptedNotFoundValue: PRODUCTION_R2_CORS_NOT_CONFIGURED,
+  });
   const renderRequest = (suffix) => requestJson({
     provider: "Render",
     url: `https://api.render.com${suffix}`,
@@ -1335,6 +1367,7 @@ const createProviderReaders = ({
   };
   return {
     cfRequest,
+    productionR2CorsRequest,
     renderRequest,
     renderList,
     r2HeadersFor: (jurisdiction) => ({ "cf-r2-jurisdiction": jurisdiction }),
@@ -1421,11 +1454,30 @@ const readProductionControl = async ({
     );
   }));
   const r2Headers = readers.r2HeadersFor(productionJurisdiction);
+  const readProductionCors = async () => {
+    const payload = await readers.productionR2CorsRequest(r2Headers);
+    if (payload === PRODUCTION_R2_CORS_NOT_CONFIGURED) {
+      const confirmedBucket = await readers.cfRequest(
+        `/r2/buckets/${PRODUCTION_R2}`,
+        r2Headers,
+      ).then(selectR2Bucket);
+      requireEqual(
+        confirmedBucket.name,
+        PRODUCTION_R2,
+        "production R2 bucket recheck name",
+      );
+      requireEqual(
+        normalizeJurisdiction(confirmedBucket.jurisdiction),
+        productionJurisdiction,
+        "production R2 bucket recheck jurisdiction",
+      );
+    }
+    return selectProductionCors(payload);
+  };
   const [lifecycle, cors, managedDomain, customDomains] = await Promise.all([
     readers.cfRequest(`/r2/buckets/${PRODUCTION_R2}/lifecycle`, r2Headers)
       .then(selectLifecycle),
-    readers.cfRequest(`/r2/buckets/${PRODUCTION_R2}/cors`, r2Headers)
-      .then(selectCors),
+    readProductionCors(),
     readers.cfRequest(`/r2/buckets/${PRODUCTION_R2}/domains/managed`, r2Headers)
       .then(selectManagedDomain),
     readers.cfRequest(`/r2/buckets/${PRODUCTION_R2}/domains/custom`, r2Headers)
