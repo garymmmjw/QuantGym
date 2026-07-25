@@ -5,6 +5,10 @@ const baseURL = `http://localhost:${port}`;
 const browserChannel = process.env.PLAYWRIGHT_USE_SYSTEM_CHROME === "1" ? "chrome" : undefined;
 
 export default defineConfig({
+  captureGitInfo: {
+    commit: false,
+    diff: false,
+  },
   testDir: "./tests/e2e-v2",
   outputDir: "./test-results/e2e-v2",
   fullyParallel: false,

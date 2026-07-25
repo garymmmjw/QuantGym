@@ -374,6 +374,15 @@ test("CI installs the lockfile Chromium and executes the complete Playwright scr
     path.join(root, ".github/workflows/frontend-v2-preview.yml"),
     "utf8",
   );
+  const playwrightConfig = await readFile(
+    path.join(root, "playwright.v2.config.ts"),
+    "utf8",
+  );
+  assert.match(
+    playwrightConfig,
+    /captureGitInfo:\s*\{\s*commit:\s*false,\s*diff:\s*false,\s*\}/u,
+    "Playwright must not fetch shallow PR history while collecting Git metadata",
+  );
   assert.match(
     workflow,
     /npx --no-install playwright install --with-deps chromium/u,
