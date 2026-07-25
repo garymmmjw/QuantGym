@@ -32,6 +32,41 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Verify the checkout is a complete trusted repository
+        run: |
+          trusted_git() {
+            env -i \
+              PATH=/usr/bin:/bin \
+              LANG=C \
+              LC_ALL=C \
+              GIT_CONFIG_NOSYSTEM=1 \
+              GIT_CONFIG_GLOBAL=/dev/null \
+              GIT_NO_REPLACE_OBJECTS=1 \
+              GIT_OPTIONAL_LOCKS=0 \
+              GIT_LITERAL_PATHSPECS=1 \
+              /usr/bin/git \
+              -c core.fsmonitor=false \
+              -c core.untrackedCache=false \
+              -c core.ignoreStat=false \
+              "$@"
+          }
+          shallow="$(trusted_git rev-parse --is-shallow-repository)"
+          git_dir="$(trusted_git rev-parse --absolute-git-dir)"
+          git_common_dir="$(trusted_git rev-parse --git-common-dir)"
+          shallow_path="$(trusted_git rev-parse --git-path shallow)"
+          if test -e "$shallow_path"; then
+            shallow_bytes="$(wc -c < "$shallow_path")"
+          else
+            shallow_bytes="absent"
+          fi
+          printf '%s\n' \
+            "trusted_git_shallow_after_checkout=$shallow" \
+            "trusted_git_dir_after_checkout=$git_dir" \
+            "trusted_git_common_dir_after_checkout=$git_common_dir" \
+            "trusted_git_shallow_path_after_checkout=$shallow_path" \
+            "trusted_git_shallow_bytes_after_checkout=$shallow_bytes"
+          test "$shallow" = "false"
+
       - name: Select the locked Node runtime
         uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
@@ -64,8 +99,47 @@ jobs:
 
       - name: Run V2 and Phase 1 tests
         run: |
+          trusted_git() {
+            env -i \
+              PATH=/usr/bin:/bin \
+              LANG=C \
+              LC_ALL=C \
+              GIT_CONFIG_NOSYSTEM=1 \
+              GIT_CONFIG_GLOBAL=/dev/null \
+              GIT_NO_REPLACE_OBJECTS=1 \
+              GIT_OPTIONAL_LOCKS=0 \
+              GIT_LITERAL_PATHSPECS=1 \
+              /usr/bin/git \
+              -c core.fsmonitor=false \
+              -c core.untrackedCache=false \
+              -c core.ignoreStat=false \
+              "$@"
+          }
+          assert_trusted_history() {
+            local label="$1"
+            local shallow git_dir git_common_dir shallow_path shallow_bytes
+            shallow="$(trusted_git rev-parse --is-shallow-repository)"
+            git_dir="$(trusted_git rev-parse --absolute-git-dir)"
+            git_common_dir="$(trusted_git rev-parse --git-common-dir)"
+            shallow_path="$(trusted_git rev-parse --git-path shallow)"
+            if test -e "$shallow_path"; then
+              shallow_bytes="$(wc -c < "$shallow_path")"
+            else
+              shallow_bytes="absent"
+            fi
+            printf '%s\n' \
+              "trusted_git_shallow_${label}=$shallow" \
+              "trusted_git_dir_${label}=$git_dir" \
+              "trusted_git_common_dir_${label}=$git_common_dir" \
+              "trusted_git_shallow_path_${label}=$shallow_path" \
+              "trusted_git_shallow_bytes_${label}=$shallow_bytes"
+            test "$shallow" = "false"
+          }
+          assert_trusted_history after_build
           npm run test:v2
+          assert_trusted_history after_v2_tests
           npm run test:frontend-upgrade:phase1:node
+          assert_trusted_history after_phase1_tests
 
       - name: Generate Playwright Linux visual baselines
         if: ${{ inputs.update_linux_visual_baselines }}
@@ -110,6 +184,42 @@ jobs:
       - name: Run the complete 82-test Playwright suite
         if: ${{ !inputs.update_linux_visual_baselines }}
         run: npm run test:e2e:v2 -- --retries=0
+
+      - name: Verify browser tests preserved the complete trusted repository
+        if: ${{ !inputs.update_linux_visual_baselines }}
+        run: |
+          trusted_git() {
+            env -i \
+              PATH=/usr/bin:/bin \
+              LANG=C \
+              LC_ALL=C \
+              GIT_CONFIG_NOSYSTEM=1 \
+              GIT_CONFIG_GLOBAL=/dev/null \
+              GIT_NO_REPLACE_OBJECTS=1 \
+              GIT_OPTIONAL_LOCKS=0 \
+              GIT_LITERAL_PATHSPECS=1 \
+              /usr/bin/git \
+              -c core.fsmonitor=false \
+              -c core.untrackedCache=false \
+              -c core.ignoreStat=false \
+              "$@"
+          }
+          shallow="$(trusted_git rev-parse --is-shallow-repository)"
+          git_dir="$(trusted_git rev-parse --absolute-git-dir)"
+          git_common_dir="$(trusted_git rev-parse --git-common-dir)"
+          shallow_path="$(trusted_git rev-parse --git-path shallow)"
+          if test -e "$shallow_path"; then
+            shallow_bytes="$(wc -c < "$shallow_path")"
+          else
+            shallow_bytes="absent"
+          fi
+          printf '%s\n' \
+            "trusted_git_shallow_after_browser_tests=$shallow" \
+            "trusted_git_dir_after_browser_tests=$git_dir" \
+            "trusted_git_common_dir_after_browser_tests=$git_common_dir" \
+            "trusted_git_shallow_path_after_browser_tests=$shallow_path" \
+            "trusted_git_shallow_bytes_after_browser_tests=$shallow_bytes"
+          test "$shallow" = "false"
 
       - name: Verify frozen contracts and offline acceptance gates
         run: |
