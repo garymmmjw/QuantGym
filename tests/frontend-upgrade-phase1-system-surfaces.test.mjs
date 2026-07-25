@@ -393,3 +393,53 @@ test("CI installs the lockfile Chromium and executes the complete Playwright scr
   assert.doesNotMatch(workflow, /QUANTGYM_PHASE1_(?:PROVIDER|R2|POSTGRES)/u);
   assert.doesNotMatch(workflow, /\$\{\{\s*secrets\./u);
 });
+
+test("Linux baseline refresh verifies its runtime and uploads only fresh output", async () => {
+  const updater = await readFile(
+    path.join(root, "scripts/update-playwright-linux-snapshots.mjs"),
+    "utf8",
+  );
+  const workflow = await readFile(
+    path.join(root, ".github/workflows/frontend-v2-preview.yml"),
+    "utf8",
+  );
+
+  const expectedNodeArchiveSha256 = (
+    "19e56f0825510207dd904f087fe52faa0a4eb6b2aab5f0ea7a33830d04888b8b"
+  );
+  assert.match(updater, new RegExp(expectedNodeArchiveSha256, "u"));
+  assert.match(updater, /sha256sum --check --strict -/u);
+  assert.doesNotMatch(updater, /curl[^\n]*\|\s*tar/u);
+  const downloadIndex = updater.indexOf("--output \"$node_archive\"");
+  const checksumIndex = updater.indexOf("sha256sum --check --strict -");
+  const extractIndex = updater.indexOf("tar -xzf \"$node_archive\"");
+  assert.ok(downloadIndex >= 0);
+  assert.ok(downloadIndex < checksumIndex);
+  assert.ok(checksumIndex < extractIndex);
+
+  assert.match(workflow, /id: generate_linux_baselines/u);
+  assert.match(
+    workflow,
+    /find tests\/e2e-v2 -type f -name '\*-linux\.png' -delete/u,
+  );
+  assert.match(workflow, /test "\$\{#snapshots\[@\]\}" = "21"/u);
+  assert.match(workflow, /sha256sum --check --strict SHA256SUMS/u);
+  assert.match(
+    workflow,
+    /steps\.generate_linux_baselines\.outcome == 'success'/u,
+  );
+  assert.match(
+    workflow,
+    /steps\.generate_linux_baselines\.outputs\.snapshot_count == '21'/u,
+  );
+  assert.match(
+    workflow,
+    /path: \$\{\{ runner\.temp \}\}\/playwright-linux-visual-baselines/u,
+  );
+  const uploadBlock = workflow.match(
+    /- name: Upload generated Playwright Linux visual baselines[\s\S]*?retention-days: 14/u,
+  )?.[0] ?? "";
+  assert.notEqual(uploadBlock, "");
+  assert.doesNotMatch(uploadBlock, /always\(\)/u);
+  assert.doesNotMatch(uploadBlock, /tests\/e2e-v2\/\*\*\/\*-linux\.png/u);
+});

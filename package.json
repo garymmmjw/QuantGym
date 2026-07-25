@@ -54,6 +54,7 @@
     "lint:styles:v2": "stylelint --config stylelint.config.mjs 'src/{core,shared,design-system,domains,legacy-preview,pages/v2}/**/*.css' --allow-empty-input",
     "test:v2": "vitest --config vitest.v2.config.ts run",
     "test:e2e:v2": "playwright test --config playwright.v2.config.ts",
+    "test:e2e:v2:update-linux-snapshots": "node scripts/update-playwright-linux-snapshots.mjs",
     "build:v2": "node scripts/build-frontend-v2.mjs",
     "check:frontend-v2-build-isolation": "node --test tests/frontend-v2-build-isolation.test.mjs && node scripts/check-frontend-v2-boundaries.mjs",
     "storybook:v2": "storybook dev --config-dir .storybook --port 6006 --no-open --disable-telemetry",

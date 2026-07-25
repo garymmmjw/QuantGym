@@ -3,6 +3,12 @@ name: Frontend V2 Preview
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      update_linux_visual_baselines:
+        description: Generate reviewable Playwright Linux visual baselines
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -61,7 +67,48 @@ jobs:
           npm run test:v2
           npm run test:frontend-upgrade:phase1:node
 
+      - name: Generate Playwright Linux visual baselines
+        if: ${{ inputs.update_linux_visual_baselines }}
+        id: generate_linux_baselines
+        shell: bash
+        run: |
+          find tests/e2e-v2 -type f -name '*-linux.png' -delete
+          npm run test:e2e:v2 -- --grep '@visual:' --update-snapshots --retries=0 --timeout=90000
+
+          mapfile -d '' snapshots < <(
+            find tests/e2e-v2 -type f -name '*-linux.png' -print0 | sort -z
+          )
+          test "${#snapshots[@]}" = "21"
+
+          artifact_dir="$RUNNER_TEMP/playwright-linux-visual-baselines"
+          test ! -e "$artifact_dir"
+          mkdir --mode=0755 "$artifact_dir"
+          for snapshot in "${snapshots[@]}"; do
+            sha256sum "$snapshot" >> "$artifact_dir/SHA256SUMS"
+            install -D --mode=0644 "$snapshot" "$artifact_dir/$snapshot"
+          done
+          (
+            cd "$artifact_dir"
+            sha256sum --check --strict SHA256SUMS
+          )
+          printf 'snapshot_count=%s\n' "${#snapshots[@]}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload generated Playwright Linux visual baselines
+        if: >-
+          ${{
+            inputs.update_linux_visual_baselines
+            && steps.generate_linux_baselines.outcome == 'success'
+            && steps.generate_linux_baselines.outputs.snapshot_count == '21'
+          }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: playwright-linux-visual-baselines-${{ github.run_id }}
+          path: ${{ runner.temp }}/playwright-linux-visual-baselines
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Run the complete 82-test Playwright suite
+        if: ${{ !inputs.update_linux_visual_baselines }}
         run: npm run test:e2e:v2 -- --retries=0
 
       - name: Verify frozen contracts and offline acceptance gates
@@ -71,6 +118,15 @@ jobs:
           npm run check:frontend-upgrade:phase1:auth -- --offline
           npm run check:frontend-upgrade:phase1:surfaces -- --offline
           npm run check:frontend-upgrade:phase1 -- --offline
+
+      - name: Upload Playwright failure diagnostics
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: playwright-failure-diagnostics-${{ github.run_id }}
+          path: test-results/e2e-v2
+          if-no-files-found: ignore
+          retention-days: 14
 
   python-gates:
     name: Python API and migration gates
