@@ -36,6 +36,46 @@ const NOW = new Date("2026-07-24T00:00:00.000Z");
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ISOLATED_TEST_PARENT = await realpath(tmpdir());
 const execFileAsync = promisify(execFile);
+const FIXTURE_GIT_ENV = Object.freeze({
+  PATH: "/usr/bin:/bin",
+  HOME: ISOLATED_TEST_PARENT,
+  LANG: "C",
+  LC_ALL: "C",
+  GIT_CONFIG_NOSYSTEM: "1",
+  GIT_CONFIG_GLOBAL: "/dev/null",
+  GIT_TERMINAL_PROMPT: "0",
+});
+const fixtureGit = (root, args) => execFileAsync(
+  "/usr/bin/git",
+  args,
+  {
+    encoding: "utf8",
+    maxBuffer: 1024 * 1024,
+    cwd: root,
+    env: FIXTURE_GIT_ENV,
+  },
+);
+const resolveGitPath = (root, value) => (
+  path.isAbsolute(value) ? value : path.resolve(root, value)
+);
+const snapshotRepositoryShallowState = async (root) => {
+  const [{ stdout: shallowOutput }, { stdout: pathOutput }] = await Promise.all([
+    fixtureGit(root, ["rev-parse", "--is-shallow-repository"]),
+    fixtureGit(root, ["rev-parse", "--git-path", "shallow"]),
+  ]);
+  const shallowPath = resolveGitPath(root, pathOutput.trim());
+  let bytes = null;
+  try {
+    bytes = await readFile(shallowPath);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  return {
+    shallow: shallowOutput.trim(),
+    shallowPath,
+    bytes,
+  };
+};
 process.env.NODE_ENV = "test";
 const CHECKED_AT = NOW.toISOString();
 const COMMIT = "1".repeat(40);
@@ -472,31 +512,31 @@ const isolatedRoot = async (t) => {
   );
   const root = await realpath(temporaryRoot);
   t.after(() => rm(root, { recursive: true, force: true }));
-  await execFileAsync("/usr/bin/git", ["init", "--quiet"], { cwd: root });
-  await execFileAsync("/usr/bin/git", ["config", "user.name", "Phase 1 Test"], {
-    cwd: root,
-  });
-  await execFileAsync(
-    "/usr/bin/git",
+  await fixtureGit(root, ["init", "--quiet"]);
+  const { stdout: gitDirectoryOutput } = await fixtureGit(
+    root,
+    ["rev-parse", "--absolute-git-dir"],
+  );
+  const expectedGitDirectory = await realpath(path.join(root, ".git"));
+  const gitDirectory = await realpath(gitDirectoryOutput.trim());
+  assert.equal(gitDirectory, expectedGitDirectory);
+  assert.equal(path.dirname(gitDirectory), root);
+  await fixtureGit(root, ["config", "user.name", "Phase 1 Test"]);
+  await fixtureGit(
+    root,
     ["config", "user.email", "phase1-test@example.invalid"],
-    { cwd: root },
   );
   await Promise.all([
     writeFile(path.join(root, "fixture.txt"), "phase-1 fixture\n", { mode: 0o644 }),
     writeFile(path.join(root, ".gitignore"), "dist-v2/\n", { mode: 0o644 }),
   ]);
-  await execFileAsync("/usr/bin/git", ["add", "fixture.txt", ".gitignore"], { cwd: root });
-  await execFileAsync("/usr/bin/git", ["commit", "--quiet", "-m", "fixture"], {
-    cwd: root,
-  });
-  const { stdout } = await execFileAsync("/usr/bin/git", ["rev-parse", "HEAD"], {
-    cwd: root,
-    encoding: "utf8",
-  });
+  await fixtureGit(root, ["add", "fixture.txt", ".gitignore"]);
+  await fixtureGit(root, ["commit", "--quiet", "-m", "fixture"]);
+  const { stdout } = await fixtureGit(root, ["rev-parse", "HEAD"]);
   await mkdir(path.join(root, "docs/browser-audit-screenshots"), { recursive: true });
   const commit = stdout.trim();
   await writeRuntimeArtifact(root, commit);
-  return { root, commit };
+  return { root, commit, gitDirectory };
 };
 
 test("test-only aggregate injection requires a canonical isolated temporary root", async (t) => {
@@ -564,28 +604,21 @@ test("application commit must exist and be an ancestor of repository HEAD", asyn
     verifyPhase1ApplicationCommitProvenance(root, "9".repeat(40)),
   );
 
-  const { stdout: branchOutput } = await execFileAsync(
-    "/usr/bin/git",
+  const { stdout: branchOutput } = await fixtureGit(
+    root,
     ["branch", "--show-current"],
-    { cwd: root, encoding: "utf8" },
   );
-  await execFileAsync("/usr/bin/git", ["checkout", "--quiet", "-b", "side"], {
-    cwd: root,
-  });
+  await fixtureGit(root, ["checkout", "--quiet", "-b", "side"]);
   await writeFile(path.join(root, "side.txt"), "side commit\n", { mode: 0o644 });
-  await execFileAsync("/usr/bin/git", ["add", "side.txt"], { cwd: root });
-  await execFileAsync("/usr/bin/git", ["commit", "--quiet", "-m", "side"], {
-    cwd: root,
-  });
-  const { stdout: sideOutput } = await execFileAsync(
-    "/usr/bin/git",
+  await fixtureGit(root, ["add", "side.txt"]);
+  await fixtureGit(root, ["commit", "--quiet", "-m", "side"]);
+  const { stdout: sideOutput } = await fixtureGit(
+    root,
     ["rev-parse", "HEAD"],
-    { cwd: root, encoding: "utf8" },
   );
-  await execFileAsync(
-    "/usr/bin/git",
+  await fixtureGit(
+    root,
     ["checkout", "--quiet", branchOutput.trim()],
-    { cwd: root },
   );
   await assert.rejects(
     verifyPhase1ApplicationCommitProvenance(root, sideOutput.trim()),
@@ -603,10 +636,8 @@ test("an application commit may have only exact committed 380 evidence successor
     await verifyPhase1ApplicationCommitProvenance(root, commit),
     true,
   );
-  await execFileAsync("/usr/bin/git", ["add", evidencePath], { cwd: root });
-  await execFileAsync("/usr/bin/git", ["commit", "--quiet", "-m", "evidence"], {
-    cwd: root,
-  });
+  await fixtureGit(root, ["add", evidencePath]);
+  await fixtureGit(root, ["commit", "--quiet", "-m", "evidence"]);
   assert.equal(
     await verifyPhase1ApplicationCommitProvenance(root, commit),
     true,
@@ -617,10 +648,8 @@ test("application provenance rejects committed and uncommitted source successors
   await t.test("committed source successor", async (subtest) => {
     const { root, commit } = await isolatedRoot(subtest);
     await writeFile(path.join(root, "fixture.txt"), "changed source\n", { mode: 0o644 });
-    await execFileAsync("/usr/bin/git", ["add", "fixture.txt"], { cwd: root });
-    await execFileAsync("/usr/bin/git", ["commit", "--quiet", "-m", "source drift"], {
-      cwd: root,
-    });
+    await fixtureGit(root, ["add", "fixture.txt"]);
+    await fixtureGit(root, ["commit", "--quiet", "-m", "source drift"]);
     await assert.rejects(
       verifyPhase1ApplicationCommitProvenance(root, commit),
       (error) => error?.code === "application_source_drift",
@@ -701,10 +730,9 @@ test("application provenance rejects hidden index state", async (t) => {
   for (const flag of ["--assume-unchanged", "--skip-worktree"]) {
     await t.test(flag, async (subtest) => {
       const { root, commit } = await isolatedRoot(subtest);
-      await execFileAsync(
-        "/usr/bin/git",
+      await fixtureGit(
+        root,
         ["update-index", flag, "fixture.txt"],
-        { cwd: root },
       );
       await assert.rejects(
         verifyPhase1ApplicationCommitProvenance(root, commit),
@@ -720,11 +748,9 @@ test("application provenance rejects replace refs, grafts, and shallow history",
     await writeFile(path.join(root, "fixture.txt"), "replacement commit\n", {
       mode: 0o644,
     });
-    await execFileAsync("/usr/bin/git", ["add", "fixture.txt"], { cwd: root });
-    await execFileAsync("/usr/bin/git", ["commit", "--quiet", "-m", "replacement"], {
-      cwd: root,
-    });
-    await execFileAsync("/usr/bin/git", ["replace", commit, "HEAD"], { cwd: root });
+    await fixtureGit(root, ["add", "fixture.txt"]);
+    await fixtureGit(root, ["commit", "--quiet", "-m", "replacement"]);
+    await fixtureGit(root, ["replace", commit, "HEAD"]);
     await assert.rejects(
       verifyPhase1ApplicationCommitProvenance(root, commit),
       (error) => error?.code === "application_commit_invalid",
@@ -732,13 +758,9 @@ test("application provenance rejects replace refs, grafts, and shallow history",
   });
 
   await t.test("graft file", async (subtest) => {
-    const { root, commit } = await isolatedRoot(subtest);
-    const { stdout } = await execFileAsync(
-      "/usr/bin/git",
-      ["rev-parse", "--git-path", "info/grafts"],
-      { cwd: root, encoding: "utf8" },
-    );
-    const graftPath = path.resolve(root, stdout.trim());
+    const { root, commit, gitDirectory } = await isolatedRoot(subtest);
+    const graftPath = path.join(gitDirectory, "info/grafts");
+    assert.equal(path.relative(root, graftPath), path.join(".git", "info", "grafts"));
     await mkdir(path.dirname(graftPath), { recursive: true });
     await writeFile(graftPath, "\n", { mode: 0o644 });
     await assert.rejects(
@@ -748,17 +770,48 @@ test("application provenance rejects replace refs, grafts, and shallow history",
   });
 
   await t.test("shallow repository", async (subtest) => {
-    const { root, commit } = await isolatedRoot(subtest);
-    const { stdout } = await execFileAsync(
-      "/usr/bin/git",
-      ["rev-parse", "--git-path", "shallow"],
-      { cwd: root, encoding: "utf8" },
+    const projectStateBefore = await snapshotRepositoryShallowState(PROJECT_ROOT);
+    const decoyTemporaryRoot = await mkdtemp(
+      path.join(ISOLATED_TEST_PARENT, "git-env-decoy-"),
     );
-    await writeFile(path.resolve(root, stdout.trim()), `${commit}\n`, { mode: 0o644 });
-    await assert.rejects(
-      verifyPhase1ApplicationCommitProvenance(root, commit),
-      (error) => error?.code === "application_commit_invalid",
+    const decoyRoot = await realpath(decoyTemporaryRoot);
+    subtest.after(() => rm(decoyRoot, { recursive: true, force: true }));
+    await fixtureGit(decoyRoot, ["init", "--quiet"]);
+    const decoyStateBefore = await snapshotRepositoryShallowState(decoyRoot);
+    const gitLocationVariables = ["GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE"];
+    const ambientValues = Object.fromEntries(
+      gitLocationVariables.map((name) => [name, process.env[name]]),
     );
+    process.env.GIT_DIR = path.join(decoyRoot, ".git");
+    process.env.GIT_COMMON_DIR = path.join(decoyRoot, ".git");
+    process.env.GIT_WORK_TREE = decoyRoot;
+    try {
+      const { root, commit, gitDirectory } = await isolatedRoot(subtest);
+      const shallowPath = path.join(gitDirectory, "shallow");
+      assert.equal(path.dirname(shallowPath), gitDirectory);
+      assert.equal(path.relative(root, shallowPath), path.join(".git", "shallow"));
+      await writeFile(shallowPath, `${commit}\n`, { mode: 0o644 });
+      await assert.rejects(
+        verifyPhase1ApplicationCommitProvenance(root, commit),
+        (error) => error?.code === "application_commit_invalid",
+      );
+    } finally {
+      for (const name of gitLocationVariables) {
+        if (ambientValues[name] === undefined) {
+          delete process.env[name];
+        } else {
+          process.env[name] = ambientValues[name];
+        }
+      }
+      assert.deepEqual(
+        await snapshotRepositoryShallowState(PROJECT_ROOT),
+        projectStateBefore,
+      );
+      assert.deepEqual(
+        await snapshotRepositoryShallowState(decoyRoot),
+        decoyStateBefore,
+      );
+    }
   });
 });
 
