@@ -6,6 +6,11 @@ import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
+import {
+  resolveRepositoryBuildBranch,
+  validateFrontendV2BuildBranch,
+} from "./scripts/lib/frontend-v2-build-branch.mjs";
+
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const canonicalProjectRoot = realpathSync(projectRoot);
 const approvedAssetRoot = path.join(canonicalProjectRoot, "assets/generated/playful-precision");
@@ -150,10 +155,12 @@ export const resolveV2BuildBranch = (
     throw new Error("V2_CLOUDFLARE_METADATA_REQUIRED");
   }
 
-  const repositoryBranch = readBranch();
   if (environment.QUANTGYM_BUILD_SOURCE === "test") {
-    return environment.QUANTGYM_BUILD_BRANCH ?? repositoryBranch;
+    return environment.QUANTGYM_BUILD_BRANCH === undefined
+      ? resolveRepositoryBuildBranch(environment, readBranch)
+      : validateFrontendV2BuildBranch(environment.QUANTGYM_BUILD_BRANCH);
   }
+  const repositoryBranch = resolveRepositoryBuildBranch(environment, readBranch);
   if (
     environment.QUANTGYM_BUILD_BRANCH !== undefined
     && environment.QUANTGYM_BUILD_BRANCH !== repositoryBranch

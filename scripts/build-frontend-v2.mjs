@@ -16,6 +16,10 @@ import { fileURLToPath } from "node:url";
 
 import { build } from "vite";
 
+import {
+  resolveRepositoryBuildBranch,
+} from "./lib/frontend-v2-build-branch.mjs";
+
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const outputDirectory = path.join(projectRoot, "dist-v2");
 const publicDirectory = path.join(projectRoot, "public-v2");
@@ -118,9 +122,9 @@ export const resolveBuildMetadata = (
     throw new Error("V2_CLOUDFLARE_METADATA_REQUIRED");
   }
   const repositoryCommit = validateCommit(gitValue(["rev-parse", "HEAD"]));
-  const repositoryBranch = validateLabel(
-    "branch",
-    gitValue(["branch", "--show-current"]) || "detached",
+  const repositoryBranch = resolveRepositoryBuildBranch(
+    environment,
+    () => gitValue(["branch", "--show-current"]),
   );
   if (source !== "test") {
     if (

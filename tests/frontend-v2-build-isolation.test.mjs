@@ -17,18 +17,31 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { loadConfigFromFile } from "vite";
+import { loadConfigFromFile, runnerImport } from "vite";
 
 import {
   resolveBuildMetadata,
   validateV2PublicDirectory,
   validateV2PublicDeploymentPolicy,
 } from "../scripts/build-frontend-v2.mjs";
+import {
+  resolveRepositoryBuildBranch,
+} from "../scripts/lib/frontend-v2-build-branch.mjs";
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const nodeBin = process.execPath;
 const buildScript = path.join(projectRoot, "scripts/build-frontend-v2.mjs");
 const distDirectory = path.join(projectRoot, "dist-v2");
+const viteConfigPath = path.join(projectRoot, "vite.v2.config.ts");
+let viteV2ModulePromise;
+
+const loadViteV2Module = async () => {
+  viteV2ModulePromise ??= runnerImport(viteConfigPath, {
+    root: projectRoot,
+    logLevel: "silent",
+  }).then((result) => result.module);
+  return viteV2ModulePromise;
+};
 
 const exactDependencies = {
   "@hookform/resolvers": "5.4.0",
@@ -432,6 +445,112 @@ test("uses complete Cloudflare Pages provenance as the authoritative deployment 
     branch: "codex/frontend-v2-preview",
     source: "test",
   });
+});
+
+test("resolves a detached GitHub PR merge checkout to its trusted head branch", async () => {
+  let branchReads = 0;
+  const environment = {
+    GITHUB_ACTIONS: "true",
+    GITHUB_EVENT_NAME: "pull_request",
+    GITHUB_HEAD_REF: "codex/frontend-v2-preview",
+    GITHUB_REF_NAME: "130/merge",
+    GITHUB_REF_TYPE: "branch",
+  };
+  assert.equal(resolveRepositoryBuildBranch(environment, () => {
+    branchReads += 1;
+    return "";
+  }), "codex/frontend-v2-preview");
+  assert.equal(branchReads, 0);
+
+  const gitValue = (args) => {
+    if (args[0] === "rev-parse") return "6666666666666666666666666666666666666666";
+    throw new Error("Detached PR builds must use the trusted GitHub head ref");
+  };
+  assert.deepEqual(resolveBuildMetadata(environment, gitValue), {
+    commit: "6666666666666666666666666666666666666666",
+    branch: "codex/frontend-v2-preview",
+    source: "local",
+  });
+
+  const viteV2Module = await loadViteV2Module();
+  let viteBranchReads = 0;
+  const viteBranch = viteV2Module.resolveV2BuildBranch({
+    ...environment,
+    QUANTGYM_BUILD_SOURCE: "test",
+  }, () => {
+    viteBranchReads += 1;
+    return "";
+  });
+  assert.equal(viteBranch, "codex/frontend-v2-preview");
+  assert.equal(viteBranchReads, 0);
+});
+
+test("keeps a detached GitHub main build on the production legacy-frame policy", async () => {
+  const environment = {
+    GITHUB_ACTIONS: "true",
+    GITHUB_EVENT_NAME: "push",
+    GITHUB_HEAD_REF: "codex/frontend-v2-preview",
+    GITHUB_REF_NAME: "main",
+    GITHUB_REF_TYPE: "branch",
+  };
+  const branch = resolveRepositoryBuildBranch(environment, () => {
+    throw new Error("GitHub branch metadata must take precedence over detached Git");
+  });
+  assert.equal(branch, "main");
+  const gitValue = (args) => {
+    if (args[0] === "rev-parse") return "7777777777777777777777777777777777777777";
+    throw new Error("Detached production builds must use the trusted GitHub ref name");
+  };
+  assert.deepEqual(resolveBuildMetadata(environment, gitValue), {
+    commit: "7777777777777777777777777777777777777777",
+    branch: "main",
+    source: "local",
+  });
+  await assert.rejects(
+    validateV2PublicDeploymentPolicy(branch === "codex/frontend-v2-preview"),
+    /V2_PRODUCTION_LEGACY_FRAME_POLICY_FORBIDDEN/,
+  );
+  assert.equal(
+    resolveRepositoryBuildBranch({
+      GITHUB_EVENT_NAME: "pull_request",
+      GITHUB_HEAD_REF: "codex/frontend-v2-preview",
+    }, () => "main"),
+    "main",
+    "GitHub refs outside GitHub Actions must not override the repository branch",
+  );
+  const tagEnvironment = {
+    GITHUB_ACTIONS: "true",
+    GITHUB_EVENT_NAME: "push",
+    GITHUB_REF_NAME: "codex/frontend-v2-preview",
+    GITHUB_REF_TYPE: "tag",
+  };
+  let tagBranchReads = 0;
+  assert.equal(resolveRepositoryBuildBranch(tagEnvironment, () => {
+    tagBranchReads += 1;
+    return "codex/frontend-v2-preview";
+  }), "detached");
+  assert.equal(tagBranchReads, 0);
+
+  const viteV2Module = await loadViteV2Module();
+  let viteTagBranchReads = 0;
+  assert.equal(viteV2Module.resolveV2BuildBranch(tagEnvironment, () => {
+    viteTagBranchReads += 1;
+    return "codex/frontend-v2-preview";
+  }), "detached");
+  assert.equal(viteTagBranchReads, 0);
+
+  const unknownRefEnvironment = {
+    GITHUB_ACTIONS: "true",
+    GITHUB_EVENT_NAME: "push",
+    GITHUB_REF_NAME: "codex/frontend-v2-preview",
+    GITHUB_REF_TYPE: "unknown",
+  };
+  let unknownRefBranchReads = 0;
+  assert.equal(resolveRepositoryBuildBranch(unknownRefEnvironment, () => {
+    unknownRefBranchReads += 1;
+    return "codex/frontend-v2-preview";
+  }), "detached");
+  assert.equal(unknownRefBranchReads, 0);
 });
 
 test("public-v2 accepts only the three reviewed regular control files", async () => {
