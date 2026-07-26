@@ -95,6 +95,9 @@ Visual-review findings: 0 blocking, 0 non-blocking.
 
 Closeout is complete. Temporary local credentials, the database tunnel, helper scripts, and the
 dedicated temporary Python environment were removed after the final provider checks.
+The final documentation-only handoff commit uses Cloudflare's documented
+[`[CF-Pages-Skip]`](https://developers.cloudflare.com/pages/configuration/git-integration/github-integration/#skipping-a-build-via-a-commit-message)
+prefix so it cannot replace the frozen Preview deployment.
 
 ## Decision
 
