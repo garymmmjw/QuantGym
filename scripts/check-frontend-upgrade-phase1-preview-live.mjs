@@ -56,7 +56,15 @@ const FORBIDDEN_SUMMARY_KEY = (
 );
 const POSTGRES_CLEANUP_ENV = "QUANTGYM_PHASE1_CLEANUP_SYNTHETIC_AUDIT_DATA";
 const POSTGRES_CLEANUP_CONFIRMATION = "confirmed";
-const MAX_ANONYMOUS_CHALLENGE_TARGETS = 2;
+const MAX_ANONYMOUS_CHALLENGE_TARGETS = 3;
+const EXPECTED_ANONYMOUS_CHALLENGE_KIND_COUNTS = Object.freeze({
+  google_oauth: 1,
+  pre_auth_csrf: 2,
+});
+const EXPECTED_AUTH_CHALLENGE_KIND_COUNTS = Object.freeze({
+  google_oauth: 1,
+  pre_auth_csrf: 1,
+});
 const AUTH_SUMMARY_RELATIVE = (
   "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-auth-security-summary.json"
 );
@@ -156,15 +164,16 @@ const assertNoSecretShapedSummaryKeys = (value, label = "summary") => {
   }
 };
 
-const validateAnonymousChallengeTargets = (value, { complete = false } = {}) => {
+const validateAnonymousChallengeTargets = (value, { requiredKindCounts } = {}) => {
   if (
     !Array.isArray(value)
     || value.length > MAX_ANONYMOUS_CHALLENGE_TARGETS
   ) {
     throw new Error("anonymous challenge cleanup targets are invalid");
   }
-  const allowedKinds = new Set(["pre_auth_csrf", "google_oauth"]);
-  const seenKinds = new Set();
+  const allowedKinds = new Set(Object.keys(EXPECTED_ANONYMOUS_CHALLENGE_KIND_COUNTS));
+  const seenTargets = new Set();
+  const kindCounts = new Map();
   const validated = value.map((target) => {
     exactKeys(
       target,
@@ -173,13 +182,21 @@ const validateAnonymousChallengeTargets = (value, { complete = false } = {}) => 
     );
     if (
       !allowedKinds.has(target.kind)
-      || seenKinds.has(target.kind)
       || !HASH_PATTERN.test(target.tokenHash)
       || target.expectedConsumed !== true
     ) {
       throw new Error("anonymous challenge cleanup targets are invalid");
     }
-    seenKinds.add(target.kind);
+    const identity = `${target.kind}:${target.tokenHash}`;
+    if (seenTargets.has(identity)) {
+      throw new Error("anonymous challenge cleanup targets are invalid");
+    }
+    seenTargets.add(identity);
+    const kindCount = (kindCounts.get(target.kind) ?? 0) + 1;
+    if (kindCount > EXPECTED_ANONYMOUS_CHALLENGE_KIND_COUNTS[target.kind]) {
+      throw new Error("anonymous challenge cleanup targets are invalid");
+    }
+    kindCounts.set(target.kind, kindCount);
     return Object.freeze({
       kind: target.kind,
       tokenHash: target.tokenHash,
@@ -187,10 +204,15 @@ const validateAnonymousChallengeTargets = (value, { complete = false } = {}) => 
     });
   });
   if (
-    complete
+    requiredKindCounts
     && (
-      validated.length !== MAX_ANONYMOUS_CHALLENGE_TARGETS
-      || ![...allowedKinds].every((kind) => seenKinds.has(kind))
+      validated.length !== Object.values(requiredKindCounts).reduce(
+        (total, count) => total + count,
+        0,
+      )
+      || Object.entries(requiredKindCounts).some(
+        ([kind, expectedCount]) => kindCounts.get(kind) !== expectedCount,
+      )
     )
   ) {
     throw new Error("anonymous challenge cleanup targets are incomplete");
@@ -1357,16 +1379,23 @@ export async function runFrontendUpgradePhase1PreviewLive(options = {}) {
       });
       validateAnonymousChallengeTargets(
         anonymousChallengeTargets,
-        { complete: true },
+        { requiredKindCounts: EXPECTED_AUTH_CHALLENGE_KIND_COUNTS },
       );
       surfaceResult = await runSurfaces({
         root,
         mode: "live",
+        env,
         expectedCommit,
         evidenceSha256: providerEvidenceSha256,
         checkedAt: now,
         credentials,
+        csrfSigningSecret: env.QUANTGYM_V2_CSRF_SIGNING_SECRET,
+        [PHASE1_AUTH_CLEANUP_CHANNEL]: recordAnonymousChallengeTarget,
       });
+      validateAnonymousChallengeTargets(
+        anonymousChallengeTargets,
+        { requiredKindCounts: EXPECTED_ANONYMOUS_CHALLENGE_KIND_COUNTS },
+      );
       r2Summary = await runR2({
         env: {
           ...env,

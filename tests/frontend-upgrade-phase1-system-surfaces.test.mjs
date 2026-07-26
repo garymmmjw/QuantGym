@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -12,6 +12,7 @@ import {
   buildPhase1SystemSurfacesLiveSummary,
   collectPhase1SystemSurfaceOfflineEvidence,
   inspectPhase1BundleBudgets,
+  loginPhase1BrowserContext,
   phase1E2EChildEnvironment,
   phase1SystemBrowserLaunchOptions,
   runPhase1ExactCommitE2E,
@@ -121,6 +122,98 @@ test("live browser probes use explicit application readiness instead of network 
     'await page.goto(`${PREVIEW_ORIGIN}/`, { waitUntil: "domcontentloaded" });\n'
     + '  await page.locator("#qg-main-content").waitFor();',
   ));
+});
+
+test("todo role selectors encode apostrophes without breaking Playwright selector chaining", async () => {
+  const surfaceSource = await readFile(
+    path.join(root, "scripts/check-frontend-upgrade-phase1-system-surfaces.mjs"),
+    "utf8",
+  );
+  assert.equal(surfaceSource.includes("Open today's tasks"), false);
+  assert.equal(surfaceSource.includes("Today's tasks/iu"), false);
+  assert.ok(surfaceSource.includes("Open today\\x27s tasks/iu"));
+  assert.ok(surfaceSource.includes("Today\\x27s tasks/iu"));
+});
+
+test("surface login publishes the exact pre-auth cleanup target before login", async () => {
+  const token = "z".repeat(43);
+  const signingSecret = "phase1-surface-csrf-signing-secret-32-bytes";
+  const credentials = {
+    email: "phase1-audit-browser@example.com",
+    password: "Qg!0123456789abcdefaZ9",
+  };
+  const events = [];
+  const targets = [];
+  const context = {
+    request: {
+      get: async (url, options) => {
+        events.push("csrf");
+        assert.equal(url, "https://quantgym-v2-preview.pages.dev/api/v2/auth/csrf");
+        assert.equal(options.failOnStatusCode, false);
+        return {
+          status: () => 200,
+          json: async () => ({ csrfToken: token }),
+        };
+      },
+      post: async (url, options) => {
+        events.push("login");
+        assert.equal(url, "https://quantgym-v2-preview.pages.dev/api/v2/auth/login");
+        assert.deepEqual(options.data, credentials);
+        assert.equal(options.headers["x-csrf-token"], token);
+        return { status: () => 200 };
+      },
+    },
+  };
+  await loginPhase1BrowserContext({
+    context,
+    credentials,
+    csrfSigningSecret: signingSecret,
+    cleanupChannel: (target) => {
+      events.push("cleanup");
+      targets.push(target);
+    },
+  });
+  assert.deepEqual(events, ["csrf", "cleanup", "login"]);
+  const tokenHash = createHmac("sha256", Buffer.from(signingSecret, "utf8"))
+    .update(Buffer.from("quantgym:v2:csrf:pre-auth:v1", "ascii"))
+    .update(Buffer.from([0, 0]))
+    .update(token, "ascii")
+    .digest("hex");
+  assert.deepEqual(targets, [{
+    kind: "pre_auth_csrf",
+    tokenHash,
+    expectedConsumed: true,
+  }]);
+});
+
+test("surface login registers the exact cleanup target before a rejected login", async () => {
+  const targets = [];
+  await assert.rejects(
+    loginPhase1BrowserContext({
+      context: {
+        request: {
+          get: async () => ({
+            status: () => 200,
+            json: async () => ({ csrfToken: "z".repeat(43) }),
+          }),
+          post: async () => ({ status: () => 401 }),
+        },
+      },
+      credentials: {
+        email: "phase1-audit-browser@example.com",
+        password: "Qg!0123456789abcdefaZ9",
+      },
+      csrfSigningSecret: "phase1-surface-csrf-signing-secret-32-bytes",
+      cleanupChannel: (target) => {
+        targets.push(target);
+      },
+    }),
+    /browser audit login failed/u,
+  );
+  assert.equal(targets.length, 1);
+  assert.equal(targets[0].kind, "pre_auth_csrf");
+  assert.equal(targets[0].expectedConsumed, true);
+  assert.match(targets[0].tokenHash, /^[0-9a-f]{64}$/u);
 });
 
 test("checked-in Phase 1 system surfaces trace 82 gates and stay within bundle budgets", async () => {

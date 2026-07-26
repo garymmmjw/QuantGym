@@ -50,7 +50,8 @@ const RANDOM_BYTES = Buffer.from("0123456789abcdef", "utf8");
 const ENV_SECRET = "phase1-live-test-secret-never-persist";
 const PRE_AUTH_CHALLENGE_HASH = "d".repeat(64);
 const GOOGLE_OAUTH_CHALLENGE_HASH = "e".repeat(64);
-const CLEANUP_TARGETS = Object.freeze([
+const SURFACE_PRE_AUTH_CHALLENGE_HASH = "f".repeat(64);
+const AUTH_CLEANUP_TARGETS = Object.freeze([
   Object.freeze({
     kind: "pre_auth_csrf",
     tokenHash: PRE_AUTH_CHALLENGE_HASH,
@@ -61,6 +62,15 @@ const CLEANUP_TARGETS = Object.freeze([
     tokenHash: GOOGLE_OAUTH_CHALLENGE_HASH,
     expectedConsumed: true,
   }),
+]);
+const SURFACE_CLEANUP_TARGET = Object.freeze({
+  kind: "pre_auth_csrf",
+  tokenHash: SURFACE_PRE_AUTH_CHALLENGE_HASH,
+  expectedConsumed: true,
+});
+const CLEANUP_TARGETS = Object.freeze([
+  ...AUTH_CLEANUP_TARGETS,
+  SURFACE_CLEANUP_TARGET,
 ]);
 const SUMMARY_DIRECTORY = "docs/browser-audit-screenshots";
 const AUTH_SUMMARY_NAME = "380-frontend-upgrade-phase-1-auth-security-summary.json";
@@ -456,7 +466,7 @@ const buildHarness = ({ root, phase0Bytes, overrides = {} }) => {
       assert.equal(options.expectedCommit, COMMIT);
       assert.equal(options.evidenceSha256, evidenceSha256);
       assert.equal(options.csrfSigningSecret, ENV_SECRET);
-      for (const target of CLEANUP_TARGETS) {
+      for (const target of AUTH_CLEANUP_TARGETS) {
         options[PHASE1_AUTH_CLEANUP_CHANNEL](target);
       }
       capturedCredentials = options.auditCredentials;
@@ -473,6 +483,9 @@ const buildHarness = ({ root, phase0Bytes, overrides = {} }) => {
       assert.deepEqual(options.credentials, capturedCredentials);
       assert.equal(options.expectedCommit, COMMIT);
       assert.equal(options.evidenceSha256, evidenceSha256);
+      assert.equal(options.env.QUANTGYM_V2_CSRF_SIGNING_SECRET, ENV_SECRET);
+      assert.equal(options.csrfSigningSecret, ENV_SECRET);
+      options[PHASE1_AUTH_CLEANUP_CHANNEL](SURFACE_CLEANUP_TARGET);
       const summary = surfaceSummary(evidenceSha256);
       await writeFile(
         path.join(root, SUMMARY_DIRECTORY, SURFACE_SUMMARY_NAME),
@@ -705,6 +718,7 @@ test("live gate checks fixed endpoints, cleans data, preserves Phase 0, and writ
     RANDOM_BYTES.toString("hex"),
     PRE_AUTH_CHALLENGE_HASH,
     GOOGLE_OAUTH_CHALLENGE_HASH,
+    SURFACE_PRE_AUTH_CHALLENGE_HASH,
   ]) {
     assert.equal(renderedOutputs.includes(sensitive), false);
   }
@@ -753,6 +767,68 @@ test("an auth failure still runs confirmed PostgreSQL cleanup and the Phase 0 af
   assert.deepEqual(await readdir(path.join(fixture.root, SUMMARY_DIRECTORY)), []);
 });
 
+test("an incomplete successful auth result cannot start the surface audit", async (t) => {
+  const fixture = await createIsolatedRoot(t);
+  const harness = buildHarness({
+    ...fixture,
+    overrides: {
+      runAuth: async (options) => {
+        options[PHASE1_AUTH_CLEANUP_CHANNEL](AUTH_CLEANUP_TARGETS[0]);
+        return { summary: authSummary(loadedProviderEvidence().sha256) };
+      },
+      runSurfaces: async () => {
+        assert.fail("surface audit must not run after incomplete auth cleanup publication");
+      },
+      runR2: async () => {
+        assert.fail("R2 audit must not run after incomplete auth cleanup publication");
+      },
+      runPostgres: async ({ cleanupTargets }) => {
+        assert.deepEqual(cleanupTargets, [AUTH_CLEANUP_TARGETS[0]]);
+        return postgresSummary(loadedProviderEvidence().sha256);
+      },
+    },
+  });
+  await assert.rejects(
+    runHarness(harness),
+    /anonymous challenge cleanup targets are incomplete/u,
+  );
+  assert.equal(harness.lockChecks, 2);
+});
+
+test("cleanup publication rejects a second Google OAuth target", async (t) => {
+  const fixture = await createIsolatedRoot(t);
+  const harness = buildHarness({
+    ...fixture,
+    overrides: {
+      runAuth: async (options) => {
+        for (const target of AUTH_CLEANUP_TARGETS) {
+          options[PHASE1_AUTH_CLEANUP_CHANNEL](target);
+        }
+        options[PHASE1_AUTH_CLEANUP_CHANNEL]({
+          kind: "google_oauth",
+          tokenHash: SURFACE_PRE_AUTH_CHALLENGE_HASH,
+          expectedConsumed: true,
+        });
+      },
+      runSurfaces: async () => {
+        assert.fail("surface audit must not run after a cleanup quota violation");
+      },
+      runR2: async () => {
+        assert.fail("R2 audit must not run after a cleanup quota violation");
+      },
+      runPostgres: async ({ cleanupTargets }) => {
+        assert.deepEqual(cleanupTargets, AUTH_CLEANUP_TARGETS);
+        return postgresSummary(loadedProviderEvidence().sha256);
+      },
+    },
+  });
+  await assert.rejects(
+    runHarness(harness),
+    /anonymous challenge cleanup targets are invalid/u,
+  );
+  assert.equal(harness.lockChecks, 2);
+});
+
 test("cleanup targets require an exact consumed-state assertion", async (t) => {
   const fixture = await createIsolatedRoot(t);
   const harness = buildHarness({
@@ -781,6 +857,30 @@ test("cleanup targets require an exact consumed-state assertion", async (t) => {
     /anonymous challenge cleanup target has an unapproved shape/u,
   );
   assert.deepEqual(await readdir(path.join(fixture.root, SUMMARY_DIRECTORY)), []);
+});
+
+test("surface login must publish its distinct pre-auth cleanup target", async (t) => {
+  const fixture = await createIsolatedRoot(t);
+  const harness = buildHarness({
+    ...fixture,
+    overrides: {
+      runSurfaces: async () => ({ summary: surfaceSummary(
+        loadedProviderEvidence().sha256,
+      ) }),
+      runR2: async () => {
+        assert.fail("R2 audit must not run with an incomplete cleanup set");
+      },
+      runPostgres: async ({ cleanupTargets }) => {
+        assert.deepEqual(cleanupTargets, AUTH_CLEANUP_TARGETS);
+        return postgresSummary(loadedProviderEvidence().sha256);
+      },
+    },
+  });
+  await assert.rejects(
+    runHarness(harness),
+    /anonymous challenge cleanup targets are incomplete/u,
+  );
+  assert.equal(harness.lockChecks, 2);
 });
 
 test("a new failed round cannot be aggregated with a complete old 380 evidence batch", async (t) => {

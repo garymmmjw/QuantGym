@@ -36,9 +36,11 @@ COMMIT = "1234567890abcdef1234567890abcdef12345678"
 PRE_AUTH_CHALLENGE_HASH = "a" * 64
 GOOGLE_OAUTH_CHALLENGE_HASH = "b" * 64
 UNRELATED_CHALLENGE_HASH = "c" * 64
+SURFACE_PRE_AUTH_CHALLENGE_HASH = "d" * 64
 CLEANUP_TARGETS = (
     ("pre_auth_csrf", PRE_AUTH_CHALLENGE_HASH, True),
     ("google_oauth", GOOGLE_OAUTH_CHALLENGE_HASH, True),
+    ("pre_auth_csrf", SURFACE_PRE_AUTH_CHALLENGE_HASH, True),
 )
 
 
@@ -54,6 +56,12 @@ def audit_challenges() -> list[tuple[uuid.UUID, str, str, datetime | None]]:
             uuid.UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
             "google_oauth",
             GOOGLE_OAUTH_CHALLENGE_HASH,
+            NOW,
+        ),
+        (
+            uuid.UUID("dddddddd-dddd-4ddd-8ddd-dddddddddddd"),
+            "pre_auth_csrf",
+            SURFACE_PRE_AUTH_CHALLENGE_HASH,
             NOW,
         ),
     ]
@@ -636,7 +644,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
     def test_explicit_cleanup_removes_only_synthetic_audit_users(self) -> None:
         identifier = uuid.UUID("12345678-1234-4123-8123-123456789abc")
         cursor = FakeCursor(
-            row_count=3,
+            row_count=4,
             synthetic_users=[
                 (identifier, "phase1-audit-0123abcd@example.com"),
             ],
@@ -660,7 +668,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
         ]
         self.assertEqual(
             sum(sql.startswith("DELETE FROM public.auth_challenges") for sql in delete_statements),
-            2,
+            3,
         )
         self.assertTrue(
             any(sql.startswith("DELETE FROM public.users") for sql in delete_statements)
@@ -706,6 +714,44 @@ class Phase1PostgresCheckTests(unittest.TestCase):
         )
         self.assertEqual(fake.calls, [])
 
+        duplicate_targets = (
+            CLEANUP_TARGETS[0],
+            CLEANUP_TARGETS[1],
+            CLEANUP_TARGETS[0],
+        )
+        status, summary, fake = self.run_check(
+            env={
+                "QUANTGYM_PREVIEW_POSTGRES_URL": DSN,
+                MODULE.CLEANUP_CONFIRMATION_ENV: MODULE.CLEANUP_CONFIRMATION_VALUE,
+            },
+            cleanup_targets=duplicate_targets,
+        )
+        self.assertEqual(status, 1)
+        self.assertEqual(
+            summary["failureCodes"],
+            ["synthetic_cleanup_targets_invalid"],
+        )
+        self.assertEqual(fake.calls, [])
+
+        over_quota_targets = (
+            CLEANUP_TARGETS[0],
+            CLEANUP_TARGETS[1],
+            ("google_oauth", "e" * 64, True),
+        )
+        status, summary, fake = self.run_check(
+            env={
+                "QUANTGYM_PREVIEW_POSTGRES_URL": DSN,
+                MODULE.CLEANUP_CONFIRMATION_ENV: MODULE.CLEANUP_CONFIRMATION_VALUE,
+            },
+            cleanup_targets=over_quota_targets,
+        )
+        self.assertEqual(status, 1)
+        self.assertEqual(
+            summary["failureCodes"],
+            ["synthetic_cleanup_targets_invalid"],
+        )
+        self.assertEqual(fake.calls, [])
+
         malformed = FakeCursor(
             synthetic_users=[
                 (
@@ -730,7 +776,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
 
     def test_explicit_cleanup_removes_anonymous_one_time_audit_challenges(self) -> None:
         cursor = FakeCursor(
-            row_count=2,
+            row_count=3,
             anonymous_challenges=audit_challenges(),
         )
         status, summary, fake = self.run_check(
@@ -748,7 +794,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
             for sql, params in fake.cursor.executions
             if sql.startswith("DELETE FROM public.")
         ]
-        self.assertEqual(len(delete_statements), 2)
+        self.assertEqual(len(delete_statements), 3)
         self.assertEqual(
             [params[1:] for _sql, params in delete_statements],
             [(kind, token_hash) for kind, token_hash, _expected in CLEANUP_TARGETS],
@@ -764,7 +810,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
         challenges = audit_challenges()
         challenges[1] = (*challenges[1][:3], None)
         cursor = FakeCursor(
-            row_count=2,
+            row_count=3,
             anonymous_challenges=challenges,
         )
         status, summary, fake = self.run_check(
@@ -794,7 +840,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
         )
         challenges = [*audit_challenges(), unrelated]
         cursor = FakeCursor(
-            row_count=3,
+            row_count=4,
             anonymous_challenges=challenges,
         )
         status, summary, fake = self.run_check(
@@ -832,7 +878,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
         users = [(identifier, "phase1-audit-rollback@example.com")]
         challenges = audit_challenges()
         cursor = FakeCursor(
-            row_count=3,
+            row_count=4,
             synthetic_users=users,
             anonymous_challenges=challenges,
             fail_on="challenge_delete",
@@ -854,7 +900,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
         self.assertEqual(fake.connection.rollback_calls, 1)
         self.assertEqual(fake.cursor.synthetic_users, users)
         self.assertEqual(fake.cursor.anonymous_challenges, challenges)
-        self.assertEqual(fake.cursor.row_count, 3)
+        self.assertEqual(fake.cursor.row_count, 4)
         self.assert_redacted(summary)
 
     def test_migration_probe_requires_exact_pinned_deterministic_pg18_result(self) -> None:
@@ -924,7 +970,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
 
     def test_main_accepts_cleanup_targets_only_over_bounded_stdin(self) -> None:
         cursor = FakeCursor(
-            row_count=2,
+            row_count=3,
             anonymous_challenges=audit_challenges(),
         )
         fake = FakeConnector(cursor)

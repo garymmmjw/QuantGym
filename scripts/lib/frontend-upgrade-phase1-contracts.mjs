@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
 import { execFile } from "node:child_process";
 import { constants as fsConstants } from "node:fs";
 import { lstat, open, rename, unlink } from "node:fs/promises";
@@ -49,6 +49,50 @@ export const PHASE1_PROVIDER_EVIDENCE_ARCHIVE_PATH_TEMPLATE = (
 export const APPROVED_LEGACY_PAGES_ALIAS_SHA256 = (
   "ba30f7e6f48ae62b8011fa7036856089061d9c123bea1110ecad267cc408b637"
 );
+
+const PRE_AUTH_CSRF_DOMAIN = Buffer.from("quantgym:v2:csrf:pre-auth:v1", "ascii");
+
+export const PHASE1_AUTH_CLEANUP_CHANNEL = Symbol(
+  "frontend-upgrade-phase1-auth-cleanup-channel",
+);
+
+export const phase1PreAuthCsrfDigest = (token, signingSecret) => {
+  if (
+    typeof token !== "string"
+    || !/^[A-Za-z0-9_-]{43}$/u.test(token)
+    || typeof signingSecret !== "string"
+  ) {
+    throw new Error("Phase 1 cleanup binding is invalid");
+  }
+  let key;
+  try {
+    key = Buffer.from(signingSecret, "utf8");
+  } catch {
+    throw new Error("Phase 1 cleanup binding is invalid");
+  }
+  if (key.byteLength < 32) throw new Error("Phase 1 cleanup binding is invalid");
+  return createHmac("sha256", key)
+    .update(PRE_AUTH_CSRF_DOMAIN)
+    .update(Buffer.from([0, 0]))
+    .update(token, "ascii")
+    .digest("hex");
+};
+
+export const phase1AnonymousChallengeCleanupChannelFor = (options) => {
+  const channel = options[PHASE1_AUTH_CLEANUP_CHANNEL];
+  if (channel !== undefined && typeof channel !== "function") {
+    throw new Error("Phase 1 cleanup channel is invalid");
+  }
+  return channel;
+};
+
+export const publishPhase1AnonymousChallengeCleanupTarget = (channel, target) => {
+  if (!channel) return;
+  const result = channel(Object.freeze({ ...target }));
+  if (result !== undefined) {
+    throw new Error("Phase 1 cleanup channel is invalid");
+  }
+};
 
 export const phase1AuditCredentialsAreValid = (credentials) => (
   credentials

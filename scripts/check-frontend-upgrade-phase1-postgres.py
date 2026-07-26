@@ -43,9 +43,13 @@ CHECK_NAME = "frontend-v2-phase1-postgres"
 CLEANUP_CONFIRMATION_ENV = "QUANTGYM_PHASE1_CLEANUP_SYNTHETIC_AUDIT_DATA"
 CLEANUP_CONFIRMATION_VALUE = "confirmed"
 MAX_SYNTHETIC_AUDIT_USERS = 32
-MAX_ANONYMOUS_CHALLENGE_TARGETS = 2
+MAX_ANONYMOUS_CHALLENGE_TARGETS = 3
 MAX_CLEANUP_INPUT_BYTES = 4 * 1024
 ANONYMOUS_CHALLENGE_KINDS = frozenset({"pre_auth_csrf", "google_oauth"})
+ANONYMOUS_CHALLENGE_KIND_LIMITS = {
+    "pre_auth_csrf": 2,
+    "google_oauth": 1,
+}
 SYNTHETIC_AUDIT_EMAIL_PATTERN = re.compile(
     r"^phase1-audit-[a-z0-9._-]+@example[.]com$"
 )
@@ -151,7 +155,8 @@ def validate_anonymous_challenge_targets(
     ):
         raise CheckFailure("synthetic_cleanup_targets_invalid")
     targets: list[AnonymousChallengeTarget] = []
-    seen_kinds: set[str] = set()
+    seen_targets: set[tuple[str, str]] = set()
+    kind_counts: dict[str, int] = {}
     for item in value:
         kind = item.get("kind") if isinstance(item, dict) else None
         if (
@@ -159,12 +164,17 @@ def validate_anonymous_challenge_targets(
             or set(item) != {"kind", "tokenHash", "expectedConsumed"}
             or not isinstance(kind, str)
             or kind not in ANONYMOUS_CHALLENGE_KINDS
-            or kind in seen_kinds
             or not is_sha256(item.get("tokenHash"))
             or item.get("expectedConsumed") is not True
         ):
             raise CheckFailure("synthetic_cleanup_targets_invalid")
-        seen_kinds.add(kind)
+        identity = (kind, item["tokenHash"])
+        if identity in seen_targets:
+            raise CheckFailure("synthetic_cleanup_targets_invalid")
+        seen_targets.add(identity)
+        kind_counts[kind] = kind_counts.get(kind, 0) + 1
+        if kind_counts[kind] > ANONYMOUS_CHALLENGE_KIND_LIMITS[kind]:
+            raise CheckFailure("synthetic_cleanup_targets_invalid")
         targets.append((kind, item["tokenHash"], True))
     return tuple(targets)
 
@@ -1068,8 +1078,13 @@ def run_check(
                 or target[2] is not True
                 for target in anonymous_challenge_targets
             )
-            or len({target[0] for target in anonymous_challenge_targets})
+            or len({(target[0], target[1]) for target in anonymous_challenge_targets})
             != len(anonymous_challenge_targets)
+            or any(
+                sum(1 for target in anonymous_challenge_targets if target[0] == kind)
+                > limit
+                for kind, limit in ANONYMOUS_CHALLENGE_KIND_LIMITS.items()
+            )
         ):
             raise CheckFailure("synthetic_cleanup_targets_invalid")
         selected = select_evidence(evidence, now)

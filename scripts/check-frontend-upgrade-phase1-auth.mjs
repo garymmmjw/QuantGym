@@ -1,12 +1,18 @@
-import { createHash, createHmac, randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { lstat, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
+  PHASE1_AUTH_CLEANUP_CHANNEL,
+  phase1AnonymousChallengeCleanupChannelFor as cleanupChannelFor,
   phase1AuditCredentialsAreValid,
+  phase1PreAuthCsrfDigest as preAuthCsrfDigest,
+  publishPhase1AnonymousChallengeCleanupTarget as publishCleanupTarget,
   writeFileAtomicallyWithinTrustedRoot,
 } from "./lib/frontend-upgrade-phase1-contracts.mjs";
+
+export { PHASE1_AUTH_CLEANUP_CHANNEL } from "./lib/frontend-upgrade-phase1-contracts.mjs";
 
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SUMMARY_RELATIVE = (
@@ -17,7 +23,6 @@ const PREVIEW_ORIGIN = `https://${PREVIEW_HOST}`;
 const MAX_RESPONSE_BYTES = 64 * 1024;
 const SHA_PATTERN = /^[0-9a-f]{40}$/u;
 const HASH_PATTERN = /^[0-9a-f]{64}$/u;
-const PRE_AUTH_CSRF_DOMAIN = Buffer.from("quantgym:v2:csrf:pre-auth:v1", "ascii");
 const API_ERROR_KEYS = Object.freeze([
   "code",
   "fieldErrors",
@@ -25,10 +30,6 @@ const API_ERROR_KEYS = Object.freeze([
   "requestId",
   "retryable",
 ]);
-
-export const PHASE1_AUTH_CLEANUP_CHANNEL = Symbol(
-  "frontend-upgrade-phase1-auth-cleanup-channel",
-);
 
 export const PHASE1_AUTH_REQUIRED_SOURCES = Object.freeze({
   authRouter: "api/app/auth/router.py",
@@ -60,41 +61,6 @@ const isObject = (value) => (
   value !== null && typeof value === "object" && !Array.isArray(value)
 );
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
-const preAuthCsrfDigest = (token, signingSecret) => {
-  if (
-    typeof token !== "string"
-    || !/^[A-Za-z0-9_-]{43}$/u.test(token)
-    || typeof signingSecret !== "string"
-  ) {
-    throw new Error("Phase 1 cleanup binding is invalid");
-  }
-  let key;
-  try {
-    key = Buffer.from(signingSecret, "utf8");
-  } catch {
-    throw new Error("Phase 1 cleanup binding is invalid");
-  }
-  if (key.byteLength < 32) throw new Error("Phase 1 cleanup binding is invalid");
-  return createHmac("sha256", key)
-    .update(PRE_AUTH_CSRF_DOMAIN)
-    .update(Buffer.from([0, 0]))
-    .update(token, "ascii")
-    .digest("hex");
-};
-const cleanupChannelFor = (options) => {
-  const channel = options[PHASE1_AUTH_CLEANUP_CHANNEL];
-  if (channel !== undefined && typeof channel !== "function") {
-    throw new Error("Phase 1 cleanup channel is invalid");
-  }
-  return channel;
-};
-const publishCleanupTarget = (channel, target) => {
-  if (!channel) return;
-  const result = channel(Object.freeze({ ...target }));
-  if (result !== undefined) {
-    throw new Error("Phase 1 cleanup channel is invalid");
-  }
-};
 const unique = (values) => [...new Set(values)];
 const exactObjectKeys = (value, expected) => (
   isObject(value)

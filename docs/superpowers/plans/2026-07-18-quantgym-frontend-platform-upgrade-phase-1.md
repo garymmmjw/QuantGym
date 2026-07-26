@@ -1028,6 +1028,22 @@ then explicitly wait for the authenticated main content or login heading, lock t
 a regression test, and repeat the complete baseline, CI, Preview deployment, and live-evidence
 cycle. No Production deployment occurred.
 
+Candidate `6e3f8eec73e12e5899600e9e75a69791a3da4e7c` completed CI and exact-commit
+deployment across the same Preview Pages, API, and LLM resources, and again proved the Production
+control digest unchanged. It is superseded and not accepted after the live audit exposed two
+acceptance-tool defects. First, Playwright could not serialize the literal apostrophe in the
+English Today-tasks role-name regular expressions once `.first()` appended an internal selector;
+the superseding candidate must encode that apostrophe as `\x27` for both the launcher and dialog
+and lock the source contract. Second, the system-surface login issued and consumed its own
+pre-auth CSRF challenge without publishing that exact digest to the bounded cleanup channel. The
+superseding candidate must share the digest/channel contract across Auth and system surfaces,
+require exactly two distinct consumed `pre_auth_csrf` targets plus one consumed `google_oauth`
+target, continue rejecting duplicate target identities, and repeat the complete baseline, CI,
+Preview deployment, and live-evidence cycle. The failed candidate's partial `380-*` output was
+isolated, its one synthetic user and three anonymous challenges were removed under the scoped
+cleanup contract, and a zero-row readback was completed before C6 work began. No Production
+deployment occurred.
+
 ### Pre-deploy
 
 1. Verify all offline gates and the exact commit.

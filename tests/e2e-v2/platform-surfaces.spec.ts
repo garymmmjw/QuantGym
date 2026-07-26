@@ -474,8 +474,12 @@ const openNotifications = async (page: Page) => {
 };
 
 const openTodo = async (page: Page) => {
-  await page.getByRole("button", { name: /打开今日待办/u }).click();
-  const dialog = page.getByRole("dialog", { name: "今日待办", exact: true });
+  await page.getByRole("button", {
+    name: /打开今日待办|Open today\x27s tasks/iu,
+  }).first().click();
+  const dialog = page.getByRole("dialog", {
+    name: /今日待办|Today\x27s tasks/iu,
+  }).first();
   await expect(dialog).toBeVisible();
   await expect(dialog.getByLabel("新增待办", { exact: true })).toBeVisible();
   return dialog;

@@ -17,7 +17,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   APPROVED_PHASE1_ACCEPTANCE_MANIFEST,
+  phase1AnonymousChallengeCleanupChannelFor,
   phase1AuditCredentialsAreValid,
+  phase1PreAuthCsrfDigest,
+  publishPhase1AnonymousChallengeCleanupTarget,
   writeFileAtomicallyWithinTrustedRoot,
 } from "./lib/frontend-upgrade-phase1-contracts.mjs";
 
@@ -699,7 +702,15 @@ export async function collectPhase1SystemSurfaceOfflineEvidence(root = defaultRo
   };
 }
 
-const loginBrowserContext = async ({ context, credentials }) => {
+export const loginPhase1BrowserContext = async ({
+  context,
+  credentials,
+  cleanupChannel,
+  csrfSigningSecret,
+}) => {
+  if (cleanupChannel) {
+    phase1PreAuthCsrfDigest("a".repeat(43), csrfSigningSecret);
+  }
   const csrfResponse = await context.request.get(`${PREVIEW_ORIGIN}/api/v2/auth/csrf`, {
     failOnStatusCode: false,
     headers: { accept: "application/json", "cache-control": "no-store" },
@@ -708,9 +719,16 @@ const loginBrowserContext = async ({ context, credentials }) => {
   const csrfBody = await csrfResponse.json();
   if (
     typeof csrfBody?.csrfToken !== "string"
-    || !/^[A-Za-z0-9_-]{16,512}$/u.test(csrfBody.csrfToken)
+    || !/^[A-Za-z0-9_-]{43}$/u.test(csrfBody.csrfToken)
   ) {
     throw new Error("browser audit CSRF response is invalid");
+  }
+  if (cleanupChannel) {
+    publishPhase1AnonymousChallengeCleanupTarget(cleanupChannel, {
+      kind: "pre_auth_csrf",
+      tokenHash: phase1PreAuthCsrfDigest(csrfBody.csrfToken, csrfSigningSecret),
+      expectedConsumed: true,
+    });
   }
   const login = await context.request.post(`${PREVIEW_ORIGIN}/api/v2/auth/login`, {
     data: { email: credentials.email, password: credentials.password },
@@ -768,16 +786,22 @@ const exerciseSurface = async ({ context, page, surfaceId }) => {
     await page.getByRole("dialog", { name: /通知中心|Notifications/iu }).waitFor();
   } else if (surfaceId === "system:todo") {
     await page.getByRole("button", {
-      name: /打开今日待办|Open today's tasks/iu,
+      name: /打开今日待办|Open today\x27s tasks/iu,
     }).first().click();
-    await page.getByRole("dialog", { name: /今日待办|Today's tasks/iu }).waitFor();
+    await page.getByRole("dialog", { name: /今日待办|Today\x27s tasks/iu }).waitFor();
   } else if (surfaceId === "system:network-recovery") {
     await context.setOffline(true);
     await page.locator('[data-network-status="offline"]').waitFor();
   }
 };
 
-const defaultBrowserAudit = async ({ credentials, environment, outputRoot }) => {
+const defaultBrowserAudit = async ({
+  credentials,
+  environment,
+  outputRoot,
+  cleanupChannel,
+  csrfSigningSecret,
+}) => {
   if (!phase1AuditCredentialsAreValid(credentials)) {
     throw new Error("browser audit credentials are invalid");
   }
@@ -827,7 +851,12 @@ const defaultBrowserAudit = async ({ credentials, environment, outputRoot }) => 
         window.__qgPhase1UnhandledRejections.count += 1;
       });
     });
-    await loginBrowserContext({ context: authenticatedContext, credentials });
+    await loginPhase1BrowserContext({
+      context: authenticatedContext,
+      credentials,
+      cleanupChannel,
+      csrfSigningSecret,
+    });
 
     for (const surfaceId of APPROVED_PHASE1_ACCEPTANCE_MANIFEST.systemSurfaces) {
       for (const [viewportName, viewport] of Object.entries(VIEWPORTS)) {
@@ -1007,6 +1036,14 @@ export async function runFrontendUpgradePhase1SystemSurfacesCheck(options = {}) 
     throw new Error("provider evidence SHA-256 is invalid");
   }
   const environment = options.env ?? process.env;
+  const cleanupChannel = phase1AnonymousChallengeCleanupChannelFor(options);
+  const csrfSigningSecret = (
+    options.csrfSigningSecret
+    ?? environment.QUANTGYM_V2_CSRF_SIGNING_SECRET
+  );
+  if (cleanupChannel) {
+    phase1PreAuthCsrfDigest("a".repeat(43), csrfSigningSecret);
+  }
   const checkedAt = new Date(options.checkedAt ?? Date.now());
   if (!Number.isFinite(checkedAt.getTime())) throw new Error("checkedAt is invalid");
   const credentials = options.credentials ?? {
@@ -1023,6 +1060,8 @@ export async function runFrontendUpgradePhase1SystemSurfacesCheck(options = {}) 
     credentials,
     environment,
     outputRoot: root,
+    cleanupChannel,
+    csrfSigningSecret,
   });
   const browserFailures = validatePhase1BrowserAudit(browserAudit);
   if (browserFailures.length > 0) {

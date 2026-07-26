@@ -321,8 +321,12 @@ const phase1SystemCases: readonly Phase1SystemCase[] = [
     authenticated: true,
     exercise: async (page) => {
       await page.goto("/");
-      await page.getByRole("button", { name: /打开今日待办/u }).click();
-      await expect(page.getByRole("dialog", { name: "今日待办", exact: true })).toBeVisible();
+      await page.getByRole("button", {
+        name: /打开今日待办|Open today\x27s tasks/iu,
+      }).first().click();
+      await expect(page.getByRole("dialog", {
+        name: /今日待办|Today\x27s tasks/iu,
+      }).first()).toBeVisible();
     },
     hasCompatibilityFrame: true,
     viewport: { width: 1_440, height: 900 },
