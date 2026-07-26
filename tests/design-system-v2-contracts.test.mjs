@@ -76,6 +76,47 @@ test("reward badge tokens retain a 6:1 contrast margin in both themes", async ()
   }
 });
 
+test("danger text tokens retain a 4.5:1 contrast margin in all account-menu states", async () => {
+  for (const theme of ["light", "dark"]) {
+    const source = await readFile(
+      path.join(projectRoot, `src/design-system/tokens/${theme}.css`),
+      "utf8",
+    );
+    for (const backgroundToken of ["qg-surface-primary", "qg-status-danger-soft"]) {
+      const ratio = contrastRatio(
+        semanticHex(source, "qg-status-danger-text"),
+        semanticHex(source, backgroundToken),
+      );
+      assert.ok(
+        ratio >= 4.5,
+        `${theme} danger text on ${backgroundToken} is ${ratio.toFixed(2)}:1`,
+      );
+    }
+  }
+});
+
+test("account menu binds danger text and hover backgrounds to their semantic tokens", async () => {
+  const source = await readFile(
+    path.join(
+      projectRoot,
+      "src/design-system/patterns/AccountMenu/AccountMenu.module.css",
+    ),
+    "utf8",
+  );
+  assert.match(
+    source,
+    /\.signOut\s*\{[^}]*color:\s*var\(--qg-status-danger-text\);[^}]*\}/u,
+  );
+  assert.match(
+    source,
+    /\.signOut:hover\s*\{[^}]*background:\s*var\(--qg-status-danger-soft\);[^}]*\}/u,
+  );
+  assert.doesNotMatch(
+    source,
+    /\.signOut\s*\{[^}]*color:\s*var\(--qg-status-danger\);[^}]*\}/u,
+  );
+});
+
 test("component styles consume semantic color, shadow, and layer tokens", () => {
   const source = `
     .button {

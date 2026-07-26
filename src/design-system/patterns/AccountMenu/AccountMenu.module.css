@@ -113,7 +113,7 @@
 }
 
 .signOut {
-  color: var(--qg-status-danger);
+  color: var(--qg-status-danger-text);
 }
 
 .trigger:focus-visible,

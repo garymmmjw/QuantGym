@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   PHASE1_SURFACE_REQUIRED_SOURCES,
+  PHASE1_REVIEW_SCREENSHOT_OPTIONS,
   assertPhase1NodeRuntime,
   buildPhase1SystemSurfacesLiveSummary,
   collectPhase1SystemSurfaceOfflineEvidence,
@@ -127,8 +128,42 @@ test("live browser probes use explicit application readiness instead of network 
     'const requestedUrl = `${PREVIEW_ORIGIN}/`;\n'
     + '  const response = await page.goto(requestedUrl, { waitUntil: "domcontentloaded" });\n'
     + '  requireSuccessfulSurfaceNavigation(response, requestedUrl);\n'
-    + '  await page.locator("#qg-main-content").waitFor();',
+    + '  await page.locator("#qg-main-content").waitFor();\n'
+    + '  await prepareCompatibilityFrameForEvidence(page);',
   ));
+  assert.ok(surfaceSource.includes(
+    'iframe[data-legacy-preview-frame]',
+  ));
+  assert.ok(surfaceSource.includes(
+    '[data-evidence-scope="excluded"] [data-frame-state] > *',
+  ));
+  assert.ok(surfaceSource.includes(
+    'await dialog.locator(\'[data-empty-state="true"], ol\').waitFor();',
+  ));
+  assert.ok(surfaceSource.includes(
+    '/今天从一件小事开始|Start with one small thing/iu',
+  ));
+  assert.ok(surfaceSource.includes(
+    'await page.getByRole("menu", { name: /账户操作|Account actions/iu }).waitFor();',
+  ));
+  assert.ok(surfaceSource.includes("await waitForVisualAssets(page);"));
+  assert.ok(surfaceSource.includes(
+    "await Promise.race([visualReadiness, timeout]);",
+  ));
+  assert.ok(surfaceSource.includes(
+    "}, VISUAL_STABILITY_TIMEOUT_MS);",
+  ));
+  assert.doesNotMatch(surfaceSource, /waitForTimeout/u);
+});
+
+test("review capture uses exact viewports after deterministic visual readiness", () => {
+  assert.deepEqual(PHASE1_REVIEW_SCREENSHOT_OPTIONS, {
+    animations: "disabled",
+    caret: "hide",
+    fullPage: false,
+    quality: 82,
+    type: "jpeg",
+  });
 });
 
 test("surface navigation accepts only the exact requested URL with a 200 response", () => {
@@ -245,6 +280,28 @@ test("surface audit source records exact session responses without broad 401 fil
     'await page.locator(\'[data-network-status="offline"]\').waitFor({\n'
     + '                state: "hidden",',
   ));
+  const iframeAttached = surfaceSource.indexOf(
+    'await frame.waitFor({ state: "attached", timeout: VISUAL_STABILITY_TIMEOUT_MS });',
+  );
+  const excludedPixelsHidden = surfaceSource.indexOf(
+    '[data-evidence-scope="excluded"] [data-frame-state] > *',
+  );
+  const offlineConfirmed = surfaceSource.indexOf(
+    "await page.waitForFunction(() => navigator.onLine === false);",
+  );
+  const offlineBanner = surfaceSource.indexOf(
+    'await page.locator(\'[data-network-status="offline"]\').waitFor();',
+  );
+  assert.ok(iframeAttached >= 0);
+  assert.ok(iframeAttached < excludedPixelsHidden);
+  assert.ok(excludedPixelsHidden < offlineConfirmed);
+  assert.ok(offlineConfirmed < offlineBanner);
+  assert.equal(
+    surfaceSource.split(
+      '[data-evidence-scope="excluded"] [data-frame-state] > *',
+    ).length - 1,
+    1,
+  );
   assert.ok(surfaceSource.indexOf("await page.close();") < surfaceSource.indexOf(
     "applicationConsoleErrors += pageErrors.length;",
   ));

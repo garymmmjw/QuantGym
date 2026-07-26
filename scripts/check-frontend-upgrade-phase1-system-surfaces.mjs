@@ -39,6 +39,7 @@ const CHROME_ANONYMOUS_401_RESOURCE_ERRORS = Object.freeze([
 ]);
 const INITIAL_JS_BUDGET = 180 * 1024;
 const ROUTE_CHUNK_BUDGET = 100 * 1024;
+const VISUAL_STABILITY_TIMEOUT_MS = 20_000;
 const EXPECTED_E2E_TEST_COUNT = 82;
 const MAX_E2E_COMMAND_OUTPUT_BYTES = 1024 * 1024;
 const MAX_E2E_REPORT_BYTES = 16 * 1024 * 1024;
@@ -815,12 +816,77 @@ const waitForTheme = async (page, theme) => {
       name: theme === "dark"
         ? /切换到深色主题|Switch to dark theme/iu
         : /切换到浅色主题|Switch to light theme/iu,
-    }).first();
-    if (await toggle.isVisible().catch(() => false)) await toggle.click();
+    }).filter({ visible: true }).first();
+    if (await toggle.isVisible().catch(() => false)) {
+      const preferenceResponse = page.waitForResponse((response) => (
+        response.url() === `${PREVIEW_ORIGIN}/api/v2/preferences`
+        && response.request().method() === "PATCH"
+      ));
+      await toggle.click();
+      if ((await preferenceResponse).status() !== 200) {
+        throw new Error("browser audit theme preference was not confirmed");
+      }
+    }
     await page.waitForFunction((expected) => (
       document.documentElement.getAttribute("data-qg-theme") === expected
     ), theme, { timeout: 10_000 });
   });
+};
+
+const prepareCompatibilityFrameForEvidence = async (page) => {
+  const frame = page.locator("iframe[data-legacy-preview-frame]");
+  await frame.waitFor({ state: "attached", timeout: VISUAL_STABILITY_TIMEOUT_MS });
+  await page.addStyleTag({
+    content: (
+      '[data-evidence-scope="excluded"] [data-frame-state] > * '
+      + "{ visibility: hidden !important; }"
+    ),
+  });
+};
+
+const waitForVisualAssets = async (page) => {
+  await page.waitForFunction(() => {
+    const visibleImages = [...document.images].filter((image) => {
+      const style = window.getComputedStyle(image);
+      const bounds = image.getBoundingClientRect();
+      return (
+        style.display !== "none"
+        && style.visibility !== "hidden"
+        && bounds.width > 0
+        && bounds.height > 0
+      );
+    });
+    return visibleImages.every((image) => image.complete && image.naturalWidth > 0);
+  }, undefined, { timeout: VISUAL_STABILITY_TIMEOUT_MS });
+  await page.evaluate(async (timeoutMs) => {
+    let timeoutId;
+    const timeout = new Promise((_, reject) => {
+      timeoutId = window.setTimeout(() => {
+        reject(new Error("browser audit visual assets did not become ready"));
+      }, timeoutMs);
+    });
+    const visualReadiness = (async () => {
+      await document.fonts.ready;
+      const visibleImages = [...document.images].filter((image) => {
+        const style = window.getComputedStyle(image);
+        const bounds = image.getBoundingClientRect();
+        return (
+          style.display !== "none"
+          && style.visibility !== "hidden"
+          && bounds.width > 0
+          && bounds.height > 0
+        );
+      });
+      await Promise.all(visibleImages.map(async (image) => {
+        if (typeof image.decode === "function") await image.decode();
+      }));
+    })();
+    try {
+      await Promise.race([visualReadiness, timeout]);
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }, VISUAL_STABILITY_TIMEOUT_MS);
 };
 
 const requireSuccessfulSurfaceNavigation = (response, requestedUrl) => {
@@ -833,22 +899,25 @@ const requireSuccessfulSurfaceNavigation = (response, requestedUrl) => {
   }
 };
 
-const exerciseSurface = async ({ context, page, surfaceId }) => {
+const exerciseSurface = async ({ context, page, surfaceId, theme }) => {
   if (surfaceId === "system:auth") {
     const requestedUrl = `${PREVIEW_ORIGIN}/login`;
     const response = await page.goto(requestedUrl, { waitUntil: "domcontentloaded" });
     requireSuccessfulSurfaceNavigation(response, requestedUrl);
     await page.getByRole("heading", { name: /欢迎回来|Welcome back/iu }).waitFor();
+    await waitForTheme(page, theme);
     return;
   }
   const requestedUrl = `${PREVIEW_ORIGIN}/`;
   const response = await page.goto(requestedUrl, { waitUntil: "domcontentloaded" });
   requireSuccessfulSurfaceNavigation(response, requestedUrl);
   await page.locator("#qg-main-content").waitFor();
+  await prepareCompatibilityFrameForEvidence(page);
+  await waitForTheme(page, theme);
   if (surfaceId === "system:mobile-shell") {
     const trigger = page.getByRole("button", {
       name: /打开全部模块|Open all modules/iu,
-    });
+    }).filter({ visible: true }).first();
     if (await trigger.isVisible().catch(() => false)) {
       await trigger.click();
       await page.getByRole("dialog", { name: /全部模块|All modules/iu }).waitFor();
@@ -856,23 +925,54 @@ const exerciseSurface = async ({ context, page, surfaceId }) => {
   } else if (surfaceId === "system:global-search") {
     await page.getByRole("button", {
       name: /搜索题目、公司、课程|打开全局搜索|Search problems|Open global search/iu,
-    }).first().click();
-    await page.getByRole("dialog", { name: /全局搜索|Global search/iu }).waitFor();
+    }).filter({ visible: true }).first().click();
+    const dialog = page.getByRole("dialog", { name: /全局搜索|Global search/iu });
+    await dialog.waitFor();
+    await dialog.getByRole("option", { selected: true }).waitFor();
   } else if (surfaceId === "system:notifications-toast") {
     await page.getByRole("button", {
       name: /打开通知|Open notifications/iu,
-    }).first().click();
-    await page.getByRole("dialog", { name: /通知中心|Notifications/iu }).waitFor();
+    }).filter({ visible: true }).first().click();
+    const dialog = page.getByRole("dialog", { name: /通知中心|Notifications/iu });
+    await dialog.waitFor();
+    await dialog.locator('[data-empty-state="true"], ol').waitFor();
   } else if (surfaceId === "system:todo") {
     await page.getByRole("button", {
       name: /打开今日待办|Open today\x27s tasks/iu,
     }).first().click();
-    await page.getByRole("dialog", { name: /今日待办|Today\x27s tasks/iu }).waitFor();
+    const dialog = page.getByRole("dialog", { name: /今日待办|Today\x27s tasks/iu });
+    await dialog.waitFor();
+    await dialog.getByRole("textbox", { name: /新增待办|New task/iu }).waitFor();
+    await dialog.getByText(
+      /今天从一件小事开始|Start with one small thing/iu,
+    ).waitFor();
+  } else if (surfaceId === "system:theme-language") {
+    const accountTrigger = page.getByRole("button", {
+      name: /打开账户菜单|Open account menu/iu,
+    }).filter({ visible: true }).first();
+    if (await accountTrigger.isVisible().catch(() => false)) {
+      await accountTrigger.click();
+      await page.getByRole("menu", { name: /账户操作|Account actions/iu }).waitFor();
+    } else {
+      await page.getByRole("button", {
+        name: /打开全部模块|Open all modules/iu,
+      }).filter({ visible: true }).first().click();
+      await page.getByRole("dialog", { name: /全部模块|All modules/iu }).waitFor();
+    }
   } else if (surfaceId === "system:network-recovery") {
     await context.setOffline(true);
+    await page.waitForFunction(() => navigator.onLine === false);
     await page.locator('[data-network-status="offline"]').waitFor();
   }
 };
+
+export const PHASE1_REVIEW_SCREENSHOT_OPTIONS = Object.freeze({
+  animations: "disabled",
+  caret: "hide",
+  fullPage: false,
+  quality: 82,
+  type: "jpeg",
+});
 
 const defaultBrowserAudit = async ({
   credentials,
@@ -970,8 +1070,8 @@ const defaultBrowserAudit = async ({
           try {
             await page.setViewportSize(viewport);
             await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
-            await exerciseSurface({ context, page, surfaceId });
-            await waitForTheme(page, theme);
+            await exerciseSurface({ context, page, surfaceId, theme });
+            await waitForVisualAssets(page);
             const axe = await new AxeBuilder({ page })
               .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
               .analyze();
@@ -984,12 +1084,8 @@ const defaultBrowserAudit = async ({
             );
             const absolutePath = path.join(outputRoot, relativePath);
             await page.screenshot({
-              animations: "disabled",
-              caret: "hide",
-              fullPage: true,
+              ...PHASE1_REVIEW_SCREENSHOT_OPTIONS,
               path: absolutePath,
-              quality: 82,
-              type: "jpeg",
             });
             const bytes = await readFile(absolutePath);
             const fileStats = await stat(absolutePath);

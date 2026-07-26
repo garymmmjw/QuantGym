@@ -1060,6 +1060,21 @@ direct application-route navigation to return 200, precisely attest only the exp
 `/api/v2/me` 401, and repeat the complete baseline, CI, Preview deployment, and live-evidence
 cycle. This corrective cycle does not authorize a Production deployment.
 
+Candidate `5dabd8a35f6edcd754cfcfdd8887981c9022aa32` completed CI, exact-commit deployment,
+all 82 browser gates, all 48 visual captures, and the live aggregate with the Production control
+digest unchanged. It is nevertheless superseded and not accepted after independent review of the
+image evidence found that several captures represented intermediate loading states rather than
+their stable review states: brand and avatar assets were absent in shell captures, Notifications
+and Todo still showed loading placeholders, Theme/Language did not expose its controls, and the
+Network Recovery mobile captures used inconsistent full-page dimensions. Once the account menu
+was exposed, the same review also found that its sign-out text did not meet the required contrast
+in either theme at desktop and laptop widths. The superseding candidate must wait for each
+surface-specific final state and visible image/font readiness, capture the exact viewport rather
+than a full page, restrict compatibility-frame suppression to the already excluded evidence
+region, expose the real Theme/Language controls, and use a semantic danger-text token with at
+least 4.5:1 contrast in both themes. It must then repeat the complete baseline, CI, exact Preview
+deployment, live-evidence, and independent visual-review cycle. No Production deployment occurred.
+
 ### Pre-deploy
 
 1. Verify all offline gates and the exact commit.
