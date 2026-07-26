@@ -1017,6 +1017,17 @@ use one shared credential validator across Auth and system surfaces, lock the `e
 contract with a regression test, and repeat the complete baseline, CI, Preview deployment, and
 live-evidence cycle.
 
+Candidate `25bd44da4450e90aa47b50c2f84e5ceaabc9f7ce` completed CI and exact-commit
+deployment across the existing Preview Pages, API, and LLM resources, and its provider evidence
+proved the Production control digest unchanged. It is nevertheless superseded and not accepted
+because the live browser probes repeatedly timed out while waiting for global `networkidle`, even
+though the public Preview endpoints remained healthy. The system-surface journeys already had
+application-specific readiness targets, and the Auth storage probe can use the authenticated main
+content as its explicit target. The superseding candidate must navigate at `domcontentloaded`,
+then explicitly wait for the authenticated main content or login heading, lock that contract with
+a regression test, and repeat the complete baseline, CI, Preview deployment, and live-evidence
+cycle. No Production deployment occurred.
+
 ### Pre-deploy
 
 1. Verify all offline gates and the exact commit.

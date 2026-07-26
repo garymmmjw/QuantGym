@@ -742,11 +742,11 @@ const waitForTheme = async (page, theme) => {
 
 const exerciseSurface = async ({ context, page, surfaceId }) => {
   if (surfaceId === "system:auth") {
-    await page.goto(`${PREVIEW_ORIGIN}/login`, { waitUntil: "networkidle" });
+    await page.goto(`${PREVIEW_ORIGIN}/login`, { waitUntil: "domcontentloaded" });
     await page.getByRole("heading", { name: /欢迎回来|Welcome back/iu }).waitFor();
     return;
   }
-  await page.goto(`${PREVIEW_ORIGIN}/`, { waitUntil: "networkidle" });
+  await page.goto(`${PREVIEW_ORIGIN}/`, { waitUntil: "domcontentloaded" });
   await page.locator("#qg-main-content").waitFor();
   if (surfaceId === "system:mobile-shell") {
     const trigger = page.getByRole("button", {

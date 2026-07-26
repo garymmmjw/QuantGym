@@ -502,7 +502,8 @@ const defaultBrowserStorageProbe = async ({ baseOrigin, cookies, environment }) 
     const page = await context.newPage();
     const failures = [];
     page.on("pageerror", () => failures.push("pageerror"));
-    await page.goto(baseOrigin, { waitUntil: "networkidle" });
+    await page.goto(baseOrigin, { waitUntil: "domcontentloaded" });
+    await page.locator("#qg-main-content").waitFor();
     const evidence = await page.evaluate(async () => {
       const local = Object.fromEntries(Object.keys(localStorage).map((key) => (
         [key, localStorage.getItem(key)]

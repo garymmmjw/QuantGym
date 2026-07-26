@@ -99,6 +99,30 @@ test("Auth, orchestrator, and system surfaces consume the shared credential cont
   }
 });
 
+test("live browser probes use explicit application readiness instead of network idle", async () => {
+  const [authSource, surfaceSource] = await Promise.all([
+    readFile(path.join(root, "scripts/check-frontend-upgrade-phase1-auth.mjs"), "utf8"),
+    readFile(
+      path.join(root, "scripts/check-frontend-upgrade-phase1-system-surfaces.mjs"),
+      "utf8",
+    ),
+  ]);
+  assert.doesNotMatch(authSource, /\bnetworkidle\b/u);
+  assert.doesNotMatch(surfaceSource, /\bnetworkidle\b/u);
+  assert.ok(authSource.includes(
+    'await page.goto(baseOrigin, { waitUntil: "domcontentloaded" });\n'
+    + '    await page.locator("#qg-main-content").waitFor();',
+  ));
+  assert.ok(surfaceSource.includes(
+    'await page.goto(`${PREVIEW_ORIGIN}/login`, { waitUntil: "domcontentloaded" });\n'
+    + '    await page.getByRole("heading", { name: /欢迎回来|Welcome back/iu }).waitFor();',
+  ));
+  assert.ok(surfaceSource.includes(
+    'await page.goto(`${PREVIEW_ORIGIN}/`, { waitUntil: "domcontentloaded" });\n'
+    + '  await page.locator("#qg-main-content").waitFor();',
+  ));
+});
+
 test("checked-in Phase 1 system surfaces trace 82 gates and stay within bundle budgets", async () => {
   const result = await collectPhase1SystemSurfaceOfflineEvidence(root);
   assert.deepEqual(result.failures, []);
