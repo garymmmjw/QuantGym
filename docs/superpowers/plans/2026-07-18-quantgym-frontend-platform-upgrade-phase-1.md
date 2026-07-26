@@ -350,6 +350,7 @@ public-v2/
   _redirects
   _headers
   _routes.json
+  favicon.svg
 src/
   core/
     bootstrap/main.tsx
@@ -466,6 +467,7 @@ test: define frontend upgrade phase 1 contracts
 - `public-v2/_redirects`
 - `public-v2/_headers`
 - `public-v2/_routes.json`
+- `public-v2/favicon.svg`
 - `tests/frontend-v2-build-isolation.test.mjs`
 - `tests/frontend-v2-edge-proxy.test.mjs`
 
@@ -1043,6 +1045,20 @@ Preview deployment, and live-evidence cycle. The failed candidate's partial `380
 isolated, its one synthetic user and three anonymous challenges were removed under the scoped
 cleanup contract, and a zero-row readback was completed before C6 work began. No Production
 deployment occurred.
+
+Candidate `c3f0826e33986bc58cc141f217df8cb669a97745` completed CI, exact-commit deployment
+across the same Preview Pages, API, and LLM resources, and provider evidence again proved the
+Production control digest unchanged. It is nevertheless superseded and not accepted. Its live
+browser audit completed all 48 visual cases but found six `scrollable-region-focusable` findings
+across the Global Search viewports and 13 Auth console errors: the generated top-level `404.html`
+disabled Cloudflare Pages SPA fallback, the favicon was missing, and the expected anonymous
+`/api/v2/me` 401 response had no exact, fail-closed exception in the acceptance checker. Scoped
+cleanup still removed exactly two consumed `pre_auth_csrf` targets and one consumed `google_oauth`
+target, then proved a zero-row database readback. The C7 candidate must make the scrollable result
+region keyboard-focusable and named, remove the top-level 404 artifact, ship the favicon, require
+direct application-route navigation to return 200, precisely attest only the expected anonymous
+`/api/v2/me` 401, and repeat the complete baseline, CI, Preview deployment, and live-evidence
+cycle. This corrective cycle does not authorize a Production deployment.
 
 ### Pre-deploy
 

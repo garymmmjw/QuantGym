@@ -96,6 +96,10 @@ describe("CommandPalette", () => {
     const input = screen.getByRole("combobox", { name: "全局搜索" });
     expect(input).toHaveFocus();
     expect(screen.getByRole("dialog", { name: "全局搜索" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "搜索结果" })).toHaveAttribute(
+      "tabindex",
+      "0",
+    );
     expect(await screen.findAllByText("兼容预览")).toHaveLength(2);
 
     await user.type(input, "完全不存在的模块");
@@ -144,9 +148,12 @@ describe("CommandPalette", () => {
     const trigger = screen.getByRole("button", { name: "Open global search" });
     await user.click(trigger);
     const input = screen.getByRole("combobox", { name: "Global search" });
+    const resultsRegion = screen.getByRole("region", { name: "Search results" });
     const close = screen.getByRole("button", { name: "Close global search" });
     expect(input).toHaveFocus();
 
+    await user.tab();
+    expect(resultsRegion).toHaveFocus();
     await user.tab();
     expect(close).toHaveFocus();
     await user.tab();

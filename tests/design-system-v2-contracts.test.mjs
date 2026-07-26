@@ -18,8 +18,62 @@ import {
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 
+const semanticHex = (source, token) => {
+  const match = source.match(new RegExp(`--${token}:\\s*(#[0-9a-f]{6});`, "iu"));
+  assert.ok(match?.[1], `${token} must be a six-digit hex color`);
+  return match[1];
+};
+
+const relativeLuminance = (hex) => {
+  const channels = [1, 3, 5].map((offset) => (
+    Number.parseInt(hex.slice(offset, offset + 2), 16) / 255
+  ));
+  const linear = channels.map((channel) => (
+    channel <= 0.04045
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4
+  ));
+  return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+};
+
+const contrastRatio = (left, right) => {
+  const leftLuminance = relativeLuminance(left);
+  const rightLuminance = relativeLuminance(right);
+  return (
+    (Math.max(leftLuminance, rightLuminance) + 0.05)
+    / (Math.min(leftLuminance, rightLuminance) + 0.05)
+  );
+};
+
 test("checked-in V2 tokens exactly implement the approved design contract", async () => {
   assert.deepEqual(await checkDesignSystemV2({ root: projectRoot }), []);
+});
+
+test("dialog entry motion is fully disabled for reduced-motion browser audits", async () => {
+  const source = await readFile(
+    path.join(projectRoot, "src/design-system/primitives/Dialog/Dialog.module.css"),
+    "utf8",
+  );
+  assert.ok(source.includes(
+    "@media (prefers-reduced-motion: reduce) {\n"
+    + "  .backdrop,\n"
+    + "  .panel {\n"
+    + "    animation: none;",
+  ));
+});
+
+test("reward badge tokens retain a 6:1 contrast margin in both themes", async () => {
+  for (const theme of ["light", "dark"]) {
+    const source = await readFile(
+      path.join(projectRoot, `src/design-system/tokens/${theme}.css`),
+      "utf8",
+    );
+    const ratio = contrastRatio(
+      semanticHex(source, "qg-reward-ink"),
+      semanticHex(source, "qg-reward-surface"),
+    );
+    assert.ok(ratio >= 6, `${theme} reward contrast is ${ratio.toFixed(2)}:1`);
+  }
 });
 
 test("component styles consume semantic color, shadow, and layer tokens", () => {

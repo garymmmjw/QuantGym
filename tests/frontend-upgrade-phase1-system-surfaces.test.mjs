@@ -13,8 +13,11 @@ import {
   collectPhase1SystemSurfaceOfflineEvidence,
   inspectPhase1BundleBudgets,
   loginPhase1BrowserContext,
+  phase1ConsoleErrorIsExpected,
   phase1E2EChildEnvironment,
+  phase1SurfaceNavigationIsSuccessful,
   phase1SystemBrowserLaunchOptions,
+  phase1UnexpectedConsoleErrorCount,
   runPhase1ExactCommitE2E,
   validatePhase1BrowserAudit,
   validatePhase1E2EReport,
@@ -115,13 +118,145 @@ test("live browser probes use explicit application readiness instead of network 
     + '    await page.locator("#qg-main-content").waitFor();',
   ));
   assert.ok(surfaceSource.includes(
-    'await page.goto(`${PREVIEW_ORIGIN}/login`, { waitUntil: "domcontentloaded" });\n'
+    'const requestedUrl = `${PREVIEW_ORIGIN}/login`;\n'
+    + '    const response = await page.goto(requestedUrl, { waitUntil: "domcontentloaded" });\n'
+    + '    requireSuccessfulSurfaceNavigation(response, requestedUrl);\n'
     + '    await page.getByRole("heading", { name: /欢迎回来|Welcome back/iu }).waitFor();',
   ));
   assert.ok(surfaceSource.includes(
-    'await page.goto(`${PREVIEW_ORIGIN}/`, { waitUntil: "domcontentloaded" });\n'
+    'const requestedUrl = `${PREVIEW_ORIGIN}/`;\n'
+    + '  const response = await page.goto(requestedUrl, { waitUntil: "domcontentloaded" });\n'
+    + '  requireSuccessfulSurfaceNavigation(response, requestedUrl);\n'
     + '  await page.locator("#qg-main-content").waitFor();',
   ));
+});
+
+test("surface navigation accepts only the exact requested URL with a 200 response", () => {
+  const requestedUrl = "https://quantgym-v2-preview.pages.dev/login";
+  assert.equal(phase1SurfaceNavigationIsSuccessful({
+    requestedUrl,
+    responseUrl: requestedUrl,
+    status: 200,
+  }), true);
+  assert.equal(phase1SurfaceNavigationIsSuccessful({
+    requestedUrl,
+    responseUrl: requestedUrl,
+    status: 204,
+  }), false);
+  for (const candidate of [
+    { responseUrl: requestedUrl, status: 199 },
+    { responseUrl: requestedUrl, status: 300 },
+    { responseUrl: requestedUrl, status: 404 },
+    { responseUrl: "https://quantgym-v2-preview.pages.dev/", status: 200 },
+    { responseUrl: undefined, status: undefined },
+  ]) {
+    assert.equal(phase1SurfaceNavigationIsSuccessful({
+      requestedUrl,
+      ...candidate,
+    }), false);
+  }
+});
+
+test("auth console filtering accepts only the exact anonymous GET session 401", () => {
+  const exact = {
+    surfaceId: "system:auth",
+    location: "https://quantgym-v2-preview.pages.dev/api/v2/me",
+    text: "Failed to load resource: the server responded with a status of 401 ()",
+    sessionProbeResponses: [{ method: "GET", status: 401 }],
+  };
+  assert.equal(phase1ConsoleErrorIsExpected(exact), true);
+  assert.equal(phase1ConsoleErrorIsExpected({
+    ...exact,
+    text: "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+  }), true);
+
+  for (const candidate of [
+    { surfaceId: "system:desktop-shell" },
+    { location: "https://quantgym-v2-preview.pages.dev/api/v2/me?anonymous=1" },
+    { location: "https://quantgym-v2-preview.pages.dev/api/v2/auth/login" },
+    { text: "Failed to load resource: the server responded with a status of 500 ()" },
+    { text: "prefix Failed to load resource: the server responded with a status of 401 ()" },
+    { sessionProbeResponses: [{ method: "GET", status: 500 }] },
+    { sessionProbeResponses: [{ method: "POST", status: 401 }] },
+    {
+      sessionProbeResponses: [
+        { method: "GET", status: 401 },
+        { method: "GET", status: 401 },
+      ],
+    },
+    { sessionProbeResponses: [] },
+  ]) {
+    assert.equal(phase1ConsoleErrorIsExpected({ ...exact, ...candidate }), false);
+  }
+});
+
+test("auth console filtering consumes at most one exact 401 error per exact response", () => {
+  const exactError = {
+    location: "https://quantgym-v2-preview.pages.dev/api/v2/me",
+    text: "Failed to load resource: the server responded with a status of 401 ()",
+  };
+  const exactProbe = [{ method: "GET", status: 401 }];
+  assert.equal(phase1UnexpectedConsoleErrorCount({
+    surfaceId: "system:auth",
+    consoleErrors: [exactError],
+    sessionProbeResponses: exactProbe,
+  }), 0);
+  assert.equal(phase1UnexpectedConsoleErrorCount({
+    surfaceId: "system:auth",
+    consoleErrors: [exactError, exactError],
+    sessionProbeResponses: exactProbe,
+  }), 1);
+  assert.equal(phase1UnexpectedConsoleErrorCount({
+    surfaceId: "system:auth",
+    consoleErrors: [],
+    sessionProbeResponses: exactProbe,
+  }), 0);
+  assert.equal(phase1UnexpectedConsoleErrorCount({
+    surfaceId: "system:auth",
+    consoleErrors: [exactError],
+    sessionProbeResponses: [{ method: "GET", status: 500 }],
+  }), 2);
+  assert.equal(phase1UnexpectedConsoleErrorCount({
+    surfaceId: "system:desktop-shell",
+    consoleErrors: [exactError],
+    sessionProbeResponses: exactProbe,
+  }), 1);
+  assert.equal(phase1UnexpectedConsoleErrorCount({
+    surfaceId: "system:auth",
+    consoleErrors: null,
+    sessionProbeResponses: exactProbe,
+  }), 1);
+});
+
+test("surface audit source records exact session responses without broad 401 filtering", async () => {
+  const surfaceSource = await readFile(
+    path.join(root, "scripts/check-frontend-upgrade-phase1-system-surfaces.mjs"),
+    "utf8",
+  );
+  assert.ok(surfaceSource.includes(
+    'if (response.url() !== ANONYMOUS_SESSION_ENDPOINT) return;\n'
+    + '            sessionProbeResponses.push({\n'
+    + '              method: response.request().method(),\n'
+    + '              status: response.status(),',
+  ));
+  assert.doesNotMatch(surfaceSource, /text\.(?:includes|match)\([^\n]*401/iu);
+  assert.doesNotMatch(surfaceSource, /status\(\)\s*===\s*401[^\n]*return/iu);
+  assert.ok(surfaceSource.includes(
+    'await page.locator(\'[data-network-status="offline"]\').waitFor({\n'
+    + '                state: "hidden",',
+  ));
+  assert.ok(surfaceSource.indexOf("await page.close();") < surfaceSource.indexOf(
+    "applicationConsoleErrors += pageErrors.length;",
+  ));
+  const recoverySettled = surfaceSource.indexOf(
+    'await page.locator(\'[data-network-status="offline"]\').waitFor({',
+  );
+  const finalUnhandledRead = surfaceSource.lastIndexOf(
+    "unhandledRejections += await page.evaluate",
+  );
+  const pageClosed = surfaceSource.indexOf("await page.close();");
+  assert.ok(recoverySettled < finalUnhandledRead);
+  assert.ok(finalUnhandledRead < pageClosed);
 });
 
 test("todo role selectors encode apostrophes without breaking Playwright selector chaining", async () => {

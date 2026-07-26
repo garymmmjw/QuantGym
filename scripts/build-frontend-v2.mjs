@@ -26,14 +26,14 @@ const publicDirectory = path.join(projectRoot, "public-v2");
 const LEGACY_PREVIEW_BRANCH = "codex/frontend-v2-preview";
 const LEGACY_PREVIEW_ALIAS = "legacy-compat.quantgym-v2-preview.pages.dev";
 const LEGACY_PREVIEW_CHUNK_MARKER = "data-legacy-preview-frame";
-const EXPECTED_PUBLIC_FILES = ["_headers", "_redirects", "_routes.json"];
+const EXPECTED_PUBLIC_FILES = ["_headers", "_redirects", "_routes.json", "favicon.svg"];
 const EXPECTED_OUTPUT_ROOT_FILES = new Set([
-  "404.html",
   "_headers",
   "_redirects",
   "_routes.json",
   "asset-integrity.json",
   "config.json",
+  "favicon.svg",
   "index.html",
   "version.json",
 ]);
@@ -301,11 +301,9 @@ const writePublicMetadata = async (metadata) => {
     branch: metadata.branch,
     source: metadata.source,
   };
-  const index = await readFile(path.join(outputDirectory, "index.html"));
   await Promise.all([
     atomicWrite(path.join(outputDirectory, "config.json"), json(config)),
     atomicWrite(path.join(outputDirectory, "version.json"), json(version)),
-    atomicWrite(path.join(outputDirectory, "404.html"), index),
   ]);
 };
 

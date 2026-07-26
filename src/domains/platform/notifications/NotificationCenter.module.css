@@ -117,7 +117,7 @@
   margin-block-start: var(--qg-space-1);
   background: var(--qg-action-primary);
   border-radius: var(--qg-radius-pill);
-  box-shadow: 0 0 0 3px var(--qg-action-primary-soft);
+  outline: 3px solid var(--qg-action-primary-soft);
 }
 
 .recovery {

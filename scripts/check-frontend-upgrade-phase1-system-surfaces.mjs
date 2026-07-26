@@ -32,6 +32,11 @@ const REVIEW_DIRECTORY_RELATIVE = (
   "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review"
 );
 const PREVIEW_ORIGIN = "https://quantgym-v2-preview.pages.dev";
+const ANONYMOUS_SESSION_ENDPOINT = `${PREVIEW_ORIGIN}/api/v2/me`;
+const CHROME_ANONYMOUS_401_RESOURCE_ERRORS = Object.freeze([
+  "Failed to load resource: the server responded with a status of 401 ()",
+  "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+]);
 const INITIAL_JS_BUDGET = 180 * 1024;
 const ROUTE_CHUNK_BUDGET = 100 * 1024;
 const EXPECTED_E2E_TEST_COUNT = 82;
@@ -62,6 +67,66 @@ const VIEWPORTS = Object.freeze({
 const THEMES = Object.freeze(["light", "dark"]);
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const unique = (values) => [...new Set(values)];
+
+export const phase1SurfaceNavigationIsSuccessful = ({
+  requestedUrl,
+  responseUrl,
+  status,
+}) => (
+  typeof requestedUrl === "string"
+  && requestedUrl.length > 0
+  && responseUrl === requestedUrl
+  && status === 200
+);
+
+const phase1AnonymousSessionProbeIsExpected = (sessionProbeResponses) => (
+  Array.isArray(sessionProbeResponses)
+  && sessionProbeResponses.length === 1
+  && sessionProbeResponses[0]?.method === "GET"
+  && sessionProbeResponses[0]?.status === 401
+);
+
+export const phase1ConsoleErrorIsExpected = ({
+  surfaceId,
+  location,
+  text,
+  sessionProbeResponses,
+}) => (
+  surfaceId === "system:auth"
+  && location === ANONYMOUS_SESSION_ENDPOINT
+  && CHROME_ANONYMOUS_401_RESOURCE_ERRORS.includes(text)
+  && phase1AnonymousSessionProbeIsExpected(sessionProbeResponses)
+);
+
+export const phase1UnexpectedConsoleErrorCount = ({
+  surfaceId,
+  consoleErrors,
+  sessionProbeResponses,
+}) => {
+  if (!Array.isArray(consoleErrors)) return 1;
+  const expectedSessionProbe = phase1AnonymousSessionProbeIsExpected(
+    sessionProbeResponses,
+  );
+  let expectedConsoleErrorConsumed = false;
+  let unexpectedCount = surfaceId === "system:auth" && !expectedSessionProbe ? 1 : 0;
+  for (const error of consoleErrors) {
+    if (
+      expectedSessionProbe
+      && !expectedConsoleErrorConsumed
+      && phase1ConsoleErrorIsExpected({
+        surfaceId,
+        location: error?.location,
+        text: error?.text,
+        sessionProbeResponses,
+      })
+    ) {
+      expectedConsoleErrorConsumed = true;
+    } else {
+      unexpectedCount += 1;
+    }
+  }
+  return unexpectedCount;
+};
 
 export const assertPhase1NodeRuntime = (
   version = process.versions.node,
@@ -758,13 +823,27 @@ const waitForTheme = async (page, theme) => {
   });
 };
 
+const requireSuccessfulSurfaceNavigation = (response, requestedUrl) => {
+  if (!phase1SurfaceNavigationIsSuccessful({
+    requestedUrl,
+    responseUrl: response?.url(),
+    status: response?.status(),
+  })) {
+    throw new Error("browser audit surface navigation did not return an exact 200 response");
+  }
+};
+
 const exerciseSurface = async ({ context, page, surfaceId }) => {
   if (surfaceId === "system:auth") {
-    await page.goto(`${PREVIEW_ORIGIN}/login`, { waitUntil: "domcontentloaded" });
+    const requestedUrl = `${PREVIEW_ORIGIN}/login`;
+    const response = await page.goto(requestedUrl, { waitUntil: "domcontentloaded" });
+    requireSuccessfulSurfaceNavigation(response, requestedUrl);
     await page.getByRole("heading", { name: /欢迎回来|Welcome back/iu }).waitFor();
     return;
   }
-  await page.goto(`${PREVIEW_ORIGIN}/`, { waitUntil: "domcontentloaded" });
+  const requestedUrl = `${PREVIEW_ORIGIN}/`;
+  const response = await page.goto(requestedUrl, { waitUntil: "domcontentloaded" });
+  requireSuccessfulSurfaceNavigation(response, requestedUrl);
   await page.locator("#qg-main-content").waitFor();
   if (surfaceId === "system:mobile-shell") {
     const trigger = page.getByRole("button", {
@@ -866,15 +945,27 @@ const defaultBrowserAudit = async ({
             : authenticatedContext;
           await context.setOffline(false);
           const page = await context.newPage();
+          const consoleErrors = [];
+          const pageErrors = [];
+          const sessionProbeResponses = [];
           page.on("console", (message) => {
             const location = message.location().url ?? "";
             if (
               message.type() === "error"
               && (location === "" || location.startsWith(PREVIEW_ORIGIN))
-            ) applicationConsoleErrors += 1;
+            ) {
+              consoleErrors.push({ location, text: message.text() });
+            }
           });
-          page.on("pageerror", () => {
-            applicationConsoleErrors += 1;
+          page.on("pageerror", (error) => {
+            pageErrors.push(error);
+          });
+          page.on("response", (response) => {
+            if (response.url() !== ANONYMOUS_SESSION_ENDPOINT) return;
+            sessionProbeResponses.push({
+              method: response.request().method(),
+              status: response.status(),
+            });
           });
           try {
             await page.setViewportSize(viewport);
@@ -887,9 +978,6 @@ const defaultBrowserAudit = async ({
             seriousOrCriticalAxeFindings += axe.violations.filter((violation) => (
               violation.impact === "serious" || violation.impact === "critical"
             )).length;
-            unhandledRejections += await page.evaluate(() => (
-              window.__qgPhase1UnhandledRejections?.count ?? 0
-            ));
             const relativePath = (
               `${REVIEW_DIRECTORY_RELATIVE}/`
               + `${surfaceId.slice("system:".length)}-${viewportName}-${theme}.jpg`
@@ -912,7 +1000,22 @@ const defaultBrowserAudit = async ({
             visualCaseCount += 1;
           } finally {
             await context.setOffline(false);
+            if (surfaceId === "system:network-recovery") {
+              await page.locator('[data-network-status="offline"]').waitFor({
+                state: "hidden",
+                timeout: 10_000,
+              });
+            }
+            unhandledRejections += await page.evaluate(() => (
+              window.__qgPhase1UnhandledRejections?.count ?? 0
+            ));
             await page.close();
+            applicationConsoleErrors += pageErrors.length;
+            applicationConsoleErrors += phase1UnexpectedConsoleErrorCount({
+              surfaceId,
+              consoleErrors,
+              sessionProbeResponses,
+            });
           }
         }
       }

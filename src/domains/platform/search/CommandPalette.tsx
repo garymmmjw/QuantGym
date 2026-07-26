@@ -187,7 +187,12 @@ function OpenCommandPalette({
         <kbd className={styles.escapeHint}>Esc</kbd>
       </div>
 
-      <div className={styles.resultsViewport}>
+      <div
+        aria-label={copy.resultsLabel}
+        className={styles.resultsViewport}
+        role="region"
+        tabIndex={0}
+      >
         <ul
           aria-label={copy.resultsLabel}
           className={styles.results}

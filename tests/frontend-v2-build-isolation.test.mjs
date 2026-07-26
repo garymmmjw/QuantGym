@@ -553,7 +553,7 @@ test("keeps a detached GitHub main build on the production legacy-frame policy",
   assert.equal(unknownRefBranchReads, 0);
 });
 
-test("public-v2 accepts only the three reviewed regular control files", async () => {
+test("public-v2 accepts only the four reviewed regular deployment files", async () => {
   const fixtureRoot = await mkdtemp(path.join(tmpdir(), "quantgym-v2-public-"));
   const outsideRoot = await mkdtemp(path.join(tmpdir(), "quantgym-v2-public-outside-"));
   try {
@@ -561,6 +561,7 @@ test("public-v2 accepts only the three reviewed regular control files", async ()
       writeFile(path.join(fixtureRoot, "_headers"), "/assets/*\n  Cache-Control: public\n", "utf8"),
       writeFile(path.join(fixtureRoot, "_redirects"), "/* /index.html 200\n", "utf8"),
       writeFile(path.join(fixtureRoot, "_routes.json"), "{\"version\":1,\"include\":[\"/api/v2/*\"],\"exclude\":[]}\n", "utf8"),
+      writeFile(path.join(fixtureRoot, "favicon.svg"), "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>\n", "utf8"),
       writeFile(path.join(outsideRoot, "secret.pem"), "PRIVATE MATERIAL\n", "utf8"),
     ]);
     await assert.doesNotReject(validateV2PublicDirectory(fixtureRoot));
@@ -598,29 +599,27 @@ test("builds exactly one V2 HTML entry and deterministic public metadata", { tim
 
   const files = await walkFiles(distDirectory);
   assert.ok(files.includes("index.html"));
-  assert.ok(files.includes("404.html"));
+  assert.ok(!files.includes("404.html"));
   assert.ok(files.includes("config.json"));
   assert.ok(files.includes("version.json"));
   assert.ok(files.includes("asset-integrity.json"));
   assert.ok(files.includes("_headers"));
   assert.ok(files.includes("_redirects"));
   assert.ok(files.includes("_routes.json"));
+  assert.ok(files.includes("favicon.svg"));
   assert.ok(!files.includes("v2.html"));
   assert.ok(!files.includes("index.html.html"));
 
-  const [indexHtml, fallbackHtml] = await Promise.all([
-    readFile(path.join(distDirectory, "index.html"), "utf8"),
-    readFile(path.join(distDirectory, "404.html"), "utf8"),
-  ]);
-  assert.equal(fallbackHtml, indexHtml);
+  const indexHtml = await readFile(path.join(distDirectory, "index.html"), "utf8");
   assert.match(indexHtml, /<div id="root"><\/div>/);
+  assert.match(indexHtml, /<link rel="icon" href="\/favicon\.svg" type="image\/svg\+xml"\s*\/?>/);
   assert.doesNotMatch(indexHtml, /(?:src\/main\.jsx|config\.js|data\/.*\.js)/);
 
-  for (const controlFile of ["_headers", "_redirects", "_routes.json"]) {
-    assert.equal(
-      await readFile(path.join(distDirectory, controlFile), "utf8"),
-      await readFile(path.join(projectRoot, "public-v2", controlFile), "utf8"),
-      controlFile,
+  for (const deploymentFile of ["_headers", "_redirects", "_routes.json", "favicon.svg"]) {
+    assert.deepEqual(
+      await readFile(path.join(distDirectory, deploymentFile)),
+      await readFile(path.join(projectRoot, "public-v2", deploymentFile)),
+      deploymentFile,
     );
   }
   assert.equal(await readFile(path.join(distDirectory, "_redirects"), "utf8"), "/* /index.html 200\n");
