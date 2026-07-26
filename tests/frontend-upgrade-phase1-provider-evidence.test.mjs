@@ -35,6 +35,9 @@ import {
 
 const BRANCH = "codex/frontend-v2-preview";
 const COMMIT = "1".repeat(40);
+const PRODUCTION_PAGES_CONTROL_ANCHOR_COMMIT = (
+  "240016962fb5868c9a20f860b003ec3368ddfd63"
+);
 const CF_ACCOUNT_ID = "a".repeat(32);
 const CF_TOKEN = "cloudflare-test-token-never-persist";
 const RENDER_TOKEN = "render-test-token-never-persist";
@@ -608,6 +611,63 @@ const providerFixture = () => ({
   },
 });
 
+const productionPagesControlAnchor = () => ({
+  id: "pages-phase1-control-anchor-raw-id",
+  environment: "preview",
+  is_skipped: true,
+  deployment_trigger: {
+    type: "github:push",
+    metadata: {
+      branch: BRANCH,
+      commit_hash: PRODUCTION_PAGES_CONTROL_ANCHOR_COMMIT,
+    },
+  },
+  latest_stage: { name: "queued", status: "idle" },
+});
+
+const excludedProductionPagesPreviewQueue = () => ({
+  id: "pages-excluded-preview-queue-raw-id",
+  environment: "preview",
+  is_skipped: true,
+  deployment_trigger: {
+    type: "github:push",
+    metadata: { branch: BRANCH, commit_hash: COMMIT },
+  },
+  latest_stage: { name: "queued", status: "idle" },
+});
+
+const productionDeploymentPage = (result, resultInfo = {}) => ({
+  success: true,
+  result,
+  result_info: {
+    page: 1,
+    per_page: 25,
+    count: result.length,
+    total_count: result.length,
+    total_pages: 1,
+    ...resultInfo,
+  },
+});
+
+const providerFixtureWithProductionPagesAnchor = () => {
+  const fixture = providerFixture();
+  const canonicalDeployment = clone(
+    fixture.cloudflare.productionPages.result.latest_deployment,
+  );
+  const controlAnchor = productionPagesControlAnchor();
+  fixture.cloudflare.productionPages.result.canonical_deployment = canonicalDeployment;
+  fixture.cloudflare.productionPages.result.latest_deployment = controlAnchor;
+  fixture.cloudflare.productionPagesAfter = clone(fixture.cloudflare.productionPages);
+  fixture.cloudflare.productionPagesAfter.result.latest_deployment = (
+    excludedProductionPagesPreviewQueue()
+  );
+  fixture.cloudflare.productionDeployments = productionDeploymentPage([
+    fixture.cloudflare.productionPagesAfter.result.latest_deployment,
+    controlAnchor,
+  ]);
+  return { fixture, canonicalDeployment, controlAnchor };
+};
+
 const providerFixtureAfterBaseline = () => {
   const fixture = providerFixture();
   fixture.cloudflare.previewPagesBeforeCommit = COMMIT;
@@ -660,6 +720,18 @@ const fixtureFetch = (fixture, requests = []) => {
           ? fixture.cloudflare.productionPages
           : fixture.cloudflare.productionPagesAfter ?? fixture.cloudflare.productionPages;
         return response(body);
+      }
+      if (
+        cfPath === "/pages/projects/quantgym-beta/deployments"
+        && url.searchParams.get("per_page") === "25"
+      ) {
+        const page = Number(url.searchParams.get("page"));
+        const body = Array.isArray(fixture.cloudflare.productionDeploymentPages)
+          ? fixture.cloudflare.productionDeploymentPages[page - 1]
+          : page === 1
+            ? fixture.cloudflare.productionDeployments
+            : undefined;
+        if (body !== undefined) return response(body);
       }
       if (
         cfPath === "/pages/projects/quantgym-v2-preview/deployments"
@@ -1194,6 +1266,201 @@ test("Production R2 CORS absence and presence transitions are both rejected as d
         /production provider controls changed since the pre-push baseline/u,
       );
       assert.equal(corsCalls, 2);
+    });
+  }
+});
+
+test("an excluded queued Pages Preview record does not masquerade as a Production deploy", async () => {
+  await withRoot(async (root) => {
+    const { fixture } = providerFixtureWithProductionPagesAnchor();
+    const requests = [];
+    const options = buildOptions(root, fixture);
+    options[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].fetchImpl = fixtureFetch(fixture, requests);
+
+    const result = await buildFrontendUpgradePhase1ProviderEvidence(
+      options,
+    );
+    assert.equal(
+      result.evidence.productionControlBefore,
+      result.evidence.productionControlAfter,
+    );
+    assert.equal(
+      requests.filter(({ url }) => (
+        new URL(url).pathname.endsWith("/pages/projects/quantgym-beta/deployments")
+      )).length,
+      2,
+    );
+  });
+});
+
+test("a real canonical Pages Production deployment change remains fail-closed", async () => {
+  await withRoot(async (root) => {
+    const { fixture } = providerFixtureWithProductionPagesAnchor();
+    fixture.cloudflare.productionPagesAfter.result.canonical_deployment
+      .deployment_trigger.metadata.commit_hash = "8".repeat(40);
+
+    await assert.rejects(
+      buildFrontendUpgradePhase1ProviderEvidence(buildOptions(root, fixture)),
+      /production provider controls changed since the pre-push baseline/u,
+    );
+  });
+});
+
+test("a non-deployment Pages Production configuration change remains fail-closed", async () => {
+  await withRoot(async (root) => {
+    const { fixture } = providerFixtureWithProductionPagesAnchor();
+    fixture.cloudflare.productionPagesAfter.result.build_config.destination_dir = (
+      "unexpected-production-output"
+    );
+
+    await assert.rejects(
+      buildFrontendUpgradePhase1ProviderEvidence(buildOptions(root, fixture)),
+      /production provider controls changed since the pre-push baseline/u,
+    );
+  });
+});
+
+test("the frozen Pages control anchor must exist uniquely in deployment history", async () => {
+  for (const [label, history] of [
+    ["missing", [excludedProductionPagesPreviewQueue()]],
+    [
+      "duplicate",
+      [productionPagesControlAnchor(), productionPagesControlAnchor()],
+    ],
+  ]) {
+    await withRoot(async (root) => {
+      const { fixture } = providerFixtureWithProductionPagesAnchor();
+      fixture.cloudflare.productionDeployments = productionDeploymentPage(history);
+      await assert.rejects(
+        buildFrontendUpgradePhase1ProviderEvidence(buildOptions(root, fixture)),
+        /frozen production Pages control anchor must exist uniquely/u,
+        label,
+      );
+    });
+  }
+});
+
+test("a latest frozen Pages control anchor must match its raw history record", async () => {
+  await withRoot(async (root) => {
+    const { fixture, controlAnchor } = providerFixtureWithProductionPagesAnchor();
+    const mismatchedHistoryAnchor = clone(controlAnchor);
+    mismatchedHistoryAnchor.url = "https://mismatched-history-anchor.pages.dev";
+    fixture.cloudflare.productionDeployments = productionDeploymentPage([
+      mismatchedHistoryAnchor,
+    ]);
+
+    await assert.rejects(
+      buildFrontendUpgradePhase1ProviderEvidence(buildOptions(root, fixture)),
+      /frozen production Pages control anchor must match the latest deployment observation/u,
+    );
+  });
+});
+
+test("the frozen Pages control anchor is found uniquely across complete pagination", async () => {
+  await withRoot(async (root) => {
+    const { fixture, controlAnchor } = providerFixtureWithProductionPagesAnchor();
+    const firstPageEntries = [
+      excludedProductionPagesPreviewQueue(),
+      ...Array.from({ length: 24 }, (_, index) => ({
+        id: `unrelated-production-pages-deployment-${index}`,
+        environment: "production",
+        is_skipped: false,
+        deployment_trigger: {
+          type: "github:push",
+          metadata: {
+            branch: "main",
+            commit_hash: (index + 2).toString(16).padStart(40, "0"),
+          },
+        },
+        latest_stage: { name: "deploy", status: "success" },
+      })),
+    ];
+    fixture.cloudflare.productionDeploymentPages = [
+      productionDeploymentPage(firstPageEntries, {
+        page: 1,
+        total_count: 26,
+        total_pages: 2,
+      }),
+      productionDeploymentPage([controlAnchor], {
+        page: 2,
+        total_count: 26,
+        total_pages: 2,
+      }),
+    ];
+    const requests = [];
+    const options = buildOptions(root, fixture);
+    options[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].fetchImpl = fixtureFetch(fixture, requests);
+
+    const result = await buildFrontendUpgradePhase1ProviderEvidence(options);
+    assert.equal(
+      result.evidence.productionControlBefore,
+      result.evidence.productionControlAfter,
+    );
+    assert.equal(
+      requests.filter(({ url }) => (
+        new URL(url).pathname.endsWith("/pages/projects/quantgym-beta/deployments")
+        && new URL(url).searchParams.get("page") === "2"
+      )).length,
+      2,
+    );
+  });
+});
+
+test("malformed Pages deployment pagination metadata fails closed", async () => {
+  const malformedCases = [
+    ["missing total_pages", (anchor) => {
+      const payload = productionDeploymentPage([anchor]);
+      delete payload.result_info.total_pages;
+      return [payload];
+    }],
+    ["wrong page", (anchor) => [
+      productionDeploymentPage([anchor], { page: 2 }),
+    ]],
+    ["wrong per_page", (anchor) => [
+      productionDeploymentPage([anchor], { per_page: 50 }),
+    ]],
+    ["count mismatch", (anchor) => [
+      productionDeploymentPage([anchor], { count: 0 }),
+    ]],
+    ["cumulative count mismatch", (anchor) => [
+      productionDeploymentPage([anchor], { total_count: 2 }),
+    ]],
+    ["inconsistent totals", (anchor) => {
+      const firstPageEntries = Array.from({ length: 25 }, (_, index) => ({
+        id: `pagination-control-${index}`,
+      }));
+      return [
+        productionDeploymentPage(firstPageEntries, {
+          page: 1,
+          total_count: 26,
+          total_pages: 2,
+        }),
+        productionDeploymentPage([anchor], {
+          page: 2,
+          total_count: 27,
+          total_pages: 2,
+        }),
+      ];
+    }],
+    ["oversized page", (anchor) => [
+      productionDeploymentPage([
+        anchor,
+        ...Array.from({ length: 25 }, (_, index) => ({
+          id: `oversized-pagination-control-${index}`,
+        })),
+      ], { total_count: 26, total_pages: 2 }),
+    ]],
+  ];
+
+  for (const [label, makePages] of malformedCases) {
+    await withRoot(async (root) => {
+      const { fixture, controlAnchor } = providerFixtureWithProductionPagesAnchor();
+      fixture.cloudflare.productionDeploymentPages = makePages(controlAnchor);
+      await assert.rejects(
+        buildFrontendUpgradePhase1ProviderEvidence(buildOptions(root, fixture)),
+        /production Pages deployments pagination is invalid/u,
+        label,
+      );
     });
   }
 });

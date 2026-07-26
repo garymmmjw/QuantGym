@@ -988,6 +988,17 @@ new baseline. Candidate `240016962fb5868c9a20f860b003ec3368ddfd63` is the sole c
 mapping to the original generic
 baseline path; every later candidate uses the commit-derived template.
 
+Cloudflare may still create a `queued` / `idle`, `is_skipped=true` Pages deployment record on the
+Production project when this excluded Phase 1 branch is pushed, and then expose that non-serving
+record as `latest_deployment`. The Production control digest must not treat a newer skipped record
+as a Production rollout. During Phase 1 it therefore preserves the unique skipped
+`240016962fb5868c9a20f860b003ec3368ddfd63` record as the fixed `latest_deployment` digest anchor,
+while continuing to hash the provider's live `canonical_deployment` and every other project,
+Render, PostgreSQL, and R2 control. The lookup must enumerate the complete deployment history and
+strictly validate Cloudflare's pagination metadata. A missing, duplicate, or mismatched anchor
+fails closed, and any canonical deployment or non-deployment configuration change remains
+Production drift.
+
 Candidate `240016962fb5868c9a20f860b003ec3368ddfd63` is superseded and not accepted after live audit
 proved that Cloudflare can expose an empty logout POST as a stream with `Content-Length: 0`, while
 the Pages proxy rejected that valid representation with `EDGE_CONTENT_LENGTH_INVALID`. The

@@ -425,6 +425,20 @@ const selectPagesProject = (payload) => {
   const value = payload?.result ?? {};
   const productionEnv = value.deployment_configs?.production?.env_vars;
   const productionR2Bindings = value.deployment_configs?.production?.r2_buckets;
+  const selectDeployment = (deployment) => ({
+    id: deployment?.id,
+    branch: deployment?.deployment_trigger?.metadata?.branch,
+    commit: deployment?.deployment_trigger?.metadata?.commit_hash,
+    status: deployment?.latest_stage?.status,
+  });
+  const selectDeploymentObservation = (deployment) => ({
+    ...selectDeployment(deployment),
+    environment: deployment?.environment,
+    isSkipped: deployment?.is_skipped,
+    stage: deployment?.latest_stage?.name,
+  });
+  const canonicalDeployment = value.canonical_deployment ?? value.latest_deployment;
+  const controlConfiguration = canonicalize(value);
   const envVars = productionEnv && typeof productionEnv === "object" && !Array.isArray(productionEnv)
     ? Object.entries(productionEnv).map(([key, entry]) => ({
       key,
@@ -452,12 +466,9 @@ const selectPagesProject = (payload) => {
     },
     buildCommand: value.build_config?.build_command,
     destinationDir: value.build_config?.destination_dir,
-    latestDeployment: {
-      id: value.latest_deployment?.id,
-      branch: value.latest_deployment?.deployment_trigger?.metadata?.branch,
-      commit: value.latest_deployment?.deployment_trigger?.metadata?.commit_hash,
-      status: value.latest_deployment?.latest_stage?.status,
-    },
+    latestDeployment: selectDeployment(value.latest_deployment),
+    latestDeploymentObservation: selectDeploymentObservation(value.latest_deployment),
+    canonicalDeployment: selectDeployment(canonicalDeployment),
     envVars,
     r2BindingKeys: (
       productionR2Bindings
@@ -468,7 +479,9 @@ const selectPagesProject = (payload) => {
       : [],
     // This value never leaves process memory. It is included only in the canonical Production
     // control hash so configuration additions cannot evade the baseline comparison.
-    controlConfiguration: canonicalize(value),
+    controlConfiguration,
+    productionControlConfiguration: controlConfiguration,
+    productionControlDeployment: selectDeployment(value.latest_deployment),
   };
 };
 
@@ -887,8 +900,12 @@ const productionControlState = ({
     pages: {
       id: pages.id,
       name: pages.name,
-      controlConfiguration: pages.controlConfiguration,
-      latestDeployment: pages.latestDeployment,
+      controlConfiguration: (
+        pages.productionControlConfiguration ?? pages.controlConfiguration
+      ),
+      // Keep the historical field name for digest continuity. An excluded, non-serving Preview
+      // queue can be normalized to the frozen Phase 1 anchor before this state is hashed.
+      latestDeployment: pages.productionControlDeployment ?? pages.latestDeployment,
     },
     r2: {
       identity: hashR2Identity(
@@ -1419,6 +1436,123 @@ const stableLiveDeployControl = (entry, label) => {
   return { id, status, commit };
 };
 
+const isExcludedProductionPagesPreviewQueue = (deployment) => (
+  deployment?.environment === "preview"
+  && deployment?.isSkipped === true
+  && deployment?.branch === PREVIEW_BRANCH
+  && deployment?.stage === "queued"
+  && deployment?.status === "idle"
+);
+
+const selectProductionPagesControlAnchor = (entry) => ({
+  id: entry?.id,
+  environment: entry?.environment,
+  isSkipped: entry?.is_skipped,
+  branch: entry?.deployment_trigger?.metadata?.branch,
+  commit: entry?.deployment_trigger?.metadata?.commit_hash,
+  stage: entry?.latest_stage?.name,
+  status: entry?.latest_stage?.status,
+});
+
+const readFrozenProductionPagesControlAnchor = async ({ readers }) => {
+  const matches = [];
+  let expectedTotalCount;
+  let expectedTotalPages;
+  let observedCount = 0;
+  const perPage = 25;
+  const maximumPages = 100;
+
+  for (let page = 1; page <= maximumPages; page += 1) {
+    const payload = await readers.cfRequest(
+      `/pages/projects/${PRODUCTION_PAGES}/deployments?page=${page}&per_page=${perPage}`,
+    );
+    const entries = payload?.result;
+    const resultInfo = payload?.result_info;
+    const returnedPage = resultInfo?.page;
+    const returnedPerPage = resultInfo?.per_page;
+    const returnedCount = resultInfo?.count;
+    const totalCount = resultInfo?.total_count;
+    const totalPages = resultInfo?.total_pages;
+    if (
+      !Array.isArray(entries)
+      || !Number.isInteger(returnedPage)
+      || !Number.isInteger(returnedPerPage)
+      || !Number.isInteger(returnedCount)
+      || !Number.isInteger(totalCount)
+      || !Number.isInteger(totalPages)
+      || returnedPage !== page
+      || returnedPerPage !== perPage
+      || returnedCount !== entries.length
+      || entries.length > perPage
+      || totalCount < 0
+      || totalPages < 1
+      || totalPages > maximumPages
+      || totalPages !== Math.max(1, Math.ceil(totalCount / perPage))
+      || page > totalPages
+      || (expectedTotalCount !== undefined && totalCount !== expectedTotalCount)
+      || (expectedTotalPages !== undefined && totalPages !== expectedTotalPages)
+    ) {
+      throw new Error("production Pages deployments pagination is invalid");
+    }
+    expectedTotalCount ??= totalCount;
+    expectedTotalPages ??= totalPages;
+    observedCount += entries.length;
+    for (const entry of entries) {
+      const selected = selectProductionPagesControlAnchor(entry);
+      if (
+        selected.commit === LEGACY_GENERIC_BASELINE_COMMIT
+        && isExcludedProductionPagesPreviewQueue(selected)
+      ) matches.push({ raw: entry, selected });
+    }
+    if (page === expectedTotalPages) {
+      if (observedCount !== expectedTotalCount) {
+        throw new Error("production Pages deployments pagination is invalid");
+      }
+      if (matches.length !== 1) {
+        throw new Error("frozen production Pages control anchor must exist uniquely");
+      }
+      return matches[0];
+    }
+  }
+  throw new Error("production Pages deployments pagination exceeded the safety limit");
+};
+
+const normalizeProductionPagesControl = async ({ readers, pages }) => {
+  if (!isExcludedProductionPagesPreviewQueue(pages.latestDeploymentObservation)) return pages;
+  const anchor = await readFrozenProductionPagesControlAnchor({ readers });
+  if (pages.latestDeploymentObservation.commit === LEGACY_GENERIC_BASELINE_COMMIT) {
+    const latestRaw = pages.controlConfiguration?.latest_deployment;
+    if (
+      JSON.stringify(canonicalize(anchor.selected))
+        !== JSON.stringify(canonicalize(pages.latestDeploymentObservation))
+      || JSON.stringify(canonicalize(anchor.raw))
+        !== JSON.stringify(canonicalize(latestRaw))
+    ) {
+      throw new Error(
+        "frozen production Pages control anchor must match the latest deployment observation",
+      );
+    }
+  }
+  return {
+    ...pages,
+    // Cloudflare records a skipped queued deployment for every push to the excluded Phase 1
+    // branch and exposes it as `latest_deployment`, even though it never serves traffic. The
+    // first provider-evidence cycle hashed the 240016... skipped record. Reuse that exact provider
+    // record as the fixed digest anchor so later skipped records cannot masquerade as Production
+    // drift, while every canonical deployment and all other project controls remain live inputs.
+    productionControlConfiguration: canonicalize({
+      ...pages.controlConfiguration,
+      latest_deployment: anchor.raw,
+    }),
+    productionControlDeployment: {
+      id: anchor.selected.id,
+      branch: anchor.selected.branch,
+      commit: anchor.selected.commit,
+      status: anchor.selected.status,
+    },
+  };
+};
+
 const readProductionControl = async ({
   readers,
   pages,
@@ -1430,6 +1564,10 @@ const readProductionControl = async ({
   cloudflareAccountId,
   productionJurisdiction,
 }) => {
+  const productionPagesControl = await normalizeProductionPagesControl({
+    readers,
+    pages,
+  });
   const productionApi = findNamed(services, PRODUCTION_API, "production API service");
   const productionLlm = findNamed(services, PRODUCTION_LLM, "production LLM service");
   const productionServiceIds = [productionApi.id, productionLlm.id];
@@ -1507,7 +1645,7 @@ const readProductionControl = async ({
       .then(selectCustomDomains),
   ]);
   return productionControlState({
-    pages,
+    pages: productionPagesControl,
     r2,
     r2Controls: { lifecycle, cors, managedDomain, customDomains },
     services,
