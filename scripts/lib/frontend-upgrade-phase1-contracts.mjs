@@ -38,6 +38,14 @@ export const PHASE0_EVIDENCE_LOCK_PATH = (
 export const PHASE1_PROVIDER_EVIDENCE_PATH = (
   "artifacts/frontend-upgrade/phase-1-preview/provider-evidence.redacted.json"
 );
+export const PHASE1_PRE_PUSH_BASELINE_PATH_TEMPLATE = (
+  "artifacts/frontend-upgrade/phase-1-preview/"
+  + "pre-push-provider-baseline.{applicationCommit}.redacted.json"
+);
+export const PHASE1_PROVIDER_EVIDENCE_ARCHIVE_PATH_TEMPLATE = (
+  "artifacts/frontend-upgrade/phase-1-preview/"
+  + "provider-evidence.{applicationCommit}.redacted.json"
+);
 export const APPROVED_LEGACY_PAGES_ALIAS_SHA256 = (
   "ba30f7e6f48ae62b8011fa7036856089061d9c123bea1110ecad267cc408b637"
 );
@@ -193,6 +201,10 @@ export const APPROVED_PHASE1_PREVIEW_CONTRACT = {
     namespace: "380-frontend-upgrade-phase-1-",
     providerEvidencePath: PHASE1_PROVIDER_EVIDENCE_PATH,
     providerEvidenceMode: "0600",
+    prePushBaselineStrategy: "immutable-per-application-commit",
+    prePushBaselinePathTemplate: PHASE1_PRE_PUSH_BASELINE_PATH_TEMPLATE,
+    supersededProviderEvidencePathTemplate: PHASE1_PROVIDER_EVIDENCE_ARCHIVE_PATH_TEMPLATE,
+    productionControlContinuityRequired: true,
     aggregateStatusCeiling: "ready-for-review",
   },
 };
@@ -1223,7 +1235,11 @@ const collectSecretShapedKeys = (value, currentPath = "providerSchema", failures
   return failures;
 };
 
-export function validatePhase1ProviderEvidenceRelationships(sample = {}, nowMs = Date.now()) {
+export function validatePhase1ProviderEvidenceRelationships(
+  sample = {},
+  nowMs = Date.now(),
+  { allowExpired = false } = {},
+) {
   const failures = [];
   if (!isObject(sample)) return ["provider evidence must be an object"];
   const capturedMs = Date.parse(sample.capturedAt);
@@ -1238,7 +1254,9 @@ export function validatePhase1ProviderEvidenceRelationships(sample = {}, nowMs =
       failures.push("provider evidence lifetime must be greater than zero and at most seven days");
     }
     if (Number.isFinite(nowMs) && capturedMs > nowMs) failures.push("provider evidence is captured in the future");
-    if (Number.isFinite(nowMs) && expiresMs < nowMs) failures.push("provider evidence has expired");
+    if (Number.isFinite(nowMs) && expiresMs < nowMs && !allowExpired) {
+      failures.push("provider evidence has expired");
+    }
   }
 
   if (sample.applicationCommit === ACCEPTED_PHASE0_DEPLOYMENT_COMMIT) {

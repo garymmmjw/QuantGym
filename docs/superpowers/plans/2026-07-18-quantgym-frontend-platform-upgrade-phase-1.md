@@ -960,6 +960,41 @@ The user has authorized Phase 1 Preview application deployment. This authorizati
 existing Preview resources only. Stop for new approval if resource scope, plan/cost, production,
 or destruction changes.
 
+### Superseding deployment attempts
+
+Phase 1 may require more than one reviewed candidate on the same authorized Preview resources.
+Each candidate commit owns one create-once provider baseline at
+`artifacts/frontend-upgrade/phase-1-preview/pre-push-provider-baseline.<applicationCommit>.redacted.json`.
+The candidate SHA is validated before deriving that path; callers cannot supply a baseline path.
+Every baseline remains mode `0600`, ignored, no-follow, single-link, and immutable. Earlier generic
+or commit-suffixed baselines must retain their original path, bytes, inode, and digest.
+
+Freeze the candidate commit before capturing its baseline, and capture while that SHA is absent
+from Pages, API, and LLM deployments and all automatic deploys remain disabled. Do not amend or add
+source changes after capture. Any later source change creates a new candidate commit and a new
+baseline; it never replaces a prior baseline. A failed candidate is `superseded / not accepted`,
+its provider evidence and partial `380-*` batch cannot be mixed into the next attempt, and all
+three Preview runtimes must be manually aligned to the superseding exact commit before fresh live
+evidence is generated.
+
+Before replacing the mutable current provider-evidence file, preserve the prior redacted record at
+a commit-derived ignored `0600` path and record both digests in the final review. The next
+baseline's `productionControlSha256` must equal the prior provider evidence's
+`productionControlAfter`; a mismatch is cross-attempt Production drift and stops the cutover.
+The operator supplies only `--prior-provider-evidence-sha256`, never a path. The builder verifies
+the fixed current record, derives both its archive and prior baseline paths from its validated
+application commit, and records `priorApplicationCommit` plus `priorProviderEvidenceSha256` in the
+new baseline. Candidate `240016962fb5868c9a20f860b003ec3368ddfd63` is the sole compatibility
+mapping to the original generic
+baseline path; every later candidate uses the commit-derived template.
+
+Candidate `240016962fb5868c9a20f860b003ec3368ddfd63` is superseded and not accepted after live audit
+proved that Cloudflare can expose an empty logout POST as a stream with `Content-Length: 0`, while
+the Pages proxy rejected that valid representation with `EDGE_CONTENT_LENGTH_INVALID`. The
+superseding candidate must include the zero-length stream normalization and its regression tests.
+This corrective redeploy stays within the already authorized Preview resources and does not permit
+new resources, production changes, destructive database work, or a plan/cost change.
+
 ### Pre-deploy
 
 1. Verify all offline gates and the exact commit.

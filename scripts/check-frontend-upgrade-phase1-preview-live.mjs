@@ -1329,7 +1329,7 @@ export async function runFrontendUpgradePhase1PreviewLive(options = {}) {
     }
     const random = Buffer.from(randomSource).toString("hex");
     const credentials = {
-      email: `phase1-audit-${random}@example.invalid`,
+      email: `phase1-audit-${random}@example.com`,
       password: `Qg!${random}aZ9`,
     };
 

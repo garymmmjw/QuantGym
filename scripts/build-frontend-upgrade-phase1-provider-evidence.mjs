@@ -15,6 +15,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   ACCEPTED_PHASE0_DEPLOYMENT_COMMIT,
   APPROVED_LEGACY_PAGES_ALIAS_SHA256,
+  PHASE1_PRE_PUSH_BASELINE_PATH_TEMPLATE,
+  PHASE1_PROVIDER_EVIDENCE_ARCHIVE_PATH_TEMPLATE,
   PHASE1_PROVIDER_EVIDENCE_PATH,
   captureTrustedDirectoryChain,
   validatePhase1ProviderEvidenceRelationships,
@@ -60,7 +62,10 @@ const PHASE0_PREVIEW_SUMMARY_PATH = (
 const PHASE0_PREVIEW_SUMMARY_SHA256 = (
   "59216ece973ec0b3b9b1389bdf0ecc565e0729e429671a72125fbc8d22a88260"
 );
-export const PHASE1_PRE_PUSH_BASELINE_PATH = (
+const LEGACY_GENERIC_BASELINE_COMMIT = (
+  "240016962fb5868c9a20f860b003ec3368ddfd63"
+);
+const LEGACY_GENERIC_BASELINE_PATH = (
   "artifacts/frontend-upgrade/phase-1-preview/pre-push-provider-baseline.redacted.json"
 );
 const MAX_PHASE0_EVIDENCE_BYTES = 256 * 1024;
@@ -149,6 +154,24 @@ const requireSha = (value, label) => {
     throw new Error(`${label} must be a 40-character lowercase Git SHA`);
   }
   return normalized;
+};
+export const phase1PrePushBaselinePathForCommit = (value) => (
+  PHASE1_PRE_PUSH_BASELINE_PATH_TEMPLATE.replace(
+    "{applicationCommit}",
+    requireSha(value, "expected commit"),
+  )
+);
+export const phase1ProviderEvidenceArchivePathForCommit = (value) => (
+  PHASE1_PROVIDER_EVIDENCE_ARCHIVE_PATH_TEMPLATE.replace(
+    "{applicationCommit}",
+    requireSha(value, "prior application commit"),
+  )
+);
+export const phase1PriorPrePushBaselinePathForCommit = (value) => {
+  const commit = requireSha(value, "prior application commit");
+  return commit === LEGACY_GENERIC_BASELINE_COMMIT
+    ? LEGACY_GENERIC_BASELINE_PATH
+    : phase1PrePushBaselinePathForCommit(commit);
 };
 const unwrap = (entry, key) => entry?.[key] ?? entry;
 const normalizedRepo = (value) => clean(value).replace(/\.git$/iu, "");
@@ -1653,8 +1676,8 @@ const assertPreviewIdentitiesLocked = (current, locked) => {
   }
 };
 
-const validatePrePushBaseline = (value, now, phase0) => {
-  assertExactKeys(value, [
+const validatePrePushBaseline = (value, now, phase0, { allowStale = false } = {}) => {
+  const baseKeys = [
     "schemaVersion",
     "kind",
     "capturedAt",
@@ -1667,8 +1690,18 @@ const validatePrePushBaseline = (value, now, phase0) => {
     "previewAutomaticDeploysDisabled",
     "expectedCommitAbsentFromPreviewDeployments",
     "productionControlSha256",
-  ], "pre-push provider baseline");
-  requireEqual(value.schemaVersion, 1, "pre-push baseline schema");
+  ];
+  const schemaVersion = value?.schemaVersion;
+  assertExactKeys(
+    value,
+    schemaVersion === 2
+      ? [...baseKeys, "priorApplicationCommit", "priorProviderEvidenceSha256"]
+      : baseKeys,
+    "pre-push provider baseline",
+  );
+  if (schemaVersion !== 1 && schemaVersion !== 2) {
+    throw new Error("pre-push baseline schema must match the approved Phase 1 value");
+  }
   requireEqual(
     value.kind,
     "frontend-upgrade-phase1-pre-push-provider-baseline",
@@ -1687,7 +1720,7 @@ const validatePrePushBaseline = (value, now, phase0) => {
   if (
     !Number.isFinite(capturedMs)
     || capturedMs > now.getTime()
-    || now.getTime() - capturedMs > R2_LIFETIME_MS
+    || (!allowStale && now.getTime() - capturedMs > R2_LIFETIME_MS)
   ) {
     throw new Error("pre-push provider baseline is stale");
   }
@@ -1721,15 +1754,34 @@ const validatePrePushBaseline = (value, now, phase0) => {
     "pre-push expected commit absence proof",
   );
   requireHash(value.productionControlSha256, "pre-push Production control digest");
+  if (schemaVersion === 2) {
+    const priorApplicationCommit = requireSha(
+      value.priorApplicationCommit,
+      "prior application commit",
+    );
+    if (priorApplicationCommit === expectedApplicationCommit) {
+      throw new Error("prior application commit must differ from the new candidate");
+    }
+    requireHash(
+      value.priorProviderEvidenceSha256,
+      "prior provider evidence digest",
+    );
+  }
   return value;
 };
 
-const loadPrePushBaseline = async ({ root, now, phase0 }) => {
+const loadPrePushBaselineAtPath = async ({
+  root,
+  now,
+  phase0,
+  relativePath,
+  allowStale = false,
+}) => {
   let loaded;
   try {
     loaded = await securelyReadJson({
       root,
-      relativePath: PHASE1_PRE_PUSH_BASELINE_PATH,
+      relativePath,
       label: "pre-push provider baseline",
       maximumBytes: MAX_BASELINE_BYTES,
       expectedMode: 0o600,
@@ -1738,8 +1790,120 @@ const loadPrePushBaseline = async ({ root, now, phase0 }) => {
     throw new Error(`pre-push provider baseline is missing or unsafe: ${error.message}`);
   }
   return {
-    value: validatePrePushBaseline(loaded.value, now, phase0),
+    value: validatePrePushBaseline(loaded.value, now, phase0, { allowStale }),
     sha256: loaded.sha256,
+  };
+};
+
+const loadPrePushBaseline = async ({ root, now, phase0, expectedApplicationCommit }) => (
+  loadPrePushBaselineAtPath({
+    root,
+    now,
+    phase0,
+    relativePath: phase1PrePushBaselinePathForCommit(expectedApplicationCommit),
+  })
+);
+
+const ensurePriorProviderEvidenceArchive = async ({ root, record }) => {
+  const relativePath = phase1ProviderEvidenceArchivePathForCommit(
+    record.value.applicationCommit,
+  );
+  const absolutePath = path.join(root, relativePath);
+  let exists = false;
+  try {
+    await lstat(absolutePath);
+    exists = true;
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  if (!exists) {
+    await writeEvidenceAtomically({
+      root,
+      serialized: record.bytes,
+      relativePath,
+      label: "superseded provider evidence archive",
+      mustNotExist: true,
+    });
+  }
+  const archived = await securelyReadJson({
+    root,
+    relativePath,
+    label: "superseded provider evidence archive",
+    maximumBytes: MAX_BASELINE_BYTES,
+    expectedMode: 0o600,
+  });
+  if (archived.sha256 !== record.sha256 || !archived.bytes.equals(record.bytes)) {
+    throw new Error("superseded provider evidence archive does not match the prior record");
+  }
+  return relativePath;
+};
+
+const loadPriorProviderEvidenceProof = async ({
+  root,
+  now,
+  phase0,
+  expectedApplicationCommit,
+  priorProviderEvidenceSha256,
+  recordRelativePath = PHASE1_PROVIDER_EVIDENCE_PATH,
+  archiveRecord = true,
+}) => {
+  const expectedDigest = requireHash(
+    priorProviderEvidenceSha256,
+    "prior provider evidence digest",
+  );
+  const record = await securelyReadJson({
+    root,
+    relativePath: recordRelativePath,
+    label: "prior provider evidence",
+    maximumBytes: MAX_BASELINE_BYTES,
+    expectedMode: 0o600,
+  });
+  if (record.sha256 !== expectedDigest) {
+    throw new Error("prior provider evidence digest mismatch");
+  }
+  assertEvidenceSchemaFields(record.value);
+  const relationshipFailures = validatePhase1ProviderEvidenceRelationships(
+    record.value,
+    now.getTime(),
+    { allowExpired: true },
+  );
+  if (relationshipFailures.length > 0) {
+    throw new Error("prior provider evidence relationship validation failed");
+  }
+  const priorApplicationCommit = requireSha(
+    record.value.applicationCommit,
+    "prior application commit",
+  );
+  if (priorApplicationCommit === expectedApplicationCommit) {
+    throw new Error("prior application commit must differ from the new candidate");
+  }
+  const priorBaseline = await loadPrePushBaselineAtPath({
+    root,
+    now,
+    phase0,
+    relativePath: phase1PriorPrePushBaselinePathForCommit(priorApplicationCommit),
+    allowStale: true,
+  });
+  if (
+    priorBaseline.sha256 !== record.value.prePushBaselineSha256
+    || priorBaseline.value.expectedApplicationCommit !== priorApplicationCommit
+  ) {
+    throw new Error("prior provider evidence does not match its immutable baseline");
+  }
+  if (
+    record.value.productionControlBefore !== priorBaseline.value.productionControlSha256
+    || record.value.productionControlAfter !== priorBaseline.value.productionControlSha256
+  ) {
+    throw new Error("prior provider evidence production control is inconsistent");
+  }
+  const archivePath = archiveRecord
+    ? await ensurePriorProviderEvidenceArchive({ root, record })
+    : recordRelativePath;
+  return {
+    applicationCommit: priorApplicationCommit,
+    archivePath,
+    productionControlSha256: record.value.productionControlAfter,
+    providerEvidenceSha256: record.sha256,
   };
 };
 
@@ -1784,8 +1948,9 @@ export async function captureFrontendUpgradePhase1PrePushBaseline(options = {}) 
     approvedGroupIds[0],
     "Preview environment group ID",
   );
+  const baselinePath = phase1PrePushBaselinePathForCommit(expectedApplicationCommit);
   try {
-    await lstat(path.join(root, PHASE1_PRE_PUSH_BASELINE_PATH));
+    await lstat(path.join(root, baselinePath));
     throw new Error("pre-push provider baseline already exists and is immutable");
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
@@ -1795,6 +1960,19 @@ export async function captureFrontendUpgradePhase1PrePushBaseline(options = {}) 
   const fetchImpl = testOnly?.fetchImpl ?? globalThis.fetch;
   if (typeof fetchImpl !== "function") throw new Error("HTTPS fetch is unavailable");
   const phase0 = await loadLockedPhase0ProviderIdentities({ root, testOnly });
+  const priorDigest = clean(options.priorProviderEvidenceSha256);
+  if (!testOnly && !priorDigest) {
+    throw new Error("prior provider evidence digest is required for a superseding candidate");
+  }
+  const priorProof = priorDigest
+    ? await loadPriorProviderEvidenceProof({
+      root,
+      now,
+      phase0,
+      expectedApplicationCommit,
+      priorProviderEvidenceSha256: priorDigest,
+    })
+    : null;
   const cloudflareSensitiveValues = [cloudflareToken, cloudflareAccountId];
   const renderSensitiveValues = [renderToken];
   const readers = createProviderReaders({
@@ -1943,8 +2121,15 @@ export async function captureFrontendUpgradePhase1PrePushBaseline(options = {}) 
     cloudflareAccountId,
     productionJurisdiction,
   });
+  const productionControlSha256 = canonicalHash(productionControl);
+  if (
+    priorProof
+    && productionControlSha256 !== priorProof.productionControlSha256
+  ) {
+    throw new Error("production provider controls changed between candidate attempts");
+  }
   const baseline = {
-    schemaVersion: 1,
+    schemaVersion: priorProof ? 2 : 1,
     kind: "frontend-upgrade-phase1-pre-push-provider-baseline",
     capturedAt: now.toISOString(),
     environment: "preview",
@@ -1955,7 +2140,11 @@ export async function captureFrontendUpgradePhase1PrePushBaseline(options = {}) 
     previewResourceFingerprints: currentIdentities,
     previewAutomaticDeploysDisabled: { pages: true, api: true, llm: true },
     expectedCommitAbsentFromPreviewDeployments: true,
-    productionControlSha256: canonicalHash(productionControl),
+    productionControlSha256,
+    ...(priorProof ? {
+      priorApplicationCommit: priorProof.applicationCommit,
+      priorProviderEvidenceSha256: priorProof.providerEvidenceSha256,
+    } : {}),
   };
   validatePrePushBaseline(baseline, now, phase0);
   const serialized = `${JSON.stringify(baseline, null, 2)}\n`;
@@ -1975,7 +2164,7 @@ export async function captureFrontendUpgradePhase1PrePushBaseline(options = {}) 
     root,
     serialized,
     beforeRename: testOnly?.beforeBaselineRename,
-    relativePath: PHASE1_PRE_PUSH_BASELINE_PATH,
+    relativePath: baselinePath,
     label: "pre-push provider baseline",
     mustNotExist: true,
   });
@@ -2039,8 +2228,9 @@ export async function buildFrontendUpgradePhase1ProviderEvidence(options = {}) {
   const fetchImpl = testOnly?.fetchImpl ?? globalThis.fetch;
   if (typeof fetchImpl !== "function") throw new Error("HTTPS fetch is unavailable");
   if (testOnly?.autoCaptureBaseline === true) {
+    const baselinePath = phase1PrePushBaselinePathForCommit(expectedCommit);
     try {
-      await lstat(path.join(root, PHASE1_PRE_PUSH_BASELINE_PATH));
+      await lstat(path.join(root, baselinePath));
     } catch (error) {
       if (error.code !== "ENOENT") throw error;
       const captured = await captureFrontendUpgradePhase1PrePushBaseline(options);
@@ -2048,7 +2238,12 @@ export async function buildFrontendUpgradePhase1ProviderEvidence(options = {}) {
     }
   }
   const phase0 = await loadLockedPhase0ProviderIdentities({ root, testOnly });
-  const prePushBaseline = await loadPrePushBaseline({ root, now, phase0 });
+  const prePushBaseline = await loadPrePushBaseline({
+    root,
+    now,
+    phase0,
+    expectedApplicationCommit: expectedCommit,
+  });
   if (
     testOnly?.autoCaptureBaseline === true
     && !clean(options.prePushBaselineSha256)
@@ -2068,6 +2263,29 @@ export async function buildFrontendUpgradePhase1ProviderEvidence(options = {}) {
     expectedCommit,
     "pre-push expected application commit",
   );
+  if (prePushBaseline.value.schemaVersion === 2) {
+    const priorProof = await loadPriorProviderEvidenceProof({
+      root,
+      now,
+      phase0,
+      expectedApplicationCommit: expectedCommit,
+      priorProviderEvidenceSha256: prePushBaseline.value.priorProviderEvidenceSha256,
+      recordRelativePath: phase1ProviderEvidenceArchivePathForCommit(
+        prePushBaseline.value.priorApplicationCommit,
+      ),
+      archiveRecord: false,
+    });
+    requireEqual(
+      priorProof.applicationCommit,
+      prePushBaseline.value.priorApplicationCommit,
+      "prior application commit",
+    );
+    requireEqual(
+      priorProof.productionControlSha256,
+      prePushBaseline.value.productionControlSha256,
+      "cross-attempt production control digest",
+    );
+  }
 
   const cloudflareSensitiveValues = [cloudflareToken, cloudflareAccountId];
   const renderSensitiveValues = [renderToken];
@@ -2090,7 +2308,7 @@ export async function buildFrontendUpgradePhase1ProviderEvidence(options = {}) {
     const selected = [];
     for (let page = 1; page <= 100; page += 1) {
       const payload = await cfRequest(
-        `/pages/projects/${PREVIEW_PAGES}/deployments?page=${page}&per_page=100`,
+        `/pages/projects/${PREVIEW_PAGES}/deployments?page=${page}&per_page=25`,
       );
       if (!Array.isArray(payload?.result)) {
         throw new Error("Cloudflare Pages deployments response is invalid");
@@ -2677,6 +2895,7 @@ const parseArgs = (argv) => {
   const supported = new Map([
     ["--expected-commit", "expectedCommit"],
     ["--pre-push-baseline-sha256", "prePushBaselineSha256"],
+    ["--prior-provider-evidence-sha256", "priorProviderEvidenceSha256"],
     ["--operator", "operator"],
     ["--budget-owner", "budgetOwner"],
     ["--data-reset-owner", "dataResetOwner"],

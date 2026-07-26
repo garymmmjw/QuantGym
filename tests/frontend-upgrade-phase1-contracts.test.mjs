@@ -17,6 +17,8 @@ import {
   APPROVED_PHASE1_SCHEMA_CONTRACT,
   PHASE0_ACCEPTED_REVIEW_PATH,
   PHASE0_EVIDENCE_LOCK_PATH,
+  PHASE1_PRE_PUSH_BASELINE_PATH_TEMPLATE,
+  PHASE1_PROVIDER_EVIDENCE_ARCHIVE_PATH_TEMPLATE,
   buildPhase0EvidenceLock,
   validatePhase0EvidenceLock,
   validatePhase1ContractSet,
@@ -121,6 +123,19 @@ test("locks the two accepted Phase 0 commits and exact Preview identities", () =
   assert.equal(previewContract.commits.legacyCommit, ACCEPTED_PHASE0_DEPLOYMENT_COMMIT);
   assert.equal(previewContract.commits.applicationCommitSource, "provider-evidence.applicationCommit");
   assert.equal(previewContract.commits.applicationCommitMustDifferFromLegacy, true);
+  assert.equal(
+    previewContract.evidence.prePushBaselineStrategy,
+    "immutable-per-application-commit",
+  );
+  assert.equal(
+    previewContract.evidence.prePushBaselinePathTemplate,
+    PHASE1_PRE_PUSH_BASELINE_PATH_TEMPLATE,
+  );
+  assert.equal(
+    previewContract.evidence.supersededProviderEvidencePathTemplate,
+    PHASE1_PROVIDER_EVIDENCE_ARCHIVE_PATH_TEMPLATE,
+  );
+  assert.equal(previewContract.evidence.productionControlContinuityRequired, true);
   assert.ok(providerSchema.required.includes("postgresMajor"));
   assert.equal(providerSchema.properties.postgresMajor.const, 18);
   assert.ok(providerSchema.required.includes("applicationCommit"));
@@ -306,6 +321,24 @@ test("accepts a current, isolated provider-evidence relationship set", () => {
   assert.deepEqual(validatePhase1ProviderEvidenceRelationships(sample, nowMs), []);
   sample.resourceFingerprints.productionEnvironmentGroups = [];
   assert.deepEqual(validatePhase1ProviderEvidenceRelationships(sample, nowMs), []);
+});
+
+test("historical provider evidence may be expired without relaxing its original lifetime", () => {
+  const sample = providerEvidenceSample();
+  const afterExpiry = Date.parse("2026-07-26T00:00:00.000Z");
+  assert.ok(
+    validatePhase1ProviderEvidenceRelationships(sample, afterExpiry)
+      .includes("provider evidence has expired"),
+  );
+  assert.deepEqual(
+    validatePhase1ProviderEvidenceRelationships(sample, afterExpiry, { allowExpired: true }),
+    [],
+  );
+  sample.expiresAt = "2026-07-25T00:00:00.001Z";
+  assert.ok(
+    validatePhase1ProviderEvidenceRelationships(sample, afterExpiry, { allowExpired: true })
+      .some((failure) => failure.includes("lifetime must be greater than zero and at most seven days")),
+  );
 });
 
 for (const [label, mutate, expected] of [

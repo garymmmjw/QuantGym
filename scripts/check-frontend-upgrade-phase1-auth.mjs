@@ -15,7 +15,7 @@ const MAX_RESPONSE_BYTES = 64 * 1024;
 const SHA_PATTERN = /^[0-9a-f]{40}$/u;
 const HASH_PATTERN = /^[0-9a-f]{64}$/u;
 const PRE_AUTH_CSRF_DOMAIN = Buffer.from("quantgym:v2:csrf:pre-auth:v1", "ascii");
-const GOOGLE_OAUTH_ERROR_KEYS = Object.freeze([
+const API_ERROR_KEYS = Object.freeze([
   "code",
   "fieldErrors",
   "message",
@@ -99,7 +99,7 @@ const exactObjectKeys = (value, expected) => (
 );
 const validAuditCredentials = (credentials) => (
   credentials
-  && /^phase1-audit-[a-z0-9._-]+@example\.invalid$/u.test(credentials.email ?? "")
+  && /^phase1-audit-[a-z0-9._-]+@example\.com$/u.test(credentials.email ?? "")
   && typeof credentials.password === "string"
   && credentials.password.length >= 12
   && credentials.password.length <= 128
@@ -459,6 +459,23 @@ const requireStatus = (result, expected) => {
   }
 };
 
+const requireApiErrorCode = async (result, expectedCode) => {
+  const body = await responseJson(result.response, result.label);
+  if (
+    !exactObjectKeys(body, API_ERROR_KEYS)
+    || body.code !== expectedCode
+    || typeof body.message !== "string"
+    || body.message.length === 0
+    || !isObject(body.fieldErrors)
+    || !/^req_[0-9a-f]{32}$/u.test(body.requestId)
+    || body.retryable !== false
+    || result.response.headers.get("x-request-id") !== body.requestId
+    || result.response.headers.get("cache-control") !== "no-store"
+  ) {
+    throw new Error(`${result.label} error envelope is invalid`);
+  }
+};
+
 export const phase1AuthBrowserLaunchOptions = (environment = process.env) => {
   if (environment?.PLAYWRIGHT_USE_SYSTEM_CHROME !== "1") {
     throw new Error(
@@ -467,6 +484,14 @@ export const phase1AuthBrowserLaunchOptions = (environment = process.env) => {
   }
   return { headless: true, channel: "chrome" };
 };
+
+export const browserStorageEvidenceContainsAuthenticationMaterial = (evidence) => (
+  /(?:bearer|access.?token|session|csrf|oauth|email|"user")/iu.test(JSON.stringify([
+    Object.entries(evidence.local),
+    Object.entries(evidence.session),
+    evidence.indexedRecords,
+  ]))
+);
 
 const defaultBrowserStorageProbe = async ({ baseOrigin, cookies, environment }) => {
   const { chromium } = await import("playwright");
@@ -518,8 +543,7 @@ const defaultBrowserStorageProbe = async ({ baseOrigin, cookies, environment }) 
       }
       return { local, session, indexedRecords };
     });
-    const serialized = JSON.stringify(evidence);
-    if (/(?:bearer|access.?token|session|csrf|oauth|email|"user")/iu.test(serialized)) {
+    if (browserStorageEvidenceContainsAuthenticationMaterial(evidence)) {
       failures.push("sensitive-browser-storage");
     }
     return {
@@ -598,7 +622,7 @@ export async function runPhase1AuthLiveProbe(options = {}) {
     throw new Error("audit credentials are invalid");
   }
   const registrationBody = {
-    email: suppliedCredentials?.email ?? `phase1-audit-${auditNonce}@example.invalid`,
+    email: suppliedCredentials?.email ?? `phase1-audit-${auditNonce}@example.com`,
     password: suppliedCredentials?.password ?? `Qg!${auditNonce}aZ9`,
     displayName: "Phase 1 audit",
   };
@@ -614,6 +638,7 @@ export async function runPhase1AuthLiveProbe(options = {}) {
     pathname: "/api/v2/auth/register",
   });
   requireStatus(wrongOrigin, 403);
+  await requireApiErrorCode(wrongOrigin, "CSRF_ORIGIN_INVALID");
 
   const registered = await authRequest({
     baseOrigin,
@@ -686,6 +711,7 @@ export async function runPhase1AuthLiveProbe(options = {}) {
     pathname: "/api/v2/auth/logout",
   });
   requireStatus(missingCsrfLogout, 403);
+  await requireApiErrorCode(missingCsrfLogout, "CSRF_PROOF_MISSING");
   const wrongOriginLogout = await authRequest({
     baseOrigin,
     csrfProof: sessionCsrfCookie.value,
@@ -697,6 +723,7 @@ export async function runPhase1AuthLiveProbe(options = {}) {
     pathname: "/api/v2/auth/logout",
   });
   requireStatus(wrongOriginLogout, 403);
+  await requireApiErrorCode(wrongOriginLogout, "CSRF_ORIGIN_INVALID");
 
   const loggedOut = await authRequest({
     baseOrigin,
@@ -787,7 +814,7 @@ export async function runPhase1AuthLiveProbe(options = {}) {
     oauthCancelled.label,
   );
   if (
-    !exactObjectKeys(oauthCancelledBody, GOOGLE_OAUTH_ERROR_KEYS)
+    !exactObjectKeys(oauthCancelledBody, API_ERROR_KEYS)
     || oauthCancelledBody.code !== "GOOGLE_OAUTH_FAILED"
     || oauthCancelledBody.retryable !== false
     || !isObject(oauthCancelledBody.fieldErrors)
@@ -812,7 +839,7 @@ export async function runPhase1AuthLiveProbe(options = {}) {
   requireStatus(oauthReplay, 400);
   const oauthReplayBody = await responseJson(oauthReplay.response, oauthReplay.label);
   if (
-    !exactObjectKeys(oauthReplayBody, GOOGLE_OAUTH_ERROR_KEYS)
+    !exactObjectKeys(oauthReplayBody, API_ERROR_KEYS)
     || oauthReplayBody.code !== "GOOGLE_OAUTH_FAILED"
     || oauthReplayBody.retryable !== false
     || !isObject(oauthReplayBody.fieldErrors)

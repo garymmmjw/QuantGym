@@ -232,9 +232,13 @@ const validateMethodAndBody = (request: Request): Response | null => {
     return edgeFailure(400, "EDGE_CONTENT_LENGTH_INVALID");
   }
   const length = Number(rawLength);
-  if (!Number.isSafeInteger(length) || length <= 0) {
+  if (!Number.isSafeInteger(length)) {
     return edgeFailure(400, "EDGE_CONTENT_LENGTH_INVALID");
   }
+  // Cloudflare can expose an empty POST as a non-null stream with an exact
+  // Content-Length of zero.  Treat that representation as bodyless so routes
+  // such as logout can reach the API without inventing a JSON payload.
+  if (length === 0) return null;
   if (length > MAX_REQUEST_BODY_BYTES) return edgeFailure(413, "EDGE_BODY_TOO_LARGE");
   return null;
 };
@@ -384,7 +388,7 @@ const proxyV2RequestWithoutCallbackPolicy = async (
     headers,
     redirect: "manual",
   };
-  if (request.body !== null) {
+  if (request.body !== null && request.headers.get("content-length") !== "0") {
     init.body = request.body;
     init.duplex = "half";
   }

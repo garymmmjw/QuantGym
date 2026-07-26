@@ -694,7 +694,7 @@ test("live gate checks fixed endpoints, cleans data, preserves Phase 0, and writ
   );
 
   const credentials = harness.capturedCredentials;
-  assert.match(credentials.email, /^phase1-audit-[0-9a-f]{32}@example[.]invalid$/u);
+  assert.match(credentials.email, /^phase1-audit-[0-9a-f]{32}@example[.]com$/u);
   const renderedOutputs = (
     await Promise.all(outputNames.map((name) => readFile(path.join(outputDirectory, name), "utf8")))
   ).join("\n");

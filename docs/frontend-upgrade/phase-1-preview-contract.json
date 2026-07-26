@@ -47,6 +47,10 @@
     "namespace": "380-frontend-upgrade-phase-1-",
     "providerEvidencePath": "artifacts/frontend-upgrade/phase-1-preview/provider-evidence.redacted.json",
     "providerEvidenceMode": "0600",
+    "prePushBaselineStrategy": "immutable-per-application-commit",
+    "prePushBaselinePathTemplate": "artifacts/frontend-upgrade/phase-1-preview/pre-push-provider-baseline.{applicationCommit}.redacted.json",
+    "supersededProviderEvidencePathTemplate": "artifacts/frontend-upgrade/phase-1-preview/provider-evidence.{applicationCommit}.redacted.json",
+    "productionControlContinuityRequired": true,
     "aggregateStatusCeiling": "ready-for-review"
   }
 }

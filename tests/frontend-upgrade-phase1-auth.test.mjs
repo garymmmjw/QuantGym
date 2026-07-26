@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import {
   PHASE1_AUTH_REQUIRED_SOURCES,
   PHASE1_AUTH_CLEANUP_CHANNEL,
+  browserStorageEvidenceContainsAuthenticationMaterial,
   buildPhase1AuthLiveSummary,
   collectPhase1AuthOfflineEvidence,
   phase1AuthBrowserLaunchOptions,
@@ -80,6 +81,29 @@ test("auth browser launch only accepts the explicit system Chrome switch", () =>
   }
 });
 
+test("browser storage scanning ignores empty container labels and scans real entries", () => {
+  assert.equal(browserStorageEvidenceContainsAuthenticationMaterial({
+    local: {},
+    session: {},
+    indexedRecords: [],
+  }), false);
+  assert.equal(browserStorageEvidenceContainsAuthenticationMaterial({
+    local: { theme: "dark" },
+    session: { locale: "zh-CN" },
+    indexedRecords: [],
+  }), false);
+  assert.equal(browserStorageEvidenceContainsAuthenticationMaterial({
+    local: { accessToken: "forbidden" },
+    session: {},
+    indexedRecords: [],
+  }), true);
+  assert.equal(browserStorageEvidenceContainsAuthenticationMaterial({
+    local: {},
+    session: {},
+    indexedRecords: [{ database: "app", storeName: "cache", records: [{ email: "x" }] }],
+  }), true);
+});
+
 const jsonResponse = (status, value, setCookies = [], extraHeaders = {}) => {
   const headers = new Headers({
     "content-type": "application/json; charset=utf-8",
@@ -88,6 +112,17 @@ const jsonResponse = (status, value, setCookies = [], extraHeaders = {}) => {
   for (const cookie of setCookies) headers.append("set-cookie", cookie);
   return new Response(JSON.stringify(value), { status, headers });
 };
+
+const apiErrorResponse = (code, requestId) => jsonResponse(403, {
+  code,
+  message: "request rejected",
+  fieldErrors: {},
+  requestId,
+  retryable: false,
+}, [], {
+  "cache-control": "no-store",
+  "x-request-id": requestId,
+});
 
 test("live auth probe verifies CSRF, rotation, origin, logout, OAuth replay, and storage", async () => {
   const preAuth = "p".repeat(43);
@@ -120,7 +155,7 @@ test("live auth probe verifies CSRF, rotation, origin, logout, OAuth replay, and
       ]);
     }
     if (url.pathname === "/api/v2/auth/register" && headers.get("origin") !== url.origin) {
-      return jsonResponse(403, { error: { code: "CSRF_ORIGIN_INVALID" } });
+      return apiErrorResponse("CSRF_ORIGIN_INVALID", `req_${"1".repeat(32)}`);
     }
     if (url.pathname === "/api/v2/auth/register") {
       assert.equal(headers.get("x-csrf-token"), preAuth);
@@ -140,11 +175,14 @@ test("live auth probe verifies CSRF, rotation, origin, logout, OAuth replay, and
       return jsonResponse(401, { error: { code: "AUTH_SESSION_REQUIRED" } });
     }
     if (url.pathname === "/api/v2/auth/logout") {
-      if (
-        headers.get("origin") !== url.origin
-        || headers.get("x-csrf-token") !== sessionCsrf
-      ) {
-        return jsonResponse(403, { error: { code: "CSRF_PROOF_INVALID" } });
+      if (headers.get("origin") !== url.origin) {
+        return apiErrorResponse("CSRF_ORIGIN_INVALID", `req_${"2".repeat(32)}`);
+      }
+      if (headers.get("x-csrf-token") === null) {
+        return apiErrorResponse("CSRF_PROOF_MISSING", `req_${"3".repeat(32)}`);
+      }
+      if (headers.get("x-csrf-token") !== sessionCsrf) {
+        return apiErrorResponse("CSRF_PROOF_INVALID", `req_${"4".repeat(32)}`);
       }
       loggedOut = true;
       return jsonResponse(200, { status: "ok" }, [

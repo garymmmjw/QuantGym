@@ -19,10 +19,12 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
-  PHASE1_PRE_PUSH_BASELINE_PATH,
   TEST_ONLY_PHASE1_PROVIDER_EVIDENCE,
   buildFrontendUpgradePhase1ProviderEvidence,
   captureFrontendUpgradePhase1PrePushBaseline,
+  phase1PrePushBaselinePathForCommit,
+  phase1PriorPrePushBaselinePathForCommit,
+  phase1ProviderEvidenceArchivePathForCommit,
 } from "../scripts/build-frontend-upgrade-phase1-provider-evidence.mjs";
 import {
   ACCEPTED_PHASE0_DEPLOYMENT_COMMIT,
@@ -662,7 +664,7 @@ const fixtureFetch = (fixture, requests = []) => {
       if (
         cfPath === "/pages/projects/quantgym-v2-preview/deployments"
         && url.searchParams.get("page") === "1"
-        && url.searchParams.get("per_page") === "100"
+        && url.searchParams.get("per_page") === "25"
       ) return response(fixture.cloudflare.deployments);
       if (cfPath === "/r2/buckets/quantgym-v2-preview-media") {
         return response(fixture.cloudflare.previewR2);
@@ -871,6 +873,39 @@ const withRoot = async (run) => {
     await rm(root, { recursive: true, force: true });
   }
 };
+
+test("baseline paths are derived only from exact lowercase commit SHAs", () => {
+  assert.equal(
+    phase1PrePushBaselinePathForCommit(COMMIT),
+    `artifacts/frontend-upgrade/phase-1-preview/pre-push-provider-baseline.${COMMIT}.redacted.json`,
+  );
+  assert.equal(
+    phase1ProviderEvidenceArchivePathForCommit(COMMIT),
+    `artifacts/frontend-upgrade/phase-1-preview/provider-evidence.${COMMIT}.redacted.json`,
+  );
+  assert.equal(
+    phase1PriorPrePushBaselinePathForCommit(
+      "240016962fb5868c9a20f860b003ec3368ddfd63",
+    ),
+    "artifacts/frontend-upgrade/phase-1-preview/pre-push-provider-baseline.redacted.json",
+  );
+  assert.equal(
+    phase1PriorPrePushBaselinePathForCommit(COMMIT),
+    phase1PrePushBaselinePathForCommit(COMMIT),
+  );
+  for (const candidate of ["../escape", "A".repeat(40), "1".repeat(39)]) {
+    for (const derive of [
+      phase1PrePushBaselinePathForCommit,
+      phase1PriorPrePushBaselinePathForCommit,
+      phase1ProviderEvidenceArchivePathForCommit,
+    ]) {
+      assert.throws(
+        () => derive(candidate),
+        /40-character lowercase Git SHA/u,
+      );
+    }
+  }
+});
 
 test("builds a current schema-only provider record from authenticated allowlisted fields", async () => {
   await withRoot(async (root) => {
@@ -1084,7 +1119,7 @@ test("captures an independent 0600 pre-push baseline before the future commit is
     const baseline = await captureFrontendUpgradePhase1PrePushBaseline(options);
     assert.equal(
       baseline.output,
-      path.join(root, PHASE1_PRE_PUSH_BASELINE_PATH),
+      path.join(root, phase1PrePushBaselinePathForCommit(COMMIT)),
     );
     assert.equal((await lstat(baseline.output)).mode & 0o777, 0o600);
     assert.equal(
@@ -1358,6 +1393,104 @@ test("the pre-push baseline is create-once and final evidence requires its origi
     await assert.rejects(
       buildFrontendUpgradePhase1ProviderEvidence(options),
       /expected pre-push baseline digest/u,
+    );
+  });
+});
+
+test("different candidate commits keep independent immutable baselines", async () => {
+  await withRoot(async (root) => {
+    const fixture = providerFixture();
+    const firstOptions = buildOptions(root, fixture);
+    firstOptions[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].autoCaptureBaseline = false;
+    const first = await captureFrontendUpgradePhase1PrePushBaseline(firstOptions);
+    const firstBefore = await lstat(first.output);
+    const firstBytes = await readFile(first.output);
+
+    const secondCommit = "2".repeat(40);
+    const secondOptions = buildOptions(root, fixture);
+    secondOptions.expectedCommit = secondCommit;
+    secondOptions[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].autoCaptureBaseline = false;
+    const second = await captureFrontendUpgradePhase1PrePushBaseline(secondOptions);
+
+    assert.equal(
+      second.output,
+      path.join(root, phase1PrePushBaselinePathForCommit(secondCommit)),
+    );
+    assert.notEqual(second.output, first.output);
+    assert.equal(second.baseline.expectedApplicationCommit, secondCommit);
+    const firstAfter = await lstat(first.output);
+    assert.equal(firstAfter.ino, firstBefore.ino);
+    assert.deepEqual(await readFile(first.output), firstBytes);
+    await assert.rejects(
+      captureFrontendUpgradePhase1PrePushBaseline(secondOptions),
+      /already exists and is immutable/u,
+    );
+  });
+});
+
+test("a superseding baseline archives prior evidence and preserves production continuity", async () => {
+  await withRoot(async (root) => {
+    const firstFixture = providerFixture();
+    const firstOptions = buildOptions(root, firstFixture);
+    const first = await buildFrontendUpgradePhase1ProviderEvidence(firstOptions);
+    const firstBytes = await readFile(first.output);
+
+    const secondCommit = "2".repeat(40);
+    const captureFixture = providerFixture();
+    const secondOptions = buildOptions(root, captureFixture);
+    secondOptions.expectedCommit = secondCommit;
+    secondOptions.priorProviderEvidenceSha256 = first.sha256;
+    secondOptions[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].autoCaptureBaseline = false;
+    const secondBaseline = await captureFrontendUpgradePhase1PrePushBaseline(secondOptions);
+
+    assert.equal(secondBaseline.baseline.schemaVersion, 2);
+    assert.equal(secondBaseline.baseline.priorApplicationCommit, COMMIT);
+    assert.equal(secondBaseline.baseline.priorProviderEvidenceSha256, first.sha256);
+    const archivePath = path.join(
+      root,
+      phase1ProviderEvidenceArchivePathForCommit(COMMIT),
+    );
+    assert.equal((await lstat(archivePath)).mode & 0o777, 0o600);
+    assert.deepEqual(await readFile(archivePath), firstBytes);
+
+    const finalFixture = JSON.parse(
+      JSON.stringify(providerFixture()).replaceAll(COMMIT, secondCommit),
+    );
+    finalFixture.cloudflare.previewPagesBeforeCommit = secondCommit;
+    delete finalFixture.render.deploysBefore;
+    const finalOptions = buildOptions(root, finalFixture);
+    finalOptions.expectedCommit = secondCommit;
+    finalOptions.prePushBaselineSha256 = secondBaseline.sha256;
+    finalOptions[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].autoCaptureBaseline = false;
+    const final = await buildFrontendUpgradePhase1ProviderEvidence(finalOptions);
+
+    assert.equal(final.evidence.applicationCommit, secondCommit);
+    assert.equal(final.evidence.prePushBaselineSha256, secondBaseline.sha256);
+    assert.deepEqual(await readFile(archivePath), firstBytes);
+  });
+});
+
+test("a superseding baseline rejects production drift between candidate attempts", async () => {
+  await withRoot(async (root) => {
+    const first = await buildFrontendUpgradePhase1ProviderEvidence(
+      buildOptions(root, providerFixture()),
+    );
+    const secondCommit = "2".repeat(40);
+    const driftedFixture = providerFixture();
+    driftedFixture.cloudflare.productionPages.result.latest_deployment
+      .deployment_trigger.metadata.commit_hash = "9".repeat(40);
+    const secondOptions = buildOptions(root, driftedFixture);
+    secondOptions.expectedCommit = secondCommit;
+    secondOptions.priorProviderEvidenceSha256 = first.sha256;
+    secondOptions[TEST_ONLY_PHASE1_PROVIDER_EVIDENCE].autoCaptureBaseline = false;
+
+    await assert.rejects(
+      captureFrontendUpgradePhase1PrePushBaseline(secondOptions),
+      /production provider controls changed between candidate attempts/u,
+    );
+    await assert.rejects(
+      lstat(path.join(root, phase1PrePushBaselinePathForCommit(secondCommit))),
+      { code: "ENOENT" },
     );
   });
 });

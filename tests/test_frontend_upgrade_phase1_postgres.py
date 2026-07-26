@@ -638,7 +638,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
         cursor = FakeCursor(
             row_count=3,
             synthetic_users=[
-                (identifier, "phase1-audit-0123abcd@example.invalid"),
+                (identifier, "phase1-audit-0123abcd@example.com"),
             ],
             anonymous_challenges=audit_challenges(),
         )
@@ -829,7 +829,7 @@ class Phase1PostgresCheckTests(unittest.TestCase):
 
     def test_mid_cleanup_failure_rolls_back_without_commit(self) -> None:
         identifier = uuid.UUID("12345678-1234-4123-8123-123456789abc")
-        users = [(identifier, "phase1-audit-rollback@example.invalid")]
+        users = [(identifier, "phase1-audit-rollback@example.com")]
         challenges = audit_challenges()
         cursor = FakeCursor(
             row_count=3,

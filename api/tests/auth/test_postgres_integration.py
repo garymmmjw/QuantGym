@@ -851,6 +851,14 @@ def test_real_http_routes_complete_cookie_session_journey(postgres_engine: Any) 
         assert me.status_code == 200
         assert me.json()["email"] == "route@example.com"
 
+        missing_csrf = client.post("/api/v2/auth/logout", headers=headers)
+        assert missing_csrf.status_code == 403
+        assert missing_csrf.json()["code"] == "CSRF_PROOF_MISSING"
+        assert client.get(
+            "/api/v2/me",
+            headers={"X-QuantGym-Edge-Token": EDGE_SECRET},
+        ).status_code == 200
+
         logged_out = client.post(
             "/api/v2/auth/logout",
             headers={**headers, "X-CSRF-Token": session_csrf},

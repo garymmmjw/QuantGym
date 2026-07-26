@@ -271,6 +271,23 @@ describe("Phase 1 edge method and streaming body limits", () => {
     expect(await errorCode(response)).toBe("EDGE_LENGTH_REQUIRED");
   });
 
+  it("normalizes Cloudflare's zero-length POST stream as a bodyless request", async () => {
+    const body = new ReadableStream({ start(controller) { controller.close(); } });
+    const input = streamRequest("/api/v2/auth/logout", body, 0);
+    const fetchImpl = vi.fn(async (_target, init) => {
+      expect(init.body).toBeUndefined();
+      expect(init.headers.get("content-length")).toBe("0");
+      return new Response('{"status":"ok"}', {
+        headers: { "content-type": "application/json" },
+      });
+    });
+
+    const response = await callProxy(input, fetchImpl);
+
+    expect(response.status).toBe(200);
+    expect(fetchImpl).toHaveBeenCalledOnce();
+  });
+
   it.each([
     ["nonnumeric", "1, 2", 400, "EDGE_CONTENT_LENGTH_INVALID"],
     ["too large", String(EDGE_PROXY_CONFIG.maxRequestBodyBytes + 1), 413, "EDGE_BODY_TOO_LARGE"],

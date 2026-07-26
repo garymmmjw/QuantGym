@@ -47,7 +47,7 @@ MAX_ANONYMOUS_CHALLENGE_TARGETS = 2
 MAX_CLEANUP_INPUT_BYTES = 4 * 1024
 ANONYMOUS_CHALLENGE_KINDS = frozenset({"pre_auth_csrf", "google_oauth"})
 SYNTHETIC_AUDIT_EMAIL_PATTERN = re.compile(
-    r"^phase1-audit-[a-z0-9._-]+@example[.]invalid$"
+    r"^phase1-audit-[a-z0-9._-]+@example[.]com$"
 )
 MAX_EVIDENCE_BYTES = 256 * 1024
 MAX_EVIDENCE_AGE_SECONDS = 7 * 24 * 60 * 60
