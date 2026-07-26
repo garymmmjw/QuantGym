@@ -1,0 +1,37 @@
+{
+  "check": "frontend-v2-phase1-postgres",
+  "checkedAt": "2026-07-26T15:49:53.518Z",
+  "checks": {
+    "applicationDataCleaned": true,
+    "authenticatedPreviewBinding": true,
+    "ephemeralImagePinnedToPostgres18": true,
+    "exactAlembicHead": true,
+    "legacyTablesAndColumnsAbsent": true,
+    "migrationRoundTripDeterministic": true,
+    "postgresMajor18": true,
+    "providerEvidenceCurrent": true,
+    "resourceDistinctFromProduction": true,
+    "schemaMatchesFrozenContract": true,
+    "sslForCurrentBackend": true,
+    "syntheticCleanupExplicitlyAuthorized": true
+  },
+  "commit": "5a3b6f33b7f2a4d15f0a81ca57f81570ca89c6a3",
+  "counts": {
+    "applicationRows": 0,
+    "applicationTables": 9,
+    "metadataTables": 1,
+    "postgresMajor": 18,
+    "syntheticUsersDeleted": 1
+  },
+  "evidenceSha256": "15e9ad7f9dc6b5d1d8d607b304fa93d9cee2fc0dda83a41cdd1e82ae405f33ea",
+  "failureCodes": [],
+  "hashes": {
+    "migrationRoundTripSha256": "f22cbb0b8183123bd4a93efc51cc0830ddd966267237a28233f605f9c220b7d7",
+    "postgresResourceSha256": "442cd96ed95516466a734390b7734223be7657527d225f3ee2f0c27d3da50290",
+    "postgresRoleSha256": "06bc58503546c4ee812662a67f98006fc79fbf40ed7bb5cb68876dcfecdfbbfa",
+    "runtimeIdentitySha256": "f96e80eeb497625f451e5b55d981327b6ff6813c00957d445e35d4c0c8badf52",
+    "schemaSha256": "f22cbb0b8183123bd4a93efc51cc0830ddd966267237a28233f605f9c220b7d7"
+  },
+  "schemaVersion": 1,
+  "status": "pass"
+}

@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "check": "frontend-upgrade-phase1-preview-live",
+  "status": "pass",
+  "checkedAt": "2026-07-26T15:43:06.670Z",
+  "commit": "5a3b6f33b7f2a4d15f0a81ca57f81570ca89c6a3",
+  "evidenceSha256": "15e9ad7f9dc6b5d1d8d607b304fa93d9cee2fc0dda83a41cdd1e82ae405f33ea",
+  "hashes": {
+    "phase0EvidenceLockSha256": "6465aa9b56c21993ec6a1b6f41d07f655e5650b61f89a133b3d5c07d3d15ff1a",
+    "productionControlSha256": "2a627e631ce079c296305655e74fee4681b8ecd867707b35a23b3d2282c86ddc"
+  },
+  "checks": {
+    "providerEvidenceCurrent": true,
+    "automaticDeploysDisabled": true,
+    "applicationDeploymentsAligned": true,
+    "pagesRuntimeExact": true,
+    "publicConfigMinimal": true,
+    "proxiedApiHealthy": true,
+    "directApiHealthy": true,
+    "privateLlmProviderAttested": true,
+    "postgresBindingVerified": true,
+    "r2BindingVerified": true,
+    "authSecurityVerified": true,
+    "systemSurfacesVerified": true,
+    "legacyCompatibilityLocked": true,
+    "syntheticDataCleaned": true,
+    "productionUnchanged": true,
+    "phase0LockBeforeAndAfter": true
+  },
+  "counts": {
+    "providerDeployments": 4,
+    "liveRuntimeDocuments": 7,
+    "systemSurfaces": 8,
+    "targetGates": 82,
+    "activatedFutureStates": 6,
+    "visualCases": 48,
+    "postgresMajor": 18,
+    "applicationRowsRemaining": 0,
+    "r2ObjectsRemaining": 0,
+    "seriousOrCriticalAxeFindings": 0,
+    "applicationConsoleErrors": 0,
+    "unhandledRejections": 0
+  },
+  "failureCodes": []
+}
