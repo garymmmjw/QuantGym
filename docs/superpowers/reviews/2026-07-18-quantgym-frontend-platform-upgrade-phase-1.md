@@ -54,6 +54,8 @@ Visual-review findings: 0 blocking, 0 non-blocking.
   [run 30208196385](https://github.com/garymmmjw/QuantGym/actions/runs/30208196385) passed.
 - Evidence-successor CI:
   [run 30209315617](https://github.com/garymmmjw/QuantGym/actions/runs/30209315617) passed.
+- Review-commit CI:
+  [run 30209847607](https://github.com/garymmmjw/QuantGym/actions/runs/30209847607) passed.
 - Live visual matrix: 48/48; application console errors: 0; unhandled rejections: 0.
 - Initial JavaScript: 165,042 bytes gzip against a 184,320-byte budget.
 - Largest route chunk: 4,238 bytes gzip against a 102,400-byte budget.
@@ -70,20 +72,29 @@ Visual-review findings: 0 blocking, 0 non-blocking.
   configuration passed.
 - Preview PostgreSQL is major 18 with the exact Alembic head, nine application tables, one
   metadata table, and the frozen schema contract.
-- Runtime and short-lived audit R2 identities are independent and bucket-scoped; signed
-  upload/read/delete and production-denial checks passed.
+- Runtime and short-lived audit R2 identities were independent and bucket-scoped during live
+  acceptance; signed upload/read/delete and production-denial checks passed.
 - The synthetic audit user and anonymous challenges were removed. Final application rows: 0.
   Final R2 objects: 0.
 - The 22 unmigrated business routes remain inside the isolated Preview-only compatibility adapter;
   the adapter is excluded from migrated visual evidence and does not start the legacy bootstrap
   globally.
 - Every locked `370-*` Phase 0 artifact remained byte-identical.
-- Production controls remained unchanged throughout baseline capture, deployment, and live audit;
-  no Production application deployment occurred.
+- No Production application deployment occurred. The temporary Production Pages branch-safety
+  policy was restored after review CI passed; the current canonical production-control digest is
+  `316ac14ca5a7411c180ea88219fa51e44712f99b3a9901b4af07acdee60f1f49`. Reapplying only the three
+  acceptance-isolation policy fields in memory reproduces the frozen isolation digest
+  `2a627e631ce079c296305655e74fee4681b8ecd867707b35a23b3d2282c86ddc`, confirming no other
+  provider-control drift.
+- Closeout revoked the short-lived audit R2 token, the uniquely matched accidental all-buckets
+  read-only R2 token, and the temporary user operator token. The runtime token remains active,
+  scoped only to `quantgym-v2-preview-media`, and bound to the frozen runtime identity.
+- Post-cleanup R2 verification returned `200` for a signed Preview list with zero synthetic
+  objects and `403` for the same runtime identity against the Production bucket. The revoked
+  operator token returned `401` on verification.
 
-The temporary Production Pages branch-safety setting remains in its acceptance-isolation state
-until this review commit passes CI. Closeout must restore the pre-Phase-1 policy and verify its
-expected digest before asking Gary for acceptance.
+Closeout is complete. Temporary local credentials, the database tunnel, helper scripts, and the
+dedicated temporary Python environment were removed after the final provider checks.
 
 ## Decision
 
