@@ -21,6 +21,7 @@ import {
 } from "../scripts/check-frontend-upgrade-phase1-system-surfaces.mjs";
 import {
   APPROVED_PHASE1_ACCEPTANCE_MANIFEST,
+  phase1AuditCredentialsAreValid,
 } from "../scripts/lib/frontend-upgrade-phase1-contracts.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -57,6 +58,44 @@ test("Phase 1 E2E runtime accepts only exact Node 20.20.2", () => {
       () => assertPhase1NodeRuntime(version),
       /requires Node 20\.20\.2/u,
     );
+  }
+});
+
+test("Phase 1 audit credentials accept only synthetic example.com identities", () => {
+  const password = "Qg!0123456789abcdefaZ9";
+  assert.equal(phase1AuditCredentialsAreValid({
+    email: `phase1-audit-${"a".repeat(32)}@example.com`,
+    password,
+  }), true);
+  for (const email of [
+    `phase1-audit-${"a".repeat(32)}@example.invalid`,
+    `phase1-audit-${"a".repeat(32)}@example.org`,
+    "gary@example.com",
+  ]) {
+    assert.equal(phase1AuditCredentialsAreValid({ email, password }), false);
+  }
+});
+
+test("Auth, orchestrator, and system surfaces consume the shared credential contract", async () => {
+  const [authSource, orchestratorSource, surfaceSource] = await Promise.all([
+    readFile(path.join(root, "scripts/check-frontend-upgrade-phase1-auth.mjs"), "utf8"),
+    readFile(path.join(root, "scripts/check-frontend-upgrade-phase1-preview-live.mjs"), "utf8"),
+    readFile(
+      path.join(root, "scripts/check-frontend-upgrade-phase1-system-surfaces.mjs"),
+      "utf8",
+    ),
+  ]);
+  assert.ok(authSource.includes(
+    "&& !phase1AuditCredentialsAreValid(suppliedCredentials)",
+  ));
+  assert.ok(orchestratorSource.includes(
+    "email: `phase1-audit-${random}@example.com`",
+  ));
+  assert.ok(surfaceSource.includes(
+    "if (!phase1AuditCredentialsAreValid(credentials))",
+  ));
+  for (const source of [authSource, orchestratorSource, surfaceSource]) {
+    assert.equal(source.includes("@example.invalid"), false);
   }
 });
 

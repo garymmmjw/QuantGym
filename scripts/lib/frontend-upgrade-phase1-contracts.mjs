@@ -50,6 +50,15 @@ export const APPROVED_LEGACY_PAGES_ALIAS_SHA256 = (
   "ba30f7e6f48ae62b8011fa7036856089061d9c123bea1110ecad267cc408b637"
 );
 
+export const phase1AuditCredentialsAreValid = (credentials) => (
+  credentials
+  && /^phase1-audit-[a-z0-9._-]+@example\.com$/u.test(credentials.email ?? "")
+  && typeof credentials.password === "string"
+  && credentials.password.length >= 12
+  && credentials.password.length <= 128
+  && !/[\s\u0000-\u001f\u007f]/u.test(credentials.password)
+);
+
 const SYSTEM_SURFACES = [
   "system:auth",
   "system:desktop-shell",

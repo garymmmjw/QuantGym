@@ -3,7 +3,10 @@ import { lstat, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { writeFileAtomicallyWithinTrustedRoot } from "./lib/frontend-upgrade-phase1-contracts.mjs";
+import {
+  phase1AuditCredentialsAreValid,
+  writeFileAtomicallyWithinTrustedRoot,
+} from "./lib/frontend-upgrade-phase1-contracts.mjs";
 
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SUMMARY_RELATIVE = (
@@ -97,15 +100,6 @@ const exactObjectKeys = (value, expected) => (
   isObject(value)
   && JSON.stringify(Object.keys(value).sort()) === JSON.stringify([...expected].sort())
 );
-const validAuditCredentials = (credentials) => (
-  credentials
-  && /^phase1-audit-[a-z0-9._-]+@example\.com$/u.test(credentials.email ?? "")
-  && typeof credentials.password === "string"
-  && credentials.password.length >= 12
-  && credentials.password.length <= 128
-  && !/[\s\u0000-\u001f\u007f]/u.test(credentials.password)
-);
-
 const requirePreviewOrigin = (value) => {
   let parsed;
   try {
@@ -618,7 +612,10 @@ export async function runPhase1AuthLiveProbe(options = {}) {
         }
       : null
   );
-  if (suppliedCredentials !== null && !validAuditCredentials(suppliedCredentials)) {
+  if (
+    suppliedCredentials !== null
+    && !phase1AuditCredentialsAreValid(suppliedCredentials)
+  ) {
     throw new Error("audit credentials are invalid");
   }
   const registrationBody = {

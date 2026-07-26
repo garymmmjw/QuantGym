@@ -1006,6 +1006,17 @@ superseding candidate must include the zero-length stream normalization and its 
 This corrective redeploy stays within the already authorized Preview resources and does not permit
 new resources, production changes, destructive database work, or a plan/cost change.
 
+Candidate `f56323a9a030f993b808a9f946b5d8a03e26729c` is superseded and not accepted because the
+provider guard correctly stopped when Cloudflare exposed a newer excluded-branch queue record as
+the Production project's `latest_deployment`; no Production deployment occurred. Candidate
+`0f8db3a89bf37753c662a8f3f9d5a3c4ae38cd15` then proved the fixed Production digest continuity,
+but is also superseded and not accepted after live audit exposed an internal credential-contract
+mismatch: Auth and the orchestrator create `phase1-audit-*` identities under `example.com`, while
+the system-surface browser audit accepted only `example.invalid`. The superseding candidate must
+use one shared credential validator across Auth and system surfaces, lock the `example.com`
+contract with a regression test, and repeat the complete baseline, CI, Preview deployment, and
+live-evidence cycle.
+
 ### Pre-deploy
 
 1. Verify all offline gates and the exact commit.

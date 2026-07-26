@@ -17,6 +17,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
   APPROVED_PHASE1_ACCEPTANCE_MANIFEST,
+  phase1AuditCredentialsAreValid,
   writeFileAtomicallyWithinTrustedRoot,
 } from "./lib/frontend-upgrade-phase1-contracts.mjs";
 
@@ -698,15 +699,6 @@ export async function collectPhase1SystemSurfaceOfflineEvidence(root = defaultRo
   };
 }
 
-const validAuditCredentials = (credentials) => (
-  credentials
-  && /^phase1-audit-[a-z0-9._-]+@example\.invalid$/u.test(credentials.email ?? "")
-  && typeof credentials.password === "string"
-  && credentials.password.length >= 12
-  && credentials.password.length <= 128
-  && !/[\s\u0000-\u001f\u007f]/u.test(credentials.password)
-);
-
 const loginBrowserContext = async ({ context, credentials }) => {
   const csrfResponse = await context.request.get(`${PREVIEW_ORIGIN}/api/v2/auth/csrf`, {
     failOnStatusCode: false,
@@ -786,7 +778,7 @@ const exerciseSurface = async ({ context, page, surfaceId }) => {
 };
 
 const defaultBrowserAudit = async ({ credentials, environment, outputRoot }) => {
-  if (!validAuditCredentials(credentials)) {
+  if (!phase1AuditCredentialsAreValid(credentials)) {
     throw new Error("browser audit credentials are invalid");
   }
   const [{ chromium }, { default: AxeBuilder }] = await Promise.all([
