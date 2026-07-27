@@ -1,8 +1,8 @@
 # QuantGym Frontend Platform Upgrade Phase 1 Review
 
 Date: 2026-07-27
-Accepted: pending explicit confirmation from Gary
-Status: ready-for-review
+Accepted: 2026-07-27 — explicit confirmation from Gary
+Status: accepted
 
 ## Reviewed candidate
 
@@ -15,7 +15,8 @@ Status: ready-for-review
 - Redacted provider evidence SHA-256:
   `15e9ad7f9dc6b5d1d8d607b304fa93d9cee2fc0dda83a41cdd1e82ae405f33ea`
 
-The aggregate is intentionally limited to `ready-for-review`; it cannot mark Phase 1 accepted.
+The automated aggregate remains intentionally limited to `ready-for-review`; Phase 1 acceptance
+was recorded only after Gary's explicit confirmation on 2026-07-27.
 
 ## Independent review outcome
 
@@ -101,5 +102,6 @@ prefix so it cannot replace the frozen Preview deployment.
 
 ## Decision
 
-Phase 1 is ready for Gary's review with no unresolved finding. It is not accepted by this report.
-Phase 2 remains unauthorized until Gary explicitly accepts Phase 1.
+Gary explicitly accepted Phase 1 and authorized Phase 2 on 2026-07-27. Phase 1 has no unresolved
+finding and is now closed as accepted. Phase 2 may proceed with Overview, Plan, and Problems while
+Production remains unchanged and the pull request remains unmerged.
