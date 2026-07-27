@@ -178,6 +178,7 @@ function validateNativeV2CatalogBoundary() {
     "src/core",
     "src/shared",
     "src/domains",
+    "src/pages/plan",
     "src/pages/training",
     "src/pages/v2",
   ];

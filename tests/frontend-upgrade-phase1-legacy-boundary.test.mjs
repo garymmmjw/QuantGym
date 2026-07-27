@@ -112,6 +112,7 @@ const legacyCompatibilityElement = (
   </Suspense>
 );
 const nativeOverviewElement = <OverviewPage />;
+const nativePlanElement = <PlanPage />;
 const businessRouteChildren = COMPATIBILITY_BUSINESS_ROUTES
   .map(({ id, path }) => ({
     path: path.slice(1),
@@ -122,6 +123,7 @@ const businessRouteChildren = COMPATIBILITY_BUSINESS_ROUTES
   }));
 export const routes = [
   { index: true, element: nativeOverviewElement },
+  { path: "plan", element: nativePlanElement },
   ...businessRouteChildren,
 ];
 `;
@@ -130,13 +132,17 @@ const expectFailure = (failures, pattern) => {
   assert.match(failures.join("\n"), pattern);
 };
 
-test("freezes one native and 21 compatibility routes, eight systems, origin, and sandbox", () => {
+test("freezes two native and 20 compatibility routes, eight systems, origin, and sandbox", () => {
   assert.equal(APPROVED_BUSINESS_ROUTES.length, 22);
-  assert.equal(APPROVED_NATIVE_BUSINESS_ROUTES.length, 1);
-  assert.deepEqual(APPROVED_NATIVE_BUSINESS_ROUTES, [{ id: "overview", path: "/" }]);
-  assert.equal(APPROVED_UNMIGRATED_ROUTES.length, 21);
-  assert.equal(new Set(APPROVED_UNMIGRATED_ROUTES.map(({ id }) => id)).size, 21);
-  assert.equal(new Set(APPROVED_UNMIGRATED_ROUTES.map(({ path: routePath }) => routePath)).size, 21);
+  assert.equal(APPROVED_NATIVE_BUSINESS_ROUTES.length, 2);
+  assert.deepEqual(APPROVED_NATIVE_BUSINESS_ROUTES, [
+    { id: "overview", path: "/" },
+    { id: "plan", path: "/plan" },
+  ]);
+  assert.equal(APPROVED_UNMIGRATED_ROUTES.length, 20);
+  assert.equal(new Set(APPROVED_UNMIGRATED_ROUTES.map(({ id }) => id)).size, 20);
+  assert.equal(new Set(APPROVED_UNMIGRATED_ROUTES.map(({ path: routePath }) => routePath)).size, 20);
+  assert.ok(PHASE1_PRODUCTION_SOURCE_ROOTS.includes("src/pages/plan"));
   assert.ok(PHASE1_PRODUCTION_SOURCE_ROOTS.includes("src/pages/training"));
   assert.deepEqual(PHASE1_SYSTEM_SURFACES, [
     "system:auth",
@@ -171,32 +177,32 @@ test("accepts only the exact independent unmigrated-route allowlist", () => {
   ].join("\n");
   expectFailure(
     validateUnmigratedRoutesSource(deadApprovedArray),
-    /UNMIGRATED_ROUTES.*exact independent 21-route compatibility allowlist/u,
+    /UNMIGRATED_ROUTES.*exact independent 20-route compatibility allowlist/u,
   );
 
   const missing = goodRoutesSource.replace(
     JSON.stringify(APPROVED_UNMIGRATED_ROUTES[0]),
     "",
   );
-  expectFailure(validateUnmigratedRoutesSource(missing), /21-route compatibility allowlist|route count/u);
+  expectFailure(validateUnmigratedRoutesSource(missing), /20-route compatibility allowlist|route count/u);
 
   const duplicate = goodRoutesSource.replace(
     "Object.freeze([",
     `Object.freeze([${JSON.stringify(APPROVED_UNMIGRATED_ROUTES[0])},`,
   );
-  expectFailure(validateUnmigratedRoutesSource(duplicate), /21-route compatibility allowlist|route count|unique/u);
+  expectFailure(validateUnmigratedRoutesSource(duplicate), /20-route compatibility allowlist|route count|unique/u);
 
   const unexpected = goodRoutesSource.replace(
     '"path":"/account"',
     '"path":"/admin"',
   );
-  expectFailure(validateUnmigratedRoutesSource(unexpected), /21-route compatibility allowlist/u);
+  expectFailure(validateUnmigratedRoutesSource(unexpected), /20-route compatibility allowlist/u);
 
   const queryPath = goodRoutesSource.replace(
-    '"path":"/plan"',
-    '"path":"/plan?legacy=1"',
+    '"path":"/skills"',
+    '"path":"/skills?legacy=1"',
   );
-  expectFailure(validateUnmigratedRoutesSource(queryPath), /not canonical|21-route compatibility allowlist/u);
+  expectFailure(validateUnmigratedRoutesSource(queryPath), /not canonical|20-route compatibility allowlist/u);
 
   const wrongOrigin = goodRoutesSource.replace(
     "legacy-compat.quantgym-v2-preview.pages.dev",
@@ -213,13 +219,22 @@ test("requires the explicit staged business-route ownership split", () => {
     validateBusinessRouteOwnershipSource(
       goodOwnershipSource.replace('"owner":"native"', '"owner":"compatibility"'),
     ),
-    /Overview to native and the remaining 21 routes to compatibility/u,
+    /Overview and Plan to native and the remaining 20 routes to compatibility/u,
+  );
+  expectFailure(
+    validateBusinessRouteOwnershipSource(
+      goodOwnershipSource.replace(
+        '{"id":"plan","path":"/plan","owner":"native"}',
+        '{"id":"plan","path":"/plan","owner":"compatibility"}',
+      ),
+    ),
+    /Overview and Plan to native and the remaining 20 routes to compatibility/u,
   );
   expectFailure(
     validateBusinessRouteOwnershipSource(
       goodOwnershipSource.replace('"owner":"compatibility"', '"owner":"native"'),
     ),
-    /Overview to native and the remaining 21 routes to compatibility/u,
+    /Overview and Plan to native and the remaining 20 routes to compatibility/u,
   );
 });
 
@@ -349,7 +364,7 @@ test("requires Preview-only source inclusion and explicit production artifact re
   );
 });
 
-test("proves the V2 router maps one native and 21 compatibility routes", () => {
+test("proves the V2 router maps two native and 20 compatibility routes", () => {
   assert.deepEqual(validateRouterMappingSources({
     navigationSource: goodNavigationSource,
     ownershipSource: goodOwnershipSource,
@@ -375,7 +390,7 @@ test("proves the V2 router maps one native and 21 compatibility routes", () => {
       "const businessRouteChildren = []",
     ),
     routesSource: goodRoutesSource,
-  }), /map all 21 compatibility routes/u);
+  }), /map all 20 compatibility routes/u);
 
   expectFailure(validateRouterMappingSources({
     navigationSource: goodNavigationSource,
@@ -441,13 +456,23 @@ test("proves the V2 router maps one native and 21 compatibility routes", () => {
 
   expectFailure(validateRouterMappingSources({
     navigationSource: goodNavigationSource,
+    ownershipSource: goodOwnershipSource,
+    routerSource: goodRouterSource.replace(
+      '{ path: "plan", element: nativePlanElement }',
+      '{ path: "plan", element: null }',
+    ),
+    routesSource: goodRoutesSource,
+  }), /native Plan element/u);
+
+  expectFailure(validateRouterMappingSources({
+    navigationSource: goodNavigationSource,
     ownershipSource: goodOwnershipSource.replace(
       '"owner":"native"',
       '"owner":"compatibility"',
     ),
     routerSource: goodRouterSource,
     routesSource: goodRoutesSource,
-  }), /one native plus 21 compatibility routes/u);
+  }), /two native plus 20 compatibility routes/u);
 
   const deadApprovedNavigation = [
     goodNavigationSource.replace(

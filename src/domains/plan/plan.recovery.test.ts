@@ -4,15 +4,18 @@ import { setupServer } from "msw/node";
 
 import type {
   CompletePlanTaskIntent,
+  CreatePlanIntent,
   PlanMutationIntent,
   UpdatePlanTaskIntent,
 } from "./plan.mutations";
 import {
   diagnosticQuestionIds,
   type CurrentPlanResponse,
+  type OfficialPlan,
   type OfficialPlanTask,
 } from "./plan.schema";
 import {
+  cacheCurrentPlanMonotonically,
   createPlanMutationDraft,
   planTaskIntentIsSatisfied,
   persistPlanMutationDraft,
@@ -24,8 +27,20 @@ import { createInMemoryDraftRepository } from "../../shared/storage/drafts";
 const ownerScope = "acct-1234567890abcdef";
 const taskId = "29584c83-7297-44ef-b985-f38e6c95de76";
 const planId = "30ba30c0-781d-45be-9fb2-a667340a2f56";
+const replacementPlanId = "c57d0956-38c0-40c9-a1c6-bd65d26e0f69";
 const csrfProof = "session-proof-0123456789abcdef";
 const verifyOwner = async (): Promise<void> => undefined;
+
+const createIntent: CreatePlanIntent = {
+  idempotencyKey: "plan-create-intent-12345678",
+  kind: "create",
+  request: {
+    role: "Quant Researcher",
+    season: "2027 Spring",
+    track: "internship",
+    weeklyHours: 8,
+  },
+};
 
 const updateIntent: UpdatePlanTaskIntent = {
   idempotencyKey: "plan-update-intent-12345678",
@@ -69,6 +84,7 @@ const taskResponse = (
 
 const currentPlanResponse = (
   task: OfficialPlanTask,
+  overrides: Partial<OfficialPlan> = {},
 ): CurrentPlanResponse => ({
   plan: {
     createdAt: "2026-07-27T02:00:00Z",
@@ -86,6 +102,7 @@ const currentPlanResponse = (
     updatedAt: "2026-07-27T03:00:00Z",
     version: 5,
     weeklyHours: 8,
+    ...overrides,
   },
 });
 
@@ -94,6 +111,14 @@ const conflictResponse = () => HttpResponse.json({
   fieldErrors: {},
   message: "任务已在其他位置更新。",
   requestId: "req_plan_recovery_conflict",
+  retryable: false,
+}, { status: 409 });
+
+const alreadyActiveResponse = () => HttpResponse.json({
+  code: "PLAN_ALREADY_ACTIVE",
+  fieldErrors: {},
+  message: "A plan already exists.",
+  requestId: "req_plan_recovery_already_active",
   retryable: false,
 }, { status: 409 });
 
@@ -112,16 +137,7 @@ afterEach(() => {
 afterAll(() => server.close());
 
 const roundTripIntents: readonly PlanMutationIntent[] = [
-  {
-    idempotencyKey: "plan-create-intent-12345678",
-    kind: "create",
-    request: {
-      role: "Quant Researcher",
-      season: "2027 Spring",
-      track: "internship",
-      weeklyHours: 8,
-    },
-  },
+  createIntent,
   {
     idempotencyKey: "plan-diagnostic-intent-1234",
     kind: "diagnostic",
@@ -150,6 +166,27 @@ describe("Plan draft recovery", () => {
       );
     },
   );
+
+  it.each([
+    {
+      draft: { ...createPlanMutationDraft(ownerScope, createIntent), resourceId: "other" },
+      label: "create resource identity",
+    },
+    {
+      draft: { ...createPlanMutationDraft(ownerScope, createIntent), serverVersion: 1 },
+      label: "create version metadata",
+    },
+    {
+      draft: { ...createPlanMutationDraft(ownerScope, updateIntent), resourceId: "not-a-uuid" },
+      label: "task resource identity",
+    },
+    {
+      draft: { ...createPlanMutationDraft(ownerScope, completeIntent), serverVersion: 99 },
+      label: "task plan version metadata",
+    },
+  ])("rejects domain-invalid $label before replay", ({ draft }) => {
+    expect(() => recoverPlanMutationIntent(draft)).toThrow();
+  });
 
   it("persists one stable local retry identity for every plan intent", async () => {
     const repository = createInMemoryDraftRepository();
@@ -194,6 +231,72 @@ describe("Plan draft recovery", () => {
     queryClient.clear();
   });
 
+  it("acknowledges an already-created plan only after refetch proves all four fields", async () => {
+    const repository = createInMemoryDraftRepository();
+    const queryClient = new QueryClient();
+    const draft = await persistPlanMutationDraft(ownerScope, createIntent, repository);
+    server.use(
+      http.post("*/api/v2/plans", alreadyActiveResponse),
+      http.get("*/api/v2/plans/current", () => HttpResponse.json(
+        currentPlanResponse(taskResponse()),
+      )),
+    );
+
+    const report = await replayPlanMutationDrafts({
+      csrfProof,
+      ownerScope,
+      queryClient,
+      repository,
+      verifyOwner,
+    });
+
+    expect(report.acknowledged).toEqual([draft.draftId]);
+    expect(await repository.list(ownerScope)).toEqual([]);
+    expect(queryClient.getQueryData<CurrentPlanResponse>(
+      ["plans", ownerScope, "current"],
+    )?.plan).toEqual(expect.objectContaining(createIntent.request));
+    queryClient.clear();
+  });
+
+  it.each([
+    ["role", { role: "Quant Developer" }],
+    ["season", { season: "2028 Spring" }],
+    ["track", { track: "fulltime" as const }],
+    ["weeklyHours", { weeklyHours: 12 as const }],
+  ] as const)(
+    "retains an already-active create draft when %s differs",
+    async (_field, overrides) => {
+      const repository = createInMemoryDraftRepository();
+      const queryClient = new QueryClient();
+      const draft = await persistPlanMutationDraft(ownerScope, createIntent, repository);
+      server.use(
+        http.post("*/api/v2/plans", alreadyActiveResponse),
+        http.get("*/api/v2/plans/current", () => HttpResponse.json(
+          currentPlanResponse(taskResponse(), overrides),
+        )),
+      );
+
+      const report = await replayPlanMutationDrafts({
+        csrfProof,
+        ownerScope,
+        queryClient,
+        repository,
+        verifyOwner,
+      });
+
+      expect(report.retained).toEqual([{
+        code: "PLAN_ALREADY_ACTIVE",
+        draftId: draft.draftId,
+        reason: "deferred",
+        requestId: "req_plan_recovery_already_active",
+        retryable: false,
+        state: "stale-version-conflict",
+      }]);
+      expect(await repository.list(ownerScope)).toHaveLength(1);
+      queryClient.clear();
+    },
+  );
+
   it("keeps a CAS-conflicted draft when refetch does not prove its target state", async () => {
     const repository = createInMemoryDraftRepository();
     const queryClient = new QueryClient();
@@ -229,6 +332,75 @@ describe("Plan draft recovery", () => {
     expect(queryClient.getQueryState(
       ["dashboard", ownerScope, "overview"],
     )?.isInvalidated).toBe(true);
+    queryClient.clear();
+  });
+
+  it("never lets a late reconciliation read roll the cached plan version backward", async () => {
+    const repository = createInMemoryDraftRepository();
+    const queryClient = new QueryClient();
+    const draft = await persistPlanMutationDraft(ownerScope, updateIntent, repository);
+    const newer = currentPlanResponse(
+      taskResponse({ title: "更新后的版本", version: 7 }),
+      { version: 9 },
+    );
+    queryClient.setQueryData(["plans", ownerScope, "current"], newer);
+    server.use(
+      http.patch("*/api/v2/plans/current/tasks/:taskId", conflictResponse),
+      http.get("*/api/v2/plans/current", () => HttpResponse.json(
+        currentPlanResponse(taskResponse({ title: "复习概率论", version: 3 })),
+      )),
+    );
+
+    const report = await replayPlanMutationDrafts({
+      csrfProof,
+      ownerScope,
+      queryClient,
+      repository,
+      verifyOwner,
+    });
+
+    expect(report.retained).toEqual([expect.objectContaining({
+      draftId: draft.draftId,
+      state: "stale-version-conflict",
+    })]);
+    expect(cacheCurrentPlanMonotonically(
+      queryClient,
+      ownerScope,
+      currentPlanResponse(taskResponse(), { version: 5 }),
+    )).toBe(newer);
+    expect(queryClient.getQueryData(["plans", ownerScope, "current"])).toBe(newer);
+    expect(await repository.list(ownerScope)).toHaveLength(1);
+    queryClient.clear();
+  });
+
+  it("accepts an owner-verified plan identity change or absence instead of comparing versions", () => {
+    const queryClient = new QueryClient();
+    const cached = currentPlanResponse(taskResponse({ version: 7 }), { version: 9 });
+    const replacement = currentPlanResponse(
+      taskResponse({ planId: replacementPlanId, version: 1 }),
+      { id: replacementPlanId, version: 1 },
+    );
+    queryClient.setQueryData(["plans", ownerScope, "current"], cached);
+
+    expect(cacheCurrentPlanMonotonically(
+      queryClient,
+      ownerScope,
+      replacement,
+    )).toBe(replacement);
+    expect(queryClient.getQueryData(["plans", ownerScope, "current"])).toEqual(
+      replacement,
+    );
+
+    queryClient.setQueryData(["plans", ownerScope, "current"], cached);
+    const noCurrentPlan: CurrentPlanResponse = { plan: null };
+    expect(cacheCurrentPlanMonotonically(
+      queryClient,
+      ownerScope,
+      noCurrentPlan,
+    )).toBe(noCurrentPlan);
+    expect(queryClient.getQueryData(["plans", ownerScope, "current"])).toEqual(
+      noCurrentPlan,
+    );
     queryClient.clear();
   });
 

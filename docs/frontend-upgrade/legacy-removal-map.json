@@ -14,7 +14,7 @@
       "priority": 50,
       "globs": ["src/features/overview/**", "src/features/plan/**", "src/features/problems/**", "src/modules/overview/**", "src/modules/plan/**", "src/modules/problems/**", "src/pages/OverviewPage.jsx", "src/pages/PlanPage.jsx", "src/pages/ProblemsPage.jsx", "src/app/services/overviewPageApi.js", "src/app/services/planPageApi.js", "src/app/services/problemsPageApi.js"],
       "targetDomains": ["plan", "problems", "training"],
-      "replacementPaths": ["src/domains/plan", "src/domains/problems", "src/domains/training", "src/pages/training"],
+      "replacementPaths": ["src/domains/plan", "src/domains/problems", "src/domains/training", "src/pages/plan", "src/pages/training"],
       "exitChecks": ["daily training e2e passes", "duplicate local and server training state is removed"]
     },
     {

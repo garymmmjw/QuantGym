@@ -5,6 +5,11 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
+import {
+  PHASE1_E2E_PLAYWRIGHT_ARGUMENTS,
+  PHASE2_PLAN_E2E_TAG,
+} from "../scripts/check-frontend-upgrade-phase1-system-surfaces.mjs";
+
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const readJson = async (relativePath) => JSON.parse(
   await readFile(path.join(root, relativePath), "utf8"),
@@ -16,6 +21,36 @@ const isAncestor = (ancestor, descendant) => {
     stdio: "ignore",
   });
   return true;
+};
+const countListedPlaywrightTests = (suites) => suites.reduce(
+  (total, suite) => total
+    + (suite.specs ?? []).reduce(
+      (specTotal, spec) => specTotal + (spec.tests?.length ?? 0),
+      0,
+    )
+    + countListedPlaywrightTests(suite.suites ?? []),
+  0,
+);
+const listPlaywrightTestCount = (filterArguments = []) => {
+  const report = JSON.parse(execFileSync(
+    process.execPath,
+    [
+      path.join(root, "node_modules/playwright/cli.js"),
+      "test",
+      "--config",
+      "playwright.v2.config.ts",
+      "--list",
+      "--reporter=json",
+      ...filterArguments,
+    ],
+    {
+      cwd: root,
+      encoding: "utf8",
+      maxBuffer: 4 * 1024 * 1024,
+    },
+  ));
+  assert.deepEqual(report.errors, []);
+  return countListedPlaywrightTests(report.suites);
 };
 
 const [
@@ -46,6 +81,32 @@ const catalogById = new Map(selectedCatalogEntries.map((entry) => [entry.id, ent
 const manifestGateById = new Map(manifest.gates.map((gate) => [gate.id, gate]));
 const mutationById = new Map(manifest.mutations.map((mutation) => [mutation.id, mutation]));
 const viewportById = new Map(designSystem.viewports.map((viewport) => [viewport.id, viewport]));
+
+test("locks the complete 104-test suite, frozen Phase 1 subset, and 22 Plan tests", () => {
+  assert.deepEqual(PHASE1_E2E_PLAYWRIGHT_ARGUMENTS, [
+    "run",
+    "test:e2e:v2",
+    "--",
+    "--reporter=json",
+    "--grep-invert",
+    PHASE2_PLAN_E2E_TAG,
+  ]);
+
+  const completeCount = listPlaywrightTestCount();
+  const phase1Count = listPlaywrightTestCount([
+    "--grep-invert",
+    PHASE2_PLAN_E2E_TAG,
+  ]);
+  const phase2PlanCount = listPlaywrightTestCount([
+    "--grep",
+    PHASE2_PLAN_E2E_TAG,
+  ]);
+
+  assert.equal(completeCount, 104);
+  assert.equal(phase1Count, 82);
+  assert.equal(phase2PlanCount, 22);
+  assert.equal(phase1Count + phase2PlanCount, completeCount);
+});
 
 test("maps the exact Phase 2 routes, mutations, and recovery-state matrix", () => {
   assert.equal(manifest.schemaVersion, 1);

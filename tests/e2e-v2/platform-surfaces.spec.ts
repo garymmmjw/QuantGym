@@ -7,10 +7,7 @@ import {
   type Route,
 } from "playwright/test";
 
-import {
-  hideLegacyPreviewFrameForScreenshot,
-  mockLegacyPreviewFrame,
-} from "./legacy-frame.fixture";
+import { mockLegacyPreviewFrame } from "./legacy-frame.fixture";
 
 type PlatformTheme = "light" | "dark";
 type PlatformLanguage = "zh-CN" | "en";
@@ -98,6 +95,9 @@ const createdTodoId = "33333333-3333-4333-8333-333333333333";
 const fixedCreatedAt = "2026-07-23T02:00:00.000Z";
 const fixedUpdatedAt = "2026-07-23T03:00:00.000Z";
 const fixedCompletedAt = "2026-07-23T04:00:00.000Z";
+const overviewTitleZh = "Gary，今天把一题练扎实";
+const planTitleZh = "你的量化职业训练计划";
+const shellReadyTimeoutMs = 20_000;
 
 const unreadNotification = (): NotificationRecord => ({
   body: "完成一组随机过程训练，保持今天的节奏。",
@@ -266,6 +266,29 @@ const responseFor = (request: Request, state: PlatformApiState) => {
   if (pathname === "/api/v2/todos" && method === "GET") {
     state.todoListRequestCount += 1;
     return jsonResponse({ items: state.todos });
+  }
+
+  if (pathname === "/api/v2/dashboard/overview" && method === "GET") {
+    return jsonResponse({
+      planProgress: null,
+      profile: {
+        displayName: "Gary",
+        level: 1,
+        streakDays: 0,
+        weeklyXp: 0,
+      },
+      recentXp: [],
+      resourceVersions: { plan: 0, training: 0 },
+      todayTask: null,
+      unreadNotificationCount: state.notifications.filter(
+        ({ readAt }) => readAt === null,
+      ).length,
+      weakness: null,
+    });
+  }
+
+  if (pathname === "/api/v2/plans/current" && method === "GET") {
+    return jsonResponse({ plan: null });
   }
 
   if (operation !== null) {
@@ -444,9 +467,15 @@ const callsFor = (state: PlatformApiState, operation: MutationOperation) => (
   state.calls.filter((call) => call.operation === operation)
 );
 
-const expectShellReady = async (page: Page, title = "总览") => {
-  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
-  await expect(page.getByRole("main")).toHaveAttribute("id", "qg-main-content");
+const expectShellReady = async (page: Page, title = overviewTitleZh) => {
+  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible({
+    timeout: shellReadyTimeoutMs,
+  });
+  await expect(page.getByRole("main")).toHaveAttribute(
+    "id",
+    "qg-main-content",
+    { timeout: shellReadyTimeoutMs },
+  );
 };
 
 const expectNoAxeViolations = async (page: Page) => {
@@ -678,7 +707,7 @@ test(
     await search.press("Enter");
 
     await expect(page).toHaveURL(/\/plan$/u);
-    await expectShellReady(page, "计划");
+    await expectShellReady(page, planTitleZh);
     await expect(dialog).toHaveCount(0);
 
     const trigger = page.getByRole("button", { name: /搜索题目|打开全局搜索/u }).first();
@@ -819,7 +848,6 @@ test("@visual:global-search:light-dark 全局搜索明暗主题视觉基线", as
     await dialog.getByRole("combobox", { name: "全局搜索", exact: true }).fill("计划");
     await expect(dialog.getByRole("option", { name: /计划/u })).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("data-qg-theme", theme);
-    await hideLegacyPreviewFrameForScreenshot(page);
     await expect(page).toHaveScreenshot(`global-search-${theme}-laptop.png`, { fullPage: true });
     await page.keyboard.press("Escape");
   }
@@ -838,7 +866,6 @@ test(
       const dialog = await openNotifications(page);
       await expect(dialog.getByText("今日训练提醒", { exact: true })).toBeVisible();
       await expect(page.locator("html")).toHaveAttribute("data-qg-theme", theme);
-      await hideLegacyPreviewFrameForScreenshot(page);
       await expect(page).toHaveScreenshot(
         `notifications-toast-${theme}-laptop.png`,
         { fullPage: true },
@@ -859,7 +886,6 @@ test("@visual:todo:light-dark 今日待办明暗主题视觉基线", async ({ pa
     const dialog = await openTodo(page);
     await expect(dialog.getByText("复习概率论", { exact: true })).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("data-qg-theme", theme);
-    await hideLegacyPreviewFrameForScreenshot(page);
     await expect(page).toHaveScreenshot(`todo-${theme}-laptop.png`, { fullPage: true });
     await dialog.getByRole("button", { name: "关闭今日待办", exact: true }).click();
   }

@@ -3,6 +3,8 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
 import * as ReactRouterDom from "react-router-dom";
 
+import { I18nProvider } from "../../shared/i18n";
+
 const { legacyAdapterLocation, legacyAdapterRender } = vi.hoisted(() => ({
   legacyAdapterLocation: vi.fn(),
   legacyAdapterRender: vi.fn(),
@@ -10,6 +12,10 @@ const { legacyAdapterLocation, legacyAdapterRender } = vi.hoisted(() => ({
 
 vi.mock("../../pages/training/OverviewPage", () => ({
   default: () => <h1>原生总览测试页</h1>,
+}));
+
+vi.mock("../../pages/plan/PlanPage", () => ({
+  default: () => <h1>原生计划测试页</h1>,
 }));
 
 vi.mock("../../pages/training/ProblemTrainingHandoffPage", () => ({
@@ -38,6 +44,7 @@ vi.mock("../../legacy-preview/LegacyRouteAdapter", async () => {
   };
 });
 
+import { PlanRouteLoadingFallback } from "./PlanRouteLoadingFallback";
 import { authenticatedBusinessRouteChildren } from "./router";
 
 describe("business router ownership", () => {
@@ -60,6 +67,42 @@ describe("business router ownership", () => {
     expect(await screen.findByRole("heading", { name: "原生总览测试页" })).toBeVisible();
     expect(screen.queryByRole("heading", { name: "兼容页面测试桩" })).not.toBeInTheDocument();
     expect(legacyAdapterRender).not.toHaveBeenCalled();
+  });
+
+  it("renders the native Plan at /plan without mounting the compatibility adapter", async () => {
+    const router = ReactRouterDom.createMemoryRouter([
+      {
+        path: "/",
+        element: <ReactRouterDom.Outlet />,
+        children: authenticatedBusinessRouteChildren,
+      },
+    ], { initialEntries: ["/plan"] });
+
+    render(<ReactRouterDom.RouterProvider router={router} />);
+
+    expect(await screen.findByRole("heading", { name: "原生计划测试页" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "兼容页面测试桩" })).not.toBeInTheDocument();
+    expect(legacyAdapterRender).not.toHaveBeenCalled();
+  });
+
+  it("localizes the native Plan lazy-loading fallback", () => {
+    const { rerender } = render(
+      <I18nProvider language="zh-CN">
+        <PlanRouteLoadingFallback />
+      </I18nProvider>,
+    );
+
+    expect(screen.getByRole("status", { name: "正在载入训练计划" })).toBeVisible();
+
+    rerender(
+      <I18nProvider language="en">
+        <PlanRouteLoadingFallback />
+      </I18nProvider>,
+    );
+
+    expect(screen.getByRole("status", { name: "Loading training plan" })).toBeVisible();
+    expect(screen.queryByRole("status", { name: "正在载入训练计划" }))
+      .not.toBeInTheDocument();
   });
 
   it("renders a valid training handoff natively without mounting compatibility", async () => {

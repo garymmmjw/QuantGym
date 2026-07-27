@@ -741,6 +741,7 @@ test("CI installs the lockfile Chromium and executes the complete Playwright scr
     /npm run build:v2[\s\S]*npm run test:frontend-upgrade:phase1:node/u,
     "CI must build dist-v2 before Phase 1 Node tests inspect its runtime artifacts",
   );
+  assert.doesNotMatch(workflow, /complete 82-test Playwright suite/u);
   const actionReferences = [...workflow.matchAll(/^\s*uses:\s*(\S+)\s*$/gmu)]
     .map((match) => match[1]);
   assert.ok(actionReferences.length >= 4);
@@ -764,6 +765,16 @@ test("Linux baseline refresh verifies its runtime and uploads only fresh output"
   const expectedNodeArchiveSha256 = (
     "19e56f0825510207dd904f087fe52faa0a4eb6b2aab5f0ea7a33830d04888b8b"
   );
+  assert.match(updater, /const linuxSnapshotCount = 29;/u);
+  assert.match(updater, /--timeout=300000/u);
+  assert.match(
+    updater,
+    /test "\$snapshot_count" = "\$\{linuxSnapshotCount\}"/u,
+  );
+  assert.match(
+    updater,
+    /Updating \$\{linuxSnapshotCount\} Linux visual baselines/u,
+  );
   assert.match(updater, new RegExp(expectedNodeArchiveSha256, "u"));
   assert.match(updater, /sha256sum --check --strict -/u);
   assert.doesNotMatch(updater, /curl[^\n]*\|\s*tar/u);
@@ -779,7 +790,8 @@ test("Linux baseline refresh verifies its runtime and uploads only fresh output"
     workflow,
     /find tests\/e2e-v2 -type f -name '\*-linux\.png' -delete/u,
   );
-  assert.match(workflow, /test "\$\{#snapshots\[@\]\}" = "21"/u);
+  assert.match(workflow, /test "\$\{#snapshots\[@\]\}" = "29"/u);
+  assert.match(workflow, /--timeout=300000/u);
   assert.match(workflow, /sha256sum --check --strict SHA256SUMS/u);
   assert.match(
     workflow,
@@ -787,7 +799,7 @@ test("Linux baseline refresh verifies its runtime and uploads only fresh output"
   );
   assert.match(
     workflow,
-    /steps\.generate_linux_baselines\.outputs\.snapshot_count == '21'/u,
+    /steps\.generate_linux_baselines\.outputs\.snapshot_count == '29'/u,
   );
   assert.match(
     workflow,

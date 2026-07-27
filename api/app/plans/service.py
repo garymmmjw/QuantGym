@@ -972,30 +972,57 @@ class PlansService:
                 plan_id=plan["id"],
                 task_id=task_id,
             )
-            if task["target_problem_id"] is not None:
-                raise ApiError(
-                    status_code=409,
-                    code="PLAN_TASK_REQUIRES_TRAINING",
-                    message="该任务必须由已确认的训练完成事件更新",
-                    retryable=False,
-                )
             if task["version"] != payload.task_version or task["status"] != "open":
                 raise _official_task_conflict()
             changed = (
                 connection.execute(
                     text(
                         f"""
-                        UPDATE plan_tasks
+                        {_LATEST_PREVIEW_SOURCE_CTE}
+                        UPDATE plan_tasks AS task
                         SET status = 'completed',
                             completed_at = :completed_at,
+                            recommendation_id = CASE
+                                WHEN target_problem_id IS NULL
+                                    THEN recommendation_id
+                                ELSE NULL
+                            END,
+                            target_problem_id = NULL,
+                            title = CASE
+                                WHEN target_problem_id IS NULL
+                                    THEN title
+                                ELSE concat(
+                                    COALESCE(NULLIF(skill_key, ''), '计划'),
+                                    ' 针对性训练'
+                                )
+                            END,
+                            detail = CASE
+                                WHEN target_problem_id IS NULL
+                                    THEN detail
+                                ELSE concat(
+                                    '完成一组 ',
+                                    COALESCE(NULLIF(skill_key, ''), '计划'),
+                                    ' 针对性练习并记录复盘。'
+                                )
+                            END,
                             version = version + 1,
                             updated_at = :completed_at
-                        WHERE id = :task_id
-                          AND user_id = :user_id
-                          AND plan_id = :plan_id
-                          AND target_problem_id IS NULL
-                          AND status = 'open'
-                          AND version = :expected_version
+                        WHERE task.id = :task_id
+                          AND task.user_id = :user_id
+                          AND task.plan_id = :plan_id
+                          AND task.status = 'open'
+                          AND task.version = :expected_version
+                          AND (
+                              task.target_problem_id IS NULL
+                              OR NOT EXISTS (
+                                  SELECT 1
+                                  FROM problems AS visible_problem
+                                  JOIN allowed_sources AS visible_source
+                                    ON visible_source.id = visible_problem.source_id
+                                  WHERE visible_problem.id =
+                                      task.target_problem_id
+                              )
+                          )
                         RETURNING {_OFFICIAL_TASK_COLUMNS}
                         """
                     ),
@@ -1011,7 +1038,44 @@ class PlansService:
                 .first()
             )
             if changed is None:
+                if (
+                    task["target_problem_id"] is not None
+                    and _problem_is_visible(
+                        connection,
+                        problem_id=task["target_problem_id"],
+                    )
+                ):
+                    raise ApiError(
+                        status_code=409,
+                        code="PLAN_TASK_REQUIRES_TRAINING",
+                        message="该任务必须由已确认的训练完成事件更新",
+                        retryable=False,
+                    )
                 raise _official_task_conflict()
+            if task["target_problem_id"] is not None:
+                connection.execute(
+                    text(
+                        """
+                        UPDATE training_sessions
+                        SET status = 'abandoned',
+                            plan_task_id = NULL,
+                            version = version + 1,
+                            last_activity_at = GREATEST(
+                                last_activity_at,
+                                :completed_at
+                            ),
+                            updated_at = GREATEST(updated_at, :completed_at)
+                        WHERE user_id = :user_id
+                          AND plan_task_id = :task_id
+                          AND status = 'active'
+                        """
+                    ),
+                    {
+                        "completed_at": now,
+                        "task_id": task_id,
+                        "user_id": user_id,
+                    },
+                )
             plan_version = _advance_plan_version(
                 connection,
                 user_id=user_id,

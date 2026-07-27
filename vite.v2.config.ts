@@ -117,6 +117,7 @@ export const V2_SOURCE_ROOTS = Object.freeze([
   "src/core",
   "src/design-system",
   "src/domains",
+  "src/pages/plan",
   "src/pages/training",
   "src/pages/v2",
   "src/shared/api",

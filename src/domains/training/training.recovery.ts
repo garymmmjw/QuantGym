@@ -22,6 +22,7 @@ import {
   type TrainingMutationIntent,
   type TrainingMutationResponse,
 } from "./training.mutations";
+import { publishTrainingDraftChanged } from "./training.events";
 import {
   attemptSubmissionResponseSchema,
   completeTrainingRequestSchema,
@@ -52,6 +53,7 @@ export const TRAINING_RECOVERY_RECEIPT_KINDS = [
 
 const receiptSourceShape = {
   expiresAt: z.string().datetime({ offset: true }),
+  sourcePlanTaskId: z.string().uuid().optional(),
   sourceAttemptCount: z.number().int().positive().optional(),
   sourceDraftId: z.string().min(1).max(220),
   sourceGenerationId: z.string().min(1).max(300),
@@ -92,6 +94,16 @@ const trainingRecoveryReceiptPayloadSchema = z.discriminatedUnion("intentKind", 
     response: completionResponseSchema,
   }).strict(),
 ]).superRefine((payload, context) => {
+  if (
+    payload.intentKind !== "start"
+    && payload.sourcePlanTaskId !== undefined
+  ) {
+    context.addIssue({
+      code: "custom",
+      message: "TRAINING_RECOVERY_RECEIPT_PLAN_TASK_INVALID",
+      path: ["sourcePlanTaskId"],
+    });
+  }
   const hasAttemptCount = payload.sourceAttemptCount !== undefined;
   const hasLastAttemptAt = payload.sourceLastAttemptAt !== undefined;
   if (hasAttemptCount === hasLastAttemptAt) return;
@@ -100,16 +112,34 @@ const trainingRecoveryReceiptPayloadSchema = z.discriminatedUnion("intentKind", 
     message: "TRAINING_RECOVERY_RECEIPT_SOURCE_ATTEMPT_INCOMPLETE",
     path: [hasAttemptCount ? "sourceLastAttemptAt" : "sourceAttemptCount"],
   });
-}).transform((payload) => payload as typeof payload & DraftJsonObject);
+});
 
-export type TrainingRecoveryReceiptPayload = z.output<
+type ParsedTrainingRecoveryReceiptPayload = z.output<
   typeof trainingRecoveryReceiptPayloadSchema
+>;
+
+type WithoutPlanTaskReceiptMetadata<Payload> = Payload extends unknown
+  ? Omit<Payload, "sourcePlanTaskId"> & DraftJsonObject
+  : never;
+
+export type TrainingRecoveryReceiptPayload = WithoutPlanTaskReceiptMetadata<
+  ParsedTrainingRecoveryReceiptPayload
 >;
 
 export type TrainingRecoveryReceipt = Readonly<{
   draft: RecoverableDraft;
   payload: TrainingRecoveryReceiptPayload;
 }>;
+
+export const trainingRecoveryReceiptPlanTaskId = (
+  receipt: TrainingRecoveryReceipt,
+): string | null => {
+  if (receipt.payload.intentKind !== "start") return null;
+  const sourcePlanTaskId = (receipt.payload as unknown as {
+    sourcePlanTaskId?: unknown;
+  }).sourcePlanTaskId;
+  return typeof sourcePlanTaskId === "string" ? sourcePlanTaskId : null;
+};
 
 export const trainingRecoveryReceiptMatchesSourceAttempt = (
   receipt: TrainingRecoveryReceipt,
@@ -179,7 +209,7 @@ const receiptResponse = (
   }
 };
 
-const createTrainingRecoveryReceipt = (
+export const createTrainingRecoveryReceipt = (
   ownerScope: string,
   source: RecoverableDraft,
   intent: TrainingMutationIntent,
@@ -194,6 +224,9 @@ const createTrainingRecoveryReceipt = (
     expiresAt: receiptExpiry(createdAt),
     intentKind: intent.kind,
     response: parsedResponse,
+    ...(intent.kind === "start" && intent.request.planTaskId !== undefined
+      ? { sourcePlanTaskId: intent.request.planTaskId }
+      : {}),
     sourceAttemptCount: source.attemptCount,
     sourceDraftId: source.draftId,
     sourceGenerationId: source.generationId,
@@ -203,12 +236,15 @@ const createTrainingRecoveryReceipt = (
     idempotencyKey: stableReceiptKey(source),
     kind: recoveryReceiptKind(intent),
     ownerScope,
-    payload,
+    payload: payload as DraftJsonObject,
     resourceId: parsedResponse.sessionId,
     serverVersion: parsedResponse.sessionVersion,
     updatedAt: createdAt,
   });
-  return { draft, payload };
+  return {
+    draft,
+    payload: payload as unknown as TrainingRecoveryReceiptPayload,
+  };
 };
 
 const recoverTrainingRecoveryReceipt = (
@@ -227,7 +263,10 @@ const recoverTrainingRecoveryReceipt = (
   ) {
     throw new Error("TRAINING_RECOVERY_RECEIPT_INVALID");
   }
-  return { draft, payload };
+  return {
+    draft,
+    payload: payload as unknown as TrainingRecoveryReceiptPayload,
+  };
 };
 
 export const listTrainingRecoveryReceipts = async (
@@ -403,7 +442,27 @@ export const persistTrainingMutationDraft = async (
 ): Promise<RecoverableDraft> => {
   const draft = createTrainingMutationDraft(ownerScope, intent);
   await repository.put(draft);
+  publishTrainingDraftChanged(ownerScope);
   return draft;
+};
+
+export const persistTrainingRecoveryReceipt = async (
+  ownerScope: string,
+  source: RecoverableDraft,
+  intent: TrainingMutationIntent,
+  response: TrainingMutationResponse,
+  repository: RecoverableDraftRepository = recoverableDraftRepository,
+): Promise<TrainingRecoveryReceipt | null> => {
+  if (source.ownerScope !== ownerScope) {
+    throw new Error("TRAINING_RECOVERY_RECEIPT_OWNER_MISMATCH");
+  }
+  const receipt = createTrainingRecoveryReceipt(
+    ownerScope,
+    source,
+    intent,
+    response,
+  );
+  return await repository.putIfCurrent(source, receipt.draft) ? receipt : null;
 };
 
 export type ReplayTrainingDraftsOptions = Readonly<{
@@ -463,16 +522,15 @@ const trainingReplayOptions = (options: ReplayTrainingDraftsOptions) => {
         signal,
       );
       abortIfRequested(signal);
-      const receipt = createTrainingRecoveryReceipt(
+      const receipt = await persistTrainingRecoveryReceipt(
         options.ownerScope,
         draft,
         intent,
         response,
+        repository,
       );
       abortIfRequested(signal);
-      const receiptCommitted = await repository.putIfCurrent(draft, receipt.draft);
-      abortIfRequested(signal);
-      if (!receiptCommitted) {
+      if (receipt === null) {
         return { acknowledged: true };
       }
       await invalidateTrainingRecoveryReceipt(

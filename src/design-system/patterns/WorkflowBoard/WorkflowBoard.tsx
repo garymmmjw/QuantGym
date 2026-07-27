@@ -22,9 +22,11 @@ export type WorkflowBoardProps = Readonly<{
   columns: readonly WorkflowBoardColumn[];
   ariaLabel?: string;
   className?: string;
+  columnsLabel?: string;
   description?: ReactNode;
   disabled?: boolean;
   disabledMessage?: ReactNode;
+  itemCountLabel?: (count: number) => string;
   title?: ReactNode;
 }>;
 
@@ -32,9 +34,11 @@ export function WorkflowBoard({
   ariaLabel,
   className,
   columns,
+  columnsLabel,
   description,
   disabled = false,
   disabledMessage = "This board is currently read only.",
+  itemCountLabel = (count) => `${count} items`,
   title,
 }: WorkflowBoardProps) {
   const titleId = useId();
@@ -58,7 +62,9 @@ export function WorkflowBoard({
       )}
       {disabled ? <p className={styles.disabledMessage} role="status">{disabledMessage}</p> : null}
       <div
-        aria-label={ariaLabel === undefined ? "Workflow columns" : `${ariaLabel} columns`}
+        aria-label={columnsLabel ?? (
+          ariaLabel === undefined ? "Workflow columns" : `${ariaLabel} columns`
+        )}
         className={styles.scroller}
         inert={disabled || undefined}
         role="group"
@@ -66,7 +72,11 @@ export function WorkflowBoard({
       >
         <div className={styles.columns}>
           {columns.map((column) => (
-            <WorkflowColumn column={column} key={column.id} />
+            <WorkflowColumn
+              column={column}
+              itemCountLabel={itemCountLabel}
+              key={column.id}
+            />
           ))}
         </div>
       </div>
@@ -74,7 +84,13 @@ export function WorkflowBoard({
   );
 }
 
-function WorkflowColumn({ column }: Readonly<{ column: WorkflowBoardColumn }>) {
+function WorkflowColumn({
+  column,
+  itemCountLabel,
+}: Readonly<{
+  column: WorkflowBoardColumn;
+  itemCountLabel: (count: number) => string;
+}>) {
   const columnTitleId = useId();
   const hasItems = column.items.length > 0;
 
@@ -87,7 +103,11 @@ function WorkflowColumn({ column }: Readonly<{ column: WorkflowBoardColumn }>) {
             <p className={styles.columnDescription}>{column.description}</p>
           )}
         </div>
-        <span aria-label={`${column.items.length} items`} className={styles.count} data-qg-metric>
+        <span
+          aria-label={itemCountLabel(column.items.length)}
+          className={styles.count}
+          data-qg-metric
+        >
           {column.items.length}
         </span>
       </header>

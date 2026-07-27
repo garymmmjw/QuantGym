@@ -15,7 +15,6 @@ export type UnmigratedRoute = Readonly<{
 }>;
 
 export const UNMIGRATED_ROUTES = Object.freeze([
-  { id: "plan", path: "/plan", label: { "zh-CN": "计划", en: "Plan" } },
   { id: "skills", path: "/skills", label: { "zh-CN": "能力值", en: "Skills" } },
   { id: "league", path: "/league", label: { "zh-CN": "联赛", en: "League" } },
   { id: "interview", path: "/interview", label: { "zh-CN": "模拟面试", en: "Interview" } },

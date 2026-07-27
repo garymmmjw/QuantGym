@@ -1,0 +1,118 @@
+.root {
+  display: grid;
+  min-inline-size: 0;
+  gap: var(--qg-space-4);
+  margin-block-start: var(--qg-space-4);
+  border-block-start: 1px solid var(--qg-border-subtle);
+  padding-block-start: var(--qg-space-5);
+}
+
+.header {
+  display: grid;
+  gap: var(--qg-space-2);
+}
+
+.header h4,
+.header p,
+.hint,
+.error,
+.noChanges {
+  margin: 0;
+}
+
+.header h4 {
+  font-size: var(--qg-font-size-body);
+  font-weight: var(--qg-font-weight-bold);
+  line-height: var(--qg-line-height-tight);
+}
+
+.header p,
+.hint,
+.noChanges {
+  color: var(--qg-text-muted);
+  font-size: var(--qg-font-size-caption);
+  line-height: var(--qg-line-height-relaxed);
+}
+
+.textareaField {
+  display: grid;
+  gap: 0.4375rem;
+  color: var(--qg-text-primary);
+  font-size: var(--qg-font-size-body-small);
+  font-weight: var(--qg-font-weight-semibold);
+}
+
+.textarea {
+  min-inline-size: 0;
+  inline-size: 100%;
+  resize: vertical;
+  border: 1px solid var(--qg-border-control);
+  border-radius: var(--qg-radius-control);
+  padding: var(--qg-space-3);
+  background: var(--qg-surface-primary);
+  color: var(--qg-text-primary);
+  font: inherit;
+  font-weight: var(--qg-font-weight-regular);
+  line-height: var(--qg-line-height-relaxed);
+}
+
+.textarea:focus-visible {
+  border-color: var(--qg-action-primary);
+  outline: 0;
+  box-shadow: var(--qg-shadow-focus-ring);
+}
+
+.textarea[aria-invalid="true"] {
+  border-color: var(--qg-status-danger);
+}
+
+.textarea:disabled {
+  cursor: not-allowed;
+  background: var(--qg-surface-secondary);
+  opacity: 0.65;
+}
+
+.error {
+  color: var(--qg-text-primary);
+  font-size: var(--qg-font-size-caption);
+  font-weight: var(--qg-font-weight-medium);
+  line-height: var(--qg-line-height-normal);
+}
+
+.fieldGrid {
+  display: grid;
+  min-inline-size: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--qg-space-4);
+}
+
+.fieldGrid > :last-child {
+  grid-column: 1 / -1;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: var(--qg-space-2);
+}
+
+.noChanges {
+  text-align: end;
+}
+
+@media (width <= 1024px) {
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fieldGrid > :last-child {
+    grid-column: auto;
+  }
+}
+
+@media (width <= 640px) {
+  .actions > * {
+    flex: 1 1 8rem;
+  }
+}

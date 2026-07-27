@@ -20,15 +20,18 @@ import {
   createTrainingMutationDraft,
   listTrainingRecoveryReceipts,
   persistTrainingMutationDraft,
+  persistTrainingRecoveryReceipt,
   recoverTrainingMutationIntent,
   replayTrainingMutationDrafts,
   trainingRecoveryReceiptMatchesSourceAttempt,
+  trainingRecoveryReceiptPlanTaskId,
 } from "./training.recovery";
 
 const ownerScope = "acct-1234567890abcdef";
 const problemId = "29584c83-7297-44ef-b985-f38e6c95de76";
 const sessionId = "19584c83-7297-44ef-b985-f38e6c95de76";
 const attemptId = "39584c83-7297-44ef-b985-f38e6c95de76";
+const planTaskId = "69584c83-7297-44ef-b985-f38e6c95de76";
 const verifyOwner = async (): Promise<void> => undefined;
 
 describe("Training draft recovery", () => {
@@ -79,6 +82,73 @@ describe("Training draft recovery", () => {
     expect(draft.idempotencyKey).toBe(intent.idempotencyKey);
     expect((await repository.list(ownerScope))[0]?.idempotencyKey)
       .toBe(intent.idempotencyKey);
+  });
+
+  it("persists a plan-scoped start receipt before the exact attempted source is acknowledged", async () => {
+    const repository = createInMemoryDraftRepository();
+    const intent: TrainingMutationIntent = {
+      idempotencyKey: "training-plan-receipt-first-1",
+      kind: "start",
+      request: { planTaskId, problemId },
+    };
+    const source = await persistTrainingMutationDraft(ownerScope, intent, repository);
+    const attempted = await repository.markAttempt(source);
+    if (attempted === null) throw new Error("TRAINING_ATTEMPT_EXPECTED");
+
+    const receipt = await persistTrainingRecoveryReceipt(
+      ownerScope,
+      attempted,
+      intent,
+      {
+        problemId,
+        resumed: false,
+        sessionId,
+        sessionVersion: 1,
+      },
+      repository,
+    );
+
+    expect(receipt).not.toBeNull();
+    if (receipt === null) throw new Error("TRAINING_RECEIPT_EXPECTED");
+    expect(trainingRecoveryReceiptPlanTaskId(receipt)).toBe(planTaskId);
+    expect(await repository.list(ownerScope)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ draftId: attempted.draftId, kind: "training.start" }),
+      expect.objectContaining({ draftId: receipt.draft.draftId, kind: "training.recovery-start" }),
+    ]));
+    expect(await repository.acknowledge(attempted)).toBe(true);
+    expect(await consumeTrainingRecoveryReceipt(ownerScope, receipt, repository)).toBe(true);
+    expect(await repository.list(ownerScope)).toEqual([]);
+  });
+
+  it("keeps legacy and ordinary start receipts valid without plan-task metadata", async () => {
+    const repository = createInMemoryDraftRepository();
+    const intent: TrainingMutationIntent = {
+      idempotencyKey: "training-ordinary-receipt-123",
+      kind: "start",
+      request: { problemId },
+    };
+    const source = await persistTrainingMutationDraft(ownerScope, intent, repository);
+    const attempted = await repository.markAttempt(source);
+    if (attempted === null) throw new Error("TRAINING_ATTEMPT_EXPECTED");
+    const persisted = await persistTrainingRecoveryReceipt(
+      ownerScope,
+      attempted,
+      intent,
+      {
+        problemId,
+        resumed: false,
+        sessionId,
+        sessionVersion: 1,
+      },
+      repository,
+    );
+
+    expect(persisted).not.toBeNull();
+    if (persisted === null) throw new Error("TRAINING_RECEIPT_EXPECTED");
+    expect(trainingRecoveryReceiptPlanTaskId(persisted)).toBeNull();
+    const [recovered] = await listTrainingRecoveryReceipts(ownerScope, repository);
+    expect(recovered).toBeDefined();
+    expect(trainingRecoveryReceiptPlanTaskId(recovered!)).toBeNull();
   });
 
   it.each([

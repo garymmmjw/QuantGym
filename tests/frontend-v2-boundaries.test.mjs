@@ -29,7 +29,8 @@ const packageLock = JSON.parse(
   await readFile(new URL("../package-lock.json", import.meta.url), "utf8"),
 );
 
-test("the V2 boundary scan includes native training pages", () => {
+test("the V2 boundary scan includes native Plan and training pages", () => {
+  assert.ok(V2_BOUNDARY_SCAN_ROOTS.includes("src/pages/plan"));
   assert.ok(V2_BOUNDARY_SCAN_ROOTS.includes("src/pages/training"));
 });
 
@@ -55,7 +56,7 @@ const exactFamilies = [
     priority: 50,
     globs: ["src/features/overview/**", "src/features/plan/**", "src/features/problems/**", "src/modules/overview/**", "src/modules/plan/**", "src/modules/problems/**", "src/pages/OverviewPage.jsx", "src/pages/PlanPage.jsx", "src/pages/ProblemsPage.jsx", "src/app/services/overviewPageApi.js", "src/app/services/planPageApi.js", "src/app/services/problemsPageApi.js"],
     targetDomains: ["plan", "problems", "training"],
-    replacementPaths: ["src/domains/plan", "src/domains/problems", "src/domains/training", "src/pages/training"],
+    replacementPaths: ["src/domains/plan", "src/domains/problems", "src/domains/training", "src/pages/plan", "src/pages/training"],
     exitChecks: ["daily training e2e passes", "duplicate local and server training state is removed"],
   },
   {
@@ -285,12 +286,13 @@ test("excludes replacement-path target subtrees from legacy ownership", () => {
     legacyRoots: ["src/pages"],
     families: [makeFamily({
       globs: ["src/pages/**"],
-      replacementPaths: ["src/pages/training", "src/pages/v2"],
+      replacementPaths: ["src/pages/plan", "src/pages/training", "src/pages/v2"],
     })],
   });
 
   assert.deepEqual(validateLegacyRemovalMap(removalMap, [
     "src/pages/LegacyPage.jsx",
+    "src/pages/plan/PlanPage.tsx",
     "src/pages/training/OverviewPage.tsx",
     "src/pages/v2/Overview.tsx",
   ]), []);
@@ -307,6 +309,7 @@ test("allows typed domains to import shared API code and keeps governed JSON imp
     "src/shared/api/problems.ts": "export const getProblems = () => fetch('/api/problems');\n",
     "src/shared/catalog.ts": 'import catalog from "../../data/problem-catalog.json";\nexport default catalog;\n',
     "src/core/browser-shell.ts": "document.querySelector('#root');\nwindow.addEventListener('focus', () => {});\n",
+    "src/pages/plan/PlanPage.tsx": 'import "../../shared/api/training";\nexport default function PlanPage() {}\n',
     "src/pages/training/OverviewPage.tsx": 'import "../../shared/api/training";\nexport default function OverviewPage() {}\n',
     "src/pages/v2/Overview.tsx": 'import "@/shared/api/training";\nexport default function Overview() {}\n',
     "src/pages/v2/Routes.ts": 'import Overview from "@/pages/v2/Overview";\nexport default Overview;\n',
@@ -444,6 +447,7 @@ test("reports every non-import boundary rule and scopes fetch and DOM exceptions
     "src/design-system/window-fetch.ts": "export const load = () => window.fetch('/api/theme');\n",
     "src/domains/training/document.ts": "export const root = document.querySelector('#root');\n",
     "src/domains/training/listener.ts": "window.addEventListener('online', () => {});\n",
+    "src/pages/plan/page-fetch.tsx": "export const load = () => fetch('/api/page');\n",
     "src/pages/training/page-fetch.tsx": "export const load = () => fetch('/api/page');\n",
     "src/pages/v2/page-fetch.tsx": "export const load = () => fetch('/api/page');\n",
     "src/shared/apiClient.ts": "export const load = () => fetch('/api/not-api-subtree');\n",
@@ -466,7 +470,7 @@ test("reports every non-import boundary rule and scopes fetch and DOM exceptions
         rule,
         violations.filter((violation) => violation.rule === rule).length,
       ])),
-      { legacySymbol: 1, eventBus: 1, directFetch: 6, domainDom: 2 },
+      { legacySymbol: 1, eventBus: 1, directFetch: 7, domainDom: 2 },
     );
   });
 });
@@ -730,11 +734,16 @@ test("distinguishes regex literals, template expressions, and nested JSX prose",
       "export const identity = <T extends unknown>(value: T) => value;",
       "fetch('/api/training');",
     ].join("\n"),
+    "src/pages/plan/generic.tsx": [
+      "export const identity = <T extends unknown>(value: T) => value;",
+      "fetch('/api/plan');",
+    ].join("\n"),
   }, async (root) => {
     assert.deepEqual(await findBoundaryViolations(root), [
       { file: "src/core/regex-before-boundaries.ts", rule: "directFetch", evidence: "fetch(" },
       { file: "src/core/regex-before-boundaries.ts", rule: "legacyImport", evidence: "@/api/client" },
       { file: "src/core/template-expression.ts", rule: "legacyImport", evidence: "@/app/runtime" },
+      { file: "src/pages/plan/generic.tsx", rule: "directFetch", evidence: "fetch(" },
       { file: "src/pages/training/generic.tsx", rule: "directFetch", evidence: "fetch(" },
       { file: "src/pages/v2/generic.tsx", rule: "directFetch", evidence: "fetch(" },
     ]);

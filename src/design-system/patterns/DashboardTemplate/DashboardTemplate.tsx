@@ -4,6 +4,7 @@ import { Skeleton } from "../../primitives/Skeleton";
 import styles from "./DashboardTemplate.module.css";
 
 export type DashboardTemplateStatus = "ready" | "loading";
+export type DashboardTemplateLayout = "default" | "tablet-stacked";
 
 export type DashboardTemplateProps = Readonly<{
   title: ReactNode;
@@ -16,6 +17,7 @@ export type DashboardTemplateProps = Readonly<{
   eyebrow?: ReactNode;
   hero?: ReactNode;
   loadingLabel?: string;
+  layout?: DashboardTemplateLayout;
   metrics?: ReactNode;
   metricsLabel?: string;
   primaryAction?: ReactNode;
@@ -49,6 +51,7 @@ export function DashboardTemplate({
   description,
   eyebrow,
   hero,
+  layout = "default",
   loadingLabel = "Loading dashboard",
   metrics,
   metricsLabel = "Key metrics",
@@ -67,6 +70,7 @@ export function DashboardTemplate({
       aria-label={ariaLabel}
       aria-labelledby={ariaLabel === undefined ? titleId : undefined}
       className={classes}
+      data-dashboard-layout={layout}
       data-dashboard-status={status}
     >
       <header className={styles.header}>

@@ -102,6 +102,17 @@
   white-space: nowrap;
 }
 
+@media (width <= 1100px) {
+  .root[data-dashboard-layout="tablet-stacked"] .body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--qg-space-6);
+  }
+
+  .root[data-dashboard-layout="tablet-stacked"] .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (width <= 860px) {
   .root {
     gap: var(--qg-space-6);
@@ -125,6 +136,10 @@
 }
 
 @media (width <= 640px) {
+  .root[data-dashboard-layout="tablet-stacked"] .metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .actions > * {
     flex: 1 1 auto;
   }

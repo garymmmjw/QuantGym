@@ -20,7 +20,6 @@ const routeTitles: Readonly<Record<string, string>> = Object.freeze({
   "/network": "人脉",
   "/news": "新闻",
   "/pk": "PK 对战",
-  "/plan": "计划",
   "/poker": "Poker",
   "/problems": "题目",
   "/resume": "简历",

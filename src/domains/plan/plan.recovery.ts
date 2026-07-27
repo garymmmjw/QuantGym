@@ -1,4 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 
 import { ApiError } from "../../shared/api/errors";
 import {
@@ -22,6 +23,7 @@ import {
   runPlanDiagnostic,
   updatePlanTask,
   type CompletePlanTaskIntent,
+  type CreatePlanIntent,
   type PlanMutationIntent,
   type UpdatePlanTaskIntent,
 } from "./plan.mutations";
@@ -90,20 +92,28 @@ export const recoverPlanMutationIntent = (
 ): PlanMutationIntent => {
   switch (draft.kind) {
     case "plan.create":
+      z.literal("current").parse(draft.resourceId);
+      z.null().parse(draft.serverVersion);
       return {
         idempotencyKey: draft.idempotencyKey,
         kind: "create",
         request: createPlanRequestSchema.parse(draft.payload),
       };
-    case "plan.diagnostic":
+    case "plan.diagnostic": {
+      const request = runPlanDiagnosticRequestSchema.parse(draft.payload);
+      z.literal("current").parse(draft.resourceId);
+      z.literal(request.planVersion).parse(draft.serverVersion);
       return {
         idempotencyKey: draft.idempotencyKey,
         kind: "diagnostic",
-        request: runPlanDiagnosticRequestSchema.parse(draft.payload),
+        request,
       };
+    }
     case "plan.task-update":
       {
         const request = updatePlanTaskRequestSchema.parse(draft.payload);
+        const taskId = z.string().uuid().parse(draft.resourceId);
+        z.literal(request.planVersion).parse(draft.serverVersion);
         return {
           idempotencyKey: draft.idempotencyKey,
           kind: "update-task",
@@ -120,16 +130,20 @@ export const recoverPlanMutationIntent = (
             taskVersion: request.taskVersion,
             ...(request.title === undefined ? {} : { title: request.title }),
           },
-          taskId: draft.resourceId,
+          taskId,
         };
       }
-    case "plan.task-complete":
+    case "plan.task-complete": {
+      const request = completePlanTaskRequestSchema.parse(draft.payload);
+      const taskId = z.string().uuid().parse(draft.resourceId);
+      z.literal(request.planVersion).parse(draft.serverVersion);
       return {
         idempotencyKey: draft.idempotencyKey,
         kind: "complete-task",
-        request: completePlanTaskRequestSchema.parse(draft.payload),
-        taskId: draft.resourceId,
+        request,
+        taskId,
       };
+    }
     default:
       throw new Error("PLAN_DRAFT_KIND_INVALID");
   }
@@ -187,6 +201,49 @@ export const planTaskIntentIsSatisfied = (
     : updateIntentIsSatisfied(task, intent);
 };
 
+export const createPlanIntentIsSatisfied = (
+  current: CurrentPlanResponse,
+  intent: CreatePlanIntent,
+): boolean => {
+  const plan = current.plan;
+  if (plan === null) return false;
+  return plan.role === intent.request.role
+    && plan.season === intent.request.season
+    && plan.track === intent.request.track
+    && plan.weeklyHours === intent.request.weeklyHours;
+};
+
+const selectMonotonicCurrentPlan = (
+  cached: CurrentPlanResponse | undefined,
+  incoming: CurrentPlanResponse,
+): CurrentPlanResponse => {
+  if (
+    cached === undefined
+    || cached.plan === null
+    || incoming.plan === null
+    || cached.plan.id !== incoming.plan.id
+  ) {
+    return incoming;
+  }
+  return incoming.plan.version < cached.plan.version ? cached : incoming;
+};
+
+export const cacheCurrentPlanMonotonically = (
+  queryClient: QueryClient,
+  ownerScope: string,
+  incoming: CurrentPlanResponse,
+): CurrentPlanResponse => {
+  let retained = incoming;
+  queryClient.setQueryData<CurrentPlanResponse>(
+    planQueryKeys.current(ownerScope),
+    (cached) => {
+      retained = selectMonotonicCurrentPlan(cached, incoming);
+      return retained;
+    },
+  );
+  return retained;
+};
+
 export type ReplayPlanDraftsOptions = Readonly<{
   csrfProof: string | null;
   ownerScope: string;
@@ -240,20 +297,27 @@ const planReplayOptions = (options: ReplayPlanDraftsOptions) => {
           !(error instanceof ApiError)
           || error.status !== 409
           || error.retryable
-          || (intent.kind !== "update-task" && intent.kind !== "complete-task")
+          || (
+            intent.kind !== "update-task"
+            && intent.kind !== "complete-task"
+            && !(intent.kind === "create" && error.code === "PLAN_ALREADY_ACTIVE")
+          )
         ) {
           throw error;
         }
-        const current = await runOwnerVerifiedOperation(
+        const incoming = await runOwnerVerifiedOperation(
           verifyOwner,
           (operationSignal) => getCurrentPlan(operationSignal),
           signal,
         );
-        options.queryClient.setQueryData(
-          planQueryKeys.current(options.ownerScope),
-          current,
+        const current = cacheCurrentPlanMonotonically(
+          options.queryClient,
+          options.ownerScope,
+          incoming,
         );
-        const acknowledged = planTaskIntentIsSatisfied(current, intent);
+        const acknowledged = intent.kind === "create"
+          ? createPlanIntentIsSatisfied(current, intent)
+          : planTaskIntentIsSatisfied(current, intent);
         await invalidatePlanReadModels(options.queryClient, options.ownerScope);
         return {
           acknowledged,

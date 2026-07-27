@@ -2,18 +2,32 @@ import { createElement, lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router-dom";
 
 import { Spinner } from "../../design-system/primitives/Spinner";
-import AuthPage from "../../pages/v2/AuthPage";
-import NotFoundPage from "../../pages/v2/NotFoundPage";
-import { AuthenticatedShellRoute } from "./AuthenticatedShellRoute";
 import { COMPATIBILITY_BUSINESS_ROUTES } from "./businessRouteOwnership";
+import { PlanRouteLoadingFallback } from "./PlanRouteLoadingFallback";
 import { ProblemsRoute } from "./ProblemsRoute";
-import { RouteErrorBoundary } from "./RouteErrorBoundary";
 
+const authPage = lazy(
+  () => import("../../pages/v2/AuthPage"),
+);
+const authenticatedShellRoute = lazy(async () => {
+  const module = await import("./AuthenticatedShellRoute");
+  return { default: module.AuthenticatedShellRoute };
+});
+const routeErrorBoundary = lazy(async () => {
+  const module = await import("./RouteErrorBoundary");
+  return { default: module.RouteErrorBoundary };
+});
+const notFoundPage = lazy(
+  () => import("../../pages/v2/NotFoundPage"),
+);
 const legacyRouteAdapter = lazy(
   () => import("../../legacy-preview/LegacyRouteAdapter"),
 );
 const overviewPage = lazy(
   () => import("../../pages/training/OverviewPage"),
+);
+const planPage = lazy(
+  () => import("../../pages/plan/PlanPage"),
 );
 
 const legacyCompatibilityElement = (
@@ -44,25 +58,57 @@ const nativeOverviewElement = (
   </Suspense>
 );
 
+const nativePlanElement = (
+  <Suspense fallback={<PlanRouteLoadingFallback />}>
+    {createElement(planPage)}
+  </Suspense>
+);
+
 export const authenticatedBusinessRouteChildren = [
   { index: true, element: nativeOverviewElement },
+  { path: "plan", element: nativePlanElement },
   ...compatibilityRouteChildren,
-  { path: "*", element: <NotFoundPage /> },
+  {
+    path: "*",
+    element: (
+      <Suspense fallback={<Spinner label="正在载入页面" size="large" />}>
+        {createElement(notFoundPage)}
+      </Suspense>
+    ),
+  },
 ];
+
+const authElement = (
+  <Suspense fallback={<Spinner label="正在载入登录页面" size="large" />}>
+    {createElement(authPage)}
+  </Suspense>
+);
+
+const authenticatedShellElement = (
+  <Suspense fallback={<Spinner label="正在载入训练空间" size="large" />}>
+    {createElement(authenticatedShellRoute)}
+  </Suspense>
+);
+
+const routeErrorElement = (
+  <Suspense fallback={<Spinner label="正在恢复页面" size="large" />}>
+    {createElement(routeErrorBoundary)}
+  </Suspense>
+);
 
 export const appRouter = createBrowserRouter([
   {
     path: "/login",
-    element: <AuthPage />,
+    element: authElement,
   },
   {
     path: "/auth/reset",
-    element: <AuthPage />,
+    element: authElement,
   },
   {
     path: "/",
-    element: <AuthenticatedShellRoute />,
-    errorElement: <RouteErrorBoundary />,
+    element: authenticatedShellElement,
+    errorElement: routeErrorElement,
     children: authenticatedBusinessRouteChildren,
   },
 ]);

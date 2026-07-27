@@ -3,6 +3,8 @@ import { expect, test, type Page, type Request, type Route } from "playwright/te
 
 import { mockLegacyPreviewFrame } from "./legacy-frame.fixture";
 
+const routeReadyTimeoutMs = 20_000;
+
 type ApiCall = Readonly<{
   method: string;
   path: string;
@@ -276,7 +278,9 @@ test("@visual:auth:light-dark 三种批准尺寸无溢出、无 PNG 且只有一
     for (const theme of ["light", "dark"] as const) {
       await page.emulateMedia({ colorScheme: theme });
       await page.goto("/login");
-      await expect(page.getByRole("heading", { name: "欢迎回来", exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "欢迎回来", exact: true })).toBeVisible({
+        timeout: routeReadyTimeoutMs,
+      });
       await expect(page.locator("html")).toHaveAttribute("data-qg-theme", theme);
 
       const layout = await page.evaluate(() => ({

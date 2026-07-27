@@ -43,6 +43,7 @@ export const APPROVED_BUSINESS_ROUTES = Object.freeze([
 
 export const APPROVED_NATIVE_BUSINESS_ROUTES = Object.freeze([
   { id: "overview", path: "/" },
+  { id: "plan", path: "/plan" },
 ]);
 
 export const APPROVED_UNMIGRATED_ROUTES = Object.freeze(
@@ -84,6 +85,7 @@ export const PHASE1_PRODUCTION_SOURCE_ROOTS = Object.freeze([
   "src/core",
   "src/design-system",
   "src/domains",
+  "src/pages/plan",
   "src/pages/training",
   "src/pages/v2",
   "src/shared",
@@ -406,7 +408,7 @@ export function validateBusinessRouteOwnershipSource(source) {
   failures.push(...parsed.failures);
   if (!sameOwnership(parsed.ownership, approvedBusinessRouteOwnership)) {
     failures.push(
-      "BUSINESS_ROUTE_OWNERSHIP must assign Overview to native and the remaining 21 routes to compatibility",
+      "BUSINESS_ROUTE_OWNERSHIP must assign Overview and Plan to native and the remaining 20 routes to compatibility",
     );
   }
   const ids = parsed.ownership.map(({ id }) => id);
@@ -425,7 +427,7 @@ export function validateUnmigratedRoutesSource(source) {
   failures.push(...parseFailures);
   if (!sameRoutes(routes, APPROVED_UNMIGRATED_ROUTES)) {
     failures.push(
-      "UNMIGRATED_ROUTES must be the exact independent 21-route compatibility allowlist",
+      "UNMIGRATED_ROUTES must be the exact independent 20-route compatibility allowlist",
     );
   }
 
@@ -1105,7 +1107,7 @@ const validateCompatibilityRouteMapping = (routerAst) => {
 
   if (mappingCalls.length !== 1) {
     failures.push(
-      "V2 router must map all 21 compatibility routes exactly once from the ownership registry",
+      "V2 router must map all 20 compatibility routes exactly once from the ownership registry",
     );
     return failures;
   }
@@ -1167,7 +1169,7 @@ export function validateRouterMappingSources({
   );
   failures.push(...ownership.failures);
   if (!sameOwnership(ownership.ownership, approvedBusinessRouteOwnership)) {
-    failures.push("business route ownership must remain one native plus 21 compatibility routes");
+    failures.push("business route ownership must remain two native plus 20 compatibility routes");
   }
   if (!sameRoutes(
     ownership.ownership.map(({ id, path: routePath }) => ({ id, path: routePath })),
@@ -1185,7 +1187,7 @@ export function validateRouterMappingSources({
     registry.routes.length !== APPROVED_UNMIGRATED_ROUTES.length
     || !sameRoutes(registry.routes, APPROVED_UNMIGRATED_ROUTES)
   ) {
-    failures.push("unmigrated route registry must equal the 21-route compatibility ownership complement");
+    failures.push("unmigrated route registry must equal the 20-route compatibility ownership complement");
   }
 
   const parsedRouter = parseSource(routerSource, REQUIRED_FILES.router, "tsx");
@@ -1203,10 +1205,22 @@ export function validateRouterMappingSources({
     failures.push("V2 router must map the root Overview route to a native element");
   }
   if (
+    !/\{\s*path\s*:\s*["']plan["']\s*,\s*element\s*:\s*nativePlanElement\s*\}/u
+      .test(routerSource)
+  ) {
+    failures.push("V2 router must map /plan to its native Plan element");
+  }
+  if (
     /\{\s*index\s*:\s*true\s*,\s*element\s*:\s*legacyCompatibilityElement\s*\}/u
       .test(routerSource)
   ) {
     failures.push("native Overview must not use the compatibility adapter");
+  }
+  if (
+    /\{\s*path\s*:\s*["']plan["']\s*,\s*element\s*:\s*legacyCompatibilityElement\s*\}/u
+      .test(routerSource)
+  ) {
+    failures.push("native Plan must not use the compatibility adapter");
   }
   if (!/LegacyRouteAdapter|legacy-preview/u.test(routerSource)) {
     failures.push("V2 router must bind compatibility routes to the Preview adapter");

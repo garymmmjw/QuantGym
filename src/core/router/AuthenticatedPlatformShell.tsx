@@ -22,9 +22,14 @@ import {
 import {
   authQueryKeys,
   currentUserQueryOptions,
+  getCurrentUser,
 } from "../../domains/account/auth/auth.queries";
 import type { MeResponse } from "../../domains/account/auth/auth.schema";
 import { useDashboardOverviewQuery } from "../../domains/dashboard/dashboard.queries";
+import { PLAN_RECONNECT_REPLAYED_EVENT } from "../../domains/plan/plan.events";
+import {
+  registerPlanDraftReconnectReplay,
+} from "../../domains/plan/plan.recovery";
 import { TRAINING_RECONNECT_REPLAYED_EVENT } from "../../domains/training/training.events";
 import {
   registerTrainingDraftReconnectReplay,
@@ -186,12 +191,8 @@ export function AuthenticatedPlatformShell({
     [ownerScope, sessionCsrfProof],
   );
   const logoutToastId = `session-${sessionToastScope}-logout`;
-  const verifyCurrentOwner = useCallback(async () => {
-    const latest = await queryClient.fetchQuery({
-      ...currentUserQueryOptions(),
-      networkMode: "always",
-      staleTime: 0,
-    });
+  const verifyCurrentOwner = useCallback(async (signal?: AbortSignal) => {
+    const latest = await getCurrentUser(signal);
     if (
       latest === null
       || createAccountScope(latest.email) !== ownerScope
@@ -204,6 +205,20 @@ export function AuthenticatedPlatformShell({
         status: 401,
       });
     }
+    queryClient.setQueryData<MeResponse | null>(authQueryKeys.me, (current) => {
+      if (
+        current === null
+        || current === undefined
+        || createAccountScope(current.email) !== ownerScope
+      ) return latest;
+
+      return {
+        ...latest,
+        preferences: current.preferences.version > latest.preferences.version
+          ? current.preferences
+          : latest.preferences,
+      };
+    });
   }, [ownerScope, queryClient]);
   const currentCacheMatchesOwner = useCallback((expectedOwnerScope: string) => {
     const latest = queryClient.getQueryData<MeResponse | null>(authQueryKeys.me);
@@ -405,6 +420,35 @@ export function AuthenticatedPlatformShell({
         || typeof window === "undefined"
       ) return;
       window.dispatchEvent(new Event(TRAINING_RECONNECT_REPLAYED_EVENT));
+    },
+    ownerScope,
+    queryClient,
+    verifyOwner: verifyCurrentOwner,
+  }), [
+    currentCacheMatchesOwner,
+    ownerScope,
+    queryClient,
+    sessionCsrfProof,
+    verifyCurrentOwner,
+  ]);
+
+  useEffect(() => registerPlanDraftReconnectReplay({
+    csrfProof: sessionCsrfProof,
+    onError: () => {
+      if (
+        !sessionBoundaryActiveRef.current
+        || !currentCacheMatchesOwner(ownerScope)
+        || typeof window === "undefined"
+      ) return;
+      window.dispatchEvent(new Event(PLAN_RECONNECT_REPLAYED_EVENT));
+    },
+    onReport: () => {
+      if (
+        !sessionBoundaryActiveRef.current
+        || !currentCacheMatchesOwner(ownerScope)
+        || typeof window === "undefined"
+      ) return;
+      window.dispatchEvent(new Event(PLAN_RECONNECT_REPLAYED_EVENT));
     },
     ownerScope,
     queryClient,

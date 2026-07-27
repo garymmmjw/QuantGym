@@ -17,7 +17,9 @@ import {
 
 const shellMocks = vi.hoisted(() => ({
   apiRequest: vi.fn(),
+  registerPlanReplay: vi.fn(),
   registerTrainingReplay: vi.fn(),
+  stopPlanReplay: vi.fn(),
   stopTrainingReplay: vi.fn(),
 }));
 
@@ -26,6 +28,11 @@ vi.mock("../../domains/training/training.recovery", () => ({
   registerTrainingDraftReconnectReplay: (
     options: Record<string, unknown>,
   ) => shellMocks.registerTrainingReplay(options),
+}));
+vi.mock("../../domains/plan/plan.recovery", () => ({
+  registerPlanDraftReconnectReplay: (
+    options: Record<string, unknown>,
+  ) => shellMocks.registerPlanReplay(options),
 }));
 
 const apiRequestMock = shellMocks.apiRequest;
@@ -82,6 +89,7 @@ beforeEach(() => {
   shellMocks.registerTrainingReplay.mockReturnValue(
     shellMocks.stopTrainingReplay,
   );
+  shellMocks.registerPlanReplay.mockReturnValue(shellMocks.stopPlanReplay);
   vi.spyOn(document, "cookie", "get").mockImplementation(() => liveCsrfCookie);
   apiRequestMock.mockImplementation((
     path: string,
@@ -105,7 +113,7 @@ beforeEach(() => {
 });
 
 describe("AuthenticatedPlatformShell", () => {
-  it("registers owner-verified training reconnect replay and cleans it up", async () => {
+  it("registers owner-verified training and plan reconnect replay and cleans them up", async () => {
     const { queryClient, unmount } = renderShell();
 
     await waitFor(() => expect(shellMocks.registerTrainingReplay).toHaveBeenCalledOnce());
@@ -117,9 +125,106 @@ describe("AuthenticatedPlatformShell", () => {
       queryClient,
       verifyOwner: expect.any(Function),
     }));
+    await waitFor(() => expect(shellMocks.registerPlanReplay).toHaveBeenCalledOnce());
+    expect(shellMocks.registerPlanReplay).toHaveBeenCalledWith(expect.objectContaining({
+      csrfProof: sessionCsrfProof,
+      onError: expect.any(Function),
+      onReport: expect.any(Function),
+      ownerScope: expect.stringMatching(/^acct-[a-f0-9]{16}$/u),
+      queryClient,
+      verifyOwner: expect.any(Function),
+    }));
 
     unmount();
     expect(shellMocks.stopTrainingReplay).toHaveBeenCalledOnce();
+    expect(shellMocks.stopPlanReplay).toHaveBeenCalledOnce();
+  });
+
+  it("keeps same-owner preference versions monotonic when owner checks resolve out of order", async () => {
+    const staleCurrentUser = createDeferred<MeResponse>();
+    const freshCurrentUser = createDeferred<MeResponse>();
+    let meRequestCount = 0;
+    apiRequestMock.mockImplementation((path: string) => {
+      if (path === "/me") {
+        meRequestCount += 1;
+        if (meRequestCount === 1) return Promise.resolve(currentUser);
+        return meRequestCount === 2
+          ? staleCurrentUser.promise
+          : freshCurrentUser.promise;
+      }
+      if (path === "/notifications") {
+        return Promise.resolve({ items: [], nextCursor: null, unreadCount: 0 });
+      }
+      if (path === "/todos") return Promise.resolve({ items: [] });
+      throw new Error(`UNHANDLED_TEST_API:${path}`);
+    });
+    const { queryClient } = renderShell();
+
+    await waitFor(() => expect(shellMocks.registerPlanReplay).toHaveBeenCalledOnce());
+    await waitFor(() => expect(meRequestCount).toBe(1));
+    const { verifyOwner } = shellMocks.registerPlanReplay.mock.calls[0]?.[0] as {
+      readonly verifyOwner: (signal?: AbortSignal) => Promise<void>;
+    };
+    const staleVerification = verifyOwner();
+    const freshVerification = verifyOwner();
+    await waitFor(() => expect(meRequestCount).toBe(3));
+
+    const freshPreferences = { language: "en", theme: "dark", version: 9 } as const;
+    const freshResponse: MeResponse = {
+      ...currentUser,
+      displayName: "Gary Current",
+      preferences: freshPreferences,
+    };
+    await act(async () => {
+      freshCurrentUser.resolve(freshResponse);
+      await freshVerification;
+    });
+    expect(queryClient.getQueryData(authQueryKeys.me)).toEqual(freshResponse);
+
+    await act(async () => {
+      staleCurrentUser.resolve({
+        ...currentUser,
+        displayName: "Gary From Older Response",
+      });
+      await staleVerification;
+    });
+
+    expect(queryClient.getQueryData<MeResponse>(authQueryKeys.me)?.preferences)
+      .toEqual(freshPreferences);
+  });
+
+  it("still rejects a changed owner before merging a cached preference version", async () => {
+    const otherUser: MeResponse = {
+      displayName: "Ada",
+      email: "ada@example.com",
+      emailVerified: true,
+      preferences: { language: "en", theme: "dark", version: 3 },
+    };
+    apiRequestMock.mockImplementation((path: string) => {
+      if (path === "/me") return Promise.resolve(otherUser);
+      if (path === "/notifications") {
+        return Promise.resolve({ items: [], nextCursor: null, unreadCount: 0 });
+      }
+      if (path === "/todos") return Promise.resolve({ items: [] });
+      throw new Error(`UNHANDLED_TEST_API:${path}`);
+    });
+    const { queryClient } = renderShell();
+    const cachedUser: MeResponse = {
+      ...currentUser,
+      preferences: { language: "zh-CN", theme: "light", version: 12 },
+    };
+    queryClient.setQueryData(authQueryKeys.me, cachedUser);
+
+    await waitFor(() => expect(shellMocks.registerPlanReplay).toHaveBeenCalledOnce());
+    const { verifyOwner } = shellMocks.registerPlanReplay.mock.calls[0]?.[0] as {
+      readonly verifyOwner: (signal?: AbortSignal) => Promise<void>;
+    };
+
+    await expect(verifyOwner()).rejects.toMatchObject({
+      code: "AUTH_SESSION_OWNER_CHANGED",
+      status: 401,
+    });
+    expect(queryClient.getQueryData(authQueryKeys.me)).toEqual(cachedUser);
   });
 
   it("keeps search, notifications and Todo mutually exclusive with focus restoration", async () => {

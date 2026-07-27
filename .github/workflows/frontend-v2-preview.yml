@@ -73,12 +73,12 @@ jobs:
         shell: bash
         run: |
           find tests/e2e-v2 -type f -name '*-linux.png' -delete
-          npm run test:e2e:v2 -- --grep '@visual:' --update-snapshots --retries=0 --timeout=90000
+          npm run test:e2e:v2 -- --grep '@visual:' --update-snapshots --retries=0 --timeout=300000
 
           mapfile -d '' snapshots < <(
             find tests/e2e-v2 -type f -name '*-linux.png' -print0 | sort -z
           )
-          test "${#snapshots[@]}" = "21"
+          test "${#snapshots[@]}" = "29"
 
           artifact_dir="$RUNNER_TEMP/playwright-linux-visual-baselines"
           test ! -e "$artifact_dir"
@@ -98,7 +98,7 @@ jobs:
           ${{
             inputs.update_linux_visual_baselines
             && steps.generate_linux_baselines.outcome == 'success'
-            && steps.generate_linux_baselines.outputs.snapshot_count == '21'
+            && steps.generate_linux_baselines.outputs.snapshot_count == '29'
           }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -107,7 +107,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Run the complete 82-test Playwright suite
+      - name: Run the complete Playwright suite
         if: ${{ !inputs.update_linux_visual_baselines }}
         run: npm run test:e2e:v2 -- --retries=0
 

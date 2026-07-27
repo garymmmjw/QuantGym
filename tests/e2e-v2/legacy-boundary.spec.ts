@@ -275,7 +275,7 @@ const phase1SystemCases: readonly Phase1SystemCase[] = [
     id: "system:desktop-shell",
     authenticated: true,
     exercise: async (page) => {
-      await page.goto("/plan");
+      await page.goto("/skills");
       await expect(page.getByRole("main")).toHaveAttribute("id", "qg-main-content");
       await expect(page.getByRole("navigation", { name: "主导航", exact: true })).toBeVisible();
     },
@@ -347,6 +347,11 @@ const phase1SystemCases: readonly Phase1SystemCase[] = [
     authenticated: true,
     exercise: async (page) => {
       await page.goto("/");
+      await expect(page.getByRole("main")).toHaveAttribute(
+        "id",
+        "qg-main-content",
+        { timeout: 20_000 },
+      );
       await setReportedOnlineState(page, false);
       await expect(page.locator('[data-network-status="offline"]')).toBeVisible();
       await setReportedOnlineState(page, true);

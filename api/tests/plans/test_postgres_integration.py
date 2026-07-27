@@ -29,6 +29,7 @@ from api.app.plans.schemas import (
 from api.app.plans.service import PlansService, apply_training_plan_effect
 from api.app.preferences.schemas import UpdatePreferencesRequest
 from api.app.preferences.service import PreferencesService
+from api.app.training.service import TrainingService
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -1085,6 +1086,255 @@ def test_current_snapshot_and_rediagnostic_hide_blocked_successor(
     assert persisted["recommendation_id"] is None
     assert persisted["target_problem_id"] is None
     assert persisted["title"] == "leetcode 针对性训练"
+
+
+def test_hidden_training_target_is_atomically_detached_and_completable(
+    postgres_engine: Any,
+) -> None:
+    original_problem_id = _insert_diagnostic_catalog(postgres_engine)
+    plans = PlansService(
+        postgres_engine,
+        clock=lambda: NOW,
+        fingerprint_secret=FINGERPRINT_SECRET,
+    )
+    plans.create_plan(
+        user_id=USER_ID,
+        payload=CreatePlanRequest(
+            track="internship",
+            role="quantDeveloper",
+            season="2027-summer",
+            weekly_hours=8,
+        ),
+        idempotency_key=IdempotencyKey("ac" * 32),
+    )
+    plans.run_diagnostic(
+        user_id=USER_ID,
+        payload=_diagnostic_payload(plan_version=1),
+        idempotency_key=IdempotencyKey("bd" * 32),
+    )
+    before = plans.get_current(user_id=USER_ID)
+    assert before is not None
+    linked_task = next(
+        task for task in before.tasks if task.target_problem_id == original_problem_id
+    )
+    assert linked_task.recommendation_id is not None
+
+    training = TrainingService(postgres_engine, clock=lambda: NOW)
+    started = training.start_or_resume(
+        user_id=USER_ID,
+        problem_id=original_problem_id,
+        plan_task_id=linked_task.id,
+        idempotency_key=IdempotencyKey("ce" * 32),
+    )
+    assert started.resumed is False
+
+    blocked_source_id = _insert_blocked_successor(postgres_engine)
+
+    hidden = plans.get_current(user_id=USER_ID)
+    assert hidden is not None
+    public_task = next(task for task in hidden.tasks if task.id == linked_task.id)
+    assert public_task.target_problem_id is None
+    assert public_task.title == "leetcode 针对性训练"
+    assert public_task.version == linked_task.version
+    assert hidden.plan.version == before.plan.version
+
+    with pytest.raises(ApiError) as hidden_training:
+        training.start_or_resume(
+            user_id=USER_ID,
+            problem_id=original_problem_id,
+            plan_task_id=linked_task.id,
+            idempotency_key=IdempotencyKey("df" * 32),
+        )
+    assert hidden_training.value.code == "PROBLEM_NOT_FOUND"
+
+    completed = plans.complete_plan_task(
+        user_id=USER_ID,
+        task_id=public_task.id,
+        payload=CompletePlanTaskRequest(
+            plan_version=hidden.plan.version,
+            task_version=public_task.version,
+        ),
+    )
+    assert completed.plan_version == hidden.plan.version + 1
+    assert completed.task.status == "completed"
+    assert completed.task.version == public_task.version + 1
+    assert completed.task.target_problem_id is None
+    assert completed.task.recommendation_id is None
+    assert completed.task.title == "leetcode 针对性训练"
+    assert (
+        completed.task.detail
+        == "完成一组 leetcode 针对性练习并记录复盘。"
+    )
+
+    with postgres_engine.connect() as connection:
+        persisted = connection.execute(
+            text(
+                """
+                SELECT status, recommendation_id, target_problem_id, title, detail,
+                       (
+                           SELECT jsonb_build_object(
+                               'status', session.status,
+                               'planTaskId', session.plan_task_id,
+                               'version', session.version,
+                               'completedAt', session.completed_at
+                           )
+                           FROM training_sessions AS session
+                           WHERE session.id = :session_id
+                             AND session.user_id = :user_id
+                       ) AS training_session,
+                       (
+                           SELECT count(*)
+                           FROM training_events AS event
+                           WHERE event.training_session_id = :session_id
+                             AND event.user_id = :user_id
+                       ) AS training_event_count
+                FROM plan_tasks
+                WHERE id = :task_id
+                  AND user_id = :user_id
+                """
+            ),
+            {
+                "task_id": linked_task.id,
+                "session_id": started.session_id,
+                "user_id": USER_ID,
+            },
+        ).mappings().one()
+    assert {
+        "status": persisted["status"],
+        "recommendation_id": persisted["recommendation_id"],
+        "target_problem_id": persisted["target_problem_id"],
+        "title": persisted["title"],
+        "detail": persisted["detail"],
+    } == {
+        "status": "completed",
+        "recommendation_id": None,
+        "target_problem_id": None,
+        "title": "leetcode 针对性训练",
+        "detail": "完成一组 leetcode 针对性练习并记录复盘。",
+    }
+    assert persisted["training_session"] == {
+        "status": "abandoned",
+        "planTaskId": None,
+        "version": started.session_version + 1,
+        "completedAt": None,
+    }
+    assert persisted["training_event_count"] == 0
+
+    with postgres_engine.begin() as connection:
+        connection.execute(
+            text("DELETE FROM problem_sources WHERE id = :source_id"),
+            {"source_id": blocked_source_id},
+        )
+    recovered = training.start_or_resume(
+        user_id=USER_ID,
+        problem_id=original_problem_id,
+        plan_task_id=None,
+        idempotency_key=IdempotencyKey("e0" * 32),
+    )
+    assert recovered.session_id != started.session_id
+    assert recovered.resumed is False
+    with postgres_engine.connect() as connection:
+        active_session_count = connection.execute(
+            text(
+                """
+                SELECT count(*)
+                FROM training_sessions
+                WHERE user_id = :user_id
+                  AND problem_id = :problem_id
+                  AND status = 'active'
+                """
+            ),
+            {"user_id": USER_ID, "problem_id": original_problem_id},
+        ).scalar_one()
+    assert active_session_count == 1
+
+
+def test_completion_visibility_race_returns_task_conflict_before_safe_retry(
+    postgres_engine: Any,
+) -> None:
+    original_problem_id = _insert_diagnostic_catalog(postgres_engine)
+    plans = PlansService(
+        postgres_engine,
+        clock=lambda: NOW,
+        fingerprint_secret=FINGERPRINT_SECRET,
+    )
+    plans.create_plan(
+        user_id=USER_ID,
+        payload=CreatePlanRequest(
+            track="internship",
+            role="quantDeveloper",
+            season="2027-summer",
+            weekly_hours=8,
+        ),
+        idempotency_key=IdempotencyKey("f1" * 32),
+    )
+    plans.run_diagnostic(
+        user_id=USER_ID,
+        payload=_diagnostic_payload(plan_version=1),
+        idempotency_key=IdempotencyKey("02" * 32),
+    )
+    current = plans.get_current(user_id=USER_ID)
+    assert current is not None
+    linked_task = next(
+        task for task in current.tasks if task.target_problem_id == original_problem_id
+    )
+    visibility_changed: list[bool] = []
+
+    def block_after_rejected_completion(
+        _connection: Any,
+        _cursor: Any,
+        statement: str,
+        _parameters: Any,
+        _context: Any,
+        _executemany: bool,
+    ) -> None:
+        if visibility_changed or "UPDATE plan_tasks AS task" not in statement:
+            return
+        visibility_changed.append(True)
+        _insert_blocked_successor(postgres_engine)
+
+    event.listen(
+        postgres_engine,
+        "after_cursor_execute",
+        block_after_rejected_completion,
+    )
+    try:
+        with pytest.raises(ApiError) as raced:
+            plans.complete_plan_task(
+                user_id=USER_ID,
+                task_id=linked_task.id,
+                payload=CompletePlanTaskRequest(
+                    plan_version=current.plan.version,
+                    task_version=linked_task.version,
+                ),
+            )
+    finally:
+        event.remove(
+            postgres_engine,
+            "after_cursor_execute",
+            block_after_rejected_completion,
+        )
+
+    assert visibility_changed == [True]
+    assert raced.value.code == "PLAN_TASK_CONFLICT"
+    hidden = plans.get_current(user_id=USER_ID)
+    assert hidden is not None
+    hidden_task = next(task for task in hidden.tasks if task.id == linked_task.id)
+    assert hidden.plan.version == current.plan.version
+    assert hidden_task.status == "open"
+    assert hidden_task.version == linked_task.version
+    assert hidden_task.target_problem_id is None
+
+    completed = plans.complete_plan_task(
+        user_id=USER_ID,
+        task_id=hidden_task.id,
+        payload=CompletePlanTaskRequest(
+            plan_version=hidden.plan.version,
+            task_version=hidden_task.version,
+        ),
+    )
+    assert completed.task.status == "completed"
+    assert completed.task.target_problem_id is None
 
 
 def test_diagnostic_binding_does_not_steal_foreign_recommendation_task(

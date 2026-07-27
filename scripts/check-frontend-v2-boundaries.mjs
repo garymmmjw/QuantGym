@@ -12,10 +12,12 @@ export const V2_BOUNDARY_SCAN_ROOTS = Object.freeze([
   "src/design-system",
   "src/domains",
   "src/shared",
+  "src/pages/plan",
   "src/pages/training",
   "src/pages/v2",
 ]);
 const V2_PAGE_ROOTS = Object.freeze([
+  "src/pages/plan",
   "src/pages/training",
   "src/pages/v2",
 ]);

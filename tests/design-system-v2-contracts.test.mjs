@@ -19,7 +19,8 @@ import {
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 
-test("the style policy scans native training pages", () => {
+test("the style policy scans native Plan and training pages", () => {
+  assert.ok(V2_STYLE_SCAN_ROOTS.includes("src/pages/plan"));
   assert.ok(V2_STYLE_SCAN_ROOTS.includes("src/pages/training"));
 });
 

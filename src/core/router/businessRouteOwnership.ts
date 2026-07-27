@@ -16,7 +16,7 @@ export type BusinessRouteOwnership = Readonly<{
  */
 export const BUSINESS_ROUTE_OWNERSHIP = Object.freeze([
   { id: "overview", owner: "native", path: "/" },
-  { id: "plan", owner: "compatibility", path: "/plan" },
+  { id: "plan", owner: "native", path: "/plan" },
   { id: "skills", owner: "compatibility", path: "/skills" },
   { id: "league", owner: "compatibility", path: "/league" },
   { id: "interview", owner: "compatibility", path: "/interview" },

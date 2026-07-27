@@ -7,7 +7,6 @@ import {
 } from "./unmigratedRoutes";
 
 const expectedRoutes = [
-  ["plan", "/plan"],
   ["skills", "/skills"],
   ["league", "/league"],
   ["interview", "/interview"],
@@ -31,21 +30,23 @@ const expectedRoutes = [
 ] as const;
 
 describe("unmigrated route allowlist", () => {
-  it("contains exactly the approved 21 unique compatibility routes", () => {
+  it("contains exactly the approved 20 unique compatibility routes", () => {
     expect(UNMIGRATED_ROUTES.map(({ id, path }) => [id, path])).toEqual(expectedRoutes);
-    expect(new Set(UNMIGRATED_ROUTES.map(({ id }) => id))).toHaveLength(21);
-    expect(new Set(UNMIGRATED_ROUTES.map(({ path }) => path))).toHaveLength(21);
+    expect(new Set(UNMIGRATED_ROUTES.map(({ id }) => id))).toHaveLength(20);
+    expect(new Set(UNMIGRATED_ROUTES.map(({ path }) => path))).toHaveLength(20);
     expect(resolveUnmigratedRoute("/")).toBeNull();
+    expect(resolveUnmigratedRoute("/plan")).toBeNull();
   });
 
   it("normalizes only allowlisted pathnames and removes query or fragment data", () => {
-    expect(normalizeUnmigratedPathname("/plan/?token=secret#private")).toBe("/plan");
+    expect(normalizeUnmigratedPathname("/skills/?token=secret#private")).toBe("/skills");
     expect(normalizeUnmigratedPathname("/problems//")).toBe("/problems");
     expect(resolveUnmigratedRoute("/pk?match=private")?.id).toBe("pk");
 
     for (const rejected of [
       "https://example.com/plan",
       "//example.com/plan",
+      "/plan",
       "/unknown",
       "/plan/../account",
       "/plan%2f..%2faccount",

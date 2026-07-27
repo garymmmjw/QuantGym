@@ -38,4 +38,19 @@ describe("DashboardTemplate", () => {
     expect(screen.getByRole("status", { name: "Loading daily overview" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Stale action" })).not.toBeInTheDocument();
   });
+
+  it("marks routes that need a distinct stacked tablet layout", () => {
+    render(
+      <DashboardTemplate
+        aside={<p>Evidence</p>}
+        layout="tablet-stacked"
+        title="Plan"
+      >
+        <p>Tasks</p>
+      </DashboardTemplate>,
+    );
+
+    expect(screen.getByRole("region", { name: "Plan" }))
+      .toHaveAttribute("data-dashboard-layout", "tablet-stacked");
+  });
 });

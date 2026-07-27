@@ -32,6 +32,23 @@ describe("WorkflowBoard", () => {
     expect(screen.getByText("No later tasks")).toBeInTheDocument();
   });
 
+  it("accepts localized column and item-count labels", () => {
+    render(
+      <WorkflowBoard
+        ariaLabel="训练任务"
+        columns={[
+          { id: "open", items: [], title: "待完成" },
+          { id: "done", items: [], title: "已完成" },
+        ]}
+        columnsLabel="训练任务分栏"
+        itemCountLabel={(count) => `${count} 项任务`}
+      />,
+    );
+
+    expect(screen.getByRole("group", { name: "训练任务分栏" })).toBeInTheDocument();
+    expect(screen.getAllByLabelText("0 项任务")).toHaveLength(2);
+  });
+
   it("announces the read-only state while preserving readable board content", () => {
     render(
       <WorkflowBoard

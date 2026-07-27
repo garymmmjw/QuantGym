@@ -26,15 +26,15 @@ afterEach(() => {
 
 describe("LegacyRouteAdapter", () => {
   it("renders a clearly labelled, tightly sandboxed cross-origin compatibility frame", () => {
-    renderAdapter("/plan?private=value#secret");
+    renderAdapter("/skills?private=value#secret");
 
     expect(screen.getByText("兼容预览")).toBeVisible();
-    expect(screen.getByRole("heading", { name: "计划" })).toBeVisible();
+    expect(screen.getByRole("heading", { name: "能力值" })).toBeVisible();
     expect(screen.getByText(/隔离的旧版预览/u)).toBeVisible();
-    const frame = screen.getByTitle("计划 · 旧版兼容页面");
+    const frame = screen.getByTitle("能力值 · 旧版兼容页面");
     expect(frame).toHaveAttribute(
       "src",
-      "https://legacy-compat.quantgym-v2-preview.pages.dev/plan",
+      "https://legacy-compat.quantgym-v2-preview.pages.dev/skills",
     );
     expect(frame).toHaveAttribute(
       "sandbox",

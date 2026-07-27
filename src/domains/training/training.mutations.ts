@@ -340,6 +340,10 @@ export type TrainingMutationOptions = Readonly<{
   verifyOwner?: (signal?: AbortSignal) => Promise<void>;
 }>;
 
+export type StartTrainingMutationOptions = TrainingMutationOptions & Readonly<{
+  getOperationSignal?: () => AbortSignal | undefined;
+}>;
+
 const useTrainingMutationOptions = ({
   csrfProof,
   ownerScope,
@@ -356,13 +360,17 @@ const useTrainingMutationOptions = ({
   } as const;
 };
 
-export const useStartTrainingMutation = (options: TrainingMutationOptions) => {
+export const useStartTrainingMutation = ({
+  getOperationSignal,
+  ...options
+}: StartTrainingMutationOptions) => {
   const context = useTrainingMutationOptions(options);
   return useMutation<StartTrainingResponse, unknown, StartTrainingIntent>({
     mutationFn: async (intent) => {
       return runOwnerVerifiedOperation(
         context.verifyOwner,
         (signal) => startOrResumeTraining(intent, context.csrfProof, signal),
+        getOperationSignal?.(),
       );
     },
     mutationKey: ["training", context.ownerScope, "start"],
