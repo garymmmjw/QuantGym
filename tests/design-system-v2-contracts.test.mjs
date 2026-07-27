@@ -336,7 +336,7 @@ test("Storybook accessibility checks lock the complete story set and fail closed
   assert.doesNotMatch(source, /\.include\(["']#storybook-root["']\)/);
   assert.doesNotMatch(source, /skip-a11y/);
 
-  assert.equal(EXPECTED_STORY_IDS.length, 45);
+  assert.equal(EXPECTED_STORY_IDS.length, 76);
   assert.equal(isCompleteStorySet(compareStoryIds(EXPECTED_STORY_IDS)), true);
   assert.equal(
     isCompleteStorySet(compareStoryIds(EXPECTED_STORY_IDS.slice(1))),
