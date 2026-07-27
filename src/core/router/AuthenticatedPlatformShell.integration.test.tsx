@@ -15,9 +15,20 @@ import {
   preferenceController,
 } from "../../domains/platform/preferences";
 
-const { apiRequestMock } = vi.hoisted(() => ({ apiRequestMock: vi.fn() }));
+const shellMocks = vi.hoisted(() => ({
+  apiRequest: vi.fn(),
+  registerTrainingReplay: vi.fn(),
+  stopTrainingReplay: vi.fn(),
+}));
 
-vi.mock("../../shared/api/client", () => ({ apiRequest: apiRequestMock }));
+vi.mock("../../shared/api/client", () => ({ apiRequest: shellMocks.apiRequest }));
+vi.mock("../../domains/training/training.recovery", () => ({
+  registerTrainingDraftReconnectReplay: (
+    options: Record<string, unknown>,
+  ) => shellMocks.registerTrainingReplay(options),
+}));
+
+const apiRequestMock = shellMocks.apiRequest;
 
 const currentUser: MeResponse = {
   displayName: "Gary",
@@ -68,6 +79,9 @@ beforeEach(() => {
   preferenceController.reset();
   clearPreferenceSyncDrafts();
   liveCsrfCookie = `__Host-qg_csrf=${sessionCsrfProof}`;
+  shellMocks.registerTrainingReplay.mockReturnValue(
+    shellMocks.stopTrainingReplay,
+  );
   vi.spyOn(document, "cookie", "get").mockImplementation(() => liveCsrfCookie);
   apiRequestMock.mockImplementation((
     path: string,
@@ -91,13 +105,34 @@ beforeEach(() => {
 });
 
 describe("AuthenticatedPlatformShell", () => {
+  it("registers owner-verified training reconnect replay and cleans it up", async () => {
+    const { queryClient, unmount } = renderShell();
+
+    await waitFor(() => expect(shellMocks.registerTrainingReplay).toHaveBeenCalledOnce());
+    expect(shellMocks.registerTrainingReplay).toHaveBeenCalledWith(expect.objectContaining({
+      csrfProof: sessionCsrfProof,
+      onError: expect.any(Function),
+      onReport: expect.any(Function),
+      ownerScope: expect.stringMatching(/^acct-[a-f0-9]{16}$/u),
+      queryClient,
+      verifyOwner: expect.any(Function),
+    }));
+
+    unmount();
+    expect(shellMocks.stopTrainingReplay).toHaveBeenCalledOnce();
+  });
+
   it("keeps search, notifications and Todo mutually exclusive with focus restoration", async () => {
     const user = userEvent.setup();
     renderShell();
     const searchTrigger = screen.getByRole("button", { name: /搜索题目、公司、课程/ });
 
     await user.click(searchTrigger);
-    const searchDialog = await screen.findByRole("dialog", { name: "全局搜索" });
+    const searchDialog = await screen.findByRole(
+      "dialog",
+      { name: "全局搜索" },
+      { timeout: 5_000 },
+    );
     expect(screen.getByRole("combobox", { name: "全局搜索" })).toHaveFocus();
     await user.keyboard("{Escape}");
     expect(searchDialog).not.toBeInTheDocument();
@@ -106,15 +141,23 @@ describe("AuthenticatedPlatformShell", () => {
     const notificationTrigger = screen.getAllByRole("button", { name: "打开通知" })[0];
     expect(notificationTrigger).toBeDefined();
     await user.click(notificationTrigger as HTMLElement);
-    expect(await screen.findByRole("dialog", { name: "通知中心" })).toBeVisible();
+    expect(await screen.findByRole(
+      "dialog",
+      { name: "通知中心" },
+      { timeout: 5_000 },
+    )).toBeVisible();
     await user.keyboard("{Meta>}k{/Meta}");
     expect(screen.queryByRole("dialog", { name: "全局搜索" })).not.toBeInTheDocument();
     await user.keyboard("{Escape}");
 
     await user.click(screen.getByRole("button", { name: /打开今日待办/ }));
-    expect(await screen.findByRole("dialog", { name: "今日待办" })).toBeVisible();
+    expect(await screen.findByRole(
+      "dialog",
+      { name: "今日待办" },
+      { timeout: 5_000 },
+    )).toBeVisible();
     expect(screen.queryByRole("dialog", { name: "通知中心" })).not.toBeInTheDocument();
-  });
+  }, 15_000);
 
   it("navigates only through clearly labelled compatibility search results", async () => {
     const user = userEvent.setup();

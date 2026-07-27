@@ -7,7 +7,6 @@ import {
 } from "./unmigratedRoutes";
 
 const expectedRoutes = [
-  ["overview", "/"],
   ["plan", "/plan"],
   ["skills", "/skills"],
   ["league", "/league"],
@@ -32,10 +31,11 @@ const expectedRoutes = [
 ] as const;
 
 describe("unmigrated route allowlist", () => {
-  it("contains exactly the approved 22 unique routes", () => {
+  it("contains exactly the approved 21 unique compatibility routes", () => {
     expect(UNMIGRATED_ROUTES.map(({ id, path }) => [id, path])).toEqual(expectedRoutes);
-    expect(new Set(UNMIGRATED_ROUTES.map(({ id }) => id))).toHaveLength(22);
-    expect(new Set(UNMIGRATED_ROUTES.map(({ path }) => path))).toHaveLength(22);
+    expect(new Set(UNMIGRATED_ROUTES.map(({ id }) => id))).toHaveLength(21);
+    expect(new Set(UNMIGRATED_ROUTES.map(({ path }) => path))).toHaveLength(21);
+    expect(resolveUnmigratedRoute("/")).toBeNull();
   });
 
   it("normalizes only allowlisted pathnames and removes query or fragment data", () => {

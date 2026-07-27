@@ -174,7 +174,13 @@ function validateServerPreviewCatalog() {
 }
 
 function validateNativeV2CatalogBoundary() {
-  const roots = ["src/core", "src/shared", "src/domains", "src/pages/v2"];
+  const roots = [
+    "src/core",
+    "src/shared",
+    "src/domains",
+    "src/pages/training",
+    "src/pages/v2",
+  ];
   const forbiddenPatterns = [
     { label: "legacy problem catalog module", pattern: /(?:data\/problem-catalog|problem-catalog\.js)/ },
     { label: "legacy catalog data module", pattern: /(?:src\/catalog-data|catalog-data\.js)/ },

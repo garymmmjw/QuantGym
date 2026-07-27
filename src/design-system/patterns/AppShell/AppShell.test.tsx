@@ -74,6 +74,20 @@ describe("AppShell", () => {
     expect(onLanguageChange).toHaveBeenCalledWith("en");
   });
 
+  it("never fabricates level or streak while profile data is unavailable", () => {
+    renderShell();
+
+    expect(screen.queryByLabelText(/连续 .* 天/u)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/等级 /u)).not.toBeInTheDocument();
+  });
+
+  it("renders only server-backed level and streak values when provided", () => {
+    renderShell("/", { level: 7, streakDays: 12 });
+
+    expect(screen.getByLabelText("等级 7")).toHaveTextContent("Lv.7");
+    expect(screen.getAllByLabelText("连续 12 天")).toHaveLength(2);
+  });
+
   it("locks the approved 252px desktop shell and 860px mobile switch in CSS", () => {
     const appShellCss = readSiblingCss("./AppShell.module.css");
     const desktopSidebarCss = readSiblingCss("../DesktopSidebar/DesktopSidebar.module.css");

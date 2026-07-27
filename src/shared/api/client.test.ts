@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { apiRequest } from "./client";
+import { API_REQUEST_TIMEOUT_MS, apiRequest } from "./client";
 import { forgetCsrfToken, readCsrfToken, rememberCsrfToken } from "./csrf";
 import type { ApiError } from "./errors";
 
 afterEach(() => {
   forgetCsrfToken();
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -25,6 +26,75 @@ describe("apiRequest", () => {
     expect(init.credentials).toBe("include");
     expect(init.cache).toBe("no-store");
     expect(init.redirect).toBe("manual");
+  });
+
+  it("aborts a pending API request with a fixed timeout error", async () => {
+    vi.useFakeTimers();
+    const captured: { signal?: AbortSignal } = {};
+    vi.stubGlobal("fetch", vi.fn((_input: RequestInfo | URL, init?: RequestInit) => (
+      new Promise<Response>((_resolve, reject) => {
+        const signal = init?.signal;
+        if (!(signal instanceof AbortSignal)) {
+          reject(new Error("TEST_REQUEST_SIGNAL_REQUIRED"));
+          return;
+        }
+        captured.signal = signal;
+        const rejectAborted = () => reject(signal.reason);
+        if (signal.aborted) rejectAborted();
+        else signal.addEventListener("abort", rejectAborted, { once: true });
+      })
+    )));
+
+    const request = apiRequest("/health");
+    const assertion = expect(request).rejects.toMatchObject({
+      message: "API request timed out.",
+      name: "TimeoutError",
+    });
+    await vi.advanceTimersByTimeAsync(API_REQUEST_TIMEOUT_MS);
+    await assertion;
+
+    expect(captured.signal).toMatchObject({ aborted: true });
+    expect(captured.signal?.reason).toMatchObject({
+      message: "API request timed out.",
+      name: "TimeoutError",
+    });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("forwards an earlier caller abort reason through the internal signal", async () => {
+    vi.useFakeTimers();
+    const caller = new AbortController();
+    const callerReason = new DOMException("Caller stopped the request.", "AbortError");
+    caller.abort(callerReason);
+    const captured: { signal?: AbortSignal } = {};
+    vi.stubGlobal("fetch", vi.fn((_input: RequestInfo | URL, init?: RequestInit) => (
+      new Promise<Response>((_resolve, reject) => {
+        const signal = init?.signal;
+        if (!(signal instanceof AbortSignal)) {
+          reject(new Error("TEST_REQUEST_SIGNAL_REQUIRED"));
+          return;
+        }
+        captured.signal = signal;
+        if (signal.aborted) reject(signal.reason);
+        else signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+      })
+    )));
+
+    await expect(apiRequest("/health", { signal: caller.signal })).rejects.toBe(callerReason);
+    expect(captured.signal?.reason).toBe(callerReason);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("clears the timeout after a successful response", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ status: "ok" }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    )));
+
+    await expect(apiRequest<{ status: string }>("/health"))
+      .resolves.toEqual({ status: "ok" });
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("overwrites CSRF and removes caller-supplied secret and forwarding headers", async () => {

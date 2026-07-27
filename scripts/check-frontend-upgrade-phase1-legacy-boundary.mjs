@@ -16,7 +16,7 @@ export const APPROVED_LEGACY_SANDBOX_TOKENS = Object.freeze([
   "allow-scripts",
 ]);
 
-export const APPROVED_UNMIGRATED_ROUTES = Object.freeze([
+export const APPROVED_BUSINESS_ROUTES = Object.freeze([
   { id: "overview", path: "/" },
   { id: "plan", path: "/plan" },
   { id: "problems", path: "/problems" },
@@ -41,6 +41,16 @@ export const APPROVED_UNMIGRATED_ROUTES = Object.freeze([
   { id: "account", path: "/account" },
 ]);
 
+export const APPROVED_NATIVE_BUSINESS_ROUTES = Object.freeze([
+  { id: "overview", path: "/" },
+]);
+
+export const APPROVED_UNMIGRATED_ROUTES = Object.freeze(
+  APPROVED_BUSINESS_ROUTES.filter(({ id }) => (
+    !APPROVED_NATIVE_BUSINESS_ROUTES.some((route) => route.id === id)
+  )),
+);
+
 export const PHASE1_SYSTEM_SURFACES = Object.freeze([
   "system:auth",
   "system:desktop-shell",
@@ -56,6 +66,7 @@ const REQUIRED_FILES = Object.freeze({
   adapter: "src/legacy-preview/LegacyRouteAdapter.tsx",
   adapterStyles: "src/legacy-preview/adapter.module.css",
   navigation: "src/design-system/patterns/AppShell/navigation.ts",
+  ownership: "src/core/router/businessRouteOwnership.ts",
   routes: "src/legacy-preview/unmigratedRoutes.ts",
   router: "src/core/router/router.tsx",
   vite: "vite.v2.config.ts",
@@ -69,10 +80,11 @@ const EXPECTED_LEGACY_PREVIEW_FILES = Object.freeze([
   "unmigratedRoutes.ts",
 ]);
 
-const PRODUCTION_SOURCE_ROOTS = Object.freeze([
+export const PHASE1_PRODUCTION_SOURCE_ROOTS = Object.freeze([
   "src/core",
   "src/design-system",
   "src/domains",
+  "src/pages/training",
   "src/pages/v2",
   "src/shared",
 ]);
@@ -303,6 +315,60 @@ const routesFromNamedArrayExport = (
   };
 };
 
+const ownershipFromNamedArrayExport = (
+  source,
+  exportName,
+  file = REQUIRED_FILES.ownership,
+) => {
+  const { ast, failures } = parseSource(source, file, "ts");
+  if (ast === null) return { failures, ownership: [] };
+  const initializers = directNamedExportInitializers(ast, exportName);
+  if (initializers.length !== 1 || initializers[0] === null) {
+    return {
+      failures: [
+        ...failures,
+        `${file}: must directly export exactly one ${exportName} array`,
+      ],
+      ownership: [],
+    };
+  }
+  const array = unwrapFrozenExpression(initializers[0]);
+  if (array?.type !== "ArrayExpression") {
+    return {
+      failures: [
+        ...failures,
+        `${file}: ${exportName} must be initialized from a static array`,
+      ],
+      ownership: [],
+    };
+  }
+  const entries = array.elements.map(staticObject);
+  if (
+    entries.some((entry) => (
+      !isObject(entry)
+      || typeof entry.id !== "string"
+      || typeof entry.path !== "string"
+      || !["native", "compatibility"].includes(entry.owner)
+    ))
+  ) {
+    return {
+      failures: [
+        ...failures,
+        `${file}: ${exportName} must contain only static id/path/owner objects`,
+      ],
+      ownership: [],
+    };
+  }
+  return {
+    failures,
+    ownership: entries.map(({ id, owner, path: routePath }) => ({
+      id,
+      owner,
+      path: routePath,
+    })),
+  };
+};
+
 const sortedRoutes = (routes) => [...routes].sort((left, right) => (
   compareText(left.id, right.id) || compareText(left.path, right.path)
 ));
@@ -310,6 +376,45 @@ const sortedRoutes = (routes) => [...routes].sort((left, right) => (
 const sameRoutes = (left, right) => (
   JSON.stringify(sortedRoutes(left)) === JSON.stringify(sortedRoutes(right))
 );
+
+const sortedOwnership = (ownership) => [...ownership].sort((left, right) => (
+  compareText(left.id, right.id)
+  || compareText(left.path, right.path)
+  || compareText(left.owner, right.owner)
+));
+
+const sameOwnership = (left, right) => (
+  JSON.stringify(sortedOwnership(left)) === JSON.stringify(sortedOwnership(right))
+);
+
+const approvedBusinessRouteOwnership = Object.freeze(
+  APPROVED_BUSINESS_ROUTES.map(({ id, path: routePath }) => ({
+    id,
+    owner: APPROVED_NATIVE_BUSINESS_ROUTES.some((route) => route.id === id)
+      ? "native"
+      : "compatibility",
+    path: routePath,
+  })),
+);
+
+export function validateBusinessRouteOwnershipSource(source) {
+  const failures = [];
+  const parsed = ownershipFromNamedArrayExport(
+    source,
+    "BUSINESS_ROUTE_OWNERSHIP",
+  );
+  failures.push(...parsed.failures);
+  if (!sameOwnership(parsed.ownership, approvedBusinessRouteOwnership)) {
+    failures.push(
+      "BUSINESS_ROUTE_OWNERSHIP must assign Overview to native and the remaining 21 routes to compatibility",
+    );
+  }
+  const ids = parsed.ownership.map(({ id }) => id);
+  const paths = parsed.ownership.map(({ path: routePath }) => routePath);
+  if (new Set(ids).size !== ids.length) failures.push("business route ownership IDs must be unique");
+  if (new Set(paths).size !== paths.length) failures.push("business route ownership paths must be unique");
+  return [...new Set(failures)];
+}
 
 export function validateUnmigratedRoutesSource(source) {
   const failures = [];
@@ -320,7 +425,7 @@ export function validateUnmigratedRoutesSource(source) {
   failures.push(...parseFailures);
   if (!sameRoutes(routes, APPROVED_UNMIGRATED_ROUTES)) {
     failures.push(
-      "UNMIGRATED_ROUTES must be the exact independent 22-route allowlist",
+      "UNMIGRATED_ROUTES must be the exact independent 21-route compatibility allowlist",
     );
   }
 
@@ -726,8 +831,323 @@ const routesFromNavigationExport = (source, file = REQUIRED_FILES.navigation) =>
   };
 };
 
+const exactObjectPropertyValue = (node, propertyName) => {
+  const current = unwrapExpression(node);
+  if (current?.type !== "ObjectExpression") return null;
+  const matches = (current.properties ?? []).filter((property) => (
+    property?.type === "Property"
+    && !property.computed
+    && property.kind === "init"
+    && (
+      (property.key?.type === "Identifier" && property.key.name === propertyName)
+      || staticString(property.key) === propertyName
+    )
+  ));
+  return matches.length === 1 ? matches[0].value : null;
+};
+
+const objectPatternBinding = (pattern, propertyName) => {
+  if (pattern?.type !== "ObjectPattern") return null;
+  const matches = (pattern.properties ?? []).filter((property) => (
+    property?.type === "Property"
+    && !property.computed
+    && property.kind === "init"
+    && (
+      (property.key?.type === "Identifier" && property.key.name === propertyName)
+      || staticString(property.key) === propertyName
+    )
+  ));
+  if (matches.length !== 1 || matches[0].value?.type !== "Identifier") return null;
+  return matches[0].value.name;
+};
+
+const hasExactSimpleObjectPatternProperties = (pattern, expectedNames) => {
+  if (
+    pattern?.type !== "ObjectPattern"
+    || pattern.properties?.length !== expectedNames.length
+  ) {
+    return false;
+  }
+  const names = [];
+  for (const property of pattern.properties) {
+    if (
+      property?.type !== "Property"
+      || property.computed
+      || property.kind !== "init"
+      || property.value?.type !== "Identifier"
+    ) {
+      return false;
+    }
+    const name = property.key?.type === "Identifier"
+      ? property.key.name
+      : staticString(property.key);
+    if (name === null) return false;
+    names.push(name);
+  }
+  return names.sort(compareText).join("\0")
+    === [...expectedNames].sort(compareText).join("\0");
+};
+
+const isIdentifierNamed = (node, name) => (
+  unwrapExpression(node)?.type === "Identifier"
+  && unwrapExpression(node).name === name
+);
+
+const hasExactSimpleObjectProperties = (node, expectedNames) => {
+  const current = unwrapExpression(node);
+  if (
+    current?.type !== "ObjectExpression"
+    || current.properties?.length !== expectedNames.length
+  ) {
+    return false;
+  }
+  const names = [];
+  for (const property of current.properties) {
+    if (
+      property?.type !== "Property"
+      || property.computed
+      || property.kind !== "init"
+    ) {
+      return false;
+    }
+    const name = property.key?.type === "Identifier"
+      ? property.key.name
+      : staticString(property.key);
+    if (name === null) return false;
+    names.push(name);
+  }
+  return names.sort(compareText).join("\0")
+    === [...expectedNames].sort(compareText).join("\0");
+};
+
+const isExactPathSlice = (node, pathBinding) => {
+  const current = unwrapExpression(node);
+  return current?.type === "CallExpression"
+    && current.arguments?.length === 1
+    && unwrapExpression(current.arguments[0])?.type === "Literal"
+    && unwrapExpression(current.arguments[0]).value === 1
+    && current.callee?.type === "MemberExpression"
+    && !current.callee.computed
+    && isIdentifierNamed(current.callee.object, pathBinding)
+    && memberPropertyName(current.callee) === "slice";
+};
+
+const isExactPreviewRouteId = (node, idBinding) => {
+  const current = unwrapExpression(node);
+  return current?.type === "TemplateLiteral"
+    && current.expressions?.length === 1
+    && current.quasis?.length === 2
+    && (current.quasis[0]?.value?.cooked ?? current.quasis[0]?.value?.raw) === "preview-"
+    && (current.quasis[1]?.value?.cooked ?? current.quasis[1]?.value?.raw) === ""
+    && isIdentifierNamed(current.expressions[0], idBinding);
+};
+
+const uniqueTopLevelConstInitializer = (ast, variableName) => {
+  const allDeclarators = [];
+  traverseAst(ast, (node) => {
+    if (
+      node.type === "VariableDeclarator"
+      && node.id?.type === "Identifier"
+      && node.id.name === variableName
+    ) {
+      allDeclarators.push(node);
+    }
+  });
+  const topLevelDeclarations = [];
+  for (const statement of ast.body ?? []) {
+    const declaration = statement.type === "ExportNamedDeclaration"
+      ? statement.declaration
+      : statement;
+    if (declaration?.type !== "VariableDeclaration") continue;
+    for (const declarator of declaration.declarations ?? []) {
+      if (declarator.id?.type === "Identifier" && declarator.id.name === variableName) {
+        topLevelDeclarations.push({ declarator, kind: declaration.kind });
+      }
+    }
+  }
+  if (
+    allDeclarators.length !== 1
+    || topLevelDeclarations.length !== 1
+    || topLevelDeclarations[0].kind !== "const"
+    || topLevelDeclarations[0].declarator.init === null
+  ) {
+    return null;
+  }
+  return topLevelDeclarations[0].declarator.init;
+};
+
+const isExactLegacyAdapterLoader = (node) => {
+  const current = unwrapExpression(node);
+  if (
+    current?.type !== "CallExpression"
+    || !isIdentifierNamed(current.callee, "lazy")
+    || current.arguments?.length !== 1
+  ) {
+    return false;
+  }
+  const loader = unwrapExpression(current.arguments[0]);
+  const imported = unwrapExpression(loader?.body);
+  return loader?.type === "ArrowFunctionExpression"
+    && loader.params?.length === 0
+    && imported?.type === "ImportExpression"
+    && staticString(imported.source) === "../../legacy-preview/LegacyRouteAdapter";
+};
+
+const isExactLegacyCompatibilityElement = (node) => {
+  const current = unwrapExpression(node);
+  if (
+    current?.type !== "JSXElement"
+    || jsxElementName(current.openingElement) !== "Suspense"
+    || jsxElementName(current.closingElement) !== "Suspense"
+  ) {
+    return false;
+  }
+  const attributes = current.openingElement.attributes ?? [];
+  if (
+    attributes.length !== 1
+    || jsxAttributeName(attributes[0]) !== "fallback"
+    || attributes[0].value === null
+  ) {
+    return false;
+  }
+  const meaningfulChildren = (current.children ?? []).filter((child) => (
+    child.type !== "JSXText" || child.value.trim() !== ""
+  ));
+  if (meaningfulChildren.length !== 1) return false;
+  const mounted = unwrapExpression(meaningfulChildren[0]);
+  return mounted?.type === "CallExpression"
+    && isIdentifierNamed(mounted.callee, "createElement")
+    && mounted.arguments?.length === 1
+    && isIdentifierNamed(mounted.arguments[0], "legacyRouteAdapter");
+};
+
+const validateLegacyCompatibilityElement = (routerAst) => {
+  const failures = [];
+  const adapterInitializer = uniqueTopLevelConstInitializer(
+    routerAst,
+    "legacyRouteAdapter",
+  );
+  if (!isExactLegacyAdapterLoader(adapterInitializer)) {
+    failures.push(
+      "V2 router legacyRouteAdapter must uniquely lazy-load the isolated LegacyRouteAdapter module",
+    );
+  }
+  const elementInitializer = uniqueTopLevelConstInitializer(
+    routerAst,
+    "legacyCompatibilityElement",
+  );
+  if (!isExactLegacyCompatibilityElement(elementInitializer)) {
+    failures.push(
+      "V2 router legacyCompatibilityElement must be one unique Suspense wrapper around createElement(legacyRouteAdapter)",
+    );
+  }
+  return failures;
+};
+
+const isExactProblemsCompatibilityGateway = (
+  node,
+  pathBinding,
+) => {
+  const current = unwrapExpression(node);
+  if (current?.type !== "ConditionalExpression") return false;
+  const test = unwrapExpression(current.test);
+  if (
+    test?.type !== "BinaryExpression"
+    || test.operator !== "==="
+    || !isIdentifierNamed(test.left, pathBinding)
+    || staticString(test.right) !== "/problems"
+    || !isIdentifierNamed(current.alternate, "legacyCompatibilityElement")
+  ) {
+    return false;
+  }
+
+  const gateway = unwrapExpression(current.consequent);
+  if (
+    gateway?.type !== "JSXElement"
+    || jsxElementName(gateway.openingElement) !== "ProblemsRoute"
+    || gateway.openingElement?.selfClosing !== true
+    || (gateway.children ?? []).length !== 0
+  ) {
+    return false;
+  }
+  const attributes = gateway.openingElement.attributes ?? [];
+  if (attributes.length !== 1) return false;
+  const compatibilityElement = attributes[0];
+  return jsxAttributeName(compatibilityElement) === "compatibilityElement"
+    && isIdentifierNamed(
+      compatibilityElement.value,
+      "legacyCompatibilityElement",
+    );
+};
+
+const validateCompatibilityRouteMapping = (routerAst) => {
+  const failures = validateLegacyCompatibilityElement(routerAst);
+  const mappingCalls = [];
+  const problemsGateways = [];
+  traverseAst(routerAst, (node) => {
+    if (
+      node.type === "CallExpression"
+      && node.callee?.type === "MemberExpression"
+      && !node.callee.computed
+      && node.callee.object?.type === "Identifier"
+      && node.callee.object.name === "COMPATIBILITY_BUSINESS_ROUTES"
+      && memberPropertyName(node.callee) === "map"
+    ) {
+      mappingCalls.push(node);
+    }
+    if (
+      node.type === "JSXOpeningElement"
+      && jsxElementName(node) === "ProblemsRoute"
+    ) {
+      problemsGateways.push(node);
+    }
+  });
+
+  if (mappingCalls.length !== 1) {
+    failures.push(
+      "V2 router must map all 21 compatibility routes exactly once from the ownership registry",
+    );
+    return failures;
+  }
+
+  const callback = unwrapExpression(mappingCalls[0].arguments?.[0]);
+  const idBinding = objectPatternBinding(callback?.params?.[0], "id");
+  const pathBinding = objectPatternBinding(callback?.params?.[0], "path");
+  const callbackBody = unwrapExpression(callback?.body);
+  const mappedId = exactObjectPropertyValue(callbackBody, "id");
+  const mappedPath = exactObjectPropertyValue(callbackBody, "path");
+  const element = exactObjectPropertyValue(callbackBody, "element");
+  if (
+    callback?.type !== "ArrowFunctionExpression"
+    || callback.params?.length !== 1
+    || !hasExactSimpleObjectPatternProperties(callback.params[0], ["id", "path"])
+    || idBinding === null
+    || pathBinding === null
+    || callbackBody?.type !== "ObjectExpression"
+    || !hasExactSimpleObjectProperties(callbackBody, ["element", "id", "path"])
+    || !isExactPathSlice(mappedPath, pathBinding)
+    || !isExactProblemsCompatibilityGateway(element, pathBinding)
+  ) {
+    failures.push(
+      "V2 router compatibility mapping must bind every ordinary route to legacyCompatibilityElement and allow only /problems to use ProblemsRoute with compatibilityElement={legacyCompatibilityElement}",
+    );
+  }
+  if (idBinding === null || !isExactPreviewRouteId(mappedId, idBinding)) {
+    failures.push(
+      "V2 router compatibility mapping must derive every route id as preview-${id} from the ownership registry id",
+    );
+  }
+  if (problemsGateways.length !== 1) {
+    failures.push(
+      "V2 router must declare exactly one controlled ProblemsRoute compatibility gateway",
+    );
+  }
+  return failures;
+};
+
 export function validateRouterMappingSources({
   navigationSource,
+  ownershipSource,
   routerSource,
   routesSource,
 }) {
@@ -735,10 +1155,25 @@ export function validateRouterMappingSources({
   const navigation = routesFromNavigationExport(navigationSource);
   failures.push(...navigation.failures);
   if (
-    navigation.routes.length !== APPROVED_UNMIGRATED_ROUTES.length
-    || !sameRoutes(navigation.routes, APPROVED_UNMIGRATED_ROUTES)
+    navigation.routes.length !== APPROVED_BUSINESS_ROUTES.length
+    || !sameRoutes(navigation.routes, APPROVED_BUSINESS_ROUTES)
   ) {
     failures.push("V2 navigation must expose exactly the approved 22 business routes");
+  }
+
+  const ownership = ownershipFromNamedArrayExport(
+    ownershipSource,
+    "BUSINESS_ROUTE_OWNERSHIP",
+  );
+  failures.push(...ownership.failures);
+  if (!sameOwnership(ownership.ownership, approvedBusinessRouteOwnership)) {
+    failures.push("business route ownership must remain one native plus 21 compatibility routes");
+  }
+  if (!sameRoutes(
+    ownership.ownership.map(({ id, path: routePath }) => ({ id, path: routePath })),
+    navigation.routes,
+  )) {
+    failures.push("router navigation and business route ownership must cover the same 22 routes");
   }
 
   const registry = routesFromNamedArrayExport(
@@ -748,34 +1183,33 @@ export function validateRouterMappingSources({
   failures.push(...registry.failures);
   if (
     registry.routes.length !== APPROVED_UNMIGRATED_ROUTES.length
-    || !sameRoutes(registry.routes, navigation.routes)
+    || !sameRoutes(registry.routes, APPROVED_UNMIGRATED_ROUTES)
   ) {
-    failures.push("router navigation and unmigrated route registry must have the same 22 routes");
+    failures.push("unmigrated route registry must equal the 21-route compatibility ownership complement");
   }
 
-  const routeCollection = /PREVIEW_BUSINESS_ROUTES|UNMIGRATED_ROUTES/u.exec(routerSource)?.[0];
-  if (routeCollection === undefined) {
-    failures.push("V2 router must consume a frozen 22-route collection");
-  } else {
-    const mapPattern = new RegExp(
-      `${routeCollection}[\\s\\S]{0,320}\\.filter\\([\\s\\S]{0,100}path[\\s\\S]{0,80}!==\\s*["']/["'][\\s\\S]{0,180}\\.map\\(`,
-      "u",
-    );
-    if (!mapPattern.test(routerSource)) {
-      failures.push("V2 router must map all 21 non-root compatibility routes from the frozen collection");
-    }
+  const parsedRouter = parseSource(routerSource, REQUIRED_FILES.router, "tsx");
+  failures.push(...parsedRouter.failures);
+  if (parsedRouter.ast !== null) {
+    failures.push(...validateCompatibilityRouteMapping(parsedRouter.ast));
   }
   if (!/path\s*:\s*path\.slice\s*\(\s*1\s*\)/u.test(routerSource)) {
     failures.push("V2 router must preserve every non-root allowlisted pathname");
   }
   if (
-    !/\{\s*index\s*:\s*true\s*,\s*element\s*:\s*legacyCompatibilityElement\s*\}/u
+    !/\{\s*index\s*:\s*true\s*,\s*element\s*:\s*nativeOverviewElement\s*\}/u
       .test(routerSource)
   ) {
-    failures.push("V2 router must map the root Overview route to the compatibility adapter");
+    failures.push("V2 router must map the root Overview route to a native element");
+  }
+  if (
+    /\{\s*index\s*:\s*true\s*,\s*element\s*:\s*legacyCompatibilityElement\s*\}/u
+      .test(routerSource)
+  ) {
+    failures.push("native Overview must not use the compatibility adapter");
   }
   if (!/LegacyRouteAdapter|legacy-preview/u.test(routerSource)) {
-    failures.push("V2 router must bind unmigrated routes to the Preview adapter");
+    failures.push("V2 router must bind compatibility routes to the Preview adapter");
   }
   return failures;
 }
@@ -1032,7 +1466,7 @@ const walkProductionSources = async (root, relativeDirectory) => {
 
 export async function validateV2SourceApiBoundary(root) {
   const failures = [];
-  for (const sourceRoot of PRODUCTION_SOURCE_ROOTS) {
+  for (const sourceRoot of PHASE1_PRODUCTION_SOURCE_ROOTS) {
     for (const file of await walkProductionSources(root, sourceRoot)) {
       if (file.symlink) {
         failures.push(`${file.relativePath}: symlinks are not allowed in the V2 source graph`);
@@ -1102,6 +1536,9 @@ export async function findPhase1LegacyBoundaryFailures(root) {
   if (sources.routes !== undefined) {
     failures.push(...validateUnmigratedRoutesSource(sources.routes));
   }
+  if (sources.ownership !== undefined) {
+    failures.push(...validateBusinessRouteOwnershipSource(sources.ownership));
+  }
   if (sources.adapter !== undefined) {
     failures.push(...validateLegacyAdapterSource(sources.adapter, sources.routes ?? ""));
   }
@@ -1119,11 +1556,13 @@ export async function findPhase1LegacyBoundaryFailures(root) {
   }
   if (
     sources.navigation !== undefined
+    && sources.ownership !== undefined
     && sources.router !== undefined
     && sources.routes !== undefined
   ) {
     failures.push(...validateRouterMappingSources({
       navigationSource: sources.navigation,
+      ownershipSource: sources.ownership,
       routerSource: sources.router,
       routesSource: sources.routes,
     }));

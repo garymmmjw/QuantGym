@@ -77,6 +77,7 @@ export const newSaveProblemNoteIntent = (
 export const setProblemFavorite = async (
   intent: SetProblemFavoriteIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<FavoriteState> => {
   const problemId = problemIdSchema.parse(intent.problemId);
   const validated = setProblemFavoriteInputSchema.parse({
@@ -99,6 +100,7 @@ export const setProblemFavorite = async (
       body,
       csrfProof,
       method: "PUT",
+      ...(signal === undefined ? {} : { signal }),
     },
   );
   return favoriteStateSchema.parse(response);
@@ -107,6 +109,7 @@ export const setProblemFavorite = async (
 export const saveProblemNote = async (
   intent: SaveProblemNoteIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<ProblemNote> => {
   const problemId = problemIdSchema.parse(intent.problemId);
   const validated = saveProblemNoteInputSchema.parse({
@@ -125,6 +128,7 @@ export const saveProblemNote = async (
       body,
       csrfProof,
       method: "PUT",
+      ...(signal === undefined ? {} : { signal }),
     },
   );
   return problemNoteSchema.parse(response);
@@ -133,12 +137,13 @@ export const saveProblemNote = async (
 export const mutateProblem = async (
   intent: ProblemMutationIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<FavoriteState | ProblemNote> => {
   switch (intent.kind) {
     case "set-favorite":
-      return setProblemFavorite(intent, csrfProof);
+      return setProblemFavorite(intent, csrfProof, signal);
     case "save-note":
-      return saveProblemNote(intent, csrfProof);
+      return saveProblemNote(intent, csrfProof, signal);
   }
 };
 

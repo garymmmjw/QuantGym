@@ -6,7 +6,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { findBoundaryViolations } from "../scripts/check-frontend-v2-boundaries.mjs";
+import {
+  findBoundaryViolations,
+  V2_BOUNDARY_SCAN_ROOTS,
+} from "../scripts/check-frontend-v2-boundaries.mjs";
 import { validateLegacyRemovalMap } from "../scripts/lib/frontend-upgrade-contracts.mjs";
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -25,6 +28,10 @@ const packageJson = JSON.parse(
 const packageLock = JSON.parse(
   await readFile(new URL("../package-lock.json", import.meta.url), "utf8"),
 );
+
+test("the V2 boundary scan includes native training pages", () => {
+  assert.ok(V2_BOUNDARY_SCAN_ROOTS.includes("src/pages/training"));
+});
 
 const exactFamilyIds = [
   "daily-training",
@@ -278,12 +285,13 @@ test("excludes replacement-path target subtrees from legacy ownership", () => {
     legacyRoots: ["src/pages"],
     families: [makeFamily({
       globs: ["src/pages/**"],
-      replacementPaths: ["src/pages/v2"],
+      replacementPaths: ["src/pages/training", "src/pages/v2"],
     })],
   });
 
   assert.deepEqual(validateLegacyRemovalMap(removalMap, [
     "src/pages/LegacyPage.jsx",
+    "src/pages/training/OverviewPage.tsx",
     "src/pages/v2/Overview.tsx",
   ]), []);
 });
@@ -299,6 +307,7 @@ test("allows typed domains to import shared API code and keeps governed JSON imp
     "src/shared/api/problems.ts": "export const getProblems = () => fetch('/api/problems');\n",
     "src/shared/catalog.ts": 'import catalog from "../../data/problem-catalog.json";\nexport default catalog;\n',
     "src/core/browser-shell.ts": "document.querySelector('#root');\nwindow.addEventListener('focus', () => {});\n",
+    "src/pages/training/OverviewPage.tsx": 'import "../../shared/api/training";\nexport default function OverviewPage() {}\n',
     "src/pages/v2/Overview.tsx": 'import "@/shared/api/training";\nexport default function Overview() {}\n',
     "src/pages/v2/Routes.ts": 'import Overview from "@/pages/v2/Overview";\nexport default Overview;\n',
   }, async (root) => {
@@ -435,6 +444,7 @@ test("reports every non-import boundary rule and scopes fetch and DOM exceptions
     "src/design-system/window-fetch.ts": "export const load = () => window.fetch('/api/theme');\n",
     "src/domains/training/document.ts": "export const root = document.querySelector('#root');\n",
     "src/domains/training/listener.ts": "window.addEventListener('online', () => {});\n",
+    "src/pages/training/page-fetch.tsx": "export const load = () => fetch('/api/page');\n",
     "src/pages/v2/page-fetch.tsx": "export const load = () => fetch('/api/page');\n",
     "src/shared/apiClient.ts": "export const load = () => fetch('/api/not-api-subtree');\n",
     "src/shared/events.ts": 'export const eventName = "quantgym:training-complete";\n',
@@ -456,7 +466,7 @@ test("reports every non-import boundary rule and scopes fetch and DOM exceptions
         rule,
         violations.filter((violation) => violation.rule === rule).length,
       ])),
-      { legacySymbol: 1, eventBus: 1, directFetch: 5, domainDom: 2 },
+      { legacySymbol: 1, eventBus: 1, directFetch: 6, domainDom: 2 },
     );
   });
 });
@@ -716,11 +726,16 @@ test("distinguishes regex literals, template expressions, and nested JSX prose",
       "export const identity = <T extends unknown>(value: T) => value;",
       "fetch('/api/page');",
     ].join("\n"),
+    "src/pages/training/generic.tsx": [
+      "export const identity = <T extends unknown>(value: T) => value;",
+      "fetch('/api/training');",
+    ].join("\n"),
   }, async (root) => {
     assert.deepEqual(await findBoundaryViolations(root), [
       { file: "src/core/regex-before-boundaries.ts", rule: "directFetch", evidence: "fetch(" },
       { file: "src/core/regex-before-boundaries.ts", rule: "legacyImport", evidence: "@/api/client" },
       { file: "src/core/template-expression.ts", rule: "legacyImport", evidence: "@/app/runtime" },
+      { file: "src/pages/training/generic.tsx", rule: "directFetch", evidence: "fetch(" },
       { file: "src/pages/v2/generic.tsx", rule: "directFetch", evidence: "fetch(" },
     ]);
   });

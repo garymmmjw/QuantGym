@@ -16,7 +16,7 @@ export type MobileHeaderProps = Readonly<{
   onOpenSearch: () => void;
   searchOpen?: boolean;
   onToggleTheme: () => void;
-  streakDays?: number;
+  streakDays?: number | undefined;
   theme: ShellTheme;
 }>;
 
@@ -30,7 +30,7 @@ export const MobileHeader = forwardRef<HTMLButtonElement, MobileHeaderProps>(fun
     onOpenSearch,
     searchOpen = false,
     onToggleTheme,
-    streakDays = 0,
+    streakDays,
     theme,
   },
   menuButtonRef,
@@ -53,10 +53,12 @@ export const MobileHeader = forwardRef<HTMLButtonElement, MobileHeaderProps>(fun
         <span>Quant<strong>Gym</strong></span>
       </Link>
       <div className={styles.spacer} />
-      <div className={styles.reward} aria-label={isChinese ? `连续 ${streakDays} 天` : `${streakDays} day streak`}>
-        <span aria-hidden="true">🔥</span>
-        <strong data-qg-metric>{streakDays}</strong>
-      </div>
+      {streakDays === undefined ? null : (
+        <div className={styles.reward} aria-label={isChinese ? `连续 ${streakDays} 天` : `${streakDays} day streak`}>
+          <span aria-hidden="true">🔥</span>
+          <strong data-qg-metric>{streakDays}</strong>
+        </div>
+      )}
       <button
         aria-controls="qg-command-palette"
         aria-expanded={searchOpen}

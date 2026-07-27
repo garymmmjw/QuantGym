@@ -275,7 +275,7 @@ const phase1SystemCases: readonly Phase1SystemCase[] = [
     id: "system:desktop-shell",
     authenticated: true,
     exercise: async (page) => {
-      await page.goto("/");
+      await page.goto("/plan");
       await expect(page.getByRole("main")).toHaveAttribute("id", "qg-main-content");
       await expect(page.getByRole("navigation", { name: "主导航", exact: true })).toBeVisible();
     },
@@ -291,7 +291,7 @@ const phase1SystemCases: readonly Phase1SystemCase[] = [
       await page.getByRole("button", { name: "打开全部模块", exact: true }).click();
       await expect(page.getByRole("dialog", { name: "全部模块", exact: true })).toBeVisible();
     },
-    hasCompatibilityFrame: true,
+    hasCompatibilityFrame: false,
     viewport: { width: 390, height: 844 },
   },
   {
@@ -302,7 +302,7 @@ const phase1SystemCases: readonly Phase1SystemCase[] = [
       await page.getByRole("button", { name: /搜索题目、公司、课程/u }).click();
       await expect(page.getByRole("dialog", { name: "全局搜索", exact: true })).toBeVisible();
     },
-    hasCompatibilityFrame: true,
+    hasCompatibilityFrame: false,
     viewport: { width: 1_440, height: 900 },
   },
   {
@@ -313,7 +313,7 @@ const phase1SystemCases: readonly Phase1SystemCase[] = [
       await page.getByRole("button", { name: "打开通知", exact: true }).click();
       await expect(page.getByRole("dialog", { name: "通知中心", exact: true })).toBeVisible();
     },
-    hasCompatibilityFrame: true,
+    hasCompatibilityFrame: false,
     viewport: { width: 1_440, height: 900 },
   },
   {
@@ -328,7 +328,7 @@ const phase1SystemCases: readonly Phase1SystemCase[] = [
         name: /今日待办|Today\x27s tasks/iu,
       }).first()).toBeVisible();
     },
-    hasCompatibilityFrame: true,
+    hasCompatibilityFrame: false,
     viewport: { width: 1_440, height: 900 },
   },
   {
@@ -339,7 +339,7 @@ const phase1SystemCases: readonly Phase1SystemCase[] = [
       await page.getByRole("button", { name: "切换到深色主题", exact: true }).click();
       await expect(page.locator("html")).toHaveAttribute("data-qg-theme", "dark");
     },
-    hasCompatibilityFrame: true,
+    hasCompatibilityFrame: false,
     viewport: { width: 1_440, height: 900 },
   },
   {
@@ -351,7 +351,7 @@ const phase1SystemCases: readonly Phase1SystemCase[] = [
       await expect(page.locator('[data-network-status="offline"]')).toBeVisible();
       await setReportedOnlineState(page, true);
     },
-    hasCompatibilityFrame: true,
+    hasCompatibilityFrame: false,
     viewport: { width: 1_440, height: 900 },
   },
 ];

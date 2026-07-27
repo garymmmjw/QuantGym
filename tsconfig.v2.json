@@ -31,6 +31,8 @@
     "src/domains/**/*.tsx",
     "src/legacy-preview/**/*.ts",
     "src/legacy-preview/**/*.tsx",
+    "src/pages/training/**/*.ts",
+    "src/pages/training/**/*.tsx",
     "src/pages/v2/**/*.ts",
     "src/pages/v2/**/*.tsx",
     "src/shared/api/**/*.ts",

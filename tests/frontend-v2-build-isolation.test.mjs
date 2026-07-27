@@ -73,6 +73,7 @@ const exactDevDependencies = {
   eslint: "10.7.0",
   "eslint-plugin-react-hooks": "7.1.1",
   "eslint-plugin-react-refresh": "0.5.3",
+  "fake-indexeddb": "6.2.5",
   globals: "17.7.0",
   jsdom: "29.1.1",
   msw: "2.15.0",
@@ -156,8 +157,8 @@ test("declares the isolated V2 commands and exact source program", async () => {
     ].map((name) => [name, packageJson.scripts[name]])),
     {
       "typecheck:v2": "tsc --project tsconfig.v2.json --noEmit",
-      "lint:v2": "eslint --max-warnings 0 --no-error-on-unmatched-pattern --config eslint.config.mjs 'src/{core,design-system,domains,legacy-preview,pages/v2}/**/*.{ts,tsx}' 'src/shared/{api,i18n,lib,storage,testing}/**/*.{ts,tsx}' 'functions/**/*.ts' '.storybook/*.ts' vite.v2.config.ts vitest.v2.config.ts",
-      "lint:styles:v2": "stylelint --config stylelint.config.mjs 'src/{core,shared,design-system,domains,legacy-preview,pages/v2}/**/*.css' --allow-empty-input",
+      "lint:v2": "eslint --max-warnings 0 --no-error-on-unmatched-pattern --config eslint.config.mjs 'src/{core,design-system,domains,legacy-preview,pages/training,pages/v2}/**/*.{ts,tsx}' 'src/shared/{api,i18n,lib,storage,testing}/**/*.{ts,tsx}' 'functions/**/*.ts' '.storybook/*.ts' vite.v2.config.ts vitest.v2.config.ts",
+      "lint:styles:v2": "stylelint --config stylelint.config.mjs 'src/{core,shared,design-system,domains,legacy-preview,pages/training,pages/v2}/**/*.css' --allow-empty-input",
       "test:v2": "vitest --config vitest.v2.config.ts run",
       "build:v2": "node scripts/build-frontend-v2.mjs",
       "check:frontend-v2-build-isolation": "node --test tests/frontend-v2-build-isolation.test.mjs && node scripts/check-frontend-v2-boundaries.mjs",
@@ -178,6 +179,8 @@ test("declares the isolated V2 commands and exact source program", async () => {
     "src/domains/**/*.tsx",
     "src/legacy-preview/**/*.ts",
     "src/legacy-preview/**/*.tsx",
+    "src/pages/training/**/*.ts",
+    "src/pages/training/**/*.tsx",
     "src/pages/v2/**/*.ts",
     "src/pages/v2/**/*.tsx",
     "src/shared/api/**/*.ts",
@@ -211,12 +214,26 @@ test("declares the isolated V2 commands and exact source program", async () => {
     "src/design-system/**/*.test.{ts,tsx}",
     "src/domains/**/*.test.{ts,tsx}",
     "src/legacy-preview/**/*.test.{ts,tsx}",
+    "src/pages/training/**/*.test.{ts,tsx}",
     "src/pages/v2/**/*.test.{ts,tsx}",
     "src/shared/**/*.test.{ts,tsx}",
   ]);
 });
 
 test("uses v2.html as the sole Vite entry and guards the canonical module graph", async () => {
+  const viteV2Module = await loadViteV2Module();
+  assert.deepEqual(viteV2Module.V2_SOURCE_ROOTS, [
+    "src/core",
+    "src/design-system",
+    "src/domains",
+    "src/pages/training",
+    "src/pages/v2",
+    "src/shared/api",
+    "src/shared/i18n",
+    "src/shared/lib",
+    "src/shared/storage",
+    "src/shared/testing",
+  ]);
   const loaded = await loadConfigFromFile(
     { command: "build", mode: "test" },
     path.join(projectRoot, "vite.v2.config.ts"),

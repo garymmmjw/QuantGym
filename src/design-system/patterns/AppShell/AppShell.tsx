@@ -12,7 +12,7 @@ import styles from "./AppShell.module.css";
 export type AppShellProps = Readonly<{
   children: ReactNode;
   language: ShellLanguage;
-  level?: number;
+  level?: number | undefined;
   notificationCount?: number;
   notificationsOpen?: boolean;
   onLanguageChange: (language: ShellLanguage) => void;
@@ -21,7 +21,7 @@ export type AppShellProps = Readonly<{
   onSignOut?: (() => void) | undefined;
   onToggleTheme: () => void;
   searchOpen?: boolean;
-  streakDays?: number;
+  streakDays?: number | undefined;
   theme: ShellTheme;
   user: ShellUser;
 }>;
@@ -29,7 +29,7 @@ export type AppShellProps = Readonly<{
 export function AppShell({
   children,
   language,
-  level = 1,
+  level,
   notificationCount = 0,
   notificationsOpen = false,
   onLanguageChange,
@@ -38,7 +38,7 @@ export function AppShell({
   onSignOut,
   onToggleTheme,
   searchOpen = false,
-  streakDays = 0,
+  streakDays,
   theme,
   user,
 }: AppShellProps) {

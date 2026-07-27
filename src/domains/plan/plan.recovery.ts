@@ -192,32 +192,39 @@ export type ReplayPlanDraftsOptions = Readonly<{
   ownerScope: string;
   queryClient: QueryClient;
   repository?: RecoverableDraftRepository;
-  verifyOwner?: () => Promise<void>;
+  signal?: AbortSignal;
+  verifyOwner?: (signal?: AbortSignal) => Promise<void>;
 }>;
 
 const planReplayOptions = (options: ReplayPlanDraftsOptions) => {
   const verifyOwner = options.verifyOwner
-    ?? (() => verifyCurrentSessionOwner(options.ownerScope));
+    ?? ((signal?: AbortSignal) => (
+      verifyCurrentSessionOwner(options.ownerScope, signal)
+    ));
   return {
     kinds: PLAN_DRAFT_KINDS,
     ownerScope: options.ownerScope,
     replay: async (draft: RecoverableDraft, signal?: AbortSignal) => {
       const intent = recoverPlanMutationIntent(draft);
       try {
-        const acknowledged = await runOwnerVerifiedOperation(verifyOwner, async () => {
-          switch (intent.kind) {
-            case "create":
-              await createPlan(intent, options.csrfProof);
-              return null;
-            case "diagnostic":
-              await runPlanDiagnostic(intent, options.csrfProof);
-              return null;
-            case "update-task":
-              return updatePlanTask(intent, options.csrfProof);
-            case "complete-task":
-              return completePlanTask(intent, options.csrfProof);
-          }
-        });
+        const acknowledged = await runOwnerVerifiedOperation(
+          verifyOwner,
+          async (operationSignal) => {
+            switch (intent.kind) {
+              case "create":
+                await createPlan(intent, options.csrfProof, operationSignal);
+                return null;
+              case "diagnostic":
+                await runPlanDiagnostic(intent, options.csrfProof, operationSignal);
+                return null;
+              case "update-task":
+                return updatePlanTask(intent, options.csrfProof, operationSignal);
+              case "complete-task":
+                return completePlanTask(intent, options.csrfProof, operationSignal);
+            }
+          },
+          signal,
+        );
         if (acknowledged !== null) {
           acknowledgePlanTaskMutation(
             options.queryClient,
@@ -239,7 +246,8 @@ const planReplayOptions = (options: ReplayPlanDraftsOptions) => {
         }
         const current = await runOwnerVerifiedOperation(
           verifyOwner,
-          () => getCurrentPlan(signal),
+          (operationSignal) => getCurrentPlan(operationSignal),
+          signal,
         );
         options.queryClient.setQueryData(
           planQueryKeys.current(options.ownerScope),
@@ -261,6 +269,7 @@ const planReplayOptions = (options: ReplayPlanDraftsOptions) => {
       }
     },
     ...(options.repository === undefined ? {} : { repository: options.repository }),
+    ...(options.signal === undefined ? {} : { signal: options.signal }),
   };
 };
 

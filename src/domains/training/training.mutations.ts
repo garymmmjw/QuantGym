@@ -194,12 +194,14 @@ export const newCompleteTrainingIntent = (
 export const startOrResumeTraining = async (
   intent: StartTrainingIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<StartTrainingResponse> => {
   const response = await apiRequest<unknown>("/training/sessions", {
     body: startTrainingRequestSchema.parse(intent.request),
     csrfProof,
     headers: idempotencyHeaders(intent.idempotencyKey),
     method: "POST",
+    ...(signal === undefined ? {} : { signal }),
   });
   return startTrainingResponseSchema.parse(response);
 };
@@ -207,6 +209,7 @@ export const startOrResumeTraining = async (
 export const requestTrainingHint = async (
   intent: UseTrainingHintIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<HintUseResponse> => {
   const sessionId = resourceIdSchema.parse(intent.sessionId);
   const response = await apiRequest<unknown>(
@@ -216,6 +219,7 @@ export const requestTrainingHint = async (
       csrfProof,
       headers: idempotencyHeaders(intent.idempotencyKey),
       method: "POST",
+      ...(signal === undefined ? {} : { signal }),
     },
   );
   return hintUseResponseSchema.parse(response);
@@ -224,6 +228,7 @@ export const requestTrainingHint = async (
 export const submitTrainingAttempt = async (
   intent: SubmitTrainingAttemptIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<AttemptSubmissionResponse> => {
   const sessionId = resourceIdSchema.parse(intent.sessionId);
   const response = await apiRequest<unknown>(
@@ -233,6 +238,7 @@ export const submitTrainingAttempt = async (
       csrfProof,
       headers: idempotencyHeaders(intent.idempotencyKey),
       method: "POST",
+      ...(signal === undefined ? {} : { signal }),
     },
   );
   return attemptSubmissionResponseSchema.parse(response);
@@ -241,6 +247,7 @@ export const submitTrainingAttempt = async (
 export const revealTrainingSolution = async (
   intent: RevealTrainingSolutionIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<SolutionRevealResponse> => {
   const sessionId = resourceIdSchema.parse(intent.sessionId);
   const response = await apiRequest<unknown>(
@@ -250,6 +257,7 @@ export const revealTrainingSolution = async (
       csrfProof,
       headers: idempotencyHeaders(intent.idempotencyKey),
       method: "POST",
+      ...(signal === undefined ? {} : { signal }),
     },
   );
   return solutionRevealResponseSchema.parse(response);
@@ -258,6 +266,7 @@ export const revealTrainingSolution = async (
 export const completeTrainingSession = async (
   intent: CompleteTrainingIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<CompletionResponse> => {
   const sessionId = resourceIdSchema.parse(intent.sessionId);
   const response = await apiRequest<unknown>(
@@ -267,6 +276,7 @@ export const completeTrainingSession = async (
       csrfProof,
       headers: idempotencyHeaders(intent.idempotencyKey),
       method: "POST",
+      ...(signal === undefined ? {} : { signal }),
     },
   );
   return completionResponseSchema.parse(response);
@@ -275,18 +285,19 @@ export const completeTrainingSession = async (
 export const mutateTraining = (
   intent: TrainingMutationIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<TrainingMutationResponse> => {
   switch (intent.kind) {
     case "start":
-      return startOrResumeTraining(intent, csrfProof);
+      return startOrResumeTraining(intent, csrfProof, signal);
     case "hint":
-      return requestTrainingHint(intent, csrfProof);
+      return requestTrainingHint(intent, csrfProof, signal);
     case "attempt":
-      return submitTrainingAttempt(intent, csrfProof);
+      return submitTrainingAttempt(intent, csrfProof, signal);
     case "solution":
-      return revealTrainingSolution(intent, csrfProof);
+      return revealTrainingSolution(intent, csrfProof, signal);
     case "complete":
-      return completeTrainingSession(intent, csrfProof);
+      return completeTrainingSession(intent, csrfProof, signal);
   }
 };
 
@@ -326,7 +337,7 @@ export const invalidateTrainingProgressReadModels = async (
 export type TrainingMutationOptions = Readonly<{
   csrfProof: string | null;
   ownerScope: string;
-  verifyOwner?: () => Promise<void>;
+  verifyOwner?: (signal?: AbortSignal) => Promise<void>;
 }>;
 
 const useTrainingMutationOptions = ({
@@ -339,7 +350,9 @@ const useTrainingMutationOptions = ({
     csrfProof,
     ownerScope,
     queryClient,
-    verifyOwner: verifyOwner ?? (() => verifyCurrentSessionOwner(ownerScope)),
+    verifyOwner: verifyOwner ?? ((signal?: AbortSignal) => (
+      verifyCurrentSessionOwner(ownerScope, signal)
+    )),
   } as const;
 };
 
@@ -349,7 +362,7 @@ export const useStartTrainingMutation = (options: TrainingMutationOptions) => {
     mutationFn: async (intent) => {
       return runOwnerVerifiedOperation(
         context.verifyOwner,
-        () => startOrResumeTraining(intent, context.csrfProof),
+        (signal) => startOrResumeTraining(intent, context.csrfProof, signal),
       );
     },
     mutationKey: ["training", context.ownerScope, "start"],
@@ -368,7 +381,7 @@ export const useTrainingHintMutation = (options: TrainingMutationOptions) => {
     mutationFn: async (intent) => {
       return runOwnerVerifiedOperation(
         context.verifyOwner,
-        () => requestTrainingHint(intent, context.csrfProof),
+        (signal) => requestTrainingHint(intent, context.csrfProof, signal),
       );
     },
     mutationKey: ["training", context.ownerScope, "hint"],
@@ -393,7 +406,7 @@ export const useSubmitTrainingAttemptMutation = (
     mutationFn: async (intent) => {
       return runOwnerVerifiedOperation(
         context.verifyOwner,
-        () => submitTrainingAttempt(intent, context.csrfProof),
+        (signal) => submitTrainingAttempt(intent, context.csrfProof, signal),
       );
     },
     mutationKey: ["training", context.ownerScope, "attempt"],
@@ -418,7 +431,7 @@ export const useRevealTrainingSolutionMutation = (
     mutationFn: async (intent) => {
       return runOwnerVerifiedOperation(
         context.verifyOwner,
-        () => revealTrainingSolution(intent, context.csrfProof),
+        (signal) => revealTrainingSolution(intent, context.csrfProof, signal),
       );
     },
     mutationKey: ["training", context.ownerScope, "solution"],
@@ -439,7 +452,7 @@ export const useCompleteTrainingMutation = (
     mutationFn: async (intent) => {
       return runOwnerVerifiedOperation(
         context.verifyOwner,
-        () => completeTrainingSession(intent, context.csrfProof),
+        (signal) => completeTrainingSession(intent, context.csrfProof, signal),
       );
     },
     mutationKey: ["training", context.ownerScope, "complete"],

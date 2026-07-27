@@ -7,13 +7,18 @@ import { parseAst } from "rolldown/parseAst";
 
 import { validateLegacyRemovalMap } from "./lib/frontend-upgrade-contracts.mjs";
 
-const SCAN_ROOTS = [
+export const V2_BOUNDARY_SCAN_ROOTS = Object.freeze([
   "src/core",
   "src/design-system",
   "src/domains",
   "src/shared",
+  "src/pages/training",
   "src/pages/v2",
-];
+]);
+const V2_PAGE_ROOTS = Object.freeze([
+  "src/pages/training",
+  "src/pages/v2",
+]);
 const PARSER_LANGUAGE = new Map([
   [".js", "js"],
   [".jsx", "jsx"],
@@ -188,7 +193,10 @@ const resolveImportSpecifier = (importingFile, specifier) => {
 };
 
 const resolvesIntoLegacyRoot = (resolvedPath, legacyRoots) => legacyRoots.some((legacyRoot) => {
-  if (legacyRoot === "src/pages" && isAtOrUnder("src/pages/v2", resolvedPath)) return false;
+  if (
+    legacyRoot === "src/pages"
+    && V2_PAGE_ROOTS.some((pageRoot) => isAtOrUnder(pageRoot, resolvedPath))
+  ) return false;
   if (isAtOrUnder(legacyRoot, resolvedPath)) return true;
   return path.posix.extname(legacyRoot) !== ""
     && path.posix.extname(resolvedPath) === ""
@@ -312,7 +320,7 @@ export async function findBoundaryViolations(root) {
     .filter(Boolean);
   const violations = [];
   const sourceFiles = [];
-  for (const scanRoot of SCAN_ROOTS) {
+  for (const scanRoot of V2_BOUNDARY_SCAN_ROOTS) {
     sourceFiles.push(...await walkSourceFiles(absoluteRoot, scanRoot, violations));
   }
 

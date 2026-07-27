@@ -143,4 +143,57 @@ describe("owner-scoped query boundary", () => {
     )).rejects.toThrow("AUTH_SESSION_OWNER_CHANGED");
     expect(verifyOwner).toHaveBeenCalledTimes(2);
   });
+
+  it("passes one operation signal through both owner checks and the request", async () => {
+    const controller = new AbortController();
+    const verifyOwner = vi.fn(async () => undefined);
+    const request = vi.fn(async () => ({ owner: "A" }));
+
+    await expect(runOwnerVerifiedOperation(
+      verifyOwner,
+      request,
+      controller.signal,
+    )).resolves.toEqual({ owner: "A" });
+
+    expect(verifyOwner).toHaveBeenNthCalledWith(1, controller.signal);
+    expect(request).toHaveBeenCalledWith(controller.signal);
+    expect(verifyOwner).toHaveBeenNthCalledWith(2, controller.signal);
+  });
+
+  it("stops before the request when the owner deadline aborts during preflight", async () => {
+    const controller = new AbortController();
+    const timeout = new DOMException("Owner deadline exceeded", "TimeoutError");
+    const verifyOwner = vi.fn(async (signal?: AbortSignal) => {
+      expect(signal).toBe(controller.signal);
+      controller.abort(timeout);
+    });
+    const request = vi.fn(async () => ({ owner: "A" }));
+
+    await expect(runOwnerVerifiedOperation(
+      verifyOwner,
+      request,
+      controller.signal,
+    )).rejects.toBe(timeout);
+    expect(verifyOwner).toHaveBeenCalledOnce();
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it("does not run postflight verification after the request deadline aborts", async () => {
+    const controller = new AbortController();
+    const timeout = new DOMException("Mutation deadline exceeded", "TimeoutError");
+    const verifyOwner = vi.fn(async () => undefined);
+    const request = vi.fn(async (signal?: AbortSignal) => {
+      expect(signal).toBe(controller.signal);
+      controller.abort(timeout);
+      return { owner: "A" };
+    });
+
+    await expect(runOwnerVerifiedOperation(
+      verifyOwner,
+      request,
+      controller.signal,
+    )).rejects.toBe(timeout);
+    expect(request).toHaveBeenCalledOnce();
+    expect(verifyOwner).toHaveBeenCalledOnce();
+  });
 });

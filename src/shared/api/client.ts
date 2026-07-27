@@ -3,6 +3,7 @@ import { ApiError, isApiErrorEnvelope } from "./errors";
 
 const API_BASE = "/api/v2";
 const STATE_CHANGING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+export const API_REQUEST_TIMEOUT_MS = 60_000;
 
 type ApiRequestOptions = Readonly<{
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -11,6 +12,33 @@ type ApiRequestOptions = Readonly<{
   headers?: Readonly<Record<string, string>>;
   signal?: AbortSignal;
 }>;
+
+const createRequestTimeoutError = () => (
+  new DOMException("API request timed out.", "TimeoutError")
+);
+
+const createRequestAbortScope = (callerSignal: AbortSignal | undefined) => {
+  const controller = new AbortController();
+  const forwardCallerAbort = () => {
+    if (!controller.signal.aborted && callerSignal !== undefined) {
+      controller.abort(callerSignal.reason);
+    }
+  };
+  if (callerSignal?.aborted === true) forwardCallerAbort();
+  else callerSignal?.addEventListener("abort", forwardCallerAbort, { once: true });
+
+  const timeoutId = setTimeout(() => {
+    if (!controller.signal.aborted) controller.abort(createRequestTimeoutError());
+  }, API_REQUEST_TIMEOUT_MS);
+
+  return {
+    dispose: () => {
+      clearTimeout(timeoutId);
+      callerSignal?.removeEventListener("abort", forwardCallerAbort);
+    },
+    signal: controller.signal,
+  };
+};
 
 const normalizePath = (value: string) => {
   const rawPath = value.split("?", 1)[0] ?? "";
@@ -87,38 +115,45 @@ export const apiRequest = async <ResponseBody>(
     headers.set("X-CSRF-Token", validateCsrfProof(csrfToken));
   }
 
+  const normalizedPath = normalizePath(path);
+  const abortScope = createRequestAbortScope(options.signal);
+
   const init: RequestInit = {
     method,
     headers,
     credentials: "include",
     cache: "no-store",
     redirect: "manual",
+    signal: abortScope.signal,
   };
   if (options.body !== undefined) init.body = JSON.stringify(options.body);
-  if (options.signal !== undefined) init.signal = options.signal;
 
-  const response = await fetch(`${API_BASE}${normalizePath(path)}`, init);
-  const payload = await readResponsePayload(response);
+  try {
+    const response = await fetch(`${API_BASE}${normalizedPath}`, init);
+    const payload = await readResponsePayload(response);
 
-  if (!response.ok) {
-    const requestId = response.headers.get("x-request-id");
-    if (isApiErrorEnvelope(payload)) {
+    if (!response.ok) {
+      const requestId = response.headers.get("x-request-id");
+      if (isApiErrorEnvelope(payload)) {
+        throw new ApiError({
+          code: payload.code,
+          fieldErrors: payload.fieldErrors,
+          message: payload.message,
+          requestId: payload.requestId,
+          retryable: payload.retryable,
+          status: response.status,
+        });
+      }
       throw new ApiError({
-        code: payload.code,
-        fieldErrors: payload.fieldErrors,
-        message: payload.message,
-        requestId: payload.requestId,
-        retryable: payload.retryable,
+        code: "API_REQUEST_FAILED",
+        message: "请求暂时无法完成，请稍后重试。",
+        requestId,
         status: response.status,
       });
     }
-    throw new ApiError({
-      code: "API_REQUEST_FAILED",
-      message: "请求暂时无法完成，请稍后重试。",
-      requestId,
-      status: response.status,
-    });
-  }
 
-  return payload as ResponseBody;
+    return payload as ResponseBody;
+  } finally {
+    abortScope.dispose();
+  }
 };

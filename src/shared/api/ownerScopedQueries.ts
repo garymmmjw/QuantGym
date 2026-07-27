@@ -88,6 +88,11 @@ const assertSessionBoundary = (expectedProof: string): void => {
   }
 };
 
+const abortIfRequested = (signal: AbortSignal | undefined): void => {
+  if (signal?.aborted !== true) return;
+  throw signal.reason ?? new DOMException("Owner operation aborted", "AbortError");
+};
+
 export const verifyCurrentSessionOwner = async (
   expectedOwnerScope: string,
   signal?: AbortSignal,
@@ -128,14 +133,22 @@ export const runOwnerScopedQuery = async <Result>(
  * raced response from updating the old account's local read models.
  */
 export const runOwnerVerifiedOperation = async <Result>(
-  verifyOwner: () => Promise<void>,
-  request: () => Promise<Result>,
+  verifyOwner: (signal?: AbortSignal) => Promise<void>,
+  request: (signal?: AbortSignal) => Promise<Result>,
+  signal?: AbortSignal,
 ): Promise<Result> => {
+  abortIfRequested(signal);
   const sessionBoundary = captureSessionBoundary();
-  await verifyOwner();
+  abortIfRequested(signal);
+  await verifyOwner(signal);
+  abortIfRequested(signal);
   assertSessionBoundary(sessionBoundary);
-  const result = await request();
-  await verifyOwner();
+  abortIfRequested(signal);
+  const result = await request(signal);
+  abortIfRequested(signal);
+  await verifyOwner(signal);
+  abortIfRequested(signal);
   assertSessionBoundary(sessionBoundary);
+  abortIfRequested(signal);
   return result;
 };

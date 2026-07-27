@@ -8,6 +8,7 @@ import { ApiError } from "../../shared/api/errors";
 import {
   createInMemoryDraftRepository,
   reviseRecoverableDraft,
+  type DraftJsonObject,
   type RecoverableDraftRepository,
 } from "../../shared/storage/drafts";
 import {
@@ -21,6 +22,7 @@ import {
   persistTrainingMutationDraft,
   recoverTrainingMutationIntent,
   replayTrainingMutationDrafts,
+  trainingRecoveryReceiptMatchesSourceAttempt,
 } from "./training.recovery";
 
 const ownerScope = "acct-1234567890abcdef";
@@ -187,14 +189,32 @@ describe("Training draft recovery", () => {
     expect(receipts[0]?.payload).toEqual(expect.objectContaining({
       intentKind: "attempt",
       response,
+      sourceAttemptCount: 1,
       sourceDraftId: source.draftId,
       sourceGenerationId: source.generationId,
+      sourceLastAttemptAt: expect.any(String),
     }));
     expect(JSON.stringify(receipts[0])).not.toContain(intent.request.answer);
     const receipt = receipts[0];
     if (receipt?.payload.intentKind !== "attempt") {
       throw new Error("ATTEMPT_RECEIPT_EXPECTED");
     }
+    const sourceAttemptCount = receipt.payload.sourceAttemptCount;
+    const sourceLastAttemptAt = receipt.payload.sourceLastAttemptAt;
+    if (sourceAttemptCount === undefined || sourceLastAttemptAt === undefined) {
+      throw new Error("ATTEMPT_RECEIPT_SOURCE_IDENTITY_EXPECTED");
+    }
+    const exactAttempt = {
+      ...source,
+      attemptCount: sourceAttemptCount,
+      lastAttemptAt: sourceLastAttemptAt,
+    };
+    expect(trainingRecoveryReceiptMatchesSourceAttempt(receipt, exactAttempt)).toBe(true);
+    expect(trainingRecoveryReceiptMatchesSourceAttempt(receipt, {
+      ...exactAttempt,
+      attemptCount: exactAttempt.attemptCount + 1,
+      lastAttemptAt: new Date(Date.parse(sourceLastAttemptAt) + 1_000).toISOString(),
+    })).toBe(false);
     expect(newCompleteTrainingIntent({
       sessionId: receipt.payload.response.sessionId,
       sessionVersion: receipt.payload.response.sessionVersion,
@@ -208,6 +228,206 @@ describe("Training draft recovery", () => {
     expect(queryClient.getQueryState(["problems", ownerScope, "list"])?.isInvalidated)
       .toBe(true);
     expect(await consumeTrainingRecoveryReceipt(ownerScope, receipt, repository)).toBe(true);
+    expect(await repository.list(ownerScope)).toEqual([]);
+    queryClient.clear();
+  });
+
+  it("shares one replay signal across outer, preflight, mutation, and postflight", async () => {
+    const repository = createInMemoryDraftRepository();
+    const queryClient = new QueryClient();
+    const source = await persistTrainingMutationDraft(ownerScope, {
+      idempotencyKey: "training-start-shared-signal-1",
+      kind: "start",
+      request: { problemId },
+    }, repository);
+    const response = {
+      problemId,
+      resumed: false,
+      sessionId,
+      sessionVersion: 1,
+    };
+    const observedOwnerSignals: (AbortSignal | undefined)[] = [];
+    let mutationSignal: AbortSignal | undefined;
+    const signalAwareVerifier = vi.fn(async (signal?: AbortSignal) => {
+      observedOwnerSignals.push(signal);
+    });
+    apiRequestMock.mockImplementation((
+      _path: string,
+      requestOptions?: Readonly<{ signal?: AbortSignal }>,
+    ) => {
+      mutationSignal = requestOptions?.signal;
+      return Promise.resolve(response);
+    });
+
+    await expect(replayTrainingMutationDrafts({
+      csrfProof: "csrf-proof-1234567890abcdef",
+      ownerScope,
+      queryClient,
+      repository,
+      verifyOwner: signalAwareVerifier,
+    })).resolves.toMatchObject({ acknowledged: [source.draftId] });
+
+    expect(signalAwareVerifier).toHaveBeenCalledTimes(3);
+    const [outerSignal, preflightSignal, postflightSignal] = observedOwnerSignals;
+    expect(outerSignal).toBeInstanceOf(AbortSignal);
+    expect(preflightSignal).toBe(outerSignal);
+    expect(mutationSignal).toBe(outerSignal);
+    expect(postflightSignal).toBe(outerSignal);
+    queryClient.clear();
+  });
+
+  it("does not verify postflight or persist a receipt after the replay deadline aborts", async () => {
+    const repository = createInMemoryDraftRepository();
+    const queryClient = new QueryClient();
+    const controller = new AbortController();
+    const timeout = new DOMException("Replay deadline exceeded", "TimeoutError");
+    const source = await persistTrainingMutationDraft(ownerScope, {
+      idempotencyKey: "training-start-abort-signal-12",
+      kind: "start",
+      request: { problemId },
+    }, repository);
+    let sharedSignal: AbortSignal | undefined;
+    const signalAwareVerifier = vi.fn(async (signal?: AbortSignal) => {
+      sharedSignal ??= signal;
+      expect(signal).toBe(sharedSignal);
+    });
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+    apiRequestMock.mockImplementation((
+      _path: string,
+      requestOptions?: Readonly<{ signal?: AbortSignal }>,
+    ) => {
+      expect(requestOptions?.signal).toBe(sharedSignal);
+      controller.abort(timeout);
+      return Promise.resolve({
+        problemId,
+        resumed: false,
+        sessionId,
+        sessionVersion: 1,
+      });
+    });
+
+    await expect(replayTrainingMutationDrafts({
+      csrfProof: "csrf-proof-1234567890abcdef",
+      ownerScope,
+      queryClient,
+      repository,
+      signal: controller.signal,
+      verifyOwner: signalAwareVerifier,
+    })).rejects.toBe(timeout);
+
+    expect(signalAwareVerifier).toHaveBeenCalledTimes(2);
+    expect(apiRequestMock).toHaveBeenCalledOnce();
+    expect(invalidateSpy).not.toHaveBeenCalled();
+    expect(await listTrainingRecoveryReceipts(ownerScope, repository)).toEqual([]);
+    expect(await repository.list(ownerScope)).toEqual([
+      expect.objectContaining({
+        draftId: source.draftId,
+        lastAttemptAt: null,
+      }),
+    ]);
+    queryClient.clear();
+  });
+
+  it("rejects recovery receipts with only half of the source attempt identity", async () => {
+    const repository = createInMemoryDraftRepository();
+    const queryClient = new QueryClient();
+    const intent: TrainingMutationIntent = {
+      idempotencyKey: "training-attempt-partial-receipt-1",
+      kind: "attempt",
+      request: { answer: "O(n log n)", kind: "text", version: 3 },
+      sessionId,
+    };
+    const response = {
+      attemptId,
+      eventId: "49584c83-7297-44ef-b985-f38e6c95de76",
+      eventSequence: 2,
+      score: 100,
+      sessionId,
+      sessionVersion: 4,
+    };
+    await persistTrainingMutationDraft(ownerScope, intent, repository);
+    apiRequestMock.mockResolvedValue(response);
+    await replayTrainingMutationDrafts({
+      csrfProof: "csrf-proof-1234567890abcdef",
+      ownerScope,
+      queryClient,
+      repository,
+      verifyOwner,
+    });
+    const [validReceiptDraft] = await repository.list(ownerScope);
+    if (validReceiptDraft === undefined) {
+      throw new Error("TRAINING_RECOVERY_RECEIPT_EXPECTED");
+    }
+    const validPayload = validReceiptDraft.payload as DraftJsonObject;
+    const countOnlyPayload = { ...validPayload };
+    const timestampOnlyPayload = { ...validPayload };
+    delete countOnlyPayload.sourceLastAttemptAt;
+    delete timestampOnlyPayload.sourceAttemptCount;
+
+    await repository.clear(ownerScope);
+    await repository.put(reviseRecoverableDraft(validReceiptDraft, {
+      payload: countOnlyPayload,
+      serverVersion: validReceiptDraft.serverVersion,
+    }));
+    expect(await listTrainingRecoveryReceipts(ownerScope, repository)).toEqual([]);
+    expect(await repository.list(ownerScope)).toEqual([]);
+
+    await repository.put(reviseRecoverableDraft(validReceiptDraft, {
+      payload: timestampOnlyPayload,
+      serverVersion: validReceiptDraft.serverVersion,
+    }));
+    expect(await listTrainingRecoveryReceipts(ownerScope, repository)).toEqual([]);
+    expect(await repository.list(ownerScope)).toEqual([]);
+    queryClient.clear();
+  });
+
+  it("does not persist a late receipt after its exact replay source is removed", async () => {
+    const repository = createInMemoryDraftRepository();
+    const queryClient = new QueryClient();
+    const intent: TrainingMutationIntent = {
+      idempotencyKey: "training-attempt-late-receipt-1",
+      kind: "attempt",
+      request: { answer: "O(log n)", kind: "text", version: 3 },
+      sessionId,
+    };
+    const response = {
+      attemptId,
+      eventId: "49584c83-7297-44ef-b985-f38e6c95de76",
+      eventSequence: 2,
+      score: 100,
+      sessionId,
+      sessionVersion: 4,
+    };
+    const source = await persistTrainingMutationDraft(ownerScope, intent, repository);
+    let resolveResponse: (value: typeof response) => void = () => undefined;
+    const pendingResponse = new Promise<typeof response>((resolve) => {
+      resolveResponse = resolve;
+    });
+    apiRequestMock.mockReturnValue(pendingResponse);
+
+    const operation = replayTrainingMutationDrafts({
+      csrfProof: "csrf-proof-1234567890abcdef",
+      ownerScope,
+      queryClient,
+      repository,
+      verifyOwner,
+    });
+    await vi.waitFor(() => expect(apiRequestMock).toHaveBeenCalledOnce());
+    const attemptedSource = (await repository.list(ownerScope)).find(
+      ({ kind }) => kind === "training.attempt",
+    );
+    if (attemptedSource === undefined) {
+      throw new Error("ATTEMPTED_TRAINING_SOURCE_EXPECTED");
+    }
+    expect(attemptedSource.lastAttemptAt).not.toBeNull();
+    expect(await repository.acknowledge(attemptedSource)).toBe(true);
+
+    resolveResponse(response);
+    await expect(operation).resolves.toMatchObject({
+      acknowledged: [],
+      retained: [{ draftId: source.draftId, reason: "superseded" }],
+    });
+    expect(await listTrainingRecoveryReceipts(ownerScope, repository)).toEqual([]);
     expect(await repository.list(ownerScope)).toEqual([]);
     queryClient.clear();
   });

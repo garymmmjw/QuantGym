@@ -9,6 +9,8 @@ import {
 export const RECOVERABLE_DRAFT_DATABASE_NAME = "qg-v2-phase2-draft-recovery";
 export const RECOVERABLE_DRAFT_DATABASE_VERSION = 1;
 export const RECOVERABLE_DRAFT_SCHEMA_VERSION = 1 as const;
+export const RECOVERABLE_DRAFT_ATTEMPT_LEASE_MS = 120_000;
+export const RECOVERABLE_DRAFT_REPLAY_DEADLINE_MS = 90_000;
 
 const DRAFT_STORE_NAME = "drafts";
 const QUARANTINE_STORE_NAME = "draft-quarantine";
@@ -98,6 +100,16 @@ export type RecoverableDraft<Payload extends DraftJsonValue = DraftJsonValue> = 
   updatedAt: string;
 }>;
 
+export const isRecoverableDraftAttemptActive = (
+  draft: RecoverableDraft,
+  now = Date.now(),
+): boolean => {
+  if (draft.lastAttemptAt === null) return false;
+  const attemptedAt = Date.parse(draft.lastAttemptAt);
+  return Number.isFinite(attemptedAt)
+    && now < attemptedAt + RECOVERABLE_DRAFT_ATTEMPT_LEASE_MS;
+};
+
 export type DraftQuarantineRecord = Readonly<{
   quarantineId: string;
   quarantinedAt: string;
@@ -108,6 +120,7 @@ export type DraftQuarantineRecord = Readonly<{
 export type RecoverableDraftRepository = Readonly<{
   acknowledge: (draft: RecoverableDraft) => Promise<boolean>;
   clear: (ownerScope?: string) => Promise<void>;
+  discard: (draft: RecoverableDraft) => Promise<boolean>;
   list: (ownerScope: string) => Promise<readonly RecoverableDraft[]>;
   listQuarantine: () => Promise<readonly DraftQuarantineRecord[]>;
   markAttempt: (
@@ -115,16 +128,23 @@ export type RecoverableDraftRepository = Readonly<{
     attemptedAt?: string,
   ) => Promise<RecoverableDraft | null>;
   put: (draft: RecoverableDraft) => Promise<void>;
+  putIfCurrent: (
+    source: RecoverableDraft,
+    draft: RecoverableDraft,
+  ) => Promise<boolean>;
   readActiveOwner: () => Promise<string | null>;
+  releaseAttempt: (draft: RecoverableDraft) => Promise<RecoverableDraft | null>;
   writeActiveOwner: (ownerScope: string | null) => Promise<void>;
 }>;
 
 type DraftIdentity = Pick<
   RecoverableDraft,
+  | "attemptCount"
   | "draftId"
   | "generationId"
   | "idempotencyKey"
   | "kind"
+  | "lastAttemptAt"
   | "ownerScope"
   | "payload"
   | "resourceId"
@@ -272,11 +292,13 @@ export const reviseRecoverableDraft = <Payload extends DraftJsonValue>(
   updatedAt: revision.updatedAt ?? new Date().toISOString(),
 }) as RecoverableDraft<Payload>;
 
-const sameDraftGeneration = (left: DraftIdentity, right: DraftIdentity) => (
-  left.draftId === right.draftId
+const sameExactDraftState = (left: DraftIdentity, right: DraftIdentity) => (
+  left.attemptCount === right.attemptCount
+  && left.draftId === right.draftId
   && left.generationId === right.generationId
   && left.idempotencyKey === right.idempotencyKey
   && left.kind === right.kind
+  && left.lastAttemptAt === right.lastAttemptAt
   && left.ownerScope === right.ownerScope
   && JSON.stringify(left.payload) === JSON.stringify(right.payload)
   && left.resourceId === right.resourceId
@@ -343,7 +365,7 @@ export const createInMemoryDraftRepository = (
       const persisted = decodeEntry(draft.draftId, raw);
       if (persisted === null) return false;
       if (persisted.ownerScope !== draft.ownerScope) return ownerMismatch();
-      if (!sameDraftGeneration(persisted, draft)) return false;
+      if (!sameExactDraftState(persisted, draft)) return false;
       entries.delete(draft.draftId);
       return true;
     },
@@ -359,6 +381,16 @@ export const createInMemoryDraftRepository = (
         const draft = decodeEntry(key, raw);
         if (draft?.ownerScope === parsedOwner) entries.delete(key);
       }
+    },
+    discard: async (draft) => {
+      const raw = entries.get(draft.draftId);
+      if (raw === undefined) return false;
+      const persisted = decodeEntry(draft.draftId, raw);
+      if (persisted === null) return false;
+      if (persisted.ownerScope !== draft.ownerScope) return ownerMismatch();
+      if (!sameExactDraftState(persisted, draft)) return false;
+      entries.delete(draft.draftId);
+      return true;
     },
     list: async (ownerScope) => {
       const parsedOwner = parseDraftOwnerScope(ownerScope);
@@ -380,11 +412,15 @@ export const createInMemoryDraftRepository = (
       const persisted = decodeEntry(draft.draftId, raw);
       if (persisted === null) return null;
       if (persisted.ownerScope !== draft.ownerScope) return ownerMismatch();
-      if (!sameDraftGeneration(persisted, draft)) return null;
+      if (!sameExactDraftState(persisted, draft)) return null;
+      const parsedAttemptedAt = timestampSchema.parse(attemptedAt);
+      if (isRecoverableDraftAttemptActive(persisted, Date.parse(parsedAttemptedAt))) {
+        return null;
+      }
       const attempted = decodePersistedDraft({
         ...persisted,
         attemptCount: persisted.attemptCount + 1,
-        lastAttemptAt: timestampSchema.parse(attemptedAt),
+        lastAttemptAt: parsedAttemptedAt,
       });
       entries.set(attempted.draftId, attempted);
       return attempted;
@@ -393,7 +429,36 @@ export const createInMemoryDraftRepository = (
       const parsed = decodePersistedDraft(draft);
       entries.set(parsed.draftId, parsed);
     },
+    putIfCurrent: async (source, draft) => {
+      const parsedDraft = decodePersistedDraft(draft);
+      if (source.ownerScope !== parsedDraft.ownerScope) return ownerMismatch();
+      if (source.draftId === parsedDraft.draftId) return false;
+      const raw = entries.get(source.draftId);
+      if (raw === undefined) return false;
+      const persisted = decodeEntry(source.draftId, raw);
+      if (persisted === null) return false;
+      if (persisted.ownerScope !== source.ownerScope) return ownerMismatch();
+      if (!sameExactDraftState(persisted, source)) return false;
+      entries.set(parsedDraft.draftId, parsedDraft);
+      return true;
+    },
     readActiveOwner: async () => activeOwner,
+    releaseAttempt: async (draft) => {
+      const raw = entries.get(draft.draftId);
+      if (raw === undefined) return null;
+      const persisted = decodeEntry(draft.draftId, raw);
+      if (persisted === null) return null;
+      if (persisted.ownerScope !== draft.ownerScope) return ownerMismatch();
+      if (persisted.lastAttemptAt === null || !sameExactDraftState(persisted, draft)) {
+        return null;
+      }
+      const released = decodePersistedDraft({
+        ...persisted,
+        lastAttemptAt: null,
+      });
+      entries.set(released.draftId, released);
+      return released;
+    },
     writeActiveOwner: async (ownerScope) => {
       activeOwner = ownerScope === null ? null : parseDraftOwnerScope(ownerScope);
     },
@@ -493,7 +558,7 @@ export const createIndexedDbDraftRepository = (): RecoverableDraftRepository => 
       return false;
     }
     if (persisted.ownerScope !== draft.ownerScope) return ownerMismatch();
-    if (!sameDraftGeneration(persisted, draft)) {
+    if (!sameExactDraftState(persisted, draft)) {
       await completion;
       return false;
     }
@@ -536,6 +601,40 @@ export const createIndexedDbDraftRepository = (): RecoverableDraftRepository => 
       }
     });
     await completion;
+  }),
+  discard: async (draft) => withDatabase(async (database) => {
+    const transaction = database.transaction(
+      [DRAFT_STORE_NAME, QUARANTINE_STORE_NAME],
+      "readwrite",
+    );
+    const completion = transactionComplete(transaction);
+    const store = transaction.objectStore(DRAFT_STORE_NAME);
+    const raw = await requestResult(store.get(draft.draftId));
+    if (raw === undefined) {
+      await completion;
+      return false;
+    }
+    let persisted: RecoverableDraft;
+    try {
+      persisted = decodePersistedDraft(raw);
+    } catch (error) {
+      quarantinePersistedRecord(
+        store,
+        transaction.objectStore(QUARANTINE_STORE_NAME),
+        draft.draftId,
+        error,
+      );
+      await completion;
+      return false;
+    }
+    if (persisted.ownerScope !== draft.ownerScope) return ownerMismatch();
+    if (!sameExactDraftState(persisted, draft)) {
+      await completion;
+      return false;
+    }
+    store.delete(draft.draftId);
+    await completion;
+    return true;
   }),
   list: async (ownerScope) => withDatabase(async (database) => {
     const parsedOwner = parseDraftOwnerScope(ownerScope);
@@ -614,14 +713,19 @@ export const createIndexedDbDraftRepository = (): RecoverableDraftRepository => 
         return null;
       }
       if (persisted.ownerScope !== draft.ownerScope) return ownerMismatch();
-      if (!sameDraftGeneration(persisted, draft)) {
+      if (!sameExactDraftState(persisted, draft)) {
+        await completion;
+        return null;
+      }
+      const parsedAttemptedAt = timestampSchema.parse(attemptedAt);
+      if (isRecoverableDraftAttemptActive(persisted, Date.parse(parsedAttemptedAt))) {
         await completion;
         return null;
       }
       const attempted = decodePersistedDraft({
         ...persisted,
         attemptCount: persisted.attemptCount + 1,
-        lastAttemptAt: timestampSchema.parse(attemptedAt),
+        lastAttemptAt: parsedAttemptedAt,
       });
       store.put(attempted);
       await completion;
@@ -635,6 +739,45 @@ export const createIndexedDbDraftRepository = (): RecoverableDraftRepository => 
     transaction.objectStore(DRAFT_STORE_NAME).put(parsed);
     await completion;
   }),
+  putIfCurrent: async (source, draft) => {
+    const parsedDraft = decodePersistedDraft(draft);
+    if (source.ownerScope !== parsedDraft.ownerScope) return ownerMismatch();
+    if (source.draftId === parsedDraft.draftId) return false;
+    return withDatabase(async (database) => {
+      const transaction = database.transaction(
+        [DRAFT_STORE_NAME, QUARANTINE_STORE_NAME],
+        "readwrite",
+      );
+      const completion = transactionComplete(transaction);
+      const store = transaction.objectStore(DRAFT_STORE_NAME);
+      const raw = await requestResult(store.get(source.draftId));
+      if (raw === undefined) {
+        await completion;
+        return false;
+      }
+      let persisted: RecoverableDraft;
+      try {
+        persisted = decodePersistedDraft(raw);
+      } catch (error) {
+        quarantinePersistedRecord(
+          store,
+          transaction.objectStore(QUARANTINE_STORE_NAME),
+          source.draftId,
+          error,
+        );
+        await completion;
+        return false;
+      }
+      if (persisted.ownerScope !== source.ownerScope) return ownerMismatch();
+      if (!sameExactDraftState(persisted, source)) {
+        await completion;
+        return false;
+      }
+      store.put(parsedDraft);
+      await completion;
+      return true;
+    });
+  },
   readActiveOwner: async () => withDatabase(async (database) => {
     const transaction = database.transaction(METADATA_STORE_NAME, "readonly");
     const completion = transactionComplete(transaction);
@@ -649,6 +792,44 @@ export const createIndexedDbDraftRepository = (): RecoverableDraftRepository => 
     }).strict().safeParse(raw);
     if (!parsed.success) return invalidRecord();
     return parsed.data.value;
+  }),
+  releaseAttempt: async (draft) => withDatabase(async (database) => {
+    const transaction = database.transaction(
+      [DRAFT_STORE_NAME, QUARANTINE_STORE_NAME],
+      "readwrite",
+    );
+    const completion = transactionComplete(transaction);
+    const store = transaction.objectStore(DRAFT_STORE_NAME);
+    const raw = await requestResult(store.get(draft.draftId));
+    if (raw === undefined) {
+      await completion;
+      return null;
+    }
+    let persisted: RecoverableDraft;
+    try {
+      persisted = decodePersistedDraft(raw);
+    } catch (error) {
+      quarantinePersistedRecord(
+        store,
+        transaction.objectStore(QUARANTINE_STORE_NAME),
+        draft.draftId,
+        error,
+      );
+      await completion;
+      return null;
+    }
+    if (persisted.ownerScope !== draft.ownerScope) return ownerMismatch();
+    if (persisted.lastAttemptAt === null || !sameExactDraftState(persisted, draft)) {
+      await completion;
+      return null;
+    }
+    const released = decodePersistedDraft({
+      ...persisted,
+      lastAttemptAt: null,
+    });
+    store.put(released);
+    await completion;
+    return released;
   }),
   writeActiveOwner: async (ownerScope) => withDatabase(async (database) => {
     const transaction = database.transaction(METADATA_STORE_NAME, "readwrite");
@@ -691,6 +872,10 @@ export type DraftReplayReport = Readonly<{
   retained: readonly DraftReplayRetention[];
 }>;
 
+type DraftReplayAttemptOutcome =
+  | Readonly<{ status: "acknowledged" }>
+  | Readonly<{ retention: DraftReplayRetention; status: "retained" }>;
+
 export type ReplayRecoverableDraftsOptions = Readonly<{
   kinds: readonly RecoverableDraftKind[];
   ownerScope: string;
@@ -712,6 +897,58 @@ const abortIfRequested = (signal: AbortSignal | undefined) => {
   throw signal.reason ?? new DOMException("Draft replay aborted", "AbortError");
 };
 
+const createReplayAttemptAbortScope = (externalSignal: AbortSignal | undefined) => {
+  const controller = new AbortController();
+  const forwardExternalAbort = () => {
+    if (!controller.signal.aborted && externalSignal !== undefined) {
+      controller.abort(externalSignal.reason);
+    }
+  };
+  if (externalSignal?.aborted === true) forwardExternalAbort();
+  else externalSignal?.addEventListener("abort", forwardExternalAbort, { once: true });
+
+  const timeoutId = setTimeout(() => {
+    if (!controller.signal.aborted) {
+      controller.abort(new DOMException(
+        "Recoverable draft replay timed out.",
+        "TimeoutError",
+      ));
+    }
+  }, RECOVERABLE_DRAFT_REPLAY_DEADLINE_MS);
+
+  return {
+    dispose: () => {
+      clearTimeout(timeoutId);
+      externalSignal?.removeEventListener("abort", forwardExternalAbort);
+    },
+    signal: controller.signal,
+  };
+};
+
+const runAbortableReplay = async <Result>(
+  signal: AbortSignal,
+  replay: () => Promise<Result>,
+): Promise<Result> => {
+  abortIfRequested(signal);
+  let rejectAborted: ((reason?: unknown) => void) | null = null;
+  const aborted = new Promise<never>((_resolve, reject) => {
+    rejectAborted = reject;
+  });
+  const handleAbort = () => rejectAborted?.(
+    signal.reason ?? new DOMException("Draft replay aborted", "AbortError"),
+  );
+  signal.addEventListener("abort", handleAbort, { once: true });
+  const operation = Promise.resolve().then(() => {
+    abortIfRequested(signal);
+    return replay();
+  });
+  try {
+    return await Promise.race([operation, aborted]);
+  } finally {
+    signal.removeEventListener("abort", handleAbort);
+  }
+};
+
 const executeDraftReplay = async (
   options: ReplayRecoverableDraftsOptions,
   repository: RecoverableDraftRepository,
@@ -731,24 +968,45 @@ const executeDraftReplay = async (
       continue;
     }
     attempted.push(attempt.draftId);
+    const abortScope = createReplayAttemptAbortScope(options.signal);
     try {
-      const acknowledgement = await options.replay(attempt, options.signal);
-      abortIfRequested(options.signal);
-      if (!acknowledgement.acknowledged) {
-        retained.push({
-          draftId: attempt.draftId,
-          reason: "deferred",
-          ...acknowledgement.failure,
-        });
-        continue;
-      }
-      if (await repository.acknowledge(attempt)) {
-        acknowledged.push(attempt.draftId);
-      } else {
-        retained.push({ draftId: attempt.draftId, reason: "superseded" });
-      }
+      const outcome = await runAbortableReplay<DraftReplayAttemptOutcome>(
+        abortScope.signal,
+        async () => {
+          const acknowledgement = await options.replay(attempt, abortScope.signal);
+          abortIfRequested(abortScope.signal);
+          if (!acknowledgement.acknowledged) {
+            await repository.releaseAttempt(attempt);
+            abortIfRequested(abortScope.signal);
+            return {
+              retention: {
+                draftId: attempt.draftId,
+                reason: "deferred",
+                ...acknowledgement.failure,
+              },
+              status: "retained",
+            };
+          }
+          if (await repository.acknowledge(attempt)) {
+            abortIfRequested(abortScope.signal);
+            return { status: "acknowledged" };
+          }
+          await repository.releaseAttempt(attempt);
+          abortIfRequested(abortScope.signal);
+          return {
+            retention: { draftId: attempt.draftId, reason: "superseded" },
+            status: "retained",
+          };
+        },
+      );
+      abortIfRequested(abortScope.signal);
+      if (outcome.status === "acknowledged") acknowledged.push(attempt.draftId);
+      else retained.push(outcome.retention);
     } catch (error) {
-      if (options.signal?.aborted === true) throw error;
+      await repository.releaseAttempt(attempt);
+      if (options.signal?.aborted === true) {
+        throw options.signal.reason ?? error;
+      }
       const failure = classifyMutationFailure(error);
       retained.push({
         code: failure.code,
@@ -758,6 +1016,8 @@ const executeDraftReplay = async (
         retryable: failure.retryable,
         state: failure.state,
       });
+    } finally {
+      abortScope.dispose();
     }
   }
 

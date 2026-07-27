@@ -10,6 +10,7 @@ import {
   recoverableDraftRepository,
   registerDraftReconnectReplay,
   replayRecoverableDrafts,
+  type DraftJsonObject,
   type DraftReplayReport,
   type RecoverableDraft,
   type RecoverableDraftRepository,
@@ -51,8 +52,10 @@ export const TRAINING_RECOVERY_RECEIPT_KINDS = [
 
 const receiptSourceShape = {
   expiresAt: z.string().datetime({ offset: true }),
+  sourceAttemptCount: z.number().int().positive().optional(),
   sourceDraftId: z.string().min(1).max(220),
   sourceGenerationId: z.string().min(1).max(300),
+  sourceLastAttemptAt: z.string().datetime({ offset: true }).optional(),
 } as const;
 
 const trainingEventReceiptResponseSchema = z.object({
@@ -88,7 +91,16 @@ const trainingRecoveryReceiptPayloadSchema = z.discriminatedUnion("intentKind", 
     intentKind: z.literal("complete"),
     response: completionResponseSchema,
   }).strict(),
-]);
+]).superRefine((payload, context) => {
+  const hasAttemptCount = payload.sourceAttemptCount !== undefined;
+  const hasLastAttemptAt = payload.sourceLastAttemptAt !== undefined;
+  if (hasAttemptCount === hasLastAttemptAt) return;
+  context.addIssue({
+    code: "custom",
+    message: "TRAINING_RECOVERY_RECEIPT_SOURCE_ATTEMPT_INCOMPLETE",
+    path: [hasAttemptCount ? "sourceLastAttemptAt" : "sourceAttemptCount"],
+  });
+}).transform((payload) => payload as typeof payload & DraftJsonObject);
 
 export type TrainingRecoveryReceiptPayload = z.output<
   typeof trainingRecoveryReceiptPayloadSchema
@@ -98,6 +110,18 @@ export type TrainingRecoveryReceipt = Readonly<{
   draft: RecoverableDraft;
   payload: TrainingRecoveryReceiptPayload;
 }>;
+
+export const trainingRecoveryReceiptMatchesSourceAttempt = (
+  receipt: TrainingRecoveryReceipt,
+  source: RecoverableDraft,
+): boolean => (
+  receipt.payload.sourceDraftId === source.draftId
+  && receipt.payload.sourceGenerationId === source.generationId
+  && receipt.payload.sourceAttemptCount !== undefined
+  && receipt.payload.sourceLastAttemptAt !== undefined
+  && receipt.payload.sourceAttemptCount === source.attemptCount
+  && receipt.payload.sourceLastAttemptAt === source.lastAttemptAt
+);
 
 const receiptExpiry = (createdAt: string): string => {
   const expiry = new Date(createdAt);
@@ -162,13 +186,18 @@ const createTrainingRecoveryReceipt = (
   response: TrainingMutationResponse,
   createdAt = new Date().toISOString(),
 ): TrainingRecoveryReceipt => {
+  if (source.attemptCount < 1 || source.lastAttemptAt === null) {
+    throw new Error("TRAINING_RECOVERY_RECEIPT_SOURCE_ATTEMPT_INVALID");
+  }
   const parsedResponse = receiptResponse(intent, response);
   const payload = trainingRecoveryReceiptPayloadSchema.parse({
     expiresAt: receiptExpiry(createdAt),
     intentKind: intent.kind,
     response: parsedResponse,
+    sourceAttemptCount: source.attemptCount,
     sourceDraftId: source.draftId,
     sourceGenerationId: source.generationId,
+    sourceLastAttemptAt: source.lastAttemptAt,
   });
   const draft = createRecoverableDraft({
     idempotencyKey: stableReceiptKey(source),
@@ -382,18 +411,28 @@ export type ReplayTrainingDraftsOptions = Readonly<{
   ownerScope: string;
   queryClient: QueryClient;
   repository?: RecoverableDraftRepository;
-  verifyOwner?: () => Promise<void>;
+  signal?: AbortSignal;
+  verifyOwner?: (signal?: AbortSignal) => Promise<void>;
 }>;
+
+const abortIfRequested = (signal: AbortSignal | undefined): void => {
+  if (signal?.aborted !== true) return;
+  throw signal.reason ?? new DOMException("Training replay aborted", "AbortError");
+};
 
 const trainingReplayOptions = (options: ReplayTrainingDraftsOptions) => {
   const repository = options.repository ?? recoverableDraftRepository;
   const verifyOwner = options.verifyOwner
-    ?? (() => verifyCurrentSessionOwner(options.ownerScope));
+    ?? ((signal?: AbortSignal) => (
+      verifyCurrentSessionOwner(options.ownerScope, signal)
+    ));
   return {
     kinds: TRAINING_DRAFT_KINDS,
     ownerScope: options.ownerScope,
-    replay: async (draft: RecoverableDraft) => {
-      await verifyOwner();
+    replay: async (draft: RecoverableDraft, signal?: AbortSignal) => {
+      abortIfRequested(signal);
+      await verifyOwner(signal);
+      abortIfRequested(signal);
       const existing = (await listTrainingRecoveryReceipts(
         options.ownerScope,
         repository,
@@ -401,35 +440,51 @@ const trainingReplayOptions = (options: ReplayTrainingDraftsOptions) => {
         payload.sourceDraftId === draft.draftId
         && payload.sourceGenerationId === draft.generationId
       ));
+      abortIfRequested(signal);
       if (existing !== undefined) {
+        abortIfRequested(signal);
         await invalidateTrainingRecoveryReceipt(
           options.queryClient,
           options.ownerScope,
           existing,
         );
+        abortIfRequested(signal);
         return { acknowledged: true };
       }
 
       const intent = recoverTrainingMutationIntent(draft);
       const response = await runOwnerVerifiedOperation(
         verifyOwner,
-        () => mutateTraining(intent, options.csrfProof),
+        (operationSignal) => mutateTraining(
+          intent,
+          options.csrfProof,
+          operationSignal,
+        ),
+        signal,
       );
+      abortIfRequested(signal);
       const receipt = createTrainingRecoveryReceipt(
         options.ownerScope,
         draft,
         intent,
         response,
       );
-      await repository.put(receipt.draft);
+      abortIfRequested(signal);
+      const receiptCommitted = await repository.putIfCurrent(draft, receipt.draft);
+      abortIfRequested(signal);
+      if (!receiptCommitted) {
+        return { acknowledged: true };
+      }
       await invalidateTrainingRecoveryReceipt(
         options.queryClient,
         options.ownerScope,
         receipt,
       );
+      abortIfRequested(signal);
       return { acknowledged: true };
     },
     repository,
+    ...(options.signal === undefined ? {} : { signal: options.signal }),
   };
 };
 

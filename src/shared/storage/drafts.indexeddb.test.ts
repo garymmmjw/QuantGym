@@ -100,6 +100,26 @@ describe("native IndexedDB recoverable drafts", () => {
     expect(await repository.readActiveOwner()).toBeNull();
   });
 
+  it("does not remove an IndexedDB source snapshot after replay advances it", async () => {
+    const repository = createIndexedDbDraftRepository();
+    const original = draftFor(
+      ownerScope,
+      "等待重放",
+      "indexed-db-replay-intent-1234",
+    );
+    await repository.put(original);
+    const attempted = await repository.markAttempt(
+      original,
+      "2026-07-27T03:01:00.000Z",
+    );
+    if (attempted === null) throw new Error("ATTEMPTED_DRAFT_EXPECTED");
+
+    expect(await repository.acknowledge(original)).toBe(false);
+    expect(await repository.discard(original)).toBe(false);
+    expect(await repository.list(ownerScope)).toEqual([attempted]);
+    expect(await repository.acknowledge(attempted)).toBe(true);
+  });
+
   it("moves corrupt persisted records to a payload-free quarantine store", async () => {
     const repository = createIndexedDbDraftRepository();
     const valid = draftFor(ownerScope, "有效", "indexed-db-valid-intent-1234");
@@ -116,5 +136,26 @@ describe("native IndexedDB recoverable drafts", () => {
     expect(quarantine).toHaveLength(1);
     expect(quarantine[0]).toEqual(expect.objectContaining({ reason: "auth-material" }));
     expect(JSON.stringify(quarantine)).not.toContain(secret);
+  });
+
+  it("discards only the exact user-selected generation", async () => {
+    const repository = createIndexedDbDraftRepository();
+    const original = draftFor(
+      ownerScope,
+      "准备丢弃的旧内容",
+      "indexed-db-discard-intent-1234",
+    );
+    const revision = reviseRecoverableDraft(original, {
+      payload: { body: "需要保留的新内容", expectedVersion: 4 },
+      serverVersion: 4,
+      updatedAt: original.updatedAt,
+    });
+    await repository.put(original);
+    await repository.put(revision);
+
+    expect(await repository.discard(original)).toBe(false);
+    expect(await repository.list(ownerScope)).toEqual([revision]);
+    expect(await repository.discard(revision)).toBe(true);
+    expect(await repository.list(ownerScope)).toEqual([]);
   });
 });

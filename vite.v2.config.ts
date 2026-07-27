@@ -113,17 +113,22 @@ if (
   throw new Error("V2_ASSET_ALLOWLIST_INVALID");
 }
 
-const baseApprovedSourceDirectories = [
+export const V2_SOURCE_ROOTS = Object.freeze([
   "src/core",
   "src/design-system",
   "src/domains",
+  "src/pages/training",
   "src/pages/v2",
   "src/shared/api",
   "src/shared/i18n",
   "src/shared/lib",
   "src/shared/storage",
   "src/shared/testing",
-].map((relativePath) => canonicalSecureDirectory(path.join(canonicalProjectRoot, relativePath)));
+] as const);
+
+const baseApprovedSourceDirectories = V2_SOURCE_ROOTS.map(
+  (relativePath) => canonicalSecureDirectory(path.join(canonicalProjectRoot, relativePath)),
+);
 
 export const resolveV2BuildBranch = (
   environment: NodeJS.ProcessEnv = process.env,

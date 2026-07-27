@@ -24,6 +24,11 @@ import {
   currentUserQueryOptions,
 } from "../../domains/account/auth/auth.queries";
 import type { MeResponse } from "../../domains/account/auth/auth.schema";
+import { useDashboardOverviewQuery } from "../../domains/dashboard/dashboard.queries";
+import { TRAINING_RECONNECT_REPLAYED_EVENT } from "../../domains/training/training.events";
+import {
+  registerTrainingDraftReconnectReplay,
+} from "../../domains/training/training.recovery";
 import {
   clearPreferenceSyncDrafts,
   listPreferenceSyncDrafts,
@@ -43,6 +48,7 @@ import {
 import type {
   CompatibilityNavigationSearchResult,
   SearchProviderResult,
+  V2NavigationSearchResult,
 } from "../../domains/platform/search/search.types";
 import {
   useGlobalSearchShortcut,
@@ -59,6 +65,11 @@ import {
 import { createAccountScope } from "../../shared/lib/accountScope";
 import { recoverableDraftOwnerBoundary } from "../../shared/storage/draftOwnerBoundary";
 import { useOnlineStatus } from "../../shared/lib/useOnlineStatus";
+import {
+  COMPATIBILITY_BUSINESS_ROUTES,
+  NATIVE_BUSINESS_ROUTES,
+  type BusinessRouteOwnership,
+} from "./businessRouteOwnership";
 import styles from "./AuthenticatedPlatformShell.module.css";
 
 const LazyCommandPalette = lazy(async () => {
@@ -100,18 +111,48 @@ export type AuthenticatedPlatformShellProps = Readonly<{
   currentUser: MeResponse;
 }>;
 
+const navigationForOwnedRoute = (route: BusinessRouteOwnership) => {
+  const navigationItem = PREVIEW_BUSINESS_ROUTES.find(({ id, path }) => (
+    id === route.id && path === route.path
+  ));
+  if (navigationItem === undefined) {
+    throw new Error(`BUSINESS_ROUTE_NAVIGATION_MISSING:${route.id}`);
+  }
+  return navigationItem;
+};
+
 const compatibilitySearchResults: readonly CompatibilityNavigationSearchResult[] = (
-  PREVIEW_BUSINESS_ROUTES.map((item) => ({
-    description: {
-      "zh-CN": "在已隔离的兼容预览中打开",
-      en: "Open in the isolated compatibility preview",
-    },
-    href: item.path,
-    id: item.id,
-    keywords: [item.id, item.path],
-    kind: "compatibility-navigation" as const,
-    title: item.label,
-  }))
+  COMPATIBILITY_BUSINESS_ROUTES.map((route) => {
+    const item = navigationForOwnedRoute(route);
+    return {
+      description: {
+        "zh-CN": "在已隔离的兼容预览中打开",
+        en: "Open in the isolated compatibility preview",
+      },
+      href: item.path,
+      id: item.id,
+      keywords: [item.id, item.path],
+      kind: "compatibility-navigation" as const,
+      title: item.label,
+    };
+  })
+);
+
+const nativeSearchResults: readonly V2NavigationSearchResult[] = (
+  NATIVE_BUSINESS_ROUTES.map((route) => {
+    const item = navigationForOwnedRoute(route);
+    return {
+      description: {
+        "zh-CN": "在原生 V2 页面中打开",
+        en: "Open the native V2 page",
+      },
+      href: item.path,
+      id: item.id,
+      keywords: [item.id, item.path],
+      kind: "v2-navigation" as const,
+      title: item.label,
+    };
+  })
 );
 
 export function AuthenticatedPlatformShell({
@@ -182,9 +223,10 @@ export function AuthenticatedPlatformShell({
   const clearPreferenceMutationFailure = preferenceMutation.clearFailure;
   const logoutMutation = useLogoutMutation(sessionCsrfProof);
   const notificationSummary = useUnreadNotificationCount({ ownerScope });
+  const dashboardOverview = useDashboardOverviewQuery(ownerScope);
   const searchRegistry = useMemo(() => createPhase1SearchRegistry({
     compatibilityNavigation: compatibilitySearchResults,
-    v2Navigation: [],
+    v2Navigation: nativeSearchResults,
   }), []);
 
   const rememberSurfaceTrigger = useCallback(() => {
@@ -345,6 +387,35 @@ export function AuthenticatedPlatformShell({
     }
     previousOwnerScopeRef.current = ownerScope;
   }, [ownerScope, queryClient]);
+
+  useEffect(() => registerTrainingDraftReconnectReplay({
+    csrfProof: sessionCsrfProof,
+    onError: () => {
+      if (
+        !sessionBoundaryActiveRef.current
+        || !currentCacheMatchesOwner(ownerScope)
+        || typeof window === "undefined"
+      ) return;
+      window.dispatchEvent(new Event(TRAINING_RECONNECT_REPLAYED_EVENT));
+    },
+    onReport: () => {
+      if (
+        !sessionBoundaryActiveRef.current
+        || !currentCacheMatchesOwner(ownerScope)
+        || typeof window === "undefined"
+      ) return;
+      window.dispatchEvent(new Event(TRAINING_RECONNECT_REPLAYED_EVENT));
+    },
+    ownerScope,
+    queryClient,
+    verifyOwner: verifyCurrentOwner,
+  }), [
+    currentCacheMatchesOwner,
+    ownerScope,
+    queryClient,
+    sessionCsrfProof,
+    verifyCurrentOwner,
+  ]);
 
   useEffect(() => {
     preferenceVersionRef.current = currentUser.preferences.version;
@@ -606,6 +677,7 @@ export function AuthenticatedPlatformShell({
   return (
     <AppShell
       language={language}
+      level={dashboardOverview.data?.profile.level}
       notificationCount={notificationSummary.count}
       notificationsOpen={activeSurface === "notifications"}
       onLanguageChange={(nextLanguage) => mutatePreference({
@@ -622,6 +694,7 @@ export function AuthenticatedPlatformShell({
         version: preferenceVersionRef.current,
       })}
       searchOpen={activeSurface === "search"}
+      streakDays={dashboardOverview.data?.profile.streakDays}
       theme={theme}
       user={{ displayName: currentUser.displayName, email: currentUser.email }}
     >

@@ -1,0 +1,285 @@
+.page {
+  min-inline-size: 0;
+}
+
+.heroCard {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  overflow: hidden;
+  min-block-size: 15rem;
+  grid-template-columns: minmax(0, 1.45fr) minmax(11rem, 0.55fr);
+  align-items: center;
+  gap: var(--qg-space-6);
+  border: 1px solid var(--qg-border-subtle);
+  border-radius: var(--qg-radius-feature);
+  padding: clamp(var(--qg-space-6), 4vw, var(--qg-space-10));
+  background:
+    radial-gradient(
+      circle at 88% 18%,
+      var(--qg-reward-surface) 0,
+      transparent 38%
+    ),
+    linear-gradient(
+      135deg,
+      var(--qg-surface-primary) 0%,
+      var(--qg-action-primary-soft) 100%
+    );
+}
+
+.heroCard::before {
+  position: absolute;
+  z-index: var(--qg-layer-underlay);
+  inset: auto -5rem -8rem auto;
+  inline-size: 22rem;
+  block-size: 22rem;
+  border: 1px solid var(--qg-border-subtle);
+  border-radius: 50%;
+  content: "";
+}
+
+.heroCopy {
+  position: relative;
+  z-index: var(--qg-layer-raised);
+  display: grid;
+  min-inline-size: 0;
+  justify-items: start;
+  gap: var(--qg-space-4);
+}
+
+.heroEyebrow,
+.heroTitle,
+.heroReason,
+.focusLabel,
+.focusTitle,
+.focusDescription,
+.sectionTitle,
+.emptyActivity {
+  margin: 0;
+}
+
+.heroEyebrow,
+.focusLabel {
+  color: var(--qg-action-primary-text);
+  font-size: var(--qg-font-size-caption);
+  font-weight: var(--qg-font-weight-bold);
+  letter-spacing: 0.04em;
+}
+
+.heroTitle {
+  max-inline-size: 18ch;
+  font-size: clamp(var(--qg-font-size-title), 3vw, var(--qg-font-size-display));
+  font-weight: var(--qg-font-weight-extrabold);
+  letter-spacing: var(--qg-letter-spacing-tight);
+  line-height: var(--qg-line-height-tight);
+  text-wrap: balance;
+}
+
+.heroReason {
+  max-inline-size: 55ch;
+  color: var(--qg-text-secondary);
+  font-size: var(--qg-font-size-body);
+  line-height: var(--qg-line-height-relaxed);
+  text-wrap: pretty;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--qg-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.heroMetaItem {
+  border: 1px solid var(--qg-border-subtle);
+  border-radius: var(--qg-radius-compact);
+  padding: var(--qg-space-2) var(--qg-space-3);
+  background: var(--qg-surface-primary);
+  color: var(--qg-text-secondary);
+  font-size: var(--qg-font-size-caption);
+  font-weight: var(--qg-font-weight-semibold);
+}
+
+.heroMetaItem strong {
+  color: var(--qg-text-primary);
+  font-family: var(--qg-font-metrics);
+  font-variant-numeric: tabular-nums;
+}
+
+.heroAction {
+  margin-block-start: var(--qg-space-1);
+}
+
+.draftStatus {
+  inline-size: min(100%, 34rem);
+}
+
+.heroMascot {
+  place-self: end center;
+  margin-block-end: calc(-1 * var(--qg-space-8));
+}
+
+.recovery {
+  inline-size: 100%;
+  max-inline-size: none;
+}
+
+.activity,
+.focusCard {
+  border-radius: var(--qg-radius-panel);
+  background: var(--qg-surface-primary);
+}
+
+.activity {
+  padding: var(--qg-space-6);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--qg-space-4);
+  margin-block-end: var(--qg-space-5);
+}
+
+.sectionTitle {
+  font-size: var(--qg-font-size-title-small);
+  font-weight: var(--qg-font-weight-bold);
+  letter-spacing: var(--qg-letter-spacing-tight);
+}
+
+.sectionMeta {
+  color: var(--qg-text-muted);
+  font-size: var(--qg-font-size-caption);
+}
+
+.activityList {
+  display: grid;
+  gap: var(--qg-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activityItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--qg-space-4);
+  border-block-start: 1px solid var(--qg-border-subtle);
+  padding-block: var(--qg-space-3);
+}
+
+.activityItem:first-child {
+  border-block-start: 0;
+  padding-block-start: 0;
+}
+
+.activitySkill {
+  overflow: hidden;
+  color: var(--qg-text-primary);
+  font-size: var(--qg-font-size-body-small);
+  font-weight: var(--qg-font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activityDate {
+  color: var(--qg-text-muted);
+  font-size: var(--qg-font-size-caption);
+}
+
+.activityXp {
+  color: var(--qg-action-primary-text);
+  font-family: var(--qg-font-metrics);
+  font-size: var(--qg-font-size-body-small);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--qg-font-weight-bold);
+}
+
+.emptyActivity {
+  color: var(--qg-text-secondary);
+  font-size: var(--qg-font-size-body-small);
+  line-height: var(--qg-line-height-relaxed);
+}
+
+.focusCard {
+  display: grid;
+  gap: var(--qg-space-4);
+  border-block-start: var(--qg-space-1) solid var(--qg-status-warning);
+  padding: var(--qg-space-6);
+}
+
+.focusHeading {
+  display: grid;
+  gap: var(--qg-space-2);
+}
+
+.focusTitle {
+  font-size: var(--qg-font-size-title-small);
+  font-weight: var(--qg-font-weight-bold);
+  letter-spacing: var(--qg-letter-spacing-tight);
+  line-height: var(--qg-line-height-tight);
+  text-wrap: balance;
+}
+
+.focusScore {
+  color: var(--qg-text-primary);
+  font-family: var(--qg-font-metrics);
+  font-size: clamp(var(--qg-font-size-display), 4vw, 2.75rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--qg-font-weight-bold);
+  line-height: 1;
+}
+
+.focusDescription {
+  color: var(--qg-text-secondary);
+  font-size: var(--qg-font-size-body-small);
+  line-height: var(--qg-line-height-relaxed);
+  text-wrap: pretty;
+}
+
+@media (width <= 860px) {
+  .heroCard {
+    min-block-size: auto;
+    grid-template-columns: minmax(0, 1fr);
+    padding-block-end: 0;
+  }
+
+  .heroMascot {
+    inline-size: min(48vw, 13rem);
+    margin-block-end: calc(-1 * var(--qg-space-5));
+  }
+}
+
+@media (width <= 640px) {
+  .heroCard {
+    gap: var(--qg-space-3);
+    padding-inline: var(--qg-space-5);
+  }
+
+  .heroAction {
+    inline-size: 100%;
+  }
+
+  .heroAction > * {
+    inline-size: 100%;
+  }
+
+  .activityItem {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--qg-space-2) var(--qg-space-3);
+  }
+
+  .activityDate {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .activityXp {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}

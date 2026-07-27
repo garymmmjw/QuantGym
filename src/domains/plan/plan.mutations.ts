@@ -171,12 +171,14 @@ export const newCompletePlanTaskIntent = (
 export const createPlan = async (
   intent: CreatePlanIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<PlanCreationResponse> => {
   const response = await apiRequest<unknown>("/plans", {
     body: createPlanRequestSchema.parse(intent.request),
     csrfProof,
     headers: idempotencyHeaders(intent.idempotencyKey),
     method: "POST",
+    ...(signal === undefined ? {} : { signal }),
   });
   return planCreationResponseSchema.parse(response);
 };
@@ -184,12 +186,14 @@ export const createPlan = async (
 export const runPlanDiagnostic = async (
   intent: RunPlanDiagnosticIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<PlanDiagnosticResponse> => {
   const response = await apiRequest<unknown>("/plans/current/diagnostic", {
     body: runPlanDiagnosticRequestSchema.parse(intent.request),
     csrfProof,
     headers: idempotencyHeaders(intent.idempotencyKey),
     method: "POST",
+    ...(signal === undefined ? {} : { signal }),
   });
   return planDiagnosticResponseSchema.parse(response);
 };
@@ -197,6 +201,7 @@ export const runPlanDiagnostic = async (
 export const updatePlanTask = async (
   intent: UpdatePlanTaskIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<PlanTaskMutationResponse> => {
   const taskId = resourceIdSchema.parse(intent.taskId);
   const response = await apiRequest<unknown>(
@@ -205,6 +210,7 @@ export const updatePlanTask = async (
       body: updatePlanTaskRequestSchema.parse(intent.request),
       csrfProof,
       method: "PATCH",
+      ...(signal === undefined ? {} : { signal }),
     },
   );
   return planTaskMutationResponseSchema.parse(response);
@@ -213,6 +219,7 @@ export const updatePlanTask = async (
 export const completePlanTask = async (
   intent: CompletePlanTaskIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<PlanTaskMutationResponse> => {
   const taskId = resourceIdSchema.parse(intent.taskId);
   const response = await apiRequest<unknown>(
@@ -221,6 +228,7 @@ export const completePlanTask = async (
       body: completePlanTaskRequestSchema.parse(intent.request),
       csrfProof,
       method: "POST",
+      ...(signal === undefined ? {} : { signal }),
     },
   );
   return planTaskMutationResponseSchema.parse(response);
@@ -229,16 +237,17 @@ export const completePlanTask = async (
 export const mutatePlan = (
   intent: PlanMutationIntent,
   csrfProof: string | null,
+  signal?: AbortSignal,
 ): Promise<PlanCreationResponse | PlanDiagnosticResponse | PlanTaskMutationResponse> => {
   switch (intent.kind) {
     case "create":
-      return createPlan(intent, csrfProof);
+      return createPlan(intent, csrfProof, signal);
     case "diagnostic":
-      return runPlanDiagnostic(intent, csrfProof);
+      return runPlanDiagnostic(intent, csrfProof, signal);
     case "update-task":
-      return updatePlanTask(intent, csrfProof);
+      return updatePlanTask(intent, csrfProof, signal);
     case "complete-task":
-      return completePlanTask(intent, csrfProof);
+      return completePlanTask(intent, csrfProof, signal);
   }
 };
 

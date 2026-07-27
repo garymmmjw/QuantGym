@@ -6,11 +6,15 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import {
+  APPROVED_BUSINESS_ROUTES,
   APPROVED_LEGACY_SANDBOX_TOKENS,
+  APPROVED_NATIVE_BUSINESS_ROUTES,
   APPROVED_UNMIGRATED_ROUTES,
   LEGACY_PREVIEW_ORIGIN,
+  PHASE1_PRODUCTION_SOURCE_ROOTS,
   PHASE1_SYSTEM_SURFACES,
   findPhase1LegacyBoundaryFailures,
+  validateBusinessRouteOwnershipSource,
   validateBuildIsolationSources,
   validateLegacyAdapterReachableGraph,
   validateLegacyAdapterSource,
@@ -25,6 +29,17 @@ const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const goodRoutesSource = `
 export const LEGACY_PREVIEW_ORIGIN = ${JSON.stringify(LEGACY_PREVIEW_ORIGIN)};
 export const UNMIGRATED_ROUTES = Object.freeze(${JSON.stringify(APPROVED_UNMIGRATED_ROUTES)});
+`;
+
+const goodOwnershipSource = `
+export const BUSINESS_ROUTE_OWNERSHIP = Object.freeze(${JSON.stringify(
+  APPROVED_BUSINESS_ROUTES.map((route) => ({
+    ...route,
+    owner: APPROVED_NATIVE_BUSINESS_ROUTES.some(({ id }) => id === route.id)
+      ? "native"
+      : "compatibility",
+  })),
+)});
 `;
 
 const goodAdapterSource = `
@@ -80,25 +95,33 @@ const goodBuildSources = {
 const goodNavigationSource = `
 const item = (id: string, path: string) => ({ id, path });
 export const PREVIEW_BUSINESS_ROUTES = [
-${APPROVED_UNMIGRATED_ROUTES.map(({ id, path: routePath }) => (
+${APPROVED_BUSINESS_ROUTES.map(({ id, path: routePath }) => (
   `  item(${JSON.stringify(id)}, ${JSON.stringify(routePath)}),`
 )).join("\n")}
 ];
 `;
 
 const goodRouterSource = `
-import { PREVIEW_BUSINESS_ROUTES } from "../../design-system/patterns/AppShell";
-const legacyRouteAdapter = import("../../legacy-preview/LegacyRouteAdapter");
-const legacyCompatibilityElement = <LegacyRouteAdapter />;
-const businessRouteChildren = PREVIEW_BUSINESS_ROUTES
-  .filter(({ path }) => path !== "/")
+import { COMPATIBILITY_BUSINESS_ROUTES } from "./businessRouteOwnership";
+const legacyRouteAdapter = lazy(
+  () => import("../../legacy-preview/LegacyRouteAdapter"),
+);
+const legacyCompatibilityElement = (
+  <Suspense fallback={<Spinner label="正在载入兼容预览" size="large" />}>
+    {createElement(legacyRouteAdapter)}
+  </Suspense>
+);
+const nativeOverviewElement = <OverviewPage />;
+const businessRouteChildren = COMPATIBILITY_BUSINESS_ROUTES
   .map(({ id, path }) => ({
     path: path.slice(1),
-    element: legacyCompatibilityElement,
-    id,
+    element: path === "/problems"
+      ? <ProblemsRoute compatibilityElement={legacyCompatibilityElement} />
+      : legacyCompatibilityElement,
+    id: \`preview-\${id}\`,
   }));
 export const routes = [
-  { index: true, element: legacyCompatibilityElement },
+  { index: true, element: nativeOverviewElement },
   ...businessRouteChildren,
 ];
 `;
@@ -107,10 +130,14 @@ const expectFailure = (failures, pattern) => {
   assert.match(failures.join("\n"), pattern);
 };
 
-test("freezes the exact 22 routes, eight systems, compatibility origin, and sandbox capabilities", () => {
-  assert.equal(APPROVED_UNMIGRATED_ROUTES.length, 22);
-  assert.equal(new Set(APPROVED_UNMIGRATED_ROUTES.map(({ id }) => id)).size, 22);
-  assert.equal(new Set(APPROVED_UNMIGRATED_ROUTES.map(({ path: routePath }) => routePath)).size, 22);
+test("freezes one native and 21 compatibility routes, eight systems, origin, and sandbox", () => {
+  assert.equal(APPROVED_BUSINESS_ROUTES.length, 22);
+  assert.equal(APPROVED_NATIVE_BUSINESS_ROUTES.length, 1);
+  assert.deepEqual(APPROVED_NATIVE_BUSINESS_ROUTES, [{ id: "overview", path: "/" }]);
+  assert.equal(APPROVED_UNMIGRATED_ROUTES.length, 21);
+  assert.equal(new Set(APPROVED_UNMIGRATED_ROUTES.map(({ id }) => id)).size, 21);
+  assert.equal(new Set(APPROVED_UNMIGRATED_ROUTES.map(({ path: routePath }) => routePath)).size, 21);
+  assert.ok(PHASE1_PRODUCTION_SOURCE_ROOTS.includes("src/pages/training"));
   assert.deepEqual(PHASE1_SYSTEM_SURFACES, [
     "system:auth",
     "system:desktop-shell",
@@ -144,32 +171,32 @@ test("accepts only the exact independent unmigrated-route allowlist", () => {
   ].join("\n");
   expectFailure(
     validateUnmigratedRoutesSource(deadApprovedArray),
-    /UNMIGRATED_ROUTES.*exact independent 22-route allowlist/u,
+    /UNMIGRATED_ROUTES.*exact independent 21-route compatibility allowlist/u,
   );
 
   const missing = goodRoutesSource.replace(
     JSON.stringify(APPROVED_UNMIGRATED_ROUTES[0]),
     "",
   );
-  expectFailure(validateUnmigratedRoutesSource(missing), /22-route allowlist|route count/u);
+  expectFailure(validateUnmigratedRoutesSource(missing), /21-route compatibility allowlist|route count/u);
 
   const duplicate = goodRoutesSource.replace(
     "Object.freeze([",
     `Object.freeze([${JSON.stringify(APPROVED_UNMIGRATED_ROUTES[0])},`,
   );
-  expectFailure(validateUnmigratedRoutesSource(duplicate), /22-route allowlist|route count|unique/u);
+  expectFailure(validateUnmigratedRoutesSource(duplicate), /21-route compatibility allowlist|route count|unique/u);
 
   const unexpected = goodRoutesSource.replace(
     '"path":"/account"',
     '"path":"/admin"',
   );
-  expectFailure(validateUnmigratedRoutesSource(unexpected), /22-route allowlist/u);
+  expectFailure(validateUnmigratedRoutesSource(unexpected), /21-route compatibility allowlist/u);
 
   const queryPath = goodRoutesSource.replace(
     '"path":"/plan"',
     '"path":"/plan?legacy=1"',
   );
-  expectFailure(validateUnmigratedRoutesSource(queryPath), /not canonical|22-route allowlist/u);
+  expectFailure(validateUnmigratedRoutesSource(queryPath), /not canonical|21-route compatibility allowlist/u);
 
   const wrongOrigin = goodRoutesSource.replace(
     "legacy-compat.quantgym-v2-preview.pages.dev",
@@ -177,6 +204,23 @@ test("accepts only the exact independent unmigrated-route allowlist", () => {
   );
   expectFailure(validateUnmigratedRoutesSource(wrongOrigin), /exact compatibility origin/u);
 
+});
+
+test("requires the explicit staged business-route ownership split", () => {
+  assert.deepEqual(validateBusinessRouteOwnershipSource(goodOwnershipSource), []);
+
+  expectFailure(
+    validateBusinessRouteOwnershipSource(
+      goodOwnershipSource.replace('"owner":"native"', '"owner":"compatibility"'),
+    ),
+    /Overview to native and the remaining 21 routes to compatibility/u,
+  );
+  expectFailure(
+    validateBusinessRouteOwnershipSource(
+      goodOwnershipSource.replace('"owner":"compatibility"', '"owner":"native"'),
+    ),
+    /Overview to native and the remaining 21 routes to compatibility/u,
+  );
 });
 
 test("locks the adapter to one labelled iframe with the exact sandbox and no state bridge", () => {
@@ -305,9 +349,10 @@ test("requires Preview-only source inclusion and explicit production artifact re
   );
 });
 
-test("proves the V2 router maps the exact 22-route registry to the adapter", () => {
+test("proves the V2 router maps one native and 21 compatibility routes", () => {
   assert.deepEqual(validateRouterMappingSources({
     navigationSource: goodNavigationSource,
+    ownershipSource: goodOwnershipSource,
     routerSource: goodRouterSource,
     routesSource: goodRoutesSource,
   }), []);
@@ -317,27 +362,92 @@ test("proves the V2 router maps the exact 22-route registry to the adapter", () 
       'item("account", "/account"),',
       "",
     ),
+    ownershipSource: goodOwnershipSource,
     routerSource: goodRouterSource,
     routesSource: goodRoutesSource,
   }), /exactly the approved 22 business routes|same 22 routes/u);
 
   expectFailure(validateRouterMappingSources({
     navigationSource: goodNavigationSource,
+    ownershipSource: goodOwnershipSource,
     routerSource: goodRouterSource.replace(
-      '.filter(({ path }) => path !== "/")',
-      "",
+      "const businessRouteChildren = COMPATIBILITY_BUSINESS_ROUTES",
+      "const businessRouteChildren = []",
     ),
     routesSource: goodRoutesSource,
-  }), /map all 21 non-root compatibility routes/u);
+  }), /map all 21 compatibility routes/u);
 
   expectFailure(validateRouterMappingSources({
     navigationSource: goodNavigationSource,
+    ownershipSource: goodOwnershipSource,
     routerSource: goodRouterSource.replace(
-      "{ index: true, element: legacyCompatibilityElement }",
+      `path === "/problems"
+      ? <ProblemsRoute compatibilityElement={legacyCompatibilityElement} />
+      : legacyCompatibilityElement`,
+      "nativeOverviewElement",
+    ),
+    routesSource: goodRoutesSource,
+  }), /bind every ordinary route to legacyCompatibilityElement/u);
+
+  expectFailure(validateRouterMappingSources({
+    navigationSource: goodNavigationSource,
+    ownershipSource: goodOwnershipSource,
+    routerSource: goodRouterSource.replace(
+      ": legacyCompatibilityElement,",
+      ": nativeOverviewElement,",
+    ),
+    routesSource: goodRoutesSource,
+  }), /bind every ordinary route to legacyCompatibilityElement/u);
+
+  expectFailure(validateRouterMappingSources({
+    navigationSource: goodNavigationSource,
+    ownershipSource: goodOwnershipSource,
+    routerSource: goodRouterSource.replace(
+      "<ProblemsRoute compatibilityElement={legacyCompatibilityElement} />",
+      "<ProblemsRoute />",
+    ),
+    routesSource: goodRoutesSource,
+  }), /ProblemsRoute with compatibilityElement=\{legacyCompatibilityElement\}/u);
+
+  expectFailure(validateRouterMappingSources({
+    navigationSource: goodNavigationSource,
+    ownershipSource: goodOwnershipSource,
+    routerSource: goodRouterSource.replace(
+      "createElement(legacyRouteAdapter)",
+      "createElement(overviewPage)",
+    ),
+    routesSource: goodRoutesSource,
+  }), /unique Suspense wrapper around createElement\(legacyRouteAdapter\)/u);
+
+  expectFailure(validateRouterMappingSources({
+    navigationSource: goodNavigationSource,
+    ownershipSource: goodOwnershipSource,
+    routerSource: goodRouterSource.replace(
+      "id: `preview-${id}`",
+      'id: "preview-static"',
+    ),
+    routesSource: goodRoutesSource,
+  }), /derive every route id as preview-\$\{id\}/u);
+
+  expectFailure(validateRouterMappingSources({
+    navigationSource: goodNavigationSource,
+    ownershipSource: goodOwnershipSource,
+    routerSource: goodRouterSource.replace(
+      "{ index: true, element: nativeOverviewElement }",
       "{ index: true, element: null }",
     ),
     routesSource: goodRoutesSource,
   }), /root Overview route/u);
+
+  expectFailure(validateRouterMappingSources({
+    navigationSource: goodNavigationSource,
+    ownershipSource: goodOwnershipSource.replace(
+      '"owner":"native"',
+      '"owner":"compatibility"',
+    ),
+    routerSource: goodRouterSource,
+    routesSource: goodRoutesSource,
+  }), /one native plus 21 compatibility routes/u);
 
   const deadApprovedNavigation = [
     goodNavigationSource.replace(
@@ -348,6 +458,7 @@ test("proves the V2 router maps the exact 22-route registry to the adapter", () 
   ].join("\n");
   expectFailure(validateRouterMappingSources({
     navigationSource: deadApprovedNavigation,
+    ownershipSource: goodOwnershipSource,
     routerSource: goodRouterSource,
     routesSource: goodRoutesSource,
   }), /exactly the approved 22 business routes/u);
@@ -358,6 +469,7 @@ test("proves the V2 router maps the exact 22-route registry to the adapter", () 
   );
   expectFailure(validateRouterMappingSources({
     navigationSource: duplicateRuntimeRoute,
+    ownershipSource: goodOwnershipSource,
     routerSource: goodRouterSource,
     routesSource: goodRoutesSource,
   }), /exactly the approved 22 business routes/u);
@@ -367,6 +479,7 @@ test("proves the V2 router maps the exact 22-route registry to the adapter", () 
       "({ id, path })",
       '({ id, path: "/admin" })',
     ),
+    ownershipSource: goodOwnershipSource,
     routerSource: goodRouterSource,
     routesSource: goodRoutesSource,
   }), /item helper must preserve its first id and second path arguments/u);

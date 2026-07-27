@@ -8,6 +8,7 @@ import test from "node:test";
 import {
   checkDesignSystemV2,
   findStylePolicyViolations,
+  V2_STYLE_SCAN_ROOTS,
 } from "../scripts/check-design-system-v2.mjs";
 import {
   compareStoryIds,
@@ -17,6 +18,10 @@ import {
 } from "../scripts/lib/storybook-a11y-v2.mjs";
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
+
+test("the style policy scans native training pages", () => {
+  assert.ok(V2_STYLE_SCAN_ROOTS.includes("src/pages/training"));
+});
 
 const semanticHex = (source, token) => {
   const match = source.match(new RegExp(`--${token}:\\s*(#[0-9a-f]{6});`, "iu"));

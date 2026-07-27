@@ -22,10 +22,28 @@ const isNetworkFailure = (error: unknown, online: boolean) => (
   || (error instanceof TypeError && /fetch|network|load failed/i.test(error.message))
 );
 
+const isApiRequestTimeout = (error: unknown) => (
+  typeof error === "object"
+  && error !== null
+  && "name" in error
+  && error.name === "TimeoutError"
+);
+
 export const classifyMutationFailure = (
   error: unknown,
   online = typeof navigator === "undefined" || navigator.onLine !== false,
 ): MutationFailure => {
+  if (isApiRequestTimeout(error)) {
+    return {
+      code: "API_REQUEST_TIMEOUT",
+      message: "请求等待时间过长，当前更改已保留，请重试。",
+      preserveDraft: true,
+      requestId: null,
+      retryable: true,
+      state: "recoverable-error",
+    };
+  }
+
   if (isNetworkFailure(error, online)) {
     return {
       code: "NETWORK_OFFLINE",

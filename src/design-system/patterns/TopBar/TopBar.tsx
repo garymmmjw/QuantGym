@@ -5,7 +5,7 @@ import styles from "./TopBar.module.css";
 
 export type TopBarProps = Readonly<{
   language: ShellLanguage;
-  level?: number;
+  level?: number | undefined;
   notificationCount?: number;
   notificationsOpen?: boolean;
   onLanguageChange: (language: ShellLanguage) => void;
@@ -16,14 +16,14 @@ export type TopBarProps = Readonly<{
   onToggleTheme: () => void;
   sidebarCollapsed: boolean;
   searchOpen?: boolean;
-  streakDays?: number;
+  streakDays?: number | undefined;
   theme: ShellTheme;
   user: ShellUser;
 }>;
 
 export function TopBar({
   language,
-  level = 1,
+  level,
   notificationCount = 0,
   notificationsOpen = false,
   onLanguageChange,
@@ -34,7 +34,7 @@ export function TopBar({
   onToggleTheme,
   sidebarCollapsed,
   searchOpen = false,
-  streakDays = 0,
+  streakDays,
   theme,
   user,
 }: TopBarProps) {
@@ -66,14 +66,18 @@ export function TopBar({
         <kbd>⌘K</kbd>
       </button>
       <div className={styles.spacer} />
-      <div className={styles.reward} aria-label={isChinese ? `连续 ${streakDays} 天` : `${streakDays} day streak`}>
-        <span aria-hidden="true">🔥</span>
-        <strong data-qg-metric>{streakDays}</strong>
-      </div>
-      <div className={styles.level} aria-label={isChinese ? `等级 ${level}` : `Level ${level}`}>
-        <span aria-hidden="true">XP</span>
-        <strong data-qg-metric>Lv.{level}</strong>
-      </div>
+      {streakDays === undefined ? null : (
+        <div className={styles.reward} aria-label={isChinese ? `连续 ${streakDays} 天` : `${streakDays} day streak`}>
+          <span aria-hidden="true">🔥</span>
+          <strong data-qg-metric>{streakDays}</strong>
+        </div>
+      )}
+      {level === undefined ? null : (
+        <div className={styles.level} aria-label={isChinese ? `等级 ${level}` : `Level ${level}`}>
+          <span aria-hidden="true">XP</span>
+          <strong data-qg-metric>Lv.{level}</strong>
+        </div>
+      )}
       <button
         aria-controls="qg-notification-center"
         aria-expanded={notificationsOpen}

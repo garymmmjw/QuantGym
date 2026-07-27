@@ -115,21 +115,29 @@ export type ReplayProblemDraftsOptions = Readonly<{
   ownerScope: string;
   queryClient: QueryClient;
   repository?: RecoverableDraftRepository;
-  verifyOwner?: () => Promise<void>;
+  signal?: AbortSignal;
+  verifyOwner?: (signal?: AbortSignal) => Promise<void>;
 }>;
 
 const problemReplayOptions = (options: ReplayProblemDraftsOptions) => {
   const verifyOwner = options.verifyOwner
-    ?? (() => verifyCurrentSessionOwner(options.ownerScope));
+    ?? ((signal?: AbortSignal) => (
+      verifyCurrentSessionOwner(options.ownerScope, signal)
+    ));
   return {
     kinds: PROBLEM_DRAFT_KINDS,
     ownerScope: options.ownerScope,
-    replay: async (draft: RecoverableDraft) => {
+    replay: async (draft: RecoverableDraft, signal?: AbortSignal) => {
       const intent = recoverProblemMutationIntent(draft);
       if (intent.kind === "set-favorite") {
         const acknowledged = await runOwnerVerifiedOperation(
           verifyOwner,
-          () => setProblemFavorite(intent, options.csrfProof),
+          (operationSignal) => setProblemFavorite(
+            intent,
+            options.csrfProof,
+            operationSignal,
+          ),
+          signal,
         );
         await acknowledgeProblemFavorite(
           options.queryClient,
@@ -140,7 +148,12 @@ const problemReplayOptions = (options: ReplayProblemDraftsOptions) => {
       } else {
         const acknowledged = await runOwnerVerifiedOperation(
           verifyOwner,
-          () => saveProblemNote(intent, options.csrfProof),
+          (operationSignal) => saveProblemNote(
+            intent,
+            options.csrfProof,
+            operationSignal,
+          ),
+          signal,
         );
         acknowledgeProblemNote(
           options.queryClient,
@@ -157,6 +170,7 @@ const problemReplayOptions = (options: ReplayProblemDraftsOptions) => {
       return { acknowledged: true };
     },
     ...(options.repository === undefined ? {} : { repository: options.repository }),
+    ...(options.signal === undefined ? {} : { signal: options.signal }),
   };
 };
 

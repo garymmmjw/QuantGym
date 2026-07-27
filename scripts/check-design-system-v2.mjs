@@ -32,13 +32,14 @@ const FONT_PROVENANCE_FILES = [
   "src/design-system/assets/fonts/README.md",
   "src/design-system/assets/fonts/OFL-1.1.txt",
 ];
-const STYLE_SCAN_ROOTS = [
+export const V2_STYLE_SCAN_ROOTS = Object.freeze([
   "src/core",
   "src/design-system",
   "src/domains",
+  "src/pages/training",
   "src/pages/v2",
   "src/shared",
-];
+]);
 const THEME_TOKEN_FIELDS = {
   appBackground: "app-background",
   surfacePrimary: "surface-primary",
@@ -755,7 +756,7 @@ export async function checkDesignSystemV2({ root = PROJECT_ROOT } = {}) {
   await validateFontAssets(absoluteRoot, violations);
 
   const styleFiles = [];
-  for (const scanRoot of STYLE_SCAN_ROOTS) {
+  for (const scanRoot of V2_STYLE_SCAN_ROOTS) {
     styleFiles.push(...await walkCssFiles(absoluteRoot, scanRoot, violations));
   }
   for (const styleFile of styleFiles) {

@@ -38,6 +38,21 @@ describe("classifyMutationFailure", () => {
     });
   });
 
+  it("keeps timed-out API work as a retryable recoverable draft", () => {
+    const result = classifyMutationFailure(
+      new DOMException("API request timed out.", "TimeoutError"),
+    );
+
+    expect(result).toEqual({
+      code: "API_REQUEST_TIMEOUT",
+      message: "请求等待时间过长，当前更改已保留，请重试。",
+      preserveDraft: true,
+      requestId: null,
+      retryable: true,
+      state: "recoverable-error",
+    });
+  });
+
   it("keeps a retryable idempotency 409 recoverable", () => {
     const result = classifyMutationFailure(new ApiError({
       code: "IDEMPOTENCY_REQUEST_IN_PROGRESS",
