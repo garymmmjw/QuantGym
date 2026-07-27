@@ -1,9 +1,9 @@
-"""Transaction-scoped persistence for replayable idempotent operations.
+"""Typed, transaction-scoped persistence for idempotent domain operations.
 
-The helpers in this module deliberately do not begin, commit, or roll back a
-transaction.  A caller can therefore reserve an operation, apply its domain
-write (including rewards), and persist the exact acknowledgement atomically on
-the same SQLAlchemy connection.
+``execute_idempotent_operation`` is the write boundary: it reserves a key,
+invokes the reward/domain callback with that exact SQLAlchemy connection, and
+persists a typed public acknowledgement before the caller-owned transaction
+can commit.  This module never begins, commits, or rolls back that transaction.
 """
 
 from __future__ import annotations
@@ -11,9 +11,9 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, ClassVar
 from uuid import UUID, uuid4
 
 from sqlalchemy import text
@@ -26,6 +26,16 @@ from .idempotency import IdempotencyKey
 _HASH_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _OPERATION_PATTERN = re.compile(r"^[a-z][a-z0-9._-]{0,79}$")
 _MAX_SNAPSHOT_BYTES = 256 * 1024
+_SUPPORTED_FAILURE_CODES = frozenset(
+    {
+        "PERMISSION_DENIED",
+        "RATE_LIMITED",
+        "RESOURCE_NOT_FOUND",
+        "SERVICE_UNAVAILABLE",
+        "VALIDATION_ERROR",
+        "VERSION_CONFLICT",
+    }
+)
 _RECORD_COLUMNS = """
     id,
     user_id,
@@ -63,6 +73,179 @@ _SENSITIVE_STRING_PATTERN = re.compile(
 )
 
 
+class IdempotencyAcknowledgement:
+    """Marker for snapshots whose complete public shape is code-controlled."""
+
+    operation: ClassVar[str | None] = None
+
+    def to_snapshot(self) -> dict[str, Any]:
+        raise NotImplementedError
+
+
+@dataclass(frozen=True, slots=True)
+class PlanEffectAcknowledgement(IdempotencyAcknowledgement):
+    """Non-content plan effect safe to persist in a completion acknowledgement."""
+
+    task_completed: bool
+    plan_version: int
+
+    def __post_init__(self) -> None:
+        _strict_bool("task_completed", self.task_completed)
+        _positive_int("plan_version", self.plan_version)
+
+    def to_snapshot(self) -> dict[str, Any]:
+        return {
+            "planVersion": self.plan_version,
+            "taskCompleted": self.task_completed,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ProblemCompletionAcknowledgement(IdempotencyAcknowledgement):
+    """The only successful public snapshot for ``problems.complete``."""
+
+    operation: ClassVar[str] = "problems.complete"
+
+    session_id: UUID
+    session_version: int
+    xp_delta: int
+    plan_effect: PlanEffectAcknowledgement | None = None
+
+    def __post_init__(self) -> None:
+        _uuid("session_id", self.session_id)
+        _positive_int("session_version", self.session_version)
+        _nonnegative_int("xp_delta", self.xp_delta)
+        if self.plan_effect is not None and not isinstance(
+            self.plan_effect, PlanEffectAcknowledgement
+        ):
+            raise ValueError("plan_effect must be a PlanEffectAcknowledgement")
+
+    def to_snapshot(self) -> dict[str, Any]:
+        snapshot: dict[str, Any] = {
+            "sessionId": str(self.session_id),
+            "sessionVersion": self.session_version,
+            "xpDelta": self.xp_delta,
+        }
+        if self.plan_effect is not None:
+            snapshot["planEffect"] = self.plan_effect.to_snapshot()
+        return snapshot
+
+
+@dataclass(frozen=True, slots=True)
+class TrainingSessionAcknowledgement(IdempotencyAcknowledgement):
+    """The public identity/version result for starting or resuming training."""
+
+    operation: ClassVar[str] = "training.start-or-resume"
+
+    session_id: UUID
+    problem_id: UUID
+    session_version: int
+    resumed: bool
+
+    def __post_init__(self) -> None:
+        _uuid("session_id", self.session_id)
+        _uuid("problem_id", self.problem_id)
+        _positive_int("session_version", self.session_version)
+        _strict_bool("resumed", self.resumed)
+
+    def to_snapshot(self) -> dict[str, Any]:
+        return {
+            "problemId": str(self.problem_id),
+            "resumed": self.resumed,
+            "sessionId": str(self.session_id),
+            "sessionVersion": self.session_version,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PlanDiagnosticAcknowledgement(IdempotencyAcknowledgement):
+    """Content-free identities produced by the diagnostic transaction."""
+
+    operation: ClassVar[str] = "plan.run-diagnostic"
+
+    plan_id: UUID
+    plan_version: int
+    recommendation_ids: tuple[UUID, ...]
+
+    def __post_init__(self) -> None:
+        _uuid("plan_id", self.plan_id)
+        _positive_int("plan_version", self.plan_version)
+        _uuid_tuple("recommendation_ids", self.recommendation_ids)
+
+    def to_snapshot(self) -> dict[str, Any]:
+        return {
+            "planId": str(self.plan_id),
+            "planVersion": self.plan_version,
+            "recommendationIds": [str(value) for value in self.recommendation_ids],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class PlanCreationAcknowledgement(IdempotencyAcknowledgement):
+    """Content-free identities produced by plan creation."""
+
+    operation: ClassVar[str] = "plan.create"
+
+    plan_id: UUID
+    plan_version: int
+    task_ids: tuple[UUID, ...]
+
+    def __post_init__(self) -> None:
+        _uuid("plan_id", self.plan_id)
+        _positive_int("plan_version", self.plan_version)
+        _uuid_tuple("task_ids", self.task_ids)
+
+    def to_snapshot(self) -> dict[str, Any]:
+        return {
+            "planId": str(self.plan_id),
+            "planVersion": self.plan_version,
+            "taskIds": [str(value) for value in self.task_ids],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class FailureAcknowledgement(IdempotencyAcknowledgement):
+    """Small allowlisted failure acknowledgement with no reflected content."""
+
+    error_code: str
+    retryable: bool
+
+    def __post_init__(self) -> None:
+        if self.error_code not in _SUPPORTED_FAILURE_CODES:
+            raise ValueError("error_code is not an allowlisted public failure code")
+        _strict_bool("retryable", self.retryable)
+
+    def to_snapshot(self) -> dict[str, Any]:
+        return {"errorCode": self.error_code, "retryable": self.retryable}
+
+
+_SUCCESS_ACKNOWLEDGEMENTS: dict[str, type[IdempotencyAcknowledgement]] = {
+    ProblemCompletionAcknowledgement.operation: ProblemCompletionAcknowledgement,
+    TrainingSessionAcknowledgement.operation: TrainingSessionAcknowledgement,
+    PlanDiagnosticAcknowledgement.operation: PlanDiagnosticAcknowledgement,
+    PlanCreationAcknowledgement.operation: PlanCreationAcknowledgement,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class IdempotencyCompletion:
+    """Typed result returned by the in-transaction reward/domain callback."""
+
+    response_status: int
+    acknowledgement: IdempotencyAcknowledgement
+    resource_id: UUID | None
+
+    def __post_init__(self) -> None:
+        _response_status(self.response_status)
+        _optional_uuid("resource_id", self.resource_id)
+
+
+@dataclass(frozen=True, slots=True)
+class _TransactionIdentity:
+    connection: Any
+    root_transaction: Any
+
+
 @dataclass(frozen=True, slots=True, repr=False)
 class IdempotencyRecord:
     """A persisted idempotency state without printable secret-bearing fields."""
@@ -81,6 +264,16 @@ class IdempotencyRecord:
     updated_at: datetime
     completed_at: datetime | None
     acquired: bool
+    _transaction_identity: _TransactionIdentity | None = field(
+        default=None,
+        compare=False,
+        repr=False,
+    )
+    _completion_permit: object | None = field(
+        default=None,
+        compare=False,
+        repr=False,
+    )
 
     def __repr__(self) -> str:
         return (
@@ -92,6 +285,63 @@ class IdempotencyRecord:
             "key_hash='[REDACTED]', request_hash='[REDACTED]', "
             "response_snapshot='[REDACTED]')"
         )
+
+
+def execute_idempotent_operation(
+    connection: Connection,
+    *,
+    user_id: UUID,
+    operation: str,
+    key: IdempotencyKey,
+    request_hash: str,
+    now: datetime,
+    expires_at: datetime,
+    reward_callback: Callable[[Connection], IdempotencyCompletion],
+    completion_clock: Callable[[], datetime],
+    id_factory: Callable[[], UUID] = uuid4,
+) -> IdempotencyRecord:
+    """Run reserve -> domain/reward callback -> complete in one transaction.
+
+    The callback receives the exact connection that owns the reservation.  A
+    replay returns before invoking it.  The active root transaction is checked
+    both at reservation and completion, so a connection swap or a commit/new
+    transaction between the two phases fails before the terminal UPDATE.
+    """
+
+    if not callable(reward_callback):
+        raise ValueError("reward_callback must be callable")
+    if not callable(completion_clock):
+        raise ValueError("completion_clock must be callable")
+    reservation = reserve_idempotency_record(
+        connection,
+        user_id=user_id,
+        operation=operation,
+        key=key,
+        request_hash=request_hash,
+        now=now,
+        expires_at=expires_at,
+        id_factory=id_factory,
+    )
+    if not reservation.acquired:
+        return reservation
+
+    completion = reward_callback(connection)
+    if not isinstance(completion, IdempotencyCompletion):
+        raise ValueError("reward_callback must return IdempotencyCompletion")
+    permit = object()
+    permitted_reservation = replace(
+        reservation,
+        _completion_permit=permit,
+    )
+    return complete_idempotency_record(
+        connection,
+        reservation=permitted_reservation,
+        response_status=completion.response_status,
+        acknowledgement=completion.acknowledgement,
+        resource_id=completion.resource_id,
+        now=completion_clock(),
+        _completion_permit=permit,
+    )
 
 
 def reserve_idempotency_record(
@@ -112,6 +362,7 @@ def reserve_idempotency_record(
     closed.
     """
 
+    transaction_identity = _capture_transaction(connection)
     _validate_identity(
         user_id=user_id,
         operation=operation,
@@ -170,7 +421,11 @@ def reserve_idempotency_record(
         .first()
     )
     if row is not None:
-        return _record_from_row(row, acquired=True)
+        return _record_from_row(
+            row,
+            acquired=True,
+            transaction_identity=transaction_identity,
+        )
 
     return replay_idempotency_record(
         connection,
@@ -193,6 +448,7 @@ def replay_idempotency_record(
 ) -> IdempotencyRecord:
     """Load and validate the snapshot associated with an existing key."""
 
+    _capture_transaction(connection)
     _validate_identity(
         user_id=user_id,
         operation=operation,
@@ -275,20 +531,42 @@ def complete_idempotency_record(
     *,
     reservation: IdempotencyRecord,
     response_status: int,
-    response_snapshot: Mapping[str, Any],
+    acknowledgement: IdempotencyAcknowledgement,
     resource_id: UUID | None,
     now: datetime,
+    _completion_permit: object | None = None,
 ) -> IdempotencyRecord:
-    """Persist the exact acknowledgement inside the caller's transaction."""
+    """Persist the acknowledgement after the orchestrated reward callback.
+
+    Direct completion is intentionally rejected.  Callers use
+    :func:`execute_idempotent_operation`, which supplies the private permit only
+    after its callback has run on the reservation connection.
+    """
 
     if not isinstance(reservation, IdempotencyRecord):
         raise ValueError("reservation must be an IdempotencyRecord")
     if not reservation.acquired or reservation.status != "pending":
         raise ValueError("complete requires an acquired reservation")
+    _assert_same_transaction(connection, reservation)
+    if (
+        _completion_permit is None
+        or reservation._completion_permit is None
+        or _completion_permit is not reservation._completion_permit
+    ):
+        raise ValueError(
+            "completion must be called by execute_idempotent_operation "
+            "after its reward callback"
+        )
     completed_at = _as_utc("now", now)
+    if completed_at < reservation.created_at:
+        raise ValueError("completed_at must not precede created_at")
     normalized_status = _response_status(response_status)
     normalized_resource_id = _optional_uuid("resource_id", resource_id)
-    normalized_snapshot, encoded_snapshot = _safe_snapshot(response_snapshot)
+    normalized_snapshot, encoded_snapshot = _acknowledgement_snapshot(
+        operation=reservation.operation,
+        response_status=normalized_status,
+        acknowledgement=acknowledgement,
+    )
     terminal_status = "completed" if normalized_status < 400 else "failed"
 
     row = (
@@ -308,6 +586,7 @@ def complete_idempotency_record(
                   AND key_hash = :key_hash
                   AND request_hash = :request_hash
                   AND status = 'pending'
+                  AND :completed_at >= created_at
                   AND expires_at > :completed_at
                 RETURNING {_RECORD_COLUMNS}
                 """
@@ -329,7 +608,11 @@ def complete_idempotency_record(
         .first()
     )
     if row is not None:
-        record = _record_from_row(row, acquired=True)
+        record = _record_from_row(
+            row,
+            acquired=True,
+            transaction_identity=reservation._transaction_identity,
+        )
         try:
             _validate_terminal_record(record)
         except (ApiError, TypeError, ValueError):
@@ -370,6 +653,8 @@ def _validate_identity(
         raise ValueError("user_id must be a UUID")
     if not isinstance(operation, str) or _OPERATION_PATTERN.fullmatch(operation) is None:
         raise ValueError("operation is invalid")
+    if operation not in _SUCCESS_ACKNOWLEDGEMENTS:
+        raise ValueError("unsupported idempotency operation")
     if not isinstance(key, IdempotencyKey):
         raise ValueError("key must be a parsed IdempotencyKey")
     if not isinstance(request_hash, str) or _HASH_PATTERN.fullmatch(request_hash) is None:
@@ -380,6 +665,7 @@ def _record_from_row(
     row: Mapping[str, Any],
     *,
     acquired: bool,
+    transaction_identity: _TransactionIdentity | None = None,
 ) -> IdempotencyRecord:
     record_id = _uuid("id", row["id"])
     user_id = _uuid("user_id", row["user_id"])
@@ -431,6 +717,7 @@ def _record_from_row(
             else _as_utc("completed_at", row["completed_at"])
         ),
         acquired=acquired,
+        _transaction_identity=transaction_identity,
     )
 
 
@@ -448,17 +735,41 @@ def _validate_terminal_record(record: IdempotencyRecord) -> None:
         raise ValueError("completed record has an error response")
     if record.status == "failed" and response_status < 400:
         raise ValueError("failed record has a success response")
-    _safe_snapshot(record.response_snapshot)
+    _safe_snapshot(
+        operation=record.operation,
+        response_status=response_status,
+        snapshot=record.response_snapshot,
+    )
 
 
-def _safe_snapshot(snapshot: Mapping[str, Any]) -> tuple[dict[str, Any], str]:
+def _acknowledgement_snapshot(
+    *,
+    operation: str,
+    response_status: int,
+    acknowledgement: IdempotencyAcknowledgement,
+) -> tuple[dict[str, Any], str]:
+    expected_type = (
+        _SUCCESS_ACKNOWLEDGEMENTS[operation]
+        if response_status < 400
+        else FailureAcknowledgement
+    )
+    if type(acknowledgement) is not expected_type:
+        raise _invalid_acknowledgement()
+    return _safe_snapshot(
+        operation=operation,
+        response_status=response_status,
+        snapshot=acknowledgement.to_snapshot(),
+    )
+
+
+def _safe_snapshot(
+    *,
+    operation: str,
+    response_status: int,
+    snapshot: Mapping[str, Any],
+) -> tuple[dict[str, Any], str]:
     if not isinstance(snapshot, Mapping):
-        raise ApiError(
-            status_code=422,
-            code="IDEMPOTENCY_SNAPSHOT_INVALID",
-            message="幂等确认快照必须是 JSON 对象",
-            retryable=False,
-        )
+        raise _invalid_acknowledgement()
     try:
         encoded = json.dumps(
             snapshot,
@@ -470,19 +781,9 @@ def _safe_snapshot(snapshot: Mapping[str, Any]) -> tuple[dict[str, Any], str]:
         encoded_bytes = encoded.encode("utf-8")
         normalized = json.loads(encoded)
     except (TypeError, ValueError, OverflowError):
-        raise ApiError(
-            status_code=422,
-            code="IDEMPOTENCY_SNAPSHOT_INVALID",
-            message="幂等确认快照不是有效的 JSON 对象",
-            retryable=False,
-        ) from None
+        raise _invalid_acknowledgement() from None
     if not isinstance(normalized, dict):
-        raise ApiError(
-            status_code=422,
-            code="IDEMPOTENCY_SNAPSHOT_INVALID",
-            message="幂等确认快照必须是 JSON 对象",
-            retryable=False,
-        )
+        raise _invalid_acknowledgement()
     if len(encoded_bytes) > _MAX_SNAPSHOT_BYTES:
         raise ApiError(
             status_code=422,
@@ -497,7 +798,83 @@ def _safe_snapshot(snapshot: Mapping[str, Any]) -> tuple[dict[str, Any], str]:
             message="幂等确认快照包含不可持久化的敏感内容",
             retryable=False,
         )
+    try:
+        _validate_snapshot_shape(
+            operation=operation,
+            response_status=response_status,
+            snapshot=normalized,
+        )
+    except (KeyError, TypeError, ValueError):
+        raise _invalid_acknowledgement() from None
     return normalized, encoded
+
+
+def _validate_snapshot_shape(
+    *,
+    operation: str,
+    response_status: int,
+    snapshot: Mapping[str, Any],
+) -> None:
+    if response_status >= 400:
+        _exact_keys(snapshot, required={"errorCode", "retryable"})
+        if snapshot["errorCode"] not in _SUPPORTED_FAILURE_CODES:
+            raise ValueError("failure code is not allowlisted")
+        _strict_bool("retryable", snapshot["retryable"])
+        return
+
+    if operation == ProblemCompletionAcknowledgement.operation:
+        _exact_keys(
+            snapshot,
+            required={"sessionId", "sessionVersion", "xpDelta"},
+            optional={"planEffect"},
+        )
+        _snapshot_uuid("sessionId", snapshot["sessionId"])
+        _positive_int("sessionVersion", snapshot["sessionVersion"])
+        _nonnegative_int("xpDelta", snapshot["xpDelta"])
+        plan_effect = snapshot.get("planEffect")
+        if plan_effect is not None:
+            if not isinstance(plan_effect, Mapping):
+                raise ValueError("planEffect must be an object")
+            _exact_keys(
+                plan_effect,
+                required={"planVersion", "taskCompleted"},
+            )
+            _positive_int("planVersion", plan_effect["planVersion"])
+            _strict_bool("taskCompleted", plan_effect["taskCompleted"])
+        return
+
+    if operation == TrainingSessionAcknowledgement.operation:
+        _exact_keys(
+            snapshot,
+            required={"problemId", "resumed", "sessionId", "sessionVersion"},
+        )
+        _snapshot_uuid("problemId", snapshot["problemId"])
+        _snapshot_uuid("sessionId", snapshot["sessionId"])
+        _strict_bool("resumed", snapshot["resumed"])
+        _positive_int("sessionVersion", snapshot["sessionVersion"])
+        return
+
+    if operation == PlanDiagnosticAcknowledgement.operation:
+        _exact_keys(
+            snapshot,
+            required={"planId", "planVersion", "recommendationIds"},
+        )
+        _snapshot_uuid("planId", snapshot["planId"])
+        _positive_int("planVersion", snapshot["planVersion"])
+        _snapshot_uuid_list("recommendationIds", snapshot["recommendationIds"])
+        return
+
+    if operation == PlanCreationAcknowledgement.operation:
+        _exact_keys(
+            snapshot,
+            required={"planId", "planVersion", "taskIds"},
+        )
+        _snapshot_uuid("planId", snapshot["planId"])
+        _positive_int("planVersion", snapshot["planVersion"])
+        _snapshot_uuid_list("taskIds", snapshot["taskIds"])
+        return
+
+    raise ValueError("operation has no acknowledgement schema")
 
 
 def _contains_sensitive_content(value: Any) -> bool:
@@ -514,6 +891,99 @@ def _contains_sensitive_content(value: Any) -> bool:
     if isinstance(value, list):
         return any(_contains_sensitive_content(item) for item in value)
     return isinstance(value, str) and _SENSITIVE_STRING_PATTERN.search(value) is not None
+
+
+def _capture_transaction(connection: Any) -> _TransactionIdentity:
+    get_transaction = getattr(connection, "get_transaction", None)
+    if not callable(get_transaction):
+        raise ValueError("an active SQLAlchemy Connection transaction is required")
+    root_transaction = get_transaction()
+    if root_transaction is None or not bool(
+        getattr(root_transaction, "is_active", False)
+    ):
+        raise ValueError("an active SQLAlchemy Connection transaction is required")
+    return _TransactionIdentity(
+        connection=connection,
+        root_transaction=root_transaction,
+    )
+
+
+def _assert_same_transaction(
+    connection: Any,
+    reservation: IdempotencyRecord,
+) -> None:
+    expected = reservation._transaction_identity
+    try:
+        current = _capture_transaction(connection)
+    except ValueError:
+        raise ValueError(
+            "completion requires the same active SQLAlchemy transaction as reservation"
+        ) from None
+    if (
+        expected is None
+        or current.connection is not expected.connection
+        or current.root_transaction is not expected.root_transaction
+    ):
+        raise ValueError(
+            "completion requires the same active SQLAlchemy transaction as reservation"
+        )
+
+
+def _exact_keys(
+    value: Mapping[str, Any],
+    *,
+    required: set[str],
+    optional: set[str] | None = None,
+) -> None:
+    allowed = required | (optional or set())
+    actual = set(value)
+    if not required <= actual or not actual <= allowed:
+        raise ValueError("acknowledgement fields do not match the operation schema")
+
+
+def _strict_bool(name: str, value: Any) -> bool:
+    if type(value) is not bool:
+        raise ValueError(f"{name} must be a boolean")
+    return value
+
+
+def _positive_int(name: str, value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ValueError(f"{name} must be a positive integer")
+    return value
+
+
+def _nonnegative_int(name: str, value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"{name} must be a non-negative integer")
+    return value
+
+
+def _uuid_tuple(name: str, value: Any) -> tuple[UUID, ...]:
+    if not isinstance(value, tuple):
+        raise ValueError(f"{name} must be a tuple of UUIDs")
+    for item in value:
+        _uuid(name, item)
+    return value
+
+
+def _snapshot_uuid(name: str, value: Any) -> UUID:
+    if not isinstance(value, str):
+        raise ValueError(f"{name} must be a canonical UUID string")
+    try:
+        parsed = UUID(value)
+    except (AttributeError, TypeError, ValueError):
+        raise ValueError(f"{name} must be a canonical UUID string") from None
+    if str(parsed) != value:
+        raise ValueError(f"{name} must be a canonical UUID string")
+    return parsed
+
+
+def _snapshot_uuid_list(name: str, value: Any) -> None:
+    if not isinstance(value, list):
+        raise ValueError(f"{name} must be a list of UUIDs")
+    for item in value:
+        _snapshot_uuid(name, item)
 
 
 def _response_status(value: Any) -> int:
@@ -551,4 +1021,13 @@ def _invalid_record() -> ApiError:
         message="幂等请求状态无法安全恢复，请稍后重试",
         retryable=True,
         headers={"Retry-After": "1"},
+    )
+
+
+def _invalid_acknowledgement() -> ApiError:
+    return ApiError(
+        status_code=422,
+        code="IDEMPOTENCY_ACKNOWLEDGEMENT_INVALID",
+        message="该操作的幂等确认不符合公开字段约束",
+        retryable=False,
     )
