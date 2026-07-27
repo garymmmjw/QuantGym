@@ -60,6 +60,7 @@ import {
   type MutationFailure,
 } from "../../shared/api/mutationRecovery";
 import { createAccountScope } from "../../shared/lib/accountScope";
+import { recoverableDraftOwnerBoundary } from "../../shared/storage/draftOwnerBoundary";
 import { useOnlineStatus } from "../../shared/lib/useOnlineStatus";
 import styles from "./AuthenticatedPlatformShell.module.css";
 
@@ -231,7 +232,10 @@ export function AuthenticatedPlatformShell({
 
   const clearDraftsAndFinishLogout = useCallback(function clearLocalDrafts() {
     clearPreferenceSyncDrafts();
-    void clearTodoDrafts()
+    void Promise.all([
+      clearTodoDrafts(),
+      recoverableDraftOwnerBoundary.logout(),
+    ])
       .then(() => {
         if (sessionBoundaryActiveRef.current) finishLocalLogout();
       })
@@ -247,8 +251,8 @@ export function AuthenticatedPlatformShell({
           durationMs: null,
           message: error instanceof Error ? error.message : undefined,
           title: language === "zh-CN"
-            ? "已退出，但本地待办草稿尚未清除"
-            : "Signed out, but local task drafts remain",
+            ? "已退出，但本机草稿尚未清除"
+            : "Signed out, but local drafts remain",
           tone: "danger",
         });
       });

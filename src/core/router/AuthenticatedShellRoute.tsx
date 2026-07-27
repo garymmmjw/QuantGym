@@ -1,22 +1,25 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { NetworkBanner } from "../../design-system/patterns/NetworkBanner";
 import { RecoveryPanel, type RecoveryState } from "../../design-system/patterns/RecoveryPanel";
 import { Spinner } from "../../design-system/primitives/Spinner";
 import {
+  clearPreferenceSyncDrafts,
   listPreferenceSyncDrafts,
   reconcilePreferencesFromMe,
   setLanguagePreference,
   setThemePreference,
   usePreferences,
 } from "../../domains/platform/preferences";
+import { todoDraftRepository } from "../../domains/platform/todo/todoDrafts";
 import { useCurrentUserQuery } from "../../domains/account/auth/auth.queries";
 import { readCsrfToken } from "../../shared/api/csrf";
 import { ApiError } from "../../shared/api/errors";
 import { useI18n } from "../../shared/i18n";
 import { useOnlineStatus } from "../../shared/lib/useOnlineStatus";
 import { createAccountScope } from "../../shared/lib/accountScope";
+import { recoverableDraftOwnerBoundary } from "../../shared/storage/draftOwnerBoundary";
 import { recoveryPresentationFor } from "../errors/recoveryPresentation";
 import styles from "./AuthenticatedShellRoute.module.css";
 import { AuthenticatedPlatformShell } from "./AuthenticatedPlatformShell";
@@ -37,6 +40,37 @@ export function AuthenticatedShellRoute() {
   const online = useOnlineStatus();
   const language = usePreferences((state) => state.language);
   const { t } = useI18n();
+  const [readyDraftOwnerScope, setReadyDraftOwnerScope] = useState<string | null>(null);
+  const [draftBoundaryFailure, setDraftBoundaryFailure] = useState<Readonly<{
+    error: unknown;
+    ownerScope: string;
+  }> | null>(null);
+  const [draftBoundaryRetry, setDraftBoundaryRetry] = useState(0);
+  const resolvedOwnerScope = currentUser.data === null || currentUser.data === undefined
+    ? null
+    : createAccountScope(currentUser.data.email);
+
+  useEffect(() => {
+    if (resolvedOwnerScope === null) return;
+    let active = true;
+    void recoverableDraftOwnerBoundary.activate(resolvedOwnerScope, {
+      beforeChange: async ({ previousOwnerScope }) => {
+        clearPreferenceSyncDrafts(previousOwnerScope);
+        await todoDraftRepository.clear(previousOwnerScope);
+      },
+    }).then(() => {
+      if (!active) return;
+      setDraftBoundaryFailure(null);
+      setReadyDraftOwnerScope(resolvedOwnerScope);
+    }).catch((error: unknown) => {
+      if (!active) return;
+      setReadyDraftOwnerScope(null);
+      setDraftBoundaryFailure({ error, ownerScope: resolvedOwnerScope });
+    });
+    return () => {
+      active = false;
+    };
+  }, [draftBoundaryRetry, resolvedOwnerScope]);
 
   useEffect(() => {
     if (currentUser.data !== null && currentUser.data !== undefined) {
@@ -88,6 +122,44 @@ export function AuthenticatedShellRoute() {
     const params = new URLSearchParams();
     if (redirect !== "/") params.set("redirect", redirect);
     return <Navigate replace to={`/login${params.size === 0 ? "" : `?${params.toString()}`}`} />;
+  }
+
+  if (draftBoundaryFailure?.ownerScope === resolvedOwnerScope) {
+    const presentation = recoveryPresentationFor("recoverable-error", t);
+    return (
+      <main className={styles.recoveryPage}>
+        <RecoveryPanel
+          actionLabel={presentation.actionLabel}
+          busy={false}
+          busyLabel={language === "zh-CN" ? "正在重试" : "Retrying"}
+          onReload={() => setDraftBoundaryRetry((value) => value + 1)}
+          onRetry={() => setDraftBoundaryRetry((value) => value + 1)}
+          onReturn={() => navigate("/", { replace: true })}
+          onSignIn={() => navigate("/login?reauth=1", { replace: true })}
+          state="recoverable-error"
+          message={language === "zh-CN"
+            ? "无法确认本机草稿的账号边界。完成清理前不会显示账号内容。"
+            : "The local draft owner boundary could not be verified. Account content remains hidden until cleanup succeeds."}
+          title={language === "zh-CN" ? "本机草稿暂不可用" : "Local drafts unavailable"}
+        />
+      </main>
+    );
+  }
+
+  if (readyDraftOwnerScope !== resolvedOwnerScope) {
+    return (
+      <main aria-labelledby="draft-owner-gate-title" className={styles.sessionGate}>
+        <Spinner label={language === "zh-CN" ? "正在隔离本机草稿" : "Securing local drafts"} size="large" />
+        <h1 id="draft-owner-gate-title">
+          {language === "zh-CN" ? "正在确认本机草稿" : "Checking local drafts"}
+        </h1>
+        <p>
+          {language === "zh-CN"
+            ? "账号内容会在本机草稿边界确认后显示。"
+            : "Account content appears after the local draft boundary is verified."}
+        </p>
+      </main>
+    );
   }
 
   const sessionBoundaryKey = createAccountScope([
