@@ -26,11 +26,13 @@ from .schemas import (
     StartTrainingResponse,
     SubmitAttemptRequest,
     TrainingResultResponse,
+    TrainingSessionResponse,
     VersionedTrainingRequest,
     to_attempt_response,
     to_completion_response,
     to_hint_response,
     to_result_response,
+    to_session_response,
     to_solution_response,
     to_start_response,
 )
@@ -82,6 +84,24 @@ def start_or_resume_training(
     )
     _no_store(response)
     return to_start_response(result)
+
+
+@router.get(
+    "/{session_id}",
+    operation_id="getTrainingSession",
+    response_model=TrainingSessionResponse,
+    responses=standard_error_responses(401, 404, 422, 500, 503),
+    summary="Read one current-account training session snapshot",
+)
+def get_training_session(
+    session_id: UUID,
+    response: Response,
+    session: SessionContext = Depends(get_authenticated_session),
+    service: TrainingService = Depends(get_training_service),
+) -> TrainingSessionResponse:
+    result = service.get_session(user_id=session.user.id, session_id=session_id)
+    _no_store(response)
+    return to_session_response(result)
 
 
 @router.post(

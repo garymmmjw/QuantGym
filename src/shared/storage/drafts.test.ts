@@ -404,6 +404,25 @@ describe("native recoverable draft storage", () => {
     }
   });
 
+  it("persists and clears the logout cleanup boundary in IndexedDB", async () => {
+    vi.stubGlobal("indexedDB", fakeIndexedDb);
+    await deleteFakeIndexedDbDatabase();
+    try {
+      const firstRepository = createIndexedDbDraftRepository();
+      expect(await firstRepository.readLogoutCleanupPending()).toBe(false);
+      await firstRepository.writeLogoutCleanupPending(true);
+
+      const reloadedRepository = createIndexedDbDraftRepository();
+      expect(await reloadedRepository.readLogoutCleanupPending()).toBe(true);
+
+      await reloadedRepository.writeLogoutCleanupPending(false);
+      expect(await firstRepository.readLogoutCleanupPending()).toBe(false);
+    } finally {
+      await deleteFakeIndexedDbDatabase();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("atomically rejects a late dependent IndexedDB write after source replacement", async () => {
     vi.stubGlobal("indexedDB", fakeIndexedDb);
     await deleteFakeIndexedDbDatabase();

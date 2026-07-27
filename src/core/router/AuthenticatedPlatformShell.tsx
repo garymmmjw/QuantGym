@@ -30,6 +30,10 @@ import { PLAN_RECONNECT_REPLAYED_EVENT } from "../../domains/plan/plan.events";
 import {
   registerPlanDraftReconnectReplay,
 } from "../../domains/plan/plan.recovery";
+import { PROBLEM_RECONNECT_REPLAYED_EVENT } from "../../domains/problems/problems.events";
+import {
+  registerProblemDraftReconnectReplay,
+} from "../../domains/problems/problems.recovery";
 import { TRAINING_RECONNECT_REPLAYED_EVENT } from "../../domains/training/training.events";
 import {
   registerTrainingDraftReconnectReplay,
@@ -281,10 +285,9 @@ export function AuthenticatedPlatformShell({
 
   const clearDraftsAndFinishLogout = useCallback(function clearLocalDrafts() {
     clearPreferenceSyncDrafts();
-    void Promise.all([
-      clearTodoDrafts(),
-      recoverableDraftOwnerBoundary.logout(),
-    ])
+    void recoverableDraftOwnerBoundary.logout({
+      beforeClear: clearTodoDrafts,
+    })
       .then(() => {
         if (sessionBoundaryActiveRef.current) finishLocalLogout();
       })
@@ -319,11 +322,20 @@ export function AuthenticatedPlatformShell({
     };
     toast.dismissToast(logoutToastId);
     void verifyCurrentOwner()
-      .then(() => {
+      .then(async () => {
         if (
           !sessionBoundaryActiveRef.current
           || !currentCacheMatchesOwner(requestOwnerScope)
         ) {
+          releaseRequest();
+          return;
+        }
+        await recoverableDraftOwnerBoundary.beginLogout();
+        if (
+          !sessionBoundaryActiveRef.current
+          || !currentCacheMatchesOwner(requestOwnerScope)
+        ) {
+          await recoverableDraftOwnerBoundary.cancelLogout();
           releaseRequest();
           return;
         }
@@ -338,6 +350,7 @@ export function AuthenticatedPlatformShell({
               clearDraftsAndFinishLogout();
               return;
             }
+            void recoverableDraftOwnerBoundary.cancelLogout().catch(() => undefined);
             toast.addToast({
               action: {
                 label: language === "zh-CN" ? "重试" : "Retry",
@@ -449,6 +462,35 @@ export function AuthenticatedPlatformShell({
         || typeof window === "undefined"
       ) return;
       window.dispatchEvent(new Event(PLAN_RECONNECT_REPLAYED_EVENT));
+    },
+    ownerScope,
+    queryClient,
+    verifyOwner: verifyCurrentOwner,
+  }), [
+    currentCacheMatchesOwner,
+    ownerScope,
+    queryClient,
+    sessionCsrfProof,
+    verifyCurrentOwner,
+  ]);
+
+  useEffect(() => registerProblemDraftReconnectReplay({
+    csrfProof: sessionCsrfProof,
+    onError: () => {
+      if (
+        !sessionBoundaryActiveRef.current
+        || !currentCacheMatchesOwner(ownerScope)
+        || typeof window === "undefined"
+      ) return;
+      window.dispatchEvent(new Event(PROBLEM_RECONNECT_REPLAYED_EVENT));
+    },
+    onReport: () => {
+      if (
+        !sessionBoundaryActiveRef.current
+        || !currentCacheMatchesOwner(ownerScope)
+        || typeof window === "undefined"
+      ) return;
+      window.dispatchEvent(new Event(PROBLEM_RECONNECT_REPLAYED_EVENT));
     },
     ownerScope,
     queryClient,

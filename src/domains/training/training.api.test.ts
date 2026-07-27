@@ -22,6 +22,7 @@ import {
   requestTrainingHint,
 } from "./training.mutations";
 import {
+  getTrainingSession,
   getTrainingResult,
   trainingQueryKeys,
 } from "./training.queries";
@@ -36,15 +37,39 @@ const hintEventId = "40000000-0000-4000-8000-000000000004";
 const attemptEventId = "50000000-0000-4000-8000-000000000005";
 const solutionEventId = "60000000-0000-4000-8000-000000000006";
 const attemptId = "70000000-0000-4000-8000-000000000007";
+const nextProblemId = "80000000-0000-4000-8000-000000000008";
 
 const trainingResult = {
   completedAt: "2026-07-27T03:00:00Z",
+  nextAction: { problemId: nextProblemId, target: "problems" },
   planEffect: { planVersion: 9, taskCompleted: true },
   problemId,
   score: 100,
   sessionId,
   sessionVersion: 5,
+  skillEffect: {
+    currentBestScore: 100,
+    delta: 20,
+    previousBestScore: 80,
+    skillKey: "arrays",
+  },
   xpDelta: 20,
+} as const;
+
+const trainingSession = {
+  attemptId,
+  hintEn: "Use symmetry.",
+  hintZh: "使用对称性。",
+  lastActivityAt: "2026-07-27T02:59:00Z",
+  planTaskId,
+  problemId,
+  score: 100,
+  sessionId,
+  sessionVersion: 4,
+  solutionEn: null,
+  solutionZh: null,
+  startedAt: "2026-07-27T02:55:00Z",
+  status: "active",
 } as const;
 
 const server = setupServer();
@@ -157,9 +182,16 @@ describe("daily training API client", () => {
             version: 4,
           });
           return HttpResponse.json({
+            nextAction: { problemId: nextProblemId, target: "problems" },
             planEffect: { planVersion: 9, taskCompleted: true },
             sessionId,
             sessionVersion: 5,
+            skillEffect: {
+              currentBestScore: 100,
+              delta: 20,
+              previousBestScore: 80,
+              skillKey: "arrays",
+            },
             xpDelta: 20,
           });
         },
@@ -191,9 +223,16 @@ describe("daily training API client", () => {
 
     expect(first).toEqual(replay);
     expect(first).toEqual({
+      nextAction: { problemId: nextProblemId, target: "problems" },
       planEffect: { planVersion: 9, taskCompleted: true },
       sessionId,
       sessionVersion: 5,
+      skillEffect: {
+        currentBestScore: 100,
+        delta: 20,
+        previousBestScore: 80,
+        skillKey: "arrays",
+      },
       xpDelta: 20,
     });
   });
@@ -217,6 +256,53 @@ describe("daily training API client", () => {
     ).idempotencyKey).not.toBe(attempt.idempotencyKey);
     expect(newRevealTrainingSolutionIntent({ sessionId, sessionVersion: 2 }).idempotencyKey)
       .not.toBe(solution.idempotencyKey);
+  });
+
+  it("loads an owner-scoped active session snapshot without answer content", async () => {
+    server.use(
+      http.get(
+        "*/api/v2/training/sessions/:sessionId",
+        ({ params }) => {
+          expect(params.sessionId).toBe(sessionId);
+          return HttpResponse.json(trainingSession);
+        },
+      ),
+    );
+
+    await expect(getTrainingSession(sessionId)).resolves.toEqual(trainingSession);
+    expect(JSON.stringify(await getTrainingSession(sessionId))).not.toContain("answer");
+    expect(trainingQueryKeys.session(ownerScope, sessionId)).not.toEqual(
+      trainingQueryKeys.session(otherOwnerScope, sessionId),
+    );
+  });
+
+  it("aborts session reads and rejects unsafe or incoherent snapshots", async () => {
+    server.use(
+      http.get(
+        "*/api/v2/training/sessions/:sessionId",
+        async () => {
+          await delay("infinite");
+          return HttpResponse.json(trainingSession);
+        },
+      ),
+    );
+    const controller = new AbortController();
+    const pending = getTrainingSession(sessionId, controller.signal);
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
+    await expect(getTrainingSession("../foreign-session")).rejects.toThrow();
+
+    server.use(
+      http.get(
+        "*/api/v2/training/sessions/:sessionId",
+        () => HttpResponse.json({
+          ...trainingSession,
+          answer: "must-never-enter-client-state",
+          score: null,
+        }),
+      ),
+    );
+    await expect(getTrainingSession(sessionId)).rejects.toThrow();
   });
 
   it("loads a validated result through an abortable owner-scoped query", async () => {
@@ -249,6 +335,35 @@ describe("daily training API client", () => {
       ),
     );
     await expect(getTrainingResult(sessionId)).rejects.toThrow();
+  });
+
+  it("rejects incoherent completion effects before they reach recovery or UI state", async () => {
+    server.use(
+      http.post(
+        "*/api/v2/training/sessions/:sessionId/complete",
+        () => HttpResponse.json({
+          nextAction: { problemId: null, target: "problems" },
+          planEffect: null,
+          sessionId,
+          sessionVersion: 5,
+          skillEffect: {
+            currentBestScore: 100,
+            delta: 10,
+            previousBestScore: 80,
+            skillKey: "arrays",
+          },
+          xpDelta: 20,
+        }),
+      ),
+    );
+
+    await expect(completeTrainingSession(
+      newCompleteTrainingIntent(
+        { sessionId, sessionVersion: 4 },
+        attemptId,
+      ),
+      csrfProof,
+    )).rejects.toThrow();
   });
 
   it("invalidates every owner-confirmed completion read model without crossing accounts", async () => {

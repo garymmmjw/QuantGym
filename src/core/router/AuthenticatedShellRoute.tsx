@@ -57,6 +57,13 @@ export function AuthenticatedShellRoute() {
     if (resolvedOwnerScope === null) return;
     let active = true;
     void recoverableDraftOwnerBoundary.activate(resolvedOwnerScope, {
+      beforeRecovery: async ({ previousOwnerScope }) => {
+        if (previousOwnerScope !== null) {
+          await cancelAndRemoveOwnerQueries(queryClient, previousOwnerScope);
+        }
+        clearPreferenceSyncDrafts();
+        await todoDraftRepository.clear();
+      },
       beforeChange: async ({ previousOwnerScope }) => {
         await cancelAndRemoveOwnerQueries(queryClient, previousOwnerScope);
         clearPreferenceSyncDrafts(previousOwnerScope);

@@ -84,6 +84,46 @@ describe("Training draft recovery", () => {
       .toBe(intent.idempotencyKey);
   });
 
+  it("preserves stable completion effects in the durable recovery receipt", async () => {
+    const repository = createInMemoryDraftRepository();
+    const intent: TrainingMutationIntent = {
+      idempotencyKey: "training-complete-effects-123",
+      kind: "complete",
+      request: { attemptId, version: 4 },
+      sessionId,
+    };
+    const source = await persistTrainingMutationDraft(ownerScope, intent, repository);
+    const attempted = await repository.markAttempt(source);
+    if (attempted === null) throw new Error("TRAINING_ATTEMPT_EXPECTED");
+    const response = {
+      nextAction: { problemId: null, target: "overview" as const },
+      planEffect: null,
+      sessionId,
+      sessionVersion: 5,
+      skillEffect: {
+        currentBestScore: 100,
+        delta: 20,
+        previousBestScore: 80,
+        skillKey: "arrays",
+      },
+      xpDelta: 20,
+    };
+
+    const receipt = await persistTrainingRecoveryReceipt(
+      ownerScope,
+      attempted,
+      intent,
+      response,
+      repository,
+    );
+
+    expect(receipt?.payload.response).toEqual(response);
+    const persisted = JSON.stringify(await repository.list(ownerScope));
+    for (const forbidden of ["answer", "note", "hint", "solution"]) {
+      expect(persisted.toLowerCase()).not.toContain(forbidden);
+    }
+  });
+
   it("persists a plan-scoped start receipt before the exact attempted source is acknowledged", async () => {
     const repository = createInMemoryDraftRepository();
     const intent: TrainingMutationIntent = {

@@ -16,6 +16,7 @@ const DRAFT_STORE_NAME = "drafts";
 const QUARANTINE_STORE_NAME = "draft-quarantine";
 const METADATA_STORE_NAME = "draft-metadata";
 const ACTIVE_OWNER_KEY = "active-owner";
+const LOGOUT_CLEANUP_PENDING_KEY = "logout-cleanup-pending";
 const MAX_PAYLOAD_BYTES = 128 * 1024;
 
 const ownerScopeSchema = z.string().regex(/^acct-[a-f0-9]{16}$/u);
@@ -133,8 +134,10 @@ export type RecoverableDraftRepository = Readonly<{
     draft: RecoverableDraft,
   ) => Promise<boolean>;
   readActiveOwner: () => Promise<string | null>;
+  readLogoutCleanupPending: () => Promise<boolean>;
   releaseAttempt: (draft: RecoverableDraft) => Promise<RecoverableDraft | null>;
   writeActiveOwner: (ownerScope: string | null) => Promise<void>;
+  writeLogoutCleanupPending: (pending: boolean) => Promise<void>;
 }>;
 
 type DraftIdentity = Pick<
@@ -332,6 +335,7 @@ export const createInMemoryDraftRepository = (
   const entries = new Map<string, unknown>();
   const quarantine = new Map<string, DraftQuarantineRecord>();
   let activeOwner: string | null = null;
+  let logoutCleanupPending = false;
 
   initialRecords.forEach((record, index) => {
     const candidateId = typeof record === "object"
@@ -443,6 +447,7 @@ export const createInMemoryDraftRepository = (
       return true;
     },
     readActiveOwner: async () => activeOwner,
+    readLogoutCleanupPending: async () => logoutCleanupPending,
     releaseAttempt: async (draft) => {
       const raw = entries.get(draft.draftId);
       if (raw === undefined) return null;
@@ -461,6 +466,9 @@ export const createInMemoryDraftRepository = (
     },
     writeActiveOwner: async (ownerScope) => {
       activeOwner = ownerScope === null ? null : parseDraftOwnerScope(ownerScope);
+    },
+    writeLogoutCleanupPending: async (pending) => {
+      logoutCleanupPending = z.boolean().parse(pending);
     },
   };
 };
@@ -793,6 +801,21 @@ export const createIndexedDbDraftRepository = (): RecoverableDraftRepository => 
     if (!parsed.success) return invalidRecord();
     return parsed.data.value;
   }),
+  readLogoutCleanupPending: async () => withDatabase(async (database) => {
+    const transaction = database.transaction(METADATA_STORE_NAME, "readonly");
+    const completion = transactionComplete(transaction);
+    const raw: unknown = await requestResult(
+      transaction.objectStore(METADATA_STORE_NAME).get(LOGOUT_CLEANUP_PENDING_KEY),
+    );
+    await completion;
+    if (raw === undefined) return false;
+    const parsed = z.object({
+      key: z.literal(LOGOUT_CLEANUP_PENDING_KEY),
+      value: z.literal(true),
+    }).strict().safeParse(raw);
+    if (!parsed.success) return invalidRecord();
+    return true;
+  }),
   releaseAttempt: async (draft) => withDatabase(async (database) => {
     const transaction = database.transaction(
       [DRAFT_STORE_NAME, QUARANTINE_STORE_NAME],
@@ -837,6 +860,17 @@ export const createIndexedDbDraftRepository = (): RecoverableDraftRepository => 
     const store = transaction.objectStore(METADATA_STORE_NAME);
     if (ownerScope === null) store.delete(ACTIVE_OWNER_KEY);
     else store.put({ key: ACTIVE_OWNER_KEY, value: parseDraftOwnerScope(ownerScope) });
+    await completion;
+  }),
+  writeLogoutCleanupPending: async (pending) => withDatabase(async (database) => {
+    const transaction = database.transaction(METADATA_STORE_NAME, "readwrite");
+    const completion = transactionComplete(transaction);
+    const store = transaction.objectStore(METADATA_STORE_NAME);
+    if (z.boolean().parse(pending)) {
+      store.put({ key: LOGOUT_CLEANUP_PENDING_KEY, value: true });
+    } else {
+      store.delete(LOGOUT_CLEANUP_PENDING_KEY);
+    }
     await completion;
   }),
 });

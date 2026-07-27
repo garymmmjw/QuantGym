@@ -10,7 +10,6 @@ const expectedRoutes = [
   ["skills", "/skills"],
   ["league", "/league"],
   ["interview", "/interview"],
-  ["problems", "/problems"],
   ["tools", "/tools"],
   ["poker", "/poker"],
   ["experiences", "/experiences"],
@@ -30,17 +29,18 @@ const expectedRoutes = [
 ] as const;
 
 describe("unmigrated route allowlist", () => {
-  it("contains exactly the approved 20 unique compatibility routes", () => {
+  it("contains exactly the approved 19 unique compatibility routes", () => {
     expect(UNMIGRATED_ROUTES.map(({ id, path }) => [id, path])).toEqual(expectedRoutes);
-    expect(new Set(UNMIGRATED_ROUTES.map(({ id }) => id))).toHaveLength(20);
-    expect(new Set(UNMIGRATED_ROUTES.map(({ path }) => path))).toHaveLength(20);
+    expect(new Set(UNMIGRATED_ROUTES.map(({ id }) => id))).toHaveLength(19);
+    expect(new Set(UNMIGRATED_ROUTES.map(({ path }) => path))).toHaveLength(19);
     expect(resolveUnmigratedRoute("/")).toBeNull();
     expect(resolveUnmigratedRoute("/plan")).toBeNull();
+    expect(resolveUnmigratedRoute("/problems")).toBeNull();
   });
 
   it("normalizes only allowlisted pathnames and removes query or fragment data", () => {
     expect(normalizeUnmigratedPathname("/skills/?token=secret#private")).toBe("/skills");
-    expect(normalizeUnmigratedPathname("/problems//")).toBe("/problems");
+    expect(normalizeUnmigratedPathname("/interview//")).toBe("/interview");
     expect(resolveUnmigratedRoute("/pk?match=private")?.id).toBe("pk");
 
     for (const rejected of [

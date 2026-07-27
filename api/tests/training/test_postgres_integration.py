@@ -28,6 +28,8 @@ SOURCE_ID = UUID("7a3caec4-32ea-4ea2-9a98-15d97a5de1da")
 NEWEST_BLOCKED_SOURCE_ID = UUID("e0bf284f-8f96-448e-a626-03563a0a5a6a")
 PROBLEM_ID = UUID("0c1d974a-ec41-42d9-a28c-85fbca86f17d")
 REBOUND_PROBLEM_ID = UUID("2b52aa59-1e62-4f1e-8326-02728bb8f9ec")
+COMPLETED_NEXT_PROBLEM_ID = UUID("30000000-0000-4000-8000-000000000001")
+NEXT_PROBLEM_ID = UUID("30000000-0000-4000-8000-000000000002")
 PLAN_ID = UUID("1568a65e-da34-46f7-93d4-ab84f587dd04")
 TASK_ID = UUID("78c1e61e-e3aa-4aa8-82b9-ee37f10614a7")
 RECOMMENDATION_ID = UUID("69e17025-b670-48d5-b896-49e218d77856")
@@ -211,6 +213,91 @@ def _start_and_attempt(service: TrainingService) -> tuple[Any, Any]:
     return started, attempt
 
 
+def test_session_snapshot_restores_only_authorized_content_and_latest_attempt(
+    phase2_rows: Any,
+) -> None:
+    service = _service(phase2_rows)
+    started = service.start_or_resume(
+        user_id=USER_ID,
+        problem_id=PROBLEM_ID,
+        plan_task_id=TASK_ID,
+        idempotency_key=START_KEY,
+    )
+
+    initial = service.get_session(
+        user_id=USER_ID,
+        session_id=started.session_id,
+    )
+    assert initial.problem_id == PROBLEM_ID
+    assert initial.plan_task_id == TASK_ID
+    assert initial.status == "active"
+    assert initial.session_version == 1
+    assert initial.started_at == NOW
+    assert initial.last_activity_at == NOW
+    assert initial.attempt_id is None
+    assert initial.score is None
+    assert initial.hint_zh is None
+    assert initial.hint_en is None
+    assert initial.solution_zh is None
+    assert initial.solution_en is None
+
+    hint = service.use_hint(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        expected_version=initial.session_version,
+        idempotency_key=HINT_KEY,
+    )
+    after_hint = service.get_session(
+        user_id=USER_ID,
+        session_id=started.session_id,
+    )
+    assert after_hint.session_version == hint.session_version
+    assert after_hint.hint_zh == "先排序"
+    assert after_hint.hint_en == "Sort first"
+    assert after_hint.solution_zh is None
+
+    first_attempt = service.submit_attempt(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        expected_version=after_hint.session_version,
+        answer_kind="code",
+        answer=PRIVATE_ANSWER,
+        idempotency_key=ATTEMPT_KEY,
+    )
+    second_attempt = service.submit_attempt(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        expected_version=first_attempt.session_version,
+        answer_kind="text",
+        answer=f"{PRIVATE_ANSWER}-newer",
+        idempotency_key=IdempotencyKey("f" * 64),
+    )
+    after_attempt = service.get_session(
+        user_id=USER_ID,
+        session_id=started.session_id,
+    )
+    assert after_attempt.session_version == second_attempt.session_version
+    assert after_attempt.attempt_id == second_attempt.attempt_id
+    assert after_attempt.score == second_attempt.score
+    assert first_attempt.attempt_id != after_attempt.attempt_id
+
+    solution = service.reveal_solution(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        expected_version=after_attempt.session_version,
+        idempotency_key=SOLUTION_KEY,
+    )
+    restored = service.get_session(
+        user_id=USER_ID,
+        session_id=started.session_id,
+    )
+    assert restored.session_version == solution.session_version
+    assert restored.solution_zh == "使用双指针"
+    assert restored.solution_en == "Use two pointers"
+    assert PRIVATE_ANSWER not in repr(restored)
+    assert f"{PRIVATE_ANSWER}-newer" not in repr(restored)
+
+
 def test_complete_daily_loop_replays_snapshot_and_never_leaks_answer(
     phase2_rows: Any,
 ) -> None:
@@ -311,6 +398,12 @@ def test_complete_daily_loop_replays_snapshot_and_never_leaks_answer(
     assert completed.xp_delta == 20
     assert completed.task_completed is True
     assert completed.plan_version == 2
+    assert completed.skill_effect.skill_key == "arrays"
+    assert completed.skill_effect.previous_best_score == 100
+    assert completed.skill_effect.current_best_score == 100
+    assert completed.skill_effect.delta == 0
+    assert completed.next_action.target == "overview"
+    assert completed.next_action.problem_id is None
 
     with phase2_rows.begin() as connection:
         connection.execute(
@@ -350,6 +443,8 @@ def test_complete_daily_loop_replays_snapshot_and_never_leaks_answer(
     assert result.score == 100
     assert result.xp_delta == 20
     assert result.task_completed is True
+    assert result.skill_effect == completed.skill_effect
+    assert result.next_action == completed.next_action
 
     overview = DashboardService(phase2_rows, clock=lambda: NOW).get_overview(
         user_id=USER_ID
@@ -418,6 +513,24 @@ def test_complete_daily_loop_replays_snapshot_and_never_leaks_answer(
                 """
             )
         ).mappings().all()
+        completion_snapshot = connection.execute(
+            text(
+                """
+                SELECT response_snapshot
+                FROM idempotency_records
+                WHERE operation = 'problems.complete'
+                """
+            )
+        ).scalar_one()
+        completion_payload = connection.execute(
+            text(
+                """
+                SELECT payload
+                FROM training_events
+                WHERE event_type = 'completed'
+                """
+            )
+        ).scalar_one()
 
     assert dict(counts) == {
         "sessions": 1,
@@ -474,9 +587,173 @@ def test_complete_daily_loop_replays_snapshot_and_never_leaks_answer(
             "sessionVersion",
         },
     }
+    assert completion_snapshot["skillEffect"] == {
+        "currentBestScore": 100,
+        "delta": 0,
+        "previousBestScore": 100,
+        "skillKey": "arrays",
+    }
+    assert completion_snapshot["nextAction"] == {
+        "problemId": None,
+        "target": "overview",
+    }
+    assert completion_payload["skillEffect"] == completion_snapshot["skillEffect"]
+    assert completion_payload["nextAction"] == completion_snapshot["nextAction"]
+    completion_snapshot_text = json.dumps(completion_snapshot, sort_keys=True)
+    for forbidden in ("answer", "note", "hint", "solution"):
+        assert forbidden not in completion_snapshot_text.casefold()
     assert notification["action_target"] == "training_result"
     assert notification["action_resource_id"] == started.session_id
     assert len(notification["dedupe_key"]) == 64
+
+
+def test_completion_persists_stable_skill_effect_and_next_action(
+    phase2_rows: Any,
+) -> None:
+    with phase2_rows.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO problems
+                    (id, source_id, external_key, title_zh, title_en,
+                     prompt_zh, prompt_en, hint_zh, hint_en,
+                     solution_zh, solution_en, category, difficulty,
+                     tags, companies, hot100, version, created_at, updated_at)
+                VALUES
+                    (:completed_id, :source_id, 'array-next-completed',
+                     '已完成的下一题', 'Completed next problem',
+                     '跳过已完成题', 'Skip completed problems',
+                     NULL, NULL, NULL, NULL, 'arrays', 'Easy',
+                     CAST('["arrays"]' AS jsonb), CAST('[]' AS jsonb),
+                     false, 1, :now, :now),
+                    (:next_id, :source_id, 'array-next-open',
+                     '稳定选择的下一题', 'Stable next problem',
+                     '选择未完成题', 'Choose an unfinished problem',
+                     NULL, NULL, NULL, NULL, 'arrays', 'Easy',
+                     CAST('["arrays"]' AS jsonb), CAST('[]' AS jsonb),
+                     false, 1, :now, :now)
+                """
+            ),
+            {
+                "completed_id": COMPLETED_NEXT_PROBLEM_ID,
+                "next_id": NEXT_PROBLEM_ID,
+                "source_id": SOURCE_ID,
+                "now": NOW,
+            },
+        )
+
+    service = _service(phase2_rows)
+    started, attempt = _start_and_attempt(service)
+    service.start_or_resume(
+        user_id=USER_ID,
+        problem_id=COMPLETED_NEXT_PROBLEM_ID,
+        plan_task_id=None,
+        idempotency_key=IdempotencyKey("1" * 64),
+    )
+    with phase2_rows.begin() as connection:
+        connection.execute(
+            text(
+                """
+                UPDATE problem_progress
+                SET status = 'completed',
+                    completed_at = :now,
+                    updated_at = :now
+                WHERE user_id = :user_id
+                  AND problem_id = :completed_problem_id
+                """
+            ),
+            {
+                "completed_problem_id": COMPLETED_NEXT_PROBLEM_ID,
+                "now": NOW,
+                "user_id": USER_ID,
+            },
+        )
+        connection.execute(
+            text(
+                """
+                UPDATE problem_progress
+                SET best_score = 70,
+                    updated_at = :now
+                WHERE user_id = :user_id
+                  AND problem_id = :problem_id
+                """
+            ),
+            {"now": NOW, "problem_id": PROBLEM_ID, "user_id": USER_ID},
+        )
+
+    completed = service.complete(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        attempt_id=attempt.attempt_id,
+        expected_version=attempt.session_version,
+        idempotency_key=COMPLETE_KEY,
+    )
+    assert completed.skill_effect == type(completed.skill_effect)(
+        skill_key="arrays",
+        previous_best_score=70,
+        current_best_score=100,
+        delta=30,
+    )
+    assert completed.next_action.target == "problems"
+    assert completed.next_action.problem_id == NEXT_PROBLEM_ID
+
+    service.start_or_resume(
+        user_id=USER_ID,
+        problem_id=NEXT_PROBLEM_ID,
+        plan_task_id=None,
+        idempotency_key=IdempotencyKey("2" * 64),
+    )
+    with phase2_rows.begin() as connection:
+        connection.execute(
+            text(
+                """
+                UPDATE problem_progress
+                SET status = 'completed',
+                    completed_at = :now,
+                    updated_at = :now
+                WHERE user_id = :user_id
+                  AND problem_id = :problem_id
+                """
+            ),
+            {"now": NOW, "problem_id": NEXT_PROBLEM_ID, "user_id": USER_ID},
+        )
+
+    replay = service.complete(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        attempt_id=attempt.attempt_id,
+        expected_version=attempt.session_version,
+        idempotency_key=COMPLETE_KEY,
+    )
+    result = service.get_result(user_id=USER_ID, session_id=started.session_id)
+    assert replay == completed
+    assert result.skill_effect == completed.skill_effect
+    assert result.next_action == completed.next_action
+
+    with phase2_rows.connect() as connection:
+        official = connection.execute(
+            text(
+                """
+                SELECT
+                    event.payload,
+                    record.response_snapshot
+                FROM training_events AS event
+                JOIN idempotency_records AS record
+                  ON record.user_id = event.user_id
+                 AND record.resource_id = event.training_session_id
+                 AND record.operation = 'problems.complete'
+                WHERE event.training_session_id = :session_id
+                  AND event.event_type = 'completed'
+                """
+            ),
+            {"session_id": started.session_id},
+        ).mappings().one()
+    assert official["payload"]["skillEffect"] == official["response_snapshot"][
+        "skillEffect"
+    ]
+    assert official["payload"]["nextAction"] == official["response_snapshot"][
+        "nextAction"
+    ]
 
 
 def test_completion_validates_ownership_version_and_persisted_answer(
@@ -855,6 +1132,10 @@ def test_cross_user_training_mutations_and_result_uniformly_return_404(
             user_id=OTHER_USER_ID,
             session_id=started.session_id,
         ),
+        lambda: service.get_session(
+            user_id=OTHER_USER_ID,
+            session_id=started.session_id,
+        ),
     )
     expected_codes = [
         "TRAINING_SESSION_NOT_FOUND",
@@ -862,6 +1143,7 @@ def test_cross_user_training_mutations_and_result_uniformly_return_404(
         "TRAINING_SESSION_NOT_FOUND",
         "TRAINING_SESSION_NOT_FOUND",
         "TRAINING_RESULT_NOT_FOUND",
+        "TRAINING_SESSION_NOT_FOUND",
     ]
     for call, expected_code in zip(calls, expected_codes, strict=True):
         with pytest.raises(ApiError) as hidden:
@@ -935,6 +1217,10 @@ def test_preview_rights_fail_closed_for_start_and_authorized_content(
             {"id": SOURCE_ID},
         )
     for operation in (
+        lambda: service.get_session(
+            user_id=USER_ID,
+            session_id=started.session_id,
+        ),
         lambda: service.use_hint(
             user_id=USER_ID,
             session_id=started.session_id,

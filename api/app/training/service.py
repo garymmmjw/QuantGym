@@ -18,8 +18,10 @@ from ..errors import ApiError
 from ..idempotency import IdempotencyKey, request_fingerprint
 from ..idempotency_records import (
     IdempotencyCompletion,
+    NextTrainingActionAcknowledgement,
     PlanEffectAcknowledgement,
     ProblemCompletionAcknowledgement,
+    SkillEffectAcknowledgement,
     TrainingAttemptAcknowledgement,
     TrainingHintAcknowledgement,
     TrainingSessionAcknowledgement,
@@ -120,6 +122,8 @@ class CompletionResult:
     xp_delta: int
     task_completed: bool
     plan_version: int | None
+    skill_effect: SkillEffectAcknowledgement
+    next_action: NextTrainingActionAcknowledgement
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,6 +136,38 @@ class TrainingResult:
     completed_at: datetime
     task_completed: bool
     plan_version: int | None
+    skill_effect: SkillEffectAcknowledgement
+    next_action: NextTrainingActionAcknowledgement
+
+
+@dataclass(frozen=True, slots=True, repr=False)
+class TrainingSessionSnapshot:
+    session_id: UUID
+    problem_id: UUID
+    plan_task_id: UUID | None
+    status: str
+    session_version: int
+    started_at: datetime
+    last_activity_at: datetime
+    attempt_id: UUID | None
+    score: int | None
+    hint_zh: str | None
+    hint_en: str | None
+    solution_zh: str | None
+    solution_en: str | None
+
+    def __repr__(self) -> str:
+        return (
+            "TrainingSessionSnapshot("
+            f"session_id={self.session_id!r}, problem_id={self.problem_id!r}, "
+            f"plan_task_id={self.plan_task_id!r}, status={self.status!r}, "
+            f"session_version={self.session_version!r}, "
+            f"started_at={self.started_at!r}, "
+            f"last_activity_at={self.last_activity_at!r}, "
+            f"attempt_id={self.attempt_id!r}, score={self.score!r}, "
+            "hint_zh='[REDACTED]', hint_en='[REDACTED]', "
+            "solution_zh='[REDACTED]', solution_en='[REDACTED]')"
+        )
 
 
 class TrainingService:
@@ -379,6 +415,108 @@ class TrainingService:
             )
         return _completion_from_snapshot(record.response_snapshot)
 
+    def get_session(
+        self,
+        *,
+        user_id: UUID,
+        session_id: UUID,
+    ) -> TrainingSessionSnapshot:
+        with self._engine.connect() as connection:
+            row = (
+                connection.execute(
+                    text(
+                        f"""
+                        {_ALLOWED_SOURCE_CTE}
+                        SELECT
+                            session.id AS session_id,
+                            session.problem_id,
+                            own_task.id AS plan_task_id,
+                            session.status,
+                            session.version AS session_version,
+                            session.started_at,
+                            session.last_activity_at,
+                            latest_attempt.id AS attempt_id,
+                            latest_attempt.score,
+                            CASE WHEN event_state.hint_used
+                                 THEN problem.hint_zh ELSE NULL END AS hint_zh,
+                            CASE WHEN event_state.hint_used
+                                 THEN problem.hint_en ELSE NULL END AS hint_en,
+                            CASE WHEN event_state.solution_revealed
+                                 THEN problem.solution_zh ELSE NULL END AS solution_zh,
+                            CASE WHEN event_state.solution_revealed
+                                 THEN problem.solution_en ELSE NULL END AS solution_en
+                        FROM training_sessions AS session
+                        JOIN problems AS problem ON problem.id = session.problem_id
+                        JOIN allowed_sources AS source ON source.id = problem.source_id
+                        LEFT JOIN plan_tasks AS own_task
+                          ON own_task.id = session.plan_task_id
+                         AND own_task.user_id = :user_id
+                        LEFT JOIN LATERAL (
+                            SELECT
+                                COALESCE(bool_or(
+                                    training_event.event_type = 'hint_used'
+                                ), false) AS hint_used,
+                                COALESCE(bool_or(
+                                    training_event.event_type = 'solution_revealed'
+                                ), false) AS solution_revealed
+                            FROM training_events AS training_event
+                            WHERE training_event.training_session_id = session.id
+                              AND training_event.user_id = :user_id
+                              AND training_event.problem_id = session.problem_id
+                        ) AS event_state ON true
+                        LEFT JOIN LATERAL (
+                            SELECT attempt.id, attempt.score
+                            FROM attempts AS attempt
+                            WHERE attempt.training_session_id = session.id
+                              AND attempt.user_id = :user_id
+                              AND attempt.problem_id = session.problem_id
+                              AND attempt.status = 'evaluated'
+                              AND attempt.score IS NOT NULL
+                            ORDER BY attempt.sequence DESC,
+                                     attempt.created_at DESC,
+                                     attempt.id DESC
+                            LIMIT 1
+                        ) AS latest_attempt ON true
+                        WHERE session.id = :session_id
+                          AND session.user_id = :user_id
+                          AND (
+                              session.plan_task_id IS NULL
+                              OR own_task.id IS NOT NULL
+                          )
+                        """
+                    ),
+                    {"session_id": session_id, "user_id": user_id},
+                )
+                .mappings()
+                .first()
+            )
+        if row is None:
+            raise ApiError(
+                status_code=404,
+                code="TRAINING_SESSION_NOT_FOUND",
+                message="训练会话不存在",
+                retryable=False,
+            )
+        attempt_id = row["attempt_id"]
+        score = row["score"]
+        if (attempt_id is None) != (score is None):
+            raise RuntimeError("training session attempt projection is inconsistent")
+        return TrainingSessionSnapshot(
+            session_id=row["session_id"],
+            problem_id=row["problem_id"],
+            plan_task_id=row["plan_task_id"],
+            status=row["status"],
+            session_version=int(row["session_version"]),
+            started_at=row["started_at"],
+            last_activity_at=row["last_activity_at"],
+            attempt_id=attempt_id,
+            score=None if score is None else int(score),
+            hint_zh=row["hint_zh"],
+            hint_en=row["hint_en"],
+            solution_zh=row["solution_zh"],
+            solution_en=row["solution_en"],
+        )
+
     def get_result(self, *, user_id: UUID, session_id: UUID) -> TrainingResult:
         with self._engine.connect() as connection:
             row = (
@@ -390,6 +528,8 @@ class TrainingService:
                             session.problem_id,
                             session.version AS session_version,
                             session.completed_at,
+                            event.payload AS completion_payload,
+                            attempt.sequence AS attempt_sequence,
                             attempt.score,
                             ledger.amount AS xp_delta,
                             CASE
@@ -437,6 +577,12 @@ class TrainingService:
                 message="训练结果不存在",
                 retryable=False,
             )
+        skill_effect, next_action = _completion_effects_from_event_payload(
+            row["completion_payload"],
+            attempt_sequence=int(row["attempt_sequence"]),
+            score=int(row["score"]),
+            xp_delta=int(row["xp_delta"]),
+        )
         return TrainingResult(
             session_id=row["session_id"],
             problem_id=row["problem_id"],
@@ -448,6 +594,8 @@ class TrainingService:
             plan_version=(
                 None if row["plan_version"] is None else int(row["plan_version"])
             ),
+            skill_effect=skill_effect,
+            next_action=next_action,
         )
 
     def _start_or_resume(
@@ -785,6 +933,26 @@ class TrainingService:
                 message="已保存的作答无法通过完整性校验",
                 retryable=False,
             )
+        attempt_score = int(attempt["score"])
+        previous_best_score = self._lock_previous_best_score(
+            connection,
+            user_id=user_id,
+            problem_id=session["problem_id"],
+        )
+        baseline_score = previous_best_score or 0
+        current_best_score = max(baseline_score, attempt_score)
+        skill_effect = SkillEffectAcknowledgement(
+            skill_key=session["category"],
+            previous_best_score=previous_best_score,
+            current_best_score=current_best_score,
+            delta=current_best_score - baseline_score,
+        )
+        next_action = self._next_training_action(
+            connection,
+            user_id=user_id,
+            current_problem_id=session["problem_id"],
+            category=session["category"],
+        )
         session_version = int(
             connection.execute(
                 text(
@@ -818,7 +986,9 @@ class TrainingService:
             attempt_id=attempt_id,
             payload={
                 "attemptSequence": int(attempt["sequence"]),
-                "score": int(attempt["score"]),
+                "nextAction": next_action.to_snapshot(),
+                "score": attempt_score,
+                "skillEffect": skill_effect.to_snapshot(),
                 "xpDelta": xp_delta,
             },
             now=now,
@@ -828,7 +998,7 @@ class TrainingService:
             session=session,
             now=now,
             completed=True,
-            score=int(attempt["score"]),
+            score=attempt_score,
         )
         ledger_id = self._new_id()
         connection.execute(
@@ -873,6 +1043,8 @@ class TrainingService:
             session_id=session_id,
             session_version=session_version,
             xp_delta=xp_delta,
+            skill_effect=skill_effect,
+            next_action=next_action,
             plan_effect=plan_effect,
         )
         return IdempotencyCompletion(
@@ -1251,6 +1423,77 @@ class TrainingService:
             ).scalar_one()
         )
 
+    def _lock_previous_best_score(
+        self,
+        connection: Any,
+        *,
+        user_id: UUID,
+        problem_id: UUID,
+    ) -> int | None:
+        row = (
+            connection.execute(
+                text(
+                    """
+                    SELECT best_score
+                    FROM problem_progress
+                    WHERE user_id = :user_id
+                      AND problem_id = :problem_id
+                    FOR UPDATE
+                    """
+                ),
+                {"user_id": user_id, "problem_id": problem_id},
+            )
+            .mappings()
+            .first()
+        )
+        if row is None or row["best_score"] is None:
+            return None
+        previous_best_score = int(row["best_score"])
+        if not 0 <= previous_best_score <= 100:
+            raise RuntimeError("persisted problem best score is invalid")
+        return previous_best_score
+
+    def _next_training_action(
+        self,
+        connection: Any,
+        *,
+        user_id: UUID,
+        current_problem_id: UUID,
+        category: str,
+    ) -> NextTrainingActionAcknowledgement:
+        problem_id = connection.execute(
+            text(
+                f"""
+                {_ALLOWED_SOURCE_CTE}
+                SELECT problem.id
+                FROM problems AS problem
+                JOIN allowed_sources AS source ON source.id = problem.source_id
+                LEFT JOIN problem_progress AS progress
+                  ON progress.user_id = :user_id
+                 AND progress.problem_id = problem.id
+                WHERE problem.category = :category
+                  AND problem.id <> :current_problem_id
+                  AND COALESCE(progress.status, 'unstarted') <> 'completed'
+                ORDER BY problem.id ASC
+                LIMIT 1
+                """
+            ),
+            {
+                "user_id": user_id,
+                "current_problem_id": current_problem_id,
+                "category": category,
+            },
+        ).scalar_one_or_none()
+        if problem_id is None:
+            return NextTrainingActionAcknowledgement(
+                target="overview",
+                problem_id=None,
+            )
+        return NextTrainingActionAcknowledgement(
+            target="problems",
+            problem_id=problem_id,
+        )
+
     def _upsert_progress(
         self,
         connection: Any,
@@ -1483,9 +1726,100 @@ def _snapshot_score(snapshot: Mapping[str, Any], key: str) -> int:
     return value
 
 
+def _snapshot_nonnegative_int(snapshot: Mapping[str, Any], key: str) -> int:
+    value = _snapshot_int(snapshot, key)
+    if value < 0:
+        raise RuntimeError("persisted idempotency acknowledgement is invalid")
+    return value
+
+
 def _exact_snapshot_keys(snapshot: Mapping[str, Any], expected: set[str]) -> None:
     if set(snapshot) != expected:
         raise RuntimeError("persisted idempotency acknowledgement is invalid")
+
+
+def _skill_effect_from_mapping(value: Any) -> SkillEffectAcknowledgement:
+    effect = _snapshot(value)
+    _exact_snapshot_keys(
+        effect,
+        {
+            "currentBestScore",
+            "delta",
+            "previousBestScore",
+            "skillKey",
+        },
+    )
+    skill_key = effect.get("skillKey")
+    previous_best_score = effect.get("previousBestScore")
+    if not isinstance(skill_key, str) or not skill_key.strip():
+        raise RuntimeError("persisted idempotency acknowledgement is invalid")
+    if previous_best_score is not None:
+        previous_best_score = _snapshot_score(effect, "previousBestScore")
+    try:
+        return SkillEffectAcknowledgement(
+            skill_key=skill_key,
+            previous_best_score=previous_best_score,
+            current_best_score=_snapshot_score(effect, "currentBestScore"),
+            delta=_snapshot_score(effect, "delta"),
+        )
+    except ValueError:
+        raise RuntimeError(
+            "persisted idempotency acknowledgement is invalid"
+        ) from None
+
+
+def _next_action_from_mapping(value: Any) -> NextTrainingActionAcknowledgement:
+    action = _snapshot(value)
+    _exact_snapshot_keys(action, {"problemId", "target"})
+    target = action.get("target")
+    if target not in {"problems", "overview"}:
+        raise RuntimeError("persisted idempotency acknowledgement is invalid")
+    problem_id = (
+        _snapshot_uuid(action, "problemId")
+        if target == "problems"
+        else None
+    )
+    if target == "overview" and action.get("problemId") is not None:
+        raise RuntimeError("persisted idempotency acknowledgement is invalid")
+    try:
+        return NextTrainingActionAcknowledgement(
+            target=target,
+            problem_id=problem_id,
+        )
+    except ValueError:
+        raise RuntimeError(
+            "persisted idempotency acknowledgement is invalid"
+        ) from None
+
+
+def _completion_effects_from_event_payload(
+    value: Any,
+    *,
+    attempt_sequence: int,
+    score: int,
+    xp_delta: int,
+) -> tuple[SkillEffectAcknowledgement, NextTrainingActionAcknowledgement]:
+    payload = _snapshot(value)
+    _exact_snapshot_keys(
+        payload,
+        {
+            "attemptSequence",
+            "nextAction",
+            "score",
+            "skillEffect",
+            "xpDelta",
+        },
+    )
+    if (
+        _snapshot_int(payload, "attemptSequence") != attempt_sequence
+        or _snapshot_score(payload, "score") != score
+        or _snapshot_nonnegative_int(payload, "xpDelta") != xp_delta
+    ):
+        raise RuntimeError("persisted training completion event is inconsistent")
+    return (
+        _skill_effect_from_mapping(payload.get("skillEffect")),
+        _next_action_from_mapping(payload.get("nextAction")),
+    )
 
 
 def _training_event_from_snapshot(value: Any) -> TrainingEventResult:
@@ -1532,19 +1866,34 @@ def _attempt_from_snapshot(value: Any) -> AttemptSubmissionResult:
 
 def _completion_from_snapshot(value: Any) -> CompletionResult:
     snapshot = _snapshot(value)
+    expected_keys = {
+        "nextAction",
+        "sessionId",
+        "sessionVersion",
+        "skillEffect",
+        "xpDelta",
+    }
     plan_effect = snapshot.get("planEffect")
     if plan_effect is not None and not isinstance(plan_effect, Mapping):
         raise RuntimeError("persisted idempotency acknowledgement is invalid")
+    if plan_effect is not None:
+        expected_keys.add("planEffect")
+        _exact_snapshot_keys(plan_effect, {"planVersion", "taskCompleted"})
+    _exact_snapshot_keys(snapshot, expected_keys)
     return CompletionResult(
         session_id=_snapshot_uuid(snapshot, "sessionId"),
         session_version=_snapshot_int(snapshot, "sessionVersion"),
-        xp_delta=_snapshot_int(snapshot, "xpDelta"),
+        xp_delta=_snapshot_nonnegative_int(snapshot, "xpDelta"),
         task_completed=(
-            False if plan_effect is None else _snapshot_bool(plan_effect, "taskCompleted")
+            False
+            if plan_effect is None
+            else _snapshot_bool(plan_effect, "taskCompleted")
         ),
         plan_version=(
             None if plan_effect is None else _snapshot_int(plan_effect, "planVersion")
         ),
+        skill_effect=_skill_effect_from_mapping(snapshot.get("skillEffect")),
+        next_action=_next_action_from_mapping(snapshot.get("nextAction")),
     )
 
 
@@ -1556,5 +1905,6 @@ __all__ = [
     "StartTrainingResult",
     "TrainingEventResult",
     "TrainingResult",
+    "TrainingSessionSnapshot",
     "TrainingService",
 ]

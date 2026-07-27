@@ -82,9 +82,16 @@ describe("training mutation signal propagation", () => {
         solutionZh: "二分之一。",
       },
       {
+        nextAction: { problemId: null, target: "overview" },
         planEffect: { planVersion: 9, taskCompleted: true },
         sessionId,
         sessionVersion: 5,
+        skillEffect: {
+          currentBestScore: 100,
+          delta: 20,
+          previousBestScore: 80,
+          skillKey: "arrays",
+        },
         xpDelta: 20,
       },
     ] as const;

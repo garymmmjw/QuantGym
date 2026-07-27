@@ -18,16 +18,23 @@ vi.mock("../../pages/plan/PlanPage", () => ({
   default: () => <h1>原生计划测试页</h1>,
 }));
 
-vi.mock("../../pages/training/ProblemTrainingHandoffPage", () => ({
-  default: ({ handoff }: {
-    handoff: Readonly<{ problemId: string; sessionId: string }> | null;
-  }) => (
-    <section data-testid="native-problem-handoff">
-      <h1>原生训练题目测试页</h1>
-      <output>{handoff === null ? "invalid" : `${handoff.problemId}:${handoff.sessionId}`}</output>
-    </section>
-  ),
-}));
+vi.mock("../../pages/training/ProblemsPage", async () => {
+  const { useLocation } = await vi.importActual<typeof ReactRouterDom>(
+    "react-router-dom",
+  );
+  function ProblemsPageStub() {
+    const location = useLocation();
+    return (
+      <section data-testid="native-problems-page">
+        <h1>原生训练题目测试页</h1>
+        <output>{`${location.pathname}${location.search}`}</output>
+      </section>
+    );
+  }
+  return {
+    default: ProblemsPageStub,
+  };
+});
 
 vi.mock("../../legacy-preview/LegacyRouteAdapter", async () => {
   const { useLocation } = await vi.importActual<typeof ReactRouterDom>(
@@ -45,6 +52,7 @@ vi.mock("../../legacy-preview/LegacyRouteAdapter", async () => {
 });
 
 import { PlanRouteLoadingFallback } from "./PlanRouteLoadingFallback";
+import { ProblemsRouteLoadingFallback } from "./ProblemsRouteLoadingFallback";
 import { authenticatedBusinessRouteChildren } from "./router";
 
 describe("business router ownership", () => {
@@ -105,7 +113,43 @@ describe("business router ownership", () => {
       .not.toBeInTheDocument();
   });
 
-  it("renders a valid training handoff natively without mounting compatibility", async () => {
+  it("localizes the native Problems lazy-loading fallback", () => {
+    const { rerender } = render(
+      <I18nProvider language="zh-CN">
+        <ProblemsRouteLoadingFallback />
+      </I18nProvider>,
+    );
+
+    expect(screen.getByRole("status", { name: "正在载入题目训练" })).toBeVisible();
+
+    rerender(
+      <I18nProvider language="en">
+        <ProblemsRouteLoadingFallback />
+      </I18nProvider>,
+    );
+
+    expect(screen.getByRole("status", { name: "Loading problem training" })).toBeVisible();
+    expect(screen.queryByRole("status", { name: "正在载入题目训练" }))
+      .not.toBeInTheDocument();
+  });
+
+  it("keeps the remaining business routes in the isolated compatibility adapter", async () => {
+    const router = ReactRouterDom.createMemoryRouter([
+      {
+        path: "/",
+        element: <ReactRouterDom.Outlet />,
+        children: authenticatedBusinessRouteChildren,
+      },
+    ], { initialEntries: ["/skills?focus=weakness"] });
+
+    render(<ReactRouterDom.RouterProvider router={router} />);
+
+    expect(await screen.findByRole("heading", { name: "兼容页面测试桩" })).toBeVisible();
+    expect(legacyAdapterLocation).toHaveBeenCalledWith("/skills?focus=weakness");
+    expect(screen.queryByTestId("native-problems-page")).not.toBeInTheDocument();
+  });
+
+  it("renders a valid training handoff in the native Problems page", async () => {
     const handoff = (
       "/problems"
       + "?problem=11111111-1111-4111-8111-111111111111"
@@ -123,14 +167,14 @@ describe("business router ownership", () => {
 
     expect(await screen.findByRole("heading", { name: "原生训练题目测试页" })).toBeVisible();
     expect(screen.getByText(
-      "11111111-1111-4111-8111-111111111111:22222222-2222-4222-8222-222222222222",
+      handoff,
     )).toBeVisible();
     expect(screen.queryByRole("heading", { name: "兼容页面测试桩" }))
       .not.toBeInTheDocument();
     expect(legacyAdapterRender).not.toHaveBeenCalled();
   });
 
-  it("keeps ordinary Problems navigation in the isolated compatibility adapter", async () => {
+  it("renders ordinary Problems navigation natively", async () => {
     const router = ReactRouterDom.createMemoryRouter([
       {
         path: "/",
@@ -141,12 +185,12 @@ describe("business router ownership", () => {
 
     render(<ReactRouterDom.RouterProvider router={router} />);
 
-    expect(await screen.findByRole("heading", { name: "兼容页面测试桩" })).toBeVisible();
-    expect(legacyAdapterLocation).toHaveBeenCalledWith("/problems");
-    expect(screen.queryByTestId("native-problem-handoff")).not.toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "原生训练题目测试页" })).toBeVisible();
+    expect(screen.getByText("/problems")).toBeVisible();
+    expect(legacyAdapterRender).not.toHaveBeenCalled();
   });
 
-  it("keeps unrelated Problems query state inside the isolated compatibility route", async () => {
+  it("preserves Problems query state in the native route", async () => {
     const router = ReactRouterDom.createMemoryRouter([
       {
         path: "/",
@@ -157,14 +201,14 @@ describe("business router ownership", () => {
 
     render(<ReactRouterDom.RouterProvider router={router} />);
 
-    expect(await screen.findByRole("heading", { name: "兼容页面测试桩" })).toBeVisible();
-    expect(legacyAdapterLocation).toHaveBeenCalledWith(
+    expect(await screen.findByRole("heading", { name: "原生训练题目测试页" })).toBeVisible();
+    expect(screen.getByText(
       "/problems?focus=weakness&source=plan",
-    );
-    expect(screen.queryByTestId("native-problem-handoff")).not.toBeInTheDocument();
+    )).toBeVisible();
+    expect(legacyAdapterRender).not.toHaveBeenCalled();
   });
 
-  it("fails a malformed handoff closed without mounting compatibility", async () => {
+  it("keeps malformed Problems query state inside the native page", async () => {
     const router = ReactRouterDom.createMemoryRouter([
       {
         path: "/",
@@ -175,7 +219,8 @@ describe("business router ownership", () => {
 
     render(<ReactRouterDom.RouterProvider router={router} />);
 
-    expect(await screen.findByText("invalid")).toBeVisible();
+    expect(await screen.findByRole("heading", { name: "原生训练题目测试页" })).toBeVisible();
+    expect(screen.getByText("/problems?problem=bad&session=also-bad")).toBeVisible();
     expect(legacyAdapterRender).not.toHaveBeenCalled();
   });
 });

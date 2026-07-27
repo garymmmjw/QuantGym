@@ -120,6 +120,9 @@
       "CompletionResponse": {
         "additionalProperties": false,
         "properties": {
+          "nextAction": {
+            "$ref": "#/components/schemas/NextTrainingActionResponse"
+          },
           "planEffect": {
             "anyOf": [
               {
@@ -140,6 +143,9 @@
             "title": "Sessionversion",
             "type": "integer"
           },
+          "skillEffect": {
+            "$ref": "#/components/schemas/SkillEffectResponse"
+          },
           "xpDelta": {
             "minimum": 0.0,
             "title": "Xpdelta",
@@ -150,7 +156,9 @@
           "sessionId",
           "sessionVersion",
           "xpDelta",
-          "planEffect"
+          "planEffect",
+          "skillEffect",
+          "nextAction"
         ],
         "title": "CompletionResponse",
         "type": "object"
@@ -804,6 +812,37 @@
           "preferences"
         ],
         "title": "MeResponse",
+        "type": "object"
+      },
+      "NextTrainingActionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "problemId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problemid"
+          },
+          "target": {
+            "enum": [
+              "problems",
+              "overview"
+            ],
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "problemId"
+        ],
+        "title": "NextTrainingActionResponse",
         "type": "object"
       },
       "NoteResponse": {
@@ -2124,6 +2163,49 @@
         "title": "SetFavoriteRequest",
         "type": "object"
       },
+      "SkillEffectResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "currentBestScore": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Currentbestscore",
+            "type": "integer"
+          },
+          "delta": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Delta",
+            "type": "integer"
+          },
+          "previousBestScore": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previousbestscore"
+          },
+          "skillKey": {
+            "minLength": 1,
+            "title": "Skillkey",
+            "type": "string"
+          }
+        },
+        "required": [
+          "skillKey",
+          "previousBestScore",
+          "currentBestScore",
+          "delta"
+        ],
+        "title": "SkillEffectResponse",
+        "type": "object"
+      },
       "SolutionRevealResponse": {
         "additionalProperties": false,
         "properties": {
@@ -2310,6 +2392,9 @@
             "title": "Completedat",
             "type": "string"
           },
+          "nextAction": {
+            "$ref": "#/components/schemas/NextTrainingActionResponse"
+          },
           "planEffect": {
             "anyOf": [
               {
@@ -2341,6 +2426,9 @@
             "title": "Sessionversion",
             "type": "integer"
           },
+          "skillEffect": {
+            "$ref": "#/components/schemas/SkillEffectResponse"
+          },
           "xpDelta": {
             "minimum": 0.0,
             "title": "Xpdelta",
@@ -2354,9 +2442,148 @@
           "score",
           "xpDelta",
           "completedAt",
-          "planEffect"
+          "planEffect",
+          "skillEffect",
+          "nextAction"
         ],
         "title": "TrainingResultResponse",
+        "type": "object"
+      },
+      "TrainingSessionResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "attemptId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attemptid"
+          },
+          "hintEn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hinten"
+          },
+          "hintZh": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hintzh"
+          },
+          "lastActivityAt": {
+            "format": "date-time",
+            "title": "Lastactivityat",
+            "type": "string"
+          },
+          "planTaskId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plantaskid"
+          },
+          "problemId": {
+            "format": "uuid",
+            "title": "Problemid",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "sessionId": {
+            "format": "uuid",
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "sessionVersion": {
+            "minimum": 1.0,
+            "title": "Sessionversion",
+            "type": "integer"
+          },
+          "solutionEn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Solutionen"
+          },
+          "solutionZh": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Solutionzh"
+          },
+          "startedAt": {
+            "format": "date-time",
+            "title": "Startedat",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "completed",
+              "abandoned"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "problemId",
+          "planTaskId",
+          "status",
+          "sessionVersion",
+          "startedAt",
+          "lastActivityAt",
+          "attemptId",
+          "score",
+          "hintZh",
+          "hintEn",
+          "solutionZh",
+          "solutionEn"
+        ],
+        "title": "TrainingSessionResponse",
         "type": "object"
       },
       "UpdatePlanTaskRequest": {
@@ -5186,6 +5413,94 @@
           }
         ],
         "summary": "Start or resume one current-account training session",
+        "tags": [
+          "training"
+        ]
+      }
+    },
+    "/api/v2/training/sessions/{session_id}": {
+      "get": {
+        "operationId": "getTrainingSession",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingSessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Resource not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Request validation failed"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Internal server error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            },
+            "description": "Service unavailable"
+          }
+        },
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "summary": "Read one current-account training session snapshot",
         "tags": [
           "training"
         ]

@@ -20,7 +20,7 @@ export const BUSINESS_ROUTE_OWNERSHIP = Object.freeze([
   { id: "skills", owner: "compatibility", path: "/skills" },
   { id: "league", owner: "compatibility", path: "/league" },
   { id: "interview", owner: "compatibility", path: "/interview" },
-  { id: "problems", owner: "compatibility", path: "/problems" },
+  { id: "problems", owner: "native", path: "/problems" },
   { id: "tools", owner: "compatibility", path: "/tools" },
   { id: "poker", owner: "compatibility", path: "/poker" },
   { id: "experiences", owner: "compatibility", path: "/experiences" },

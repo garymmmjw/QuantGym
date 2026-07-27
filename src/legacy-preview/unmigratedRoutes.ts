@@ -18,7 +18,6 @@ export const UNMIGRATED_ROUTES = Object.freeze([
   { id: "skills", path: "/skills", label: { "zh-CN": "能力值", en: "Skills" } },
   { id: "league", path: "/league", label: { "zh-CN": "联赛", en: "League" } },
   { id: "interview", path: "/interview", label: { "zh-CN": "模拟面试", en: "Interview" } },
-  { id: "problems", path: "/problems", label: { "zh-CN": "题目", en: "Problems" } },
   { id: "tools", path: "/tools", label: { "zh-CN": "训练工具", en: "Tools" } },
   { id: "poker", path: "/poker", label: { "zh-CN": "Poker", en: "Poker" } },
   { id: "experiences", path: "/experiences", label: { "zh-CN": "面经", en: "Experiences" } },

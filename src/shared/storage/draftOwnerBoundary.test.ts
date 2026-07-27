@@ -24,6 +24,45 @@ describe("draft owner boundary", () => {
     expect(await repository.list(ownerScope)).toEqual([draft]);
   });
 
+  it("clears a pending logout before the same account can render again", async () => {
+    const repository = createInMemoryDraftRepository();
+    const boundary = createDraftOwnerBoundary(repository);
+    const draft = draftFor(ownerScope, "must not survive logout");
+    await repository.put(draft);
+    await repository.writeActiveOwner(ownerScope);
+    await boundary.beginLogout();
+    const beforeRecovery = vi.fn();
+
+    await expect(boundary.activate(ownerScope, { beforeRecovery })).resolves.toBeNull();
+
+    expect(beforeRecovery).toHaveBeenCalledWith({
+      nextOwnerScope: ownerScope,
+      previousOwnerScope: ownerScope,
+    });
+    expect(await repository.list(ownerScope)).toEqual([]);
+    expect(await repository.readActiveOwner()).toBe(ownerScope);
+    expect(await repository.readLogoutCleanupPending()).toBe(false);
+  });
+
+  it("keeps the pending logout fail-closed until external cleanup succeeds", async () => {
+    const repository = createInMemoryDraftRepository();
+    const boundary = createDraftOwnerBoundary(repository);
+    const draft = draftFor(ownerScope, "retry cleanup");
+    await repository.put(draft);
+    await repository.writeActiveOwner(ownerScope);
+    await boundary.beginLogout();
+
+    await expect(boundary.activate(ownerScope, {
+      beforeRecovery: async () => {
+        throw new Error("TODO_DRAFT_CLEANUP_FAILED");
+      },
+    })).rejects.toThrow("TODO_DRAFT_CLEANUP_FAILED");
+
+    expect(await repository.list(ownerScope)).toEqual([draft]);
+    expect(await repository.readActiveOwner()).toBe(ownerScope);
+    expect(await repository.readLogoutCleanupPending()).toBe(true);
+  });
+
   it("clears the previous account before activating the next account", async () => {
     const repository = createInMemoryDraftRepository();
     const boundary = createDraftOwnerBoundary(repository);
@@ -79,6 +118,25 @@ describe("draft owner boundary", () => {
     expect(await repository.list(ownerScope)).toEqual([]);
     expect(await repository.list(otherOwnerScope)).toEqual([]);
     expect(await repository.readActiveOwner()).toBeNull();
+    expect(await repository.readLogoutCleanupPending()).toBe(false);
+  });
+
+  it("persists the pending boundary when logout cleanup fails", async () => {
+    const repository = createInMemoryDraftRepository();
+    const boundary = createDraftOwnerBoundary(repository);
+    const draft = draftFor(ownerScope, "pending cleanup");
+    await repository.put(draft);
+    await repository.writeActiveOwner(ownerScope);
+
+    await expect(boundary.logout({
+      beforeClear: async () => {
+        throw new Error("TODO_DRAFT_CLEANUP_FAILED");
+      },
+    })).rejects.toThrow("TODO_DRAFT_CLEANUP_FAILED");
+
+    expect(await repository.list(ownerScope)).toEqual([draft]);
+    expect(await repository.readActiveOwner()).toBe(ownerScope);
+    expect(await repository.readLogoutCleanupPending()).toBe(true);
   });
 
   it("serializes racing account changes", async () => {

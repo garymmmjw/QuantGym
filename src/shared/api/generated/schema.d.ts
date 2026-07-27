@@ -463,6 +463,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v2/training/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one current-account training session snapshot */
+        get: operations["getTrainingSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v2/training/sessions/{session_id}/attempts": {
         parameters: {
             query?: never;
@@ -604,6 +621,7 @@ export interface components {
         };
         /** CompletionResponse */
         CompletionResponse: {
+            nextAction: components["schemas"]["NextTrainingActionResponse"];
             planEffect: components["schemas"]["PlanEffectResponse"] | null;
             /**
              * Sessionid
@@ -612,6 +630,7 @@ export interface components {
             sessionId: string;
             /** Sessionversion */
             sessionVersion: number;
+            skillEffect: components["schemas"]["SkillEffectResponse"];
             /** Xpdelta */
             xpDelta: number;
         };
@@ -853,6 +872,16 @@ export interface components {
             /** Emailverified */
             emailVerified: boolean;
             preferences: components["schemas"]["PreferencesResponse"];
+        };
+        /** NextTrainingActionResponse */
+        NextTrainingActionResponse: {
+            /** Problemid */
+            problemId: string | null;
+            /**
+             * Target
+             * @enum {string}
+             */
+            target: "problems" | "overview";
         };
         /** NoteResponse */
         NoteResponse: {
@@ -1301,6 +1330,17 @@ export interface components {
             /** Favorite */
             favorite: boolean;
         };
+        /** SkillEffectResponse */
+        SkillEffectResponse: {
+            /** Currentbestscore */
+            currentBestScore: number;
+            /** Delta */
+            delta: number;
+            /** Previousbestscore */
+            previousBestScore: number | null;
+            /** Skillkey */
+            skillKey: string;
+        };
         /** SolutionRevealResponse */
         SolutionRevealResponse: {
             /**
@@ -1382,6 +1422,7 @@ export interface components {
              * Format: date-time
              */
             completedAt: string;
+            nextAction: components["schemas"]["NextTrainingActionResponse"];
             planEffect: components["schemas"]["PlanEffectResponse"] | null;
             /**
              * Problemid
@@ -1397,8 +1438,53 @@ export interface components {
             sessionId: string;
             /** Sessionversion */
             sessionVersion: number;
+            skillEffect: components["schemas"]["SkillEffectResponse"];
             /** Xpdelta */
             xpDelta: number;
+        };
+        /** TrainingSessionResponse */
+        TrainingSessionResponse: {
+            /** Attemptid */
+            attemptId: string | null;
+            /** Hinten */
+            hintEn: string | null;
+            /** Hintzh */
+            hintZh: string | null;
+            /**
+             * Lastactivityat
+             * Format: date-time
+             */
+            lastActivityAt: string;
+            /** Plantaskid */
+            planTaskId: string | null;
+            /**
+             * Problemid
+             * Format: uuid
+             */
+            problemId: string;
+            /** Score */
+            score: number | null;
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Sessionversion */
+            sessionVersion: number;
+            /** Solutionen */
+            solutionEn: string | null;
+            /** Solutionzh */
+            solutionZh: string | null;
+            /**
+             * Startedat
+             * Format: date-time
+             */
+            startedAt: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "completed" | "abandoned";
         };
         /** UpdatePlanTaskRequest */
         UpdatePlanTaskRequest: {
@@ -3265,6 +3351,73 @@ export interface operations {
             };
             /** @description Version or idempotency conflict */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getTrainingSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingSessionResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

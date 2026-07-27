@@ -4,7 +4,7 @@ import { createBrowserRouter } from "react-router-dom";
 import { Spinner } from "../../design-system/primitives/Spinner";
 import { COMPATIBILITY_BUSINESS_ROUTES } from "./businessRouteOwnership";
 import { PlanRouteLoadingFallback } from "./PlanRouteLoadingFallback";
-import { ProblemsRoute } from "./ProblemsRoute";
+import { ProblemsRouteLoadingFallback } from "./ProblemsRouteLoadingFallback";
 
 const authPage = lazy(
   () => import("../../pages/v2/AuthPage"),
@@ -29,6 +29,9 @@ const overviewPage = lazy(
 const planPage = lazy(
   () => import("../../pages/plan/PlanPage"),
 );
+const problemsPage = lazy(
+  () => import("../../pages/training/ProblemsPage"),
+);
 
 const legacyCompatibilityElement = (
   <Suspense
@@ -46,9 +49,7 @@ const legacyCompatibilityElement = (
 const compatibilityRouteChildren = COMPATIBILITY_BUSINESS_ROUTES
   .map(({ id, path }) => ({
     path: path.slice(1),
-    element: path === "/problems"
-      ? <ProblemsRoute compatibilityElement={legacyCompatibilityElement} />
-      : legacyCompatibilityElement,
+    element: legacyCompatibilityElement,
     id: `preview-${id}`,
   }));
 
@@ -64,9 +65,16 @@ const nativePlanElement = (
   </Suspense>
 );
 
+const nativeProblemsElement = (
+  <Suspense fallback={<ProblemsRouteLoadingFallback />}>
+    {createElement(problemsPage)}
+  </Suspense>
+);
+
 export const authenticatedBusinessRouteChildren = [
   { index: true, element: nativeOverviewElement },
   { path: "plan", element: nativePlanElement },
+  { path: "problems", element: nativeProblemsElement },
   ...compatibilityRouteChildren,
   {
     path: "*",

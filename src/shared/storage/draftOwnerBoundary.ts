@@ -11,6 +11,10 @@ export type DraftOwnerChange = Readonly<{
 
 export type ActivateDraftOwnerOptions = Readonly<{
   beforeChange?: (change: DraftOwnerChange) => Promise<void> | void;
+  beforeRecovery?: (change: Readonly<{
+    nextOwnerScope: string;
+    previousOwnerScope: string | null;
+  }>) => Promise<void> | void;
 }>;
 
 export type ClearDraftOwnerOptions = Readonly<{
@@ -22,6 +26,8 @@ export type DraftOwnerBoundary = Readonly<{
     ownerScope: string,
     options?: ActivateDraftOwnerOptions,
   ) => Promise<DraftOwnerChange | null>;
+  beginLogout: () => Promise<void>;
+  cancelLogout: () => Promise<void>;
   logout: (options?: ClearDraftOwnerOptions) => Promise<void>;
 }>;
 
@@ -44,7 +50,14 @@ export const createDraftOwnerBoundary = (
   return {
     activate: (ownerScope, options = {}) => serialize(async () => {
       const nextOwnerScope = parseDraftOwnerScope(ownerScope);
-      const previousOwnerScope = await repository.readActiveOwner();
+      let previousOwnerScope = await repository.readActiveOwner();
+      if (await repository.readLogoutCleanupPending()) {
+        await options.beforeRecovery?.({ nextOwnerScope, previousOwnerScope });
+        await repository.clear();
+        await repository.writeActiveOwner(null);
+        await repository.writeLogoutCleanupPending(false);
+        previousOwnerScope = null;
+      }
       if (previousOwnerScope === nextOwnerScope) return null;
 
       if (previousOwnerScope !== null) {
@@ -58,10 +71,18 @@ export const createDraftOwnerBoundary = (
       await repository.writeActiveOwner(nextOwnerScope);
       return null;
     }),
+    beginLogout: () => serialize(async () => {
+      await repository.writeLogoutCleanupPending(true);
+    }),
+    cancelLogout: () => serialize(async () => {
+      await repository.writeLogoutCleanupPending(false);
+    }),
     logout: (options = {}) => serialize(async () => {
+      await repository.writeLogoutCleanupPending(true);
       await options.beforeClear?.();
       await repository.clear();
       await repository.writeActiveOwner(null);
+      await repository.writeLogoutCleanupPending(false);
     }),
   };
 };

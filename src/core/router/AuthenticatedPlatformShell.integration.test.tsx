@@ -8,6 +8,7 @@ import { MemoryRouter, useLocation } from "react-router-dom";
 import { authQueryKeys } from "../../domains/account/auth/auth.queries";
 import type { MeResponse } from "../../domains/account/auth/auth.schema";
 import { ApiError } from "../../shared/api/errors";
+import { recoverableDraftOwnerBoundary } from "../../shared/storage/draftOwnerBoundary";
 import { RuntimeProviders } from "../providers/RuntimeProviders";
 import { AuthenticatedPlatformShell } from "./AuthenticatedPlatformShell";
 import {
@@ -18,8 +19,10 @@ import {
 const shellMocks = vi.hoisted(() => ({
   apiRequest: vi.fn(),
   registerPlanReplay: vi.fn(),
+  registerProblemReplay: vi.fn(),
   registerTrainingReplay: vi.fn(),
   stopPlanReplay: vi.fn(),
+  stopProblemReplay: vi.fn(),
   stopTrainingReplay: vi.fn(),
 }));
 
@@ -33,6 +36,11 @@ vi.mock("../../domains/plan/plan.recovery", () => ({
   registerPlanDraftReconnectReplay: (
     options: Record<string, unknown>,
   ) => shellMocks.registerPlanReplay(options),
+}));
+vi.mock("../../domains/problems/problems.recovery", () => ({
+  registerProblemDraftReconnectReplay: (
+    options: Record<string, unknown>,
+  ) => shellMocks.registerProblemReplay(options),
 }));
 
 const apiRequestMock = shellMocks.apiRequest;
@@ -82,14 +90,16 @@ const renderShell = () => {
   };
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   preferenceController.reset();
   clearPreferenceSyncDrafts();
+  await recoverableDraftOwnerBoundary.cancelLogout();
   liveCsrfCookie = `__Host-qg_csrf=${sessionCsrfProof}`;
   shellMocks.registerTrainingReplay.mockReturnValue(
     shellMocks.stopTrainingReplay,
   );
   shellMocks.registerPlanReplay.mockReturnValue(shellMocks.stopPlanReplay);
+  shellMocks.registerProblemReplay.mockReturnValue(shellMocks.stopProblemReplay);
   vi.spyOn(document, "cookie", "get").mockImplementation(() => liveCsrfCookie);
   apiRequestMock.mockImplementation((
     path: string,
@@ -113,7 +123,7 @@ beforeEach(() => {
 });
 
 describe("AuthenticatedPlatformShell", () => {
-  it("registers owner-verified training and plan reconnect replay and cleans them up", async () => {
+  it("registers owner-verified training, plan, and problem reconnect replay and cleans them up", async () => {
     const { queryClient, unmount } = renderShell();
 
     await waitFor(() => expect(shellMocks.registerTrainingReplay).toHaveBeenCalledOnce());
@@ -134,10 +144,20 @@ describe("AuthenticatedPlatformShell", () => {
       queryClient,
       verifyOwner: expect.any(Function),
     }));
+    await waitFor(() => expect(shellMocks.registerProblemReplay).toHaveBeenCalledOnce());
+    expect(shellMocks.registerProblemReplay).toHaveBeenCalledWith(expect.objectContaining({
+      csrfProof: sessionCsrfProof,
+      onError: expect.any(Function),
+      onReport: expect.any(Function),
+      ownerScope: expect.stringMatching(/^acct-[a-f0-9]{16}$/u),
+      queryClient,
+      verifyOwner: expect.any(Function),
+    }));
 
     unmount();
     expect(shellMocks.stopTrainingReplay).toHaveBeenCalledOnce();
     expect(shellMocks.stopPlanReplay).toHaveBeenCalledOnce();
+    expect(shellMocks.stopProblemReplay).toHaveBeenCalledOnce();
   });
 
   it("keeps same-owner preference versions monotonic when owner checks resolve out of order", async () => {
@@ -297,6 +317,53 @@ describe("AuthenticatedPlatformShell", () => {
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/login"));
     expect(queryClient.getQueryData(["auth", "me"])).toBeUndefined();
     expect(queryClient.getQueryData(["plan-tasks"])).toBeUndefined();
+  });
+
+  it("persists the local cleanup boundary before calling the logout API", async () => {
+    const order: string[] = [];
+    const beginLogout = vi.spyOn(recoverableDraftOwnerBoundary, "beginLogout")
+      .mockImplementation(async () => {
+        order.push("boundary");
+      });
+    apiRequestMock.mockImplementation((path: string) => {
+      if (path === "/me") return Promise.resolve(currentUser);
+      if (path === "/notifications") {
+        return Promise.resolve({ items: [], nextCursor: null, unreadCount: 0 });
+      }
+      if (path === "/todos") return Promise.resolve({ items: [] });
+      if (path === "/auth/logout") {
+        order.push("request");
+        return Promise.resolve({ status: "ok" });
+      }
+      throw new Error(`UNHANDLED_TEST_API:${path}`);
+    });
+    const user = userEvent.setup();
+    renderShell();
+
+    await user.click(screen.getByRole("button", { name: "打开账户菜单" }));
+    await user.click(screen.getByRole("menuitem", { name: "退出登录" }));
+
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("/login"));
+    expect(beginLogout).toHaveBeenCalledOnce();
+    expect(order).toEqual(["boundary", "request"]);
+  });
+
+  it("does not call the logout API when the durable cleanup boundary is unavailable", async () => {
+    vi.spyOn(recoverableDraftOwnerBoundary, "beginLogout").mockRejectedValueOnce(
+      new Error("RECOVERABLE_DRAFT_DATABASE_UNAVAILABLE"),
+    );
+    const user = userEvent.setup();
+    renderShell();
+
+    await user.click(screen.getByRole("button", { name: "打开账户菜单" }));
+    await user.click(screen.getByRole("menuitem", { name: "退出登录" }));
+
+    expect(await screen.findByText("退出前需要确认账号")).toBeVisible();
+    expect(apiRequestMock).not.toHaveBeenCalledWith(
+      "/auth/logout",
+      expect.anything(),
+    );
+    expect(screen.getByTestId("location")).toHaveTextContent("/");
   });
 
   it("makes the logout retry actionable as soon as its recovery toast is visible", async () => {

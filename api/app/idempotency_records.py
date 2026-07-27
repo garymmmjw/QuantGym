@@ -13,7 +13,7 @@ import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 from uuid import UUID, uuid4
 
 from sqlalchemy import text
@@ -101,6 +101,63 @@ class PlanEffectAcknowledgement(IdempotencyAcknowledgement):
 
 
 @dataclass(frozen=True, slots=True)
+class SkillEffectAcknowledgement(IdempotencyAcknowledgement):
+    """Content-free best-score effect safe to persist after completion."""
+
+    skill_key: str
+    previous_best_score: int | None
+    current_best_score: int
+    delta: int
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.skill_key, str) or not self.skill_key.strip():
+            raise ValueError("skill_key must be a non-empty string")
+        if self.previous_best_score is not None:
+            _score("previous_best_score", self.previous_best_score)
+        _score("current_best_score", self.current_best_score)
+        _score("delta", self.delta)
+        baseline = self.previous_best_score or 0
+        if self.current_best_score < baseline:
+            raise ValueError("current_best_score cannot decrease")
+        if self.delta != self.current_best_score - baseline:
+            raise ValueError("delta must equal the best-score increase")
+
+    def to_snapshot(self) -> dict[str, Any]:
+        return {
+            "currentBestScore": self.current_best_score,
+            "delta": self.delta,
+            "previousBestScore": self.previous_best_score,
+            "skillKey": self.skill_key,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class NextTrainingActionAcknowledgement(IdempotencyAcknowledgement):
+    """Stable, content-free navigation decision safe to persist."""
+
+    target: Literal["problems", "overview"]
+    problem_id: UUID | None
+
+    def __post_init__(self) -> None:
+        if self.target not in {"problems", "overview"}:
+            raise ValueError("target must be problems or overview")
+        if self.target == "problems":
+            if self.problem_id is None:
+                raise ValueError("problem_id is required for a problems target")
+            _uuid("problem_id", self.problem_id)
+        elif self.problem_id is not None:
+            raise ValueError("problem_id must be null for an overview target")
+
+    def to_snapshot(self) -> dict[str, Any]:
+        return {
+            "problemId": (
+                None if self.problem_id is None else str(self.problem_id)
+            ),
+            "target": self.target,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class ProblemCompletionAcknowledgement(IdempotencyAcknowledgement):
     """The only successful public snapshot for ``problems.complete``."""
 
@@ -109,12 +166,22 @@ class ProblemCompletionAcknowledgement(IdempotencyAcknowledgement):
     session_id: UUID
     session_version: int
     xp_delta: int
+    skill_effect: SkillEffectAcknowledgement
+    next_action: NextTrainingActionAcknowledgement
     plan_effect: PlanEffectAcknowledgement | None = None
 
     def __post_init__(self) -> None:
         _uuid("session_id", self.session_id)
         _positive_int("session_version", self.session_version)
         _nonnegative_int("xp_delta", self.xp_delta)
+        if not isinstance(self.skill_effect, SkillEffectAcknowledgement):
+            raise ValueError("skill_effect must be a SkillEffectAcknowledgement")
+        if not isinstance(
+            self.next_action, NextTrainingActionAcknowledgement
+        ):
+            raise ValueError(
+                "next_action must be a NextTrainingActionAcknowledgement"
+            )
         if self.plan_effect is not None and not isinstance(
             self.plan_effect, PlanEffectAcknowledgement
         ):
@@ -124,6 +191,8 @@ class ProblemCompletionAcknowledgement(IdempotencyAcknowledgement):
         snapshot: dict[str, Any] = {
             "sessionId": str(self.session_id),
             "sessionVersion": self.session_version,
+            "skillEffect": self.skill_effect.to_snapshot(),
+            "nextAction": self.next_action.to_snapshot(),
             "xpDelta": self.xp_delta,
         }
         if self.plan_effect is not None:
@@ -912,12 +981,58 @@ def _validate_snapshot_shape(
     if operation == ProblemCompletionAcknowledgement.operation:
         _exact_keys(
             snapshot,
-            required={"sessionId", "sessionVersion", "xpDelta"},
+            required={
+                "nextAction",
+                "sessionId",
+                "sessionVersion",
+                "skillEffect",
+                "xpDelta",
+            },
             optional={"planEffect"},
         )
         _snapshot_uuid("sessionId", snapshot["sessionId"])
         _positive_int("sessionVersion", snapshot["sessionVersion"])
         _nonnegative_int("xpDelta", snapshot["xpDelta"])
+        skill_effect = snapshot["skillEffect"]
+        if not isinstance(skill_effect, Mapping):
+            raise ValueError("skillEffect must be an object")
+        _exact_keys(
+            skill_effect,
+            required={
+                "currentBestScore",
+                "delta",
+                "previousBestScore",
+                "skillKey",
+            },
+        )
+        skill_key = skill_effect["skillKey"]
+        if not isinstance(skill_key, str) or not skill_key.strip():
+            raise ValueError("skillKey must be a non-empty string")
+        previous_best_score = skill_effect["previousBestScore"]
+        if previous_best_score is not None:
+            _score("previousBestScore", previous_best_score)
+        current_best_score = _score(
+            "currentBestScore", skill_effect["currentBestScore"]
+        )
+        delta = _score("delta", skill_effect["delta"])
+        baseline = previous_best_score or 0
+        if current_best_score < baseline:
+            raise ValueError("currentBestScore cannot decrease")
+        if delta != current_best_score - baseline:
+            raise ValueError("delta must equal the best-score increase")
+        next_action = snapshot["nextAction"]
+        if not isinstance(next_action, Mapping):
+            raise ValueError("nextAction must be an object")
+        _exact_keys(next_action, required={"problemId", "target"})
+        target = next_action["target"]
+        problem_id = next_action["problemId"]
+        if target == "problems":
+            _snapshot_uuid("problemId", problem_id)
+        elif target == "overview":
+            if problem_id is not None:
+                raise ValueError("overview problemId must be null")
+        else:
+            raise ValueError("nextAction target is invalid")
         plan_effect = snapshot.get("planEffect")
         if plan_effect is not None:
             if not isinstance(plan_effect, Mapping):

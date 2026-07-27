@@ -6,17 +6,26 @@ export type AttemptSubmissionResponse = components["schemas"]["AttemptSubmission
 export type CompleteTrainingRequest = components["schemas"]["CompleteTrainingRequest"];
 export type CompletionResponse = components["schemas"]["CompletionResponse"];
 export type HintUseResponse = components["schemas"]["HintUseResponse"];
+export type NextTrainingAction = components["schemas"]["NextTrainingActionResponse"];
 export type PlanEffect = components["schemas"]["PlanEffectResponse"];
+export type SkillEffect = components["schemas"]["SkillEffectResponse"];
 export type SolutionRevealResponse = components["schemas"]["SolutionRevealResponse"];
 export type StartTrainingRequest = components["schemas"]["StartTrainingRequest"];
 export type StartTrainingResponse = components["schemas"]["StartTrainingResponse"];
 export type SubmitAttemptRequest = components["schemas"]["SubmitAttemptRequest"];
 export type TrainingResultResponse = components["schemas"]["TrainingResultResponse"];
+export type TrainingSessionResponse = components["schemas"]["TrainingSessionResponse"];
 export type VersionedTrainingRequest = components["schemas"]["VersionedTrainingRequest"];
 
 const isoDateTimeSchema = z.string().datetime({ offset: true });
 const uuidSchema = z.string().uuid();
 const positiveVersionSchema = z.number().int().positive();
+
+export const trainingSessionStatusSchema = z.enum([
+  "active",
+  "completed",
+  "abandoned",
+]);
 
 export const startTrainingRequestSchema = z.object({
   planTaskId: uuidSchema.nullable().optional(),
@@ -59,6 +68,55 @@ export const planEffectSchema: z.ZodType<
   taskCompleted: z.boolean(),
 }).strict();
 
+export const skillEffectSchema: z.ZodType<
+  SkillEffect,
+  SkillEffect
+> = z.object({
+  currentBestScore: z.number().int().min(0).max(100),
+  delta: z.number().int().min(0).max(100),
+  previousBestScore: z.number().int().min(0).max(100).nullable(),
+  skillKey: z.string().trim().min(1),
+}).strict().superRefine((effect, context) => {
+  const baseline = effect.previousBestScore ?? 0;
+  if (effect.currentBestScore < baseline) {
+    context.addIssue({
+      code: "custom",
+      message: "Current best score cannot decrease.",
+      path: ["currentBestScore"],
+    });
+  }
+  if (effect.delta !== effect.currentBestScore - baseline) {
+    context.addIssue({
+      code: "custom",
+      message: "Delta must equal the best-score increase.",
+      path: ["delta"],
+    });
+  }
+});
+
+export const nextTrainingActionSchema: z.ZodType<
+  NextTrainingAction,
+  NextTrainingAction
+> = z.object({
+  problemId: uuidSchema.nullable(),
+  target: z.enum(["problems", "overview"]),
+}).strict().superRefine((action, context) => {
+  if (action.target === "problems" && action.problemId === null) {
+    context.addIssue({
+      code: "custom",
+      message: "A problems action requires a problem ID.",
+      path: ["problemId"],
+    });
+  }
+  if (action.target === "overview" && action.problemId !== null) {
+    context.addIssue({
+      code: "custom",
+      message: "An overview action cannot include a problem ID.",
+      path: ["problemId"],
+    });
+  }
+});
+
 const trainingEventResponseShape = {
   eventId: uuidSchema,
   eventSequence: z.number().int().positive(),
@@ -75,6 +133,32 @@ export const startTrainingResponseSchema: z.ZodType<
   sessionId: uuidSchema,
   sessionVersion: positiveVersionSchema,
 }).strict();
+
+export const trainingSessionResponseSchema: z.ZodType<
+  TrainingSessionResponse,
+  TrainingSessionResponse
+> = z.object({
+  attemptId: uuidSchema.nullable(),
+  hintEn: z.string().nullable(),
+  hintZh: z.string().nullable(),
+  lastActivityAt: isoDateTimeSchema,
+  planTaskId: uuidSchema.nullable(),
+  problemId: uuidSchema,
+  score: z.number().int().min(0).max(100).nullable(),
+  sessionId: uuidSchema,
+  sessionVersion: positiveVersionSchema,
+  solutionEn: z.string().nullable(),
+  solutionZh: z.string().nullable(),
+  startedAt: isoDateTimeSchema,
+  status: trainingSessionStatusSchema,
+}).strict().superRefine((session, context) => {
+  if ((session.attemptId === null) === (session.score === null)) return;
+  context.addIssue({
+    code: "custom",
+    message: "Latest evaluated attempt identity and score must be coherent.",
+    path: [session.attemptId === null ? "attemptId" : "score"],
+  });
+});
 
 export const hintUseResponseSchema: z.ZodType<
   HintUseResponse,
@@ -107,9 +191,11 @@ export const completionResponseSchema: z.ZodType<
   CompletionResponse,
   CompletionResponse
 > = z.object({
+  nextAction: nextTrainingActionSchema,
   planEffect: planEffectSchema.nullable(),
   sessionId: uuidSchema,
   sessionVersion: positiveVersionSchema,
+  skillEffect: skillEffectSchema,
   xpDelta: z.number().int().nonnegative(),
 }).strict();
 
@@ -118,10 +204,12 @@ export const trainingResultResponseSchema: z.ZodType<
   TrainingResultResponse
 > = z.object({
   completedAt: isoDateTimeSchema,
+  nextAction: nextTrainingActionSchema,
   planEffect: planEffectSchema.nullable(),
   problemId: uuidSchema,
   score: z.number().int().min(0).max(100),
   sessionId: uuidSchema,
   sessionVersion: positiveVersionSchema,
+  skillEffect: skillEffectSchema,
   xpDelta: z.number().int().nonnegative(),
 }).strict();

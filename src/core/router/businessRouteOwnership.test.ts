@@ -15,17 +15,21 @@ describe("business route ownership", () => {
     );
   });
 
-  it("moves Overview and Plan to native ownership and keeps 20 routes compatible", () => {
+  it("moves Overview, Plan, and Problems to native ownership and keeps 19 routes compatible", () => {
     expect(NATIVE_BUSINESS_ROUTES).toEqual([
       { id: "overview", owner: "native", path: "/" },
       { id: "plan", owner: "native", path: "/plan" },
+      { id: "problems", owner: "native", path: "/problems" },
     ]);
-    expect(COMPATIBILITY_BUSINESS_ROUTES).toHaveLength(20);
+    expect(COMPATIBILITY_BUSINESS_ROUTES).toHaveLength(19);
     expect(COMPATIBILITY_BUSINESS_ROUTES).not.toContainEqual(
       expect.objectContaining({ path: "/" }),
     );
     expect(COMPATIBILITY_BUSINESS_ROUTES).not.toContainEqual(
       expect.objectContaining({ path: "/plan" }),
+    );
+    expect(COMPATIBILITY_BUSINESS_ROUTES).not.toContainEqual(
+      expect.objectContaining({ path: "/problems" }),
     );
     expect(COMPATIBILITY_BUSINESS_ROUTES.every(
       ({ owner }) => owner === "compatibility",

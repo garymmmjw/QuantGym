@@ -19,6 +19,7 @@
   /* stylelint-disable-next-line color-hex-length -- approved contract literal */
   --qg-on-action-primary: #ffffff;
   --qg-status-success: #16a06a;
+  --qg-status-success-text: #087647;
   --qg-status-warning: #ff9f2e;
   --qg-status-danger: #d0524b;
   --qg-status-danger-text: #b13b35;

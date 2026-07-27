@@ -16,8 +16,10 @@ from api.app.errors import ApiError
 from api.app.idempotency import IdempotencyKey
 from api.app.idempotency_records import (
     IdempotencyCompletion,
+    NextTrainingActionAcknowledgement,
     PlanEffectAcknowledgement,
     ProblemCompletionAcknowledgement,
+    SkillEffectAcknowledgement,
     complete_idempotency_record,
     execute_idempotent_operation,
     replay_idempotency_record,
@@ -162,6 +164,16 @@ def problem_acknowledgement(
         session_id=RESOURCE_ID,
         session_version=2,
         xp_delta=xp_delta,
+        skill_effect=SkillEffectAcknowledgement(
+            skill_key="arrays",
+            previous_best_score=80,
+            current_best_score=100,
+            delta=20,
+        ),
+        next_action=NextTrainingActionAcknowledgement(
+            target="overview",
+            problem_id=None,
+        ),
         plan_effect=(
             PlanEffectAcknowledgement(task_completed=True, plan_version=4)
             if with_plan_effect
@@ -231,9 +243,16 @@ def test_completed_response_replays_after_the_domain_resource_version_advances()
     assert replay.status == "completed"
     assert replay.response_status == 200
     assert replay.response_snapshot == {
+        "nextAction": {"problemId": None, "target": "overview"},
         "planEffect": {"planVersion": 4, "taskCompleted": True},
         "sessionId": str(RESOURCE_ID),
         "sessionVersion": 2,
+        "skillEffect": {
+            "currentBestScore": 100,
+            "delta": 20,
+            "previousBestScore": 80,
+            "skillKey": "arrays",
+        },
         "xpDelta": 10,
     }
     assert replay.resource_id == RESOURCE_ID
@@ -310,6 +329,16 @@ def test_problem_acknowledgement_rejects_non_typed_values() -> None:
             session_id=RESOURCE_ID,
             session_version=True,  # type: ignore[arg-type]
             xp_delta=10,
+            skill_effect=SkillEffectAcknowledgement(
+                skill_key="arrays",
+                previous_best_score=None,
+                current_best_score=100,
+                delta=100,
+            ),
+            next_action=NextTrainingActionAcknowledgement(
+                target="overview",
+                problem_id=None,
+            ),
         )
 
 

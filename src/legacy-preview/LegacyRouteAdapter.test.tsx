@@ -48,9 +48,9 @@ describe("LegacyRouteAdapter", () => {
 
   it("announces ready, error, and explicit reload states", () => {
     vi.useFakeTimers();
-    renderAdapter("/problems");
+    renderAdapter("/interview");
 
-    const initialFrame = screen.getByTitle("题目 · 旧版兼容页面");
+    const initialFrame = screen.getByTitle("模拟面试 · 旧版兼容页面");
     act(() => {
       vi.advanceTimersByTime(20_000);
     });
@@ -59,11 +59,11 @@ describe("LegacyRouteAdapter", () => {
 
     fireEvent.click(screen.getAllByRole("button", { name: "重新加载兼容页面" })[1]!);
     expect(screen.getByRole("status")).toHaveTextContent("正在载入兼容页面");
-    const reloadedFrame = screen.getByTitle("题目 · 旧版兼容页面");
+    const reloadedFrame = screen.getByTitle("模拟面试 · 旧版兼容页面");
     expect(reloadedFrame).not.toBe(initialFrame);
     expect(reloadedFrame).toHaveAttribute(
       "src",
-      "https://legacy-compat.quantgym-v2-preview.pages.dev/problems",
+      "https://legacy-compat.quantgym-v2-preview.pages.dev/interview",
     );
     fireEvent.load(reloadedFrame);
     expect(screen.getByRole("status")).toHaveTextContent("兼容页面已载入");
