@@ -47,6 +47,8 @@
     "check:frontend-upgrade:phase1:surfaces": "node scripts/check-frontend-upgrade-phase1-system-surfaces.mjs",
     "check:frontend-upgrade:phase1:aggregate": "node scripts/check-frontend-upgrade-phase1.mjs",
     "check:frontend-upgrade:phase1": "node scripts/check-frontend-upgrade-phase1.mjs",
+    "test:frontend-upgrade:phase2": "node --test --test-concurrency=1 tests/frontend-upgrade-phase2*.test.mjs",
+    "check:frontend-upgrade:phase2:contracts": "node scripts/check-frontend-upgrade-phase2-contracts.mjs",
     "generate:openapi:v2": "node scripts/openapi-v2.mjs --write",
     "check:openapi:v2": "node scripts/openapi-v2.mjs --check",
     "typecheck:v2": "tsc --project tsconfig.v2.json --noEmit",

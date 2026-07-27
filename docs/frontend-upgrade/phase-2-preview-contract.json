@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "phase": 2,
+  "environment": "preview",
+  "branch": "codex/frontend-v2-preview",
+  "commits": {
+    "phase2AcceptanceAncestor": "4bed12b2b9951276124df2fff18b23f2319c8de1",
+    "phase1ApplicationCommit": "5a3b6f33b7f2a4d15f0a81ca57f81570ca89c6a3",
+    "phase1EvidenceCommit": "d87b20f8630fdc39f46e1065c5ffee14bf3ca8dd",
+    "phase1HandoffCommit": "4faba0653e28e4ca28edd8521a053d00d0d88e57",
+    "requiredAncestorOrder": [
+      "phase1ApplicationCommit",
+      "phase1EvidenceCommit",
+      "phase1HandoffCommit",
+      "phase2AcceptanceAncestor",
+      "candidateApplicationCommit"
+    ],
+    "candidateApplicationCommitSource": "provider-evidence.applicationCommit",
+    "candidateApiCommitSource": "provider-evidence.deployments.api.commit",
+    "candidatePagesCommitSource": "provider-evidence.deployments.pages.commit",
+    "candidateCommitsMustMatch": true,
+    "acceptanceAncestorRequired": true
+  },
+  "acceptedPhase1": {
+    "reviewPath": "docs/superpowers/reviews/2026-07-18-quantgym-frontend-platform-upgrade-phase-1.md",
+    "previewUrl": "https://quantgym-v2-preview.pages.dev/",
+    "pullRequest": "garymmmjw/QuantGym#130",
+    "pullRequestMustRemainDraft": true,
+    "pullRequestMustRemainUnmerged": true
+  },
+  "postgresMajor": 18,
+  "governance": {
+    "operator": "Gary",
+    "budgetOwner": "Gary",
+    "dataResetOwner": "Gary",
+    "destroyOwner": "Gary",
+    "reviewDate": "2026-07-29"
+  },
+  "resources": {
+    "pagesProject": "quantgym-v2-preview",
+    "apiService": "quantgym-v2-preview-api",
+    "llmService": "quantgym-v2-preview-llm",
+    "postgres": "quantgym-v2-preview-postgres",
+    "r2Bucket": "quantgym-v2-preview-media",
+    "legacyPagesBranch": "legacy-compat",
+    "legacyPagesAlias": "legacy-compat.quantgym-v2-preview.pages.dev"
+  },
+  "topology": {
+    "browserApiBase": "/api/v2",
+    "edgeProxy": "cloudflare-pages-function",
+    "apiProvider": "render",
+    "llmVisibility": "internal",
+    "browserDirectUpstreamAllowed": false,
+    "edgeProofHeader": "X-QuantGym-Edge-Token"
+  },
+  "routeOwnership": {
+    "nativeRoutes": [
+      "overview",
+      "plan",
+      "problems"
+    ],
+    "nativeRouteCount": 3,
+    "compatibilityRoutes": [
+      "interview",
+      "tools",
+      "skills",
+      "league",
+      "pk",
+      "poker",
+      "experiences",
+      "news",
+      "community",
+      "messages",
+      "network",
+      "resume",
+      "jobs",
+      "companies",
+      "library",
+      "courses",
+      "memory",
+      "settings",
+      "account"
+    ],
+    "compatibilityRouteCount": 19,
+    "totalBusinessRouteCount": 22,
+    "compatibilityAdapterPreviewOnly": true,
+    "nativeRoutesMayUseCompatibilityAdapter": false,
+    "nativeRoutesUseV2DataOnly": true,
+    "compatibilityStateAcceptedAsPhase2Evidence": false
+  },
+  "isolation": {
+    "productionResourcesAllowed": false,
+    "productionMutationAllowed": false,
+    "productionDeploymentAllowed": false,
+    "productionPromotionAllowed": false,
+    "productionDatabaseSharingAllowed": false,
+    "productionBucketSharingAllowed": false,
+    "productionEnvironmentGroupSharingAllowed": false,
+    "legacyDataImportAllowed": false,
+    "dualWriteAllowed": false,
+    "previewSyntheticOrRightsLabelledDataOnly": true
+  },
+  "deployment": {
+    "automaticPreviewDeployMayBypassMigration": false,
+    "databaseMigrationRequiresBackupRestoreEvidence": true,
+    "databaseMigrationRequiresTestedDowngrade": true,
+    "staticRollbackTarget": "previous-cloudflare-pages-build",
+    "productionMustRemainUnchanged": true
+  },
+  "evidence": {
+    "namespace": "390-frontend-upgrade-phase-2-",
+    "providerEvidencePath": "artifacts/frontend-upgrade/phase-2-preview/provider-evidence.redacted.json",
+    "providerEvidenceMode": "0600",
+    "providerEvidenceMaximumLifetimeDays": 7,
+    "providerEvidenceExpiresAtRequired": true,
+    "authenticatedProviderCaptureRequired": true,
+    "exactCandidateCommitAlignmentRequired": true,
+    "rawProviderResponsesAllowed": false,
+    "harFilesAllowed": false,
+    "signedUrlsAllowed": false,
+    "databaseExportsAllowed": false,
+    "productionControlContinuityRequired": true,
+    "aggregateStatusCeiling": "ready-for-review"
+  }
+}

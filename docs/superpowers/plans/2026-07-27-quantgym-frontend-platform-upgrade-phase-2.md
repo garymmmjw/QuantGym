@@ -147,6 +147,12 @@ The completion transaction must atomically:
 Repeating the same completion idempotency key returns the same acknowledged result and never
 creates a second reward. Reusing it for a different payload fails closed.
 
+Reward-producing and create mutations use a persistent `idempotency_records` boundary with an
+operation, owner, key hash, request fingerprint, state, acknowledged response snapshot, resource
+identity, timestamps, and expiry. Its successful response snapshot is committed in the same
+transaction as the reward. It does not depend on the resource remaining at the original version,
+and it never stores the raw idempotency key, CSRF proof, cookie, answer, or note contents.
+
 ### 3.4 Phase 2 PostgreSQL migration
 
 Create Alembic revision `0002_phase2_daily_training` with a tested downgrade. The exact schema
@@ -164,12 +170,15 @@ contract covers:
 - `answers`
 - `training_events`
 - `xp_ledger`
+- `idempotency_records`
 
 Extend `plan_tasks` only through explicit foreign keys/versioned fields needed to attach official
 plan tasks to a plan and training target. Preserve Phase 1 audit, user, session, preference,
 notification, Todo, and media tables. Use UUID primary keys, UTC timestamps, user-scoped unique
 constraints, check constraints, foreign keys, and indexes for every query path. Ledger/event rows
-are append-only through the service boundary.
+are append-only through the service boundary. Extend notifications additively with a structured,
+validated action target and dedupe key so completion notifications can open the acknowledged
+result without placing arbitrary URLs or private response content in the row.
 
 The migration gate proves `upgrade 0001 -> head`, `downgrade head -> 0001`, and a second upgrade
 produce the same normalized schema. Provider migration runs only after backup/restore evidence
@@ -391,7 +400,8 @@ feat: add v2 problem catalog and progress api
 2. Implement start/resume, hint, attempt, solution reveal, completion, and result reads.
 3. Make completion atomically write the official progress, event, XP, plan, and notification
    effects listed in Section 3.3.
-4. Prove retry returns one reward, conflicting key reuse fails, and partial writes roll back.
+4. Prove persistent response-snapshot replay returns one reward even after the resource advances,
+   conflicting key reuse fails, and partial writes roll back.
 5. Compose Overview only from server-confirmed read models.
 
 ### Verify
