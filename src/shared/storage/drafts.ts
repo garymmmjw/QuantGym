@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { createIdempotencyKey } from "../api/mutationRecovery";
+import {
+  classifyMutationFailure,
+  createIdempotencyKey,
+  type MutationFailure,
+} from "../api/mutationRecovery";
 
 export const RECOVERABLE_DRAFT_DATABASE_NAME = "qg-v2-phase2-draft-recovery";
 export const RECOVERABLE_DRAFT_DATABASE_VERSION = 1;
@@ -16,11 +20,13 @@ const ownerScopeSchema = z.string().regex(/^acct-[a-f0-9]{16}$/u);
 const draftKindSchema = z.string().regex(/^(?:problems|plan|training)\.[a-z][a-z0-9.-]{0,79}$/u);
 const resourceIdSchema = z.string().trim().min(1).max(256);
 const idempotencyKeySchema = z.string().regex(/^[A-Za-z0-9_-]{16,128}$/u);
+const generationIdSchema = z.string().regex(/^gen-[A-Za-z0-9_-]{16,256}$/u);
 const timestampSchema = z.string().datetime({ offset: true });
 
 const persistedDraftSchema = z.object({
   attemptCount: z.number().int().nonnegative(),
   draftId: z.string().regex(/^draft-[A-Za-z0-9_-]{16,180}$/u),
+  generationId: generationIdSchema.optional(),
   idempotencyKey: idempotencyKeySchema,
   kind: draftKindSchema,
   lastAttemptAt: timestampSchema.nullable(),
@@ -80,6 +86,7 @@ export type RecoverableDraftKind = `${"problems" | "plan" | "training"}.${string
 export type RecoverableDraft<Payload extends DraftJsonValue = DraftJsonValue> = Readonly<{
   attemptCount: number;
   draftId: string;
+  generationId: string;
   idempotencyKey: string;
   kind: RecoverableDraftKind;
   lastAttemptAt: string | null;
@@ -114,7 +121,16 @@ export type RecoverableDraftRepository = Readonly<{
 
 type DraftIdentity = Pick<
   RecoverableDraft,
-  "draftId" | "idempotencyKey" | "ownerScope" | "updatedAt"
+  | "draftId"
+  | "generationId"
+  | "idempotencyKey"
+  | "kind"
+  | "ownerScope"
+  | "payload"
+  | "resourceId"
+  | "schemaVersion"
+  | "serverVersion"
+  | "updatedAt"
 >;
 
 const invalidRecord = (): never => {
@@ -198,6 +214,9 @@ export const decodePersistedDraft = (value: unknown): RecoverableDraft => {
   if (!parsed.success) return invalidRecord();
   return {
     ...parsed.data,
+    generationId: parsed.data.generationId ?? generationIdSchema.parse(
+      `gen-legacy-${parsed.data.idempotencyKey}-${parsed.data.updatedAt.replace(/\D/gu, "")}`,
+    ),
     kind: parsed.data.kind as RecoverableDraftKind,
     payload: parsePayload(parsed.data.payload),
   };
@@ -223,6 +242,7 @@ export const createRecoverableDraft = <Payload extends DraftJsonValue>(
   return decodePersistedDraft({
     attemptCount: 0,
     draftId: `draft-${ownerScope.slice(5)}-${idempotencyKey}`,
+    generationId: `gen-${randomSuffix()}`,
     idempotencyKey,
     kind: input.kind,
     lastAttemptAt: null,
@@ -245,6 +265,7 @@ export const reviseRecoverableDraft = <Payload extends DraftJsonValue>(
 ): RecoverableDraft<Payload> => decodePersistedDraft({
   ...draft,
   attemptCount: 0,
+  generationId: `gen-${randomSuffix()}`,
   lastAttemptAt: null,
   payload: revision.payload,
   serverVersion: revision.serverVersion,
@@ -253,8 +274,14 @@ export const reviseRecoverableDraft = <Payload extends DraftJsonValue>(
 
 const sameDraftGeneration = (left: DraftIdentity, right: DraftIdentity) => (
   left.draftId === right.draftId
+  && left.generationId === right.generationId
   && left.idempotencyKey === right.idempotencyKey
+  && left.kind === right.kind
   && left.ownerScope === right.ownerScope
+  && JSON.stringify(left.payload) === JSON.stringify(right.payload)
+  && left.resourceId === right.resourceId
+  && left.schemaVersion === right.schemaVersion
+  && left.serverVersion === right.serverVersion
   && left.updatedAt === right.updatedAt
 );
 
@@ -439,7 +466,7 @@ const quarantinePersistedRecord = (
   draftStore.delete(key);
 };
 
-const createIndexedDbDraftRepository = (): RecoverableDraftRepository => ({
+export const createIndexedDbDraftRepository = (): RecoverableDraftRepository => ({
   acknowledge: async (draft) => withDatabase(async (database) => {
     const transaction = database.transaction(
       [DRAFT_STORE_NAME, QUARANTINE_STORE_NAME],
@@ -639,15 +666,29 @@ export const recoverableDraftRepository: RecoverableDraftRepository = (
     : createIndexedDbDraftRepository()
 );
 
-export type DraftReplayAcknowledgement = Readonly<{ acknowledged: boolean }>;
+export type DraftReplayFailure = Pick<
+  MutationFailure,
+  "code" | "requestId" | "retryable" | "state"
+>;
+
+export type DraftReplayAcknowledgement = Readonly<{
+  acknowledged: boolean;
+  failure?: DraftReplayFailure;
+}>;
+
+export type DraftReplayRetention = Readonly<{
+  draftId: string;
+  reason: "deferred" | "failed" | "superseded";
+  code?: string;
+  requestId?: string | null;
+  retryable?: boolean;
+  state?: MutationFailure["state"];
+}>;
 
 export type DraftReplayReport = Readonly<{
   acknowledged: readonly string[];
   attempted: readonly string[];
-  retained: readonly Readonly<{
-    draftId: string;
-    reason: "deferred" | "failed" | "superseded";
-  }>[];
+  retained: readonly DraftReplayRetention[];
 }>;
 
 export type ReplayRecoverableDraftsOptions = Readonly<{
@@ -680,10 +721,7 @@ const executeDraftReplay = async (
     .filter((draft) => kinds.has(draft.kind));
   const acknowledged: string[] = [];
   const attempted: string[] = [];
-  const retained: Array<{
-    draftId: string;
-    reason: "deferred" | "failed" | "superseded";
-  }> = [];
+  const retained: DraftReplayRetention[] = [];
 
   for (const draft of drafts) {
     abortIfRequested(options.signal);
@@ -697,7 +735,11 @@ const executeDraftReplay = async (
       const acknowledgement = await options.replay(attempt, options.signal);
       abortIfRequested(options.signal);
       if (!acknowledgement.acknowledged) {
-        retained.push({ draftId: attempt.draftId, reason: "deferred" });
+        retained.push({
+          draftId: attempt.draftId,
+          reason: "deferred",
+          ...acknowledgement.failure,
+        });
         continue;
       }
       if (await repository.acknowledge(attempt)) {
@@ -707,7 +749,15 @@ const executeDraftReplay = async (
       }
     } catch (error) {
       if (options.signal?.aborted === true) throw error;
-      retained.push({ draftId: attempt.draftId, reason: "failed" });
+      const failure = classifyMutationFailure(error);
+      retained.push({
+        code: failure.code,
+        draftId: attempt.draftId,
+        reason: "failed",
+        requestId: failure.requestId,
+        retryable: failure.retryable,
+        state: failure.state,
+      });
     }
   }
 

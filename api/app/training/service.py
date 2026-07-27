@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import text
+from pydantic import SecretStr
 
 from ..errors import ApiError
 from ..idempotency import IdempotencyKey, request_fingerprint
@@ -18,7 +20,10 @@ from ..idempotency_records import (
     IdempotencyCompletion,
     PlanEffectAcknowledgement,
     ProblemCompletionAcknowledgement,
+    TrainingAttemptAcknowledgement,
+    TrainingHintAcknowledgement,
     TrainingSessionAcknowledgement,
+    TrainingSolutionAcknowledgement,
     execute_idempotent_operation,
 )
 
@@ -139,11 +144,13 @@ class TrainingService:
         clock: Callable[[], datetime] = utc_now,
         id_factory: Callable[[], UUID] = uuid4,
         completion_hook: Callable[[str, Any], None] | None = None,
+        fingerprint_secret: SecretStr | str | None = None,
     ) -> None:
         self._engine = engine
         self._clock = clock
         self._id_factory = id_factory
         self._completion_hook = completion_hook
+        self._attempt_fingerprint_key = _attempt_fingerprint_key(fingerprint_secret)
 
     def start_or_resume(
         self,
@@ -194,37 +201,46 @@ class TrainingService:
         user_id: UUID,
         session_id: UUID,
         expected_version: int,
+        idempotency_key: IdempotencyKey,
     ) -> HintUseResult:
         now = self._now()
+        request_hash = request_fingerprint(
+            event_type=TrainingHintAcknowledgement.operation,
+            resource_id=str(session_id),
+            payload={"version": expected_version},
+        )
         with self._engine.begin() as connection:
-            session = self._lock_session(
+            record = execute_idempotent_operation(
+                connection,
+                user_id=user_id,
+                operation=TrainingHintAcknowledgement.operation,
+                key=idempotency_key,
+                request_hash=request_hash,
+                now=now,
+                expires_at=now + timedelta(hours=24),
+                reward_callback=lambda active_connection: self._use_hint(
+                    active_connection,
+                    user_id=user_id,
+                    session_id=session_id,
+                    expected_version=expected_version,
+                    now=now,
+                ),
+                completion_clock=lambda: now,
+                id_factory=self._id_factory,
+            )
+            event = _training_event_from_snapshot(record.response_snapshot)
+            content = self._read_authorized_content(
                 connection,
                 user_id=user_id,
                 session_id=session_id,
-                expected_version=expected_version,
-            )
-            event_id, event_sequence = self._append_event(
-                connection,
-                session=session,
-                event_type="hint_used",
-                attempt_id=None,
-                payload={},
-                now=now,
-            )
-            session_version = self._advance_session(connection, session=session, now=now)
-            self._upsert_progress(
-                connection,
-                session=session,
-                now=now,
-                hint_delta=1,
             )
         return HintUseResult(
-            session_id=session_id,
-            session_version=session_version,
-            event_id=event_id,
-            event_sequence=event_sequence,
-            hint_zh=session["hint_zh"],
-            hint_en=session["hint_en"],
+            session_id=event.session_id,
+            session_version=event.session_version,
+            event_id=event.event_id,
+            event_sequence=event.event_sequence,
+            hint_zh=content["hint_zh"],
+            hint_en=content["hint_en"],
         )
 
     def submit_attempt(
@@ -235,105 +251,45 @@ class TrainingService:
         expected_version: int,
         answer_kind: str,
         answer: str,
+        idempotency_key: IdempotencyKey,
     ) -> AttemptSubmissionResult:
         now = self._now()
         private_answer = _private_answer(answer)
         if answer_kind not in {"text", "code", "multiple_choice"}:
             raise ValueError("answer_kind is invalid")
+        answer_sha256 = hashlib.sha256(private_answer.encode("utf-8")).hexdigest()
+        request_hash = _attempt_request_fingerprint(
+            self._attempt_fingerprint_key,
+            user_id=user_id,
+            idempotency_key=idempotency_key,
+            session_id=session_id,
+            expected_version=expected_version,
+            answer_kind=answer_kind,
+            private_answer=private_answer,
+        )
         with self._engine.begin() as connection:
-            session = self._lock_session(
+            record = execute_idempotent_operation(
                 connection,
                 user_id=user_id,
-                session_id=session_id,
-                expected_version=expected_version,
-            )
-            attempt_sequence = int(
-                connection.execute(
-                    text(
-                        """
-                        SELECT COALESCE(max(sequence), 0) + 1
-                        FROM attempts
-                        WHERE training_session_id = :session_id
-                        """
-                    ),
-                    {"session_id": session_id},
-                ).scalar_one()
-            )
-            attempt_id = self._new_id()
-            answer_id = self._new_id()
-            score = 100
-            connection.execute(
-                text(
-                    """
-                    INSERT INTO attempts
-                        (id, user_id, training_session_id, problem_id, sequence,
-                         status, score, evaluation, submitted_at, evaluated_at,
-                         created_at)
-                    VALUES
-                        (:id, :user_id, :session_id, :problem_id, :sequence,
-                         'evaluated', :score, 'recorded', :now, :now, :now)
-                    """
-                ),
-                {
-                    "id": attempt_id,
-                    "user_id": user_id,
-                    "session_id": session_id,
-                    "problem_id": session["problem_id"],
-                    "sequence": attempt_sequence,
-                    "score": score,
-                    "now": now,
-                },
-            )
-            connection.execute(
-                text(
-                    """
-                    INSERT INTO answers
-                        (id, user_id, attempt_id, kind, body, body_sha256, created_at)
-                    VALUES
-                        (:id, :user_id, :attempt_id, :kind, :body,
-                         :body_sha256, :created_at)
-                    """
-                ),
-                {
-                    "id": answer_id,
-                    "user_id": user_id,
-                    "attempt_id": attempt_id,
-                    "kind": answer_kind,
-                    "body": private_answer,
-                    "body_sha256": hashlib.sha256(
-                        private_answer.encode("utf-8")
-                    ).hexdigest(),
-                    "created_at": now,
-                },
-            )
-            event_id, event_sequence = self._append_event(
-                connection,
-                session=session,
-                event_type="attempt_submitted",
-                attempt_id=attempt_id,
-                payload={
-                    "attemptId": str(attempt_id),
-                    "attemptSequence": attempt_sequence,
-                    "score": score,
-                },
+                operation=TrainingAttemptAcknowledgement.operation,
+                key=idempotency_key,
+                request_hash=request_hash,
                 now=now,
+                expires_at=now + timedelta(hours=24),
+                reward_callback=lambda active_connection: self._submit_attempt(
+                    active_connection,
+                    user_id=user_id,
+                    session_id=session_id,
+                    expected_version=expected_version,
+                    answer_kind=answer_kind,
+                    private_answer=private_answer,
+                    answer_sha256=answer_sha256,
+                    now=now,
+                ),
+                completion_clock=lambda: now,
+                id_factory=self._id_factory,
             )
-            session_version = self._advance_session(connection, session=session, now=now)
-            self._upsert_progress(
-                connection,
-                session=session,
-                now=now,
-                attempt_delta=1,
-                score=score,
-            )
-        return AttemptSubmissionResult(
-            session_id=session_id,
-            session_version=session_version,
-            attempt_id=attempt_id,
-            event_id=event_id,
-            event_sequence=event_sequence,
-            score=score,
-        )
+        return _attempt_from_snapshot(record.response_snapshot)
 
     def reveal_solution(
         self,
@@ -341,37 +297,46 @@ class TrainingService:
         user_id: UUID,
         session_id: UUID,
         expected_version: int,
+        idempotency_key: IdempotencyKey,
     ) -> SolutionRevealResult:
         now = self._now()
+        request_hash = request_fingerprint(
+            event_type=TrainingSolutionAcknowledgement.operation,
+            resource_id=str(session_id),
+            payload={"version": expected_version},
+        )
         with self._engine.begin() as connection:
-            session = self._lock_session(
+            record = execute_idempotent_operation(
+                connection,
+                user_id=user_id,
+                operation=TrainingSolutionAcknowledgement.operation,
+                key=idempotency_key,
+                request_hash=request_hash,
+                now=now,
+                expires_at=now + timedelta(hours=24),
+                reward_callback=lambda active_connection: self._reveal_solution(
+                    active_connection,
+                    user_id=user_id,
+                    session_id=session_id,
+                    expected_version=expected_version,
+                    now=now,
+                ),
+                completion_clock=lambda: now,
+                id_factory=self._id_factory,
+            )
+            event = _training_event_from_snapshot(record.response_snapshot)
+            content = self._read_authorized_content(
                 connection,
                 user_id=user_id,
                 session_id=session_id,
-                expected_version=expected_version,
-            )
-            event_id, event_sequence = self._append_event(
-                connection,
-                session=session,
-                event_type="solution_revealed",
-                attempt_id=None,
-                payload={},
-                now=now,
-            )
-            session_version = self._advance_session(connection, session=session, now=now)
-            self._upsert_progress(
-                connection,
-                session=session,
-                now=now,
-                solution_revealed=True,
             )
         return SolutionRevealResult(
-            session_id=session_id,
-            session_version=session_version,
-            event_id=event_id,
-            event_sequence=event_sequence,
-            solution_zh=session["solution_zh"],
-            solution_en=session["solution_en"],
+            session_id=event.session_id,
+            session_version=event.session_version,
+            event_id=event.event_id,
+            event_sequence=event.event_sequence,
+            solution_zh=content["solution_zh"],
+            solution_en=content["solution_en"],
         )
 
     def complete(
@@ -916,6 +881,234 @@ class TrainingService:
             resource_id=session_id,
         )
 
+    def _use_hint(
+        self,
+        connection: Any,
+        *,
+        user_id: UUID,
+        session_id: UUID,
+        expected_version: int,
+        now: datetime,
+    ) -> IdempotencyCompletion:
+        session = self._lock_session(
+            connection,
+            user_id=user_id,
+            session_id=session_id,
+            expected_version=expected_version,
+        )
+        event_id, event_sequence = self._append_event(
+            connection,
+            session=session,
+            event_type="hint_used",
+            attempt_id=None,
+            payload={},
+            now=now,
+        )
+        session_version = self._advance_session(connection, session=session, now=now)
+        self._upsert_progress(
+            connection,
+            session=session,
+            now=now,
+            hint_delta=1,
+        )
+        return IdempotencyCompletion(
+            response_status=200,
+            acknowledgement=TrainingHintAcknowledgement(
+                session_id=session_id,
+                session_version=session_version,
+                event_id=event_id,
+                event_sequence=event_sequence,
+            ),
+            resource_id=session_id,
+        )
+
+    def _submit_attempt(
+        self,
+        connection: Any,
+        *,
+        user_id: UUID,
+        session_id: UUID,
+        expected_version: int,
+        answer_kind: str,
+        private_answer: str,
+        answer_sha256: str,
+        now: datetime,
+    ) -> IdempotencyCompletion:
+        session = self._lock_session(
+            connection,
+            user_id=user_id,
+            session_id=session_id,
+            expected_version=expected_version,
+        )
+        attempt_sequence = int(
+            connection.execute(
+                text(
+                    """
+                    SELECT COALESCE(max(sequence), 0) + 1
+                    FROM attempts
+                    WHERE training_session_id = :session_id
+                    """
+                ),
+                {"session_id": session_id},
+            ).scalar_one()
+        )
+        attempt_id = self._new_id()
+        answer_id = self._new_id()
+        score = 100
+        connection.execute(
+            text(
+                """
+                INSERT INTO attempts
+                    (id, user_id, training_session_id, problem_id, sequence,
+                     status, score, evaluation, submitted_at, evaluated_at,
+                     created_at)
+                VALUES
+                    (:id, :user_id, :session_id, :problem_id, :sequence,
+                     'evaluated', :score, 'recorded', :now, :now, :now)
+                """
+            ),
+            {
+                "id": attempt_id,
+                "user_id": user_id,
+                "session_id": session_id,
+                "problem_id": session["problem_id"],
+                "sequence": attempt_sequence,
+                "score": score,
+                "now": now,
+            },
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO answers
+                    (id, user_id, attempt_id, kind, body, body_sha256, created_at)
+                VALUES
+                    (:id, :user_id, :attempt_id, :kind, :body,
+                     :body_sha256, :created_at)
+                """
+            ),
+            {
+                "id": answer_id,
+                "user_id": user_id,
+                "attempt_id": attempt_id,
+                "kind": answer_kind,
+                "body": private_answer,
+                "body_sha256": answer_sha256,
+                "created_at": now,
+            },
+        )
+        event_id, event_sequence = self._append_event(
+            connection,
+            session=session,
+            event_type="attempt_submitted",
+            attempt_id=attempt_id,
+            payload={
+                "attemptId": str(attempt_id),
+                "attemptSequence": attempt_sequence,
+                "score": score,
+            },
+            now=now,
+        )
+        session_version = self._advance_session(connection, session=session, now=now)
+        self._upsert_progress(
+            connection,
+            session=session,
+            now=now,
+            attempt_delta=1,
+            score=score,
+        )
+        return IdempotencyCompletion(
+            response_status=201,
+            acknowledgement=TrainingAttemptAcknowledgement(
+                session_id=session_id,
+                session_version=session_version,
+                attempt_id=attempt_id,
+                event_id=event_id,
+                event_sequence=event_sequence,
+                score=score,
+            ),
+            resource_id=attempt_id,
+        )
+
+    def _reveal_solution(
+        self,
+        connection: Any,
+        *,
+        user_id: UUID,
+        session_id: UUID,
+        expected_version: int,
+        now: datetime,
+    ) -> IdempotencyCompletion:
+        session = self._lock_session(
+            connection,
+            user_id=user_id,
+            session_id=session_id,
+            expected_version=expected_version,
+        )
+        event_id, event_sequence = self._append_event(
+            connection,
+            session=session,
+            event_type="solution_revealed",
+            attempt_id=None,
+            payload={},
+            now=now,
+        )
+        session_version = self._advance_session(connection, session=session, now=now)
+        self._upsert_progress(
+            connection,
+            session=session,
+            now=now,
+            solution_revealed=True,
+        )
+        return IdempotencyCompletion(
+            response_status=200,
+            acknowledgement=TrainingSolutionAcknowledgement(
+                session_id=session_id,
+                session_version=session_version,
+                event_id=event_id,
+                event_sequence=event_sequence,
+            ),
+            resource_id=session_id,
+        )
+
+    def _read_authorized_content(
+        self,
+        connection: Any,
+        *,
+        user_id: UUID,
+        session_id: UUID,
+    ) -> Mapping[str, Any]:
+        row = (
+            connection.execute(
+                text(
+                    f"""
+                    {_ALLOWED_SOURCE_CTE}
+                    SELECT
+                        problem.hint_zh,
+                        problem.hint_en,
+                        problem.solution_zh,
+                        problem.solution_en
+                    FROM training_sessions AS session
+                    JOIN problems AS problem ON problem.id = session.problem_id
+                    JOIN allowed_sources AS source ON source.id = problem.source_id
+                    WHERE session.id = :session_id
+                      AND session.user_id = :user_id
+                    """
+                ),
+                {"session_id": session_id, "user_id": user_id},
+            )
+            .mappings()
+            .first()
+        )
+        if row is None:
+            raise ApiError(
+                status_code=404,
+                code="TRAINING_SESSION_NOT_FOUND",
+                message="训练会话不存在",
+                retryable=False,
+            )
+        return row
+
     def _lock_session(
         self,
         connection: Any,
@@ -1200,6 +1393,48 @@ def _apply_training_plan_effect(
     )
 
 
+def _attempt_fingerprint_key(value: SecretStr | str | None) -> bytes | None:
+    if value is None:
+        return None
+    raw = value.get_secret_value() if isinstance(value, SecretStr) else value
+    if not isinstance(raw, str) or len(raw) < 32:
+        raise ValueError("training fingerprint secret is invalid")
+    return hashlib.sha256(
+        b"quantgym:training-attempt:fingerprint-key:v1\x00" + raw.encode("utf-8")
+    ).digest()
+
+
+def _attempt_request_fingerprint(
+    key: bytes | None,
+    *,
+    user_id: UUID,
+    idempotency_key: IdempotencyKey,
+    session_id: UUID,
+    expected_version: int,
+    answer_kind: str,
+    private_answer: str,
+) -> str:
+    if key is None:
+        raise RuntimeError("training attempt fingerprint secret is unavailable")
+    canonical = json.dumps(
+        {
+            "domain": "quantgym:training.submit-attempt:v1",
+            "idempotencyKeyDigest": idempotency_key.digest,
+            "payload": {
+                "answer": private_answer,
+                "kind": answer_kind,
+                "version": expected_version,
+            },
+            "resourceId": str(session_id),
+            "userId": str(user_id),
+        },
+        ensure_ascii=False,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+    return hmac.new(key, canonical, hashlib.sha256).hexdigest()
+
+
 def _private_answer(value: Any) -> str:
     if not isinstance(value, str) or not value.strip() or len(value) > 50_000:
         raise ValueError("answer is invalid")
@@ -1215,10 +1450,16 @@ def _snapshot(value: Any) -> Mapping[str, Any]:
 
 
 def _snapshot_uuid(snapshot: Mapping[str, Any], key: str) -> UUID:
+    value = snapshot.get(key)
+    if not isinstance(value, str):
+        raise RuntimeError("persisted idempotency acknowledgement is invalid")
     try:
-        return UUID(snapshot[key])
-    except (KeyError, TypeError, ValueError):
+        parsed = UUID(value)
+    except (AttributeError, TypeError, ValueError):
         raise RuntimeError("persisted idempotency acknowledgement is invalid") from None
+    if str(parsed) != value:
+        raise RuntimeError("persisted idempotency acknowledgement is invalid")
+    return parsed
 
 
 def _snapshot_int(snapshot: Mapping[str, Any], key: str) -> int:
@@ -1233,6 +1474,60 @@ def _snapshot_bool(snapshot: Mapping[str, Any], key: str) -> bool:
     if type(value) is not bool:
         raise RuntimeError("persisted idempotency acknowledgement is invalid")
     return value
+
+
+def _snapshot_score(snapshot: Mapping[str, Any], key: str) -> int:
+    value = _snapshot_int(snapshot, key)
+    if not 0 <= value <= 100:
+        raise RuntimeError("persisted idempotency acknowledgement is invalid")
+    return value
+
+
+def _exact_snapshot_keys(snapshot: Mapping[str, Any], expected: set[str]) -> None:
+    if set(snapshot) != expected:
+        raise RuntimeError("persisted idempotency acknowledgement is invalid")
+
+
+def _training_event_from_snapshot(value: Any) -> TrainingEventResult:
+    snapshot = _snapshot(value)
+    _exact_snapshot_keys(
+        snapshot,
+        {
+            "eventId",
+            "eventSequence",
+            "sessionId",
+            "sessionVersion",
+        },
+    )
+    return TrainingEventResult(
+        session_id=_snapshot_uuid(snapshot, "sessionId"),
+        session_version=_snapshot_int(snapshot, "sessionVersion"),
+        event_id=_snapshot_uuid(snapshot, "eventId"),
+        event_sequence=_snapshot_int(snapshot, "eventSequence"),
+    )
+
+
+def _attempt_from_snapshot(value: Any) -> AttemptSubmissionResult:
+    snapshot = _snapshot(value)
+    _exact_snapshot_keys(
+        snapshot,
+        {
+            "attemptId",
+            "eventId",
+            "eventSequence",
+            "score",
+            "sessionId",
+            "sessionVersion",
+        },
+    )
+    return AttemptSubmissionResult(
+        session_id=_snapshot_uuid(snapshot, "sessionId"),
+        session_version=_snapshot_int(snapshot, "sessionVersion"),
+        attempt_id=_snapshot_uuid(snapshot, "attemptId"),
+        event_id=_snapshot_uuid(snapshot, "eventId"),
+        event_sequence=_snapshot_int(snapshot, "eventSequence"),
+        score=_snapshot_score(snapshot, "score"),
+    )
 
 
 def _completion_from_snapshot(value: Any) -> CompletionResult:

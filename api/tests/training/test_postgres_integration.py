@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -15,7 +16,7 @@ from sqlalchemy import create_engine, event, text
 
 from api.app.dashboard.service import DashboardService
 from api.app.errors import ApiError
-from api.app.idempotency import IdempotencyKey
+from api.app.idempotency import IdempotencyKey, request_fingerprint
 from api.app.notifications.service import NotificationsService
 from api.app.training.service import TrainingService
 
@@ -33,7 +34,11 @@ RECOMMENDATION_ID = UUID("69e17025-b670-48d5-b896-49e218d77856")
 NOW = datetime(2026, 7, 27, 8, tzinfo=UTC)
 START_KEY = IdempotencyKey("a" * 64)
 COMPLETE_KEY = IdempotencyKey("b" * 64)
+HINT_KEY = IdempotencyKey("c" * 64)
+ATTEMPT_KEY = IdempotencyKey("d" * 64)
+SOLUTION_KEY = IdempotencyKey("e" * 64)
 PRIVATE_ANSWER = "private-answer-7f3c99"
+FINGERPRINT_SECRET = "task6-training-fingerprint-secret-" * 2
 
 
 @pytest.fixture(scope="module")
@@ -184,6 +189,7 @@ def phase2_rows(postgres_engine: Any) -> Iterator[Any]:
 
 
 def _service(engine: Any, **overrides: Any) -> TrainingService:
+    overrides.setdefault("fingerprint_secret", FINGERPRINT_SECRET)
     return TrainingService(engine, clock=lambda: NOW, **overrides)
 
 
@@ -200,6 +206,7 @@ def _start_and_attempt(service: TrainingService) -> tuple[Any, Any]:
         expected_version=started.session_version,
         answer_kind="code",
         answer=PRIVATE_ANSWER,
+        idempotency_key=ATTEMPT_KEY,
     )
     return started, attempt
 
@@ -224,6 +231,13 @@ def test_complete_daily_loop_replays_snapshot_and_never_leaks_answer(
         user_id=USER_ID,
         session_id=started.session_id,
         expected_version=1,
+        idempotency_key=HINT_KEY,
+    )
+    replayed_hint = service.use_hint(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        expected_version=1,
+        idempotency_key=HINT_KEY,
     )
     attempt = service.submit_attempt(
         user_id=USER_ID,
@@ -231,12 +245,54 @@ def test_complete_daily_loop_replays_snapshot_and_never_leaks_answer(
         expected_version=hint.session_version,
         answer_kind="code",
         answer=PRIVATE_ANSWER,
+        idempotency_key=ATTEMPT_KEY,
+    )
+    replayed_attempt = service.submit_attempt(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        expected_version=hint.session_version,
+        answer_kind="code",
+        answer=PRIVATE_ANSWER,
+        idempotency_key=ATTEMPT_KEY,
     )
     solution = service.reveal_solution(
         user_id=USER_ID,
         session_id=started.session_id,
         expected_version=attempt.session_version,
+        idempotency_key=SOLUTION_KEY,
     )
+    replayed_solution = service.reveal_solution(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        expected_version=attempt.session_version,
+        idempotency_key=SOLUTION_KEY,
+    )
+    with pytest.raises(ApiError) as changed_hint:
+        service.use_hint(
+            user_id=USER_ID,
+            session_id=started.session_id,
+            expected_version=hint.session_version,
+            idempotency_key=HINT_KEY,
+        )
+    assert changed_hint.value.code == "IDEMPOTENCY_KEY_REUSED"
+    with pytest.raises(ApiError) as changed_attempt:
+        service.submit_attempt(
+            user_id=USER_ID,
+            session_id=started.session_id,
+            expected_version=hint.session_version,
+            answer_kind="code",
+            answer=f"{PRIVATE_ANSWER}-changed",
+            idempotency_key=ATTEMPT_KEY,
+        )
+    assert changed_attempt.value.code == "IDEMPOTENCY_KEY_REUSED"
+    with pytest.raises(ApiError) as changed_solution:
+        service.reveal_solution(
+            user_id=USER_ID,
+            session_id=started.session_id,
+            expected_version=solution.session_version,
+            idempotency_key=SOLUTION_KEY,
+        )
+    assert changed_solution.value.code == "IDEMPOTENCY_KEY_REUSED"
     completed = service.complete(
         user_id=USER_ID,
         session_id=started.session_id,
@@ -246,7 +302,11 @@ def test_complete_daily_loop_replays_snapshot_and_never_leaks_answer(
     )
 
     assert replayed_start == started
+    assert replayed_hint == hint
+    assert replayed_attempt == attempt
+    assert replayed_solution == solution
     assert hint.hint_zh == "先排序"
+    assert solution.solution_zh == "使用双指针"
     assert completed.session_version == 5
     assert completed.xp_delta == 20
     assert completed.task_completed is True
@@ -308,9 +368,15 @@ def test_complete_daily_loop_replays_snapshot_and_never_leaks_answer(
                 """
                 SELECT
                     (SELECT count(*) FROM training_sessions) AS sessions,
+                    (SELECT count(*) FROM training_events) AS events,
+                    (SELECT count(*) FROM attempts) AS attempts,
                     (SELECT count(*) FROM training_events WHERE event_type = 'completed') AS completions,
                     (SELECT count(*) FROM xp_ledger) AS rewards,
-                    (SELECT count(*) FROM notifications) AS notifications
+                    (SELECT count(*) FROM notifications) AS notifications,
+                    (SELECT attempt_count FROM problem_progress) AS attempt_count,
+                    (SELECT hint_count FROM problem_progress) AS hint_count,
+                    (SELECT solution_revealed_at IS NOT NULL FROM problem_progress)
+                        AS solution_revealed
                 """
             )
         ).mappings().one()
@@ -333,16 +399,81 @@ def test_complete_daily_loop_replays_snapshot_and_never_leaks_answer(
                 """
             )
         ).mappings().one()
+        attempt_record = connection.execute(
+            text(
+                """
+                SELECT request_hash, response_snapshot
+                FROM idempotency_records
+                WHERE operation = 'training.submit-attempt'
+                """
+            )
+        ).mappings().one()
+        content_snapshots = connection.execute(
+            text(
+                """
+                SELECT operation, response_snapshot
+                FROM idempotency_records
+                WHERE operation IN ('training.use-hint', 'training.reveal-solution')
+                ORDER BY operation
+                """
+            )
+        ).mappings().all()
 
     assert dict(counts) == {
         "sessions": 1,
+        "events": 4,
+        "attempts": 1,
         "completions": 1,
         "rewards": 1,
         "notifications": 1,
+        "attempt_count": 1,
+        "hint_count": 1,
+        "solution_revealed": True,
     }
     assert PRIVATE_ANSWER not in serialized
+    assert ATTEMPT_KEY.digest not in serialized
+    assert "idempotencyKey" not in serialized
     assert "先排序" not in serialized
     assert "使用双指针" not in serialized
+    attempt_snapshot = attempt_record["response_snapshot"]
+    assert set(attempt_snapshot) == {
+        "attemptId",
+        "eventId",
+        "eventSequence",
+        "score",
+        "sessionId",
+        "sessionVersion",
+    }
+    attempt_snapshot_text = json.dumps(attempt_snapshot, sort_keys=True)
+    assert PRIVATE_ANSWER not in attempt_snapshot_text
+    assert "answer" not in attempt_snapshot_text.casefold()
+    public_attempt_fingerprint = request_fingerprint(
+        event_type="training.submit-attempt",
+        resource_id=str(started.session_id),
+        payload={
+            "answerSha256": hashlib.sha256(PRIVATE_ANSWER.encode("utf-8")).hexdigest(),
+            "kind": "code",
+            "version": hint.session_version,
+        },
+    )
+    assert attempt_record["request_hash"].rstrip() != public_attempt_fingerprint
+    assert {
+        row["operation"]: set(row["response_snapshot"])
+        for row in content_snapshots
+    } == {
+        "training.reveal-solution": {
+            "eventId",
+            "eventSequence",
+            "sessionId",
+            "sessionVersion",
+        },
+        "training.use-hint": {
+            "eventId",
+            "eventSequence",
+            "sessionId",
+            "sessionVersion",
+        },
+    }
     assert notification["action_target"] == "training_result"
     assert notification["action_resource_id"] == started.session_id
     assert len(notification["dedupe_key"]) == 64
@@ -697,6 +828,7 @@ def test_cross_user_training_mutations_and_result_uniformly_return_404(
             user_id=OTHER_USER_ID,
             session_id=started.session_id,
             expected_version=attempt.session_version,
+            idempotency_key=HINT_KEY,
         ),
         lambda: service.submit_attempt(
             user_id=OTHER_USER_ID,
@@ -704,11 +836,13 @@ def test_cross_user_training_mutations_and_result_uniformly_return_404(
             expected_version=attempt.session_version,
             answer_kind="text",
             answer="other-private-answer",
+            idempotency_key=ATTEMPT_KEY,
         ),
         lambda: service.reveal_solution(
             user_id=OTHER_USER_ID,
             session_id=started.session_id,
             expected_version=attempt.session_version,
+            idempotency_key=SOLUTION_KEY,
         ),
         lambda: service.complete(
             user_id=OTHER_USER_ID,
@@ -805,17 +939,78 @@ def test_preview_rights_fail_closed_for_start_and_authorized_content(
             user_id=USER_ID,
             session_id=started.session_id,
             expected_version=1,
+            idempotency_key=HINT_KEY,
         ),
         lambda: service.reveal_solution(
             user_id=USER_ID,
             session_id=started.session_id,
             expected_version=1,
+            idempotency_key=SOLUTION_KEY,
         ),
     ):
         with pytest.raises(ApiError) as revoked:
             operation()
         assert revoked.value.status_code == 404
         assert revoked.value.code == "TRAINING_SESSION_NOT_FOUND"
+
+
+def test_hint_and_solution_replay_recheck_latest_preview_rights(
+    phase2_rows: Any,
+) -> None:
+    service = _service(phase2_rows)
+    started = service.start_or_resume(
+        user_id=USER_ID,
+        problem_id=PROBLEM_ID,
+        plan_task_id=TASK_ID,
+        idempotency_key=START_KEY,
+    )
+    hint = service.use_hint(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        expected_version=started.session_version,
+        idempotency_key=HINT_KEY,
+    )
+    solution = service.reveal_solution(
+        user_id=USER_ID,
+        session_id=started.session_id,
+        expected_version=hint.session_version,
+        idempotency_key=SOLUTION_KEY,
+    )
+    assert hint.hint_zh == "先排序"
+    assert solution.solution_zh == "使用双指针"
+
+    with phase2_rows.begin() as connection:
+        connection.execute(
+            text(
+                "UPDATE problem_sources SET rights_status = 'blocked' WHERE id = :id"
+            ),
+            {"id": SOURCE_ID},
+        )
+
+    replay_calls = (
+        lambda: service.use_hint(
+            user_id=USER_ID,
+            session_id=started.session_id,
+            expected_version=started.session_version,
+            idempotency_key=HINT_KEY,
+        ),
+        lambda: service.reveal_solution(
+            user_id=USER_ID,
+            session_id=started.session_id,
+            expected_version=hint.session_version,
+            idempotency_key=SOLUTION_KEY,
+        ),
+    )
+    for replay in replay_calls:
+        with pytest.raises(ApiError) as revoked:
+            replay()
+        assert revoked.value.status_code == 404
+        assert revoked.value.code == "TRAINING_SESSION_NOT_FOUND"
+
+    with phase2_rows.connect() as connection:
+        assert connection.execute(
+            text("SELECT count(*) FROM training_events")
+        ).scalar_one() == 2
 
 
 def test_latest_source_rights_block_old_safe_training_and_dashboard_fallback(
@@ -865,6 +1060,7 @@ def test_latest_source_rights_block_old_safe_training_and_dashboard_fallback(
             user_id=USER_ID,
             session_id=started.session_id,
             expected_version=started.session_version,
+            idempotency_key=HINT_KEY,
         )
     assert active_session.value.status_code == 404
     assert active_session.value.code == "TRAINING_SESSION_NOT_FOUND"

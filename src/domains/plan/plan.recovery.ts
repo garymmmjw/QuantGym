@@ -1,3 +1,10 @@
+import type { QueryClient } from "@tanstack/react-query";
+
+import { ApiError } from "../../shared/api/errors";
+import {
+  runOwnerVerifiedOperation,
+  verifyCurrentSessionOwner,
+} from "../../shared/api/ownerScopedQueries";
 import {
   createRecoverableDraft,
   recoverableDraftRepository,
@@ -8,14 +15,24 @@ import {
   type RecoverableDraftRepository,
 } from "../../shared/storage/drafts";
 import {
-  mutatePlan,
+  acknowledgePlanTaskMutation,
+  completePlanTask,
+  createPlan,
+  invalidatePlanReadModels,
+  runPlanDiagnostic,
+  updatePlanTask,
+  type CompletePlanTaskIntent,
   type PlanMutationIntent,
+  type UpdatePlanTaskIntent,
 } from "./plan.mutations";
+import { getCurrentPlan, planQueryKeys } from "./plan.queries";
 import {
   completePlanTaskRequestSchema,
   createPlanRequestSchema,
   runPlanDiagnosticRequestSchema,
   updatePlanTaskRequestSchema,
+  type CurrentPlanResponse,
+  type OfficialPlanTask,
 } from "./plan.schema";
 
 export const PLAN_DRAFT_KINDS = [
@@ -128,23 +145,124 @@ export const persistPlanMutationDraft = async (
   return draft;
 };
 
+const currentTaskFor = (
+  current: CurrentPlanResponse,
+  intent: UpdatePlanTaskIntent | CompletePlanTaskIntent,
+): OfficialPlanTask | null => {
+  const plan = current.plan;
+  if (plan === null) return null;
+  return plan.tasks.find(({ id, planId }) => (
+    id === intent.taskId && planId === plan.id
+  )) ?? null;
+};
+
+const updateIntentIsSatisfied = (
+  task: OfficialPlanTask,
+  intent: UpdatePlanTaskIntent,
+) => {
+  const request = intent.request;
+  return (
+    (!Object.hasOwn(request, "detail") || task.detail === request.detail)
+    && (
+      !Object.hasOwn(request, "estimatedMinutes")
+      || task.estimatedMinutes === request.estimatedMinutes
+    )
+    && (
+      !Object.hasOwn(request, "scheduledFor")
+      || task.scheduledFor === request.scheduledFor
+    )
+    && (!Object.hasOwn(request, "sortOrder") || task.sortOrder === request.sortOrder)
+    && (!Object.hasOwn(request, "title") || task.title === request.title)
+  );
+};
+
+export const planTaskIntentIsSatisfied = (
+  current: CurrentPlanResponse,
+  intent: UpdatePlanTaskIntent | CompletePlanTaskIntent,
+): boolean => {
+  const task = currentTaskFor(current, intent);
+  if (task === null) return false;
+  return intent.kind === "complete-task"
+    ? task.status === "completed"
+    : updateIntentIsSatisfied(task, intent);
+};
+
 export type ReplayPlanDraftsOptions = Readonly<{
   csrfProof: string | null;
   ownerScope: string;
+  queryClient: QueryClient;
   repository?: RecoverableDraftRepository;
   verifyOwner?: () => Promise<void>;
 }>;
 
-const planReplayOptions = (options: ReplayPlanDraftsOptions) => ({
-  kinds: PLAN_DRAFT_KINDS,
-  ownerScope: options.ownerScope,
-  replay: async (draft: RecoverableDraft) => {
-    await options.verifyOwner?.();
-    await mutatePlan(recoverPlanMutationIntent(draft), options.csrfProof);
-    return { acknowledged: true };
-  },
-  ...(options.repository === undefined ? {} : { repository: options.repository }),
-});
+const planReplayOptions = (options: ReplayPlanDraftsOptions) => {
+  const verifyOwner = options.verifyOwner
+    ?? (() => verifyCurrentSessionOwner(options.ownerScope));
+  return {
+    kinds: PLAN_DRAFT_KINDS,
+    ownerScope: options.ownerScope,
+    replay: async (draft: RecoverableDraft, signal?: AbortSignal) => {
+      const intent = recoverPlanMutationIntent(draft);
+      try {
+        const acknowledged = await runOwnerVerifiedOperation(verifyOwner, async () => {
+          switch (intent.kind) {
+            case "create":
+              await createPlan(intent, options.csrfProof);
+              return null;
+            case "diagnostic":
+              await runPlanDiagnostic(intent, options.csrfProof);
+              return null;
+            case "update-task":
+              return updatePlanTask(intent, options.csrfProof);
+            case "complete-task":
+              return completePlanTask(intent, options.csrfProof);
+          }
+        });
+        if (acknowledged !== null) {
+          acknowledgePlanTaskMutation(
+            options.queryClient,
+            options.ownerScope,
+            intent as UpdatePlanTaskIntent | CompletePlanTaskIntent,
+            acknowledged,
+          );
+        }
+        await invalidatePlanReadModels(options.queryClient, options.ownerScope);
+        return { acknowledged: true };
+      } catch (error) {
+        if (
+          !(error instanceof ApiError)
+          || error.status !== 409
+          || error.retryable
+          || (intent.kind !== "update-task" && intent.kind !== "complete-task")
+        ) {
+          throw error;
+        }
+        const current = await runOwnerVerifiedOperation(
+          verifyOwner,
+          () => getCurrentPlan(signal),
+        );
+        options.queryClient.setQueryData(
+          planQueryKeys.current(options.ownerScope),
+          current,
+        );
+        const acknowledged = planTaskIntentIsSatisfied(current, intent);
+        await invalidatePlanReadModels(options.queryClient, options.ownerScope);
+        return {
+          acknowledged,
+          ...(acknowledged ? {} : {
+            failure: {
+              code: error.code,
+              requestId: error.requestId,
+              retryable: false,
+              state: "stale-version-conflict" as const,
+            },
+          }),
+        };
+      }
+    },
+    ...(options.repository === undefined ? {} : { repository: options.repository }),
+  };
+};
 
 export const replayPlanMutationDrafts = (
   options: ReplayPlanDraftsOptions,

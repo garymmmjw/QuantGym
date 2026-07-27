@@ -3304,7 +3304,9 @@ export interface operations {
     submitTrainingAttempt: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "X-Idempotency-Key": string;
+            };
             path: {
                 session_id: string;
             };
@@ -3323,6 +3325,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AttemptSubmissionResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
             /** @description Authentication required */
@@ -3493,7 +3504,9 @@ export interface operations {
     useTrainingHint: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "X-Idempotency-Key": string;
+            };
             path: {
                 session_id: string;
             };
@@ -3512,6 +3525,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HintUseResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
             /** @description Authentication required */
@@ -3649,7 +3671,9 @@ export interface operations {
     revealTrainingSolution: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "X-Idempotency-Key": string;
+            };
             path: {
                 session_id: string;
             };
@@ -3668,6 +3692,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SolutionRevealResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
             /** @description Authentication required */

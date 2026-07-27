@@ -109,7 +109,8 @@ const nullableTrimmedDetailSchema = z.string()
     }),
     "任务详情包含不支持的字符。",
   )
-  .nullable();
+  .nullable()
+  .transform((value) => value === "" ? null : value);
 
 export const updatePlanTaskRequestSchema = z.object({
   detail: nullableTrimmedDetailSchema.optional(),

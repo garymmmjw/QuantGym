@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
@@ -84,14 +85,18 @@ class FakeTrainingService:
         )
 
 
-def _client() -> tuple[TestClient, FakeTrainingService]:
+def _client(
+    *,
+    override_idempotency: bool = True,
+) -> tuple[TestClient, FakeTrainingService]:
     application = FastAPI(exception_handlers=EXCEPTION_HANDLERS)
     application.include_router(router)
     service = FakeTrainingService()
     session = type("Session", (), {"user": type("User", (), {"id": USER_ID})()})()
     application.dependency_overrides[get_authenticated_session] = lambda: session
     application.dependency_overrides[require_mutating_session] = lambda: session
-    application.dependency_overrides[require_idempotency_key] = lambda: KEY
+    if override_idempotency:
+        application.dependency_overrides[require_idempotency_key] = lambda: KEY
     application.dependency_overrides[get_training_service] = lambda: service
     return TestClient(application), service
 
@@ -153,8 +158,8 @@ def test_training_router_exposes_the_complete_daily_loop() -> None:
         "result",
     ]
     assert all(values["user_id"] == USER_ID for _name, values in service.calls)
-    assert service.calls[0][1]["idempotency_key"] is KEY
-    assert service.calls[4][1]["idempotency_key"] is KEY
+    for index in range(5):
+        assert service.calls[index][1]["idempotency_key"] is KEY
 
 
 def test_training_read_and_mutations_are_no_store() -> None:
@@ -168,3 +173,69 @@ def test_training_read_and_mutations_are_no_store() -> None:
 
     assert mutation.headers["cache-control"] == "no-store"
     assert read.headers["cache-control"] == "no-store"
+
+
+def test_training_mutations_require_one_valid_idempotency_header() -> None:
+    client, service = _client(override_idempotency=False)
+    mutations = (
+        (
+            f"/api/v2/training/sessions/{SESSION_ID}/hint",
+            {"version": 1},
+        ),
+        (
+            f"/api/v2/training/sessions/{SESSION_ID}/attempts",
+            {"version": 2, "kind": "code", "answer": "print(42)"},
+        ),
+        (
+            f"/api/v2/training/sessions/{SESSION_ID}/solution",
+            {"version": 3},
+        ),
+    )
+
+    for path, payload in mutations:
+        missing = client.post(path, json=payload)
+        assert missing.status_code == 422
+        assert missing.json()["code"] == "VALIDATION_ERROR"
+
+    invalid = client.post(
+        mutations[0][0],
+        json=mutations[0][1],
+        headers={"X-Idempotency-Key": "too-short"},
+    )
+    assert invalid.status_code == 422
+    assert invalid.json()["code"] == "VALIDATION_ERROR"
+
+    duplicate = client.post(
+        mutations[0][0],
+        json=mutations[0][1],
+        headers=[
+            ("X-Idempotency-Key", "hint-request-key-0001"),
+            ("X-Idempotency-Key", "hint-request-key-0002"),
+        ],
+    )
+    assert duplicate.status_code == 400
+    assert duplicate.json()["code"] == "IDEMPOTENCY_KEY_INVALID"
+    assert service.calls == []
+
+    raw_key = "valid-hint-request-key-0001"
+    valid = client.post(
+        mutations[0][0],
+        json=mutations[0][1],
+        headers={"X-Idempotency-Key": raw_key},
+    )
+    assert valid.status_code == 200
+    parsed_key = service.calls[0][1]["idempotency_key"]
+    assert parsed_key.digest == hashlib.sha256(raw_key.encode("ascii")).hexdigest()
+    assert raw_key not in repr(parsed_key)
+
+
+def test_training_idempotent_mutations_document_bad_key_responses() -> None:
+    client, _service = _client()
+
+    responses = client.app.openapi()["paths"]
+    for path in (
+        "/api/v2/training/sessions/{session_id}/hint",
+        "/api/v2/training/sessions/{session_id}/attempts",
+        "/api/v2/training/sessions/{session_id}/solution",
+    ):
+        assert "400" in responses[path]["post"]["responses"]

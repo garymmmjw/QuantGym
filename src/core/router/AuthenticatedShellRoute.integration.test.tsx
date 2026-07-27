@@ -86,6 +86,9 @@ beforeEach(() => {
   preferenceController.reset();
   window.localStorage.removeItem(PREFERENCE_STORAGE_KEY);
   vi.spyOn(navigator, "onLine", "get").mockReturnValue(true);
+  vi.spyOn(document, "cookie", "get").mockReturnValue(
+    "__Host-qg_csrf=session-proof-shell-route-123456",
+  );
 });
 
 afterEach(() => {

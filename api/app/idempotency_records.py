@@ -158,6 +158,90 @@ class TrainingSessionAcknowledgement(IdempotencyAcknowledgement):
 
 
 @dataclass(frozen=True, slots=True)
+class TrainingHintAcknowledgement(IdempotencyAcknowledgement):
+    """Content-free identity produced by recording one hint reveal."""
+
+    operation: ClassVar[str] = "training.use-hint"
+
+    session_id: UUID
+    session_version: int
+    event_id: UUID
+    event_sequence: int
+
+    def __post_init__(self) -> None:
+        _uuid("session_id", self.session_id)
+        _positive_int("session_version", self.session_version)
+        _uuid("event_id", self.event_id)
+        _positive_int("event_sequence", self.event_sequence)
+
+    def to_snapshot(self) -> dict[str, Any]:
+        return {
+            "eventId": str(self.event_id),
+            "eventSequence": self.event_sequence,
+            "sessionId": str(self.session_id),
+            "sessionVersion": self.session_version,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class TrainingAttemptAcknowledgement(IdempotencyAcknowledgement):
+    """Content-free public result of storing and evaluating one answer."""
+
+    operation: ClassVar[str] = "training.submit-attempt"
+
+    session_id: UUID
+    session_version: int
+    attempt_id: UUID
+    event_id: UUID
+    event_sequence: int
+    score: int
+
+    def __post_init__(self) -> None:
+        _uuid("session_id", self.session_id)
+        _positive_int("session_version", self.session_version)
+        _uuid("attempt_id", self.attempt_id)
+        _uuid("event_id", self.event_id)
+        _positive_int("event_sequence", self.event_sequence)
+        _score("score", self.score)
+
+    def to_snapshot(self) -> dict[str, Any]:
+        return {
+            "attemptId": str(self.attempt_id),
+            "eventId": str(self.event_id),
+            "eventSequence": self.event_sequence,
+            "score": self.score,
+            "sessionId": str(self.session_id),
+            "sessionVersion": self.session_version,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class TrainingSolutionAcknowledgement(IdempotencyAcknowledgement):
+    """Content-free identity produced by recording one solution reveal."""
+
+    operation: ClassVar[str] = "training.reveal-solution"
+
+    session_id: UUID
+    session_version: int
+    event_id: UUID
+    event_sequence: int
+
+    def __post_init__(self) -> None:
+        _uuid("session_id", self.session_id)
+        _positive_int("session_version", self.session_version)
+        _uuid("event_id", self.event_id)
+        _positive_int("event_sequence", self.event_sequence)
+
+    def to_snapshot(self) -> dict[str, Any]:
+        return {
+            "eventId": str(self.event_id),
+            "eventSequence": self.event_sequence,
+            "sessionId": str(self.session_id),
+            "sessionVersion": self.session_version,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class PlanDiagnosticAcknowledgement(IdempotencyAcknowledgement):
     """Content-free identities produced by the diagnostic transaction."""
 
@@ -222,6 +306,9 @@ class FailureAcknowledgement(IdempotencyAcknowledgement):
 _SUCCESS_ACKNOWLEDGEMENTS: dict[str, type[IdempotencyAcknowledgement]] = {
     ProblemCompletionAcknowledgement.operation: ProblemCompletionAcknowledgement,
     TrainingSessionAcknowledgement.operation: TrainingSessionAcknowledgement,
+    TrainingHintAcknowledgement.operation: TrainingHintAcknowledgement,
+    TrainingAttemptAcknowledgement.operation: TrainingAttemptAcknowledgement,
+    TrainingSolutionAcknowledgement.operation: TrainingSolutionAcknowledgement,
     PlanDiagnosticAcknowledgement.operation: PlanDiagnosticAcknowledgement,
     PlanCreationAcknowledgement.operation: PlanCreationAcknowledgement,
 }
@@ -854,6 +941,49 @@ def _validate_snapshot_shape(
         _positive_int("sessionVersion", snapshot["sessionVersion"])
         return
 
+    if operation == TrainingHintAcknowledgement.operation:
+        _validate_training_event_snapshot(snapshot)
+        _exact_keys(
+            snapshot,
+            required={
+                "eventId",
+                "eventSequence",
+                "sessionId",
+                "sessionVersion",
+            },
+        )
+        return
+
+    if operation == TrainingAttemptAcknowledgement.operation:
+        _validate_training_event_snapshot(snapshot)
+        _exact_keys(
+            snapshot,
+            required={
+                "attemptId",
+                "eventId",
+                "eventSequence",
+                "score",
+                "sessionId",
+                "sessionVersion",
+            },
+        )
+        _snapshot_uuid("attemptId", snapshot["attemptId"])
+        _score("score", snapshot["score"])
+        return
+
+    if operation == TrainingSolutionAcknowledgement.operation:
+        _validate_training_event_snapshot(snapshot)
+        _exact_keys(
+            snapshot,
+            required={
+                "eventId",
+                "eventSequence",
+                "sessionId",
+                "sessionVersion",
+            },
+        )
+        return
+
     if operation == PlanDiagnosticAcknowledgement.operation:
         _exact_keys(
             snapshot,
@@ -891,6 +1021,13 @@ def _contains_sensitive_content(value: Any) -> bool:
     if isinstance(value, list):
         return any(_contains_sensitive_content(item) for item in value)
     return isinstance(value, str) and _SENSITIVE_STRING_PATTERN.search(value) is not None
+
+
+def _validate_training_event_snapshot(snapshot: Mapping[str, Any]) -> None:
+    _snapshot_uuid("sessionId", snapshot["sessionId"])
+    _positive_int("sessionVersion", snapshot["sessionVersion"])
+    _snapshot_uuid("eventId", snapshot["eventId"])
+    _positive_int("eventSequence", snapshot["eventSequence"])
 
 
 def _capture_transaction(connection: Any) -> _TransactionIdentity:
@@ -956,6 +1093,16 @@ def _positive_int(name: str, value: Any) -> int:
 def _nonnegative_int(name: str, value: Any) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise ValueError(f"{name} must be a non-negative integer")
+    return value
+
+
+def _score(name: str, value: Any) -> int:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or not 0 <= value <= 100
+    ):
+        raise ValueError(f"{name} must be an integer from 0 through 100")
     return value
 
 

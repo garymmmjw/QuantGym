@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { apiRequest } from "../../shared/api/client";
+import { runOwnerScopedQuery } from "../../shared/api/ownerScopedQueries";
 import {
   currentPlanResponseSchema,
   type CurrentPlanResponse,
@@ -31,7 +32,11 @@ export const currentPlanQueryOptions = ({
   ownerScope,
 }: CurrentPlanQueryOptions) => queryOptions({
   enabled,
-  queryFn: ({ signal }) => getCurrentPlan(signal),
+  queryFn: ({ signal }) => runOwnerScopedQuery(
+    ownerScope,
+    () => getCurrentPlan(signal),
+    signal,
+  ),
   queryKey: planQueryKeys.current(ownerScope),
   retry: false,
 });

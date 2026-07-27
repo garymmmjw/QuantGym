@@ -2,6 +2,8 @@ const { apiRequestMock } = vi.hoisted(() => ({ apiRequestMock: vi.fn() }));
 
 vi.mock("../../shared/api/client", () => ({ apiRequest: apiRequestMock }));
 
+import { QueryClient } from "@tanstack/react-query";
+
 import type { ProblemMutationIntent } from "./problems.mutations";
 import {
   createProblemMutationDraft,
@@ -14,9 +16,15 @@ import { createInMemoryDraftRepository } from "../../shared/storage/drafts";
 const ownerScope = "acct-1234567890abcdef";
 const problemId = "29584c83-7297-44ef-b985-f38e6c95de76";
 const stateId = "19584c83-7297-44ef-b985-f38e6c95de76";
+const verifyOwner = async (): Promise<void> => undefined;
 
 describe("Problems draft recovery", () => {
-  beforeEach(() => apiRequestMock.mockReset());
+  beforeEach(() => {
+    apiRequestMock.mockReset();
+    vi.spyOn(document, "cookie", "get").mockReturnValue(
+      "__Host-qg_csrf=session-proof-problems-123456",
+    );
+  });
 
   it.each<ProblemMutationIntent>([
     {
@@ -44,6 +52,7 @@ describe("Problems draft recovery", () => {
 
   it("keeps a failed reconnect draft, reuses its key, then removes it on acknowledgement", async () => {
     const repository = createInMemoryDraftRepository();
+    const queryClient = new QueryClient();
     const intent: ProblemMutationIntent = {
       body: "联网后同步",
       expectedVersion: null,
@@ -63,17 +72,29 @@ describe("Problems draft recovery", () => {
     const first = await replayProblemMutationDrafts({
       csrfProof: "csrf-proof-1234567890abcdef",
       ownerScope,
+      queryClient,
       repository,
+      verifyOwner,
     });
     const second = await replayProblemMutationDrafts({
       csrfProof: "csrf-proof-1234567890abcdef",
       ownerScope,
+      queryClient,
       repository,
+      verifyOwner,
     });
 
-    expect(first.retained).toEqual([{ draftId: draft.draftId, reason: "failed" }]);
+    expect(first.retained).toEqual([{
+      code: "NETWORK_OFFLINE",
+      draftId: draft.draftId,
+      reason: "failed",
+      requestId: null,
+      retryable: true,
+      state: "offline-draft",
+    }]);
     expect(second.acknowledged).toEqual([draft.draftId]);
     expect(await repository.list(ownerScope)).toEqual([]);
     expect(recoverProblemMutationIntent(draft).idempotencyKey).toBe(intent.idempotencyKey);
+    queryClient.clear();
   });
 });

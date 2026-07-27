@@ -17,10 +17,12 @@ import {
 } from "react";
 
 import { ToastProvider } from "../../../design-system/patterns/ToastRegion";
+import { createAccountScope } from "../../../shared/lib/accountScope";
 import { NotificationCenter } from "./NotificationCenter";
 
 const notificationId = "10000000-0000-4000-8000-000000000001";
-const ownerScope = "acct-1234567890abcdef";
+const accountEmail = "notification-owner@example.com";
+const ownerScope = createAccountScope(accountEmail);
 const csrfToken = "c".repeat(43);
 const unreadNotification = {
   body: "完成今天的概率训练，即可保持连胜。",
@@ -72,6 +74,7 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 
 beforeEach(() => {
   vi.spyOn(document, "cookie", "get").mockReturnValue(`__Host-qg_csrf=${csrfToken}`);
+  server.use(http.get("*/api/v2/me", () => HttpResponse.json({ email: accountEmail })));
 });
 
 afterEach(() => {

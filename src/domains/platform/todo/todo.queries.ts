@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { apiRequest } from "../../../shared/api/client";
+import { runOwnerScopedQuery } from "../../../shared/api/ownerScopedQueries";
 import { todoListResponseSchema } from "./todo.schema";
 
 export const todoQueryKeys = {
@@ -17,7 +18,11 @@ export const listTodos = async (signal?: AbortSignal) => {
 };
 
 export const todoQueryOptions = (ownerScope: string) => queryOptions({
-  queryFn: ({ signal }) => listTodos(signal),
+  queryFn: ({ signal }) => runOwnerScopedQuery(
+    ownerScope,
+    () => listTodos(signal),
+    signal,
+  ),
   queryKey: todoQueryKeys.forOwner(ownerScope),
   retry: false,
 });

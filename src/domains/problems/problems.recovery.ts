@@ -1,4 +1,10 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+
+import {
+  runOwnerVerifiedOperation,
+  verifyCurrentSessionOwner,
+} from "../../shared/api/ownerScopedQueries";
 
 import {
   createRecoverableDraft,
@@ -10,7 +16,11 @@ import {
   type RecoverableDraftRepository,
 } from "../../shared/storage/drafts";
 import {
-  mutateProblem,
+  acknowledgeProblemFavorite,
+  acknowledgeProblemNote,
+  invalidateProblemMutationReadModels,
+  saveProblemNote,
+  setProblemFavorite,
   type ProblemMutationIntent,
 } from "./problems.mutations";
 
@@ -103,20 +113,52 @@ export const persistProblemMutationDraft = async (
 export type ReplayProblemDraftsOptions = Readonly<{
   csrfProof: string | null;
   ownerScope: string;
+  queryClient: QueryClient;
   repository?: RecoverableDraftRepository;
   verifyOwner?: () => Promise<void>;
 }>;
 
-const problemReplayOptions = (options: ReplayProblemDraftsOptions) => ({
-  kinds: PROBLEM_DRAFT_KINDS,
-  ownerScope: options.ownerScope,
-  replay: async (draft: RecoverableDraft) => {
-    await options.verifyOwner?.();
-    await mutateProblem(recoverProblemMutationIntent(draft), options.csrfProof);
-    return { acknowledged: true };
-  },
-  ...(options.repository === undefined ? {} : { repository: options.repository }),
-});
+const problemReplayOptions = (options: ReplayProblemDraftsOptions) => {
+  const verifyOwner = options.verifyOwner
+    ?? (() => verifyCurrentSessionOwner(options.ownerScope));
+  return {
+    kinds: PROBLEM_DRAFT_KINDS,
+    ownerScope: options.ownerScope,
+    replay: async (draft: RecoverableDraft) => {
+      const intent = recoverProblemMutationIntent(draft);
+      if (intent.kind === "set-favorite") {
+        const acknowledged = await runOwnerVerifiedOperation(
+          verifyOwner,
+          () => setProblemFavorite(intent, options.csrfProof),
+        );
+        await acknowledgeProblemFavorite(
+          options.queryClient,
+          options.ownerScope,
+          intent,
+          acknowledged,
+        );
+      } else {
+        const acknowledged = await runOwnerVerifiedOperation(
+          verifyOwner,
+          () => saveProblemNote(intent, options.csrfProof),
+        );
+        acknowledgeProblemNote(
+          options.queryClient,
+          options.ownerScope,
+          intent,
+          acknowledged,
+        );
+        await invalidateProblemMutationReadModels(
+          options.queryClient,
+          options.ownerScope,
+          intent.problemId,
+        );
+      }
+      return { acknowledged: true };
+    },
+    ...(options.repository === undefined ? {} : { repository: options.repository }),
+  };
+};
 
 export const replayProblemMutationDrafts = (
   options: ReplayProblemDraftsOptions,

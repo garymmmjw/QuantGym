@@ -7,8 +7,14 @@ import { z } from "zod";
 
 import { notificationQueryKeys } from "../platform/notifications/notifications.queries";
 import { planQueryKeys } from "../plan/plan.queries";
+import { dashboardQueryKeys } from "../dashboard/dashboard.queries";
+import { problemQueryKeys } from "../problems/problems.queries";
 import { apiRequest } from "../../shared/api/client";
 import { createIdempotencyKey } from "../../shared/api/mutationRecovery";
+import {
+  runOwnerVerifiedOperation,
+  verifyCurrentSessionOwner,
+} from "../../shared/api/ownerScopedQueries";
 import {
   attemptSubmissionResponseSchema,
   completeTrainingRequestSchema,
@@ -45,13 +51,13 @@ export type StartTrainingIntent = IdempotentIntent & Readonly<{
   request: StartTrainingRequest;
 }>;
 
-export type UseTrainingHintIntent = Readonly<{
+export type UseTrainingHintIntent = IdempotentIntent & Readonly<{
   kind: "hint";
   request: { version: number };
   sessionId: string;
 }>;
 
-export type SubmitTrainingAttemptIntent = Readonly<{
+export type SubmitTrainingAttemptIntent = IdempotentIntent & Readonly<{
   kind: "attempt";
   request: {
     answer: string;
@@ -61,7 +67,7 @@ export type SubmitTrainingAttemptIntent = Readonly<{
   sessionId: string;
 }>;
 
-export type RevealTrainingSolutionIntent = Readonly<{
+export type RevealTrainingSolutionIntent = IdempotentIntent & Readonly<{
   kind: "solution";
   request: { version: number };
   sessionId: string;
@@ -131,6 +137,7 @@ export const newUseTrainingHintIntent = (
 ): UseTrainingHintIntent => {
   const parsed = parseSession(session);
   return {
+    idempotencyKey: createIdempotencyKey(),
     kind: "hint",
     request: { version: parsed.version },
     sessionId: parsed.sessionId,
@@ -146,6 +153,7 @@ export const newSubmitTrainingAttemptIntent = (
 ): SubmitTrainingAttemptIntent => {
   const parsed = parseSession(session);
   return {
+    idempotencyKey: createIdempotencyKey(),
     kind: "attempt",
     request: submitAttemptRequestSchema.parse({
       ...attempt,
@@ -160,6 +168,7 @@ export const newRevealTrainingSolutionIntent = (
 ): RevealTrainingSolutionIntent => {
   const parsed = parseSession(session);
   return {
+    idempotencyKey: createIdempotencyKey(),
     kind: "solution",
     request: { version: parsed.version },
     sessionId: parsed.sessionId,
@@ -205,6 +214,7 @@ export const requestTrainingHint = async (
     {
       body: versionedTrainingRequestSchema.parse(intent.request),
       csrfProof,
+      headers: idempotencyHeaders(intent.idempotencyKey),
       method: "POST",
     },
   );
@@ -221,6 +231,7 @@ export const submitTrainingAttempt = async (
     {
       body: submitAttemptRequestSchema.parse(intent.request),
       csrfProof,
+      headers: idempotencyHeaders(intent.idempotencyKey),
       method: "POST",
     },
   );
@@ -237,6 +248,7 @@ export const revealTrainingSolution = async (
     {
       body: versionedTrainingRequestSchema.parse(intent.request),
       csrfProof,
+      headers: idempotencyHeaders(intent.idempotencyKey),
       method: "POST",
     },
   );
@@ -284,6 +296,7 @@ export const invalidateTrainingCompletionReadModels = async (
   sessionId: string,
 ) => {
   await Promise.all([
+    invalidateTrainingProgressReadModels(queryClient, ownerScope),
     queryClient.invalidateQueries({
       queryKey: trainingQueryKeys.result(ownerScope, sessionId),
     }),
@@ -291,13 +304,21 @@ export const invalidateTrainingCompletionReadModels = async (
       queryKey: planQueryKeys.forOwner(ownerScope),
     }),
     queryClient.invalidateQueries({
-      queryKey: ["dashboard", ownerScope] as const,
-    }),
-    queryClient.invalidateQueries({
-      queryKey: ["problems", ownerScope] as const,
-    }),
-    queryClient.invalidateQueries({
       queryKey: notificationQueryKeys.forOwner(ownerScope),
+    }),
+  ]);
+};
+
+export const invalidateTrainingProgressReadModels = async (
+  queryClient: QueryClient,
+  ownerScope: string,
+) => {
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: dashboardQueryKeys.forOwner(ownerScope),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: problemQueryKeys.forOwner(ownerScope),
     }),
   ]);
 };
@@ -308,26 +329,35 @@ export type TrainingMutationOptions = Readonly<{
   verifyOwner?: () => Promise<void>;
 }>;
 
-const noOpOwnerVerification = async (): Promise<void> => undefined;
-
 const useTrainingMutationOptions = ({
   csrfProof,
   ownerScope,
-  verifyOwner = noOpOwnerVerification,
+  verifyOwner,
 }: TrainingMutationOptions) => {
   const queryClient = useQueryClient();
-  return { csrfProof, ownerScope, queryClient, verifyOwner } as const;
+  return {
+    csrfProof,
+    ownerScope,
+    queryClient,
+    verifyOwner: verifyOwner ?? (() => verifyCurrentSessionOwner(ownerScope)),
+  } as const;
 };
 
 export const useStartTrainingMutation = (options: TrainingMutationOptions) => {
   const context = useTrainingMutationOptions(options);
   return useMutation<StartTrainingResponse, unknown, StartTrainingIntent>({
     mutationFn: async (intent) => {
-      await context.verifyOwner();
-      return startOrResumeTraining(intent, context.csrfProof);
+      return runOwnerVerifiedOperation(
+        context.verifyOwner,
+        () => startOrResumeTraining(intent, context.csrfProof),
+      );
     },
     mutationKey: ["training", context.ownerScope, "start"],
     networkMode: "always",
+    onSuccess: () => invalidateTrainingProgressReadModels(
+      context.queryClient,
+      context.ownerScope,
+    ),
     retry: false,
   });
 };
@@ -336,11 +366,17 @@ export const useTrainingHintMutation = (options: TrainingMutationOptions) => {
   const context = useTrainingMutationOptions(options);
   return useMutation<HintUseResponse, unknown, UseTrainingHintIntent>({
     mutationFn: async (intent) => {
-      await context.verifyOwner();
-      return requestTrainingHint(intent, context.csrfProof);
+      return runOwnerVerifiedOperation(
+        context.verifyOwner,
+        () => requestTrainingHint(intent, context.csrfProof),
+      );
     },
     mutationKey: ["training", context.ownerScope, "hint"],
     networkMode: "always",
+    onSuccess: () => invalidateTrainingProgressReadModels(
+      context.queryClient,
+      context.ownerScope,
+    ),
     retry: false,
   });
 };
@@ -355,11 +391,17 @@ export const useSubmitTrainingAttemptMutation = (
     SubmitTrainingAttemptIntent
   >({
     mutationFn: async (intent) => {
-      await context.verifyOwner();
-      return submitTrainingAttempt(intent, context.csrfProof);
+      return runOwnerVerifiedOperation(
+        context.verifyOwner,
+        () => submitTrainingAttempt(intent, context.csrfProof),
+      );
     },
     mutationKey: ["training", context.ownerScope, "attempt"],
     networkMode: "always",
+    onSuccess: () => invalidateTrainingProgressReadModels(
+      context.queryClient,
+      context.ownerScope,
+    ),
     retry: false,
   });
 };
@@ -374,11 +416,17 @@ export const useRevealTrainingSolutionMutation = (
     RevealTrainingSolutionIntent
   >({
     mutationFn: async (intent) => {
-      await context.verifyOwner();
-      return revealTrainingSolution(intent, context.csrfProof);
+      return runOwnerVerifiedOperation(
+        context.verifyOwner,
+        () => revealTrainingSolution(intent, context.csrfProof),
+      );
     },
     mutationKey: ["training", context.ownerScope, "solution"],
     networkMode: "always",
+    onSuccess: () => invalidateTrainingProgressReadModels(
+      context.queryClient,
+      context.ownerScope,
+    ),
     retry: false,
   });
 };
@@ -389,8 +437,10 @@ export const useCompleteTrainingMutation = (
   const context = useTrainingMutationOptions(options);
   return useMutation<CompletionResponse, unknown, CompleteTrainingIntent>({
     mutationFn: async (intent) => {
-      await context.verifyOwner();
-      return completeTrainingSession(intent, context.csrfProof);
+      return runOwnerVerifiedOperation(
+        context.verifyOwner,
+        () => completeTrainingSession(intent, context.csrfProof),
+      );
     },
     mutationKey: ["training", context.ownerScope, "complete"],
     networkMode: "always",

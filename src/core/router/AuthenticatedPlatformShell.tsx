@@ -36,10 +36,7 @@ import {
   usePreferences,
   usePreferencesMutation,
 } from "../../domains/platform/preferences";
-import {
-  notificationQueryKeys,
-  useUnreadNotificationCount,
-} from "../../domains/platform/notifications/notifications.queries";
+import { useUnreadNotificationCount } from "../../domains/platform/notifications/notifications.queries";
 import {
   createPhase1SearchRegistry,
 } from "../../domains/platform/search/search.registry";
@@ -51,10 +48,10 @@ import {
   useGlobalSearchShortcut,
 } from "../../domains/platform/search/useGlobalSearchShortcut";
 import { TodoLauncher } from "../../domains/platform/todo/TodoLauncher";
-import { todoQueryKeys } from "../../domains/platform/todo/todo.queries";
 import { clearTodoDrafts } from "../../domains/platform/todo/todoDrafts";
 import { readCsrfToken } from "../../shared/api/csrf";
 import { ApiError } from "../../shared/api/errors";
+import { cancelAndRemoveOwnerQueries } from "../../shared/api/ownerScopedQueries";
 import {
   classifyMutationFailure,
   type MutationFailure,
@@ -158,12 +155,7 @@ export function AuthenticatedPlatformShell({
       latest === null
       || createAccountScope(latest.email) !== ownerScope
     ) {
-      queryClient.removeQueries({
-        queryKey: notificationQueryKeys.forOwner(ownerScope),
-      });
-      queryClient.removeQueries({
-        queryKey: todoQueryKeys.forOwner(ownerScope),
-      });
+      await cancelAndRemoveOwnerQueries(queryClient, ownerScope);
       throw new ApiError({
         code: "AUTH_SESSION_OWNER_CHANGED",
         message: "当前浏览器会话的账号已发生变化，请确认账号后重试。",
@@ -349,12 +341,7 @@ export function AuthenticatedPlatformShell({
   useEffect(() => {
     const previousOwnerScope = previousOwnerScopeRef.current;
     if (previousOwnerScope !== null && previousOwnerScope !== ownerScope) {
-      queryClient.removeQueries({
-        queryKey: notificationQueryKeys.forOwner(previousOwnerScope),
-      });
-      queryClient.removeQueries({
-        queryKey: todoQueryKeys.forOwner(previousOwnerScope),
-      });
+      void cancelAndRemoveOwnerQueries(queryClient, previousOwnerScope);
     }
     previousOwnerScopeRef.current = ownerScope;
   }, [ownerScope, queryClient]);

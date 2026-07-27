@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { apiRequest } from "../../shared/api/client";
+import { runOwnerScopedQuery } from "../../shared/api/ownerScopedQueries";
 import {
   dashboardOverviewSchema,
   type DashboardOverview,
@@ -27,7 +28,11 @@ export const dashboardOverviewQueryOptions = (
   enabled = true,
 ) => queryOptions({
   enabled,
-  queryFn: ({ signal }) => getDashboardOverview(signal),
+  queryFn: ({ signal }) => runOwnerScopedQuery(
+    ownerScope,
+    () => getDashboardOverview(signal),
+    signal,
+  ),
   queryKey: dashboardQueryKeys.overview(ownerScope),
 });
 

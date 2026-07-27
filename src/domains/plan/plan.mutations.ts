@@ -8,6 +8,11 @@ import { z } from "zod";
 import { apiRequest } from "../../shared/api/client";
 import { createIdempotencyKey } from "../../shared/api/mutationRecovery";
 import {
+  runOwnerVerifiedOperation,
+  verifyCurrentSessionOwner,
+} from "../../shared/api/ownerScopedQueries";
+import { dashboardQueryKeys } from "../dashboard/dashboard.queries";
+import {
   completePlanTaskRequestSchema,
   createPlanRequestSchema,
   planCreationResponseSchema,
@@ -29,16 +34,16 @@ import { planQueryKeys } from "./plan.queries";
 const resourceIdSchema = z.string().uuid();
 const idempotencyKeySchema = z.string().regex(/^[A-Za-z0-9._~-]{16,128}$/);
 
-type IdempotentIntent = Readonly<{
+type StableMutationIntent = Readonly<{
   idempotencyKey: string;
 }>;
 
-export type CreatePlanIntent = IdempotentIntent & Readonly<{
+export type CreatePlanIntent = StableMutationIntent & Readonly<{
   kind: "create";
   request: CreatePlanRequest;
 }>;
 
-export type RunPlanDiagnosticIntent = IdempotentIntent & Readonly<{
+export type RunPlanDiagnosticIntent = StableMutationIntent & Readonly<{
   kind: "diagnostic";
   request: {
     answers: DiagnosticAnswerRequest[];
@@ -55,7 +60,7 @@ export type PlanTaskChanges = Readonly<{
   title?: string;
 }>;
 
-export type UpdatePlanTaskIntent = IdempotentIntent & Readonly<{
+export type UpdatePlanTaskIntent = StableMutationIntent & Readonly<{
   kind: "update-task";
   request: PlanTaskChanges & {
     planVersion: number;
@@ -64,7 +69,7 @@ export type UpdatePlanTaskIntent = IdempotentIntent & Readonly<{
   taskId: string;
 }>;
 
-export type CompletePlanTaskIntent = IdempotentIntent & Readonly<{
+export type CompletePlanTaskIntent = StableMutationIntent & Readonly<{
   kind: "complete-task";
   request: {
     planVersion: number;
@@ -199,7 +204,6 @@ export const updatePlanTask = async (
     {
       body: updatePlanTaskRequestSchema.parse(intent.request),
       csrfProof,
-      headers: idempotencyHeaders(intent.idempotencyKey),
       method: "PATCH",
     },
   );
@@ -216,7 +220,6 @@ export const completePlanTask = async (
     {
       body: completePlanTaskRequestSchema.parse(intent.request),
       csrfProof,
-      headers: idempotencyHeaders(intent.idempotencyKey),
       method: "POST",
     },
   );
@@ -242,6 +245,7 @@ export const mutatePlan = (
 export const acknowledgePlanTaskMutation = (
   queryClient: QueryClient,
   ownerScope: string,
+  intent: UpdatePlanTaskIntent | CompletePlanTaskIntent,
   acknowledged: PlanTaskMutationResponse,
 ) => {
   queryClient.setQueryData<CurrentPlanResponse>(
@@ -251,12 +255,28 @@ export const acknowledgePlanTaskMutation = (
       if (
         plan === null
         || plan === undefined
+        || intent.taskId !== acknowledged.task.id
         || plan.id !== acknowledged.task.planId
         || !plan.tasks.some(({ id }) => id === acknowledged.task.id)
       ) {
         return current;
       }
       const previousTask = plan.tasks.find(({ id }) => id === acknowledged.task.id);
+      if (previousTask === undefined) return current;
+      if (
+        plan.version === acknowledged.planVersion
+        && previousTask.version === acknowledged.task.version
+      ) {
+        return current;
+      }
+      if (
+        plan.version !== intent.request.planVersion
+        || previousTask.version !== intent.request.taskVersion
+        || acknowledged.planVersion <= plan.version
+        || acknowledged.task.version <= previousTask.version
+      ) {
+        return current;
+      }
       const completionDelta = previousTask?.status === "open"
         && acknowledged.task.status === "completed"
         ? 1
@@ -290,7 +310,7 @@ export const invalidatePlanReadModels = async (
       queryKey: planQueryKeys.forOwner(ownerScope),
     }),
     queryClient.invalidateQueries({
-      queryKey: ["dashboard", ownerScope] as const,
+      queryKey: dashboardQueryKeys.forOwner(ownerScope),
     }),
   ]);
 };
@@ -301,23 +321,28 @@ export type PlanMutationOptions = Readonly<{
   verifyOwner?: () => Promise<void>;
 }>;
 
-const noOpOwnerVerification = async (): Promise<void> => undefined;
-
 const usePlanMutationOptions = ({
   csrfProof,
   ownerScope,
-  verifyOwner = noOpOwnerVerification,
+  verifyOwner,
 }: PlanMutationOptions) => {
   const queryClient = useQueryClient();
-  return { csrfProof, ownerScope, queryClient, verifyOwner } as const;
+  return {
+    csrfProof,
+    ownerScope,
+    queryClient,
+    verifyOwner: verifyOwner ?? (() => verifyCurrentSessionOwner(ownerScope)),
+  } as const;
 };
 
 export const useCreatePlanMutation = (options: PlanMutationOptions) => {
   const context = usePlanMutationOptions(options);
   return useMutation<PlanCreationResponse, unknown, CreatePlanIntent>({
     mutationFn: async (intent) => {
-      await context.verifyOwner();
-      return createPlan(intent, context.csrfProof);
+      return runOwnerVerifiedOperation(
+        context.verifyOwner,
+        () => createPlan(intent, context.csrfProof),
+      );
     },
     mutationKey: ["plans", context.ownerScope, "create"],
     networkMode: "always",
@@ -330,8 +355,10 @@ export const useRunPlanDiagnosticMutation = (options: PlanMutationOptions) => {
   const context = usePlanMutationOptions(options);
   return useMutation<PlanDiagnosticResponse, unknown, RunPlanDiagnosticIntent>({
     mutationFn: async (intent) => {
-      await context.verifyOwner();
-      return runPlanDiagnostic(intent, context.csrfProof);
+      return runOwnerVerifiedOperation(
+        context.verifyOwner,
+        () => runPlanDiagnostic(intent, context.csrfProof),
+      );
     },
     mutationKey: ["plans", context.ownerScope, "diagnostic"],
     networkMode: "always",
@@ -344,15 +371,18 @@ export const useUpdatePlanTaskMutation = (options: PlanMutationOptions) => {
   const context = usePlanMutationOptions(options);
   return useMutation<PlanTaskMutationResponse, unknown, UpdatePlanTaskIntent>({
     mutationFn: async (intent) => {
-      await context.verifyOwner();
-      return updatePlanTask(intent, context.csrfProof);
+      return runOwnerVerifiedOperation(
+        context.verifyOwner,
+        () => updatePlanTask(intent, context.csrfProof),
+      );
     },
     mutationKey: ["plans", context.ownerScope, "update-task"],
     networkMode: "always",
-    onSuccess: async (acknowledged) => {
+    onSuccess: async (acknowledged, intent) => {
       acknowledgePlanTaskMutation(
         context.queryClient,
         context.ownerScope,
+        intent,
         acknowledged,
       );
       await invalidatePlanReadModels(context.queryClient, context.ownerScope);
@@ -365,15 +395,18 @@ export const useCompletePlanTaskMutation = (options: PlanMutationOptions) => {
   const context = usePlanMutationOptions(options);
   return useMutation<PlanTaskMutationResponse, unknown, CompletePlanTaskIntent>({
     mutationFn: async (intent) => {
-      await context.verifyOwner();
-      return completePlanTask(intent, context.csrfProof);
+      return runOwnerVerifiedOperation(
+        context.verifyOwner,
+        () => completePlanTask(intent, context.csrfProof),
+      );
     },
     mutationKey: ["plans", context.ownerScope, "complete-task"],
     networkMode: "always",
-    onSuccess: async (acknowledged) => {
+    onSuccess: async (acknowledged, intent) => {
       acknowledgePlanTaskMutation(
         context.queryClient,
         context.ownerScope,
+        intent,
         acknowledged,
       );
       await invalidatePlanReadModels(context.queryClient, context.ownerScope);

@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { apiRequest } from "../../../shared/api/client";
+import { runOwnerScopedQuery } from "../../../shared/api/ownerScopedQueries";
 import {
   notificationsResponseSchema,
   type NotificationsResponse,
@@ -42,7 +43,11 @@ export const notificationsQueryOptions = (
   const cursor = options.cursor ?? null;
   return queryOptions({
     enabled: options.enabled ?? true,
-    queryFn: ({ signal }) => getNotifications(cursor, signal),
+    queryFn: ({ signal }) => runOwnerScopedQuery(
+      options.ownerScope,
+      () => getNotifications(cursor, signal),
+      signal,
+    ),
     queryKey: notificationQueryKeys.list(options.ownerScope, cursor),
   });
 };

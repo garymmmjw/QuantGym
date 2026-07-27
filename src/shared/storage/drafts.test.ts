@@ -36,6 +36,7 @@ describe("native recoverable draft storage", () => {
     expect(draft.schemaVersion).toBe(RECOVERABLE_DRAFT_SCHEMA_VERSION);
     expect(draft).toEqual(expect.objectContaining({
       attemptCount: 0,
+      generationId: expect.stringMatching(/^gen-/u),
       lastAttemptAt: null,
       ownerScope,
       resourceId: "problem-two-sum",
@@ -63,6 +64,7 @@ describe("native recoverable draft storage", () => {
 
     expect(second.idempotencyKey).not.toBe(first.idempotencyKey);
     expect(second.draftId).not.toBe(first.draftId);
+    expect(second.generationId).not.toBe(first.generationId);
   });
 
   it("rejects auth material recursively instead of persisting it", () => {
@@ -142,10 +144,26 @@ describe("native recoverable draft storage", () => {
     await repository.put(original);
     await repository.put(revision);
 
+    expect(revision.generationId).not.toBe(original.generationId);
     expect(await repository.acknowledge(original)).toBe(false);
     expect(await repository.list(ownerScope)).toEqual([revision]);
     expect(await repository.acknowledge(revision)).toBe(true);
     expect(await repository.list(ownerScope)).toEqual([]);
+  });
+
+  it("keeps a same-millisecond revision when an older generation is acknowledged", async () => {
+    const repository = createInMemoryDraftRepository();
+    const original = createProblemDraft("原始内容");
+    const revision = reviseRecoverableDraft(original, {
+      payload: { body: "同毫秒修订内容" },
+      serverVersion: 4,
+      updatedAt: original.updatedAt,
+    });
+    await repository.put(original);
+    await repository.put(revision);
+
+    expect(await repository.acknowledge(original)).toBe(false);
+    expect(await repository.list(ownerScope)).toEqual([revision]);
   });
 
   it("reuses the persisted key across failed reconnects and deletes after acknowledgement", async () => {
@@ -163,7 +181,14 @@ describe("native recoverable draft storage", () => {
       },
       repository,
     });
-    expect(failed.retained).toEqual([{ draftId: draft.draftId, reason: "failed" }]);
+    expect(failed.retained).toEqual([{
+      code: "NETWORK_OFFLINE",
+      draftId: draft.draftId,
+      reason: "failed",
+      requestId: null,
+      retryable: true,
+      state: "offline-draft",
+    }]);
 
     const acknowledged = await replayRecoverableDrafts({
       kinds: ["problems.note"],

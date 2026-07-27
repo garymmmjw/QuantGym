@@ -51,11 +51,11 @@ export const classifyMutationFailure = (
   if (error instanceof ApiError) {
     const state = error.status === 401 || error.status === 403
       ? "permission-denied"
-      : error.status === 409
-        ? "stale-version-conflict"
-        : error.retryable || error.status === 429 || error.status >= 500
+      : error.retryable || error.status === 429 || error.status >= 500
           ? "recoverable-error"
-          : "non-recoverable-error";
+          : error.status === 409
+            ? "stale-version-conflict"
+            : "non-recoverable-error";
     return {
       code: error.code,
       message: error.message,

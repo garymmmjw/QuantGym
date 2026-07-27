@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 import { apiRequest } from "../../shared/api/client";
+import { runOwnerScopedQuery } from "../../shared/api/ownerScopedQueries";
 import {
   problemDetailSchema,
   problemIdSchema,
@@ -103,7 +104,11 @@ export const problemsQueryOptions = ({
   ownerScope,
 }: ProblemsQueryOptions) => queryOptions({
   enabled,
-  queryFn: ({ signal }) => getProblems(filters, signal),
+  queryFn: ({ signal }) => runOwnerScopedQuery(
+    ownerScope,
+    () => getProblems(filters, signal),
+    signal,
+  ),
   queryKey: problemQueryKeys.list(ownerScope, filters),
 });
 
@@ -123,7 +128,11 @@ export const problemDetailQueryOptions = ({
   problemId,
 }: ProblemDetailQueryOptions) => queryOptions({
   enabled,
-  queryFn: ({ signal }) => getProblem(problemId, signal),
+  queryFn: ({ signal }) => runOwnerScopedQuery(
+    ownerScope,
+    () => getProblem(problemId, signal),
+    signal,
+  ),
   queryKey: problemQueryKeys.detail(ownerScope, problemId),
 });
 

@@ -217,30 +217,70 @@ describe("problems typed client", () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
-    const filters = { favorite: false } as const;
-    queryClient.setQueryData(problemQueryKeys.list(ownerScope, filters), page);
-    queryClient.setQueryData(problemQueryKeys.detail(ownerScope, problemId), detail);
+    const filters = { favorite: true } as const;
+    const favoritedPage: ProblemListResponse = {
+      ...page,
+      items: [{ ...summary, favorite: favoriteAcknowledgement }],
+    };
+    const favoritedDetail: ProblemDetail = {
+      ...detail,
+      favorite: favoriteAcknowledgement,
+    };
+    queryClient.setQueryData(problemQueryKeys.list(ownerScope, filters), favoritedPage);
+    queryClient.setQueryData(problemQueryKeys.detail(ownerScope, problemId), favoritedDetail);
     queryClient.setQueryData(problemQueryKeys.list(otherOwnerScope, filters), page);
-    const intent = newSetProblemFavoriteIntent(summary, true);
+    const intent = newSetProblemFavoriteIntent(favoritedPage.items[0]!, false);
 
     await acknowledgeProblemFavorite(
       queryClient,
       ownerScope,
       intent,
-      favoriteAcknowledgement,
+      unfavorited,
     );
 
     expect(queryClient.getQueryData<ProblemListResponse>(
       problemQueryKeys.list(ownerScope, filters),
-    )?.items[0]?.favorite).toEqual(favoriteAcknowledgement);
+    )?.items[0]?.favorite).toEqual(unfavorited);
     expect(queryClient.getQueryData<ProblemDetail>(
       problemQueryKeys.detail(ownerScope, problemId),
-    )?.favorite).toEqual(favoriteAcknowledgement);
+    )?.favorite).toEqual(unfavorited);
     expect(queryClient.getQueryState(problemQueryKeys.list(ownerScope, filters))?.isInvalidated)
       .toBe(true);
+    expect(queryClient.getQueryState(
+      problemQueryKeys.detail(ownerScope, problemId),
+    )?.isInvalidated).toBe(true);
     expect(queryClient.getQueryData<ProblemListResponse>(
       problemQueryKeys.list(otherOwnerScope, filters),
     )).toEqual(page);
+    queryClient.clear();
+  });
+
+  it("does not let a delayed null-generation add acknowledgement undo a later remove", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    queryClient.setQueryData(problemQueryKeys.list(ownerScope), page);
+    queryClient.setQueryData(problemQueryKeys.detail(ownerScope, problemId), detail);
+    const delayedAddIntent = newSetProblemFavoriteIntent(summary, true);
+
+    await acknowledgeProblemFavorite(
+      queryClient,
+      ownerScope,
+      delayedAddIntent,
+      favoriteAcknowledgement,
+    );
+
+    expect(queryClient.getQueryData<ProblemListResponse>(
+      problemQueryKeys.list(ownerScope),
+    )?.items[0]?.favorite).toEqual(unfavorited);
+    expect(queryClient.getQueryData<ProblemDetail>(
+      problemQueryKeys.detail(ownerScope, problemId),
+    )?.favorite).toEqual(unfavorited);
+    expect(queryClient.getQueryState(problemQueryKeys.list(ownerScope))?.isInvalidated)
+      .toBe(true);
+    expect(queryClient.getQueryState(
+      problemQueryKeys.detail(ownerScope, problemId),
+    )?.isInvalidated).toBe(true);
     queryClient.clear();
   });
 

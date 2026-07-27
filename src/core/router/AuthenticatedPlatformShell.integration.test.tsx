@@ -226,7 +226,7 @@ describe("AuthenticatedPlatformShell", () => {
     apiRequestMock.mockImplementation((path: string) => {
       if (path === "/me") {
         meRequestCount += 1;
-        if (meRequestCount === 1) return Promise.resolve(currentUser);
+        if (meRequestCount <= 2) return Promise.resolve(currentUser);
         return Promise.reject(new ApiError({
           code: "AUTH_SERVICE_UNAVAILABLE",
           message: "暂时无法载入最新设置。",
@@ -251,6 +251,7 @@ describe("AuthenticatedPlatformShell", () => {
     });
     const user = userEvent.setup();
     renderShell();
+    await waitFor(() => expect(meRequestCount).toBe(1));
 
     await user.click(screen.getAllByRole("button", { name: "切换到深色主题" })[0] as HTMLElement);
     await user.click(await screen.findByRole("button", { name: "载入最新后重试" }));
@@ -277,7 +278,7 @@ describe("AuthenticatedPlatformShell", () => {
     ) => {
       if (path === "/me") {
         meRequestCount += 1;
-        if (meRequestCount === 2) return reloadResponse;
+        if (meRequestCount === 3) return reloadResponse;
         return Promise.resolve({ ...currentUser, preferences: serverPreferences });
       }
       if (path === "/notifications") {
@@ -313,10 +314,11 @@ describe("AuthenticatedPlatformShell", () => {
     });
     const user = userEvent.setup();
     renderShell();
+    await waitFor(() => expect(meRequestCount).toBe(1));
 
     await user.click(screen.getAllByRole("button", { name: "切换到深色主题" })[0] as HTMLElement);
     await user.click(await screen.findByRole("button", { name: "载入最新后重试" }));
-    await waitFor(() => expect(meRequestCount).toBe(2));
+    await waitFor(() => expect(meRequestCount).toBe(3));
 
     await user.click(screen.getByRole("button", { name: "打开账户菜单" }));
     await user.click(screen.getByRole("menuitem", { name: "Switch to English" }));

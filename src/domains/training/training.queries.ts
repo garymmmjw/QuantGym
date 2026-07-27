@@ -2,6 +2,7 @@ import { queryOptions, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { apiRequest } from "../../shared/api/client";
+import { runOwnerScopedQuery } from "../../shared/api/ownerScopedQueries";
 import {
   trainingResultResponseSchema,
   type TrainingResultResponse,
@@ -44,7 +45,11 @@ export const trainingResultQueryOptions = ({
   sessionId,
 }: TrainingResultQueryOptions) => queryOptions({
   enabled,
-  queryFn: ({ signal }) => getTrainingResult(sessionId, signal),
+  queryFn: ({ signal }) => runOwnerScopedQuery(
+    ownerScope,
+    () => getTrainingResult(sessionId, signal),
+    signal,
+  ),
   queryKey: trainingQueryKeys.result(ownerScope, sessionId),
   retry: false,
 });

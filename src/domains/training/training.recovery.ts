@@ -1,3 +1,10 @@
+import type { QueryClient } from "@tanstack/react-query";
+import { z } from "zod";
+
+import {
+  runOwnerVerifiedOperation,
+  verifyCurrentSessionOwner,
+} from "../../shared/api/ownerScopedQueries";
 import {
   createRecoverableDraft,
   recoverableDraftRepository,
@@ -8,12 +15,20 @@ import {
   type RecoverableDraftRepository,
 } from "../../shared/storage/drafts";
 import {
+  invalidateTrainingCompletionReadModels,
+  invalidateTrainingProgressReadModels,
   mutateTraining,
   type TrainingMutationIntent,
+  type TrainingMutationResponse,
 } from "./training.mutations";
 import {
+  attemptSubmissionResponseSchema,
   completeTrainingRequestSchema,
+  completionResponseSchema,
+  hintUseResponseSchema,
+  solutionRevealResponseSchema,
   startTrainingRequestSchema,
+  startTrainingResponseSchema,
   submitAttemptRequestSchema,
   versionedTrainingRequestSchema,
 } from "./training.schema";
@@ -25,6 +40,230 @@ export const TRAINING_DRAFT_KINDS = [
   "training.solution",
   "training.complete",
 ] as const;
+
+export const TRAINING_RECOVERY_RECEIPT_KINDS = [
+  "training.recovery-start",
+  "training.recovery-hint",
+  "training.recovery-attempt",
+  "training.recovery-solution",
+  "training.recovery-complete",
+] as const;
+
+const receiptSourceShape = {
+  expiresAt: z.string().datetime({ offset: true }),
+  sourceDraftId: z.string().min(1).max(220),
+  sourceGenerationId: z.string().min(1).max(300),
+} as const;
+
+const trainingEventReceiptResponseSchema = z.object({
+  eventId: z.string().uuid(),
+  eventSequence: z.number().int().positive(),
+  sessionId: z.string().uuid(),
+  sessionVersion: z.number().int().positive(),
+}).strict();
+
+const trainingRecoveryReceiptPayloadSchema = z.discriminatedUnion("intentKind", [
+  z.object({
+    ...receiptSourceShape,
+    intentKind: z.literal("start"),
+    response: startTrainingResponseSchema,
+  }).strict(),
+  z.object({
+    ...receiptSourceShape,
+    intentKind: z.literal("hint"),
+    response: trainingEventReceiptResponseSchema,
+  }).strict(),
+  z.object({
+    ...receiptSourceShape,
+    intentKind: z.literal("attempt"),
+    response: attemptSubmissionResponseSchema,
+  }).strict(),
+  z.object({
+    ...receiptSourceShape,
+    intentKind: z.literal("solution"),
+    response: trainingEventReceiptResponseSchema,
+  }).strict(),
+  z.object({
+    ...receiptSourceShape,
+    intentKind: z.literal("complete"),
+    response: completionResponseSchema,
+  }).strict(),
+]);
+
+export type TrainingRecoveryReceiptPayload = z.output<
+  typeof trainingRecoveryReceiptPayloadSchema
+>;
+
+export type TrainingRecoveryReceipt = Readonly<{
+  draft: RecoverableDraft;
+  payload: TrainingRecoveryReceiptPayload;
+}>;
+
+const receiptExpiry = (createdAt: string): string => {
+  const expiry = new Date(createdAt);
+  expiry.setUTCDate(expiry.getUTCDate() + 7);
+  return expiry.toISOString();
+};
+
+const stableReceiptKey = (source: RecoverableDraft): string => {
+  const value = `${source.draftId}:${source.generationId}`;
+  const seeds = [0x811c9dc5, 0x9e3779b9, 0x85ebca6b, 0xc2b2ae35];
+  const segments = seeds.map((seed) => {
+    let hash = seed;
+    for (let index = 0; index < value.length; index += 1) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 0x01000193);
+    }
+    return (hash >>> 0).toString(16).padStart(8, "0");
+  });
+  return `receipt_${segments.join("")}`;
+};
+
+const recoveryReceiptKind = (intent: TrainingMutationIntent) => (
+  `training.recovery-${intent.kind}` as const
+);
+
+const contentFreeEventReceipt = (response: {
+  eventId: string;
+  eventSequence: number;
+  sessionId: string;
+  sessionVersion: number;
+}) => trainingEventReceiptResponseSchema.parse({
+  eventId: response.eventId,
+  eventSequence: response.eventSequence,
+  sessionId: response.sessionId,
+  sessionVersion: response.sessionVersion,
+});
+
+const receiptResponse = (
+  intent: TrainingMutationIntent,
+  response: TrainingMutationResponse,
+): TrainingRecoveryReceiptPayload["response"] => {
+  switch (intent.kind) {
+    case "start":
+      return startTrainingResponseSchema.parse(response);
+    case "hint": {
+      return contentFreeEventReceipt(hintUseResponseSchema.parse(response));
+    }
+    case "attempt":
+      return attemptSubmissionResponseSchema.parse(response);
+    case "solution": {
+      return contentFreeEventReceipt(solutionRevealResponseSchema.parse(response));
+    }
+    case "complete":
+      return completionResponseSchema.parse(response);
+  }
+};
+
+const createTrainingRecoveryReceipt = (
+  ownerScope: string,
+  source: RecoverableDraft,
+  intent: TrainingMutationIntent,
+  response: TrainingMutationResponse,
+  createdAt = new Date().toISOString(),
+): TrainingRecoveryReceipt => {
+  const parsedResponse = receiptResponse(intent, response);
+  const payload = trainingRecoveryReceiptPayloadSchema.parse({
+    expiresAt: receiptExpiry(createdAt),
+    intentKind: intent.kind,
+    response: parsedResponse,
+    sourceDraftId: source.draftId,
+    sourceGenerationId: source.generationId,
+  });
+  const draft = createRecoverableDraft({
+    idempotencyKey: stableReceiptKey(source),
+    kind: recoveryReceiptKind(intent),
+    ownerScope,
+    payload,
+    resourceId: parsedResponse.sessionId,
+    serverVersion: parsedResponse.sessionVersion,
+    updatedAt: createdAt,
+  });
+  return { draft, payload };
+};
+
+const recoverTrainingRecoveryReceipt = (
+  draft: RecoverableDraft,
+): TrainingRecoveryReceipt => {
+  if (!TRAINING_RECOVERY_RECEIPT_KINDS.includes(
+    draft.kind as (typeof TRAINING_RECOVERY_RECEIPT_KINDS)[number],
+  )) {
+    throw new Error("TRAINING_RECOVERY_RECEIPT_KIND_INVALID");
+  }
+  const payload = trainingRecoveryReceiptPayloadSchema.parse(draft.payload);
+  if (
+    draft.kind !== `training.recovery-${payload.intentKind}`
+    || draft.resourceId !== payload.response.sessionId
+    || draft.serverVersion !== payload.response.sessionVersion
+  ) {
+    throw new Error("TRAINING_RECOVERY_RECEIPT_INVALID");
+  }
+  return { draft, payload };
+};
+
+export const listTrainingRecoveryReceipts = async (
+  ownerScope: string,
+  repository: RecoverableDraftRepository = recoverableDraftRepository,
+  now = new Date(),
+): Promise<readonly TrainingRecoveryReceipt[]> => {
+  const receipts: TrainingRecoveryReceipt[] = [];
+  for (const draft of await repository.list(ownerScope)) {
+    if (!TRAINING_RECOVERY_RECEIPT_KINDS.includes(
+      draft.kind as (typeof TRAINING_RECOVERY_RECEIPT_KINDS)[number],
+    )) continue;
+    let receipt: TrainingRecoveryReceipt;
+    try {
+      receipt = recoverTrainingRecoveryReceipt(draft);
+    } catch {
+      // A generic draft can be structurally valid while its domain receipt is
+      // unusable. Remove only that exact invalid generation so one bad record
+      // cannot block every other training continuation.
+      await repository.acknowledge(draft);
+      continue;
+    }
+    if (Date.parse(receipt.payload.expiresAt) <= now.getTime()) {
+      await repository.acknowledge(receipt.draft);
+      continue;
+    }
+    receipts.push(receipt);
+  }
+  return receipts;
+};
+
+export const consumeTrainingRecoveryReceipt = async (
+  ownerScope: string,
+  receipt: TrainingRecoveryReceipt,
+  repository: RecoverableDraftRepository = recoverableDraftRepository,
+): Promise<boolean> => {
+  if (receipt.draft.ownerScope !== ownerScope) {
+    throw new Error("TRAINING_RECOVERY_RECEIPT_OWNER_MISMATCH");
+  }
+  return repository.acknowledge(receipt.draft);
+};
+
+const invalidateTrainingRecoveryReceipt = (
+  queryClient: QueryClient,
+  ownerScope: string,
+  receipt: TrainingRecoveryReceipt,
+) => receipt.payload.intentKind === "complete"
+  ? invalidateTrainingCompletionReadModels(
+      queryClient,
+      ownerScope,
+      receipt.payload.response.sessionId,
+    )
+  : invalidateTrainingProgressReadModels(queryClient, ownerScope);
+
+export const reconcileTrainingRecoveryReceipts = async (
+  ownerScope: string,
+  queryClient: QueryClient,
+  repository: RecoverableDraftRepository = recoverableDraftRepository,
+): Promise<readonly TrainingRecoveryReceipt[]> => {
+  const receipts = await listTrainingRecoveryReceipts(ownerScope, repository);
+  await Promise.all(receipts.map((receipt) => (
+    invalidateTrainingRecoveryReceipt(queryClient, ownerScope, receipt)
+  )));
+  return receipts;
+};
 
 export const createTrainingMutationDraft = (
   ownerScope: string,
@@ -51,11 +290,23 @@ export const createTrainingMutationDraft = (
         kind: "training.start",
       });
     case "hint":
-      return createRecoverableDraft({ ...common, kind: "training.hint" });
+      return createRecoverableDraft({
+        ...common,
+        idempotencyKey: intent.idempotencyKey,
+        kind: "training.hint",
+      });
     case "attempt":
-      return createRecoverableDraft({ ...common, kind: "training.attempt" });
+      return createRecoverableDraft({
+        ...common,
+        idempotencyKey: intent.idempotencyKey,
+        kind: "training.attempt",
+      });
     case "solution":
-      return createRecoverableDraft({ ...common, kind: "training.solution" });
+      return createRecoverableDraft({
+        ...common,
+        idempotencyKey: intent.idempotencyKey,
+        kind: "training.solution",
+      });
     case "complete":
       return createRecoverableDraft({
         ...common,
@@ -85,18 +336,21 @@ export const recoverTrainingMutationIntent = (
       }
     case "training.hint":
       return {
+        idempotencyKey: draft.idempotencyKey,
         kind: "hint",
         request: versionedTrainingRequestSchema.parse(draft.payload),
         sessionId: draft.resourceId,
       };
     case "training.attempt":
       return {
+        idempotencyKey: draft.idempotencyKey,
         kind: "attempt",
         request: submitAttemptRequestSchema.parse(draft.payload),
         sessionId: draft.resourceId,
       };
     case "training.solution":
       return {
+        idempotencyKey: draft.idempotencyKey,
         kind: "solution",
         request: versionedTrainingRequestSchema.parse(draft.payload),
         sessionId: draft.resourceId,
@@ -126,20 +380,58 @@ export const persistTrainingMutationDraft = async (
 export type ReplayTrainingDraftsOptions = Readonly<{
   csrfProof: string | null;
   ownerScope: string;
+  queryClient: QueryClient;
   repository?: RecoverableDraftRepository;
   verifyOwner?: () => Promise<void>;
 }>;
 
-const trainingReplayOptions = (options: ReplayTrainingDraftsOptions) => ({
-  kinds: TRAINING_DRAFT_KINDS,
-  ownerScope: options.ownerScope,
-  replay: async (draft: RecoverableDraft) => {
-    await options.verifyOwner?.();
-    await mutateTraining(recoverTrainingMutationIntent(draft), options.csrfProof);
-    return { acknowledged: true };
-  },
-  ...(options.repository === undefined ? {} : { repository: options.repository }),
-});
+const trainingReplayOptions = (options: ReplayTrainingDraftsOptions) => {
+  const repository = options.repository ?? recoverableDraftRepository;
+  const verifyOwner = options.verifyOwner
+    ?? (() => verifyCurrentSessionOwner(options.ownerScope));
+  return {
+    kinds: TRAINING_DRAFT_KINDS,
+    ownerScope: options.ownerScope,
+    replay: async (draft: RecoverableDraft) => {
+      await verifyOwner();
+      const existing = (await listTrainingRecoveryReceipts(
+        options.ownerScope,
+        repository,
+      )).find(({ payload }) => (
+        payload.sourceDraftId === draft.draftId
+        && payload.sourceGenerationId === draft.generationId
+      ));
+      if (existing !== undefined) {
+        await invalidateTrainingRecoveryReceipt(
+          options.queryClient,
+          options.ownerScope,
+          existing,
+        );
+        return { acknowledged: true };
+      }
+
+      const intent = recoverTrainingMutationIntent(draft);
+      const response = await runOwnerVerifiedOperation(
+        verifyOwner,
+        () => mutateTraining(intent, options.csrfProof),
+      );
+      const receipt = createTrainingRecoveryReceipt(
+        options.ownerScope,
+        draft,
+        intent,
+        response,
+      );
+      await repository.put(receipt.draft);
+      await invalidateTrainingRecoveryReceipt(
+        options.queryClient,
+        options.ownerScope,
+        receipt,
+      );
+      return { acknowledged: true };
+    },
+    repository,
+  };
+};
 
 export const replayTrainingMutationDrafts = (
   options: ReplayTrainingDraftsOptions,

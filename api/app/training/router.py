@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
+from pydantic import SecretStr
 
 from ..auth.dependencies import (
     get_authenticated_session,
@@ -12,6 +13,7 @@ from ..auth.dependencies import (
     require_mutating_session,
 )
 from ..auth.service import SessionContext
+from ..config import get_settings
 from ..errors import standard_error_responses
 from ..idempotency import IdempotencyKey, require_idempotency_key
 from .schemas import (
@@ -38,10 +40,18 @@ from .service import TrainingService
 router = APIRouter(prefix="/api/v2/training/sessions", tags=["training"])
 
 
+def get_training_fingerprint_secret(request: Request) -> SecretStr:
+    settings = getattr(request.app.state, "settings", None)
+    if settings is None:
+        settings = get_settings()
+    return settings.session_secret
+
+
 def get_training_service(
     engine: object = Depends(get_database_engine),
+    fingerprint_secret: SecretStr = Depends(get_training_fingerprint_secret),
 ) -> TrainingService:
-    return TrainingService(engine)
+    return TrainingService(engine, fingerprint_secret=fingerprint_secret)
 
 
 def _no_store(response: Response) -> None:
@@ -78,7 +88,7 @@ def start_or_resume_training(
     "/{session_id}/hint",
     operation_id="useTrainingHint",
     response_model=HintUseResponse,
-    responses=standard_error_responses(401, 403, 404, 409, 422, 500, 503),
+    responses=standard_error_responses(400, 401, 403, 404, 409, 422, 500, 503),
     summary="Record one authorized hint reveal",
 )
 def use_training_hint(
@@ -86,12 +96,14 @@ def use_training_hint(
     payload: VersionedTrainingRequest,
     response: Response,
     session: SessionContext = Depends(require_mutating_session),
+    key: IdempotencyKey = Depends(require_idempotency_key),
     service: TrainingService = Depends(get_training_service),
 ) -> HintUseResponse:
     result = service.use_hint(
         user_id=session.user.id,
         session_id=session_id,
         expected_version=payload.version,
+        idempotency_key=key,
     )
     _no_store(response)
     return to_hint_response(result)
@@ -102,7 +114,7 @@ def use_training_hint(
     operation_id="submitTrainingAttempt",
     response_model=AttemptSubmissionResponse,
     status_code=status.HTTP_201_CREATED,
-    responses=standard_error_responses(401, 403, 404, 409, 422, 500, 503),
+    responses=standard_error_responses(400, 401, 403, 404, 409, 422, 500, 503),
     summary="Store and evaluate one private training answer",
 )
 def submit_training_attempt(
@@ -110,6 +122,7 @@ def submit_training_attempt(
     payload: SubmitAttemptRequest,
     response: Response,
     session: SessionContext = Depends(require_mutating_session),
+    key: IdempotencyKey = Depends(require_idempotency_key),
     service: TrainingService = Depends(get_training_service),
 ) -> AttemptSubmissionResponse:
     result = service.submit_attempt(
@@ -118,6 +131,7 @@ def submit_training_attempt(
         expected_version=payload.version,
         answer_kind=payload.kind,
         answer=payload.answer,
+        idempotency_key=key,
     )
     _no_store(response)
     return to_attempt_response(result)
@@ -127,7 +141,7 @@ def submit_training_attempt(
     "/{session_id}/solution",
     operation_id="revealTrainingSolution",
     response_model=SolutionRevealResponse,
-    responses=standard_error_responses(401, 403, 404, 409, 422, 500, 503),
+    responses=standard_error_responses(400, 401, 403, 404, 409, 422, 500, 503),
     summary="Record and return one authorized solution reveal",
 )
 def reveal_training_solution(
@@ -135,12 +149,14 @@ def reveal_training_solution(
     payload: VersionedTrainingRequest,
     response: Response,
     session: SessionContext = Depends(require_mutating_session),
+    key: IdempotencyKey = Depends(require_idempotency_key),
     service: TrainingService = Depends(get_training_service),
 ) -> SolutionRevealResponse:
     result = service.reveal_solution(
         user_id=session.user.id,
         session_id=session_id,
         expected_version=payload.version,
+        idempotency_key=key,
     )
     _no_store(response)
     return to_solution_response(result)

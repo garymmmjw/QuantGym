@@ -186,9 +186,7 @@ describe("official plan API client", () => {
         "*/api/v2/plans/current/tasks/:taskId",
         async ({ params, request }) => {
           expect(params.taskId).toBe(taskId);
-          expect(request.headers.get("x-idempotency-key")).toMatch(
-            /^[A-Za-z0-9._~-]{16,128}$/,
-          );
+          expect(request.headers.get("x-idempotency-key")).toBeNull();
           await expect(request.json()).resolves.toEqual({
             planVersion: 5,
             taskVersion: 3,
@@ -200,9 +198,7 @@ describe("official plan API client", () => {
       http.post(
         "*/api/v2/plans/current/tasks/:taskId/complete",
         async ({ request }) => {
-          expect(request.headers.get("x-idempotency-key")).toMatch(
-            /^[A-Za-z0-9._~-]{16,128}$/,
-          );
+          expect(request.headers.get("x-idempotency-key")).toBeNull();
           await expect(request.json()).resolves.toEqual({
             planVersion: 5,
             taskVersion: 3,
@@ -222,37 +218,29 @@ describe("official plan API client", () => {
     )).resolves.toEqual({ planVersion: 6, task: completedTask });
   });
 
-  it("keeps one idempotency key per task intent and rotates it for a new intent", async () => {
+  it("keeps local retry identity without sending an unsupported server header", async () => {
     const updateIntent = newUpdatePlanTaskIntent(plan, task, {
       title: "调整后的训练",
     });
     const completeIntent = newCompletePlanTaskIntent(plan, task);
-    const observedUpdateKeys: string[] = [];
-    const observedCompleteKeys: string[] = [];
+    const observedHeaders: Array<string | null> = [];
     server.use(
       http.patch("*/api/v2/plans/current/tasks/:taskId", ({ request }) => {
-        observedUpdateKeys.push(request.headers.get("x-idempotency-key") ?? "");
+        observedHeaders.push(request.headers.get("x-idempotency-key"));
         return HttpResponse.json({ planVersion: 6, task });
       }),
       http.post("*/api/v2/plans/current/tasks/:taskId/complete", ({ request }) => {
-        observedCompleteKeys.push(request.headers.get("x-idempotency-key") ?? "");
+        observedHeaders.push(request.headers.get("x-idempotency-key"));
         return HttpResponse.json({ planVersion: 6, task });
       }),
     );
 
     await updatePlanTask(updateIntent, csrfProof);
-    await updatePlanTask(updateIntent, csrfProof);
-    await completePlanTask(completeIntent, csrfProof);
     await completePlanTask(completeIntent, csrfProof);
 
-    expect(observedUpdateKeys).toEqual([
-      updateIntent.idempotencyKey,
-      updateIntent.idempotencyKey,
-    ]);
-    expect(observedCompleteKeys).toEqual([
-      completeIntent.idempotencyKey,
-      completeIntent.idempotencyKey,
-    ]);
+    expect(observedHeaders).toEqual([null, null]);
+    expect(updateIntent.idempotencyKey).toHaveLength(36);
+    expect(completeIntent.idempotencyKey).toHaveLength(36);
     expect(newUpdatePlanTaskIntent(plan, task, { title: "调整后的训练" }).idempotencyKey)
       .not.toBe(updateIntent.idempotencyKey);
     expect(newCompletePlanTaskIntent(plan, task).idempotencyKey)
@@ -274,8 +262,9 @@ describe("official plan API client", () => {
         version: 4,
       },
     };
+    const intent = newCompletePlanTaskIntent(plan, task);
 
-    acknowledgePlanTaskMutation(queryClient, ownerScope, acknowledged);
+    acknowledgePlanTaskMutation(queryClient, ownerScope, intent, acknowledged);
     expect(queryClient.getQueryData<CurrentPlanResponse>(
       planQueryKeys.current(ownerScope),
     )?.plan).toEqual(expect.objectContaining({
@@ -296,6 +285,29 @@ describe("official plan API client", () => {
     expect(queryClient.getQueryState(
       ["dashboard", otherOwnerScope, "overview"],
     )?.isInvalidated).toBe(false);
+    queryClient.clear();
+  });
+
+  it("never lets a late task acknowledgement roll cached versions backward", () => {
+    const queryClient = new QueryClient();
+    const currentTask = { ...task, title: "较新的任务", version: 5 };
+    const newer: CurrentPlanResponse = {
+      plan: { ...plan, tasks: [currentTask], version: 7 },
+    };
+    queryClient.setQueryData(planQueryKeys.current(ownerScope), newer);
+    const staleAcknowledgement = {
+      planVersion: 6,
+      task: { ...task, title: "迟到的响应", version: 4 },
+    };
+
+    acknowledgePlanTaskMutation(
+      queryClient,
+      ownerScope,
+      newUpdatePlanTaskIntent(plan, task, { title: "迟到的响应" }),
+      staleAcknowledgement,
+    );
+
+    expect(queryClient.getQueryData(planQueryKeys.current(ownerScope))).toEqual(newer);
     queryClient.clear();
   });
 

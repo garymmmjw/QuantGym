@@ -7,6 +7,10 @@ import {
 import { apiRequest } from "../../shared/api/client";
 import { createIdempotencyKey } from "../../shared/api/mutationRecovery";
 import {
+  runOwnerVerifiedOperation,
+  verifyCurrentSessionOwner,
+} from "../../shared/api/ownerScopedQueries";
+import {
   favoriteStateSchema,
   problemIdSchema,
   problemNoteSchema,
@@ -158,6 +162,17 @@ const applyFavoriteAcknowledgement = <Problem extends ProblemSummary>(
   acknowledged: FavoriteState,
 ): Problem => {
   if (problem.id !== intent.problemId) return problem;
+  // The unfavorited state has no server generation. A delayed "add" response
+  // therefore cannot distinguish the original state from a later add/remove
+  // cycle that returned to the same null generation. Keep the cache as-is and
+  // let the invalidated server read model reconcile this ambiguous ABA case.
+  if (
+    intent.expectedStateId === null
+    && intent.expectedVersion === null
+    && !favoriteStateEquals(problem.favorite, acknowledged)
+  ) {
+    return problem;
+  }
   if (
     !favoriteGenerationMatches(problem.favorite, intent)
     && !favoriteStateEquals(problem.favorite, acknowledged)
@@ -192,11 +207,35 @@ export const acknowledgeProblemFavorite = async (
   );
 
   // A favorite-filtered page may need to add or remove this row. The local
-  // patch keeps visible data current while invalidation reconciles membership.
-  await queryClient.invalidateQueries({
-    queryKey: problemQueryKeys.lists(ownerScope),
-    refetchType: "active",
-  });
+  // patch keeps unambiguous visible data current while invalidation reconciles
+  // membership and null-generation acknowledgements from the server.
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: problemQueryKeys.lists(ownerScope),
+      refetchType: "active",
+    }),
+    queryClient.invalidateQueries({
+      queryKey: problemQueryKeys.detail(ownerScope, intent.problemId),
+      refetchType: "active",
+    }),
+  ]);
+};
+
+export const invalidateProblemMutationReadModels = async (
+  queryClient: QueryClient,
+  ownerScope: string,
+  problemId: string,
+): Promise<void> => {
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: problemQueryKeys.lists(ownerScope),
+      refetchType: "active",
+    }),
+    queryClient.invalidateQueries({
+      queryKey: problemQueryKeys.detail(ownerScope, problemId),
+      refetchType: "active",
+    }),
+  ]);
 };
 
 const shouldApplyNoteAcknowledgement = (
@@ -242,8 +281,6 @@ export const acknowledgeProblemNote = (
   );
 };
 
-const noOpOwnerVerification = async (): Promise<void> => undefined;
-
 export type ProblemMutationOptions = Readonly<{
   csrfProof: string | null;
   ownerScope: string;
@@ -253,15 +290,18 @@ export type ProblemMutationOptions = Readonly<{
 export const useSetProblemFavoriteMutation = ({
   csrfProof,
   ownerScope,
-  verifyOwner = noOpOwnerVerification,
+  verifyOwner = () => verifyCurrentSessionOwner(ownerScope),
 }: ProblemMutationOptions) => {
   const queryClient = useQueryClient();
   return useMutation<FavoriteState, unknown, SetProblemFavoriteIntent>({
     mutationFn: async (intent) => {
-      await verifyOwner();
-      return setProblemFavorite(intent, csrfProof);
+      return runOwnerVerifiedOperation(
+        verifyOwner,
+        () => setProblemFavorite(intent, csrfProof),
+      );
     },
     networkMode: "always",
+    mutationKey: ["problems", ownerScope, "favorite"],
     onSuccess: (acknowledged, intent) => (
       acknowledgeProblemFavorite(queryClient, ownerScope, intent, acknowledged)
     ),
@@ -272,17 +312,25 @@ export const useSetProblemFavoriteMutation = ({
 export const useSaveProblemNoteMutation = ({
   csrfProof,
   ownerScope,
-  verifyOwner = noOpOwnerVerification,
+  verifyOwner = () => verifyCurrentSessionOwner(ownerScope),
 }: ProblemMutationOptions) => {
   const queryClient = useQueryClient();
   return useMutation<ProblemNote, unknown, SaveProblemNoteIntent>({
     mutationFn: async (intent) => {
-      await verifyOwner();
-      return saveProblemNote(intent, csrfProof);
+      return runOwnerVerifiedOperation(
+        verifyOwner,
+        () => saveProblemNote(intent, csrfProof),
+      );
     },
     networkMode: "always",
-    onSuccess: (acknowledged, intent) => {
+    mutationKey: ["problems", ownerScope, "note"],
+    onSuccess: async (acknowledged, intent) => {
       acknowledgeProblemNote(queryClient, ownerScope, intent, acknowledged);
+      await invalidateProblemMutationReadModels(
+        queryClient,
+        ownerScope,
+        intent.problemId,
+      );
     },
     retry: false,
   });

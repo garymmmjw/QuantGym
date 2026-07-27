@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 
@@ -16,6 +17,7 @@ import { todoDraftRepository } from "../../domains/platform/todo/todoDrafts";
 import { useCurrentUserQuery } from "../../domains/account/auth/auth.queries";
 import { readCsrfToken } from "../../shared/api/csrf";
 import { ApiError } from "../../shared/api/errors";
+import { cancelAndRemoveOwnerQueries } from "../../shared/api/ownerScopedQueries";
 import { useI18n } from "../../shared/i18n";
 import { useOnlineStatus } from "../../shared/lib/useOnlineStatus";
 import { createAccountScope } from "../../shared/lib/accountScope";
@@ -36,6 +38,7 @@ const recoveryStateFor = (error: unknown, online: boolean): RecoveryState => {
 export function AuthenticatedShellRoute() {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const currentUser = useCurrentUserQuery();
   const online = useOnlineStatus();
   const language = usePreferences((state) => state.language);
@@ -55,6 +58,7 @@ export function AuthenticatedShellRoute() {
     let active = true;
     void recoverableDraftOwnerBoundary.activate(resolvedOwnerScope, {
       beforeChange: async ({ previousOwnerScope }) => {
+        await cancelAndRemoveOwnerQueries(queryClient, previousOwnerScope);
         clearPreferenceSyncDrafts(previousOwnerScope);
         await todoDraftRepository.clear(previousOwnerScope);
       },
@@ -70,7 +74,7 @@ export function AuthenticatedShellRoute() {
     return () => {
       active = false;
     };
-  }, [draftBoundaryRetry, resolvedOwnerScope]);
+  }, [draftBoundaryRetry, queryClient, resolvedOwnerScope]);
 
   useEffect(() => {
     if (currentUser.data !== null && currentUser.data !== undefined) {

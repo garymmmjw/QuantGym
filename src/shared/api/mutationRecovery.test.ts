@@ -38,6 +38,23 @@ describe("classifyMutationFailure", () => {
     });
   });
 
+  it("keeps a retryable idempotency 409 recoverable", () => {
+    const result = classifyMutationFailure(new ApiError({
+      code: "IDEMPOTENCY_REQUEST_IN_PROGRESS",
+      message: "request is still in progress",
+      requestId: "request-retryable-409",
+      retryable: true,
+      status: 409,
+    }));
+
+    expect(result).toMatchObject({
+      preserveDraft: true,
+      requestId: "request-retryable-409",
+      retryable: true,
+      state: "recoverable-error",
+    });
+  });
+
   it("treats a missing session CSRF token as a permission recovery", () => {
     expect(classifyMutationFailure(new Error("CSRF_TOKEN_REQUIRED"))).toMatchObject({
       state: "permission-denied",

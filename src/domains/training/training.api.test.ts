@@ -4,9 +4,12 @@ import { setupServer } from "msw/node";
 
 import { notificationQueryKeys } from "../platform/notifications/notifications.queries";
 import { planQueryKeys } from "../plan/plan.queries";
+import { dashboardQueryKeys } from "../dashboard/dashboard.queries";
+import { problemQueryKeys } from "../problems/problems.queries";
 import {
   completeTrainingSession,
   invalidateTrainingCompletionReadModels,
+  invalidateTrainingProgressReadModels,
   newCompleteTrainingIntent,
   newRevealTrainingSolutionIntent,
   newStartTrainingIntent,
@@ -91,6 +94,9 @@ describe("daily training API client", () => {
         "*/api/v2/training/sessions/:sessionId/hint",
         async ({ params, request }) => {
           expect(params.sessionId).toBe(sessionId);
+          expect(request.headers.get("x-idempotency-key")).toMatch(
+            /^[A-Za-z0-9._~-]{16,128}$/,
+          );
           await expect(request.json()).resolves.toEqual({ version: 1 });
           return HttpResponse.json({
             eventId: hintEventId,
@@ -105,7 +111,9 @@ describe("daily training API client", () => {
       http.post(
         "*/api/v2/training/sessions/:sessionId/attempts",
         async ({ request }) => {
-          expect(request.headers.get("x-idempotency-key")).toBeNull();
+          expect(request.headers.get("x-idempotency-key")).toMatch(
+            /^[A-Za-z0-9._~-]{16,128}$/,
+          );
           await expect(request.json()).resolves.toEqual({
             answer,
             kind: "text",
@@ -124,6 +132,9 @@ describe("daily training API client", () => {
       http.post(
         "*/api/v2/training/sessions/:sessionId/solution",
         async ({ request }) => {
+          expect(request.headers.get("x-idempotency-key")).toMatch(
+            /^[A-Za-z0-9._~-]{16,128}$/,
+          );
           await expect(request.json()).resolves.toEqual({ version: 3 });
           return HttpResponse.json({
             eventId: solutionEventId,
@@ -187,15 +198,25 @@ describe("daily training API client", () => {
     });
   });
 
-  it("does not create an idempotency key for version-only interactions", () => {
-    expect(newUseTrainingHintIntent({ sessionId, sessionVersion: 2 }))
-      .not.toHaveProperty("idempotencyKey");
+  it("gives every recoverable interaction a stable, per-intent server key", () => {
+    const hint = newUseTrainingHintIntent({ sessionId, sessionVersion: 2 });
+    const attempt = newSubmitTrainingAttemptIntent(
+      { sessionId, sessionVersion: 2 },
+      { answer: "answer", kind: "text" },
+    );
+    const solution = newRevealTrainingSolutionIntent({ sessionId, sessionVersion: 2 });
+
+    expect(hint.idempotencyKey).toHaveLength(36);
+    expect(attempt.idempotencyKey).toHaveLength(36);
+    expect(solution.idempotencyKey).toHaveLength(36);
+    expect(newUseTrainingHintIntent({ sessionId, sessionVersion: 2 }).idempotencyKey)
+      .not.toBe(hint.idempotencyKey);
     expect(newSubmitTrainingAttemptIntent(
       { sessionId, sessionVersion: 2 },
       { answer: "answer", kind: "text" },
-    )).not.toHaveProperty("idempotencyKey");
-    expect(newRevealTrainingSolutionIntent({ sessionId, sessionVersion: 2 }))
-      .not.toHaveProperty("idempotencyKey");
+    ).idempotencyKey).not.toBe(attempt.idempotencyKey);
+    expect(newRevealTrainingSolutionIntent({ sessionId, sessionVersion: 2 }).idempotencyKey)
+      .not.toBe(solution.idempotencyKey);
   });
 
   it("loads a validated result through an abortable owner-scoped query", async () => {
@@ -235,15 +256,15 @@ describe("daily training API client", () => {
     const ownerKeys = [
       trainingQueryKeys.result(ownerScope, sessionId),
       planQueryKeys.current(ownerScope),
-      ["dashboard", ownerScope, "overview"] as const,
-      ["problems", ownerScope, "detail", problemId] as const,
+      dashboardQueryKeys.overview(ownerScope),
+      problemQueryKeys.detail(ownerScope, problemId),
       notificationQueryKeys.list(ownerScope, null),
     ];
     const otherOwnerKeys = [
       trainingQueryKeys.result(otherOwnerScope, sessionId),
       planQueryKeys.current(otherOwnerScope),
-      ["dashboard", otherOwnerScope, "overview"] as const,
-      ["problems", otherOwnerScope, "detail", problemId] as const,
+      dashboardQueryKeys.overview(otherOwnerScope),
+      problemQueryKeys.detail(otherOwnerScope, problemId),
       notificationQueryKeys.list(otherOwnerScope, null),
     ];
     for (const key of [...ownerKeys, ...otherOwnerKeys]) {
@@ -255,6 +276,31 @@ describe("daily training API client", () => {
       ownerScope,
       sessionId,
     );
+
+    for (const key of ownerKeys) {
+      expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true);
+    }
+    for (const key of otherOwnerKeys) {
+      expect(queryClient.getQueryState(key)?.isInvalidated).toBe(false);
+    }
+    queryClient.clear();
+  });
+
+  it("invalidates problem progress and dashboard weakness after in-session events", async () => {
+    const queryClient = new QueryClient();
+    const ownerKeys = [
+      dashboardQueryKeys.overview(ownerScope),
+      problemQueryKeys.detail(ownerScope, problemId),
+    ];
+    const otherOwnerKeys = [
+      dashboardQueryKeys.overview(otherOwnerScope),
+      problemQueryKeys.detail(otherOwnerScope, problemId),
+    ];
+    for (const key of [...ownerKeys, ...otherOwnerKeys]) {
+      queryClient.setQueryData(key, { marker: key[1] });
+    }
+
+    await invalidateTrainingProgressReadModels(queryClient, ownerScope);
 
     for (const key of ownerKeys) {
       expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true);
