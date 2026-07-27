@@ -16,8 +16,10 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 API_ROOT = REPO_ROOT / "api"
 CONTRACT_PATH = REPO_ROOT / "docs" / "frontend-upgrade" / "phase-1-schema-contract.json"
+PHASE2_CONTRACT_PATH = REPO_ROOT / "docs" / "frontend-upgrade" / "phase-2-schema-contract.json"
 REVISION_PATH = API_ROOT / "migrations" / "versions" / "0001_phase1_foundation.py"
 EXPECTED_REVISION = "0001_phase1_foundation"
+EXPECTED_HEAD_REVISION = "0002_phase2_daily_training"
 DATABASE_ENVIRONMENT_KEYS = (
     "QUANTGYM_POSTGRES_DATABASE_URL",
     "QUANTGYM_PREVIEW_POSTGRES_URL",
@@ -28,6 +30,10 @@ DATABASE_ENVIRONMENT_KEYS = (
 
 def _contract() -> dict[str, Any]:
     return json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+
+
+def _phase2_contract() -> dict[str, Any]:
+    return json.loads(PHASE2_CONTRACT_PATH.read_text(encoding="utf-8"))
 
 
 def _revision_ast() -> ast.Module:
@@ -469,7 +475,7 @@ def test_postgres18_upgrade_downgrade_upgrade_round_trip() -> None:
                 assert server_version_num // 10_000 == _contract()["postgresMajor"]
 
                 config = _alembic_config(connection)
-                command.upgrade(config, "head")
+                command.upgrade(config, EXPECTED_REVISION)
                 all_tables = inspect(connection).get_table_names(schema="public")
                 assert sorted(all_tables) == sorted(
                     [
@@ -484,9 +490,128 @@ def test_postgres18_upgrade_downgrade_upgrade_round_trip() -> None:
                 remaining = inspect(connection).get_table_names(schema="public")
                 assert [name for name in remaining if name != "alembic_version"] == []
 
-                command.upgrade(config, "head")
+                command.upgrade(config, EXPECTED_REVISION)
                 second = _database_fingerprint(connection)
                 assert second == first
+        finally:
+            engine.dispose()
+
+
+def _assert_phase2_columns_match_contract(fingerprint: dict[str, Any]) -> None:
+    phase1 = _contract()
+    phase2 = _phase2_contract()
+    assert fingerprint["tables"] == sorted(phase2["applicationTables"])
+    phase1_by_name = {table["name"]: table for table in phase1["applicationTables"]}
+    altered_by_name = {table["name"]: table for table in phase2["alteredTables"]}
+    new_by_name = {table["name"]: table for table in phase2["newTables"]}
+    for table_name in phase2["applicationTables"]:
+        if table_name in new_by_name:
+            expected_columns = new_by_name[table_name]["columns"]
+        else:
+            expected_columns = [*phase1_by_name[table_name]["columns"]]
+            if table_name in altered_by_name:
+                expected_columns.extend(altered_by_name[table_name]["addColumns"])
+        assert fingerprint["definitions"][table_name]["columns"] == [
+            {
+                "name": column["name"],
+                "type": column["type"],
+                "nullable": column["nullable"],
+                "primaryKey": column.get("primaryKey", False),
+            }
+            for column in expected_columns
+        ]
+
+
+@pytest.mark.skipif(
+    not _dependencies_available(),
+    reason="ephemeral PostgreSQL 18 Phase 2 round trip requires the locked dependencies",
+)
+def test_postgres18_phase2_upgrade_downgrade_upgrade_normalized_fingerprint() -> None:
+    from alembic import command
+    from sqlalchemy import create_engine, inspect
+
+    for container in _postgres_container():
+        engine = create_engine(container.get_connection_url())
+        try:
+            with engine.connect() as connection:
+                server_version_num = int(
+                    connection.exec_driver_sql("SHOW server_version_num").scalar_one()
+                )
+                assert server_version_num // 10_000 == _phase2_contract()["postgresMajor"]
+                config = _alembic_config(connection)
+
+                command.upgrade(config, EXPECTED_REVISION)
+                phase1_fingerprint = _database_fingerprint(connection)
+                _assert_columns_match_contract(phase1_fingerprint)
+                connection.exec_driver_sql(
+                    """
+                    INSERT INTO users (id, email, normalized_email, display_name)
+                    VALUES (
+                      '10000000-0000-4000-8000-000000000001',
+                      'phase1-row@example.com',
+                      'phase1-row@example.com',
+                      'Phase 1 row'
+                    )
+                    """
+                )
+                connection.exec_driver_sql(
+                    """
+                    INSERT INTO plan_tasks (id, user_id, title)
+                    VALUES (
+                      '20000000-0000-4000-8000-000000000001',
+                      '10000000-0000-4000-8000-000000000001',
+                      'Existing Phase 1 task'
+                    )
+                    """
+                )
+                connection.exec_driver_sql(
+                    """
+                    INSERT INTO notifications (id, user_id, kind, title, body)
+                    VALUES (
+                      '30000000-0000-4000-8000-000000000001',
+                      '10000000-0000-4000-8000-000000000001',
+                      'phase1',
+                      'Existing notification',
+                      'Existing Phase 1 notification body'
+                    )
+                    """
+                )
+                connection.commit()
+
+                command.upgrade(config, EXPECTED_HEAD_REVISION)
+                first_phase2_fingerprint = _database_fingerprint(connection)
+                _assert_phase2_columns_match_contract(first_phase2_fingerprint)
+                assert sorted(inspect(connection).get_table_names(schema="public")) == sorted(
+                    [_phase2_contract()["metadataTable"], *_phase2_contract()["applicationTables"]]
+                )
+                assert connection.exec_driver_sql(
+                    """
+                    SELECT plan_id, recommendation_id, target_problem_id, detail, scheduled_for,
+                           estimated_minutes, action_target, skill_key
+                    FROM plan_tasks
+                    WHERE id = '20000000-0000-4000-8000-000000000001'
+                    """
+                ).one() == (None, None, None, None, None, None, None, None)
+                assert connection.exec_driver_sql(
+                    """
+                    SELECT action_target, action_resource_id, dedupe_key
+                    FROM notifications
+                    WHERE id = '30000000-0000-4000-8000-000000000001'
+                    """
+                ).one() == (None, None, None)
+
+                command.downgrade(config, EXPECTED_REVISION)
+                restored_phase1_fingerprint = _database_fingerprint(connection)
+                assert restored_phase1_fingerprint == phase1_fingerprint
+                assert connection.exec_driver_sql("SELECT count(*) FROM plan_tasks").scalar_one() == 1
+                assert connection.exec_driver_sql(
+                    "SELECT count(*) FROM notifications"
+                ).scalar_one() == 1
+
+                command.upgrade(config, EXPECTED_HEAD_REVISION)
+                second_phase2_fingerprint = _database_fingerprint(connection)
+                assert second_phase2_fingerprint == first_phase2_fingerprint
+                assert connection.exec_driver_sql("SELECT count(*) FROM plan_tasks").scalar_one() == 1
         finally:
             engine.dispose()
 
@@ -501,4 +626,4 @@ def test_alembic_has_exactly_one_head() -> None:
 
     script = ScriptDirectory.from_config(Config(str(API_ROOT / "alembic.ini")))
 
-    assert script.get_heads() == [EXPECTED_REVISION]
+    assert script.get_heads() == [EXPECTED_HEAD_REVISION]
