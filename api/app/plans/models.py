@@ -99,4 +99,47 @@ class PlanTaskRecord:
         )
 
 
-__all__ = ["PlanRecord", "PlanTaskRecord", "RecommendationRecord"]
+@dataclass(frozen=True, slots=True)
+class CurrentPlanRecord:
+    plan: PlanRecord
+    tasks: tuple[PlanTaskRecord, ...]
+    recommendations: tuple[RecommendationRecord, ...]
+
+    @property
+    def total_tasks(self) -> int:
+        return len(self.tasks)
+
+    @property
+    def completed_tasks(self) -> int:
+        return sum(task.status == "completed" for task in self.tasks)
+
+
+@dataclass(frozen=True, slots=True)
+class PlanCreationResult:
+    plan_id: UUID
+    plan_version: int
+    task_ids: tuple[UUID, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class PlanDiagnosticResult:
+    plan_id: UUID
+    plan_version: int
+    recommendation_ids: tuple[UUID, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class PlanTaskMutationResult:
+    plan_version: int
+    task: PlanTaskRecord
+
+
+__all__ = [
+    "CurrentPlanRecord",
+    "PlanCreationResult",
+    "PlanDiagnosticResult",
+    "PlanRecord",
+    "PlanTaskMutationResult",
+    "PlanTaskRecord",
+    "RecommendationRecord",
+]
