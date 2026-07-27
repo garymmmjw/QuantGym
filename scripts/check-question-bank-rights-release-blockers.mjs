@@ -20,6 +20,9 @@ validatePrivateBeta(privateBeta);
 validateBlockedRelease(publicRelease, "public");
 validateBlockedRelease(commercialRelease, "commercial");
 
+const serverPreviewCatalog = validateServerPreviewCatalog();
+const nativeV2CatalogBoundary = validateNativeV2CatalogBoundary();
+
 const publicBlockerSlugs = blockerSlugs(publicRelease.data);
 const commercialBlockerSlugs = blockerSlugs(commercialRelease.data);
 const activeSlugs = activeSourceSlugs(privateBeta.data);
@@ -50,8 +53,14 @@ const summary = {
     activePublicCommercialNeedsReview: Number(privateBeta.data?.rightsStatus?.activePublicCommercial?.["needs-review"] || 0) === Number(privateBeta.data?.activeSources || 0),
     noActivePublicCommercialApprovals: Number(privateBeta.data?.rightsStatus?.activePublicCommercial?.approved || 0) === 0,
     quantguideStillPrivateAndBlocked: sourceBySlug(privateBeta.data, "quantguide")?.visibility?.includes("private") === true
-      && sourceBySlug(privateBeta.data, "quantguide")?.publicCommercialStatus === "needs-review"
+      && sourceBySlug(privateBeta.data, "quantguide")?.publicCommercialStatus === "needs-review",
+    serverPreviewFixtureValid: serverPreviewCatalog.valid,
+    serverPreviewFixtureInternalOnly: serverPreviewCatalog.internalOnly,
+    serverPreviewFixtureExcludedFromPublicCommercial: serverPreviewCatalog.excludedFromPublicCommercial,
+    nativeV2HasNoLegacyGlobalCatalog: nativeV2CatalogBoundary.valid
   },
+  serverPreviewCatalog,
+  nativeV2CatalogBoundary,
   failures,
   warnings
 };
@@ -106,6 +115,102 @@ function validateBlockedRelease(run, mode) {
   for (const item of failuresList) {
     if (!String(item).includes(expectedText)) fail(`${mode} blocker has unexpected failure text: ${item}`);
   }
+}
+
+function validateServerPreviewCatalog() {
+  const relativePath = "api/catalogs/phase2-preview-v1.json";
+  const absolutePath = path.join(root, relativePath);
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(absolutePath, "utf8"));
+  } catch (error) {
+    fail(`Server Preview catalog must be readable JSON: ${error instanceof Error ? error.message : String(error)}.`);
+    return {
+      path: relativePath,
+      valid: false,
+      internalOnly: false,
+      excludedFromPublicCommercial: false,
+      sourceCount: 0,
+      problemCount: 0
+    };
+  }
+
+  const sources = Array.isArray(data.sources) ? data.sources : [];
+  const problemCount = sources.reduce(
+    (total, source) => total + (Array.isArray(source?.problems) ? source.problems.length : 0),
+    0
+  );
+  const valid = data.schemaVersion === 1
+    && data.catalogId === "quantgym-phase2-preview-synthetic"
+    && data.synthetic === true
+    && typeof data.contentVersion === "string"
+    && /^\d{4}-\d{2}-\d{2}\.[1-9]\d*$/.test(data.contentVersion)
+    && sources.length > 0
+    && problemCount > 0;
+  const internalOnly = sources.length > 0 && sources.every(
+    (source) => source?.rightsStatus === "internal_preview"
+      && source?.releaseScope === "preview"
+      && Array.isArray(source?.problems)
+      && source.problems.length > 0
+  );
+  const excludedFromPublicCommercial = internalOnly && sources.every(
+    (source) => source?.releaseScope !== "public" && source?.rightsStatus !== "approved"
+  );
+
+  if (!valid) fail("Server Preview catalog must be the non-empty, versioned synthetic Phase 2 fixture.");
+  if (!internalOnly) fail("Every server Preview catalog source must be internal_preview and preview-scoped.");
+  if (!excludedFromPublicCommercial) fail("Server Preview catalog must remain excluded from public and commercial releases.");
+  return {
+    path: relativePath,
+    catalogId: typeof data.catalogId === "string" ? data.catalogId : "",
+    contentVersion: typeof data.contentVersion === "string" ? data.contentVersion : "",
+    synthetic: data.synthetic === true,
+    sourceCount: sources.length,
+    problemCount,
+    valid,
+    internalOnly,
+    excludedFromPublicCommercial
+  };
+}
+
+function validateNativeV2CatalogBoundary() {
+  const roots = ["src/core", "src/shared", "src/domains", "src/pages/v2"];
+  const forbiddenPatterns = [
+    { label: "legacy problem catalog module", pattern: /(?:data\/problem-catalog|problem-catalog\.js)/ },
+    { label: "legacy catalog data module", pattern: /(?:src\/catalog-data|catalog-data\.js)/ },
+    { label: "legacy global catalog symbol", pattern: /\bquantProblemCatalog\b/ }
+  ];
+  const violations = [];
+  for (const relativeRoot of roots) {
+    const absoluteRoot = path.join(root, relativeRoot);
+    if (!fs.existsSync(absoluteRoot)) continue;
+    for (const absoluteFile of walkFiles(absoluteRoot)) {
+      if (!/\.(?:[cm]?[jt]sx?|css|json)$/.test(absoluteFile)) continue;
+      const source = fs.readFileSync(absoluteFile, "utf8");
+      for (const forbidden of forbiddenPatterns) {
+        if (forbidden.pattern.test(source)) {
+          violations.push({
+            file: path.relative(root, absoluteFile).split(path.sep).join("/"),
+            reason: forbidden.label
+          });
+        }
+      }
+    }
+  }
+  if (violations.length) {
+    fail(`Native V2 must not import or embed the legacy global problem catalog: ${violations.map((item) => `${item.file} (${item.reason})`).join(", ")}.`);
+  }
+  return { roots, valid: violations.length === 0, violations };
+}
+
+function walkFiles(directory) {
+  const files = [];
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...walkFiles(absolute));
+    else if (entry.isFile()) files.push(absolute);
+  }
+  return files;
 }
 
 function summarizeRun(run) {

@@ -20,6 +20,7 @@ from .middleware.request_id import RequestIdMiddleware
 from .notifications.router import router as notifications_router
 from .plans.router import router as plans_router
 from .preferences.router import router as preferences_router
+from .problems.router import router as problems_router
 from .security.edge import EdgeProofMiddleware
 from .users.router import router as users_router
 
@@ -118,6 +119,7 @@ def create_app(
     application.include_router(preferences_router)
     application.include_router(notifications_router)
     application.include_router(plans_router)
+    application.include_router(problems_router)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.allowed_origins if settings else (PREVIEW_ORIGIN,)),

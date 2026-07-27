@@ -223,6 +223,74 @@ export interface paths {
         patch: operations["updatePreferences"];
         trace?: never;
     };
+    "/api/v2/problems": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the current-account Preview problem catalog */
+        get: operations["listProblems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/problems/{problem_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one safe current-account problem detail projection */
+        get: operations["getProblem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/problems/{problem_id}/favorite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set the current account's desired favorite state */
+        put: operations["setProblemFavorite"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/problems/{problem_id}/note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save the current account's versioned private problem note */
+        put: operations["saveProblemNote"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v2/todos": {
         parameters: {
             query?: never;
@@ -322,6 +390,17 @@ export interface components {
             /** Retryable */
             retryable: boolean;
         };
+        /** FavoriteStateResponse */
+        FavoriteStateResponse: {
+            /** Favorite */
+            favorite: boolean;
+            /** Stateid */
+            stateId: string | null;
+            /** Updatedat */
+            updatedAt: string | null;
+            /** Version */
+            version?: number | null;
+        };
         /** ForgotPasswordRequest */
         ForgotPasswordRequest: {
             /**
@@ -369,6 +448,18 @@ export interface components {
             /** Emailverified */
             emailVerified: boolean;
             preferences: components["schemas"]["PreferencesResponse"];
+        };
+        /** NoteResponse */
+        NoteResponse: {
+            /** Body */
+            body: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Version */
+            version: number;
         };
         /** NotificationListResponse */
         NotificationListResponse: {
@@ -440,6 +531,121 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** ProblemDetailResponse */
+        ProblemDetailResponse: {
+            /** Category */
+            category: string;
+            /** Companies */
+            companies: string[];
+            /**
+             * Difficulty
+             * @enum {string}
+             */
+            difficulty: "Easy" | "Medium" | "Hard";
+            favorite: components["schemas"]["FavoriteStateResponse"];
+            /** Hot100 */
+            hot100: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            note: components["schemas"]["NoteResponse"] | null;
+            /** Noteexists */
+            noteExists: boolean;
+            /** Noteversion */
+            noteVersion: number | null;
+            progress: components["schemas"]["ProblemProgressResponse"];
+            /** Prompten */
+            promptEn: string | null;
+            /** Promptzh */
+            promptZh: string | null;
+            source: components["schemas"]["ProblemSourceResponse"];
+            /** Tags */
+            tags: string[];
+            /** Titleen */
+            titleEn: string | null;
+            /** Titlezh */
+            titleZh: string | null;
+            /** Version */
+            version: number;
+        };
+        /** ProblemListResponse */
+        ProblemListResponse: {
+            /** Availablesources */
+            availableSources: components["schemas"]["ProblemSourceResponse"][];
+            /** Items */
+            items: components["schemas"]["ProblemSummaryResponse"][];
+            /** Nextcursor */
+            nextCursor: string | null;
+        };
+        /** ProblemProgressResponse */
+        ProblemProgressResponse: {
+            /** Attemptcount */
+            attemptCount: number;
+            /** Bestscore */
+            bestScore: number | null;
+            /** Completedat */
+            completedAt: string | null;
+            /** Hintcount */
+            hintCount: number;
+            /** Lastpracticedat */
+            lastPracticedAt: string | null;
+            /** Lastscore */
+            lastScore: number | null;
+            /** Solutionrevealedat */
+            solutionRevealedAt: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "unstarted" | "in_progress" | "completed";
+            /** Version */
+            version?: number | null;
+        };
+        /** ProblemSourceResponse */
+        ProblemSourceResponse: {
+            /** Contentversion */
+            contentVersion: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+        };
+        /** ProblemSummaryResponse */
+        ProblemSummaryResponse: {
+            /** Category */
+            category: string;
+            /** Companies */
+            companies: string[];
+            /**
+             * Difficulty
+             * @enum {string}
+             */
+            difficulty: "Easy" | "Medium" | "Hard";
+            favorite: components["schemas"]["FavoriteStateResponse"];
+            /** Hot100 */
+            hot100: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Noteexists */
+            noteExists: boolean;
+            /** Noteversion */
+            noteVersion: number | null;
+            progress: components["schemas"]["ProblemProgressResponse"];
+            source: components["schemas"]["ProblemSourceResponse"];
+            /** Tags */
+            tags: string[];
+            /** Titleen */
+            titleEn: string | null;
+            /** Titlezh */
+            titleZh: string | null;
+            /** Version */
+            version: number;
+        };
         /** RegisterRequest */
         RegisterRequest: {
             /** Displayname */
@@ -467,6 +673,22 @@ export interface components {
              * Format: password
              */
             token: string;
+        };
+        /** SaveNoteRequest */
+        SaveNoteRequest: {
+            /** Body */
+            body: string;
+            /** Expectedversion */
+            expectedVersion?: number | null;
+        };
+        /** SetFavoriteRequest */
+        SetFavoriteRequest: {
+            /** Expectedstateid */
+            expectedStateId?: string | null;
+            /** Expectedversion */
+            expectedVersion?: number | null;
+            /** Favorite */
+            favorite: boolean;
         };
         /** StatusResponse */
         StatusResponse: {
@@ -971,6 +1193,326 @@ export interface operations {
             };
             /** @description Request proof or permission denied */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    listProblems: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                daily?: boolean;
+                difficulty?: ("Easy" | "Medium" | "Hard") | null;
+                favorite?: boolean | null;
+                hot100?: boolean | null;
+                limit?: number;
+                q?: string | null;
+                source?: string | null;
+                status?: ("unstarted" | "in_progress" | "completed") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemListResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getProblem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                problem_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetailResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    setProblemFavorite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                problem_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetFavoriteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FavoriteStateResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    saveProblemNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                problem_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveNoteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
