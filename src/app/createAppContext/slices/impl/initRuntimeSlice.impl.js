@@ -329,7 +329,6 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     seedJobs,
     seedCourses,
     seedNews,
-    catalogProblems: getRuntimeCatalogProblems?.() || catalogProblems,
     makeId,
     parseTags,
     stableProblemId,
@@ -339,16 +338,8 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     localDateKey,
     normalizeContentSources,
     normalizeNetworkContact,
-    mergeProblemStates,
-    problemStatesFromFavorites,
-    isDisabledProblemId,
-    normalizeLeetcodeHot100Done,
     normalizeLeaderboardSettings,
-    mergeProblems,
-    isCatalogProblem,
-    isDisabledProblemSource,
     mergeNews,
-    getUserCatalogProblems,
     defaultLeaderboardSettings,
     nowIso: () => new Date().toISOString()
   });
@@ -511,10 +502,6 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     },
     clearStateForUser,
     loadState,
-    clearProblemLookupCaches: () => {
-      const clearCaches = sliceRefs.clearProblemLookupCaches || clearProblemLookupCaches;
-      if (typeof clearCaches === "function") clearCaches();
-    },
     saveCommunity: (...args) => communityRuntime.save(...args),
     saveState,
     renderAll: () => {
@@ -527,10 +514,7 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     normalizeGameRecords,
     normalizeCommunityStore: (store) => communityRuntime.normalizeStore(store),
     mergeCommunityStores: (remote, local) => communityRuntime.mergeCloud(remote, local),
-    mergeProblemStates,
-    problemStatesFromFavorites,
     defaultLeaderboardSettings,
-    mergeProblems,
     mergeNews,
     normalizeState,
     now: () => new Date(),

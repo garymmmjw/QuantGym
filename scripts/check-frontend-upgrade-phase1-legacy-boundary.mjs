@@ -44,6 +44,7 @@ export const APPROVED_BUSINESS_ROUTES = Object.freeze([
 export const APPROVED_NATIVE_BUSINESS_ROUTES = Object.freeze([
   { id: "overview", path: "/" },
   { id: "plan", path: "/plan" },
+  { id: "problems", path: "/problems" },
 ]);
 
 export const APPROVED_UNMIGRATED_ROUTES = Object.freeze(
@@ -408,7 +409,7 @@ export function validateBusinessRouteOwnershipSource(source) {
   failures.push(...parsed.failures);
   if (!sameOwnership(parsed.ownership, approvedBusinessRouteOwnership)) {
     failures.push(
-      "BUSINESS_ROUTE_OWNERSHIP must assign Overview and Plan to native and the remaining 20 routes to compatibility",
+      "BUSINESS_ROUTE_OWNERSHIP must assign Overview, Plan, and Problems to native and the remaining 19 routes to compatibility",
     );
   }
   const ids = parsed.ownership.map(({ id }) => id);
@@ -427,7 +428,7 @@ export function validateUnmigratedRoutesSource(source) {
   failures.push(...parseFailures);
   if (!sameRoutes(routes, APPROVED_UNMIGRATED_ROUTES)) {
     failures.push(
-      "UNMIGRATED_ROUTES must be the exact independent 20-route compatibility allowlist",
+      "UNMIGRATED_ROUTES must be the exact independent 19-route compatibility allowlist",
     );
   }
 
@@ -1046,44 +1047,79 @@ const validateLegacyCompatibilityElement = (routerAst) => {
   return failures;
 };
 
-const isExactProblemsCompatibilityGateway = (
-  node,
-  pathBinding,
-) => {
+const isExactProblemsPageLoader = (node) => {
   const current = unwrapExpression(node);
-  if (current?.type !== "ConditionalExpression") return false;
-  const test = unwrapExpression(current.test);
   if (
-    test?.type !== "BinaryExpression"
-    || test.operator !== "==="
-    || !isIdentifierNamed(test.left, pathBinding)
-    || staticString(test.right) !== "/problems"
-    || !isIdentifierNamed(current.alternate, "legacyCompatibilityElement")
+    current?.type !== "CallExpression"
+    || !isIdentifierNamed(current.callee, "lazy")
+    || current.arguments?.length !== 1
   ) {
     return false;
   }
+  const loader = unwrapExpression(current.arguments[0]);
+  const imported = unwrapExpression(loader?.body);
+  return loader?.type === "ArrowFunctionExpression"
+    && loader.params?.length === 0
+    && imported?.type === "ImportExpression"
+    && staticString(imported.source) === "../../pages/training/ProblemsPage";
+};
 
-  const gateway = unwrapExpression(current.consequent);
+const isExactNativeProblemsElement = (node) => {
+  const current = unwrapExpression(node);
   if (
-    gateway?.type !== "JSXElement"
-    || jsxElementName(gateway.openingElement) !== "ProblemsRoute"
-    || gateway.openingElement?.selfClosing !== true
-    || (gateway.children ?? []).length !== 0
+    current?.type !== "JSXElement"
+    || jsxElementName(current.openingElement) !== "Suspense"
+    || jsxElementName(current.closingElement) !== "Suspense"
   ) {
     return false;
   }
-  const attributes = gateway.openingElement.attributes ?? [];
-  if (attributes.length !== 1) return false;
-  const compatibilityElement = attributes[0];
-  return jsxAttributeName(compatibilityElement) === "compatibilityElement"
-    && isIdentifierNamed(
-      compatibilityElement.value,
-      "legacyCompatibilityElement",
+  const attributes = current.openingElement.attributes ?? [];
+  if (
+    attributes.length !== 1
+    || jsxAttributeName(attributes[0]) !== "fallback"
+    || attributes[0].value === null
+  ) {
+    return false;
+  }
+  const meaningfulChildren = (current.children ?? []).filter((child) => (
+    child.type !== "JSXText" || child.value.trim() !== ""
+  ));
+  if (meaningfulChildren.length !== 1) return false;
+  const mounted = unwrapExpression(meaningfulChildren[0]);
+  return mounted?.type === "CallExpression"
+    && isIdentifierNamed(mounted.callee, "createElement")
+    && mounted.arguments?.length === 1
+    && isIdentifierNamed(mounted.arguments[0], "problemsPage");
+};
+
+const validateNativeProblemsElement = (routerAst) => {
+  const failures = [];
+  const pageInitializer = uniqueTopLevelConstInitializer(
+    routerAst,
+    "problemsPage",
+  );
+  if (!isExactProblemsPageLoader(pageInitializer)) {
+    failures.push(
+      "V2 router problemsPage must uniquely lazy-load the native ProblemsPage module",
     );
+  }
+  const elementInitializer = uniqueTopLevelConstInitializer(
+    routerAst,
+    "nativeProblemsElement",
+  );
+  if (!isExactNativeProblemsElement(elementInitializer)) {
+    failures.push(
+      "V2 router nativeProblemsElement must be one unique Suspense wrapper around createElement(problemsPage)",
+    );
+  }
+  return failures;
 };
 
 const validateCompatibilityRouteMapping = (routerAst) => {
-  const failures = validateLegacyCompatibilityElement(routerAst);
+  const failures = [
+    ...validateLegacyCompatibilityElement(routerAst),
+    ...validateNativeProblemsElement(routerAst),
+  ];
   const mappingCalls = [];
   const problemsGateways = [];
   traverseAst(routerAst, (node) => {
@@ -1107,7 +1143,7 @@ const validateCompatibilityRouteMapping = (routerAst) => {
 
   if (mappingCalls.length !== 1) {
     failures.push(
-      "V2 router must map all 20 compatibility routes exactly once from the ownership registry",
+      "V2 router must map all 19 compatibility routes exactly once from the ownership registry",
     );
     return failures;
   }
@@ -1128,10 +1164,10 @@ const validateCompatibilityRouteMapping = (routerAst) => {
     || callbackBody?.type !== "ObjectExpression"
     || !hasExactSimpleObjectProperties(callbackBody, ["element", "id", "path"])
     || !isExactPathSlice(mappedPath, pathBinding)
-    || !isExactProblemsCompatibilityGateway(element, pathBinding)
+    || !isIdentifierNamed(element, "legacyCompatibilityElement")
   ) {
     failures.push(
-      "V2 router compatibility mapping must bind every ordinary route to legacyCompatibilityElement and allow only /problems to use ProblemsRoute with compatibilityElement={legacyCompatibilityElement}",
+      "V2 router compatibility mapping must bind all 19 compatibility routes directly to legacyCompatibilityElement",
     );
   }
   if (idBinding === null || !isExactPreviewRouteId(mappedId, idBinding)) {
@@ -1139,9 +1175,9 @@ const validateCompatibilityRouteMapping = (routerAst) => {
       "V2 router compatibility mapping must derive every route id as preview-${id} from the ownership registry id",
     );
   }
-  if (problemsGateways.length !== 1) {
+  if (problemsGateways.length !== 0) {
     failures.push(
-      "V2 router must declare exactly one controlled ProblemsRoute compatibility gateway",
+      "V2 router must not declare the retired ProblemsRoute compatibility gateway",
     );
   }
   return failures;
@@ -1169,7 +1205,7 @@ export function validateRouterMappingSources({
   );
   failures.push(...ownership.failures);
   if (!sameOwnership(ownership.ownership, approvedBusinessRouteOwnership)) {
-    failures.push("business route ownership must remain two native plus 20 compatibility routes");
+    failures.push("business route ownership must remain three native plus 19 compatibility routes");
   }
   if (!sameRoutes(
     ownership.ownership.map(({ id, path: routePath }) => ({ id, path: routePath })),
@@ -1187,7 +1223,7 @@ export function validateRouterMappingSources({
     registry.routes.length !== APPROVED_UNMIGRATED_ROUTES.length
     || !sameRoutes(registry.routes, APPROVED_UNMIGRATED_ROUTES)
   ) {
-    failures.push("unmigrated route registry must equal the 20-route compatibility ownership complement");
+    failures.push("unmigrated route registry must equal the 19-route compatibility ownership complement");
   }
 
   const parsedRouter = parseSource(routerSource, REQUIRED_FILES.router, "tsx");
@@ -1211,6 +1247,12 @@ export function validateRouterMappingSources({
     failures.push("V2 router must map /plan to its native Plan element");
   }
   if (
+    !/\{\s*path\s*:\s*["']problems["']\s*,\s*element\s*:\s*nativeProblemsElement\s*\}/u
+      .test(routerSource)
+  ) {
+    failures.push("V2 router must map /problems to its native Problems element");
+  }
+  if (
     /\{\s*index\s*:\s*true\s*,\s*element\s*:\s*legacyCompatibilityElement\s*\}/u
       .test(routerSource)
   ) {
@@ -1221,6 +1263,12 @@ export function validateRouterMappingSources({
       .test(routerSource)
   ) {
     failures.push("native Plan must not use the compatibility adapter");
+  }
+  if (
+    /\{\s*path\s*:\s*["']problems["']\s*,\s*element\s*:\s*legacyCompatibilityElement\s*\}/u
+      .test(routerSource)
+  ) {
+    failures.push("native Problems must not use the compatibility adapter");
   }
   if (!/LegacyRouteAdapter|legacy-preview/u.test(routerSource)) {
     failures.push("V2 router must bind compatibility routes to the Preview adapter");

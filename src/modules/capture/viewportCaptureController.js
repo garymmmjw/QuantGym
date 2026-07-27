@@ -67,10 +67,7 @@ export function createProblemViewportCaptureController(deps = {}) {
     }
   }
 
-  return {
-    start,
-    processCapture
-  };
+  return { start, processCapture };
 }
 
 export function isViewportCaptureMessage(event = {}, windowRef = globalThis.window) {

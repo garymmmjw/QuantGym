@@ -4,12 +4,34 @@
 //
 // Pure presentation layer — skillDefs `name` in src/skills.js is untouched
 // (it is referenced app-wide). Chinese names come from existing mappings only:
-// - problems-page category labels (src/features/problems/problemDisplayLabels.js),
-//   the authoritative zh topic names used on chips/filters across the app;
+// - the stable skill-category labels below (the retired Problems page no
+//   longer owns cross-route display copy);
 // - skillDefs subtitles for fuller forms where the category label is an
 //   abbreviation (线代 → 线性代数);
 // - probabilityExpectation follows the design spec exactly (「概率 / 期望」).
-import { localizeCategoryLabel } from "../problems/problemDisplayLabels.js";
+const CATEGORY_LABELS_ZH = Object.freeze({
+  mentalMath: "速算",
+  probabilityExpectation: "概率期望",
+  calculus: "微积分",
+  statistics: "统计",
+  complexNumbers: "复数",
+  linearAlgebra: "线代",
+  algebra: "代数",
+  optimization: "优化",
+  machineLearning: "机器学习",
+  deepLearning: "深度学习",
+  market: "市场",
+  option: "期权",
+  leetcode: "编程",
+  coding: "编程",
+  cppProgramming: "C++ 编程",
+  pandasNumpy: "Pandas/NumPy"
+});
+
+const localizeCategoryLabel = (value) => {
+  const raw = String(value || "").trim();
+  return CATEGORY_LABELS_ZH[raw] || raw;
+};
 
 // Proper nouns keep the original name as the primary title
 // (user decision: LeetCode / Mental Math / C++ / Pandas·NumPy 保持原文为主).
@@ -81,7 +103,7 @@ export function getSkillRadarLabel(key, def) {
 // zh problems-page category name for the coach banner's「题目 → X」path,
 // so the reference matches the actual category labels on the problems page.
 export function getSkillPracticeCategoryZh(key, def) {
-  const label = localizeCategoryLabel(key, false);
+  const label = localizeCategoryLabel(key);
   if (label && label !== key) return label;
   return String(def?.subtitle || "");
 }

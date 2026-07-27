@@ -11,6 +11,7 @@
     {
       "id": "daily-training",
       "removeInPhase": 2,
+      "completedInPhase": 2,
       "priority": 50,
       "globs": ["src/features/overview/**", "src/features/plan/**", "src/features/problems/**", "src/modules/overview/**", "src/modules/plan/**", "src/modules/problems/**", "src/pages/OverviewPage.jsx", "src/pages/PlanPage.jsx", "src/pages/ProblemsPage.jsx", "src/app/services/overviewPageApi.js", "src/app/services/planPageApi.js", "src/app/services/problemsPageApi.js"],
       "targetDomains": ["plan", "problems", "training"],

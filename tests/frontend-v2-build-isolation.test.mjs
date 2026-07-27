@@ -46,6 +46,7 @@ const loadViteV2Module = async () => {
 const exactDependencies = {
   "@hookform/resolvers": "5.4.0",
   "@tanstack/react-query": "5.101.2",
+  "@tanstack/react-virtual": "3.14.8",
   "openapi-typescript": "7.13.0",
   react: "19.2.7",
   "react-dom": "19.2.7",

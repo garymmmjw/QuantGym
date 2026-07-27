@@ -65,8 +65,6 @@ export function bindAppShellEvents(options = {}) {
     if (!event.target?.closest?.(".streak-widget")) handlers.setStreakPanelOpen?.(false);
   });
 
-  bind(elements.generateStudyPlanBtn, "click", () => handlers.switchModule?.("plan"));
-
   bind(elements.globalSearchInput, "compositionstart", () => {
     handlers.setGlobalSearchComposing?.(true);
   });
@@ -91,17 +89,6 @@ export function bindAppShellEvents(options = {}) {
   bind(elements.durationInput, "input", () => handlers.updatePreview?.());
   bind(elements.difficultyInput, "change", () => handlers.updatePreview?.());
   bind(elements.sampleBtn, "click", () => handlers.fillSampleEntry?.());
-  if (!String(elements.todoDockButton?.dataset?.todoHandler || "").startsWith("react-native")) {
-    bind(elements.todoDockButton, "click", () => handlers.toggleTodoDock?.());
-    bind(elements.todoDockCloseBtn, "click", () => handlers.closeTodoDock?.());
-    bind(elements.todoDockPanel, "click", (event) => handlers.handleTodoDockClick?.(event));
-    bind(elements.todoDockPanel, "change", (event) => handlers.handleTodoDockEdit?.(event));
-    bind(elements.todoDockAddForm, "submit", (event) => {
-      event.preventDefault();
-      handlers.addTodoTask?.();
-    });
-  }
-
   return () => {
     disposers.splice(0).forEach((dispose) => dispose());
   };

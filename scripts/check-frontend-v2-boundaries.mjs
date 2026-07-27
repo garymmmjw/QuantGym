@@ -43,6 +43,69 @@ const IMPORT_SOURCE_NODES = new Set([
 const SCAN_SYMLINK_EVIDENCE = "symbolic links are not allowed under v2 scan roots";
 const LEGACY_PREVIEW_ROUTER_FILE = "src/core/router/router.tsx";
 const LEGACY_PREVIEW_ADAPTER_SPECIFIER = "../../legacy-preview/LegacyRouteAdapter";
+const COMPLETED_DAILY_TRAINING_REGISTRY_RULES = Object.freeze([
+  {
+    file: "src/app/pageApi.js",
+    tokens: [
+      "createOverviewPageApi",
+      "createPlanPageApi",
+      "createProblemsPageApi",
+      "overviewPageApi.js",
+      "planPageApi.js",
+      "problemsPageApi.js",
+    ],
+  },
+  {
+    file: "src/app/createAppContext/sharedImports.js",
+    tokens: [
+      "createAppOverviewControllerBundle",
+      "createAppProblemControllerBundles",
+      "createOverviewActivityBundle",
+      "createOverviewFacade",
+      "createPlanningActivityBundle",
+      "createProblemCatalogMutationController",
+      "createProblemNavigationBundle",
+      "createProblemPaginationController",
+      "createProblemPersonalStateController",
+      "createProblemProviderFacade",
+      "createProblemsFacade",
+    ],
+  },
+  {
+    file: "src/app/shellDom.js",
+    tokens: ["pages/overview.html", "pages/plan.html", "pages/problems.html"],
+  },
+  {
+    file: "src/ui/appEvents.js",
+    tokens: [
+      "generateStudyPlanBtn",
+      "prepPlanSetupForm",
+      "problemSearch",
+      "problemPagination",
+      "todoDockAddForm",
+    ],
+  },
+  {
+    file: "src/ui/elements.js",
+    tokens: [
+      "generateStudyPlanBtn",
+      "overviewProblemProgress",
+      "prepPlanSetupForm",
+      "problemSearch",
+      "problemPagination",
+      "todoDockAddForm",
+    ],
+  },
+  {
+    file: "src/ui/qgFeedback.js",
+    tokens: [
+      "applyDailyAllClearReward",
+      "studyPlan",
+      "prepPlan",
+      "problemStates",
+    ],
+  },
+]);
 
 const normalizeRepoPath = (value) => String(value || "")
   .replaceAll("\\", "/")
@@ -362,6 +425,33 @@ export async function findBoundaryViolations(root) {
   ));
 }
 
+export async function findCompletedDailyTrainingRegistryViolations(root) {
+  const absoluteRoot = path.resolve(root);
+  const violations = [];
+  for (const { file, tokens } of COMPLETED_DAILY_TRAINING_REGISTRY_RULES) {
+    let source;
+    try {
+      source = await readFile(path.join(absoluteRoot, file), "utf8");
+    } catch (error) {
+      if (isMissingPathError(error)) continue;
+      throw error;
+    }
+    for (const token of tokens) {
+      if (source.includes(token)) {
+        violations.push({
+          file,
+          rule: "completedFamilyRegistration",
+          evidence: token,
+        });
+      }
+    }
+  }
+  return violations.sort((left, right) => (
+    compareText(left.file, right.file)
+    || compareText(left.evidence, right.evidence)
+  ));
+}
+
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const runCli = async () => {
@@ -371,11 +461,23 @@ const runCli = async () => {
   }
   const root = rootFlagIndex >= 0 ? path.resolve(process.argv[rootFlagIndex + 1]) : defaultRoot;
   const removalMap = await readRemovalMap(root);
-  const trackedFiles = execFileSync("git", ["-C", root, "ls-files", "-z"], {
+  const repositoryFiles = execFileSync("git", ["-C", root, "ls-files", "-co", "--exclude-standard", "-z"], {
     encoding: "buffer",
   }).toString("utf8").split("\0").filter(Boolean);
+  const trackedFiles = [];
+  for (const file of repositoryFiles) {
+    try {
+      const fileStats = await lstat(path.join(root, file));
+      if (fileStats.isFile()) trackedFiles.push(file);
+    } catch (error) {
+      if (!isMissingPathError(error)) throw error;
+    }
+  }
   const removalMapFailures = validateLegacyRemovalMap(removalMap, trackedFiles);
-  const violations = await findBoundaryViolations(root);
+  const violations = [
+    ...await findBoundaryViolations(root),
+    ...await findCompletedDailyTrainingRegistryViolations(root),
+  ];
   if (removalMapFailures.length > 0 || violations.length > 0) {
     for (const failure of removalMapFailures) console.error(`FAIL: ${failure}`);
     for (const { file, rule, evidence } of violations) {

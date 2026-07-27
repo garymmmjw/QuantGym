@@ -12,7 +12,7 @@ import {
   upsertNewsItems
 } from './mutations.js';
 import { getNewsQueriesForTopic } from './sync.js';
-import { normalizeNewsSkills as normalizeNewsSkillsValue } from '../problems/data.js';
+import { normalizeNewsSkills as normalizeNewsSkillsValue } from './skills.js';
 
 export function createNewsProvider(deps = {}) {
   const windowRef = deps.windowRef || globalThis.window;

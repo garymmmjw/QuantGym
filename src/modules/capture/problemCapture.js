@@ -32,30 +32,7 @@ export function getIncomingProblemCaptureResult(location = window.location) {
       nextUrl: getUrlWithoutCapture(location)
     };
   } catch {
-    return {
-      status: "error",
-      problems: [],
-      nextUrl: getUrlWithoutCapture(location)
-    };
-  }
-}
-
-export function parseProblemImportJson(raw) {
-  const parsed = JSON.parse(String(raw || ""));
-  return Array.isArray(parsed) ? parsed : [parsed];
-}
-
-export function getProblemImportResult(raw) {
-  try {
-    return {
-      status: "ok",
-      problems: parseProblemImportJson(raw)
-    };
-  } catch {
-    return {
-      status: "error",
-      problems: []
-    };
+    return { status: "error", problems: [], nextUrl: getUrlWithoutCapture(location) };
   }
 }
 

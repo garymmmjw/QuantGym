@@ -5,16 +5,13 @@
    - streak check-in / freeze toasts: called from src/ui/streakController.js (markActivityCheckIn chain)
    - level up: userStateStore subscription + getLevelInfo(getEffectiveTotalXp) (skills XP + bonusXp)
    - training completion (+XP / +coins): userStateStore subscription, entry + economy.coins deltas
-   - daily plan tasks all done: userStateStore subscription + getPrepDailyTasks,
-     awards a REAL +50 bonus XP through the app's save path (state.bonusXp)
    Per-day dedup is kept in localStorage keyed by user id + date. */
 
 import { escapeHtml } from "../lib/text.js";
 import { localDateKey, timestampOrZero } from "../lib/date.js";
 import { getQuantySrc } from "../lib/quantyAssets.js";
 import { getLevelInfo } from "../modules/skills/data.js";
-import { getEffectiveTotalXp, normalizeBonusXp, ensureEconomy } from "../modules/economy/index.js";
-import { getPrepDailyTasks, normalizePrepPlan } from "../modules/plan/data.js";
+import { getEffectiveTotalXp } from "../modules/economy/index.js";
 
 const ASSET_BASE = "/assets/generated/playful-precision/";
 
@@ -25,8 +22,6 @@ export const QG_FEEDBACK_ASSETS = {
   trophy: getQuantySrc("trophy", 320),
   oops: getQuantySrc("oops", 320)
 };
-
-const DAILY_ALL_CLEAR_BONUS_XP = 50;
 
 const DEDUP_PREFIX = "quantgym.feedback.v1";
 const CONFETTI_COLORS = ["#5b5ff5", "#ff9f2e", "#2ec38a", "#ff7a3d", "#8a7bff", "#ffd479"];
@@ -230,14 +225,6 @@ function readCoins(value) {
   return Math.max(0, Math.round(Number(value?.economy?.coins) || 0));
 }
 
-function readTodayTasks(value) {
-  const plan = normalizePrepPlan(value?.prepPlan, { localDateKey });
-  if (!plan) return null;
-  const tasks = getPrepDailyTasks(plan, { localDateKey });
-  if (!tasks.length) return null;
-  return { total: tasks.length, done: tasks.filter((task) => task.done).length };
-}
-
 let activeDispose = null;
 
 export function disposeQgFeedback() {
@@ -261,42 +248,8 @@ export function initQgFeedback(appServices = {}) {
 
   pruneStaleDedupKeys();
 
-  // Real +50 bonus XP for the daily all-clear, booked through the app's save
-  // path so it persists + cloud-syncs like any other state change.
-  function awardDailyAllClearBonus(taskCount, userId) {
-    window.setTimeout(() => {
-      if (getUserId() !== userId) return;
-      const stateValue = appServices?.userState?.value
-        || appServices?.userStateRuntime?.state?.value
-        || userStateStore.getState()?.value;
-      const saveState = appServices?.saveState
-        || appServices?.pageApi?.saveState
-        || appServices?.userStateRuntime?.save;
-      if (stateValue) {
-        stateValue.bonusXp = normalizeBonusXp(stateValue.bonusXp) + DAILY_ALL_CLEAR_BONUS_XP;
-        ensureEconomy(stateValue);
-        if (!Array.isArray(stateValue.economy.bonusXpLog)) stateValue.economy.bonusXpLog = [];
-        // Anchor to local noon of the local day so the week bucket matches the
-        // local-day semantics used by streak/freeze/dedup (avoids a UTC/local
-        // off-by-one at the day boundary that would mis-bucket the league week).
-        stateValue.economy.bonusXpLog.push({ date: `${localDateKey()}T12:00:00`, xp: DAILY_ALL_CLEAR_BONUS_XP });
-      }
-      // Celebrate before saving: the save re-notifies the store and a level-up
-      // (effective XP crossed a threshold) would otherwise jump the queue.
-      qgCelebrate({
-        kicker: "DAILY GOAL CLEAR",
-        title: t("fbDailyDoneTitle", { count: taskCount }),
-        sub: t("fbDailyDoneSub"),
-        img: QG_FEEDBACK_ASSETS.fire,
-        cta: t("fbDailyDoneCta")
-      });
-      if (stateValue && typeof saveState === "function") saveState();
-    }, 250);
-  }
-
   let trackedUserId = getUserId();
   let prevLevel = readLevel(userStateStore.getState()?.value);
-  let prevTasks = readTodayTasks(userStateStore.getState()?.value);
   let prevEntriesCount = readEntriesCount(userStateStore.getState()?.value);
   let prevCoins = readCoins(userStateStore.getState()?.value);
 
@@ -304,7 +257,6 @@ export function initQgFeedback(appServices = {}) {
     const value = state?.value || {};
     const userId = getUserId();
     const level = readLevel(value);
-    const tasks = readTodayTasks(value);
     const entriesCount = readEntriesCount(value);
     const coins = readCoins(value);
 
@@ -312,7 +264,6 @@ export function initQgFeedback(appServices = {}) {
       // Account switched under the same subscription: re-baseline silently.
       trackedUserId = userId;
       prevLevel = level;
-      prevTasks = tasks;
       prevEntriesCount = entriesCount;
       prevCoins = coins;
       return;
@@ -350,18 +301,7 @@ export function initQgFeedback(appServices = {}) {
       }
     }
 
-    const hadUnfinished = Boolean(prevTasks && prevTasks.done < prevTasks.total);
-    const allDone = Boolean(tasks && tasks.total > 0 && tasks.done >= tasks.total);
-    if (hadUnfinished && allDone) {
-      const key = dedupKey(userId, "daily-tasks-clear");
-      if (!wasShown(key)) {
-        markShown(key);
-        awardDailyAllClearBonus(tasks.total, userId);
-      }
-    }
-
     prevLevel = level;
-    prevTasks = tasks;
     prevEntriesCount = entriesCount;
     prevCoins = coins;
   });

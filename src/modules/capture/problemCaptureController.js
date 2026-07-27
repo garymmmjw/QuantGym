@@ -2,7 +2,7 @@ import {
   getIncomingProblemCaptureResult,
   getPendingProblemCaptureResult,
   writePendingProblemCapture
-} from './capture.js';
+} from "./problemCapture.js";
 
 const CAPTURE_ERROR_MESSAGE = "插件捕获的题目无法读取。";
 const CAPTURE_PENDING_MESSAGE = "登录后会自动收录刚才捕获的题目。";
@@ -56,8 +56,5 @@ export function createProblemCaptureController(deps = {}) {
     return result;
   }
 
-  return {
-    consumeIncoming,
-    consumePending
-  };
+  return { consumeIncoming, consumePending };
 }

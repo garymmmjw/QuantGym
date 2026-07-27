@@ -663,6 +663,13 @@ export function validateLegacyRemovalMap(removalMap = {}, trackedFiles = []) {
     if (!Number.isInteger(family?.removeInPhase) || family.removeInPhase < 1 || family.removeInPhase > 6) {
       failures.push(`${label} removeInPhase must be an integer from 1 through 6`);
     }
+    const completedInPhase = family?.completedInPhase;
+    if (
+      completedInPhase !== undefined
+      && (!Number.isInteger(completedInPhase) || completedInPhase !== family?.removeInPhase)
+    ) {
+      failures.push(`${label} completedInPhase must equal removeInPhase when present`);
+    }
     if (!Number.isInteger(family?.priority)) failures.push(`${label} priority must be an integer`);
     const globs = validateNonEmptyStringArray(family?.globs, `${label} globs`, failures, { paths: true });
     const targetDomains = validateNonEmptyStringArray(
@@ -681,6 +688,7 @@ export function validateLegacyRemovalMap(removalMap = {}, trackedFiles = []) {
       id: family?.id,
       label,
       priority: family?.priority,
+      completedInPhase,
       globs,
       targetDomains,
       replacementPaths,
@@ -732,7 +740,12 @@ export function validateLegacyRemovalMap(removalMap = {}, trackedFiles = []) {
   }
 
   for (const family of families) {
-    if (matchedByFamily.get(family).length === 0) {
+    const matchedFiles = matchedByFamily.get(family);
+    if (family.completedInPhase !== undefined && matchedFiles.length > 0) {
+      failures.push(
+        `${family.label} is completed but still matches tracked legacy files: ${matchedFiles.join(", ")}`,
+      );
+    } else if (family.completedInPhase === undefined && matchedFiles.length === 0) {
       failures.push(`${family.label} matches no tracked legacy files`);
     }
   }

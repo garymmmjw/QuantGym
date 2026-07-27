@@ -3,7 +3,7 @@ import {
   mergeNews as mergeNewsValue,
   newsDedupeKey as newsDedupeKeyValue
 } from './data.js';
-import { normalizeNewsSkills as normalizeNewsSkillsValue } from '../problems/data.js';
+import { normalizeNewsSkills as normalizeNewsSkillsValue } from './skills.js';
 
 export function createNewsDataAdapter(deps = {}) {
   const normalizeSkills = (value) => normalizeNewsSkillsValue(value, {

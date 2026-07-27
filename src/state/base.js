@@ -4,9 +4,6 @@ export function createBaseState(deps = {}) {
     seedJobs = [],
     seedCourses = [],
     seedNews = [],
-    catalogProblems = [],
-    mergeProblems = (seed = [], saved = []) => [...seed, ...saved],
-    isDisabledProblemSource = () => false,
     defaultLeaderboardSettings = () => ({}),
     nowIso = () => new Date().toISOString()
   } = deps;
@@ -21,10 +18,6 @@ export function createBaseState(deps = {}) {
     mentalMathRecords: [],
     gameRecords: [],
     courseStates: [],
-    problemStates: [],
-    leetcodeHot100Done: [],
-    studyPlan: null,
-    prepPlan: null,
     interviewExperiences: [],
     resume: { text: "", review: [], fileName: "", fileType: "", fileSize: 0, uploadedAt: "", updatedAt: "" },
     jobs: seedJobs.map((item) => ({ ...item, tags: [...(item.tags || [])] })),
@@ -32,10 +25,6 @@ export function createBaseState(deps = {}) {
     streakCount: 0,
     checkIns: [],
     leaderboard: defaultLeaderboardSettings(),
-    problems: mergeProblems(
-      catalogProblems.filter((problem) => !isDisabledProblemSource(problem)),
-      []
-    ).map((problem) => ({ ...problem, tags: [...(problem.tags || [])] })),
     news: seedNews.map((item) => ({
       ...item,
       tags: [...(item.tags || [])],

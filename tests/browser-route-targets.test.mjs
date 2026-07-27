@@ -176,8 +176,9 @@ test("browser smoke preserves behavioral intent instead of visibility-only check
     growthCss,
     /\.problem-progress-panel \.icon-button\.ghost\s*\{[\s\S]*?display\s*:\s*inline-grid[\s\S]*?min-width\s*:\s*44px[\s\S]*?min-height\s*:\s*44px/
   );
-  const overviewHook = fs.readFileSync(path.join(root, "src/features/overview/overviewHooks.js"), "utf8");
-  assert.match(overviewHook, /return\s*\{\s*\n\s*t:[^\n]+\n\s*isEnglish,/);
+  const overviewPage = fs.readFileSync(path.join(root, "src/pages/training/OverviewPage.tsx"), "utf8");
+  assert.match(overviewPage, /useDashboardOverviewQuery/);
+  assert.match(overviewPage, /buildProblemTrainingRoute/);
   assert.match(source, /function expectMarketCrossedQuoteFeedback/);
   assert.match(source, /function expectMarketScoredRoundFeedback/);
   assert.match(source, /function expectPkAnswerOutcome/);

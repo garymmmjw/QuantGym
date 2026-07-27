@@ -765,7 +765,7 @@ test("Linux baseline refresh verifies its runtime and uploads only fresh output"
   const expectedNodeArchiveSha256 = (
     "19e56f0825510207dd904f087fe52faa0a4eb6b2aab5f0ea7a33830d04888b8b"
   );
-  assert.match(updater, /const linuxSnapshotCount = 29;/u);
+  assert.match(updater, /const linuxSnapshotCount = 43;/u);
   assert.match(updater, /--timeout=300000/u);
   assert.match(
     updater,
@@ -790,7 +790,7 @@ test("Linux baseline refresh verifies its runtime and uploads only fresh output"
     workflow,
     /find tests\/e2e-v2 -type f -name '\*-linux\.png' -delete/u,
   );
-  assert.match(workflow, /test "\$\{#snapshots\[@\]\}" = "29"/u);
+  assert.match(workflow, /test "\$\{#snapshots\[@\]\}" = "43"/u);
   assert.match(workflow, /--timeout=300000/u);
   assert.match(workflow, /sha256sum --check --strict SHA256SUMS/u);
   assert.match(
@@ -799,7 +799,7 @@ test("Linux baseline refresh verifies its runtime and uploads only fresh output"
   );
   assert.match(
     workflow,
-    /steps\.generate_linux_baselines\.outputs\.snapshot_count == '29'/u,
+    /steps\.generate_linux_baselines\.outputs\.snapshot_count == '43'/u,
   );
   assert.match(
     workflow,

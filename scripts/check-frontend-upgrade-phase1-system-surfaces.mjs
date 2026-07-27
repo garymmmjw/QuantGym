@@ -41,14 +41,14 @@ const INITIAL_JS_BUDGET = 180 * 1024;
 const ROUTE_CHUNK_BUDGET = 100 * 1024;
 const VISUAL_STABILITY_TIMEOUT_MS = 20_000;
 const EXPECTED_E2E_TEST_COUNT = 82;
-export const PHASE2_PLAN_E2E_TAG = "@phase2:plan";
+export const PHASE2_E2E_TAG = "@phase2:";
 export const PHASE1_E2E_PLAYWRIGHT_ARGUMENTS = Object.freeze([
   "run",
   "test:e2e:v2",
   "--",
   "--reporter=json",
   "--grep-invert",
-  PHASE2_PLAN_E2E_TAG,
+  PHASE2_E2E_TAG,
 ]);
 const MAX_E2E_COMMAND_OUTPUT_BYTES = 1024 * 1024;
 const MAX_E2E_REPORT_BYTES = 16 * 1024 * 1024;

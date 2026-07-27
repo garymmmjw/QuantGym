@@ -65,6 +65,9 @@ function checkShape() {
     for (const field of ["id", "owner", "navGroup", "page", "featureEntry"]) {
       expect(Boolean(clean(entry[field])), `${label} ownership entry missing ${field}.`);
     }
+    if (entry.mode !== undefined) {
+      expect(["native", "compatibility"].includes(entry.mode), `${label} ownership mode must be native or compatibility.`);
+    }
     expect(/^[a-z][a-z0-9-]*$/.test(clean(entry.id)), `${label} ownership id must be slug-like.`);
     expect(/^[a-z][a-z0-9-]*$/.test(clean(entry.owner)), `${label} owner must be slug-like.`);
     expect(Array.isArray(entry.stateDomains) && entry.stateDomains.length > 0, `${label} must list stateDomains.`);
@@ -90,11 +93,19 @@ function checkOwnedFiles() {
     const featurePath = path.join(root, entry.featureEntry || "");
     expect(fs.existsSync(pagePath), `${entry.id} page file is missing: ${entry.page}`);
     expect(fs.existsSync(featurePath), `${entry.id} feature entry is missing: ${entry.featureEntry}`);
-    const expectedFeaturePrefix = path.join(root, "src", "features", entry.id) + path.sep;
-    expect(featurePath.startsWith(expectedFeaturePrefix), `${entry.id} feature entry must live under src/features/${entry.id}/.`);
+    const native = entry.mode === "native";
+    const expectedFeaturePrefix = native
+      ? path.join(root, "src", "domains") + path.sep
+      : path.join(root, "src", "features", entry.id) + path.sep;
+    expect(
+      featurePath.startsWith(expectedFeaturePrefix),
+      native
+        ? `${entry.id} native feature entry must live under src/domains/.`
+        : `${entry.id} feature entry must live under src/features/${entry.id}/.`,
+    );
     if (fs.existsSync(pagePath) && fs.existsSync(featurePath)) {
       const pageText = fs.readFileSync(pagePath, "utf8");
-      const featureName = path.basename(entry.featureEntry, ".jsx");
+      const featureName = path.basename(entry.featureEntry).replace(/\.(?:jsx|tsx?|js)$/u, "");
       expect(pageText.includes(featureName), `${entry.id} page must import/render ${featureName}.`);
     }
   }

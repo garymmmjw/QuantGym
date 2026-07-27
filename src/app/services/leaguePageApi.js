@@ -358,8 +358,8 @@ export function createLeaguePageApi(deps = {}) {
 
   /* ----------------------- learning map --------------------------- */
 
-  /* Same fallback as overviewPageApi: deps.getCatalogProblems may be the
-     pure (problems, isCatalogProblem) helper which yields [] with no args. */
+  /* Compatibility fallback: deps.getCatalogProblems may be the pure
+     (problems, isCatalogProblem) helper which yields [] with no args. */
   function getLeagueCatalogProblems() {
     const catalogProblems = deps.getCatalogProblems?.();
     if (Array.isArray(catalogProblems) && catalogProblems.length) return catalogProblems;

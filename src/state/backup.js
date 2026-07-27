@@ -82,38 +82,30 @@ export async function mergeBackupFile(file, currentState = {}, deps = {}) {
 }
 
 export function mergeImportedState(currentState = {}, importedRaw = {}, deps = {}) {
-  const importedState = parseBackupState(importedRaw);
+  const importedState = withoutRetiredDailyTrainingState(parseBackupState(importedRaw));
+  const retainedCurrentState = withoutRetiredDailyTrainingState(currentState);
   const normalizeMentalMathRecords = deps.normalizeMentalMathRecords || passthroughArray;
   const normalizeGameRecords = deps.normalizeGameRecords || passthroughArray;
-  const mergeProblemStates = deps.mergeProblemStates || ((...lists) => lists.flat().filter(Boolean));
-  const problemStatesFromFavorites = deps.problemStatesFromFavorites || passthroughArray;
   const defaultLeaderboardSettings = deps.defaultLeaderboardSettings || (() => ({}));
-  const mergeProblems = deps.mergeProblems || ((seed = [], saved = []) => [...seed, ...saved]);
   const mergeNews = deps.mergeNews || ((seed = [], saved = []) => [...seed, ...saved]);
   const normalizeState = deps.normalizeState || ((state) => state);
   const nowIso = deps.nowIso || new Date().toISOString();
   return normalizeState({
-    ...currentState,
+    ...retainedCurrentState,
     ...importedState,
-    skills: { ...(currentState.skills || {}), ...(importedState.skills || {}) },
+    skills: { ...(retainedCurrentState.skills || {}), ...(importedState.skills || {}) },
     entries: Array.isArray(importedState.entries) ? importedState.entries : [],
     resources: Array.isArray(importedState.resources) ? importedState.resources : [],
     network: Array.isArray(importedState.network) ? importedState.network : [],
     interviewFavorites: Array.isArray(importedState.interviewFavorites) ? importedState.interviewFavorites : [],
     mentalMathRecords: normalizeMentalMathRecords(importedState.mentalMathRecords),
     gameRecords: normalizeGameRecords(importedState.gameRecords),
-    problemStates: mergeProblemStates(
-      currentState.problemStates || [],
-      Array.isArray(importedState.problemStates) ? importedState.problemStates : [],
-      problemStatesFromFavorites(Array.isArray(importedState.interviewFavorites) ? importedState.interviewFavorites : [])
-    ),
-    leaderboard: importedState.leaderboard || currentState.leaderboard || defaultLeaderboardSettings(),
-    problems: mergeProblems(currentState.problems, Array.isArray(importedState.problems) ? importedState.problems : []),
-    news: mergeNews(currentState.news || [], Array.isArray(importedState.news) ? importedState.news : []),
-    newsFetchedAt: importedState.newsFetchedAt || currentState.newsFetchedAt || "",
-    newsFetchAttemptAt: importedState.newsFetchAttemptAt || currentState.newsFetchAttemptAt || "",
+    leaderboard: importedState.leaderboard || retainedCurrentState.leaderboard || defaultLeaderboardSettings(),
+    news: mergeNews(retainedCurrentState.news || [], Array.isArray(importedState.news) ? importedState.news : []),
+    newsFetchedAt: importedState.newsFetchedAt || retainedCurrentState.newsFetchedAt || "",
+    newsFetchAttemptAt: importedState.newsFetchAttemptAt || retainedCurrentState.newsFetchAttemptAt || "",
     newsSyncError: importedState.newsSyncError || "",
-    createdAt: importedState.createdAt || currentState.createdAt || nowIso,
+    createdAt: importedState.createdAt || retainedCurrentState.createdAt || nowIso,
     updatedAt: nowIso
   });
 }
@@ -142,4 +134,14 @@ function passthroughArray(value = []) {
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function withoutRetiredDailyTrainingState(rawState = {}) {
+  const state = { ...(rawState || {}) };
+  delete state.problems;
+  delete state.problemStates;
+  delete state.leetcodeHot100Done;
+  delete state.studyPlan;
+  delete state.prepPlan;
+  return state;
 }

@@ -49,7 +49,7 @@ function valueKey(value) {
   return Number(value).toFixed(9);
 }
 
-// 与 modules/problems/format.js getLocalizedProblemField(problem,"answer",false)
+// 与 modules/problemContent.js getLocalizedProblemField(problem,"answer",false)
 // 相同的取值优先级，保证按钮上的“真实答案”与查看参考答案一致。
 export function resolvePkAnswerText(problem) {
   return String(problem?.answerZh || problem?.answer || problem?.answerEn || "").trim();

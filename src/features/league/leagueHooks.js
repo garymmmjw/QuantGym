@@ -100,13 +100,6 @@ export function useLeaguePageModel() {
   const openNode = useCallback((node) => {
     if (!node) return;
     if (node.status === "current") {
-      if (node.topic) {
-        try {
-          pageApi?.problems?.applyFilterAction?.({ type: "theme", value: node.topic });
-        } catch {
-          /* filter pre-selection is best-effort */
-        }
-      }
       navigate(node.path || "/problems");
       return;
     }
@@ -118,7 +111,7 @@ export function useLeaguePageModel() {
       sub: t("leagueNodeLockedSub"),
       ms: 2400
     });
-  }, [navigate, pageApi, view.map.currentName, t]);
+  }, [navigate, view.map.currentName, t]);
 
   const buyItem = useCallback((itemId) => {
     const result = api?.buyItem?.(itemId);

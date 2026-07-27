@@ -20,10 +20,6 @@ import {
 } from '../modules/jobs/data.js';
 import { normalizeResources as normalizeResourcesValue } from '../modules/memory/data.js';
 import {
-  normalizePrepPlan as normalizePrepPlanValue,
-  normalizeStudyPlan as normalizeStudyPlanValue
-} from '../modules/plan/data.js';
-import {
   mergeResumeState as mergeResumeStateValue,
   normalizeResumeState as normalizeResumeStateValue
 } from '../modules/resume/data.js';
@@ -40,9 +36,6 @@ export function createStateDataRuntime(deps = {}) {
       seedJobs: deps.seedJobs,
       seedCourses: deps.seedCourses,
       seedNews: deps.seedNews,
-      catalogProblems: deps.catalogProblems,
-      mergeProblems: deps.mergeProblems,
-      isDisabledProblemSource: deps.isDisabledProblemSource,
       defaultLeaderboardSettings: deps.defaultLeaderboardSettings,
       nowIso: deps.nowIso
     });
@@ -57,22 +50,12 @@ export function createStateDataRuntime(deps = {}) {
       normalizeMentalMathRecords,
       normalizeGameRecords,
       normalizeCourseStates,
-      mergeProblemStates: deps.mergeProblemStates,
-      problemStatesFromFavorites: deps.problemStatesFromFavorites,
-      isDisabledProblemId: deps.isDisabledProblemId,
-      normalizeLeetcodeHot100Done: deps.normalizeLeetcodeHot100Done,
-      normalizeStudyPlan,
-      normalizePrepPlan,
       normalizeInterviewExperience,
       normalizeResumeState,
       normalizeJobs,
       normalizeCourses,
       normalizeLeaderboardSettings: deps.normalizeLeaderboardSettings,
-      mergeProblems: deps.mergeProblems,
-      isCatalogProblem: deps.isCatalogProblem,
-      isDisabledProblemSource: deps.isDisabledProblemSource,
       mergeNews: deps.mergeNews,
-      getUserCatalogProblems: deps.getUserCatalogProblems,
       mergeRecordsById,
       mergeCourseStates,
       mergeResumeState,
@@ -87,17 +70,6 @@ export function createStateDataRuntime(deps = {}) {
 
   function normalizeState(rawState) {
     return normalizeStateValue(rawState, getStateDataDeps());
-  }
-
-  function normalizeStudyPlan(raw = null) {
-    return normalizeStudyPlanValue(raw, { makeId: deps.makeId });
-  }
-
-  function normalizePrepPlan(raw = null) {
-    return normalizePrepPlanValue(raw, {
-      makeId: deps.makeId,
-      localDateKey: deps.localDateKey
-    });
   }
 
   function normalizeMentalMathRecords(records = []) {
@@ -227,11 +199,9 @@ export function createStateDataRuntime(deps = {}) {
     normalizeInterviewExperience,
     normalizeJobs,
     normalizeMentalMathRecords,
-    normalizePrepPlan,
     normalizeResources,
     normalizeResumeState,
     normalizeSkills,
-    normalizeState,
-    normalizeStudyPlan
+    normalizeState
   };
 }

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -8,9 +9,16 @@ import test from "node:test";
 
 import {
   findBoundaryViolations,
+  findCompletedDailyTrainingRegistryViolations,
   V2_BOUNDARY_SCAN_ROOTS,
 } from "../scripts/check-frontend-v2-boundaries.mjs";
 import { validateLegacyRemovalMap } from "../scripts/lib/frontend-upgrade-contracts.mjs";
+import { mergeImportedState } from "../src/state/backup.js";
+import {
+  buildCloudSessionState,
+  localStatePayload,
+  normalizeState,
+} from "../src/state/data.js";
 
 const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const boundaryScript = fileURLToPath(
@@ -53,6 +61,7 @@ const exactFamilies = [
   {
     id: "daily-training",
     removeInPhase: 2,
+    completedInPhase: 2,
     priority: 50,
     globs: ["src/features/overview/**", "src/features/plan/**", "src/features/problems/**", "src/modules/overview/**", "src/modules/plan/**", "src/modules/problems/**", "src/pages/OverviewPage.jsx", "src/pages/PlanPage.jsx", "src/pages/ProblemsPage.jsx", "src/app/services/overviewPageApi.js", "src/app/services/planPageApi.js", "src/app/services/problemsPageApi.js"],
     targetDomains: ["plan", "problems", "training"],
@@ -107,7 +116,7 @@ const exactFamilies = [
 ];
 
 const gitTrackedFiles = (root) => {
-  const result = spawnSync("git", ["ls-files", "-z"], {
+  const result = spawnSync("git", ["ls-files", "-co", "--exclude-standard", "-z"], {
     cwd: root,
     encoding: "buffer",
   });
@@ -115,7 +124,7 @@ const gitTrackedFiles = (root) => {
   return result.stdout
     .toString("utf8")
     .split("\0")
-    .filter(Boolean);
+    .filter((file) => file && existsSync(path.join(root, file)));
 };
 
 const makeFamily = (overrides = {}) => ({
@@ -173,6 +182,62 @@ test("the checked-in removal map has exactly six remaining families and covers t
   }
 
   assert.deepEqual(validateLegacyRemovalMap(legacyRemovalMap, gitTrackedFiles(projectRoot)), []);
+});
+
+test("the completed daily-training family is disconnected from active legacy registries", async () => {
+  assert.deepEqual(await findCompletedDailyTrainingRegistryViolations(projectRoot), []);
+});
+
+test("legacy persistence and backup cannot restore server-owned daily-training state", () => {
+  const retiredState = {
+    problems: [{ id: "legacy-problem" }],
+    problemStates: [{ problemId: "legacy-problem", completed: true }],
+    leetcodeHot100Done: ["legacy-problem"],
+    studyPlan: { id: "legacy-study-plan" },
+    prepPlan: { id: "legacy-prep-plan" },
+  };
+  const assertRetiredFieldsAbsent = (value) => {
+    for (const field of Object.keys(retiredState)) {
+      assert.equal(Object.hasOwn(value, field), false, `${field} must stay server-owned`);
+    }
+  };
+
+  assertRetiredFieldsAbsent(localStatePayload({ entries: [], ...retiredState }));
+  assertRetiredFieldsAbsent(normalizeState({ entries: [], ...retiredState }));
+  assertRetiredFieldsAbsent(buildCloudSessionState({ state: retiredState }).remoteState);
+  assertRetiredFieldsAbsent(mergeImportedState(retiredState, {
+    state: { entries: [], ...retiredState },
+  }, { normalizeState }));
+});
+
+test("detects a completed daily-training page API or createAppContext registration regression", async () => {
+  await withFixture({
+    "src/app/pageApi.js": [
+      'import { createPlanPageApi } from "./services/planPageApi.js";',
+      "export const pageApi = { plan: createPlanPageApi({}) };",
+    ].join("\n"),
+    "src/app/createAppContext/sharedImports.js": [
+      'export { createProblemsFacade } from "../../modules/problems/facade.js";',
+    ].join("\n"),
+  }, async (root) => {
+    assert.deepEqual(await findCompletedDailyTrainingRegistryViolations(root), [
+      {
+        file: "src/app/createAppContext/sharedImports.js",
+        rule: "completedFamilyRegistration",
+        evidence: "createProblemsFacade",
+      },
+      {
+        file: "src/app/pageApi.js",
+        rule: "completedFamilyRegistration",
+        evidence: "createPlanPageApi",
+      },
+      {
+        file: "src/app/pageApi.js",
+        rule: "completedFamilyRegistration",
+        evidence: "planPageApi.js",
+      },
+    ]);
+  });
 });
 
 test("freezes every removal-family record independently", () => {
@@ -279,6 +344,24 @@ test("rejects unmatched tracked legacy files and families with no tracked match"
     ["src/legacy/unmatched.js"],
   );
   assert.ok(noFamilyMatch.includes("owner matches no tracked legacy files"));
+});
+
+test("accepts a completed removal family only at zero matches and rejects regressions", () => {
+  const completed = makeRemovalMap({
+    families: [makeFamily({ completedInPhase: 1 })],
+  });
+
+  assert.deepEqual(validateLegacyRemovalMap(completed, []), []);
+  assert.ok(validateLegacyRemovalMap(completed, ["src/legacy/owned.js"]).includes(
+    "owner is completed but still matches tracked legacy files: src/legacy/owned.js",
+  ));
+
+  const wrongPhase = makeRemovalMap({
+    families: [makeFamily({ completedInPhase: 2 })],
+  });
+  assert.ok(validateLegacyRemovalMap(wrongPhase, []).includes(
+    "owner completedInPhase must equal removeInPhase when present",
+  ));
 });
 
 test("excludes replacement-path target subtrees from legacy ownership", () => {
