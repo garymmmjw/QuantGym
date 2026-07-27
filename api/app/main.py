@@ -11,6 +11,7 @@ from pydantic import SecretStr
 from .auth.router import router as auth_router
 from .auth.runtime import AuthRuntime, build_auth_runtime
 from .config import PREVIEW_ORIGIN, Settings, get_settings
+from .dashboard.router import router as dashboard_router
 from .db import assert_database_at_alembic_head, create_database_engine
 from .errors import EXCEPTION_HANDLERS
 from .health import router as health_router
@@ -22,6 +23,7 @@ from .plans.router import router as plans_router
 from .preferences.router import router as preferences_router
 from .problems.router import router as problems_router
 from .security.edge import EdgeProofMiddleware
+from .training.router import router as training_router
 from .users.router import router as users_router
 
 
@@ -118,8 +120,10 @@ def create_app(
     application.include_router(users_router)
     application.include_router(preferences_router)
     application.include_router(notifications_router)
+    application.include_router(dashboard_router)
     application.include_router(plans_router)
     application.include_router(problems_router)
+    application.include_router(training_router)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.allowed_origins if settings else (PREVIEW_ORIGIN,)),

@@ -135,6 +135,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v2/dashboard/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one server-composed current-account Overview */
+        get: operations["getDashboardOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v2/health": {
         parameters: {
             query?: never;
@@ -204,6 +221,91 @@ export interface paths {
         head?: never;
         /** Mark one current-account notification as read */
         patch: operations["markNotificationRead"];
+        trace?: never;
+    };
+    "/api/v2/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create one idempotent official plan */
+        post: operations["createPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/plans/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the current account's official plan */
+        get: operations["getCurrentPlan"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/plans/current/diagnostic": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run an idempotent diagnostic on the current official plan */
+        post: operations["runPlanDiagnostic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/plans/current/tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update one versioned official plan task */
+        patch: operations["updatePlanTask"];
+        trace?: never;
+    };
+    "/api/v2/plans/current/tasks/{task_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete one non-training official plan task */
+        post: operations["completePlanTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v2/preferences": {
@@ -344,18 +446,191 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v2/training/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start or resume one current-account training session */
+        post: operations["startOrResumeTraining"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/training/sessions/{session_id}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Store and evaluate one private training answer */
+        post: operations["submitTrainingAttempt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/training/sessions/{session_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Atomically complete training and issue official effects */
+        post: operations["completeTrainingSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/training/sessions/{session_id}/hint": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record one authorized hint reveal */
+        post: operations["useTrainingHint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/training/sessions/{session_id}/result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one server-confirmed training result */
+        get: operations["getTrainingResult"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/training/sessions/{session_id}/solution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record and return one authorized solution reveal */
+        post: operations["revealTrainingSolution"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AttemptSubmissionResponse */
+        AttemptSubmissionResponse: {
+            /**
+             * Attemptid
+             * Format: uuid
+             */
+            attemptId: string;
+            /**
+             * Eventid
+             * Format: uuid
+             */
+            eventId: string;
+            /** Eventsequence */
+            eventSequence: number;
+            /** Score */
+            score: number;
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Sessionversion */
+            sessionVersion: number;
+        };
         /** AuthResponse */
         AuthResponse: {
             user: components["schemas"]["MeResponse"];
+        };
+        /** CompletePlanTaskRequest */
+        CompletePlanTaskRequest: {
+            /** Planversion */
+            planVersion: number;
+            /** Taskversion */
+            taskVersion: number;
         };
         /** CompleteTodoRequest */
         CompleteTodoRequest: {
             /** Version */
             version: number;
+        };
+        /** CompleteTrainingRequest */
+        CompleteTrainingRequest: {
+            /**
+             * Attemptid
+             * Format: uuid
+             */
+            attemptId: string;
+            /** Version */
+            version: number;
+        };
+        /** CompletionResponse */
+        CompletionResponse: {
+            planEffect: components["schemas"]["PlanEffectResponse"] | null;
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Sessionversion */
+            sessionVersion: number;
+            /** Xpdelta */
+            xpDelta: number;
+        };
+        /** CreatePlanRequest */
+        CreatePlanRequest: {
+            /** Role */
+            role: string;
+            /** Season */
+            season: string;
+            /**
+             * Track
+             * @enum {string}
+             */
+            track: "internship" | "fulltime";
+            /**
+             * Weeklyhours
+             * @enum {integer}
+             */
+            weeklyHours: 5 | 8 | 12 | 16;
         };
         /** CreateTodoRequest */
         CreateTodoRequest: {
@@ -371,6 +646,115 @@ export interface components {
         CsrfResponse: {
             /** Csrftoken */
             csrfToken: string;
+        };
+        /** CurrentPlanResponse */
+        CurrentPlanResponse: {
+            plan: components["schemas"]["OfficialPlanResponse"] | null;
+        };
+        /** DashboardOverviewResponse */
+        DashboardOverviewResponse: {
+            planProgress: components["schemas"]["DashboardPlanProgressResponse"] | null;
+            profile: components["schemas"]["DashboardProfileResponse"];
+            /** Recentxp */
+            recentXp: components["schemas"]["DashboardXpResponse"][];
+            /** Resourceversions */
+            resourceVersions: {
+                [key: string]: number;
+            };
+            todayTask: components["schemas"]["DashboardTaskResponse"] | null;
+            /** Unreadnotificationcount */
+            unreadNotificationCount: number;
+            weakness: components["schemas"]["DashboardWeaknessResponse"] | null;
+        };
+        /** DashboardPlanProgressResponse */
+        DashboardPlanProgressResponse: {
+            /** Completedtasks */
+            completedTasks: number;
+            /**
+             * Planid
+             * Format: uuid
+             */
+            planId: string;
+            /** Totaltasks */
+            totalTasks: number;
+            /** Version */
+            version: number;
+        };
+        /** DashboardProfileResponse */
+        DashboardProfileResponse: {
+            /** Displayname */
+            displayName: string;
+            /** Level */
+            level: number;
+            /** Streakdays */
+            streakDays: number;
+            /** Weeklyxp */
+            weeklyXp: number;
+        };
+        /** DashboardTaskResponse */
+        DashboardTaskResponse: {
+            /** Actionresourceid */
+            actionResourceId: string | null;
+            /** Actiontarget */
+            actionTarget: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Rewardxp */
+            rewardXp: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "completed";
+            /** Title */
+            title: string;
+            /** Unlockreason */
+            unlockReason: string;
+            /** Version */
+            version: number;
+        };
+        /** DashboardWeaknessResponse */
+        DashboardWeaknessResponse: {
+            /** Label */
+            label: string;
+            /** Recommendedproblemid */
+            recommendedProblemId: string | null;
+            /** Score */
+            score: number;
+            /** Skillkey */
+            skillKey: string;
+        };
+        /** DashboardXpResponse */
+        DashboardXpResponse: {
+            /** Amount */
+            amount: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Occurredat
+             * Format: date-time
+             */
+            occurredAt: string;
+            /**
+             * Reason
+             * @constant
+             */
+            reason: "problem_completion";
+            /** Skillkey */
+            skillKey: string;
+        };
+        /** DiagnosticAnswerRequest */
+        DiagnosticAnswerRequest: {
+            /** Optionid */
+            optionId: string;
+            /** Questionid */
+            questionId: string;
         };
         /**
          * ErrorEnvelope
@@ -417,6 +801,27 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** HintUseResponse */
+        HintUseResponse: {
+            /**
+             * Eventid
+             * Format: uuid
+             */
+            eventId: string;
+            /** Eventsequence */
+            eventSequence: number;
+            /** Hinten */
+            hintEn: string | null;
+            /** Hintzh */
+            hintZh: string | null;
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Sessionversion */
+            sessionVersion: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -490,6 +895,155 @@ export interface components {
             readAt: string | null;
             /** Title */
             title: string;
+        };
+        /** OfficialPlanResponse */
+        OfficialPlanResponse: {
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Diagnosticscore */
+            diagnosticScore: number;
+            /** Diagnosticscores */
+            diagnosticScores: {
+                [key: string]: number;
+            };
+            /**
+             * Diagnosticstatus
+             * @enum {string}
+             */
+            diagnosticStatus: "pending" | "completed" | "skipped";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            progress: components["schemas"]["PlanProgressResponse"];
+            /** Recommendations */
+            recommendations: components["schemas"]["RecommendationResponse"][];
+            /** Role */
+            role: string;
+            /** Season */
+            season: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "completed" | "archived";
+            /** Tasks */
+            tasks: components["schemas"]["OfficialPlanTaskResponse"][];
+            /**
+             * Track
+             * @enum {string}
+             */
+            track: "internship" | "fulltime";
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Version */
+            version: number;
+            /**
+             * Weeklyhours
+             * @enum {integer}
+             */
+            weeklyHours: 5 | 8 | 12 | 16;
+        };
+        /** OfficialPlanTaskResponse */
+        OfficialPlanTaskResponse: {
+            /** Actiontarget */
+            actionTarget: ("problems" | "tools" | "resume" | "jobs" | "experiences" | "interview" | "custom") | null;
+            /** Completedat */
+            completedAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Detail */
+            detail: string | null;
+            /** Estimatedminutes */
+            estimatedMinutes: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Planid
+             * Format: uuid
+             */
+            planId: string;
+            /** Recommendationid */
+            recommendationId: string | null;
+            /** Scheduledfor */
+            scheduledFor: string | null;
+            /** Skillkey */
+            skillKey: string | null;
+            /** Sortorder */
+            sortOrder: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "open" | "completed";
+            /** Targetproblemid */
+            targetProblemId: string | null;
+            /** Title */
+            title: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Version */
+            version: number;
+        };
+        /** PlanCreationResponse */
+        PlanCreationResponse: {
+            /**
+             * Planid
+             * Format: uuid
+             */
+            planId: string;
+            /** Planversion */
+            planVersion: number;
+            /** Taskids */
+            taskIds: string[];
+        };
+        /** PlanDiagnosticResponse */
+        PlanDiagnosticResponse: {
+            /**
+             * Planid
+             * Format: uuid
+             */
+            planId: string;
+            /** Planversion */
+            planVersion: number;
+            /** Recommendationids */
+            recommendationIds: string[];
+        };
+        /** PlanEffectResponse */
+        PlanEffectResponse: {
+            /** Planversion */
+            planVersion: number;
+            /** Taskcompleted */
+            taskCompleted: boolean;
+        };
+        /** PlanProgressResponse */
+        PlanProgressResponse: {
+            /** Completed */
+            completed: number;
+            /** Total */
+            total: number;
+        };
+        /** PlanTaskMutationResponse */
+        PlanTaskMutationResponse: {
+            /** Planversion */
+            planVersion: number;
+            task: components["schemas"]["OfficialPlanTaskResponse"];
         };
         /** PlanTaskResponse */
         PlanTaskResponse: {
@@ -646,6 +1200,51 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** RecommendationResponse */
+        RecommendationResponse: {
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "problem" | "skill" | "task";
+            /** Problemid */
+            problemId: string | null;
+            /** Provenanceresourceid */
+            provenanceResourceId: string | null;
+            /**
+             * Provenancetype
+             * @enum {string}
+             */
+            provenanceType: "diagnostic" | "training" | "system";
+            /** Rank */
+            rank: number;
+            /** Rationale */
+            rationale: string;
+            /** Skillkey */
+            skillKey: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "applied" | "dismissed";
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Version */
+            version: number;
+        };
         /** RegisterRequest */
         RegisterRequest: {
             /** Displayname */
@@ -674,6 +1273,18 @@ export interface components {
              */
             token: string;
         };
+        /** RunPlanDiagnosticRequest */
+        RunPlanDiagnosticRequest: {
+            /** Answers */
+            answers: components["schemas"]["DiagnosticAnswerRequest"][];
+            /**
+             * Definitionversion
+             * @constant
+             */
+            definitionVersion: "baseline-v1";
+            /** Planversion */
+            planVersion: number;
+        };
         /** SaveNoteRequest */
         SaveNoteRequest: {
             /** Body */
@@ -690,6 +1301,54 @@ export interface components {
             /** Favorite */
             favorite: boolean;
         };
+        /** SolutionRevealResponse */
+        SolutionRevealResponse: {
+            /**
+             * Eventid
+             * Format: uuid
+             */
+            eventId: string;
+            /** Eventsequence */
+            eventSequence: number;
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Sessionversion */
+            sessionVersion: number;
+            /** Solutionen */
+            solutionEn: string | null;
+            /** Solutionzh */
+            solutionZh: string | null;
+        };
+        /** StartTrainingRequest */
+        StartTrainingRequest: {
+            /** Plantaskid */
+            planTaskId?: string | null;
+            /**
+             * Problemid
+             * Format: uuid
+             */
+            problemId: string;
+        };
+        /** StartTrainingResponse */
+        StartTrainingResponse: {
+            /**
+             * Problemid
+             * Format: uuid
+             */
+            problemId: string;
+            /** Resumed */
+            resumed: boolean;
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Sessionversion */
+            sessionVersion: number;
+        };
         /** StatusResponse */
         StatusResponse: {
             /**
@@ -699,10 +1358,64 @@ export interface components {
              */
             status: "ok";
         };
+        /** SubmitAttemptRequest */
+        SubmitAttemptRequest: {
+            /** Answer */
+            answer: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "text" | "code" | "multiple_choice";
+            /** Version */
+            version: number;
+        };
         /** TodoListResponse */
         TodoListResponse: {
             /** Items */
             items: components["schemas"]["PlanTaskResponse"][];
+        };
+        /** TrainingResultResponse */
+        TrainingResultResponse: {
+            /**
+             * Completedat
+             * Format: date-time
+             */
+            completedAt: string;
+            planEffect: components["schemas"]["PlanEffectResponse"] | null;
+            /**
+             * Problemid
+             * Format: uuid
+             */
+            problemId: string;
+            /** Score */
+            score: number;
+            /**
+             * Sessionid
+             * Format: uuid
+             */
+            sessionId: string;
+            /** Sessionversion */
+            sessionVersion: number;
+            /** Xpdelta */
+            xpDelta: number;
+        };
+        /** UpdatePlanTaskRequest */
+        UpdatePlanTaskRequest: {
+            /** Detail */
+            detail?: string | null;
+            /** Estimatedminutes */
+            estimatedMinutes?: number | null;
+            /** Planversion */
+            planVersion: number;
+            /** Scheduledfor */
+            scheduledFor?: string | null;
+            /** Sortorder */
+            sortOrder?: number | null;
+            /** Taskversion */
+            taskVersion: number;
+            /** Title */
+            title?: string | null;
         };
         /** UpdatePreferencesRequest */
         UpdatePreferencesRequest: {
@@ -734,6 +1447,11 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** VersionedTrainingRequest */
+        VersionedTrainingRequest: {
+            /** Version */
+            version: number;
         };
     };
     responses: never;
@@ -976,6 +1694,71 @@ export interface operations {
             };
         };
     };
+    getDashboardOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOverviewResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     getHealth: {
         parameters: {
             query?: never;
@@ -1124,6 +1907,436 @@ export interface operations {
             };
             /** @description Resource not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    createPlan: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePlanRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanCreationResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getCurrentPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentPlanResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    runPlanDiagnostic: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunPlanDiagnosticRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanDiagnosticResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    updatePlanTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePlanTaskRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanTaskMutationResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    completePlanTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompletePlanTaskRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanTaskMutationResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1923,6 +3136,538 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    startOrResumeTraining: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartTrainingRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartTrainingResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    submitTrainingAttempt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitAttemptRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttemptSubmissionResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    completeTrainingSession: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Idempotency-Key": string;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteTrainingRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompletionResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    useTrainingHint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionedTrainingRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HintUseResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request proof or permission denied */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Version or idempotency conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    getTrainingResult: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrainingResultResponse"];
+                };
+            };
+            /** @description Authentication required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Request validation failed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Service unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    revealTrainingSolution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionedTrainingRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SolutionRevealResponse"];
                 };
             };
             /** @description Authentication required */
