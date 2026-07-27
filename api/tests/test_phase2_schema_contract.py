@@ -100,6 +100,7 @@ def test_phase1_revision_remains_byte_immutable() -> None:
 def test_second_revision_embeds_the_exact_phase2_contract() -> None:
     source = REVISION_PATH.read_text(encoding="utf-8")
     snapshot_json = _literal_assignment("SCHEMA_CONTRACT_JSON")
+    contract_bytes = CONTRACT_PATH.read_bytes()
 
     assert _literal_assignment("revision") == "0002_phase2_daily_training"
     assert _literal_assignment("down_revision") == "0001_phase1_foundation"
@@ -107,8 +108,10 @@ def test_second_revision_embeds_the_exact_phase2_contract() -> None:
         "docs/frontend-upgrade/phase-2-schema-contract.json"
     )
     assert isinstance(snapshot_json, str)
+    snapshot_bytes = snapshot_json.encode("utf-8")
+    assert snapshot_bytes == contract_bytes
     assert json.loads(snapshot_json) == _contract()
-    assert hashlib.sha256(snapshot_json.encode("utf-8")).hexdigest() == _literal_assignment(
+    assert hashlib.sha256(contract_bytes).hexdigest() == _literal_assignment(
         "SCHEMA_CONTRACT_SHA256"
     )
     assert "Path(" not in source

@@ -23,7 +23,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 # Audit provenance only: this immutable revision never reads the external path.
 SCHEMA_CONTRACT_RELATIVE_PATH = "docs/frontend-upgrade/phase-2-schema-contract.json"
-SCHEMA_CONTRACT_SHA256 = "c3701fc0fb32bc88d1302085623dd854995e40953b24242c7b3206c9313921b2"
+SCHEMA_CONTRACT_SHA256 = "44fdf46535bfb15dad5dbd4f3d45ec9229561263d504a41557e2cc5ccf148745"
 SCHEMA_CONTRACT_JSON = r"""{
   "schemaVersion": 2,
   "phase": 2,
@@ -1664,7 +1664,8 @@ SCHEMA_CONTRACT_JSON = r"""{
     "same-fingerprint:0002_phase2_daily_training"
   ],
   "sharedPreviewDowngradeAllowed": false
-}"""
+}
+"""
 _TYPE_PATTERN = re.compile(r"^(varchar|char)\((\d+)\)$")
 _PHASE1_CHECK_COUNTS = {
     "plan_tasks": 3,

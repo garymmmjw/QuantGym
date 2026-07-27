@@ -195,11 +195,20 @@ def test_offline_migrations_reject_conflicting_database_aliases_without_leaking(
     assert second_secret not in rendered
 
 
-def _dependencies_available() -> bool:
+def _alembic_dependencies_available() -> bool:
     try:
         import alembic  # noqa: F401
-        import psycopg  # noqa: F401
         import sqlalchemy  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+def _postgres_test_dependencies_available() -> bool:
+    if not _alembic_dependencies_available():
+        return False
+    try:
+        import psycopg  # noqa: F401
         import testcontainers.postgres  # noqa: F401
     except ImportError:
         return False
@@ -216,7 +225,7 @@ def _load_revision() -> Any:
 
 
 @pytest.mark.skipif(
-    not _dependencies_available(),
+    not _alembic_dependencies_available(),
     reason="exact migration compiler contract requires the locked SQLAlchemy and Alembic dependencies",
 )
 def test_migration_compiler_emits_every_frozen_contract_element() -> None:
@@ -458,7 +467,7 @@ def _assert_columns_match_contract(fingerprint: dict[str, Any]) -> None:
 
 
 @pytest.mark.skipif(
-    not _dependencies_available(),
+    not _postgres_test_dependencies_available(),
     reason="ephemeral PostgreSQL 18 migration test requires Alembic, psycopg, SQLAlchemy and testcontainers",
 )
 def test_postgres18_upgrade_downgrade_upgrade_round_trip() -> None:
@@ -522,8 +531,52 @@ def _assert_phase2_columns_match_contract(fingerprint: dict[str, Any]) -> None:
         ]
 
 
+def _assert_phase1_fixture_rows_preserved(connection: Any) -> None:
+    assert connection.exec_driver_sql(
+        """
+        SELECT email, normalized_email, password_hash, display_name, status, email_verified_at
+        FROM users
+        WHERE id = '10000000-0000-4000-8000-000000000001'
+        """
+    ).one() == (
+        "phase1-row@example.com",
+        "phase1-row@example.com",
+        None,
+        "Phase 1 row",
+        "active",
+        None,
+    )
+    assert connection.exec_driver_sql(
+        """
+        SELECT user_id::text, title, status, sort_order, version, completed_at
+        FROM plan_tasks
+        WHERE id = '20000000-0000-4000-8000-000000000001'
+        """
+    ).one() == (
+        "10000000-0000-4000-8000-000000000001",
+        "Existing Phase 1 task",
+        "open",
+        0,
+        1,
+        None,
+    )
+    assert connection.exec_driver_sql(
+        """
+        SELECT user_id::text, kind, title, body, read_at
+        FROM notifications
+        WHERE id = '30000000-0000-4000-8000-000000000001'
+        """
+    ).one() == (
+        "10000000-0000-4000-8000-000000000001",
+        "phase1",
+        "Existing notification",
+        "Existing Phase 1 notification body",
+        None,
+    )
+
+
 @pytest.mark.skipif(
-    not _dependencies_available(),
+    not _postgres_test_dependencies_available(),
     reason="ephemeral PostgreSQL 18 Phase 2 round trip requires the locked dependencies",
 )
 def test_postgres18_phase2_upgrade_downgrade_upgrade_normalized_fingerprint() -> None:
@@ -577,10 +630,12 @@ def test_postgres18_phase2_upgrade_downgrade_upgrade_normalized_fingerprint() ->
                     """
                 )
                 connection.commit()
+                _assert_phase1_fixture_rows_preserved(connection)
 
                 command.upgrade(config, EXPECTED_HEAD_REVISION)
                 first_phase2_fingerprint = _database_fingerprint(connection)
                 _assert_phase2_columns_match_contract(first_phase2_fingerprint)
+                _assert_phase1_fixture_rows_preserved(connection)
                 assert sorted(inspect(connection).get_table_names(schema="public")) == sorted(
                     [_phase2_contract()["metadataTable"], *_phase2_contract()["applicationTables"]]
                 )
@@ -603,22 +658,19 @@ def test_postgres18_phase2_upgrade_downgrade_upgrade_normalized_fingerprint() ->
                 command.downgrade(config, EXPECTED_REVISION)
                 restored_phase1_fingerprint = _database_fingerprint(connection)
                 assert restored_phase1_fingerprint == phase1_fingerprint
-                assert connection.exec_driver_sql("SELECT count(*) FROM plan_tasks").scalar_one() == 1
-                assert connection.exec_driver_sql(
-                    "SELECT count(*) FROM notifications"
-                ).scalar_one() == 1
+                _assert_phase1_fixture_rows_preserved(connection)
 
                 command.upgrade(config, EXPECTED_HEAD_REVISION)
                 second_phase2_fingerprint = _database_fingerprint(connection)
                 assert second_phase2_fingerprint == first_phase2_fingerprint
-                assert connection.exec_driver_sql("SELECT count(*) FROM plan_tasks").scalar_one() == 1
+                _assert_phase1_fixture_rows_preserved(connection)
         finally:
             engine.dispose()
 
 
 @pytest.mark.skipif(
-    not _dependencies_available(),
-    reason="Alembic head check requires the locked Python dependencies",
+    not _alembic_dependencies_available(),
+    reason="Alembic head check requires Alembic and SQLAlchemy",
 )
 def test_alembic_has_exactly_one_head() -> None:
     from alembic.config import Config
