@@ -17,6 +17,7 @@ import {
   parsePhase2PerformanceReport,
   PHASE2_PERFORMANCE_SAMPLES_PER_CASE,
   PHASE2_PERFORMANCE_SUMMARY_PATH,
+  phase2PerformanceBuildEnvironment,
   phase2PerformanceP75,
   phase2PerformancePlaywrightArguments,
   runPhase2PerformanceEvidenceBuilder,
@@ -294,6 +295,36 @@ test("Playwright command locks JSON reporter, retries zero, and one worker", () 
     "--retries=0",
     "--workers=1",
   ]);
+
+  const inheritedEnvironment = {
+    CF_PAGES_BRANCH: "main",
+    CF_PAGES_COMMIT_SHA: "f".repeat(40),
+    PATH: "/fixture/bin",
+    QUANTGYM_BUILD_BRANCH: "main",
+    QUANTGYM_BUILD_COMMIT: "e".repeat(40),
+    QUANTGYM_BUILD_SOURCE: "cloudflare-pages",
+    SENTINEL: "preserved",
+  };
+  const buildEnvironment = phase2PerformanceBuildEnvironment(inheritedEnvironment);
+  assert.equal(buildEnvironment.CF_PAGES_BRANCH, undefined);
+  assert.equal(buildEnvironment.CF_PAGES_COMMIT_SHA, undefined);
+  assert.equal(buildEnvironment.QUANTGYM_BUILD_COMMIT, undefined);
+  assert.equal(buildEnvironment.QUANTGYM_BUILD_BRANCH, "codex/frontend-v2-preview");
+  assert.equal(buildEnvironment.QUANTGYM_BUILD_SOURCE, "test");
+  assert.equal(buildEnvironment.SENTINEL, "preserved");
+  assert.equal(
+    buildEnvironment.PATH,
+    `${path.dirname(process.execPath)}:/fixture/bin`,
+  );
+  assert.deepEqual(inheritedEnvironment, {
+    CF_PAGES_BRANCH: "main",
+    CF_PAGES_COMMIT_SHA: "f".repeat(40),
+    PATH: "/fixture/bin",
+    QUANTGYM_BUILD_BRANCH: "main",
+    QUANTGYM_BUILD_COMMIT: "e".repeat(40),
+    QUANTGYM_BUILD_SOURCE: "cloudflare-pages",
+    SENTINEL: "preserved",
+  });
 });
 
 test("bundle inspection rejects an oversized initial JavaScript payload", async () => {

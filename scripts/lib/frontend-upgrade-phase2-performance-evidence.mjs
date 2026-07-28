@@ -686,15 +686,30 @@ export async function runPhase2PerformancePlaywright({ root, grep } = {}) {
   }
 }
 
-export async function runPhase2ProductionBuild({ root } = {}) {
+export const phase2PerformanceBuildEnvironment = (
+  environment = process.env,
+) => {
+  const buildEnvironment = { ...environment };
+  delete buildEnvironment.CF_PAGES_BRANCH;
+  delete buildEnvironment.CF_PAGES_COMMIT_SHA;
+  delete buildEnvironment.QUANTGYM_BUILD_COMMIT;
+  return {
+    ...buildEnvironment,
+    PATH: `${path.dirname(process.execPath)}:${environment.PATH ?? ""}`,
+    QUANTGYM_BUILD_BRANCH: "codex/frontend-v2-preview",
+    QUANTGYM_BUILD_SOURCE: "test",
+  };
+};
+
+export async function runPhase2ProductionBuild({
+  environment = process.env,
+  root,
+} = {}) {
   const npmExecutable = path.join(path.dirname(process.execPath), "npm");
   await execFileAsync(npmExecutable, ["run", "build:v2"], {
     cwd: root,
     encoding: "utf8",
-    env: {
-      ...process.env,
-      PATH: `${path.dirname(process.execPath)}:${process.env.PATH ?? ""}`,
-    },
+    env: phase2PerformanceBuildEnvironment(environment),
     maxBuffer: 16 * 1024 * 1024,
   });
 }
