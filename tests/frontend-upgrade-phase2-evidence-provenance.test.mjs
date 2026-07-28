@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   chmod,
+  lstat,
   mkdir,
   mkdtemp,
   readFile,
@@ -156,7 +157,7 @@ const createFixture = async (t) => {
   git(root, ["init", "-q"]);
   git(root, ["config", "user.name", "Phase 2 Evidence Test"]);
   git(root, ["config", "user.email", "phase2-evidence@example.invalid"]);
-  await writeFixtureFile(root, ".gitignore", "artifacts/\n");
+  await writeFixtureFile(root, ".gitignore", "artifacts/\nnode_modules/\n");
   await writeFixtureFile(root, "app.txt", "frozen application\n");
   await writeFixtureFile(
     root,
@@ -869,10 +870,53 @@ test("rejects application source drift created while an in-place evidence run is
 
 test("installs only the declared output from an isolated detached worktree", async (t) => {
   const fixture = await createFixture(t);
+  const dependencyPath = "node_modules/phase2-fixture/package.json";
+  await writeFixtureFile(fixture.root, dependencyPath, "source dependency\n");
+  for (const cacheDirectory of [".cache", ".vite", ".vite-temp"]) {
+    await writeFixtureFile(
+      fixture.root,
+      `node_modules/${cacheDirectory}/source-cache.txt`,
+      "source cache\n",
+    );
+  }
   const result = await runPhase2EvidenceBuilderWithProvenance({
     root: fixture.root,
     component: "contract",
     runner: async ({ applicationCommit, root }) => {
+      const isolatedNodeModules = path.join(root, "node_modules");
+      const metadata = await lstat(isolatedNodeModules);
+      assert.equal(metadata.isDirectory(), true);
+      assert.equal(metadata.isSymbolicLink(), false);
+      assert.equal(await realpath(isolatedNodeModules), isolatedNodeModules);
+      assert.equal(await readFile(path.join(root, dependencyPath), "utf8"), (
+        "source dependency\n"
+      ));
+      for (const cacheDirectory of [".cache", ".vite", ".vite-temp"]) {
+        await assert.rejects(
+          readFile(path.join(
+            isolatedNodeModules,
+            cacheDirectory,
+            "source-cache.txt",
+          )),
+          { code: "ENOENT" },
+        );
+      }
+      await writeFile(path.join(root, dependencyPath), "isolated dependency\n");
+      await mkdir(path.join(isolatedNodeModules, ".vite"), { recursive: true });
+      await writeFile(
+        path.join(isolatedNodeModules, ".vite/isolated-cache.txt"),
+        "isolated cache\n",
+      );
+      assert.equal(await readFile(path.join(fixture.root, dependencyPath), "utf8"), (
+        "source dependency\n"
+      ));
+      assert.equal(
+        await readFile(path.join(
+          fixture.root,
+          "node_modules/.vite/source-cache.txt",
+        ), "utf8"),
+        "source cache\n",
+      );
       await writeFileAtomicallyWithinTrustedRoot({
         root,
         relativePath: contractOutput,
@@ -887,6 +931,9 @@ test("installs only the declared output from an isolated detached worktree", asy
   ));
   assert.equal(await readFile(path.join(fixture.root, "app.txt"), "utf8"), (
     "frozen application\n"
+  ));
+  assert.equal(await readFile(path.join(fixture.root, dependencyPath), "utf8"), (
+    "source dependency\n"
   ));
 });
 

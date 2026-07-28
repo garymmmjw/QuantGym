@@ -2,13 +2,13 @@ import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import {
+  cp,
   lstat,
   mkdtemp,
   mkdir,
   open,
   readFile,
   rm,
-  symlink,
 } from "node:fs/promises";
 import path from "node:path";
 import { promisify, TextDecoder } from "node:util";
@@ -145,6 +145,12 @@ const ISOLATED_RUNTIME_PREFIXES = Object.freeze([
   "dist-v2/",
   "test-results/",
   "playwright-report/",
+]);
+
+const ISOLATED_NODE_MODULES_CACHE_DIRECTORIES = new Set([
+  ".cache",
+  ".vite",
+  ".vite-temp",
 ]);
 
 const isPlainObject = (value) => (
@@ -1113,7 +1119,27 @@ const addDetachedWorktree = async ({ sourceRoot, applicationCommit, worktreeRoot
     if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
       throw new Error("source node_modules must be a regular directory");
     }
-    await symlink(sourceNodeModules, path.join(worktreeRoot, "node_modules"), "dir");
+    const isolatedNodeModules = path.join(worktreeRoot, "node_modules");
+    await cp(sourceNodeModules, isolatedNodeModules, {
+      dereference: false,
+      errorOnExist: true,
+      filter: (sourcePath) => {
+        const relativePath = path.relative(sourceNodeModules, sourcePath);
+        if (relativePath === "") return true;
+        return !ISOLATED_NODE_MODULES_CACHE_DIRECTORIES.has(
+          relativePath.split(path.sep)[0],
+        );
+      },
+      force: false,
+      mode: fsConstants.COPYFILE_FICLONE,
+      preserveTimestamps: true,
+      recursive: true,
+      verbatimSymlinks: true,
+    });
+    const isolatedMetadata = await lstat(isolatedNodeModules);
+    if (!isolatedMetadata.isDirectory() || isolatedMetadata.isSymbolicLink()) {
+      throw new Error("isolated node_modules must be a regular directory");
+    }
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
   }
