@@ -393,7 +393,7 @@ export async function createPhase2ContractCommandPlan({
     descriptor("module-ownership", node, ["scripts/check-module-ownership.mjs"]),
     descriptor("question-bank-rights", node, [
       "scripts/check-question-bank-rights-release-blockers.mjs",
-    ]),
+    ], { temporarySummary: true }),
     descriptor("phase1-node", node, [
       "scripts/run-node-tests-strict.mjs", "--prefix", "frontend-upgrade-phase1",
     ]),
@@ -465,12 +465,19 @@ const spawnCaptured = ({ command, args, cwd, environment }) => new Promise((reso
   });
 });
 
-const commandEnvironment = (pythonExecutable) => ({
-  ...process.env,
-  PATH: `${path.dirname(process.execPath)}:${process.env.PATH ?? ""}`,
-  PYTHONDONTWRITEBYTECODE: "1",
-  QUANTGYM_PYTHON_313: pythonExecutable,
-});
+const commandEnvironment = (pythonExecutable) => {
+  const environment = { ...process.env };
+  delete environment.CF_PAGES_BRANCH;
+  delete environment.CF_PAGES_COMMIT_SHA;
+  return {
+    ...environment,
+    PATH: `${path.dirname(process.execPath)}:${process.env.PATH ?? ""}`,
+    PYTHONDONTWRITEBYTECODE: "1",
+    QUANTGYM_BUILD_BRANCH: "codex/frontend-v2-preview",
+    QUANTGYM_BUILD_SOURCE: "test",
+    QUANTGYM_PYTHON_313: pythonExecutable,
+  };
+};
 
 export async function runPhase2ContractCommand({
   root,
@@ -481,6 +488,26 @@ export async function runPhase2ContractCommand({
     throw new Error("contract evidence command descriptor is invalid");
   }
   const environment = commandEnvironment(pythonExecutable);
+  if (command.pytest === true) {
+    environment.TESTCONTAINERS_RYUK_DISABLED = "true";
+  }
+  if (command.temporarySummary === true) {
+    const temporaryDirectory = await mkdtemp(path.join(
+      tmpdir(),
+      "quantgym-phase2-rights-summary-",
+    ));
+    const summaryPath = path.join(temporaryDirectory, "summary.json");
+    try {
+      return await spawnCaptured({
+        command: command.command,
+        args: [...command.args, "--summary", summaryPath],
+        cwd: root,
+        environment,
+      });
+    } finally {
+      await rm(temporaryDirectory, { force: true, recursive: true });
+    }
+  }
   if (command.pytest !== true) {
     return spawnCaptured({
       command: command.command,

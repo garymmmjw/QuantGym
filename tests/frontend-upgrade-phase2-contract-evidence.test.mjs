@@ -20,6 +20,7 @@ import {
   assertStrictPhase2ContractSummary,
   buildPhase2ContractSummary,
   parseStrictPytestEvidence,
+  runPhase2ContractCommand,
   runPhase2ContractEvidencePipeline,
   writePhase2ContractSummary,
 } from "../scripts/lib/frontend-upgrade-phase2-contract-evidence.mjs";
@@ -129,6 +130,11 @@ test("injected pipeline runs all contract commands serially and builds the stric
     "--test",
     "--disable-telemetry",
   ]);
+  const rightsCommand = result.plan.find(({ id }) => id === "question-bank-rights");
+  assert.deepEqual(rightsCommand?.args, [
+    "scripts/check-question-bank-rights-release-blockers.mjs",
+  ]);
+  assert.equal(rightsCommand?.temporarySummary, true);
   assert.equal(result.summary.metrics.commandCount, 21);
   assert.equal(result.summary.metrics.apiPytestTests, 480);
   assert.deepEqual(result.summary.results, []);
@@ -136,6 +142,108 @@ test("injected pipeline runs all contract commands serially and builds the stric
   assert.deepEqual(Object.keys(result.summary.checks), PHASE2_CONTRACT_REQUIRED_CHECKS);
   assert.ok(Object.values(result.summary.checks).every((value) => value === true));
   assert.equal(assertStrictPhase2ContractSummary(result.summary), true);
+
+  const environmentProbe = await runPhase2ContractCommand({
+    root,
+    pythonExecutable: "/fixture/python3.13",
+    command: {
+      id: "environment-probe",
+      command: process.execPath,
+      args: [
+        "-e",
+        "process.stdout.write(JSON.stringify({"
+          + "branch:process.env.QUANTGYM_BUILD_BRANCH,"
+          + "cloudflareBranch:process.env.CF_PAGES_BRANCH??null,"
+          + "cloudflareCommit:process.env.CF_PAGES_COMMIT_SHA??null,"
+          + "source:process.env.QUANTGYM_BUILD_SOURCE"
+          + "}))",
+      ],
+    },
+  });
+  assert.equal(environmentProbe.exitCode, 0);
+  assert.equal(environmentProbe.signal, null);
+  assert.deepEqual(JSON.parse(environmentProbe.stdout), {
+    branch: "codex/frontend-v2-preview",
+    cloudflareBranch: null,
+    cloudflareCommit: null,
+    source: "test",
+  });
+
+  const pytestEnvironmentProbe = await runPhase2ContractCommand({
+    root,
+    pythonExecutable: "/fixture/python3.13",
+    command: {
+      id: "pytest-environment-probe",
+      command: process.execPath,
+      args: [
+        "-e",
+        "const fs=require('node:fs');"
+          + "const argument=process.argv.find((value)=>value.startsWith('--junitxml='));"
+          + "const junitPath=argument.slice('--junitxml='.length);"
+          + "fs.writeFileSync(junitPath,'<testsuites/>');"
+          + "process.stdout.write(JSON.stringify({"
+          + "junitPath,ryukDisabled:process.env.TESTCONTAINERS_RYUK_DISABLED"
+          + "}));",
+        "--",
+      ],
+      pytest: true,
+    },
+  });
+  assert.equal(pytestEnvironmentProbe.exitCode, 0);
+  assert.equal(pytestEnvironmentProbe.signal, null);
+  assert.equal(pytestEnvironmentProbe.junitXml, "<testsuites/>");
+  const pytestEnvironment = JSON.parse(pytestEnvironmentProbe.stdout);
+  assert.equal(pytestEnvironment.ryukDisabled, "true");
+  await assert.rejects(lstat(pytestEnvironment.junitPath), { code: "ENOENT" });
+
+  const temporarySummaryProbe = await runPhase2ContractCommand({
+    root,
+    pythonExecutable: "/fixture/python3.13",
+    command: {
+      id: "temporary-summary-probe",
+      command: process.execPath,
+      args: [
+        "-e",
+        "const fs=require('node:fs');"
+          + "const index=process.argv.indexOf('--summary');"
+          + "const target=process.argv[index+1];"
+          + "fs.writeFileSync(target,'summary\\n');"
+          + "process.stdout.write(JSON.stringify({index,target}));",
+        "--",
+      ],
+      temporarySummary: true,
+    },
+  });
+  assert.equal(temporarySummaryProbe.exitCode, 0);
+  assert.equal(temporarySummaryProbe.signal, null);
+  const temporarySummary = JSON.parse(temporarySummaryProbe.stdout);
+  assert.ok(temporarySummary.index >= 0);
+  assert.equal(path.isAbsolute(temporarySummary.target), true);
+  await assert.rejects(lstat(temporarySummary.target), { code: "ENOENT" });
+
+  const failingTemporarySummaryProbe = await runPhase2ContractCommand({
+    root,
+    pythonExecutable: "/fixture/python3.13",
+    command: {
+      id: "failing-temporary-summary-probe",
+      command: process.execPath,
+      args: [
+        "-e",
+        "const fs=require('node:fs');"
+          + "const index=process.argv.indexOf('--summary');"
+          + "const target=process.argv[index+1];"
+          + "fs.writeFileSync(target,'failed summary\\n');"
+          + "process.stdout.write(JSON.stringify({target}));"
+          + "process.exitCode=7;",
+        "--",
+      ],
+      temporarySummary: true,
+    },
+  });
+  assert.equal(failingTemporarySummaryProbe.exitCode, 7);
+  assert.equal(failingTemporarySummaryProbe.signal, null);
+  const failingTemporarySummary = JSON.parse(failingTemporarySummaryProbe.stdout);
+  await assert.rejects(lstat(failingTemporarySummary.target), { code: "ENOENT" });
 });
 
 test("a command failure stops the serial plan and cannot produce a pass summary", async () => {
