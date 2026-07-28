@@ -644,8 +644,10 @@ const assertTodoApplied = async (
 ) => {
   const dialog = page.getByRole("dialog", { name: "今日待办", exact: true });
   if (operation === "todo.create") {
+    await expect.poll(() => (
+      state.todos.some(({ title }) => title === "完成一套随机过程题")
+    )).toBe(true);
     await expect(dialog.getByText("完成一套随机过程题", { exact: true })).toBeVisible();
-    expect(state.todos.some(({ title }) => title === "完成一套随机过程题")).toBe(true);
     return;
   }
   if (operation === "todo.update") {
