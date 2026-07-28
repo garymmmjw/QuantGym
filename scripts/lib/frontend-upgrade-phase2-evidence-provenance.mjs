@@ -30,7 +30,8 @@ const SHA_PATTERN = /^[0-9a-f]{40}$/u;
 const TREE_PATTERN = /^[0-9a-f]{40,64}$/u;
 const MAX_MANIFEST_BYTES = 2 * 1024 * 1024;
 const MAX_PROVIDER_EVIDENCE_BYTES = 2 * 1024 * 1024;
-const MAX_REVIEW_HANDOFF_MS = 5 * 60 * 1_000;
+const MAX_EVIDENCE_AGE_MS = 7 * 24 * 60 * 60 * 1_000;
+const MAX_PROVIDER_REVIEW_HANDOFF_MS = 5 * 60 * 1_000;
 export const PHASE2_REVIEW_DOCUMENT_MAX_BYTES = (
   Math.ceil(MAX_PROVIDER_EVIDENCE_BYTES / 3) * 4 + 512 * 1024
 );
@@ -518,10 +519,10 @@ const validateTrackedReviewHandoff = async ({
     || !Number.isFinite(aggregateCheckedAt)
     || new Date(aggregateCheckedAt).toISOString() !== aggregate?.checkedAt
     || generatedAt < providerCapturedAt
-    || generatedAt - providerCapturedAt > MAX_REVIEW_HANDOFF_MS
+    || generatedAt - providerCapturedAt > MAX_PROVIDER_REVIEW_HANDOFF_MS
     || generatedAt < aggregateCheckedAt
-    || generatedAt - aggregateCheckedAt > MAX_REVIEW_HANDOFF_MS
-  ) throw new Error("Phase 2 review handoff time is outside the exact five-minute window");
+    || generatedAt - aggregateCheckedAt > MAX_EVIDENCE_AGE_MS
+  ) throw new Error("Phase 2 review handoff time is outside the allowed windows");
   return Object.freeze({
     status: matches[0][7],
     providerSha256: matches[0][4],

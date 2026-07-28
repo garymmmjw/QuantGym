@@ -55,7 +55,7 @@ const MAX_JSON_BYTES = 2 * 1024 * 1024;
 const MAX_REVIEW_IMAGE_BYTES = 16 * 1024 * 1024;
 const MAX_EVIDENCE_AGE_MS = 7 * 24 * 60 * 60 * 1_000;
 const CLOCK_SKEW_MS = 5 * 60 * 1_000;
-const MAX_REVIEW_HANDOFF_MS = 5 * 60 * 1_000;
+const MAX_PROVIDER_REVIEW_HANDOFF_MS = 5 * 60 * 1_000;
 const COMPONENT_NAMES = Object.freeze(Object.keys(PHASE2_COMPONENT_SUMMARY_PATHS));
 const COMPONENT_ENVELOPE_KEYS = Object.freeze([
   "schemaVersion",
@@ -717,11 +717,13 @@ export function validatePhase2ReviewDocument(document, inputs) {
     || generatedAt > inputs.nowMs + CLOCK_SKEW_MS
     || inputs.nowMs - generatedAt > MAX_EVIDENCE_AGE_MS
     || !Number.isFinite(aggregateCheckedAt)
+    || new Date(aggregateCheckedAt).toISOString() !== inputs.aggregateSummary?.checkedAt
     || generatedAt < aggregateCheckedAt
-    || generatedAt - aggregateCheckedAt > MAX_REVIEW_HANDOFF_MS
+    || generatedAt - aggregateCheckedAt > MAX_EVIDENCE_AGE_MS
     || !Number.isFinite(providerCapturedAt)
+    || new Date(providerCapturedAt).toISOString() !== inputs.providerEvidence?.capturedAt
     || generatedAt < providerCapturedAt
-    || generatedAt - providerCapturedAt > MAX_REVIEW_HANDOFF_MS
+    || generatedAt - providerCapturedAt > MAX_PROVIDER_REVIEW_HANDOFF_MS
   ) failures.push("review_generated_time_invalid");
   return [...new Set(failures)];
 }

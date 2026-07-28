@@ -591,19 +591,29 @@ test("review revalidation rejects hand-authored summaries that omit required com
 
 test("review template is ready-for-review only and records the complete provider boundary", async () => {
   const inputs = await createInputs();
-  const document = renderPhase2ReviewDocument({
-    generatedAt: inputs.generatedAt,
-    applicationCommit: inputs.expectedCommit,
-    evidenceCommit: inputs.provenanceHead,
-    visualReviewReceiptSha256: inputs.visualReviewReceiptSha256,
-    providerEvidenceSha256: inputs.providerEvidenceSha256,
-    aggregateSummarySha256: inputs.aggregateSummarySha256,
-    componentSummarySha256: inputs.componentSummarySha256,
-    providerEvidence: inputs.providerEvidence,
-    providerEvidenceBytes: inputs.providerEvidenceBytes,
-    aggregateSummary: inputs.aggregateSummary,
-    visualReviewReceipt: inputs.visualReviewReceipt,
+  const renderDocument = (candidate) => renderPhase2ReviewDocument({
+    generatedAt: candidate.generatedAt,
+    applicationCommit: candidate.expectedCommit,
+    evidenceCommit: candidate.provenanceHead,
+    visualReviewReceiptSha256: candidate.visualReviewReceiptSha256,
+    providerEvidenceSha256: candidate.providerEvidenceSha256,
+    aggregateSummarySha256: candidate.aggregateSummarySha256,
+    componentSummarySha256: candidate.componentSummarySha256,
+    providerEvidence: candidate.providerEvidence,
+    providerEvidenceBytes: candidate.providerEvidenceBytes,
+    aggregateSummary: candidate.aggregateSummary,
+    visualReviewReceipt: candidate.visualReviewReceipt,
   });
+  const withAggregateCheckedAt = (candidate, checkedAt) => {
+    const aggregateSummary = { ...candidate.aggregateSummary, checkedAt };
+    return {
+      ...candidate,
+      aggregateSummary,
+      aggregateSummarySha256: HASH(`${JSON.stringify(aggregateSummary, null, 2)}\n`),
+      recalculatedAggregate: { ...candidate.recalculatedAggregate, checkedAt },
+    };
+  };
+  const document = renderDocument(inputs);
   assert.deepEqual(validatePhase2ReviewDocument(document, inputs), []);
   assert.match(document, /^Status: ready-for-review$/mu);
   assert.match(document, /All eight live checks passed/u);
@@ -631,6 +641,38 @@ test("review template is ready-for-review only and records the complete provider
   );
   assert.ok(document.includes(inputs.providerEvidenceBytes.toString("base64")));
   assert.doesNotMatch(document, /^Accepted:/mu);
+
+  const generatedAt = "2026-07-27T02:05:00.000Z";
+  const delayedAggregate = {
+    ...withAggregateCheckedAt(inputs, "2026-07-26T02:05:00.000Z"),
+    generatedAt,
+    nowMs: Date.parse(generatedAt),
+  };
+  assert.deepEqual(
+    validatePhase2ReviewDocument(renderDocument(delayedAggregate), delayedAggregate),
+    [],
+  );
+
+  const lateProviderHandoff = {
+    ...delayedAggregate,
+    generatedAt: "2026-07-27T02:05:00.001Z",
+    nowMs: Date.parse("2026-07-27T02:05:00.001Z"),
+  };
+  assert.ok(validatePhase2ReviewDocument(
+    renderDocument(lateProviderHandoff),
+    lateProviderHandoff,
+  ).includes("review_generated_time_invalid"));
+
+  for (const checkedAt of [
+    "2026-07-20T02:04:59.999Z",
+    "2026-07-27T02:05:00.001Z",
+  ]) {
+    const invalidAggregate = withAggregateCheckedAt(delayedAggregate, checkedAt);
+    assert.ok(validatePhase2ReviewDocument(
+      renderDocument(invalidAggregate),
+      invalidAggregate,
+    ).includes("review_generated_time_invalid"));
+  }
 
   const selfAccepted = document.replace("Status: ready-for-review", "Status: accepted");
   const failures = validatePhase2ReviewDocument(selfAccepted, inputs);

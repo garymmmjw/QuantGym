@@ -408,11 +408,11 @@ test("keeps A to E to provider-backed R classified as evidence", async (t) => {
   assert.deepEqual(provenance.statusEntries, []);
 });
 
-test("accepts the exact five-minute provider and aggregate handoff boundary", async (t) => {
+test("accepts the provider five-minute and aggregate seven-day handoff boundaries", async (t) => {
   const fixture = await createFixture(t);
   const evidenceCommit = await commitLifecycleOutputs({
     fixture,
-    aggregateCheckedAt: REVIEW_GENERATED_AT,
+    aggregateCheckedAt: "2026-07-20T02:05:00.000Z",
   });
   const generatedAt = "2026-07-27T02:05:00.000Z";
   const reviewCommit = await commitReviewHandoff({
@@ -425,32 +425,53 @@ test("accepts the exact five-minute provider and aggregate handoff boundary", as
   assert.equal(lifecycle.reviewCommit, reviewCommit);
 });
 
-test("rejects both first-R five-minute handoff expiry classes", async (t) => {
-  for (const [name, aggregateCheckedAt, generatedAt] of [
-    [
-      "provider capture",
-      "2026-07-27T02:05:00.001Z",
-      "2026-07-27T02:05:00.001Z",
-    ],
-    [
-      "tracked aggregate",
-      "2026-07-27T01:59:59.999Z",
-      "2026-07-27T02:05:00.000Z",
-    ],
-  ]) {
-    await t.test(name, async (subtest) => {
-      const fixture = await createFixture(subtest);
-      const evidenceCommit = await commitLifecycleOutputs({
-        fixture,
-        aggregateCheckedAt,
-      });
-      await commitReviewHandoff({ fixture, evidenceCommit, generatedAt });
-      await assert.rejects(
-        classifyPhase2EvidenceLifecycle({ root: fixture.root }),
-        /handoff time is outside the exact five-minute window/u,
-      );
+test("rejects provider five-minute expiry and invalid aggregate time", async (t) => {
+  await t.test("provider capture", async (subtest) => {
+    const fixture = await createFixture(subtest);
+    const generatedAt = "2026-07-27T02:05:00.001Z";
+    const evidenceCommit = await commitLifecycleOutputs({
+      fixture,
+      aggregateCheckedAt: generatedAt,
     });
-  }
+    await commitReviewHandoff({ fixture, evidenceCommit, generatedAt });
+    await assert.rejects(
+      classifyPhase2EvidenceLifecycle({ root: fixture.root }),
+      /handoff time is outside the allowed windows/u,
+    );
+  });
+
+  await t.test("tracked aggregate", async (subtest) => {
+    const generatedAt = "2026-07-27T02:05:00.000Z";
+    const staleFixture = await createFixture(subtest);
+    const staleEvidenceCommit = await commitLifecycleOutputs({
+      fixture: staleFixture,
+      aggregateCheckedAt: "2026-07-20T02:04:59.999Z",
+    });
+    await commitReviewHandoff({
+      fixture: staleFixture,
+      evidenceCommit: staleEvidenceCommit,
+      generatedAt,
+    });
+    await assert.rejects(
+      classifyPhase2EvidenceLifecycle({ root: staleFixture.root }),
+      /handoff time is outside the allowed windows/u,
+    );
+
+    const futureFixture = await createFixture(subtest);
+    const futureEvidenceCommit = await commitLifecycleOutputs({
+      fixture: futureFixture,
+      aggregateCheckedAt: "2026-07-27T02:05:00.001Z",
+    });
+    await commitReviewHandoff({
+      fixture: futureFixture,
+      evidenceCommit: futureEvidenceCommit,
+      generatedAt,
+    });
+    await assert.rejects(
+      classifyPhase2EvidenceLifecycle({ root: futureFixture.root }),
+      /handoff time is outside the allowed windows/u,
+    );
+  });
 });
 
 test("allows later linear updates to the same review document without moving E", async (t) => {
