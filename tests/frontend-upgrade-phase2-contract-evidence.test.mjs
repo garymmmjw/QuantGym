@@ -97,7 +97,7 @@ test("injected pipeline runs all contract commands serially and builds the stric
       return passingResult(command);
     },
   });
-  assert.equal(result.plan.length, 20);
+  assert.equal(result.plan.length, 21);
   assert.deepEqual(order, result.plan.map(({ id }) => id));
   const buildIsolationIndex = result.plan.findIndex(({ id }) => id === "build-isolation");
   const buildIndex = result.plan.findIndex(({ id }) => id === "build-v2");
@@ -115,7 +115,21 @@ test("injected pipeline runs all contract commands serially and builds the stric
     false,
     "build isolation must run through the strict no-skip wrapper",
   );
-  assert.equal(result.summary.metrics.commandCount, 20);
+  const storybookBuildIndex = result.plan.findIndex(({ id }) => id === "storybook-build");
+  const storybookA11yIndex = result.plan.findIndex(({ id }) => id === "storybook-a11y");
+  assert.ok(storybookBuildIndex >= 0);
+  assert.equal(storybookA11yIndex, storybookBuildIndex + 1);
+  assert.deepEqual(result.plan[storybookBuildIndex].args, [
+    "node_modules/storybook/dist/bin/dispatcher.js",
+    "build",
+    "--config-dir",
+    ".storybook",
+    "--output-dir",
+    "storybook-static-v2",
+    "--test",
+    "--disable-telemetry",
+  ]);
+  assert.equal(result.summary.metrics.commandCount, 21);
   assert.equal(result.summary.metrics.apiPytestTests, 480);
   assert.deepEqual(result.summary.results, []);
   assert.deepEqual(result.summary.visualCases, []);
@@ -281,7 +295,7 @@ test("strict envelope rejects extra keys, non-empty results, and false checks", 
     commit: head,
     manifestSha256: "b".repeat(64),
     phase1EvidenceLockSha256: "c".repeat(64),
-    commandCount: 20,
+    commandCount: 21,
     apiPytestTests: 480,
   });
   assert.throws(
@@ -308,7 +322,7 @@ test("strict envelope rejects extra keys, non-empty results, and false checks", 
       commit: head,
       manifestSha256: "b".repeat(64),
       phase1EvidenceLockSha256: "c".repeat(64),
-      commandCount: 20,
+      commandCount: 21,
       apiPytestTests: 479,
     }),
     /API pytest count/u,
@@ -328,7 +342,7 @@ test("fixed-path atomic writer replaces an output symlink without touching its t
     commit: head,
     manifestSha256: "b".repeat(64),
     phase1EvidenceLockSha256: "c".repeat(64),
-    commandCount: 20,
+    commandCount: 21,
     apiPytestTests: 480,
   });
   const written = await writePhase2ContractSummary({ root: temporaryRoot, summary });

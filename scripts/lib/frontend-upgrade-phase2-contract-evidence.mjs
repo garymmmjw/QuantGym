@@ -370,6 +370,16 @@ export async function createPhase2ContractCommandPlan({
       "tests/design-system-v2-contracts.test.mjs",
     ]),
     descriptor("design-system-check", node, ["scripts/check-design-system-v2.mjs"]),
+    descriptor("storybook-build", node, [
+      "node_modules/storybook/dist/bin/dispatcher.js",
+      "build",
+      "--config-dir",
+      ".storybook",
+      "--output-dir",
+      "storybook-static-v2",
+      "--test",
+      "--disable-telemetry",
+    ]),
     descriptor("storybook-a11y", node, ["scripts/check-storybook-a11y-v2.mjs"]),
     descriptor("build-isolation", node, [
       "scripts/run-node-tests-strict.mjs",

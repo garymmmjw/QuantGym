@@ -111,7 +111,7 @@ const checkNames = Object.freeze({
 
 const metrics = Object.freeze({
   contract: {
-    commandCount: 20,
+    commandCount: 21,
     apiPytestTests: 480,
   },
   visual: {},

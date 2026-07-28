@@ -89,7 +89,7 @@ const checkNames = {
 
 const metrics = {
   contract: {
-    commandCount: 20,
+    commandCount: 21,
     apiPytestTests: 480,
   },
   visual: {},

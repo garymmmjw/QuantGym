@@ -9,7 +9,7 @@ export const STRICT_PHASE1_NODE_TEST_COUNT = 315;
 export const STRICT_PHASE2_NODE_TEST_COUNT = 306;
 export const STRICT_DESIGN_SYSTEM_NODE_TEST_COUNT = 15;
 export const STRICT_BUILD_ISOLATION_NODE_TEST_COUNT = 13;
-export const STRICT_PHASE2_CONTRACT_COMMAND_COUNT = 20;
+export const STRICT_PHASE2_CONTRACT_COMMAND_COUNT = 21;
 
 export const STRICT_VITEST_V2_TEST_FILES = Object.freeze([
   "src/core/errors/AppErrorBoundary.test.tsx",
