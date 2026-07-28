@@ -18,7 +18,7 @@ const nodeArchiveSha256 = (
 );
 const nodeModulesVolume = "quantgym-playwright-1-61-1-node-modules";
 const npmCacheVolume = "quantgym-playwright-npm-10-8-2-cache";
-const linuxSnapshotCount = 29;
+const linuxSnapshotCount = 43;
 const hostUid = typeof process.getuid === "function" ? String(process.getuid()) : "";
 const hostGid = typeof process.getgid === "function" ? String(process.getgid()) : "";
 
@@ -42,9 +42,11 @@ npm install --global npm@10.8.2
 test "$(node --version)" = "v20.20.2"
 test "$(npm --version)" = "10.8.2"
 npm ci
+npm run test:e2e:v2 -- --grep-invert '@visual:' --retries=0
 npm run test:e2e:v2 -- --grep '@visual:' --update-snapshots --retries=0 --timeout=300000
 snapshot_count="$(find tests/e2e-v2 -type f -name '*-linux.png' | wc -l | tr -d ' ')"
 test "$snapshot_count" = "${linuxSnapshotCount}"
+npm run test:e2e:v2 -- --retries=0
 if test -n "\${HOST_UID}" && test -n "\${HOST_GID}"; then
   find tests/e2e-v2 -type f -name '*-linux.png' -exec chown "\${HOST_UID}:\${HOST_GID}" {} +
 fi

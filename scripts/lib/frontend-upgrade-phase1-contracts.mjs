@@ -876,16 +876,24 @@ export async function assertTrustedDirectoryChainUnchanged(
   if (!isObject(snapshot) || !Array.isArray(snapshot.entries) || snapshot.entries.length === 0) {
     throw new Error("trusted directory snapshot is required");
   }
+  const resolvedSnapshotRoot = path.resolve(snapshot.root);
   const currentEntries = [];
   for (const [index, entry] of snapshot.entries.entries()) {
     const current = await directoryMetadata(entry.path);
     const isLeaf = index === snapshot.entries.length - 1;
+    const relativeToSnapshotRoot = path.relative(resolvedSnapshotRoot, entry.path);
+    const isAtOrWithinSnapshotRoot = relativeToSnapshotRoot === ""
+      || (
+        relativeToSnapshotRoot !== ".."
+        && !relativeToSnapshotRoot.startsWith(`..${path.sep}`)
+        && !path.isAbsolute(relativeToSnapshotRoot)
+      );
     for (const field of ["dev", "ino", "mode"]) {
       if (entry.metadata[field] !== current[field]) {
         throw new Error(`unsafe ancestor directory changed ${entry.path}`);
       }
     }
-    if (!(allowLeafMetadataChange && isLeaf)) {
+    if (isAtOrWithinSnapshotRoot && !(allowLeafMetadataChange && isLeaf)) {
       for (const field of ["mtimeNs", "ctimeNs"]) {
         if (entry.metadata[field] !== current[field]) {
           throw new Error(`unsafe ancestor directory changed ${entry.path}`);

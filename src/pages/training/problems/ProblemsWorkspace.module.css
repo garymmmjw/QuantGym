@@ -835,7 +835,7 @@
 
 .characterCount,
 .noteActions > span {
-  color: var(--qg-text-muted);
+  color: var(--qg-text-secondary);
   font-size: var(--qg-font-size-caption);
 }
 

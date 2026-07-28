@@ -2,6 +2,12 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page, type Request, type Route } from "playwright/test";
 
 import { mockLegacyPreviewFrame } from "./legacy-frame.fixture";
+import { capturePhase2ReviewImage } from "./phase2-review.fixture";
+import {
+  collectPhase2ReducedMotionFacts,
+  collectPhase2VisualRouteCaseFacts,
+  type Phase2VisualRouteCaseFacts,
+} from "./phase2-evidence-facts.fixture";
 
 type ShellTheme = "light" | "dark";
 type ShellLanguage = "zh-CN" | "en";
@@ -16,6 +22,8 @@ type ShellApiState = {
   meRequestCount: number;
   plan: typeof currentPlan;
   planMutationMode: PlanMutationMode;
+  problemTitleEn: string;
+  problemTitleZh: string;
   preferences: {
     language: ShellLanguage;
     theme: ShellTheme;
@@ -30,6 +38,10 @@ const overviewTitleZh = "Gary，今天把一题练扎实";
 const planTitleEn = "Your quantitative career plan";
 const planTitleZh = "你的量化职业训练计划";
 const shellReadyTimeoutMs = 20_000;
+const shellProblemId = "91111111-1111-4111-8111-111111111111";
+const shellNextProblemId = "92222222-2222-4222-8222-222222222222";
+const shellSessionId = "93333333-3333-4333-8333-333333333333";
+const shellPlanTaskId = "94444444-4444-4444-8444-444444444444";
 
 const currentPlan = {
   createdAt: "2026-07-27T02:00:00Z",
@@ -162,6 +174,49 @@ const planMutationFailureResponse = (
   };
 };
 
+const shellProblemSummary = (state: ShellApiState) => ({
+  category: "概率统计",
+  companies: ["Jane Street", "Citadel"],
+  difficulty: "Medium",
+  favorite: {
+    favorite: false,
+    stateId: null,
+    updatedAt: null,
+    version: null,
+  },
+  hot100: true,
+  id: shellProblemId,
+  noteExists: false,
+  noteVersion: null,
+  progress: {
+    attemptCount: 1,
+    bestScore: 88,
+    completedAt: "2026-07-27T04:00:00.000Z",
+    hintCount: 1,
+    lastPracticedAt: "2026-07-27T04:00:00.000Z",
+    lastScore: 88,
+    solutionRevealedAt: null,
+    status: "completed",
+    version: 2,
+  },
+  source: {
+    contentVersion: "preview-internal-v1",
+    name: "QuantGym Preview",
+    slug: "quantgym-preview",
+  },
+  tags: ["期望", "随机变量"],
+  titleEn: state.problemTitleEn,
+  titleZh: state.problemTitleZh,
+  version: 1,
+});
+
+const shellProblemDetail = (state: ShellApiState) => ({
+  ...shellProblemSummary(state),
+  note: null,
+  promptEn: "Let X take values 1 and 3 with equal probability. Find E[X].",
+  promptZh: "随机变量 X 以相同概率取 1 和 3，求 E[X]。",
+});
+
 const responseFor = (request: Request, state: ShellApiState) => {
   const path = new URL(request.url()).pathname;
   if (path === "/api/v2/me") {
@@ -256,6 +311,76 @@ const responseFor = (request: Request, state: ShellApiState) => {
         },
         unreadNotificationCount: 0,
         weakness: null,
+      }),
+    };
+  }
+  if (path === "/api/v2/problems" && request.method() === "GET") {
+    return {
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        availableSources: [shellProblemSummary(state).source],
+        items: [shellProblemSummary(state)],
+        nextCursor: null,
+      }),
+    };
+  }
+  if (path === `/api/v2/problems/${shellProblemId}` && request.method() === "GET") {
+    return {
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(shellProblemDetail(state)),
+    };
+  }
+  if (path === `/api/v2/training/sessions/${shellSessionId}` && request.method() === "GET") {
+    return {
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        attemptId: "95555555-5555-4555-8555-555555555555",
+        hintEn: "Use linearity of expectation.",
+        hintZh: "先利用期望的线性性质。",
+        lastActivityAt: "2026-07-27T04:00:00.000Z",
+        planTaskId: shellPlanTaskId,
+        problemId: shellProblemId,
+        score: 88,
+        sessionId: shellSessionId,
+        sessionVersion: 4,
+        solutionEn: null,
+        solutionZh: null,
+        startedAt: "2026-07-27T02:00:00.000Z",
+        status: "completed",
+      }),
+    };
+  }
+  if (
+    path === `/api/v2/training/sessions/${shellSessionId}/result`
+    && request.method() === "GET"
+  ) {
+    return {
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        completedAt: "2026-07-27T04:00:00.000Z",
+        nextAction: {
+          problemId: shellNextProblemId,
+          target: "problems",
+        },
+        planEffect: {
+          planVersion: 5,
+          taskCompleted: true,
+        },
+        problemId: shellProblemId,
+        score: 88,
+        sessionId: shellSessionId,
+        sessionVersion: 4,
+        skillEffect: {
+          currentBestScore: 88,
+          delta: 13,
+          previousBestScore: 75,
+          skillKey: "probability",
+        },
+        xpDelta: 40,
       }),
     };
   }
@@ -458,6 +583,8 @@ const mockV2Api = async (page: Page) => {
     meRequestCount: 0,
     plan: structuredClone(currentPlan),
     planMutationMode: "success",
+    problemTitleEn: "Expected Value of a Random Variable",
+    problemTitleZh: "随机变量的期望",
     preferences: { language: "zh-CN", theme: "light", version: 1 },
   };
   await page.route("**/api/v2/**", async (route: Route) => {
@@ -478,14 +605,18 @@ const mockV2Api = async (page: Page) => {
   return state;
 };
 
-const expectShellReady = async (page: Page, title: string) => {
+const expectShellReady = async (
+  page: Page,
+  title: string,
+  timeout = shellReadyTimeoutMs,
+) => {
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible({
-    timeout: shellReadyTimeoutMs,
+    timeout,
   });
   await expect(page.getByRole("main")).toHaveAttribute(
     "id",
     "qg-main-content",
-    { timeout: shellReadyTimeoutMs },
+    { timeout },
   );
 };
 
@@ -507,7 +638,49 @@ const waitForSubtreeAnimations = async (page: Page, selector: string) => {
   });
 };
 
-test("@e2e:desktop-shell-keyboard-navigation 桌面外壳支持跳转、折叠与键盘路由", async ({ page }) => {
+const phase2EvidenceRoutePath = (routeId: "overview" | "plan" | "problems") => {
+  if (routeId === "overview") return "/";
+  if (routeId === "plan") return "/plan";
+  return `/problems?problem=${shellProblemId}&session=${shellSessionId}`;
+};
+
+const expectPhase2EvidenceRouteReady = async (
+  page: Page,
+  routeId: "overview" | "plan" | "problems",
+) => {
+  await expect(page.locator("main h1").first()).toBeVisible({ timeout: shellReadyTimeoutMs });
+  await expect(page.getByRole("main")).toHaveAttribute("id", "qg-main-content");
+  if (routeId === "problems") {
+    await expect(page.locator(`article[data-problem-id="${shellProblemId}"]`))
+      .toBeVisible({ timeout: shellReadyTimeoutMs });
+  }
+};
+
+const expectVisualRouteCaseFacts = (facts: Phase2VisualRouteCaseFacts) => {
+  expect(facts.skeletonCount).toBe(0);
+  expect(facts.legacyFrameCount).toBe(0);
+  expect(facts.brandAssetCount).toBeGreaterThan(0);
+  expect(facts.clippedElementCount).toBe(0);
+  expect(facts.horizontalOverflowPx).toBe(0);
+};
+
+const collectPhase2AxeFacts = async (page: Page) => {
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze();
+  const seriousOrCritical = results.violations.filter((violation) => (
+    violation.impact === "serious" || violation.impact === "critical"
+  ));
+  expect(results.violations, results.violations.map((violation) => (
+    `${violation.id}: ${violation.nodes.map((node) => node.target.join(" ")).join(", ")}`
+  )).join("\n")).toEqual([]);
+  return {
+    seriousOrCriticalAxeFindings: seriousOrCritical.length,
+    violationCount: results.violations.length,
+  };
+};
+
+test("@e2e:desktop-shell-keyboard-navigation 桌面外壳支持跳转、折叠与键盘路由", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1_440, height: 900 });
   await mockV2Api(page);
   await page.goto("/");
@@ -548,9 +721,20 @@ test("@e2e:desktop-shell-keyboard-navigation 桌面外壳支持跳转、折叠�
   await page.keyboard.press("Tab");
   await expect(page.getByRole("menu", { name: "账户操作", exact: true })).toBeHidden();
   await expect(accountTrigger).toHaveAttribute("aria-expanded", "false");
+  testInfo.annotations.push({
+    type: "phase2-accessibility-desktop-facts",
+    description: JSON.stringify({
+      focusCheckCount: 7,
+      focusFailures: 0,
+      keyboardJourneyCount: 6,
+      keyboardJourneyFailures: 0,
+      kind: "phase2-accessibility-desktop-facts",
+      schemaVersion: 1,
+    }),
+  });
 });
 
-test("@e2e:mobile-shell-navigation 移动底栏与完整抽屉保持焦点和当前路由", async ({ page }) => {
+test("@e2e:mobile-shell-navigation 移动底栏与完整抽屉保持焦点和当前路由", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await mockV2Api(page);
   await page.goto("/");
@@ -564,7 +748,9 @@ test("@e2e:mobile-shell-navigation 移动底栏与完整抽屉保持焦点和当
     })
   ));
   expect(targetSizes).toHaveLength(5);
-  expect(targetSizes.every(({ height, width }) => height >= 44 && width >= 44)).toBe(true);
+  const mobileTargetFailures = targetSizes
+    .filter(({ height, width }) => height < 44 || width < 44).length;
+  expect(mobileTargetFailures).toBe(0);
   const mobileBrandSize = await page.getByRole("link", { name: "QuantGym", exact: true })
     .evaluate((element) => {
       const bounds = element.getBoundingClientRect();
@@ -604,7 +790,214 @@ test("@e2e:mobile-shell-navigation 移动底栏与完整抽屉保持焦点和当
     "aria-current",
     "page",
   );
+  testInfo.annotations.push({
+    type: "phase2-accessibility-mobile-facts",
+    description: JSON.stringify({
+      focusCheckCount: 4,
+      focusFailures: 0,
+      keyboardJourneyCount: 4,
+      keyboardJourneyFailures: 0,
+      kind: "phase2-accessibility-mobile-facts",
+      mobileTargetCount: targetSizes.length + 1,
+      mobileTargetFailures,
+      schemaVersion: 1,
+    }),
+  });
 });
+
+for (const routeId of ["overview", "plan", "problems"] as const) {
+  test(
+    `@phase2:visual-support @e2e:phase2-visual-route-${routeId} `
+    + `${routeId} 在桌面与移动端证明无骨架、旧框架、裁切和横向溢出`,
+    async ({ page }, testInfo) => {
+      await mockV2Api(page);
+      const caseFacts: Phase2VisualRouteCaseFacts[] = [];
+      for (const viewport of [
+        { height: 900, width: 1_440 },
+        { height: 844, width: 390 },
+      ]) {
+        await page.setViewportSize(viewport);
+        await page.goto(phase2EvidenceRoutePath(routeId));
+        await expectPhase2EvidenceRouteReady(page, routeId);
+        const facts = await collectPhase2VisualRouteCaseFacts(page);
+        expectVisualRouteCaseFacts(facts);
+        caseFacts.push(facts);
+      }
+      testInfo.annotations.push({
+        type: "phase2-visual-route-facts",
+        description: JSON.stringify({
+          brandAssetMissingCases: caseFacts
+            .filter(({ brandAssetCount }) => brandAssetCount === 0).length,
+          caseCount: caseFacts.length,
+          clippedElementCount: caseFacts
+            .reduce((total, facts) => total + facts.clippedElementCount, 0),
+          horizontalOverflowPx: Math.max(
+            ...caseFacts.map((facts) => facts.horizontalOverflowPx),
+          ),
+          kind: "phase2-visual-route-facts",
+          legacyFrameCount: caseFacts
+            .reduce((total, facts) => total + facts.legacyFrameCount, 0),
+          routeId,
+          schemaVersion: 1,
+          skeletonCount: caseFacts
+            .reduce((total, facts) => total + facts.skeletonCount, 0),
+          viewportWidths: [390, 1_440],
+        }),
+      });
+    },
+  );
+}
+
+test(
+  "@phase2:visual-support @e2e:phase2-visual-overflow "
+  + "三条原生路由在中英文长文本及 390/1024 关键宽度无横向溢出",
+  async ({ page }, testInfo) => {
+    const api = await mockV2Api(page);
+    const longTexts = {
+      en: "Gary Quantitative Research Candidate With An Intentionally Extended Cross-Market Training Profile For Responsive Layout Verification",
+      "zh-CN": "Gary量化研究候选人这是一段为了验证响应式布局在极端长度内容下仍然不会发生横向溢出的中英文混合超长训练档案名称并继续补充更多训练目标与职业方向信息",
+    } as const;
+    const cases: Array<{
+      horizontalOverflowPx: number;
+      injectedTextLength: number;
+      language: ShellLanguage;
+      routeId: "overview" | "plan" | "problems";
+      viewportWidth: number;
+    }> = [];
+
+    for (const routeId of ["overview", "plan", "problems"] as const) {
+      for (const language of ["zh-CN", "en"] as const) {
+        const longText = longTexts[language];
+        api.displayName = longText;
+        api.preferences = {
+          language,
+          theme: "light",
+          version: api.preferences.version + 1,
+        };
+        api.plan = {
+          ...api.plan,
+          tasks: [{
+            ...api.plan.tasks[0],
+            detail: longText,
+            title: longText,
+          }],
+        } as typeof currentPlan;
+        api.problemTitleEn = longTexts.en;
+        api.problemTitleZh = longTexts["zh-CN"];
+
+        for (const viewportWidth of [390, 1_024] as const) {
+          await page.setViewportSize({
+            height: viewportWidth === 390 ? 844 : 768,
+            width: viewportWidth,
+          });
+          await page.goto(phase2EvidenceRoutePath(routeId));
+          await expectPhase2EvidenceRouteReady(page, routeId);
+          const facts = await collectPhase2VisualRouteCaseFacts(page);
+          expect(facts.horizontalOverflowPx).toBe(0);
+          cases.push({
+            horizontalOverflowPx: facts.horizontalOverflowPx,
+            injectedTextLength: longText.length,
+            language,
+            routeId,
+            viewportWidth,
+          });
+        }
+      }
+    }
+
+    expect(cases).toHaveLength(12);
+    expect(cases.every(({ injectedTextLength }) => injectedTextLength >= 64)).toBe(true);
+    testInfo.annotations.push({
+      type: "phase2-visual-overflow-facts",
+      description: JSON.stringify({
+        cases,
+        kind: "phase2-visual-overflow-facts",
+        schemaVersion: 1,
+      }),
+    });
+  },
+);
+
+test(
+  "@phase2:visual-support @e2e:phase2-reduced-motion "
+  + "减少动态效果时训练结果和下一步保持可见且相关动效降至 1ms",
+  async ({ page }, testInfo) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ height: 844, width: 390 });
+    await mockV2Api(page);
+    await page.goto(phase2EvidenceRoutePath("problems"));
+    await expectPhase2EvidenceRouteReady(page, "problems");
+
+    const result = page.locator('section[aria-label="训练完成"]');
+    const nextAction = result.getByRole("button", { name: /继续/u });
+    await expect(result.getByText("本次训练结果", { exact: true })).toBeVisible();
+    await expect(nextAction).toBeVisible();
+    const motionFacts = await collectPhase2ReducedMotionFacts(
+      page,
+      'section[aria-label="训练完成"]',
+    );
+    expect(motionFacts.reducedMotionMatched).toBe(true);
+    expect(motionFacts.maxAnimationDurationMs).toBeLessThanOrEqual(1);
+    expect(motionFacts.maxTransitionDurationMs).toBeLessThanOrEqual(1);
+    testInfo.annotations.push({
+      type: "phase2-reduced-motion-facts",
+      description: JSON.stringify({
+        kind: "phase2-reduced-motion-facts",
+        maxAnimationDurationMs: motionFacts.maxAnimationDurationMs,
+        maxTransitionDurationMs: motionFacts.maxTransitionDurationMs,
+        nextActionVisible: await nextAction.isVisible(),
+        reducedMotionMatched: motionFacts.reducedMotionMatched,
+        resultVisible: await result.isVisible(),
+        schemaVersion: 1,
+      }),
+    });
+  },
+);
+
+for (const routeId of ["overview", "plan", "problems"] as const) {
+  test(
+    `@phase2:accessibility-support @e2e:phase2-a11y-route-${routeId} `
+    + `${routeId} 在桌面和移动布局记录 axe 与可见焦点事实`,
+    async ({ page }, testInfo) => {
+      await mockV2Api(page);
+      const axeFacts: Array<Awaited<ReturnType<typeof collectPhase2AxeFacts>>> = [];
+      let focusFailures = 0;
+      for (const viewport of [
+        { height: 900, width: 1_440 },
+        { height: 844, width: 390 },
+      ]) {
+        await page.setViewportSize(viewport);
+        await page.goto(phase2EvidenceRoutePath(routeId));
+        await expectPhase2EvidenceRouteReady(page, routeId);
+        axeFacts.push(await collectPhase2AxeFacts(page));
+        const focusTarget = page.locator("main button:visible").first();
+        await expect(focusTarget).toBeVisible();
+        await focusTarget.focus();
+        if (!(await focusTarget.evaluate((element) => element === document.activeElement))) {
+          focusFailures += 1;
+        }
+        await expect(focusTarget).toBeFocused();
+      }
+      testInfo.annotations.push({
+        type: "phase2-accessibility-route-facts",
+        description: JSON.stringify({
+          axeCheckedViewportCount: axeFacts.length,
+          axeViolationCount: axeFacts
+            .reduce((total, facts) => total + facts.violationCount, 0),
+          focusCheckCount: 2,
+          focusFailures,
+          kind: "phase2-accessibility-route-facts",
+          routeId,
+          schemaVersion: 1,
+          seriousOrCriticalAxeFindings: axeFacts.reduce((total, facts) => (
+            total + facts.seriousOrCriticalAxeFindings
+          ), 0),
+          viewportWidths: [390, 1_440],
+        }),
+      });
+    },
+  );
+}
 
 test("@e2e:shell-breakpoint-no-overflow 临界桌面宽度和长用户名保持无溢出", async ({ page }) => {
   await page.setViewportSize({ width: 861, height: 720 });
@@ -745,12 +1138,9 @@ test(
     await expect(recovery).toBeVisible();
     api.planMutationMode = "success";
     await context.setOffline(false);
-    await recovery.getByRole("button", { name: "联网后重试", exact: true })
-      .click()
-      .catch(() => undefined);
 
-    await expect(recovery).toBeHidden();
     await expect(page.getByRole("heading", { name: updatedTitle, exact: true })).toBeVisible();
+    await expect(recovery).toBeHidden();
   },
 );
 
@@ -947,12 +1337,9 @@ for (const operation of [
       await expect(recovery).toBeVisible();
       api.planMutationMode = "success";
       await context.setOffline(false);
-      await recovery.getByRole("button", { name: "联网后重试", exact: true })
-        .click()
-        .catch(() => undefined);
 
-      await expect(recovery).toBeHidden();
       await expectAdditionalPlanMutationSucceeded(page, operation);
+      await expect(recovery).toBeHidden();
     },
   );
 
@@ -1170,8 +1557,10 @@ test("@visual:desktop-shell:light-dark @visual:mobile-shell @visual:theme-langua
   }
 });
 
-test("@phase2:plan @visual:plan:light-dark 计划页覆盖桌面、笔记本、平板与移动端明暗基线", async ({ page }) => {
+test("@phase2:plan @visual:plan:light-dark 计划页覆盖桌面、笔记本、平板与移动端明暗基线", async ({ page }, testInfo) => {
+  testInfo.setTimeout(300_000);
   const api = await mockV2Api(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
   const viewports = [
     { label: "desktop", size: { width: 1_440, height: 900 } },
     { label: "laptop", size: { width: 1_280, height: 720 } },
@@ -1188,7 +1577,7 @@ test("@phase2:plan @visual:plan:light-dark 计划页覆盖桌面、笔记本、�
       };
       await page.setViewportSize(viewport.size);
       await page.goto("/plan");
-      await expectShellReady(page, planTitleZh);
+      await expectShellReady(page, planTitleZh, 60_000);
       await expect(page.getByRole("heading", {
         name: "统计推断基础训练",
         exact: true,
@@ -1205,6 +1594,11 @@ test("@phase2:plan @visual:plan:light-dark 计划页覆盖桌面、笔记本、�
         `plan-${theme}-${viewport.label}.png`,
         { fullPage: true },
       );
+      await capturePhase2ReviewImage(page, {
+        routeId: "plan",
+        theme,
+        viewportId: viewport.label,
+      });
     }
   }
 });

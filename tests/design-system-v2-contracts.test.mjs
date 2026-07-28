@@ -55,14 +55,18 @@ test("checked-in V2 tokens exactly implement the approved design contract", asyn
   assert.deepEqual(await checkDesignSystemV2({ root: projectRoot }), []);
 });
 
-test("dialog entry motion is fully disabled for reduced-motion browser audits", async () => {
+test("dialog entry motion preserves contrast and is disabled for reduced-motion audits", async () => {
   const source = await readFile(
     path.join(projectRoot, "src/design-system/primitives/Dialog/Dialog.module.css"),
     "utf8",
   );
+  assert.equal(source.includes("dialog-backdrop-in"), false);
+  assert.equal(
+    /@keyframes dialog-panel-in\s*\{[\s\S]*?\bopacity\s*:/u.test(source),
+    false,
+  );
   assert.ok(source.includes(
     "@media (prefers-reduced-motion: reduce) {\n"
-    + "  .backdrop,\n"
     + "  .panel {\n"
     + "    animation: none;",
   ));
@@ -79,6 +83,25 @@ test("reward badge tokens retain a 6:1 contrast margin in both themes", async ()
       semanticHex(source, "qg-reward-surface"),
     );
     assert.ok(ratio >= 6, `${theme} reward contrast is ${ratio.toFixed(2)}:1`);
+  }
+});
+
+test("success text tokens retain a 4.5:1 contrast margin on status surfaces", async () => {
+  for (const theme of ["light", "dark"]) {
+    const source = await readFile(
+      path.join(projectRoot, `src/design-system/tokens/${theme}.css`),
+      "utf8",
+    );
+    for (const backgroundToken of ["qg-surface-primary", "qg-action-primary-soft"]) {
+      const ratio = contrastRatio(
+        semanticHex(source, "qg-status-success-text"),
+        semanticHex(source, backgroundToken),
+      );
+      assert.ok(
+        ratio >= 4.5,
+        `${theme} success text on ${backgroundToken} is ${ratio.toFixed(2)}:1`,
+      );
+    }
   }
 });
 

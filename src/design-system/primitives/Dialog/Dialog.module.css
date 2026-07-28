@@ -6,7 +6,6 @@
   place-items: center;
   padding: var(--qg-space-4);
   background: var(--qg-overlay-backdrop);
-  animation: dialog-backdrop-in var(--qg-motion-panel-fast) var(--qg-motion-ease-standard);
 }
 
 .panel {
@@ -98,25 +97,17 @@
   border-block-start: 1px solid var(--qg-border-subtle);
 }
 
-@keyframes dialog-backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 @keyframes dialog-panel-in {
   from {
-    opacity: 0;
     transform: translateY(var(--qg-motion-distance));
   }
 
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .backdrop,
   .panel {
     animation: none;
   }

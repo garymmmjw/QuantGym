@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
+import {
+  mkdtemp,
+  mkdir,
+  readFile,
+  realpath,
+  rename,
+  rm,
+  symlink,
+  utimes,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -19,7 +29,9 @@ import {
   PHASE0_EVIDENCE_LOCK_PATH,
   PHASE1_PRE_PUSH_BASELINE_PATH_TEMPLATE,
   PHASE1_PROVIDER_EVIDENCE_ARCHIVE_PATH_TEMPLATE,
+  assertTrustedDirectoryChainUnchanged,
   buildPhase0EvidenceLock,
+  captureTrustedDirectoryChain,
   validatePhase0EvidenceLock,
   validatePhase1ContractSet,
   validatePhase1ProviderEvidenceRelationships,
@@ -584,6 +596,49 @@ test("atomic lock writes reject a symlink above the resolved root", async (t) =>
     /unsafe ancestor directory/,
   );
   assert.deepEqual(await readFile(sentinelPath), before);
+});
+
+test("trusted directory snapshots ignore external-ancestor sibling timestamp noise", async (t) => {
+  const fixture = await mkdtemp(path.join(
+    canonicalTmpRoot,
+    "quantgym-phase1-external-ancestor-noise-",
+  ));
+  t.after(() => rm(fixture, { force: true, recursive: true }));
+  const workspace = path.join(fixture, "workspace");
+  await mkdir(path.join(workspace, "internal/deep"), { recursive: true });
+  const snapshot = await captureTrustedDirectoryChain(workspace, "internal/deep");
+
+  await writeFile(path.join(fixture, "external-sibling.txt"), "unrelated sibling\n");
+  const forcedTimestamp = new Date("2001-01-01T00:00:00.000Z");
+  await utimes(fixture, forcedTimestamp, forcedTimestamp);
+
+  await assert.doesNotReject(assertTrustedDirectoryChainUnchanged(snapshot));
+});
+
+test("trusted directory snapshots still reject root and internal timestamp changes", async (t) => {
+  const fixture = await mkdtemp(path.join(
+    canonicalTmpRoot,
+    "quantgym-phase1-internal-ancestor-change-",
+  ));
+  t.after(() => rm(fixture, { force: true, recursive: true }));
+  const workspace = path.join(fixture, "workspace");
+  const internal = path.join(workspace, "internal");
+  await mkdir(path.join(internal, "deep"), { recursive: true });
+  const forcedTimestamp = new Date("2001-01-01T00:00:00.000Z");
+
+  let snapshot = await captureTrustedDirectoryChain(workspace, "internal/deep");
+  await utimes(workspace, forcedTimestamp, forcedTimestamp);
+  await assert.rejects(
+    assertTrustedDirectoryChainUnchanged(snapshot),
+    new RegExp(`unsafe ancestor directory changed ${workspace.replaceAll("/", "\\/")}`),
+  );
+
+  snapshot = await captureTrustedDirectoryChain(workspace, "internal/deep");
+  await utimes(internal, forcedTimestamp, forcedTimestamp);
+  await assert.rejects(
+    assertTrustedDirectoryChainUnchanged(snapshot),
+    new RegExp(`unsafe ancestor directory changed ${internal.replaceAll("/", "\\/")}`),
+  );
 });
 
 for (const outputPath of acceptanceManifest.evidenceOutputs) {

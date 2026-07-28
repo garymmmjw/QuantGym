@@ -160,9 +160,9 @@ test("declares the isolated V2 commands and exact source program", async () => {
       "typecheck:v2": "tsc --project tsconfig.v2.json --noEmit",
       "lint:v2": "eslint --max-warnings 0 --no-error-on-unmatched-pattern --config eslint.config.mjs 'src/{core,design-system,domains,legacy-preview,pages/plan,pages/training,pages/v2}/**/*.{ts,tsx}' 'src/shared/{api,i18n,lib,storage,testing}/**/*.{ts,tsx}' 'functions/**/*.ts' '.storybook/*.ts' vite.v2.config.ts vitest.v2.config.ts",
       "lint:styles:v2": "stylelint --config stylelint.config.mjs 'src/{core,shared,design-system,domains,legacy-preview,pages/plan,pages/training,pages/v2}/**/*.css' --allow-empty-input",
-      "test:v2": "vitest --config vitest.v2.config.ts run",
+      "test:v2": "node scripts/run-vitest-v2-strict.mjs",
       "build:v2": "node scripts/build-frontend-v2.mjs",
-      "check:frontend-v2-build-isolation": "node --test tests/frontend-v2-build-isolation.test.mjs && node scripts/check-frontend-v2-boundaries.mjs",
+      "check:frontend-v2-build-isolation": "node scripts/run-node-tests-strict.mjs --file tests/frontend-v2-build-isolation.test.mjs && node scripts/check-frontend-v2-boundaries.mjs",
     },
   );
 

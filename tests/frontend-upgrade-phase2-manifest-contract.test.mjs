@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   PHASE1_E2E_PLAYWRIGHT_ARGUMENTS,
-  PHASE2_PLAN_E2E_TAG,
+  PHASE2_E2E_TAG,
 } from "../scripts/check-frontend-upgrade-phase1-system-surfaces.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -82,30 +82,30 @@ const manifestGateById = new Map(manifest.gates.map((gate) => [gate.id, gate]));
 const mutationById = new Map(manifest.mutations.map((mutation) => [mutation.id, mutation]));
 const viewportById = new Map(designSystem.viewports.map((viewport) => [viewport.id, viewport]));
 
-test("locks the complete 104-test suite, frozen Phase 1 subset, and 22 Plan tests", () => {
+test("locks the exact 157-test suite, 82 frozen Phase 1 tests, and 75 Phase 2 tests", () => {
   assert.deepEqual(PHASE1_E2E_PLAYWRIGHT_ARGUMENTS, [
     "run",
     "test:e2e:v2",
     "--",
     "--reporter=json",
     "--grep-invert",
-    PHASE2_PLAN_E2E_TAG,
+    PHASE2_E2E_TAG,
   ]);
 
   const completeCount = listPlaywrightTestCount();
   const phase1Count = listPlaywrightTestCount([
     "--grep-invert",
-    PHASE2_PLAN_E2E_TAG,
+    PHASE2_E2E_TAG,
   ]);
-  const phase2PlanCount = listPlaywrightTestCount([
+  const phase2Count = listPlaywrightTestCount([
     "--grep",
-    PHASE2_PLAN_E2E_TAG,
+    PHASE2_E2E_TAG,
   ]);
 
-  assert.equal(completeCount, 104);
+  assert.equal(completeCount, 157);
   assert.equal(phase1Count, 82);
-  assert.equal(phase2PlanCount, 22);
-  assert.equal(phase1Count + phase2PlanCount, completeCount);
+  assert.equal(phase2Count, 75);
+  assert.equal(phase1Count + phase2Count, completeCount);
 });
 
 test("maps the exact Phase 2 routes, mutations, and recovery-state matrix", () => {
@@ -217,7 +217,18 @@ test("activates all and only the 76 catalog IDs as non-legacy pass results", () 
   ]) {
     assert.equal(manifest.activationPolicy[key], false, key + " must remain false");
   }
-  for (const rejected of ["legacy-baseline", "future-gate", "skipped", "retry", "flaky"]) {
+  for (const rejected of [
+    "legacy-baseline",
+    "future-gate",
+    "skipped",
+    "retry",
+    "flaky",
+    "todo",
+    "xfail",
+    "xpass",
+    "fixme",
+    "pending",
+  ]) {
     assert.equal(manifest.activationPolicy.allowedResultStatuses.includes(rejected), false);
   }
 });
@@ -268,6 +279,14 @@ test("locks the 22 light/dark final visual cases to approved Phase 2 viewports",
     "380-frontend-upgrade-phase-1-",
   ]);
   assert.equal(new Set(manifest.evidenceOutputs).size, manifest.evidenceOutputs.length);
+  assert.equal(manifest.evidenceOutputs.length, 30);
+  assert.equal(
+    manifest.evidenceOutputs.filter((output) => (
+      output === "docs/browser-audit-screenshots/"
+        + "390-frontend-upgrade-phase-2-visual-review-receipt.json"
+    )).length,
+    1,
+  );
   for (const output of manifest.evidenceOutputs) {
     const relativeEvidencePath = output.replace(
       "docs/browser-audit-screenshots/",

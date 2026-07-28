@@ -1,0 +1,1019 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quantgym.invalid/schemas/frontend-upgrade-phase2-provider-evidence.schema.json",
+  "title": "QuantGym Phase 2 Preview provider evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "phase",
+    "status",
+    "capturedAt",
+    "expiresAt",
+    "environment",
+    "branch",
+    "applicationCommit",
+    "governance",
+    "capture",
+    "candidateGate",
+    "operatorPreflight",
+    "credentialBoundary",
+    "resources",
+    "productionContinuity",
+    "deployments",
+    "deploymentControls",
+    "databaseBackup",
+    "databaseMigration",
+    "acceptanceData",
+    "liveChecks",
+    "cleanup",
+    "temporaryAccess",
+    "postRevokeContinuity",
+    "pullRequest",
+    "cutoverSequence",
+    "cutoverDurationMs"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "phase": { "const": 2 },
+    "status": { "const": "pass" },
+    "capturedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "environment": { "const": "preview" },
+    "branch": { "const": "codex/frontend-v2-preview" },
+    "applicationCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "governance": { "$ref": "#/$defs/governance" },
+    "capture": { "$ref": "#/$defs/capture" },
+    "candidateGate": { "$ref": "#/$defs/candidateGate" },
+    "operatorPreflight": { "$ref": "#/$defs/operatorPreflight" },
+    "credentialBoundary": { "$ref": "#/$defs/credentialBoundary" },
+    "resources": { "$ref": "#/$defs/resources" },
+    "productionContinuity": { "$ref": "#/$defs/productionContinuity" },
+    "deployments": { "$ref": "#/$defs/deployments" },
+    "deploymentControls": { "$ref": "#/$defs/deploymentControls" },
+    "databaseBackup": { "$ref": "#/$defs/databaseBackup" },
+    "databaseMigration": { "$ref": "#/$defs/databaseMigration" },
+    "acceptanceData": { "$ref": "#/$defs/acceptanceData" },
+    "liveChecks": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "prefixItems": [
+        { "$ref": "#/$defs/liveCheckApi" },
+        { "$ref": "#/$defs/liveCheckMigration" },
+        { "$ref": "#/$defs/liveCheckDailyLoop" },
+        { "$ref": "#/$defs/liveCheckAccessibility" },
+        { "$ref": "#/$defs/liveCheckStorage" },
+        { "$ref": "#/$defs/liveCheckProductionDenial" },
+        { "$ref": "#/$defs/liveCheckDeployedVisual" },
+        { "$ref": "#/$defs/liveCheckDeployedBundle" }
+      ],
+      "items": false
+    },
+    "cleanup": { "$ref": "#/$defs/cleanup" },
+    "temporaryAccess": { "$ref": "#/$defs/temporaryAccess" },
+    "postRevokeContinuity": { "$ref": "#/$defs/postRevokeContinuity" },
+    "pullRequest": { "$ref": "#/$defs/pullRequest" },
+    "cutoverSequence": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "uniqueItems": true,
+      "prefixItems": [
+        { "$ref": "#/$defs/cutoverStepBackup" },
+        { "$ref": "#/$defs/cutoverStepRestoreProof" },
+        { "$ref": "#/$defs/cutoverStepRestoreTargetDestroy" },
+        { "$ref": "#/$defs/cutoverStepMigration" },
+        { "$ref": "#/$defs/cutoverStepApiDeploy" },
+        { "$ref": "#/$defs/cutoverStepPagesDeploy" },
+        { "$ref": "#/$defs/cutoverStepLiveChecks" },
+        { "$ref": "#/$defs/cutoverStepCleanup" },
+        { "$ref": "#/$defs/cutoverStepRevoke" },
+        { "$ref": "#/$defs/cutoverStepPostRevokeContinuity" }
+      ],
+      "items": false
+    },
+    "cutoverDurationMs": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 21600000
+    }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operator", "budgetOwner", "dataResetOwner", "destroyOwner", "reviewDate"],
+      "properties": {
+        "operator": { "const": "Gary" },
+        "budgetOwner": { "const": "Gary" },
+        "dataResetOwner": { "const": "Gary" },
+        "destroyOwner": { "const": "Gary" },
+        "reviewDate": { "const": "2026-07-29" }
+      }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authenticated", "inputSource", "rawResponsesPersisted", "journalTrustBoundary"],
+      "properties": {
+        "authenticated": { "const": true },
+        "inputSource": { "const": "operator-environment" },
+        "rawResponsesPersisted": { "const": false },
+        "journalTrustBoundary": { "$ref": "#/$defs/journalTrustBoundary" }
+      }
+    },
+    "journalTrustBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trustRoot", "operator", "journalMode", "externalSignaturePresent", "sameUserTamperingOutOfScope", "evidenceSha256"],
+      "properties": {
+        "trustRoot": { "const": "local-system-user" },
+        "operator": { "const": "Gary" },
+        "journalMode": { "const": "0600" },
+        "externalSignaturePresent": { "const": false },
+        "sameUserTamperingOutOfScope": { "const": true },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "candidateGate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "checkedAt", "repository", "pullRequestNumber", "branch", "applicationCommit", "evidenceHeadCommit", "localHeadCommit", "remoteHeadCommit", "applicationCommitMessageSha256", "evidenceCommitMessageSha256", "workflowSha256", "ciContractSha256", "workflowRunIdentitySha256", "applicationCloudflarePagesSkipDirectivePresent", "evidenceCloudflarePagesSkipDirectivePresent", "evidenceOutputCount", "evidenceSuccessorOnly", "evidenceHeadCiGreen", "applicationPagesSkipRecordCount", "evidencePagesSkipRecordCount", "pagesSkipObservationSha256", "trackedWorktreeClean", "indexClean", "allowedUntrackedOnly", "requiredAncestorCommits", "allRequiredAncestorsPresent", "pullRequestState", "pullRequestDraft", "pullRequestMerged", "pullRequestHeadCommit", "evidenceSha256"],
+      "properties": {
+        "status": { "const": "pass" },
+        "checkedAt": { "$ref": "#/$defs/timestamp" },
+        "repository": { "const": "garymmmjw/QuantGym" },
+        "pullRequestNumber": { "const": 130 },
+        "branch": { "const": "codex/frontend-v2-preview" },
+        "applicationCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "evidenceHeadCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "localHeadCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "remoteHeadCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "applicationCommitMessageSha256": { "$ref": "#/$defs/sha256" },
+        "evidenceCommitMessageSha256": { "$ref": "#/$defs/sha256" },
+        "workflowSha256": { "$ref": "#/$defs/sha256" },
+        "ciContractSha256": { "$ref": "#/$defs/sha256" },
+        "workflowRunIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "applicationCloudflarePagesSkipDirectivePresent": { "const": true },
+        "evidenceCloudflarePagesSkipDirectivePresent": { "const": true },
+        "evidenceOutputCount": { "const": 30 },
+        "evidenceSuccessorOnly": { "const": true },
+        "evidenceHeadCiGreen": { "const": true },
+        "applicationPagesSkipRecordCount": { "type": "integer", "minimum": 1 },
+        "evidencePagesSkipRecordCount": { "type": "integer", "minimum": 1 },
+        "pagesSkipObservationSha256": { "$ref": "#/$defs/sha256" },
+        "trackedWorktreeClean": { "const": true },
+        "indexClean": { "const": true },
+        "allowedUntrackedOnly": { "const": true },
+        "requiredAncestorCommits": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "prefixItems": [
+            { "const": "5a3b6f33b7f2a4d15f0a81ca57f81570ca89c6a3" },
+            { "const": "d87b20f8630fdc39f46e1065c5ffee14bf3ca8dd" },
+            { "const": "4faba0653e28e4ca28edd8521a053d00d0d88e57" },
+            { "const": "4bed12b2b9951276124df2fff18b23f2319c8de1" }
+          ],
+          "items": false
+        },
+        "allRequiredAncestorsPresent": { "const": true },
+        "pullRequestState": { "const": "open" },
+        "pullRequestDraft": { "const": true },
+        "pullRequestMerged": { "const": false },
+        "pullRequestHeadCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "credentialBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identitySha256", "selfIdentityVerified"],
+      "properties": {
+        "identitySha256": { "$ref": "#/$defs/sha256" },
+        "selfIdentityVerified": { "const": true }
+      }
+    },
+    "mutationTokenBindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cloudflare", "render", "postgres", "r2"],
+      "properties": {
+        "cloudflare": { "$ref": "#/$defs/credentialBinding" },
+        "render": { "$ref": "#/$defs/credentialBinding" },
+        "postgres": { "$ref": "#/$defs/credentialBinding" },
+        "r2": { "$ref": "#/$defs/credentialBinding" }
+      }
+    },
+    "operatorPreflight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "checkedAt", "candidateCommit", "capabilitiesReady", "toolchainReady", "controlDatabaseReadOnly", "previewR2RunPrefixEmpty", "mutationR2RunPrefixEmpty", "frontendBuildPassed", "localDowngradeGatePassed", "proxyLoopback", "proxyIdentitySha256", "remainingReadOnlyControlProofs", "terminalTemporaryControl", "mutationTokenBindings", "evidenceSha256"],
+      "properties": {
+        "status": { "const": "pass" },
+        "checkedAt": { "$ref": "#/$defs/timestamp" },
+        "candidateCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "capabilitiesReady": { "const": true },
+        "toolchainReady": { "const": true },
+        "controlDatabaseReadOnly": { "const": true },
+        "previewR2RunPrefixEmpty": { "const": true },
+        "mutationR2RunPrefixEmpty": { "const": true },
+        "frontendBuildPassed": { "const": true },
+        "localDowngradeGatePassed": { "const": true },
+        "proxyLoopback": { "const": true },
+        "proxyIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "remainingReadOnlyControlProofs": { "$ref": "#/$defs/remainingReadOnlyControlProofs" },
+        "terminalTemporaryControl": { "$ref": "#/$defs/terminalTemporaryControl" },
+        "mutationTokenBindings": { "$ref": "#/$defs/mutationTokenBindings" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "controlCredentialRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "remainingReadOnlyProviders", "terminalTemporaryUnscopedProviders", "terminalTemporaryProviders", "terminalRevocationRequired", "retainedAfterMutationRevoke", "identitySha256"],
+      "properties": {
+        "kind": { "const": "control" },
+        "remainingReadOnlyProviders": {
+          "const": ["cloudflare", "r2"]
+        },
+        "terminalTemporaryUnscopedProviders": {
+          "const": ["render"]
+        },
+        "terminalTemporaryProviders": {
+          "const": ["postgres", "render"]
+        },
+        "terminalRevocationRequired": { "const": true },
+        "retainedAfterMutationRevoke": { "const": true },
+        "identitySha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "bootstrapCredentialRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "provider", "privilege", "retained", "excludedFromReadOnlyControlAssertions", "identitySha256"],
+      "properties": {
+        "kind": { "const": "persistent-provider-admin" },
+        "provider": { "const": "postgres" },
+        "privilege": { "const": "admin" },
+        "retained": { "const": true },
+        "excludedFromReadOnlyControlAssertions": { "const": true },
+        "identitySha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "remainingReadOnlyControlProofs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cloudflare", "r2"],
+      "properties": {
+        "cloudflare": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["accountBound", "providerScopeReadOnly", "evidenceSha256"],
+          "properties": {
+            "accountBound": { "const": true },
+            "providerScopeReadOnly": { "const": true },
+            "evidenceSha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "r2": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["policyBucketBound", "policyReadOnly", "previewReadSucceeded", "previewWriteDenied", "productionAccessDenied", "evidenceSha256"],
+          "properties": {
+            "policyBucketBound": { "const": true },
+            "policyReadOnly": { "const": true },
+            "previewReadSucceeded": { "const": true },
+            "previewWriteDenied": { "const": true },
+            "productionAccessDenied": { "const": true },
+            "evidenceSha256": { "$ref": "#/$defs/sha256" }
+          }
+        }
+      }
+    },
+    "terminalTemporaryControl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["providers", "unscopedProviders", "terminalRevocationRequired", "postgres", "renderCredentialIdentitySha256"],
+      "properties": {
+        "providers": { "const": ["postgres", "render"] },
+        "unscopedProviders": { "const": ["render"] },
+        "terminalRevocationRequired": { "const": true },
+        "postgres": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["applicationDmlDenied", "ddlDenied", "largeObjectCreationDenied", "selectSucceeded", "sqlManagedTemporaryRole", "transactionReadOnly", "finalDropRequired", "providerCredentialInventoryUnchanged", "providerCredentialInventorySha256", "persistentProviderAdmin", "evidenceSha256"],
+          "properties": {
+            "applicationDmlDenied": { "const": true },
+            "ddlDenied": { "const": true },
+            "largeObjectCreationDenied": { "const": true },
+            "selectSucceeded": { "const": true },
+            "sqlManagedTemporaryRole": { "const": true },
+            "transactionReadOnly": { "const": true },
+            "finalDropRequired": { "const": true },
+            "providerCredentialInventoryUnchanged": { "const": true },
+            "providerCredentialInventorySha256": { "$ref": "#/$defs/sha256" },
+            "persistentProviderAdmin": { "$ref": "#/$defs/persistentProviderAdmin" },
+            "evidenceSha256": { "$ref": "#/$defs/sha256" }
+          }
+        },
+        "renderCredentialIdentitySha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "persistentProviderAdmin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["retained", "privilege", "excludedFromReadOnlyControlAssertions", "identitySha256", "sqlIdentitySha256", "providerCredentialInventoryUnchanged", "providerCredentialInventorySha256", "evidenceSha256"],
+      "properties": {
+        "retained": { "const": true },
+        "privilege": { "const": "admin" },
+        "excludedFromReadOnlyControlAssertions": { "const": true },
+        "identitySha256": { "$ref": "#/$defs/sha256" },
+        "sqlIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "providerCredentialInventoryUnchanged": { "const": true },
+        "providerCredentialInventorySha256": { "$ref": "#/$defs/sha256" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "mutationCredentialRole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "revocable", "identitySha256"],
+      "properties": {
+        "kind": { "const": "mutation" },
+        "revocable": { "const": true },
+        "identitySha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "credentialBoundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bootstrap", "control", "mutation", "identitiesDistinct"],
+      "properties": {
+        "bootstrap": { "$ref": "#/$defs/bootstrapCredentialRole" },
+        "control": { "$ref": "#/$defs/controlCredentialRole" },
+        "mutation": { "$ref": "#/$defs/mutationCredentialRole" },
+        "identitiesDistinct": { "const": true }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "name", "identitySha256"],
+      "properties": {
+        "provider": { "enum": ["cloudflare", "render"] },
+        "name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "identitySha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pages", "api", "llm", "postgres", "r2", "productionPages", "productionApi", "productionLlm", "productionPostgres", "productionR2"],
+      "properties": {
+        "pages": { "$ref": "#/$defs/resource" },
+        "api": { "$ref": "#/$defs/resource" },
+        "llm": { "$ref": "#/$defs/resource" },
+        "postgres": { "$ref": "#/$defs/resource" },
+        "r2": { "$ref": "#/$defs/resource" },
+        "productionPages": { "$ref": "#/$defs/resource" },
+        "productionApi": { "$ref": "#/$defs/resource" },
+        "productionLlm": { "$ref": "#/$defs/resource" },
+        "productionPostgres": { "$ref": "#/$defs/resource" },
+        "productionR2": { "$ref": "#/$defs/resource" }
+      }
+    },
+    "productionServiceAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "identitySha256", "configurationSha256", "repository", "branch", "visibility", "automaticDeploysEnabled", "liveDeploymentCommit", "live"],
+      "properties": {
+        "name": { "enum": ["quantgym-api", "quantgym-llm"] },
+        "identitySha256": { "$ref": "#/$defs/sha256" },
+        "configurationSha256": { "$ref": "#/$defs/sha256" },
+        "repository": { "const": "garymmmjw/QuantGym" },
+        "branch": { "const": "main" },
+        "visibility": { "enum": ["public", "internal"] },
+        "automaticDeploysEnabled": { "type": "boolean" },
+        "liveDeploymentCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "live": { "const": true }
+      }
+    },
+    "productionAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pagesDeploymentCommit", "pagesResourceIdentitySha256", "pagesConfigurationSha256", "pagesSuccessfulDeploymentSetSha256", "pagesEnvironment", "pagesBranch", "pagesAutomaticDeploysEnabled", "pagesLive", "candidateCommitChecked", "candidateCommitRecordCount", "candidateCommitSkippedRecordCount", "candidateCommitStartedRecordCount", "candidateCommitAliasedRecordCount", "candidateCommitActiveDeploymentCount", "services", "postgresControlSha256", "r2ControlSha256", "environmentGroupsControlSha256"],
+      "properties": {
+        "pagesDeploymentCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "pagesResourceIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "pagesConfigurationSha256": { "$ref": "#/$defs/sha256" },
+        "pagesSuccessfulDeploymentSetSha256": { "$ref": "#/$defs/sha256" },
+        "pagesEnvironment": { "const": "production" },
+        "pagesBranch": { "const": "main" },
+        "pagesAutomaticDeploysEnabled": { "type": "boolean" },
+        "pagesLive": { "const": true },
+        "candidateCommitChecked": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "candidateCommitRecordCount": { "type": "integer", "minimum": 0 },
+        "candidateCommitSkippedRecordCount": { "type": "integer", "minimum": 0 },
+        "candidateCommitStartedRecordCount": { "const": 0 },
+        "candidateCommitAliasedRecordCount": { "const": 0 },
+        "candidateCommitActiveDeploymentCount": { "const": 0 },
+        "services": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "prefixItems": [
+            {
+              "allOf": [
+                { "$ref": "#/$defs/productionServiceAnchor" },
+                { "properties": { "name": { "const": "quantgym-api" }, "visibility": { "const": "public" } } }
+              ]
+            },
+            {
+              "allOf": [
+                { "$ref": "#/$defs/productionServiceAnchor" },
+                { "properties": { "name": { "const": "quantgym-llm" }, "visibility": { "const": "internal" } } }
+              ]
+            }
+          ],
+          "items": false
+        },
+        "postgresControlSha256": { "$ref": "#/$defs/sha256" },
+        "r2ControlSha256": { "$ref": "#/$defs/sha256" },
+        "environmentGroupsControlSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "previewAnchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pagesDeploymentCommit", "apiDeploymentCommit", "llmDeploymentCommit", "llmResourceIdentitySha256", "llmConfigurationSha256", "llmRepository", "llmBranch", "llmVisibility", "llmAutomaticDeploysEnabled", "llmLive", "databaseRevision"],
+      "properties": {
+        "pagesDeploymentCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "apiDeploymentCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "llmDeploymentCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "llmResourceIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "llmConfigurationSha256": { "$ref": "#/$defs/sha256" },
+        "llmRepository": { "const": "garymmmjw/QuantGym" },
+        "llmBranch": { "const": "codex/frontend-v2-preview" },
+        "llmVisibility": { "const": "internal" },
+        "llmAutomaticDeploysEnabled": { "const": false },
+        "llmLive": { "const": true },
+        "databaseRevision": { "enum": ["0001_phase1_foundation", "0002_phase2_daily_training"] }
+      }
+    },
+    "productionContinuity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before", "beforeCheckedAt", "after", "afterCheckedAt", "controlIdentitySha256", "unchanged"],
+      "properties": {
+        "before": { "$ref": "#/$defs/productionAnchor" },
+        "beforeCheckedAt": { "$ref": "#/$defs/timestamp" },
+        "after": { "$ref": "#/$defs/productionAnchor" },
+        "afterCheckedAt": { "$ref": "#/$defs/timestamp" },
+        "controlIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "unchanged": { "const": true }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "resourceIdentitySha256", "commit", "status"],
+      "properties": {
+        "provider": { "enum": ["cloudflare-pages", "render"] },
+        "resourceIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "status": { "const": "ready" }
+      }
+    },
+    "pagesDeployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "resourceIdentitySha256", "commit", "status", "artifactManifestSha256"],
+      "properties": {
+        "provider": { "const": "cloudflare-pages" },
+        "resourceIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "status": { "const": "ready" },
+        "artifactManifestSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "deployments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["api", "pages"],
+      "properties": {
+        "api": { "$ref": "#/$defs/deployment" },
+        "pages": { "$ref": "#/$defs/pagesDeployment" }
+      }
+    },
+    "deploymentControls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pagesAutomaticDeploysDisabled", "apiAutomaticDeploysDisabled", "llmAutomaticDeploysDisabled", "migrationPrecedesDeploy", "evidenceSha256"],
+      "properties": {
+        "pagesAutomaticDeploysDisabled": { "const": true },
+        "apiAutomaticDeploysDisabled": { "const": true },
+        "llmAutomaticDeploysDisabled": { "const": true },
+        "migrationPrecedesDeploy": { "const": true },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "databaseContentTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "rowCount", "rowAggregateSha256"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z_][a-z0-9_]{0,62}$" },
+        "rowCount": { "type": "integer", "minimum": 0 },
+        "rowAggregateSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "databaseContentSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "tables", "catalogSections", "inventorySha256", "rowCountsSha256", "dataAggregateSha256", "snapshotSha256"],
+      "properties": {
+        "schemaVersion": { "const": 2 },
+        "tables": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/databaseContentTable" }
+        },
+        "catalogSections": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sequences", "extensions", "largeObjects", "schemas", "objects", "database"],
+          "properties": {
+            "sequences": { "$ref": "#/$defs/databaseContentSection" },
+            "extensions": { "$ref": "#/$defs/databaseContentSection" },
+            "largeObjects": { "$ref": "#/$defs/databaseContentSection" },
+            "schemas": { "$ref": "#/$defs/databaseContentSection" },
+            "objects": { "$ref": "#/$defs/databaseContentSection" },
+            "database": { "$ref": "#/$defs/databaseContentSection" }
+          }
+        },
+        "inventorySha256": { "$ref": "#/$defs/sha256" },
+        "rowCountsSha256": { "$ref": "#/$defs/sha256" },
+        "dataAggregateSha256": { "$ref": "#/$defs/sha256" },
+        "snapshotSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "databaseContentSection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rowCount", "aggregateSha256"],
+      "properties": {
+        "rowCount": { "type": "integer", "minimum": 0 },
+        "aggregateSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "databaseBackup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "capturedAt", "backupSha256", "sourceResourceSha256", "sourceRevision", "sourceSchemaSha256", "sourceContentSnapshot", "restore"],
+      "properties": {
+        "status": { "const": "pass" },
+        "capturedAt": { "$ref": "#/$defs/timestamp" },
+        "backupSha256": { "$ref": "#/$defs/sha256" },
+        "sourceResourceSha256": { "$ref": "#/$defs/sha256" },
+        "sourceRevision": { "const": "0001_phase1_foundation" },
+        "sourceSchemaSha256": { "$ref": "#/$defs/sha256" },
+        "sourceContentSnapshot": { "$ref": "#/$defs/databaseContentSnapshot" },
+        "restore": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "verifiedAt", "backupSha256", "sourceResourceSha256", "targetResourceSha256", "sourceRevision", "sourceSchemaSha256", "sourceContentSnapshot", "destruction"],
+          "properties": {
+            "status": { "const": "pass" },
+            "verifiedAt": { "$ref": "#/$defs/timestamp" },
+            "backupSha256": { "$ref": "#/$defs/sha256" },
+            "sourceResourceSha256": { "$ref": "#/$defs/sha256" },
+            "targetResourceSha256": { "$ref": "#/$defs/sha256" },
+            "sourceRevision": { "const": "0001_phase1_foundation" },
+            "sourceSchemaSha256": { "$ref": "#/$defs/sha256" },
+            "sourceContentSnapshot": { "$ref": "#/$defs/databaseContentSnapshot" },
+            "destruction": { "$ref": "#/$defs/restoreDestruction" }
+          }
+        }
+      }
+    },
+    "restoreDestruction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "destroyedAt", "targetResourceSha256", "destroyed", "absentAfterDestroy", "restoreIdentitySha256", "restoreRoleSha256", "restoreRoleAbsent", "restoreLoginDenied", "evidenceSha256"],
+      "properties": {
+        "status": { "const": "pass" },
+        "destroyedAt": { "$ref": "#/$defs/timestamp" },
+        "targetResourceSha256": { "$ref": "#/$defs/sha256" },
+        "destroyed": { "const": true },
+        "absentAfterDestroy": { "const": true },
+        "restoreIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "restoreRoleSha256": { "$ref": "#/$defs/sha256" },
+        "restoreRoleAbsent": { "const": true },
+        "restoreLoginDenied": { "const": true },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "databaseMigration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "direction", "fromRevision", "toRevision", "sourceSchemaSha256", "targetSchemaSha256", "roundTripSchemaSha256", "localDowngradeGatePassed", "providerDowngradeExecuted", "completedAt"],
+      "properties": {
+        "status": { "const": "pass" },
+        "direction": { "const": "upgrade" },
+        "fromRevision": { "const": "0001_phase1_foundation" },
+        "toRevision": { "const": "0002_phase2_daily_training" },
+        "sourceSchemaSha256": { "$ref": "#/$defs/sha256" },
+        "targetSchemaSha256": { "$ref": "#/$defs/sha256" },
+        "roundTripSchemaSha256": { "$ref": "#/$defs/sha256" },
+        "localDowngradeGatePassed": { "const": true },
+        "providerDowngradeExecuted": { "const": false },
+        "completedAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "acceptanceData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "rightsLabelled", "syntheticOnly", "catalogSha256", "actorSha256", "seededAt"],
+      "properties": {
+        "status": { "const": "pass" },
+        "rightsLabelled": { "const": true },
+        "syntheticOnly": { "const": true },
+        "catalogSha256": { "$ref": "#/$defs/sha256" },
+        "actorSha256": { "$ref": "#/$defs/sha256" },
+        "seededAt": { "$ref": "#/$defs/timestamp" }
+      }
+    },
+    "liveCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "checkedAt", "evidenceSha256"],
+      "properties": {
+        "id": { "enum": ["api", "migration", "daily-loop", "accessibility", "storage", "production-denial"] },
+        "status": { "const": "pass" },
+        "checkedAt": { "$ref": "#/$defs/timestamp" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "liveCheckApi": {
+      "allOf": [
+        { "$ref": "#/$defs/liveCheck" },
+        { "properties": { "id": { "const": "api" } } }
+      ]
+    },
+    "liveCheckMigration": {
+      "allOf": [
+        { "$ref": "#/$defs/liveCheck" },
+        { "properties": { "id": { "const": "migration" } } }
+      ]
+    },
+    "liveCheckDailyLoop": {
+      "allOf": [
+        { "$ref": "#/$defs/liveCheck" },
+        { "properties": { "id": { "const": "daily-loop" } } }
+      ]
+    },
+    "liveCheckAccessibility": {
+      "allOf": [
+        { "$ref": "#/$defs/liveCheck" },
+        { "properties": { "id": { "const": "accessibility" } } }
+      ]
+    },
+    "liveCheckStorage": {
+      "allOf": [
+        { "$ref": "#/$defs/liveCheck" },
+        { "properties": { "id": { "const": "storage" } } }
+      ]
+    },
+    "liveCheckProductionDenial": {
+      "allOf": [
+        { "$ref": "#/$defs/liveCheck" },
+        { "properties": { "id": { "const": "production-denial" } } }
+      ]
+    },
+    "liveCheckDeployedVisual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "checkedAt", "evidenceSha256", "deploymentCommit"],
+      "properties": {
+        "id": { "const": "deployed-visual" },
+        "status": { "const": "pass" },
+        "checkedAt": { "$ref": "#/$defs/timestamp" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" },
+        "deploymentCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "liveCheckDeployedBundle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "checkedAt", "evidenceSha256", "deploymentCommit", "artifactManifestSha256"],
+      "properties": {
+        "id": { "const": "deployed-bundle" },
+        "status": { "const": "pass" },
+        "checkedAt": { "$ref": "#/$defs/timestamp" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" },
+        "deploymentCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "artifactManifestSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "syntheticApplicationRows", "syntheticR2Objects", "syntheticCatalogRows", "completedAt", "evidenceSha256"],
+      "properties": {
+        "status": { "const": "pass" },
+        "syntheticApplicationRows": { "const": 0 },
+        "syntheticR2Objects": { "const": 0 },
+        "syntheticCatalogRows": { "const": 0 },
+        "completedAt": { "$ref": "#/$defs/timestamp" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "temporaryAccess": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "cloudflareRevoked", "renderRevoked", "postgresRevoked", "r2Revoked", "mutationCredentialsRevoked", "controlIdentityRetained", "postgresControlRevocationPending", "renderControlRevocationPending", "postgresProviderCredentialInventoryUnchanged", "postgresProviderCredentialInventorySha256", "remainingReadOnlyControlProviders", "terminalTemporaryControlProviders", "terminalRevocationRequired", "terminalRevocationPending", "renderControlCredentialIdentitySha256", "revokedMutationTokenBindings", "postgresIdentities", "revokedAt", "evidenceSha256"],
+      "properties": {
+        "status": { "const": "pass" },
+        "cloudflareRevoked": { "const": true },
+        "renderRevoked": { "const": true },
+        "postgresRevoked": { "const": true },
+        "r2Revoked": { "const": true },
+        "mutationCredentialsRevoked": { "const": true },
+        "controlIdentityRetained": { "const": true },
+        "postgresControlRevocationPending": { "const": true },
+        "renderControlRevocationPending": { "const": true },
+        "postgresProviderCredentialInventoryUnchanged": { "const": true },
+        "postgresProviderCredentialInventorySha256": { "$ref": "#/$defs/sha256" },
+        "remainingReadOnlyControlProviders": { "const": ["cloudflare", "r2"] },
+        "terminalTemporaryControlProviders": { "const": ["postgres", "render"] },
+        "terminalRevocationRequired": { "const": true },
+        "terminalRevocationPending": { "const": true },
+        "renderControlCredentialIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "revokedMutationTokenBindings": { "$ref": "#/$defs/mutationTokenBindings" },
+        "postgresIdentities": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "prefixItems": [
+            { "$ref": "#/$defs/postgresMutationIdentity" },
+            { "$ref": "#/$defs/postgresRestoreIdentity" }
+          ],
+          "items": false
+        },
+        "revokedAt": { "$ref": "#/$defs/timestamp" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "postgresIdentityRevocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "identitySha256", "roleSha256", "revoked", "roleAbsent", "loginDenied", "evidenceSha256"],
+      "properties": {
+        "kind": { "enum": ["control", "mutation", "restore"] },
+        "identitySha256": { "$ref": "#/$defs/sha256" },
+        "roleSha256": { "$ref": "#/$defs/sha256" },
+        "revoked": { "const": true },
+        "roleAbsent": { "const": true },
+        "loginDenied": { "const": true },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "postgresControlIdentity": {
+      "allOf": [
+        { "$ref": "#/$defs/postgresIdentityRevocation" },
+        { "properties": { "kind": { "const": "control" } } }
+      ]
+    },
+    "postgresMutationIdentity": {
+      "allOf": [
+        { "$ref": "#/$defs/postgresIdentityRevocation" },
+        { "properties": { "kind": { "const": "mutation" } } }
+      ]
+    },
+    "postgresRestoreIdentity": {
+      "allOf": [
+        { "$ref": "#/$defs/postgresIdentityRevocation" },
+        { "properties": { "kind": { "const": "restore" } } }
+      ]
+    },
+    "previewApiContinuity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resourceIdentitySha256", "deploymentCommit", "live", "evidenceSha256"],
+      "properties": {
+        "resourceIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "deploymentCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "live": { "const": true },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "previewDatabaseContinuity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resourceIdentitySha256", "revision", "readSucceeded", "evidenceSha256"],
+      "properties": {
+        "resourceIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "revision": { "const": "0002_phase2_daily_training" },
+        "readSucceeded": { "const": true },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "previewR2Continuity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resourceIdentitySha256", "readSucceeded", "policyBucketBound", "policyReadOnly", "writeDenied", "productionAccessDenied", "mutationAttempted", "evidenceSha256"],
+      "properties": {
+        "resourceIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "readSucceeded": { "const": true },
+        "policyBucketBound": { "const": true },
+        "policyReadOnly": { "const": true },
+        "writeDenied": { "const": true },
+        "productionAccessDenied": { "const": true },
+        "mutationAttempted": { "const": false },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "renderTopologyObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observedAt", "timing", "reobservedAfterTerminalRevocation"],
+      "properties": {
+        "observedAt": { "$ref": "#/$defs/timestamp" },
+        "timing": { "const": "before-terminal-control-revocation" },
+        "reobservedAfterTerminalRevocation": { "const": false }
+      }
+    },
+    "sustainableControlRevalidation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "checkedAt", "completedAt", "cloudflareTopologyUnchanged", "pullRequestUnchanged", "previewApiLive", "previewDatabaseRevisionUnchanged", "previewR2ContinuityUnchanged", "githubReadOnly", "publicApiUnauthenticated", "postgresBootstrapAdminUsed", "postgresBootstrapAdminExcludedFromReadOnlyAssertions", "renderTopologyReobserved", "renderTopologyBasis", "cloudflareEvidenceSha256", "pullRequestEvidenceSha256", "previewApiEvidenceSha256", "previewDatabaseEvidenceSha256", "previewR2EvidenceSha256", "evidenceSha256"],
+      "properties": {
+        "status": { "const": "pass" },
+        "checkedAt": { "$ref": "#/$defs/timestamp" },
+        "completedAt": { "$ref": "#/$defs/timestamp" },
+        "cloudflareTopologyUnchanged": { "const": true },
+        "pullRequestUnchanged": { "const": true },
+        "previewApiLive": { "const": true },
+        "previewDatabaseRevisionUnchanged": { "const": true },
+        "previewR2ContinuityUnchanged": { "const": true },
+        "githubReadOnly": { "const": true },
+        "publicApiUnauthenticated": { "const": true },
+        "postgresBootstrapAdminUsed": { "const": true },
+        "postgresBootstrapAdminExcludedFromReadOnlyAssertions": { "const": true },
+        "renderTopologyReobserved": { "const": false },
+        "renderTopologyBasis": { "const": "pre-terminal-revocation-observation" },
+        "cloudflareEvidenceSha256": { "$ref": "#/$defs/sha256" },
+        "pullRequestEvidenceSha256": { "$ref": "#/$defs/sha256" },
+        "previewApiEvidenceSha256": { "$ref": "#/$defs/sha256" },
+        "previewDatabaseEvidenceSha256": { "$ref": "#/$defs/sha256" },
+        "previewR2EvidenceSha256": { "$ref": "#/$defs/sha256" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "postRevokeContinuity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "checkedAt", "continuityObservationCompletedAt", "terminalRevocationCompletedAt", "continuityToTerminalRevocationMs", "controlIdentitySha256", "resources", "productionAnchor", "previewAnchor", "pullRequest", "previewApi", "previewDatabase", "previewR2", "renderControlRevoked", "renderControlAccessDenied", "renderControlRefreshDenied", "renderControlCredentialIdentitySha256", "renderControlRevocationEvidenceSha256", "postgresControlRevokedAfterContinuity", "postgresProviderCredentialInventoryUnchanged", "postgresProviderCredentialInventorySha256", "postgresControlIdentity", "persistentProviderAdmin", "remainingReadOnlyControlProviders", "terminalTemporaryControlProviders", "terminalTemporaryControlCredentialsRevoked", "remainingControlCredentialsReadOnly", "runtimeIdentitiesUnchanged", "renderTopologyObservation", "sustainableControlRevalidation", "evidenceSha256"],
+      "properties": {
+        "status": { "const": "pass" },
+        "checkedAt": { "$ref": "#/$defs/timestamp" },
+        "continuityObservationCompletedAt": { "$ref": "#/$defs/timestamp" },
+        "terminalRevocationCompletedAt": { "$ref": "#/$defs/timestamp" },
+        "continuityToTerminalRevocationMs": { "type": "integer", "minimum": 0, "maximum": 300000 },
+        "controlIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "resources": { "$ref": "#/$defs/resources" },
+        "productionAnchor": { "$ref": "#/$defs/productionAnchor" },
+        "previewAnchor": { "$ref": "#/$defs/previewAnchor" },
+        "pullRequest": { "$ref": "#/$defs/pullRequestCheck" },
+        "previewApi": { "$ref": "#/$defs/previewApiContinuity" },
+        "previewDatabase": { "$ref": "#/$defs/previewDatabaseContinuity" },
+        "previewR2": { "$ref": "#/$defs/previewR2Continuity" },
+        "renderControlRevoked": { "const": true },
+        "renderControlAccessDenied": { "const": true },
+        "renderControlRefreshDenied": { "const": true },
+        "renderControlCredentialIdentitySha256": { "$ref": "#/$defs/sha256" },
+        "renderControlRevocationEvidenceSha256": { "$ref": "#/$defs/sha256" },
+        "postgresControlRevokedAfterContinuity": { "const": true },
+        "postgresProviderCredentialInventoryUnchanged": { "const": true },
+        "postgresProviderCredentialInventorySha256": { "$ref": "#/$defs/sha256" },
+        "postgresControlIdentity": { "$ref": "#/$defs/postgresControlIdentity" },
+        "persistentProviderAdmin": { "$ref": "#/$defs/persistentProviderAdmin" },
+        "remainingReadOnlyControlProviders": { "const": ["cloudflare", "r2"] },
+        "terminalTemporaryControlProviders": { "const": ["postgres", "render"] },
+        "terminalTemporaryControlCredentialsRevoked": { "const": true },
+        "remainingControlCredentialsReadOnly": { "const": true },
+        "runtimeIdentitiesUnchanged": { "const": true },
+        "renderTopologyObservation": { "$ref": "#/$defs/renderTopologyObservation" },
+        "sustainableControlRevalidation": { "$ref": "#/$defs/sustainableControlRevalidation" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "pullRequestCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "number", "state", "draft", "merged", "headCommit", "checkedAt", "evidenceSha256"],
+      "properties": {
+        "repository": { "const": "garymmmjw/QuantGym" },
+        "number": { "const": 130 },
+        "state": { "const": "open" },
+        "draft": { "const": true },
+        "merged": { "const": false },
+        "headCommit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "checkedAt": { "$ref": "#/$defs/timestamp" },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "pullRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before", "after", "unchanged"],
+      "properties": {
+        "before": { "$ref": "#/$defs/pullRequestCheck" },
+        "after": { "$ref": "#/$defs/pullRequestCheck" },
+        "unchanged": { "const": true }
+      }
+    },
+    "cutoverStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "startedAt", "completedAt", "durationMs", "evidenceSha256"],
+      "properties": {
+        "id": { "enum": ["backup", "restore-proof", "restore-target-destroy", "migration", "api-deploy", "pages-deploy", "live-checks", "cleanup", "revoke", "post-revoke-continuity"] },
+        "status": { "const": "pass" },
+        "startedAt": { "$ref": "#/$defs/timestamp" },
+        "completedAt": { "$ref": "#/$defs/timestamp" },
+        "durationMs": { "type": "integer", "minimum": 0, "maximum": 7200000 },
+        "evidenceSha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "cutoverStepBackup": {
+      "allOf": [
+        { "$ref": "#/$defs/cutoverStep" },
+        { "properties": { "id": { "const": "backup" } } }
+      ]
+    },
+    "cutoverStepRestoreProof": {
+      "allOf": [
+        { "$ref": "#/$defs/cutoverStep" },
+        { "properties": { "id": { "const": "restore-proof" } } }
+      ]
+    },
+    "cutoverStepRestoreTargetDestroy": {
+      "allOf": [
+        { "$ref": "#/$defs/cutoverStep" },
+        { "properties": { "id": { "const": "restore-target-destroy" } } }
+      ]
+    },
+    "cutoverStepMigration": {
+      "allOf": [
+        { "$ref": "#/$defs/cutoverStep" },
+        { "properties": { "id": { "const": "migration" } } }
+      ]
+    },
+    "cutoverStepApiDeploy": {
+      "allOf": [
+        { "$ref": "#/$defs/cutoverStep" },
+        { "properties": { "id": { "const": "api-deploy" } } }
+      ]
+    },
+    "cutoverStepPagesDeploy": {
+      "allOf": [
+        { "$ref": "#/$defs/cutoverStep" },
+        { "properties": { "id": { "const": "pages-deploy" } } }
+      ]
+    },
+    "cutoverStepLiveChecks": {
+      "allOf": [
+        { "$ref": "#/$defs/cutoverStep" },
+        { "properties": { "id": { "const": "live-checks" } } }
+      ]
+    },
+    "cutoverStepCleanup": {
+      "allOf": [
+        { "$ref": "#/$defs/cutoverStep" },
+        { "properties": { "id": { "const": "cleanup" } } }
+      ]
+    },
+    "cutoverStepRevoke": {
+      "allOf": [
+        { "$ref": "#/$defs/cutoverStep" },
+        { "properties": { "id": { "const": "revoke" } } }
+      ]
+    },
+    "cutoverStepPostRevokeContinuity": {
+      "allOf": [
+        { "$ref": "#/$defs/cutoverStep" },
+        { "properties": { "id": { "const": "post-revoke-continuity" } } }
+      ]
+    }
+  }
+}
