@@ -65,6 +65,7 @@ jobs:
 
       - name: Verify design-system and isolated-build boundaries
         run: |
+          npm run storybook:build:v2
           npm run check:design-system:v2
           npm run check:frontend-v2-build-isolation
 

@@ -230,6 +230,7 @@ test("Preview CI runs build isolation, design system, full E2E, and Phase 2 aggr
   assert.deepEqual(
     commandsForStep(stepNamed(job, "Verify design-system and isolated-build boundaries")),
     [
+      "npm run storybook:build:v2",
       "npm run check:design-system:v2",
       "npm run check:frontend-v2-build-isolation",
     ],
