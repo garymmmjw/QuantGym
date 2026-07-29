@@ -1,0 +1,499 @@
+{
+  "schemaVersion": 1,
+  "check": "frontend-upgrade-phase2-recovery",
+  "status": "pass",
+  "checkedAt": "2026-07-29T09:21:11.283Z",
+  "commit": "7ccb68441f349dd81aa593d23acb45bc759a3b70",
+  "manifestSha256": "83d654cbc81b5d591af9ebb14bcf86fa4a0f0a4bdfab366126237df85e37f541",
+  "phase1EvidenceLockSha256": "488fcfb1e78d4697ab576c3282a01a42cf8a809853fc079490bd9c8e745c007f",
+  "results": [
+    {
+      "id": "mutation:training.start-or-resume:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:training.start-or-resume:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:training.start-or-resume:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:training.start-or-resume:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:training.start-or-resume:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:training.start-or-resume:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.create:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.create:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.create:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.create:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.create:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.create:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.update-task:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.update-task:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.update-task:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.update-task:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.update-task:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.update-task:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.complete-task:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.complete-task:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.complete-task:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.complete-task:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.complete-task:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:plan.complete-task:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.use-hint:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.use-hint:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.use-hint:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.use-hint:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.use-hint:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.use-hint:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.submit-attempt:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.submit-attempt:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.submit-attempt:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.submit-attempt:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.submit-attempt:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.submit-attempt:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.reveal-solution:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.reveal-solution:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.reveal-solution:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.reveal-solution:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.reveal-solution:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.reveal-solution:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.save-note:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.save-note:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.save-note:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.save-note:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.save-note:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.save-note:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.complete:recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.complete:non-recoverable-error",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.complete:offline-draft",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.complete:permission-denied",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.complete:stale-version-conflict",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.complete:retry",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    },
+    {
+      "id": "mutation:problems.complete:retry-idempotency",
+      "status": "pass",
+      "skipped": false,
+      "retried": false,
+      "flaky": false
+    }
+  ],
+  "visualCases": [],
+  "checks": {
+    "allGatesPassed": true,
+    "noSkippedResults": true,
+    "noRetriedResults": true,
+    "noFlakyResults": true,
+    "idempotencyPassed": true
+  },
+  "counts": {
+    "resultCount": 67,
+    "skippedResultCount": 0,
+    "failedResultCount": 0,
+    "retriedResultCount": 0,
+    "flakyResultCount": 0
+  },
+  "metrics": {
+    "retryIdempotencyGateCount": 1
+  },
+  "failureCodes": []
+}
