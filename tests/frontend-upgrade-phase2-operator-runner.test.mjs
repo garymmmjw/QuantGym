@@ -279,14 +279,15 @@ const journalMetadata = Object.freeze({
   nlink: 1,
 });
 
-test("recovery journal persistence fsyncs the file and renamed directory in order", async () => {
+test("recovery journal resolves the macOS /tmp alias before fsyncing the directory", async () => {
   const events = [];
   const journalPath = "/tmp/quantgym-phase2-durability-test.json";
   const directoryPath = path.dirname(journalPath);
+  const resolvedDirectoryPath = "/private/tmp";
   let temporaryPath;
   const fileOperations = {
     open: async (target, flags, mode) => {
-      if (target === directoryPath) {
+      if (target === resolvedDirectoryPath) {
         events.push("directory-open");
         assert.equal(flags & fsConstants.O_DIRECTORY, fsConstants.O_DIRECTORY);
         assert.equal(flags & fsConstants.O_NOFOLLOW, fsConstants.O_NOFOLLOW);
@@ -327,6 +328,11 @@ test("recovery journal persistence fsyncs the file and renamed directory in orde
       events.push("lstat");
       return journalMetadata;
     },
+    realpath: async (target) => {
+      assert.equal(target, directoryPath);
+      events.push("directory-realpath");
+      return resolvedDirectoryPath;
+    },
     rm: async () => events.push("unexpected-remove"),
   };
 
@@ -343,6 +349,7 @@ test("recovery journal persistence fsyncs the file and renamed directory in orde
     "temporary-sync",
     "temporary-close",
     "rename",
+    "directory-realpath",
     "directory-open",
     "directory-sync",
     "directory-close",
@@ -1038,6 +1045,72 @@ test("SQL-managed PostgreSQL role recovery is idempotent without a temporary pas
   );
 });
 
+test("recovery converges before provider mutation and when PostgreSQL roles were never created", async () => {
+  const source = await readFile(new URL(
+    "../scripts/lib/frontend-upgrade-phase2-operator-adapter.mjs",
+    import.meta.url,
+  ), "utf8");
+
+  const recoveryStart = source.indexOf("const recover = async (context = {}) =>");
+  const recoveryEnd = source.indexOf("const actions = Object.freeze", recoveryStart);
+  const recovery = source.slice(recoveryStart, recoveryEnd);
+  const noBaselineBranch = recovery.indexOf(
+    "} else if (Object.values(recoveryJournal.mutationIntents).some(Boolean)) {",
+  );
+  const mutationTopologyRead = recovery.indexOf(
+    'await readTopology("operator-recovery-no-baseline", { controlOnly: true })',
+    noBaselineBranch,
+  );
+  const noMutationElse = recovery.indexOf(
+    "} else {",
+    mutationTopologyRead,
+  );
+  const noMutationBranch = recovery.indexOf(
+    'recoveryFailures.delete("postgres-binding");',
+    noMutationElse,
+  );
+  const revocationClosure = recovery.indexOf(
+    "const revocationClosure = await runRecoveryRevocationClosure",
+    noMutationBranch,
+  );
+  assert.ok(recoveryStart >= 0);
+  assert.ok(noBaselineBranch >= 0);
+  assert.ok(mutationTopologyRead > noBaselineBranch);
+  assert.ok(noMutationElse > mutationTopologyRead);
+  assert.ok(noMutationBranch > noMutationElse);
+  assert.ok(revocationClosure > noMutationBranch);
+  assert.doesNotMatch(
+    recovery.slice(noMutationBranch, revocationClosure),
+    /readTopology/u,
+  );
+
+  const postgresStart = source.indexOf("const revokePostgresCredentials = async");
+  const postgresFallback = source.indexOf(
+    "recoveryMode\n      && postgresRolesCreated === false",
+    postgresStart,
+  );
+  const fallbackEnd = source.indexOf(
+    "await bindPreviewPostgresInventory(phase);",
+    postgresFallback,
+  );
+  const fallback = source.slice(postgresFallback, fallbackEnd);
+  assert.ok(postgresStart >= 0);
+  assert.ok(postgresFallback > postgresStart);
+  assert.ok(fallbackEnd > postgresFallback);
+  assert.match(fallback, /recoveryJournal\.postgresAccess\.created === false/u);
+  assert.equal(
+    fallback.match(/controlPostgresRolesPresent\(/gu)?.length,
+    1,
+  );
+  assert.match(fallback, /observation < 2/u);
+  assert.match(fallback, /present\.size === 0/u);
+  assert.match(fallback, /stage: "postgres-roles-confirmed-absent"/u);
+  assert.match(
+    fallback,
+    /postgres: \{ control: true, mutation: true, restore: true \}/u,
+  );
+});
+
 test("durable PostgreSQL terminal ack gates Render and avoids Render inventory on recovery", async () => {
   const {
     recoverTerminalPostgresControl,
@@ -1557,6 +1630,156 @@ test("Render credential timing is accepted only from the trusted CLI file", asyn
   await adapter.dispose();
 });
 
+test("provider compatibility uses versioned Render OAuth paths and Cloudflare total_pages", async () => {
+  const source = await readFile(new URL(
+    "../scripts/lib/frontend-upgrade-phase2-operator-adapter.mjs",
+    import.meta.url,
+  ), "utf8");
+
+  const renderStart = source.indexOf("const refreshRenderOauth = async");
+  const renderEnd = source.indexOf("const revokeRenderCredential = async", renderStart);
+  const renderRevocation = source.slice(renderStart, renderEnd);
+  assert.ok(renderStart >= 0);
+  assert.ok(renderEnd > renderStart);
+  assert.match(
+    renderRevocation,
+    /https:\/\/api\.render\.com\/v1\/token\/refresh\//u,
+  );
+  assert.match(
+    renderRevocation,
+    /https:\/\/api\.render\.com\/v1\/oauth\/revoke/u,
+  );
+  assert.doesNotMatch(
+    renderRevocation,
+    /https:\/\/api\.render\.com\/(?:token\/refresh\/|oauth\/revoke)/u,
+  );
+
+  const cloudflareStart = source.indexOf(
+    "const listCloudflareAccountTokenIds = async",
+  );
+  const cloudflareEnd = source.indexOf(
+    "const verifyCloudflareAccountTokenDestroyed = async",
+    cloudflareStart,
+  );
+  const cloudflareInventory = source.slice(cloudflareStart, cloudflareEnd);
+  assert.ok(cloudflareStart >= 0);
+  assert.ok(cloudflareEnd > cloudflareStart);
+  assert.match(cloudflareInventory, /"total_pages"/u);
+  assert.match(
+    cloudflareInventory,
+    /Object\.keys\(resultInfo\)\.every\(\(key\) => resultInfoKeys\.has\(key\)\)/u,
+  );
+  assert.match(
+    cloudflareInventory,
+    /resultInfo\.total_pages === undefined\s+\|\|\s+resultInfo\.total_pages === totalPages/u,
+  );
+});
+
+test("operator compatibility keeps rights versions and tool closures narrowly bounded", async (t) => {
+  const { hashToolClosure, isRightsContentVersion } = PHASE2_OPERATOR_TEST_SUPPORT;
+  assert.equal(isRightsContentVersion("2026-07-27.1"), true);
+  assert.equal(isRightsContentVersion("2026-07-27.10"), true);
+  for (const invalid of [
+    "2026-07-27",
+    "2026-07-27.0",
+    "2026-07-27.01",
+    "2026-07-27.",
+    "2026-07-27.1.",
+    "2026-07-27..1",
+    "release-2026-07-27.1",
+  ]) assert.equal(isRightsContentVersion(invalid), false, invalid);
+
+  const closureRoot = await mkdtemp(path.join(tmpdir(), "quantgym-phase2-tool-closure-"));
+  t.after(() => rm(closureRoot, { force: true, recursive: true }));
+  await Promise.all([
+    writeFile(path.join(closureRoot, "a.bin"), "abc", { mode: 0o600 }),
+    writeFile(path.join(closureRoot, "b.bin"), "def", { mode: 0o600 }),
+  ]);
+  assert.match(await hashToolClosure(closureRoot, { maxTotalBytes: 6 }), /^[0-9a-f]{64}$/u);
+  await assert.rejects(
+    hashToolClosure(closureRoot, { maxTotalBytes: 5 }),
+    (error) => error instanceof Phase2OperatorError
+      && error.code === "TOOL_CLOSURE_INVALID",
+  );
+});
+
+test("candidate CI identity requires suite IDs and the authoritative workflow PR", () => {
+  const {
+    evidenceCheckWorkflowRunId,
+    isEvidenceWorkflowRunIdentity,
+    sharedEvidenceCheckSuiteId,
+  } = (
+    PHASE2_OPERATOR_TEST_SUPPORT
+  );
+  const check = {
+    details_url: "https://github.com/garymmmjw/QuantGym/actions/runs/9001/job/101",
+    check_suite: {
+      id: 7001,
+      head_sha: EVIDENCE_COMMIT,
+      head_branch: "codex/frontend-v2-preview",
+    },
+  };
+  assert.equal(evidenceCheckWorkflowRunId(check, EVIDENCE_COMMIT), "9001");
+  for (const id of [undefined, null, "7001", -1, 0, 1.5]) {
+    assert.throws(
+      () => evidenceCheckWorkflowRunId({
+        ...check,
+        check_suite: { ...check.check_suite, id },
+      }, EVIDENCE_COMMIT),
+      (error) => error instanceof Phase2OperatorError
+        && error.code === "EVIDENCE_HEAD_CI_IDENTITY_INVALID",
+    );
+  }
+  assert.equal(sharedEvidenceCheckSuiteId([check, { ...check }]), 7001);
+  assert.throws(
+    () => sharedEvidenceCheckSuiteId([
+      check,
+      { ...check, check_suite: { ...check.check_suite, id: 7002 } },
+    ]),
+    (error) => error instanceof Phase2OperatorError
+      && error.code === "EVIDENCE_HEAD_CI_IDENTITY_INVALID",
+  );
+
+  const workflowRun = {
+    id: 9001,
+    path: ".github/workflows/frontend-v2-preview.yml",
+    event: "pull_request",
+    head_sha: EVIDENCE_COMMIT,
+    head_branch: "codex/frontend-v2-preview",
+    check_suite_id: 7001,
+    run_attempt: 1,
+    status: "completed",
+    conclusion: "success",
+    pull_requests: [{ number: 130 }],
+  };
+  assert.equal(isEvidenceWorkflowRunIdentity(
+    workflowRun,
+    EVIDENCE_COMMIT,
+    7001,
+    "9001",
+  ), true);
+  assert.equal(isEvidenceWorkflowRunIdentity(
+    workflowRun,
+    EVIDENCE_COMMIT,
+    7002,
+    "9001",
+  ), false);
+  for (const id of [undefined, 0, 9002]) {
+    assert.equal(isEvidenceWorkflowRunIdentity(
+      { ...workflowRun, id },
+      EVIDENCE_COMMIT,
+      7001,
+      "9001",
+    ), false);
+  }
+  for (const pullRequests of [undefined, [], [{ number: 129 }]]) {
+    assert.equal(isEvidenceWorkflowRunIdentity({
+      ...workflowRun,
+      pull_requests: pullRequests,
+    }, EVIDENCE_COMMIT, 7001, "9001"), false);
+  }
+});
+
 test("Python site-packages lock rejects executable closure drift", async (t) => {
   const verify = async ({ expected, sitePackagesPath }) => (
     PHASE2_OPERATOR_TEST_SUPPORT.verifyPythonSitePackagesClosure({
@@ -1637,7 +1860,7 @@ test("Python site-packages lock rejects executable closure drift", async (t) => 
   );
 });
 
-test("missing or mismatched externally locked operator tools fail before every provider request", async (t) => {
+test("candidate gate falls back to workflow-run PR association before tool preflight", async (t) => {
   const journalPath = path.join(
     tmpdir(),
     `quantgym-phase2-recovery-${COMMIT}.json`,
@@ -1810,9 +2033,9 @@ test("missing or mismatched externally locked operator tools fail before every p
               "https://github.com/garymmmjw/QuantGym/actions/runs/9001/job/101"
             ),
             check_suite: {
+              id: 7001,
               head_sha: EVIDENCE_COMMIT,
               head_branch: "codex/frontend-v2-preview",
-              pull_requests: [{ number: 130 }],
             },
           },
           {
@@ -1825,9 +2048,9 @@ test("missing or mismatched externally locked operator tools fail before every p
               "https://github.com/garymmmjw/QuantGym/actions/runs/9001/job/102"
             ),
             check_suite: {
+              id: 7001,
               head_sha: EVIDENCE_COMMIT,
               head_branch: "codex/frontend-v2-preview",
-              pull_requests: [{ number: 130 }],
             },
           },
         ],
@@ -1836,6 +2059,7 @@ test("missing or mismatched externally locked operator tools fail before every p
       payload = {
         id: 9001,
         workflow_id: 42,
+        check_suite_id: 7001,
         path: ".github/workflows/frontend-v2-preview.yml",
         event: "pull_request",
         head_sha: EVIDENCE_COMMIT,

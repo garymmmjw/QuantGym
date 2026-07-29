@@ -146,6 +146,7 @@ const MAX_COMMAND_BYTES = 4 * 1024 * 1024;
 const MAX_R2_OBJECTS = 32;
 const MAX_ARTIFACT_FILES = 4096;
 const MAX_ARTIFACT_FILE_BYTES = 16 * 1024 * 1024;
+const MAX_TOOL_CLOSURE_BYTES = 512 * 1024 * 1024;
 const ARTIFACT_MANIFEST_PATH = ".well-known/quantgym-phase2-artifact-manifest.json";
 const OPERATOR_TOOLCHAIN_LOCK_PATH = "docs/frontend-upgrade/phase-2-operator-toolchain-lock.json";
 const HTTP_TIMEOUT_MS = 20_000;
@@ -153,6 +154,7 @@ const DEPLOY_TIMEOUT_MS = 15 * 60 * 1_000;
 const POLL_INTERVAL_MS = 5_000;
 const HASH_PATTERN = /^[0-9a-f]{64}$/u;
 const SHA_PATTERN = /^[0-9a-f]{40}$/u;
+const RIGHTS_CONTENT_VERSION_PATTERN = /^\d{4}-\d{2}-\d{2}\.[1-9]\d*$/u;
 const ACCOUNT_ID_PATTERN = /^[0-9a-f]{32}$/u;
 const TOKEN_ID_PATTERN = /^[0-9a-f]{32}$/u;
 const SAFE_ROLE_PATTERN = /^qg_phase2_[a-z0-9_]{4,48}$/u;
@@ -342,6 +344,7 @@ const requireCondition = (condition, code, phase) => {
 const RECOVERY_JOURNAL_FILE_OPERATIONS = Object.freeze({
   lstat,
   open,
+  realpath,
   rename,
   rm,
 });
@@ -352,8 +355,11 @@ const syncRecoveryJournalDirectory = async ({
 }) => {
   let directoryHandle;
   try {
+    const resolvedDirectoryPath = typeof fileOperations.realpath === "function"
+      ? await fileOperations.realpath(directoryPath)
+      : directoryPath;
     directoryHandle = await fileOperations.open(
-      directoryPath,
+      resolvedDirectoryPath,
       fsConstants.O_RDONLY
         | (fsConstants.O_DIRECTORY ?? 0)
         | (fsConstants.O_NOFOLLOW ?? 0),
@@ -844,6 +850,57 @@ const normalizeRepository = (value) => clean(value)
   .replace(/\.git$/iu, "")
   .replace(/\/$/u, "")
   .toLowerCase();
+
+const evidenceCheckWorkflowRunId = (check, evidenceHeadCommit) => {
+  const match = new RegExp(
+    `^https://github\\.com/${REPOSITORY.replace("/", "\\/")}`
+      + "/actions/runs/([1-9][0-9]*)(?:/job/[1-9][0-9]*)?$",
+    "u",
+  ).exec(clean(check?.details_url));
+  requireCondition(
+    match !== null
+      && clean(check?.check_suite?.head_sha).toLowerCase() === evidenceHeadCommit
+      && clean(check?.check_suite?.head_branch) === BRANCH
+      && Number.isSafeInteger(check?.check_suite?.id)
+      && check.check_suite.id > 0,
+    "EVIDENCE_HEAD_CI_IDENTITY_INVALID",
+    "candidate-gate",
+  );
+  return match[1];
+};
+
+const sharedEvidenceCheckSuiteId = (checks) => {
+  const suiteIds = [...new Set(checks.map((check) => check?.check_suite?.id))];
+  requireCondition(
+    suiteIds.length === 1
+      && Number.isSafeInteger(suiteIds[0])
+      && suiteIds[0] > 0,
+    "EVIDENCE_HEAD_CI_IDENTITY_INVALID",
+    "candidate-gate",
+  );
+  return suiteIds[0];
+};
+
+const isEvidenceWorkflowRunIdentity = (
+  run,
+  evidenceHeadCommit,
+  expectedCheckSuiteId,
+  expectedRunId,
+) => (
+  Number.isSafeInteger(run?.id)
+  && run.id > 0
+  && String(run.id) === expectedRunId
+  && clean(run?.path) === ".github/workflows/frontend-v2-preview.yml"
+  && clean(run?.event) === "pull_request"
+  && clean(run?.head_sha).toLowerCase() === evidenceHeadCommit
+  && clean(run?.head_branch) === BRANCH
+  && run?.check_suite_id === expectedCheckSuiteId
+  && run?.run_attempt === 1
+  && run?.status === "completed"
+  && run?.conclusion === "success"
+  && Array.isArray(run?.pull_requests)
+  && run.pull_requests.some((pull) => pull?.number === PULL_REQUEST_NUMBER)
+);
 
 const safeUrl = (value, expectedHostname, code, phase) => {
   let parsed;
@@ -1496,8 +1553,17 @@ const toolFile = async (filePath, code, phase, { preserveEntry = false } = {}) =
   return preserveEntry ? path.resolve(filePath) : resolved;
 };
 
-const hashToolClosure = async (root) => {
+const hashToolClosure = async (
+  root,
+  { maxTotalBytes = MAX_TOOL_CLOSURE_BYTES } = {},
+) => {
   const inventory = [];
+  let totalFileBytes = 0;
+  requireCondition(
+    Number.isSafeInteger(maxTotalBytes) && maxTotalBytes > 0,
+    "TOOL_CLOSURE_INVALID",
+    "toolchain-preflight",
+  );
   const visit = async (relative = "") => {
     const entries = await readdir(path.join(root, relative), { withFileTypes: true });
     for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
@@ -1521,8 +1587,11 @@ const hashToolClosure = async (root) => {
         );
         inventory.push({ path: child, target, type: "symlink" });
       } else {
+        totalFileBytes += metadata.size;
         requireCondition(
-          metadata.isFile() && metadata.size <= 32 * 1024 * 1024,
+          metadata.isFile()
+            && metadata.size <= 128 * 1024 * 1024
+            && totalFileBytes <= maxTotalBytes,
           "TOOL_CLOSURE_INVALID",
           "toolchain-preflight",
         );
@@ -3097,7 +3166,7 @@ const verifyRightsCatalog = async (root) => {
   );
   const sourceSlugs = catalog.sources.map((entry) => clean(entry.slug)).sort();
   requireCondition(
-    /^[a-z0-9][a-z0-9-]{2,63}$/u.test(clean(catalog.contentVersion))
+    RIGHTS_CONTENT_VERSION_PATTERN.test(clean(catalog.contentVersion))
       && sourceSlugs.length === new Set(sourceSlugs).size
       && sourceSlugs.every((slug) => /^[a-z0-9][a-z0-9-]{2,63}$/u.test(slug)),
     "RIGHTS_CATALOG_INVALID",
@@ -5958,25 +6027,10 @@ export async function createPhase2OperatorAdapter({
       "EVIDENCE_HEAD_CI_NOT_GREEN",
       "candidate-gate",
     );
-    const workflowRunIds = completedChecks.map((check) => {
-      const match = new RegExp(
-        `^https://github\\.com/${REPOSITORY.replace("/", "\\/")}`
-          + "/actions/runs/([1-9][0-9]*)(?:/job/[1-9][0-9]*)?$",
-        "u",
-      ).exec(clean(check?.details_url));
-      requireCondition(
-        match !== null
-          && clean(check?.check_suite?.head_sha).toLowerCase() === evidenceHeadCommit
-          && clean(check?.check_suite?.head_branch) === BRANCH
-          && Array.isArray(check?.check_suite?.pull_requests)
-          && check.check_suite.pull_requests.some(
-            (pull) => pull?.number === PULL_REQUEST_NUMBER,
-          ),
-        "EVIDENCE_HEAD_CI_IDENTITY_INVALID",
-        "candidate-gate",
-      );
-      return match[1];
-    });
+    const workflowRunIds = completedChecks.map((check) => (
+      evidenceCheckWorkflowRunId(check, evidenceHeadCommit)
+    ));
+    const evidenceCheckSuiteId = sharedEvidenceCheckSuiteId(completedChecks);
     const uniqueWorkflowRunIds = [...new Set(workflowRunIds)];
     requireCondition(
       uniqueWorkflowRunIds.length === 1,
@@ -5987,16 +6041,11 @@ export async function createPhase2OperatorAdapter({
       githubRequest(`/repos/${REPOSITORY}/actions/runs/${runId}`, "candidate-gate")
     )));
     requireCondition(
-      workflowRuns.every((run) => (
-        clean(run?.path) === ".github/workflows/frontend-v2-preview.yml"
-        && clean(run?.event) === "pull_request"
-        && clean(run?.head_sha).toLowerCase() === evidenceHeadCommit
-        && clean(run?.head_branch) === BRANCH
-        && run?.run_attempt === 1
-        && run?.status === "completed"
-        && run?.conclusion === "success"
-        && Array.isArray(run?.pull_requests)
-        && run.pull_requests.some((pull) => pull?.number === PULL_REQUEST_NUMBER)
+      workflowRuns.every((run, index) => isEvidenceWorkflowRunIdentity(
+        run,
+        evidenceHeadCommit,
+        evidenceCheckSuiteId,
+        uniqueWorkflowRunIds[index],
       ))
         && workflowSource.stdout.includes("Node and browser gates")
         && workflowSource.stdout.includes("Python API and migration gates")
@@ -6195,7 +6244,7 @@ export async function createPhase2OperatorAdapter({
   const refreshRenderOauth = async ({ refreshToken, phase, code }) => {
     let response;
     try {
-      response = await renderFetchImpl("https://api.render.com/token/refresh/", {
+      response = await renderFetchImpl("https://api.render.com/v1/token/refresh/", {
         method: "POST",
         headers: {
           accept: "application/json",
@@ -6298,7 +6347,7 @@ export async function createPhase2OperatorAdapter({
         await fetchWithBearer({
           token: accessToken,
           requestFetch: renderFetchImpl,
-          url: "https://api.render.com/oauth/revoke",
+          url: "https://api.render.com/v1/oauth/revoke",
           method: "POST",
           acceptedStatuses: [204],
           phase,
@@ -8291,13 +8340,27 @@ export async function createPhase2OperatorAdapter({
       const resultInfo = payload?.result_info;
       const totalCount = Number(resultInfo?.total_count);
       const totalPages = Math.max(1, Math.ceil(totalCount / 50));
+      const resultInfoKeys = new Set([
+        "page",
+        "per_page",
+        "count",
+        "total_count",
+        "total_pages",
+      ]);
       requireCondition(
-        exactKeys(resultInfo, ["page", "per_page", "count", "total_count"])
+        isPlainObject(resultInfo)
+          && ["page", "per_page", "count", "total_count"]
+            .every((key) => Object.hasOwn(resultInfo, key))
+          && Object.keys(resultInfo).every((key) => resultInfoKeys.has(key))
           && resultInfo.page === page
           && resultInfo.per_page === 50
           && resultInfo.count === payload.result.length
           && Number.isSafeInteger(totalCount)
           && totalCount >= ids.length
+          && (
+            resultInfo.total_pages === undefined
+            || resultInfo.total_pages === totalPages
+          )
           && totalPages <= 100,
         "CLOUDFLARE_TOKEN_LIST_INVALID",
         phase,
@@ -8457,10 +8520,19 @@ export async function createPhase2OperatorAdapter({
     const recoveryConvergence = recoveryJournal.revocationAttempts.cloudflare === true;
     if (providerState === "absent") {
       requireCondition(
-        recoveryConvergence,
+        recoveryConvergence || recoveryMode,
         "CLOUDFLARE_REVOKE_SEQUENCE_INVALID",
         phase,
       );
+      if (!recoveryConvergence) {
+        // Recovery may resume after an independently confirmed compensating
+        // self-revocation. The control credential still proves both detail and
+        // inventory absence below, while the revoked bearer must return 401.
+        await updateRecoveryJournal((current) => ({
+          stage: "cloudflare-revoke-attempted",
+          revocationAttempts: { ...current.revocationAttempts, cloudflare: true },
+        }));
+      }
     }
     if (providerState === "active") {
       if (!recoveryConvergence) {
@@ -8570,6 +8642,42 @@ export async function createPhase2OperatorAdapter({
     { includeControl = false } = {},
   ) => {
     if (revocationState.postgres && !includeControl && !recoveryMode) return;
+    if (
+      recoveryMode
+      && postgresRolesCreated === false
+      && recoveryJournal.postgresAccess.created === false
+    ) {
+      for (let observation = 0; observation < 2; observation += 1) {
+        const present = await controlPostgresRolesPresent(
+          Object.values(credentials.postgresRoles),
+          phase,
+        );
+        requireCondition(
+          present.size === 0,
+          "POSTGRES_REVOKE_VERIFY_FAILED",
+          phase,
+        );
+        if (observation === 0) await delay(2_000);
+      }
+      revocationState.postgres = true;
+      await updateRecoveryJournal((current) => ({
+        stage: "postgres-roles-confirmed-absent",
+        revocationAttempts: {
+          ...current.revocationAttempts,
+          postgres: { control: true, mutation: true, restore: true },
+        },
+        revocations: {
+          ...current.revocations,
+          postgres: { control: true, mutation: true, restore: true },
+        },
+      }));
+      return {
+        revoked: true,
+        controlContinuity: true,
+        requiredRolesAbsent: true,
+        terminalControlRetained: false,
+      };
+    }
     await bindPreviewPostgresInventory(phase);
     stableDatabaseOwner ??= await discoverStableDatabaseOwner(phase);
     const result = await revocationCapability.revokePostgres(Object.freeze({
@@ -9815,7 +9923,7 @@ export async function createPhase2OperatorAdapter({
           "database-restore",
         ]) recoveryFailures.delete(resolvedFailure);
       });
-    } else {
+    } else if (Object.values(recoveryJournal.mutationIntents).some(Boolean)) {
       await attemptRecovery(
         "topology-verification",
         async () => {
@@ -9823,6 +9931,13 @@ export async function createPhase2OperatorAdapter({
           recoveryFailures.delete("postgres-binding");
         },
       );
+    } else {
+      // The candidate gate persists the journal before any provider mutation can
+      // be attempted. With no baseline and no mutation intent, the journal is
+      // sufficient proof that there is no provider state to roll back. This also
+      // lets recovery converge after terminal credential revocation has already
+      // made the read-only Render credential unavailable.
+      recoveryFailures.delete("postgres-binding");
     }
     const revocationClosure = await runRecoveryRevocationClosure({
       attempt: attemptRecovery,
@@ -10139,8 +10254,13 @@ export const PHASE2_OPERATOR_TEST_SUPPORT = Object.freeze({
   annotateMutationRevocationFailure,
   createR2CredentialRouter,
   createRestoreTargetBinding,
+  evidenceCheckWorkflowRunId,
   inspectBackupFileNoFollow,
   inspectPythonSitePackagesClosure,
+  hashToolClosure,
+  isEvidenceWorkflowRunIdentity,
+  isRightsContentVersion: (value) => RIGHTS_CONTENT_VERSION_PATTERN.test(clean(value)),
+  sharedEvidenceCheckSuiteId,
   isR2AccessDenied,
   persistRecoveryJournalFile,
   recoverTerminalPostgresControl,
