@@ -343,7 +343,11 @@ test("facts staged before evidence write resume locally without provider access"
   });
   const result = await resumeFrontendUpgradePhase2ProviderEvidenceFinalization({
     expectedCommit: COMMIT,
-    [TEST_ONLY_PHASE2_PROVIDER_EVIDENCE]: { root, recoveryJournalPath: journalPath },
+    [TEST_ONLY_PHASE2_PROVIDER_EVIDENCE]: {
+      root,
+      recoveryJournalPath: journalPath,
+      now: NOW,
+    },
   });
   assert.equal(result.resumed, true);
   assert.equal(result.evidence.applicationCommit, COMMIT);
@@ -366,7 +370,11 @@ test("terminal intent before Render acknowledgement defers to operator recovery"
   });
   const result = await resumeFrontendUpgradePhase2ProviderEvidenceFinalization({
     expectedCommit: COMMIT,
-    [TEST_ONLY_PHASE2_PROVIDER_EVIDENCE]: { root, recoveryJournalPath: journalPath },
+    [TEST_ONLY_PHASE2_PROVIDER_EVIDENCE]: {
+      root,
+      recoveryJournalPath: journalPath,
+      now: NOW,
+    },
   });
   assert.deepEqual(result, { resumed: false });
   assert.equal(JSON.parse(await readFile(journalPath, "utf8")).controlRenderRevoked, false);
@@ -389,7 +397,11 @@ test("evidence written before journal ack resumes by exact byte comparison", asy
   });
   const first = await resumeFrontendUpgradePhase2ProviderEvidenceFinalization({
     expectedCommit: COMMIT,
-    [TEST_ONLY_PHASE2_PROVIDER_EVIDENCE]: { root, recoveryJournalPath: journalPath },
+    [TEST_ONLY_PHASE2_PROVIDER_EVIDENCE]: {
+      root,
+      recoveryJournalPath: journalPath,
+      now: NOW,
+    },
   });
   await writeFinalizationJournal({
     journalPath,
@@ -399,7 +411,11 @@ test("evidence written before journal ack resumes by exact byte comparison", asy
   });
   const second = await resumeFrontendUpgradePhase2ProviderEvidenceFinalization({
     expectedCommit: COMMIT,
-    [TEST_ONLY_PHASE2_PROVIDER_EVIDENCE]: { root, recoveryJournalPath: journalPath },
+    [TEST_ONLY_PHASE2_PROVIDER_EVIDENCE]: {
+      root,
+      recoveryJournalPath: journalPath,
+      now: NOW,
+    },
   });
   assert.equal(second.resumed, true);
   assert.equal(second.sha256, first.sha256);

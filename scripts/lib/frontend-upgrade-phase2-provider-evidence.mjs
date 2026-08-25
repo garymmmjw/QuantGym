@@ -2549,7 +2549,8 @@ export async function resumeFrontendUpgradePhase2ProviderEvidenceFinalization(
   const { journal, metadata } = loaded;
   const { capturedAt, facts, evidenceSha256, status } = journal.finalization;
   const evidence = evidenceFromStagedFacts({ expectedCommit, capturedAt, facts });
-  const nowMs = Date.now();
+  const nowMs = testOnly?.now instanceof Date ? testOnly.now.getTime() : Date.now();
+  if (!Number.isFinite(nowMs)) throw new Error("provider evidence time is invalid");
   const failures = validatePhase2ProviderEvidence(evidence, { expectedCommit, nowMs });
   if (failures.length > 0) {
     throw new Error(`Phase 2 staged provider facts failed: ${failures[0]}`);

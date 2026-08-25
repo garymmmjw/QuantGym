@@ -739,6 +739,7 @@ test("real terminal-intent journal reader reaches recovery before Render acknowl
         [TEST_ONLY_PHASE2_PROVIDER_EVIDENCE]: {
           root: providerEvidenceRoot,
           recoveryJournalPath: journalPath,
+          now: new Date(capturedAt),
         },
       })
     );

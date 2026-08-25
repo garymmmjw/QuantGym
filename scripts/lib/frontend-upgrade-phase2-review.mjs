@@ -504,7 +504,7 @@ export function validatePhase2ReviewPrerequisites({
   });
   if (providerFailures.length > 0) failures.push("provider_evidence_not_ready");
   try {
-    validatePhase2AggregateSummary(aggregateSummary);
+    validatePhase2AggregateSummary(aggregateSummary, { nowMs });
   } catch {
     failures.push("aggregate_summary_invalid");
   }

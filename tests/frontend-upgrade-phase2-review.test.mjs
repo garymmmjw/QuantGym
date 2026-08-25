@@ -302,6 +302,7 @@ const createInputs = async ({ mutateLocal } = {}) => {
     componentSummarySha256,
     reviewImageSha256,
     visualReviewReceiptSha256,
+    nowMs: NOW.getTime(),
   });
   const providerEvidence = await createProviderEvidence();
   const providerEvidenceBytes = Buffer.from(

@@ -292,11 +292,12 @@ test("builds ready-for-review only from a fully valid result and never self-acce
     ),
     reviewImageSha256: manifest.finalVisualCases.map(({ id }) => hashFor(id)),
     visualReviewReceiptSha256: fixture.visualReviewReceiptSha256,
+    nowMs,
   });
   assert.equal(summary.status, "ready-for-review");
   assert.equal(summary.failureCodes.length, 0);
   assert.equal(JSON.stringify(summary).includes('"accepted"'), false);
-  assert.equal(validatePhase2AggregateSummary(summary), summary);
+  assert.equal(validatePhase2AggregateSummary(summary, { nowMs }), summary);
 });
 
 test("read-only aggregate matching rejects stale, tampered, and non-canonical tracked bytes", () => {
@@ -365,6 +366,7 @@ test("cannot forge ready-for-review by passing a hand-written validation object"
     ),
     reviewImageSha256: manifest.finalVisualCases.map(({ id }) => hashFor(id)),
     visualReviewReceiptSha256: fixture.visualReviewReceiptSha256,
+    nowMs,
   });
   assert.equal(forged.status, "not-ready");
   assert.deepEqual(forged.failureCodes, ["internal_check_failed"]);
@@ -383,19 +385,20 @@ test("ready aggregate validator rejects stale time and incomplete zero-outcome c
     ),
     reviewImageSha256: manifest.finalVisualCases.map(({ id }) => hashFor(id)),
     visualReviewReceiptSha256: fixture.visualReviewReceiptSha256,
+    nowMs,
   });
   assert.throws(
     () => validatePhase2AggregateSummary({
       ...summary,
       checkedAt: "2026-07-01T00:00:00.000Z",
-    }),
+    }, { nowMs }),
     /aggregate output is invalid/u,
   );
   assert.throws(
     () => validatePhase2AggregateSummary({
       ...summary,
       counts: { ...summary.counts, skippedResults: 1 },
-    }),
+    }, { nowMs }),
     /ready aggregate output is invalid/u,
   );
 });
@@ -437,6 +440,7 @@ test("missing current evidence produces deterministic not-ready output", () => {
     validation: first,
     manifestSha256,
     phase1EvidenceLockSha256,
+    nowMs,
   });
   assert.equal(summary.status, "not-ready");
   assert.equal(summary.counts.passedGates, 0);
