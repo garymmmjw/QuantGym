@@ -5280,6 +5280,7 @@ export async function createPhase2OperatorAdapter({
   };
 
   const listPagesDeployments = async (projectName, phase) => {
+    const perPage = 25;
     const deployments = [];
     const ids = new Set();
     for (let page = 1; page <= 100; page += 1) {
@@ -5288,7 +5289,7 @@ export async function createPhase2OperatorAdapter({
         suffix: (
           `/accounts/${config.cloudflareAccountId}`
           + `/pages/projects/${encodeURIComponent(projectName)}`
-          + `/deployments?page=${page}&per_page=100`
+          + `/deployments?page=${page}&per_page=${perPage}`
         ),
         phase,
       });
@@ -5310,7 +5311,7 @@ export async function createPhase2OperatorAdapter({
       const totalPages = Number(payload?.result_info?.total_pages);
       if (
         (Number.isSafeInteger(totalPages) && totalPages >= 1 && page >= totalPages)
-        || (!Number.isSafeInteger(totalPages) && payload.result.length < 100)
+        || (!Number.isSafeInteger(totalPages) && payload.result.length < perPage)
       ) return deployments;
     }
     fail("CLOUDFLARE_PAGES_DEPLOYMENTS_INVALID", phase);

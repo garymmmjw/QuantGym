@@ -2001,6 +2001,13 @@ test("candidate gate falls back to workflow-run PR association before tool prefl
     const pathname = parsed.pathname;
     let payload;
     if (parsed.hostname === "api.cloudflare.com") {
+      assert.equal(
+        pathname,
+        `/client/v4/accounts/${OPERATOR_CONFIG.cloudflareAccountId}`
+          + "/pages/projects/quantgym-beta/deployments",
+      );
+      assert.equal(parsed.searchParams.get("page"), "1");
+      assert.equal(parsed.searchParams.get("per_page"), "25");
       const skipped = (commit, id) => ({
         id,
         environment: "preview",
