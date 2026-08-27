@@ -859,14 +859,76 @@ const evidenceCheckWorkflowRunId = (check, evidenceHeadCommit) => {
   ).exec(clean(check?.details_url));
   requireCondition(
     match !== null
-      && clean(check?.check_suite?.head_sha).toLowerCase() === evidenceHeadCommit
-      && clean(check?.check_suite?.head_branch) === BRANCH
+      && clean(check?.head_sha).toLowerCase() === evidenceHeadCommit
+      && clean(check?.app?.slug) === "github-actions"
       && Number.isSafeInteger(check?.check_suite?.id)
       && check.check_suite.id > 0,
     "EVIDENCE_HEAD_CI_IDENTITY_INVALID",
     "candidate-gate",
   );
   return match[1];
+};
+
+const selectLatestEvidenceCheckSet = (
+  checkRuns,
+  evidenceHeadCommit,
+  requiredCheckNames,
+) => {
+  const checks = Array.isArray(checkRuns?.check_runs) ? checkRuns.check_runs : [];
+  const totalCount = checkRuns?.total_count;
+  requireCondition(
+    Number.isSafeInteger(totalCount)
+      && totalCount >= requiredCheckNames.length
+      && totalCount <= 100
+      && checks.length === totalCount
+      && checks.every((check) => (
+        clean(check?.head_sha).toLowerCase() === evidenceHeadCommit
+      )),
+    "EVIDENCE_HEAD_CI_NOT_GREEN",
+    "candidate-gate",
+  );
+  const requiredNames = new Set(requiredCheckNames);
+  const githubChecks = checks.filter((check) => clean(check?.app?.slug) === "github-actions");
+  requireCondition(
+    githubChecks.filter((check) => requiredNames.has(clean(check?.name))).length
+      >= requiredCheckNames.length,
+    "EVIDENCE_HEAD_CI_NOT_GREEN",
+    "candidate-gate",
+  );
+  const groups = new Map();
+  for (const check of githubChecks) {
+    const workflowRunId = evidenceCheckWorkflowRunId(check, evidenceHeadCommit);
+    const checkSuiteId = check.check_suite.id;
+    const key = `${workflowRunId}:${checkSuiteId}`;
+    const group = groups.get(key) ?? { checkSuiteId, checks: [], workflowRunId };
+    group.checks.push(check);
+    groups.set(key, group);
+  }
+  const orderedGroups = [...groups.values()].sort((left, right) => {
+    const leftId = BigInt(left.workflowRunId);
+    const rightId = BigInt(right.workflowRunId);
+    if (leftId !== rightId) return leftId < rightId ? -1 : 1;
+    return left.checkSuiteId - right.checkSuiteId;
+  }).filter((group) => group.checks.some((check) => (
+    requiredNames.has(clean(check?.name))
+  )));
+  const selected = orderedGroups.at(-1);
+  requireCondition(
+    selected !== undefined
+      && selected.checks.length === requiredCheckNames.length
+      && canonicalJson(selected.checks.map((check) => clean(check?.name)).sort())
+        === canonicalJson([...requiredCheckNames].sort())
+      && selected.checks.every((check) => (
+        check.status === "completed" && check.conclusion === "success"
+      )),
+    "EVIDENCE_HEAD_CI_NOT_GREEN",
+    "candidate-gate",
+  );
+  return Object.freeze({
+    checkSuiteId: sharedEvidenceCheckSuiteId(selected.checks),
+    checks: Object.freeze([...selected.checks]),
+    workflowRunId: selected.workflowRunId,
+  });
 };
 
 const sharedEvidenceCheckSuiteId = (checks) => {
@@ -6013,32 +6075,15 @@ export async function createPhase2OperatorAdapter({
       "candidate-gate",
     );
     const requiredCheckNames = ["Node and browser gates", "Python API and migration gates"];
-    const completedChecks = Array.isArray(checkRuns?.check_runs) ? checkRuns.check_runs : [];
-    requireCondition(
-      checkRuns?.total_count === 2
-        && completedChecks.length === 2
-        && canonicalJson(completedChecks.map((check) => clean(check?.name)).sort())
-          === canonicalJson([...requiredCheckNames].sort())
-        && completedChecks.every((check) => (
-          clean(check?.head_sha).toLowerCase() === evidenceHeadCommit
-          && clean(check?.app?.slug) === "github-actions"
-          && check.status === "completed"
-          && check.conclusion === "success"
-        )),
-      "EVIDENCE_HEAD_CI_NOT_GREEN",
-      "candidate-gate",
+    const selectedCheckSet = selectLatestEvidenceCheckSet(
+      checkRuns,
+      evidenceHeadCommit,
+      requiredCheckNames,
     );
-    const workflowRunIds = completedChecks.map((check) => (
-      evidenceCheckWorkflowRunId(check, evidenceHeadCommit)
-    ));
-    const evidenceCheckSuiteId = sharedEvidenceCheckSuiteId(completedChecks);
-    const uniqueWorkflowRunIds = [...new Set(workflowRunIds)];
-    requireCondition(
-      uniqueWorkflowRunIds.length === 1,
-      "EVIDENCE_HEAD_CI_IDENTITY_INVALID",
-      "candidate-gate",
-    );
-    const workflowRuns = await Promise.all(uniqueWorkflowRunIds.map((runId) => (
+    const completedChecks = selectedCheckSet.checks;
+    const evidenceCheckSuiteId = selectedCheckSet.checkSuiteId;
+    const workflowRunIds = [selectedCheckSet.workflowRunId];
+    const workflowRuns = await Promise.all(workflowRunIds.map((runId) => (
       githubRequest(`/repos/${REPOSITORY}/actions/runs/${runId}`, "candidate-gate")
     )));
     requireCondition(
@@ -6046,7 +6091,7 @@ export async function createPhase2OperatorAdapter({
         run,
         evidenceHeadCommit,
         evidenceCheckSuiteId,
-        uniqueWorkflowRunIds[index],
+        workflowRunIds[index],
       ))
         && workflowSource.stdout.includes("Node and browser gates")
         && workflowSource.stdout.includes("Python API and migration gates")
@@ -10261,6 +10306,7 @@ export const PHASE2_OPERATOR_TEST_SUPPORT = Object.freeze({
   hashToolClosure,
   isEvidenceWorkflowRunIdentity,
   isRightsContentVersion: (value) => RIGHTS_CONTENT_VERSION_PATTERN.test(clean(value)),
+  selectLatestEvidenceCheckSet,
   sharedEvidenceCheckSuiteId,
   isR2AccessDenied,
   persistRecoveryJournalFile,

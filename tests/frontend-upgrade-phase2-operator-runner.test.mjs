@@ -1708,17 +1708,19 @@ test("candidate CI identity requires suite IDs and the authoritative workflow PR
   const {
     evidenceCheckWorkflowRunId,
     isEvidenceWorkflowRunIdentity,
+    selectLatestEvidenceCheckSet,
     sharedEvidenceCheckSuiteId,
   } = (
     PHASE2_OPERATOR_TEST_SUPPORT
   );
   const check = {
+    name: "Node and browser gates",
+    head_sha: EVIDENCE_COMMIT,
+    app: { slug: "github-actions" },
+    status: "completed",
+    conclusion: "success",
     details_url: "https://github.com/garymmmjw/QuantGym/actions/runs/9001/job/101",
-    check_suite: {
-      id: 7001,
-      head_sha: EVIDENCE_COMMIT,
-      head_branch: "codex/frontend-v2-preview",
-    },
+    check_suite: { id: 7001 },
   };
   assert.equal(evidenceCheckWorkflowRunId(check, EVIDENCE_COMMIT), "9001");
   for (const id of [undefined, null, "7001", -1, 0, 1.5]) {
@@ -1740,6 +1742,85 @@ test("candidate CI identity requires suite IDs and the authoritative workflow PR
     (error) => error instanceof Phase2OperatorError
       && error.code === "EVIDENCE_HEAD_CI_IDENTITY_INVALID",
   );
+  for (const invalid of [
+    { ...check, head_sha: COMMIT },
+    { ...check, app: { slug: "third-party" } },
+    {
+      ...check,
+      details_url: "https://github.com/another-owner/QuantGym/actions/runs/9001/job/101",
+    },
+  ]) {
+    assert.throws(
+      () => evidenceCheckWorkflowRunId(invalid, EVIDENCE_COMMIT),
+      (error) => error instanceof Phase2OperatorError
+        && error.code === "EVIDENCE_HEAD_CI_IDENTITY_INVALID",
+    );
+  }
+
+  const pythonCheck = {
+    ...check,
+    name: "Python API and migration gates",
+    details_url: "https://github.com/garymmmjw/QuantGym/actions/runs/9001/job/102",
+  };
+  const olderChecks = [check, pythonCheck].map((entry, index) => ({
+    ...entry,
+    details_url: `https://github.com/garymmmjw/QuantGym/actions/runs/9000/job/${90 + index}`,
+    check_suite: { id: 7000 },
+  }));
+  const selected = selectLatestEvidenceCheckSet({
+    total_count: 4,
+    check_runs: [...olderChecks, check, pythonCheck],
+  }, EVIDENCE_COMMIT, ["Node and browser gates", "Python API and migration gates"]);
+  assert.equal(selected.workflowRunId, "9001");
+  assert.equal(selected.checkSuiteId, 7001);
+  assert.deepEqual(selected.checks.map((entry) => entry.name).sort(), [
+    "Node and browser gates",
+    "Python API and migration gates",
+  ]);
+  assert.throws(
+    () => selectLatestEvidenceCheckSet({
+      total_count: 4,
+      check_runs: [...olderChecks, check, { ...pythonCheck, conclusion: "failure" }],
+    }, EVIDENCE_COMMIT, ["Node and browser gates", "Python API and migration gates"]),
+    (error) => error instanceof Phase2OperatorError
+      && error.code === "EVIDENCE_HEAD_CI_NOT_GREEN",
+  );
+  for (const payload of [
+    { total_count: 3, check_runs: [...olderChecks, check, pythonCheck] },
+    {
+      total_count: 3,
+      check_runs: [
+        ...olderChecks,
+        {
+          ...check,
+          details_url: "https://github.com/garymmmjw/QuantGym/actions/runs/9002/job/201",
+          check_suite: { id: 7002 },
+        },
+      ],
+    },
+    {
+      total_count: 5,
+      check_runs: [...olderChecks, check, pythonCheck, { ...check, name: "Lint" }],
+    },
+    {
+      total_count: 4,
+      check_runs: [...olderChecks, check, {
+        ...check,
+        details_url: "https://github.com/garymmmjw/QuantGym/actions/runs/9001/job/102",
+      }],
+    },
+    { total_count: 101, check_runs: Array.from({ length: 101 }, () => check) },
+  ]) {
+    assert.throws(
+      () => selectLatestEvidenceCheckSet(
+        payload,
+        EVIDENCE_COMMIT,
+        ["Node and browser gates", "Python API and migration gates"],
+      ),
+      (error) => error instanceof Phase2OperatorError
+        && error.code === "EVIDENCE_HEAD_CI_NOT_GREEN",
+    );
+  }
 
   const workflowRun = {
     id: 9001,
@@ -1773,6 +1854,10 @@ test("candidate CI identity requires suite IDs and the authoritative workflow PR
       "9001",
     ), false);
   }
+  assert.equal(isEvidenceWorkflowRunIdentity({
+    ...workflowRun,
+    run_attempt: 2,
+  }, EVIDENCE_COMMIT, 7001, "9001"), false);
   for (const pullRequests of [undefined, [], [{ number: 129 }]]) {
     assert.equal(isEvidenceWorkflowRunIdentity({
       ...workflowRun,
@@ -2040,11 +2125,7 @@ test("candidate gate falls back to workflow-run PR association before tool prefl
             details_url: (
               "https://github.com/garymmmjw/QuantGym/actions/runs/9001/job/101"
             ),
-            check_suite: {
-              id: 7001,
-              head_sha: EVIDENCE_COMMIT,
-              head_branch: "codex/frontend-v2-preview",
-            },
+            check_suite: { id: 7001 },
           },
           {
             name: "Python API and migration gates",
@@ -2055,11 +2136,7 @@ test("candidate gate falls back to workflow-run PR association before tool prefl
             details_url: (
               "https://github.com/garymmmjw/QuantGym/actions/runs/9001/job/102"
             ),
-            check_suite: {
-              id: 7001,
-              head_sha: EVIDENCE_COMMIT,
-              head_branch: "codex/frontend-v2-preview",
-            },
+            check_suite: { id: 7001 },
           },
         ],
       };
