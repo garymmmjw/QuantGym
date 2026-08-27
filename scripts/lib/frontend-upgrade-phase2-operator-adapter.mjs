@@ -3606,6 +3606,15 @@ const createDetachedCandidateArtifact = async ({
     await verifyDetachedCandidateSource({ sourceDirectory, commit, commandRunner });
     const npmHome = path.join(temporaryDirectory, "npm-home");
     await mkdir(npmHome, { mode: 0o700 });
+    const npmGlobalConfig = path.join(npmHome, "global.npmrc");
+    const npmUserConfig = path.join(npmHome, "user.npmrc");
+    await Promise.all([
+      writeFile(npmGlobalConfig, "", { flag: "wx", mode: 0o600 }),
+      writeFile(npmUserConfig, "", { flag: "wx", mode: 0o600 }),
+    ]).catch(() => fail(
+      "CANDIDATE_DEPENDENCIES_INVALID",
+      "candidate-artifact",
+    ));
     await runSafeCommand(commandRunner, {
       file: process.execPath,
       args: [
@@ -3622,8 +3631,8 @@ const createDetachedCandidateArtifact = async ({
         LANG: "C",
         LC_ALL: "C",
         NODE_OPTIONS: "",
-        NPM_CONFIG_GLOBALCONFIG: "/dev/null",
-        NPM_CONFIG_USERCONFIG: "/dev/null",
+        NPM_CONFIG_GLOBALCONFIG: npmGlobalConfig,
+        NPM_CONFIG_USERCONFIG: npmUserConfig,
         PATH: "/usr/bin:/bin",
       },
       timeoutMs: 15 * 60 * 1_000,

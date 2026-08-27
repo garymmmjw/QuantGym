@@ -1540,6 +1540,21 @@ test("candidate artifact manifest rejects any byte drift before deployment", asy
   );
 });
 
+test("candidate dependency install isolates npm global and user configuration", async () => {
+  const source = await readFile(new URL(
+    "../scripts/lib/frontend-upgrade-phase2-operator-adapter.mjs",
+    import.meta.url,
+  ), "utf8");
+  assert.match(source, /const npmGlobalConfig = path\.join\(npmHome, "global\.npmrc"\)/u);
+  assert.match(source, /const npmUserConfig = path\.join\(npmHome, "user\.npmrc"\)/u);
+  assert.match(source, /NPM_CONFIG_GLOBALCONFIG: npmGlobalConfig/u);
+  assert.match(source, /NPM_CONFIG_USERCONFIG: npmUserConfig/u);
+  assert.doesNotMatch(
+    source,
+    /NPM_CONFIG_(?:GLOBAL|USER)CONFIG:\s*"\/dev\/null"/u,
+  );
+});
+
 test("failure formatter exposes only safe recovery stages and action statuses", () => {
   const error = new Error("raw-provider-secret-must-never-print");
   error.failureReport = {
