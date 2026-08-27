@@ -758,10 +758,20 @@ test("schema fixes ordered unique IDs and explicit step/total cutover duration c
   assert.ok(validatePhase2ProviderEvidenceSchema(unbounded).some((failure) => (
     failure.includes("duration bounds")
   )));
+
+  const internalProductionLlm = structuredClone(schema);
+  internalProductionLlm.$defs.productionAnchor.properties.services
+    .prefixItems[1].allOf[1].properties.visibility.const = "internal";
+  assert.ok(validatePhase2ProviderEvidenceSchema(internalProductionLlm).some((failure) => (
+    failure.includes("service topology inventory")
+  )));
 });
 
 test("relationship validator requires complete Preview LLM and Production service topology", async () => {
   let fixture = await makeEvidence();
+  assert.equal(fixture.productionContinuity.before.services[1].visibility, "public");
+  assert.equal(fixture.productionContinuity.after.services[1].visibility, "public");
+  assert.equal(fixture.postRevokeContinuity.previewAnchor.llmVisibility, "internal");
   fixture.postRevokeContinuity.previewAnchor.llmVisibility = "public";
   expectFailure(fixture, "post-revoke Preview anchor is invalid");
 
@@ -777,7 +787,7 @@ test("relationship validator requires complete Preview LLM and Production servic
   expectFailure(fixture, "Production after Production service anchor inventory mismatch");
 
   fixture = await makeEvidence();
-  fixture.productionContinuity.after.services[1].visibility = "public";
+  fixture.productionContinuity.after.services[1].visibility = "internal";
   expectFailure(fixture, "Production after Production quantgym-llm service anchor is invalid");
 });
 

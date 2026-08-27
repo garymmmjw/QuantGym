@@ -438,7 +438,7 @@
             {
               "allOf": [
                 { "$ref": "#/$defs/productionServiceAnchor" },
-                { "properties": { "name": { "const": "quantgym-llm" }, "visibility": { "const": "internal" } } }
+                { "properties": { "name": { "const": "quantgym-llm" }, "visibility": { "const": "public" } } }
               ]
             }
           ],

@@ -388,7 +388,7 @@ const requireProductionAnchor = (anchor, resources, expectedCommit, label) => {
       || !HASH_PATTERN.test(service.configurationSha256 ?? "")
       || service.repository !== "garymmmjw/QuantGym"
       || service.branch !== "main"
-      || service.visibility !== (name === "quantgym-api" ? "public" : "internal")
+      || service.visibility !== "public"
       || typeof service.automaticDeploysEnabled !== "boolean"
       || !SHA_PATTERN.test(service.liveDeploymentCommit ?? "")
       || service.live !== true

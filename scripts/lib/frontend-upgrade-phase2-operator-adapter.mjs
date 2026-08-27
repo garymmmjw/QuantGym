@@ -5519,7 +5519,7 @@ export async function createPhase2OperatorAdapter({
         && renderVisibility(previewApi, "TOPOLOGY_CONTROL_INVALID", phase) === "public"
         && renderVisibility(previewLlm, "TOPOLOGY_CONTROL_INVALID", phase) === "internal"
         && renderVisibility(productionApi, "TOPOLOGY_CONTROL_INVALID", phase) === "public"
-        && renderVisibility(productionLlm, "TOPOLOGY_CONTROL_INVALID", phase) === "internal"
+        && renderVisibility(productionLlm, "TOPOLOGY_CONTROL_INVALID", phase) === "public"
         && previewPages.source?.type === "github"
         && previewPages.source?.config?.owner === "garymmmjw"
         && previewPages.source?.config?.repo_name === "QuantGym"

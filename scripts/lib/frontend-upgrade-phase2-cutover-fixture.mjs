@@ -120,7 +120,7 @@ export function createPhase2CutoverDryRunFixture({
         configurationSha256: digest("fixture:production:llm-config"),
         repository: "garymmmjw/QuantGym",
         branch: "main",
-        visibility: "internal",
+        visibility: "public",
         automaticDeploysEnabled: true,
         liveDeploymentCommit: "3".repeat(40),
         live: true,

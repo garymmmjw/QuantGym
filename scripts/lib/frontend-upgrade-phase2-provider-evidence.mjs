@@ -395,7 +395,7 @@ const validateProductionAnchor = (
         && validateHash(service?.configurationSha256)
         && service?.repository === "garymmmjw/QuantGym"
         && service?.branch === "main"
-        && service?.visibility === (name === "quantgym-api" ? "public" : "internal")
+        && service?.visibility === "public"
         && typeof service?.automaticDeploysEnabled === "boolean"
         && SHA_PATTERN.test(service?.liveDeploymentCommit ?? "")
         && service?.live === true,
@@ -585,6 +585,10 @@ export function validatePhase2ProviderEvidenceSchema(schema) {
         === PRODUCTION_SERVICE_NAMES.length
       && schema.$defs?.productionAnchor?.properties?.services?.maxItems
         === PRODUCTION_SERVICE_NAMES.length
+      && schema.$defs?.productionAnchor?.properties?.services?.prefixItems?.[0]
+        ?.allOf?.[1]?.properties?.visibility?.const === "public"
+      && schema.$defs?.productionAnchor?.properties?.services?.prefixItems?.[1]
+        ?.allOf?.[1]?.properties?.visibility?.const === "public"
       && schema.$defs?.productionAnchor?.properties?.services?.items === false,
     "Phase 2 provider schema service topology inventory mismatch",
   );
