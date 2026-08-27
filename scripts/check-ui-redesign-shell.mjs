@@ -56,7 +56,8 @@ for (const marker of [
   "qg-auth-brand",
   "qg-auth-card",
   "auth-brand-q-badge",
-  "/assets/generated/playful-precision/mascot-hero-v5-clean.png"
+  'asset="hero"',
+  "priority"
 ]) {
   expect(authShell.includes(marker), `AuthShell.jsx missing ${marker}`);
 }

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+</style>
+<script src="./qg-state.js"></script>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><rect x="26" y="24" width="48" height="52" rx="6" fill="none" stroke="#fff" stroke-width="6"/><path d="M26 40h48M40 20v10M60 20v10" stroke="#fff" stroke-width="6" stroke-linecap="round"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:var(--brand-soft);color:#5b5ff5;font-size:11.5px;font-weight:700;margin-bottom:10px">GROWTH · 学习计划</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">计划 <span style="color:#5b5ff5">Plan</span></h1>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">把目标拆成每天的小任务 · 与连胜和热力图联动</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:14px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04)">
+      <button type="button" style="width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer">‹</button>
+      <span style="font-size:13px;font-weight:700">6 月第 4 周</span>
+      <button type="button" style="width:30px;height:30px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer">›</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px">
+    <sc-for list="{{ week }}" as="d" hint-placeholder-count="7">
+      <div style="{{ d.cardStyle }}">
+        <div style="font-size:11px;font-weight:600;color:{{ d.subColor }}">{{ d.dow }}</div>
+        <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;margin:2px 0 8px;color:{{ d.dateColor }}">{{ d.date }}</div>
+        <div style="position:relative;width:38px;height:38px;margin:0 auto">
+          <div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient({{ d.ringColor }} 0% {{ d.pct }}%,{{ d.trackColor }} {{ d.pct }}% 100%)"></div>
+          <div style="position:absolute;inset:5px;border-radius:50%;background:{{ d.innerBg }};display:grid;place-items:center;font-family:'Space Grotesk';font-size:11px;font-weight:700;color:{{ d.dateColor }}">{{ d.done }}/{{ d.total }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start">
+
+    <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35);padding:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="font-size:15px;font-weight:800">本周看板</div>
+        <div style="font-size:12px;color:var(--muted);font-weight:600">点击卡片推进状态 →</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <sc-for list="{{ columns }}" as="col" hint-placeholder-count="3">
+          <div style="border-radius:16px;background:var(--surface-3);border:1px solid var(--border);padding:12px;min-height:280px">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:11px"><span style="{{ col.dotStyle }}"></span><span style="font-size:12.5px;font-weight:700">{{ col.title }}</span><span style="margin-left:auto;font-family:'Space Grotesk';font-size:11.5px;font-weight:700;color:var(--muted-3)">{{ col.count }}</span></div>
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="3">
+                <div onClick="{{ c.onClick }}" style="{{ c.style }}" style-hover="transform:translateY(-2px);box-shadow:0 10px 22px -12px rgba(74,67,214,.4)">
+                  <div style="display:flex;align-items:center;gap:7px;margin-bottom:6px"><span style="{{ c.tagStyle }}">{{ c.tag }}</span><span style="{{ c.doneMarkStyle }}">✓</span></div>
+                  <div style="{{ c.titleStyle }}">{{ c.title }}</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px"><span onClick="{{ c.onGo }}" style="display:inline-flex;align-items:center;gap:2px;font-size:11px;color:var(--brand-ink);font-weight:700;cursor:pointer" style-hover="text-decoration:underline">{{ c.meta }} · 去练 ›</span><span style="display:inline-flex;align-items:center;gap:3px;font-family:'Space Grotesk';font-size:10.5px;font-weight:700;color:#b3610a;background:#fff3dd;padding:2px 7px;border-radius:20px">+{{ c.xp }}</span></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35);padding:18px">
+        <div style="font-size:14px;font-weight:800;margin-bottom:14px">今日时间线</div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ timeline }}" as="t" hint-placeholder-count="5">
+            <div style="display:flex;gap:12px">
+              <div style="display:flex;flex-direction:column;align-items:center;flex:0 0 auto"><span style="{{ t.dotStyle }}"></span><span style="{{ t.lineStyle }}"></span></div>
+              <div style="padding-bottom:16px;min-width:0">
+                <div style="font-family:'Space Grotesk';font-size:11.5px;font-weight:600;color:var(--muted-3)">{{ t.time }}</div>
+                <div style="{{ t.titleStyle }}">{{ t.title }}</div>
+                <div style="font-size:11.5px;color:var(--muted);font-weight:500">{{ t.sub }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border-radius:22px;background:linear-gradient(150deg,#fff3dd,#ffe9c7);border:1px solid #ffe0ad;padding:16px 18px;display:flex;align-items:center;gap:14px">
+        <img src="assets/reward-fire.webp" alt="" style="width:44px;height:44px">
+        <div style="flex:1"><div style="font-family:'Space Grotesk';font-size:22px;font-weight:700;color:#b3610a;line-height:1">12 天连胜</div><div style="font-size:11.5px;color:#a35c07;font-weight:600;margin-top:2px">今天再完成 2 项即可保持</div></div>
+        <div style="display:flex;gap:4px">
+          <sc-for list="{{ streakDots }}" as="s" hint-placeholder-count="7"><span style="{{ s }}"></span></sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { status:{ mock:'todo', prob:'doing', mm:'done', poker:'todo', notes:'todo', course:'doing', radar:'done', news:'done' } };
+
+  componentDidMount(){
+    if(!window.QG) return;
+    const apply=(sh)=>{ if(sh && sh.plan) this.setState(s=>({ status:{ ...s.status, ...sh.plan } })); };
+    apply(QG.get());
+    this._unsub=QG.onChange(apply);
+  }
+  componentWillUnmount(){ if(this._unsub) this._unsub(); }
+
+  tasks(){
+    return [
+      {id:'mock',tag:'模拟面试',title:'完成 Round 2 模拟面试',meta:'≈ 25 分钟',xp:60,color:'#ff9f2e'},
+      {id:'prob',tag:'题目',title:'概率专题 · 5 道中等题',meta:'概率 / 期望',xp:40,color:'#5b5ff5'},
+      {id:'mm',tag:'Mental Math',title:'速算达到 90% 正确率',meta:'限时 3 分钟',xp:30,color:'#16a06a'},
+      {id:'poker',tag:'Poker',title:'6 人桌决策训练 20 手',meta:'翻后决策',xp:25,color:'#8a63e8'},
+      {id:'course',tag:'课程',title:'Hull 衍生品 · 第 3 讲',meta:'期权定价',xp:35,color:'#16879a'},
+      {id:'notes',tag:'面经',title:'读 Optiver 速算轮面经',meta:'Quant Wire',xp:15,color:'#2f9be0'},
+      {id:'radar',tag:'能力值',title:'查看本周能力雷达变化',meta:'弱项：随机过程',xp:10,color:'#7161f2'},
+      {id:'news',tag:'新闻',title:'读一篇市场要闻',meta:'Bloomberg',xp:10,color:'#d0524b'},
+    ];
+  }
+
+  advance(id){
+    this.setState(s=>{
+      const cur=s.status[id]; const nx=cur==='todo'?'doing':cur==='doing'?'done':'todo';
+      if(window.QG) QG.setPlan(id,nx);
+      return { status:{...s.status,[id]:nx} };
+    });
+  }
+
+  renderVals(){
+    const S=this.state;
+    const week=[['一',22],['二',23],['三',24],['四',25,'today'],['五',26],['六',27],['日',28]].map(d=>{
+      const done=[3,4,5,2,0,0,0][['22','23','24','25','26','27','28'].indexOf(String(d[1]))];
+      const total=5; const pct=Math.round((done/total)*100); const today=d[2]==='today';
+      return { dow:d[0], date:d[1], done, total, pct,
+        cardStyle:'text-align:center;padding:12px 6px;border-radius:16px;border:1px solid '+(today?'#c9c7f5':'var(--border)')+';background:'+(today?'linear-gradient(160deg,#eef0ff,#f6f0ff)':'var(--surface)')+';box-shadow:'+(today?'0 12px 26px -16px rgba(91,95,245,.5)':'0 1px 2px rgba(27,26,56,.04)'),
+        subColor: today?'#5b5ff5':'#a3a2bd', dateColor: today?'#3a38a8':'var(--text)',
+        ringColor: today?'#5b5ff5':(pct>0?'#8a7bff':'#dedcf0'), trackColor:'var(--border)', innerBg: today?'#f4f2ff':'var(--surface)' };
+    });
+
+    const st=this.tasks();
+    const mk=(status)=>st.filter(t=>S.status[t.id]===status).map(t=>{
+      const done=status==='done';
+      return { title:t.title, meta:t.meta, xp:t.xp, tag:t.tag,
+        onClick:()=>this.advance(t.id),
+        onGo:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); const m=({mock:['interview',null],prob:['problems',{topic:'probabilityExpectation'}],mm:['mental',null],poker:['poker',null],notes:['notes',null],course:['courses',null],radar:['skills',null],news:['news',null]})[t.id]; if(m&&window.QG) QG.navigate(m[0],m[1]); },
+        style:'padding:11px 12px;border-radius:13px;background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:transform .14s ease,box-shadow .14s ease;'+(done?'opacity:.7':''),
+        tagStyle:'padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;color:#fff;background:'+t.color,
+        titleStyle:'font-size:12.5px;font-weight:700;line-height:1.4;color:'+(done?'#9aa0b0':'var(--text)')+(done?';text-decoration:line-through':''),
+        doneMarkStyle: done?'margin-left:auto;display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#dcf3e9;color:#0f9d63;font-size:10px;font-weight:800':'display:none',
+      };
+    });
+    const columns=[
+      {key:'todo',title:'待办',dot:'#c3c2d8'},
+      {key:'doing',title:'进行中',dot:'#5b5ff5'},
+      {key:'done',title:'已完成',dot:'#16a06a'},
+    ].map(c=>{ const cards=mk(c.key); return { title:c.title, count:cards.length, cards, dotStyle:'width:8px;height:8px;border-radius:3px;background:'+c.dot }; });
+
+    const tl=[
+      {time:'09:00',title:'Mental Math 速算',sub:'已完成 · 92% 正确率',done:true},
+      {time:'11:30',title:'概率专题刷题',sub:'进行中 · 3 / 5 题',active:true},
+      {time:'14:00',title:'Hull 衍生品 · 第 3 讲',sub:'待开始'},
+      {time:'16:30',title:'模拟面试 Round 2',sub:'待开始 · Optiver 主题'},
+      {time:'20:00',title:'复盘 & 记录面经',sub:'待开始',last:true},
+    ];
+    const timeline=tl.map(t=>({ time:t.time, title:t.title, sub:t.sub,
+      titleStyle:'font-size:13.5px;font-weight:700;margin:1px 0;color:'+(t.done?'#9aa0b0':'var(--text)')+(t.done?';text-decoration:line-through':''),
+      dotStyle:'width:11px;height:11px;border-radius:50%;flex:0 0 auto;margin-top:3px;background:'+(t.done?'#16a06a':t.active?'#5b5ff5':'#dedcf0')+(t.active?';box-shadow:0 0 0 4px rgba(91,95,245,.18)':''),
+      lineStyle:'flex:1;width:2px;background:var(--border);'+(t.last?'display:none':'') }));
+
+    const streakDots=[1,1,1,1,1,0,0].map(on=>'width:8px;height:26px;border-radius:6px;background:'+(on?'linear-gradient(180deg,#ff9f2e,#ff7a3d)':'rgba(255,255,255,.5)'));
+
+    return { week, columns, timeline, streakDots };
+  }
+}
+</script>
+</body>
+</html>

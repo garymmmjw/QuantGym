@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+</style>
+<script src="./qg-state.js"></script>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><path d="M32 26h30l10 10v38H32z" fill="none" stroke="#fff" stroke-width="5"/><path d="M40 44h22M40 54h22M40 64h14" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:var(--track);color:#7161f2;font-size:11.5px;font-weight:700;margin-bottom:10px">TRAINING · 面经</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">面经 <span style="color:#5b5ff5">Interview Notes</span></h1>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">真实面试复盘 · 按公司/轮次归档 · 每篇都能跳转对应题库</p>
+    </div>
+    <button type="button" style="display:flex;align-items:center;gap:8px;padding:12px 18px;border:none;border-radius:14px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(3px);box-shadow:0 1px 0 #3f39c9">＋ 写面经 · +30 XP</button>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <sc-for list="{{ chips }}" as="c" hint-placeholder-count="7"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ posts }}" as="p" hint-placeholder-count="5">
+        <div onClick="{{ p.onRead }}" style="border-radius:18px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04),0 12px 28px -22px rgba(74,67,214,.35);padding:17px 19px;transition:transform .14s ease;cursor:pointer" style-hover="transform:translateY(-2px)">
+          <div style="display:flex;align-items:center;gap:11px;margin-bottom:10px">
+            <div style="{{ p.logoStyle }}">{{ p.abbr }}</div>
+            <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800">{{ p.company }} · {{ p.role }}</div><div style="font-size:11.5px;color:var(--muted-3);font-weight:600">{{ p.rounds }} 轮 · {{ p.result }}</div></div>
+            <span style="{{ p.readStyle }}">已读 ✓</span>
+            <span style="{{ p.resStyle }}">{{ p.resLabel }}</span>
+          </div>
+          <p style="margin:0 0 11px;font-size:13px;line-height:1.65;color:var(--text-2)">{{ p.summary }}</p>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <sc-for list="{{ p.tags }}" as="t" hint-placeholder-count="3"><span style="padding:3px 9px;border-radius:8px;background:var(--track);color:var(--muted);font-size:11px;font-weight:600">{{ t }}</span></sc-for>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:14px;color:var(--muted);font-size:12px;font-weight:600">
+              <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:15px;height:15px;display:inline-flex;color:#5b5ff5">{{ upIcon }}</span>{{ p.likes }}</span>
+              <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:15px;height:15px;display:inline-flex">{{ cmtIcon }}</span>{{ p.comments }}</span>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:18px 20px">
+        <div style="font-size:13.5px;font-weight:800;margin-bottom:14px">面经最多的公司</div>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <sc-for list="{{ ranks }}" as="r" hint-placeholder-count="5">
+            <div style="display:flex;align-items:center;gap:11px">
+              <span style="font-family:'Space Grotesk';font-size:13px;font-weight:700;color:#c3c2d8;width:16px">{{ r.rank }}</span>
+              <div style="{{ r.logoStyle }}">{{ r.abbr }}</div>
+              <span style="flex:1;font-size:13px;font-weight:700">{{ r.company }}</span>
+              <span style="font-family:'Space Grotesk';font-size:12.5px;font-weight:700;color:var(--muted)">{{ r.count }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="border-radius:20px;background:linear-gradient(160deg,#eef0ff,#f6f0ff);border:1px solid #e0dffb;padding:18px 20px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px"><img src="assets/reward-target.webp" alt="" style="width:26px;height:26px"><div style="font-size:13.5px;font-weight:800;color:#3a38a8">高频考点</div></div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px">
+          <sc-for list="{{ hot }}" as="h" hint-placeholder-count="6"><span style="padding:6px 12px;border-radius:11px;background:var(--surface);color:#5b5ff5;font-size:12px;font-weight:700;border:1px solid #e0dffb">{{ h }}</span></sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { company:'all' };
+
+  icon(name){
+    const R=React.createElement;
+    const w=(ch)=>R('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.9,strokeLinecap:'round',strokeLinejoin:'round',style:{width:'100%',height:'100%',display:'block'}},ch);
+    const P=(d)=>R('path',{d,key:d.slice(0,6)});
+    if(name==='up') return w([P('M12 20V8'),P('M6 12l6-6 6 6')]);
+    if(name==='cmt') return w([P('M20 14.5a3 3 0 0 1-3 3H9l-4 3V6.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3z')]);
+    return w([R('circle',{cx:12,cy:12,r:8,key:'c'})]);
+  }
+
+  data(){
+    return [
+      {company:'Optiver',abbr:'OP',c:'#e0562e',role:'量化交易实习',rounds:4,result:'已 Offer',res:'offer',
+        summary:'第一轮 8 分钟限时速算（80 题），第二轮概率与期望口算，第三轮做市模拟报价，终面聊 motivation。速算轮是硬门槛，务必刷到 90%+。',tags:['速算轮','做市报价','概率'],likes:342,comments:56},
+      {company:'Jane Street',abbr:'JS',c:'var(--text)',role:'量化研究实习',rounds:5,result:'进行中',res:'wip',
+        summary:'脑筋急转弯为主：醉酒乘客、期望值博弈、市场直觉题。面试官很看重你「出声思考」的过程与对称性论证，而不是最终答案。',tags:['脑筋急转弯','对称性','市场直觉'],likes:298,comments:41},
+      {company:'Citadel Securities',abbr:'CS',c:'#0b6ea8',role:'量化研究实习',rounds:4,result:'已 Offer',res:'offer',
+        summary:'统计与随机过程较重：布朗运动、鞅、回归诊断；还有一道 Python 数据清洗题。建议提前复习 Stat 110 与随机过程基础。',tags:['随机过程','统计','Python'],likes:255,comments:38},
+      {company:'IMC',abbr:'IMC',c:'#c8102e',role:'Graduate Trader',rounds:3,result:'已 Offer',res:'offer',
+        summary:'群面速算 + 扑克博弈决策，考察压力下的 EV 计算与风险偏好。终面是交易游戏，注意仓位管理与止损纪律。',tags:['扑克','EV 计算','交易游戏'],likes:210,comments:29},
+      {company:'DRW',abbr:'DRW',c:'#2f9be0',role:'量化研究',rounds:4,result:'挂在终面',res:'rej',
+        summary:'偏工程与数据：时间序列特征、回测框架设计、C++ 性能优化。终面对系统设计要求较高，我在低延迟部分答得不够深入。',tags:['时间序列','回测','C++'],likes:176,comments:33},
+    ];
+  }
+
+  renderVals(){
+    const S=this.state;
+    const comps=[['all','全部'],['Optiver','Optiver'],['Jane Street','Jane Street'],['Citadel Securities','Citadel'],['IMC','IMC'],['DRW','DRW']];
+    const chips=comps.map(c=>({ label:c[1], onClick:()=>this.setState({company:c[0]}),
+      style:'padding:8px 15px;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid '+(S.company===c[0]?'transparent':'var(--border)')+';background:'+(S.company===c[0]?'#7161f2':'var(--surface)')+';color:'+(S.company===c[0]?'#fff':'var(--muted)') }));
+
+    const logo=(c)=>"display:grid;place-items:center;width:42px;height:42px;border-radius:12px;flex:0 0 auto;font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#fff;background:"+c;
+    const resMap={offer:['已 Offer','#0f9d63','#e3f7ee'],wip:['进行中','#5b5ff5','#eef0ff'],rej:['未过','#8988a8','#f2f1fb']};
+    const posts=this.data().filter(p=>S.company==='all'||p.company===S.company).map(p=>{
+      const id=p.company+'-'+p.role;
+      const read=window.QG && QG.isRead(id);
+      return {
+      company:p.company, role:p.role, rounds:p.rounds, result:p.result, summary:p.summary, tags:p.tags, likes:p.likes, comments:p.comments,
+      abbr:p.abbr, logoStyle:logo(p.c),
+      resLabel:resMap[p.res][0], resStyle:'padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;flex:0 0 auto;color:'+resMap[p.res][1]+';background:'+resMap[p.res][2],
+      readStyle: read ? 'padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;flex:0 0 auto;color:#0f9d63;background:rgba(46,195,138,.14)' : 'display:none',
+      onRead:()=>{
+        if(!window.QG) return;
+        if(!QG.markRead(id)) QG.toast('这篇面经已读过', { ms:1600 });
+        else if(QG.get().quests['read-exp']) this.forceUpdate();
+      },
+      };
+    });
+
+    const logoSm=(c)=>"display:grid;place-items:center;width:30px;height:30px;border-radius:9px;flex:0 0 auto;font-family:'Space Grotesk';font-weight:700;font-size:11px;color:#fff;background:"+c;
+    const ranks=[['Jane Street','JS','var(--text)',128],['Optiver','OP','#e0562e',96],['Citadel','CS','#0b6ea8',84],['Jump','JT','#5b5ff5',61],['SIG','SIG','#16a06a',47]].map((r,i)=>({
+      rank:i+1, company:r[0], abbr:r[1], logoStyle:logoSm(r[2]), count:r[3],
+    }));
+
+    const hot=['限时速算','醉酒乘客','期望博弈','做市报价','布朗运动','扑克 EV'];
+
+    return { upIcon:this.icon('up'), cmtIcon:this.icon('cmt'), chips, posts, ranks, hot };
+  }
+}
+</script>
+</body>
+</html>

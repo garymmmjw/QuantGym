@@ -1,4 +1,5 @@
 import { PokerCard } from "./PokerCard.jsx";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 export function PokerSeatGrid({ seats = [], onSit, onAddBot, onRemove, skinOwned = false }) {
   return (
@@ -35,13 +36,12 @@ export function PokerSeatGrid({ seats = [], onSit, onAddBot, onRemove, skinOwned
         return (
           <div key={seat.id} className={className}>
             {hasSkin ? (
-              <img
+              <QuantyImage
                 className="qg-poker-skin-ava"
-                src="/assets/generated/playful-precision/mascot-poker.png"
-                alt=""
+                asset="poker"
+                size="avatar"
                 aria-hidden="true"
                 draggable="false"
-                loading="lazy"
               />
             ) : null}
             <div className="poker-seat-top">

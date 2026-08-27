@@ -1,0 +1,390 @@
+{
+  "schemaVersion": 1,
+  "kind": "frontend-upgrade-phase-1-evidence-lock",
+  "generatedFrom": "tracked-git-objects",
+  "acceptedApplicationCommit": "5a3b6f33b7f2a4d15f0a81ca57f81570ca89c6a3",
+  "acceptedEvidenceCommit": "d87b20f8630fdc39f46e1065c5ffee14bf3ca8dd",
+  "acceptedHandoffCommit": "4faba0653e28e4ca28edd8521a053d00d0d88e57",
+  "acceptedAcceptanceCommit": "4bed12b2b9951276124df2fff18b23f2319c8de1",
+  "acceptedReviewPath": "docs/superpowers/reviews/2026-07-18-quantgym-frontend-platform-upgrade-phase-1.md",
+  "phase1PlanPath": "docs/superpowers/plans/2026-07-18-quantgym-frontend-platform-upgrade-phase-1.md",
+  "phase0EvidenceLockPath": "docs/frontend-upgrade/phase-0-evidence-lock.json",
+  "summaryCount": 7,
+  "reviewImageCount": 48,
+  "contractCount": 4,
+  "entryCount": 62,
+  "entries": [
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-auth-security-summary.json",
+      "mode": "100644",
+      "bytes": 916,
+      "sha256": "18b5c58b6ffab90a84de0cb17b6c799401d232d50bf3164cc9cfd90142387295"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-legacy-boundary-summary.json",
+      "mode": "100644",
+      "bytes": 895,
+      "sha256": "0bc4730f2dd39b51225db71858347d5ea6430cd282ec6dfc0a0ada7c4a46478c"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-postgres-migration-summary.json",
+      "mode": "100644",
+      "bytes": 1438,
+      "sha256": "3627da2d3b6577ce68913a0afa21b4a616cb2eee28e6c40ed3eb0f76685bafb7"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-preview-live-summary.json",
+      "mode": "100644",
+      "bytes": 1480,
+      "sha256": "2e4ae415831ae4425ad4448ef0aa7e99adb20ff7f6e1a8562c4feadbb8a02294"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-r2-binding-summary.json",
+      "mode": "100644",
+      "bytes": 2308,
+      "sha256": "dca2de381a12395f4c104f1a224dbf2d03cf35cf4f9eec25a6abe7def96e6bcd"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-desktop-dark.jpg",
+      "mode": "100644",
+      "bytes": 75917,
+      "sha256": "d8325e2778c66926f1b969bd49538354c51093366815ecfc44230f9b1f0d97b1"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-desktop-light.jpg",
+      "mode": "100644",
+      "bytes": 78888,
+      "sha256": "8b02a625b88f2daee70624b67b6f861040a6737c3612f695bd6acd7d39d152c3"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-laptop-dark.jpg",
+      "mode": "100644",
+      "bytes": 63509,
+      "sha256": "740094b96ba0f433a53e273ca28808bacb056e7df5bea8f934e9165fd7ea99a5"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-laptop-light.jpg",
+      "mode": "100644",
+      "bytes": 66416,
+      "sha256": "612a7afb91274a0927d6d99f25dcf24a778eb7644705feb30579d2792c7df7f1"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-mobile-dark.jpg",
+      "mode": "100644",
+      "bytes": 25790,
+      "sha256": "045c51c6905582547bb9009fa1ea7e4749cbbbeb8318f142d0888803a5c4d050"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-mobile-light.jpg",
+      "mode": "100644",
+      "bytes": 27463,
+      "sha256": "19757cc8453c4781bead386446a80a14592139348abb4a75cd1a40c2a31ede95"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-desktop-dark.jpg",
+      "mode": "100644",
+      "bytes": 51880,
+      "sha256": "d048eb671bec034c2d10ea2ca882087d7f03d9f11cf8962edbff8406a1927a4d"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-desktop-light.jpg",
+      "mode": "100644",
+      "bytes": 50998,
+      "sha256": "481ade60c7674136c2ebf556c1557f2461575c5fc5ad76dcc1aff9a9033d0a59"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-laptop-dark.jpg",
+      "mode": "100644",
+      "bytes": 44979,
+      "sha256": "bf757e762d367bdb4d4c8e3f68dfbf85047928a4c81ef507e0db939da796ef4e"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-laptop-light.jpg",
+      "mode": "100644",
+      "bytes": 44419,
+      "sha256": "480a48a8ada8a7f467313dc577a0afdf8c0e0f5b8c97c00f80b07c96c1735712"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-mobile-dark.jpg",
+      "mode": "100644",
+      "bytes": 21376,
+      "sha256": "9a91a24b4df60ac503ac91fefb77b7c30bf637ee50ca5900dc945276cd62ff71"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-mobile-light.jpg",
+      "mode": "100644",
+      "bytes": 21320,
+      "sha256": "e5a39833d410e8f8b9acefea0c4a88b218d0579e42d260ed1c8a348f01a96344"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-desktop-dark.jpg",
+      "mode": "100644",
+      "bytes": 68580,
+      "sha256": "5647623a8967dc341e119000eac9bf2c723afbb46f0b695627804a8f79d2abaa"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-desktop-light.jpg",
+      "mode": "100644",
+      "bytes": 73159,
+      "sha256": "0c556983d896a7439500a649d50fd31215db6338d6dc77ed99a092cb30ed1ebf"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-laptop-dark.jpg",
+      "mode": "100644",
+      "bytes": 59320,
+      "sha256": "d46047784db505477c8e50f55aa262dbe8042a398537853c02c0fcf0de988292"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-laptop-light.jpg",
+      "mode": "100644",
+      "bytes": 64133,
+      "sha256": "e17e3b58e56ab6488ebae34be4788783c7e60e33f5f854c0cd975677d6c76c9d"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-mobile-dark.jpg",
+      "mode": "100644",
+      "bytes": 32854,
+      "sha256": "0bc764f19d13649b4c7d0de7b958954db79401e5c142c38bd37980c348414994"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-mobile-light.jpg",
+      "mode": "100644",
+      "bytes": 34025,
+      "sha256": "dfdc957afa86a95890c5538e3a835df5d5cd5239e69647353c791729992d96bc"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-desktop-dark.jpg",
+      "mode": "100644",
+      "bytes": 51880,
+      "sha256": "d048eb671bec034c2d10ea2ca882087d7f03d9f11cf8962edbff8406a1927a4d"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-desktop-light.jpg",
+      "mode": "100644",
+      "bytes": 50998,
+      "sha256": "481ade60c7674136c2ebf556c1557f2461575c5fc5ad76dcc1aff9a9033d0a59"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-laptop-dark.jpg",
+      "mode": "100644",
+      "bytes": 44979,
+      "sha256": "bf757e762d367bdb4d4c8e3f68dfbf85047928a4c81ef507e0db939da796ef4e"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-laptop-light.jpg",
+      "mode": "100644",
+      "bytes": 44419,
+      "sha256": "480a48a8ada8a7f467313dc577a0afdf8c0e0f5b8c97c00f80b07c96c1735712"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-mobile-dark.jpg",
+      "mode": "100644",
+      "bytes": 30230,
+      "sha256": "32286e1f27872bbec558b1f4a39c007aeb6668932784f4c2a4f9309ed7b79946"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-mobile-light.jpg",
+      "mode": "100644",
+      "bytes": 29815,
+      "sha256": "b919f408c2ccffae03c5725aac0179fa114518e5b7148a24c29e8928ecdafa9b"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-desktop-dark.jpg",
+      "mode": "100644",
+      "bytes": 61215,
+      "sha256": "4821a929035ec3c6a2d16646831025a47ddbc61460cdfc7d0bd80a06fdf783bb"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-desktop-light.jpg",
+      "mode": "100644",
+      "bytes": 60018,
+      "sha256": "3a694b992b168d4f40bfc3d67d2c0406e55091730f7d020b848fa9ff5f2ddff0"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-laptop-dark.jpg",
+      "mode": "100644",
+      "bytes": 54060,
+      "sha256": "0442037134e2d720a79dbb2a275261ab2730347cf9a007034282a9b15e10b792"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-laptop-light.jpg",
+      "mode": "100644",
+      "bytes": 53051,
+      "sha256": "e0cdc0820243f6d1165694ef3512c4afed4725931cf5a4d8350d2c0dbf042f8e"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-mobile-dark.jpg",
+      "mode": "100644",
+      "bytes": 29670,
+      "sha256": "b204866ee6ee35ee771ff2fb60cce6ee333381e7558428f97c25681c3ceb13df"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-mobile-light.jpg",
+      "mode": "100644",
+      "bytes": 28921,
+      "sha256": "aefe64f7ca2bc11c89a7f968cde943d75a166f2dd9dbb3e4556b34788d068415"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-desktop-dark.jpg",
+      "mode": "100644",
+      "bytes": 45886,
+      "sha256": "5823a7aad9dc5ccbbcf71a8a825bb989c92b81ca0b61f96d98551d07632d284c"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-desktop-light.jpg",
+      "mode": "100644",
+      "bytes": 48054,
+      "sha256": "93005ceffbb0dffbc5dec59882d8f6a451b19b9998d0c2fa04ce6ae4027e9e9a"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-laptop-dark.jpg",
+      "mode": "100644",
+      "bytes": 40233,
+      "sha256": "8749904b489fab524b9b6efa1d466bd0a4cfd556e1abc25ae6da6bf8b5c9bd6c"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-laptop-light.jpg",
+      "mode": "100644",
+      "bytes": 42574,
+      "sha256": "1c25981cf9d7c32c69f558ffdfc4388d1de8c598ab6364482626eaa33c26cdd9"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-mobile-dark.jpg",
+      "mode": "100644",
+      "bytes": 19385,
+      "sha256": "8435691dad09462bb90bc31c5cd048d1e9cf145dcb416adc0a13b712f239fdc0"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-mobile-light.jpg",
+      "mode": "100644",
+      "bytes": 18853,
+      "sha256": "51bff5c9ab8885b021e430ec4899b5d29fb77ab1431056bd27455e83e4fd3bac"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-desktop-dark.jpg",
+      "mode": "100644",
+      "bytes": 57236,
+      "sha256": "18c623c6e9a59450136b68d67ea997946c73e563c59be686e7288d28423d488f"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-desktop-light.jpg",
+      "mode": "100644",
+      "bytes": 56743,
+      "sha256": "e2a6a2e6d73d24cdf493de34692deb9741dfa3d7e8d896a631dfc01821a9ba8f"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-laptop-dark.jpg",
+      "mode": "100644",
+      "bytes": 50303,
+      "sha256": "d820c33ffc72a5f0cc1aa0cc5cc52a2716617863fefa26890b9a5c5fef51f353"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-laptop-light.jpg",
+      "mode": "100644",
+      "bytes": 50214,
+      "sha256": "10b9f55abd2329bad42659334a0e82820ad68ecf67b09458cd01fdca07ff17be"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-mobile-dark.jpg",
+      "mode": "100644",
+      "bytes": 30230,
+      "sha256": "32286e1f27872bbec558b1f4a39c007aeb6668932784f4c2a4f9309ed7b79946"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-mobile-light.jpg",
+      "mode": "100644",
+      "bytes": 29815,
+      "sha256": "b919f408c2ccffae03c5725aac0179fa114518e5b7148a24c29e8928ecdafa9b"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-desktop-dark.jpg",
+      "mode": "100644",
+      "bytes": 49542,
+      "sha256": "dce977d72edeeefbf858f311500c6ffada6c286c01158aa9616a7ff84f01943f"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-desktop-light.jpg",
+      "mode": "100644",
+      "bytes": 52488,
+      "sha256": "65fb55018168df4b2106a2b5870ec011ec4d233d448359195635f237e7e8be1b"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-laptop-dark.jpg",
+      "mode": "100644",
+      "bytes": 43753,
+      "sha256": "105a1a2a373560dc6b5f11f3b8a963e91953b0f7731db3f7d9a64177ac36cadc"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-laptop-light.jpg",
+      "mode": "100644",
+      "bytes": 46936,
+      "sha256": "4ce1e378435d9435654d0ec969b9676967e22510c47d435df2791415b895cefb"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-mobile-dark.jpg",
+      "mode": "100644",
+      "bytes": 22487,
+      "sha256": "0c0a1bfe2327733d916625e1a29ad27f61fd384d73f6c30e50845cc025a2f59d"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-mobile-light.jpg",
+      "mode": "100644",
+      "bytes": 22876,
+      "sha256": "2fd8ad3940cea6bf1abf8e0edc84a3525d05322d1c79567dbd4a8b9ff5c058e3"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-summary.json",
+      "mode": "100644",
+      "bytes": 1355,
+      "sha256": "6cc59963cf8886882034d129df1342242e6ef2090c591dfb043a174104113b93"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-system-surfaces-summary.json",
+      "mode": "100644",
+      "bytes": 4676,
+      "sha256": "89951907e3504e3c38824ec43ce6ab77f1a1bac387aa87dc1c91f181336cee94"
+    },
+    {
+      "path": "docs/frontend-upgrade/phase-0-evidence-lock.json",
+      "mode": "100644",
+      "bytes": 9012,
+      "sha256": "6465aa9b56c21993ec6a1b6f41d07f655e5650b61f89a133b3d5c07d3d15ff1a"
+    },
+    {
+      "path": "docs/frontend-upgrade/phase-1-acceptance-manifest.json",
+      "mode": "100644",
+      "bytes": 25283,
+      "sha256": "51650508a2f91e11b8077ce1fb656599c0acdf01e1d5c235be37ad6422f8e221"
+    },
+    {
+      "path": "docs/frontend-upgrade/phase-1-preview-contract.json",
+      "mode": "100644",
+      "bytes": 2189,
+      "sha256": "6141346c5b06c7292c6ebdd13c5689dd768c23264b58323f37694c489d3b1550"
+    },
+    {
+      "path": "docs/frontend-upgrade/phase-1-provider-evidence.schema.json",
+      "mode": "100644",
+      "bytes": 9471,
+      "sha256": "d86d6f94191f0d546301de1f30ab7935808030147dceac82c60560de45135474"
+    },
+    {
+      "path": "docs/frontend-upgrade/phase-1-schema-contract.json",
+      "mode": "100644",
+      "bytes": 15570,
+      "sha256": "4379b47a26173ce5ec4699af13d3e9c9c7f5bf99e499e9f0e52355d2b90e1d20"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-07-18-quantgym-frontend-platform-upgrade-phase-1.md",
+      "mode": "100644",
+      "bytes": 49625,
+      "sha256": "82e5742b63d87e97c0679f6c6905095f86192ea1a630f2f33d189eb386583512"
+    },
+    {
+      "path": "docs/superpowers/reviews/2026-07-18-quantgym-frontend-platform-upgrade-phase-1.md",
+      "mode": "100644",
+      "bytes": 6384,
+      "sha256": "4c9e72842632254e824b3744802b8b2a845179400fa052f7d1694eeda7abfddc"
+    }
+  ]
+}

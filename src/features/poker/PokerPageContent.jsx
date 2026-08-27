@@ -5,6 +5,7 @@ import { PokerTable } from "./PokerTable.jsx";
 import { PokerTournamentStrip } from "./PokerTournamentStrip.jsx";
 import { usePokerPageModel } from "./pokerHooks.js";
 import { useOwnedCosmetic } from "../shared/cosmetics.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 import {
   estimateHeroEquity,
   getBoardCardViews,
@@ -130,7 +131,7 @@ export function PokerPageContent() {
 
           <section className="qg-poker-rail-card qg-poker-coach" aria-label="GTO 教练建议">
             <div className="qg-poker-coach-head">
-              <img src="/assets/generated/playful-precision/avatar-wink-v2.png" alt="" />
+              <QuantyImage asset="wink" size="avatar" />
               <h3>GTO 教练建议</h3>
             </div>
             <p className="qg-poker-coach-advice">

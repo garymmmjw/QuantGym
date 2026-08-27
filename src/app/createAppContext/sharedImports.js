@@ -87,12 +87,7 @@ export { createAccountAuthBundle } from '../accountAuthBundle.js';
 export { createAppCommunityControllerBundle } from '../communityControllerBundle.js';
 export { createContentControllerBundles } from '../contentControllerBundles.js';
 export { createLibrarySearchBundles } from '../librarySearchBundles.js';
-export { createOverviewActivityBundle } from '../overviewActivityBundle.js';
-export { createAppOverviewControllerBundle } from '../overviewControllerBundle.js';
 export { createPokerControllerBundle } from '../pokerControllerBundle.js';
-export { createPlanningActivityBundle } from '../planningActivityBundle.js';
-export { createAppProblemControllerBundles } from '../problemControllerBundles.js';
-export { createProblemNavigationBundle } from '../problemNavigationBundle.js';
 export { createAppSkillsControllerBundle } from '../skillsControllerBundle.js';
 export { createSyncSettingsBundle } from '../syncSettingsBundle.js';
 export { createHeroCoachController } from '../../ui/heroCoach.js';
@@ -172,10 +167,9 @@ export {
   sortNews
 } from '../../modules/news/data.js';
 export { createNewsDataAdapter } from '../../modules/news/dataAdapter.js';
-export { createOverviewFacade } from '../../modules/overview/facade.js';
 export {
   normalizeCloudLeaderboardRows as normalizeCloudLeaderboardRowsValue
-} from '../../modules/overview/leaderboard.js';
+} from '../../modules/leaderboardCloud.js';
 export { registerAppFeatureModules } from '../featureModules.js';
 export { createPokerRuntime } from '../../modules/poker/runtime.js';
 export {
@@ -183,26 +177,9 @@ export {
   getLocalizedProblemField,
   isDisabledProblemId,
   isLegacyCatalogMarker
-} from '../../modules/problems/format.js';
-export { createProblemsFacade } from '../../modules/problems/facade.js';
-export { createProblemProvider } from '../../modules/problems/provider.js';
-export { createProblemProviderFacade } from '../../modules/problems/providerFacade.js';
-export { createProblemCaptureController } from '../../modules/problems/captureController.js';
-export { createProblemViewportCaptureController } from '../../modules/problems/viewportCaptureController.js';
-export { addProblemTag } from '../../modules/problems/list.js';
-export { createProblemCatalogMutationController } from '../../modules/problems/catalogMutationController.js';
-export { createProblemPaginationController } from '../../modules/problems/paginationController.js';
-export { createProblemDetailState } from '../../modules/problems/viewState.js';
-export {
-  createProblemSearchRecord,
-  scoreProblemSearchRecord
-} from '../../modules/problems/search.js';
-export {
-  getProblemSocial as getProblemSocialValue,
-  requestProblemSocial as requestProblemSocialValue
-} from '../../modules/problems/social.js';
-export { createProblemSocialState } from '../../modules/problems/socialState.js';
-export { createProblemPersonalStateController } from '../../modules/problems/personalStateController.js';
+} from '../../modules/problemContent.js';
+export { createProblemCaptureController } from '../../modules/capture/problemCaptureController.js';
+export { createProblemViewportCaptureController } from '../../modules/capture/viewportCaptureController.js';
 export {
   requestResumeReview as requestResumeReviewValue
 } from '../../modules/resume/data.js';

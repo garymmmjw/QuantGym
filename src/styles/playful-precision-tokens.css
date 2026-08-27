@@ -23,6 +23,7 @@
   --qg-ticker-bg: rgba(255, 255, 255, 0.6);
   --qg-pill-dark: #1b1a38;
   --qg-brand: #5b5ff5;
+  --qg-on-brand: #ffffff;
   --qg-brand-ink: #5b5ff5;
   --qg-brand-soft: #eef0ff;
   --qg-brand-soft-2: #f6f0ff;
@@ -65,6 +66,7 @@
   --qg-ticker-bg: rgba(255, 255, 255, 0.03);
   --qg-pill-dark: #302d55;
   --qg-brand: #7d7bff;
+  --qg-on-brand: #141322;
   --qg-brand-ink: #b9b8ff;
   --qg-brand-soft: #2a2856;
   --qg-brand-soft-2: #2c2650;

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-07-10-quantgym-frontend-platform-upgrade-design.md",
+  "phases": [
+    { "id": 0, "name": "baseline-and-design-freeze", "routes": [] },
+    { "id": 1, "name": "kernel-shell-auth", "routes": [] },
+    { "id": 2, "name": "daily-training-loop", "routes": ["overview", "plan", "problems"] },
+    { "id": 3, "name": "interview-and-tools", "routes": ["interview", "tools"] },
+    { "id": 4, "name": "skills-economy-competition", "routes": ["skills", "league", "pk", "poker"] },
+    { "id": 5, "name": "remaining-product-domains", "routes": ["experiences", "news", "community", "messages", "network", "resume", "jobs", "companies", "library", "courses", "memory", "settings", "account"] },
+    { "id": 6, "name": "hardening-and-cutover", "routes": [] }
+  ]
+}

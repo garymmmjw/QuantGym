@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="./qg-state.js"></script>
+<style>
+  *{box-sizing:border-box}
+  :root{
+    --bg-base:#f4f4fb;
+    --bg-grad:radial-gradient(1100px 560px at 12% -10%,#ecebff 0%,transparent 55%),radial-gradient(900px 520px at 102% -4%,#e9f0ff 0%,transparent 52%),linear-gradient(180deg,#f6f6fc 0%,#f3f3fa 60%,#f1f1f8 100%);
+    --surface:#fff; --surface-2:#fbfbfd; --surface-3:#faf9ff;
+    --border:#ecebf7; --border-2:#e8e7f4;
+    --text:#1b1a38; --text-2:#4a4966;
+    --muted:#6d6c8e; --muted-2:#9998b6; --muted-3:#a3a2bd;
+    --track:#eeedfa;
+    --brand:#5b5ff5; --brand-ink:#5b5ff5; --brand-soft:#eef0ff; --brand-soft-2:#f6f0ff;
+    --nav-hover:#edecfb;
+    --header-bg:#f5f6fc; --aside-grad:linear-gradient(180deg,#fbfbfe,#f7f7fc);
+    --hero-grad:linear-gradient(130deg,#f2f2ff 0%,#edefff 52%,#e9e6ff 100%);
+    --chip:rgba(255,255,255,.72); --done-soft:#f4fbf7; --heat0:#edecf6;
+    --ticker-bg:rgba(255,255,255,.6); --pill-dark:#1b1a38;
+    --shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 30px -22px rgba(74,67,214,.35);
+    --shadow-pop:0 14px 30px -12px rgba(27,26,56,.35);
+  }
+  :root[data-theme="dark"]{
+    --bg-base:#111020;
+    --bg-grad:radial-gradient(1100px 560px at 12% -10%,#241f45 0%,transparent 55%),radial-gradient(900px 520px at 102% -4%,#1a2247 0%,transparent 52%),linear-gradient(180deg,#121120 0%,#131221 60%,#151327 100%);
+    --surface:#201f39; --surface-2:#1b1a30; --surface-3:#242243;
+    --border:#332f57; --border-2:#3a3763;
+    --text:#f1f0fb; --text-2:#cbc9e8;
+    --muted:#a6a4cf; --muted-2:#8785ae; --muted-3:#76749c;
+    --track:#2c2a4e;
+    --brand:#7d7bff; --brand-ink:#b9b8ff; --brand-soft:#2a2856; --brand-soft-2:#2c2650;
+    --nav-hover:#2a2850;
+    --header-bg:#141322; --aside-grad:linear-gradient(180deg,#181731,#141222);
+    --hero-grad:linear-gradient(130deg,#242245 0%,#211f42 52%,#251f48 100%);
+    --chip:#2a2848; --done-soft:#17251f; --heat0:#262340;
+    --ticker-bg:rgba(255,255,255,.03); --pill-dark:#302d55;
+    --shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 30px -22px rgba(0,0,0,.6);
+    --shadow-pop:0 16px 34px -14px rgba(0,0,0,.65);
+  }
+  body{margin:0;background:var(--bg-base)}
+  ::selection{background:#d9d8ff}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:20px;border:3px solid transparent;background-clip:content-box}
+  @keyframes qFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  @keyframes qFloatSlow{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  @keyframes qFill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes qTicker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @keyframes qSpin{to{transform:rotate(360deg)}}
+  @keyframes qFillY{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes qSheet{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  @keyframes qFade{from{opacity:0}to{opacity:1}}
+  @keyframes qRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes qgLoader{from{transform:translateX(-110%)}to{transform:translateX(310%)}}
+</style>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><text x="50" y="68" font-family="sans-serif" font-size="52" font-weight="800" fill="#fff" text-anchor="middle">Q</text></svg>
+</template>
+<div style="display:flex;min-height:100vh;background:var(--bg-grad);font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text)">
+
+  <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+  <aside style="position:sticky;top:0;height:100vh;overflow-y:auto;flex:0 0 252px;display:flex;flex-direction:column;background:var(--aside-grad);border-right:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:11px;padding:22px 20px 16px">
+      <img src="assets/brand-q-mark.webp" alt="QuantGym" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 5px 9px rgba(91,95,245,.4))">
+      <div style="font-weight:800;font-size:20px;letter-spacing:-.02em">Quant<span style="color:var(--brand-ink)">Gym</span></div>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:15px;padding:6px 12px 16px;flex:1">
+      <sc-for list="{{ navGroups }}" as="group" hint-placeholder-count="5">
+        <div>
+          <div style="font-size:10.5px;font-weight:700;letter-spacing:.14em;color:var(--muted-2);padding:0 11px;margin-bottom:7px">{{ group.label }}</div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <sc-for list="{{ group.items }}" as="item" hint-placeholder-count="4">
+              <button type="button" onClick="{{ item.onClick }}" onMouseEnter="{{ item.onEnter }}" onMouseLeave="{{ item.onLeave }}" style="{{ item.itemStyle }}">
+                <span style="display:inline-flex;width:19px;height:19px;flex:0 0 auto">{{ item.iconEl }}</span>
+                <span style="flex:1;min-width:0">{{ item.name }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </nav>
+    <div style="margin:0 14px 16px;padding:14px;border-radius:18px;background:linear-gradient(150deg,var(--brand-soft),var(--brand-soft-2));border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <img src="assets/avatar-focused-v2.png" alt="" style="width:40px;height:40px;object-fit:contain;flex:0 0 auto">
+        <div style="min-width:0">
+          <div style="font-size:12.5px;font-weight:700;line-height:1.2">{{ goalCardTitle }}</div>
+          <div style="font-size:11px;color:var(--muted);font-weight:600">{{ goalSubText }}</div>
+        </div>
+      </div>
+      <div style="margin-top:11px;height:7px;border-radius:20px;background:var(--track);overflow:hidden">
+        <div style="height:100%;width:{{ questPct }}%;border-radius:20px;background:linear-gradient(90deg,#5b5ff5,#8a7bff);transform-origin:left;animation:qFill .9s .2s both ease-out;transition:width .4s cubic-bezier(.2,.8,.2,1)"></div>
+      </div>
+    </div>
+  </aside>
+  </sc-if>
+
+  <div style="min-width:0;flex:1;display:flex;flex-direction:column">
+
+    <header style="position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:13px clamp(14px,3.4vw,28px);background:var(--header-bg);border-bottom:1px solid var(--border)">
+      <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+        <button type="button" style="display:grid;place-items:center;width:38px;height:38px;border-radius:11px;border:1px solid var(--border-2);background:var(--surface);color:var(--muted);cursor:pointer;flex:0 0 auto;transition:all .15s ease" style-hover="border-color:#cbc9ee;color:#5b5ff5">
+          <span style="width:18px;height:18px;display:inline-flex">{{ panelIcon }}</span>
+        </button>
+        <div onClick="{{ openPalette }}" style="display:flex;align-items:center;gap:10px;flex:1;max-width:460px;padding:10px 15px;border-radius:14px;background:var(--surface);border:1px solid var(--border-2);box-shadow:0 1px 2px rgba(27,26,56,.04);cursor:pointer;transition:border-color .15s ease" style-hover="border-color:#cbc9ee">
+          <span style="width:18px;height:18px;display:inline-flex;color:var(--muted-2)">{{ searchIcon }}</span>
+          <span style="flex:1;min-width:0;font-size:14px;color:var(--muted-2);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">搜索题目、公司、课程，或跳转模块…</span>
+          <span style="display:inline-flex;align-items:center;padding:3px 8px;border-radius:8px;background:var(--track);color:var(--muted);font-family:'Space Grotesk';font-size:11px;font-weight:700;flex:0 0 auto">⌘K</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ narrow }}">
+        <button type="button" onClick="{{ onOpenSheet }}" style="display:grid;place-items:center;width:44px;height:44px;border-radius:12px;border:1px solid var(--border-2);background:var(--surface);color:var(--text);cursor:pointer;flex:0 0 auto">
+          <span style="width:20px;height:20px;display:inline-flex">{{ menuIcon }}</span>
+        </button>
+        <div style="display:flex;align-items:center;gap:9px;flex:1;min-width:0">
+          <img src="assets/brand-q-mark.webp" alt="QuantGym" style="width:30px;height:30px;object-fit:contain;flex:0 0 auto">
+          <div style="font-weight:800;font-size:17px;letter-spacing:-.02em">Quant<span style="color:var(--brand-ink)">Gym</span></div>
+        </div>
+      </sc-if>
+
+      <div style="flex:1"></div>
+
+      <div style="display:flex;align-items:center;gap:6px;padding:7px 13px 7px 9px;border-radius:13px;background:linear-gradient(135deg,#fff3dd,#ffe9c7);border:1px solid #ffe0ad;cursor:pointer;flex:0 0 auto;transition:transform .15s ease" style-hover="transform:translateY(-1px)">
+        <img src="assets/reward-fire.webp" alt="" style="width:22px;height:22px;object-fit:contain">
+        <span style="font-family:'Space Grotesk';font-weight:700;font-size:15px;color:#b3610a">{{ streakDays }}</span>
+      </div>
+      <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;gap:6px;padding:7px 13px 7px 9px;border-radius:13px;background:var(--surface);border:1px solid var(--border-2);cursor:pointer;transition:transform .15s ease" style-hover="transform:translateY(-1px)">
+          <img src="assets/reward-xp.webp" alt="" style="width:22px;height:22px;object-fit:contain">
+          <span style="font-family:'Space Grotesk';font-weight:700;font-size:14px;color:var(--brand-ink)">Lv.{{ lvl }}</span>
+        </div>
+      </sc-if>
+      <button type="button" onClick="{{ openNotifs }}" title="通知" style="position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:11px;border:1px solid var(--border-2);background:var(--surface);color:var(--muted);cursor:pointer;flex:0 0 auto">
+        <span style="width:18px;height:18px;display:inline-flex">{{ bellIcon }}</span>
+        <sc-if value="{{ notifUnread }}"><span style="position:absolute;top:-5px;right:-5px;display:grid;place-items:center;min-width:17px;height:17px;padding:0 4px;border-radius:10px;background:#ff5a5f;color:#fff;font-family:'Space Grotesk';font-size:10px;font-weight:700;border:2px solid var(--surface)">{{ notifUnread }}</span></sc-if>
+      </button>
+      <button type="button" onClick="{{ onToggleTheme }}" title="切换主题" style="display:grid;place-items:center;width:38px;height:38px;border-radius:11px;border:1px solid var(--border-2);background:var(--surface);color:var(--muted);cursor:pointer;flex:0 0 auto;transition:all .15s ease" style-hover="border-color:#cbc9ee;color:#5b5ff5">
+        <span style="width:18px;height:18px;display:inline-flex">{{ themeIcon }}</span>
+      </button>
+      <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+        <div style="width:1px;height:26px;background:var(--border-2);margin:0 2px"></div>
+        <button type="button" style="display:flex;align-items:center;gap:9px;padding:5px 9px 5px 5px;border-radius:14px;border:1px solid var(--border-2);background:var(--surface);cursor:pointer;transition:all .15s ease" style-hover="border-color:#cbc9ee">
+          <img src="assets/avatar-happy-v2.png" alt="" style="width:32px;height:32px;border-radius:9px;object-fit:cover;background:#eef0ff">
+          <span style="font-weight:700;font-size:13.5px">Quant</span>
+        </button>
+      </sc-if>
+      <sc-if value="{{ narrow }}">
+        <button type="button" style="display:grid;place-items:center;width:44px;height:44px;border-radius:12px;border:1px solid var(--border-2);background:var(--surface);cursor:pointer;flex:0 0 auto">
+          <img src="assets/avatar-happy-v2.png" alt="" style="width:30px;height:30px;border-radius:9px;object-fit:cover;background:#eef0ff">
+        </button>
+      </sc-if>
+    </header>
+
+    <sc-if value="{{ showQuantWire }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:16px;padding:9px clamp(14px,3.4vw,28px);background:var(--ticker-bg);border-bottom:1px solid var(--border);overflow:hidden">
+      <div style="display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:20px;background:var(--pill-dark);color:#fff;flex:0 0 auto">
+        <span style="width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.25)"></span>
+        <span style="font-size:11.5px;font-weight:700;letter-spacing:.02em">Quant Wire</span>
+      </div>
+      <div style="flex:1;overflow:hidden;position:relative">
+        <div style="display:flex;gap:34px;width:max-content;animation:qTicker 34s linear infinite" style-hover="animation-play-state:paused">
+          <sc-for list="{{ ticker }}" as="t" hint-placeholder-count="6">
+            <span style="display:inline-flex;align-items:center;gap:8px;font-size:12.5px;white-space:nowrap"><span style="font-weight:700;color:var(--brand-ink)">{{ t.src }}</span><span style="color:var(--text-2)">{{ t.head }}</span></span>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <main style="flex:1;padding:26px clamp(14px,3.4vw,30px) 60px">
+      <div style="max-width:1180px;margin:0 auto">
+
+        <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;align-items:stretch;border-radius:28px;overflow:hidden;background:var(--hero-grad);border:1px solid var(--border);box-shadow:var(--shadow-card)">
+            <div style="padding:clamp(24px,4vw,36px) clamp(22px,3.6vw,34px);display:flex;flex-direction:column;justify-content:center;gap:16px">
+              <div style="display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:6px 12px 6px 8px;border-radius:20px;background:var(--chip);border:1px solid var(--border);font-size:12px;font-weight:700;color:var(--muted)">
+                <img src="assets/reward-fire.webp" alt="" style="width:18px;height:18px;object-fit:contain"> 连续 {{ streakDays }} 天 · 欢迎回来，Quant
+              </div>
+              <h1 style="margin:0;font-size:clamp(30px,4.4vw,40px);line-height:1.08;font-weight:800;letter-spacing:-.02em">把你的 <span style="color:var(--brand-ink)">quant</span><br>练到锋利。</h1>
+              <p style="margin:0;max-width:420px;color:var(--muted);font-size:15px;line-height:1.6">{{ heroTaskLine }}</p>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:4px">
+                <button type="button" onClick="{{ startTraining }}" style="display:inline-flex;align-items:center;gap:9px;padding:14px 22px;border:none;border-radius:16px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 0 #3f39c9,0 14px 24px -10px rgba(91,95,245,.65);transition:transform .12s ease,box-shadow .12s ease" style-active="transform:translateY(3px);box-shadow:0 1px 0 #3f39c9,0 7px 16px -10px rgba(91,95,245,.6)">
+                  开始今日训练 <span style="width:18px;height:18px;display:inline-flex">{{ arrowIcon }}</span>
+                </button>
+                <button type="button" onClick="{{ goPlan }}" style="padding:13px 20px;border-radius:16px;background:var(--surface);color:var(--brand-ink);border:1.5px solid var(--border);font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 3px 0 var(--border);transition:transform .12s ease" style-active="transform:translateY(2px)">查看学习计划</button>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 14px 8px 9px;border-radius:14px;background:var(--chip);border:1px solid var(--border)">
+                  <img src="assets/badge-level-1.webp" alt="" style="width:24px;height:24px;object-fit:contain">
+                  <div><div style="font-size:10.5px;color:var(--muted-2);font-weight:600">当前段位</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:14.5px;letter-spacing:-.01em">{{ tier }}</div></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 14px 8px 9px;border-radius:14px;background:var(--chip);border:1px solid var(--border)">
+                  <img src="assets/reward-xp.webp" alt="" style="width:24px;height:24px;object-fit:contain">
+                  <div><div style="font-size:10.5px;color:var(--muted-2);font-weight:600">本周 XP</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:14.5px">{{ weekTotalFmt }}</div></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:9px;padding:8px 14px 8px 9px;border-radius:14px;background:var(--chip);border:1px solid var(--border)">
+                  <img src="assets/reward-target.webp" alt="" style="width:24px;height:24px;object-fit:contain">
+                  <div><div style="font-size:10.5px;color:var(--muted-2);font-weight:600">已解题目</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:14.5px">{{ solvedFmt }}</div></div>
+                </div>
+              </div>
+            </div>
+            <div style="position:relative;display:grid;place-items:center;min-height:320px;padding:16px">
+              <div style="position:absolute;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(123,107,255,.28),transparent 62%);filter:blur(6px)"></div>
+              <div style="position:absolute;width:322px;height:322px;border-radius:50%;border:1.5px solid rgba(123,107,255,.12)"></div>
+              <div style="position:absolute;width:250px;height:250px;border-radius:50%;border:1.5px solid rgba(123,107,255,.18)"></div>
+              <div style="position:absolute;bottom:30px;width:170px;height:24px;border-radius:50%;background:radial-gradient(ellipse,rgba(74,67,214,.2),transparent 72%);filter:blur(3px)"></div>
+              {{ heroMascotEl }}
+              <div style="position:absolute;top:22px;left:12px;z-index:2;display:flex;align-items:center;gap:8px;padding:9px 13px 9px 9px;background:var(--surface);border-radius:15px;box-shadow:var(--shadow-pop);border:1px solid var(--border);animation:qFloatSlow 4.5s ease-in-out infinite">
+                <img src="assets/reward-fire.webp" alt="" style="width:28px;height:28px;object-fit:contain">
+                <div><div style="font-family:'Space Grotesk';font-weight:700;font-size:17px;line-height:1">{{ streakDays }}</div><div style="font-size:10px;color:var(--muted-2);font-weight:600">连续天数</div></div>
+              </div>
+              <div style="position:absolute;bottom:26px;right:8px;z-index:2;display:flex;align-items:center;gap:8px;padding:9px 13px 9px 9px;background:var(--surface);border-radius:15px;box-shadow:var(--shadow-pop);border:1px solid var(--border);animation:qFloatSlow 5s .6s ease-in-out infinite">
+                <img src="assets/reward-xp.webp" alt="" style="width:28px;height:28px;object-fit:contain">
+                <div><div style="font-family:'Space Grotesk';font-weight:700;font-size:17px;line-height:1;color:var(--brand-ink)">+{{ todayXp }}</div><div style="font-size:10px;color:var(--muted-2);font-weight:600">今日 XP</div></div>
+              </div>
+            </div>
+          </section>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:18px">
+            <div style="padding:18px;border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);transition:transform .18s ease,box-shadow .18s ease" style-hover="transform:translateY(-3px)">
+              <div style="display:flex;align-items:center;gap:11px">
+                <img src="assets/badge-level-1.webp" alt="" style="width:46px;height:46px;object-fit:contain">
+                <div><div style="font-size:12px;color:var(--muted-2);font-weight:600">当前段位</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:19px;letter-spacing:-.01em">{{ tier }}</div></div>
+              </div>
+              <div style="margin-top:14px;height:8px;border-radius:20px;background:var(--track);overflow:hidden"><div style="height:100%;width:{{ tierPct }}%;border-radius:20px;background:linear-gradient(90deg,#5b5ff5,#8a7bff);transform-origin:left;animation:qFill 1s .1s both cubic-bezier(.2,.8,.2,1);transition:width .4s ease"></div></div>
+              <div style="margin-top:8px;font-size:11.5px;color:var(--muted);font-weight:600">距 {{ nextTier }} · 还差 {{ tierNeedFmt }} XP</div>
+            </div>
+            <div style="padding:18px;border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);transition:transform .18s ease,box-shadow .18s ease" style-hover="transform:translateY(-3px)">
+              <div style="display:flex;align-items:center;gap:11px">
+                <img src="assets/reward-fire.webp" alt="" style="width:46px;height:46px;object-fit:contain">
+                <div><div style="font-size:12px;color:var(--muted-2);font-weight:600">连续天数</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:22px">{{ streakDays }} <span style="font-size:13px;color:var(--muted)">天</span></div></div>
+              </div>
+              <div style="margin-top:16px;display:flex;gap:5px">
+                <sc-for list="{{ weekDots }}" as="d" hint-placeholder-count="7"><div style="{{ d.style }}"></div></sc-for>
+              </div>
+              <div style="margin-top:8px;font-size:11.5px;color:var(--muted);font-weight:600">{{ weekTrainedText }}</div>
+            </div>
+            <div style="padding:18px;border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);transition:transform .18s ease,box-shadow .18s ease" style-hover="transform:translateY(-3px)">
+              <div style="display:flex;align-items:center;gap:11px">
+                <img src="assets/reward-xp.webp" alt="" style="width:46px;height:46px;object-fit:contain">
+                <div><div style="font-size:12px;color:var(--muted-2);font-weight:600">累计 XP</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:22px">{{ heroXpFmt }}</div></div>
+              </div>
+              <div style="margin-top:14px;height:8px;border-radius:20px;background:var(--track);overflow:hidden"><div style="height:100%;width:{{ lvlPct }}%;border-radius:20px;background:linear-gradient(90deg,#ff9f2e,#ffbf5e);transform-origin:left;animation:qFill 1s .2s both cubic-bezier(.2,.8,.2,1);transition:width .4s ease"></div></div>
+              <div style="margin-top:8px;font-size:11.5px;color:var(--muted);font-weight:600">{{ lvLine }}</div>
+            </div>
+            <div style="padding:16px;border-radius:20px;background:linear-gradient(150deg,#5b5ff5,#7a6bff);color:#fff;box-shadow:0 1px 2px rgba(27,26,56,.05),0 18px 34px -18px rgba(91,95,245,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:11px;transition:transform .18s ease" style-hover="transform:translateY(-3px)">
+              <div style="position:relative;width:60px;height:60px;flex:0 0 auto;border-radius:50%;background:conic-gradient(#fff 0% {{ questPct }}%,rgba(255,255,255,.26) {{ questPct }}% 100%);display:grid;place-items:center">
+                <div style="width:45px;height:45px;border-radius:50%;background:#6a5cf0;display:grid;place-items:center;font-family:'Space Grotesk';font-weight:700;font-size:15px">{{ doneCount }}/5</div>
+              </div>
+              <div><div style="font-size:13.5px;font-weight:800">今日目标</div><div style="font-size:11.5px;font-weight:600;opacity:.9;margin-top:3px">{{ goalSubText }}</div></div>
+            </div>
+          </div>
+
+          <section style="margin-top:20px;padding:22px 22px 20px;border-radius:24px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:12px">
+                <img src="assets/reward-target.webp" alt="" style="width:36px;height:36px;object-fit:contain">
+                <div><div style="font-size:17px;font-weight:800;letter-spacing:-.01em">今日任务</div><div style="font-size:12.5px;color:var(--muted);font-weight:600">全部完成即可解锁连胜奖励 +50 XP</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:130px;height:9px;border-radius:20px;background:var(--track);overflow:hidden"><div style="height:100%;width:{{ questPct }}%;border-radius:20px;background:linear-gradient(90deg,#16a06a,#54dd9b);transition:width .45s cubic-bezier(.2,.8,.2,1)"></div></div>
+                <span style="font-family:'Space Grotesk';font-weight:700;font-size:13.5px;color:#0f9d63;flex:0 0 auto">{{ doneCount }}/5</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ quests }}" as="q" hint-placeholder-count="5">
+                <div onClick="{{ q.onToggle }}" style="{{ q.rowStyle }}" style-hover="transform:translateX(4px)">
+                  <span style="{{ q.badgeStyle }}"><span style="width:20px;height:20px;display:inline-flex">{{ q.iconEl }}</span></span>
+                  <div style="flex:1;min-width:0">
+                    <div style="{{ q.titleStyle }}">{{ q.title }}</div>
+                    <div style="font-size:12px;color:var(--muted-3);font-weight:600;margin-top:2px">{{ q.sub }}</div>
+                  </div>
+                  <span style="{{ q.xpStyle }}">+{{ q.xp }} XP</span>
+                  <span style="{{ q.toggleStyle }}"><span style="width:15px;height:15px;display:inline-flex">{{ q.checkEl }}</span></span>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:16px">
+            <section style="padding:22px;border-radius:24px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+                <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">刷题进度</div>
+                <span style="font-size:12px;color:var(--muted);font-weight:600">已解 716 题</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <sc-for list="{{ problemSets }}" as="p" hint-placeholder-count="4">
+                  <div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
+                      <span style="display:flex;align-items:center;gap:9px;min-width:0"><span style="{{ p.dotStyle }}"></span><span style="font-size:13.5px;font-weight:700;color:var(--text)">{{ p.name }}</span></span>
+                      <span style="display:flex;align-items:baseline;gap:7px;flex:0 0 auto"><span style="font-family:'Space Grotesk';font-size:12px;font-weight:600;color:var(--muted-2)">{{ p.done }} / {{ p.total }}</span><span style="font-family:'Space Grotesk';font-size:13.5px;font-weight:700;color:var(--text)">{{ p.pct }}%</span></span>
+                    </div>
+                    <div style="height:9px;border-radius:20px;background:var(--track);overflow:hidden"><div style="{{ p.fillStyle }}"></div></div>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+            <section style="padding:22px;border-radius:24px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);display:flex;flex-direction:column">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2px">
+                <div style="font-size:16px;font-weight:800;letter-spacing:-.01em">本周节奏</div>
+                <div style="text-align:right"><div style="font-family:'Space Grotesk';font-size:15px;font-weight:700;line-height:1.1">{{ weekTotal }} <span style="font-size:11px;color:var(--muted-2);font-weight:600">XP</span></div><div style="font-size:10.5px;color:var(--muted-3);font-weight:600;margin-top:1px">日均 {{ weekAvg }}</div></div>
+              </div>
+              <div style="flex:1;display:flex;align-items:stretch;gap:8px;height:150px;margin-top:6px">
+                <sc-for list="{{ weekBars }}" as="b" hint-placeholder-count="7">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center">
+                    <div style="flex:1;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end"><span style="{{ b.labelStyle }}">{{ b.xp }}</span><div style="{{ b.barStyle }}"></div></div>
+                    <span style="font-size:11px;color:var(--muted-3);font-weight:600;margin-top:8px">{{ b.d }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+          </div>
+
+          <section style="margin-top:16px;padding:22px;border-radius:24px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+              <div><span style="font-size:16px;font-weight:800;letter-spacing:-.01em">贡献热力图</span> <span style="font-size:12px;color:var(--muted);font-weight:600;margin-left:6px">最近 18 周 · 共 214 次训练</span></div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted-3);font-weight:600">少<div style="width:12px;height:12px;border-radius:3px;background:var(--heat0)"></div><div style="width:12px;height:12px;border-radius:3px;background:#dcdbfb"></div><div style="width:12px;height:12px;border-radius:3px;background:#b7b5f7"></div><div style="width:12px;height:12px;border-radius:3px;background:#827ef0"></div><div style="width:12px;height:12px;border-radius:3px;background:#5b5ff5"></div>多</div>
+            </div>
+            <div style="display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);grid-template-columns:repeat(18,1fr);gap:4px;overflow-x:auto">
+              <sc-for list="{{ heatCells }}" as="c" hint-placeholder-count="126"><div style="{{ c.style }}" style-hover="transform:scale(1.55);z-index:2;position:relative"></div></sc-for>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:11px;padding:0 2px;font-size:10.5px;color:var(--muted-2);font-weight:600">
+              <span>3 月</span><span>4 月</span><span>5 月</span><span>6 月</span><span>7 月</span>
+            </div>
+          </section>
+
+          <section style="margin-top:16px;padding:22px;border-radius:24px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+              <div style="display:flex;align-items:center;gap:11px"><img src="assets/reward-trophy.webp" alt="" style="width:32px;height:32px;object-fit:contain"><span style="font-size:16px;font-weight:800;letter-spacing:-.01em">排行榜</span></div>
+              <div style="display:flex;gap:6px">
+                <span style="padding:6px 13px;border-radius:20px;background:#5b5ff5;color:#fff;font-size:12.5px;font-weight:700">总分</span>
+                <span style="padding:6px 13px;border-radius:20px;background:var(--track);color:var(--muted);font-size:12.5px;font-weight:600">本周</span>
+                <span style="padding:6px 13px;border-radius:20px;background:var(--track);color:var(--muted);font-size:12.5px;font-weight:600">上海</span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px">
+              <div style="position:relative;padding:20px 14px 16px;border-radius:18px;text-align:center;border:1.5px solid #ffdca0;background:var(--surface-2)">
+                <img src="assets/reward-crown.webp" alt="" style="position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:34px;height:34px;object-fit:contain">
+                <div style="margin-top:12px;display:grid;place-items:center;width:48px;height:48px;margin-inline:auto;border-radius:50%;background:#fff3dd;color:#b3610a;font-family:'Space Grotesk';font-weight:700;font-size:16px">AC</div>
+                <div style="font-weight:700;font-size:14px;margin-top:9px">Ari Chen</div>
+                <div style="font-size:11px;color:var(--muted-3);font-weight:600">上海 · Trader I</div>
+                <div style="font-family:'Space Grotesk';font-weight:700;font-size:20px;color:#c98a1e;margin-top:8px">2,940</div>
+              </div>
+              <div style="position:relative;padding:20px 14px 16px;border-radius:18px;text-align:center;border:1.5px solid var(--border-2);background:var(--surface-2)">
+                <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#d9dce4,#b7bcc8);color:#fff;font-family:'Space Grotesk';font-weight:700;font-size:12px">2</div>
+                <div style="margin-top:12px;display:grid;place-items:center;width:48px;height:48px;margin-inline:auto;border-radius:50%;background:#eef0f4;color:#7a8090;font-family:'Space Grotesk';font-weight:700;font-size:16px">MP</div>
+                <div style="font-weight:700;font-size:14px;margin-top:9px">Mina Patel</div>
+                <div style="font-size:11px;color:var(--muted-3);font-weight:600">伦敦 · Analyst III</div>
+                <div style="font-family:'Space Grotesk';font-weight:700;font-size:20px;color:var(--muted);margin-top:8px">2,610</div>
+              </div>
+              <div style="position:relative;padding:20px 14px 16px;border-radius:18px;text-align:center;border:1.5px solid #cfd0fb;background:linear-gradient(180deg,var(--brand-soft),var(--brand-soft-2))">
+                <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:linear-gradient(180deg,#eaa970,#cf8046);color:#fff;font-family:'Space Grotesk';font-weight:700;font-size:12px">3</div>
+                <img src="assets/avatar-happy-v2.png" alt="" style="margin-top:12px;width:48px;height:48px;margin-inline:auto;display:block;border-radius:50%;object-fit:cover;background:#eef0ff">
+                <div style="font-weight:700;font-size:14px;margin-top:9px">Quant<span style="color:var(--brand-ink)"> · 你</span></div>
+                <div style="font-size:11px;color:var(--muted-3);font-weight:600">上海 · {{ tier }}</div>
+                <div style="font-family:'Space Grotesk';font-weight:700;font-size:20px;color:var(--brand-ink);margin-top:8px">{{ heroXpFmt }}</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:14px;padding:11px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);transition:transform .15s ease" style-hover="transform:translateX(4px)">
+                <span style="font-family:'Space Grotesk';font-weight:700;font-size:14px;color:var(--muted-2);width:20px;text-align:center">4</span>
+                <div style="display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#eafaf3;color:#0f9d63;font-family:'Space Grotesk';font-weight:700;font-size:13px">SK</div>
+                <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13.5px">Sofia Kim</div><div style="font-size:11px;color:var(--muted-3);font-weight:600">新加坡 · Analyst II</div></div>
+                <span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-family:'Space Grotesk';font-size:10.5px;font-weight:700;background:#e3f7ee;color:#0f9d63;flex:0 0 auto">▲ 1</span>
+                <span style="font-family:'Space Grotesk';font-weight:700;font-size:15px;width:52px;text-align:right">2,210</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:14px;padding:11px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);transition:transform .15s ease" style-hover="transform:translateX(4px)">
+                <span style="font-family:'Space Grotesk';font-weight:700;font-size:14px;color:var(--muted-2);width:20px;text-align:center">5</span>
+                <div style="display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#eef0ff;color:#5b5ff5;font-family:'Space Grotesk';font-weight:700;font-size:13px">LW</div>
+                <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13.5px">Leo Wang</div><div style="font-size:11px;color:var(--muted-3);font-weight:600">香港 · Analyst I</div></div>
+                <span style="display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-family:'Space Grotesk';font-size:10.5px;font-weight:700;background:#fdeceb;color:#d0524b;flex:0 0 auto">▼ 2</span>
+                <span style="font-family:'Space Grotesk';font-weight:700;font-size:15px;width:52px;text-align:right">1,980</span>
+              </div>
+            </div>
+          </section>
+
+          <section style="margin-top:16px;padding:22px;border-radius:24px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+              <div><span style="font-size:16px;font-weight:800;letter-spacing:-.01em">成就徽章</span> <span style="font-size:12px;color:var(--muted);font-weight:600;margin-left:6px">4 / 12 已解锁</span></div>
+              <span style="font-size:12.5px;color:var(--brand-ink);font-weight:700;cursor:pointer">查看全部 ›</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:16px 8px;border-radius:16px;background:var(--surface-2);border:1px solid var(--border);transition:transform .18s ease" style-hover="transform:translateY(-4px)"><img src="assets/badge-level-1.webp" alt="" style="width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(74,67,214,.22))"><div style="font-size:12px;font-weight:700;text-align:center">初出茅庐</div><div style="font-size:10.5px;color:var(--muted-3);font-weight:600">Lv.1 达成</div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:16px 8px;border-radius:16px;background:var(--surface-2);border:1px solid var(--border);transition:transform .18s ease" style-hover="transform:translateY(-4px)"><img src="assets/badge-streak-7.webp" alt="" style="width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(255,122,61,.28))"><div style="font-size:12px;font-weight:700;text-align:center">七日连胜</div><div style="font-size:10.5px;color:var(--muted-3);font-weight:600">连续 7 天</div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:16px 8px;border-radius:16px;background:var(--surface-2);border:1px solid var(--border);transition:transform .18s ease" style-hover="transform:translateY(-4px)"><img src="assets/badge-gold.webp" alt="" style="width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(255,159,46,.3))"><div style="font-size:12px;font-weight:700;text-align:center">黄金勋章</div><div style="font-size:10.5px;color:var(--muted-3);font-weight:600">正确率 90%</div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:16px 8px;border-radius:16px;background:var(--surface-2);border:1px solid var(--border);transition:transform .18s ease" style-hover="transform:translateY(-4px)"><img src="assets/badge-top-rank.webp" alt="" style="width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(74,67,214,.22))"><div style="font-size:12px;font-weight:700;text-align:center">登顶周榜</div><div style="font-size:10.5px;color:var(--muted-3);font-weight:600">地区第一</div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:16px 8px;border-radius:16px;background:var(--surface-2);border:1px dashed var(--border-2);opacity:.85"><div style="width:58px;height:58px;border-radius:50%;background:var(--track);display:grid;place-items:center;color:var(--muted-2)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.5"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></div><div style="font-size:12px;font-weight:700;text-align:center;color:var(--muted-2)">百题达人</div><div style="font-size:10.5px;color:var(--muted-3);font-weight:600">68 / 100</div><div style="width:72%;height:5px;border-radius:20px;background:var(--track);overflow:hidden;margin-top:3px"><div style="height:100%;width:68%;border-radius:20px;background:linear-gradient(90deg,#b7b5f7,#cbc9fb)"></div></div></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:7px;padding:16px 8px;border-radius:16px;background:var(--surface-2);border:1px dashed var(--border-2);opacity:.85"><div style="width:58px;height:58px;border-radius:50%;background:var(--track);display:grid;place-items:center;color:var(--muted-2)"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.5"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></div><div style="font-size:12px;font-weight:700;text-align:center;color:var(--muted-2)">大师段位</div><div style="font-size:10.5px;color:var(--muted-3);font-weight:600">敬请期待</div></div>
+            </div>
+          </section>
+          <div id="tail"></div>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ isPlan }}"><dc-import name="QuantGym 计划" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isSkills }}"><dc-import name="QuantGym 能力值" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isArena }}"><dc-import name="QuantGym 联赛" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isPk }}"><dc-import name="QuantGym PK" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isLibrary }}"><dc-import name="QuantGym 资料库" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isMarket }}"><dc-import name="QuantGym 报价" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isAccount }}"><dc-import name="QuantGym 账户" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isSettings }}"><dc-import name="QuantGym 设置" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isInterview }}"><dc-import name="QuantGym 模拟面试" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isProblems }}"><dc-import name="QuantGym 题目" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isMental }}"><dc-import name="QuantGym 速算" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isPoker }}"><dc-import name="QuantGym Poker" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isExp }}"><dc-import name="QuantGym 面经" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isNews }}"><dc-import name="QuantGym 新闻" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isForum }}"><dc-import name="QuantGym 论坛" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isChat }}"><dc-import name="QuantGym 聊天" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isNetwork }}"><dc-import name="QuantGym 人脉" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isResume }}"><dc-import name="QuantGym 简历" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isJobs }}"><dc-import name="QuantGym 求职" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isCompanies }}"><dc-import name="QuantGym 公司" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isCourses }}"><dc-import name="QuantGym 课程" hint-size="100%,760px"></dc-import></sc-if>
+        <sc-if value="{{ isNotes }}"><dc-import name="QuantGym 资料笔记" hint-size="100%,760px"></dc-import></sc-if>
+
+        <sc-if value="{{ isOther }}">
+        <div style="display:grid;place-items:center;min-height:60vh">
+          <div style="text-align:center;max-width:440px;padding:40px;border-radius:26px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card)">
+            <img src="assets/mascot-calculator-v2.png" alt="" style="width:130px;height:auto;margin:0 auto 8px;filter:drop-shadow(0 18px 26px rgba(74,67,214,.24))">
+            <h2 style="margin:0 0 8px;font-size:22px;font-weight:800">新版「{{ otherTitle }}」正在路上</h2>
+            <p style="margin:0 0 20px;color:var(--muted);font-size:14px;line-height:1.6">这个模块将沿用同一套「Playful Precision」设计系统。先从总览开始体验新的外观与手感。</p>
+            <button type="button" onClick="{{ goOverview }}" style="padding:13px 22px;border:none;border-radius:15px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:700;font-size:14.5px;cursor:pointer;box-shadow:0 4px 0 #3f39c9,0 12px 22px -10px rgba(91,95,245,.6);transition:transform .12s ease" style-active="transform:translateY(3px);box-shadow:0 1px 0 #3f39c9">返回总览</button>
+          </div>
+        </div>
+        </sc-if>
+
+      </div>
+      <sc-if value="{{ narrow }}"><div style="height:74px"></div></sc-if>
+    </main>
+  </div>
+
+  <sc-if value="{{ narrow }}">
+  <nav style="position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;align-items:stretch;gap:2px;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:var(--header-bg);border-top:1px solid var(--border);box-shadow:0 -8px 26px -16px rgba(27,26,56,.4)">
+    <sc-for list="{{ bottomTabs }}" as="t" hint-placeholder-count="5">
+      <button type="button" onClick="{{ t.onClick }}" style="{{ t.style }}">
+        <span style="width:23px;height:23px;display:inline-flex">{{ t.iconEl }}</span>
+        <span style="font-size:10.5px;font-weight:700">{{ t.name }}</span>
+      </button>
+    </sc-for>
+  </nav>
+  </sc-if>
+
+  <sc-if value="{{ navSheetOpen }}">
+  <div onClick="{{ onCloseSheet }}" style="position:fixed;inset:0;z-index:60;background:rgba(20,18,40,.5);backdrop-filter:blur(2px);animation:qFade .18s ease">
+    <div onClick="{{ stop }}" style="position:absolute;left:0;right:0;bottom:0;max-height:82vh;overflow-y:auto;border-radius:24px 24px 0 0;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px calc(24px + env(safe-area-inset-bottom));animation:qSheet .26s cubic-bezier(.2,.8,.2,1)">
+      <div style="width:40px;height:5px;border-radius:20px;background:var(--border-2);margin:8px auto 14px"></div>
+      <div style="display:flex;align-items:center;gap:11px;padding:0 4px 12px">
+        <img src="assets/brand-q-mark.webp" alt="" style="width:34px;height:34px;object-fit:contain">
+        <div style="font-weight:800;font-size:18px;flex:1">全部模块</div>
+        <button type="button" onClick="{{ onCloseSheet }}" style="display:grid;place-items:center;width:38px;height:38px;border-radius:11px;border:1px solid var(--border);background:var(--surface-2);color:var(--muted);cursor:pointer">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <sc-for list="{{ navGroups }}" as="group" hint-placeholder-count="5">
+          <div>
+            <div style="font-size:10.5px;font-weight:700;letter-spacing:.14em;color:var(--muted-2);padding:0 4px;margin-bottom:8px">{{ group.label }}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <sc-for list="{{ group.items }}" as="item" hint-placeholder-count="4">
+                <button type="button" onClick="{{ item.onClick }}" style="{{ item.sheetStyle }}">
+                  <span style="display:inline-flex;width:20px;height:20px;flex:0 0 auto">{{ item.iconEl }}</span>
+                  <span style="flex:1;min-width:0;text-align:left">{{ item.name }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ showFloatingTodoWide }}" hint-placeholder-val="{{ true }}">
+  <button type="button" onClick="{{ startTraining }}" style="position:fixed;bottom:22px;right:26px;z-index:40;display:flex;align-items:center;gap:10px;padding:11px 16px 11px 13px;border-radius:18px;border:1px solid var(--border);background:var(--surface);cursor:pointer;box-shadow:0 18px 40px -14px rgba(74,67,214,.4);transition:transform .16s ease" style-hover="transform:translateY(-2px)">
+    <span style="width:19px;height:19px;display:inline-flex;color:var(--brand-ink)">{{ boltIcon }}</span>
+    <span style="font-weight:700;font-size:14px">今日待办</span>
+    <span style="display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:#5b5ff5;color:#fff;font-family:'Space Grotesk';font-weight:700;font-size:12px">{{ goalLeft }}</span>
+  </button>
+  </sc-if>
+
+  <sc-if value="{{ switching }}">
+  <div style="position:fixed;top:0;left:0;right:0;z-index:60;height:3px;pointer-events:none;overflow:hidden"><div style="height:100%;width:38%;border-radius:3px;background:linear-gradient(90deg,#5b5ff5,#8a7bff);animation:qgLoader .55s ease-out infinite"></div></div>
+  </sc-if>
+
+  <sc-if value="{{ notifOpen }}">
+  <div onClick="{{ closeNotifs }}" style="position:fixed;inset:0;z-index:69;background:transparent">
+    <div onClick="{{ stop }}" style="position:absolute;top:64px;right:18px;width:min(94vw,380px);max-height:min(72vh,560px);display:flex;flex-direction:column;border-radius:20px;background:var(--surface);border:1px solid var(--border-2);box-shadow:0 30px 70px -20px rgba(10,8,40,.5);overflow:hidden;animation:qRise .2s ease both">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 17px;border-bottom:1px solid var(--border)">
+        <span style="font-size:14px;font-weight:800">通知</span>
+        <span style="font-size:11.5px;color:var(--muted-2);font-weight:600">{{ notifCountText }}</span>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:3px">
+        <sc-for list="{{ notifRows }}" as="n" hint-placeholder-count="4">
+          <div onClick="{{ n.onGo }}" style="{{ n.style }}" style-hover="background:var(--surface-3)">
+            <span style="{{ n.iconWrap }}">{{ n.iconEl }}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:700;line-height:1.4">{{ n.title }}</div>
+              <div style="font-size:11.5px;color:var(--muted);font-weight:600;margin-top:2px;line-height:1.45">{{ n.sub }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex:0 0 auto;padding-top:1px">
+              <span style="font-size:10.5px;color:var(--muted-2);font-weight:600;white-space:nowrap">{{ n.ago }}</span>
+              <span style="{{ n.dotStyle }}"></span>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ notifEmpty }}">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:30px 16px;text-align:center">
+          <img src="assets/avatar-happy-v2.png" alt="" style="width:72px;height:auto">
+          <div style="font-size:13px;font-weight:800">暂时没有新通知</div>
+          <div style="font-size:11.5px;color:var(--muted-2);font-weight:600;line-height:1.5">完成训练、升级、求职进展都会出现在这里</div>
+        </div>
+        </sc-if>
+      </div>
+      <div style="padding:10px 17px;border-top:1px solid var(--border);font-size:11px;color:var(--muted-2);font-weight:600">点击通知跳转对应模块 · 关闭即全部标记已读</div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ onboardOpen }}">
+  <div style="position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(16,14,36,.6);backdrop-filter:blur(4px);animation:qFade .2s ease both;padding:16px">
+    <div style="position:relative;width:min(92vw,400px);border-radius:26px;background:var(--surface);border:1px solid var(--border-2);box-shadow:0 40px 90px -30px rgba(10,8,40,.65);padding:26px 24px 22px;text-align:center">
+      <button type="button" onClick="{{ obSkip }}" style="position:absolute;top:14px;right:16px;border:none;background:transparent;color:var(--muted-2);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:6px">跳过</button>
+      <div style="display:grid;place-items:center;height:150px">{{ obImgEl }}</div>
+      <div style="margin-top:12px;font-size:11.5px;font-weight:800;letter-spacing:.12em;color:var(--brand-ink)">{{ obKicker }}</div>
+      <div style="margin-top:6px;font-size:21px;font-weight:800;letter-spacing:-.01em">{{ obTitle }}</div>
+      <div style="margin-top:8px;font-size:13px;line-height:1.65;color:var(--muted);font-weight:500">{{ obSub }}</div>
+      <div style="display:flex;justify-content:center;gap:6px;margin-top:16px">
+        <sc-for list="{{ obDots }}" as="d" hint-placeholder-count="3"><span style="{{ d }}"></span></sc-for>
+      </div>
+      <button type="button" onClick="{{ obNext }}" style="margin-top:16px;width:100%;padding:13px;border:none;border-radius:14px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:800;font-size:14.5px;cursor:pointer;box-shadow:0 4px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(3px)">{{ obCta }}</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ paletteOpen }}">
+  <div onClick="{{ closePalette }}" style="position:fixed;inset:0;z-index:70;background:rgba(16,14,36,.52);backdrop-filter:blur(3px);animation:qFade .16s ease;display:flex;align-items:flex-start;justify-content:center;padding:11vh 16px 16px">
+    <div onClick="{{ stop }}" style="width:min(94vw,560px);border-radius:20px;background:var(--surface);border:1px solid var(--border-2);box-shadow:0 40px 90px -24px rgba(10,8,40,.6);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:11px;padding:14px 17px;border-bottom:1px solid var(--border)">
+        <span style="width:19px;height:19px;display:inline-flex;color:var(--brand-ink);flex:0 0 auto">{{ searchIcon }}</span>
+        <input value="{{ paletteQ }}" onInput="{{ onPaletteQ }}" data-qg-palette-input="1" placeholder="搜索题目、公司、模块，或输入命令…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:inherit;font-size:15px;font-weight:600;color:var(--text)">
+        <span onClick="{{ closePalette }}" style="padding:3px 8px;border-radius:8px;background:var(--track);color:var(--muted);font-family:'Space Grotesk';font-size:11px;font-weight:700;cursor:pointer;flex:0 0 auto">ESC</span>
+      </div>
+      <div style="max-height:min(54vh,430px);overflow-y:auto;padding:8px">
+        <sc-for list="{{ paletteRows }}" as="r" hint-placeholder-count="6">
+          <div onClick="{{ r.onRun }}" onMouseEnter="{{ r.onHover }}" style="{{ r.style }}">
+            <span style="{{ r.iconWrap }}"><span style="width:17px;height:17px;display:inline-flex">{{ r.iconEl }}</span></span>
+            <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.label }}</div><div style="font-size:11px;color:var(--muted-2);font-weight:600">{{ r.hint }}</div></div>
+            <span style="{{ r.kbdStyle }}">↵</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ paletteEmpty }}">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:26px 16px 22px;text-align:center">
+          <img src="assets/mascot-search.png" alt="" style="width:96px;height:auto;opacity:.95">
+          <div style="font-size:13.5px;font-weight:800">没找到「{{ paletteQ }}」</div>
+          <div style="font-size:12px;color:var(--muted-2);font-weight:600">试试题目名、公司名，或模块名（如「速算」「面经」）</div>
+        </div>
+        </sc-if>
+      </div>
+      <div style="display:flex;gap:14px;padding:10px 17px;border-top:1px solid var(--border);font-size:11px;color:var(--muted-2);font-weight:600"><span>↑↓ 选择</span><span>↵ 跳转</span><span>ESC 关闭</span><span style="margin-left:auto">⌘K 随处唤起</span></div>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;heroMascot&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;wave&quot;,&quot;calculator&quot;,&quot;trophy&quot;,&quot;hero&quot;],&quot;default&quot;:&quot;wave&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;吉祥物与外观&quot;},
+  &quot;defaultTheme&quot;: {&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;吉祥物与外观&quot;},
+  &quot;showQuantWire&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;模块开关&quot;},
+  &quot;showFloatingTodo&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;模块开关&quot;}
+}">
+class Component extends DCLogic {
+  state = {
+    page: 'overview',
+    hoverNav: null,
+    mounted: false,
+    streakDays: 0,
+    heroXp: 0,
+    todayXp: 0,
+    shared: null,
+    paletteOpen: false, paletteQ: '', paletteIdx: 0,
+    notifOpen: false, onboard: -1, switching: false,
+    theme: 'light',
+    narrow: (typeof window !== 'undefined' && window.innerWidth <= 860),
+    navSheet: false,
+  };
+
+  sharedState() {
+    if (this.state.shared) return this.state.shared;
+    if (window.QG) return QG.get();
+    return { xp: 2480, todayXp: 120, streak: 12, solved: 342, weekXp: [40,120,90,0,70,200,130], quests: {} };
+  }
+
+  componentDidMount() {
+    requestAnimationFrame(() => this.setState({ mounted: true }));
+
+    // 全局共享状态：初始同步 + 订阅变化
+    const sh = window.QG ? QG.get() : this.sharedState();
+    this.setState({ shared: sh });
+    this.syncCounters(sh, true);
+    if (window.QG) this._unsub = QG.onChange((st) => { this.setState({ shared: st }); this.syncCounters(st); });
+
+    // 跨模块导航总线：其他模块 QG.navigate(page, ctx) 时切页
+    this._onNav = (e) => { e.detail.handled = true; this.go(e.detail.page); };
+    window.addEventListener('qg-nav', this._onNav);
+
+    // URL hash → 初始页（#problems 等）
+    try {
+      const h = (window.location.hash || '').replace('#', '');
+      if (h && h !== this.state.page) this.setState({ page: h });
+    } catch (e) {}
+
+    // ⌘K 命令面板
+    this._onKey = (ev) => {
+      if ((ev.metaKey || ev.ctrlKey) && (ev.key === 'k' || ev.key === 'K')) {
+        ev.preventDefault();
+        this.setPalette(!this.state.paletteOpen);
+        return;
+      }
+      if (!this.state.paletteOpen) return;
+      if (ev.key === 'Escape') this.setPalette(false);
+      else if (ev.key === 'ArrowDown') { ev.preventDefault(); this.setState((s) => ({ paletteIdx: Math.min((this._paletteLen || 1) - 1, s.paletteIdx + 1) })); }
+      else if (ev.key === 'ArrowUp') { ev.preventDefault(); this.setState((s) => ({ paletteIdx: Math.max(0, s.paletteIdx - 1) })); }
+      else if (ev.key === 'Enter') { const it = (this._paletteItems || [])[this.state.paletteIdx]; if (it) this.runPalette(it); }
+    };
+    window.addEventListener('keydown', this._onKey);
+
+    // theme: last choice wins, else prop default, else light
+    let theme = 'light';
+    try { theme = localStorage.getItem('qg-theme') || this.props.defaultTheme || 'light'; } catch (e) { theme = this.props.defaultTheme || 'light'; }
+    this.applyTheme(theme);
+
+    // 新手引导：首次访问弹出
+    try { if (!localStorage.getItem('qg-onboarded')) this.setState({ onboard: 0 }); } catch (e) {}
+
+    this._onResize = () => {
+      const n = window.innerWidth <= 860;
+      if (n !== this.state.narrow) this.setState({ narrow: n, navSheet: n ? this.state.navSheet : false });
+    };
+    window.addEventListener('resize', this._onResize);
+  }
+
+  componentWillUnmount() {
+    if (this._onResize) window.removeEventListener('resize', this._onResize);
+    if (this._onNav) window.removeEventListener('qg-nav', this._onNav);
+    if (this._onKey) window.removeEventListener('keydown', this._onKey);
+    if (this._unsub) this._unsub();
+  }
+
+  syncCounters(sh, first) {
+    this.countTo('streakDays', sh.streak, first ? 700 : 350);
+    this.countTo('heroXp', sh.xp, first ? 950 : 450);
+    this.countTo('todayXp', sh.todayXp, first ? 750 : 400);
+  }
+
+  setPalette(open) {
+    this.setState({ paletteOpen: open, paletteQ: '', paletteIdx: 0 });
+    if (open) setTimeout(() => { const el = document.querySelector('[data-qg-palette-input]'); if (el) el.focus(); }, 60);
+  }
+
+  paletteItems() {
+    const pages = [
+      ['overview', '总览', 'grid', '仪表盘 · 今日任务'], ['plan', '计划', 'calendar', '学习计划看板'], ['skills', '能力值', 'radar', '六维雷达'], ['arena', '联赛', 'trophy', '段位联赛 · 学习地图 · 奖励商店'],
+      ['interview', '模拟面试', 'chat', 'AI 面试考场'], ['problems', '题目', 'list', '2,771 题题库'], ['mental', 'Mental Math', 'calc', '限时速算'],
+      ['poker', 'Poker', 'suit', '决策训练'], ['pk', 'PK 对战', 'bolt', '实时同题对战 · Rating'], ['exp', '面经', 'notebook', '真实面试经验'], ['news', '新闻', 'news', 'Quant Wire'],
+      ['forum', '论坛', 'forum', '社区讨论'], ['chat', '聊天', 'forum', '私信与群组'], ['network', '人脉', 'network', '行业人脉'],
+      ['resume', '简历', 'resume', '简历诊断'], ['jobs', '求职', 'briefcase', '投递追踪'], ['companies', '公司', 'building', '公司图鉴'],
+      ['courses', '课程', 'course', '体系课'], ['notes', '资料笔记', 'bookmark', '知识卡片'], ['library', '资料库', 'course', '量化书架 · 在线阅读'], ['market', '报价游戏', 'calc', '做市 Bid/Ask 训练'], ['account', '账户', 'user', '个人资料 · 安全'], ['settings', '设置', 'gear', '语言 · 云同步 · 备份'],
+    ].map((p) => ({ kind: 'page', page: p[0], label: p[1], icon: p[2], hint: '页面 · ' + p[3], keys: p[1] + p[3] }));
+    const problems = [
+      ['蒙蒂霍尔问题 Monty Hall', '概率期望 · 中等'], ['醉酒乘客 Drunk passenger', '概率期望 · 简单'], ['赌徒破产 Gambler\u2019s ruin', '概率期望 · 中等'],
+      ['古怪的海盗 Screwy pirates', '速算逻辑 · 困难'], ['燃烧的绳索 Burning ropes', '逻辑 · 简单'], ['两数之和 Two Sum', 'LeetCode · 简单'],
+    ].map((p) => ({ kind: 'problem', page: 'problems', ctx: { q: p[0].split(' ')[0] }, label: p[0], icon: 'list', hint: '题目 · ' + p[1], keys: p[0] }));
+    const companies = ['Jane Street', 'Citadel Securities', 'Optiver', 'IMC Trading', 'SIG', 'DRW', 'Hudson River Trading', 'Jump Trading']
+      .map((c) => ({ kind: 'company', page: 'companies', ctx: { q: c }, label: c, icon: 'building', hint: '公司 · 图鉴与真题', keys: c }));
+    const actions = [
+      { kind: 'action', act: 'theme', label: this.state.theme === 'dark' ? '切换到浅色模式' : '切换到深色模式', icon: this.state.theme === 'dark' ? 'sun' : 'moon', hint: '动作 · 全站生效', keys: '主题 深色 浅色 theme dark light' },
+      { kind: 'action', act: 'train', label: '开始今日训练', icon: 'bolt', hint: '动作 · 跳到下一个未完成任务', keys: '训练 任务 today train' },
+    ];
+    return { pages, problems, companies, actions };
+  }
+
+  runPalette(it) {
+    this.setPalette(false);
+    if (it.kind === 'action') {
+      if (it.act === 'theme') this.toggleTheme();
+      else if (it.act === 'train') this.startTraining();
+      return;
+    }
+    if (it.ctx && window.QG) QG.navigate(it.page, it.ctx);
+    else this.go(it.page);
+  }
+
+  closeNotifs() {
+    this.setState({ notifOpen: false });
+    if (window.QG) QG.markNotifsRead();
+  }
+
+  obNext() {
+    if (this.state.onboard >= 2) this.finishOnboard();
+    else this.setState({ onboard: this.state.onboard + 1 });
+  }
+
+  finishOnboard() {
+    try { localStorage.setItem('qg-onboarded', '1'); } catch (e) {}
+    this.setState({ onboard: -1 });
+  }
+
+  timeAgo(t) {
+    const d = Date.now() - (t || 0);
+    if (d < 60e3) return '刚刚';
+    if (d < 3600e3) return Math.floor(d / 60e3) + ' 分钟前';
+    if (d < 86400e3) return Math.floor(d / 3600e3) + ' 小时前';
+    return Math.floor(d / 86400e3) + ' 天前';
+  }
+
+  startTraining() {
+    const sh = this.sharedState();
+    const defs = window.QG ? QG.QUESTS : [];
+    const open = defs.find((q) => !sh.quests[q.id]);
+    this.go(open ? open.page : 'plan');
+  }
+
+  applyTheme(theme) {
+    this.setState({ theme });
+    try { document.documentElement.setAttribute('data-theme', theme); } catch (e) {}
+    try { localStorage.setItem('qg-theme', theme); } catch (e) {}
+  }
+  toggleTheme() { this.applyTheme(this.state.theme === 'dark' ? 'light' : 'dark'); }
+
+  countTo(key, target, dur) {
+    const start = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / dur);
+      const e = 1 - Math.pow(1 - t, 3);
+      this.setState({ [key]: Math.round(target * e) });
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  go(page) {
+    this.setState({ page, hoverNav: null, navSheet: false, switching: page !== this.state.page });
+    clearTimeout(this._swT); this._swT = setTimeout(() => this.setState({ switching: false }), 650);
+    try { window.history.replaceState(null, '', '#' + page); } catch (e) {}
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+  }
+  enter(id) { this.setState({ hoverNav: id }); }
+  leave() { this.setState({ hoverNav: null }); }
+  toggleQuest(id, done) {
+    if (!window.QG) return;
+    if (done) QG.uncompleteQuest(id);
+    else QG.completeQuest(id, { sub: '在总览手动勾选' });
+  }
+
+  icon(name) {
+    const R = React.createElement;
+    const wrap = (ch) => R('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.9, strokeLinecap: 'round', strokeLinejoin: 'round', style: { width: '100%', height: '100%', display: 'block' } }, ch);
+    const P = (d, k) => R('path', { d, key: k || d.slice(0, 8) });
+    const C = (cx, cy, r, k) => R('circle', { cx, cy, r, key: k });
+    const Rc = (x, y, w, h, rx, k) => R('rect', { x, y, width: w, height: h, rx, key: k });
+    const L = (a, b, c, d, k) => R('line', { x1: a, y1: b, x2: c, y2: d, key: k });
+    switch (name) {
+      case 'grid': return wrap([Rc(3,3,7.5,7.5,2,'a'),Rc(13.5,3,7.5,7.5,2,'b'),Rc(13.5,13.5,7.5,7.5,2,'c'),Rc(3,13.5,7.5,7.5,2,'d')]);
+      case 'calendar': return wrap([Rc(3,4.5,18,16.5,3.5,'r'),L(3,9,21,9,'l'),L(8,2.5,8,6,'a'),L(16,2.5,16,6,'b'),P('M8 13.5l2.2 2.2 4.2-4.4','c')]);
+      case 'radar': return wrap([C(12,12,9,'a'),C(12,12,5,'b'),C(12,12,1.4,'c'),L(12,3,12,7,'d'),L(12,17,12,21,'e')]);
+      case 'chat': return wrap([P('M20 14.5a3 3 0 0 1-3 3H9l-4 3V6.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3z','a'),P('M9 9.8h.01M13 9.8h.01M17 9.8h.01','b')]);
+      case 'list': return wrap([L(9,6,20,6,'a'),L(9,12,20,12,'b'),L(9,18,20,18,'c'),P('M4 6h.01M4 12h.01M4 18h.01','d')]);
+      case 'calc': return wrap([Rc(4,3,16,18,3.5,'r'),L(8,7,16,7,'a'),P('M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01','b')]);
+      case 'suit': return wrap([P('M12 3l5.2 5.2c1.5 1.5 1.5 3.9 0 5.4A3.7 3.7 0 0 1 12 14a3.7 3.7 0 0 1-5.2-.4c-1.5-1.5-1.5-3.9 0-5.4z','a'),P('M12 14v6M9.5 20h5','b')]);
+      case 'notebook': return wrap([P('M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7z','a'),L(7,3,7,21,'b'),L(4,7.5,7,7.5,'c'),L(4,12,7,12,'d'),L(4,16.5,7,16.5,'e'),L(10.5,8,15,8,'f'),L(10.5,12,15,12,'g')]);
+      case 'news': return wrap([P('M4 5.5h13v13a2 2 0 0 0 2 2H6.5a2.5 2.5 0 0 1-2.5-2.5z','a'),P('M17 9h2a1 1 0 0 1 1 1v8.5a2 2 0 0 1-2 2','b'),L(7,9,14,9,'c'),L(7,13,14,13,'d'),L(7,16.5,11,16.5,'e')]);
+      case 'forum': return wrap([P('M18 12.5a3 3 0 0 1-3 3H9l-4 3V7a3 3 0 0 1 3-3h7a3 3 0 0 1 3 3z','a')]);
+      case 'network': return wrap([C(6,7,2.4,'a'),C(18,7,2.4,'b'),C(12,18,2.4,'c'),L(7.9,8.4,10.3,15.8,'d'),L(16.1,8.4,13.7,15.8,'e'),L(8.4,7,15.6,7,'f')]);
+      case 'resume': return wrap([P('M6.5 3h7l5 5v11a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z','a'),P('M13.5 3v5h5','b'),C(11,13,2,'c'),P('M7.5 18.5a3.5 3.5 0 0 1 7 0','d')]);
+      case 'briefcase': return wrap([Rc(3,7,18,13,3.5,'r'),P('M8 7V5.5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2V7','a'),L(3,12.5,21,12.5,'b')]);
+      case 'building': return wrap([P('M5 21V4.5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V21','a'),P('M15 9.5h3a1 1 0 0 1 1 1V21','b'),L(3,21,21,21,'c'),P('M8 7.5h.01M11.5 7.5h.01M8 11.5h.01M11.5 11.5h.01M8 15.5h.01M11.5 15.5h.01','d')]);
+      case 'course': return wrap([C(12,12,9,'a'),P('M10 8.2l6 3.8-6 3.8z','b')]);
+      case 'bookmark': return wrap([P('M6.5 4a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v17l-5.5-3.8L6.5 21z','a')]);
+      case 'search': return wrap([C(11,11,7,'a'),L(20,20,16.2,16.2,'b')]);
+      case 'settings': return wrap([C(12,12,3,'a'),P('M19.5 14.8a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.2a2 2 0 0 1-4 0v-.3a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.2a1.6 1.6 0 0 0 1.4-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.2a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.2a1.6 1.6 0 0 0-1.3.8z','a')]);
+      case 'panel': return wrap([Rc(3,4,18,16,3,'a'),L(9,4,9,20,'b')]);
+      case 'menu': return wrap([L(4,7,20,7,'a'),L(4,12,20,12,'b'),L(4,17,20,17,'c')]);
+      case 'arrow': return wrap([L(4,12,19,12,'a'),P('M13 6l6 6-6 6','b')]);
+      case 'bolt': return wrap([P('M13 2L4.5 13.5H11l-1 8.5L19.5 10H13z','a')]);
+      case 'bell': return wrap([P('M18 9.5a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6','a'),P('M10 19a2.2 2.2 0 0 0 4 0','b')]);
+      case 'user': return wrap([P('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z','a'),P('M4.5 20c1.4-3.2 4.2-5 7.5-5s6.1 1.8 7.5 5','b')]);
+      case 'gear': return wrap([P('M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z','a'),P('M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.5a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.5h4l.4-2.5a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z','b')]);
+      case 'check': return wrap([P('M4.5 12.5l5 5 10-11','a')]);
+      case 'sun': return wrap([C(12,12,4.2,'a'),P('M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6','b')]);
+      case 'moon': return wrap([P('M20 14.5A8 8 0 0 1 9.5 4a7 7 0 1 0 10.5 10.5z','a')]);
+      case 'trophy': return wrap([P('M7 4.5h10v3a5 5 0 0 1-10 0z','a'),P('M7 5.5H4v1a3 3 0 0 0 3 3M17 5.5h3v1a3 3 0 0 1-3 3','b'),L(12,12.5,12,16,'c'),P('M8.5 20h7M10 20v-2.2h4V20','d')]);
+      case 'target': return wrap([C(12,12,8.5,'a'),C(12,12,4.5,'b'),C(12,12,1,'c')]);
+      case 'plus': return wrap([L(12,5,12,19,'a'),L(5,12,19,12,'b')]);
+      default: return wrap([C(12,12,8,'a')]);
+    }
+  }
+
+  renderVals() {
+    const page = this.state.page;
+    const built = new Set(['problems','mental','interview','poker','pk','plan','skills','arena','news','resume','jobs','courses','exp','forum','chat','network','companies','notes','library','market','account','settings']);
+    const B = (id) => page === id && built.has(id);
+    const hv = this.state.hoverNav;
+    const base = "display:flex;align-items:center;gap:11px;width:100%;padding:9px 11px;border:none;border-radius:12px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;text-align:left;line-height:1;transition:transform .16s ease,background .16s ease,color .16s ease,box-shadow .16s ease;";
+    const styleFor = (id) => {
+      if (id === page) return base + "background:linear-gradient(135deg,#5b5ff5,#7d6cff);color:#fff;box-shadow:0 9px 18px -9px rgba(91,95,245,.7);transform:translateX(1px);";
+      if (id === hv) return base + "background:var(--nav-hover);color:var(--text);";
+      return base + "background:transparent;color:var(--muted);";
+    };
+    const sheetStyleFor = (id) => {
+      const b = "display:flex;align-items:center;gap:10px;width:100%;padding:13px 12px;border:1px solid var(--border);border-radius:14px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;line-height:1;";
+      if (id === page) return b + "background:linear-gradient(135deg,#5b5ff5,#7d6cff);color:#fff;border-color:transparent;";
+      return b + "background:var(--surface-2);color:var(--text);";
+    };
+    const mk = (id, name, ic) => ({ id, name, iconEl: this.icon(ic), itemStyle: styleFor(id), sheetStyle: sheetStyleFor(id), onClick: () => this.go(id), onEnter: () => this.enter(id), onLeave: () => this.leave() });
+    const navGroups = [
+      { label: '成长', items: [mk('overview', '总览', 'grid'), mk('plan', '计划', 'calendar'), mk('skills', '能力值', 'radar'), mk('arena', '联赛', 'trophy')] },
+      { label: '训练', items: [mk('interview', '模拟面试', 'chat'), mk('problems', '题目', 'list'), mk('mental', 'Mental Math', 'calc'), mk('poker', 'Poker', 'suit'), mk('pk', 'PK 对战', 'bolt'), mk('market', '报价游戏', 'calc'), mk('exp', '面经', 'notebook')] },
+      { label: '社群', items: [mk('news', '新闻', 'news'), mk('forum', '论坛', 'forum'), mk('chat', '聊天', 'forum'), mk('network', '人脉', 'network')] },
+      { label: '求职', items: [mk('resume', '简历', 'resume'), mk('jobs', '求职', 'briefcase'), mk('companies', '公司', 'building')] },
+      { label: '资源', items: [mk('courses', '课程', 'course'), mk('library', '资料库', 'course'), mk('notes', '资料笔记', 'bookmark')], }, { label: '我的', items: [mk('account', '账户', 'user'), mk('settings', '设置', 'gear')] },
+    ];
+    const titleMap = { plan: '计划', skills: '能力值', arena: '联赛', interview: '模拟面试', problems: '题目', mental: 'Mental Math', poker: 'Poker', pk: 'PK 对战', exp: '面经', news: '新闻', forum: '论坛', chat: '聊天', network: '人脉', resume: '简历', jobs: '求职', companies: '公司', courses: '课程', notes: '资料笔记', library: '资料库', market: '报价游戏', account: '账户', settings: '设置' };
+
+    const bottomDefs = [
+      { id: 'overview', name: '总览', ic: 'grid' },
+      { id: 'plan', name: '计划', ic: 'calendar' },
+      { id: 'problems', name: '题目', ic: 'list' },
+      { id: 'interview', name: '面试', ic: 'chat' },
+      { more: true, name: '更多', ic: 'menu' },
+    ];
+    const tabBase = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 2px;border:none;border-radius:14px;background:transparent;font-family:inherit;cursor:pointer;transition:background .15s ease,color .15s ease;';
+    const bottomTabs = bottomDefs.map((t) => {
+      const active = t.more ? this.state.navSheet : (page === t.id);
+      return {
+        name: t.name, iconEl: this.icon(t.ic),
+        onClick: t.more ? (() => this.setState({ navSheet: true })) : (() => this.go(t.id)),
+        style: tabBase + (active ? 'color:var(--brand-ink);background:var(--brand-soft);' : 'color:var(--muted);'),
+      };
+    });
+
+    const ticker = [
+      { src: 'Bloomberg', head: 'Jane Street 2025 年交易收入创新高' },
+      { src: 'Data Center Dynamics', head: 'Citadel 扩建低延迟数据中心' },
+      { src: 'Quant Wire', head: 'Optiver 校招流程更新：新增速算轮' },
+      { src: 'Risk.net', head: '做市商如何应对隔夜波动率跳升' },
+      { src: 'Bloomberg', head: 'HRT 与 Squarepoint 抢滩东京' },
+      { src: 'eFinancial', head: '2026 实习季：概率题权重上升' },
+    ];
+    const shared = this.sharedState();
+    const lvInfo = window.QG ? QG.level(shared.xp) : { lv: 7, pct: 20, need: 320, tier: 'Analyst II', nextTier: 'Analyst III', tierNeed: 1120, tierPct: 7 };
+    const dayIdx = window.QG ? QG.dayIdx : 5;
+    const weekDots = shared.weekXp.map((v, i) => ({
+      style: 'flex:1;height:26px;border-radius:8px;' + (v > 0
+        ? 'background:linear-gradient(180deg,#ff9f2e,#ff7a3d);box-shadow:0 4px 10px -4px rgba(255,122,61,.6)'
+        : (i <= dayIdx ? 'background:var(--track)' : 'background:var(--track);border:1.5px dashed var(--border-2)')),
+    }));
+    const trainedDays = shared.weekXp.filter((v) => v > 0).length;
+    const questDefs = window.QG ? QG.QUESTS : [];
+    const quests = questDefs.map((q) => {
+      const done = !!shared.quests[q.id];
+      return {
+        title: q.title, sub: q.sub, xp: q.xp, done,
+        iconEl: this.icon(done ? 'check' : q.icon),
+        checkEl: this.icon('check'),
+        onToggle: () => this.toggleQuest(q.id, done),
+        rowStyle: 'display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;cursor:pointer;transition:transform .14s ease,border-color .14s ease;border:1px solid ' + (done ? '#2c6a4d' : 'var(--border)') + ';background:' + (done ? 'var(--done-soft)' : 'var(--surface)'),
+        badgeStyle: 'display:grid;place-items:center;width:40px;height:40px;flex:0 0 auto;border-radius:12px;color:' + (done ? '#2ec38a' : 'var(--brand-ink)') + ';background:' + (done ? 'rgba(46,195,138,.16)' : 'var(--brand-soft)'),
+        titleStyle: 'font-weight:700;font-size:14px;' + (done ? 'color:var(--muted-2);text-decoration:line-through' : 'color:var(--text)'),
+        xpStyle: "display:inline-flex;align-items:center;gap:3px;padding:4px 9px;border-radius:20px;font-family:'Space Grotesk';font-weight:700;font-size:12px;flex:0 0 auto;" + (done ? 'background:rgba(46,195,138,.16);color:#2ec38a' : 'background:#fff3dd;color:#b3610a'),
+        toggleStyle: 'display:grid;place-items:center;width:29px;height:29px;flex:0 0 auto;border-radius:50%;transition:all .15s ease;color:#fff;border:2px solid ' + (done ? '#16a06a' : 'var(--border-2)') + ';background:' + (done ? '#16a06a' : 'transparent'),
+      };
+    });
+    const doneCount = quests.filter((q) => q.done).length;
+    const questPct = questDefs.length ? Math.round((doneCount / questDefs.length) * 100) : 0;
+    const psRaw = [['全部题库', 342, 2771, '#5b5ff5', '#8a7bff'], ['LeetCode Hot 100', 68, 100, '#2f9be0', '#63c4f5'], ['概率 / 期望', 210, 1211, '#16a06a', '#54dd9b'], ['期权 / 衍生品', 96, 1060, '#ff9f2e', '#ffc061']];
+    const problemSets = psRaw.map((p, i) => {
+      const pct = Math.round((p[1] / p[2]) * 100);
+      return {
+        name: p[0], done: p[1], total: p[2], pct,
+        dotStyle: 'width:9px;height:9px;border-radius:3px;flex:0 0 auto;background:linear-gradient(135deg,' + p[3] + ',' + p[4] + ')',
+        fillStyle: 'height:100%;width:' + Math.max(pct, 4) + '%;border-radius:20px;background:linear-gradient(90deg,' + p[3] + ',' + p[4] + ');box-shadow:0 1px 4px -1px ' + p[3] + '66;transform-origin:left;animation:qFill .9s ' + (0.1 + i * 0.08) + 's both cubic-bezier(.2,.8,.2,1)',
+      };
+    });
+    const dowNames = ['一', '二', '三', '四', '五', '六', '日'];
+    const wbRaw = shared.weekXp.map((v, i) => [dowNames[i], v]);
+    const wbMax = Math.max(220, ...shared.weekXp);
+    const weekTotal = wbRaw.reduce((s, w) => s + w[1], 0);
+    const weekAvg = Math.round(weekTotal / wbRaw.length);
+    const weekBars = wbRaw.map((w, i) => {
+      const h = Math.max(3, Math.round((w[1] / wbMax) * 100)); const today = i === dayIdx;
+      return {
+        d: w[0], xp: w[1], today,
+        labelStyle: "font-family:'Space Grotesk';font-size:10.5px;font-weight:700;margin-bottom:5px;color:" + (today ? 'var(--brand-ink)' : 'var(--muted-2)'),
+        barStyle: 'width:74%;border-radius:7px 7px 3px 3px;height:' + h + '%;transform-origin:bottom;animation:qFillY .7s ' + (0.1 + i * 0.06) + 's both cubic-bezier(.2,.8,.2,1);background:' + (today ? 'linear-gradient(180deg,#5b5ff5,#8a7bff);box-shadow:0 6px 14px -5px rgba(91,95,245,.7)' : 'linear-gradient(180deg,#cfcef6,#e4e3fb)'),
+      };
+    });
+    const heatColors = ['var(--heat0)', '#dcdbfb', '#b7b5f7', '#827ef0', '#5b5ff5'];
+    const heatCells = [];
+    for (let i = 0; i < 126; i++) {
+      const r = Math.sin(i * 12.9898 + 4.1) * 43758.5453; const f = r - Math.floor(r);
+      const recent = i > 96 ? 1 : 0;
+      let lvl = Math.min(4, Math.floor(f * 5) + recent);
+      heatCells.push({ style: 'aspect-ratio:1;border-radius:3px;transition:transform .1s ease;background:' + heatColors[lvl] });
+    }
+    const mascotMap = { wave: 'assets/mascot-hero-v5-clean.png', calculator: 'assets/mascot-calculator-v2.png', trophy: 'assets/mascot-trophy-v2.png', hero: 'assets/mascot-hero-v5-clean.png' };
+    const heroMascotSrc = mascotMap[this.props.heroMascot] || mascotMap.wave;
+    const heroMascotEl = React.createElement('img', { src: heroMascotSrc, alt: 'QuantGym 吉祥物', style: { position: 'relative', zIndex: 1, width: 'min(300px,86%)', height: 'auto', filter: 'drop-shadow(0 26px 32px rgba(74,67,214,.3))', animation: 'qFloat 5.5s ease-in-out infinite' } });
+    const showQuantWire = this.props.showQuantWire !== false;
+    const showFloatingTodo = this.props.showFloatingTodo !== false;
+    const narrow = this.state.narrow;
+    const wide = !narrow;
+
+    // ⌘K 命令面板
+    const src = this.paletteItems();
+    const pq = (this.state.paletteQ || '').trim().toLowerCase();
+    let pItems;
+    if (!pq) pItems = [...src.actions, ...src.pages];
+    else {
+      const match = (it) => (it.label + ' ' + it.hint + ' ' + (it.keys || '')).toLowerCase().includes(pq);
+      pItems = [...src.pages, ...src.problems, ...src.companies, ...src.actions].filter(match);
+    }
+    pItems = pItems.slice(0, 12);
+    this._paletteItems = pItems; this._paletteLen = pItems.length;
+    const pIdx = Math.min(this.state.paletteIdx, Math.max(0, pItems.length - 1));
+    const paletteRows = pItems.map((it, i) => {
+      const active = i === pIdx;
+      return {
+        label: it.label, hint: it.hint, iconEl: this.icon(it.icon),
+        onRun: () => this.runPalette(it),
+        onHover: () => this.setState({ paletteIdx: i }),
+        style: 'display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:13px;cursor:pointer;transition:background .1s ease;background:' + (active ? 'var(--nav-hover)' : 'transparent'),
+        iconWrap: 'display:grid;place-items:center;width:32px;height:32px;border-radius:10px;flex:0 0 auto;color:' + (active ? '#fff' : 'var(--brand-ink)') + ';background:' + (active ? 'linear-gradient(135deg,#5b5ff5,#7d6cff)' : 'var(--brand-soft)'),
+        kbdStyle: "font-family:'Space Grotesk';font-size:12px;font-weight:700;color:var(--muted-2);flex:0 0 auto;opacity:" + (active ? '1' : '0'),
+      };
+    });
+
+    const goalLeft = Math.max(0, questDefs.length - doneCount);
+    const allDone = questDefs.length > 0 && goalLeft === 0;
+
+    // 通知中心
+    const notifsRaw = shared.notifs || [];
+    const unreadCount = notifsRaw.filter((n) => !n.read).length;
+    const notifRows = notifsRaw.slice(0, 12).map((n) => ({
+      title: n.title, sub: n.sub, ago: this.timeAgo(n.t),
+      iconEl: n.img
+        ? React.createElement('img', { src: n.img, alt: '', style: { width: '30px', height: '30px', objectFit: 'contain' } })
+        : (n.emoji || '✓'),
+      iconWrap: 'display:grid;place-items:center;width:38px;height:38px;border-radius:12px;flex:0 0 auto;overflow:hidden;font-size:14px;font-weight:800;color:' + (n.img ? 'var(--brand-ink)' : '#fff') + ';background:' + (n.img ? 'var(--brand-soft)' : 'linear-gradient(135deg,#5b5ff5,#7d6cff)'),
+      dotStyle: n.read ? 'display:none' : 'width:8px;height:8px;border-radius:50%;background:#5b5ff5',
+      style: 'display:flex;align-items:flex-start;gap:11px;padding:11px 12px;border-radius:14px;cursor:pointer;transition:background .12s ease;' + (n.read ? '' : 'background:var(--brand-soft)'),
+      onGo: () => { this.closeNotifs(); if (n.page) this.go(n.page); },
+    }));
+
+    // 新手引导
+    const obSteps = [
+      { img: 'assets/mascot-hero-v5-clean.png', kicker: 'WELCOME TO QUANTGYM', title: '欢迎来到量化健身房', sub: '17 个模块覆盖刷题、速算、面试到求职。左侧导航（手机在底部）随时切换，⌘K 一键直达任何地方。', cta: '下一步' },
+      { img: 'assets/mascot-calculator-v2.png', kicker: 'DAILY QUESTS', title: '每天 5 个训练任务', sub: '完成训练自动打勾、入账 XP 和训练币；全部完成再奖 50 XP。每天至少练一次，连胜就不会断。', cta: '下一步' },
+      { img: 'assets/mascot-trophy-v2.png', kicker: 'ARENA & REWARDS', title: '联赛、地图与商店', sub: '你的 XP 实时参与每周联赛排名；学习地图规划主线，训练币在商店换连胜冻结卡等奖励。', cta: '开始训练' },
+    ];
+    const obIdx = Math.max(0, Math.min(obSteps.length - 1, this.state.onboard));
+    const ob = obSteps[obIdx];
+    const obDots = obSteps.map((s, i) => 'height:7px;border-radius:20px;transition:all .2s ease;width:' + (i === obIdx ? '22px' : '7px') + ';background:' + (i === obIdx ? '#5b5ff5' : 'var(--track)'));
+
+    return {
+      navGroups,
+      lvl: lvInfo.lv, lvlPct: Math.max(3, lvInfo.pct),
+      lvLine: 'Lv.' + lvInfo.lv + ' · 距 Lv.' + (lvInfo.lv + 1) + ' 还差 ' + lvInfo.need + ' XP',
+      tier: lvInfo.tier, nextTier: lvInfo.nextTier,
+      tierPct: Math.max(3, lvInfo.tierPct), tierNeedFmt: lvInfo.tierNeed.toLocaleString('en-US'),
+      weekTotalFmt: weekTotal.toLocaleString('en-US'),
+      solvedFmt: shared.solved.toLocaleString('en-US'),
+      weekTrainedText: '本周已训练 ' + trainedDays + ' / 7 天',
+      goalCardTitle: allDone ? '今日目标已全部达成' : ('离今日目标还差 ' + goalLeft + ' 项'),
+      goalSubText: allDone ? '奖励 +50 XP 已入账' : ('再完成 ' + goalLeft + ' 项 · +50 XP'),
+      goalLeft,
+      heroTaskLine: allDone ? '今天的 5 个训练任务已全部完成。去自由训练，或到计划里排明天的节奏。' : ('今天还有 ' + goalLeft + ' 个训练任务在等你。保持节奏，段位与 XP 会替你说话。'),
+      startTraining: () => this.startTraining(),
+      goPlan: () => this.go('plan'),
+      paletteOpen: this.state.paletteOpen, paletteQ: this.state.paletteQ,
+      onPaletteQ: (e) => this.setState({ paletteQ: e.target.value, paletteIdx: 0 }),
+      openPalette: () => this.setPalette(true),
+      closePalette: () => this.setPalette(false),
+      paletteRows, paletteEmpty: pItems.length === 0,
+      switching: this.state.switching,
+      notifOpen: this.state.notifOpen,
+      openNotifs: () => { if (this.state.notifOpen) this.closeNotifs(); else this.setState({ notifOpen: true }); },
+      closeNotifs: () => this.closeNotifs(),
+      bellIcon: this.icon('bell'),
+      notifUnread: unreadCount > 9 ? '9+' : (unreadCount ? String(unreadCount) : ''),
+      notifCountText: unreadCount ? (unreadCount + ' 条未读') : '全部已读',
+      notifRows, notifEmpty: notifRows.length === 0,
+      onboardOpen: this.state.onboard >= 0,
+      obImgEl: React.createElement('img', { src: ob.img, alt: '', style: { maxHeight: '150px', maxWidth: '210px', objectFit: 'contain', filter: 'drop-shadow(0 18px 26px rgba(74,67,214,.3))' } }),
+      obKicker: ob.kicker, obTitle: ob.title, obSub: ob.sub, obCta: ob.cta,
+      obDots, obNext: () => this.obNext(), obSkip: () => this.finishOnboard(),
+      heroMascotEl, showQuantWire,
+      showFloatingTodoWide: showFloatingTodo && wide,
+      weekDots,
+      quests, doneCount, questPct,
+      problemSets, weekBars, weekTotal, weekAvg, heatCells,
+      wide, narrow,
+      bottomTabs,
+      navSheetOpen: narrow && this.state.navSheet,
+      onOpenSheet: () => this.setState({ navSheet: true }),
+      onCloseSheet: () => this.setState({ navSheet: false }),
+      stop: (e) => { if (e && e.stopPropagation) e.stopPropagation(); },
+      onToggleTheme: () => this.toggleTheme(),
+      themeIcon: this.icon(this.state.theme === 'dark' ? 'sun' : 'moon'),
+      menuIcon: this.icon('menu'),
+      isOverview: page === 'overview',
+      isPlan: B('plan'), isSkills: B('skills'), isArena: B('arena'), isPk: B('pk'), isLibrary: B('library'), isMarket: B('market'), isAccount: B('account'), isSettings: B('settings'), isInterview: B('interview'), isProblems: B('problems'),
+      isMental: B('mental'), isPoker: B('poker'), isExp: B('exp'), isNews: B('news'),
+      isForum: B('forum'), isChat: B('chat'), isNetwork: B('network'), isResume: B('resume'),
+      isJobs: B('jobs'), isCompanies: B('companies'), isCourses: B('courses'), isNotes: B('notes'),
+      isOther: page !== 'overview' && !built.has(page),
+      otherTitle: titleMap[page] || '模块',
+      goOverview: () => this.go('overview'),
+      searchIcon: this.icon('search'),
+      panelIcon: this.icon('panel'),
+      arrowIcon: this.icon('arrow'),
+      boltIcon: this.icon('bolt'),
+      ticker,
+      streakDays: this.state.streakDays,
+      heroXp: this.state.heroXp,
+      heroXpFmt: this.state.heroXp.toLocaleString('en-US'),
+      todayXp: this.state.todayXp,
+    };
+  }
+}
+</script>
+</body>
+</html>

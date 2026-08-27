@@ -2,45 +2,42 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { pathToFileURL, fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = parseArgs(process.argv.slice(2));
 const root = path.resolve(args.root || defaultRoot);
-const src = path.join(root, "src");
 const failures = [];
 const warnings = [];
 
-const { MODULE_MANIFEST } = await import(pathToFileURL(path.join(src, "modules", "manifest.js")));
-const {
-  REACT_PAGE_IDS,
-  BRIDGE_PAGE_IDS,
-  routeConfig,
-  getRouteModuleId,
-  getModulePath,
-  countRouteModes
-} = await import(pathToFileURL(path.join(src, "routes", "routeConfig.js")));
+const { MODULE_MANIFEST } = await import(
+  pathToFileURL(path.join(root, "src", "modules", "manifest.js"))
+);
+const ownershipSource = read("src/core/router/businessRouteOwnership.ts");
+const allowlistSource = read("src/legacy-preview/unmigratedRoutes.ts");
+const routerSource = read("src/core/router/router.tsx");
+const buildScriptSource = read("scripts/build-static-site.mjs");
 
-const routesText = read("src/routes/routes.jsx");
-const buildScriptText = read("scripts/build-static-site.mjs");
-const manifestIds = MODULE_MANIFEST.map((entry) => entry.id);
-const reactIds = [...REACT_PAGE_IDS];
-const bridgeIds = [...BRIDGE_PAGE_IDS];
-const routeConfigIds = routeConfig.map((entry) => entry.id);
+const manifestRoutes = MODULE_MANIFEST.map(({ id, path: routePath }) => ({ id, path: routePath }));
+const ownershipRoutes = [...ownershipSource.matchAll(
+  /\{\s*id:\s*"([^"]+)",\s*owner:\s*"(native|compatibility)",\s*path:\s*"([^"]+)"\s*\}/gu,
+)].map((match) => ({ id: match[1], owner: match[2], path: match[3] }));
+const allowlistRoutes = [...allowlistSource.matchAll(
+  /\{\s*id:\s*"([^"]+)",\s*path:\s*"([^"]+)",\s*label:/gu,
+)].map((match) => ({ id: match[1], path: match[2] }));
+const nativeRoutes = ownershipRoutes.filter(({ owner }) => owner === "native");
+const compatibilityRoutes = ownershipRoutes.filter(({ owner }) => owner === "compatibility");
 
-checkManifestShape();
-checkRouteConfigSync();
-checkRoutesJsx();
-checkPageWrappers();
-checkPublicFallbackPages();
-checkStaticBuildFallbacks();
+checkManifest();
+checkOwnership();
+checkRouter();
+checkStaticFallbackPolicy();
 
 const summary = {
   status: failures.length ? "fail" : "pass",
-  routes: manifestIds.length,
-  reactRoutes: reactIds.length,
-  bridgeRoutes: bridgeIds.length,
-  publicFallbackPages: manifestIds.length,
+  routes: manifestRoutes.length,
+  nativeRoutes: nativeRoutes.length,
+  compatibilityRoutes: compatibilityRoutes.length,
   failures,
   warnings
 };
@@ -48,114 +45,103 @@ const summary = {
 console.log(JSON.stringify(summary, null, 2));
 if (failures.length) process.exitCode = 1;
 
-function checkManifestShape() {
-  expect(MODULE_MANIFEST.length === 22, `MODULE_MANIFEST should contain 22 routeable modules, found ${MODULE_MANIFEST.length}.`);
-  for (const field of ["id", "hash", "path", "labelKey", "navGroup", "protected", "stage2Priority"]) {
-    const missing = MODULE_MANIFEST.filter((entry) => entry[field] === undefined).map((entry) => entry.id || "(missing id)");
-    expect(missing.length === 0, `MODULE_MANIFEST entries missing ${field}: ${missing.join(", ")}`);
-  }
-  expectNoDuplicates(manifestIds, "MODULE_MANIFEST ids");
-  expectNoDuplicates(MODULE_MANIFEST.map((entry) => entry.hash), "MODULE_MANIFEST hashes");
-  expectNoDuplicates(MODULE_MANIFEST.map((entry) => normalizePath(entry.path)), "MODULE_MANIFEST paths");
-
+function checkManifest() {
+  expect(MODULE_MANIFEST.length === 22, `MODULE_MANIFEST should contain 22 routes, found ${MODULE_MANIFEST.length}.`);
+  expectNoDuplicates(manifestRoutes.map(({ id }) => id), "MODULE_MANIFEST ids");
+  expectNoDuplicates(manifestRoutes.map(({ path: routePath }) => normalizePath(routePath)), "MODULE_MANIFEST paths");
   for (const entry of MODULE_MANIFEST) {
-    expect(/^[a-z][a-z0-9-]*$/.test(entry.id), `Invalid module id: ${entry.id}`);
+    for (const field of ["id", "hash", "path", "labelKey", "navGroup", "protected", "stage2Priority"]) {
+      expect(entry[field] !== undefined, `${entry.id || "(missing id)"} manifest entry missing ${field}.`);
+    }
     expect(entry.hash === `#${entry.id}`, `${entry.id} hash must be #${entry.id}.`);
-    expect(entry.path === "/" || entry.path === `/${entry.id}`, `${entry.id} path must be / or /${entry.id}.`);
-    expect(entry.protected === true, `${entry.id} should stay protected behind the app auth gate.`);
-    expect(Number.isInteger(entry.stage2Priority), `${entry.id} stage2Priority must be an integer.`);
-    expect(typeof entry.labelKey === "string" && entry.labelKey.length > 0, `${entry.id} labelKey is required.`);
-    expect(typeof entry.navGroup === "string" && entry.navGroup.length > 0, `${entry.id} navGroup is required.`);
+    expect(entry.path === "/" || entry.path === `/${entry.id}`, `${entry.id} path is not canonical.`);
+    expect(entry.protected === true, `${entry.id} must remain protected.`);
   }
 }
 
-function checkRouteConfigSync() {
-  expectSameMembers(routeConfigIds, manifestIds, "routeConfig ids");
-  expectSameMembers(reactIds, manifestIds, "REACT_PAGE_IDS");
-  expect(bridgeIds.length === 0, `BRIDGE_PAGE_IDS must remain empty, found: ${bridgeIds.join(", ")}`);
+function checkOwnership() {
+  expect(ownershipRoutes.length === 22, `business route ownership should contain 22 routes, found ${ownershipRoutes.length}.`);
+  expectNoDuplicates(ownershipRoutes.map(({ id }) => id), "business ownership ids");
+  expectNoDuplicates(ownershipRoutes.map(({ path: routePath }) => routePath), "business ownership paths");
+  expectSameRouteSet(ownershipRoutes, manifestRoutes, "business ownership");
 
-  const counts = countRouteModes();
-  expect(counts.react === manifestIds.length, `countRouteModes().react should be ${manifestIds.length}, got ${counts.react}.`);
-  expect(counts.bridge === 0, `countRouteModes().bridge should be 0, got ${counts.bridge}.`);
-  expect(counts.legacy === 0, `countRouteModes().legacy should be 0, got ${counts.legacy}.`);
+  const expectedNative = [
+    { id: "overview", path: "/" },
+    { id: "plan", path: "/plan" },
+    { id: "problems", path: "/problems" }
+  ];
+  expectSameRouteSet(nativeRoutes, expectedNative, "native ownership");
+  expect(compatibilityRoutes.length === 19, `compatibility ownership should contain 19 routes, found ${compatibilityRoutes.length}.`);
+  expectSameRouteSet(allowlistRoutes, compatibilityRoutes, "legacy preview allowlist");
 
-  for (const manifestEntry of MODULE_MANIFEST) {
-    const routeEntry = routeConfig.find((entry) => entry.id === manifestEntry.id);
-    expect(Boolean(routeEntry), `routeConfig missing ${manifestEntry.id}.`);
-    if (!routeEntry) continue;
-    expect(routeEntry.path === manifestEntry.path, `${manifestEntry.id} routeConfig path differs from MODULE_MANIFEST.`);
-    expect(routeEntry.protected === manifestEntry.protected, `${manifestEntry.id} routeConfig protected flag differs from MODULE_MANIFEST.`);
-    expect(routeEntry.mode === "react", `${manifestEntry.id} routeConfig mode must be react.`);
-    expect(getRouteModuleId(manifestEntry.path) === manifestEntry.id, `getRouteModuleId(${manifestEntry.path}) must return ${manifestEntry.id}.`);
-    expect(getModulePath(manifestEntry.id) === manifestEntry.path, `getModulePath(${manifestEntry.id}) must return ${manifestEntry.path}.`);
+  for (const relativePath of [
+    "src/pages/training/OverviewPage.tsx",
+    "src/pages/plan/PlanPage.tsx",
+    "src/pages/training/ProblemsPage.tsx"
+  ]) {
+    expect(fs.existsSync(path.join(root, relativePath)), `native route file is missing: ${relativePath}`);
   }
-  expect(getRouteModuleId("/missing-route") === "overview", "Unknown paths must fall back to overview.");
-}
-
-function checkRoutesJsx() {
-  expect(routesText.includes("routeConfig.map"), "routes.jsx must derive app routes from routeConfig.map.");
-  expect(routesText.includes('<Route path="*" element={<Navigate to="/" replace />} />'), "routes.jsx must keep wildcard navigation fallback to overview.");
-  expect(routesText.includes('<Route path="/login" element={null} />'), "routes.jsx must keep the /login auth-shell route.");
-  expect(routesText.includes("<ProtectedRoute />"), "routes.jsx must wrap app routes in ProtectedRoute.");
-  expect(routesText.includes("<AppChromeLayout />"), "routes.jsx must render protected routes inside AppChromeLayout.");
-
-  for (const id of manifestIds) {
-    const pageName = pageComponentName(id);
-    expect(new RegExp(`const\\s+${pageName}\\s*=\\s*lazy\\(`).test(routesText), `routes.jsx missing lazy import for ${pageName}.`);
-    expect(routesText.includes(`../pages/${pageName}.jsx`), `routes.jsx lazy import path missing ../pages/${pageName}.jsx.`);
-    expect(routesText.includes(`default: m.${pageName}`), `routes.jsx lazy import for ${pageName} must select the named export.`);
-    expect(new RegExp(`${id}:\\s*${pageName}\\b`).test(routesText), `REACT_PAGES missing ${id}: ${pageName}.`);
+  for (const retiredPath of [
+    "src/pages/OverviewPage.jsx",
+    "src/pages/PlanPage.jsx",
+    "src/pages/ProblemsPage.jsx"
+  ]) {
+    expect(!fs.existsSync(path.join(root, retiredPath)), `retired route wrapper still exists: ${retiredPath}`);
   }
 }
 
-function checkPageWrappers() {
-  for (const id of manifestIds) {
-    const pageName = pageComponentName(id);
-    const featureName = `${pageName}Content`;
-    const pagePath = path.join(src, "pages", `${pageName}.jsx`);
-    expectFile(pagePath, `page wrapper for ${id}`);
-    if (!fs.existsSync(pagePath)) continue;
-    const text = fs.readFileSync(pagePath, "utf8");
-    expect(text.includes('import { useSyncModuleRoute } from "../hooks/useSyncModuleRoute.js";'), `${pageName}.jsx must import useSyncModuleRoute.`);
-    expect(text.includes(`export function ${pageName}()`), `${pageName}.jsx must export function ${pageName}.`);
-    expect(text.includes(`useSyncModuleRoute("${id}")`), `${pageName}.jsx must sync module route "${id}".`);
-    expect(text.includes(`import { ${featureName} } from "../features/${id}/${featureName}.jsx";`), `${pageName}.jsx must import ${featureName} from the matching feature folder.`);
-    expect(text.includes(`return <${featureName} />;`), `${pageName}.jsx must render ${featureName}.`);
+function checkRouter() {
+  expect(routerSource.includes("COMPATIBILITY_BUSINESS_ROUTES"), "V2 router must derive compatibility children from ownership.");
+  expect(routerSource.includes("../../legacy-preview/LegacyRouteAdapter"), "V2 router must keep the isolated compatibility adapter.");
+  for (const marker of [
+    'import("../../pages/training/OverviewPage")',
+    'import("../../pages/plan/PlanPage")',
+    'import("../../pages/training/ProblemsPage")'
+  ]) {
+    expect(routerSource.includes(marker), `V2 router is missing native lazy route ${marker}.`);
   }
+  for (const retiredPath of ["OverviewPage.jsx", "PlanPage.jsx", "ProblemsPage.jsx"]) {
+    expect(!routerSource.includes(retiredPath), `V2 router still references retired ${retiredPath}.`);
+  }
+  expect(routerSource.includes('path: "plan"'), "V2 router is missing the native /plan child.");
+  expect(routerSource.includes('path: "problems"'), "V2 router is missing the native /problems child.");
+  expect(routerSource.includes('path: "*"'), "V2 router must keep a wildcard not-found child.");
 }
 
-function checkPublicFallbackPages() {
-  for (const id of manifestIds) {
-    const htmlPath = path.join(root, "public", "pages", `${id}.html`);
-    expectFile(htmlPath, `public fallback page for ${id}`);
-  }
-}
-
-function checkStaticBuildFallbacks() {
+function checkStaticFallbackPolicy() {
   expect(
-    buildScriptText.includes("writeAssetNotFoundPage(outputDir)"),
-    "build-static-site.mjs must write an assets-level 404 page."
+    buildScriptSource.includes("writeAssetNotFoundPage(outputDir)"),
+    "build-static-site.mjs must keep an assets-level 404 page."
   );
   expect(
-    buildScriptText.includes('path.join(assetsDir, "404.html")'),
-    "build-static-site.mjs must write dist/assets/404.html for missing hashed assets."
+    buildScriptSource.includes('path.join(assetsDir, "404.html")'),
+    "build-static-site.mjs must write dist/assets/404.html."
   );
   expect(
-    !/path\.join\(distDir,\s*["']404\.html["']\)/.test(buildScriptText),
-    "build-static-site.mjs must not emit a top-level dist/404.html because that disables Cloudflare Pages SPA fallback."
+    !/path\.join\(distDir,\s*["']404\.html["']\)/u.test(buildScriptSource),
+    "build-static-site.mjs must not disable SPA fallback with a top-level 404.html."
   );
-}
-
-function pageComponentName(id) {
-  return `${String(id).split("-").filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join("")}Page`;
 }
 
 function read(relativePath) {
-  return fs.readFileSync(path.join(root, relativePath), "utf8");
+  try {
+    return fs.readFileSync(path.join(root, relativePath), "utf8");
+  } catch (error) {
+    failures.push(`missing ${relativePath}: ${error.message}`);
+    return "";
+  }
 }
 
-function expectFile(filePath, label) {
-  expect(fs.existsSync(filePath), `Missing ${label}: ${path.relative(root, filePath)}`);
+function expectSameRouteSet(actual, expected, label) {
+  const serialize = ({ id, path: routePath }) => `${id}:${normalizePath(routePath)}`;
+  const actualSet = new Set(actual.map(serialize));
+  const expectedSet = new Set(expected.map(serialize));
+  const missing = [...expectedSet].filter((value) => !actualSet.has(value));
+  const extra = [...actualSet].filter((value) => !expectedSet.has(value));
+  expect(
+    missing.length === 0 && extra.length === 0,
+    `${label} mismatch. Missing: ${missing.join(", ") || "none"}; extra: ${extra.join(", ") || "none"}.`
+  );
 }
 
 function expectNoDuplicates(values, label) {
@@ -163,14 +149,8 @@ function expectNoDuplicates(values, label) {
   expect(duplicates.length === 0, `${label} contain duplicates: ${duplicates.join(", ")}`);
 }
 
-function expectSameMembers(actual, expected, label) {
-  const missing = expected.filter((item) => !actual.includes(item));
-  const extra = actual.filter((item) => !expected.includes(item));
-  expect(missing.length === 0 && extra.length === 0, `${label} mismatch. Missing: ${missing.join(", ") || "none"}; extra: ${extra.join(", ") || "none"}`);
-}
-
 function normalizePath(value) {
-  return String(value || "").replace(/\/+$/, "") || "/";
+  return String(value || "").replace(/\/+$/u, "") || "/";
 }
 
 function expect(condition, message) {

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "check": "frontend-upgrade-phase1-auth",
+  "status": "pass",
+  "checkedAt": "2026-07-26T15:43:06.670Z",
+  "commit": "5a3b6f33b7f2a4d15f0a81ca57f81570ca89c6a3",
+  "evidenceSha256": "15e9ad7f9dc6b5d1d8d607b304fa93d9cee2fc0dda83a41cdd1e82ae405f33ea",
+  "hashes": {
+    "syntheticDataSha256": "8f676bf559bb97c7e35010a45e0dab038143857741e4e530005a31c634dbcbcc"
+  },
+  "checks": {
+    "offlineContractPassed": true,
+    "hostCookiePolicy": true,
+    "csrfPairing": true,
+    "exactOriginEnforced": true,
+    "sessionAndCsrfRotated": true,
+    "logoutRevokedSession": true,
+    "oauthPkceS256": true,
+    "oauthReplayRejected": true,
+    "browserStorageSafe": true,
+    "syntheticCleanupRequired": true
+  },
+  "counts": {
+    "localStorageEntries": 0,
+    "sessionStorageEntries": 0,
+    "indexedDbRecords": 0,
+    "sensitiveEntries": 0,
+    "syntheticUsersCreated": 1
+  },
+  "failureCodes": []
+}

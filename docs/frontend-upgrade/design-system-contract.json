@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "name": "Playful Precision 2.0",
+  "spec": "docs/superpowers/specs/2026-07-10-quantgym-frontend-platform-upgrade-design.md",
+  "designSource": "docs/ui-reference/playful-precision/source-manifest.json",
+  "productionAssets": "assets/generated/playful-precision/manifest.json",
+  "themes": {
+    "light": {
+      "appBackground": "#f4f4fb",
+      "surfacePrimary": "#ffffff",
+      "surfaceSecondary": "#fbfbfd",
+      "textPrimary": "#1b1a38",
+      "textSecondary": "#4a4966",
+      "textMuted": "#6d6c8e",
+      "borderSubtle": "#ecebf7",
+      "actionPrimary": "#5b5ff5",
+      "actionPrimarySoft": "#eef0ff"
+    },
+    "dark": {
+      "appBackground": "#111020",
+      "surfacePrimary": "#201f39",
+      "surfaceSecondary": "#1b1a30",
+      "textPrimary": "#f1f0fb",
+      "textSecondary": "#cbc9e8",
+      "textMuted": "#a6a4cf",
+      "borderSubtle": "#332f57",
+      "actionPrimary": "#7d7bff",
+      "actionPrimaryInk": "#b9b8ff"
+    }
+  },
+  "semanticTokens": [
+    "app-background", "surface-primary", "surface-secondary", "text-primary",
+    "text-secondary", "text-muted", "border-subtle", "action-primary",
+    "action-primary-soft", "status-success", "status-warning", "status-danger",
+    "reward-xp", "reward-coin", "focus-ring"
+  ],
+  "typography": {
+    "ui": "Plus Jakarta Sans",
+    "metrics": "Space Grotesk",
+    "chineseFallbacks": ["PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "sans-serif"],
+    "metricFeatures": ["tabular-nums"]
+  },
+  "shape": { "radiusPx": [11, 14, 16, 20, 28], "shadowPolicy": "dialogs-command-notifications-mascot-only" },
+  "surfacePolicy": {
+    "hierarchyOrder": ["border", "background", "spacing", "type", "shadow"],
+    "strongShadowRoles": ["dialog", "command-surface", "notification", "mascot-overlay"],
+    "gradientGlowRoles": ["primary-action", "reward-action"],
+    "primaryButtonTactilePress": true,
+    "avoidNestedCardsWhenBandsOrSpacingSuffice": true
+  },
+  "densityPolicy": {
+    "problems": "dense-professional-scan-friendly",
+    "interview": "dense-professional-scan-friendly",
+    "mobile": "reduce-simultaneous-density-without-removing-functionality"
+  },
+  "shellLayout": {
+    "desktopSidebarPx": 252,
+    "ordinaryContentMaxPx": 1180,
+    "focusedSessionMayUseWiderControlledCanvas": true,
+    "laptopTitleAndPrimaryActionAboveFold": { "width": 1280, "height": 720 }
+  },
+  "breakpoints": {
+    "mobileShellMaxPx": 860,
+    "listDetailSingleViewMaxPx": 640,
+    "mobileTouchTargetMinPx": 44
+  },
+  "templateResponsiveRules": {
+    "dashboard": "stack-priority-sections-with-primary-action-first",
+    "list-detail": "single-view-with-explicit-return-at-or-below-640",
+    "focused-session": "preserve-controls-timer-feedback-and-result",
+    "workflow-board": "preserve-task-actions-with-horizontal-density-reduction",
+    "settings-form": "single-column-mobile-with-associated-errors"
+  },
+  "motion": {
+    "microMs": [120, 180],
+    "panelMs": [240, 300],
+    "rewardMayExceedPanel": true,
+    "rewardBlocksNextAction": false,
+    "reducedMotionRequired": true,
+    "scrollJackingAllowed": false
+  },
+  "motionProfiles": {
+    "panel-and-micro": ["micro-feedback", "panel-transition"],
+    "session-feedback": ["micro-feedback", "panel-transition", "result-before-celebration"],
+    "reward-feedback": ["micro-feedback", "result-before-celebration", "non-blocking-reward"]
+  },
+  "viewports": [
+    { "id": "desktop", "width": 1440, "height": 900 },
+    { "id": "laptop", "width": 1280, "height": 720 },
+    { "id": "mobile", "width": 390, "height": 844 },
+    { "id": "tablet", "width": 1024, "height": 768, "conditional": true }
+  ],
+  "requiredStates": ["loading", "ready", "empty", "error", "disabled", "focus", "active", "reward", "reduced-motion"],
+  "routeRecoveryStates": ["loading", "empty", "recoverable-error", "non-recoverable-error", "offline-draft", "permission-denied", "stale-version-conflict", "retry"],
+  "aiJobStates": ["queued", "running", "streaming", "completed", "failed", "cancelled", "retry"],
+  "pageTemplates": ["dashboard", "list-detail", "focused-session", "workflow-board", "settings-form"],
+  "allowedDeviationReasons": ["real-data-density", "accessibility", "performance", "small-screen-usability"],
+  "mascot": {
+    "maxPrimaryPerInitialViewport": 1,
+    "allowedRoles": ["welcome", "guidance", "success", "failure", "search", "empty", "domain-training"],
+    "regenerateEquivalentAssets": false
+  }
+}

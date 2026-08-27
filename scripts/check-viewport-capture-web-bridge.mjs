@@ -3,7 +3,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createProblemViewportCaptureController } from "../src/modules/problems/viewportCaptureController.js";
+import { createProblemViewportCaptureController } from "../src/modules/capture/viewportCaptureController.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const calls = {

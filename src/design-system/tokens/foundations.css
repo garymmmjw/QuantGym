@@ -1,0 +1,54 @@
+:root {
+  --qg-space-1: 4px;
+  --qg-space-2: 8px;
+  --qg-space-3: 12px;
+  --qg-space-4: 16px;
+  --qg-space-5: 20px;
+  --qg-space-6: 24px;
+  --qg-space-8: 32px;
+  --qg-space-10: 40px;
+  --qg-space-12: 48px;
+  --qg-space-16: 64px;
+  --qg-radius-compact: 11px;
+  --qg-radius-control: 14px;
+  --qg-radius-card: 16px;
+  --qg-radius-panel: 20px;
+  --qg-radius-feature: 28px;
+  --qg-radius-pill: 999px;
+  --qg-touch-target-min: 44px;
+  --qg-control-height-default: var(--qg-touch-target-min);
+  --qg-shell-sidebar-width: 252px;
+  --qg-shell-sidebar-collapsed-width: 76px;
+  --qg-shell-content-max-width: 1180px;
+  --qg-layer-underlay: -1;
+  --qg-layer-base: 0;
+  --qg-layer-raised: 1;
+  --qg-layer-sticky: 10;
+  --qg-layer-navigation: 20;
+  --qg-layer-overlay: 40;
+  --qg-layer-dialog: 50;
+  --qg-layer-notification: 60;
+}
+
+:where(*, *::before, *::after) {
+  box-sizing: border-box;
+}
+
+:where(html, body, #root) {
+  min-inline-size: 0;
+  min-block-size: 100%;
+}
+
+:where(html) {
+  background: var(--qg-app-background);
+}
+
+:where(body) {
+  margin: 0;
+  background: var(--qg-app-background);
+  color: var(--qg-text-primary);
+}
+
+:where(button, input, select, textarea) {
+  font: inherit;
+}

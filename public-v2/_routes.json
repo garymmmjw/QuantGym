@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "include": [
+    "/api/v2",
+    "/api/v2/*"
+  ],
+  "exclude": []
+}

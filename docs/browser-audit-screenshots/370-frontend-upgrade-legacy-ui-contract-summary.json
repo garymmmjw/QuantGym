@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-17T08:04:15.910Z",
+  "status": "expected-legacy-findings",
+  "command": "npm run check:ui-contracts",
+  "rawCommandExit": 1,
+  "allowlistSha256": "99516aaf0c48df7699453aa92fc75376e39569dd3ba80f51f506a5032c2a3337",
+  "findings": [
+    {
+      "path": "docs/browser-audit-screenshots/312-chrome-visual-route-smoke-summary.json",
+      "message": "desktop route smoke count expected 22, got 21"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/312-chrome-visual-route-smoke-summary.json",
+      "message": "mobile route smoke count expected 22, got 21"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/314-github-visual-parity-all-routes-summary.json",
+      "message": "GitHub visual parity routeCount expected 22, got 21"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/314-github-visual-parity-all-routes-summary.json",
+      "message": "GitHub visual parity total expected 22, got 21"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/314-github-visual-parity-all-routes-summary.json",
+      "message": "GitHub visual parity pass count expected 22, got 21"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/314-github-visual-parity-all-routes-summary.json",
+      "message": "GitHub visual parity route array length expected 22, got 21"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/322-ui-contract-gate-summary.json",
+      "message": "UI contract route count expected 22, got 21"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/322-ui-contract-gate-summary.json",
+      "message": "UI contract image artifact count expected 96, got 92"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/322-ui-contract-gate-summary.json",
+      "message": "Stage 2 strict React route count expected 22, got 21"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/323-release-readiness-summary.json",
+      "message": "Route interactions nested gate must cover all routes when present"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/323-release-readiness-summary.json",
+      "message": "nested browser route smoke must check all routes"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/323-release-readiness-summary.json",
+      "message": "nested browser route smoke route pass count must match all routes"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/323-release-readiness-summary.json",
+      "message": "nested browser route smoke must verify mobile shell module sheet remains usable"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/323-release-readiness-summary.json",
+      "message": "nested module ownership must cover every route module"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/323-release-readiness-summary.json",
+      "message": "nested module ownership manifest route count must match UI contracts"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/323-release-readiness-summary.json",
+      "message": "nested module ownership must use browser smoke that checked every route"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json",
+      "message": "deployed beta smoke must check all deployed routes"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json",
+      "message": "deployed beta smoke must pass all deployed routes"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/351-deployed-beta-smoke-summary.json",
+      "message": "deployed beta smoke route result count must match expected routes"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/341-external-launch-blockers-summary.json",
+      "message": "external launch blockers must include the all-route deployed beta smoke"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/311-chrome-visual-desktop-league.png",
+      "message": "missing screenshot artifact"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/312-chrome-visual-mobile-league.png",
+      "message": "missing screenshot artifact"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/314-parity-baseline-league.png",
+      "message": "missing screenshot artifact"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/314-parity-current-league.png",
+      "message": "missing screenshot artifact"
+    }
+  ],
+  "unusedAllowlistEntries": []
+}

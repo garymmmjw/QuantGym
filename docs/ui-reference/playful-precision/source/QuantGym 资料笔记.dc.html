@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+</style>
+<script src="./qg-state.js"></script>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><path d="M34 24h24l14 14v38H34z" fill="none" stroke="#fff" stroke-width="5"/><path d="M56 24v14h14" fill="none" stroke="#fff" stroke-width="5"/><path d="M42 52h20M42 62h12" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:#e4f5f2;color:#16879a;font-size:11.5px;font-weight:700;margin-bottom:10px">RESOURCES · 资料笔记</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">资料笔记 <span style="color:#5b5ff5">Notes</span></h1>
+    </div>
+    <button type="button" style="display:flex;align-items:center;gap:8px;padding:12px 18px;border:none;border-radius:14px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(3px);box-shadow:0 1px 0 #3f39c9">＋ 新建笔记</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start">
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:9px;padding:10px 13px;border-radius:12px;background:var(--surface);border:1px solid var(--border)"><span style="width:16px;height:16px;display:inline-flex;color:#a5a4c2">{{ searchIcon }}</span><input placeholder="搜索笔记…" style="border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;width:100%"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <sc-for list="{{ tags }}" as="t" hint-placeholder-count="4"><button type="button" onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ notes }}" as="n" hint-placeholder-count="5">
+          <div onClick="{{ n.onClick }}" style="{{ n.rowStyle }}">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="{{ n.dotStyle }}"></span><span style="font-size:13.5px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.title }}</span></div>
+            <div style="font-size:11.5px;color:var(--muted);font-weight:500;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ n.preview }}</div>
+            <div style="font-size:10.5px;color:var(--muted-2);font-weight:600;margin-top:5px">{{ n.date }} · {{ n.words }} 字</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05),0 16px 34px -24px rgba(74,67,214,.4);overflow:hidden">
+      <div style="padding:22px 26px 16px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="{{ d.tagStyle }}">{{ d.tag }}</span>
+          <span style="font-size:11.5px;color:var(--muted-3);font-weight:600">最近编辑 {{ d.date }}</span>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button type="button" style="width:32px;height:32px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;display:grid;place-items:center"><span style="width:15px;height:15px;display:inline-flex">{{ editIcon }}</span></button>
+            <button type="button" style="width:32px;height:32px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;display:grid;place-items:center"><span style="width:15px;height:15px;display:inline-flex">{{ starIcon }}</span></button>
+          </div>
+        </div>
+        <h2 style="margin:0;font-size:24px;font-weight:800;letter-spacing:-.01em">{{ d.title }}</h2>
+      </div>
+      <div style="padding:22px 26px;font-size:14px;line-height:1.75;color:#3f3e5e">
+        <sc-for list="{{ d.blocks }}" as="b" hint-placeholder-count="6">
+          <div style="{{ b.style }}">{{ b.text }}</div>
+        </sc-for>
+        <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:11.5px;font-weight:700;color:#a9a8c4;letter-spacing:.06em">关联</span>
+          <sc-for list="{{ d.links }}" as="l" hint-placeholder-count="3"><span onClick="{{ l.onGo }}" style="{{ l.style }}" style-hover="border-color:#c9c7f5;color:var(--text)"><span style="width:6px;height:6px;border-radius:2px;background:{{ l.color }};flex:0 0 auto"></span>{{ l.label }}</span></sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { tag:'all', sel:'greeks' };
+
+  selectNote(id){
+    this.setState({ sel:id });
+    if(!window.QG) return;
+    this._viewed = this._viewed || {};
+    if(this._viewed[id]) return;
+    this._viewed[id] = true;
+    const n = Object.keys(this._viewed).length;
+    if(n === 3) QG.completeQuest('review-cards');
+    else if(n < 3 && !QG.get().quests['review-cards']) QG.toast('已复习 ' + n + ' / 3 张卡片', { sub:'再看 ' + (3 - n) + ' 张完成今日任务', ms:2200 });
+  }
+
+  goLink(label){
+    if(!window.QG) return;
+    const key = label.split('·')[0].trim();
+    const map = { '题目':'problems', '课程':'courses', 'Mental Math':'mental', '聊天':'chat', '公司':'companies', '能力值':'skills', '简历':'resume', '模拟面试':'interview' };
+    const page = map[key];
+    if(!page) return;
+    let ctx = null;
+    if(page==='problems'){
+      if(label.includes('期权')) ctx = { src:'Hull' };
+      else if(label.includes('概率')) ctx = { topic:'probabilityExpectation' };
+    }
+    QG.navigate(page, ctx);
+  }
+
+  icon(name){
+    const R=React.createElement;
+    const w=(ch)=>R('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.9,strokeLinecap:'round',strokeLinejoin:'round',style:{width:'100%',height:'100%',display:'block'}},ch);
+    const P=(d)=>R('path',{d,key:d.slice(0,6)});
+    if(name==='search') return w([R('circle',{cx:11,cy:11,r:7,key:'c'}),R('line',{x1:20,y1:20,x2:16.2,y2:16.2,key:'l'})]);
+    if(name==='edit') return w([P('M12 20h9'),P('M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z')]);
+    if(name==='star') return w([P('M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.8 6.2 21l1.1-6.5L2.6 9.8l6.5-.9z')]);
+    return w([R('circle',{cx:12,cy:12,r:8,key:'c'})]);
+  }
+
+  data(){
+    return [
+      {id:'greeks',title:'期权希腊字母速查',cat:'衍生品',c:'#8a63e8',date:'今天',words:642,preview:'Delta / Gamma / Vega / Theta 的直觉与对冲用法…',
+        blocks:[
+          {t:'h','text':'一句话直觉'},
+          {t:'p','text':'希腊字母衡量期权价格对各因子的敏感度。做市对冲的核心，是把不想要的敞口用希腊字母中性化。'},
+          {t:'f','text':'Δ = ∂C/∂S = N(d₁)   Γ = ∂²C/∂S²   Vega = ∂C/∂σ'},
+          {t:'h','text':'要点'},
+          {t:'li','text':'Delta：方向敞口，介于 0~1（看涨），Delta 对冲持 −Δ 份标的。'},
+          {t:'li','text':'Gamma：Delta 的变化率，平值、临近到期时最大。'},
+          {t:'li','text':'Theta：时间价值衰减，卖方收 Theta、付 Gamma。'},
+        ],
+        links:[['题目 · 期权定价','#ff9f2e'],['课程 · Hull 第 15 讲','#8a63e8']]},
+      {id:'ev',title:'期望值计算套路',cat:'概率',c:'#5b5ff5',date:'昨天',words:410,preview:'先写分布，再求期望；状态机与一步分析…',
+        blocks:[
+          {t:'h','text':'两步法'},
+          {t:'p','text':'先写出分布 P(X=x)，再加权求和 E[X]=Σx·P(X=x)。涉及「直到出现某模式」的题，用状态机列方程。'},
+          {t:'f','text':'掷两骰求最大值： E[max]=Σx(2x−1)/36=161/36≈4.47'},
+          {t:'li','text':'抛硬币到 HH 的期望次数 = 6（状态机 E0/E1）。'},
+          {t:'li','text':'对称技巧：E[max]+E[min]=常数，可交叉验证。'},
+        ],
+        links:[['题目 · 概率专题','#5b5ff5'],['聊天 · 鲨鱼教练','#7161f2']]},
+      {id:'speed',title:'速算技巧集',cat:'速算',c:'#ff9f2e',date:'3 天前',words:388,preview:'两位数乘法、分数近似、平方尾数…',
+        blocks:[
+          {t:'h','text':'高频技巧'},
+          {t:'li','text':'两位数乘法：拆成 (a±k) 靠近整十，再修正。'},
+          {t:'li','text':'除以 5/25：乘 2/4 再移小数点。'},
+          {t:'li','text':'分数近似：把百分比换成 1/n 记忆表。'},
+          {t:'p','text':'目标：Optiver 速算轮 8 分钟 80 题，正确率 90%+。'},
+        ],
+        links:[['Mental Math · 去练','#ff9f2e'],['公司 · Optiver','#e0562e']]},
+      {id:'stoch',title:'随机过程要点',cat:'概率',c:'#16a06a',date:'上周',words:520,preview:'鞅、布朗运动、Ito 引理的面试要点…',
+        blocks:[
+          {t:'h','text':'必背'},
+          {t:'li','text':'鞅：E[X_{t+1}|F_t]=X_t，赌徒破产是经典应用。'},
+          {t:'li','text':'布朗运动：独立增量、连续、W_t~N(0,t)。'},
+          {t:'f','text':'Ito： d f = f_x dX + ½ f_xx (dX)²'},
+        ],
+        links:[['课程 · 概率随机分析 10 题','#16a06a'],['能力值 · 弱项','#d0524b']]},
+      {id:'tpl',title:'行为面试模板 STAR',cat:'求职',c:'#2f9be0',date:'上周',words:296,preview:'Situation / Task / Action / Result…',
+        blocks:[
+          {t:'h','text':'STAR 结构'},
+          {t:'li','text':'Situation：一句话背景。'},
+          {t:'li','text':'Task：你的目标/难点。'},
+          {t:'li','text':'Action：你具体做了什么（重点）。'},
+          {t:'li','text':'Result：量化结果 + 复盘。'},
+        ],
+        links:[['简历 · 优化','#5b5ff5'],['模拟面试 · 去练','#ff9f2e']]},
+    ];
+  }
+
+  renderVals(){
+    const S=this.state;
+    const tags=[['all','全部'],['概率','概率'],['衍生品','衍生品'],['速算','速算'],['求职','求职']].map(t=>({
+      label:t[1], onClick:()=>this.setState({tag:t[0]}),
+      style:'padding:6px 12px;border-radius:10px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;border:1px solid '+(S.tag===t[0]?'transparent':'var(--border)')+';background:'+(S.tag===t[0]?'#16879a':'var(--surface)')+';color:'+(S.tag===t[0]?'#fff':'var(--muted)'),
+    }));
+
+    const notes=this.data().filter(n=>S.tag==='all'||n.cat===S.tag).map(n=>{
+      const on=n.id===S.sel;
+      return {
+        title:n.title, preview:n.preview, date:n.date, words:n.words,
+        onClick:()=>this.selectNote(n.id),
+        rowStyle:'padding:12px 14px;border-radius:14px;cursor:pointer;transition:all .14s ease;border:1px solid '+(on?'#c9c7f5':'var(--border)')+';background:'+(on?'var(--brand-soft)':'var(--surface)')+';box-shadow:'+(on?'0 8px 20px -14px rgba(91,95,245,.5)':'0 1px 2px rgba(27,26,56,.03)'),
+        dotStyle:'width:9px;height:9px;border-radius:3px;flex:0 0 auto;background:'+n.c,
+      };
+    });
+
+    const c=this.data().find(x=>x.id===S.sel)||this.data()[0];
+    const blocks=c.blocks.map(b=>{
+      if(b.t==='h') return { text:b.text, style:'font-size:15px;font-weight:800;margin:14px 0 6px;color:var(--text)' };
+      if(b.t==='f') return { text:b.text, style:"font-family:'Space Grotesk';font-size:14px;text-align:center;padding:12px;margin:8px 0;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);color:var(--text)" };
+      if(b.t==='li') return { text:'· '+b.text, style:'padding:2px 0 2px 6px;color:var(--text-2)' };
+      return { text:b.text, style:'margin:4px 0' };
+    });
+    const d={
+      title:c.title, tag:c.cat, date:c.date,
+      tagStyle:'padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;background:'+c.c,
+      blocks,
+      links:c.links.map(l=>({ label:l[0], color:l[1], onGo:()=>this.goLink(l[0]), style:'display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:10px;background:var(--surface-3);border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .13s ease' })),
+    };
+
+    return { searchIcon:this.icon('search'), editIcon:this.icon('edit'), starIcon:this.icon('star'), tags, notes, d };
+  }
+}
+</script>
+</body>
+</html>

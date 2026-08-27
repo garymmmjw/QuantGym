@@ -3,6 +3,7 @@ import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 import { timestampOrZero } from "../../lib/date.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 const EMPTY_FORM = {
   id: "",
@@ -194,7 +195,7 @@ export function NetworkPageContent() {
             ))}
             <div className="qg-net-node qg-net-node-self">
               <div className="qg-net-node-mascot">
-                <img src="/assets/generated/playful-precision/avatar-happy-v2.png" alt="" />
+                <QuantyImage asset="happy" size="avatar" />
               </div>
               <div className="qg-net-node-self-label">你 · Quant</div>
             </div>
@@ -234,7 +235,7 @@ export function NetworkPageContent() {
           <div className="network-list" id="networkList">
             {!contacts.length ? (
               <div className="qg-panel qg-empty-state">
-                <img src="/assets/generated/playful-precision/mascot-search.png" alt="" />
+                <QuantyImage asset="search" size="small" />
                 <strong>{t("networkEmpty")}</strong>
               </div>
             ) : visibleContacts.map((contact, index) => (

@@ -1,0 +1,32 @@
+.sessionGate,
+.recoveryPage {
+  display: grid;
+  place-items: center;
+  min-block-size: 100dvh;
+  padding: var(--qg-space-6);
+  color: var(--qg-text-primary);
+  text-align: center;
+  background: var(--qg-shell-app-background);
+}
+
+.sessionGate {
+  align-content: center;
+}
+
+.sessionGate h1 {
+  margin: var(--qg-space-5) 0 var(--qg-space-2);
+  font-size: var(--qg-font-size-title);
+}
+
+.sessionGate p {
+  margin: 0;
+  color: var(--qg-text-secondary);
+}
+
+.recoveryPage > * {
+  inline-size: min(100%, 48rem);
+}
+
+.recoveryPage {
+  align-content: center;
+}

@@ -6,10 +6,10 @@ import { execSync } from "node:child_process";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDir, "..");
-loadEnvFromProjectRoot();
+if (process.env.QUANTGYM_WEB_IGNORE_DOTENV !== "1") loadEnvFromProjectRoot();
 const outputDir = path.resolve(projectRoot, process.env.QUANTGYM_WEB_DIST || "dist");
 const strict = process.argv.includes("--strict") || process.env.QUANTGYM_WEB_STRICT === "1";
-const runtimeConfig = loadRuntimeConfig();
+const runtimeConfig = process.env.QUANTGYM_WEB_IGNORE_RUNTIME_CONFIG === "1" ? {} : loadRuntimeConfig();
 
 const webConfig = {
   cloudApiEndpoint: value("QUANTGYM_WEB_API_ENDPOINT", "QUANTGYM_CLOUD_API_ENDPOINT", "CLOUD_API_ENDPOINT") || clean(runtimeConfig.cloudApiEndpoint),
@@ -117,7 +117,17 @@ function copyRuntimeStaticFiles(distDir) {
 
   const generatedAssetsDir = path.join(projectRoot, "assets", "generated");
   const distGeneratedAssetsDir = path.join(distDir, "assets", "generated");
-  fs.cpSync(generatedAssetsDir, distGeneratedAssetsDir, { recursive: true });
+  fs.cpSync(generatedAssetsDir, distGeneratedAssetsDir, {
+    recursive: true,
+    filter(sourcePath) {
+      const relativePath = path.relative(generatedAssetsDir, sourcePath).split(path.sep).join("/");
+      // Quanty PNGs are repair masters; responsive runtime variants live in
+      // the stable optimized/ directory so saved avatar URLs stay durable.
+      const isQuantyMaster = relativePath.startsWith("playful-precision/") && relativePath.endsWith(".png");
+      const isSupersededRootPng = relativePath === "shark-hero-clean.png";
+      return !isQuantyMaster && !isSupersededRootPng;
+    }
+  });
 
   const problemMediaDir = path.join(projectRoot, "assets", "problem-media");
   if (fs.existsSync(problemMediaDir)) {

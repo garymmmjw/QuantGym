@@ -1,0 +1,49 @@
+.root {
+  position: fixed;
+  z-index: var(--qg-layer-navigation);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--qg-space-1);
+  padding: var(--qg-space-2) var(--qg-space-2) calc(var(--qg-space-2) + env(safe-area-inset-bottom));
+  background: var(--qg-shell-header-background);
+  border-block-start: 1px solid var(--qg-border-subtle);
+  box-shadow: var(--qg-shadow-notification);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qg-space-1);
+  align-items: center;
+  justify-content: center;
+  min-inline-size: var(--qg-touch-target-min);
+  min-block-size: 54px;
+  padding: var(--qg-space-1);
+  color: var(--qg-text-muted);
+  font-size: 0.6875rem;
+  font-weight: var(--qg-font-weight-bold);
+  line-height: 1;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  border-radius: var(--qg-radius-control);
+  cursor: pointer;
+}
+
+.item svg {
+  inline-size: 23px;
+  block-size: 23px;
+}
+
+.item:focus-visible {
+  outline: none;
+  box-shadow: var(--qg-shadow-focus-ring);
+}
+
+.activeItem {
+  color: var(--qg-action-primary-text);
+  background: var(--qg-action-primary-soft);
+}

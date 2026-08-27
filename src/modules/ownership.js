@@ -1,11 +1,12 @@
 export const MODULE_OWNERSHIP = [
   {
     id: "overview",
+    mode: "native",
     owner: "product-core",
     navGroup: "overview",
-    page: "src/pages/OverviewPage.jsx",
-    featureEntry: "src/features/overview/OverviewPageContent.jsx",
-    stateDomains: ["userState", "problemBank", "leaderboard"],
+    page: "src/pages/training/OverviewPage.tsx",
+    featureEntry: "src/domains/dashboard/dashboard.queries.ts",
+    stateDomains: ["dashboard", "training"],
     browserSmokeInteractions: [
       "overview CTA opens problems",
       "overview leaderboard controls and news ticker navigation",
@@ -20,11 +21,12 @@ export const MODULE_OWNERSHIP = [
   },
   {
     id: "plan",
+    mode: "native",
     owner: "growth",
     navGroup: "growth",
-    page: "src/pages/PlanPage.jsx",
-    featureEntry: "src/features/plan/PlanPageContent.jsx",
-    stateDomains: ["userState", "prepPlan", "todo"],
+    page: "src/pages/plan/PlanPage.tsx",
+    featureEntry: "src/domains/plan/plan.queries.ts",
+    stateDomains: ["plan", "training"],
     browserSmokeInteractions: [
       "plan create, edit, task persistence, and navigation",
       "plan baseline diagnostic completion and reload persistence",
@@ -42,6 +44,15 @@ export const MODULE_OWNERSHIP = [
     browserSmokeInteractions: ["skills radar hover and global search spotlight"]
   },
   {
+    id: "league",
+    owner: "growth",
+    navGroup: "growth",
+    page: "src/pages/LeaguePage.jsx",
+    featureEntry: "src/features/league/LeaguePageContent.jsx",
+    stateDomains: ["userState", "league", "economy"],
+    browserSmokeInteractions: ["league standings, learning map, and reward shop guard"]
+  },
+  {
     id: "interview",
     owner: "training",
     navGroup: "training",
@@ -57,11 +68,12 @@ export const MODULE_OWNERSHIP = [
   },
   {
     id: "problems",
+    mode: "native",
     owner: "training",
     navGroup: "training",
-    page: "src/pages/ProblemsPage.jsx",
-    featureEntry: "src/features/problems/ProblemsPageContent.jsx",
-    stateDomains: ["userState", "problemBank", "problemSocial"],
+    page: "src/pages/training/ProblemsPage.tsx",
+    featureEntry: "src/domains/problems/problems.queries.ts",
+    stateDomains: ["problems", "training"],
     browserSmokeInteractions: [
       "problems search, detail, reveal, and save",
       "problems pagination, collection filter, and mock interview handoff",

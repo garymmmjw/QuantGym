@@ -1,0 +1,112 @@
+.root {
+  display: grid;
+  min-inline-size: 0;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--qg-space-3);
+  border: 1px solid var(--qg-border-subtle);
+  border-radius: var(--qg-radius-control);
+  padding: var(--qg-space-3) var(--qg-space-4);
+  background: var(--qg-surface-secondary);
+  color: var(--qg-text-primary);
+}
+
+.info {
+  border-color: var(--qg-action-primary);
+}
+
+.success {
+  border-color: var(--qg-status-success);
+  background: var(--qg-status-success-soft);
+}
+
+.warning {
+  border-color: var(--qg-status-warning);
+  background: var(--qg-status-warning-soft);
+}
+
+.danger {
+  border-color: var(--qg-status-danger);
+  background: var(--qg-status-danger-soft);
+}
+
+.icon {
+  display: inline-grid;
+  inline-size: var(--qg-space-8);
+  block-size: var(--qg-space-8);
+  place-items: center;
+  border-radius: var(--qg-radius-compact);
+  background: var(--qg-action-primary-soft);
+  color: var(--qg-action-primary-text);
+  font-weight: var(--qg-font-weight-bold);
+}
+
+.success .icon {
+  background: var(--qg-status-success-soft);
+  color: var(--qg-status-success);
+}
+
+.warning .icon {
+  background: var(--qg-status-warning-soft);
+  color: var(--qg-reward-ink);
+}
+
+.danger .icon {
+  background: var(--qg-status-danger);
+  color: var(--qg-on-status-danger);
+}
+
+.saving .icon {
+  animation: draft-pulse var(--qg-motion-panel) var(--qg-motion-ease-standard) infinite alternate;
+}
+
+.content {
+  min-inline-size: 0;
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--qg-space-2);
+  font-size: var(--qg-font-size-body-small);
+  line-height: var(--qg-line-height-normal);
+}
+
+.heading span {
+  color: var(--qg-text-muted);
+  font-size: var(--qg-font-size-caption);
+}
+
+.content p {
+  margin: var(--qg-space-1) 0 0;
+  color: var(--qg-text-secondary);
+  font-size: var(--qg-font-size-caption);
+  line-height: var(--qg-line-height-relaxed);
+  text-wrap: pretty;
+}
+
+@keyframes draft-pulse {
+  from { opacity: 0.45; }
+}
+
+:where([data-qg-motion="reduced"]) .saving .icon {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .saving .icon {
+    animation: none;
+  }
+}
+
+@media (width <= 640px) {
+  .root {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .root > button {
+    grid-column: 1 / -1;
+  }
+}

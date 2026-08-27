@@ -1,0 +1,103 @@
+.root {
+  display: grid;
+  min-inline-size: 0;
+  align-content: start;
+  gap: var(--qg-space-3);
+  border-block-start: var(--qg-space-1) solid var(--qg-border-subtle);
+  border-radius: var(--qg-radius-card);
+  padding: var(--qg-space-5);
+  background: var(--qg-surface-primary);
+  color: var(--qg-text-primary);
+}
+
+.positive {
+  border-block-start-color: var(--qg-status-success);
+}
+
+.warning {
+  border-block-start-color: var(--qg-status-warning);
+}
+
+.reward {
+  border-block-start-color: var(--qg-reward-border);
+  background: var(--qg-reward-surface);
+}
+
+.labelRow,
+.valueRow {
+  display: flex;
+  min-inline-size: 0;
+  align-items: center;
+  gap: var(--qg-space-2);
+}
+
+.labelRow {
+  color: var(--qg-text-secondary);
+}
+
+.prefix {
+  display: inline-grid;
+  inline-size: var(--qg-space-6);
+  block-size: var(--qg-space-6);
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--qg-radius-compact);
+  background: var(--qg-action-primary-soft);
+  color: var(--qg-action-primary-text);
+  font-size: var(--qg-font-size-caption);
+}
+
+.label {
+  overflow: hidden;
+  margin: 0;
+  font-size: var(--qg-font-size-body-small);
+  font-weight: var(--qg-font-weight-semibold);
+  line-height: var(--qg-line-height-normal);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.valueRow {
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.value {
+  overflow-wrap: anywhere;
+  font-size: var(--qg-font-size-display);
+  font-weight: var(--qg-font-weight-bold);
+  line-height: var(--qg-line-height-tight);
+}
+
+.trend {
+  flex: 0 0 auto;
+  color: var(--qg-text-secondary);
+  font-size: var(--qg-font-size-caption);
+  font-weight: var(--qg-font-weight-semibold);
+}
+
+.positive .trend {
+  color: var(--qg-text-primary);
+}
+
+.warning .trend {
+  color: var(--qg-reward-ink);
+}
+
+.reward .value,
+.reward .trend {
+  color: var(--qg-reward-ink);
+}
+
+.detail {
+  margin: 0;
+  color: var(--qg-text-muted);
+  font-size: var(--qg-font-size-caption);
+  line-height: var(--qg-line-height-relaxed);
+  text-wrap: pretty;
+}
+
+.loading {
+  display: grid;
+  gap: var(--qg-space-3);
+}

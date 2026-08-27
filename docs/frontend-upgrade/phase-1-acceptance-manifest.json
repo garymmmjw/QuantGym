@@ -1,0 +1,726 @@
+{
+  "schemaVersion": 1,
+  "phase": 1,
+  "systemSurfaces": [
+    "system:auth",
+    "system:desktop-shell",
+    "system:mobile-shell",
+    "system:global-search",
+    "system:notifications-toast",
+    "system:todo",
+    "system:theme-language",
+    "system:network-recovery"
+  ],
+  "mutations": [
+    {
+      "id": "auth.sign-in",
+      "surfaceId": "system:auth"
+    },
+    {
+      "id": "auth.register",
+      "surfaceId": "system:auth"
+    },
+    {
+      "id": "auth.reset-password",
+      "surfaceId": "system:auth"
+    },
+    {
+      "id": "auth.google-sign-in",
+      "surfaceId": "system:auth"
+    },
+    {
+      "id": "notifications.mark-read",
+      "surfaceId": "system:notifications-toast"
+    },
+    {
+      "id": "todo.create",
+      "surfaceId": "system:todo"
+    },
+    {
+      "id": "todo.update",
+      "surfaceId": "system:todo"
+    },
+    {
+      "id": "todo.complete",
+      "surfaceId": "system:todo"
+    },
+    {
+      "id": "todo.delete",
+      "surfaceId": "system:todo"
+    },
+    {
+      "id": "preferences.update-theme",
+      "surfaceId": "system:theme-language"
+    },
+    {
+      "id": "preferences.update-language",
+      "surfaceId": "system:theme-language"
+    },
+    {
+      "id": "session.retry",
+      "surfaceId": "system:network-recovery"
+    }
+  ],
+  "recoveryStates": [
+    "recoverable-error",
+    "non-recoverable-error",
+    "offline-draft",
+    "permission-denied",
+    "stale-version-conflict",
+    "retry"
+  ],
+  "gates": [
+    {
+      "id": "e2e:auth-session-and-recovery",
+      "kind": "journey",
+      "surfaceId": "system:auth"
+    },
+    {
+      "id": "e2e:desktop-shell-keyboard-navigation",
+      "kind": "journey",
+      "surfaceId": "system:desktop-shell"
+    },
+    {
+      "id": "e2e:mobile-shell-navigation",
+      "kind": "journey",
+      "surfaceId": "system:mobile-shell"
+    },
+    {
+      "id": "e2e:global-search-keyboard",
+      "kind": "journey",
+      "surfaceId": "system:global-search"
+    },
+    {
+      "id": "e2e:notifications-live-region",
+      "kind": "journey",
+      "surfaceId": "system:notifications-toast"
+    },
+    {
+      "id": "e2e:todo-lifecycle",
+      "kind": "journey",
+      "surfaceId": "system:todo"
+    },
+    {
+      "id": "e2e:theme-language-persistence",
+      "kind": "journey",
+      "surfaceId": "system:theme-language"
+    },
+    {
+      "id": "e2e:offline-and-error-recovery",
+      "kind": "journey",
+      "surfaceId": "system:network-recovery"
+    },
+    {
+      "id": "mutation:auth.sign-in:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.sign-in",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:auth.sign-in:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.sign-in",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:auth.sign-in:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.sign-in",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:auth.sign-in:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.sign-in",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:auth.sign-in:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.sign-in",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:auth.sign-in:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.sign-in",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:auth.register:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.register",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:auth.register:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.register",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:auth.register:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.register",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:auth.register:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.register",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:auth.register:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.register",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:auth.register:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.register",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:auth.reset-password:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.reset-password",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:auth.reset-password:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.reset-password",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:auth.reset-password:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.reset-password",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:auth.reset-password:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.reset-password",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:auth.reset-password:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.reset-password",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:auth.reset-password:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.reset-password",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:auth.google-sign-in:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.google-sign-in",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:auth.google-sign-in:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.google-sign-in",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:auth.google-sign-in:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.google-sign-in",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:auth.google-sign-in:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.google-sign-in",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:auth.google-sign-in:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.google-sign-in",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:auth.google-sign-in:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:auth",
+      "mutationId": "auth.google-sign-in",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:notifications.mark-read:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:notifications-toast",
+      "mutationId": "notifications.mark-read",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:notifications.mark-read:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:notifications-toast",
+      "mutationId": "notifications.mark-read",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:notifications.mark-read:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:notifications-toast",
+      "mutationId": "notifications.mark-read",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:notifications.mark-read:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:notifications-toast",
+      "mutationId": "notifications.mark-read",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:notifications.mark-read:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:notifications-toast",
+      "mutationId": "notifications.mark-read",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:notifications.mark-read:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:notifications-toast",
+      "mutationId": "notifications.mark-read",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:todo.create:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.create",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:todo.create:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.create",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:todo.create:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.create",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:todo.create:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.create",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:todo.create:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.create",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:todo.create:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.create",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:todo.update:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.update",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:todo.update:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.update",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:todo.update:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.update",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:todo.update:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.update",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:todo.update:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.update",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:todo.update:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.update",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:todo.complete:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.complete",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:todo.complete:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.complete",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:todo.complete:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.complete",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:todo.complete:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.complete",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:todo.complete:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.complete",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:todo.complete:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.complete",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:todo.delete:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.delete",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:todo.delete:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.delete",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:todo.delete:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.delete",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:todo.delete:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.delete",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:todo.delete:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.delete",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:todo.delete:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:todo",
+      "mutationId": "todo.delete",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:preferences.update-theme:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-theme",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:preferences.update-theme:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-theme",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:preferences.update-theme:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-theme",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:preferences.update-theme:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-theme",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:preferences.update-theme:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-theme",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:preferences.update-theme:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-theme",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:preferences.update-language:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-language",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:preferences.update-language:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-language",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:preferences.update-language:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-language",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:preferences.update-language:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-language",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:preferences.update-language:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-language",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:preferences.update-language:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:theme-language",
+      "mutationId": "preferences.update-language",
+      "state": "retry"
+    },
+    {
+      "id": "mutation:session.retry:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:network-recovery",
+      "mutationId": "session.retry",
+      "state": "recoverable-error"
+    },
+    {
+      "id": "mutation:session.retry:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:network-recovery",
+      "mutationId": "session.retry",
+      "state": "non-recoverable-error"
+    },
+    {
+      "id": "mutation:session.retry:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:network-recovery",
+      "mutationId": "session.retry",
+      "state": "offline-draft"
+    },
+    {
+      "id": "mutation:session.retry:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:network-recovery",
+      "mutationId": "session.retry",
+      "state": "permission-denied"
+    },
+    {
+      "id": "mutation:session.retry:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:network-recovery",
+      "mutationId": "session.retry",
+      "state": "stale-version-conflict"
+    },
+    {
+      "id": "mutation:session.retry:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "system:network-recovery",
+      "mutationId": "session.retry",
+      "state": "retry"
+    },
+    {
+      "id": "visual:phase1-system-surfaces:light-dark-responsive",
+      "kind": "visual-matrix",
+      "surfaceIds": [
+        "system:auth",
+        "system:desktop-shell",
+        "system:mobile-shell",
+        "system:global-search",
+        "system:notifications-toast",
+        "system:todo",
+        "system:theme-language",
+        "system:network-recovery"
+      ],
+      "viewports": [
+        "desktop",
+        "laptop",
+        "mobile"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "caseCount": 48
+    },
+    {
+      "id": "a11y:phase1-system-surfaces",
+      "kind": "axe-matrix",
+      "surfaceIds": [
+        "system:auth",
+        "system:desktop-shell",
+        "system:mobile-shell",
+        "system:global-search",
+        "system:notifications-toast",
+        "system:todo",
+        "system:theme-language",
+        "system:network-recovery"
+      ],
+      "maximumSeriousOrCriticalFindings": 0
+    }
+  ],
+  "targetGateCount": 82,
+  "activatedPhase0FutureStates": [
+    "shared-state:notifications-toast:center-open",
+    "shared-state:notifications-toast:empty",
+    "shared-state:network-recovery:offline-draft",
+    "shared-state:network-recovery:recoverable-error",
+    "shared-state:network-recovery:stale-conflict",
+    "shared-state:network-recovery:permission-denied-retry"
+  ],
+  "activatedPhase0FutureStateCount": 6,
+  "baseVisualCaseCount": 48,
+  "evidenceOutputs": [
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-preview-live-summary.json",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-postgres-migration-summary.json",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-r2-binding-summary.json",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-auth-security-summary.json",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-legacy-boundary-summary.json",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-system-surfaces-summary.json",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-summary.json",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-desktop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-laptop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-mobile-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/auth-mobile-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-desktop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-laptop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-mobile-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/desktop-shell-mobile-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-desktop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-laptop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-mobile-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/mobile-shell-mobile-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-desktop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-laptop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-mobile-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/global-search-mobile-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-desktop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-laptop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-mobile-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/notifications-toast-mobile-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-desktop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-laptop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-mobile-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/todo-mobile-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-desktop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-laptop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-mobile-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/theme-language-mobile-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-desktop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-laptop-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-mobile-light.jpg",
+    "docs/browser-audit-screenshots/380-frontend-upgrade-phase-1-review/network-recovery-mobile-dark.jpg"
+  ],
+  "aggregateStatusCeiling": "ready-for-review"
+}

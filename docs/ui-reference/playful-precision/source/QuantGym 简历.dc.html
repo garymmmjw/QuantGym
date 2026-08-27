@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+</style>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><rect x="30" y="22" width="40" height="56" rx="5" fill="#fff"/><path d="M38 36h24M38 46h24M38 56h16" stroke="#5b5ff5" stroke-width="4" stroke-linecap="round"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:#e7f2fb;color:#2f7fc0;font-size:11.5px;font-weight:700;margin-bottom:10px">JOBS · 简历工作台</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">简历 <span style="color:#5b5ff5">Resume</span></h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex;align-items:center;gap:9px;padding:9px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04)">
+        <div style="position:relative;width:34px;height:34px"><div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(#16a06a 0% 82%,#eeedfa 82% 100%)"></div><div style="position:absolute;inset:4px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-family:'Space Grotesk';font-size:11px;font-weight:700;color:#0f9d63">82</div></div>
+        <div><div style="font-size:11px;color:var(--muted-2);font-weight:600">ATS 评分</div><div style="font-size:12.5px;font-weight:700;color:#0f9d63">良好</div></div>
+      </div>
+      <button type="button" style="display:flex;align-items:center;gap:8px;padding:12px 18px;border:none;border-radius:14px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(3px);box-shadow:0 1px 0 #3f39c9"><span style="width:16px;height:16px;display:inline-flex">{{ dlIcon }}</span> 导出 PDF</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start">
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:16px 18px">
+        <div style="font-size:12.5px;font-weight:800;margin-bottom:12px">模板风格</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <sc-for list="{{ templates }}" as="t" hint-placeholder-count="3">
+            <button type="button" onClick="{{ t.onClick }}" style="{{ t.style }}"><span style="{{ t.swatch }}"></span>{{ t.name }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:16px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-size:12.5px;font-weight:800">简历分区</div><span style="font-size:11.5px;color:#5b5ff5;font-weight:700;cursor:pointer">+ 添加</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ sections }}" as="s" hint-placeholder-count="5">
+            <div onClick="{{ s.onClick }}" style="{{ s.rowStyle }}">
+              <span style="width:14px;height:14px;display:inline-flex;color:#c3c2d8;cursor:grab;flex:0 0 auto">{{ gripIcon }}</span>
+              <span style="flex:1;font-size:13px;font-weight:700">{{ s.name }}</span>
+              <span style="font-size:11px;color:var(--muted-3);font-weight:600">{{ s.count }}</span>
+              <span style="{{ s.eyeStyle }}"><span style="width:15px;height:15px;display:inline-flex">{{ s.eyeEl }}</span></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border-radius:20px;background:linear-gradient(160deg,#1b1a38,#2d2a5c);color:#fff;padding:16px 18px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px"><img src="assets/avatar-wink-v2.png" alt="" style="width:28px;height:28px"><div style="font-size:13px;font-weight:800">AI 润色建议</div></div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;gap:8px;font-size:12px;line-height:1.5;color:#c9c8ec"><span style="color:#ffd479;flex:0 0 auto">·</span> 「负责数据处理」→ 用量化结果：「用 Python 处理 2GB 行情，回测夏普 1.8」</div>
+          <div style="display:flex;gap:8px;font-size:12px;line-height:1.5;color:#c9c8ec"><span style="color:#ffd479;flex:0 0 auto">·</span> 补充一段做市/概率相关项目，匹配 Optiver JD 关键词</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="border-radius:16px;background:#f4f3fa;border:1px solid var(--border);padding:22px;display:flex;justify-content:center;box-shadow:inset 0 2px 12px rgba(27,26,56,.05)">
+      <div style="width:100%;max-width:640px;background:var(--surface);border-radius:6px;box-shadow:0 18px 44px -20px rgba(27,26,56,.4);padding:38px 40px;font-size:12.5px;line-height:1.6">
+        <div style="border-bottom:2.5px solid {{ accent }};padding-bottom:14px;margin-bottom:16px">
+          <div style="font-size:26px;font-weight:800;letter-spacing:-.01em;color:var(--text)">Quant Liu</div>
+          <div style="font-size:14px;font-weight:700;color:{{ accent }};margin-top:2px">Aspiring Quantitative Trader / Researcher</div>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:9px;font-size:11.5px;color:var(--muted)">
+            <span>quant.liu@quantgym.io</span><span>· +86 138 0000 0000</span><span>· 上海</span><span>· github.com/quantliu</span>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <div style="{{ hStyle }}">教育背景 · Education</div>
+          <div style="display:flex;justify-content:space-between"><span style="font-weight:700">上海交通大学 · 金融工程（本硕）</span><span style="color:var(--muted);font-family:'Space Grotesk'">2021 — 2026</span></div>
+          <div style="color:var(--muted);margin-top:2px">GPA 3.9/4.0 · 相关课程：随机过程、概率论、凸优化、数值方法、机器学习</div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <div style="{{ hStyle }}">实习经历 · Experience</div>
+          <div style="margin-bottom:9px">
+            <div style="display:flex;justify-content:space-between"><span style="font-weight:700">某自营做市商 · 量化研究实习</span><span style="color:var(--muted);font-family:'Space Grotesk'">2025 夏</span></div>
+            <ul style="margin:4px 0 0;padding-left:16px;color:var(--text-2)"><li>用 Python 处理 2GB 高频行情，构建做市信号，回测夏普 1.8</li><li>实现 delta 对冲模拟，将库存风险敞口降低 23%</li></ul>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between"><span style="font-weight:700">券商衍生品部 · 定价实习</span><span style="color:var(--muted);font-family:'Space Grotesk'">2024 冬</span></div>
+            <ul style="margin:4px 0 0;padding-left:16px;color:var(--text-2)"><li>用 C++ 实现蒙特卡洛期权定价，较基线提速 4×</li></ul>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <div style="{{ hStyle }}">技能 · Skills</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <sc-for list="{{ skills }}" as="k" hint-placeholder-count="8"><span style="{{ skillStyle }}">{{ k }}</span></sc-for>
+          </div>
+        </div>
+
+        <div>
+          <div style="{{ hStyle }}">QuantGym 成就 · Highlights</div>
+          <div style="color:var(--text-2)">已解 342 题 · Mental Math 正确率 91% · 连续训练 12 天 · 段位 Analyst II</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { tpl:'classic', hidden:{} };
+
+  icon(name){
+    const R=React.createElement;
+    const w=(ch)=>R('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.9,strokeLinecap:'round',strokeLinejoin:'round',style:{width:'100%',height:'100%',display:'block'}},ch);
+    const P=(d)=>R('path',{d,key:d.slice(0,6)});
+    if(name==='dl') return w([P('M12 4v11'),P('M8 11l4 4 4-4'),P('M5 19h14')]);
+    if(name==='grip') return w([P('M9 6h.01M9 12h.01M9 18h.01M15 6h.01M15 12h.01M15 18h.01')]);
+    if(name==='eye') return w([P('M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z'),R('circle',{cx:12,cy:12,r:3,key:'c'})]);
+    if(name==='eyeoff') return w([P('M4 4l16 16'),P('M9.9 5.2A9.6 9.6 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3 3.6M6 6.5A15 15 0 0 0 2 12s3.5 7 10 7a9.6 9.6 0 0 0 3-.5')]);
+    return w([R('circle',{cx:12,cy:12,r:8,key:'c'})]);
+  }
+
+  renderVals(){
+    const S=this.state;
+    const accents={classic:'#5b5ff5',mono:'var(--text)',emerald:'#0f9d63'};
+    const accent=accents[S.tpl];
+
+    const templates=[['classic','品牌紫','#5b5ff5'],['mono','极简黑','var(--text)'],['emerald','稳重绿','#0f9d63']].map(t=>({
+      name:t[1], onClick:()=>this.setState({tpl:t[0]}),
+      style:'display:flex;flex-direction:column;align-items:center;gap:6px;padding:11px 6px;border-radius:12px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer;border:1.5px solid '+(S.tpl===t[0]?t[2]:'var(--border)')+';background:'+(S.tpl===t[0]?t[2]+'12':'var(--surface)')+';color:'+(S.tpl===t[0]?t[2]:'#6d6c8e'),
+      swatch:'width:100%;height:20px;border-radius:6px;background:'+t[2],
+    }));
+
+    const secDefs=[['basic','基本信息','1 项'],['edu','教育背景','1 项'],['exp','实习经历','2 项'],['skill','技能','8 项'],['ach','QuantGym 成就','1 项']];
+    const sections=secDefs.map(s=>{ const hidden=S.hidden[s[0]]; return {
+      name:s[1], count:s[2],
+      onClick:()=>this.setState(st=>({hidden:{...st.hidden,[s[0]]:!st.hidden[s[0]]}})),
+      rowStyle:'display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:12px;background:'+(hidden?'#f7f7fb':'#faf9ff')+';border:1px solid var(--border);cursor:pointer;'+(hidden?'opacity:.55':''),
+      eyeEl:this.icon(hidden?'eyeoff':'eye'),
+      eyeStyle:'display:inline-flex;color:'+(hidden?'#c3c2d8':'#5b5ff5')+';flex:0 0 auto',
+    }; });
+
+    const skills=['Python','C++','NumPy / pandas','概率论','随机过程','蒙特卡洛','期权定价','Delta 对冲'];
+
+    return {
+      dlIcon:this.icon('dl'), gripIcon:this.icon('grip'),
+      templates, sections, accent, skills,
+      hStyle:'font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:'+accent+';margin-bottom:7px',
+      skillStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;color:'+accent+';background:'+accent+'14',
+    };
+  }
+}
+</script>
+</body>
+</html>

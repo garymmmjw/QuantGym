@@ -1,0 +1,886 @@
+{
+  "schemaVersion": 1,
+  "kind": "quanty-runtime-assets",
+  "hashAlgorithm": "sha256",
+  "sourceDesignManifest": {
+    "path": "assets/generated/playful-precision/manifest.json",
+    "assetCount": 36,
+    "sha256": "58846c97d2f7a315c4cf6bc31338c3f39afd8ab4d2d2290c241a1fa025e62ce9"
+  },
+  "variantWidths": [
+    160,
+    320,
+    640
+  ],
+  "counts": {
+    "logicalAssets": 16,
+    "masters": 16,
+    "optimizedVariants": 48
+  },
+  "assets": [
+    {
+      "logicalName": "hero",
+      "role": "auth-hero",
+      "category": "mascot",
+      "slug": "hero-wave",
+      "newHq": true,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-hero-v6-hq.png",
+        "mimeType": "image/png",
+        "width": 1114,
+        "height": 1412,
+        "bytes": 1830079,
+        "sha256": "e65a7b292d9be60851d761711862afe5ed54af7c34098ece9061ef4d75855f79",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/hero-wave-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 203,
+          "bytes": 11572,
+          "sha256": "593526215c7338277199d913c6d6559a08ad9e9682c1479a386d8595c3e4fce3",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/hero-wave-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 406,
+          "bytes": 34884,
+          "sha256": "75a596c6d8bc44355106156d527ad2bccc435890271f0943b5683bb10d8a0dbc",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/hero-wave-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 812,
+          "bytes": 115018,
+          "sha256": "c765cf535c2f1f5f6bbbc27c605be9412c80d68b55a624eae78632a07533776b",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "trophy",
+      "role": "achievement-reward",
+      "category": "mascot",
+      "slug": "trophy",
+      "newHq": true,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-trophy-v3-hq.png",
+        "mimeType": "image/png",
+        "width": 1113,
+        "height": 1414,
+        "bytes": 1458930,
+        "sha256": "f446608b7d2fe946024f8bfdbc4b534481647ef24ff34cb045f42c0a7881a347",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/trophy-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 10926,
+          "sha256": "b5d5a2d514b54a8e09229177d520042f0ad2918b71c088ead1d83a18febdc0ac",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/trophy-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 407,
+          "bytes": 31112,
+          "sha256": "52eff0250f4e9adea099f1e1ac1796e3298255f07ed353afe5c9664e38e505a6",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/trophy-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 814,
+          "bytes": 99414,
+          "sha256": "6ece5cec659569bcf44ea631523e7a0a2ffa951e7acb2c7ed25bd9c96bc3cd58",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "calculator",
+      "role": "calculator-practice",
+      "category": "mascot",
+      "slug": "calculator",
+      "newHq": true,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-calculator-v3-hq.png",
+        "mimeType": "image/png",
+        "width": 1112,
+        "height": 1415,
+        "bytes": 1414604,
+        "sha256": "ba177a02ea606ed0551b163acdd93a83a356e24de02d44167c31f9626c70302f",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/calculator-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 10270,
+          "sha256": "cb3e7f1c9e70dc51c99b5988f65b85c3482308de2bd669d71e422f16e4f901b9",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/calculator-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 408,
+          "bytes": 29070,
+          "sha256": "dec2e53dd081912ed56dfe9b812db4b0452a201d4dff293a9111598d75690412",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/calculator-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 815,
+          "bytes": 88172,
+          "sha256": "d233ffdd843cd6f3e59898d4a055961d4634e607100d9f5f88a02776214ef31d",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "teacher",
+      "role": "learning-coach",
+      "category": "mascot",
+      "slug": "teacher",
+      "newHq": true,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-teacher-v4-hq.png",
+        "mimeType": "image/png",
+        "width": 1106,
+        "height": 1422,
+        "bytes": 1149719,
+        "sha256": "6f0b5990237b220fc0b491841b4dea60f55543e6a25cf1bcd21488ee911fca91",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/teacher-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 206,
+          "bytes": 8022,
+          "sha256": "a1cd6a12c61f97be473e55363f9f47fcecc1923899c22eb62edf6cbe6dc70d53",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/teacher-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 412,
+          "bytes": 20180,
+          "sha256": "af729b140a94598a07cd8904501826c08792e4571c656943ad15be0a524fc104",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/teacher-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 823,
+          "bytes": 53082,
+          "sha256": "65e1d5ea328bf01679f0cb5d6b203c9b807c444b4954716cdd535e25a778a207",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "fire",
+      "role": "streak-reward",
+      "category": "mascot",
+      "slug": "fire",
+      "newHq": true,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-fire-v3-hq.png",
+        "mimeType": "image/png",
+        "width": 1112,
+        "height": 1414,
+        "bytes": 1627137,
+        "sha256": "4bf3c8821823c08b7b68210be0e68b21f57c976e04a3a877cc30126dc819ceaa",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/fire-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 14432,
+          "sha256": "4ccf90d0704ec759fca337d8ae21c0e1309a0ea588624db9c0697fb85c11df3b",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/fire-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 407,
+          "bytes": 39592,
+          "sha256": "cd79ba598e8ac205d64af7628b8e468551d81ac7f75f3955a2b129a374fd862f",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/fire-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 814,
+          "bytes": 122802,
+          "sha256": "c7c81b3cee0dfb6a8ea3b99452102d604048c2db04b83446b828da35e075d473",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "laptop",
+      "role": "workspace-study",
+      "category": "mascot",
+      "slug": "laptop",
+      "newHq": true,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-laptop-v3-hq.png",
+        "mimeType": "image/png",
+        "width": 1113,
+        "height": 1414,
+        "bytes": 1751959,
+        "sha256": "e6c822d8720e76e31d7686aed4cd1065a9fa8af3d45b94417484de38a0962c0c",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/laptop-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 11652,
+          "sha256": "dd56feed2289b78f7d85876bdf564b8ec61baaca0c4ce67c51b632146e23b479",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/laptop-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 407,
+          "bytes": 34616,
+          "sha256": "2c640175530c27daa8d9f42c1e2ac2bd4674eec6aa961b6cbd6d2d226f4afa91",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/laptop-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 814,
+          "bytes": 113770,
+          "sha256": "da6dfbaf30e6380431dbd0ad9472b5d0be9f15390af528c3364a9fc269d54666",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "levelup",
+      "role": "level-up-reward",
+      "category": "mascot",
+      "slug": "levelup",
+      "newHq": true,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-levelup-v2-hq.png",
+        "mimeType": "image/png",
+        "width": 1110,
+        "height": 1417,
+        "bytes": 1672224,
+        "sha256": "4984a6fac72878253eb1c771314936d44b0121b1a025d74fc4037d8056107b04",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/levelup-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 205,
+          "bytes": 16510,
+          "sha256": "a3fe7b31c8df3aee8b549d38c7d7762167b60a3fcca662a5f041510fd84fca31",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/levelup-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 409,
+          "bytes": 44422,
+          "sha256": "d3fff724a499d1fd16ba13f04fc8695d10cb0599f338c56218a4d626ef189c5e",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/levelup-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 818,
+          "bytes": 135710,
+          "sha256": "050f518da0e117d58069a7de12bc50857d81147accbf473d9e1a00e95f4b7179",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "happy",
+      "role": "avatar-happy",
+      "category": "avatar",
+      "slug": "avatar-happy",
+      "newHq": true,
+      "master": {
+        "path": "assets/generated/playful-precision/avatar-happy-v3-hq.png",
+        "mimeType": "image/png",
+        "width": 1113,
+        "height": 1414,
+        "bytes": 2099587,
+        "sha256": "93028b91847e69fd98c075c775603649d16a02b495e8dd10e8c2d97c45983071",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-happy-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 12024,
+          "sha256": "360c7ec01aa730b665608489301851972de4f7aef25f4899afd26ea79f8e7501",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-happy-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 407,
+          "bytes": 38622,
+          "sha256": "09dec9a57b341d8023afd9affeb81589960edad65e24a0487e2d2ca4b0ff48ad",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-happy-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 814,
+          "bytes": 132194,
+          "sha256": "6f5347f5da6ddb74d8c73a64bc040dd7d7dc126224101b029847933c83338da5",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "focused",
+      "role": "avatar-focused",
+      "category": "avatar",
+      "slug": "avatar-focused",
+      "newHq": true,
+      "master": {
+        "path": "assets/generated/playful-precision/avatar-focused-v3-hq.png",
+        "mimeType": "image/png",
+        "width": 1112,
+        "height": 1415,
+        "bytes": 2268263,
+        "sha256": "c94290c93311809fabad38bd2fd797d6a06dc7628b22b257b8a6fb6d1798db13",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-focused-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 11894,
+          "sha256": "70ea65c82e2b29bbf8b95d65b03540c62e636ed0daf0c574034b5ffb8589c70a",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-focused-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 408,
+          "bytes": 39028,
+          "sha256": "be5b2df4676a3c48082d4445d777996f7d21334f0a78a9cdcbb870b45e63bcd3",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-focused-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 815,
+          "bytes": 134902,
+          "sha256": "28aee6e5f947df5b586d4b4db4e80c73fbfecae9365ad20ceed909ef59f03861",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "wow",
+      "role": "avatar-surprised",
+      "category": "avatar",
+      "slug": "avatar-wow",
+      "newHq": true,
+      "master": {
+        "path": "assets/generated/playful-precision/avatar-wow-v4-hq.png",
+        "mimeType": "image/png",
+        "width": 1112,
+        "height": 1414,
+        "bytes": 2132771,
+        "sha256": "ecdc9e173d2fede17c5112073c5582c068ec34a7eb93f2fc3cf8769a16620f01",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-wow-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 11198,
+          "sha256": "971f115855c42c37099ba5dd242b542b5d040312f68d65d25e5159ab60284955",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-wow-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 407,
+          "bytes": 36732,
+          "sha256": "e5834ced4362d57d7cf37463b739a9ac473f53e6745f2ab895a99d8a1b6358bd",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-wow-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 814,
+          "bytes": 129272,
+          "sha256": "174567e6a4ae0ba63a0c8c2187baad4693ec700d9e24f5198bb0ed6906246145",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "wink",
+      "role": "avatar-wink",
+      "category": "avatar",
+      "slug": "avatar-wink",
+      "newHq": false,
+      "master": {
+        "path": "assets/generated/playful-precision/avatar-wink-v2.png",
+        "mimeType": "image/png",
+        "width": 1100,
+        "height": 1400,
+        "bytes": 1083669,
+        "sha256": "ae66c96279b8ee4958907a69ff6e3786a2d915a81a6c00891402135bb89b262b",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-wink-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 11986,
+          "sha256": "f8999482256fc7684b90b5c8cec280ff043c7a72e4d862bfdd2ceef36b037c57",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-wink-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 408,
+          "bytes": 40830,
+          "sha256": "18857f255a3c95cf239194cbd688b4e1c081c1d50008d7af57e4dea0a803a439",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/avatar-wink-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 815,
+          "bytes": 119694,
+          "sha256": "b28c2198fba4986e489db13f454f556ccb9c13b1327bf1f9a5a5f879e5ed9ba2",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "interview",
+      "role": "interview-practice",
+      "category": "mascot",
+      "slug": "interview",
+      "newHq": false,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-interview.png",
+        "mimeType": "image/png",
+        "width": 1100,
+        "height": 1400,
+        "bytes": 1243686,
+        "sha256": "62a21d4ff2db6b6f384cbdcc5d484e9d50b44c574d22d2c35afd40e83cd0b54f",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/interview-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 11592,
+          "sha256": "9af8724268f9425014243e214fcad7279fb6214ba38c3f0d08f5ae286504cc60",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/interview-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 408,
+          "bytes": 38896,
+          "sha256": "27ad2edabea8e64b022e8d912724343cf77c7806140fb09b4a9fabb59018db4b",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/interview-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 815,
+          "bytes": 129042,
+          "sha256": "c3ca325570b845e051e85bafefd258ed7f81d5e2cdb5e815669bea3c6db63816",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "oops",
+      "role": "error-recovery",
+      "category": "mascot",
+      "slug": "oops",
+      "newHq": false,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-oops.png",
+        "mimeType": "image/png",
+        "width": 1100,
+        "height": 1400,
+        "bytes": 1329680,
+        "sha256": "f0e29140a6fb5ccf665fba2527f6ff3736ee1cfe7086f34a5bd820311c2a14d2",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/oops-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 11838,
+          "sha256": "b9d186b763443842a529a675101ee84c2b04ef3f5c827708649dc8a4dee97083",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/oops-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 408,
+          "bytes": 40270,
+          "sha256": "df440b9f91a2008dfa1f52bc47c9b2153be0bbc71033fa0ce654db911eed1ec7",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/oops-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 815,
+          "bytes": 139460,
+          "sha256": "6cf8a66c35ffd1d8814c3a804626a3dd3588caec9be11a85c444522439a62227",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "poker",
+      "role": "poker-practice",
+      "category": "mascot",
+      "slug": "poker",
+      "newHq": false,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-poker.png",
+        "mimeType": "image/png",
+        "width": 1100,
+        "height": 1400,
+        "bytes": 1416021,
+        "sha256": "ca3d20d5736405ecce02d0627e9804aadc014c83c62481050046e7cbb7f5e28b",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/poker-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 13522,
+          "sha256": "30069123d1aa6a2ac97925d4f86e01c92022538ceeba9442b578d4db423f08b3",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/poker-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 408,
+          "bytes": 46952,
+          "sha256": "830d361740fe52696ab1deb708b786d383f76d4c1150d65f0b39781b3ab9dbdc",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/poker-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 815,
+          "bytes": 152764,
+          "sha256": "0dad2cc34af112f63644489554326cedd107dcaf0170390781a4617f6fba985a",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "search",
+      "role": "search-empty-state",
+      "category": "mascot",
+      "slug": "search",
+      "newHq": false,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-search.png",
+        "mimeType": "image/png",
+        "width": 1100,
+        "height": 1400,
+        "bytes": 1282148,
+        "sha256": "40db9d45b9938fa866d7b5a79a50bd796c40c2edcda89ce1bcf0cb8e413d3a12",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/search-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 10996,
+          "sha256": "1c6fd2a81325d89201c90a9bcfd37e77c558644a92c840fb80a1d83751dda288",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/search-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 408,
+          "bytes": 37082,
+          "sha256": "a40a88b0cfdbff99dad2de7e271f518885f4c856f3241396d43deccb47588af7",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/search-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 815,
+          "bytes": 128796,
+          "sha256": "9dbaeca7d0793a328f445a67c5261d0d5648d3dcb7c0dabad3044f7437bca6f4",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    },
+    {
+      "logicalName": "sleep",
+      "role": "idle-empty-state",
+      "category": "mascot",
+      "slug": "sleep",
+      "newHq": false,
+      "master": {
+        "path": "assets/generated/playful-precision/mascot-sleep.png",
+        "mimeType": "image/png",
+        "width": 1100,
+        "height": 1400,
+        "bytes": 591743,
+        "sha256": "7266ff36e024a4eb1e944217a3729a364ecae6f0d62eaadd8e5f76b2f2bf878b",
+        "alpha": {
+          "present": true,
+          "transparentBackground": true
+        }
+      },
+      "variants": [
+        {
+          "path": "assets/generated/playful-precision/optimized/sleep-160.webp",
+          "mimeType": "image/webp",
+          "width": 160,
+          "height": 204,
+          "bytes": 5796,
+          "sha256": "8471329dd8790c047727d4b63b312ffd43b4e64c0ec7bc2dc16fd4f5171095de",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/sleep-320.webp",
+          "mimeType": "image/webp",
+          "width": 320,
+          "height": 408,
+          "bytes": 18796,
+          "sha256": "3112865e1002e71dbb479157378c6d68331d1cadfd6cadd580521cd863c80203",
+          "alpha": {
+            "present": true
+          }
+        },
+        {
+          "path": "assets/generated/playful-precision/optimized/sleep-640.webp",
+          "mimeType": "image/webp",
+          "width": 640,
+          "height": 815,
+          "bytes": 64792,
+          "sha256": "853c350919d7496eb9d87f3cbaab98a2357e80b47aac2aff70e733ded733168d",
+          "alpha": {
+            "present": true
+          }
+        }
+      ]
+    }
+  ]
+}

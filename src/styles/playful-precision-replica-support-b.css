@@ -525,6 +525,15 @@ body.is-authenticated .app-route-root .qg-companies-page .section-heading.compan
   overflow: visible;
 }
 
+/* The shared support layer re-applies its hero gradient in dark mode at a
+   higher specificity. Keep the approved Companies composition flat in both
+   themes, just like the Jobs header above. */
+:root[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-companies-page .section-heading.companies-header,
+[data-qg-theme="dark"] body.is-authenticated .app-route-root .qg-companies-page .section-heading.companies-header {
+  background: none;
+  box-shadow: none;
+}
+
 body.is-authenticated .app-route-root .qg-companies-page .section-heading.companies-header::after {
   content: none;
   display: none;
@@ -575,9 +584,65 @@ body.is-authenticated .app-route-root .qg-companies-page .companies-header small
   font-weight: 500;
 }
 
-/* Design has no tier segmented control — hide it, hooks stay live */
 body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter {
-  display: none !important;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(max-content, 1fr));
+  gap: 6px;
+  align-self: flex-end;
+  padding: 5px;
+  border: 1px solid var(--qg-border);
+  border-radius: 14px;
+  background: var(--qg-surface-2);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 13px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--qg-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  position: relative;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment .qg-active-check {
+  display: inline-grid;
+  place-items: center;
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment[aria-pressed="true"] .qg-active-check {
+  opacity: 1;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment .qg-active-check svg {
+  width: 12px;
+  height: 12px;
+}
+
+body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment.active {
+  background: var(--qg-brand-soft);
+  color: var(--qg-brand-ink);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--qg-brand) 24%, transparent);
+}
+
+body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment:focus-visible {
+  outline: 3px solid var(--qg-brand);
+  outline-offset: 2px;
 }
 
 /* --- Master-detail grid (design [data-co-grid]: 320px + 1fr, gap 16) --- */
@@ -747,6 +812,7 @@ body.is-authenticated .app-route-root .qg-companies-page .company-hero-actions {
 
 body.is-authenticated .app-route-root .qg-companies-page .company-save-btn,
 body.is-authenticated .app-route-root .qg-companies-page .company-site-btn {
+  min-height: 44px;
   padding: 9px 15px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
@@ -961,6 +1027,7 @@ body.is-authenticated .app-route-root .qg-companies-page .company-jobs-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
   padding: 12px 20px;
   border: none;
   border-radius: 14px;
@@ -984,6 +1051,7 @@ body.is-authenticated .app-route-root .qg-companies-page .company-practice-link 
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  min-height: 44px;
   padding: 11px 16px;
   border: 1.5px solid var(--qg-border-2);
   border-radius: 14px;
@@ -1022,7 +1090,20 @@ body.is-authenticated .app-route-root .qg-companies-page .company-practice-link 
 
 @media (max-width: 560px) {
   body.is-authenticated .app-route-root .qg-companies-page .companies-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     align-items: stretch;
+  }
+
+  body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter {
+    width: 100%;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment {
+    min-width: 0;
+    padding-inline: 4px;
+    font-size: 11px;
   }
 
   body.is-authenticated .app-route-root .qg-companies-page .company-hero-top {
@@ -1044,6 +1125,7 @@ body.is-authenticated .app-route-root .qg-companies-page .company-practice-link 
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body.is-authenticated .app-route-root .qg-companies-page #companyTierFilter .segment,
   body.is-authenticated .app-route-root .qg-companies-page .company-list-row,
   body.is-authenticated .app-route-root .qg-companies-page .company-jobs-cta,
   body.is-authenticated .app-route-root .qg-companies-page .company-practice-link {

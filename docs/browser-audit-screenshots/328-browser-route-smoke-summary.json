@@ -1,12 +1,24 @@
 {
   "status": "pass",
-  "durationMs": 502689,
+  "durationMs": 763402,
   "browser": "Google Chrome via playwright-core",
   "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "baseUrl": "http://127.0.0.1:59771",
+  "baseUrl": "http://127.0.0.1:51729",
+  "build": {
+    "distRuntimeFingerprint": "d7f1122d04eeac381d5a4094f5f989d2efa68e7d8f8b5357d4cfcfd503531679",
+    "fingerprintAlgorithm": "sha256",
+    "reproducible": true,
+    "buildCount": 2,
+    "provenanceValidated": true,
+    "provenance": {
+      "buildCommit": "0aa9cf2f19c69f6c8076fbb4f949366211458f8c",
+      "buildBranch": "codex/frontend-v2-preview",
+      "buildSource": "local-git"
+    }
+  },
   "routes": {
-    "checked": 21,
-    "passed": 21,
+    "checked": 22,
+    "passed": 22,
     "failed": 0,
     "results": [
       {
@@ -22,7 +34,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 1012,
+          "bodyTextLength": 1459,
           "horizontalOverflowPx": 0,
           "pathname": "/"
         }
@@ -39,7 +51,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 540,
+          "bodyTextLength": 978,
           "horizontalOverflowPx": 0,
           "pathname": "/plan"
         }
@@ -56,9 +68,28 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 1663,
+          "bodyTextLength": 1055,
           "horizontalOverflowPx": 0,
           "pathname": "/skills"
+        }
+      },
+      {
+        "id": "league",
+        "path": "/league",
+        "status": "pass",
+        "selectors": [
+          "#leaguePageTitle",
+          "#leagueStandings",
+          "#leagueLearningMap",
+          "#leagueRewardShop"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1628,
+          "horizontalOverflowPx": 0,
+          "pathname": "/league"
         }
       },
       {
@@ -73,7 +104,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 335,
+          "bodyTextLength": 796,
           "horizontalOverflowPx": 0,
           "pathname": "/interview"
         }
@@ -90,7 +121,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 2954,
+          "bodyTextLength": 3119,
           "horizontalOverflowPx": 0,
           "pathname": "/problems"
         }
@@ -107,7 +138,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 749,
+          "bodyTextLength": 1281,
           "horizontalOverflowPx": 0,
           "pathname": "/tools"
         }
@@ -124,7 +155,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 2480,
+          "bodyTextLength": 2973,
           "horizontalOverflowPx": 0,
           "pathname": "/poker"
         }
@@ -141,7 +172,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 630,
+          "bodyTextLength": 767,
           "horizontalOverflowPx": 0,
           "pathname": "/experiences"
         }
@@ -158,7 +189,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 1493,
+          "bodyTextLength": 1442,
           "horizontalOverflowPx": 0,
           "pathname": "/news"
         }
@@ -175,7 +206,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 126,
+          "bodyTextLength": 699,
           "horizontalOverflowPx": 0,
           "pathname": "/community"
         }
@@ -192,7 +223,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 168,
+          "bodyTextLength": 846,
           "horizontalOverflowPx": 0,
           "pathname": "/messages"
         }
@@ -209,7 +240,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 121,
+          "bodyTextLength": 669,
           "horizontalOverflowPx": 0,
           "pathname": "/network"
         }
@@ -226,7 +257,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 180,
+          "bodyTextLength": 1237,
           "horizontalOverflowPx": 0,
           "pathname": "/resume"
         }
@@ -243,7 +274,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 984,
+          "bodyTextLength": 1663,
           "horizontalOverflowPx": 0,
           "pathname": "/jobs"
         }
@@ -260,7 +291,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 2430,
+          "bodyTextLength": 1320,
           "horizontalOverflowPx": 0,
           "pathname": "/companies"
         }
@@ -277,7 +308,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 2445,
+          "bodyTextLength": 2260,
           "horizontalOverflowPx": 0,
           "pathname": "/library"
         }
@@ -294,7 +325,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 1431,
+          "bodyTextLength": 1403,
           "horizontalOverflowPx": 0,
           "pathname": "/courses"
         }
@@ -311,7 +342,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 94,
+          "bodyTextLength": 608,
           "horizontalOverflowPx": 0,
           "pathname": "/memory"
         }
@@ -328,7 +359,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 445,
+          "bodyTextLength": 1206,
           "horizontalOverflowPx": 0,
           "pathname": "/settings"
         }
@@ -345,7 +376,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 339,
+          "bodyTextLength": 989,
           "horizontalOverflowPx": 0,
           "pathname": "/account"
         }
@@ -362,7 +393,7 @@
           "appShellVisible": true,
           "authShellVisible": false,
           "overlayVisible": false,
-          "bodyTextLength": 118,
+          "bodyTextLength": 775,
           "horizontalOverflowPx": 0,
           "pathname": "/pk"
         }
@@ -370,14 +401,17 @@
     ]
   },
   "interactions": {
-    "checked": 67,
-    "passed": 67,
+    "checked": 68,
+    "passed": 68,
     "failed": 0,
     "results": [
       {
         "name": "overview CTA opens problems",
         "status": "pass",
-        "path": "/problems"
+        "entryVisible": true,
+        "path": "/problems",
+        "entry": "overview problem progress CTA",
+        "activation": "user click"
       },
       {
         "name": "overview leaderboard controls and news ticker navigation",
@@ -386,7 +420,7 @@
         "scope": "region",
         "country": "unitedStates",
         "region": "California",
-        "newsId": "news-jane-street-q1-2026",
+        "newsId": null,
         "newsTitle": "Jane Street Q1 交易收入创纪录",
         "reloaded": true
       },
@@ -425,8 +459,7 @@
         "mobileViewport": true,
         "noHorizontalOverflow": true,
         "searchUsable": true,
-        "compactActions": true,
-        "sidebarCollapsed": true,
+        "moduleSheetUsable": true,
         "reloadPersisted": true,
         "settingsShortcut": true
       },
@@ -446,6 +479,21 @@
         "legendRows": 15,
         "skillCards": 15,
         "searchSkill": "complexNumbers"
+      },
+      {
+        "name": "league standings, learning map, and reward shop guard",
+        "status": "pass",
+        "trainingPath": "/tools",
+        "shopItem": "freeze",
+        "surfacesVisible": true,
+        "standingsRows": 10,
+        "standingsRowsVisible": true,
+        "learningNodes": 8,
+        "learningNodesVisible": true,
+        "shopItems": 6,
+        "shopItemsVisible": true,
+        "path": "/league",
+        "toastText": "!\n训练币不够\n还差 350 币 · 完成训练可获得"
       },
       {
         "name": "global search module, problem, job, company, course, and news navigation",
@@ -477,11 +525,17 @@
       {
         "name": "problems pagination, collection filter, and mock interview handoff",
         "status": "pass",
+        "pageOneControlVisible": true,
+        "collectionSourceChipActive": true,
+        "collectionCatalogMembership": true,
         "page1FirstId": "green-book-problem-001",
         "page2FirstId": "green-book-problem-025",
         "collectionId": "quantguide",
         "filteredProblemId": "quantguide-place-or-take",
         "detailCategory": "probabilityExpectation",
+        "handoffSelectedProblemId": "quantguide-place-or-take",
+        "handoffCategoryKey": "probabilityExpectation",
+        "handoffType": "oa",
         "paginationNavigated": true,
         "collectionFilterActive": true,
         "interviewHandoff": true
@@ -489,11 +543,618 @@
       {
         "name": "mobile problems detail actions and mock handoff avoid overflow",
         "status": "pass",
+        "saveInitiallyActive": true,
+        "saveToggled": true,
+        "saveStateReady": true,
+        "visualPreflight": {
+          "matrix": [
+            {
+              "viewport": "1440x900",
+              "theme": "light",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 695.33,
+                "right": 996.66,
+                "top": 484.52,
+                "bottom": 580.52,
+                "width": 301.33,
+                "height": 96
+              },
+              "actionTargets": [
+                {
+                  "left": 695.33,
+                  "right": 849.98,
+                  "top": 484.52,
+                  "bottom": 528.52,
+                  "width": 154.66,
+                  "height": 44
+                },
+                {
+                  "left": 857.98,
+                  "right": 996.66,
+                  "top": 483.54,
+                  "bottom": 527.54,
+                  "width": 138.67,
+                  "height": 44
+                },
+                {
+                  "left": 695.33,
+                  "right": 996.66,
+                  "top": 536.52,
+                  "bottom": 580.52,
+                  "width": 301.33,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 153,
+                  "clientWidth": 153,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 727.66,
+                  "contentRight": 817.66,
+                  "availableLeft": 704.33,
+                  "availableRight": 840.98,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 137,
+                  "clientWidth": 137,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 890.31,
+                  "contentRight": 964.31,
+                  "availableLeft": 866.98,
+                  "availableRight": 987.66,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 299,
+                  "clientWidth": 299,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 792.98,
+                  "contentRight": 898.98,
+                  "availableLeft": 704.33,
+                  "availableRight": 987.66,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(255, 255, 255)",
+              "mockBackground": "rgb(91, 95, 245)",
+              "contrastRatio": 4.77,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(255, 255, 255)",
+                "contrastRatio": 4.77,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            },
+            {
+              "viewport": "1440x900",
+              "theme": "dark",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 695.33,
+                "right": 996.66,
+                "top": 484.52,
+                "bottom": 580.52,
+                "width": 301.33,
+                "height": 96
+              },
+              "actionTargets": [
+                {
+                  "left": 695.33,
+                  "right": 849.98,
+                  "top": 484.52,
+                  "bottom": 528.52,
+                  "width": 154.66,
+                  "height": 44
+                },
+                {
+                  "left": 857.98,
+                  "right": 996.66,
+                  "top": 483.93,
+                  "bottom": 527.93,
+                  "width": 138.67,
+                  "height": 44
+                },
+                {
+                  "left": 695.33,
+                  "right": 996.66,
+                  "top": 536.52,
+                  "bottom": 580.52,
+                  "width": 301.33,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 153,
+                  "clientWidth": 153,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 727.66,
+                  "contentRight": 817.66,
+                  "availableLeft": 704.33,
+                  "availableRight": 840.98,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 137,
+                  "clientWidth": 137,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 890.31,
+                  "contentRight": 964.31,
+                  "availableLeft": 866.98,
+                  "availableRight": 987.66,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 299,
+                  "clientWidth": 299,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 792.98,
+                  "contentRight": 898.98,
+                  "availableLeft": 704.33,
+                  "availableRight": 987.66,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(20, 19, 34)",
+              "mockBackground": "rgb(125, 123, 255)",
+              "contrastRatio": 5.37,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(32, 31, 57)",
+                "contrastRatio": 4.67,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            },
+            {
+              "viewport": "1280x720",
+              "theme": "light",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 793,
+                "right": 1192,
+                "top": 444.23,
+                "bottom": 488.23,
+                "width": 399,
+                "height": 44
+              },
+              "actionTargets": [
+                {
+                  "left": 793,
+                  "right": 920.66,
+                  "top": 444.23,
+                  "bottom": 488.23,
+                  "width": 127.66,
+                  "height": 44
+                },
+                {
+                  "left": 928.66,
+                  "right": 1040.33,
+                  "top": 444.09,
+                  "bottom": 488.09,
+                  "width": 111.67,
+                  "height": 44
+                },
+                {
+                  "left": 1048.33,
+                  "right": 1192,
+                  "top": 444.23,
+                  "bottom": 488.23,
+                  "width": 143.67,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 126,
+                  "clientWidth": 126,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 811.83,
+                  "contentRight": 901.83,
+                  "availableLeft": 802,
+                  "availableRight": 911.66,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 110,
+                  "clientWidth": 110,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 947.48,
+                  "contentRight": 1021.48,
+                  "availableLeft": 937.66,
+                  "availableRight": 1031.33,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 142,
+                  "clientWidth": 142,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 1067.16,
+                  "contentRight": 1173.16,
+                  "availableLeft": 1057.33,
+                  "availableRight": 1183,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(255, 255, 255)",
+              "mockBackground": "rgb(91, 95, 245)",
+              "contrastRatio": 4.77,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(255, 255, 255)",
+                "contrastRatio": 4.77,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            },
+            {
+              "viewport": "1280x720",
+              "theme": "dark",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 793,
+                "right": 1192,
+                "top": 444.23,
+                "bottom": 488.23,
+                "width": 399,
+                "height": 44
+              },
+              "actionTargets": [
+                {
+                  "left": 793,
+                  "right": 920.66,
+                  "top": 444.23,
+                  "bottom": 488.23,
+                  "width": 127.66,
+                  "height": 44
+                },
+                {
+                  "left": 928.66,
+                  "right": 1040.33,
+                  "top": 444.21,
+                  "bottom": 488.21,
+                  "width": 111.67,
+                  "height": 44
+                },
+                {
+                  "left": 1048.33,
+                  "right": 1192,
+                  "top": 444.23,
+                  "bottom": 488.23,
+                  "width": 143.67,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 126,
+                  "clientWidth": 126,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 811.83,
+                  "contentRight": 901.83,
+                  "availableLeft": 802,
+                  "availableRight": 911.66,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 110,
+                  "clientWidth": 110,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 947.48,
+                  "contentRight": 1021.48,
+                  "availableLeft": 937.66,
+                  "availableRight": 1031.33,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 142,
+                  "clientWidth": 142,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 1067.16,
+                  "contentRight": 1173.16,
+                  "availableLeft": 1057.33,
+                  "availableRight": 1183,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(20, 19, 34)",
+              "mockBackground": "rgb(125, 123, 255)",
+              "contrastRatio": 5.37,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(32, 31, 57)",
+                "contrastRatio": 4.67,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            },
+            {
+              "viewport": "390x844",
+              "theme": "light",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 64,
+                "right": 326,
+                "top": 477.5,
+                "bottom": 573.5,
+                "width": 262,
+                "height": 96
+              },
+              "actionTargets": [
+                {
+                  "left": 64,
+                  "right": 191,
+                  "top": 477.5,
+                  "bottom": 521.5,
+                  "width": 127,
+                  "height": 44
+                },
+                {
+                  "left": 199,
+                  "right": 326,
+                  "top": 477.5,
+                  "bottom": 521.5,
+                  "width": 127,
+                  "height": 44
+                },
+                {
+                  "left": 64,
+                  "right": 326,
+                  "top": 529.5,
+                  "bottom": 573.5,
+                  "width": 262,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 125,
+                  "clientWidth": 125,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 94.5,
+                  "contentRight": 160.5,
+                  "availableLeft": 71,
+                  "availableRight": 184,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 125,
+                  "clientWidth": 125,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 235.5,
+                  "contentRight": 289.5,
+                  "availableLeft": 206,
+                  "availableRight": 319,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 260,
+                  "clientWidth": 260,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 142,
+                  "contentRight": 248,
+                  "availableLeft": 73,
+                  "availableRight": 317,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(255, 255, 255)",
+              "mockBackground": "rgb(91, 95, 245)",
+              "contrastRatio": 4.77,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(255, 255, 255)",
+                "contrastRatio": 4.77,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            },
+            {
+              "viewport": "390x844",
+              "theme": "dark",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 64,
+                "right": 326,
+                "top": 477.5,
+                "bottom": 573.5,
+                "width": 262,
+                "height": 96
+              },
+              "actionTargets": [
+                {
+                  "left": 64,
+                  "right": 191,
+                  "top": 477.5,
+                  "bottom": 521.5,
+                  "width": 127,
+                  "height": 44
+                },
+                {
+                  "left": 199,
+                  "right": 326,
+                  "top": 477.5,
+                  "bottom": 521.5,
+                  "width": 127,
+                  "height": 44
+                },
+                {
+                  "left": 64,
+                  "right": 326,
+                  "top": 529.5,
+                  "bottom": 573.5,
+                  "width": 262,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 125,
+                  "clientWidth": 125,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 94.5,
+                  "contentRight": 160.5,
+                  "availableLeft": 71,
+                  "availableRight": 184,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 125,
+                  "clientWidth": 125,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 235.5,
+                  "contentRight": 289.5,
+                  "availableLeft": 206,
+                  "availableRight": 319,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 260,
+                  "clientWidth": 260,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 142,
+                  "contentRight": 248,
+                  "availableLeft": 73,
+                  "availableRight": 317,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(20, 19, 34)",
+              "mockBackground": "rgb(125, 123, 255)",
+              "contrastRatio": 5.37,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(32, 31, 57)",
+                "contrastRatio": 4.67,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            }
+          ],
+          "reducedMotion": {
+            "maxTransitionMs": 1,
+            "animationNames": [
+              "none",
+              "none",
+              "none",
+              "none"
+            ],
+            "movementDisabled": true
+          }
+        },
         "mobileViewport": true,
         "problemId": "quantguide-0dte-option",
+        "handoffSelectedProblemId": "quantguide-0dte-option",
+        "handoffCategoryKey": "option",
+        "handoffType": "technical",
         "detailOpened": true,
         "answerRevealed": true,
-        "saveToggled": true,
         "interviewHandoff": true,
         "noHorizontalOverflow": true
       },
@@ -530,7 +1191,7 @@
       {
         "name": "tools drill starts and accepts an answer",
         "status": "pass",
-        "question": "3 5 8 13 21 ?"
+        "question": "28 + 64 = ?"
       },
       {
         "name": "tools mental math completes session and persists records",
@@ -539,7 +1200,7 @@
         "recordsAfter": 1,
         "recordsReloaded": 1,
         "latestScore": 0,
-        "latestSkipped": 10,
+        "latestSkipped": 12,
         "bestScore": 0,
         "recordPersisted": true,
         "entryPersisted": true,
@@ -548,12 +1209,13 @@
       {
         "name": "tools market game rejects crossed quote, scores valid quote, and persists record",
         "status": "pass",
-        "fairValue": 84,
-        "feedback": "Round +26. Mid 84, width 2, fair 84.",
-        "score": 26,
+        "fairValue": 104,
+        "crossedFeedback": "⚠ Ask 必须高于 Bid——先把市场报合法。",
+        "feedback": "报价成交 · +25 分 —— 你的中价 104、价差 2，公允 104。又稳又窄，这单值钱。",
+        "score": 25,
         "recordsBefore": 0,
         "recordsAfter": 1,
-        "marketSkill": 26,
+        "marketSkill": 25,
         "reloaded": true
       },
       {
@@ -570,8 +1232,8 @@
         "roomCode": "QG-MAIN",
         "handNumber": 1,
         "playerCount": 6,
-        "actionLabel": "Call 60",
-        "currentHandLogCount": 10,
+        "actionLabel": "跟注 Call 20",
+        "currentHandLogCount": 12,
         "persisted": true
       },
       {
@@ -585,8 +1247,15 @@
       {
         "name": "pk match, submit, reveal, and record persistence",
         "status": "pass",
-        "opponentName": "Data Quant",
-        "problemPreview": "狗日子\n\n每一天要么是好日子 (G)，要么是坏日子 (B)。如果今天是 G，那么明天也是 G 的概率为 $\\dfrac{3}{5}$。如果今天是 B，那么明天也是 B 的概率为 $\\dfrac{7}{10}$。你醒来发现今天是坏日子。求直到",
+        "opponentName": "AlphaQuant",
+        "problemPreview": "问题 5.12\n\n问题 5.12. 瑞士和美国的 2 个月利率分别为每年 1% 和 2%，连续复利。瑞士法郎的现货价格为\\$1.0500. The futures price for a contract deliverable in 2 ",
+        "submittedAnswer": "Use probability, expectation, option pricing, variance, hedge ratio, market price, and explain the answer with a clean quantitative argument.",
+        "outcome": {
+          "kicker": "DEFEAT",
+          "title": "惜败一局",
+          "userScore": 53,
+          "opponentScore": 62
+        },
         "recordPersisted": true,
         "revealed": true
       },
@@ -594,6 +1263,7 @@
         "name": "plan create, edit, task persistence, and navigation",
         "status": "pass",
         "role": "quantDeveloper",
+        "season": "2027-summer",
         "weeklyHours": 12,
         "completedTaskId": "core",
         "problemQuery": "leetcode",
@@ -629,7 +1299,7 @@
       {
         "name": "interview attachment upload preview, transcript, and request payload",
         "status": "pass",
-        "fileName": "browser-smoke-interview-attachment-1782788431466.png",
+        "fileName": "browser-smoke-interview-attachment-1784264197669.png",
         "previewRendered": true,
         "transcriptAttachmentRendered": true,
         "requestAttachmentSent": true,
@@ -638,8 +1308,8 @@
       {
         "name": "interview PDF source upload generates questions and starts session",
         "status": "pass",
-        "fileName": "browser-smoke-interview-source-1782788431757.pdf",
-        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1782788431757",
+        "fileName": "browser-smoke-interview-source-1784264198262.pdf",
+        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1784264198262",
         "requestCount": 1,
         "requestPdfPayloadSent": true,
         "generatedQuestionRendered": true
@@ -652,7 +1322,7 @@
       {
         "name": "todo dock edit, complete, delete, and reload persistence",
         "status": "pass",
-        "taskId": "custom-c6190f57-b642-47e7-8f96-a441b53a8861",
+        "taskId": "custom-630579f5-a091-4de9-9dd0-30ec2e1388f9",
         "edited": true,
         "completed": true,
         "reopened": true,
@@ -663,31 +1333,32 @@
       {
         "name": "community post, like, comment, and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community post 1782788457807",
-        "commentText": "Browser smoke comment 1782788457807",
+        "headingDecorationSuppressed": true,
+        "postText": "Browser smoke community post 1784264236467",
+        "commentText": "Browser smoke comment 1784264236467",
         "reloaded": true
       },
       {
         "name": "community image post fallback and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community image post 1782788461227",
-        "fileName": "browser-smoke-community-1782788461227.png",
+        "postText": "Browser smoke community image post 1784264243387",
+        "fileName": "browser-smoke-community-1784264243387.png",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "community video post fallback and reload persistence",
         "status": "pass",
-        "postText": "Browser smoke community video post 1782788464557",
-        "fileName": "browser-smoke-community-1782788464557.webm",
+        "postText": "Browser smoke community video post 1784264250217",
+        "fileName": "browser-smoke-community-1784264250217.webm",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "community direct message from post opens messages thread",
         "status": "pass",
-        "authorName": "Community Mentor 1782788467976",
-        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1782788467976",
+        "authorName": "Community Mentor 1784264257733",
+        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1784264257733",
         "openedMessages": true,
         "threadPersisted": true,
         "replyPersisted": true
@@ -702,14 +1373,14 @@
         "messageReplyPersisted": true,
         "messageReloadPersisted": true,
         "noHorizontalOverflow": true,
-        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1782788473093",
+        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1784264268731",
         "finalPath": "/messages"
       },
       {
         "name": "messages thread read, send, and reload persistence",
         "status": "pass",
-        "threadId": "thread-browser-route-smoke-1782788478225",
-        "mentorName": "Smoke Mentor 1782788478225",
+        "threadId": "thread-browser-route-smoke-1784264278746",
+        "mentorName": "Smoke Mentor 1784264278746",
         "replied": true,
         "reloaded": true
       },
@@ -726,15 +1397,15 @@
       {
         "name": "experiences create, edit, share, delete, and reload persistence",
         "status": "pass",
-        "recordId": "33d9f3f3-5475-49ed-a6f9-26f784213c31",
-        "sharedPostId": "681dd94f-1e66-4f23-8078-1a59abb9926d",
+        "recordId": "9e713980-b7b8-41b6-bbd4-d6196079c033",
+        "sharedPostId": "f7a7e7ba-868d-4fc8-9c35-5b2423d27a1e",
         "deleted": true,
         "reloaded": true
       },
       {
         "name": "news manual submit, filter, detail, and reload persistence",
         "status": "pass",
-        "newsId": "news-browser-smoke-jane-street-official-update-1782788497079-https-www-janestreet-com-join-jane",
+        "newsId": "news-browser-smoke-jane-street-official-update-1784264314498-https-www-janestreet-com-join-jane",
         "sourceType": "official",
         "reloaded": true,
         "readPersisted": true
@@ -750,30 +1421,30 @@
         "newsFiltersUsable": true,
         "newsDetailReadPersisted": true,
         "noHorizontalOverflow": true,
-        "recordId": "3678209b-cbef-45ee-bd12-a67364511373",
-        "sharedPostId": "a0baa675-a085-4fcd-a566-309723cee0cf",
-        "newsId": "news-mobile-smoke-official-recruiting-update-1782788501919-https-www-janestreet-com-join-jane-s",
+        "recordId": "7989e37d-b497-45ef-a64d-9d3349cbe089",
+        "sharedPostId": "e20d95f2-4af3-4a59-b600-6faf4ddede68",
+        "newsId": "news-mobile-smoke-official-recruiting-update-1784264323296-https-www-janestreet-com-join-jane-s",
         "finalPath": "/news"
       },
       {
         "name": "memory resource add, source link, and reload persistence",
         "status": "pass",
-        "title": "Browser Smoke Resource 1782788509777",
+        "title": "Browser Smoke Resource 1784264336164",
         "sourceUrl": "https://www.youtube.com/@atypicalquant",
         "reloaded": true
       },
       {
         "name": "memory image resource upload fallback and reload persistence",
         "status": "pass",
-        "title": "Browser Smoke Image Resource 1782788513602",
-        "fileName": "browser-smoke-memory-1782788513602.png",
+        "title": "Browser Smoke Image Resource 1784264342964",
+        "fileName": "browser-smoke-memory-1784264342964.png",
         "dataUrlFallback": true,
         "reloaded": true
       },
       {
         "name": "network contact add, edit, delete, and reload persistence",
         "status": "pass",
-        "contactName": "Browser Smoke Contact 1782788517415",
+        "contactName": "Browser Smoke Contact 1784264350072",
         "edited": true,
         "deleted": true
       },
@@ -817,12 +1488,695 @@
       {
         "name": "companies tier filter, practice navigation, and careers link behavior",
         "status": "pass",
+        "visualPreflight": {
+          "matrix": [
+            {
+              "viewport": "1440x900",
+              "theme": "light",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 1084,
+                "right": 1410,
+                "top": 179.75,
+                "bottom": 235.75,
+                "width": 326,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 1090,
+                  "right": 1164,
+                  "top": 185.63,
+                  "bottom": 229.63,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1170,
+                  "right": 1244,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1250,
+                  "right": 1324,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1330,
+                  "right": 1404,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 1149,
+                "right": 1161,
+                "top": 188.63,
+                "bottom": 200.63,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(251, 251, 253)",
+                "contrastRatio": 4.62,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 1225.28,
+                  "right": 1297,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 1305,
+                  "right": 1387,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 641,
+                  "right": 808.86,
+                  "top": 869.44,
+                  "bottom": 913.44,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 818.86,
+                  "right": 939.86,
+                  "top": 869.44,
+                  "bottom": 913.44,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            },
+            {
+              "viewport": "1440x900",
+              "theme": "dark",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 1084,
+                "right": 1410,
+                "top": 179.75,
+                "bottom": 235.75,
+                "width": 326,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 1090,
+                  "right": 1164,
+                  "top": 185.25,
+                  "bottom": 229.25,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1170,
+                  "right": 1244,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1250,
+                  "right": 1324,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1330,
+                  "right": 1404,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 1149,
+                "right": 1161,
+                "top": 188.25,
+                "bottom": 200.25,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(27, 26, 48)",
+                "contrastRatio": 4.97,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 1225.28,
+                  "right": 1297,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 1305,
+                  "right": 1387,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 641,
+                  "right": 808.86,
+                  "top": 869.44,
+                  "bottom": 913.44,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 818.86,
+                  "right": 939.86,
+                  "top": 869.44,
+                  "bottom": 913.44,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            },
+            {
+              "viewport": "1280x720",
+              "theme": "light",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 924,
+                "right": 1250,
+                "top": 179.75,
+                "bottom": 235.75,
+                "width": 326,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 930,
+                  "right": 1004,
+                  "top": 185.44,
+                  "bottom": 229.44,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1010,
+                  "right": 1084,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1090,
+                  "right": 1164,
+                  "top": 185.62,
+                  "bottom": 229.62,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1170,
+                  "right": 1244,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 989,
+                "right": 1001,
+                "top": 188.44,
+                "bottom": 200.44,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(251, 251, 253)",
+                "contrastRatio": 4.62,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 1065.28,
+                  "right": 1137,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 1145,
+                  "right": 1227,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 641,
+                  "right": 808.86,
+                  "top": 892.38,
+                  "bottom": 936.38,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 818.86,
+                  "right": 939.86,
+                  "top": 892.38,
+                  "bottom": 936.38,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            },
+            {
+              "viewport": "1280x720",
+              "theme": "dark",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 924,
+                "right": 1250,
+                "top": 179.75,
+                "bottom": 235.75,
+                "width": 326,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 930,
+                  "right": 1004,
+                  "top": 185.67,
+                  "bottom": 229.67,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1010,
+                  "right": 1084,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1090,
+                  "right": 1164,
+                  "top": 185.24,
+                  "bottom": 229.24,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1170,
+                  "right": 1244,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 989,
+                "right": 1001,
+                "top": 188.67,
+                "bottom": 200.67,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(27, 26, 48)",
+                "contrastRatio": 4.97,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 1065.28,
+                  "right": 1137,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 1145,
+                  "right": 1227,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 641,
+                  "right": 808.86,
+                  "top": 892.38,
+                  "bottom": 936.38,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 818.86,
+                  "right": 939.86,
+                  "top": 892.38,
+                  "bottom": 936.38,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            },
+            {
+              "viewport": "390x844",
+              "theme": "light",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 12,
+                "right": 378,
+                "top": 249.67,
+                "bottom": 305.67,
+                "width": 366,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 18,
+                  "right": 102,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 108,
+                  "right": 192,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 198,
+                  "right": 282,
+                  "top": 255.13,
+                  "bottom": 299.13,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 288,
+                  "right": 372,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 87,
+                "right": 99,
+                "top": 258.67,
+                "bottom": 270.67,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(251, 251, 253)",
+                "contrastRatio": 4.62,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 35,
+                  "right": 106.72,
+                  "top": 1455.67,
+                  "bottom": 1499.67,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 114.72,
+                  "right": 196.72,
+                  "top": 1455.67,
+                  "bottom": 1499.67,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 31,
+                  "right": 198.86,
+                  "top": 2115.3,
+                  "bottom": 2159.3,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 208.86,
+                  "right": 329.86,
+                  "top": 2115.3,
+                  "bottom": 2159.3,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            },
+            {
+              "viewport": "390x844",
+              "theme": "dark",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 12,
+                "right": 378,
+                "top": 249.67,
+                "bottom": 305.67,
+                "width": 366,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 18,
+                  "right": 102,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 108,
+                  "right": 192,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 198,
+                  "right": 282,
+                  "top": 255.38,
+                  "bottom": 299.38,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 288,
+                  "right": 372,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 87,
+                "right": 99,
+                "top": 258.67,
+                "bottom": 270.67,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(27, 26, 48)",
+                "contrastRatio": 4.97,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 35,
+                  "right": 106.72,
+                  "top": 1455.67,
+                  "bottom": 1499.67,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 114.72,
+                  "right": 196.72,
+                  "top": 1455.67,
+                  "bottom": 1499.67,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 31,
+                  "right": 198.86,
+                  "top": 2115.3,
+                  "bottom": 2159.3,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 208.86,
+                  "right": 329.86,
+                  "top": 2115.3,
+                  "bottom": 2159.3,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            }
+          ],
+          "reducedMotion": {
+            "maxTransitionMs": 1,
+            "movementDisabled": true
+          }
+        },
+        "tierRouteRoundTripPersisted": true,
         "sTierCount": 5,
         "aTierCount": 7,
         "bTierCount": 1,
         "openedUrl": "https://www.janestreet.com/join-jane-street/open-roles/",
         "practicePath": "/problems",
-        "practiceCompany": "jane-street"
+        "practiceCompany": "jane-street",
+        "practiceProblemCount": 24,
+        "practiceStatus": ""
       },
       {
         "name": "mobile career jobs and companies controls avoid overflow",
@@ -837,7 +2191,9 @@
         "openedJobUrl": "https://www.imc.com/us/careers/jobs/",
         "openedCareersUrl": "https://www.janestreet.com/join-jane-street/open-roles/",
         "practicePath": "/problems",
-        "practiceCompany": "jane-street"
+        "practiceCompany": "jane-street",
+        "practiceProblemCount": 24,
+        "practiceStatus": ""
       },
       {
         "name": "library search, kind filter, practice navigation, and reader guard",
@@ -852,8 +2208,8 @@
         "readerTokenRequests": 2,
         "pdfRequests": 4,
         "readerOpened": true,
-        "openNewHref": "http://127.0.0.1:59771/api/library-reader-smoke/green-book.pdf",
-        "embedUrl": "http://127.0.0.1:59771/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+        "openNewHref": "http://127.0.0.1:51729/api/library-reader-smoke/green-book.pdf",
+        "embedUrl": "http://127.0.0.1:51729/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
         "closedByButton": true,
         "closedByEscape": true
       },
@@ -862,7 +2218,7 @@
         "status": "pass",
         "problemId": "quantguide-place-or-take",
         "problemTitle": "放置或取出",
-        "todoTitle": "Cross-module QuantGuide review 1782788567852: 放置或取出",
+        "todoTitle": "Cross-module QuantGuide review 1784264420578: 放置或取出",
         "resumeTextLength": 237,
         "settings": {
           "llmEndpoint": "http://127.0.0.1:8789/interview",
@@ -884,7 +2240,7 @@
       {
         "name": "account profile save and reload persistence",
         "status": "pass",
-        "profileName": "Browser Smoke 1782788590029",
+        "profileName": "Browser Smoke 1784264456558",
         "country": "unitedStates",
         "region": "California",
         "graduationTerm": "2028-05",
@@ -896,7 +2252,7 @@
         "wrongPasswordRejected": true,
         "oldEmailRejected": true,
         "oldEmail": "browser-route-smoke@quantgym.local",
-        "newEmail": "browser-route-smoke+email-1782788594991@quantgym.local",
+        "newEmail": "browser-route-smoke+email-1784264463710@quantgym.local",
         "passwordHashRotated": true,
         "reloginSucceeded": true,
         "reloginPath": "/"
@@ -906,7 +2262,7 @@
         "status": "pass",
         "avatarDataUrl": true,
         "avatarCleared": true,
-        "resumeFileName": "browser-smoke-resume-1782788605551.txt",
+        "resumeFileName": "browser-smoke-resume-1784264478485.txt",
         "resumeTextLength": 215,
         "reloaded": true
       },
@@ -927,8 +2283,8 @@
         "resumeUploadPersisted": true,
         "noHorizontalOverflow": true,
         "reloaded": true,
-        "profileName": "Mobile Account 1782788625268",
-        "resumeFileName": "mobile-account-resume-1782788625268.txt"
+        "profileName": "Mobile Account 1784264500978",
+        "resumeFileName": "mobile-account-resume-1784264500978.txt"
       },
       {
         "name": "settings language switch syncs URL and persists reload",
@@ -1000,7 +2356,7 @@
         "payloadIncludesCommunity": true,
         "payloadIncludesAccount": true,
         "statusUpdated": true,
-        "lastSyncAt": "2026-06-30T03:04:15.870Z"
+        "lastSyncAt": "2026-07-17T05:02:20.526Z"
       },
       {
         "name": "mobile settings config and backup controls avoid overflow",
@@ -1012,7 +2368,7 @@
         "exportDownloadWorks": true,
         "noHorizontalOverflow": true,
         "reloaded": true,
-        "exportedFilename": "quantgym-Mobile Account 1782788625268-2026-06-30.json"
+        "exportedFilename": "quantgym-Mobile Account 1784264500978-2026-07-17.json"
       },
       {
         "name": "settings rejects invalid backup files without changing state",
@@ -1030,31 +2386,52 @@
         "exportedThreadIncluded": true,
         "postRestored": true,
         "threadRestored": true,
-        "threadId": "thread-settings-backup-community-1782788672841"
+        "threadId": "thread-settings-backup-community-1784264568689"
       },
       {
         "name": "settings backup export, import, and reset state",
         "status": "pass",
         "resetPrompt": "清空当前账户的训练记录？已连接云端时也会同步为空。",
-        "exportedFilename": "quantgym-Mobile Account 1782788625268-2026-06-30.json",
-        "importedResumeFile": "settings-imported-resume-1782788681948.txt",
-        "importedResourceId": "settings-imported-resource-1782788681948",
-        "importedCourseId": "settings-imported-course-1782788681948",
+        "exportedFilename": "quantgym-Mobile Account 1784264500978-2026-07-17.json",
+        "importedResumeFile": "settings-imported-resume-1784264588398.txt",
+        "importedResourceId": "settings-imported-resource-1784264588398",
+        "importedCourseId": "settings-imported-course-1784264588398",
         "resetClearedImport": true
       }
     ]
+  },
+  "coreFlows": {
+    "namedInteractions": {
+      "expected": 68,
+      "checked": 68,
+      "passed": 68,
+      "failed": 0
+    },
+    "unauthenticatedAuth": {
+      "expected": 1,
+      "checked": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "totalCoreFlows": {
+      "expected": 69,
+      "checked": 69,
+      "passed": 69,
+      "failed": 0
+    }
   },
   "unauthenticated": {
     "name": "protected route redirects to auth and local email auth works",
     "status": "pass",
     "localEmailAuth": {
-      "email": "browser-auth-1782788193799-913blf@quantgym.local",
+      "email": "browser-auth-1784263853963-ar72c1@quantgym.local",
       "redirectedToLogin": true,
       "accountStatusChecked": true,
       "registrationFormShown": true,
       "verificationOptional": true,
       "registered": true,
       "accountPersisted": true,
+      "onboardingDismissed": true,
       "logoutReturnedToAuth": true,
       "passwordStepShown": true,
       "reloginSucceeded": true,
@@ -1063,33 +2440,163 @@
       "resetSucceeded": true,
       "resetOldPasswordRejected": true,
       "resetNewPasswordLoginSucceeded": true,
-      "accountId": "45100bfa-85a8-4f57-8fd8-9af72ce4c1b9",
+      "accountId": "d102e06a-389a-4ec1-8f8d-4ac0aa4cfea6",
       "reloginPath": "/"
     },
     "path": "/login",
     "redirectPath": "/login"
   },
+  "errorCounts": {
+    "console": 0,
+    "page": 0,
+    "firstPartyResponse": 0,
+    "firstPartyRequest": 0
+  },
   "consoleErrors": [],
-  "ignoredConsoleErrors": [
-    {
-      "type": "error",
-      "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-    },
-    {
-      "type": "error",
-      "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-    },
-    {
-      "type": "error",
-      "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-    },
-    {
-      "type": "error",
-      "text": "[reporter-pb]: request error TypeError: Failed to fetch\n    at https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:46042\n    at f (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:2968)\n    at Generator.<anonymous> (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:4314)\n    at Generator.next (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:3397)\n    at t (https://s1.hdslb.com/bfs/seed/jinkela/short/reporter-pb/index.js:1:378)\n"
-    }
-  ],
+  "ignoredConsoleErrors": [],
   "pageErrors": [],
   "responseErrors": [],
+  "expectedFirstPartyFailures": [
+    {
+      "id": "registration verification fallback",
+      "kind": "requestfailed",
+      "method": "POST",
+      "errorText": "net::ERR_FAILED",
+      "url": "http://127.0.0.1:51729/api/auth/verification-code"
+    },
+    {
+      "id": "registration verification fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:51729/api/auth/verification-code",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "id": "reset old password rejection",
+      "kind": "response",
+      "method": "POST",
+      "status": 401,
+      "url": "http://127.0.0.1:51729/api/auth/login"
+    },
+    {
+      "id": "reset old password rejection",
+      "kind": "console",
+      "url": "http://127.0.0.1:51729/api/auth/login",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "id": "interview hint offline fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:59991/interview",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "interview feedback offline fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:59991/interview",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "preview PDF abort after successful response",
+      "kind": "requestfailed",
+      "method": "GET",
+      "errorText": "net::ERR_ABORTED",
+      "url": "http://127.0.0.1:51729/api/library-reader-smoke/green-book.pdf",
+      "diagnostics": {
+        "navigationChanged": false,
+        "frameDetached": false,
+        "contextClosing": false,
+        "successfulResponse": true,
+        "domImageRemoved": false,
+        "domImageReferenceAtRequest": null,
+        "domImageReferenceAtFailure": null
+      }
+    },
+    {
+      "id": "account old-email cloud fallback",
+      "kind": "requestfailed",
+      "method": "POST",
+      "errorText": "net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8790/api/auth/login"
+    },
+    {
+      "id": "account old-email cloud fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:8790/api/auth/login",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "account new-email primary cloud fallback",
+      "kind": "requestfailed",
+      "method": "POST",
+      "errorText": "net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8790/api/auth/login"
+    },
+    {
+      "id": "account new-email primary cloud fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:8790/api/auth/login",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "account new-email session cloud fallback",
+      "kind": "requestfailed",
+      "method": "POST",
+      "errorText": "net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8790/api/auth/login"
+    },
+    {
+      "id": "account new-email session cloud fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:8790/api/auth/login",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "settings malformed backup rejection",
+      "kind": "console",
+      "url": "http://127.0.0.1:51729/assets/app-state-api-2yWXPC90.js",
+      "text": "[QuantGym] Failed to import backup SyntaxError: Unexpected end of JSON input\n    at JSON.parse (<anonymous>)\n    at Cr (http://127.0.0.1:51729/assets/app-state-api-2yWXPC90.js:1:69917)\n    at Tr (http://127.0.0.1:51729/assets/app-state-api-2yWXPC90.js:1:70481)\n    at async Object.o [as importState] (http://127.0.0.1:51729/assets/app-state-api-2yWXPC90.js:1:74104)"
+    },
+    {
+      "id": "settings non-object backup rejection",
+      "kind": "console",
+      "url": "http://127.0.0.1:51729/assets/app-state-api-2yWXPC90.js",
+      "text": "[QuantGym] Failed to import backup Error: Backup payload must be a JSON object.\n    at Cr (http://127.0.0.1:51729/assets/app-state-api-2yWXPC90.js:1:69943)\n    at Tr (http://127.0.0.1:51729/assets/app-state-api-2yWXPC90.js:1:70481)\n    at async Object.o [as importState] (http://127.0.0.1:51729/assets/app-state-api-2yWXPC90.js:1:74104)"
+    }
+  ],
+  "canonicalFixtureRequests": [
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/jobs"
+    }
+  ],
   "warnings": [],
   "failures": []
 }

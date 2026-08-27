@@ -1,0 +1,209 @@
+name: Frontend V2 Preview
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      update_linux_visual_baselines:
+        description: Generate reviewable Playwright Linux visual baselines
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-v2-preview-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  QUANTGYM_PHASE2_OPERATOR_ALLOWED: "false"
+
+jobs:
+  node-gates:
+    name: Node and browser gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out the complete review history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Select the locked Node runtime
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
+        with:
+          node-version: 20.20.2
+          cache: npm
+          package-manager-cache: false
+
+      - name: Select the locked npm CLI
+        run: |
+          npm install --global npm@10.8.2
+          test "$(node --version)" = "v20.20.2"
+          test "$(npm --version)" = "10.8.2"
+
+      - name: Classify the fail-closed Phase 2 evidence lifecycle
+        id: phase2_lifecycle
+        run: node scripts/check-frontend-upgrade-phase2-lifecycle.mjs --format github | tee -a "$GITHUB_OUTPUT"
+
+      - name: Install locked JavaScript dependencies
+        run: npm ci
+
+      - name: Install the lockfile Playwright Chromium and system dependencies
+        run: npx --no-install playwright install --with-deps chromium
+
+      - name: Check TypeScript, JavaScript, and styles
+        run: |
+          npm run typecheck:v2
+          npm run lint:v2
+          npm run lint:styles:v2
+
+      - name: Verify design-system and isolated-build boundaries
+        run: |
+          npm run storybook:build:v2
+          npm run check:design-system:v2
+          npm run check:frontend-v2-build-isolation
+
+      - name: Build and inspect the production V2 artifact
+        run: |
+          npm run build:v2
+          npm run check:frontend-v2-boundaries
+
+      - name: Run V2, Phase 1, and Phase 2 tests
+        run: |
+          npm run test:v2
+          npm run test:frontend-upgrade:phase1:node
+          npm run test:frontend-upgrade:phase2
+
+      - name: Run the complete Playwright suite with strict outcomes
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.update_linux_visual_baselines }}
+        run: npm run test:e2e:v2 -- --retries=0
+
+      - name: Run strict nonvisual Playwright before Linux baseline refresh
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_linux_visual_baselines }}
+        run: npm run test:e2e:v2 -- --grep-invert '@visual:' --retries=0
+
+      - name: Generate Playwright Linux visual baselines after nonvisual E2E
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_linux_visual_baselines }}
+        id: generate_linux_baselines
+        shell: bash
+        run: |
+          find tests/e2e-v2 -type f -name '*-linux.png' -delete
+          npm run test:e2e:v2 -- --grep '@visual:' --update-snapshots --timeout=300000
+
+          mapfile -d '' snapshots < <(
+            find tests/e2e-v2 -type f -name '*-linux.png' -print0 | sort -z
+          )
+          test "${#snapshots[@]}" = "43"
+
+          artifact_dir="$RUNNER_TEMP/playwright-linux-visual-baselines"
+          test ! -e "$artifact_dir"
+          mkdir --mode=0755 "$artifact_dir"
+          for snapshot in "${snapshots[@]}"; do
+            sha256sum "$snapshot" >> "$artifact_dir/SHA256SUMS"
+            install -D --mode=0644 "$snapshot" "$artifact_dir/$snapshot"
+          done
+          (
+            cd "$artifact_dir"
+            sha256sum --check --strict SHA256SUMS
+          )
+          printf 'snapshot_count=%s\n' "${#snapshots[@]}" >> "$GITHUB_OUTPUT"
+
+      - name: Run complete Playwright suite against refreshed Linux baselines
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.update_linux_visual_baselines }}
+        run: npm run test:e2e:v2 -- --retries=0
+
+      - name: Verify frozen contracts and functional acceptance gates
+        run: |
+          npm run check:frontend-upgrade:phase2:contracts
+          npm run check:frontend-upgrade:phase1:contracts
+          npm run check:frontend-upgrade:phase1:legacy
+          npm run check:frontend-upgrade:phase1:auth -- --offline
+          npm run check:frontend-upgrade:phase1:surfaces -- --offline
+          npm run check:frontend-upgrade:phase1 -- --offline
+
+      - name: Verify tracked Phase 2 aggregate evidence
+        if: ${{ steps.phase2_lifecycle.outputs.state == 'evidence' }}
+        run: |
+          npm run check:frontend-upgrade:phase2:aggregate
+
+      - name: Upload generated Playwright Linux visual baselines
+        if: >-
+          ${{
+            github.event_name == 'workflow_dispatch'
+            && inputs.update_linux_visual_baselines
+            && steps.generate_linux_baselines.outcome == 'success'
+            && steps.generate_linux_baselines.outputs.snapshot_count == '43'
+          }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: playwright-linux-visual-baselines-${{ github.run_id }}
+          path: ${{ runner.temp }}/playwright-linux-visual-baselines
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Playwright failure diagnostics
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: playwright-failure-diagnostics-${{ github.run_id }}
+          path: test-results/e2e-v2
+          if-no-files-found: ignore
+          retention-days: 14
+
+  python-gates:
+    name: Python API and migration gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out the complete review history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Select the locked Python runtime
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: 3.13.14
+          cache: pip
+          cache-dependency-path: api/requirements.lock.txt
+
+      - name: Select the locked Node runtime
+        uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
+        with:
+          node-version: 20.20.2
+          cache: npm
+          package-manager-cache: false
+
+      - name: Verify the locked runtimes
+        run: |
+          python -c 'import sys; assert sys.version_info[:3] == (3, 13, 14), sys.version'
+          npm install --global npm@10.8.2
+          test "$(node --version)" = "v20.20.2"
+          test "$(npm --version)" = "10.8.2"
+
+      - name: Install locked JavaScript dependencies
+        run: npm ci
+
+      - name: Install hash-locked Python dependencies
+        run: python -m pip install --require-hashes -r api/requirements.lock.txt
+
+      - name: Run API and migration tests
+        run: |
+          npm run test:api:v2:strict
+          python -m alembic -c api/alembic.ini heads
+          npm run test:frontend-upgrade:phase1:python
+        env:
+          QUANTGYM_PYTHON_313: python
+
+      - name: Verify generated OpenAPI
+        run: npm run check:openapi:v2
+        env:
+          QUANTGYM_PYTHON_313: python

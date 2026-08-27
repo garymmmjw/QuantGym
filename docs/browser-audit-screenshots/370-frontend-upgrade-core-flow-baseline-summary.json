@@ -1,0 +1,2602 @@
+{
+  "status": "pass",
+  "durationMs": 899311,
+  "browser": "Google Chrome via playwright-core",
+  "chromePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  "baseUrl": "http://127.0.0.1:58176",
+  "build": {
+    "distRuntimeFingerprint": "32ecdc18187916eacc9b68ad484996f308ef67c0629cf652b86d97daf55dff2d",
+    "fingerprintAlgorithm": "sha256",
+    "reproducible": true,
+    "buildCount": 2,
+    "provenanceValidated": true,
+    "provenance": {
+      "buildCommit": "2424c83ae7b73f29dee1fc381c85b4bb39d5d7af",
+      "buildBranch": "codex/frontend-v2-preview",
+      "buildSource": "local-git"
+    }
+  },
+  "routes": {
+    "checked": 22,
+    "passed": 22,
+    "failed": 0,
+    "results": [
+      {
+        "id": "overview",
+        "path": "/",
+        "status": "pass",
+        "selectors": [
+          "#heroTypewriter",
+          "#overviewProblemProgress",
+          "#leaderboardMetricSelect"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1459,
+          "horizontalOverflowPx": 0,
+          "pathname": "/"
+        }
+      },
+      {
+        "id": "plan",
+        "path": "/plan",
+        "status": "pass",
+        "selectors": [
+          "#prepPlanSetupForm",
+          "#prepPlanDashboard"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 978,
+          "horizontalOverflowPx": 0,
+          "pathname": "/plan"
+        }
+      },
+      {
+        "id": "skills",
+        "path": "/skills",
+        "status": "pass",
+        "selectors": [
+          "#skillsPageTitle",
+          "#skillRadar"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1055,
+          "horizontalOverflowPx": 0,
+          "pathname": "/skills"
+        }
+      },
+      {
+        "id": "league",
+        "path": "/league",
+        "status": "pass",
+        "selectors": [
+          "#leaguePageTitle",
+          "#leagueStandings",
+          "#leagueLearningMap",
+          "#leagueRewardShop"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1628,
+          "horizontalOverflowPx": 0,
+          "pathname": "/league"
+        }
+      },
+      {
+        "id": "interview",
+        "path": "/interview",
+        "status": "pass",
+        "selectors": [
+          "#interviewSetup",
+          "#startInterviewBtn"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 796,
+          "horizontalOverflowPx": 0,
+          "pathname": "/interview"
+        }
+      },
+      {
+        "id": "problems",
+        "path": "/problems",
+        "status": "pass",
+        "selectors": [
+          "#problemSearch",
+          "#problemList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 3119,
+          "horizontalOverflowPx": 0,
+          "pathname": "/problems"
+        }
+      },
+      {
+        "id": "tools",
+        "path": "/tools",
+        "status": "pass",
+        "selectors": [
+          "#startDrillSessionBtn",
+          "#drillQuestion"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1290,
+          "horizontalOverflowPx": 0,
+          "pathname": "/tools"
+        }
+      },
+      {
+        "id": "poker",
+        "path": "/poker",
+        "status": "pass",
+        "selectors": [
+          "#pokerLobbySummary",
+          "#pokerTable"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 2973,
+          "horizontalOverflowPx": 0,
+          "pathname": "/poker"
+        }
+      },
+      {
+        "id": "experiences",
+        "path": "/experiences",
+        "status": "pass",
+        "selectors": [
+          "#newExperienceBtn",
+          "#experienceForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 767,
+          "horizontalOverflowPx": 0,
+          "pathname": "/experiences"
+        }
+      },
+      {
+        "id": "news",
+        "path": "/news",
+        "status": "pass",
+        "selectors": [
+          "#newsTopicFilter",
+          "#newsList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1442,
+          "horizontalOverflowPx": 0,
+          "pathname": "/news"
+        }
+      },
+      {
+        "id": "community",
+        "path": "/community",
+        "status": "pass",
+        "selectors": [
+          "#communityForm",
+          "#communityText"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 699,
+          "horizontalOverflowPx": 0,
+          "pathname": "/community"
+        }
+      },
+      {
+        "id": "messages",
+        "path": "/messages",
+        "status": "pass",
+        "selectors": [
+          "#messageThreadList",
+          "#messageComposerForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 846,
+          "horizontalOverflowPx": 0,
+          "pathname": "/messages"
+        }
+      },
+      {
+        "id": "network",
+        "path": "/network",
+        "status": "pass",
+        "selectors": [
+          "#addNetworkBtn",
+          "#networkForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 669,
+          "horizontalOverflowPx": 0,
+          "pathname": "/network"
+        }
+      },
+      {
+        "id": "resume",
+        "path": "/resume",
+        "status": "pass",
+        "selectors": [
+          "#resumeForm",
+          "#resumeText"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1237,
+          "horizontalOverflowPx": 0,
+          "pathname": "/resume"
+        }
+      },
+      {
+        "id": "jobs",
+        "path": "/jobs",
+        "status": "pass",
+        "selectors": [
+          "#jobsSummary",
+          "#jobsList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1663,
+          "horizontalOverflowPx": 0,
+          "pathname": "/jobs"
+        }
+      },
+      {
+        "id": "companies",
+        "path": "/companies",
+        "status": "pass",
+        "selectors": [
+          "#companiesPageTitle",
+          "#companyTierFilter"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1320,
+          "horizontalOverflowPx": 0,
+          "pathname": "/companies"
+        }
+      },
+      {
+        "id": "library",
+        "path": "/library",
+        "status": "pass",
+        "selectors": [
+          "#librarySearch",
+          "#libraryBookGrid"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 2260,
+          "horizontalOverflowPx": 0,
+          "pathname": "/library"
+        }
+      },
+      {
+        "id": "courses",
+        "path": "/courses",
+        "status": "pass",
+        "selectors": [
+          "#learningPathTitle",
+          "#courseList"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1403,
+          "horizontalOverflowPx": 0,
+          "pathname": "/courses"
+        }
+      },
+      {
+        "id": "memory",
+        "path": "/memory",
+        "status": "pass",
+        "selectors": [
+          "#addResourceBtn",
+          "#resourceForm"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 608,
+          "horizontalOverflowPx": 0,
+          "pathname": "/memory"
+        }
+      },
+      {
+        "id": "settings",
+        "path": "/settings",
+        "status": "pass",
+        "selectors": [
+          "#settingsForm",
+          "#settingsLanguageSelect"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 1206,
+          "horizontalOverflowPx": 0,
+          "pathname": "/settings"
+        }
+      },
+      {
+        "id": "account",
+        "path": "/account",
+        "status": "pass",
+        "selectors": [
+          "#accountForm",
+          "#accountNameInput"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 989,
+          "horizontalOverflowPx": 0,
+          "pathname": "/account"
+        }
+      },
+      {
+        "id": "pk",
+        "path": "/pk",
+        "status": "pass",
+        "selectors": [
+          "#startPkBtn",
+          "#pkProblem"
+        ],
+        "health": {
+          "appShellVisible": true,
+          "authShellVisible": false,
+          "overlayVisible": false,
+          "bodyTextLength": 775,
+          "horizontalOverflowPx": 0,
+          "pathname": "/pk"
+        }
+      }
+    ]
+  },
+  "interactions": {
+    "checked": 68,
+    "passed": 68,
+    "failed": 0,
+    "results": [
+      {
+        "name": "overview CTA opens problems",
+        "status": "pass",
+        "entryVisible": true,
+        "path": "/problems",
+        "entry": "overview problem progress CTA",
+        "activation": "user click"
+      },
+      {
+        "name": "overview leaderboard controls and news ticker navigation",
+        "status": "pass",
+        "metric": "leetcode",
+        "scope": "region",
+        "country": "unitedStates",
+        "region": "California",
+        "newsId": null,
+        "newsTitle": "Jane Street Q1 交易收入创纪录",
+        "reloaded": true
+      },
+      {
+        "name": "streak check-in calendar opens and persists activity",
+        "status": "pass",
+        "checkedIn": true,
+        "calendarOpened": true,
+        "todayLit": true,
+        "reloaded": true,
+        "persisted": true
+      },
+      {
+        "name": "shell sidebar and command shortcuts persist navigation state",
+        "status": "pass",
+        "sidebarCollapsed": true,
+        "reloadPersisted": true,
+        "sidebarExpanded": true,
+        "chatShortcut": true,
+        "accountShortcut": true,
+        "settingsShortcut": true
+      },
+      {
+        "name": "hash compat deep links redirect without losing query state",
+        "status": "pass",
+        "jobsPathname": "/jobs",
+        "overviewAliasPathname": "/",
+        "queryPreserved": true,
+        "hashCleared": true,
+        "jobsRendered": true,
+        "overviewRendered": true
+      },
+      {
+        "name": "mobile shell sidebar, search, and settings controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "noHorizontalOverflow": true,
+        "searchUsable": true,
+        "moduleSheetUsable": true,
+        "reloadPersisted": true,
+        "settingsShortcut": true
+      },
+      {
+        "name": "mobile module nav groups open problems and library routes",
+        "status": "pass",
+        "mobileViewport": true,
+        "trainingMenuOpened": true,
+        "problemsRoute": true,
+        "resourcesMenuOpened": true,
+        "libraryRoute": true,
+        "noHorizontalOverflow": true
+      },
+      {
+        "name": "skills radar hover and global search spotlight",
+        "status": "pass",
+        "legendRows": 15,
+        "skillCards": 15,
+        "searchSkill": "complexNumbers"
+      },
+      {
+        "name": "league standings, learning map, and reward shop guard",
+        "status": "pass",
+        "trainingPath": "/tools",
+        "shopItem": "freeze",
+        "surfacesVisible": true,
+        "standingsRows": 10,
+        "standingsRowsVisible": true,
+        "learningNodes": 8,
+        "learningNodesVisible": true,
+        "shopItems": 6,
+        "shopItemsVisible": true,
+        "path": "/league",
+        "toastText": "!\n训练币不够\n还差 350 币 · 完成训练可获得"
+      },
+      {
+        "name": "global search module, problem, job, company, course, and news navigation",
+        "status": "pass",
+        "coveredTypes": [
+          "module",
+          "company",
+          "job",
+          "course",
+          "news",
+          "problem"
+        ],
+        "news": "CoreWeave",
+        "problem": "0DTE"
+      },
+      {
+        "name": "global search keyboard navigation keeps moving through focused results",
+        "status": "pass",
+        "focusedSecondTitle": "谢谢你，Quant！",
+        "keyboardActivated": true,
+        "resultCount": 14
+      },
+      {
+        "name": "problems search, detail, reveal, and save",
+        "status": "pass",
+        "firstProblemId": "quantguide-0dte-option",
+        "saveToggled": true
+      },
+      {
+        "name": "problems pagination, collection filter, and mock interview handoff",
+        "status": "pass",
+        "pageOneControlVisible": true,
+        "collectionSourceChipActive": true,
+        "collectionCatalogMembership": true,
+        "page1FirstId": "green-book-problem-001",
+        "page2FirstId": "green-book-problem-025",
+        "collectionId": "quantguide",
+        "filteredProblemId": "quantguide-place-or-take",
+        "detailCategory": "probabilityExpectation",
+        "handoffSelectedProblemId": "quantguide-place-or-take",
+        "handoffCategoryKey": "probabilityExpectation",
+        "handoffType": "oa",
+        "paginationNavigated": true,
+        "collectionFilterActive": true,
+        "interviewHandoff": true
+      },
+      {
+        "name": "mobile problems detail actions and mock handoff avoid overflow",
+        "status": "pass",
+        "saveInitiallyActive": true,
+        "saveToggled": true,
+        "saveStateReady": true,
+        "visualPreflight": {
+          "matrix": [
+            {
+              "viewport": "1440x900",
+              "theme": "light",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 695.33,
+                "right": 996.66,
+                "top": 484.52,
+                "bottom": 580.52,
+                "width": 301.33,
+                "height": 96
+              },
+              "actionTargets": [
+                {
+                  "left": 695.33,
+                  "right": 849.98,
+                  "top": 484.52,
+                  "bottom": 528.52,
+                  "width": 154.66,
+                  "height": 44
+                },
+                {
+                  "left": 857.98,
+                  "right": 996.66,
+                  "top": 483.61,
+                  "bottom": 527.61,
+                  "width": 138.67,
+                  "height": 44
+                },
+                {
+                  "left": 695.33,
+                  "right": 996.66,
+                  "top": 536.52,
+                  "bottom": 580.52,
+                  "width": 301.33,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 153,
+                  "clientWidth": 153,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 727.66,
+                  "contentRight": 817.66,
+                  "availableLeft": 704.33,
+                  "availableRight": 840.98,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 137,
+                  "clientWidth": 137,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 890.31,
+                  "contentRight": 964.31,
+                  "availableLeft": 866.98,
+                  "availableRight": 987.66,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 299,
+                  "clientWidth": 299,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 792.98,
+                  "contentRight": 898.98,
+                  "availableLeft": 704.33,
+                  "availableRight": 987.66,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(255, 255, 255)",
+              "mockBackground": "rgb(91, 95, 245)",
+              "contrastRatio": 4.77,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(255, 255, 255)",
+                "contrastRatio": 4.77,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            },
+            {
+              "viewport": "1440x900",
+              "theme": "dark",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 695.33,
+                "right": 996.66,
+                "top": 484.52,
+                "bottom": 580.52,
+                "width": 301.33,
+                "height": 96
+              },
+              "actionTargets": [
+                {
+                  "left": 695.33,
+                  "right": 849.98,
+                  "top": 484.52,
+                  "bottom": 528.52,
+                  "width": 154.66,
+                  "height": 44
+                },
+                {
+                  "left": 857.98,
+                  "right": 996.66,
+                  "top": 484.04,
+                  "bottom": 528.04,
+                  "width": 138.67,
+                  "height": 44
+                },
+                {
+                  "left": 695.33,
+                  "right": 996.66,
+                  "top": 536.52,
+                  "bottom": 580.52,
+                  "width": 301.33,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 153,
+                  "clientWidth": 153,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 727.66,
+                  "contentRight": 817.66,
+                  "availableLeft": 704.33,
+                  "availableRight": 840.98,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 146,
+                  "clientWidth": 137,
+                  "scrollOverflowPx": 9,
+                  "contentLeft": 890.31,
+                  "contentRight": 964.31,
+                  "availableLeft": 866.98,
+                  "availableRight": 987.66,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 299,
+                  "clientWidth": 299,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 792.98,
+                  "contentRight": 898.98,
+                  "availableLeft": 704.33,
+                  "availableRight": 987.66,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(20, 19, 34)",
+              "mockBackground": "rgb(125, 123, 255)",
+              "contrastRatio": 5.37,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(32, 31, 57)",
+                "contrastRatio": 4.67,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            },
+            {
+              "viewport": "1280x720",
+              "theme": "light",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 793,
+                "right": 1192,
+                "top": 444.23,
+                "bottom": 488.23,
+                "width": 399,
+                "height": 44
+              },
+              "actionTargets": [
+                {
+                  "left": 793,
+                  "right": 920.66,
+                  "top": 444.23,
+                  "bottom": 488.23,
+                  "width": 127.66,
+                  "height": 44
+                },
+                {
+                  "left": 928.66,
+                  "right": 1040.33,
+                  "top": 444.14,
+                  "bottom": 488.14,
+                  "width": 111.67,
+                  "height": 44
+                },
+                {
+                  "left": 1048.33,
+                  "right": 1192,
+                  "top": 444.23,
+                  "bottom": 488.23,
+                  "width": 143.67,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 126,
+                  "clientWidth": 126,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 811.83,
+                  "contentRight": 901.83,
+                  "availableLeft": 802,
+                  "availableRight": 911.66,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 164,
+                  "clientWidth": 110,
+                  "scrollOverflowPx": 54,
+                  "contentLeft": 947.48,
+                  "contentRight": 1021.48,
+                  "availableLeft": 937.66,
+                  "availableRight": 1031.33,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 142,
+                  "clientWidth": 142,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 1067.16,
+                  "contentRight": 1173.16,
+                  "availableLeft": 1057.33,
+                  "availableRight": 1183,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(255, 255, 255)",
+              "mockBackground": "rgb(91, 95, 245)",
+              "contrastRatio": 4.77,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(255, 255, 255)",
+                "contrastRatio": 4.77,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            },
+            {
+              "viewport": "1280x720",
+              "theme": "dark",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 793,
+                "right": 1192,
+                "top": 444.23,
+                "bottom": 488.23,
+                "width": 399,
+                "height": 44
+              },
+              "actionTargets": [
+                {
+                  "left": 793,
+                  "right": 920.66,
+                  "top": 444.23,
+                  "bottom": 488.23,
+                  "width": 127.66,
+                  "height": 44
+                },
+                {
+                  "left": 928.66,
+                  "right": 1040.33,
+                  "top": 444.23,
+                  "bottom": 488.23,
+                  "width": 111.67,
+                  "height": 44
+                },
+                {
+                  "left": 1048.33,
+                  "right": 1192,
+                  "top": 444.23,
+                  "bottom": 488.23,
+                  "width": 143.67,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 126,
+                  "clientWidth": 126,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 811.83,
+                  "contentRight": 901.83,
+                  "availableLeft": 802,
+                  "availableRight": 911.66,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 178,
+                  "clientWidth": 110,
+                  "scrollOverflowPx": 68,
+                  "contentLeft": 947.48,
+                  "contentRight": 1021.48,
+                  "availableLeft": 937.66,
+                  "availableRight": 1031.33,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 142,
+                  "clientWidth": 142,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 1067.16,
+                  "contentRight": 1173.16,
+                  "availableLeft": 1057.33,
+                  "availableRight": 1183,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(20, 19, 34)",
+              "mockBackground": "rgb(125, 123, 255)",
+              "contrastRatio": 5.37,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(32, 31, 57)",
+                "contrastRatio": 4.67,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            },
+            {
+              "viewport": "390x844",
+              "theme": "light",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 64,
+                "right": 326,
+                "top": 477.5,
+                "bottom": 573.5,
+                "width": 262,
+                "height": 96
+              },
+              "actionTargets": [
+                {
+                  "left": 64,
+                  "right": 191,
+                  "top": 477.5,
+                  "bottom": 521.5,
+                  "width": 127,
+                  "height": 44
+                },
+                {
+                  "left": 199,
+                  "right": 326,
+                  "top": 477.5,
+                  "bottom": 521.5,
+                  "width": 127,
+                  "height": 44
+                },
+                {
+                  "left": 64,
+                  "right": 326,
+                  "top": 529.5,
+                  "bottom": 573.5,
+                  "width": 262,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 125,
+                  "clientWidth": 125,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 94.5,
+                  "contentRight": 160.5,
+                  "availableLeft": 71,
+                  "availableRight": 184,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 188,
+                  "clientWidth": 125,
+                  "scrollOverflowPx": 63,
+                  "contentLeft": 235.5,
+                  "contentRight": 289.5,
+                  "availableLeft": 206,
+                  "availableRight": 319,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 260,
+                  "clientWidth": 260,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 142,
+                  "contentRight": 248,
+                  "availableLeft": 73,
+                  "availableRight": 317,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(255, 255, 255)",
+              "mockBackground": "rgb(91, 95, 245)",
+              "contrastRatio": 4.77,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(255, 255, 255)",
+                "contrastRatio": 4.77,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            },
+            {
+              "viewport": "390x844",
+              "theme": "dark",
+              "overflowPx": 0,
+              "actionDock": {
+                "left": 64,
+                "right": 326,
+                "top": 477.5,
+                "bottom": 573.5,
+                "width": 262,
+                "height": 96
+              },
+              "actionTargets": [
+                {
+                  "left": 64,
+                  "right": 191,
+                  "top": 477.5,
+                  "bottom": 521.5,
+                  "width": 127,
+                  "height": 44
+                },
+                {
+                  "left": 199,
+                  "right": 326,
+                  "top": 477.5,
+                  "bottom": 521.5,
+                  "width": 127,
+                  "height": 44
+                },
+                {
+                  "left": 64,
+                  "right": 326,
+                  "top": 529.5,
+                  "bottom": 573.5,
+                  "width": 262,
+                  "height": 44
+                }
+              ],
+              "labelMetrics": [
+                {
+                  "label": "标记完成",
+                  "scrollWidth": 125,
+                  "clientWidth": 125,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 94.5,
+                  "contentRight": 160.5,
+                  "availableLeft": 71,
+                  "availableRight": 184,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "已收藏",
+                  "scrollWidth": 199,
+                  "clientWidth": 125,
+                  "scrollOverflowPx": 74,
+                  "contentLeft": 235.5,
+                  "contentRight": 289.5,
+                  "availableLeft": 206,
+                  "availableRight": 319,
+                  "overflowPx": 0
+                },
+                {
+                  "label": "用这题模拟",
+                  "scrollWidth": 260,
+                  "clientWidth": 260,
+                  "scrollOverflowPx": 0,
+                  "contentLeft": 142,
+                  "contentRight": 248,
+                  "availableLeft": 73,
+                  "availableRight": 317,
+                  "overflowPx": 0
+                }
+              ],
+              "mockForeground": "rgb(20, 19, 34)",
+              "mockBackground": "rgb(125, 123, 255)",
+              "contrastRatio": 5.37,
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(32, 31, 57)",
+                "contrastRatio": 4.67,
+                "unclipped": true
+              },
+              "checks": {
+                "oneActionDock": true,
+                "noHorizontalOverflow": true,
+                "actionsWithinViewport": true,
+                "touchTargets": true,
+                "labelsFit": true,
+                "mobileRowsValid": true,
+                "nonColorSavedCue": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "contrastRatio": true
+              }
+            }
+          ],
+          "reducedMotion": {
+            "maxTransitionMs": 1,
+            "animationNames": [
+              "none",
+              "none",
+              "none",
+              "none"
+            ],
+            "movementDisabled": true
+          }
+        },
+        "mobileViewport": true,
+        "problemId": "quantguide-0dte-option",
+        "handoffSelectedProblemId": "quantguide-0dte-option",
+        "handoffCategoryKey": "option",
+        "handoffType": "technical",
+        "detailOpened": true,
+        "answerRevealed": true,
+        "interviewHandoff": true,
+        "noHorizontalOverflow": true
+      },
+      {
+        "name": "problems ranking view opens ranked detail and preserves ranking navigation",
+        "status": "pass",
+        "firstProblemId": "quantguide-zero-appearance",
+        "secondProblemId": "quantguide-0dte-option",
+        "rowCount": 50,
+        "topScore": 0,
+        "scoresDescending": true,
+        "rankingDetailPositionPass": true,
+        "returnedToRanking": true
+      },
+      {
+        "name": "problems social like/comment no-cloud guard",
+        "status": "pass",
+        "problemId": "quantguide-0dte-option",
+        "likeCount": 0,
+        "liked": false,
+        "commentDraftPreserved": true,
+        "socialRequests": 0,
+        "reloaded": true
+      },
+      {
+        "name": "problems LeetCode Hot 100 tracking persistence",
+        "status": "pass",
+        "hotId": "leetcode-1",
+        "title": "1. Two Sum",
+        "markedDone": true,
+        "unmarkedDone": true,
+        "reloaded": true
+      },
+      {
+        "name": "tools drill starts and accepts an answer",
+        "status": "pass",
+        "question": "75 + 35 = ?"
+      },
+      {
+        "name": "tools mental math completes session and persists records",
+        "status": "pass",
+        "recordsBefore": 0,
+        "recordsAfter": 1,
+        "recordsReloaded": 1,
+        "latestScore": 0,
+        "latestSkipped": 12,
+        "bestScore": 0,
+        "recordPersisted": true,
+        "entryPersisted": true,
+        "reloaded": true
+      },
+      {
+        "name": "tools market game rejects crossed quote, scores valid quote, and persists record",
+        "status": "pass",
+        "fairValue": 105,
+        "crossedFeedback": "⚠ Ask 必须高于 Bid——先把市场报合法。",
+        "feedback": "报价成交 · +26 分 —— 你的中价 105、价差 2，公允 105。又稳又窄，这单值钱。",
+        "score": 26,
+        "recordsBefore": 0,
+        "recordsAfter": 1,
+        "marketSkill": 26,
+        "reloaded": true
+      },
+      {
+        "name": "poker default route stays local until online action",
+        "status": "pass",
+        "roomCode": "QG-MAIN",
+        "search": "",
+        "prompt": "LOCALLocal · Open room · hand #0 · 1 activeWaiting · pot 0 · current bet 0Seat at least two active players, then start the first cash hand.",
+        "joinRequests": 0
+      },
+      {
+        "name": "poker demo table starts, acts, and persists room state",
+        "status": "pass",
+        "roomCode": "QG-MAIN",
+        "handNumber": 1,
+        "playerCount": 6,
+        "actionLabel": "跟注 Call 20",
+        "currentHandLogCount": 13,
+        "persisted": true
+      },
+      {
+        "name": "poker preflop matrix position, hand selection, and leave-table navigation",
+        "status": "pass",
+        "position": "co",
+        "hand": "QQ",
+        "selected": true,
+        "leaveTableNavigated": true
+      },
+      {
+        "name": "pk match, submit, reveal, and record persistence",
+        "status": "pass",
+        "opponentName": "Options Challenger",
+        "problemPreview": "十和十\n\nAdam 正在掷一个公平的 $10-$ 面骰。他可以反复掷，并且可以在任意时刻决定停止。如果每次掷出的值不是 $10$，他就把该点数加到自己的总金额中。如果掷出 10，他会失去所有钱。如果 Adam 采用最优策略，那么他应该在总金",
+        "submittedAnswer": "50",
+        "outcome": {
+          "kicker": "DEFEAT",
+          "title": "惜败一局",
+          "userScore": 22,
+          "opponentScore": 74
+        },
+        "recordPersisted": true,
+        "revealed": true
+      },
+      {
+        "name": "plan create, edit, task persistence, and navigation",
+        "status": "pass",
+        "role": "quantDeveloper",
+        "season": "2027-summer",
+        "weeklyHours": 12,
+        "completedTaskId": "core",
+        "problemQuery": "leetcode",
+        "reloaded": true
+      },
+      {
+        "name": "plan baseline diagnostic completion and reload persistence",
+        "status": "pass",
+        "questionCount": 8,
+        "score": 0,
+        "scoreRowCount": 7,
+        "diagnosticCompleted": true,
+        "reloaded": true
+      },
+      {
+        "name": "mobile interview advanced setup controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "advancedOpened": true,
+        "technicalTypeSelected": true,
+        "optionCategorySelected": true,
+        "pdfSourceVisible": true,
+        "fullSourceRestored": true,
+        "noHorizontalOverflow": true
+      },
+      {
+        "name": "interview onboarding, practice answer, favorite, exit, and resume",
+        "status": "pass",
+        "questionStatus": "Q1/2",
+        "favoritePersisted": true,
+        "durableResume": true
+      },
+      {
+        "name": "interview attachment upload preview, transcript, and request payload",
+        "status": "pass",
+        "fileName": "browser-smoke-interview-attachment-1784273078533.png",
+        "previewRendered": true,
+        "transcriptAttachmentRendered": true,
+        "requestAttachmentSent": true,
+        "completedSession": true
+      },
+      {
+        "name": "interview PDF source upload generates questions and starts session",
+        "status": "pass",
+        "fileName": "browser-smoke-interview-source-1784273079197.pdf",
+        "generatedQuestionTitle": "PDF Smoke Delta Hedging 1784273079197",
+        "requestCount": 1,
+        "requestPdfPayloadSent": true,
+        "generatedQuestionRendered": true
+      },
+      {
+        "name": "todo dock opens and adds a task",
+        "status": "pass",
+        "taskAdded": true
+      },
+      {
+        "name": "todo dock edit, complete, delete, and reload persistence",
+        "status": "pass",
+        "taskId": "custom-3a0e7cab-e807-4acd-9d2e-731fa6bd332a",
+        "edited": true,
+        "completed": true,
+        "reopened": true,
+        "reloaded": true,
+        "deleted": true,
+        "deletePersisted": true
+      },
+      {
+        "name": "community post, like, comment, and reload persistence",
+        "status": "pass",
+        "headingDecorationSuppressed": true,
+        "postText": "Browser smoke community post 1784273123804",
+        "commentText": "Browser smoke comment 1784273123804",
+        "reloaded": true
+      },
+      {
+        "name": "community image post fallback and reload persistence",
+        "status": "pass",
+        "postText": "Browser smoke community image post 1784273132516",
+        "fileName": "browser-smoke-community-1784273132516.png",
+        "dataUrlFallback": true,
+        "reloaded": true
+      },
+      {
+        "name": "community video post fallback and reload persistence",
+        "status": "pass",
+        "postText": "Browser smoke community video post 1784273139987",
+        "fileName": "browser-smoke-community-1784273139987.webm",
+        "dataUrlFallback": true,
+        "reloaded": true
+      },
+      {
+        "name": "community direct message from post opens messages thread",
+        "status": "pass",
+        "authorName": "Community Mentor 1784273148535",
+        "threadId": "thread-local:browser-route-smoke-mentor:community-dm-1784273148535",
+        "openedMessages": true,
+        "threadPersisted": true,
+        "replyPersisted": true
+      },
+      {
+        "name": "mobile community posting and messages controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "communityComposerUsable": true,
+        "postLikeCommentPersisted": true,
+        "directMessageNavigated": true,
+        "messageReplyPersisted": true,
+        "messageReloadPersisted": true,
+        "noHorizontalOverflow": true,
+        "threadId": "thread-local:browser-route-smoke-mentor:mobile-social-1784273160414",
+        "finalPath": "/messages"
+      },
+      {
+        "name": "messages thread read, send, and reload persistence",
+        "status": "pass",
+        "threadId": "thread-browser-route-smoke-1784273172892",
+        "mentorName": "Smoke Mentor 1784273172892",
+        "replied": true,
+        "reloaded": true
+      },
+      {
+        "name": "messages multi-thread unread badges clear and persist read state",
+        "status": "pass",
+        "threadCount": 2,
+        "initialUnreadBadges": true,
+        "switchClearedBadges": true,
+        "readStatePersisted": true,
+        "repliesPersisted": true,
+        "reloaded": true
+      },
+      {
+        "name": "experiences create, edit, share, delete, and reload persistence",
+        "status": "pass",
+        "recordId": "d5508b08-3165-4d8a-ba9f-553b73894c0a",
+        "sharedPostId": "2b7289f9-d4da-42f7-8c11-0b1eebbae211",
+        "deleted": true,
+        "reloaded": true
+      },
+      {
+        "name": "news manual submit, filter, detail, and reload persistence",
+        "status": "pass",
+        "newsId": "news-browser-smoke-jane-street-official-update-1784273217796-https-www-janestreet-com-join-jane",
+        "sourceType": "official",
+        "reloaded": true,
+        "readPersisted": true
+      },
+      {
+        "name": "mobile news and experiences controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "experienceSaved": true,
+        "experienceFilterUsable": true,
+        "experienceShared": true,
+        "newsSubmitted": true,
+        "newsFiltersUsable": true,
+        "newsDetailReadPersisted": true,
+        "noHorizontalOverflow": true,
+        "recordId": "deddb55e-5a34-40bd-bdce-2f7dd1d02b6a",
+        "sharedPostId": "df40ee5f-602b-4f5d-944e-51df8500c1ef",
+        "newsId": "news-mobile-smoke-official-recruiting-update-1784273228627-https-www-janestreet-com-join-jane-s",
+        "finalPath": "/news"
+      },
+      {
+        "name": "memory resource add, source link, and reload persistence",
+        "status": "pass",
+        "title": "Browser Smoke Resource 1784273244362",
+        "sourceUrl": "https://www.youtube.com/@atypicalquant",
+        "reloaded": true
+      },
+      {
+        "name": "memory image resource upload fallback and reload persistence",
+        "status": "pass",
+        "title": "Browser Smoke Image Resource 1784273253396",
+        "fileName": "browser-smoke-memory-1784273253396.png",
+        "dataUrlFallback": true,
+        "reloaded": true
+      },
+      {
+        "name": "network contact add, edit, delete, and reload persistence",
+        "status": "pass",
+        "contactName": "Browser Smoke Contact 1784273262911",
+        "edited": true,
+        "deleted": true
+      },
+      {
+        "name": "resume text save and reload persistence",
+        "status": "pass",
+        "textLength": 195,
+        "reloaded": true
+      },
+      {
+        "name": "resume LLM review request, render, and reload persistence",
+        "status": "pass",
+        "reviewCount": 3,
+        "requestCount": 1,
+        "reloaded": true
+      },
+      {
+        "name": "mobile resume review controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "textareaUsable": true,
+        "reviewButtonsVisible": true,
+        "reviewRendered": true,
+        "requestPayloadSent": true,
+        "reviewPersisted": true,
+        "noHorizontalOverflow": true,
+        "reloaded": true,
+        "reviewCount": 3,
+        "requestCount": 1
+      },
+      {
+        "name": "jobs filter and apply link behavior",
+        "status": "pass",
+        "allCount": 6,
+        "seedJobCount": 6,
+        "fallbackPostedAtCount": 6,
+        "internshipSeedCount": 3,
+        "fulltimeSeedCount": 3,
+        "openedUrl": "https://www.imc.com/us/careers/jobs/"
+      },
+      {
+        "name": "companies tier filter, practice navigation, and careers link behavior",
+        "status": "pass",
+        "visualPreflight": {
+          "matrix": [
+            {
+              "viewport": "1440x900",
+              "theme": "light",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 1084,
+                "right": 1410,
+                "top": 179.75,
+                "bottom": 235.75,
+                "width": 326,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 1090,
+                  "right": 1164,
+                  "top": 185.71,
+                  "bottom": 229.71,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1170,
+                  "right": 1244,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1250,
+                  "right": 1324,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1330,
+                  "right": 1404,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 1149,
+                "right": 1161,
+                "top": 188.71,
+                "bottom": 200.71,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(251, 251, 253)",
+                "contrastRatio": 4.62,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 1225.28,
+                  "right": 1297,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 1305,
+                  "right": 1387,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 641,
+                  "right": 808.86,
+                  "top": 869.44,
+                  "bottom": 913.44,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 818.86,
+                  "right": 939.86,
+                  "top": 869.44,
+                  "bottom": 913.44,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            },
+            {
+              "viewport": "1440x900",
+              "theme": "dark",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 1084,
+                "right": 1410,
+                "top": 179.75,
+                "bottom": 235.75,
+                "width": 326,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 1090,
+                  "right": 1164,
+                  "top": 185.37,
+                  "bottom": 229.37,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1170,
+                  "right": 1244,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1250,
+                  "right": 1324,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1330,
+                  "right": 1404,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 1149,
+                "right": 1161,
+                "top": 188.37,
+                "bottom": 200.37,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(27, 26, 48)",
+                "contrastRatio": 4.97,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 1225.28,
+                  "right": 1297,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 1305,
+                  "right": 1387,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 641,
+                  "right": 808.86,
+                  "top": 869.44,
+                  "bottom": 913.44,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 818.86,
+                  "right": 939.86,
+                  "top": 869.44,
+                  "bottom": 913.44,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            },
+            {
+              "viewport": "1280x720",
+              "theme": "light",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 924,
+                "right": 1250,
+                "top": 179.75,
+                "bottom": 235.75,
+                "width": 326,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 930,
+                  "right": 1004,
+                  "top": 185.54,
+                  "bottom": 229.54,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1010,
+                  "right": 1084,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1090,
+                  "right": 1164,
+                  "top": 185.7,
+                  "bottom": 229.7,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1170,
+                  "right": 1244,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 989,
+                "right": 1001,
+                "top": 188.54,
+                "bottom": 200.54,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(251, 251, 253)",
+                "contrastRatio": 4.62,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 1065.28,
+                  "right": 1137,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 1145,
+                  "right": 1227,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 641,
+                  "right": 808.86,
+                  "top": 892.38,
+                  "bottom": 936.38,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 818.86,
+                  "right": 939.86,
+                  "top": 892.38,
+                  "bottom": 936.38,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            },
+            {
+              "viewport": "1280x720",
+              "theme": "dark",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 924,
+                "right": 1250,
+                "top": 179.75,
+                "bottom": 235.75,
+                "width": 326,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 930,
+                  "right": 1004,
+                  "top": 185.72,
+                  "bottom": 229.72,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1010,
+                  "right": 1084,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1090,
+                  "right": 1164,
+                  "top": 185.35,
+                  "bottom": 229.35,
+                  "width": 74,
+                  "height": 44
+                },
+                {
+                  "left": 1170,
+                  "right": 1244,
+                  "top": 185.75,
+                  "bottom": 229.75,
+                  "width": 74,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 989,
+                "right": 1001,
+                "top": 188.72,
+                "bottom": 200.72,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(27, 26, 48)",
+                "contrastRatio": 4.97,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 1065.28,
+                  "right": 1137,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 1145,
+                  "right": 1227,
+                  "top": 286.75,
+                  "bottom": 330.75,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 641,
+                  "right": 808.86,
+                  "top": 892.38,
+                  "bottom": 936.38,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 818.86,
+                  "right": 939.86,
+                  "top": 892.38,
+                  "bottom": 936.38,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            },
+            {
+              "viewport": "390x844",
+              "theme": "light",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 12,
+                "right": 378,
+                "top": 249.67,
+                "bottom": 305.67,
+                "width": 366,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 18,
+                  "right": 102,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 108,
+                  "right": 192,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 198,
+                  "right": 282,
+                  "top": 255.11,
+                  "bottom": 299.11,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 288,
+                  "right": 372,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 87,
+                "right": 99,
+                "top": 258.67,
+                "bottom": 270.67,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(91, 95, 245)",
+                "backdropColor": "rgb(251, 251, 253)",
+                "contrastRatio": 4.62,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 35,
+                  "right": 106.72,
+                  "top": 1455.67,
+                  "bottom": 1499.67,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 114.72,
+                  "right": 196.72,
+                  "top": 1455.67,
+                  "bottom": 1499.67,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 31,
+                  "right": 198.86,
+                  "top": 2115.3,
+                  "bottom": 2159.3,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 208.86,
+                  "right": 329.86,
+                  "top": 2115.3,
+                  "bottom": 2159.3,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            },
+            {
+              "viewport": "390x844",
+              "theme": "dark",
+              "overflowPx": 0,
+              "headerBackgroundImage": "none",
+              "headerBoxShadow": "none",
+              "tierGroup": {
+                "left": 12,
+                "right": 378,
+                "top": 249.67,
+                "bottom": 305.67,
+                "width": 366,
+                "height": 56
+              },
+              "tierTargets": [
+                {
+                  "left": 18,
+                  "right": 102,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 108,
+                  "right": 192,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 198,
+                  "right": 282,
+                  "top": 255.47,
+                  "bottom": 299.47,
+                  "width": 84,
+                  "height": 44
+                },
+                {
+                  "left": 288,
+                  "right": 372,
+                  "top": 255.67,
+                  "bottom": 299.67,
+                  "width": 84,
+                  "height": 44
+                }
+              ],
+              "activeCheck": {
+                "left": 87,
+                "right": 99,
+                "top": 258.67,
+                "bottom": 270.67,
+                "width": 12,
+                "height": 12
+              },
+              "focus": {
+                "outlineWidth": "3px",
+                "outlineOffset": "2px",
+                "outlineColor": "rgb(125, 123, 255)",
+                "backdropColor": "rgb(27, 26, 48)",
+                "contrastRatio": 4.97,
+                "unclipped": true
+              },
+              "ctaTargets": [
+                {
+                  "left": 35,
+                  "right": 106.72,
+                  "top": 1455.67,
+                  "bottom": 1499.67,
+                  "width": 71.72,
+                  "height": 44
+                },
+                {
+                  "left": 114.72,
+                  "right": 196.72,
+                  "top": 1455.67,
+                  "bottom": 1499.67,
+                  "width": 82,
+                  "height": 44
+                },
+                {
+                  "left": 31,
+                  "right": 198.86,
+                  "top": 2115.3,
+                  "bottom": 2159.3,
+                  "width": 167.86,
+                  "height": 44
+                },
+                {
+                  "left": 208.86,
+                  "right": 329.86,
+                  "top": 2115.3,
+                  "bottom": 2159.3,
+                  "width": 121,
+                  "height": 44
+                }
+              ],
+              "checks": {
+                "headerFlat": true,
+                "noHorizontalOverflow": true,
+                "tierGroupVisible": true,
+                "tierTargets": true,
+                "tierLabelsFit": true,
+                "activeCueVisible": true,
+                "focusVisible": true,
+                "focusContrast": true,
+                "focusUnclipped": true,
+                "ctaTargets": true,
+                "ctaLabelsFit": true
+              }
+            }
+          ],
+          "reducedMotion": {
+            "maxTransitionMs": 1,
+            "movementDisabled": true
+          }
+        },
+        "tierRouteRoundTripPersisted": true,
+        "sTierCount": 5,
+        "aTierCount": 7,
+        "bTierCount": 1,
+        "openedUrl": "https://www.janestreet.com/join-jane-street/open-roles/",
+        "practicePath": "/problems",
+        "practiceCompany": "jane-street",
+        "practiceProblemCount": 24,
+        "practiceStatus": ""
+      },
+      {
+        "name": "mobile career jobs and companies controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "jobsFilterUsable": true,
+        "jobApplyLinkSafe": true,
+        "companiesFilterUsable": true,
+        "companyCareersLinkSafe": true,
+        "companyPracticeNavigated": true,
+        "noHorizontalOverflow": true,
+        "openedJobUrl": "https://www.imc.com/us/careers/jobs/",
+        "openedCareersUrl": "https://www.janestreet.com/join-jane-street/open-roles/",
+        "practicePath": "/problems",
+        "practiceCompany": "jane-street",
+        "practiceProblemCount": 24,
+        "practiceStatus": ""
+      },
+      {
+        "name": "library search, kind filter, practice navigation, and reader guard",
+        "status": "pass",
+        "practiceSource": "quantguide",
+        "readerGuarded": true,
+        "searchQuery": "QuantGuide"
+      },
+      {
+        "name": "library cloud PDF reader opens, exposes links, and closes",
+        "status": "pass",
+        "readerTokenRequests": 2,
+        "pdfRequests": 4,
+        "readerOpened": true,
+        "openNewHref": "http://127.0.0.1:58176/api/library-reader-smoke/green-book.pdf",
+        "embedUrl": "http://127.0.0.1:58176/api/library-reader-smoke/green-book.pdf#toolbar=0&navpanes=0&scrollbar=1&view=FitH&statusbar=0&messages=0",
+        "closedByButton": true,
+        "closedByEscape": true
+      },
+      {
+        "name": "cross-module prep journey persists library, problem, todo, resume, and settings state",
+        "status": "pass",
+        "problemId": "quantguide-place-or-take",
+        "problemTitle": "放置或取出",
+        "todoTitle": "Cross-module QuantGuide review 1784273342025: 放置或取出",
+        "resumeTextLength": 237,
+        "settings": {
+          "llmEndpoint": "http://127.0.0.1:8789/interview",
+          "llmModel": "gpt-5-mini",
+          "cloudEndpoint": "http://127.0.0.1:8799/api",
+          "googleClientId": "cross-module-browser-smoke.apps.googleusercontent.com"
+        },
+        "reloaded": true
+      },
+      {
+        "name": "courses path, source switch, note, and reload persistence",
+        "status": "pass",
+        "courseId": "course-statquest-ml-stats",
+        "selectedSourceId": "course-statquest-video-index-1-https-statquest-org-video-index",
+        "reloaded": true,
+        "notePersisted": true,
+        "pathDonePersisted": true
+      },
+      {
+        "name": "account profile save and reload persistence",
+        "status": "pass",
+        "profileName": "Browser Smoke 1784273385215",
+        "country": "unitedStates",
+        "region": "California",
+        "graduationTerm": "2028-05",
+        "reloaded": true
+      },
+      {
+        "name": "account local email change requires password and reauthenticates",
+        "status": "pass",
+        "wrongPasswordRejected": true,
+        "oldEmailRejected": true,
+        "oldEmail": "browser-route-smoke@quantgym.local",
+        "newEmail": "browser-route-smoke+email-1784273393330@quantgym.local",
+        "passwordHashRotated": true,
+        "reloginSucceeded": true,
+        "reloginPath": "/"
+      },
+      {
+        "name": "account avatar upload, clear, and resume file persistence",
+        "status": "pass",
+        "avatarDataUrl": true,
+        "avatarCleared": true,
+        "resumeFileName": "browser-smoke-resume-1784273411945.txt",
+        "resumeTextLength": 215,
+        "reloaded": true
+      },
+      {
+        "name": "account non-admin cloud session avoids admin endpoint requests",
+        "status": "pass",
+        "adminRequestCount": 0,
+        "adminPanelHidden": true
+      },
+      {
+        "name": "mobile account profile and upload controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "formControlsVisible": true,
+        "securityFieldVisible": true,
+        "uploadControlsVisible": true,
+        "profilePersisted": true,
+        "resumeUploadPersisted": true,
+        "noHorizontalOverflow": true,
+        "reloaded": true,
+        "profileName": "Mobile Account 1784273436457",
+        "resumeFileName": "mobile-account-resume-1784273436457.txt"
+      },
+      {
+        "name": "settings language switch syncs URL and persists reload",
+        "status": "pass",
+        "englishSelected": true,
+        "englishUrlSynced": true,
+        "queryPreserved": true,
+        "englishReloadPersisted": true,
+        "zhRestored": true,
+        "statusMessageTranslated": true,
+        "appShellVisible": true,
+        "snapshots": {
+          "english": {
+            "pathname": "/settings",
+            "langParam": "en",
+            "sourceParam": "browser-smoke",
+            "selectedLanguage": "en",
+            "storedLanguage": "en",
+            "documentLang": "en",
+            "heading": "Settings",
+            "saveButtonText": "Save Settings",
+            "settingsMessage": "App preferences and data management.",
+            "appShellVisible": true,
+            "authShellVisible": false,
+            "horizontalOverflowPx": 0
+          },
+          "chinese": {
+            "pathname": "/settings",
+            "langParam": "zh",
+            "sourceParam": "browser-smoke",
+            "selectedLanguage": "zh",
+            "storedLanguage": "zh",
+            "documentLang": "zh-CN",
+            "heading": "设置",
+            "saveButtonText": "保存设置",
+            "settingsMessage": "应用偏好和数据管理。",
+            "appShellVisible": true,
+            "authShellVisible": false,
+            "horizontalOverflowPx": 0
+          }
+        }
+      },
+      {
+        "name": "settings saves runtime config, clears Google Client ID, and reloads",
+        "status": "pass",
+        "persisted": {
+          "llmEndpoint": "http://127.0.0.1:8788/interview?browser-smoke=settings",
+          "llmModel": "gpt-5-mini",
+          "cloudEndpoint": "http://127.0.0.1:8798/api",
+          "googleClientId": "browser-route-smoke.apps.googleusercontent.com"
+        },
+        "googleClientIdCleared": true
+      },
+      {
+        "name": "settings sync cloud without session shows guarded status",
+        "status": "pass",
+        "noSessionGuardShown": true,
+        "syncRequestCount": 0,
+        "cloudTokenPresent": false,
+        "currentUserId": "local:browser-route-smoke",
+        "message": "云端还没有登录会话，请先用邮箱密码登录一次。"
+      },
+      {
+        "name": "settings sync cloud with session sends state and updates status",
+        "status": "pass",
+        "syncRequestCount": 1,
+        "authorizationHeaderPresent": true,
+        "payloadIncludesState": true,
+        "payloadIncludesCommunity": true,
+        "payloadIncludesAccount": true,
+        "statusUpdated": true,
+        "lastSyncAt": "2026-07-17T07:31:20.441Z"
+      },
+      {
+        "name": "mobile settings config and backup controls avoid overflow",
+        "status": "pass",
+        "mobileViewport": true,
+        "formControlsVisible": true,
+        "dataActionsVisible": true,
+        "longConfigPersisted": true,
+        "exportDownloadWorks": true,
+        "noHorizontalOverflow": true,
+        "reloaded": true,
+        "exportedFilename": "quantgym-Mobile Account 1784273436457-2026-07-17.json"
+      },
+      {
+        "name": "settings rejects invalid backup files without changing state",
+        "status": "pass",
+        "malformedJsonRejected": true,
+        "nonObjectJsonRejected": true,
+        "statePreserved": true
+      },
+      {
+        "name": "settings backup restores community posts and messages",
+        "status": "pass",
+        "existingPostPreserved": true,
+        "existingThreadPreserved": true,
+        "exportedPostIncluded": true,
+        "exportedThreadIncluded": true,
+        "postRestored": true,
+        "threadRestored": true,
+        "threadId": "thread-settings-backup-community-1784273507389"
+      },
+      {
+        "name": "settings backup export, import, and reset state",
+        "status": "pass",
+        "resetPrompt": "清空当前账户的训练记录？已连接云端时也会同步为空。",
+        "exportedFilename": "quantgym-Mobile Account 1784273436457-2026-07-17.json",
+        "importedResumeFile": "settings-imported-resume-1784273525400.txt",
+        "importedResourceId": "settings-imported-resource-1784273525400",
+        "importedCourseId": "settings-imported-course-1784273525400",
+        "resetClearedImport": true
+      }
+    ]
+  },
+  "coreFlows": {
+    "namedInteractions": {
+      "expected": 68,
+      "checked": 68,
+      "passed": 68,
+      "failed": 0
+    },
+    "unauthenticatedAuth": {
+      "expected": 1,
+      "checked": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "totalCoreFlows": {
+      "expected": 69,
+      "checked": 69,
+      "passed": 69,
+      "failed": 0
+    }
+  },
+  "unauthenticated": {
+    "name": "protected route redirects to auth and local email auth works",
+    "status": "pass",
+    "localEmailAuth": {
+      "email": "browser-auth-1784272660808-lc9n7r@quantgym.local",
+      "redirectedToLogin": true,
+      "accountStatusChecked": true,
+      "registrationFormShown": true,
+      "verificationOptional": true,
+      "registered": true,
+      "accountPersisted": true,
+      "onboardingDismissed": true,
+      "logoutReturnedToAuth": true,
+      "passwordStepShown": true,
+      "reloginSucceeded": true,
+      "resetFormShown": true,
+      "resetCodeSent": true,
+      "resetSucceeded": true,
+      "resetOldPasswordRejected": true,
+      "resetNewPasswordLoginSucceeded": true,
+      "accountId": "96e8f0e9-3335-4452-8198-1761b8b9b623",
+      "reloginPath": "/"
+    },
+    "path": "/login",
+    "redirectPath": "/login"
+  },
+  "errorCounts": {
+    "console": 0,
+    "page": 0,
+    "firstPartyResponse": 0,
+    "firstPartyRequest": 0
+  },
+  "consoleErrors": [],
+  "ignoredConsoleErrors": [],
+  "pageErrors": [],
+  "responseErrors": [],
+  "expectedFirstPartyFailures": [
+    {
+      "id": "registration verification fallback",
+      "kind": "requestfailed",
+      "method": "POST",
+      "errorText": "net::ERR_FAILED",
+      "url": "http://127.0.0.1:58176/api/auth/verification-code"
+    },
+    {
+      "id": "registration verification fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:58176/api/auth/verification-code",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "id": "reset old password rejection",
+      "kind": "response",
+      "method": "POST",
+      "status": 401,
+      "url": "http://127.0.0.1:58176/api/auth/login"
+    },
+    {
+      "id": "reset old password rejection",
+      "kind": "console",
+      "url": "http://127.0.0.1:58176/api/auth/login",
+      "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+    },
+    {
+      "id": "interview hint offline fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:59991/interview",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "interview feedback offline fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:59991/interview",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "preview PDF abort after successful response",
+      "kind": "requestfailed",
+      "method": "GET",
+      "errorText": "net::ERR_ABORTED",
+      "url": "http://127.0.0.1:58176/api/library-reader-smoke/green-book.pdf",
+      "diagnostics": {
+        "navigationChanged": false,
+        "frameDetached": false,
+        "contextClosing": false,
+        "successfulResponse": true,
+        "domImageRemoved": false,
+        "domImageReferenceAtRequest": null,
+        "domImageReferenceAtFailure": null
+      }
+    },
+    {
+      "id": "account old-email cloud fallback",
+      "kind": "requestfailed",
+      "method": "POST",
+      "errorText": "net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8790/api/auth/login"
+    },
+    {
+      "id": "account old-email cloud fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:8790/api/auth/login",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "account new-email primary cloud fallback",
+      "kind": "requestfailed",
+      "method": "POST",
+      "errorText": "net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8790/api/auth/login"
+    },
+    {
+      "id": "account new-email primary cloud fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:8790/api/auth/login",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "account new-email session cloud fallback",
+      "kind": "requestfailed",
+      "method": "POST",
+      "errorText": "net::ERR_CONNECTION_REFUSED",
+      "url": "http://127.0.0.1:8790/api/auth/login"
+    },
+    {
+      "id": "account new-email session cloud fallback",
+      "kind": "console",
+      "url": "http://127.0.0.1:8790/api/auth/login",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "id": "settings malformed backup rejection",
+      "kind": "console",
+      "url": "http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js",
+      "text": "[QuantGym] Failed to import backup SyntaxError: Unexpected end of JSON input\n    at JSON.parse (<anonymous>)\n    at Dn (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:64308)\n    at kn (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:64872)\n    at async Object.o [as importState] (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:68495)"
+    },
+    {
+      "id": "settings non-object backup rejection",
+      "kind": "console",
+      "url": "http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js",
+      "text": "[QuantGym] Failed to import backup Error: Backup payload must be a JSON object.\n    at Dn (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:64334)\n    at kn (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:64872)\n    at async Object.o [as importState] (http://127.0.0.1:58176/assets/app-state-api-BiON82Xa.js:1:68495)"
+    }
+  ],
+  "canonicalFixtureRequests": [
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/jobs"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/news"
+    },
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:8787/jobs"
+    }
+  ],
+  "warnings": [],
+  "failures": []
+}

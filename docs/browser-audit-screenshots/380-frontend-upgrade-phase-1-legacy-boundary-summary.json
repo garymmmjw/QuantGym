@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "check": "frontend-upgrade-phase1-legacy-boundary",
+  "status": "pass",
+  "checkedAt": "2026-07-26T15:43:06.670Z",
+  "commit": "5a3b6f33b7f2a4d15f0a81ca57f81570ca89c6a3",
+  "evidenceSha256": "15e9ad7f9dc6b5d1d8d607b304fa93d9cee2fc0dda83a41cdd1e82ae405f33ea",
+  "hashes": {
+    "aliasSha256": "ba30f7e6f48ae62b8011fa7036856089061d9c123bea1110ecad267cc408b637",
+    "rootDocumentSha256": "f360bd356eeea4cc0f7560dca7c798438fbfc5a156917c052d51ec5487b8b314",
+    "planDocumentSha256": "f360bd356eeea4cc0f7560dca7c798438fbfc5a156917c052d51ec5487b8b314"
+  },
+  "checks": {
+    "sourceBoundaryIsolated": true,
+    "previewOnlyAdapter": true,
+    "lockedDeploymentExact": true,
+    "rootRouteAvailable": true,
+    "planRouteAvailable": true
+  },
+  "counts": {
+    "unmigratedRoutes": 22,
+    "checkedLiveDocuments": 2,
+    "localBoundaryFailures": 0
+  },
+  "failureCodes": []
+}

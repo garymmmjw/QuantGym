@@ -329,7 +329,6 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     seedJobs,
     seedCourses,
     seedNews,
-    catalogProblems: getRuntimeCatalogProblems?.() || catalogProblems,
     makeId,
     parseTags,
     stableProblemId,
@@ -339,16 +338,8 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     localDateKey,
     normalizeContentSources,
     normalizeNetworkContact,
-    mergeProblemStates,
-    problemStatesFromFavorites,
-    isDisabledProblemId,
-    normalizeLeetcodeHot100Done,
     normalizeLeaderboardSettings,
-    mergeProblems,
-    isCatalogProblem,
-    isDisabledProblemSource,
     mergeNews,
-    getUserCatalogProblems,
     defaultLeaderboardSettings,
     nowIso: () => new Date().toISOString()
   });
@@ -511,10 +502,6 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     },
     clearStateForUser,
     loadState,
-    clearProblemLookupCaches: () => {
-      const clearCaches = sliceRefs.clearProblemLookupCaches || clearProblemLookupCaches;
-      if (typeof clearCaches === "function") clearCaches();
-    },
     saveCommunity: (...args) => communityRuntime.save(...args),
     saveState,
     renderAll: () => {
@@ -527,10 +514,7 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     normalizeGameRecords,
     normalizeCommunityStore: (store) => communityRuntime.normalizeStore(store),
     mergeCommunityStores: (remote, local) => communityRuntime.mergeCloud(remote, local),
-    mergeProblemStates,
-    problemStatesFromFavorites,
     defaultLeaderboardSettings,
-    mergeProblems,
     mergeNews,
     normalizeState,
     now: () => new Date(),
@@ -599,6 +583,6 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
   const getStreak = skillsMetricsProvider.getStreak;
   const getSkillPracticeStats = skillsMetricsProvider.getSkillPracticeStats;
   const getAllSkillPracticeStats = skillsMetricsProvider.getAllSkillPracticeStats;
-  return { INTERVIEW_HISTORY_STORAGE_KEY, INTERVIEW_RESUME_STORAGE_KEY, INTERVIEW_SESSION_STORAGE_KEY, LEADERBOARD_CLOUD_REFRESH_MS, PROBLEM_PAGE_SIZE, PROBLEM_SEARCH_DEBOUNCE_MS, accountDataAdapter, appRuntime, appState, authMessageAdapter, authStateRuntime, backupController, calculateQuantScore, canUseCloud, clearStateForUser, cloudApi, cloudRuntime, cloudStatePayload, cloudSyncController: sliceRefs.cloudSyncController, cloudSyncFacade, communityActivityHooks, communityFilterState, communityRuntime, companiesDataAdapter, companyTierFilterState, coursesDataAdapter, createBaseState, defaultLeaderboardSettings, domainStores, exportState, flushCloudSync, formatCategoryLabel, getAllSkillPracticeStats, getAuthErrorMessage, getAuthReadyMessage, getCloudApiBase, getCountryLabel, getCurrentUser, getDefaultRegion, getInitials, getLanguage, getLevelInfo, getLlmRequestHeaders, getLocale, getProblemSocial, getQuantScore, getRank, getRegionLabel, getSkillPracticeStats, getSkillScore, getStateDataDeps, getStreak, getTotalXp, getVerificationErrorMessage, getWeeklyXp, hashPassword, importState, inferCountryFromRegion, isSafeRichMediaUrl, isSocialNewsType, latestIso, libraryCatalog, libraryFilterState, loadCommunity, loadState, loadStateForUser, localStatePayload, mathTypesetScheduler, mergeCloudCommunity, mergeCloudState, mergeCourseStates, mergeCourses, mergeDuplicateNews, mergeJobs, mergeNews, mergeRecordsById, mergeResumeState, messageSelectionState, migrateLegacyState, maybeAutoRefreshNews, newsDataAdapter, newsDedupeKey, newsFacade, newsFilterState, newsMatchesSourceFilter, newsMatchesTopic, newsProvider: sliceRefs.newsProvider, normalizeAccount, normalizeCloudLeaderboardRows, normalizeCommunityStore, normalizeContentSources, normalizeCountry, normalizeCourseStates, normalizeCourses, normalizeGameRecords, normalizeGraduationTerm, normalizeInterviewExperience, normalizeJobs, normalizeLanguage, normalizeLeaderboardSettings, normalizeMentalMathRecords, normalizeNewsSkills, normalizeNewsSourceFilter, normalizeNewsSourceType, normalizeNewsTopicFilter, normalizePrepPlan, normalizeProblemCompanies, normalizeRegionForCountry, normalizeResources, normalizeState, normalizeResumeState, normalizeSkills, normalizeStudyPlan, preferencesRuntime, problemCompanyCache, problemDetailState, problemProvider, problemProviderFacade, problemSearchRecordCache, problemSocialState, queueCloudSync, refreshNewsFromApi, renderCountryOptions, renderRegionOptions, resetState, saveAppPrefs, saveAuth, saveCloudConfig, saveCommunity, saveState, setLanguage, skillsMetricsProvider, stateDataRuntime, syncLanguageToUrl, t, textMatchesI18nKeys, toggleSidebarNav, upsertLocalAccount, userState, userStateActivityHooks, userStateKey, userStateRuntime };
+  return { INTERVIEW_HISTORY_STORAGE_KEY, INTERVIEW_RESUME_STORAGE_KEY, INTERVIEW_SESSION_STORAGE_KEY, LEADERBOARD_CLOUD_REFRESH_MS, PROBLEM_PAGE_SIZE, PROBLEM_SEARCH_DEBOUNCE_MS, accountDataAdapter, appRuntime, appState, authMessageAdapter, authStateRuntime, backupController, calculateQuantScore, canUseCloud, clearStateForUser, cloudApi, cloudRuntime, cloudStatePayload, cloudSyncController: sliceRefs.cloudSyncController, cloudSyncFacade, communityActivityHooks, communityFilterState, communityRuntime, companiesDataAdapter, companyTierFilterState, coursesDataAdapter, createBaseState, defaultLeaderboardSettings, domainStores, exportState, flushCloudSync, formatCategoryLabel, getAllSkillPracticeStats, getAuthErrorMessage, getAuthReadyMessage, getCloudApiBase, getCountryLabel, getCurrentUser, getDefaultRegion, getInitials, getLanguage, getLevelInfo, getLlmRequestHeaders, getLocale, getProblemSocial, getQuantScore, getRank, getRegionLabel, getSkillPracticeStats, getSkillScore, getStateDataDeps, getStreak, getTotalXp, getVerificationErrorMessage, getWeeklyXp, hashPassword, importState, inferCountryFromRegion, isSafeRichMediaUrl, isSocialNewsType, latestIso, libraryCatalog, libraryFilterState, loadCommunity, loadState, loadStateForUser, localStatePayload, mathTypesetScheduler, mergeCloudCommunity, mergeCloudState, mergeCourseStates, mergeCourses, mergeDuplicateNews, mergeJobs, mergeNews, mergeProblemStates, mergeRecordsById, mergeResumeState, messageSelectionState, migrateLegacyState, maybeAutoRefreshNews, newsDataAdapter, newsDedupeKey, newsFacade, newsFilterState, newsMatchesSourceFilter, newsMatchesTopic, newsProvider: sliceRefs.newsProvider, normalizeAccount, normalizeCloudLeaderboardRows, normalizeCommunityStore, normalizeContentSources, normalizeCountry, normalizeCourseStates, normalizeCourses, normalizeGameRecords, normalizeGraduationTerm, normalizeInterviewExperience, normalizeJobs, normalizeLanguage, normalizeLeaderboardSettings, normalizeMentalMathRecords, normalizeNewsSkills, normalizeNewsSourceFilter, normalizeNewsSourceType, normalizeNewsTopicFilter, normalizePrepPlan, normalizeProblemCompanies, normalizeProblemState, normalizeRegionForCountry, normalizeResources, normalizeState, normalizeResumeState, normalizeSkills, normalizeStudyPlan, preferencesRuntime, problemCompanyCache, problemDetailState, problemProvider, problemProviderFacade, problemSearchRecordCache, problemSocialState, queueCloudSync, refreshNewsFromApi, renderCountryOptions, renderRegionOptions, resetState, saveAppPrefs, saveAuth, saveCloudConfig, saveCommunity, saveState, setLanguage, skillsMetricsProvider, stateDataRuntime, syncLanguageToUrl, t, textMatchesI18nKeys, toggleSidebarNav, upsertLocalAccount, userState, userStateActivityHooks, userStateKey, userStateRuntime };
 
 }

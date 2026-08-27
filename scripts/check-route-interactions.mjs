@@ -18,25 +18,11 @@ const contracts = [
     route: "overview",
     files: [
       {
-        path: "src/features/overview/OverviewPageContent.jsx",
+        path: "src/pages/training/OverviewPage.tsx",
         checks: [
-          ["study plan CTA dispatches", /id="generateStudyPlanBtn"[\s\S]*?onClick=\{model\.generateTodayStudyPlan\}/],
-          ["problem progress CTA routes to Problems", /onClick=\{\(\) => model\.openModule\("problems"\)\}/],
-          ["leaderboard metric select updates on change/input", all("id=\"leaderboardMetricSelect\"", "onChange={updateLeaderboardMetric}", "onInput={updateLeaderboardMetric}")],
-          ["leaderboard scope/country/region selects update", all("id=\"leaderboardScopeSelect\"", "onChange={updateLeaderboardScope}", "id=\"leaderboardCountrySelect\"", "onChange={updateLeaderboardCountry}", "id=\"leaderboardRegionSelect\"", "onChange={updateLeaderboardRegion}")]
-        ]
-      },
-      {
-        path: "src/features/overview/overviewHooks.js",
-        checks: [
-          ["leaderboard setting changes persist through page API", all("api?.updateLeaderboardSettings?.(patch)", "api?.switchModule?.(moduleId)")]
-        ]
-      },
-      {
-        path: "src/lib/date.js",
-        checks: [
-          ["date formatting helpers reject invalid dates without throwing", all("export function dateOrNull(value)", "if (!d) return \"\"", "if (!parsed) return String(date || \"\")", "if (!parsed) return \"\"")],
-          ["shared timestamp and ISO helpers use the same finite-date parser", all("export function timestampOrZero(value)", "return dateOrNull(value)?.getTime() || 0", "export function isoOrNow(value", "dateOrNull(value) || dateOrNull(fallback) || new Date()")]
+          ["native overview reads the server dashboard", all("useDashboardOverviewQuery", "useCurrentUserQuery")],
+          ["native overview routes training through the governed handoff", all("buildProblemTrainingRoute", "newStartTrainingIntent")],
+          ["native overview renders typed recovery states", all("RecoveryPanel", "classifyMutationFailure")]
         ]
       }
     ]
@@ -45,42 +31,11 @@ const contracts = [
     route: "plan",
     files: [
       {
-        path: "src/features/plan/PlanPageContent.jsx",
+        path: "src/pages/plan/PlanPage.tsx",
         checks: [
-          ["setup form creates plans", /id="prepPlanSetupForm"[\s\S]*?onSubmit=\{createPlan\}/],
-          ["baseline diagnostic can submit and restart", all("id=\"prepDiagnosticForm\"", "onSubmit={submitDiagnostic}", "data-prep-start-test=\"true\"", "startDiagnostic(\"pending\")")],
-          ["task rows toggle and open target modules", all("data-prep-toggle-task={task.id}", "advanceTask(task)", "data-prep-open={task.action}", "openTask(task.action, task.query || \"\")")],
-          ["external prep links stay safe", all("safeExternalUrl?.(source.url)", "target=\"_blank\"", "rel=\"noopener noreferrer\"")]
-        ]
-      },
-      {
-        path: "src/features/plan/planHooks.js",
-        checks: [
-          ["plan handlers prevent submit defaults and call API", all("event?.preventDefault?.()", "api?.create?.(setup)", "api?.submitDiagnostic?.(diagnosticAnswers)", "api?.openTask?.(action, query)")]
-        ]
-      },
-      {
-        path: "src/modules/plan/data.js",
-        checks: [
-          ["plan week calculations use safe finite timestamps", all("import { timestampOrZero } from '../../lib/date.js'", "const target = timestampOrZero(`${dateText}T12:00:00`)", "const current = timestampOrZero(now)")]
-        ]
-      },
-      {
-        path: "src/modules/plan/setup.js",
-        checks: [
-          ["prep plan setup uses safe ISO fallback for injected dates", all("import { isoOrNow } from '../../lib/date.js'", "return isoOrNow(now)")]
-        ]
-      },
-      {
-        path: "src/modules/plan/diagnostic.js",
-        checks: [
-          ["prep diagnostic updates use safe ISO fallback for injected dates", all("import { isoOrNow } from '../../lib/date.js'", "return isoOrNow(now)")]
-        ]
-      },
-      {
-        path: "src/modules/plan/todo.js",
-        checks: [
-          ["todo plan updates use safe ISO fallback for injected dates", all("import { isoOrNow } from '../../lib/date.js'", "return isoOrNow(now)")]
+          ["native plan reads and mutates the server plan", all("useCurrentPlanQuery", "usePlanMutationWorkflow", "newCreatePlanIntent")],
+          ["native plan routes tasks through the governed handoff", all("buildProblemTrainingRoute", "newStartTrainingIntent")],
+          ["native plan persists recovery drafts before training replay", all("persistTrainingMutationDraft", "recoverTrainingMutationIntent")]
         ]
       }
     ]
@@ -153,19 +108,11 @@ const contracts = [
     route: "problems",
     files: [
       {
-        path: "src/features/problems/ProblemsPageContent.jsx",
+        path: "src/pages/training/ProblemsPage.tsx",
         checks: [
-          ["search input updates query and keyboard open behavior", all("id=\"problemSearch\"", "onChange={(event) => model.setSearchQuery(event.target.value)}", "onKeyDown={model.handleSearchKeydown}")],
-          ["view tabs and source clear apply filters", all("data-problem-view=\"saved\"", "model.applyFilter({ type: \"viewMode\"", "id=\"problemSourceFilterClearBtn\"", "model.applyFilter({ type: \"clearSource\" })")],
-          ["cards and pagination call page-model actions", all("onOpen={model.openProblem}", "onToggleCompleted={model.toggleCompleted}", "onToggleSaved={model.toggleSaved}", "onNavigate={handlePaginationEvent}", "model.handlePagination(event)")],
-          ["detail reveal/social/comment actions remain wired", all("onRevealBlock={model.revealBlock}", "onToggleLike={model.toggleLike}", "onPostComment={model.postComment}", "onDeleteComment={model.deleteComment}")],
-          ["LeetCode collection toggles use React state handler", all("id=\"leetcodeHotList\"", "onCollectionClick={model.handleCollectionClick}", "onToggleDone={model.toggleLeetcodeHotDone}")]
-        ]
-      },
-      {
-        path: "src/app/services/problemsPageApi.js",
-        checks: [
-          ["problem interaction API persists state and pagination", all("setSearchQuery(value)", "applyFilterAction(action)", "openDetail(problemId)", "toggleCompleted(problemId)", "toggleSaved(problemId)", "handlePagination(event)", "deps.saveState?.()")]
+          ["native Problems reads the typed list and detail APIs", all("useProblemsQuery", "useProblemDetailQuery")],
+          ["native Problems owns durable content mutations", all("useProblemMutationWorkflow", "newSetProblemFavoriteIntent", "newSaveProblemNoteIntent")],
+          ["native Problems owns the complete training workflow", all("useProblemTrainingWorkflow", "newCompleteTrainingIntent", "useTrainingResultQuery")]
         ]
       }
     ]

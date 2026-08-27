@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+</style>
+<script src="./qg-state.js"></script>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<div data-screen-label="设置" style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px;max-width:760px">
+
+  <div>
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:var(--track);color:var(--muted);font-size:11.5px;font-weight:700;margin-bottom:10px">SETTINGS</div>
+    <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">设置</h1>
+    <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">语言 · 外观 · 云同步 · 备份</p>
+  </div>
+
+  <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);padding:22px 24px;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+      <div><div style="font-size:14px;font-weight:800">界面语言</div><div style="font-size:12px;color:var(--muted-2);font-weight:600;margin-top:2px">切换后全站文案即时生效</div></div>
+      <div style="display:flex;gap:6px;padding:4px;border-radius:12px;background:var(--track)">
+        <sc-for list="{{ langs }}" as="l" hint-placeholder-count="2"><button type="button" onClick="{{ l.onClick }}" style="{{ l.style }}">{{ l.label }}</button></sc-for>
+      </div>
+    </div>
+    <div style="height:1px;background:var(--border)"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+      <div><div style="font-size:14px;font-weight:800">外观主题</div><div style="font-size:12px;color:var(--muted-2);font-weight:600;margin-top:2px">与顶栏 ☀️/🌙 按钮联动，全站记忆</div></div>
+      <div style="display:flex;gap:6px;padding:4px;border-radius:12px;background:var(--track)">
+        <sc-for list="{{ themes }}" as="t" hint-placeholder-count="2"><button type="button" onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+      </div>
+    </div>
+  </div>
+
+  <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);padding:22px 24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#0f9d63"></span><span style="font-size:14px;font-weight:800">云同步</span></div>
+        <div style="font-size:12px;color:var(--muted-2);font-weight:600;margin-top:4px">{{ syncLine }}</div>
+      </div>
+      <button type="button" onClick="{{ syncNow }}" style="{{ syncBtnStyle }}" style-active="transform:translateY(2px)">{{ syncLabel }}</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px;margin-top:16px">
+      <sc-for list="{{ syncStats }}" as="s" hint-placeholder-count="3">
+        <div style="padding:12px 14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border)"><div style="font-size:11px;color:var(--muted-2);font-weight:600">{{ s.k }}</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:15px;margin-top:3px">{{ s.v }}</div></div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);padding:22px 24px">
+    <div style="font-size:14px;font-weight:800">备份与恢复</div>
+    <div style="font-size:12px;color:var(--muted-2);font-weight:600;margin-top:4px;line-height:1.6">导出为 JSON 文件（含训练记录、笔记、计划）；导入时校验格式，不合法的备份会被拒绝且不影响现有数据。</div>
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+      <button type="button" onClick="{{ exportBk }}" style="padding:12px 20px;border:none;border-radius:13px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(2px)">导出备份</button>
+      <button type="button" onClick="{{ importBk }}" style="padding:12px 20px;border-radius:13px;background:var(--surface);color:var(--brand-ink);border:1.5px solid var(--border);font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 3px 0 var(--border);transition:transform .12s ease" style-active="transform:translateY(2px)">导入备份…</button>
+    </div>
+    <sc-if value="{{ lastBackup }}"><div style="margin-top:11px;font-size:11.5px;color:var(--muted-2);font-weight:600">上次导出：{{ lastBackup }}</div></sc-if>
+  </div>
+
+  <div style="border-radius:22px;background:var(--surface);border:1.5px solid #f3c4c0;padding:22px 24px">
+    <div style="font-size:14px;font-weight:800;color:#d0524b">危险区</div>
+    <div style="font-size:12px;color:var(--muted-2);font-weight:600;margin-top:4px">清空本地训练数据（XP、连胜、任务进度）。云端副本不受影响，可随时重新拉取。</div>
+    <button type="button" onClick="{{ resetLocal }}" style="margin-top:13px;padding:11px 18px;border-radius:12px;background:var(--surface);color:#d0524b;border:1.5px solid #f3c4c0;font-family:inherit;font-weight:800;font-size:12.5px;cursor:pointer">{{ resetLabel }}</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:880}}">
+class Component extends DCLogic {
+  state = { lang:'zh', theme:'light', syncing:false, lastSync:'2 分钟前', lastBackup:'', confirmReset:false };
+
+  componentDidMount(){
+    let t='light'; try{ t=localStorage.getItem('qg-theme')||'light'; }catch(e){}
+    let l='zh'; try{ l=localStorage.getItem('qg-lang')||'zh'; }catch(e){}
+    this.setState({theme:t,lang:l});
+  }
+
+  setTheme(t){
+    this.setState({theme:t});
+    try{ localStorage.setItem('qg-theme',t); }catch(e){}
+    document.documentElement.setAttribute('data-theme',t);
+    try{ const f=window.top&&window.top.document; }catch(e){}
+    if(window.QG) QG.toast(t==='dark'?'已切换到深色模式':'已切换到浅色模式',{ms:1600});
+  }
+
+  seg(on){ return 'padding:9px 18px;border:none;border-radius:9px;font-family:inherit;font-size:12.5px;font-weight:800;cursor:pointer;transition:all .13s ease;'+(on?'background:var(--surface);color:var(--text);box-shadow:0 2px 6px rgba(27,26,56,.12)':'background:transparent;color:var(--muted)'); }
+
+  renderVals(){
+    const S=this.state;
+    return {
+      langs:[['zh','简体中文'],['en','English']].map(l=>({label:l[1],onClick:()=>{ this.setState({lang:l[0]}); try{localStorage.setItem('qg-lang',l[0]);}catch(e){} if(window.QG) QG.toast(l[0]==='zh'?'已切换为简体中文':'Language switched to English',{sub:l[0]==='en'?'演示环境仅切换记忆偏好':'',ms:2000}); },style:this.seg(S.lang===l[0])})),
+      themes:[['light','浅色'],['dark','深色']].map(t=>({label:t[1],onClick:()=>this.setTheme(t[0]),style:this.seg(S.theme===t[0])})),
+      syncLine:'账号 quant@gmail.com · 上次同步 '+S.lastSync+' · 端到端加密',
+      syncLabel:S.syncing?'同步中…':'立即同步',
+      syncBtnStyle:'padding:11px 20px;border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;transition:transform .12s ease;color:#fff;'+(S.syncing?'background:var(--muted-2)':'background:linear-gradient(180deg,#2ec38a,#16a06a);box-shadow:0 3px 0 #0d7a4e'),
+      syncNow:()=>{ if(S.syncing)return; this.setState({syncing:true}); setTimeout(()=>{ this.setState({syncing:false,lastSync:'刚刚'}); if(window.QG) QG.toast('云同步完成',{sub:'训练记录 · 笔记 · 计划均已上云',ms:2200}); },1400); },
+      syncStats:[{k:'训练记录',v:'1,284 条'},{k:'资料笔记',v:'46 张'},{k:'待上传变更',v:S.lastSync==='刚刚'?'0 项':'3 项'}],
+      exportBk:()=>{ const d=new Date(); const t=d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); this.setState({lastBackup:'今天 '+t+' · quantgym-backup.json (218 KB)'}); if(window.QG) QG.toast('备份已导出',{sub:'quantgym-backup.json 已开始下载',ms:2400}); },
+      importBk:()=>{ if(window.QG) QG.toast('选择备份文件',{sub:'演示环境：将校验 JSON 结构后合并导入',emoji:'↑',ms:2600}); },
+      lastBackup:S.lastBackup,
+      resetLabel:S.confirmReset?'再点一次确认清空':'清空本地数据…',
+      resetLocal:()=>{ if(!S.confirmReset){ this.setState({confirmReset:true}); setTimeout(()=>this.setState({confirmReset:false}),3000); return; } this.setState({confirmReset:false}); if(window.QG) QG.toast('演示环境不执行真实清空',{sub:'真实产品会二次确认后清空并保留云端副本',emoji:'!',tone:'gold',ms:3000}); },
+    };
+  }
+}
+</script>
+</body>
+</html>

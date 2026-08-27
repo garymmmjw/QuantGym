@@ -13,31 +13,25 @@ const evidenceDir = path.join(root, "docs", "browser-audit-screenshots");
 
 const routeContracts = {
   overview: {
-    page: "OverviewPage.jsx",
-    content: "OverviewPageContent",
-    selectors: [
-      "heroTypewriter",
-      "generateStudyPlanBtn",
-      "overviewProblemProgress",
-      "overviewXpBars",
-      "overviewContributionHeatmap",
-      "leaderboardMetricSelect",
-      "leaderboardScopeSelect",
-      "leaderboardList",
-      "logForm",
-      "newsTickerTrack"
+    native: true,
+    page: "src/pages/training/OverviewPage.tsx",
+    markers: [
+      "useDashboardOverviewQuery",
+      "useCurrentUserQuery",
+      "newStartTrainingIntent",
+      "DashboardTemplate",
+      "QuantyImage"
     ]
   },
   plan: {
-    page: "PlanPage.jsx",
-    content: "PlanPageContent",
-    selectors: [
-      "prepPlanSetupForm",
-      "prepRoleSelect",
-      "prepHoursSelect",
-      "prepDiagnosticForm",
-      "prepDiagnosticMessage",
-      "prepPlanDashboard"
+    native: true,
+    page: "src/pages/plan/PlanPage.tsx",
+    markers: [
+      "useCurrentPlanQuery",
+      "usePlanMutationWorkflow",
+      "newCreatePlanIntent",
+      "DashboardTemplate",
+      "WorkflowBoard"
     ]
   },
   skills: {
@@ -67,17 +61,14 @@ const routeContracts = {
     ]
   },
   problems: {
-    page: "ProblemsPage.jsx",
-    content: "ProblemsPageContent",
-    selectors: [
-      "problemSearch",
-      "problemThemeFilter",
-      "problemDifficultyFilter",
-      "problemList",
-      "problemDetail",
-      "problemPagination",
-      "leetcodeHotList",
-      "problemRankingList"
+    native: true,
+    page: "src/pages/training/ProblemsPage.tsx",
+    markers: [
+      "useProblemsQuery",
+      "useProblemDetailQuery",
+      "useProblemMutationWorkflow",
+      "useProblemTrainingWorkflow",
+      "useTrainingResultQuery"
     ]
   },
   tools: {
@@ -396,8 +387,10 @@ const failures = [];
 const warnings = [];
 
 const manifestIds = extractManifestIds();
-const routeConfigText = read("src/routes/routeConfig.js");
-const routeConfigIds = extractSetIds(routeConfigText, "REACT_PAGE_IDS");
+const routeOwnershipText = read("src/core/router/businessRouteOwnership.ts");
+const routeOwnership = [...routeOwnershipText.matchAll(
+  /\{\s*id:\s*"([^"]+)",\s*owner:\s*"(native|compatibility)",\s*path:\s*"([^"]+)"\s*\}/g,
+)].map(([, id, owner, routePath]) => ({ id, owner, path: routePath }));
 
 checkRouteShape();
 checkShellContracts();
@@ -429,18 +422,17 @@ console.log(JSON.stringify({
 function checkRouteShape() {
   const expectedIds = Object.keys(routeContracts);
   const missingFromManifest = expectedIds.filter((id) => !manifestIds.includes(id));
-  const missingFromReactRoutes = expectedIds.filter((id) => !routeConfigIds.includes(id));
-  const extraReactRoutes = routeConfigIds.filter((id) => !expectedIds.includes(id));
+  const routeOwnershipIds = routeOwnership.map(({ id }) => id);
+  const missingFromOwnership = expectedIds.filter((id) => !routeOwnershipIds.includes(id));
+  const extraOwnership = routeOwnershipIds.filter((id) => !expectedIds.includes(id));
 
   for (const id of missingFromManifest) fail(`route "${id}" is missing from MODULE_MANIFEST`);
-  for (const id of missingFromReactRoutes) fail(`route "${id}" is missing from REACT_PAGE_IDS`);
-  for (const id of extraReactRoutes) fail(`REACT_PAGE_IDS contains route "${id}" without a UI contract`);
-
-  if (!routeConfigText.includes("BRIDGE_PAGE_IDS = new Set([])")) {
-    fail("BRIDGE_PAGE_IDS must stay empty for full React route ownership");
-  }
-  if (/mode:\s*"(legacy|bridge)"/.test(routeConfigText)) {
-    fail("routeConfig contains a hard-coded legacy/bridge mode");
+  for (const id of missingFromOwnership) fail(`route "${id}" is missing from BUSINESS_ROUTE_OWNERSHIP`);
+  for (const id of extraOwnership) fail(`BUSINESS_ROUTE_OWNERSHIP contains route "${id}" without a UI contract`);
+  for (const id of ["overview", "plan", "problems"]) {
+    if (routeOwnership.find((route) => route.id === id)?.owner !== "native") {
+      fail(`route "${id}" must remain native after Phase 2 migration`);
+    }
   }
 }
 
@@ -455,6 +447,13 @@ function checkShellContracts() {
 
 function checkRouteContracts() {
   for (const [id, contract] of Object.entries(routeContracts)) {
+    if (contract.native) {
+      const pageText = read(contract.page);
+      for (const marker of contract.markers) {
+        if (!pageText.includes(marker)) fail(`${contract.page} is missing ${marker}`);
+      }
+      continue;
+    }
     const pagePath = path.join("src", "pages", contract.page);
     const featureDir = path.join("src", "features", id);
     const featureText = readFeatureJsx(featureDir);
@@ -1153,9 +1152,8 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(mobileShellControls?.mobileViewport === true, `${label} must verify mobile shell viewport`);
   expect(mobileShellControls?.noHorizontalOverflow === true, `${label} must verify mobile shell has no horizontal overflow`);
   expect(mobileShellControls?.searchUsable === true, `${label} must verify mobile shell search remains usable`);
-  expect(mobileShellControls?.compactActions === true, `${label} must verify mobile shell compact action layout`);
-  expect(mobileShellControls?.sidebarCollapsed === true, `${label} must verify mobile shell sidebar collapse`);
-  expect(mobileShellControls?.reloadPersisted === true, `${label} must verify mobile shell sidebar reload persistence`);
+  expect(mobileShellControls?.moduleSheetUsable === true, `${label} must verify mobile shell module sheet remains usable`);
+  expect(mobileShellControls?.reloadPersisted === true, `${label} must verify mobile shell module sheet reload state`);
   expect(mobileShellControls?.settingsShortcut === true, `${label} must verify mobile shell settings shortcut navigation`);
   const mobileModuleNav = findResult(data.interactions?.results, "mobile module nav groups open problems and library routes");
   expect(mobileModuleNav?.status === "pass", `${label} must verify mobile module nav groups open Problems and Library routes`);

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { usePageApi } from "../../stores/usePageApi.js";
 import { qgToast } from "../../ui/qgFeedback.js";
+import { getQuantySrc } from "../../lib/quantyAssets.js";
 
 const ASSET_BASE = "/assets/generated/playful-precision/";
 
@@ -57,19 +58,19 @@ export function useLeaguePageModel() {
     setRevision((value) => value + 1);
     if (settlement.movement === "up") {
       qgToast(t("leaguePromotedTitle", { tier: tierLabel(settlement.toTier) }), {
-        img: `${ASSET_BASE}mascot-trophy-v2.png`,
+        img: getQuantySrc("trophy", 160),
         sub: t("leagueSettleSubReward", { rank: settlement.rank, coins: settlement.coinsAwarded }),
         ms: 5200
       });
     } else if (settlement.movement === "stay-top") {
       qgToast(t("leagueDefendedTitle"), {
-        img: `${ASSET_BASE}mascot-trophy-v2.png`,
+        img: getQuantySrc("trophy", 160),
         sub: t("leagueSettleSubReward", { rank: settlement.rank, coins: settlement.coinsAwarded }),
         ms: 5200
       });
     } else if (settlement.movement === "down") {
       qgToast(t("leagueDemotedTitle", { tier: tierLabel(settlement.toTier) }), {
-        img: `${ASSET_BASE}mascot-oops.png`,
+        img: getQuantySrc("oops", 160),
         sub: t("leagueSettleSubDemote", { rank: settlement.rank }),
         ms: 5200
       });
@@ -99,13 +100,6 @@ export function useLeaguePageModel() {
   const openNode = useCallback((node) => {
     if (!node) return;
     if (node.status === "current") {
-      if (node.topic) {
-        try {
-          pageApi?.problems?.applyFilterAction?.({ type: "theme", value: node.topic });
-        } catch {
-          /* filter pre-selection is best-effort */
-        }
-      }
       navigate(node.path || "/problems");
       return;
     }
@@ -117,7 +111,7 @@ export function useLeaguePageModel() {
       sub: t("leagueNodeLockedSub"),
       ms: 2400
     });
-  }, [navigate, pageApi, view.map.currentName, t]);
+  }, [navigate, view.map.currentName, t]);
 
   const buyItem = useCallback((itemId) => {
     const result = api?.buyItem?.(itemId);

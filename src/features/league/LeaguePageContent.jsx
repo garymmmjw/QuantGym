@@ -1,6 +1,12 @@
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
+import { resolveLegacyQuantySrc } from "@/lib/quantyAssets.js";
 import { useLeaguePageModel } from "./leagueHooks.js";
 
 const ASSET_BASE = "/assets/generated/playful-precision/";
+
+function getLeagueShopImageSrc(src = "") {
+  return resolveLegacyQuantySrc(src, 320);
+}
 
 function CutLine({ direction, label, t }) {
   if (direction === "up") {
@@ -98,8 +104,9 @@ export function LeaguePageContent() {
         {/* ---- Race LIVE + rules ------------------------------------ */}
         <div className="qg-lg-side">
           <div className="qg-lg-live">
-            <img
-              src={`${ASSET_BASE}mascot-trophy-v2.png`}
+            <QuantyImage
+              asset="trophy"
+              size="small"
               alt=""
               loading="lazy"
               draggable="false"
@@ -184,7 +191,7 @@ export function LeaguePageContent() {
           {shop.items.map((item) => (
             <div key={item.id} className="qg-lg-shop-item">
               <div className="qg-lg-shop-figure">
-                <img src={item.img} alt="" loading="lazy" draggable="false" />
+                <img src={getLeagueShopImageSrc(item.img)} alt="" loading="lazy" draggable="false" />
               </div>
               <div className="qg-lg-shop-copy">
                 <strong>{item.name}</strong>

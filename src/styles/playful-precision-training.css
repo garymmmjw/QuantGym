@@ -720,7 +720,12 @@ body.is-authenticated .app-route-root .qg-tools-page .mental-hero::after {
   justify-self: center;
   width: 130px;
   height: 130px;
-  background: url("/assets/generated/playful-precision/mascot-calculator-v2.png") center / contain no-repeat;
+  background:
+    image-set(
+      url("/assets/generated/playful-precision/optimized/calculator-160.webp") 1x,
+      url("/assets/generated/playful-precision/optimized/calculator-320.webp") 2x
+    )
+    center / contain no-repeat;
   filter: drop-shadow(0 16px 18px rgba(91, 95, 245, 0.2));
 }
 
@@ -1030,7 +1035,12 @@ body.is-authenticated .app-route-root .qg-poker-page .qg-poker-table-world::befo
   z-index: 0;
   width: 130px;
   height: 130px;
-  background: url("/assets/generated/playful-precision/mascot-poker.png") center / contain no-repeat;
+  background:
+    image-set(
+      url("/assets/generated/playful-precision/optimized/poker-160.webp") 1x,
+      url("/assets/generated/playful-precision/optimized/poker-320.webp") 2x
+    )
+    center / contain no-repeat;
   opacity: 0.88;
   filter: drop-shadow(0 16px 18px rgba(0, 0, 0, 0.36));
   pointer-events: none;
@@ -1415,7 +1425,12 @@ body.is-authenticated .app-route-root .qg-pk-page .pk-feed::before {
   bottom: 18px;
   width: 138px;
   height: 138px;
-  background: url("/assets/generated/playful-precision/mascot-trophy-v2.png") center / contain no-repeat;
+  background:
+    image-set(
+      url("/assets/generated/playful-precision/optimized/trophy-160.webp") 1x,
+      url("/assets/generated/playful-precision/optimized/trophy-320.webp") 2x
+    )
+    center / contain no-repeat;
   opacity: 0.2;
   pointer-events: none;
 }

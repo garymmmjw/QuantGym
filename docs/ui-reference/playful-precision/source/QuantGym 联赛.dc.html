@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+@keyframes qgPulseRing{0%{box-shadow:0 0 0 0 rgba(91,95,245,.45)}70%{box-shadow:0 0 0 12px rgba(91,95,245,0)}100%{box-shadow:0 0 0 0 rgba(91,95,245,0)}}
+@keyframes qgRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+</style>
+<script src="./qg-state.js"></script>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><path d="M30 30h40v8a12 12 0 0 1-12 12h-16a12 12 0 0 1-12-12z" fill="#fff"/><path d="M42 50h16v10H42zM36 64h28v8H36z" fill="#fff" opacity=".8"/></svg>
+</template>
+<div data-screen-label="联赛" style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:var(--brand-soft);color:#5b5ff5;font-size:11.5px;font-weight:700;margin-bottom:10px">GROWTH · 段位联赛 第 8 赛季</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">联赛 <span style="color:#5b5ff5">Arena</span></h1>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">每周分组竞技 · 前 3 晋级，后 2 降级 · 训练即积分</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04)">
+        <img src="assets/reward-xp.webp" alt="" style="width:26px;height:26px;object-fit:contain">
+        <div><div style="font-size:11px;color:var(--muted-2);font-weight:600">训练币</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:18px;color:var(--brand-ink)">{{ gemsFmt }}</div></div>
+      </div>
+      <div style="padding:11px 16px;border-radius:16px;background:linear-gradient(150deg,#fff3dd,#ffe9c7);border:1px solid #ffe0ad"><div style="font-size:11px;color:#8a5a10;font-weight:600">赛季结算</div><div style="font-family:'Space Grotesk';font-weight:700;font-size:18px;color:#b3610a">{{ countdown }}</div></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px;align-items:start">
+
+    <div style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)">
+        <img src="assets/badge-level-1.webp" alt="" style="width:38px;height:38px;object-fit:contain">
+        <div style="flex:1"><div style="font-size:15.5px;font-weight:800;letter-spacing:-.01em">Analyst 联赛 · A 组</div><div style="font-size:11.5px;color:var(--muted-2);font-weight:600">10 人小组 · 本周 XP 排名</div></div>
+        <span style="{{ myRankPill }}">你第 {{ myRank }} 名</span>
+      </div>
+      <div style="display:flex;flex-direction:column;padding:6px 0">
+        <sc-for list="{{ standings }}" as="r" hint-placeholder-count="10">
+          <div>
+            <sc-if value="{{ r.cutTop }}"><div style="display:flex;align-items:center;gap:10px;padding:5px 18px"><div style="flex:1;height:1.5px;background:linear-gradient(90deg,#2ec38a,transparent)"></div><span style="font-size:10px;font-weight:800;letter-spacing:.12em;color:#0f9d63">▲ 晋级线 · TRADER 联赛</span></div></sc-if>
+            <sc-if value="{{ r.cutBottom }}"><div style="display:flex;align-items:center;gap:10px;padding:5px 18px"><span style="font-size:10px;font-weight:800;letter-spacing:.12em;color:#d0524b">▼ 降级线 · INTERN 联赛</span><div style="flex:1;height:1.5px;background:linear-gradient(90deg,transparent,#d0524b)"></div></sc-if>
+            <div style="{{ r.rowStyle }}">
+              <span style="{{ r.rankStyle }}">{{ r.rank }}</span>
+              <span style="{{ r.avatarStyle }}">{{ r.initials }}</span>
+              <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font-size:11px;color:var(--muted-3);font-weight:600">{{ r.sub }}</div></div>
+              <span style="{{ r.zoneStyle }}">{{ r.zone }}</span>
+              <span style="font-family:'Space Grotesk';font-weight:700;font-size:15px;width:56px;text-align:right;flex:0 0 auto">{{ r.xp }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:20px;background:linear-gradient(135deg,#1b1a38,#2d2a5c);color:#fff;padding:20px 22px;display:flex;align-items:center;gap:16px">
+        <img src="assets/mascot-trophy-v2.png" alt="" style="width:78px;height:auto;flex:0 0 auto;filter:drop-shadow(0 12px 20px rgba(0,0,0,.4))">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;color:#b9b8e0;margin-bottom:4px">晋级形势 · LIVE</div>
+          <div style="font-size:14.5px;font-weight:800;line-height:1.5">{{ raceLine }}</div>
+          <button type="button" onClick="{{ goTrain }}" style="margin-top:11px;padding:9px 15px;border:none;border-radius:11px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;box-shadow:0 3px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(2px)">去赚 XP →</button>
+        </div>
+      </div>
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05);padding:18px 20px">
+        <div style="font-size:13.5px;font-weight:800;margin-bottom:12px">赛季规则</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#e3f7ee;color:#0f9d63;font-size:11px;font-weight:800;flex:0 0 auto">1</span><span style="font-size:12.5px;color:var(--text-2);font-weight:600;line-height:1.55">全站训练获得的 XP 自动计入联赛积分，实时更新排名。</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:var(--brand-soft);color:var(--brand-ink);font-size:11px;font-weight:800;flex:0 0 auto">2</span><span style="font-size:12.5px;color:var(--text-2);font-weight:600;line-height:1.55">周日 24:00 结算：前 3 名晋级 Trader 联赛，后 2 名回到 Intern 联赛。</span></div>
+          <div style="display:flex;gap:10px;align-items:flex-start"><span style="display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#fff3dd;color:#b3610a;font-size:11px;font-weight:800;flex:0 0 auto">3</span><span style="font-size:12.5px;color:var(--text-2);font-weight:600;line-height:1.55">断签会清零连胜——商店的「连胜冻结卡」可自动抵挡一天。</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ showMap }}" hint-placeholder-val="{{ true }}">
+  <section style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);padding:22px 22px 18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px">
+      <div><span style="font-size:16px;font-weight:800;letter-spacing:-.01em">学习地图</span> <span style="font-size:12px;color:var(--muted);font-weight:600;margin-left:6px">面试冲刺主线 · 通关解锁里程碑奖励</span></div>
+      <span style="font-family:'Space Grotesk';font-size:12.5px;font-weight:700;color:var(--brand-ink)">3 / 8 关</span>
+    </div>
+    <div style="overflow-x:auto;padding:14px 2px 6px">
+      <div style="display:flex;align-items:flex-start;min-width:640px">
+        <sc-for list="{{ mapNodes }}" as="n" hint-placeholder-count="8">
+          <div style="display:flex;align-items:flex-start;flex:1;min-width:0">
+            <div onClick="{{ n.onClick }}" style="display:flex;flex-direction:column;align-items:center;gap:8px;width:86px;flex:0 0 auto;cursor:pointer">
+              <span style="{{ n.dotStyle }}">{{ n.mark }}</span>
+              <div style="text-align:center"><div style="{{ n.nameStyle }}">{{ n.name }}</div><div style="font-size:10.5px;color:var(--muted-3);font-weight:600;margin-top:2px">{{ n.sub }}</div></div>
+            </div>
+            <sc-if value="{{ n.hasLink }}"><div style="{{ n.linkStyle }}"></div></sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{ showShop }}" hint-placeholder-val="{{ true }}">
+  <section style="border-radius:22px;background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-card);padding:22px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+      <div><span style="font-size:16px;font-weight:800;letter-spacing:-.01em">奖励商店</span> <span style="font-size:12px;color:var(--muted);font-weight:600;margin-left:6px">训练币兑换 · 完成训练自动进账</span></div>
+      <div style="display:flex;align-items:center;gap:7px;padding:6px 13px 6px 8px;border-radius:12px;background:var(--brand-soft);border:1px solid var(--border)"><img src="assets/reward-xp.webp" alt="" style="width:20px;height:20px;object-fit:contain"><span style="font-family:'Space Grotesk';font-weight:700;font-size:14px;color:var(--brand-ink)">{{ gemsFmt }}</span></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      <sc-for list="{{ shop }}" as="it" hint-placeholder-count="6">
+        <div style="display:flex;flex-direction:column;gap:10px;padding:16px 14px 14px;border-radius:18px;background:var(--surface-2);border:1px solid var(--border);transition:transform .16s ease,box-shadow .16s ease" style-hover="transform:translateY(-3px);box-shadow:0 14px 28px -18px rgba(74,67,214,.4)">
+          <div style="display:grid;place-items:center;height:96px"><img src="{{ it.img }}" alt="" style="max-width:96px;max-height:96px;object-fit:contain;filter:drop-shadow(0 12px 18px rgba(74,67,214,.22))"></div>
+          <div style="text-align:center"><div style="font-size:13.5px;font-weight:800">{{ it.name }}</div><div style="font-size:11px;color:var(--muted-2);font-weight:600;line-height:1.5;margin-top:3px">{{ it.desc }}</div></div>
+          <button type="button" onClick="{{ it.onBuy }}" style="{{ it.btnStyle }}" style-active="transform:translateY(2px)">{{ it.btnLabel }}</button>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;showMap&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;板块开关&quot;},
+  &quot;showShop&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;板块开关&quot;}
+}">
+class Component extends DCLogic {
+  componentDidMount(){
+    if(!window.QG) return;
+    this._unsub = QG.onChange(() => this.forceUpdate());
+  }
+  componentWillUnmount(){ if(this._unsub) this._unsub(); }
+
+  shared(){
+    if(window.QG) return QG.get();
+    return { xp:2480, gems:480, weekXp:[40,120,90,0,70,200,130], owned:{} };
+  }
+
+  renderVals(){
+    const sh = this.shared();
+    const myWeek = sh.weekXp.reduce((s,v)=>s+v,0);
+
+    // —— 联赛积分榜（你的一行实时联动全站 XP）——
+    const others = [
+      ['Ari Chen','AC','上海 · 连续 21 天',940,'#fff3dd','#b3610a'],
+      ['Mina Patel','MP','伦敦 · 连续 15 天',860,'#eef0f4','#7a8090'],
+      ['Sofia Kim','SK','新加坡 · 连续 9 天',610,'#eafaf3','#0f9d63'],
+      ['Leo Wang','LW','香港 · 连续 6 天',585,'#eef0ff','#5b5ff5'],
+      ['Dan Ito','DI','东京 · 连续 11 天',540,'#fdeceb','#d0524b'],
+      ['Noah Fields','NF','芝加哥 · 连续 4 天',512,'#e7f2fb','#2f7fc0'],
+      ['Elena Ruiz','ER','纽约 · 连续 8 天',476,'#f6f0ff','#8a63e8'],
+      ['Tom Zhao','TZ','北京 · 连续 3 天',402,'#eafaf3','#16879a'],
+      ['Kenji Sato','KS','东京 · 连续 2 天',355,'#fff3dd','#c98a1e'],
+    ].map(o=>({ name:o[0], initials:o[1], sub:o[2], xp:o[3], bg:o[4], fg:o[5], me:false }));
+    const all = others.concat([{ name:'Quant · 你', initials:'你', sub:'上海 · 连续 '+(sh.streak||12)+' 天', xp:myWeek, me:true }]);
+    all.sort((a,b)=>b.xp-a.xp);
+    const myRank = all.findIndex(r=>r.me)+1;
+
+    const standings = all.map((r,i)=>{
+      const rank = i+1;
+      const zone = rank<=3 ? 'up' : (rank>=9 ? 'down' : 'safe');
+      return {
+        rank, name:r.name, sub:r.sub, xp:r.xp.toLocaleString('en-US'),
+        initials:r.initials,
+        cutTop: rank===1, cutBottom: rank===9,
+        rowStyle:'display:flex;align-items:center;gap:12px;padding:10px 18px;transition:background .12s ease;'+(r.me?'background:var(--brand-soft);border-top:1px solid #c9c7f5;border-bottom:1px solid #c9c7f5':''),
+        rankStyle:"font-family:'Space Grotesk';font-weight:700;font-size:13.5px;width:20px;text-align:center;flex:0 0 auto;color:"+(rank===1?'#c98a1e':rank<=3?'#0f9d63':rank>=9?'#d0524b':'var(--muted-2)'),
+        avatarStyle:"display:grid;place-items:center;width:34px;height:34px;border-radius:50%;flex:0 0 auto;font-family:'Space Grotesk';font-weight:700;font-size:12px;"+(r.me?'background:linear-gradient(135deg,#5b5ff5,#7d6cff);color:#fff':'background:'+r.bg+';color:'+r.fg),
+        zone: zone==='up'?'晋级区':zone==='down'?'降级区':'',
+        zoneStyle: zone==='safe' ? 'display:none' : ('padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;flex:0 0 auto;'+(zone==='up'?'background:#e3f7ee;color:#0f9d63':'background:#fdeceb;color:#d0524b')),
+      };
+    });
+
+    const ahead = all[myRank-2];
+    const gap = ahead ? (ahead.xp - myWeek + 1) : 0;
+    const raceLine = myRank<=3
+      ? (myRank===1 ? '你正领跑 A 组！守住第 1 名到周日，直升 Trader 联赛。' : '你在晋级区第 '+myRank+' 名。距上一名还差 '+gap+' XP，再练一组就能反超。')
+      : '你暂列第 '+myRank+' 名，距晋级区还差 '+(all[2].xp-myWeek+1)+' XP。今天补一次训练就能回去。';
+
+    // —— 学习地图 ——
+    const nodes = [
+      { name:'概率基础', sub:'12 题 · 已通关', st:'done' },
+      { name:'期望与分布', sub:'10 题 · 已通关', st:'done' },
+      { name:'速算冲刺', sub:'里程碑 · 已达成', st:'done', badge:'assets/badge-streak-7.webp' },
+      { name:'随机过程', sub:'弱项关卡 · 进行中', st:'current', page:'problems', ctx:{topic:'statistics'} },
+      { name:'期权入门', sub:'Hull · 待解锁', st:'locked' },
+      { name:'组合与计数', sub:'14 题 · 待解锁', st:'locked' },
+      { name:'面试实战', sub:'里程碑奖励', st:'locked', badge:'assets/badge-gold.webp' },
+      { name:'Boss · 模拟面终', sub:'AI 面试官', st:'locked' },
+    ];
+    const mapNodes = nodes.map((n,i)=>{
+      const done = n.st==='done', cur = n.st==='current';
+      let dot = 'display:grid;place-items:center;width:52px;height:52px;border-radius:50%;font-family:\'Space Grotesk\';font-weight:700;font-size:16px;transition:transform .14s ease;';
+      if(done) dot += 'background:linear-gradient(135deg,#2ec38a,#16a06a);color:#fff;box-shadow:0 8px 16px -8px rgba(22,160,106,.6)';
+      else if(cur) dot += 'background:linear-gradient(135deg,#5b5ff5,#7d6cff);color:#fff;animation:qgPulseRing 1.8s ease-out infinite';
+      else dot += 'background:var(--track);color:var(--muted-2);border:1.5px dashed var(--border-2)';
+      return {
+        name:n.name, sub:n.sub,
+        mark: done ? '✓' : (cur ? (i+1) : '🔒'.replace('🔒','·')),
+        dotStyle: dot,
+        nameStyle: 'font-size:12px;font-weight:800;line-height:1.3;'+(n.st==='locked'?'color:var(--muted-2)':'color:var(--text)'),
+        hasLink: i<nodes.length-1,
+        linkStyle: 'flex:1;height:3px;border-radius:2px;margin-top:25px;min-width:14px;background:'+(done?'linear-gradient(90deg,#2ec38a,#16a06a)':'var(--track)'),
+        onClick: ()=>{
+          if(!window.QG) return;
+          if(cur && n.page) QG.navigate(n.page, n.ctx);
+          else if(done) QG.toast('该关卡已通关', { ms:1600 });
+          else QG.toast('先通关当前关卡「随机过程」', { sub:'完成弱项训练即可解锁下一关', ms:2400 });
+        },
+      };
+    });
+
+    // —— 奖励商店 ——
+    const items = [
+      { id:'freeze',  name:'连胜冻结卡', desc:'断签自动抵挡 1 天，连胜不清零', img:'assets/reward-fire.webp', price:350 },
+      { id:'poker-skin', name:'鲨鱼牌手皮肤', desc:'Poker 桌专属出场形象', img:'assets/mascot-poker.png', price:500 },
+      { id:'frame',   name:'庆典彩带头像框', desc:'排行榜与论坛头像特效', img:'assets/mascot-levelup.png', price:420 },
+      { id:'teacher', name:'讲师鲨鱼表情包', desc:'聊天与论坛专属贴纸 ×12', img:'assets/mascot-teacher-v2.png', price:260 },
+      { id:'coder',   name:'键盘侠鲨鱼贴纸', desc:'简历与笔记页彩蛋装饰', img:'assets/mascot-laptop-v2.png', price:300 },
+      { id:'sleep',   name:'晚安主题壁纸', desc:'深色模式限定登录画面', img:'assets/mascot-sleep.png', price:800 },
+    ];
+    const shop = items.map(it=>{
+      const isFreeze = it.id==='freeze';
+      const held = sh.freezeCards||0;
+      const owned = !isFreeze && window.QG && QG.isOwned(it.id);
+      const afford = (sh.gems||0) >= it.price;
+      return {
+        name:it.name, desc: (isFreeze && held>0) ? (it.desc+' · 已备 '+held+' 张') : it.desc, img:it.img,
+        btnLabel: owned ? '已拥有 ✓' : ((isFreeze && held>0) ? (it.price+' 币 · 再备一张') : (it.price + ' 币兑换')),
+        btnStyle: 'width:100%;padding:10px;border:none;border-radius:12px;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;transition:transform .12s ease;'+
+          (owned ? 'background:#e3f7ee;color:#0f9d63' : afford ? 'background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;box-shadow:0 3px 0 #3f39c9' : 'background:var(--track);color:var(--muted-2)'),
+        onBuy: ()=>{ if(window.QG) QG.spend(it.id, it.price, it.name, it.img); },
+      };
+    });
+
+    // —— 赛季倒计时（至周日 24:00）——
+    const now = new Date();
+    const daysLeft = (7 - ((now.getDay()+6)%7)) ; // 周一=7 天 … 周日=1 天
+    const countdown = daysLeft + ' 天';
+
+    return {
+      gemsFmt: (sh.gems||0).toLocaleString('en-US'),
+      countdown,
+      myRank,
+      myRankPill: 'padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:800;flex:0 0 auto;font-family:\'Space Grotesk\';'+(myRank<=3?'background:#e3f7ee;color:#0f9d63':'background:#fdeceb;color:#d0524b'),
+      standings, raceLine,
+      goTrain: ()=>{ if(window.QG) QG.navigate('mental'); },
+      mapNodes,
+      shop,
+      showMap: this.props.showMap !== false,
+      showShop: this.props.showShop !== false,
+    };
+  }
+}
+</script>
+</body>
+</html>

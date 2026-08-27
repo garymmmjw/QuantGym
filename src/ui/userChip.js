@@ -1,4 +1,6 @@
-const DEFAULT_AVATAR_SRC = "assets/generated/shark-avatar-happy.webp?v=premium-system-4";
+import { getQuantySrc, resolveLegacyQuantySrc } from "../lib/quantyAssets.js";
+
+const DEFAULT_AVATAR_SRC = getQuantySrc("happy", 160);
 
 export function renderUserChip(elements = {}, currentUser = null, options = {}) {
   if (!currentUser) return;
@@ -16,7 +18,7 @@ export function renderUserChip(elements = {}, currentUser = null, options = {}) 
   if (elements.commandUserAvatar) elements.commandUserAvatar.innerHTML = "";
 
   const image = documentRef.createElement("img");
-  image.src = currentUser.picture || DEFAULT_AVATAR_SRC;
+  image.src = resolveLegacyQuantySrc(currentUser.picture, 160) || DEFAULT_AVATAR_SRC;
   image.alt = "";
   elements.userAvatar?.appendChild(image);
   if (elements.commandUserAvatar) {

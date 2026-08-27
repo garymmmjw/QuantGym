@@ -1,0 +1,46 @@
+:root {
+  --qg-motion-micro-fast: 120ms;
+  --qg-motion-micro: 180ms;
+  --qg-motion-panel-fast: 240ms;
+  --qg-motion-panel: 300ms;
+  --qg-motion-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --qg-motion-ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --qg-motion-distance: 8px;
+}
+
+[data-qg-motion="reduced"] {
+  --qg-motion-micro-fast: 0.01ms;
+  --qg-motion-micro: 0.01ms;
+  --qg-motion-panel-fast: 0.01ms;
+  --qg-motion-panel: 0.01ms;
+  --qg-motion-distance: 0px;
+}
+
+[data-qg-motion="reduced"],
+[data-qg-motion="reduced"] *,
+[data-qg-motion="reduced"] *::before,
+[data-qg-motion="reduced"] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --qg-motion-micro-fast: 0.01ms;
+    --qg-motion-micro: 0.01ms;
+    --qg-motion-panel-fast: 0.01ms;
+    --qg-motion-panel: 0.01ms;
+    --qg-motion-distance: 0px;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

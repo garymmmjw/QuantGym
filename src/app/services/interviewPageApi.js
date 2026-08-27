@@ -199,6 +199,7 @@ export function createInterviewPageApi(deps = {}) {
       isEnglish,
       language,
       setup: {
+        selectedProblemId: runtime.selectedProblemId || "",
         summaryText,
         source,
         type: deps.getInterviewType?.() || "oa",

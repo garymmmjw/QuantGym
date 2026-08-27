@@ -1,0 +1,410 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quantgym.invalid/schemas/frontend-upgrade-phase1-provider-evidence.schema.json",
+  "title": "QuantGym Phase 1 Preview provider evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "capturedAt",
+    "expiresAt",
+    "environment",
+    "branch",
+    "applicationCommit",
+    "legacyCommit",
+    "postgresMajor",
+    "governance",
+    "phase0ProviderEvidenceSha256",
+    "prePushBaselineSha256",
+    "productionControlBefore",
+    "productionControlAfter",
+    "r2PolicyAttestations",
+    "resourceFingerprints",
+    "deployments",
+    "bindings",
+    "controls"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "capturedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "environment": {
+      "const": "preview"
+    },
+    "branch": {
+      "const": "codex/frontend-v2-preview"
+    },
+    "applicationCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "not": {
+        "const": "7a85c2a43b24013d5a49969eca7b4a5f1d093640"
+      }
+    },
+    "legacyCommit": {
+      "const": "7a85c2a43b24013d5a49969eca7b4a5f1d093640"
+    },
+    "postgresMajor": {
+      "const": 18
+    },
+    "governance": {
+      "$ref": "#/$defs/governance"
+    },
+    "phase0ProviderEvidenceSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "prePushBaselineSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "productionControlBefore": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "productionControlAfter": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "r2PolicyAttestations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "runtimeIdSha256",
+        "runtimePolicySha256",
+        "runtimeExpirationStatus",
+        "auditIdSha256",
+        "auditPolicySha256",
+        "auditExpirationStatus"
+      ],
+      "properties": {
+        "runtimeIdSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "runtimePolicySha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "runtimeExpirationStatus": {
+          "const": "current"
+        },
+        "auditIdSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "auditPolicySha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "auditExpirationStatus": {
+          "const": "short-lived"
+        }
+      }
+    },
+    "resourceFingerprints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pages",
+        "api",
+        "llm",
+        "postgres",
+        "postgresRole",
+        "r2",
+        "previewEnvironmentGroup",
+        "legacyPagesDeployment",
+        "productionPages",
+        "productionServices",
+        "productionPostgres",
+        "productionR2",
+        "productionEnvironmentGroups"
+      ],
+      "properties": {
+        "pages": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "api": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "llm": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "postgres": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "postgresRole": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "r2": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "previewEnvironmentGroup": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "legacyPagesDeployment": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "productionPages": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "productionServices": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "productionPostgres": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "productionR2": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "productionEnvironmentGroups": {
+          "type": "array",
+          "minItems": 0,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "deployments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pages",
+        "api",
+        "llm",
+        "legacy"
+      ],
+      "properties": {
+        "pages": {
+          "$ref": "#/$defs/pagesDeployment"
+        },
+        "api": {
+          "$ref": "#/$defs/renderDeployment"
+        },
+        "llm": {
+          "$ref": "#/$defs/renderDeployment"
+        },
+        "legacy": {
+          "$ref": "#/$defs/legacyDeployment"
+        }
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "postgres",
+        "r2"
+      ],
+      "properties": {
+        "postgres": {
+          "$ref": "#/$defs/binding"
+        },
+        "r2": {
+          "$ref": "#/$defs/binding"
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pagesAutomaticDeploysDisabled",
+        "apiAutomaticDeploysDisabled",
+        "llmAutomaticDeploysDisabled",
+        "pagesV2BuildConfigured",
+        "apiPythonConfigured",
+        "llmProbeConfigured",
+        "applicationDeploymentsAligned",
+        "resourceIsolationVerified",
+        "productionUnchanged",
+        "phase0IdentitiesLocked",
+        "prePushBaselineVerified",
+        "r2PoliciesVerified"
+      ],
+      "properties": {
+        "pagesAutomaticDeploysDisabled": {
+          "const": true
+        },
+        "apiAutomaticDeploysDisabled": {
+          "const": true
+        },
+        "llmAutomaticDeploysDisabled": {
+          "const": true
+        },
+        "pagesV2BuildConfigured": {
+          "const": true
+        },
+        "apiPythonConfigured": {
+          "const": true
+        },
+        "llmProbeConfigured": {
+          "const": true
+        },
+        "applicationDeploymentsAligned": {
+          "const": true
+        },
+        "resourceIsolationVerified": {
+          "const": true
+        },
+        "productionUnchanged": {
+          "const": true
+        },
+        "phase0IdentitiesLocked": {
+          "const": true
+        },
+        "prePushBaselineVerified": {
+          "const": true
+        },
+        "r2PoliciesVerified": {
+          "const": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "governance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operator",
+        "budgetOwner",
+        "dataResetOwner",
+        "destroyOwner",
+        "reviewDate"
+      ],
+      "properties": {
+        "operator": {
+          "const": "Gary"
+        },
+        "budgetOwner": {
+          "const": "Gary"
+        },
+        "dataResetOwner": {
+          "const": "Gary"
+        },
+        "destroyOwner": {
+          "const": "Gary"
+        },
+        "reviewDate": {
+          "const": "2026-07-29"
+        }
+      }
+    },
+    "pagesDeployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "status",
+        "commit"
+      ],
+      "properties": {
+        "provider": {
+          "const": "cloudflare-pages"
+        },
+        "status": {
+          "const": "ready"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+    "renderDeployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "status",
+        "commit"
+      ],
+      "properties": {
+        "provider": {
+          "const": "render"
+        },
+        "status": {
+          "const": "ready"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+    "legacyDeployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "status",
+        "commit",
+        "branch",
+        "aliasSha256"
+      ],
+      "properties": {
+        "provider": {
+          "const": "cloudflare-pages"
+        },
+        "status": {
+          "const": "ready"
+        },
+        "commit": {
+          "const": "7a85c2a43b24013d5a49969eca7b4a5f1d093640"
+        },
+        "branch": {
+          "const": "legacy-compat"
+        },
+        "aliasSha256": {
+          "const": "ba30f7e6f48ae62b8011fa7036856089061d9c123bea1110ecad267cc408b637"
+        }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "isolated"
+      ],
+      "properties": {
+        "status": {
+          "const": "ready"
+        },
+        "isolated": {
+          "const": true
+        }
+      }
+    }
+  }
+}

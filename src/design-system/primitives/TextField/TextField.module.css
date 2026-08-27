@@ -1,0 +1,118 @@
+.root {
+  display: grid;
+  gap: 0.4375rem;
+  inline-size: 100%;
+  color: var(--qg-text-primary);
+  font-family: var(--qg-font-ui);
+}
+
+.label {
+  font-size: var(--qg-font-size-body-small);
+  font-weight: var(--qg-font-weight-semibold);
+  line-height: var(--qg-line-height-normal);
+}
+
+.requiredMark {
+  margin-inline-start: 0.25rem;
+  color: var(--qg-text-primary);
+}
+
+.control {
+  display: flex;
+  min-block-size: var(--qg-control-height-default);
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--qg-border-control);
+  border-radius: var(--qg-radius-control);
+  background-color: var(--qg-surface-primary);
+  transition:
+    border-color var(--qg-motion-micro-fast) var(--qg-motion-ease-standard),
+    box-shadow var(--qg-motion-micro-fast) var(--qg-motion-ease-standard),
+    background-color var(--qg-motion-micro-fast) var(--qg-motion-ease-standard);
+}
+
+:where([data-qg-motion="reduced"]) .control {
+  transition: none;
+}
+
+.control:focus-within {
+  border-color: var(--qg-action-primary);
+  box-shadow: var(--qg-shadow-focus-ring);
+}
+
+.root[data-error="true"] .control {
+  border-color: var(--qg-status-danger);
+}
+
+.root[data-disabled="true"] .control {
+  background-color: var(--qg-surface-secondary);
+  opacity: 0.65;
+}
+
+.input {
+  min-inline-size: 0;
+  min-block-size: calc(var(--qg-control-height-default) - 2px);
+  flex: 1;
+  border: 0;
+  outline: 0;
+  padding: 0.625rem 0.75rem;
+  background: none;
+  color: var(--qg-text-primary);
+  font: inherit;
+  font-size: var(--qg-font-size-body-small);
+  line-height: var(--qg-line-height-normal);
+}
+
+.input::placeholder {
+  color: var(--qg-text-muted);
+  opacity: 1;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+.adornment {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  color: var(--qg-text-muted);
+}
+
+.adornment:first-child {
+  margin-inline-start: 0.75rem;
+}
+
+.adornment:last-child {
+  margin-inline-end: 0.75rem;
+}
+
+.hint,
+.error {
+  font-size: var(--qg-font-size-caption);
+  line-height: var(--qg-line-height-normal);
+}
+
+.hint {
+  color: var(--qg-text-muted);
+}
+
+.error {
+  color: var(--qg-text-primary);
+  font-weight: var(--qg-font-weight-medium);
+}
+
+.visuallyHidden {
+  position: absolute;
+  overflow: hidden;
+  inline-size: 1px;
+  block-size: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control {
+    transition: none;
+  }
+}

@@ -1,0 +1,2631 @@
+{
+  "version": 1,
+  "spec": "docs/superpowers/specs/2026-07-10-quantgym-frontend-platform-upgrade-design.md",
+  "designSystem": "docs/frontend-upgrade/design-system-contract.json",
+  "supportingSources": [
+    {
+      "file": "QuantGym UI 升级计划.dc.html",
+      "role": "historical-design-plan"
+    },
+    {
+      "file": "QuantGym UI 升级计划 v2.dc.html",
+      "role": "approved-design-plan"
+    },
+    {
+      "file": "README.md",
+      "role": "archive-guide"
+    },
+    {
+      "file": "qg-state.js",
+      "role": "reference-state-fixture"
+    },
+    {
+      "file": "support.js",
+      "role": "reference-interaction-fixture"
+    },
+    {
+      "file": "吉祥物生成任务书.md",
+      "role": "mascot-art-direction"
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "system:auth",
+      "kind": "system",
+      "phase": 1,
+      "template": "settings-form",
+      "designFiles": [
+        "QuantGym 登录.dc.html"
+      ],
+      "components": [
+        "AuthFrame",
+        "EmailAuthForm",
+        "GoogleAuthButton",
+        "AuthRecovery"
+      ],
+      "entityRefs": [
+        "User",
+        "Session"
+      ],
+      "readModels": [
+        "Session",
+        "AuthChallenge"
+      ],
+      "interactions": [
+        "sign-in",
+        "register",
+        "reset-password",
+        "google-sign-in"
+      ],
+      "mutations": [
+        "auth.sign-in",
+        "auth.register",
+        "auth.reset-password",
+        "auth.google-sign-in"
+      ],
+      "acceptanceChecks": [
+        "visual:auth:light-dark",
+        "a11y:auth",
+        "e2e:auth-session-and-recovery"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "auth.sign-in": {
+            "states": {
+              "recoverable-error": "mutation:auth.sign-in:recoverable-error",
+              "non-recoverable-error": "mutation:auth.sign-in:non-recoverable-error",
+              "offline-draft": "mutation:auth.sign-in:offline-draft",
+              "permission-denied": "mutation:auth.sign-in:permission-denied",
+              "stale-version-conflict": "mutation:auth.sign-in:stale-version-conflict",
+              "retry": "mutation:auth.sign-in:retry"
+            }
+          },
+          "auth.register": {
+            "states": {
+              "recoverable-error": "mutation:auth.register:recoverable-error",
+              "non-recoverable-error": "mutation:auth.register:non-recoverable-error",
+              "offline-draft": "mutation:auth.register:offline-draft",
+              "permission-denied": "mutation:auth.register:permission-denied",
+              "stale-version-conflict": "mutation:auth.register:stale-version-conflict",
+              "retry": "mutation:auth.register:retry"
+            }
+          },
+          "auth.reset-password": {
+            "states": {
+              "recoverable-error": "mutation:auth.reset-password:recoverable-error",
+              "non-recoverable-error": "mutation:auth.reset-password:non-recoverable-error",
+              "offline-draft": "mutation:auth.reset-password:offline-draft",
+              "permission-denied": "mutation:auth.reset-password:permission-denied",
+              "stale-version-conflict": "mutation:auth.reset-password:stale-version-conflict",
+              "retry": "mutation:auth.reset-password:retry"
+            }
+          },
+          "auth.google-sign-in": {
+            "states": {
+              "recoverable-error": "mutation:auth.google-sign-in:recoverable-error",
+              "non-recoverable-error": "mutation:auth.google-sign-in:non-recoverable-error",
+              "offline-draft": "mutation:auth.google-sign-in:offline-draft",
+              "permission-denied": "mutation:auth.google-sign-in:permission-denied",
+              "stale-version-conflict": "mutation:auth.google-sign-in:stale-version-conflict",
+              "retry": "mutation:auth.google-sign-in:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "system:desktop-shell",
+      "kind": "system",
+      "phase": 1,
+      "template": "dashboard",
+      "designFiles": [
+        "QuantGym 总览.dc.html"
+      ],
+      "components": [
+        "DesktopSidebar",
+        "TopBar",
+        "AccountMenu"
+      ],
+      "entityRefs": [
+        "User",
+        "Notification"
+      ],
+      "readModels": [
+        "Me",
+        "Navigation"
+      ],
+      "interactions": [
+        "navigate",
+        "collapse-sidebar",
+        "open-account"
+      ],
+      "mutations": [],
+      "acceptanceChecks": [
+        "visual:desktop-shell:light-dark",
+        "a11y:desktop-shell",
+        "e2e:desktop-shell-keyboard-navigation"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {}
+      },
+      "deviations": []
+    },
+    {
+      "id": "system:mobile-shell",
+      "kind": "system",
+      "phase": 1,
+      "template": "dashboard",
+      "designFiles": [
+        "QuantGym 总览.dc.html"
+      ],
+      "components": [
+        "MobileHeader",
+        "MobileDrawer",
+        "BottomNavigation"
+      ],
+      "entityRefs": [
+        "User",
+        "Notification"
+      ],
+      "readModels": [
+        "Me",
+        "Navigation"
+      ],
+      "interactions": [
+        "open-drawer",
+        "switch-route",
+        "restore-focus"
+      ],
+      "mutations": [],
+      "acceptanceChecks": [
+        "visual:mobile-shell:light-dark",
+        "a11y:mobile-shell",
+        "e2e:mobile-shell-navigation"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {}
+      },
+      "deviations": []
+    },
+    {
+      "id": "system:global-search",
+      "kind": "system",
+      "phase": 1,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 总览.dc.html"
+      ],
+      "components": [
+        "CommandPalette",
+        "SearchResults"
+      ],
+      "entityRefs": [
+        "Problem",
+        "NewsItem",
+        "CompanyProfile",
+        "JobPosting",
+        "Course"
+      ],
+      "readModels": [
+        "SearchResult"
+      ],
+      "interactions": [
+        "open",
+        "query",
+        "keyboard-select"
+      ],
+      "mutations": [],
+      "acceptanceChecks": [
+        "visual:global-search:light-dark",
+        "a11y:global-search",
+        "e2e:global-search-keyboard"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {}
+      },
+      "deviations": []
+    },
+    {
+      "id": "system:notifications-toast",
+      "kind": "system",
+      "phase": 1,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 总览.dc.html"
+      ],
+      "components": [
+        "NotificationCenter",
+        "ToastRegion"
+      ],
+      "entityRefs": [
+        "Notification"
+      ],
+      "readModels": [
+        "Notification"
+      ],
+      "interactions": [
+        "open",
+        "mark-read",
+        "dismiss"
+      ],
+      "mutations": [
+        "notifications.mark-read"
+      ],
+      "acceptanceChecks": [
+        "visual:notifications-toast:light-dark",
+        "a11y:notifications-toast",
+        "e2e:notifications-live-region"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "notifications.mark-read": {
+            "states": {
+              "recoverable-error": "mutation:notifications.mark-read:recoverable-error",
+              "non-recoverable-error": "mutation:notifications.mark-read:non-recoverable-error",
+              "offline-draft": "mutation:notifications.mark-read:offline-draft",
+              "permission-denied": "mutation:notifications.mark-read:permission-denied",
+              "stale-version-conflict": "mutation:notifications.mark-read:stale-version-conflict",
+              "retry": "mutation:notifications.mark-read:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "system:todo",
+      "kind": "system",
+      "phase": 1,
+      "template": "workflow-board",
+      "designFiles": [
+        "QuantGym 计划.dc.html"
+      ],
+      "components": [
+        "TodoDock",
+        "TodoEditor"
+      ],
+      "entityRefs": [
+        "PlanTask"
+      ],
+      "readModels": [
+        "PlanTask"
+      ],
+      "interactions": [
+        "create",
+        "edit",
+        "complete",
+        "delete"
+      ],
+      "mutations": [
+        "todo.create",
+        "todo.update",
+        "todo.complete",
+        "todo.delete"
+      ],
+      "acceptanceChecks": [
+        "visual:todo:light-dark",
+        "a11y:todo",
+        "e2e:todo-lifecycle"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "todo.create": {
+            "states": {
+              "recoverable-error": "mutation:todo.create:recoverable-error",
+              "non-recoverable-error": "mutation:todo.create:non-recoverable-error",
+              "offline-draft": "mutation:todo.create:offline-draft",
+              "permission-denied": "mutation:todo.create:permission-denied",
+              "stale-version-conflict": "mutation:todo.create:stale-version-conflict",
+              "retry": "mutation:todo.create:retry"
+            }
+          },
+          "todo.update": {
+            "states": {
+              "recoverable-error": "mutation:todo.update:recoverable-error",
+              "non-recoverable-error": "mutation:todo.update:non-recoverable-error",
+              "offline-draft": "mutation:todo.update:offline-draft",
+              "permission-denied": "mutation:todo.update:permission-denied",
+              "stale-version-conflict": "mutation:todo.update:stale-version-conflict",
+              "retry": "mutation:todo.update:retry"
+            }
+          },
+          "todo.complete": {
+            "states": {
+              "recoverable-error": "mutation:todo.complete:recoverable-error",
+              "non-recoverable-error": "mutation:todo.complete:non-recoverable-error",
+              "offline-draft": "mutation:todo.complete:offline-draft",
+              "permission-denied": "mutation:todo.complete:permission-denied",
+              "stale-version-conflict": "mutation:todo.complete:stale-version-conflict",
+              "retry": "mutation:todo.complete:retry"
+            }
+          },
+          "todo.delete": {
+            "states": {
+              "recoverable-error": "mutation:todo.delete:recoverable-error",
+              "non-recoverable-error": "mutation:todo.delete:non-recoverable-error",
+              "offline-draft": "mutation:todo.delete:offline-draft",
+              "permission-denied": "mutation:todo.delete:permission-denied",
+              "stale-version-conflict": "mutation:todo.delete:stale-version-conflict",
+              "retry": "mutation:todo.delete:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "system:theme-language",
+      "kind": "system",
+      "phase": 1,
+      "template": "settings-form",
+      "designFiles": [
+        "QuantGym 设置.dc.html"
+      ],
+      "components": [
+        "ThemeSwitch",
+        "LanguageSwitch"
+      ],
+      "entityRefs": [
+        "Preference"
+      ],
+      "readModels": [
+        "Preferences"
+      ],
+      "interactions": [
+        "switch-theme",
+        "switch-language"
+      ],
+      "mutations": [
+        "preferences.update-theme",
+        "preferences.update-language"
+      ],
+      "acceptanceChecks": [
+        "visual:theme-language:light-dark",
+        "a11y:theme-language",
+        "e2e:theme-language-persistence"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "preferences.update-theme": {
+            "states": {
+              "recoverable-error": "mutation:preferences.update-theme:recoverable-error",
+              "non-recoverable-error": "mutation:preferences.update-theme:non-recoverable-error",
+              "offline-draft": "mutation:preferences.update-theme:offline-draft",
+              "permission-denied": "mutation:preferences.update-theme:permission-denied",
+              "stale-version-conflict": "mutation:preferences.update-theme:stale-version-conflict",
+              "retry": "mutation:preferences.update-theme:retry"
+            }
+          },
+          "preferences.update-language": {
+            "states": {
+              "recoverable-error": "mutation:preferences.update-language:recoverable-error",
+              "non-recoverable-error": "mutation:preferences.update-language:non-recoverable-error",
+              "offline-draft": "mutation:preferences.update-language:offline-draft",
+              "permission-denied": "mutation:preferences.update-language:permission-denied",
+              "stale-version-conflict": "mutation:preferences.update-language:stale-version-conflict",
+              "retry": "mutation:preferences.update-language:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "system:network-recovery",
+      "kind": "system",
+      "phase": 1,
+      "template": "settings-form",
+      "designFiles": [
+        "QuantGym 设置.dc.html"
+      ],
+      "components": [
+        "NetworkBanner",
+        "ErrorBoundary",
+        "RetryPanel"
+      ],
+      "entityRefs": [
+        "Session",
+        "AuditEvent"
+      ],
+      "readModels": [
+        "RuntimeStatus"
+      ],
+      "interactions": [
+        "retry",
+        "recover",
+        "sign-in-again"
+      ],
+      "mutations": [
+        "session.retry"
+      ],
+      "acceptanceChecks": [
+        "visual:network-recovery:light-dark",
+        "a11y:network-recovery",
+        "e2e:offline-and-error-recovery"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "session.retry": {
+            "states": {
+              "recoverable-error": "mutation:session.retry:recoverable-error",
+              "non-recoverable-error": "mutation:session.retry:non-recoverable-error",
+              "offline-draft": "mutation:session.retry:offline-draft",
+              "permission-denied": "mutation:session.retry:permission-denied",
+              "stale-version-conflict": "mutation:session.retry:stale-version-conflict",
+              "retry": "mutation:session.retry:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:overview",
+      "kind": "route",
+      "routeId": "overview",
+      "phase": 2,
+      "template": "dashboard",
+      "designFiles": [
+        "QuantGym 总览.dc.html"
+      ],
+      "components": [
+        "OverviewHero",
+        "DailyPlanCard",
+        "ProgressSummary",
+        "LeaderboardPreview"
+      ],
+      "entityRefs": [
+        "User",
+        "Plan",
+        "PlanTask",
+        "SkillSnapshot",
+        "XpLedger",
+        "LeagueEntry"
+      ],
+      "readModels": [
+        "Me",
+        "DailyPlan",
+        "TrainingSummary",
+        "LeagueSummary"
+      ],
+      "interactions": [
+        "resume-training",
+        "open-daily-task",
+        "open-leaderboard"
+      ],
+      "mutations": [
+        "training.start-or-resume"
+      ],
+      "acceptanceChecks": [
+        "visual:overview:light-dark",
+        "a11y:overview",
+        "e2e:overview-resume-training"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "training.start-or-resume": {
+            "states": {
+              "recoverable-error": "mutation:training.start-or-resume:recoverable-error",
+              "non-recoverable-error": "mutation:training.start-or-resume:non-recoverable-error",
+              "offline-draft": "mutation:training.start-or-resume:offline-draft",
+              "permission-denied": "mutation:training.start-or-resume:permission-denied",
+              "stale-version-conflict": "mutation:training.start-or-resume:stale-version-conflict",
+              "retry": "mutation:training.start-or-resume:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:plan",
+      "kind": "route",
+      "routeId": "plan",
+      "phase": 2,
+      "template": "workflow-board",
+      "designFiles": [
+        "QuantGym 计划.dc.html"
+      ],
+      "components": [
+        "PlanSetup",
+        "Diagnostic",
+        "PlanBoard",
+        "TaskEditor"
+      ],
+      "entityRefs": [
+        "Plan",
+        "PlanTask",
+        "Recommendation"
+      ],
+      "readModels": [
+        "Plan",
+        "PlanTask",
+        "Recommendation"
+      ],
+      "interactions": [
+        "diagnose",
+        "create-plan",
+        "edit-task",
+        "complete-task"
+      ],
+      "mutations": [
+        "plan.run-diagnostic",
+        "plan.create",
+        "plan.update-task",
+        "plan.complete-task"
+      ],
+      "acceptanceChecks": [
+        "visual:plan:light-dark",
+        "a11y:plan",
+        "e2e:plan-recommendation"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile",
+          "tablet"
+        ],
+        "tabletDistinct": true
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "plan.run-diagnostic": {
+            "states": {
+              "recoverable-error": "mutation:plan.run-diagnostic:recoverable-error",
+              "non-recoverable-error": "mutation:plan.run-diagnostic:non-recoverable-error",
+              "offline-draft": "mutation:plan.run-diagnostic:offline-draft",
+              "permission-denied": "mutation:plan.run-diagnostic:permission-denied",
+              "stale-version-conflict": "mutation:plan.run-diagnostic:stale-version-conflict",
+              "retry": "mutation:plan.run-diagnostic:retry"
+            }
+          },
+          "plan.create": {
+            "states": {
+              "recoverable-error": "mutation:plan.create:recoverable-error",
+              "non-recoverable-error": "mutation:plan.create:non-recoverable-error",
+              "offline-draft": "mutation:plan.create:offline-draft",
+              "permission-denied": "mutation:plan.create:permission-denied",
+              "stale-version-conflict": "mutation:plan.create:stale-version-conflict",
+              "retry": "mutation:plan.create:retry"
+            }
+          },
+          "plan.update-task": {
+            "states": {
+              "recoverable-error": "mutation:plan.update-task:recoverable-error",
+              "non-recoverable-error": "mutation:plan.update-task:non-recoverable-error",
+              "offline-draft": "mutation:plan.update-task:offline-draft",
+              "permission-denied": "mutation:plan.update-task:permission-denied",
+              "stale-version-conflict": "mutation:plan.update-task:stale-version-conflict",
+              "retry": "mutation:plan.update-task:retry"
+            }
+          },
+          "plan.complete-task": {
+            "states": {
+              "recoverable-error": "mutation:plan.complete-task:recoverable-error",
+              "non-recoverable-error": "mutation:plan.complete-task:non-recoverable-error",
+              "offline-draft": "mutation:plan.complete-task:offline-draft",
+              "permission-denied": "mutation:plan.complete-task:permission-denied",
+              "stale-version-conflict": "mutation:plan.complete-task:stale-version-conflict",
+              "retry": "mutation:plan.complete-task:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:problems",
+      "kind": "route",
+      "routeId": "problems",
+      "phase": 2,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 题目.dc.html"
+      ],
+      "components": [
+        "ProblemFilters",
+        "ProblemList",
+        "ProblemDetail",
+        "AttemptComposer",
+        "HintPanel",
+        "NoteEditor"
+      ],
+      "entityRefs": [
+        "ProblemSource",
+        "Problem",
+        "ProblemProgress",
+        "Favorite",
+        "Note",
+        "TrainingSession",
+        "Attempt",
+        "Answer",
+        "TrainingEvent",
+        "Comment"
+      ],
+      "readModels": [
+        "Problem",
+        "ProblemProgress",
+        "AttemptSummary",
+        "CommentSummary"
+      ],
+      "interactions": [
+        "filter",
+        "open",
+        "use-hint",
+        "submit-attempt",
+        "reveal-solution",
+        "save-note",
+        "toggle-favorite",
+        "complete"
+      ],
+      "mutations": [
+        "problems.use-hint",
+        "problems.submit-attempt",
+        "problems.reveal-solution",
+        "problems.save-note",
+        "problems.toggle-favorite",
+        "problems.complete"
+      ],
+      "acceptanceChecks": [
+        "visual:problems:light-dark",
+        "a11y:problems",
+        "e2e:problem-attempt-completion"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile",
+          "tablet"
+        ],
+        "tabletDistinct": true
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "problems.use-hint": {
+            "states": {
+              "recoverable-error": "mutation:problems.use-hint:recoverable-error",
+              "non-recoverable-error": "mutation:problems.use-hint:non-recoverable-error",
+              "offline-draft": "mutation:problems.use-hint:offline-draft",
+              "permission-denied": "mutation:problems.use-hint:permission-denied",
+              "stale-version-conflict": "mutation:problems.use-hint:stale-version-conflict",
+              "retry": "mutation:problems.use-hint:retry"
+            }
+          },
+          "problems.submit-attempt": {
+            "states": {
+              "recoverable-error": "mutation:problems.submit-attempt:recoverable-error",
+              "non-recoverable-error": "mutation:problems.submit-attempt:non-recoverable-error",
+              "offline-draft": "mutation:problems.submit-attempt:offline-draft",
+              "permission-denied": "mutation:problems.submit-attempt:permission-denied",
+              "stale-version-conflict": "mutation:problems.submit-attempt:stale-version-conflict",
+              "retry": "mutation:problems.submit-attempt:retry"
+            }
+          },
+          "problems.reveal-solution": {
+            "states": {
+              "recoverable-error": "mutation:problems.reveal-solution:recoverable-error",
+              "non-recoverable-error": "mutation:problems.reveal-solution:non-recoverable-error",
+              "offline-draft": "mutation:problems.reveal-solution:offline-draft",
+              "permission-denied": "mutation:problems.reveal-solution:permission-denied",
+              "stale-version-conflict": "mutation:problems.reveal-solution:stale-version-conflict",
+              "retry": "mutation:problems.reveal-solution:retry"
+            }
+          },
+          "problems.save-note": {
+            "states": {
+              "recoverable-error": "mutation:problems.save-note:recoverable-error",
+              "non-recoverable-error": "mutation:problems.save-note:non-recoverable-error",
+              "offline-draft": "mutation:problems.save-note:offline-draft",
+              "permission-denied": "mutation:problems.save-note:permission-denied",
+              "stale-version-conflict": "mutation:problems.save-note:stale-version-conflict",
+              "retry": "mutation:problems.save-note:retry"
+            }
+          },
+          "problems.toggle-favorite": {
+            "states": {
+              "recoverable-error": "mutation:problems.toggle-favorite:recoverable-error",
+              "non-recoverable-error": "mutation:problems.toggle-favorite:non-recoverable-error",
+              "offline-draft": "mutation:problems.toggle-favorite:offline-draft",
+              "permission-denied": "mutation:problems.toggle-favorite:permission-denied",
+              "stale-version-conflict": "mutation:problems.toggle-favorite:stale-version-conflict",
+              "retry": "mutation:problems.toggle-favorite:retry"
+            }
+          },
+          "problems.complete": {
+            "states": {
+              "recoverable-error": "mutation:problems.complete:recoverable-error",
+              "non-recoverable-error": "mutation:problems.complete:non-recoverable-error",
+              "offline-draft": "mutation:problems.complete:offline-draft",
+              "permission-denied": "mutation:problems.complete:permission-denied",
+              "stale-version-conflict": "mutation:problems.complete:stale-version-conflict",
+              "retry": "mutation:problems.complete:retry"
+            },
+            "retryIdempotency": "mutation:problems.complete:retry-idempotency"
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:interview",
+      "kind": "route",
+      "routeId": "interview",
+      "phase": 3,
+      "template": "focused-session",
+      "designFiles": [
+        "QuantGym 模拟面试.dc.html"
+      ],
+      "components": [
+        "InterviewSetup",
+        "DeviceCheck",
+        "TrainingSessionShell",
+        "VoiceTextToggle",
+        "Transcript",
+        "AttachmentQueue",
+        "FeedbackPanel",
+        "FinalReport",
+        "RecommendationPanel"
+      ],
+      "entityRefs": [
+        "InterviewSession",
+        "Turn",
+        "Attachment",
+        "Evaluation",
+        "AiJob",
+        "Plan",
+        "Recommendation"
+      ],
+      "readModels": [
+        "InterviewSessionView",
+        "AiJobView",
+        "DraftView",
+        "MediaObjectView"
+      ],
+      "interactions": [
+        "configure",
+        "device-check",
+        "switch-answer-mode",
+        "answer",
+        "autosave",
+        "recover",
+        "view-question-feedback",
+        "open-final-report",
+        "add-recommendations-to-plan"
+      ],
+      "mutations": [
+        "interview.create-session",
+        "interview.upload-attachment",
+        "interview.autosave",
+        "interview.submit-turn",
+        "interview.finish",
+        "interview.add-recommendations-to-plan"
+      ],
+      "acceptanceChecks": [
+        "visual:interview:light-dark",
+        "a11y:interview",
+        "e2e:interview-autosave-recovery"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "aiJobStateSetRef": "design-system.aiJobStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile",
+          "tablet"
+        ],
+        "tabletDistinct": true
+      },
+      "motion": {
+        "profile": "session-feedback",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "interview.create-session": {
+            "states": {
+              "recoverable-error": "mutation:interview.create-session:recoverable-error",
+              "non-recoverable-error": "mutation:interview.create-session:non-recoverable-error",
+              "offline-draft": "mutation:interview.create-session:offline-draft",
+              "permission-denied": "mutation:interview.create-session:permission-denied",
+              "stale-version-conflict": "mutation:interview.create-session:stale-version-conflict",
+              "retry": "mutation:interview.create-session:retry"
+            }
+          },
+          "interview.upload-attachment": {
+            "states": {
+              "recoverable-error": "mutation:interview.upload-attachment:recoverable-error",
+              "non-recoverable-error": "mutation:interview.upload-attachment:non-recoverable-error",
+              "offline-draft": "mutation:interview.upload-attachment:offline-draft",
+              "permission-denied": "mutation:interview.upload-attachment:permission-denied",
+              "stale-version-conflict": "mutation:interview.upload-attachment:stale-version-conflict",
+              "retry": "mutation:interview.upload-attachment:retry"
+            }
+          },
+          "interview.autosave": {
+            "states": {
+              "recoverable-error": "mutation:interview.autosave:recoverable-error",
+              "non-recoverable-error": "mutation:interview.autosave:non-recoverable-error",
+              "offline-draft": "mutation:interview.autosave:offline-draft",
+              "permission-denied": "mutation:interview.autosave:permission-denied",
+              "stale-version-conflict": "mutation:interview.autosave:stale-version-conflict",
+              "retry": "mutation:interview.autosave:retry"
+            }
+          },
+          "interview.submit-turn": {
+            "states": {
+              "recoverable-error": "mutation:interview.submit-turn:recoverable-error",
+              "non-recoverable-error": "mutation:interview.submit-turn:non-recoverable-error",
+              "offline-draft": "mutation:interview.submit-turn:offline-draft",
+              "permission-denied": "mutation:interview.submit-turn:permission-denied",
+              "stale-version-conflict": "mutation:interview.submit-turn:stale-version-conflict",
+              "retry": "mutation:interview.submit-turn:retry"
+            }
+          },
+          "interview.finish": {
+            "states": {
+              "recoverable-error": "mutation:interview.finish:recoverable-error",
+              "non-recoverable-error": "mutation:interview.finish:non-recoverable-error",
+              "offline-draft": "mutation:interview.finish:offline-draft",
+              "permission-denied": "mutation:interview.finish:permission-denied",
+              "stale-version-conflict": "mutation:interview.finish:stale-version-conflict",
+              "retry": "mutation:interview.finish:retry"
+            },
+            "retryIdempotency": "mutation:interview.finish:retry-idempotency"
+          },
+          "interview.add-recommendations-to-plan": {
+            "states": {
+              "recoverable-error": "mutation:interview.add-recommendations-to-plan:recoverable-error",
+              "non-recoverable-error": "mutation:interview.add-recommendations-to-plan:non-recoverable-error",
+              "offline-draft": "mutation:interview.add-recommendations-to-plan:offline-draft",
+              "permission-denied": "mutation:interview.add-recommendations-to-plan:permission-denied",
+              "stale-version-conflict": "mutation:interview.add-recommendations-to-plan:stale-version-conflict",
+              "retry": "mutation:interview.add-recommendations-to-plan:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:tools",
+      "kind": "route",
+      "routeId": "tools",
+      "phase": 3,
+      "template": "focused-session",
+      "designFiles": [
+        "QuantGym 速算.dc.html",
+        "QuantGym 报价.dc.html"
+      ],
+      "components": [
+        "ToolSelector",
+        "TrainingSessionShell",
+        "MentalMathRound",
+        "QuoteRound"
+      ],
+      "entityRefs": [
+        "TrainingSession",
+        "Attempt",
+        "Answer",
+        "TrainingEvent",
+        "XpLedger",
+        "CoinLedger"
+      ],
+      "readModels": [
+        "TrainingSession",
+        "Attempt",
+        "QuoteRound"
+      ],
+      "interactions": [
+        "select-mode",
+        "submit-answer",
+        "submit-quote",
+        "finish"
+      ],
+      "mutations": [
+        "tools.submit-answer",
+        "tools.submit-quote",
+        "tools.finish-session"
+      ],
+      "acceptanceChecks": [
+        "visual:tools:light-dark",
+        "a11y:tools",
+        "e2e:tools-session-completion"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "session-feedback",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "tools.submit-answer": {
+            "states": {
+              "recoverable-error": "mutation:tools.submit-answer:recoverable-error",
+              "non-recoverable-error": "mutation:tools.submit-answer:non-recoverable-error",
+              "offline-draft": "mutation:tools.submit-answer:offline-draft",
+              "permission-denied": "mutation:tools.submit-answer:permission-denied",
+              "stale-version-conflict": "mutation:tools.submit-answer:stale-version-conflict",
+              "retry": "mutation:tools.submit-answer:retry"
+            }
+          },
+          "tools.submit-quote": {
+            "states": {
+              "recoverable-error": "mutation:tools.submit-quote:recoverable-error",
+              "non-recoverable-error": "mutation:tools.submit-quote:non-recoverable-error",
+              "offline-draft": "mutation:tools.submit-quote:offline-draft",
+              "permission-denied": "mutation:tools.submit-quote:permission-denied",
+              "stale-version-conflict": "mutation:tools.submit-quote:stale-version-conflict",
+              "retry": "mutation:tools.submit-quote:retry"
+            }
+          },
+          "tools.finish-session": {
+            "states": {
+              "recoverable-error": "mutation:tools.finish-session:recoverable-error",
+              "non-recoverable-error": "mutation:tools.finish-session:non-recoverable-error",
+              "offline-draft": "mutation:tools.finish-session:offline-draft",
+              "permission-denied": "mutation:tools.finish-session:permission-denied",
+              "stale-version-conflict": "mutation:tools.finish-session:stale-version-conflict",
+              "retry": "mutation:tools.finish-session:retry"
+            },
+            "retryIdempotency": "mutation:tools.finish-session:retry-idempotency"
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:skills",
+      "kind": "route",
+      "routeId": "skills",
+      "phase": 4,
+      "template": "dashboard",
+      "designFiles": [
+        "QuantGym 能力值.dc.html"
+      ],
+      "components": [
+        "SkillRadar",
+        "SkillTrend",
+        "EvidenceList"
+      ],
+      "entityRefs": [
+        "SkillSnapshot",
+        "TrainingEvent"
+      ],
+      "readModels": [
+        "SkillSnapshot",
+        "SkillHistory"
+      ],
+      "interactions": [
+        "inspect-skill",
+        "open-evidence"
+      ],
+      "mutations": [],
+      "acceptanceChecks": [
+        "visual:skills:light-dark",
+        "a11y:skills",
+        "e2e:skill-evidence-drilldown"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "reward-feedback",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {}
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:league",
+      "kind": "route",
+      "routeId": "league",
+      "phase": 4,
+      "template": "dashboard",
+      "designFiles": [
+        "QuantGym 联赛.dc.html"
+      ],
+      "components": [
+        "LeagueStandings",
+        "LearningMap",
+        "RewardShop"
+      ],
+      "entityRefs": [
+        "LeagueSeason",
+        "LeagueEntry",
+        "XpLedger",
+        "CoinLedger",
+        "RewardPurchase"
+      ],
+      "readModels": [
+        "LeagueSeason",
+        "LeagueEntry",
+        "EconomyBalance"
+      ],
+      "interactions": [
+        "earn-xp",
+        "open-node",
+        "inspect-reward"
+      ],
+      "mutations": [
+        "league.purchase-reward"
+      ],
+      "acceptanceChecks": [
+        "visual:league:light-dark",
+        "a11y:league",
+        "e2e:league-xp-reward"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "reward-feedback",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "league.purchase-reward": {
+            "states": {
+              "recoverable-error": "mutation:league.purchase-reward:recoverable-error",
+              "non-recoverable-error": "mutation:league.purchase-reward:non-recoverable-error",
+              "offline-draft": "mutation:league.purchase-reward:offline-draft",
+              "permission-denied": "mutation:league.purchase-reward:permission-denied",
+              "stale-version-conflict": "mutation:league.purchase-reward:stale-version-conflict",
+              "retry": "mutation:league.purchase-reward:retry"
+            },
+            "retryIdempotency": "mutation:league.purchase-reward:retry-idempotency"
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:pk",
+      "kind": "route",
+      "routeId": "pk",
+      "phase": 4,
+      "template": "focused-session",
+      "designFiles": [
+        "QuantGym PK.dc.html"
+      ],
+      "components": [
+        "MatchLobby",
+        "TrainingSessionShell",
+        "MatchResult"
+      ],
+      "entityRefs": [
+        "TrainingSession",
+        "Attempt",
+        "RatingHistory",
+        "XpLedger"
+      ],
+      "readModels": [
+        "PkMatch",
+        "RatingLedger"
+      ],
+      "interactions": [
+        "start",
+        "submit",
+        "reveal",
+        "rematch"
+      ],
+      "mutations": [
+        "pk.create-match",
+        "pk.submit-attempt",
+        "pk.finish-match"
+      ],
+      "acceptanceChecks": [
+        "visual:pk:light-dark",
+        "a11y:pk",
+        "e2e:pk-rating-result"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "reward-feedback",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "pk.create-match": {
+            "states": {
+              "recoverable-error": "mutation:pk.create-match:recoverable-error",
+              "non-recoverable-error": "mutation:pk.create-match:non-recoverable-error",
+              "offline-draft": "mutation:pk.create-match:offline-draft",
+              "permission-denied": "mutation:pk.create-match:permission-denied",
+              "stale-version-conflict": "mutation:pk.create-match:stale-version-conflict",
+              "retry": "mutation:pk.create-match:retry"
+            }
+          },
+          "pk.submit-attempt": {
+            "states": {
+              "recoverable-error": "mutation:pk.submit-attempt:recoverable-error",
+              "non-recoverable-error": "mutation:pk.submit-attempt:non-recoverable-error",
+              "offline-draft": "mutation:pk.submit-attempt:offline-draft",
+              "permission-denied": "mutation:pk.submit-attempt:permission-denied",
+              "stale-version-conflict": "mutation:pk.submit-attempt:stale-version-conflict",
+              "retry": "mutation:pk.submit-attempt:retry"
+            }
+          },
+          "pk.finish-match": {
+            "states": {
+              "recoverable-error": "mutation:pk.finish-match:recoverable-error",
+              "non-recoverable-error": "mutation:pk.finish-match:non-recoverable-error",
+              "offline-draft": "mutation:pk.finish-match:offline-draft",
+              "permission-denied": "mutation:pk.finish-match:permission-denied",
+              "stale-version-conflict": "mutation:pk.finish-match:stale-version-conflict",
+              "retry": "mutation:pk.finish-match:retry"
+            },
+            "retryIdempotency": "mutation:pk.finish-match:retry-idempotency"
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:poker",
+      "kind": "route",
+      "routeId": "poker",
+      "phase": 4,
+      "template": "focused-session",
+      "designFiles": [
+        "QuantGym Poker.dc.html"
+      ],
+      "components": [
+        "PokerLobby",
+        "TrainingSessionShell",
+        "PokerTable",
+        "ActionBar",
+        "HandHistory"
+      ],
+      "entityRefs": [
+        "TrainingSession",
+        "TrainingEvent",
+        "RatingHistory",
+        "CoinLedger"
+      ],
+      "readModels": [
+        "PokerRoomView",
+        "PokerHandView",
+        "RatingSummary"
+      ],
+      "interactions": [
+        "configure",
+        "join",
+        "act",
+        "recover-session",
+        "reconnect",
+        "view-result",
+        "leave"
+      ],
+      "mutations": [
+        "poker.join",
+        "poker.act",
+        "poker.finish-hand",
+        "poker.leave"
+      ],
+      "acceptanceChecks": [
+        "visual:poker:light-dark",
+        "a11y:poker",
+        "e2e:poker-reconnect"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile",
+          "tablet"
+        ],
+        "tabletDistinct": true
+      },
+      "motion": {
+        "profile": "reward-feedback",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "poker.join": {
+            "states": {
+              "recoverable-error": "mutation:poker.join:recoverable-error",
+              "non-recoverable-error": "mutation:poker.join:non-recoverable-error",
+              "offline-draft": "mutation:poker.join:offline-draft",
+              "permission-denied": "mutation:poker.join:permission-denied",
+              "stale-version-conflict": "mutation:poker.join:stale-version-conflict",
+              "retry": "mutation:poker.join:retry"
+            }
+          },
+          "poker.act": {
+            "states": {
+              "recoverable-error": "mutation:poker.act:recoverable-error",
+              "non-recoverable-error": "mutation:poker.act:non-recoverable-error",
+              "offline-draft": "mutation:poker.act:offline-draft",
+              "permission-denied": "mutation:poker.act:permission-denied",
+              "stale-version-conflict": "mutation:poker.act:stale-version-conflict",
+              "retry": "mutation:poker.act:retry"
+            }
+          },
+          "poker.finish-hand": {
+            "states": {
+              "recoverable-error": "mutation:poker.finish-hand:recoverable-error",
+              "non-recoverable-error": "mutation:poker.finish-hand:non-recoverable-error",
+              "offline-draft": "mutation:poker.finish-hand:offline-draft",
+              "permission-denied": "mutation:poker.finish-hand:permission-denied",
+              "stale-version-conflict": "mutation:poker.finish-hand:stale-version-conflict",
+              "retry": "mutation:poker.finish-hand:retry"
+            },
+            "retryIdempotency": "mutation:poker.finish-hand:retry-idempotency"
+          },
+          "poker.leave": {
+            "states": {
+              "recoverable-error": "mutation:poker.leave:recoverable-error",
+              "non-recoverable-error": "mutation:poker.leave:non-recoverable-error",
+              "offline-draft": "mutation:poker.leave:offline-draft",
+              "permission-denied": "mutation:poker.leave:permission-denied",
+              "stale-version-conflict": "mutation:poker.leave:stale-version-conflict",
+              "retry": "mutation:poker.leave:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:experiences",
+      "kind": "route",
+      "routeId": "experiences",
+      "phase": 5,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 面经.dc.html"
+      ],
+      "components": [
+        "ExperienceList",
+        "ExperienceEditor",
+        "SharePanel"
+      ],
+      "entityRefs": [
+        "Experience"
+      ],
+      "readModels": [
+        "Experience"
+      ],
+      "interactions": [
+        "create",
+        "edit",
+        "share",
+        "delete"
+      ],
+      "mutations": [
+        "experiences.create",
+        "experiences.update",
+        "experiences.share",
+        "experiences.delete"
+      ],
+      "acceptanceChecks": [
+        "visual:experiences:light-dark",
+        "a11y:experiences",
+        "e2e:experience-lifecycle"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "experiences.create": {
+            "states": {
+              "recoverable-error": "mutation:experiences.create:recoverable-error",
+              "non-recoverable-error": "mutation:experiences.create:non-recoverable-error",
+              "offline-draft": "mutation:experiences.create:offline-draft",
+              "permission-denied": "mutation:experiences.create:permission-denied",
+              "stale-version-conflict": "mutation:experiences.create:stale-version-conflict",
+              "retry": "mutation:experiences.create:retry"
+            }
+          },
+          "experiences.update": {
+            "states": {
+              "recoverable-error": "mutation:experiences.update:recoverable-error",
+              "non-recoverable-error": "mutation:experiences.update:non-recoverable-error",
+              "offline-draft": "mutation:experiences.update:offline-draft",
+              "permission-denied": "mutation:experiences.update:permission-denied",
+              "stale-version-conflict": "mutation:experiences.update:stale-version-conflict",
+              "retry": "mutation:experiences.update:retry"
+            }
+          },
+          "experiences.share": {
+            "states": {
+              "recoverable-error": "mutation:experiences.share:recoverable-error",
+              "non-recoverable-error": "mutation:experiences.share:non-recoverable-error",
+              "offline-draft": "mutation:experiences.share:offline-draft",
+              "permission-denied": "mutation:experiences.share:permission-denied",
+              "stale-version-conflict": "mutation:experiences.share:stale-version-conflict",
+              "retry": "mutation:experiences.share:retry"
+            }
+          },
+          "experiences.delete": {
+            "states": {
+              "recoverable-error": "mutation:experiences.delete:recoverable-error",
+              "non-recoverable-error": "mutation:experiences.delete:non-recoverable-error",
+              "offline-draft": "mutation:experiences.delete:offline-draft",
+              "permission-denied": "mutation:experiences.delete:permission-denied",
+              "stale-version-conflict": "mutation:experiences.delete:stale-version-conflict",
+              "retry": "mutation:experiences.delete:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:news",
+      "kind": "route",
+      "routeId": "news",
+      "phase": 5,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 新闻.dc.html"
+      ],
+      "components": [
+        "NewsFilters",
+        "NewsList",
+        "NewsDetail"
+      ],
+      "entityRefs": [
+        "NewsItem"
+      ],
+      "readModels": [
+        "NewsItem",
+        "NewsFeed"
+      ],
+      "interactions": [
+        "filter",
+        "open",
+        "refresh",
+        "save"
+      ],
+      "mutations": [
+        "news.refresh",
+        "news.save"
+      ],
+      "acceptanceChecks": [
+        "visual:news:light-dark",
+        "a11y:news",
+        "e2e:news-filter-detail"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "news.refresh": {
+            "states": {
+              "recoverable-error": "mutation:news.refresh:recoverable-error",
+              "non-recoverable-error": "mutation:news.refresh:non-recoverable-error",
+              "offline-draft": "mutation:news.refresh:offline-draft",
+              "permission-denied": "mutation:news.refresh:permission-denied",
+              "stale-version-conflict": "mutation:news.refresh:stale-version-conflict",
+              "retry": "mutation:news.refresh:retry"
+            }
+          },
+          "news.save": {
+            "states": {
+              "recoverable-error": "mutation:news.save:recoverable-error",
+              "non-recoverable-error": "mutation:news.save:non-recoverable-error",
+              "offline-draft": "mutation:news.save:offline-draft",
+              "permission-denied": "mutation:news.save:permission-denied",
+              "stale-version-conflict": "mutation:news.save:stale-version-conflict",
+              "retry": "mutation:news.save:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:community",
+      "kind": "route",
+      "routeId": "community",
+      "phase": 5,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 论坛.dc.html"
+      ],
+      "components": [
+        "PostComposer",
+        "Feed",
+        "CommentThread"
+      ],
+      "entityRefs": [
+        "Post",
+        "Comment",
+        "Conversation",
+        "MediaObject"
+      ],
+      "readModels": [
+        "Post",
+        "Comment",
+        "MediaObject"
+      ],
+      "interactions": [
+        "post",
+        "like",
+        "comment",
+        "message-author"
+      ],
+      "mutations": [
+        "community.create-post",
+        "community.like",
+        "community.comment",
+        "community.message-author"
+      ],
+      "acceptanceChecks": [
+        "visual:community:light-dark",
+        "a11y:community",
+        "e2e:community-post-thread"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "community.create-post": {
+            "states": {
+              "recoverable-error": "mutation:community.create-post:recoverable-error",
+              "non-recoverable-error": "mutation:community.create-post:non-recoverable-error",
+              "offline-draft": "mutation:community.create-post:offline-draft",
+              "permission-denied": "mutation:community.create-post:permission-denied",
+              "stale-version-conflict": "mutation:community.create-post:stale-version-conflict",
+              "retry": "mutation:community.create-post:retry"
+            }
+          },
+          "community.like": {
+            "states": {
+              "recoverable-error": "mutation:community.like:recoverable-error",
+              "non-recoverable-error": "mutation:community.like:non-recoverable-error",
+              "offline-draft": "mutation:community.like:offline-draft",
+              "permission-denied": "mutation:community.like:permission-denied",
+              "stale-version-conflict": "mutation:community.like:stale-version-conflict",
+              "retry": "mutation:community.like:retry"
+            }
+          },
+          "community.comment": {
+            "states": {
+              "recoverable-error": "mutation:community.comment:recoverable-error",
+              "non-recoverable-error": "mutation:community.comment:non-recoverable-error",
+              "offline-draft": "mutation:community.comment:offline-draft",
+              "permission-denied": "mutation:community.comment:permission-denied",
+              "stale-version-conflict": "mutation:community.comment:stale-version-conflict",
+              "retry": "mutation:community.comment:retry"
+            }
+          },
+          "community.message-author": {
+            "states": {
+              "recoverable-error": "mutation:community.message-author:recoverable-error",
+              "non-recoverable-error": "mutation:community.message-author:non-recoverable-error",
+              "offline-draft": "mutation:community.message-author:offline-draft",
+              "permission-denied": "mutation:community.message-author:permission-denied",
+              "stale-version-conflict": "mutation:community.message-author:stale-version-conflict",
+              "retry": "mutation:community.message-author:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:messages",
+      "kind": "route",
+      "routeId": "messages",
+      "phase": 5,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 聊天.dc.html"
+      ],
+      "components": [
+        "ThreadList",
+        "MessageTimeline",
+        "MessageComposer"
+      ],
+      "entityRefs": [
+        "Conversation",
+        "Message"
+      ],
+      "readModels": [
+        "Thread",
+        "Message"
+      ],
+      "interactions": [
+        "open-thread",
+        "send",
+        "mark-read",
+        "reconnect"
+      ],
+      "mutations": [
+        "messages.send",
+        "messages.mark-read"
+      ],
+      "acceptanceChecks": [
+        "visual:messages:light-dark",
+        "a11y:messages",
+        "e2e:messages-send-reconnect"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile",
+          "tablet"
+        ],
+        "tabletDistinct": true
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "messages.send": {
+            "states": {
+              "recoverable-error": "mutation:messages.send:recoverable-error",
+              "non-recoverable-error": "mutation:messages.send:non-recoverable-error",
+              "offline-draft": "mutation:messages.send:offline-draft",
+              "permission-denied": "mutation:messages.send:permission-denied",
+              "stale-version-conflict": "mutation:messages.send:stale-version-conflict",
+              "retry": "mutation:messages.send:retry"
+            }
+          },
+          "messages.mark-read": {
+            "states": {
+              "recoverable-error": "mutation:messages.mark-read:recoverable-error",
+              "non-recoverable-error": "mutation:messages.mark-read:non-recoverable-error",
+              "offline-draft": "mutation:messages.mark-read:offline-draft",
+              "permission-denied": "mutation:messages.mark-read:permission-denied",
+              "stale-version-conflict": "mutation:messages.mark-read:stale-version-conflict",
+              "retry": "mutation:messages.mark-read:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:network",
+      "kind": "route",
+      "routeId": "network",
+      "phase": 5,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 人脉.dc.html"
+      ],
+      "components": [
+        "ContactList",
+        "ContactEditor",
+        "FollowUpPanel"
+      ],
+      "entityRefs": [
+        "NetworkContact"
+      ],
+      "readModels": [
+        "Contact"
+      ],
+      "interactions": [
+        "create",
+        "edit",
+        "schedule-follow-up",
+        "delete"
+      ],
+      "mutations": [
+        "network.create",
+        "network.update",
+        "network.schedule-follow-up",
+        "network.delete"
+      ],
+      "acceptanceChecks": [
+        "visual:network:light-dark",
+        "a11y:network",
+        "e2e:network-contact-lifecycle"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "network.create": {
+            "states": {
+              "recoverable-error": "mutation:network.create:recoverable-error",
+              "non-recoverable-error": "mutation:network.create:non-recoverable-error",
+              "offline-draft": "mutation:network.create:offline-draft",
+              "permission-denied": "mutation:network.create:permission-denied",
+              "stale-version-conflict": "mutation:network.create:stale-version-conflict",
+              "retry": "mutation:network.create:retry"
+            }
+          },
+          "network.update": {
+            "states": {
+              "recoverable-error": "mutation:network.update:recoverable-error",
+              "non-recoverable-error": "mutation:network.update:non-recoverable-error",
+              "offline-draft": "mutation:network.update:offline-draft",
+              "permission-denied": "mutation:network.update:permission-denied",
+              "stale-version-conflict": "mutation:network.update:stale-version-conflict",
+              "retry": "mutation:network.update:retry"
+            }
+          },
+          "network.schedule-follow-up": {
+            "states": {
+              "recoverable-error": "mutation:network.schedule-follow-up:recoverable-error",
+              "non-recoverable-error": "mutation:network.schedule-follow-up:non-recoverable-error",
+              "offline-draft": "mutation:network.schedule-follow-up:offline-draft",
+              "permission-denied": "mutation:network.schedule-follow-up:permission-denied",
+              "stale-version-conflict": "mutation:network.schedule-follow-up:stale-version-conflict",
+              "retry": "mutation:network.schedule-follow-up:retry"
+            }
+          },
+          "network.delete": {
+            "states": {
+              "recoverable-error": "mutation:network.delete:recoverable-error",
+              "non-recoverable-error": "mutation:network.delete:non-recoverable-error",
+              "offline-draft": "mutation:network.delete:offline-draft",
+              "permission-denied": "mutation:network.delete:permission-denied",
+              "stale-version-conflict": "mutation:network.delete:stale-version-conflict",
+              "retry": "mutation:network.delete:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:resume",
+      "kind": "route",
+      "routeId": "resume",
+      "phase": 5,
+      "template": "settings-form",
+      "designFiles": [
+        "QuantGym 简历.dc.html"
+      ],
+      "components": [
+        "ResumeEditor",
+        "FileUpload",
+        "AiReviewPanel"
+      ],
+      "entityRefs": [
+        "ResumeDocument",
+        "ResumeReview",
+        "Attachment",
+        "AiJob"
+      ],
+      "readModels": [
+        "ResumeProfile",
+        "AiJob",
+        "MediaObject"
+      ],
+      "interactions": [
+        "save",
+        "upload",
+        "request-review",
+        "retry"
+      ],
+      "mutations": [
+        "resume.save",
+        "resume.upload",
+        "resume.request-review",
+        "resume.retry-review"
+      ],
+      "acceptanceChecks": [
+        "visual:resume:light-dark",
+        "a11y:resume",
+        "e2e:resume-review-job"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "aiJobStateSetRef": "design-system.aiJobStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "resume.save": {
+            "states": {
+              "recoverable-error": "mutation:resume.save:recoverable-error",
+              "non-recoverable-error": "mutation:resume.save:non-recoverable-error",
+              "offline-draft": "mutation:resume.save:offline-draft",
+              "permission-denied": "mutation:resume.save:permission-denied",
+              "stale-version-conflict": "mutation:resume.save:stale-version-conflict",
+              "retry": "mutation:resume.save:retry"
+            }
+          },
+          "resume.upload": {
+            "states": {
+              "recoverable-error": "mutation:resume.upload:recoverable-error",
+              "non-recoverable-error": "mutation:resume.upload:non-recoverable-error",
+              "offline-draft": "mutation:resume.upload:offline-draft",
+              "permission-denied": "mutation:resume.upload:permission-denied",
+              "stale-version-conflict": "mutation:resume.upload:stale-version-conflict",
+              "retry": "mutation:resume.upload:retry"
+            }
+          },
+          "resume.request-review": {
+            "states": {
+              "recoverable-error": "mutation:resume.request-review:recoverable-error",
+              "non-recoverable-error": "mutation:resume.request-review:non-recoverable-error",
+              "offline-draft": "mutation:resume.request-review:offline-draft",
+              "permission-denied": "mutation:resume.request-review:permission-denied",
+              "stale-version-conflict": "mutation:resume.request-review:stale-version-conflict",
+              "retry": "mutation:resume.request-review:retry"
+            }
+          },
+          "resume.retry-review": {
+            "states": {
+              "recoverable-error": "mutation:resume.retry-review:recoverable-error",
+              "non-recoverable-error": "mutation:resume.retry-review:non-recoverable-error",
+              "offline-draft": "mutation:resume.retry-review:offline-draft",
+              "permission-denied": "mutation:resume.retry-review:permission-denied",
+              "stale-version-conflict": "mutation:resume.retry-review:stale-version-conflict",
+              "retry": "mutation:resume.retry-review:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:jobs",
+      "kind": "route",
+      "routeId": "jobs",
+      "phase": 5,
+      "template": "workflow-board",
+      "designFiles": [
+        "QuantGym 求职.dc.html"
+      ],
+      "components": [
+        "JobFilters",
+        "JobList",
+        "ApplicationBoard"
+      ],
+      "entityRefs": [
+        "JobPosting",
+        "JobApplication"
+      ],
+      "readModels": [
+        "Job",
+        "Application"
+      ],
+      "interactions": [
+        "filter",
+        "save",
+        "move-application",
+        "open-source"
+      ],
+      "mutations": [
+        "jobs.save",
+        "jobs.move-application"
+      ],
+      "acceptanceChecks": [
+        "visual:jobs:light-dark",
+        "a11y:jobs",
+        "e2e:job-application-board"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "jobs.save": {
+            "states": {
+              "recoverable-error": "mutation:jobs.save:recoverable-error",
+              "non-recoverable-error": "mutation:jobs.save:non-recoverable-error",
+              "offline-draft": "mutation:jobs.save:offline-draft",
+              "permission-denied": "mutation:jobs.save:permission-denied",
+              "stale-version-conflict": "mutation:jobs.save:stale-version-conflict",
+              "retry": "mutation:jobs.save:retry"
+            }
+          },
+          "jobs.move-application": {
+            "states": {
+              "recoverable-error": "mutation:jobs.move-application:recoverable-error",
+              "non-recoverable-error": "mutation:jobs.move-application:non-recoverable-error",
+              "offline-draft": "mutation:jobs.move-application:offline-draft",
+              "permission-denied": "mutation:jobs.move-application:permission-denied",
+              "stale-version-conflict": "mutation:jobs.move-application:stale-version-conflict",
+              "retry": "mutation:jobs.move-application:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:companies",
+      "kind": "route",
+      "routeId": "companies",
+      "phase": 5,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 公司.dc.html"
+      ],
+      "components": [
+        "CompanyFilters",
+        "CompanyList",
+        "CompanyDetail"
+      ],
+      "entityRefs": [
+        "CompanyProfile",
+        "Problem"
+      ],
+      "readModels": [
+        "Company"
+      ],
+      "interactions": [
+        "filter",
+        "open",
+        "start-practice"
+      ],
+      "mutations": [],
+      "acceptanceChecks": [
+        "visual:companies:light-dark",
+        "a11y:companies",
+        "e2e:company-practice-handoff"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {}
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:library",
+      "kind": "route",
+      "routeId": "library",
+      "phase": 5,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 资料库.dc.html"
+      ],
+      "components": [
+        "LibraryFilters",
+        "ResourceGrid",
+        "Reader"
+      ],
+      "entityRefs": [
+        "LibraryResource",
+        "ProblemProgress"
+      ],
+      "readModels": [
+        "LibraryItem",
+        "ReaderToken",
+        "Progress"
+      ],
+      "interactions": [
+        "search",
+        "open-reader",
+        "resume-reading",
+        "practice"
+      ],
+      "mutations": [],
+      "acceptanceChecks": [
+        "visual:library:light-dark",
+        "a11y:library",
+        "e2e:library-reader-progress"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile",
+          "tablet"
+        ],
+        "tabletDistinct": true
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {}
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:courses",
+      "kind": "route",
+      "routeId": "courses",
+      "phase": 5,
+      "template": "dashboard",
+      "designFiles": [
+        "QuantGym 课程.dc.html"
+      ],
+      "components": [
+        "LearningPath",
+        "CourseList",
+        "LessonProgress"
+      ],
+      "entityRefs": [
+        "Course",
+        "CourseProgress"
+      ],
+      "readModels": [
+        "Course",
+        "LearningPath",
+        "CourseProgress"
+      ],
+      "interactions": [
+        "choose-path",
+        "open-course",
+        "complete-lesson"
+      ],
+      "mutations": [
+        "courses.complete-lesson"
+      ],
+      "acceptanceChecks": [
+        "visual:courses:light-dark",
+        "a11y:courses",
+        "e2e:course-progress"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "courses.complete-lesson": {
+            "states": {
+              "recoverable-error": "mutation:courses.complete-lesson:recoverable-error",
+              "non-recoverable-error": "mutation:courses.complete-lesson:non-recoverable-error",
+              "offline-draft": "mutation:courses.complete-lesson:offline-draft",
+              "permission-denied": "mutation:courses.complete-lesson:permission-denied",
+              "stale-version-conflict": "mutation:courses.complete-lesson:stale-version-conflict",
+              "retry": "mutation:courses.complete-lesson:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:memory",
+      "kind": "route",
+      "routeId": "memory",
+      "phase": 5,
+      "template": "list-detail",
+      "designFiles": [
+        "QuantGym 资料笔记.dc.html"
+      ],
+      "components": [
+        "ResourceList",
+        "ResourceEditor",
+        "MediaUpload"
+      ],
+      "entityRefs": [
+        "MemoryResource",
+        "MediaObject",
+        "Note"
+      ],
+      "readModels": [
+        "ResourceNote",
+        "MediaObject"
+      ],
+      "interactions": [
+        "create",
+        "attach",
+        "edit",
+        "delete"
+      ],
+      "mutations": [
+        "memory.create",
+        "memory.attach",
+        "memory.update",
+        "memory.delete"
+      ],
+      "acceptanceChecks": [
+        "visual:memory:light-dark",
+        "a11y:memory",
+        "e2e:memory-resource-lifecycle"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "memory.create": {
+            "states": {
+              "recoverable-error": "mutation:memory.create:recoverable-error",
+              "non-recoverable-error": "mutation:memory.create:non-recoverable-error",
+              "offline-draft": "mutation:memory.create:offline-draft",
+              "permission-denied": "mutation:memory.create:permission-denied",
+              "stale-version-conflict": "mutation:memory.create:stale-version-conflict",
+              "retry": "mutation:memory.create:retry"
+            }
+          },
+          "memory.attach": {
+            "states": {
+              "recoverable-error": "mutation:memory.attach:recoverable-error",
+              "non-recoverable-error": "mutation:memory.attach:non-recoverable-error",
+              "offline-draft": "mutation:memory.attach:offline-draft",
+              "permission-denied": "mutation:memory.attach:permission-denied",
+              "stale-version-conflict": "mutation:memory.attach:stale-version-conflict",
+              "retry": "mutation:memory.attach:retry"
+            }
+          },
+          "memory.update": {
+            "states": {
+              "recoverable-error": "mutation:memory.update:recoverable-error",
+              "non-recoverable-error": "mutation:memory.update:non-recoverable-error",
+              "offline-draft": "mutation:memory.update:offline-draft",
+              "permission-denied": "mutation:memory.update:permission-denied",
+              "stale-version-conflict": "mutation:memory.update:stale-version-conflict",
+              "retry": "mutation:memory.update:retry"
+            }
+          },
+          "memory.delete": {
+            "states": {
+              "recoverable-error": "mutation:memory.delete:recoverable-error",
+              "non-recoverable-error": "mutation:memory.delete:non-recoverable-error",
+              "offline-draft": "mutation:memory.delete:offline-draft",
+              "permission-denied": "mutation:memory.delete:permission-denied",
+              "stale-version-conflict": "mutation:memory.delete:stale-version-conflict",
+              "retry": "mutation:memory.delete:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:settings",
+      "kind": "route",
+      "routeId": "settings",
+      "phase": 5,
+      "template": "settings-form",
+      "designFiles": [
+        "QuantGym 设置.dc.html"
+      ],
+      "components": [
+        "PreferenceForm",
+        "DataControls",
+        "RuntimeStatusPanel"
+      ],
+      "entityRefs": [
+        "Preference",
+        "AuditEvent"
+      ],
+      "readModels": [
+        "Preferences",
+        "RuntimeStatus",
+        "ExportJob"
+      ],
+      "interactions": [
+        "save",
+        "export",
+        "import",
+        "reset"
+      ],
+      "mutations": [
+        "settings.save",
+        "settings.export",
+        "settings.import",
+        "settings.reset"
+      ],
+      "acceptanceChecks": [
+        "visual:settings:light-dark",
+        "a11y:settings",
+        "e2e:settings-data-controls"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "settings.save": {
+            "states": {
+              "recoverable-error": "mutation:settings.save:recoverable-error",
+              "non-recoverable-error": "mutation:settings.save:non-recoverable-error",
+              "offline-draft": "mutation:settings.save:offline-draft",
+              "permission-denied": "mutation:settings.save:permission-denied",
+              "stale-version-conflict": "mutation:settings.save:stale-version-conflict",
+              "retry": "mutation:settings.save:retry"
+            }
+          },
+          "settings.export": {
+            "states": {
+              "recoverable-error": "mutation:settings.export:recoverable-error",
+              "non-recoverable-error": "mutation:settings.export:non-recoverable-error",
+              "offline-draft": "mutation:settings.export:offline-draft",
+              "permission-denied": "mutation:settings.export:permission-denied",
+              "stale-version-conflict": "mutation:settings.export:stale-version-conflict",
+              "retry": "mutation:settings.export:retry"
+            }
+          },
+          "settings.import": {
+            "states": {
+              "recoverable-error": "mutation:settings.import:recoverable-error",
+              "non-recoverable-error": "mutation:settings.import:non-recoverable-error",
+              "offline-draft": "mutation:settings.import:offline-draft",
+              "permission-denied": "mutation:settings.import:permission-denied",
+              "stale-version-conflict": "mutation:settings.import:stale-version-conflict",
+              "retry": "mutation:settings.import:retry"
+            }
+          },
+          "settings.reset": {
+            "states": {
+              "recoverable-error": "mutation:settings.reset:recoverable-error",
+              "non-recoverable-error": "mutation:settings.reset:non-recoverable-error",
+              "offline-draft": "mutation:settings.reset:offline-draft",
+              "permission-denied": "mutation:settings.reset:permission-denied",
+              "stale-version-conflict": "mutation:settings.reset:stale-version-conflict",
+              "retry": "mutation:settings.reset:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    },
+    {
+      "id": "route:account",
+      "kind": "route",
+      "routeId": "account",
+      "phase": 5,
+      "template": "settings-form",
+      "designFiles": [
+        "QuantGym 账户.dc.html"
+      ],
+      "components": [
+        "ProfileForm",
+        "AvatarUpload",
+        "SessionList"
+      ],
+      "entityRefs": [
+        "User",
+        "Session",
+        "MediaObject"
+      ],
+      "readModels": [
+        "Me",
+        "Session",
+        "MediaObject"
+      ],
+      "interactions": [
+        "save-profile",
+        "upload-avatar",
+        "revoke-session"
+      ],
+      "mutations": [
+        "account.save-profile",
+        "account.upload-avatar",
+        "account.revoke-session"
+      ],
+      "acceptanceChecks": [
+        "visual:account:light-dark",
+        "a11y:account",
+        "e2e:account-session-security"
+      ],
+      "stateSetRef": "design-system.requiredStates",
+      "recoveryStateSetRef": "design-system.routeRecoveryStates",
+      "responsive": {
+        "requiredViewports": [
+          "desktop",
+          "laptop",
+          "mobile"
+        ],
+        "tabletDistinct": false
+      },
+      "motion": {
+        "profile": "panel-and-micro",
+        "reducedMotion": true,
+        "blocksPrimaryAction": false
+      },
+      "recoveryAcceptance": {
+        "source": "approved-mutation-inventory",
+        "stateSetRef": "design-system.routeRecoveryStates",
+        "mutations": {
+          "account.save-profile": {
+            "states": {
+              "recoverable-error": "mutation:account.save-profile:recoverable-error",
+              "non-recoverable-error": "mutation:account.save-profile:non-recoverable-error",
+              "offline-draft": "mutation:account.save-profile:offline-draft",
+              "permission-denied": "mutation:account.save-profile:permission-denied",
+              "stale-version-conflict": "mutation:account.save-profile:stale-version-conflict",
+              "retry": "mutation:account.save-profile:retry"
+            }
+          },
+          "account.upload-avatar": {
+            "states": {
+              "recoverable-error": "mutation:account.upload-avatar:recoverable-error",
+              "non-recoverable-error": "mutation:account.upload-avatar:non-recoverable-error",
+              "offline-draft": "mutation:account.upload-avatar:offline-draft",
+              "permission-denied": "mutation:account.upload-avatar:permission-denied",
+              "stale-version-conflict": "mutation:account.upload-avatar:stale-version-conflict",
+              "retry": "mutation:account.upload-avatar:retry"
+            }
+          },
+          "account.revoke-session": {
+            "states": {
+              "recoverable-error": "mutation:account.revoke-session:recoverable-error",
+              "non-recoverable-error": "mutation:account.revoke-session:non-recoverable-error",
+              "offline-draft": "mutation:account.revoke-session:offline-draft",
+              "permission-denied": "mutation:account.revoke-session:permission-denied",
+              "stale-version-conflict": "mutation:account.revoke-session:stale-version-conflict",
+              "retry": "mutation:account.revoke-session:retry"
+            }
+          }
+        }
+      },
+      "deviations": []
+    }
+  ]
+}

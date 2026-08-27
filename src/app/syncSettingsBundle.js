@@ -3,7 +3,7 @@ import {
   createCloudSyncController
 } from '../api/cloudSync.js';
 import { sanitizeAccountForCloud } from '../api/cloud.js';
-import { createLeaderboardCloudController } from '../modules/overview/leaderboardCloud.js';
+import { createLeaderboardCloudController } from '../modules/leaderboardCloud.js';
 import { createSettingsController } from '../modules/settings/controller.js';
 
 export function createSyncSettingsBundle(deps = {}) {

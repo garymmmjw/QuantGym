@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+@keyframes lbFade{from{opacity:0}to{opacity:1}}
+@keyframes lbRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+</style>
+<script src="./qg-state.js"></script>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<div data-screen-label="资料库" style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:#e7f2fb;color:#2f7fc0;font-size:11.5px;font-weight:700;margin-bottom:10px">RESOURCES · 藏书 19 册</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">资料库 <span style="color:#2f7fc0">Library</span></h1>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">量化面试书架 · 在线阅读 · 有题册可一键去刷题</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 15px;border-radius:14px;background:var(--surface);border:1px solid var(--border-2);box-shadow:0 1px 2px rgba(27,26,56,.04);flex:1 1 220px;max-width:320px">
+      <span style="width:17px;height:17px;display:inline-flex;color:var(--muted-2)">{{ searchIcon }}</span>
+      <input value="{{ q }}" onInput="{{ onQ }}" placeholder="搜书名 / 作者 / 主题…" style="border:none;outline:none;background:transparent;font-family:inherit;font-size:13.5px;width:100%;color:var(--text)">
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <sc-for list="{{ kinds }}" as="k" hint-placeholder-count="4"><button type="button" onClick="{{ k.onClick }}" style="{{ k.style }}">{{ k.label }}</button></sc-for>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:16px">
+    <sc-for list="{{ books }}" as="b" hint-placeholder-count="8">
+      <div onClick="{{ b.onOpen }}" style="display:flex;flex-direction:column;gap:10px;padding:14px 14px 13px;border-radius:18px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04);cursor:pointer;transition:transform .16s ease,box-shadow .16s ease" style-hover="transform:translateY(-4px);box-shadow:0 18px 34px -18px rgba(47,127,192,.4)">
+        <div style="position:relative;border-radius:12px;overflow:hidden;aspect-ratio:3/4;background:var(--track)">
+          <img src="{{ b.cover }}" alt="{{ b.title }}" style="width:100%;height:100%;object-fit:cover;display:block">
+          <span style="{{ b.kindPill }}">{{ b.kindLabel }}</span>
+          <sc-if value="{{ b.hasProgress }}"><div style="position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(0,0,0,.25)"><div style="height:100%;width:{{ b.progress }}%;background:linear-gradient(90deg,#5b5ff5,#8a7bff)"></div></div></sc-if>
+        </div>
+        <div style="min-width:0">
+          <div style="font-size:13px;font-weight:800;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ b.title }}</div>
+          <div style="font-size:11px;color:var(--muted-2);font-weight:600;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.meta }}</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto">
+          <span style="font-size:11px;color:var(--muted-3);font-weight:600">{{ b.statText }}</span>
+          <sc-if value="{{ b.hasProblems }}"><span onClick="{{ b.onDrill }}" style="padding:5px 10px;border-radius:9px;background:var(--brand-soft);color:var(--brand-ink);font-size:11px;font-weight:700;cursor:pointer;transition:transform .12s ease" style-hover="transform:translateY(-1px)">去刷题</span></sc-if>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ empty }}">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:44px 16px;text-align:center">
+    <img src="assets/mascot-search.png" alt="" style="width:110px;height:auto;opacity:.95">
+    <div style="font-size:15px;font-weight:800">没找到「{{ q }}」</div>
+    <div style="font-size:12.5px;color:var(--muted-2);font-weight:600">换个关键词，或清掉类型筛选试试</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ readerOpen }}">
+  <div onClick="{{ closeReader }}" style="position:fixed;inset:0;z-index:75;background:rgba(16,14,36,.66);backdrop-filter:blur(5px);animation:lbFade .18s ease both;display:grid;place-items:center;padding:14px">
+    <div onClick="{{ stop }}" style="display:flex;flex-direction:column;width:min(96vw,880px);height:min(92vh,760px);border-radius:24px;background:var(--surface);border:1px solid var(--border-2);box-shadow:0 50px 110px -30px rgba(10,8,40,.75);overflow:hidden;animation:lbRise .28s cubic-bezier(.2,.8,.2,1) both">
+      <div style="display:flex;align-items:center;gap:13px;padding:13px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;row-gap:8px">
+        <img src="{{ rb.cover }}" alt="" style="width:34px;height:46px;object-fit:cover;border-radius:6px;flex:0 0 auto">
+        <div style="flex:1;min-width:140px"><div style="font-size:14px;font-weight:800;line-height:1.3">{{ rb.title }}</div><div style="font-size:11px;color:var(--muted-2);font-weight:600">{{ rb.meta }} · 第 {{ rPage }} / {{ rb.pages }} 页</div></div>
+        <sc-if value="{{ rb.hasProblems }}"><button type="button" onClick="{{ rb.onDrill }}" style="padding:9px 15px;border:none;border-radius:11px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;box-shadow:0 3px 0 #3f39c9">去刷本书题目 →</button></sc-if>
+        <button type="button" onClick="{{ closeReader }}" style="display:grid;place-items:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-size:16px;cursor:pointer;font-family:inherit">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;background:var(--surface-2);padding:26px 22px">
+        <div style="max-width:600px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 10px 30px -18px rgba(27,26,56,.25);padding:38px 42px;min-height:100%">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted-2);margin-bottom:14px">{{ rChapter }}</div>
+          <div style="font-size:20px;font-weight:800;letter-spacing:-.01em;margin-bottom:16px">{{ rTitle }}</div>
+          <sc-for list="{{ rParas }}" as="p" hint-placeholder-count="4"><p style="margin:0 0 13px;font-size:13.5px;line-height:1.85;color:var(--text-2)">{{ p }}</p></sc-for>
+          <div style="margin:18px 0;padding:15px 18px;border-radius:12px;background:var(--surface-3);border:1px solid var(--border);font-family:'Space Grotesk';font-size:14px;text-align:center;color:var(--text)">{{ rFormula }}</div>
+          <p style="margin:0;font-size:13.5px;line-height:1.85;color:var(--text-2)">{{ rTail }}</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:11px 18px;border-top:1px solid var(--border)">
+        <button type="button" onClick="{{ prevPage }}" style="{{ prevStyle }}">← 上一页</button>
+        <div style="flex:1;height:6px;border-radius:20px;background:var(--track);overflow:hidden"><div style="height:100%;width:{{ rPct }}%;border-radius:20px;background:linear-gradient(90deg,#5b5ff5,#8a7bff);transition:width .25s ease"></div></div>
+        <button type="button" onClick="{{ nextPage }}" style="{{ nextStyle }}">下一页 →</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { kind:'all', q:'', reader:null, page:{} };
+
+  icon(){ const R=React.createElement; return R('svg',{viewBox:'0 0 24 24',fill:'none',width:'100%',height:'100%'},R('circle',{cx:11,cy:11,r:7,stroke:'currentColor',strokeWidth:2}),R('path',{d:'M16.5 16.5L21 21',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round'})); }
+
+  data(){ return [
+    { id:'green-book', title:'A Practical Guide to Quant Interviews', meta:'Xinfeng Zhou · Green Book', cover:'assets/covers/green-book.webp', kind:'problems', pages:216, prog:64, count:158, src:'Green Book' },
+    { id:'red-book', title:'Heard on the Street', meta:'Timothy Crack · Red Book', cover:'assets/covers/red-book.webp', kind:'problems', pages:288, prog:31, count:139, src:'Red Book' },
+    { id:'yellow-book', title:'Frequently Asked Questions in Quant Finance', meta:'Paul Wilmott · Yellow Book', cover:'assets/covers/yellow-book.webp', kind:'problems', pages:624, prog:12, count:92, src:'Yellow Book' },
+    { id:'quantguide', title:'QuantGuide 精选题集', meta:'QuantGuide · 在线题库', cover:'assets/covers/quantguide.webp', kind:'problems', pages:150, prog:48, count:120, src:'QuantGuide' },
+    { id:'prob-10', title:'概率与随机分析 10 题', meta:'Oxford 讲义 · 附解答', cover:'assets/covers/probability-stochastic-10.webp', kind:'problems', pages:42, prog:80, count:10, src:'概率随机' },
+    { id:'hull', title:'Options, Futures and Other Derivatives', meta:'John C. Hull · 第 11 版', cover:'assets/covers/hull-derivatives.webp', kind:'textbook', pages:880, prog:22, count:64, src:'Hull' },
+    { id:'boyd', title:'Convex Optimization', meta:'Boyd & Vandenberghe · Stanford', cover:'assets/covers/boyd-convex-optimization.webp', kind:'textbook', pages:716, prog:8, count:0 },
+    { id:'dudeney', title:'Amusements in Mathematics', meta:'H. E. Dudeney · 经典趣题', cover:'assets/covers/dudeney-puzzles.webp', kind:'puzzle', pages:258, prog:0, count:74, src:'Dudeney' },
+  ]; }
+
+  content(b,pg){
+    const ch=Math.min(9, Math.ceil(pg/28)||1);
+    return {
+      chapter:'CHAPTER '+ch+' · '+(b.kind==='textbook'?'DERIVATIVES PRICING':'BRAIN TEASERS'),
+      title: b.kind==='textbook'?'风险中性定价与对冲直觉':'经典面试题 · 思路与陷阱',
+      paras:[
+        '本页为阅读器示意排版。真实产品中此处渲染 PDF 原文页面，支持缩放、目录跳转与阅读进度云同步。',
+        '面试中最常被追问的不是公式本身，而是「为什么」：为什么风险中性测度下贴现资产价格是鞅？直觉上，做市商通过持续对冲消除了方向性风险，剩下的只有时间价值与波动率的博弈。',
+        '建议边读边把关键结论写进资料笔记，形成自己的 cheat sheet；有题目的册子直接点「去刷本书题目」进入题库实战。',
+      ],
+      formula:'dS = μS dt + σS dW  →  C = S·N(d₁) − K·e^{−rT}·N(d₂)',
+      tail:'读完本节后，可以去 Mental Math 热身 5 分钟，再回到题库把本章对应的 12 道题清掉——这是数据上最高效的记忆闭环。',
+    };
+  }
+
+  openReader(id){
+    this.setState({ reader:id });
+    if(window.QG){ this._readCount=(this._readCount||0)+1; }
+  }
+
+  drill(b,e){
+    if(e&&e.stopPropagation)e.stopPropagation();
+    if(window.QG) QG.navigate('problems', b.src?{src:b.src}:null);
+  }
+
+  renderVals(){
+    const S=this.state;
+    const kinds=[['all','全部'],['problems','有题册'],['textbook','教材'],['puzzle','趣题集']].map(k=>({
+      label:k[1], onClick:()=>this.setState({kind:k[0]}),
+      style:'padding:8px 15px;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid '+(S.kind===k[0]?'transparent':'var(--border)')+';background:'+(S.kind===k[0]?'#2f7fc0':'var(--surface)')+';color:'+(S.kind===k[0]?'#fff':'var(--muted)')+';transition:all .13s ease',
+    }));
+    const kindMap={ problems:['有题册','#eef0ff','#5b5ff5'], textbook:['教材','#e7f2fb','#2f7fc0'], puzzle:['趣题','#fff3dd','#b3610a'] };
+    const ql=(S.q||'').trim().toLowerCase();
+    const list=this.data().filter(b=>(S.kind==='all'||b.kind===S.kind)&&(!ql||(b.title+b.meta).toLowerCase().includes(ql)));
+    const books=list.map(b=>{
+      const km=kindMap[b.kind];
+      return {
+        title:b.title, meta:b.meta, cover:b.cover,
+        kindLabel:km[0],
+        kindPill:'position:absolute;top:8px;left:8px;padding:4px 9px;border-radius:8px;font-size:10px;font-weight:800;background:'+km[1]+';color:'+km[2],
+        hasProgress:b.prog>0, progress:b.prog,
+        statText: b.prog>0?('已读 '+b.prog+'%'):(b.pages+' 页'),
+        hasProblems:b.count>0,
+        onOpen:()=>this.openReader(b.id),
+        onDrill:(e)=>this.drill(b,e),
+      };
+    });
+    const rb0=this.data().find(b=>b.id===S.reader);
+    const rPage=S.page[S.reader]||Math.max(1,Math.round((rb0?rb0.prog:0)/100*(rb0?rb0.pages:1)));
+    const cont=rb0?this.content(rb0,rPage):{paras:[]};
+    const navBtn=(dis)=>'padding:9px 16px;border-radius:11px;border:1px solid var(--border);background:var(--surface);font-family:inherit;font-weight:700;font-size:12.5px;transition:all .12s ease;'+(dis?'color:var(--muted-3);cursor:default;opacity:.55':'color:var(--brand-ink);cursor:pointer');
+    return {
+      searchIcon:this.icon(), q:S.q, onQ:(e)=>this.setState({q:e.target.value}),
+      kinds, books, empty:books.length===0,
+      readerOpen:!!rb0,
+      rb: rb0?{ title:rb0.title, meta:rb0.meta, cover:rb0.cover, pages:rb0.pages, hasProblems:rb0.count>0, onDrill:()=>this.drill(rb0) }:{},
+      rPage, rPct: rb0?Math.round(rPage/rb0.pages*100):0,
+      rChapter:cont.chapter, rTitle:cont.title, rParas:cont.paras, rFormula:cont.formula, rTail:cont.tail,
+      prevPage:()=>{ if(rPage>1) this.setState({page:{...S.page,[S.reader]:rPage-1}}); },
+      nextPage:()=>{ if(rb0&&rPage<rb0.pages){ this.setState({page:{...S.page,[S.reader]:rPage+1}}); if(window.QG&&(rPage+1)%25===0) QG.toast('阅读进度 '+Math.round((rPage+1)/rb0.pages*100)+'%',{sub:rb0.title,ms:1800}); } },
+      prevStyle:navBtn(rPage<=1), nextStyle:navBtn(rb0?rPage>=rb0.pages:true),
+      closeReader:()=>this.setState({reader:null}),
+      stop:(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); },
+    };
+  }
+}
+</script>
+</body>
+</html>

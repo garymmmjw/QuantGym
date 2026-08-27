@@ -1,0 +1,1590 @@
+{
+  "schemaVersion": 1,
+  "phase": 2,
+  "name": "daily-training-loop",
+  "sourceCatalog": {
+    "path": "docs/frontend-upgrade/acceptance-catalog.json",
+    "immutable": true,
+    "selectedSurfaceIds": [
+      "route:overview",
+      "route:plan",
+      "route:problems"
+    ]
+  },
+  "evidenceNamespace": {
+    "prefix": "390-frontend-upgrade-phase-2-",
+    "trackedRoot": "docs/browser-audit-screenshots",
+    "forbiddenPrefixes": [
+      "370-frontend-upgrade-",
+      "380-frontend-upgrade-phase-1-"
+    ]
+  },
+  "activationPolicy": {
+    "sourceLegacyBaselineIdsBecomePhase2Targets": true,
+    "sourceFutureGateIdsBecomePhase2Targets": true,
+    "requiredResultStatus": "pass",
+    "allowedResultStatuses": [
+      "pass"
+    ],
+    "legacyResultAllowed": false,
+    "skippedResultAllowed": false,
+    "retriedResultAllowed": false,
+    "flakyResultAllowed": false,
+    "missingResultAllowed": false,
+    "duplicateResultAllowed": false,
+    "extraResultAllowed": false,
+    "staleEvidenceAllowed": false
+  },
+  "routes": [
+    {
+      "id": "overview",
+      "surfaceId": "route:overview",
+      "path": "/",
+      "viewports": [
+        "desktop",
+        "laptop",
+        "mobile"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "routeGateIds": [
+        "visual:overview:light-dark",
+        "a11y:overview",
+        "e2e:overview-resume-training"
+      ],
+      "mutationIds": [
+        "training.start-or-resume"
+      ]
+    },
+    {
+      "id": "plan",
+      "surfaceId": "route:plan",
+      "path": "/plan",
+      "viewports": [
+        "desktop",
+        "laptop",
+        "mobile",
+        "tablet"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "routeGateIds": [
+        "visual:plan:light-dark",
+        "a11y:plan",
+        "e2e:plan-recommendation"
+      ],
+      "mutationIds": [
+        "plan.run-diagnostic",
+        "plan.create",
+        "plan.update-task",
+        "plan.complete-task"
+      ]
+    },
+    {
+      "id": "problems",
+      "surfaceId": "route:problems",
+      "path": "/problems",
+      "viewports": [
+        "desktop",
+        "laptop",
+        "mobile",
+        "tablet"
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "routeGateIds": [
+        "visual:problems:light-dark",
+        "a11y:problems",
+        "e2e:problem-attempt-completion"
+      ],
+      "mutationIds": [
+        "problems.use-hint",
+        "problems.submit-attempt",
+        "problems.reveal-solution",
+        "problems.save-note",
+        "problems.toggle-favorite",
+        "problems.complete"
+      ]
+    }
+  ],
+  "mutations": [
+    {
+      "id": "training.start-or-resume",
+      "surfaceId": "route:overview",
+      "routeId": "overview",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:training.start-or-resume:recoverable-error",
+        "non-recoverable-error": "mutation:training.start-or-resume:non-recoverable-error",
+        "offline-draft": "mutation:training.start-or-resume:offline-draft",
+        "permission-denied": "mutation:training.start-or-resume:permission-denied",
+        "stale-version-conflict": "mutation:training.start-or-resume:stale-version-conflict",
+        "retry": "mutation:training.start-or-resume:retry"
+      }
+    },
+    {
+      "id": "plan.run-diagnostic",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:plan.run-diagnostic:recoverable-error",
+        "non-recoverable-error": "mutation:plan.run-diagnostic:non-recoverable-error",
+        "offline-draft": "mutation:plan.run-diagnostic:offline-draft",
+        "permission-denied": "mutation:plan.run-diagnostic:permission-denied",
+        "stale-version-conflict": "mutation:plan.run-diagnostic:stale-version-conflict",
+        "retry": "mutation:plan.run-diagnostic:retry"
+      }
+    },
+    {
+      "id": "plan.create",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:plan.create:recoverable-error",
+        "non-recoverable-error": "mutation:plan.create:non-recoverable-error",
+        "offline-draft": "mutation:plan.create:offline-draft",
+        "permission-denied": "mutation:plan.create:permission-denied",
+        "stale-version-conflict": "mutation:plan.create:stale-version-conflict",
+        "retry": "mutation:plan.create:retry"
+      }
+    },
+    {
+      "id": "plan.update-task",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:plan.update-task:recoverable-error",
+        "non-recoverable-error": "mutation:plan.update-task:non-recoverable-error",
+        "offline-draft": "mutation:plan.update-task:offline-draft",
+        "permission-denied": "mutation:plan.update-task:permission-denied",
+        "stale-version-conflict": "mutation:plan.update-task:stale-version-conflict",
+        "retry": "mutation:plan.update-task:retry"
+      }
+    },
+    {
+      "id": "plan.complete-task",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:plan.complete-task:recoverable-error",
+        "non-recoverable-error": "mutation:plan.complete-task:non-recoverable-error",
+        "offline-draft": "mutation:plan.complete-task:offline-draft",
+        "permission-denied": "mutation:plan.complete-task:permission-denied",
+        "stale-version-conflict": "mutation:plan.complete-task:stale-version-conflict",
+        "retry": "mutation:plan.complete-task:retry"
+      }
+    },
+    {
+      "id": "problems.use-hint",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:problems.use-hint:recoverable-error",
+        "non-recoverable-error": "mutation:problems.use-hint:non-recoverable-error",
+        "offline-draft": "mutation:problems.use-hint:offline-draft",
+        "permission-denied": "mutation:problems.use-hint:permission-denied",
+        "stale-version-conflict": "mutation:problems.use-hint:stale-version-conflict",
+        "retry": "mutation:problems.use-hint:retry"
+      }
+    },
+    {
+      "id": "problems.submit-attempt",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:problems.submit-attempt:recoverable-error",
+        "non-recoverable-error": "mutation:problems.submit-attempt:non-recoverable-error",
+        "offline-draft": "mutation:problems.submit-attempt:offline-draft",
+        "permission-denied": "mutation:problems.submit-attempt:permission-denied",
+        "stale-version-conflict": "mutation:problems.submit-attempt:stale-version-conflict",
+        "retry": "mutation:problems.submit-attempt:retry"
+      }
+    },
+    {
+      "id": "problems.reveal-solution",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:problems.reveal-solution:recoverable-error",
+        "non-recoverable-error": "mutation:problems.reveal-solution:non-recoverable-error",
+        "offline-draft": "mutation:problems.reveal-solution:offline-draft",
+        "permission-denied": "mutation:problems.reveal-solution:permission-denied",
+        "stale-version-conflict": "mutation:problems.reveal-solution:stale-version-conflict",
+        "retry": "mutation:problems.reveal-solution:retry"
+      }
+    },
+    {
+      "id": "problems.save-note",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:problems.save-note:recoverable-error",
+        "non-recoverable-error": "mutation:problems.save-note:non-recoverable-error",
+        "offline-draft": "mutation:problems.save-note:offline-draft",
+        "permission-denied": "mutation:problems.save-note:permission-denied",
+        "stale-version-conflict": "mutation:problems.save-note:stale-version-conflict",
+        "retry": "mutation:problems.save-note:retry"
+      }
+    },
+    {
+      "id": "problems.toggle-favorite",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:problems.toggle-favorite:recoverable-error",
+        "non-recoverable-error": "mutation:problems.toggle-favorite:non-recoverable-error",
+        "offline-draft": "mutation:problems.toggle-favorite:offline-draft",
+        "permission-denied": "mutation:problems.toggle-favorite:permission-denied",
+        "stale-version-conflict": "mutation:problems.toggle-favorite:stale-version-conflict",
+        "retry": "mutation:problems.toggle-favorite:retry"
+      }
+    },
+    {
+      "id": "problems.complete",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "recoveryGateIds": {
+        "recoverable-error": "mutation:problems.complete:recoverable-error",
+        "non-recoverable-error": "mutation:problems.complete:non-recoverable-error",
+        "offline-draft": "mutation:problems.complete:offline-draft",
+        "permission-denied": "mutation:problems.complete:permission-denied",
+        "stale-version-conflict": "mutation:problems.complete:stale-version-conflict",
+        "retry": "mutation:problems.complete:retry"
+      },
+      "retryIdempotencyGateId": "mutation:problems.complete:retry-idempotency"
+    }
+  ],
+  "recoveryStates": [
+    "recoverable-error",
+    "non-recoverable-error",
+    "offline-draft",
+    "permission-denied",
+    "stale-version-conflict",
+    "retry"
+  ],
+  "gates": [
+    {
+      "id": "visual:overview:light-dark",
+      "kind": "visual",
+      "surfaceId": "route:overview",
+      "routeId": "overview",
+      "sourceCatalogTargetPhase": 0,
+      "sourceCatalogExpectedStatus": "legacy-baseline",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-visual-summary.json",
+      "resultSelector": "results[id=\"visual:overview:light-dark\"]"
+    },
+    {
+      "id": "a11y:overview",
+      "kind": "axe",
+      "surfaceId": "route:overview",
+      "routeId": "overview",
+      "sourceCatalogTargetPhase": 0,
+      "sourceCatalogExpectedStatus": "legacy-baseline",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-accessibility-summary.json",
+      "resultSelector": "results[id=\"a11y:overview\"]"
+    },
+    {
+      "id": "e2e:overview-resume-training",
+      "kind": "journey",
+      "surfaceId": "route:overview",
+      "routeId": "overview",
+      "sourceCatalogTargetPhase": 0,
+      "sourceCatalogExpectedStatus": "legacy-baseline",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-journeys-summary.json",
+      "resultSelector": "results[id=\"e2e:overview-resume-training\"]"
+    },
+    {
+      "id": "mutation:training.start-or-resume:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:overview",
+      "routeId": "overview",
+      "mutationId": "training.start-or-resume",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:training.start-or-resume:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:training.start-or-resume:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:overview",
+      "routeId": "overview",
+      "mutationId": "training.start-or-resume",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:training.start-or-resume:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:training.start-or-resume:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:overview",
+      "routeId": "overview",
+      "mutationId": "training.start-or-resume",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:training.start-or-resume:offline-draft\"]"
+    },
+    {
+      "id": "mutation:training.start-or-resume:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:overview",
+      "routeId": "overview",
+      "mutationId": "training.start-or-resume",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:training.start-or-resume:permission-denied\"]"
+    },
+    {
+      "id": "mutation:training.start-or-resume:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:overview",
+      "routeId": "overview",
+      "mutationId": "training.start-or-resume",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:training.start-or-resume:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:training.start-or-resume:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:overview",
+      "routeId": "overview",
+      "mutationId": "training.start-or-resume",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:training.start-or-resume:retry\"]"
+    },
+    {
+      "id": "visual:plan:light-dark",
+      "kind": "visual",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "sourceCatalogTargetPhase": 0,
+      "sourceCatalogExpectedStatus": "legacy-baseline",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-visual-summary.json",
+      "resultSelector": "results[id=\"visual:plan:light-dark\"]"
+    },
+    {
+      "id": "a11y:plan",
+      "kind": "axe",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "sourceCatalogTargetPhase": 0,
+      "sourceCatalogExpectedStatus": "legacy-baseline",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-accessibility-summary.json",
+      "resultSelector": "results[id=\"a11y:plan\"]"
+    },
+    {
+      "id": "e2e:plan-recommendation",
+      "kind": "journey",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "sourceCatalogTargetPhase": 0,
+      "sourceCatalogExpectedStatus": "legacy-baseline",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-journeys-summary.json",
+      "resultSelector": "results[id=\"e2e:plan-recommendation\"]"
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.run-diagnostic",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.run-diagnostic:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.run-diagnostic",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.run-diagnostic:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.run-diagnostic",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.run-diagnostic:offline-draft\"]"
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.run-diagnostic",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.run-diagnostic:permission-denied\"]"
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.run-diagnostic",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.run-diagnostic:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:plan.run-diagnostic:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.run-diagnostic",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.run-diagnostic:retry\"]"
+    },
+    {
+      "id": "mutation:plan.create:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.create",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.create:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:plan.create:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.create",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.create:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:plan.create:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.create",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.create:offline-draft\"]"
+    },
+    {
+      "id": "mutation:plan.create:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.create",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.create:permission-denied\"]"
+    },
+    {
+      "id": "mutation:plan.create:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.create",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.create:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:plan.create:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.create",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.create:retry\"]"
+    },
+    {
+      "id": "mutation:plan.update-task:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.update-task",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.update-task:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:plan.update-task:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.update-task",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.update-task:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:plan.update-task:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.update-task",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.update-task:offline-draft\"]"
+    },
+    {
+      "id": "mutation:plan.update-task:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.update-task",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.update-task:permission-denied\"]"
+    },
+    {
+      "id": "mutation:plan.update-task:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.update-task",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.update-task:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:plan.update-task:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.update-task",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.update-task:retry\"]"
+    },
+    {
+      "id": "mutation:plan.complete-task:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.complete-task",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.complete-task:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:plan.complete-task:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.complete-task",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.complete-task:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:plan.complete-task:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.complete-task",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.complete-task:offline-draft\"]"
+    },
+    {
+      "id": "mutation:plan.complete-task:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.complete-task",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.complete-task:permission-denied\"]"
+    },
+    {
+      "id": "mutation:plan.complete-task:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.complete-task",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.complete-task:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:plan.complete-task:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:plan",
+      "routeId": "plan",
+      "mutationId": "plan.complete-task",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:plan.complete-task:retry\"]"
+    },
+    {
+      "id": "visual:problems:light-dark",
+      "kind": "visual",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "sourceCatalogTargetPhase": 0,
+      "sourceCatalogExpectedStatus": "legacy-baseline",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-visual-summary.json",
+      "resultSelector": "results[id=\"visual:problems:light-dark\"]"
+    },
+    {
+      "id": "a11y:problems",
+      "kind": "axe",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "sourceCatalogTargetPhase": 0,
+      "sourceCatalogExpectedStatus": "legacy-baseline",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-accessibility-summary.json",
+      "resultSelector": "results[id=\"a11y:problems\"]"
+    },
+    {
+      "id": "e2e:problem-attempt-completion",
+      "kind": "journey",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "sourceCatalogTargetPhase": 0,
+      "sourceCatalogExpectedStatus": "legacy-baseline",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-journeys-summary.json",
+      "resultSelector": "results[id=\"e2e:problem-attempt-completion\"]"
+    },
+    {
+      "id": "mutation:problems.use-hint:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.use-hint",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.use-hint:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.use-hint:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.use-hint",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.use-hint:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.use-hint:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.use-hint",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.use-hint:offline-draft\"]"
+    },
+    {
+      "id": "mutation:problems.use-hint:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.use-hint",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.use-hint:permission-denied\"]"
+    },
+    {
+      "id": "mutation:problems.use-hint:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.use-hint",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.use-hint:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:problems.use-hint:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.use-hint",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.use-hint:retry\"]"
+    },
+    {
+      "id": "mutation:problems.submit-attempt:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.submit-attempt",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.submit-attempt:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.submit-attempt:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.submit-attempt",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.submit-attempt:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.submit-attempt:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.submit-attempt",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.submit-attempt:offline-draft\"]"
+    },
+    {
+      "id": "mutation:problems.submit-attempt:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.submit-attempt",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.submit-attempt:permission-denied\"]"
+    },
+    {
+      "id": "mutation:problems.submit-attempt:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.submit-attempt",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.submit-attempt:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:problems.submit-attempt:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.submit-attempt",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.submit-attempt:retry\"]"
+    },
+    {
+      "id": "mutation:problems.reveal-solution:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.reveal-solution",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.reveal-solution:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.reveal-solution:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.reveal-solution",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.reveal-solution:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.reveal-solution:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.reveal-solution",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.reveal-solution:offline-draft\"]"
+    },
+    {
+      "id": "mutation:problems.reveal-solution:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.reveal-solution",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.reveal-solution:permission-denied\"]"
+    },
+    {
+      "id": "mutation:problems.reveal-solution:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.reveal-solution",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.reveal-solution:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:problems.reveal-solution:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.reveal-solution",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.reveal-solution:retry\"]"
+    },
+    {
+      "id": "mutation:problems.save-note:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.save-note",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.save-note:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.save-note:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.save-note",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.save-note:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.save-note:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.save-note",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.save-note:offline-draft\"]"
+    },
+    {
+      "id": "mutation:problems.save-note:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.save-note",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.save-note:permission-denied\"]"
+    },
+    {
+      "id": "mutation:problems.save-note:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.save-note",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.save-note:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:problems.save-note:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.save-note",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.save-note:retry\"]"
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.toggle-favorite",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.toggle-favorite:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.toggle-favorite",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.toggle-favorite:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.toggle-favorite",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.toggle-favorite:offline-draft\"]"
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.toggle-favorite",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.toggle-favorite:permission-denied\"]"
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.toggle-favorite",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.toggle-favorite:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:problems.toggle-favorite:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.toggle-favorite",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.toggle-favorite:retry\"]"
+    },
+    {
+      "id": "mutation:problems.complete:recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.complete",
+      "state": "recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.complete:recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.complete:non-recoverable-error",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.complete",
+      "state": "non-recoverable-error",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.complete:non-recoverable-error\"]"
+    },
+    {
+      "id": "mutation:problems.complete:offline-draft",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.complete",
+      "state": "offline-draft",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.complete:offline-draft\"]"
+    },
+    {
+      "id": "mutation:problems.complete:permission-denied",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.complete",
+      "state": "permission-denied",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.complete:permission-denied\"]"
+    },
+    {
+      "id": "mutation:problems.complete:stale-version-conflict",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.complete",
+      "state": "stale-version-conflict",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.complete:stale-version-conflict\"]"
+    },
+    {
+      "id": "mutation:problems.complete:retry",
+      "kind": "mutation-recovery",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.complete",
+      "state": "retry",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.complete:retry\"]"
+    },
+    {
+      "id": "mutation:problems.complete:retry-idempotency",
+      "kind": "retry-idempotency",
+      "surfaceId": "route:problems",
+      "routeId": "problems",
+      "mutationId": "problems.complete",
+      "sourceCatalogTargetPhase": 2,
+      "sourceCatalogExpectedStatus": "future-gate",
+      "phase2RequiredResultStatus": "pass",
+      "phase2EvidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+      "resultSelector": "results[id=\"mutation:problems.complete:retry-idempotency\"]"
+    }
+  ],
+  "targetGateCount": 76,
+  "sourceCatalogStatusCounts": {
+    "legacy-baseline": 9,
+    "future-gate": 67
+  },
+  "finalVisualCases": [
+    {
+      "id": "overview--light--desktop",
+      "routeId": "overview",
+      "surfaceId": "route:overview",
+      "theme": "light",
+      "viewport": {
+        "id": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "acceptanceId": "visual:overview:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-desktop-light.jpg"
+    },
+    {
+      "id": "overview--light--laptop",
+      "routeId": "overview",
+      "surfaceId": "route:overview",
+      "theme": "light",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "acceptanceId": "visual:overview:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-laptop-light.jpg"
+    },
+    {
+      "id": "overview--light--mobile",
+      "routeId": "overview",
+      "surfaceId": "route:overview",
+      "theme": "light",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "acceptanceId": "visual:overview:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-mobile-light.jpg"
+    },
+    {
+      "id": "overview--dark--desktop",
+      "routeId": "overview",
+      "surfaceId": "route:overview",
+      "theme": "dark",
+      "viewport": {
+        "id": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "acceptanceId": "visual:overview:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-desktop-dark.jpg"
+    },
+    {
+      "id": "overview--dark--laptop",
+      "routeId": "overview",
+      "surfaceId": "route:overview",
+      "theme": "dark",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "acceptanceId": "visual:overview:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-laptop-dark.jpg"
+    },
+    {
+      "id": "overview--dark--mobile",
+      "routeId": "overview",
+      "surfaceId": "route:overview",
+      "theme": "dark",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "acceptanceId": "visual:overview:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-mobile-dark.jpg"
+    },
+    {
+      "id": "plan--light--desktop",
+      "routeId": "plan",
+      "surfaceId": "route:plan",
+      "theme": "light",
+      "viewport": {
+        "id": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "acceptanceId": "visual:plan:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-desktop-light.jpg"
+    },
+    {
+      "id": "plan--light--laptop",
+      "routeId": "plan",
+      "surfaceId": "route:plan",
+      "theme": "light",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "acceptanceId": "visual:plan:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-laptop-light.jpg"
+    },
+    {
+      "id": "plan--light--mobile",
+      "routeId": "plan",
+      "surfaceId": "route:plan",
+      "theme": "light",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "acceptanceId": "visual:plan:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-mobile-light.jpg"
+    },
+    {
+      "id": "plan--light--tablet",
+      "routeId": "plan",
+      "surfaceId": "route:plan",
+      "theme": "light",
+      "viewport": {
+        "id": "tablet",
+        "width": 1024,
+        "height": 768
+      },
+      "acceptanceId": "visual:plan:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-tablet-light.jpg"
+    },
+    {
+      "id": "plan--dark--desktop",
+      "routeId": "plan",
+      "surfaceId": "route:plan",
+      "theme": "dark",
+      "viewport": {
+        "id": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "acceptanceId": "visual:plan:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-desktop-dark.jpg"
+    },
+    {
+      "id": "plan--dark--laptop",
+      "routeId": "plan",
+      "surfaceId": "route:plan",
+      "theme": "dark",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "acceptanceId": "visual:plan:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-laptop-dark.jpg"
+    },
+    {
+      "id": "plan--dark--mobile",
+      "routeId": "plan",
+      "surfaceId": "route:plan",
+      "theme": "dark",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "acceptanceId": "visual:plan:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-mobile-dark.jpg"
+    },
+    {
+      "id": "plan--dark--tablet",
+      "routeId": "plan",
+      "surfaceId": "route:plan",
+      "theme": "dark",
+      "viewport": {
+        "id": "tablet",
+        "width": 1024,
+        "height": 768
+      },
+      "acceptanceId": "visual:plan:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-tablet-dark.jpg"
+    },
+    {
+      "id": "problems--light--desktop",
+      "routeId": "problems",
+      "surfaceId": "route:problems",
+      "theme": "light",
+      "viewport": {
+        "id": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "acceptanceId": "visual:problems:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-desktop-light.jpg"
+    },
+    {
+      "id": "problems--light--laptop",
+      "routeId": "problems",
+      "surfaceId": "route:problems",
+      "theme": "light",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "acceptanceId": "visual:problems:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-laptop-light.jpg"
+    },
+    {
+      "id": "problems--light--mobile",
+      "routeId": "problems",
+      "surfaceId": "route:problems",
+      "theme": "light",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "acceptanceId": "visual:problems:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-mobile-light.jpg"
+    },
+    {
+      "id": "problems--light--tablet",
+      "routeId": "problems",
+      "surfaceId": "route:problems",
+      "theme": "light",
+      "viewport": {
+        "id": "tablet",
+        "width": 1024,
+        "height": 768
+      },
+      "acceptanceId": "visual:problems:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-tablet-light.jpg"
+    },
+    {
+      "id": "problems--dark--desktop",
+      "routeId": "problems",
+      "surfaceId": "route:problems",
+      "theme": "dark",
+      "viewport": {
+        "id": "desktop",
+        "width": 1440,
+        "height": 900
+      },
+      "acceptanceId": "visual:problems:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-desktop-dark.jpg"
+    },
+    {
+      "id": "problems--dark--laptop",
+      "routeId": "problems",
+      "surfaceId": "route:problems",
+      "theme": "dark",
+      "viewport": {
+        "id": "laptop",
+        "width": 1280,
+        "height": 720
+      },
+      "acceptanceId": "visual:problems:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-laptop-dark.jpg"
+    },
+    {
+      "id": "problems--dark--mobile",
+      "routeId": "problems",
+      "surfaceId": "route:problems",
+      "theme": "dark",
+      "viewport": {
+        "id": "mobile",
+        "width": 390,
+        "height": 844
+      },
+      "acceptanceId": "visual:problems:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-mobile-dark.jpg"
+    },
+    {
+      "id": "problems--dark--tablet",
+      "routeId": "problems",
+      "surfaceId": "route:problems",
+      "theme": "dark",
+      "viewport": {
+        "id": "tablet",
+        "width": 1024,
+        "height": 768
+      },
+      "acceptanceId": "visual:problems:light-dark",
+      "requiredResultStatus": "pass",
+      "evidencePath": "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-tablet-dark.jpg"
+    }
+  ],
+  "finalVisualCaseCount": 22,
+  "evidenceOutputs": [
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-contract-summary.json",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-visual-summary.json",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-accessibility-summary.json",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-journeys-summary.json",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-recovery-summary.json",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-performance-summary.json",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-summary.json",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-visual-review-receipt.json",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-desktop-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-laptop-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-mobile-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/overview-mobile-dark.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-desktop-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-laptop-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-mobile-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-tablet-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-mobile-dark.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/plan-tablet-dark.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-desktop-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-laptop-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-mobile-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-tablet-light.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-desktop-dark.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-laptop-dark.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-mobile-dark.jpg",
+    "docs/browser-audit-screenshots/390-frontend-upgrade-phase-2-review/problems-tablet-dark.jpg"
+  ],
+  "aggregateStatusCeiling": "ready-for-review"
+}

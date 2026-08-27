@@ -1,6 +1,6 @@
 {
   "status": "pass",
-  "durationMs": 459,
+  "durationMs": 967,
   "releaseBlocked": true,
   "privateBeta": {
     "mode": "private-beta",
@@ -147,7 +147,34 @@
     "commercialRejectedForAllActiveSources": true,
     "activePublicCommercialNeedsReview": true,
     "noActivePublicCommercialApprovals": true,
-    "quantguideStillPrivateAndBlocked": true
+    "quantguideStillPrivateAndBlocked": true,
+    "serverPreviewFixtureValid": true,
+    "serverPreviewFixtureInternalOnly": true,
+    "serverPreviewFixtureExcludedFromPublicCommercial": true,
+    "nativeV2HasNoLegacyGlobalCatalog": true
+  },
+  "serverPreviewCatalog": {
+    "path": "api/catalogs/phase2-preview-v1.json",
+    "catalogId": "quantgym-phase2-preview-synthetic",
+    "contentVersion": "2026-07-27.1",
+    "synthetic": true,
+    "sourceCount": 2,
+    "problemCount": 6,
+    "valid": true,
+    "internalOnly": true,
+    "excludedFromPublicCommercial": true
+  },
+  "nativeV2CatalogBoundary": {
+    "roots": [
+      "src/core",
+      "src/shared",
+      "src/domains",
+      "src/pages/plan",
+      "src/pages/training",
+      "src/pages/v2"
+    ],
+    "valid": true,
+    "violations": []
   },
   "failures": [],
   "warnings": []

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>@keyframes chatDot{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}</style>
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+[data-chat-root]{display:grid;grid-template-columns:290px 1fr}
+[data-chat-back]{display:none}
+@media(max-width:860px){
+[data-chat-root]{grid-template-columns:1fr}
+[data-chat-root][data-view="thread"] [data-pane="list"]{display:none}
+[data-chat-root][data-view="list"] [data-pane="thread"]{display:none}
+[data-chat-back]{display:grid}
+}
+</style>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<script src="./qg-state.js"></script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><path d="M24 32h52v28H44L32 72V60H24z" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/><circle cx="40" cy="46" r="3" fill="#fff"/><circle cx="52" cy="46" r="3" fill="#fff"/><circle cx="64" cy="46" r="3" fill="#fff"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div>
+    <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:var(--track);color:#7161f2;font-size:11.5px;font-weight:700;margin-bottom:10px">COMMUNITY · 聊天</div>
+    <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">聊天 <span style="color:#5b5ff5">Chat</span></h1>
+  </div>
+
+  <div data-chat-root data-view="{{ mobileView }}" style="gap:16px;border-radius:24px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05),0 18px 40px -26px rgba(74,67,214,.4);overflow:hidden;height:min(640px,calc(100dvh - 170px))">
+
+    <div data-pane="list" style="border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface-2)">
+      <div style="padding:16px 16px 12px"><div style="display:flex;align-items:center;gap:9px;padding:10px 13px;border-radius:12px;background:var(--surface);border:1px solid var(--border)"><span style="width:16px;height:16px;display:inline-flex;color:#a5a4c2">{{ searchIcon }}</span><input placeholder="搜索会话…" style="border:none;outline:none;background:transparent;font-family:inherit;font-size:13px;width:100%"></div></div>
+      <div style="flex:1;overflow-y:auto;padding:0 10px 10px;display:flex;flex-direction:column;gap:4px">
+        <sc-for list="{{ convs }}" as="c" hint-placeholder-count="5">
+          <div onClick="{{ c.onClick }}" style="{{ c.rowStyle }}">
+            <div style="position:relative;flex:0 0 auto">
+              <div style="{{ c.avaStyle }}"><sc-if value="{{ c.isBot }}" hint-placeholder-val="{{ true }}"><img src="assets/avatar-happy-v2.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></sc-if><sc-if value="{{ c.notBot }}">{{ c.init }}</sc-if></div>
+              <sc-if value="{{ c.online }}"><span style="position:absolute;bottom:-1px;right:-1px;width:11px;height:11px;border-radius:50%;background:#4ade80;border:2px solid #fbfbfd"></span></sc-if>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px"><span style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span><sc-if value="{{ c.isBot }}"><span style="padding:1px 6px;border-radius:20px;background:var(--brand-soft);color:#5b5ff5;font-size:9px;font-weight:700;flex:0 0 auto">AI</span></sc-if><span style="margin-left:auto;font-size:10.5px;color:var(--muted-2);font-weight:600;flex:0 0 auto">{{ c.time }}</span></div>
+              <div style="font-size:11.5px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">{{ c.preview }}</div>
+            </div>
+            <sc-if value="{{ c.unread }}"><span style="{{ c.badgeStyle }}">{{ c.unread }}</span></sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div data-pane="thread" style="display:flex;flex-direction:column;min-width:0">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border)">
+        <button type="button" data-chat-back onClick="{{ backToList }}" style="place-items:center;width:36px;height:36px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;flex:0 0 auto;font-size:18px;line-height:1;font-family:inherit">‹</button>
+        <div style="{{ head.avaStyle }}"><sc-if value="{{ head.isBot }}" hint-placeholder-val="{{ true }}"><img src="assets/avatar-focused-v2.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px"></sc-if><sc-if value="{{ head.notBot }}">{{ head.init }}</sc-if></div>
+        <div style="flex:1"><div style="display:flex;align-items:center;gap:7px"><span style="font-size:15px;font-weight:800">{{ head.name }}</span><sc-if value="{{ head.isBot }}"><span style="padding:2px 8px;border-radius:20px;background:linear-gradient(135deg,#5b5ff5,#7d6cff);color:#fff;font-size:10px;font-weight:700">鲨鱼教练</span></sc-if></div><div style="font-size:11.5px;color:#16a06a;font-weight:600">{{ head.status }}</div></div>
+        <button type="button" style="width:36px;height:36px;border-radius:11px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer">⋯</button>
+      </div>
+
+      <div style="flex:1;overflow-y:auto;padding:20px;background:var(--surface-2);display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ messages }}" as="m" hint-placeholder-count="5">
+          <div style="{{ m.rowStyle }}">
+            <sc-if value="{{ m.showAva }}"><div style="{{ m.avaStyle }}"><img src="assets/avatar-happy-v2.png" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:10px"></div></sc-if>
+            <div style="{{ m.colStyle }}">
+              <div style="{{ m.bubbleStyle }}">{{ m.text }}</div>
+              <sc-if value="{{ m.hasCard }}">
+              <div style="margin-top:8px;padding:13px 15px;border-radius:14px;background:var(--surface);border:1px solid #e6eefb">
+                <div style="font-size:11px;font-weight:700;color:#5b5ff5;letter-spacing:.06em;margin-bottom:6px">{{ m.cardTag }}</div>
+                <div style="font-family:'Space Grotesk';font-size:15px;color:var(--text);text-align:center;padding:6px 0">{{ m.cardFormula }}</div>
+                <div style="display:flex;gap:8px;margin-top:8px"><button type="button" style="flex:1;padding:9px;border:none;border-radius:10px;background:#5b5ff5;color:#fff;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer">去练这道题</button><button type="button" style="padding:9px 13px;border-radius:10px;background:var(--surface);border:1px solid #e0dffb;color:#5b5ff5;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer">收藏</button></div>
+              </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ typing }}"><div style="display:flex;align-items:center;gap:9px"><div style="width:30px;height:30px;border-radius:10px;overflow:hidden;flex:0 0 auto"><img src="assets/avatar-happy-v2.png" alt="" style="width:100%;height:100%;object-fit:cover"></div><div style="display:flex;gap:4px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--border)"><span style="width:7px;height:7px;border-radius:50%;background:#c3c2d8;animation:chatDot 1s infinite"></span><span style="width:7px;height:7px;border-radius:50%;background:#c3c2d8;animation:chatDot 1s .2s infinite"></span><span style="width:7px;height:7px;border-radius:50%;background:#c3c2d8;animation:chatDot 1s .4s infinite"></span></div></div></sc-if>
+      </div>
+
+      <div style="padding:12px 16px;border-top:1px solid var(--border)">
+        <div style="display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap">
+          <sc-for list="{{ quicks }}" as="q" hint-placeholder-count="3"><button type="button" onClick="{{ q.onClick }}" style="padding:6px 12px;border-radius:20px;background:var(--track);border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">{{ q.label }}</button></sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 8px 15px;border-radius:15px;background:var(--surface-2);border:1px solid var(--border)">
+          <input value="{{ input }}" onInput="{{ onInput }}" onKeyDown="{{ onKey }}" placeholder="问鲨鱼教练任何量化问题…" style="flex:1;border:none;outline:none;background:transparent;font-family:inherit;font-size:14px;color:var(--text)">
+          <button type="button" onClick="{{ send }}" style="display:grid;place-items:center;width:40px;height:40px;border-radius:12px;border:none;background:linear-gradient(135deg,#5b5ff5,#7d6cff);color:#fff;cursor:pointer;flex:0 0 auto"><span style="width:18px;height:18px;display:inline-flex">{{ sendIcon }}</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    active:'bot', input:'', typing:false, mobileView:'list',
+    threads:{
+      bot:[
+        {who:'bot',text:'嗨 Quant！我是你的鲨鱼教练 🦈 今天想攻克哪个知识点？',showAva:true},
+        {who:'me',text:'期望值的题总是算错，有什么套路吗？'},
+        {who:'bot',text:'核心是「先写分布，再求期望」。比如掷两骰求最大值的期望，先求 P(max=x)，再加权求和：',showAva:true,card:{tag:'今日推荐 · 概率',formula:'E[max] = Σ x·(2x−1)/36 = 161/36 ≈ 4.47'}},
+        {who:'me',text:'原来如此！那随机游走呢？'},
+        {who:'bot',text:'随机游走用「一步分析 + 边界条件」列差分方程。要不要我给你排 3 道由易到难的题？',showAva:true},
+      ],
+    },
+  };
+
+  reply(text){
+    const canned=[
+      {text:'好问题！先把它拆成更小的子问题，往往答案就浮现了。要我给你一个例子吗？',showAva:true},
+      {text:'记住：面试官更在意你的思路，出声把每一步说清楚，比直接报答案更重要。',showAva:true},
+      {text:'我已把相关题加入你的「今日任务」，练完记得回来告诉我正确率～',showAva:true},
+    ];
+    return canned[Math.floor(Math.random()*canned.length)];
+  }
+
+  icon(name){
+    const R=React.createElement;
+    const w=(ch)=>R('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.9,strokeLinecap:'round',strokeLinejoin:'round',style:{width:'100%',height:'100%',display:'block'}},ch);
+    const P=(d)=>R('path',{d,key:d.slice(0,6)});
+    if(name==='search') return w([R('circle',{cx:11,cy:11,r:7,key:'c'}),R('line',{x1:20,y1:20,x2:16.2,y2:16.2,key:'l'})]);
+    if(name==='send') return w([P('M22 2L11 13'),P('M22 2l-7 20-4-9-9-4z')]);
+    return w([R('circle',{cx:12,cy:12,r:8,key:'c'})]);
+  }
+
+  set(k,v){ this.setState({[k]:v}); }
+
+  doSend(text){
+    const t=(text||this.state.input).trim(); if(!t) return;
+    this.setState(s=>({ input:'', typing:true, threads:{...s.threads, [s.active]:[...s.threads[s.active], {who:'me',text:t}]} }));
+    setTimeout(()=>{
+      this.setState(s=>{ const r=this.reply(t); return { typing:false, threads:{...s.threads,[s.active]:[...s.threads[s.active], r]} }; });
+    },1100);
+  }
+
+  renderVals(){
+    const S=this.state;
+    const convMeta=[
+      {id:'bot',name:'鲨鱼教练 Shark AI',bot:true,online:true,time:'刚刚',preview:'我已把相关题加入你的「今日任务」…',unread:0},
+      {id:'g1',name:'速算冲刺小组',bot:false,init:'速',color:'#ff9f2e',online:true,time:'12:04',preview:'Ari：今天限时 80 题，冲！',unread:3},
+      {id:'p1',name:'Mina Patel',bot:false,init:'MP',color:'#5b5ff5',online:true,time:'11:20',preview:'那道醉酒乘客我想通了',unread:0},
+      {id:'g2',name:'Optiver 面试互助',bot:false,init:'OP',color:'#e0562e',online:false,time:'昨天',preview:'Leo：速算轮通过啦！',unread:0},
+      {id:'p2',name:'Sofia Kim',bot:false,init:'SK',color:'#0f9d63',online:false,time:'周一',preview:'一起刷 Hull 第 13 章？',unread:0},
+    ];
+    const convs=convMeta.map(c=>{
+      const active=c.id===S.active;
+      return {
+        name:c.name, time:c.time, preview:c.preview, init:c.init, isBot:c.bot, notBot:!c.bot, online:c.online, unread:c.unread?String(c.unread):'',
+        onClick:()=>this.setState({active:c.id, mobileView:'thread'}),
+        rowStyle:'display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:13px;cursor:pointer;transition:background .12s ease;'+(active?'background:var(--brand-soft)':''),
+        avaStyle:'display:grid;place-items:center;width:42px;height:42px;border-radius:12px;flex:0 0 auto;overflow:hidden;font-family:'+"'Space Grotesk'"+';font-weight:700;font-size:13px;color:#fff;background:'+(c.bot?'#eef0ff':c.color),
+        badgeStyle:'display:grid;place-items:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:#5b5ff5;color:#fff;font-family:'+"'Space Grotesk'"+';font-size:11px;font-weight:700;flex:0 0 auto',
+      };
+    });
+    const activeMeta=convMeta.find(c=>c.id===S.active);
+    const head={ name:activeMeta.name, isBot:activeMeta.bot, notBot:!activeMeta.bot, init:activeMeta.init,
+      status: activeMeta.bot?'在线 · 秒回你的每个问题':(activeMeta.online?'在线':'最近活跃'),
+      avaStyle:'display:grid;place-items:center;width:44px;height:44px;border-radius:12px;flex:0 0 auto;overflow:hidden;font-family:'+"'Space Grotesk'"+';font-weight:700;font-size:14px;color:#fff;background:'+(activeMeta.bot?'#eef0ff':activeMeta.color) };
+
+    const raw=S.threads[S.active]||[{who:'bot',text:'开始聊天吧！',showAva:true}];
+    const messages=raw.map(m=>{
+      const me=m.who==='me';
+      return {
+        text:m.text, showAva:!me&&m.showAva, hasCard:!!m.card, cardTag:m.card&&m.card.tag, cardFormula:m.card&&m.card.formula,
+        rowStyle:'display:flex;gap:9px;align-items:flex-end;'+(me?'flex-direction:row-reverse':''),
+        avaStyle:'width:30px;height:30px;border-radius:10px;overflow:hidden;flex:0 0 auto',
+        colStyle:'max-width:74%;display:flex;flex-direction:column;'+(me?'align-items:flex-end':'align-items:flex-start')+(!me&&!m.showAva?';margin-left:39px':''),
+        bubbleStyle:'padding:11px 14px;border-radius:16px;font-size:13.5px;line-height:1.55;'+(me?'background:linear-gradient(135deg,#5b5ff5,#7d6cff);color:#fff;border-bottom-right-radius:5px':'background:var(--surface);color:#3f3e5e;border:1px solid var(--border);border-bottom-left-radius:5px'),
+      };
+    });
+
+    const quicks=[['讲讲随机过程','随机过程从哪里开始学？'],['出 3 道概率题','给我出 3 道概率题'],['模拟一次面试','帮我模拟一次面试']].map(q=>({ label:q[0], onClick:()=>this.doSend(q[1]) }));
+
+    return {
+      searchIcon:this.icon('search'), sendIcon:this.icon('send'),
+      convs, head, messages, typing:S.typing,
+      input:S.input, onInput:(e)=>this.set('input',e.target.value),
+      onKey:(e)=>{ if(e.key==='Enter') this.doSend(); },
+      send:()=>this.doSend(), quicks,
+      mobileView:S.mobileView,
+      backToList:()=>this.setState({mobileView:'list'}),
+    };
+  }
+}
+</script>
+</body>
+</html>

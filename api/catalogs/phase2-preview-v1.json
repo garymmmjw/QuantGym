@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "catalogId": "quantgym-phase2-preview-synthetic",
+  "contentVersion": "2026-07-27.1",
+  "synthetic": true,
+  "sources": [
+    {
+      "slug": "phase2-preview-probability",
+      "name": "Phase 2 Preview · Probability",
+      "rightsStatus": "internal_preview",
+      "releaseScope": "preview",
+      "problems": [
+        {
+          "externalKey": "coin-bayes-001",
+          "titleZh": "两枚硬币的贝叶斯更新",
+          "titleEn": "Bayesian Update with Two Coins",
+          "promptZh": "一枚公平硬币与一枚双面正面硬币等概率放入盒中。随机取一枚并观察到正面，求取到双面正面硬币的概率。",
+          "promptEn": "A fair coin and a double-headed coin are placed in a box with equal prior probability. One coin is selected and shows heads. Find the posterior probability that it is the double-headed coin.",
+          "hintZh": "分别写出两种硬币观察到正面的似然。",
+          "hintEn": "Write the likelihood of observing heads under each coin hypothesis.",
+          "solutionZh": "由贝叶斯公式，后验概率为 1/(1+1/2)=2/3。",
+          "solutionEn": "Bayes' rule gives 1/(1+1/2)=2/3.",
+          "category": "Probability",
+          "difficulty": "Easy",
+          "tags": ["bayes", "conditional-probability"],
+          "companies": ["Synthetic Quant Lab"],
+          "hot100": true
+        },
+        {
+          "externalKey": "stopping-time-002",
+          "titleZh": "首次连续正面的等待时间",
+          "titleEn": "Waiting Time for Consecutive Heads",
+          "promptZh": "重复抛一枚公平硬币，直到首次出现连续两个正面。求抛掷次数的期望。",
+          "promptEn": "Flip a fair coin until two consecutive heads first appear. Find the expected number of flips.",
+          "hintZh": "为“上一轮是否为正面”建立两个状态。",
+          "hintEn": "Use two states based on whether the previous flip was heads.",
+          "solutionZh": "由两状态递推可得期望为 6。",
+          "solutionEn": "A two-state recurrence gives an expectation of 6 flips.",
+          "category": "Probability",
+          "difficulty": "Medium",
+          "tags": ["expectation", "markov-state"],
+          "companies": [],
+          "hot100": false
+        },
+        {
+          "externalKey": "hidden-oracle-003",
+          "titleZh": "离散分布练习",
+          "titleEn": "Discrete Distribution Exercise",
+          "promptZh": "设随机变量在 0、1、2 上等概率取值，求其方差。",
+          "promptEn": "A random variable is uniform on 0, 1, and 2. Find its variance.",
+          "hintZh": "HIDDEN_HINT_ONLY_5832",
+          "hintEn": "Compute the first two moments.",
+          "solutionZh": "ORACLE_SOLUTION_ONLY_9471",
+          "solutionEn": "The variance is 2/3.",
+          "category": "Statistics",
+          "difficulty": "Easy",
+          "tags": ["variance", "discrete"],
+          "companies": [],
+          "hot100": false
+        }
+      ]
+    },
+    {
+      "slug": "phase2-preview-markets",
+      "name": "Phase 2 Preview · Markets",
+      "rightsStatus": "internal_preview",
+      "releaseScope": "preview",
+      "problems": [
+        {
+          "externalKey": "forward-price-001",
+          "titleZh": "无收益资产远期定价",
+          "titleEn": "Forward Pricing without Income",
+          "promptZh": "某资产现价为 100，连续复利无风险利率为 5%，期限一年且无收益。求远期价格。",
+          "promptEn": "An asset trades at 100, the continuously compounded risk-free rate is 5%, maturity is one year, and the asset pays no income. Find the forward price.",
+          "hintZh": "使用持有成本关系。",
+          "hintEn": "Use the cost-of-carry relation.",
+          "solutionZh": "远期价格为 100e^{0.05}。",
+          "solutionEn": "The forward price is 100e^{0.05}.",
+          "category": "Derivatives",
+          "difficulty": "Easy",
+          "tags": ["forward", "no-arbitrage"],
+          "companies": ["Synthetic Market Desk"],
+          "hot100": true
+        },
+        {
+          "externalKey": "delta-hedge-002",
+          "titleZh": "一期二叉树的 Delta 对冲",
+          "titleEn": "One-Step Binomial Delta Hedge",
+          "promptZh": "股票下一期可能上涨至 120 或下跌至 80。某衍生品对应价值为 25 或 5。求复制组合的股票头寸。",
+          "promptEn": "A stock can move to 120 or 80 next period. A derivative is then worth 25 or 5. Find the stock position in the replicating portfolio.",
+          "hintZh": "令两个状态下组合价值差等于衍生品价值差。",
+          "hintEn": "Match the difference in portfolio values across the two states.",
+          "solutionZh": "Delta=(25-5)/(120-80)=0.5。",
+          "solutionEn": "Delta=(25-5)/(120-80)=0.5.",
+          "category": "Derivatives",
+          "difficulty": "Medium",
+          "tags": ["binomial", "hedging"],
+          "companies": [],
+          "hot100": true
+        },
+        {
+          "externalKey": "convex-budget-003",
+          "titleZh": "带预算约束的凸组合",
+          "titleEn": "Convex Allocation with a Budget Constraint",
+          "promptZh": "在权重非负且总和为一的条件下，说明二次风险目标为何保持凸性。",
+          "promptEn": "Explain why a quadratic risk objective remains convex under nonnegative weights that sum to one.",
+          "hintZh": "检查协方差矩阵与可行域。",
+          "hintEn": "Inspect the covariance matrix and the feasible set.",
+          "solutionZh": "半正定协方差矩阵给出凸二次目标，线性等式与不等式定义凸可行域。",
+          "solutionEn": "A positive-semidefinite covariance matrix gives a convex quadratic objective, while the linear constraints define a convex feasible set.",
+          "category": "Optimization",
+          "difficulty": "Hard",
+          "tags": ["convexity", "portfolio"],
+          "companies": ["Synthetic Quant Lab"],
+          "hot100": false
+        }
+      ]
+    }
+  ]
+}

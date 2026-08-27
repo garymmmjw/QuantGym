@@ -15,15 +15,11 @@ export function applyAppLanguageText(options = {}) {
     root = globalThis.document,
     elements = {},
     language = "zh",
-    state = {},
     t = (key) => key,
     getNetworkStatusLabel = (status) => status,
-    updatePrepTaskIndicator = () => {},
     updateGlobalSearchPlaceholder = () => {},
     updateCheckInPill = () => {},
-    applySidebarState = () => {},
-    renderLeaderboardScopeSummary = () => {},
-    startHeroTypewriter = () => {}
+    applySidebarState = () => {}
   } = options;
 
   const text = (selector, value) => setText(selector, value, root);
@@ -60,11 +56,6 @@ export function applyAppLanguageText(options = {}) {
     ["settings", t("settings")]
   ].forEach(([key, value]) => button(`[data-module-tab="${key}"]`, value));
 
-  text('[data-problem-view="all"]', t("allProblems"));
-  text('[data-problem-view="saved"]', t("savedProblems"));
-  text('[data-problem-view="ranking"]', t("popularProblems"));
-  text(".problem-ranking-header h3", t("problemRankingTitle"));
-  text(".problem-ranking-header p", t("problemRankingHint"));
   text("#skillsPageTitle", t("skills"));
   text("#skillsPageSubtitle", t("skillPageSubtitle"));
   text("#skillsScoreLabel", t("skillsTierLabel"));
@@ -75,36 +66,12 @@ export function applyAppLanguageText(options = {}) {
   text("#skillRadarTitle", t("skillRadarTitle"));
   text("#skillRadarHint", t("skillRadarHint"));
   text(".sidebar-helper strong", t("todayGuide"));
-  updatePrepTaskIndicator();
-
   updateGlobalSearchPlaceholder();
   texts(".app-command-actions .app-stat-pill small", [t("commandStreakLabel"), t("commandChatLabel")]);
   updateCheckInPill();
-  text("#todoDockButtonLabel", t("todoButton"));
-  text("#todoDockEyebrow", t("todoEyebrow"));
-  text("#todoDockTitle", t("todoTitle"));
-  placeholder("todoDockAddInput", t("todoAddPlaceholder"));
-  button("#todoDockAddForm .secondary-button", t("todoAdd"));
   attribute(".app-account-chip", "aria-label", t("accountInfo"));
   attribute(".app-settings-button", "aria-label", t("settings"));
   applySidebarState();
-  button("#generateStudyPlanBtn", t("designStudyPlan"));
-
-  text(".summary-copy .rank-label", t("rankLabel"));
-  text(".total-xp span:last-child", t("scoreSuffix"));
-  texts(".summary-metrics small", [t("streak"), t("records"), t("weeklyXp")]);
-  text(".log-panel h2", t("todayLog"));
-  placeholder("logText", t("todayLogPlaceholder"));
-  placeholder("durationInput", t("minutesPlaceholder"));
-  selectOptions("difficultyInput", [t("difficultyNormal"), t("difficultyMedium"), t("difficultyHard")]);
-  button("#logForm .primary-button", t("submitLog"));
-  text(".leaderboard-panel h2", t("leaderboard"));
-  labelFor("leaderboardMetricSelect", t("leaderboardMetric"));
-  labelFor("leaderboardScopeSelect", t("leaderboardScope"));
-  labelFor("leaderboardCountrySelect", t("country"));
-  labelFor("leaderboardRegionSelect", t("region"));
-  text(".overview-community h2", t("community"));
-  text("#overviewCommunitySummary", t("overviewCommunitySummary"));
   text(".community-section h2", t("community"));
   text("#communitySummary", t("communitySummary"));
   text("#messagesPageTitle", t("messages"));
@@ -117,15 +84,6 @@ export function applyAppLanguageText(options = {}) {
   text('[data-library-kind="questionSet"]', language === "en" ? "Question Sets" : "题单");
   text("#libraryContinueTitle", language === "en" ? "Continue Reading" : "继续阅读");
 
-  text(".problem-page-copy .rank-label", t("problemEyebrow"));
-  text(".problem-page-copy h2", t("problemTitle"));
-  text(".problem-page-copy p", t("problemSubtitle"));
-  placeholder("problemSearch", t("problemSearchPlaceholder"));
-  attribute("#addProblemBtn", "title", t("addProblem"));
-  attribute("#addProblemBtn", "aria-label", t("addProblem"));
-  text("#problemCollectionsTitle", t("problemCollectionsTitle"));
-  text(".problem-collections-heading p", t("problemCollectionsHint"));
-  attribute("#problemCollectionGrid", "aria-label", t("problemCollectionsTitle"));
 
   text(".settings-section h2", t("settings"));
   if (elements.settingsMessage && !/已保存|saved|同步|sync|连接|connect/i.test(elements.settingsMessage.textContent)) {
@@ -161,9 +119,6 @@ export function applyAppLanguageText(options = {}) {
   text("#jobsSummary", t("jobsSummary"));
   text("#companiesPageTitle", t("companies"));
   text("#companiesSummary", t("companiesSummary"));
-  text("#problemCompanyTitle", t("problemCompanyTitle"));
-  text("#problemCompanySummary", t("problemCompanySummary"));
-  button("#problemCompanyClearBtn", t("allCompanies"));
   button('[data-company-tier="all"]', t("allCompanies"));
   button('[data-company-tier="s"]', "Tier S");
   button('[data-company-tier="a"]', "Tier A");
@@ -221,7 +176,6 @@ export function applyAppLanguageText(options = {}) {
 
   button("#settingsForm .primary-button", t("saveSettings"));
   button("#communityForm .primary-button", t("post"));
-  button("#overviewCommunityForm .primary-button", t("post"));
   setFileLabel("#communityForm .secondary-button", elements.communityMedia, t("addMedia"), root);
   button("#exportBtn", t("exportBackup"));
   button("#resetBtn", t("resetMemory"));
@@ -230,17 +184,8 @@ export function applyAppLanguageText(options = {}) {
   setFileLabel(null, elements.importInput, t("importBackup"), root);
 
   placeholder("communityText", t("communityPlaceholder"));
-  placeholder("overviewCommunityText", t("overviewCommunityPlaceholder"));
   text("#newsDetail .news-impact strong", t("newsImpact"));
   text("#newsDetailReadBadge", t("newsReadCount"));
 
-  const scopeOptions = elements.leaderboardScopeSelect?.options || [];
-  if (scopeOptions.length >= 3) {
-    scopeOptions[0].textContent = t("leaderboardGlobal");
-    scopeOptions[1].textContent = t("leaderboardCountry");
-    scopeOptions[2].textContent = t("leaderboardRegion");
-  }
-  renderLeaderboardScopeSummary(state.leaderboard);
-  startHeroTypewriter();
   return true;
 }

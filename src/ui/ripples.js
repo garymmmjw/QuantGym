@@ -5,11 +5,7 @@ const DEFAULT_RIPPLE_SELECTOR = [
   ".module-tab",
   ".segment",
   ".library-card",
-  ".feature-launch-card",
-  ".leetcode-hot-link",
-  ".leetcode-hot-done",
-  ".todo-dock-button",
-  ".todo-task-toggle"
+  ".feature-launch-card"
 ].join(", ");
 
 export function setupButtonRipples(root = globalThis.document, options = {}) {

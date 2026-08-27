@@ -1,0 +1,37 @@
+.page {
+  inline-size: min(100%, var(--qg-shell-content-max-width));
+  margin-inline: auto;
+}
+
+.globalRecovery {
+  margin-block-end: var(--qg-space-3);
+}
+
+.listRecovery,
+.detailState {
+  display: grid;
+  min-block-size: 30rem;
+  align-content: center;
+  border: 1px solid var(--qg-border-subtle);
+  border-radius: var(--qg-radius-panel);
+  padding: var(--qg-space-5);
+  background: var(--qg-surface-primary);
+}
+
+.attemptScore {
+  margin: 0;
+  border-radius: var(--qg-radius-compact);
+  padding: var(--qg-space-3);
+  background: var(--qg-status-success-soft);
+  color: var(--qg-text-primary);
+  font-size: var(--qg-font-size-body-small);
+  font-weight: var(--qg-font-weight-bold);
+}
+
+@media (width <= 640px) {
+  .listRecovery,
+  .detailState {
+    min-block-size: 24rem;
+    padding: var(--qg-space-4);
+  }
+}

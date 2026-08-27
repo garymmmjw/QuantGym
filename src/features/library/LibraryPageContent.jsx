@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLibraryPageModel } from "./libraryHooks.js";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 // Design taxonomy (QuantGym 资料库.dc.html): every shelf item is one of
 // 有题册 / 教材 / 趣题集, derived from the real catalog metadata.
@@ -321,7 +322,7 @@ export function LibraryPageContent() {
         </div>
 
         <div className={`library-empty-state${shelfIsEmpty ? "" : " hidden"}`}>
-          <img src="/assets/generated/playful-precision/mascot-search.png" alt="" className="library-empty-mascot" loading="lazy" />
+          <QuantyImage asset="search" className="library-empty-mascot" size="small" />
           <p id="libraryEmpty" className="library-empty">
             {view.query ? t("libEmptyQuery", { query: view.query }) : t("libEmptyGeneric")}
           </p>

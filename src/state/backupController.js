@@ -9,7 +9,7 @@ import {
 
 export function createBackupController(deps = {}) {
   const windowRef = deps.windowRef || globalThis.window;
-  const resetMessage = deps.resetMessage || "清空当前账户的训练记录？已连接云端时也会同步为空。";
+  const resetMessage = deps.resetMessage || "清空当前账户的本地数据？已连接云端时也会同步为空。";
   const importErrorMessage = deps.importErrorMessage || "备份文件无法读取。";
 
   function resetState() {
@@ -18,7 +18,6 @@ export function createBackupController(deps = {}) {
     const currentUser = deps.getCurrentUser?.();
     if (currentUser) deps.clearStateForUser?.(currentUser.id);
     deps.setState?.(deps.loadState?.());
-    deps.clearProblemLookupCaches?.();
     deps.saveState?.();
     deps.renderAll?.();
   }
@@ -49,10 +48,7 @@ export function createBackupController(deps = {}) {
         normalizeGameRecords: deps.normalizeGameRecords,
         normalizeCommunityStore: deps.normalizeCommunityStore,
         mergeCommunityStores: deps.mergeCommunityStores,
-        mergeProblemStates: deps.mergeProblemStates,
-        problemStatesFromFavorites: deps.problemStatesFromFavorites,
         defaultLeaderboardSettings: deps.defaultLeaderboardSettings,
-        mergeProblems: deps.mergeProblems,
         mergeNews: deps.mergeNews,
         normalizeState: deps.normalizeState,
         nowIso: deps.nowIso?.() || new Date().toISOString()
@@ -66,7 +62,6 @@ export function createBackupController(deps = {}) {
           windowRef.dispatchEvent?.(new windowRef.CustomEvent("quantgym:community-updated"));
         }
       }
-      deps.clearProblemLookupCaches?.();
       deps.saveState?.();
       deps.renderAll?.();
     } catch (error) {

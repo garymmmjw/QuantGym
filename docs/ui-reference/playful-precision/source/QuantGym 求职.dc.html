@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#f4f4fb;--surface:#fff;--surface-2:#fbfbfd;--surface-3:#faf9ff;--border:#ecebf7;--border-2:#e8e7f4;--text:#1b1a38;--text-2:#4a4966;--muted:#6d6c8e;--muted-2:#9998b6;--muted-3:#a3a2bd;--track:#eeedfa;--brand:#5b5ff5;--brand-ink:#5b5ff5;--brand-soft:#eef0ff;--brand-soft-2:#f6f0ff;--done-soft:#f4fbf7;--shadow-card:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35)}
+:root[data-theme="dark"]{--bg-base:#111020;--surface:#201f39;--surface-2:#1b1a30;--surface-3:#242243;--border:#332f57;--border-2:#3a3763;--text:#f1f0fb;--text-2:#cbc9e8;--muted:#a6a4cf;--muted-2:#8785ae;--muted-3:#76749c;--track:#2c2a4e;--brand:#7d7bff;--brand-ink:#b9b8ff;--brand-soft:#2a2856;--brand-soft-2:#2c2650;--done-soft:#17251f;--shadow-card:0 1px 2px rgba(0,0,0,.35),0 14px 32px -24px rgba(0,0,0,.6)}
+body{background:var(--bg-base)}
+</style>
+<script>try{var t=localStorage.getItem("qg-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+</helmet>
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="24" fill="#5b5ff5"/><rect x="24" y="38" width="52" height="34" rx="5" fill="none" stroke="#fff" stroke-width="5"/><path d="M40 38v-6a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v6" fill="none" stroke="#fff" stroke-width="5"/></svg>
+</template>
+<div style="font-family:'Plus Jakarta Sans','PingFang SC','HarmonyOS Sans SC','Microsoft YaHei','Noto Sans SC',system-ui,sans-serif;color:var(--text);display:flex;flex-direction:column;gap:16px">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:20px;background:#e7f2fb;color:#2f7fc0;font-size:11.5px;font-weight:700;margin-bottom:10px">JOBS · 职位</div>
+      <h1 style="margin:0;font-size:29px;font-weight:800;letter-spacing:-.02em">求职 <span style="color:#5b5ff5">Jobs</span></h1>
+      <p style="margin:6px 0 0;font-size:13.5px;color:var(--muted);font-weight:500">头部做市商 & 对冲基金职位 · 直连官方 ATS · 投递全程追踪</p>
+    </div>
+    <div style="display:flex;gap:8px">
+      <sc-for list="{{ typeChips }}" as="c" hint-placeholder-count="3"><button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button></sc-for>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;align-items:start">
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ jobs }}" as="j" hint-placeholder-count="6">
+        <div style="border-radius:18px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.04),0 12px 28px -22px rgba(74,67,214,.35);padding:17px 19px;transition:transform .14s ease,box-shadow .14s ease" style-hover="transform:translateY(-2px);box-shadow:0 16px 32px -18px rgba(74,67,214,.45)">
+          <div style="display:flex;align-items:flex-start;gap:13px">
+            <div style="{{ j.logoStyle }}">{{ j.abbr }}</div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px"><span style="font-size:15px;font-weight:800">{{ j.company }}</span><span style="{{ j.typeStyle }}">{{ j.typeLabel }}</span></div>
+              <div style="font-size:13.5px;font-weight:600;color:#3f3e5e;margin-top:2px">{{ j.title }}</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:6px;font-size:11.5px;color:var(--muted);font-weight:600"><span style="display:inline-flex;align-items:center;gap:4px"><span style="width:13px;height:13px;display:inline-flex">{{ pinIcon }}</span>{{ j.location }}</span><span>· {{ j.posted }}</span></div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px">
+                <sc-for list="{{ j.tags }}" as="t" hint-placeholder-count="3"><span style="padding:3px 9px;border-radius:8px;background:var(--track);color:var(--muted);font-size:11px;font-weight:600">{{ t }}</span></sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:0 0 auto">
+              <div style="font-size:10.5px;color:var(--muted-3);font-weight:600">via {{ j.ats }}</div>
+              <button type="button" style="padding:9px 15px;border:none;border-radius:12px;background:linear-gradient(180deg,#6d70f8,#5b5ff5);color:#fff;font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer;box-shadow:0 3px 0 #3f39c9;transition:transform .12s ease" style-active="transform:translateY(2px);box-shadow:0 1px 0 #3f39c9">投递</button>
+              <button type="button" style="padding:6px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:inherit;font-weight:700;font-size:11.5px;cursor:pointer">收藏</button>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="border-radius:20px;background:var(--surface);border:1px solid var(--border);box-shadow:0 1px 2px rgba(27,26,56,.05),0 14px 32px -24px rgba(74,67,214,.35);padding:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:14px;font-weight:800">投递追踪</div><span style="font-size:11.5px;color:var(--muted);font-weight:600">12 家 · 本季</span></div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
+          <sc-for list="{{ tracker }}" as="col" hint-placeholder-count="4">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="{{ col.dotStyle }}"></span><span style="font-size:12.5px;font-weight:700">{{ col.title }}</span><span style="margin-left:auto;font-family:'Space Grotesk';font-size:11.5px;font-weight:700;color:var(--muted-3)">{{ col.count }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <sc-for list="{{ col.items }}" as="it" hint-placeholder-count="2">
+                  <div style="display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:12px;background:var(--surface-3);border:1px solid var(--border)">
+                    <div style="{{ it.logoStyle }}">{{ it.abbr }}</div>
+                    <div style="flex:1;min-width:0"><div style="font-size:12.5px;font-weight:700">{{ it.company }}</div><div style="font-size:10.5px;color:var(--muted-3);font-weight:600">{{ it.stage }}</div></div>
+                    <span style="{{ it.pillStyle }}">{{ it.pill }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border-radius:20px;background:linear-gradient(160deg,#1b1a38,#2d2a5c);color:#fff;padding:18px 20px;display:flex;align-items:center;gap:14px">
+        <img src="assets/mascot-trophy-v2.png" alt="" style="width:52px;height:auto;flex:0 0 auto">
+        <div><div style="font-size:11.5px;font-weight:700;color:#b9b8e0;margin-bottom:3px">匹配度最高</div><div style="font-size:14px;font-weight:800;line-height:1.4">你的画像与 <span style="color:#a9adff">Optiver 速算轮</span> 匹配度 92% — 先去 Mental Math 冲一把。</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { type:'all' };
+
+  icon(name){
+    const R=React.createElement;
+    const w=(ch)=>R('svg',{viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:1.9,strokeLinecap:'round',strokeLinejoin:'round',style:{width:'100%',height:'100%',display:'block'}},ch);
+    const P=(d)=>R('path',{d,key:d.slice(0,6)});
+    if(name==='pin') return w([P('M12 21s7-6.5 7-12a7 7 0 0 0-14 0c0 5.5 7 12 7 12z'),R('circle',{cx:12,cy:9,r:2.5,key:'c'})]);
+    return w([R('circle',{cx:12,cy:12,r:8,key:'c'})]);
+  }
+
+  data(){
+    return [
+      {company:'Jane Street',abbr:'JS',c:'var(--text)',title:'Quantitative Trading / Research Internship',type:'internship',location:'纽约 / 伦敦 / 香港',posted:'3 天前',tags:['trading','probability','market making'],ats:'janestreet.com'},
+      {company:'Citadel Securities',abbr:'CS',c:'#0b6ea8',title:'Quantitative Research Internship',type:'internship',location:'纽约 / 芝加哥',posted:'1 周前',tags:['research','statistics','market'],ats:'citadelsecurities.com'},
+      {company:'Optiver',abbr:'OP',c:'#e0562e',title:'Quantitative Trading Internship',type:'internship',location:'芝加哥 / 阿姆斯特丹 / 悉尼',posted:'2 天前',tags:['mental math','options','trading'],ats:'optiver.com'},
+      {company:'IMC',abbr:'IMC',c:'#c8102e',title:'Graduate Quant Trader / Researcher',type:'fulltime',location:'芝加哥 / 阿姆斯特丹 / 悉尼',posted:'5 天前',tags:['full-time','trading','coding'],ats:'imc.com'},
+      {company:'DRW',abbr:'DRW',c:'#2f9be0',title:'Quantitative Researcher',type:'fulltime',location:'芝加哥 / 纽约 / 伦敦',posted:'1 周前',tags:['research','data','markets'],ats:'drw.com'},
+      {company:'Jump Trading',abbr:'JT',c:'#5b5ff5',title:'Campus Quantitative Research / Trading',type:'fulltime',location:'芝加哥 / 纽约 / 伦敦',posted:'2 周前',tags:['campus','systems','probability'],ats:'jumptrading.com'},
+    ];
+  }
+
+  renderVals(){
+    const S=this.state;
+    const typeChips=[['all','全部'],['internship','实习'],['fulltime','全职']].map(t=>({
+      label:t[1], onClick:()=>this.setState({type:t[0]}),
+      style:'padding:9px 16px;border-radius:12px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;border:1px solid '+(S.type===t[0]?'transparent':'var(--border)')+';background:'+(S.type===t[0]?'#5b5ff5':'var(--surface)')+';color:'+(S.type===t[0]?'#fff':'var(--muted)'),
+    }));
+
+    const logo=(c)=>"display:grid;place-items:center;width:46px;height:46px;border-radius:13px;flex:0 0 auto;font-family:'Space Grotesk';font-weight:700;font-size:14px;color:#fff;background:"+c;
+    const logoSm=(c)=>"display:grid;place-items:center;width:30px;height:30px;border-radius:9px;flex:0 0 auto;font-family:'Space Grotesk';font-weight:700;font-size:11px;color:#fff;background:"+c;
+
+    const jobs=this.data().filter(j=>S.type==='all'||j.type===S.type).map(j=>({
+      company:j.company, abbr:j.abbr, title:j.title, location:j.location, posted:j.posted, tags:j.tags, ats:j.ats,
+      logoStyle:logo(j.c),
+      typeLabel:j.type==='internship'?'实习':'全职',
+      typeStyle:'padding:2px 9px;border-radius:20px;font-size:10.5px;font-weight:700;'+(j.type==='internship'?'background:var(--brand-soft);color:#5b5ff5':'background:#e3f7ee;color:#0f9d63'),
+    }));
+
+    const pill=(t,color,bg)=>'padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;flex:0 0 auto;color:'+color+';background:'+bg;
+    const tracker=[
+      {title:'想投',dot:'#c3c2d8',items:[{company:'HRT',abbr:'HRT',c:'#7161f2',stage:'官网 · 未开放',pill:'待投',pc:['#8988a8','#f2f1fb']}]},
+      {title:'已投',dot:'#5b5ff5',items:[{company:'Jane Street',abbr:'JS',c:'var(--text)',stage:'OA 待发',pill:'已投',pc:['#5b5ff5','#eef0ff']},{company:'DRW',abbr:'DRW',c:'#2f9be0',stage:'简历筛选',pill:'已投',pc:['#5b5ff5','#eef0ff']}]},
+      {title:'面试中',dot:'#ff9f2e',items:[{company:'Optiver',abbr:'OP',c:'#e0562e',stage:'速算轮 · 明天',pill:'面试',pc:['#b3610a','#fff3dd']}]},
+      {title:'Offer',dot:'#16a06a',items:[{company:'IMC',abbr:'IMC',c:'#c8102e',stage:'Superday 通过',pill:'Offer',pc:['#0f9d63','#e3f7ee']}]},
+    ].map(col=>({
+      title:col.title, count:col.items.length, dotStyle:'width:8px;height:8px;border-radius:3px;background:'+col.dot,
+      items:col.items.map(it=>({ company:it.company, abbr:it.abbr, stage:it.stage, logoStyle:logoSm(it.c), pill:it.pill, pillStyle:pill(it.pill,it.pc[0],it.pc[1]) })),
+    }));
+
+    return { pinIcon:this.icon('pin'), typeChips, jobs, tracker };
+  }
+}
+</script>
+</body>
+</html>

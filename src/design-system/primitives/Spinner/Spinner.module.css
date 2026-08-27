@@ -1,0 +1,40 @@
+.root {
+  display: inline-block;
+  flex: 0 0 auto;
+  border: 2px solid var(--qg-spinner-track-color, var(--qg-border-subtle));
+  border-block-start-color: var(--qg-spinner-color, var(--qg-action-primary));
+  border-radius: var(--qg-radius-pill);
+  animation: qg-spinner-rotate var(--qg-motion-panel) linear infinite;
+}
+
+.small {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.medium {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+}
+
+.large {
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-width: 3px;
+}
+
+@keyframes qg-spinner-rotate {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    animation: none;
+  }
+}
+
+[data-qg-motion="reduced"] .root {
+  animation: none;
+}

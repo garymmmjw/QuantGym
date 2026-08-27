@@ -1,5 +1,17 @@
 import { useEffect, useRef } from "react";
+import { getQuantySrc, resolveLegacyQuantySrc } from "@/lib/quantyAssets.js";
 import { useAccountPageModel } from "./accountHooks.js";
+
+const PRESET_AVATARS = Object.freeze([
+  getQuantySrc("happy", 160),
+  getQuantySrc("focused", 160),
+  getQuantySrc("wink", 160),
+  getQuantySrc("wow", 160)
+]);
+
+function resolvePresetAvatar(src = "") {
+  return resolveLegacyQuantySrc(src, 160);
+}
 
 function countAuthEvents(metrics = {}) {
   return (metrics.audit?.authEvents24h || []).reduce((total, item) => total + Number(item.count || 0), 0);
@@ -134,13 +146,7 @@ export function AccountPageContent() {
     await model.save();
   };
 
-  const presetAvatars = [
-    "/assets/generated/playful-precision/avatar-happy-v2.png",
-    "/assets/generated/playful-precision/avatar-focused-v2.png",
-    "/assets/generated/playful-precision/avatar-wink-v2.png",
-    "/assets/generated/playful-precision/avatar-wow-v2.png"
-  ];
-  const activeAvatar = model.avatarPreview;
+  const activeAvatar = resolvePresetAvatar(model.avatarPreview);
   const displayName = model.form.name || model.currentUser?.name || "Quant";
   const displayEmail = model.form.email || model.currentUser?.email || "";
   const displayRegion = model.currentUser?.region || model.form.region || "";
@@ -174,7 +180,7 @@ export function AccountPageContent() {
             <div className="account-avatar-picker">
               <div className="account-avatar-picker-label">{model.t("accountChooseAvatar") || "选择头像"}</div>
               <div className="account-avatar-grid">
-                {presetAvatars.map((src) => (
+                {PRESET_AVATARS.map((src) => (
                   <button
                     key={src}
                     type="button"

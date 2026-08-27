@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "kind": "frontend-upgrade-phase-0-evidence-lock",
+  "generatedFrom": "tracked-git-objects",
+  "acceptedDeploymentCommit": "7a85c2a43b24013d5a49969eca7b4a5f1d093640",
+  "acceptedEvidenceCommit": "d4d263337728dab0156a9ee2aff4999d5085d77e",
+  "acceptedReviewPath": "docs/superpowers/reviews/2026-07-10-quantgym-frontend-platform-upgrade-phase-0.md",
+  "entryCount": 36,
+  "entries": [
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-core-flow-baseline-summary.json",
+      "mode": "100644",
+      "bytes": 82890,
+      "sha256": "ca2b027c52dfdbc1f6d04f9c686e1ffd32ba7e172bbd3de9ec874f1f08773dd9"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-legacy-ui-contract-summary.json",
+      "mode": "100644",
+      "bytes": 4412,
+      "sha256": "d2c186981e05c35edb0d7edc190158e7811b25df70d18b7c43cb6393f44de86a"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-performance-baseline-summary.json",
+      "mode": "100644",
+      "bytes": 34723,
+      "sha256": "122fa442c3b70f44a32905fddd4024f0ad86188517a72d2f258defae8cf15529"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-preview-environment-summary.json",
+      "mode": "100644",
+      "bytes": 3518,
+      "sha256": "59216ece973ec0b3b9b1389bdf0ecc565e0729e429671a72125fbc8d22a88260"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-account.jpg",
+      "mode": "100644",
+      "bytes": 79807,
+      "sha256": "9040f7067c528ca91b2a2e37901b3f964b2d029d8548bf223b7f801c0c4d1f41"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-auth.jpg",
+      "mode": "100644",
+      "bytes": 51153,
+      "sha256": "dc6f3ecdcd1a169c63357d8c1a9cb03b25968fde6b9d8745f905d6bc931e438d"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-community.jpg",
+      "mode": "100644",
+      "bytes": 52929,
+      "sha256": "a71b41413c34073c2315fcca24f61cde711700491bf6beb1c748f25c29e6a091"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-companies.jpg",
+      "mode": "100644",
+      "bytes": 112121,
+      "sha256": "b14c41af1bf14454d4a1d3a10ee9afdef6bf4d6193b18388a9804f54ce067f46"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-courses.jpg",
+      "mode": "100644",
+      "bytes": 137224,
+      "sha256": "a788a88f6fa36c7d7a5e108ae442262aef006883fd302d3bdc9434c26ceca1f9"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-experiences.jpg",
+      "mode": "100644",
+      "bytes": 50096,
+      "sha256": "044ffb1c38378481ffce6e6072692d287558853e758bb0bf4d19f8fdab22d681"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-interview.jpg",
+      "mode": "100644",
+      "bytes": 69484,
+      "sha256": "0ccd56083aa8673e7312a05f566c4041988005a5273d598f560f596f487f96bc"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-jobs.jpg",
+      "mode": "100644",
+      "bytes": 113470,
+      "sha256": "ef80b5e3a5017ff4c92d2be3477e80e6340d802a8f717a8486f2f31a8aac8304"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-league.jpg",
+      "mode": "100644",
+      "bytes": 143193,
+      "sha256": "ea73cd1497aef5491782e1d035e4dce88b84ddb460515999febea128e27576ae"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-library.jpg",
+      "mode": "100644",
+      "bytes": 180627,
+      "sha256": "be570d6bfe558affd7c3247a8d7e6f43e922dfac51d2fb870963155314fb64c6"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-memory.jpg",
+      "mode": "100644",
+      "bytes": 46687,
+      "sha256": "d6a857ea5a85a7ab4c4fbe6daff4583bf3ee7352eab917617339b386f0d667a1"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-messages.jpg",
+      "mode": "100644",
+      "bytes": 68018,
+      "sha256": "7c7ad6b00ca603f27ebe2256321207d56f982622499470aea9790fba9a377c38"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-network.jpg",
+      "mode": "100644",
+      "bytes": 53977,
+      "sha256": "c50123aff847d4f6b00ae3cf17159450d39976b7651e97a49666e74176176559"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-news.jpg",
+      "mode": "100644",
+      "bytes": 109961,
+      "sha256": "0c138fccad6c72039540b6672876e4704075c7b4538807c456abd611b97e3447"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-overview.jpg",
+      "mode": "100644",
+      "bytes": 175129,
+      "sha256": "8578df0a4abede1a9cb21bac69b03af9cbf8c645deae100860a560b4601939d4"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-pk.jpg",
+      "mode": "100644",
+      "bytes": 65439,
+      "sha256": "69d4cbf717fe2a8ec3c96ac35e070e74430cf45a2ff82a6c74a49e51f2a7995d"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-plan.jpg",
+      "mode": "100644",
+      "bytes": 82685,
+      "sha256": "caa7caca6d4ec564fece26b1c4521b44fe65ba4fda3f8b37da1eb64dfa51448b"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-poker.jpg",
+      "mode": "100644",
+      "bytes": 221878,
+      "sha256": "ee1f7676a6763b1404bbba68a7956ab2df40c1fc05733884cdf486042d2699cd"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-problems.jpg",
+      "mode": "100644",
+      "bytes": 225900,
+      "sha256": "cb870fd9ed49f322146e8a737ada364a1380afee2d8a43922a6017a33720d134"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-resume.jpg",
+      "mode": "100644",
+      "bytes": 106136,
+      "sha256": "ac31af59142e89d0b8540ffbd79e79bfbf8761de395f5a3f47866bb70c4ae3fc"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-settings.jpg",
+      "mode": "100644",
+      "bytes": 92980,
+      "sha256": "237258ea7ad39a39d2fd9601fb50b1ac4e885ba4f7687ca4f741262b1c62a8e1"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-skills.jpg",
+      "mode": "100644",
+      "bytes": 111860,
+      "sha256": "ecb1d573f59bdc9936cc459526da021f0f6e56e038263a49a827327644be424d"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/route-tools.jpg",
+      "mode": "100644",
+      "bytes": 151589,
+      "sha256": "0440108ca8fc1b2b4e79d65e876c85aa7fdb34097602f4a913b641ec9ffbd33c"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-desktop-shell.jpg",
+      "mode": "100644",
+      "bytes": 171848,
+      "sha256": "ffd3094441d52a24636c46835e3039f0450890650e917be0b218a63109f74504"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-global-search.jpg",
+      "mode": "100644",
+      "bytes": 154223,
+      "sha256": "dbf17ecbe9831d5b2387f98e2fc5997f0697c750185a3e94b7bcfff358365f7a"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-mobile-shell.jpg",
+      "mode": "100644",
+      "bytes": 107211,
+      "sha256": "308e634018e3ea376ff4e2cd5e4c67edbbbfc6ac6655f335be8c58426af09af3"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-notifications-toast.jpg",
+      "mode": "100644",
+      "bytes": 148008,
+      "sha256": "66491eabc50db4a9104b601fa959563d0899575e1f1952bc48fafc4d7b18a660"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-theme-language.jpg",
+      "mode": "100644",
+      "bytes": 93365,
+      "sha256": "d7b2da1b27ecd023b4282c1b67c9b19a671352af190ee0f8401afef7097c692c"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-review/shared-todo.jpg",
+      "mode": "100644",
+      "bytes": 174763,
+      "sha256": "a6971b7f2e7cc00a6dba151b31ee2e0912a0d11a3f37687162dda50c6e72903c"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-shared-state-baseline-summary.json",
+      "mode": "100644",
+      "bytes": 856046,
+      "sha256": "9270a24ba97262718d116f8ab7b1404cf3c09d7269e5df5db51f0e26f7202c24"
+    },
+    {
+      "path": "docs/browser-audit-screenshots/370-frontend-upgrade-visual-a11y-baseline-summary.json",
+      "mode": "100644",
+      "bytes": 6913242,
+      "sha256": "38676795f32336e23078d359f53e9774cee365fa1ae59aeeeccfc3a5ee292a77"
+    },
+    {
+      "path": "docs/superpowers/reviews/2026-07-10-quantgym-frontend-platform-upgrade-phase-0.md",
+      "mode": "100644",
+      "bytes": 1720756,
+      "sha256": "1acf12487c1ce8197c347bf7d0a8c863279fbbffffa911556d76a0043e88eccb"
+    }
+  ]
+}

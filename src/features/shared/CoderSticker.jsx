@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { usePageApi } from "../../stores/usePageApi.js";
 import { useOwnedCosmetic } from "./cosmetics.js";
+import { QuantyImage } from "@/components/common/QuantyImage.jsx";
 
 /**
  * 键盘侠鲨鱼贴纸 (shop item `coder`) — a dismissible corner decoration for
@@ -37,12 +38,11 @@ export function CoderSticker({ page = "" }) {
 
   return (
     <aside className={`qg-coder-sticker${page ? ` qg-coder-sticker-${page}` : ""}`} aria-label={t("coderStickerAria")}>
-      <img
-        src="/assets/generated/playful-precision/mascot-laptop-v2.png"
-        alt=""
+      <QuantyImage
+        asset="laptop"
+        size="small"
         aria-hidden="true"
         draggable="false"
-        loading="lazy"
       />
       <button
         type="button"

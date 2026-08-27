@@ -1,0 +1,372 @@
+import { execFileSync } from "node:child_process";
+import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import react from "@vitejs/plugin-react";
+import { defineConfig, type Plugin } from "vite";
+
+import {
+  resolveRepositoryBuildBranch,
+  validateFrontendV2BuildBranch,
+} from "./scripts/lib/frontend-v2-build-branch.mjs";
+
+const projectRoot = path.dirname(fileURLToPath(import.meta.url));
+const canonicalProjectRoot = realpathSync(projectRoot);
+const approvedAssetRoot = path.join(canonicalProjectRoot, "assets/generated/playful-precision");
+const approvedFontRoot = path.join(canonicalProjectRoot, "src/design-system/assets/fonts");
+const approvedSourceExtensions = new Set([".css", ".ts", ".tsx"]);
+export const LEGACY_PREVIEW_BRANCH = "codex/frontend-v2-preview";
+
+type RuntimeAsset = {
+  variants: Array<{ path: string }>;
+};
+
+type RuntimeAssetManifest = {
+  schemaVersion: number;
+  kind: string;
+  assets: RuntimeAsset[];
+};
+
+const runtimeManifestPath = path.join(
+  projectRoot,
+  "assets/generated/playful-precision/quanty-runtime-manifest.json",
+);
+
+const isAtOrUnder = (parent: string, candidate: string) => {
+  const relative = path.relative(parent, candidate);
+  return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
+};
+
+const assertPathChainHasNoSymlink = (absolutePath: string) => {
+  const relative = path.relative(canonicalProjectRoot, absolutePath);
+  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new Error(`V2_PATH_OUTSIDE_REPOSITORY: ${absolutePath}`);
+  }
+  let currentPath = canonicalProjectRoot;
+  for (const segment of relative.split(path.sep).filter(Boolean)) {
+    currentPath = path.join(currentPath, segment);
+    if (lstatSync(currentPath).isSymbolicLink()) {
+      throw new Error(`V2_PATH_SYMLINK: ${path.relative(canonicalProjectRoot, currentPath)}`);
+    }
+  }
+};
+
+const canonicalSecureFile = (absolutePath: string) => {
+  assertPathChainHasNoSymlink(absolutePath);
+  const linkStats = lstatSync(absolutePath);
+  if (!linkStats.isFile()) throw new Error(`V2_PATH_NOT_REGULAR_FILE: ${absolutePath}`);
+  const canonicalPath = realpathSync(absolutePath);
+  if (!isAtOrUnder(canonicalProjectRoot, canonicalPath)) {
+    throw new Error(`V2_FILE_OUTSIDE_REPOSITORY: ${absolutePath}`);
+  }
+  return canonicalPath;
+};
+
+const canonicalSecureDirectory = (absolutePath: string) => {
+  if (!existsSync(absolutePath)) return path.resolve(absolutePath);
+  assertPathChainHasNoSymlink(absolutePath);
+  if (!lstatSync(absolutePath).isDirectory()) {
+    throw new Error(`V2_PATH_NOT_DIRECTORY: ${absolutePath}`);
+  }
+  const canonicalPath = realpathSync(absolutePath);
+  if (!isAtOrUnder(canonicalProjectRoot, canonicalPath)) {
+    throw new Error(`V2_DIRECTORY_OUTSIDE_REPOSITORY: ${absolutePath}`);
+  }
+  return canonicalPath;
+};
+
+const canonicalRuntimeManifestPath = canonicalSecureFile(runtimeManifestPath);
+const runtimeManifest = JSON.parse(
+  readFileSync(canonicalRuntimeManifestPath, "utf8"),
+) as RuntimeAssetManifest;
+if (
+  runtimeManifest.schemaVersion !== 1
+  || runtimeManifest.kind !== "quanty-runtime-assets"
+  || !Array.isArray(runtimeManifest.assets)
+) {
+  throw new Error("V2_ASSET_MANIFEST_INVALID");
+}
+
+const assertApprovedVariantPath = (relativePath: string) => {
+  if (
+    !/^assets\/generated\/playful-precision\/optimized\/[a-z0-9-]+-(?:160|320|640)\.webp$/.test(relativePath)
+    || relativePath.includes("..")
+  ) {
+    throw new Error(`V2_ASSET_VARIANT_PATH_INVALID: ${relativePath}`);
+  }
+  return relativePath;
+};
+
+const approvedVariantRelativePaths = runtimeManifest.assets.flatMap((asset) => {
+  if (asset.variants.length !== 3) throw new Error("V2_ASSET_VARIANT_COUNT_INVALID");
+  const widths = asset.variants.map((variant) => variant.path.match(/-(160|320|640)\.webp$/)?.[1]);
+  if (new Set(widths).size !== 3 || widths.some((width) => width === undefined)) {
+    throw new Error("V2_ASSET_VARIANT_WIDTHS_INVALID");
+  }
+  return asset.variants.map((variant) => assertApprovedVariantPath(variant.path));
+});
+if (
+  approvedVariantRelativePaths.length !== 48
+  || new Set(approvedVariantRelativePaths).size !== approvedVariantRelativePaths.length
+) {
+  throw new Error("V2_ASSET_ALLOWLIST_INVALID");
+}
+
+export const V2_SOURCE_ROOTS = Object.freeze([
+  "src/core",
+  "src/design-system",
+  "src/domains",
+  "src/pages/plan",
+  "src/pages/training",
+  "src/pages/v2",
+  "src/shared/api",
+  "src/shared/i18n",
+  "src/shared/lib",
+  "src/shared/storage",
+  "src/shared/testing",
+] as const);
+
+const baseApprovedSourceDirectories = V2_SOURCE_ROOTS.map(
+  (relativePath) => canonicalSecureDirectory(path.join(canonicalProjectRoot, relativePath)),
+);
+
+export const resolveV2BuildBranch = (
+  environment: NodeJS.ProcessEnv = process.env,
+  readBranch: () => string = () => execFileSync(
+    "/usr/bin/git",
+    ["branch", "--show-current"],
+    {
+      cwd: canonicalProjectRoot,
+      encoding: "utf8",
+      env: {
+        HOME: environment.HOME ?? "",
+        PATH: "/usr/bin:/bin",
+        LANG: "C",
+        LC_ALL: "C",
+        GIT_CONFIG_NOSYSTEM: "1",
+        GIT_CONFIG_GLOBAL: "/dev/null",
+        GIT_NO_REPLACE_OBJECTS: "1",
+      },
+    },
+  ).trim(),
+) => {
+  const hasCloudflareCommit = environment.CF_PAGES_COMMIT_SHA !== undefined;
+  const hasCloudflareBranch = environment.CF_PAGES_BRANCH !== undefined;
+  if (hasCloudflareCommit !== hasCloudflareBranch) {
+    throw new Error("V2_CLOUDFLARE_METADATA_INCOMPLETE");
+  }
+  if (hasCloudflareBranch) return environment.CF_PAGES_BRANCH ?? "";
+  if (environment.QUANTGYM_BUILD_SOURCE === "cloudflare-pages") {
+    throw new Error("V2_CLOUDFLARE_METADATA_REQUIRED");
+  }
+
+  if (environment.QUANTGYM_BUILD_SOURCE === "test") {
+    return environment.QUANTGYM_BUILD_BRANCH === undefined
+      ? resolveRepositoryBuildBranch(environment, readBranch)
+      : validateFrontendV2BuildBranch(environment.QUANTGYM_BUILD_BRANCH);
+  }
+  const repositoryBranch = resolveRepositoryBuildBranch(environment, readBranch);
+  if (
+    environment.QUANTGYM_BUILD_BRANCH !== undefined
+    && environment.QUANTGYM_BUILD_BRANCH !== repositoryBranch
+  ) {
+    throw new Error("V2_LOCAL_BRANCH_OVERRIDE_MISMATCH");
+  }
+  return repositoryBranch;
+};
+
+export const isLegacyPreviewBuild = (
+  command: "build" | "serve",
+  branch: string,
+) => command === "serve" || branch === LEGACY_PREVIEW_BRANCH;
+
+const approvedDesignAssetPaths = [
+  "assets/generated/playful-precision/brand-q-mark.webp",
+  "assets/generated/playful-precision/brand-quantgym-logo.webp",
+  ...approvedVariantRelativePaths,
+].map((relativePath) => {
+  const canonicalPath = canonicalSecureFile(path.join(projectRoot, relativePath));
+  if (!isAtOrUnder(approvedAssetRoot, canonicalPath)) {
+    throw new Error(`V2_ASSET_OUTSIDE_APPROVED_ROOT: ${relativePath}`);
+  }
+  return canonicalPath;
+});
+
+const approvedFontPaths = [
+  "src/design-system/assets/fonts/PlusJakartaSans-wght.woff2",
+  "src/design-system/assets/fonts/SpaceGrotesk-wght.woff2",
+].map((relativePath) => {
+  const canonicalPath = canonicalSecureFile(path.join(projectRoot, relativePath));
+  if (!isAtOrUnder(approvedFontRoot, canonicalPath)) {
+    throw new Error(`V2_FONT_OUTSIDE_APPROVED_ROOT: ${relativePath}`);
+  }
+  return canonicalPath;
+});
+
+const approvedAssetPaths = new Set([
+  ...approvedDesignAssetPaths,
+  ...approvedFontPaths,
+]);
+
+type ModuleGuardPolicy = Readonly<{
+  projectRoot: string;
+  entryPath: string;
+  nodeModulesPath: string;
+  sourceDirectories: readonly string[];
+  assetPaths: ReadonlySet<string>;
+}>;
+
+const canonicalModulePath = (id: string) => {
+  if (id.startsWith("\0") || id.startsWith("virtual:")) return null;
+  const withoutQuery = id.replace(/[?#].*$/, "");
+  if (!path.isAbsolute(withoutQuery) || !existsSync(withoutQuery)) return null;
+  return realpathSync(withoutQuery);
+};
+
+const createModuleAssertion = (policy: ModuleGuardPolicy) => {
+  const canonicalRoot = realpathSync(policy.projectRoot);
+  const canonicalEntry = realpathSync(policy.entryPath);
+  const canonicalNodeModules = realpathSync(policy.nodeModulesPath);
+  const canonicalSources = policy.sourceDirectories
+    .filter((directory) => existsSync(directory))
+    .map((directory) => realpathSync(directory));
+  const canonicalAssets = new Set([...policy.assetPaths].map((assetPath) => realpathSync(assetPath)));
+  return (id: string) => {
+    const canonicalPath = canonicalModulePath(id);
+    if (canonicalPath === null) return;
+    if (isAtOrUnder(canonicalNodeModules, canonicalPath)) return;
+    if (canonicalPath === canonicalEntry) return;
+    if (
+      approvedSourceExtensions.has(path.extname(canonicalPath))
+      && canonicalSources.some((directory) => isAtOrUnder(directory, canonicalPath))
+    ) return;
+    if (canonicalAssets.has(canonicalPath)) return;
+    throw new Error(`V2_MODULE_OUTSIDE_ALLOWLIST: ${path.relative(canonicalRoot, canonicalPath)}`);
+  };
+};
+
+type GuardApi = Readonly<{
+  createModuleAssertion: typeof createModuleAssertion;
+}>;
+
+const v2ResolvedModuleGuard = (
+  legacyPreviewAllowed: boolean,
+): Plugin<GuardApi & { legacyPreviewAllowed: boolean }> => {
+  const sourceDirectories = legacyPreviewAllowed
+    ? [
+        ...baseApprovedSourceDirectories,
+        canonicalSecureDirectory(path.join(canonicalProjectRoot, "src/legacy-preview")),
+      ]
+    : baseApprovedSourceDirectories;
+  const assertApprovedModule = createModuleAssertion({
+    projectRoot: canonicalProjectRoot,
+    entryPath: canonicalSecureFile(path.join(canonicalProjectRoot, "v2.html")),
+    nodeModulesPath: canonicalSecureDirectory(path.join(canonicalProjectRoot, "node_modules")),
+    sourceDirectories,
+    assetPaths: approvedAssetPaths,
+  });
+  return {
+    name: "quantgym-v2-resolved-module-guard",
+    enforce: "pre",
+    transform(_source, id) {
+      assertApprovedModule(id);
+      return null;
+    },
+    moduleParsed(moduleInfo) {
+      assertApprovedModule(moduleInfo.id);
+    },
+    api: { createModuleAssertion, legacyPreviewAllowed },
+  };
+};
+
+const rejectProductionLegacyPreviewChunks = (
+  legacyPreviewAllowed: boolean,
+): Plugin => ({
+  name: "quantgym-v2-production-legacy-preview-rejection",
+  apply: "build",
+  generateBundle(_options, bundle) {
+    if (legacyPreviewAllowed) return;
+    for (const [fileName, output] of Object.entries(bundle)) {
+      const source = output.type === "chunk"
+        ? `${output.facadeModuleId ?? ""}\n${output.code}`
+        : typeof output.source === "string"
+          ? output.source
+          : "";
+      if (
+        /(?:^|[/\\])legacy-preview(?:[/\\]|$)/.test(source)
+        || /legacy-compat\.quantgym-v2-preview\.pages\.dev/.test(source)
+      ) {
+        throw new Error(`V2_PRODUCTION_LEGACY_ADAPTER_CHUNK: ${fileName}`);
+      }
+    }
+  },
+});
+
+const v2DevelopmentSpaFallback = (): Plugin => ({
+  name: "quantgym-v2-development-spa-fallback",
+  apply: "serve",
+  enforce: "pre",
+  configureServer(server) {
+    server.middlewares.use((request, _response, next) => {
+      if (request.method !== "GET" && request.method !== "HEAD") {
+        next();
+        return;
+      }
+
+      const requestUrl = new URL(request.url ?? "/", "http://localhost");
+      const isHtmlNavigation = requestUrl.pathname === "/"
+        || request.headers.accept?.includes("text/html") === true;
+      const isReservedDevelopmentPath = [
+        "/api/",
+        "/@",
+        "/__",
+        "/assets/",
+        "/node_modules/",
+        "/src/",
+      ].some((prefix) => requestUrl.pathname.startsWith(prefix));
+      const hasFileExtension = path.posix.basename(requestUrl.pathname).includes(".");
+      if (isHtmlNavigation && !isReservedDevelopmentPath && !hasFileExtension) {
+        request.url = `/v2.html${requestUrl.search}`;
+      }
+      next();
+    });
+  },
+});
+
+export default defineConfig(({ command }) => {
+  const buildBranch = resolveV2BuildBranch();
+  const legacyPreviewAllowed = isLegacyPreviewBuild(command, buildBranch);
+  return {
+    root: projectRoot,
+    base: "/",
+    publicDir: path.join(projectRoot, "public-v2"),
+    appType: "spa",
+    optimizeDeps: {
+      // Vite's dev scanner otherwise discovers the legacy root HTML alongside
+      // v2.html and correctly trips the V2 module allowlist before this app loads.
+      entries: [path.join(projectRoot, "v2.html")],
+    },
+    plugins: [
+      v2DevelopmentSpaFallback(),
+      v2ResolvedModuleGuard(legacyPreviewAllowed),
+      rejectProductionLegacyPreviewChunks(legacyPreviewAllowed),
+      react(),
+    ],
+    build: {
+      outDir: path.join(projectRoot, "dist-v2"),
+      emptyOutDir: true,
+      copyPublicDir: true,
+      sourcemap: false,
+      target: "es2022",
+      rollupOptions: {
+        input: path.join(projectRoot, "v2.html"),
+        output: {
+          entryFileNames: "assets/[name]-[hash].js",
+          chunkFileNames: "assets/[name]-[hash].js",
+          assetFileNames: "assets/[name]-[hash][extname]",
+        },
+      },
+    },
+  };
+});

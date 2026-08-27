@@ -9,23 +9,15 @@ import { createLibraryPageApi } from "./services/libraryPageApi.js";
 import { createMemoryPageApi } from "./services/memoryPageApi.js";
 import { createMessagesPageApi } from "./services/messagesPageApi.js";
 import { createNetworkPageApi } from "./services/networkPageApi.js";
-import { createOverviewPageApi } from "./services/overviewPageApi.js";
 import { createPageApiUserState } from "./services/pageApiUserState.js";
-import { createPlanPageApi } from "./services/planPageApi.js";
 import { createPkPageApi } from "./services/pkPageApi.js";
 import { createPokerPageApi } from "./services/pokerPageApi.js";
-import { createProblemsPageApi } from "./services/problemsPageApi.js";
 import { createResumePageApi } from "./services/resumePageApi.js";
 import { createSkillsPageApi } from "./services/skillsPageApi.js";
 import { createToolsPageApi } from "./services/toolsPageApi.js";
 
 export function createPageApi(deps = {}) {
   const userStateApi = createPageApiUserState(deps);
-  const problems = createProblemsPageApi(deps);
-  const plan = createPlanPageApi({
-    ...deps,
-    setProblemSearchQuery: problems.setSearchQuery
-  });
 
   return {
     t: deps.t,
@@ -54,17 +46,11 @@ export function createPageApi(deps = {}) {
 
     account: createAccountPageApi(deps),
     community: createCommunityPageApi(deps),
-    library: createLibraryPageApi({
-      ...deps,
-      setProblemSearchQuery: problems.setSearchQuery
-    }),
-    overview: createOverviewPageApi(deps),
-    plan,
+    library: createLibraryPageApi(deps),
     league: createLeaguePageApi(deps),
     skills: createSkillsPageApi(deps),
     pk: createPkPageApi(deps),
     tools: createToolsPageApi(deps),
-    problems,
     interview: createInterviewPageApi(deps),
     poker: createPokerPageApi(deps),
 

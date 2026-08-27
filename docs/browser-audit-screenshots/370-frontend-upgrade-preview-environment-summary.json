@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "status": "pass",
+  "checkedAt": "2026-07-18T08:10:45.606Z",
+  "evidenceCapturedAt": "2026-07-18T08:09:25.036Z",
+  "evidenceExpiresAt": "2026-07-25T08:09:25.036Z",
+  "branch": "codex/frontend-v2-preview",
+  "resourceIsolation": "pass",
+  "applicationBindings": "deferred-to-phase1",
+  "providerEvidenceSha256": "4cf229f20ee096e8a2f02b0693fca13650db2e2da678062546cf8607614fe30f",
+  "minimalWebArtifactSha256": "d0c17f6241c5c4be9ef57ca6ef075fd89cac8acb85ede5c826c14751a926bed5",
+  "hashes": {
+    "webOriginHash": "23cb3c5331276d307edc6bfa20f76cef378e03839d63f078f58a36af2eaeec47",
+    "apiOriginHash": "d3bcb2b80a16f4632413347ab67358c8495949b3d20b246acdb3aa916e4eb4ab",
+    "cloudflareAccountIdHash": "a69b661c3543d35f09e4fa03bf9f214f76efff05292b2fdea8e455915acd4eb1",
+    "pagesProjectIdHash": "0b34b2e072d47ca24213377ddc1de0aa95f4e21a630eefc6ad71dedec37359d1",
+    "renderWorkspaceIdHash": "2555bd4156f4e37f7d61c376020536a6ab8bc4cd6fdff814fda3c9d1a14df20b",
+    "postgresResourceIdHash": "442cd96ed95516466a734390b7734223be7657527d225f3ee2f0c27d3da50290",
+    "r2BucketIdentityHash": "c18f59cf6e040dbb3bd1f4e58fd7c526e56feae2ea206dc3beba469a4324f21c"
+  },
+  "git": {
+    "worktreeClean": true,
+    "originUrlExact": true,
+    "currentBranchExact": true,
+    "localBranchExists": true,
+    "originBranchContainsCommit": true,
+    "remoteBranchExact": true,
+    "deployedCommitAncestorOfHead": true,
+    "descendantChangesRestricted": true,
+    "replaceRefsAbsent": true,
+    "graftsAbsent": true,
+    "indexFlagsSafe": true,
+    "runtimeFilesMatchExpectedCommit": true
+  },
+  "checks": {
+    "minimalWebArtifactMatches": true,
+    "exactWebConfiguration": true,
+    "apiHealthAndInternalLlmVerified": true,
+    "previewOnlyCors": true,
+    "providerEvidenceFresh": true,
+    "providerIdentitiesDisjoint": true,
+    "postgresIsolation": true,
+    "r2Isolation": true
+  },
+  "postgres": {
+    "check": "frontend-v2-preview-postgres",
+    "checks": {
+      "databaseMatchesProviderEvidence": true,
+      "hostMatchesProviderEvidence": true,
+      "publicSchemaEmpty": true,
+      "resourceDistinctFromProduction": true,
+      "roleMatchesProviderEvidence": true,
+      "selectOne": true,
+      "sslForCurrentBackend": true
+    },
+    "evidenceSha256": "4cf229f20ee096e8a2f02b0693fca13650db2e2da678062546cf8607614fe30f",
+    "failureCodes": [],
+    "hashes": {
+      "databaseHash": "ae7a8d08a1dd5114271d9ee7a0407080b24fa249adb9ae3788671b830899ccae",
+      "hostHash": "1e7fd291f0645fc0cd8043ef112e395a8193a641abe2c1097dc4942201639248",
+      "resourceIdHash": "442cd96ed95516466a734390b7734223be7657527d225f3ee2f0c27d3da50290",
+      "roleHash": "06bc58503546c4ee812662a67f98006fc79fbf40ed7bb5cb68876dcfecdfbbfa"
+    },
+    "publicBaseTableCount": 0,
+    "schemaVersion": 1,
+    "status": "pass"
+  },
+  "r2": {
+    "schemaVersion": 1,
+    "check": "frontend-v2-preview-r2",
+    "status": "pass",
+    "evidenceSha256": "4cf229f20ee096e8a2f02b0693fca13650db2e2da678062546cf8607614fe30f",
+    "hashes": {
+      "endpointAccountIdHash": "a69b661c3543d35f09e4fa03bf9f214f76efff05292b2fdea8e455915acd4eb1",
+      "bucketIdentityHash": "c18f59cf6e040dbb3bd1f4e58fd7c526e56feae2ea206dc3beba469a4324f21c"
+    },
+    "checks": {
+      "endpointAccountMatchesProviderEvidence": true,
+      "bucketIdentityMatchesProviderEvidence": true,
+      "resourceDistinctFromProduction": true,
+      "signingRegionAuto": true,
+      "bytesMatch": true,
+      "objectDeleted": true
+    },
+    "failureCodes": []
+  }
+}

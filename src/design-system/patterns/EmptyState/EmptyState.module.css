@@ -1,0 +1,40 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qg-space-5);
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--qg-space-16);
+  padding: var(--qg-space-8);
+  color: var(--qg-text-primary);
+  text-align: center;
+  background: var(--qg-surface-secondary);
+  border: 1px solid var(--qg-border-subtle);
+  border-radius: var(--qg-radius-feature);
+}
+
+.copy {
+  display: grid;
+  gap: var(--qg-space-2);
+  max-inline-size: 36rem;
+}
+
+.title,
+.description {
+  margin: 0;
+}
+
+.title {
+  color: var(--qg-text-primary);
+}
+
+.description {
+  color: var(--qg-text-secondary);
+}
+
+.action {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--qg-space-3);
+  justify-content: center;
+}
