@@ -2,6 +2,7 @@
 
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { isProxy } from "node:util/types";
 
 import {
   runFrontendUpgradePhase2ProviderEvidence,
@@ -15,10 +16,18 @@ import {
   Phase2OperatorError,
   createPhase2OperatorAdapter,
 } from "./lib/frontend-upgrade-phase2-operator-adapter.mjs";
+import {
+  readPhase2OperatorFailureCause,
+} from "./lib/frontend-upgrade-phase2-operator-error.mjs";
 
 const SHA_PATTERN = /^[0-9a-f]{40}$/u;
 const MAX_CREDENTIAL_BYTES = 64 * 1024;
 const ALLOWED_ARGUMENTS = Object.freeze(new Set(["--execute", "--recover"]));
+const SAFE_FAILURE_CODE_PATTERN = /^[A-Z][A-Z0-9_]{2,127}$/u;
+const SAFE_FAILURE_PHASE_PATTERN = /^[a-z][a-z0-9-]{1,63}$/u;
+const SAFE_FAILURE_STAGE_PATTERN = /^[a-z0-9][a-z0-9-]{1,63}$/u;
+const MAX_RECOVERY_ACTIONS = 32;
+const MISSING_DATA_PROPERTY = Symbol("missing-data-property");
 
 export const TEST_ONLY_PHASE2_OPERATOR_RUNNER = Symbol(
   "frontend-upgrade-phase2-operator-runner-test-only",
@@ -30,6 +39,96 @@ const isPlainObject = (value) => (
   && !Array.isArray(value)
   && Object.getPrototypeOf(value) === Object.prototype
 );
+const ownDataProperty = (value, key) => {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  return descriptor !== undefined && Object.hasOwn(descriptor, "value")
+    ? descriptor.value
+    : MISSING_DATA_PROPERTY;
+};
+
+const parseSafeFailureCause = (value) => {
+  if (value === null) return null;
+  if (!isPlainObject(value) || isProxy(value)) return MISSING_DATA_PROPERTY;
+  const keys = Reflect.ownKeys(value);
+  if (
+    keys.length !== 2
+    || !keys.includes("code")
+    || !keys.includes("phase")
+  ) return MISSING_DATA_PROPERTY;
+  const code = ownDataProperty(value, "code");
+  const phase = ownDataProperty(value, "phase");
+  if (
+    typeof code !== "string"
+    || !SAFE_FAILURE_CODE_PATTERN.test(code)
+    || typeof phase !== "string"
+    || !SAFE_FAILURE_PHASE_PATTERN.test(phase)
+  ) return MISSING_DATA_PROPERTY;
+  return { code, phase };
+};
+
+const parseSafeRecoveryActions = (value, actionStatuses) => {
+  if (!Array.isArray(value) || isProxy(value)) return null;
+  const length = ownDataProperty(value, "length");
+  if (
+    !Number.isSafeInteger(length)
+    || length < 0
+    || length > MAX_RECOVERY_ACTIONS
+  ) return null;
+  const actions = [];
+  for (let index = 0; index < length; index += 1) {
+    const entry = ownDataProperty(value, String(index));
+    if (
+      entry === MISSING_DATA_PROPERTY
+      || !isPlainObject(entry)
+      || isProxy(entry)
+    ) return null;
+    const id = ownDataProperty(entry, "id");
+    const status = ownDataProperty(entry, "status");
+    if (
+      typeof id !== "string"
+      || !SAFE_FAILURE_STAGE_PATTERN.test(id)
+      || typeof status !== "string"
+      || !actionStatuses.has(status)
+    ) return null;
+    actions.push({ id, status });
+  }
+  return actions;
+};
+
+const parseSafeFailureReport = (error) => {
+  if (
+    error === null
+    || (typeof error !== "object" && typeof error !== "function")
+    || isProxy(error)
+  ) return null;
+  const report = ownDataProperty(error, "failureReport");
+  if (
+    report === MISSING_DATA_PROPERTY
+    || !isPlainObject(report)
+    || isProxy(report)
+  ) return null;
+  const failedStage = ownDataProperty(report, "failedStage");
+  const recoveryStatus = ownDataProperty(report, "recoveryStatus");
+  const causeValue = ownDataProperty(report, "cause");
+  const actionValue = ownDataProperty(report, "recoveryActions");
+  if (
+    typeof failedStage !== "string"
+    || !SAFE_FAILURE_STAGE_PATTERN.test(failedStage)
+    || typeof recoveryStatus !== "string"
+    || !new Set(["pass", "incomplete", "not-required"]).has(recoveryStatus)
+    || causeValue === MISSING_DATA_PROPERTY
+    || actionValue === MISSING_DATA_PROPERTY
+  ) return null;
+  const cause = parseSafeFailureCause(causeValue);
+  if (cause === MISSING_DATA_PROPERTY) return null;
+  const actions = parseSafeRecoveryActions(
+    actionValue,
+    new Set(["pass", "failed", "skipped"]),
+  );
+  return actions === null
+    ? null
+    : { failedStage, recoveryStatus, cause, actions };
+};
 
 const fail = (code, phase) => {
   throw new Phase2OperatorError(code, phase);
@@ -217,34 +316,29 @@ export async function runFrontendUpgradePhase2Operator(options = {}) {
 }
 
 export const formatPhase2OperatorFailure = (error) => {
-  if (error instanceof Phase2OperatorError) {
-    return `${error.code} (${error.phase})`;
+  const directCause = readPhase2OperatorFailureCause(error);
+  if (directCause !== null) {
+    return `${directCause.code} (${directCause.phase})`;
   }
-  const report = error?.failureReport;
-  const recoveryStatuses = new Set(["pass", "incomplete", "not-required"]);
-  const actionStatuses = new Set(["pass", "failed", "skipped"]);
-  if (
-    isPlainObject(report)
-    && /^[a-z0-9][a-z0-9-]{1,63}$/u.test(report.failedStage ?? "")
-    && recoveryStatuses.has(report.recoveryStatus)
-    && Array.isArray(report.recoveryActions)
-    && report.recoveryActions.every((entry) => (
-      isPlainObject(entry)
-      && /^[a-z0-9][a-z0-9-]{1,63}$/u.test(entry.id ?? "")
-      && actionStatuses.has(entry.status)
-    ))
-  ) {
-    const actions = report.recoveryActions.length === 0
+  try {
+    const report = parseSafeFailureReport(error);
+    if (report === null) return "OPERATOR_RUN_FAILED (operator-run)";
+    const actions = report.actions.length === 0
       ? "none"
-      : report.recoveryActions
+      : report.actions
         .map(({ id, status }) => `${id}:${status}`)
         .join(",");
+    const causeDetail = report.cause === null
+      ? ""
+      : `cause=${report.cause.code}:${report.cause.phase}, `;
     return (
       `CUTOVER_FAILED (stage=${report.failedStage}, `
+      + causeDetail
       + `recovery=${report.recoveryStatus}, actions=${actions})`
     );
+  } catch {
+    return "OPERATOR_RUN_FAILED (operator-run)";
   }
-  return "OPERATOR_RUN_FAILED (operator-run)";
 };
 
 const executeMain = async () => {

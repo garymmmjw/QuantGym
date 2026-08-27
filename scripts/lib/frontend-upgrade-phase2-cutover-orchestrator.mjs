@@ -9,9 +9,13 @@ import {
   validatePhase2CredentialRoles,
   validatePhase2ProviderEvidence,
 } from "./frontend-upgrade-phase2-provider-evidence.mjs";
+import {
+  readPhase2OperatorFailureCause,
+} from "./frontend-upgrade-phase2-operator-error.mjs";
 
 const HASH_PATTERN = /^[0-9a-f]{64}$/u;
 const SHA_PATTERN = /^[0-9a-f]{40}$/u;
+const RETAINED_ACTION_CAUSES = new WeakMap();
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const PHASE1_APPLICATION_COMMIT = PHASE2_REQUIRED_ANCESTOR_COMMITS[0];
 const PHASE1_REVISION = "0001_phase1_foundation";
@@ -211,6 +215,23 @@ const canonicalEqual = (left, right) => (
   JSON.stringify(canonicalize(left)) === JSON.stringify(canonicalize(right))
 );
 const canonicalJson = (value) => JSON.stringify(canonicalize(value));
+const sanitizedFailureCause = (error) => {
+  try {
+    const retained = RETAINED_ACTION_CAUSES.get(error);
+    if (retained !== undefined) return { ...retained };
+  } catch {
+    return null;
+  }
+  return readPhase2OperatorFailureCause(error);
+};
+const retainSanitizedActionCause = (error, label) => {
+  const wrapped = new Error(`${label} failed`);
+  const cause = sanitizedFailureCause(error);
+  if (cause !== null) {
+    RETAINED_ACTION_CAUSES.set(wrapped, Object.freeze({ ...cause }));
+  }
+  return wrapped;
+};
 const validContentSnapshot = (value) => (
   exactKeys(value, [
     "schemaVersion",
@@ -909,8 +930,8 @@ const runAction = async ({ actions, name, context, label, detailKeys }) => {
   let receipt;
   try {
     receipt = await actions[name](context);
-  } catch {
-    throw new Error(`${label} failed`);
+  } catch (error) {
+    throw retainSanitizedActionCause(error, label);
   }
   return requireEnvelope(receipt, label, detailKeys);
 };
@@ -1262,6 +1283,7 @@ const validateRollbackReceipt = ({ receipt, resource, commit, label }) => {
 const makeFailureReport = ({
   expectedCommit,
   failedStage,
+  cause,
   candidateGatePassed,
   providerWriteAttempted,
   completedStages,
@@ -1280,6 +1302,7 @@ const makeFailureReport = ({
     environment: "preview",
     applicationCommit: expectedCommit,
     failedStage,
+    cause: cause === null ? null : { ...cause },
     candidateGatePassed,
     providerWriteAttempted,
     productionMutation: false,
@@ -1661,7 +1684,8 @@ export async function runPhase2PreviewCutover({
     state.evidenceHeadCommit = candidateReceipt.details.evidenceHeadCommit;
     state.candidateGatePassed = true;
     state.completedStages.push("candidate-gate");
-  } catch {
+  } catch (error) {
+    const cause = sanitizedFailureCause(error);
     const recoveryActions = [];
     try {
       const emergencyReceipt = await actions.emergencyRevoke({
@@ -1690,6 +1714,7 @@ export async function runPhase2PreviewCutover({
     throw new Phase2CutoverFailure("candidate-gate", makeFailureReport({
       expectedCommit,
       failedStage: "candidate-gate",
+      cause,
       candidateGatePassed: false,
       providerWriteAttempted: false,
       completedStages: state.completedStages,
@@ -2333,8 +2358,9 @@ export async function runPhase2PreviewCutover({
       });
     }
     return facts;
-  } catch {
+  } catch (error) {
     const failedStage = state.currentStage;
+    const cause = sanitizedFailureCause(error);
     const recoveryActions = await recoverFromFailure({
       actions,
       state,
@@ -2344,6 +2370,7 @@ export async function runPhase2PreviewCutover({
     throw new Phase2CutoverFailure(failedStage, makeFailureReport({
       expectedCommit,
       failedStage,
+      cause,
       candidateGatePassed: state.candidateGatePassed,
       providerWriteAttempted: state.providerWriteAttempted,
       completedStages: state.completedStages,

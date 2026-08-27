@@ -44,6 +44,11 @@ import {
 import {
   parseStrictPytestEvidence,
 } from "./frontend-upgrade-phase2-contract-evidence.mjs";
+import {
+  Phase2OperatorError,
+} from "./frontend-upgrade-phase2-operator-error.mjs";
+
+export { Phase2OperatorError } from "./frontend-upgrade-phase2-operator-error.mjs";
 
 const REQUIRED_NODE_VERSION = "20.20.2";
 const REQUIRED_NPM_VERSION = "10.8.2";
@@ -159,7 +164,6 @@ const ACCOUNT_ID_PATTERN = /^[0-9a-f]{32}$/u;
 const TOKEN_ID_PATTERN = /^[0-9a-f]{32}$/u;
 const SAFE_ROLE_PATTERN = /^qg_phase2_[a-z0-9_]{4,48}$/u;
 const RESTORE_DATABASE_PATTERN = /^quantgym_v2_phase2_restore_[a-z0-9_]{4,48}$/u;
-const SAFE_FAILURE_CODE_PATTERN = /^[A-Z][A-Z0-9_]{2,127}$/u;
 const REMAINING_READ_ONLY_CONTROL_PROVIDERS = Object.freeze([
   "cloudflare",
   "r2",
@@ -267,6 +271,35 @@ const exactKeys = (value, expected) => (
   && Object.keys(value).length === expected.length
   && expected.every((key) => Object.hasOwn(value, key))
 );
+const recoveryJournalProvesNoProviderMutation = (journal) => {
+  const allFalse = (record, keys) => (
+    exactKeys(record, keys) && keys.every((key) => record[key] === false)
+  );
+  return isPlainObject(journal)
+    && isPlainObject(journal.baseline)
+    && journal.seed?.attempted === false
+    && [
+      journal.seed?.problemIds,
+      journal.seed?.sourceIds,
+      journal.seed?.preexistingProblemIds,
+      journal.seed?.preexistingSourceIds,
+    ].every((ids) => Array.isArray(ids) && ids.length === 0)
+    && allFalse(journal.restoreTarget, ["attempted", "destroyed"])
+    && allFalse(journal.mutationIntents, [
+      "databaseMigration",
+      "apiDeploy",
+      "pagesDeploy",
+    ])
+    && allFalse(journal.mutations, [
+      "databaseMigrated",
+      "apiDeployed",
+      "pagesDeployed",
+      "cleanupCompleted",
+      "databaseRestored",
+      "apiRolledBack",
+      "pagesRolledBack",
+    ]);
+};
 const clean = (value) => typeof value === "string" ? value.trim() : "";
 const sqlLiteral = (value) => `'${String(value).replaceAll("'", "''")}'`;
 const sqlIdentifier = (value, phase) => {
@@ -317,21 +350,6 @@ const hmac = (key, value) => createHmac("sha256", key).update(value).digest();
 const delay = (milliseconds) => new Promise((resolve) => {
   setTimeout(resolve, milliseconds);
 });
-
-export class Phase2OperatorError extends Error {
-  constructor(code, phase) {
-    const normalizedCode = clean(code);
-    const normalizedPhase = clean(phase);
-    if (
-      !SAFE_FAILURE_CODE_PATTERN.test(normalizedCode)
-      || !/^[a-z][a-z0-9-]{1,63}$/u.test(normalizedPhase)
-    ) throw new Error("invalid Phase 2 operator failure");
-    super(`${normalizedCode} (${normalizedPhase})`);
-    this.name = "Phase2OperatorError";
-    this.code = normalizedCode;
-    this.phase = normalizedPhase;
-  }
-}
 
 const fail = (code, phase) => {
   throw new Phase2OperatorError(code, phase);
@@ -9899,7 +9917,16 @@ export async function createPhase2OperatorAdapter({
       }));
     }
     const baseline = recoveryJournal.baseline;
-    if (baseline !== null) {
+    if (
+      baseline !== null
+      && recoveryJournalProvesNoProviderMutation(recoveryJournal)
+    ) {
+      // The durable journal records every provider mutation intent before its
+      // write. When every intent and mutation remains false, and neither seed
+      // nor restore was attempted, the persisted baseline is evidence only;
+      // it does not require Render topology access after terminal revocation.
+      recoveryFailures.delete("postgres-binding");
+    } else if (baseline !== null) {
       const topologyObservation = await attemptRecovery(
         "topology-observation",
         () => readTopology("operator-recovery-reconcile", { controlOnly: true }),
@@ -10319,6 +10346,7 @@ export const PHASE2_OPERATOR_TEST_SUPPORT = Object.freeze({
   sharedEvidenceCheckSuiteId,
   isR2AccessDenied,
   persistRecoveryJournalFile,
+  recoveryJournalProvesNoProviderMutation,
   recoverTerminalPostgresControl,
   removeRecoveryJournalFile,
   runRecoveryRevocationClosure,

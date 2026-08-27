@@ -539,7 +539,12 @@ test("controlled runner preserves adapter recovery on failure and always dispose
     overrides: {
       runLiveChecks: () => {
         calls.push("runLiveChecks");
-        throw new Error("raw-provider-body-must-not-escape");
+        const error = new Phase2OperatorError(
+          "LIVE_CHECK_PROBE_FAILED",
+          "live-checks",
+        );
+        error.providerBody = "raw-provider-body-must-not-escape";
+        throw error;
       },
     },
     preflight: async () => {
@@ -561,7 +566,12 @@ test("controlled runner preserves adapter recovery on failure and always dispose
   }), (error) => {
     assert.ok(error instanceof Phase2CutoverFailure);
     assert.equal(error.message.includes("raw-provider-body"), false);
+    assert.equal(JSON.stringify(error.failureReport).includes("raw-provider-body"), false);
     assert.equal(error.failureReport.failedStage, "live-checks");
+    assert.deepEqual(error.failureReport.cause, {
+      code: "LIVE_CHECK_PROBE_FAILED",
+      phase: "live-checks",
+    });
     assert.equal(error.failureReport.recoveryStatus, "pass");
     return true;
   });
@@ -574,6 +584,42 @@ test("controlled runner preserves adapter recovery on failure and always dispose
     "revokeTemporaryAccess",
     "dispose",
   ]);
+});
+
+test("unbranded action errors cannot self-report a secret-shaped cause", async () => {
+  const secretShapedCode = "SK_LIVE_SECRET_ABC123456789";
+  for (const proxied of [false, true]) {
+    const actions = createPhase2CutoverDryRunFixture({
+      expectedCommit: COMMIT,
+      overrides: {
+        runLiveChecks: () => {
+          const error = new Error("raw-provider-secret-must-never-print");
+          error.code = secretShapedCode;
+          error.phase = "live-checks";
+          throw proxied ? new Proxy(error, {}) : error;
+        },
+      },
+    });
+    await assert.rejects(runPhase2PreviewCutover({
+      mode: "dry-run",
+      expectedCommit: COMMIT,
+      actions,
+      credentialRoles: createPhase2CutoverFixtureCredentialRoles(),
+      clock: createPhase2CutoverFixtureClock(),
+    }), (error) => {
+      assert.ok(error instanceof Phase2CutoverFailure);
+      assert.equal(error.failureReport.cause, null, `proxied=${proxied}`);
+      assert.equal(
+        JSON.stringify(error.failureReport).includes(secretShapedCode),
+        false,
+      );
+      assert.equal(
+        JSON.stringify(error.failureReport).includes("raw-provider-secret"),
+        false,
+      );
+      return true;
+    });
+  }
 });
 
 test("recover resumes finalized evidence before loading credentials or creating an adapter", async (t) => {
@@ -800,6 +846,10 @@ test("preflight failure occurs after candidate gate and before mutation actions"
   }), (error) => {
     assert.ok(error instanceof Phase2CutoverFailure);
     assert.equal(error.failureReport.failedStage, "operator-preflight");
+    assert.deepEqual(error.failureReport.cause, {
+      code: "POSTGRES_CLIENT_MISSING",
+      phase: "toolchain-preflight",
+    });
     assert.equal(error.failureReport.candidateGatePassed, true);
     assert.equal(error.failureReport.providerWriteAttempted, false);
     return true;
@@ -1047,6 +1097,69 @@ test("SQL-managed PostgreSQL role recovery is idempotent without a temporary pas
 });
 
 test("recovery converges before provider mutation and when PostgreSQL roles were never created", async () => {
+  const pristineJournal = {
+    baseline: { previewAnchor: {}, productionAnchor: {} },
+    seed: {
+      attempted: false,
+      problemIds: [],
+      sourceIds: [],
+      preexistingProblemIds: [],
+      preexistingSourceIds: [],
+    },
+    restoreTarget: { attempted: false, destroyed: false },
+    mutationIntents: {
+      databaseMigration: false,
+      apiDeploy: false,
+      pagesDeploy: false,
+    },
+    mutations: {
+      databaseMigrated: false,
+      apiDeployed: false,
+      pagesDeployed: false,
+      cleanupCompleted: false,
+      databaseRestored: false,
+      apiRolledBack: false,
+      pagesRolledBack: false,
+    },
+  };
+  const provesNoProviderMutation = PHASE2_OPERATOR_TEST_SUPPORT
+    .recoveryJournalProvesNoProviderMutation;
+  assert.equal(provesNoProviderMutation(pristineJournal), true);
+  for (const [record, key] of [
+    ["mutationIntents", "databaseMigration"],
+    ["mutationIntents", "apiDeploy"],
+    ["mutationIntents", "pagesDeploy"],
+    ["mutations", "databaseMigrated"],
+    ["mutations", "apiDeployed"],
+    ["mutations", "pagesDeployed"],
+    ["mutations", "cleanupCompleted"],
+    ["mutations", "databaseRestored"],
+    ["mutations", "apiRolledBack"],
+    ["mutations", "pagesRolledBack"],
+    ["restoreTarget", "attempted"],
+    ["restoreTarget", "destroyed"],
+  ]) {
+    const changed = structuredClone(pristineJournal);
+    changed[record][key] = true;
+    assert.equal(provesNoProviderMutation(changed), false, `${record}.${key}`);
+  }
+  for (const key of [
+    "problemIds",
+    "sourceIds",
+    "preexistingProblemIds",
+    "preexistingSourceIds",
+  ]) {
+    const changed = structuredClone(pristineJournal);
+    changed.seed[key].push("durable-seed-observation");
+    assert.equal(provesNoProviderMutation(changed), false, `seed.${key}`);
+  }
+  const attemptedSeed = structuredClone(pristineJournal);
+  attemptedSeed.seed.attempted = true;
+  assert.equal(provesNoProviderMutation(attemptedSeed), false);
+  const missingBaseline = structuredClone(pristineJournal);
+  missingBaseline.baseline = null;
+  assert.equal(provesNoProviderMutation(missingBaseline), false);
+
   const source = await readFile(new URL(
     "../scripts/lib/frontend-upgrade-phase2-operator-adapter.mjs",
     import.meta.url,
@@ -1055,6 +1168,17 @@ test("recovery converges before provider mutation and when PostgreSQL roles were
   const recoveryStart = source.indexOf("const recover = async (context = {}) =>");
   const recoveryEnd = source.indexOf("const actions = Object.freeze", recoveryStart);
   const recovery = source.slice(recoveryStart, recoveryEnd);
+  const baselineNoMutationBranch = recovery.indexOf(
+    "&& recoveryJournalProvesNoProviderMutation(recoveryJournal)",
+  );
+  const baselineReconcileBranch = recovery.indexOf(
+    "} else if (baseline !== null) {",
+    baselineNoMutationBranch,
+  );
+  const baselineNoMutationBody = recovery.slice(
+    baselineNoMutationBranch,
+    baselineReconcileBranch,
+  );
   const noBaselineBranch = recovery.indexOf(
     "} else if (Object.values(recoveryJournal.mutationIntents).some(Boolean)) {",
   );
@@ -1075,6 +1199,16 @@ test("recovery converges before provider mutation and when PostgreSQL roles were
     noMutationBranch,
   );
   assert.ok(recoveryStart >= 0);
+  assert.ok(baselineNoMutationBranch >= 0);
+  assert.ok(baselineReconcileBranch > baselineNoMutationBranch);
+  assert.match(
+    baselineNoMutationBody,
+    /recoveryFailures\.delete\("postgres-binding"\)/u,
+  );
+  assert.doesNotMatch(
+    baselineNoMutationBody,
+    /readTopology|updateRecoveryJournal|finalization|revocations/u,
+  );
   assert.ok(noBaselineBranch >= 0);
   assert.ok(mutationTopologyRead > noBaselineBranch);
   assert.ok(noMutationElse > mutationTopologyRead);
@@ -1555,10 +1689,14 @@ test("candidate dependency install isolates npm global and user configuration", 
   );
 });
 
-test("failure formatter exposes only safe recovery stages and action statuses", () => {
+test("failure formatter reads only strict data descriptors and fails closed", () => {
   const error = new Error("raw-provider-secret-must-never-print");
   error.failureReport = {
     failedStage: "topology-after",
+    cause: {
+      code: "TOPOLOGY_READ_FAILED",
+      phase: "topology-read",
+    },
     recoveryStatus: "incomplete",
     recoveryActions: [
       { id: "rollback-pages", status: "pass", evidenceSha256: "a".repeat(64) },
@@ -1569,11 +1707,82 @@ test("failure formatter exposes only safe recovery stages and action statuses", 
   const formatted = formatPhase2OperatorFailure(error);
   assert.equal(formatted.includes("raw-provider-secret"), false);
   assert.equal(formatted, (
-    "CUTOVER_FAILED (stage=topology-after, recovery=incomplete, "
+    "CUTOVER_FAILED (stage=topology-after, "
+    + "cause=TOPOLOGY_READ_FAILED:topology-read, recovery=incomplete, "
     + "actions=rollback-pages:pass,restore-database:failed,"
     + "revoke-mutation-access:pass)"
   ));
 
+  const missingCause = structuredClone(error.failureReport);
+  delete missingCause.cause;
+  assert.equal(
+    formatPhase2OperatorFailure(Object.assign(new Error("hidden"), {
+      failureReport: missingCause,
+    })),
+    "OPERATOR_RUN_FAILED (operator-run)",
+  );
+
+  let failureReportAccessorRead = false;
+  const accessorError = new Error("hidden");
+  Object.defineProperty(accessorError, "failureReport", {
+    get() {
+      failureReportAccessorRead = true;
+      return error.failureReport;
+    },
+  });
+  assert.equal(
+    formatPhase2OperatorFailure(accessorError),
+    "OPERATOR_RUN_FAILED (operator-run)",
+  );
+  assert.equal(failureReportAccessorRead, false);
+
+  let causeAccessorRead = false;
+  const accessorCause = {};
+  Object.defineProperties(accessorCause, {
+    code: {
+      enumerable: true,
+      get() {
+        causeAccessorRead = true;
+        return "TOPOLOGY_READ_FAILED";
+      },
+    },
+    phase: { enumerable: true, value: "topology-read" },
+  });
+  const accessorCauseError = new Error("hidden");
+  accessorCauseError.failureReport = {
+    ...error.failureReport,
+    cause: accessorCause,
+  };
+  assert.equal(
+    formatPhase2OperatorFailure(accessorCauseError),
+    "OPERATOR_RUN_FAILED (operator-run)",
+  );
+  assert.equal(causeAccessorRead, false);
+
+  const proxiedError = new Proxy(error, {
+    getOwnPropertyDescriptor() {
+      throw new Error("proxy-secret-must-not-print");
+    },
+  });
+  assert.equal(
+    formatPhase2OperatorFailure(proxiedError),
+    "OPERATOR_RUN_FAILED (operator-run)",
+  );
+
+  const selfReported = new Error("raw-secret");
+  selfReported.code = "SK_LIVE_SECRET_ABC123456789";
+  selfReported.phase = "topology-read";
+  assert.equal(
+    formatPhase2OperatorFailure(selfReported),
+    "OPERATOR_RUN_FAILED (operator-run)",
+  );
+
+  error.failureReport.cause.message = "unsafe raw secret";
+  assert.equal(
+    formatPhase2OperatorFailure(error),
+    "OPERATOR_RUN_FAILED (operator-run)",
+  );
+  delete error.failureReport.cause.message;
   error.failureReport.recoveryActions[0].id = "unsafe raw secret";
   assert.equal(
     formatPhase2OperatorFailure(error),
