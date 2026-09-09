@@ -1,4 +1,3 @@
-import { clearLocalRecovery, rememberLocalRecovery } from '../../state/localRecovery.js';
 import { copyText } from '../../lib/clipboard.js';
 import { awardCoinsForXp } from '../economy/index.js';
 import { flashButtonLabel } from '../../ui/domText.js';
@@ -131,33 +130,12 @@ export function createInterviewResultsController(deps = {}) {
       session: interviewState.session,
       language: interviewState.language
     });
-    let historySaved = false;
     if (historyEntry) {
-      const ownerId = String(deps.getOwnerId?.() || '');
-      const historyKey = typeof deps.historyStorageKey === 'function' ? deps.historyStorageKey() : deps.historyStorageKey;
-      historyEntry.ownerId = ownerId;
-      historyEntry.id = interviewState.session.id;
-      const completedSession = interviewState.session;
-      const retry = () => {
-        if (!ownerId || String(deps.getOwnerId?.() || '') !== ownerId) return false;
-        const saved = saveInterviewHistoryEntry(historyKey, historyEntry);
-        completedSession.historyPending = !saved;
-        completedSession.pendingHistoryEntry = saved ? null : historyEntry;
-        if (saved) {
-          clearLocalRecovery(ownerId, 'interview-history');
-          if (interviewState.session === completedSession) deps.persistSnapshot?.();
-        }
-        else rememberLocalRecovery(ownerId, 'interview-history', { backup: historyEntry, retry });
-        return saved;
-      };
-      historySaved = retry();
+      saveInterviewHistoryEntry(deps.historyStorageKey, historyEntry, { limit: 50 });
     }
     deps.appendMessage?.("coach", report, { variant: "report", typewriter: false });
     launchConfetti();
-    if (historySaved) {
-      clearInterviewSessionSnapshot(deps.sessionStorageKey);
-      deps.clearDurable?.();
-    } else deps.persistSnapshot?.();
+    clearInterviewSessionSnapshot(deps.sessionStorageKey);
     deps.renderQuestionPanel?.();
   }
 
@@ -187,21 +165,6 @@ export function createInterviewResultsController(deps = {}) {
         /* user can print manually */
       }
     }, 350);
-  }
-
-  function retryPendingHistory() {
-    const session = getInterviewState().session;
-    const entry = session?.pendingHistoryEntry;
-    const ownerId = String(deps.getOwnerId?.() || '');
-    if (!session?.historyPending || !entry || entry.ownerId !== ownerId) return false;
-    const saved = saveInterviewHistoryEntry(deps.historyStorageKey, entry);
-    if (saved) {
-      session.historyPending = false;
-      session.pendingHistoryEntry = null;
-      clearLocalRecovery(ownerId, 'interview-history');
-      deps.persistSnapshot?.();
-    } else rememberLocalRecovery(ownerId, 'interview-history', { backup: entry, retry: retryPendingHistory });
-    return saved;
   }
 
   function buildReportHtml(text) {
@@ -236,7 +199,6 @@ export function createInterviewResultsController(deps = {}) {
   }
 
   return {
-    retryPendingHistory,
     buildReportHtml,
     complete,
     exportReport,

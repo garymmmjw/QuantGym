@@ -1037,47 +1037,6 @@ def sanitize_account(account: dict | None, fallback_id: str | None = None) -> di
     return public
 
 
-def save_account_profile(conn, user_id: str, profile: dict) -> dict:
-    """Apply client-editable profile fields without replacing server-owned data."""
-    if not isinstance(profile, dict):
-        raise HttpError(400, "Account updates must be an object")
-    # Read the current account inside the write transaction. Postgres must lock
-    # this row so overlapping profile requests cannot replace newer metadata.
-    if db.backend == "sqlite" and not conn.in_transaction:
-        conn.execute("BEGIN IMMEDIATE")
-    query = "SELECT * FROM users WHERE id = ?"
-    if db.backend == "postgres":
-        query += " FOR UPDATE"
-    row = conn.execute(query, (user_id,)).fetchone()
-    if not row:
-        raise HttpError(401, "Account no longer exists")
-    user = dict(row)
-    email = normalize_email(user["email_norm"])
-    if "email" in profile and (
-        not isinstance(profile["email"], str) or normalize_email(profile["email"]) != email
-    ):
-        raise HttpError(400, "Email changes require a verified email-change flow and are not supported")
-
-    account = parse_json(user["account_json"], {})
-    # /sync sends a complete account snapshot, including read-only fields.
-    # Ignore everything outside this scalar allowlist, including nested metadata.
-    for field in ("name", "country", "region", "graduationTerm", "picture"):
-        if field not in profile:
-            continue
-        if not isinstance(profile[field], str):
-            raise HttpError(400, f"Account {field} must be a string")
-        if field == "name" and not profile[field].strip():
-            raise HttpError(400, "Account name must not be empty")
-        account[field] = profile[field]
-    account.update({"id": user["id"], "provider": user["provider"], "email": email, "updatedAt": utc_now()})
-    encoded = compact_json(account)
-    conn.execute(
-        "UPDATE users SET account_json = ?, updated_at = ? WHERE id = ?",
-        (encoded, account["updatedAt"], user["id"]),
-    )
-    return {**user, "account_json": encoded, "updated_at": account["updatedAt"]}
-
-
 def is_true(value) -> bool:
     return value is True or str(value or "").lower() == "true"
 
@@ -2936,12 +2895,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path.rstrip("/") or "/"
         try:
             if path in {"/health", "/api/health"} and self.command == "GET":
-                commit = os.environ.get("RENDER_GIT_COMMIT", "")
-                return self.send_json(200, {
-                    "ok": True,
-                    "database": db.health(),
-                    "releaseCommit": commit if re.fullmatch(r"[0-9a-f]{40}", commit) else None,
-                })
+                return self.send_json(200, {"ok": True, "database": db.health()})
             if path == "/api/auth/verification-code" and self.command == "POST":
                 return self.send_verification_code()
             if path == "/api/auth/account-status" and self.command == "GET":
@@ -3749,10 +3703,27 @@ class QuantGymHandler(BaseHTTPRequestHandler):
     def patch_account(self):
         user = self.require_user()
         data = self.read_json()
+        updates = sanitize_account({**parse_json(user["account_json"], {}), **(data.get("updates") or {})}, user["id"])
+        updates["id"] = user["id"]
+        updates["provider"] = user["provider"]
+        updates["updatedAt"] = utc_now()
+        email = normalize_email(updates.get("email"))
+        if not email:
+            raise HttpError(400, "Email is required")
+        ensure_email_allowed(email)
         with db.connect() as conn:
-            refreshed = save_account_profile(conn, user["id"], data.get("updates", {}))
-            self.audit_event("account.update", user=user, metadata={"emailChanged": False}, conn=conn)
-        self.send_json(200, {"account": account_response_payload(refreshed)})
+            owner = conn.execute("SELECT id FROM users WHERE email_norm = ? AND id != ?", (email, user["id"])).fetchone()
+            if owner:
+                raise HttpError(409, "Email already exists")
+            conn.execute(
+                "UPDATE users SET email_norm = ?, account_json = ?, updated_at = ? WHERE id = ?",
+                (email, compact_json(updates), updates["updatedAt"], user["id"]),
+            )
+            refreshed = dict(user)
+            refreshed["email_norm"] = email
+            refreshed["account_json"] = compact_json(updates)
+            self.audit_event("account.update", user=user, metadata={"emailChanged": email != normalize_email(user.get("email_norm"))}, conn=conn)
+            self.send_json(200, {"account": account_response_payload(refreshed)})
 
     def get_state(self):
         user = self.require_user()
@@ -3798,7 +3769,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         data = self.read_json()
         with db.connect() as conn:
             state = db.save_state(conn, user["id"], data.get("state") if isinstance(data.get("state"), dict) else {})
-        self.send_json(200, {"state": state})
+            self.send_json(200, {"state": state})
 
     def get_leaderboard(self):
         with db.connect() as conn:
@@ -4037,9 +4008,24 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         user = self.require_user()
         data = self.read_json()
         with db.connect() as conn:
-            if "account" in data:
-                user = save_account_profile(conn, user["id"], data["account"])
-            account = account_response_payload(user)
+            account = parse_json(user["account_json"], {})
+            if isinstance(data.get("account"), dict):
+                updates = sanitize_account({**account, **data["account"]}, user["id"])
+                updates["id"] = user["id"]
+                updates["provider"] = user["provider"]
+                updates["updatedAt"] = utc_now()
+                email_owner = conn.execute(
+                    "SELECT id FROM users WHERE email_norm = ? AND id != ?",
+                    (normalize_email(updates["email"]), user["id"]),
+                ).fetchone()
+                if email_owner:
+                    raise HttpError(409, "Email already exists")
+                ensure_email_allowed(updates["email"])
+                conn.execute(
+                    "UPDATE users SET email_norm = ?, account_json = ?, updated_at = ? WHERE id = ?",
+                    (normalize_email(updates["email"]), compact_json(updates), updates["updatedAt"], user["id"]),
+                )
+                account = updates
             if isinstance(data.get("state"), dict):
                 state = db.save_state(conn, user["id"], data["state"])
             else:
@@ -4054,16 +4040,16 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 community = db.save_community(conn, data["community"], merge=False)
             else:
                 community = db.get_community(conn)
-        self.send_json(
-            200,
-            {
-                "account": account,
-                "state": state,
-                "problemStates": problem_states,
-                "community": community,
-                "syncedAt": utc_now(),
-            },
-        )
+            self.send_json(
+                200,
+                {
+                    "account": account,
+                    "state": state,
+                    "problemStates": problem_states,
+                    "community": community,
+                    "syncedAt": utc_now(),
+                },
+            )
 
 
 def main():

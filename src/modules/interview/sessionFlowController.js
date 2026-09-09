@@ -55,14 +55,12 @@ export function createInterviewSessionFlowController(deps) {
 
   function reset(options = {}) {
     const state = getState();
-    if (state.session && !options.discard && !options.preserveSnapshot && persistSnapshot?.() === false) return false;
     clearTimers();
     stopSpeech();
     state.session = null;
     state.messages = [];
-    state.answerDraft = '';
     resetSessionUiState();
-    if (!options.preserveSnapshot) clearInterviewSessionSnapshot(sessionStorageKey);
+    clearInterviewSessionSnapshot(sessionStorageKey);
     if (!options.keepSetup) renderSetup();
     if (elements.interviewAnswer) elements.interviewAnswer.value = "";
     if (elements.interviewAnswerFile) elements.interviewAnswerFile.value = "";
@@ -85,16 +83,12 @@ export function createInterviewSessionFlowController(deps) {
     updateStatus("loading");
     appendMessage("coach", formatConfigSummary(config));
 
-    const requestedSession = state.session;
-    const requestedOwner = deps.getOwnerId?.();
-    const isCurrent = () => state.session === requestedSession && deps.getOwnerId?.() === requestedOwner;
     try {
       const count = getQuestionCountForConfig(config);
       const questions = config.source === "pdf"
         ? await buildPdfQuestions(count, state.session.type)
         : buildFullRangeQuestions(count, state.session.type, config);
 
-      if (!isCurrent()) return;
       if (!questions.length) {
         appendMessage("system", state.language === "zh"
           ? "没有可用题目。请先添加题库，或切换到 PDF 生成题目。"
@@ -121,14 +115,13 @@ export function createInterviewSessionFlowController(deps) {
         : "Configuration is set. I will start with the first question.");
       startPrepCountdown(2);
     } catch (error) {
-      if (!isCurrent()) return;
       appendMessage("system", state.language === "zh"
         ? `准备模拟面试失败：${error.message || "请检查 LLM 代理是否启动。"}`
         : `Failed to prepare interview: ${error.message || "Check the LLM proxy."}`);
       runtime.preparing = false;
       updateStatus("onboarding");
     } finally {
-      if (deps.getOwnerId?.() === requestedOwner) persistSnapshot();
+      persistSnapshot();
     }
   }
 
@@ -170,7 +163,6 @@ export function createInterviewSessionFlowController(deps) {
       status: "answering"
     };
     runtime.panelExpandedIndex = index;
-    state.answerDraft = '';
     if (elements.interviewAnswer) elements.interviewAnswer.value = "";
     if (elements.interviewAnswerFile) elements.interviewAnswerFile.value = "";
     updateAnswerFileMeta();
@@ -214,7 +206,6 @@ export function createInterviewSessionFlowController(deps) {
 
   async function restartWithSameConfig() {
     const state = getState();
-    if (state.session?.historyPending && deps.retryPendingHistory?.() !== true) return false;
     const runtime = getRuntime();
     const config = normalizeSessionConfig(state.session?.sessionConfig || {});
     clearTimers();
@@ -233,15 +224,11 @@ export function createInterviewSessionFlowController(deps) {
     runtime.preparing = true;
     updateStatus("loading");
     renderTranscript();
-    const requestedSession = state.session;
-    const requestedOwner = deps.getOwnerId?.();
-    const isCurrent = () => state.session === requestedSession && deps.getOwnerId?.() === requestedOwner;
     try {
       const count = getQuestionCountForConfig(config);
       const questions = config.source === "pdf"
         ? await buildPdfQuestions(count, type)
         : buildFullRangeQuestions(count, type, config);
-      if (!isCurrent()) return;
       if (!questions.length) {
         appendMessage("system", state.language === "zh"
           ? "没有可用题目，请调整设置后重试。"
@@ -257,14 +244,13 @@ export function createInterviewSessionFlowController(deps) {
         : "Same setup — let's go again.");
       startPrepCountdown(2);
     } catch (error) {
-      if (!isCurrent()) return;
       appendMessage("system", state.language === "zh"
         ? `重新开始失败：${error.message || "请检查 LLM 代理。"}`
         : `Restart failed: ${error.message || "Check the LLM proxy."}`);
       runtime.preparing = false;
       updateStatus("onboarding");
     } finally {
-      if (deps.getOwnerId?.() === requestedOwner) persistSnapshot();
+      persistSnapshot();
     }
   }
 

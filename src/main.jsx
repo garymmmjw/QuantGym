@@ -1,7 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.jsx";
-import { loadRuntimeScript } from "./app/runtimeScriptLoader.js";
 import "./styles/playful-precision-tokens.css";
 import "./styles/react-route-overrides.css";
 import "./styles/playful-precision-shell.css";
@@ -43,6 +42,17 @@ function getRuntimeGlobal(key) {
   return globalThis[key] ?? globalThis.window?.[key];
 }
 
+function loadRuntimeScript(src) {
+  return new Promise((resolve) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = false;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.head.append(script);
+  });
+}
+
 async function ensureRuntimeData() {
   const configScript = runtimeDataScripts[0];
   if (!configScript.isReady(getRuntimeGlobal(configScript.key))) {
@@ -61,36 +71,10 @@ async function ensureRuntimeData() {
     ...runtimeDataScripts.slice(1)
   ];
   const missing = scripts.filter((item) => !item.isReady(getRuntimeGlobal(item.key)));
-  await Promise.all(missing.map(async (item) => {
-    await loadRuntimeScript(item.src);
-    if (!item.isReady(getRuntimeGlobal(item.key))) throw new Error('runtime_invalid');
-  }));
+  await Promise.all(missing.map((item) => loadRuntimeScript(item.src)));
 }
 
-let mounting = false;
-function showBootState(failed = false) {
-  const target = document.getElementById('react-root');
-  if (!target) return;
-  const section = document.createElement('section');
-  section.className = 'prep-boot';
-  section.setAttribute('role', failed ? 'alert' : 'status');
-  const title = document.createElement('h1');
-  title.textContent = failed ? '工作台暂时未能载入' : '正在打开你的备战工作台';
-  const detail = document.createElement('p');
-  detail.textContent = failed ? '连接恢复后可以重试。浏览器中已保存的训练和申请记录会保留。' : '正在准备题库与训练资料，请稍候。';
-  section.append(title, detail);
-  if (failed) {
-    const retry = document.createElement('button');
-    retry.type = 'button'; retry.textContent = '重新加载'; retry.onclick = () => mountApp();
-    section.append(retry);
-  }
-  target.replaceChildren(section);
-}
 async function mountApp() {
-  if (mounting) return;
-  mounting = true;
-  showBootState();
-  try {
   await ensureRuntimeData();
   const { createAppServices } = await import("./app/createAppServices.js");
   const appServices = createAppServices({ routingMode: "browser" });
@@ -102,10 +86,6 @@ async function mountApp() {
         <App appServices={appServices} />
       </StrictMode>
     );
-  }
-  } catch {
-    mounting = false;
-    showBootState(true);
   }
 }
 

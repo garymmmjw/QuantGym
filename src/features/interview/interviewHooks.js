@@ -39,11 +39,6 @@ export function useInterviewPageModel() {
   }, [api, revision, userState.problems, userState.problemStates]);
 
   useEffect(() => {
-    api?.sync?.();
-    bump();
-  }, [api, bump]);
-
-  useEffect(() => {
     pageApi?.refreshIcons?.({ root: document.querySelector(".interview-section") || document });
   }, [pageApi, userState.problems, userState.problemStates, view.phase]);
 
