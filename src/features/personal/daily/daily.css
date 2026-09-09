@@ -72,6 +72,12 @@
 .pd-timer-over { color:#b56a21; }
 .pd-question-panel h2 { font-size:23px; letter-spacing:-.02em; line-height:1.45; font-weight:680; margin:0 0 16px; }
 .pd-prompt { font-size:14px; line-height:1.95; color:#354359; white-space:pre-wrap; overflow-wrap:anywhere; }
+.pd-math-content { min-width:0; }
+.pd-math-content .rich-text { white-space:normal; }
+.pd-math-content p { white-space:pre-wrap; margin:0 0 12px; }
+.pd-math-content p:last-child { margin-bottom:0; }
+.pd-math-content mjx-container[display="true"],.pd-math-content .rich-math-display { max-width:100%; overflow-x:auto; overflow-y:hidden; }
+.pd-math-retry { border:0; background:transparent; color:var(--pd-blue); padding:8px 0; font-size:12px; cursor:pointer; }
 .pd-source-note { font-size:10px; color:#7b889a; margin:12px 0 0; }
 .pd-source-note a { color:var(--pd-blue); }
 .pd-examples { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:19px; }
