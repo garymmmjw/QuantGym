@@ -43,7 +43,6 @@ export function HashCompatRedirect() {
     function redirectHashRoute() {
       if (!window.location.hash) return;
       const hashModule = normalizeHashModule(readHashModule());
-      if (hashModule === "prep-content") return;
       if (!hashModule) return;
       navigateToModule(hashModule, { replace: true });
     }

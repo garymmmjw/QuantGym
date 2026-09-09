@@ -1,4 +1,3 @@
-import { reconnectPersonalAccount } from "../../../../features/personal/reconnectAccount.js";
 import { createPageApiDeps } from "../../createPageApiDeps.js";
 export function assemblePageApiSliceImpl(shared, ctx) {
   const deps = { ...shared, ...ctx };
@@ -472,17 +471,6 @@ export function assemblePageApiSliceImpl(shared, ctx) {
     createCompanyMark: (company) => createCompanyMarkView(company, { getInitials }),
     getLlmConfig,
     getCloudConfig: () => appState.cloudConfig,
-    reconnectPersonalAccount: (password) => reconnectPersonalAccount({
-      user: appState.currentUser, config: appState.cloudConfig, password,
-      request: deps.cloudApi, getCurrentOwnerId: () => appState.currentUser?.id,
-      saveConfig: (next) => {
-        const previous = appState.cloudConfig;
-        appState.cloudConfig = next;
-        try { deps.saveCloudConfig(); } catch (error) { appState.cloudConfig = previous; throw error; }
-        deps.appRuntime.notify();
-        domainStores.appStore.actions.setCloudConfig(next);
-      },
-    }),
     defaultCloudApiEndpoint: DEFAULT_CLOUD_API_ENDPOINT,
     renderCountryOptions,
     renderRegionOptions,
@@ -541,7 +529,7 @@ export function assemblePageApiSliceImpl(shared, ctx) {
       shouldRenderTools: Boolean(appState.currentUser),
       refreshNews: maybeAutoRefreshNews,
       refreshJobs: maybeAutoRefreshJobs,
-      newsRefreshMs: 0,
+      newsRefreshMs: NEWS_AUTO_REFRESH_MS,
       jobsRefreshMs: JOBS_AUTO_REFRESH_MS,
       updateGlobalSearchPlaceholder,
       refreshIcons,

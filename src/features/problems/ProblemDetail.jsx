@@ -1,7 +1,5 @@
-import { useState } from "react";
-import { useAuthStore } from '../../stores/AppServicesContext.jsx';
-import { LocalTrainingRecovery } from '../../components/common/LocalTrainingRecovery.jsx';
-import { ProblemNotes } from './ProblemNotes.jsx';
+import { useEffect, useState } from "react";
+import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { difficultyClass } from "../../modules/problems/format.js";
 import {
   getCatalogProblemInfo,
@@ -11,6 +9,8 @@ import {
   localizeDifficultyLabel
 } from "./problemDisplayLabels.js";
 import { ProblemRichText } from "./ProblemRichText.jsx";
+
+const NOTE_STORAGE_PREFIX = "quantgym.problemNote.";
 
 function DetailBlock({
   title,
@@ -52,14 +52,29 @@ export function ProblemDetail({
   t,
   isEnglish,
   renderInto,
+  formatDate,
   onBack,
   onOpenProblem,
   onToggleCompleted,
   onToggleSaved,
   onSelectInterview,
   onRevealBlock,
+  onToggleLike,
+  onPostComment,
+  onDeleteComment
 }) {
-  const ownerId = useAuthStore(state => state.currentUser?.id || '');
+  const [commentDraft, setCommentDraft] = useState("");
+  const [noteDraft, setNoteDraft] = useState("");
+  const detailId = detail?.id || "";
+
+  useEffect(() => {
+    if (!detailId) return;
+    try {
+      setNoteDraft(window.localStorage.getItem(`${NOTE_STORAGE_PREFIX}${detailId}`) || "");
+    } catch {
+      setNoteDraft("");
+    }
+  }, [detailId]);
 
   if (!detail) return null;
 
@@ -79,6 +94,17 @@ export function ProblemDetail({
   const accText = lastScore != null && Number.isFinite(Number(lastScore))
     ? `${Math.round(Number(lastScore))}%`
     : "--";
+
+  const handleNoteChange = (event) => {
+    const value = event.target.value;
+    setNoteDraft(value);
+    try {
+      if (value) window.localStorage.setItem(`${NOTE_STORAGE_PREFIX}${detail.id}`, value);
+      else window.localStorage.removeItem(`${NOTE_STORAGE_PREFIX}${detail.id}`);
+    } catch {
+      /* storage unavailable */
+    }
+  };
 
   return (
     <>
@@ -144,7 +170,7 @@ export function ProblemDetail({
             >
               <i data-lucide={detail.favorite ? "bookmark-check" : "bookmark"} />
               {" "}
-              {detail.favorite ? (isEnglish ? "Saved question" : "已收藏题目") : (isEnglish ? "Save question" : "收藏题目")}
+              {detail.favorite ? t("savedForReview") : t("saveForReview")}
             </button>
             <button className="primary-button" type="button" onClick={() => onSelectInterview(detail.id)}>
               <i data-lucide="messages-square" />
@@ -210,8 +236,12 @@ export function ProblemDetail({
           </div>
         </div>
 
-        <LocalTrainingRecovery />
-        <ProblemNotes key={JSON.stringify([ownerId, detail.id])} ownerId={ownerId} problemId={detail.id} isEnglish={isEnglish} />
+        <textarea
+          className="qg-detail-notes"
+          placeholder={isEnglish ? "Jot a note… (autosaved)" : "写点笔记…（自动保存）"}
+          value={noteDraft}
+          onChange={handleNoteChange}
+        />
 
         <div className="qg-detail-cta-row">
           <button
@@ -226,15 +256,83 @@ export function ProblemDetail({
           <button
             type="button"
             className={`qg-detail-bookmark${detail.favorite ? " active" : ""}`}
-            title={detail.favorite ? (isEnglish ? "Saved question" : "已收藏题目") : (isEnglish ? "Save question" : "收藏题目")}
-            aria-label={detail.favorite ? (isEnglish ? "Saved question" : "已收藏题目") : (isEnglish ? "Save question" : "收藏题目")}
+            title={detail.favorite ? t("savedForReview") : t("saveForReview")}
+            aria-label={detail.favorite ? t("savedForReview") : t("saveForReview")}
             onClick={() => onToggleSaved(detail.id)}
           >
             <i data-lucide={detail.favorite ? "bookmark-check" : "bookmark"} />
           </button>
         </div>
 
-
+        <section className="problem-social-panel">
+          <div className="problem-social-header">
+            <div>
+              <h3>{t("problemDiscussion")}</h3>
+              <p>{t("problemDiscussionHint")}</p>
+            </div>
+            <button
+              type="button"
+              className={`problem-like-button${detail.social.liked ? " active" : ""}`}
+              onClick={() => onToggleLike(detail.id)}
+            >
+              <i data-lucide="heart" />
+              <span>{detail.social.liked ? t("unlike") : t("like")}</span>
+              <strong>{detail.social.likeCount}</strong>
+            </button>
+          </div>
+          {detail.socialNotice ? <p className="problem-social-notice">{detail.socialNotice}</p> : null}
+          <div className="problem-comments">
+            {!detail.social.comments.length ? (
+              <EmptyState title={t("problemCommentEmpty")} />
+            ) : detail.social.comments.map((comment) => (
+              <article key={comment.id} className="problem-comment">
+                <div>
+                  <strong>{comment.author || "Quant"}</strong>
+                  <time>{formatDate?.(comment.createdAt) || ""}</time>
+                  {comment.isOwn ? (
+                    <button
+                      type="button"
+                      className="problem-comment-delete"
+                      title={t("deleteComment")}
+                      aria-label={t("deleteComment")}
+                      onClick={() => onDeleteComment(detail.id, comment.id)}
+                    >
+                      <i data-lucide="trash-2" />
+                    </button>
+                  ) : null}
+                </div>
+                <p>{comment.text}</p>
+              </article>
+            ))}
+          </div>
+          <form
+            className="problem-comment-form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const result = onPostComment(detail.id, commentDraft);
+              if (result && typeof result.then === "function") {
+                result.then((actionResult) => {
+                  if (actionResult?.ok !== false) setCommentDraft("");
+                }).catch(() => {});
+              } else if (result?.ok !== false) {
+                setCommentDraft("");
+              }
+            }}
+          >
+            <textarea
+              rows={3}
+              maxLength={1200}
+              placeholder={t("problemCommentPlaceholder")}
+              value={commentDraft}
+              onChange={(event) => setCommentDraft(event.target.value)}
+            />
+            <button className="primary-button" type="submit">
+              <i data-lucide="send" />
+              {" "}
+              {t("problemCommentPost")}
+            </button>
+          </form>
+        </section>
       </div>
     </>
   );

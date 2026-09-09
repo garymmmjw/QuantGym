@@ -54,7 +54,6 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
       const [localHash, remoteHash] = await Promise.all([personalFingerprint(local), personalFingerprint(remoteData)]);
       let next;
       if (localHash === remoteHash) next = local;
-      else if (local.activeTrial || remoteData.activeTrial) next = mergePersonalData(local, remoteData);
       else if (meta?.fingerprint === localHash) next = remoteData;
       else if (remote.data === null || meta?.fingerprint === remoteHash) next = local;
       else next = mergePersonalData(local, remoteData);
@@ -97,7 +96,7 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
       do {
         requested = false;
         await perform().catch(error => {
-          status({ phase: error.code === 'active_training_conflict' ? 'training-conflict' : error.status === 401 ? 'auth' : 'error', message: error.message, code: error.code });
+          status({ phase: error.status === 401 ? 'auth' : 'error', message: error.message });
         });
       } while (requested && (!stopped || flushOnStop));
     })().finally(() => {

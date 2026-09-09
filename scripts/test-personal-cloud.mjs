@@ -2,7 +2,7 @@ import test, { afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createPersonalCloudSync, personalFingerprint } from '../src/features/personal/personalCloud.js';
 import { createPersonalStore, createPersonalState } from '../src/features/personal/personalStore.js';
-import { createTrial, transitionTrial, persistTrialTransition } from '../src/features/personal/mental/mentalEngine.js';
+import { createTrial } from '../src/features/personal/mental/mentalEngine.js';
 import { createDailySession, updateDailyAnswer } from '../src/features/personal/daily/dailyEngine.js';
 
 const iso = '2026-09-09T12:00:00.000Z';
@@ -79,58 +79,6 @@ test('first upload saves the complete private snapshot and revision metadata', a
   assert.ok(server.calls.every(call => call.url === 'https://api.example.test/api/personal-prep'));
   assert.ok([...first.storage.values.keys()].some(key => key.startsWith('quantgym.personal-sync.v1:alice:')));
   await first.cloud.stop();
-});
-
-test('two different active trials pause cloud sync without overwriting either device, then merge after finishing', async () => {
-  const server = memoryServer();
-  const first = device(server), second = device(server);
-  const start = Date.parse(iso);
-  for (const [index, current] of [first, second].entries()) {
-    let trial = createTrial({ durationSeconds: 10 }, { id: `device-${index}`, now: start + index, rng: () => 0 });
-    trial = transitionTrial(trial, { type: 'input', value: String(trial.currentQuestion.answer) }, start + 1000, () => 0);
-    trial = transitionTrial(trial, { type: 'submit', value: '999' }, start + 2000);
-    current.store.update(state => ({ ...state, activeTrial: trial }));
-  }
-  await first.cloud.sync();
-  const remoteBefore = server.data, localBefore = clone(second.store.getSnapshot().data);
-  await second.cloud.sync();
-  assert.equal(second.statuses.at(-1).phase, 'training-conflict');
-  assert.equal(second.statuses.at(-1).code, 'active_training_conflict');
-  assert.deepEqual(server.data, remoteBefore);
-  assert.deepEqual(second.store.getSnapshot().data, localBefore);
-  assert.equal(server.calls.filter(call => call.method === 'PUT').length, 1);
-  assert.deepEqual(JSON.parse(second.store.exportBackup()).data, localBefore);
-  for (const current of [first, second]) current.store.update(state => persistTrialTransition(state, transitionTrial(state.activeTrial, { type: 'tick' }, start + 11000)));
-  await first.cloud.sync();
-  await second.cloud.sync();
-  await first.cloud.sync();
-  assert.equal(server.data.activeTrial, null);
-  assert.equal(server.data.trials.length, 2);
-  assert.ok(server.data.trials.every(trial => trial.correct === 1 && trial.questions.at(-1).submittedAnswer === '999'));
-  assert.deepEqual(first.store.getSnapshot().data, server.data);
-  assert.deepEqual(second.store.getSnapshot().data, server.data);
-});
-
-test('an unchanged synced active trial still rejects a stale lower-score cloud completion', async () => {
-  const start = Date.parse(iso);
-  const original = createTrial({ durationSeconds: 10 }, { id: 'shared-foreground', now: start, rng: () => 0 });
-  const answered = transitionTrial(original, { type: 'input', value: String(original.currentQuestion.answer) }, start + 1000, () => 0);
-  const server = memoryServer();
-  const current = device(server);
-  current.store.update(state => ({ ...state, activeTrial: answered }));
-  await current.cloud.sync();
-  server.change(persistTrialTransition(createPersonalState(), transitionTrial(original, { type: 'tick' }, start + 10000)));
-  const remoteBefore = server.data;
-  await current.cloud.sync();
-  assert.equal(current.statuses.at(-1).phase, 'training-conflict');
-  assert.equal(current.store.getSnapshot().data.activeTrial.correct, 1);
-  assert.deepEqual(server.data, remoteBefore);
-  assert.equal(server.calls.filter(call => call.method === 'PUT').length, 1);
-  current.store.update(state => persistTrialTransition(state, transitionTrial(answered, { type: 'tick' }, start + 10000)));
-  await current.cloud.sync();
-  assert.equal(current.statuses.at(-1).phase, 'synced');
-  assert.equal(server.data.trials[0].correct, 1);
-  assert.equal(server.data.activities[0].count, 1);
 });
 
 test('a new device loads saved trials and answers without overwriting or uploading empty data', async () => {

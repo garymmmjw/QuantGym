@@ -123,9 +123,7 @@ function buildQuestionPanel(session, options = {}) {
 }
 
 export function createInterviewPageApi(deps = {}) {
-  let renderedSession = null, renderedAnswerNode = null;
   function sync(options = {}) {
-    deps.interviewSessionLifecycleController?.syncOwner?.();
     const reactSetup = options.reactSetup !== false;
     const reactSession = options.reactSession !== false;
     if (deps.interviewRuntime?.state) {
@@ -133,12 +131,6 @@ export function createInterviewPageApi(deps = {}) {
     }
     deps.rebindElements?.();
     deps.renderInterviewSetup?.({ reactSetup });
-    const answerNode = deps.els?.interviewAnswer;
-    if (answerNode && (answerNode !== renderedAnswerNode || deps.interviewState?.session !== renderedSession)) {
-      renderedSession = deps.interviewState?.session || null;
-      renderedAnswerNode = answerNode;
-      answerNode.value = deps.interviewState?.answerDraft || '';
-    }
     if (reactSetup === false) {
       deps.renderInterviewCategoryPicker?.();
       deps.updateInterviewSetupVisibility?.();
@@ -269,15 +261,6 @@ export function createInterviewPageApi(deps = {}) {
   return {
     sync,
     getViewModel,
-    openRecovered(snapshot) {
-      const result = deps.interviewSessionLifecycleController?.openRecovered?.(snapshot);
-      sync();
-      return result;
-    },
-    persistDraft(value) {
-      if (deps.interviewState) deps.interviewState.answerDraft = String(value || '');
-      return deps.persistInterviewSessionSnapshot?.();
-    },
     selectLanguage: (value) => {
       if (deps.interviewState) deps.interviewState.language = value === "en" ? "en" : "zh";
       sync();

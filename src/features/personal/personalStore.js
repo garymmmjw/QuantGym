@@ -1,11 +1,6 @@
-import { validateApplicationEvent } from './applications/applicationModel.js';
-import { validateReviewEvent } from './review/reviewEngine.js';
-
 export const PERSONAL_VERSION = 1;
 const PREFIX = "quantgym.personal-prep.v1:";
 const ARRAY_FIELDS = ["trials", "dailySessions", "activities"];
-const EVENT_FIELDS = ['applicationEvents', 'reviewEvents'];
-const ALL_FIELDS = ['mentalSettings', 'activeTrial', 'dailySettings', 'removedActivityIds', ...ARRAY_FIELDS, ...EVENT_FIELDS];
 const OPERATIONS = ["add", "subtract", "multiply", "divide"];
 const DAILY_KINDS = ["tech", "coding", "behavioral"];
 const object = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -122,9 +117,7 @@ function preferTrialProgress(current, incoming) {
   // Correct answers and resolved questions only grow as a real trial progresses.
   const progress = (trial) => [trial.correct,
     trial.questions.filter((question) => ["correct", "skipped"].includes(question.outcome)).length,
-    trial.status === "completed" ? 2 : trial.status === "aborted" ? 1 : 0,
-    trial.questions.reduce((total, question) => total + question.mistakes.length, trial.currentQuestion?.mistakes.length || 0),
-    trial.questions.filter(question => typeof question.submittedAnswer === 'string' && question.submittedAnswer.length > 0).length + Number(Boolean(trial.currentAnswer))];
+    trial.status === "completed" ? 2 : trial.status === "aborted" ? 1 : 0];
   const localProgress = progress(current);
   const remoteProgress = progress(incoming);
   for (let index = 0; index < localProgress.length; index += 1) {
@@ -133,27 +126,8 @@ function preferTrialProgress(current, incoming) {
   return current;
 }
 
-function trialConflict() {
-  return Object.assign(new Error('Training is still active on multiple devices. Both copies are kept. Finish or end the trial on each device, then sync again; export a backup from each device if needed.'), { code: 'active_training_conflict' });
-}
-
-function terminalIncludesActiveProgress(active, terminal) {
-  if (preferTrialProgress(active, terminal) === active) return false;
-  // A stale background completion must not erase answers or wrong submissions
-  // entered on a foreground device, even if both snapshots have the same score.
-  for (const question of active.questions) {
-    const saved = terminal.questions.find(row => row.id === question.id);
-    if (!saved || stableEvent(saved) !== stableEvent(question)) return false;
-  }
-  const question = active.currentQuestion;
-  const saved = terminal.questions.find(row => row.id === question.id);
-  if (!saved || ['index', 'operator', 'a', 'b', 'answer', 'startedAt'].some(field => saved[field] !== question[field])) return false;
-  if (!question.mistakes.every(mistake => saved.mistakes.some(entry => stableEvent(entry) === stableEvent(mistake)))) return false;
-  return ['correct', 'skipped'].includes(saved.outcome) || !active.currentAnswer || saved.submittedAnswer === active.currentAnswer;
-}
-
 export function createPersonalState() {
-  return { mentalSettings: null, activeTrial: null, trials: [], dailySettings: null, dailySessions: [], activities: [], removedActivityIds: [], applicationEvents: [], reviewEvents: [] };
+  return { mentalSettings: null, activeTrial: null, trials: [], dailySettings: null, dailySessions: [], activities: [], removedActivityIds: [] };
 }
 
 export function personalStorageKey(ownerId) {
@@ -163,7 +137,6 @@ export function personalStorageKey(ownerId) {
 
 export function validatePersonalData(data) {
   if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Invalid training backup.");
-  requireData(Object.keys(data).every(field => ALL_FIELDS.includes(field)), 'unknown personal data fields');
   for (const key of ARRAY_FIELDS) {
     if (!Array.isArray(data[key]) || data[key].some((row) => !object(row) || !id(row.id))) {
       throw new Error(`Invalid ${key} in training backup.`);
@@ -178,30 +151,7 @@ export function validatePersonalData(data) {
   if (data.dailySettings != null) validateDailySettings(data.dailySettings);
   const removedActivityIds = data.removedActivityIds === undefined ? [] : data.removedActivityIds;
   requireData(Array.isArray(removedActivityIds) && removedActivityIds.every(id), "removed activity ids");
-  const events = {};
-  for (const field of EVENT_FIELDS) {
-    const rows = data[field] === undefined ? [] : data[field];
-    requireData(Array.isArray(rows) && new Set(rows.map(row => row?.id)).size === rows.length, field);
-    rows.forEach(field === 'applicationEvents' ? validateApplicationEvent : validateReviewEvent);
-    events[field] = rows;
-  }
-  return { ...createPersonalState(), ...data, ...events, removedActivityIds: [...new Set(removedActivityIds)] };
-}
-
-const stableEvent = value => JSON.stringify(value, function (key, nested) {
-  return nested && typeof nested === 'object' && !Array.isArray(nested)
-    ? Object.fromEntries(Object.keys(nested).sort().map(field => [field, nested[field]])) : nested;
-});
-
-function mergeEvents(current, incoming, field) {
-  const events = new Map();
-  for (const event of [...current, ...incoming]) {
-    const previous = events.get(event.id);
-    requireData(!previous || stableEvent(previous) === stableEvent(event), `conflicting ${field} event id`);
-    events.set(event.id, event);
-  }
-  const timestampField = field === 'reviewEvents' ? 'reviewedAt' : 'createdAt';
-  return [...events.values()].sort((a, b) => Date.parse(a[timestampField]) - Date.parse(b[timestampField]) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return { ...createPersonalState(), ...data, removedActivityIds: [...new Set(removedActivityIds)] };
 }
 
 /** Merge valid backups or cloud snapshots without reviving terminal work or deleted entries. */
@@ -209,7 +159,6 @@ export function mergePersonalData(currentValue, incomingValue) {
   const current = validatePersonalData(currentValue);
   const incoming = validatePersonalData(incomingValue);
   const next = { ...current };
-  for (const field of EVENT_FIELDS) next[field] = mergeEvents(current[field], incoming[field], field);
   for (const field of ARRAY_FIELDS) {
     const byId = new Map(incoming[field].map((row) => [row.id, row]));
     for (const row of current[field]) {
@@ -220,12 +169,7 @@ export function mergePersonalData(currentValue, incomingValue) {
     next[field] = [...byId.values()];
   }
   const finishedIds = new Set(next.trials.map((trial) => trial.id));
-  for (const trial of [current.activeTrial, incoming.activeTrial].filter(Boolean)) {
-    const terminal = next.trials.find(row => row.id === trial.id);
-    if (terminal && !terminalIncludesActiveProgress(trial, terminal)) throw trialConflict();
-  }
   const active = [current.activeTrial, incoming.activeTrial].filter((trial) => trial && !finishedIds.has(trial.id));
-  if (active.length === 2 && active[0].id !== active[1].id) throw trialConflict();
   next.activeTrial = active.length === 2 && active[0].id === active[1].id ? preferTrialProgress(active[0], active[1]) : active[0] || null;
   for (const trial of next.trials) {
     const activityId = `mental:${trial.id}`;

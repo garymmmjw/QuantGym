@@ -136,7 +136,6 @@ export function createInterviewOnboardingController(deps = {}) {
 
   async function start() {
     const interviewState = getInterviewState();
-    if (interviewState.session?.historyPending && deps.retryPendingHistory?.() !== true) return false;
     deps.clearTimers?.();
     deps.stopSpeech?.();
     interviewState.messages = [];
