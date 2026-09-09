@@ -1,5 +1,7 @@
 export const i18n = {
   zh: {
+    calendar: "训练日历",
+    dailyMock: "Daily Mock",
     appTitle: "QuantGym",
     loading: "Loading",
     navOverview: "总览",
@@ -941,6 +943,8 @@ export const i18n = {
     stickerLabelSleep: "先睡为敬"
   },
   en: {
+    calendar: "Training Calendar",
+    dailyMock: "Daily Mock",
     appTitle: "QuantGym",
     loading: "Loading",
     navOverview: "Overview",

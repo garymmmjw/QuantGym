@@ -23,12 +23,20 @@ import time
 import struct
 import threading
 from email.message import EmailMessage
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote, unquote, urlparse
 from urllib.request import Request, urlopen
+
+from personal_prep import (
+    MAX_PERSONAL_PREP_BYTES,
+    PersonalPrepValidationError,
+    get_personal_prep,
+    save_personal_prep,
+    validate_personal_prep_request,
+)
 
 try:
     import psycopg
@@ -104,6 +112,7 @@ JOBS_CATALOG_PATH = Path(os.environ.get("QUANTGYM_JOBS_CATALOG", PROJECT_ROOT / 
 DEFAULT_PUBLIC_ATS_JOBS_SOURCE_URL = "https://beta.quantgym.app/data/jobs/public-ats-feed.json"
 POSTGRES_SCHEMA_PATH = BASE_DIR / "postgres" / "schema.sql"
 POSTGRES_JSON_COLUMNS = {
+    "data_json",
     "account_json",
     "state_json",
     "community_json",
@@ -349,6 +358,14 @@ def api_timestamp(value) -> str:
         stamped = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
         return stamped.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     return str(value or "")
+
+
+def api_json_default(value):
+    if isinstance(value, datetime):
+        return api_timestamp(value)
+    if isinstance(value, date):
+        return value.isoformat()
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
 
 def normalize_email(email: str | None) -> str:
@@ -1577,6 +1594,14 @@ class Database:
                 CREATE TABLE IF NOT EXISTS user_states (
                   user_id TEXT PRIMARY KEY,
                   state_json TEXT NOT NULL,
+                  updated_at TEXT NOT NULL,
+                  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+
+                CREATE TABLE IF NOT EXISTS user_personal_prep (
+                  user_id TEXT PRIMARY KEY,
+                  data_json TEXT NOT NULL,
+                  revision INTEGER NOT NULL CHECK (revision > 0),
                   updated_at TEXT NOT NULL,
                   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
@@ -2831,6 +2856,10 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         sys.stderr.write("%s - - [%s] %s\n" % (self.client_address[0], self.log_date_time_string(), fmt % args))
 
     def end_headers(self):
+        if urlparse(self.path).path.rstrip("/") == "/api/personal-prep":
+            self.send_header("Cache-Control", "private, no-store")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Vary", "Authorization")
         origin = self.headers.get("Origin")
         if ALLOWED_ORIGINS == ["*"]:
             self.send_header("Access-Control-Allow-Origin", "*")
@@ -2898,6 +2927,10 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.get_state()
             if path == "/api/state" and self.command == "PUT":
                 return self.put_state()
+            if path == "/api/personal-prep" and self.command == "GET":
+                return self.get_personal_preparation()
+            if path == "/api/personal-prep" and self.command == "PUT":
+                return self.put_personal_preparation()
             if path == "/api/problems" and self.command == "GET":
                 return self.get_problems()
             if path == "/api/problems" and self.command == "PUT":
@@ -3069,7 +3102,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             threading.Thread(target=send_alert_webhook, args=(payload,), daemon=True).start()
 
     def send_json(self, status: int, payload: dict):
-        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        body = json.dumps(payload, ensure_ascii=False, default=api_json_default).encode("utf-8")
         if status >= 400:
             self.close_connection = True
         self.send_response(status)
@@ -3696,6 +3729,37 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         user = self.require_user()
         with db.connect() as conn:
             self.send_json(200, {"state": db.get_state(conn, user["id"])})
+
+    def get_personal_preparation(self):
+        user = self.require_user()
+        with db.connect() as conn:
+            envelope = get_personal_prep(conn, user["id"])
+        self.send_json(200, envelope)
+
+    def put_personal_preparation(self):
+        # The owner is always the authenticated session, never body/query data.
+        user = self.require_user()
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            raise HttpError(400, "Invalid Content-Length")
+        if length < 0:
+            raise HttpError(400, "Invalid Content-Length")
+        if length > min(MAX_BODY_BYTES, MAX_PERSONAL_PREP_BYTES):
+            raise HttpError(413, "Personal preparation request exceeds the 8 MiB limit.")
+        try:
+            payload = self.read_json()
+            base_revision, data_json = validate_personal_prep_request(payload)
+        except PersonalPrepValidationError as error:
+            raise HttpError(error.status, str(error))
+        except (ValueError, RecursionError):
+            raise HttpError(400, "Invalid JSON")
+        with db.connect() as conn:
+            saved, envelope = save_personal_prep(conn, user["id"], base_revision, data_json)
+        # The transaction has committed before the client sees an acknowledgement.
+        if not saved:
+            return self.send_json(409, {**envelope, "error": "Personal preparation changed. Reload the current revision before retrying."})
+        self.send_json(200, envelope)
 
     def put_state(self):
         user = self.require_user()

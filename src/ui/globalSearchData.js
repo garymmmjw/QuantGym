@@ -158,8 +158,9 @@ export function getModuleSearchDefs(t = (key) => key) {
     { module: "companies", label: t("companies"), detail: "Companies / 公司", fields: [t("companies"), "companies", "company", "firm", "公司", "tier", "quant firm", "jane street", "citadel", "optiver"] },
     { module: "courses", label: t("courses"), detail: "Courses / 课程", fields: [t("courses"), "course", "courses", "课程", "视频", "youtube", "bilibili", "b站"] },
     { module: "skills", label: t("skills"), detail: "Ability radar / 能力值", fields: [t("skills"), "skills", "ability", "能力值", "雷达", "知识点"] },
+    { module: "calendar", label: "训练日历 / Calendar", detail: "个人每日完成记录", fields: ["calendar", "日历", "日期", "完成记录", "daily activity"] },
+    { module: "daily-mock", label: "Daily Mock", detail: "速算 · Tech · Coding OA · Behavioral", fields: ["daily", "mock", "每日模拟", "coding oa", "behavioral"] },
     { module: "tools", label: t("tools"), detail: "Mental math / 速算", fields: [t("tools"), "tools", "drills", "速算", "mental math"] },
-    { module: "poker", label: "Poker", detail: "Private cash table / 私房现金桌", fields: ["poker", "holdem", "cash game", "preflop", "solver", "扑克", "现金桌", "私房局", "翻前", "德州扑克"] },
     { module: "memory", label: t("memory"), detail: "Memory / 资料笔记", fields: [t("memory"), "memory", "notes", "资料", "笔记"] },
     { module: "settings", label: t("settings"), detail: "Settings / 设置", fields: [t("settings"), "settings", "设置", "config"] }
   ];

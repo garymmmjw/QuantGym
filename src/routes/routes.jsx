@@ -26,7 +26,8 @@ const SkillsPage = lazy(() => import("../pages/SkillsPage.jsx").then((m) => ({ d
 const ToolsPage = lazy(() => import("../pages/ToolsPage.jsx").then((m) => ({ default: m.ToolsPage })));
 const PlanPage = lazy(() => import("../pages/PlanPage.jsx").then((m) => ({ default: m.PlanPage })));
 const PkPage = lazy(() => import("../pages/PkPage.jsx").then((m) => ({ default: m.PkPage })));
-const PokerPage = lazy(() => import("../pages/PokerPage.jsx").then((m) => ({ default: m.PokerPage })));
+const CalendarPage = lazy(() => import("../pages/CalendarPage.jsx").then((m) => ({ default: m.CalendarPage })));
+const DailyMockPage = lazy(() => import("../pages/DailyMockPage.jsx").then((m) => ({ default: m.DailyMockPage })));
 const LeaguePage = lazy(() => import("../pages/LeaguePage.jsx").then((m) => ({ default: m.LeaguePage })));
 
 const REACT_PAGES = {
@@ -37,7 +38,8 @@ const REACT_PAGES = {
   interview: InterviewPage,
   problems: ProblemsPage,
   tools: ToolsPage,
-  poker: PokerPage,
+  calendar: CalendarPage,
+  "daily-mock": DailyMockPage,
   experiences: ExperiencesPage,
   news: NewsPage,
   community: CommunityPage,
@@ -117,6 +119,7 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppChromeLayout />}>
             {AppRouteElements()}
+            <Route path="/poker/*" element={<Navigate to="/calendar" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Route>

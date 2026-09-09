@@ -97,7 +97,8 @@
     "verify:production-boundaries:deployed:paste-token": "node scripts/run-google-token-gate.mjs --verify-deployed",
     "google:token-helper": "node scripts/create-google-token-helper.mjs",
     "google:token-helper:deployed": "node scripts/create-google-token-helper.mjs --deployed",
-    "google:token-helper:deployed:clipboard": "node scripts/create-google-token-helper.mjs --deployed --copy-snippet --open-deployed"
+    "google:token-helper:deployed:clipboard": "node scripts/create-google-token-helper.mjs --deployed --copy-snippet --open-deployed",
+    "test:personal-prep": "node --test scripts/test-personal-*.mjs"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",

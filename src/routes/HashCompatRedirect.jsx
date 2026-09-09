@@ -6,7 +6,8 @@ import { getModulePath, getRouteModuleId } from "./routeConfig.js";
 const HASH_ALIASES = new Map([
   ["", "overview"],
   ["home", "overview"],
-  ["dashboard", "overview"]
+  ["dashboard", "overview"],
+  ["poker", "calendar"]
 ]);
 
 function readHashModule() {
