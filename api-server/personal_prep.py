@@ -7,7 +7,9 @@ catalog, profile, or leaderboard query should join or serialize its contents.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+import re
+from datetime import date, datetime, timezone
+from urllib.parse import urlsplit
 
 PERSONAL_PREP_VERSION = 1
 MAX_PERSONAL_PREP_BYTES = 8 * 1024 * 1024
@@ -15,6 +17,10 @@ MAX_PERSONAL_PREP_RECORDS = 100_000
 PERSONAL_PREP_FIELDS = {
     "mentalSettings", "activeTrial", "trials", "dailySettings", "dailySessions", "activities"
 }
+OPTIONAL_PERSONAL_FIELDS = {"removedActivityIds", "applicationEvents", "reviewEvents"}
+APPLICATION_FIELDS = {"company", "role", "location", "url", "status", "deadline", "nextAction", "nextActionDate", "notes", "archived"}
+APPLICATION_STATUSES = {"wishlist", "applied", "oa", "interview", "offer", "rejected", "withdrawn"}
+APPLICATION_LIMITS = {"company": 200, "role": 300, "location": 300, "url": 2048, "nextAction": 2000, "notes": 20000}
 
 
 class PersonalPrepValidationError(ValueError):
@@ -32,9 +38,9 @@ def validate_personal_prep_request(payload: dict) -> tuple[int, str]:
     if type(revision) is not int or not 0 <= revision < 2_147_483_647:
         raise PersonalPrepValidationError("baseRevision must be a nonnegative integer.")
     data = payload["data"]
-    if not isinstance(data, dict) or not PERSONAL_PREP_FIELDS.issubset(data) or set(data) - PERSONAL_PREP_FIELDS - {"removedActivityIds"}:
+    if not isinstance(data, dict) or not PERSONAL_PREP_FIELDS.issubset(data) or set(data) - PERSONAL_PREP_FIELDS - OPTIONAL_PERSONAL_FIELDS:
         raise PersonalPrepValidationError("A complete personal preparation state is required.")
-    data = {**data, "removedActivityIds": data.get("removedActivityIds", [])}
+    data = {**data, **{field: data.get(field, []) for field in OPTIONAL_PERSONAL_FIELDS}}
     removed = data["removedActivityIds"]
     if not isinstance(removed, list) or len(removed) > MAX_PERSONAL_PREP_RECORDS or any(not valid_record_id(item) for item in removed) or len(set(removed)) != len(removed):
         raise PersonalPrepValidationError("Invalid removedActivityIds.")
@@ -44,7 +50,7 @@ def validate_personal_prep_request(payload: dict) -> tuple[int, str]:
     active = data["activeTrial"]
     if active is not None and (not isinstance(active, dict) or not valid_record_id(active.get("id"))):
         raise PersonalPrepValidationError("Invalid activeTrial.")
-    for field in ("trials", "dailySessions", "activities"):
+    for field in ("trials", "dailySessions", "activities", "applicationEvents", "reviewEvents"):
         rows = data[field]
         if not isinstance(rows, list) or len(rows) > MAX_PERSONAL_PREP_RECORDS:
             raise PersonalPrepValidationError(f"Invalid {field} collection.")
@@ -53,6 +59,13 @@ def validate_personal_prep_request(payload: dict) -> tuple[int, str]:
             if not isinstance(row, dict) or not valid_record_id(row.get("id")) or row["id"] in ids:
                 raise PersonalPrepValidationError(f"Invalid or duplicate record in {field}.")
             ids.add(row["id"])
+            if field == "applicationEvents":
+                validate_application_event(row)
+            elif field == "reviewEvents":
+                validate_review_event(row)
+        if field in {"applicationEvents", "reviewEvents"}:
+            time_field = "createdAt" if field == "applicationEvents" else "reviewedAt"
+            data[field] = sorted(rows, key=lambda event: event_order(event, time_field))
     try:
         encoded = json.dumps(data, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
         size = len(encoded.encode("utf-8"))
@@ -67,6 +80,69 @@ def valid_record_id(value) -> bool:
     return isinstance(value, str) and 0 < len(value.strip()) <= 512
 
 
+def event_order(event, time_field):
+    parsed = datetime.fromisoformat(event[time_field].replace("Z", "+00:00"))
+    milliseconds = round(parsed.replace(microsecond=parsed.microsecond // 1000 * 1000).timestamp() * 1000)
+    return milliseconds, event["id"]
+
+
+def valid_civil_date(value) -> bool:
+    if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        return False
+    try:
+        return date.fromisoformat(value).isoformat() == value
+    except ValueError:
+        return False
+
+
+def valid_event_timestamp(value) -> bool:
+    if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})", value):
+        return False
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return parsed.tzinfo is not None
+    except ValueError:
+        return False
+
+
+def valid_application_url(value) -> bool:
+    if value == "":
+        return True
+    if not isinstance(value, str) or re.search(r"[\s\x00-\x1f\x7f]", value):
+        return False
+    try:
+        parsed = urlsplit(value)
+        parsed.port  # Reject malformed or out-of-range ports before saving links.
+        return parsed.scheme in {"http", "https"} and bool(parsed.hostname) and parsed.username is None and parsed.password is None
+    except ValueError:
+        return False
+
+
+def validate_application_event(event):
+    if set(event) != {"id", "applicationId", "createdAt", "changes"} or not valid_record_id(event["applicationId"]) or not valid_event_timestamp(event["createdAt"]):
+        raise PersonalPrepValidationError("Invalid application event.")
+    changes = event["changes"]
+    if not isinstance(changes, dict) or not changes or set(changes) - APPLICATION_FIELDS:
+        raise PersonalPrepValidationError("Invalid application changes.")
+    for field, value in changes.items():
+        valid = True
+        if field == "archived":
+            valid = type(value) is bool
+        elif field == "status":
+            valid = isinstance(value, str) and value in APPLICATION_STATUSES
+        elif field in {"deadline", "nextActionDate"}:
+            valid = value == "" or valid_civil_date(value)
+        else:
+            valid = isinstance(value, str) and len(value) <= APPLICATION_LIMITS[field]
+        if not valid or (field in {"company", "role"} and not value.strip()) or (field == "url" and not valid_application_url(value)):
+            raise PersonalPrepValidationError(f"Invalid application {field}.")
+
+
+def validate_review_event(event):
+    if set(event) != {"id", "questionKey", "reviewedAt", "rating", "note"} or not valid_record_id(event["questionKey"]) or not valid_event_timestamp(event["reviewedAt"]) or not isinstance(event["rating"], str) or event["rating"] not in {"again", "good", "easy"} or not isinstance(event["note"], str) or len(event["note"]) > 20000:
+        raise PersonalPrepValidationError("Invalid review event.")
+
+
 def get_personal_prep(conn, user_id: str) -> dict:
     row = conn.execute(
         "SELECT data_json, revision, updated_at FROM user_personal_prep WHERE user_id = ?",
@@ -78,10 +154,11 @@ def get_personal_prep(conn, user_id: str) -> dict:
     updated_at = row["updated_at"]
     if isinstance(updated_at, datetime):
         updated_at = updated_at.isoformat().replace("+00:00", "Z")
+    data = json.loads(stored) if isinstance(stored, str) else stored
     return {
         "version": PERSONAL_PREP_VERSION,
         "revision": int(row["revision"]),
-        "data": json.loads(stored) if isinstance(stored, str) else stored,
+        "data": {**data, **{field: data.get(field, []) for field in OPTIONAL_PERSONAL_FIELDS}},
         "updatedAt": updated_at,
     }
 
@@ -93,6 +170,20 @@ def save_personal_prep(conn, user_id: str, base_revision: int, data_json: str) -
     Existing rows update only when their revision still matches the client.
     The caller must commit before acknowledging success over HTTP.
     """
+    current = get_personal_prep(conn, user_id)
+    if current["revision"] != base_revision:
+        return False, current
+    if current["data"] is not None:
+        incoming = json.loads(data_json)
+        for field, time_field in (("applicationEvents", "createdAt"), ("reviewEvents", "reviewedAt")):
+            events = {}
+            for event in [*current["data"].get(field, []), *incoming.get(field, [])]:
+                previous = events.get(event["id"])
+                if previous is not None and previous != event:
+                    raise PersonalPrepValidationError(f"Conflicting immutable event in {field}.")
+                events[event["id"]] = event
+            incoming[field] = sorted(events.values(), key=lambda event: event_order(event, time_field))
+        _, data_json = validate_personal_prep_request({"version": PERSONAL_PREP_VERSION, "baseRevision": base_revision, "data": incoming})
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     if base_revision == 0:
         cursor = conn.execute(

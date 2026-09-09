@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ACTIVITY_KINDS, MANUAL_KINDS, addLocalDays, buildDailySummaries, collectCalendarActivities, createManualActivity, localDayKey, parseLocalDay, recordManualActivity, summarizeActivities } from "./calendarModel.js";
 import "./calendar.css";
 
@@ -13,8 +13,11 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
   const locale = en ? "en-US" : "zh-CN";
   const t = (zh, english) => en ? english : zh;
   const labels = KIND_LABELS[en ? "en" : "zh"];
+  const [searchParams] = useSearchParams();
+  const requestedDay = searchParams.get("date");
   const [today, setToday] = useState(() => localDayKey());
-  const [selectedDay, setSelectedDay] = useState(() => localDayKey());
+  const [selectedDay, setSelectedDay] = useState(() => parseLocalDay(requestedDay) ? requestedDay : localDayKey());
+  useEffect(() => { if (parseLocalDay(requestedDay)) setSelectedDay(requestedDay); }, [requestedDay]);
   const [showManual, setShowManual] = useState(false);
   const [manual, setManual] = useState({ kind: "quant", count: "1", dateKey: localDayKey(), note: "" });
   const [notice, setNotice] = useState(null);

@@ -2,6 +2,7 @@ import { Component, useEffect, useMemo, useRef, useState, useSyncExternalStore }
 import { NavLink } from "react-router-dom";
 import { useAuthStore, useAppStore, useAppServicesContext, useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { createPersonalStore } from "./personalStore.js";
+import { ReconnectAccount } from "./ReconnectAccount.jsx";
 import { createPersonalCloudSync } from "./personalCloud.js";
 import "./personalWorkspace.css";
 
@@ -32,12 +33,13 @@ export function PersonalWorkspace({ children }) {
   const language = services.getLanguage?.() || "zh";
   const ownerId = user?.id;
   if (!ownerId) return <p role="status">请先登录你的个人账户。</p>;
-  return <ScopedWorkspace key={ownerId} ownerId={ownerId} cloudConfig={cloudConfig} language={language} legacyState={legacyState}>{children}</ScopedWorkspace>;
+  return <ScopedWorkspace key={ownerId} ownerId={ownerId} user={user} cloudConfig={cloudConfig} language={language} legacyState={legacyState}>{children}</ScopedWorkspace>;
 }
 
-function ScopedWorkspace({ ownerId, cloudConfig = {}, language, legacyState, children }) {
+function ScopedWorkspace({ ownerId, user, cloudConfig = {}, language, legacyState, children }) {
   const store = useMemo(() => getStore(ownerId), [ownerId]);
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const [reconnectOpen, setReconnectOpen] = useState(false);
   const [backupMessage, setBackupMessage] = useState("");
   const inputRef = useRef(null);
   const syncRef = useRef(null);
@@ -77,8 +79,10 @@ function ScopedWorkspace({ ownerId, cloudConfig = {}, language, legacyState, chi
       if (file.size > 20 * 1024 * 1024) throw new Error("Backup too large.");
       const result = store.restoreBackup(await file.text());
       setBackupMessage(result.ok ? (en ? "Missing records restored; current work kept." : "已补回缺失记录，当前进度保持不变。") : (en ? "Restored in memory. Export before leaving." : "已恢复到本页内存，请先导出再离开。"));
-    } catch {
-      setBackupMessage(en ? "Cannot restore this file. Use a valid backup from this account; current records are unchanged." : "无法恢复此文件。请选择当前账户的有效备份；现有记录未被覆盖。");
+    } catch (error) {
+      setBackupMessage(error.code === 'active_training_conflict'
+        ? (en ? "Training is still active on more than one copy. Records were kept. Finish or end the trials before restoring; export each copy as a backup." : "两个副本仍有进行中的速算，记录均已保留。请先完成或结束试次再恢复，并分别导出备份。")
+        : (en ? "Cannot restore this file. Use a valid backup from this account; current records are unchanged." : "无法恢复此文件。请选择当前账户的有效备份；现有记录未被覆盖。"));
     }
   };
 
@@ -99,15 +103,17 @@ function ScopedWorkspace({ ownerId, cloudConfig = {}, language, legacyState, chi
     </div>}
     <div className={`personal-cloud-status personal-cloud-${cloud.phase}`} role="status">
       <span>{({
-        local: en ? "Saved on this browser. Sign in to a cloud account to sync across devices." : "本机保存中；登录云端账户后，可跨设备同步。",
+        local: en ? "Saved on this browser. Sign in to a cloud account to sync across devices." : "已保存在本机；连接账户后可跨设备同步。",
         pending: en ? "Saved locally · waiting to sync" : "已保存在本机 · 等待云端同步",
         syncing: en ? "Syncing your private training records…" : "正在同步个人训练记录…",
         synced: en ? "Saved to your account · synced across devices" : "已保存到你的账户 · 支持跨设备继续",
         auth: en ? "Cloud login expired. Sign in again; local records are kept." : "云端登录已过期，请重新登录；本机记录已保留。",
         error: en ? "Cloud sync is unavailable. Local records are kept; retry when connected." : "云端暂未同步，本机记录已保留；联网后可重试。",
+        'training-conflict': en ? "Training is active on multiple devices. Local and cloud records are kept. Finish or end each trial, then sync again; you can export a backup on each device." : "多设备仍在训练，本机与云端记录均已保留。请先在各设备完成或结束速算试次，再同步；也可分别导出备份。",
       })[cloud.phase]}</span>
-      {cloud.phase !== "local" && <button type="button" disabled={cloud.phase === "syncing"} onClick={() => syncRef.current?.sync()}>{en ? "Sync now" : "立即同步"}</button>}
+      {['auth','local'].includes(cloud.phase) ? <button type="button" onClick={() => setReconnectOpen(true)}>{en ? "Connect account" : "恢复账户同步"}</button> : <button type="button" disabled={cloud.phase === "syncing"} onClick={() => syncRef.current?.sync()}>{en ? "Sync now" : "立即同步"}</button>}
     </div>
+    {reconnectOpen && <ReconnectAccount user={user} language={language} onClose={() => setReconnectOpen(false)} />}
     <PersonalErrorBoundary>{children({ state: snapshot.data, update: store.update, legacyState, language })}</PersonalErrorBoundary>
     <footer className="personal-workspace-footer">
       <span>{en ? "Account-specific records with a local copy. Export a backup whenever you need one." : "训练记录按账户保存，本机保留副本；也可随时导出备份。"}</span>

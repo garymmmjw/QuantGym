@@ -1,9 +1,11 @@
 import { createStore } from './store.js';
+import { clearLocalRecovery, rememberLocalRecovery } from './localRecovery.js';
 
 export function createUserStateRuntime(initialState = {}, deps = {}) {
   let value = typeof initialState === "function" ? initialState() : initialState;
   const state = {};
   const store = createStore(value);
+  const unsavedByOwner = new Map();
 
   Object.defineProperty(state, "value", {
     get() {
@@ -23,6 +25,7 @@ export function createUserStateRuntime(initialState = {}, deps = {}) {
   }
 
   function loadForUser(userId) {
+    if (unsavedByOwner.has(String(userId))) return unsavedByOwner.get(String(userId));
     return deps.loadUserState?.(userId, {
       createBaseState: deps.createBaseState,
       normalizeState: deps.normalizeState,
@@ -37,27 +40,41 @@ export function createUserStateRuntime(initialState = {}, deps = {}) {
 
   function save(options = {}) {
     const currentUser = deps.getCurrentUser?.();
-    if (!currentUser) return;
+    if (!currentUser) return false;
     const activityHooks = deps.getActivityHooks?.() || {};
     const checkInResult = options.checkIn === false ? null : activityHooks.markActivity?.();
     state.value.updatedAt = deps.nowIso?.() || new Date().toISOString();
-    deps.writeUserState?.(currentUser.id, state.value, {
+    const saved = deps.writeUserState?.(currentUser.id, state.value, {
       serializeState: deps.serializeState,
       userStateKey: deps.userStateKey
     });
+    if (saved === false) {
+      const ownerId = String(currentUser.id);
+      unsavedByOwner.set(ownerId, state.value);
+      rememberLocalRecovery(ownerId, 'user-state', { backup: deps.serializeState?.(state.value) || state.value, retry: () => {
+        if (String(deps.getCurrentUser?.()?.id || '') === ownerId) return save({ checkIn: false });
+        return false;
+      } });
+    } else {
+      unsavedByOwner.delete(String(currentUser.id));
+      clearLocalRecovery(currentUser.id, 'user-state');
+    }
     if (options.sync !== false) deps.queueCloudSync?.("state");
     store.setState(state.value);
-    activityHooks.queueCelebration?.(checkInResult);
+    if (saved !== false) activityHooks.queueCelebration?.(checkInResult);
+    return saved !== false;
   }
 
   function clearForUser(userId) {
     deps.clearUserState?.(userId, {
       userStateKey: deps.userStateKey
     });
+    unsavedByOwner.delete(String(userId));
+    clearLocalRecovery(userId, 'user-state');
   }
 
   function migrateLegacy(userId) {
-    deps.migrateLegacyState?.(userId, {
+    return deps.migrateLegacyState?.(userId, {
       legacyKey: deps.legacyKey,
       normalizeState: deps.normalizeState,
       serializeState: deps.serializeState,

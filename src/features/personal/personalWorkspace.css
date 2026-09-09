@@ -24,4 +24,8 @@
 [data-qg-theme="dark"] .personal-workspace { --personal-ink:#e5eaf3; --personal-muted:#a4b1c6; --personal-line:#35425a; --personal-accent:#94afff; }
 [data-qg-theme="dark"] .personal-workspace-nav a.active { background:#253457; }
 [data-qg-theme="dark"] .personal-workspace-footer button { background:#1b2535; }
+:root[data-prep-mode="personal"][data-qg-theme="dark"] .personal-workspace { --personal-ink:var(--prep-ink); --personal-muted:var(--prep-muted); --personal-line:var(--prep-line); --personal-accent:var(--prep-accent); }
+:root[data-prep-mode="personal"][data-qg-theme="dark"] .personal-workspace :is(.personal-workspace-footer button,.personal-recovery button) { background:var(--prep-surface); color:var(--prep-ink); border-color:var(--prep-line); }
+:root[data-prep-mode="personal"][data-qg-theme="dark"] .personal-workspace :is(.personal-workspace-nav a.active,.personal-workspace-nav a:hover) { background:var(--prep-soft); }
+:root[data-prep-mode="personal"][data-qg-theme="dark"] .personal-workspace :is(.personal-recovery,.personal-cloud-auth,.personal-cloud-error,.personal-cloud-training-conflict) { color:#efc989; background:var(--prep-soft); border-color:var(--prep-line); }
 @media(max-width:640px) { .personal-workspace { padding:4px 0 28px; } .personal-workspace-bar { display:block; padding-bottom:16px; margin-bottom:20px; } .personal-workspace-nav { margin-top:16px; gap:0; justify-content:space-between; } .personal-workspace-nav a { padding:10px 8px; font-size:13px; } .personal-workspace-footer { align-items:flex-start; } .personal-workspace-footer button { margin:0 8px 0 0; } }

@@ -39,6 +39,8 @@ def empty_state(marker=None):
         "dailySessions": [],
         "activities": [],
         "removedActivityIds": [],
+        "applicationEvents": [],
+        "reviewEvents": [],
     }
 
 
@@ -352,6 +354,130 @@ class PersonalPrepApiTests(unittest.TestCase):
         self.assertEqual(self.request("GET", "/api/state", token=token)[1]["state"]["existingUserProgress"], marker["existingUserProgress"])
         self.assertEqual(self.request("GET", token=token)[1]["revision"], 0)
         self.assertEqual(self.put(token, empty_state("after-upgrade"))[0], 200)
+
+    def test_application_and_review_events_survive_old_client_updates(self):
+        token, _ = self.new_user()
+        old = empty_state("old-client")
+        del old["applicationEvents"]
+        del old["reviewEvents"]
+        status, first, _ = self.put(token, old)
+        self.assertEqual(status, 200, first)
+        self.assertEqual(first["data"]["applicationEvents"], [])
+        self.assertEqual(first["data"]["reviewEvents"], [])
+        state = empty_state("new-client")
+        application = {"id": "app-create", "applicationId": "application-1", "createdAt": "2026-09-09T12:00:00Z", "changes": {"company": "Private Company", "role": "Quant Research", "url": "https://careers.example.com/role", "deadline": "2026-10-01"}}
+        review = {"id": "review-1", "questionKey": "question-1", "reviewedAt": "2026-09-09T12:00:00Z", "rating": "good", "note": "Private review note"}
+        state["applicationEvents"] = [application]
+        state["reviewEvents"] = [review]
+        self.assertEqual(self.put(token, state, 1)[0], 200)
+        status, result, _ = self.put(token, old, 2)
+        self.assertEqual(status, 200, result)
+        self.assertEqual(result["data"]["applicationEvents"], [application])
+        self.assertEqual(result["data"]["reviewEvents"], [review])
+        self.assertEqual(result["data"]["dailySettings"], old["dailySettings"])
+        # Explicit empty arrays from a stale client cannot delete an event history.
+        status, result, _ = self.put(token, empty_state(), 3)
+        self.assertEqual(status, 200, result)
+        self.assertEqual(result["data"]["applicationEvents"], [application])
+        self.assertEqual(result["data"]["reviewEvents"], [review])
+        self.assertEqual(self.request("GET", token=token)[1], result)
+        other, _ = self.new_user()
+        self.assertIsNone(self.request("GET", token=other)[1]["data"])
+
+    def test_event_union_order_and_conflicting_immutable_ids(self):
+        token, _ = self.new_user()
+        first_event = {"id": "z-created", "applicationId": "application-1", "createdAt": "2026-09-09T12:00:00Z", "changes": {"company": "Company", "role": "Trader"}}
+        first = empty_state()
+        first["applicationEvents"] = [first_event]
+        self.assertEqual(self.put(token, first)[0], 200)
+        second_event = {"id": "a-edit", "applicationId": "application-1", "createdAt": "2026-09-09T12:01:00Z", "changes": {"status": "applied"}}
+        # The revision checked write unions event history even if the caller sent only its edits.
+        second = empty_state()
+        second["applicationEvents"] = [second_event]
+        status, saved, _ = self.put(token, second, 1)
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["applicationEvents"], [first_event, second_event])
+        conflict = empty_state()
+        conflict["applicationEvents"] = [{**first_event, "changes": {"company": "Mutated"}}]
+        status, error, _ = self.put(token, conflict, 2)
+        self.assertEqual(status, 400, error)
+        self.assertIn("Conflicting immutable event", error["error"])
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+        stale = copy.deepcopy(second)
+        stale["applicationEvents"] = [{**second_event, "id": "offline-other", "changes": {"notes": "Other field edit"}}]
+        self.assertEqual(self.put(token, stale, 1)[0], 409)
+        status, final, _ = self.put(token, stale, 2)
+        self.assertEqual(status, 200, final)
+        self.assertEqual(len(final["data"]["applicationEvents"]), 3)
+
+    def test_application_and_review_event_schema_rejects_unsafe_or_invalid_fields(self):
+        token, _ = self.new_user()
+        application = {"id": "application-event", "applicationId": "application-1", "createdAt": "2026-09-09T12:00:00Z", "changes": {"company": "Company", "role": "Quant"}}
+        bad_changes = [{"company": ""}, {"role": " "}, {"status": "invalid"}, {"archived": 1}, {"deadline": "2026-02-29"}, {"nextActionDate": "2026-04-31"}, {"url": "javascript:alert(1)"}, {"url": "data:text/html,bad"}, {"url": "https://name:secret@example.com"}, {"url": "https://example.com:bad"}, {"notes": "x" * 20001}, {"unrecognizedField": "value"}, {}]
+        bad_events = [{**application, "changes": changes} for changes in bad_changes]
+        bad_events += [{**application, "createdAt": "2026-02-30T12:00:00Z"}, {**application, "applicationId": ""}, {**application, "unknown": True}]
+        for bad in bad_events:
+            status, error, _ = self.put(token, {**empty_state(), "applicationEvents": [bad]})
+            self.assertEqual(status, 400, (bad, error))
+        review = {"id": "review-1", "questionKey": "question-1", "reviewedAt": "2026-09-09T12:00:00Z", "rating": "good", "note": ""}
+        for patch in ({"rating": "bad"}, {"rating": []}, {"note": 1}, {"note": "x" * 20001}, {"questionKey": ""}, {"reviewedAt": "2026-02-30T00:00:00Z"}, {"unknown": True}):
+            status, error, _ = self.put(token, {**empty_state(), "reviewEvents": [{**review, **patch}]})
+            self.assertEqual(status, 400, (patch, error))
+        for field in ("applicationEvents", "reviewEvents"):
+            self.assertEqual(self.put(token, {**empty_state(), field: None})[0], 400)
+        self.assertEqual(self.request("GET", token=token)[1]["revision"], 0)
+
+    def test_legacy_database_rows_get_optional_event_defaults_without_a_migration(self):
+        token, owner = self.new_user()
+        legacy = empty_state()
+        del legacy["applicationEvents"]
+        del legacy["reviewEvents"]
+        self.put(token, empty_state())
+        with self.connect_database() as conn:
+            conn.execute(self.sql("UPDATE user_personal_prep SET data_json = ? WHERE user_id = ?"), (json.dumps(legacy), owner))
+        result = self.request("GET", token=token)[1]
+        self.assertEqual(result["revision"], 1)
+        self.assertEqual(result["data"]["applicationEvents"], [])
+        self.assertEqual(result["data"]["reviewEvents"], [])
+
+    def test_legacy_state_success_acknowledgement_waits_for_commit(self):
+        # Exercise the real handler with a controlled transaction boundary. A
+        # failed commit must never have already returned a successful response.
+        tree = ast.parse((ROOT / "api-server/server.py").read_text())
+        handler = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "QuantGymHandler")
+        method = next(node for node in handler.body if isinstance(node, ast.FunctionDef) and node.name == "put_state")
+        trace = []
+        class Transaction:
+            fail = False
+            def __enter__(self):
+                return self
+            def __exit__(self, *_):
+                trace.append("commit")
+                if self.fail:
+                    raise RuntimeError("Simulated commit failure")
+        transaction = Transaction()
+        class Database:
+            def connect(self):
+                return transaction
+            def save_state(self, _conn, _owner, state):
+                trace.append("save")
+                return state
+        class Handler:
+            def require_user(self):
+                return {"id": "fixture"}
+            def read_json(self):
+                return {"state": {"existingUserProgress": "keep"}}
+            def send_json(self, status, _payload):
+                trace.append(f"response:{status}")
+        namespace = {"db": Database()}
+        exec(compile(ast.Module(body=[method], type_ignores=[]), "state-commit-boundary", "exec"), namespace)
+        namespace["put_state"](Handler())
+        self.assertEqual(trace, ["save", "commit", "response:200"])
+        trace.clear()
+        transaction.fail = True
+        with self.assertRaises(RuntimeError):
+            namespace["put_state"](Handler())
+        self.assertEqual(trace, ["save", "commit"])
 
     def test_body_length_limits_reject_before_reading_or_writing(self):
         token, _ = self.new_user()

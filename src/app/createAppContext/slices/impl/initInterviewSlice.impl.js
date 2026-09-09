@@ -1,3 +1,4 @@
+import { ownedStorageKey } from '../../../../state/localRecovery.js';
 export function initInterviewSliceImpl(shared, ctx) {
   const deps = { ...shared, ...ctx };
   const sliceRefs = ctx.__sliceRefs || {};
@@ -236,7 +237,7 @@ export function initInterviewSliceImpl(shared, ctx) {
     refreshIcons,
     applySidebarState,
     renderSetup: () => renderInterviewSetup(),
-    resetInterview: () => resetInterview(),
+    resetInterview: options => resetInterview(options),
     switchModule
   });
   const renderInterviewTranscript = interviewViewController.renderTranscript;
@@ -321,6 +322,7 @@ export function initInterviewSliceImpl(shared, ctx) {
     clearTimers: () => clearInterviewTimers(),
     stopSpeech: () => stopInterviewSpeech(),
     resetSessionUiState: () => interviewRuntime.resetSessionUiState(),
+    retryPendingHistory: () => interviewResultsController.retryPendingHistory(),
     updateLlmConfigFromControls: () => sliceRefs.updateLlmConfigFromControls?.(),
     appendMessage: (...args) => appendInterviewMessage(...args),
     updateStatus: (...args) => updateInterviewStatus(...args),
@@ -426,7 +428,15 @@ export function initInterviewSliceImpl(shared, ctx) {
   const speakInterviewText = interviewInteractionController.speakText;
   const stopInterviewSpeech = interviewInteractionController.stopSpeech;
   const toggleVoiceAnswer = interviewInteractionController.toggleVoiceAnswer;
+  const getInterviewOwnerId = () => String(deps.getCurrentUser?.()?.id || '');
   const interviewSessionLifecycleController = createInterviewSessionLifecycleController({
+    retryPendingHistory: () => interviewResultsController.retryPendingHistory(),
+    getOwnerId: getInterviewOwnerId,
+    subscribeOwner: listener => deps.domainStores?.authStore?.subscribe(listener),
+    getAnswerDraft: () => els.interviewAnswer?.value ?? interviewState.answerDraft ?? '',
+    setAnswerDraft: value => { if (els.interviewAnswer) els.interviewAnswer.value = value; },
+    stopSpeech: () => stopInterviewSpeech(),
+    resetSessionUiState: () => interviewRuntime.resetSessionUiState(),
     windowRef: window,
     storageKey: INTERVIEW_SESSION_STORAGE_KEY,
     resumeStorageKey: INTERVIEW_RESUME_STORAGE_KEY,
@@ -444,7 +454,7 @@ export function initInterviewSliceImpl(shared, ctx) {
     renderTranscript: renderInterviewTranscript,
     renderQuestionPanel: renderInterviewQuestionPanel,
     syncLanguageControls: syncInterviewLanguageControls,
-    resetInterview: () => resetInterview(),
+    resetInterview: options => resetInterview(options),
     isLive: () => isInterviewLiveMode()
   });
   const clearInterviewTimers = interviewSessionLifecycleController.clearTimers;
@@ -473,8 +483,11 @@ export function initInterviewSliceImpl(shared, ctx) {
   const interviewResultsController = createInterviewResultsController({
     elements: els,
     windowRef: window,
-    sessionStorageKey: INTERVIEW_SESSION_STORAGE_KEY,
-    historyStorageKey: INTERVIEW_HISTORY_STORAGE_KEY,
+    sessionStorageKey: () => ownedStorageKey(INTERVIEW_SESSION_STORAGE_KEY, getInterviewOwnerId()),
+    historyStorageKey: () => ownedStorageKey(INTERVIEW_HISTORY_STORAGE_KEY, getInterviewOwnerId()),
+    getOwnerId: getInterviewOwnerId,
+    persistSnapshot: () => persistInterviewSessionSnapshot(),
+    clearDurable: () => interviewSessionLifecycleController.clearDurable(),
     getInterviewState: () => interviewState,
     getUserState: () => userState.value,
     skillDefs,
@@ -509,9 +522,11 @@ export function initInterviewSliceImpl(shared, ctx) {
   const exportInterviewReport = interviewResultsController.exportReport;
   const revealInterviewAnswer = interviewResultsController.revealAnswer;
   interviewSessionFlowController = createInterviewSessionFlowController({
+    retryPendingHistory: () => interviewResultsController.retryPendingHistory(),
+    getOwnerId: getInterviewOwnerId,
     elements: els,
     windowRef: window,
-    sessionStorageKey: INTERVIEW_SESSION_STORAGE_KEY,
+    sessionStorageKey: () => ownedStorageKey(INTERVIEW_SESSION_STORAGE_KEY, getInterviewOwnerId()),
     getInterviewState: () => interviewState,
     getRuntimeState: () => interviewRuntime.state,
     resetSessionUiState: () => interviewRuntime.resetSessionUiState(),
@@ -576,6 +591,7 @@ export function initInterviewSliceImpl(shared, ctx) {
     }
   }
   interviewAnswerController = createInterviewAnswerController({
+    getOwnerId: getInterviewOwnerId,
     elements: els,
     getInterviewState: () => interviewState,
     isOnboarding: () => isInterviewOnboarding(),

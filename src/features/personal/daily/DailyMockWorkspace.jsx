@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { MentalMathTrainer } from '../mental/MentalMathTrainer.jsx';
 import { DailyQuestionText } from './DailyQuestionText.jsx';
 import {
   normalizeDailySettings, hasDailySections, dailyBudgetSeconds, createDailySession,
   getDailyProgress, getQuestionElapsed, updateDailyAnswer, completeDailyQuestion,
-  setDailyQuestionTimer, completeDailyMental, preferredDailySession, getLibraryTechQuestions,
+  setDailyQuestionTimer, completeDailyMental, preferredDailySession, getLibraryTechQuestions, resolveDailyDeepLink,
 } from './dailyEngine.js';
 import './daily.css';
 
@@ -36,8 +37,10 @@ export function DailyMockWorkspace({ state, update, language = 'zh', legacyState
   const t = (zh, english) => en ? english : zh;
   const settings = normalizeDailySettings(state.dailySettings);
   const sessions = state.dailySessions || [];
-  const [selectedSessionId, setSelectedSessionId] = useState(null);
-  const [selectedQuestionId, setSelectedQuestionId] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deepLink = resolveDailyDeepLink(sessions, searchParams.toString());
+  const [selectedSessionId, setSelectedSessionId] = useState(deepLink.sessionId);
+  const [selectedQuestionId, setSelectedQuestionId] = useState(deepLink.questionId);
   const [showSetup, setShowSetup] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [notice, setNotice] = useState('');
@@ -50,6 +53,24 @@ export function DailyMockWorkspace({ state, update, language = 'zh', legacyState
   const question = session?.questions.find(item => item.id === selected);
   const answer = question ? session.answers?.[question.id] || {} : {};
   const elapsed = getQuestionElapsed(answer, now);
+
+  useEffect(() => {
+    setSelectedSessionId(deepLink.sessionId);
+    setSelectedQuestionId(deepLink.questionId);
+    if (deepLink.sessionId) setShowSetup(false);
+  }, [deepLink.sessionId, deepLink.questionId]);
+
+  const selectSavedItem = (sessionId, questionId = null) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('session', sessionId);
+    if (questionId) params.set('question', questionId);
+    else params.delete('question');
+    setSearchParams(params, { replace: true });
+    setSelectedSessionId(sessionId);
+    setSelectedQuestionId(questionId);
+    setShowSetup(false);
+  };
+  const selectQuestion = questionId => selectSavedItem(session.id, questionId);
 
   useEffect(() => { setNotice(''); }, [session?.id, selected]);
 
@@ -77,10 +98,13 @@ export function DailyMockWorkspace({ state, update, language = 'zh', legacyState
   const patchSettings = patch => update(latest => ({ ...latest, dailySettings: normalizeDailySettings({ ...latest.dailySettings, ...patch }) }));
   const startSession = () => {
     if (!hasDailySections(settings)) return;
-    const created = createDailySession(settings, { problems: legacyState?.problems });
-    update(latest => ({ ...latest, dailySettings: settings, dailySessions: [...(latest.dailySessions || []), created] }));
-    setSelectedSessionId(created.id);
-    setSelectedQuestionId(created.settings.mentalEnabled ? 'mental' : created.questions[0]?.id);
+    let created;
+    update(latest => {
+      created = createDailySession(settings, { problems: legacyState?.problems, priorSessions: latest.dailySessions });
+      return { ...latest, dailySettings: settings, dailySessions: [...(latest.dailySessions || []), created] };
+    });
+    if (!created) return;
+    selectSavedItem(created.id, created.settings.mentalEnabled ? 'mental' : created.questions[0]?.id);
     setShowSetup(false);
     setNotice('');
   };
@@ -92,7 +116,7 @@ export function DailyMockWorkspace({ state, update, language = 'zh', legacyState
   };
   const nextIncomplete = () => {
     const next = session.questions.find(item => item.id !== selected && !session.answers?.[item.id]?.completedAt);
-    setSelectedQuestionId(next?.id || (session.settings.mentalEnabled && !session.mentalCompletedAt ? 'mental' : selected));
+    selectQuestion(next?.id || (session.settings.mentalEnabled && !session.mentalCompletedAt ? 'mental' : selected));
     setNotice('');
   };
 
@@ -101,6 +125,8 @@ export function DailyMockWorkspace({ state, update, language = 'zh', legacyState
       <div><p className="pd-eyebrow">YOUR APPLICATION ROUTINE</p><h1>Daily mock</h1><p className="pd-subtitle">{t('每天一套，练习完整的申请面试流程。', 'One routine to practice the full interview process.')}</p></div>
       {session && <button className="pd-secondary" type="button" onClick={() => setShowSetup(value => !value)}>{showSetup ? t('返回训练', 'Back to practice') : t('配置新一轮', 'Set up a new round')}</button>}
     </header>
+
+    {(deepLink.missingSession || deepLink.missingQuestion) && <p className="pd-source-note" role="status">{t('链接对应的练习暂未找到。请等待账户同步，或从下方历史记录选择已保存的练习。', 'The linked practice is not available yet. Wait for account sync, or choose a saved session from history.')}</p>}
 
     {(!session || showSetup) && <section className="pd-setup" aria-labelledby="pd-setup-title">
       <div className="pd-section-heading"><div><h2 id="pd-setup-title">{t('定制今日练习', 'Build your daily session')}</h2><p>{t('调整题量与时间预算。开始后题目固定，作答自动保留。', 'Adjust counts and time budgets. Questions stay fixed after you start; answers are saved as you type.')}</p></div><span className="pd-budget">{t('预计', 'Budget')} {Math.round(dailyBudgetSeconds(settings) / 60)} {t('分钟', 'min')}</span></div>
@@ -119,13 +145,13 @@ export function DailyMockWorkspace({ state, update, language = 'zh', legacyState
       </section>
       <div className="pd-workspace-grid">
         <nav className="pd-question-nav" aria-label={t('本轮训练项目', 'Session sections')}>
-          {session.settings.mentalEnabled && <button type="button" aria-current={selected === 'mental' ? 'step' : undefined} className={selected === 'mental' ? 'pd-nav-item pd-nav-active' : 'pd-nav-item'} onClick={() => { setSelectedQuestionId('mental'); setNotice(''); }}><span className={`pd-step-dot ${session.mentalCompletedAt ? 'pd-step-done' : ''}`}>{session.mentalCompletedAt ? '✓' : 'M'}</span><span><strong>Mental math</strong><small>{duration(session.settings.mentalSeconds)} · {session.mentalCompletedAt ? t('已完成', 'Complete') : t('待完成', 'Pending')}</small></span></button>}
+          {session.settings.mentalEnabled && <button type="button" aria-current={selected === 'mental' ? 'step' : undefined} className={selected === 'mental' ? 'pd-nav-item pd-nav-active' : 'pd-nav-item'} onClick={() => { selectQuestion('mental'); setNotice(''); }}><span className={`pd-step-dot ${session.mentalCompletedAt ? 'pd-step-done' : ''}`}>{session.mentalCompletedAt ? '✓' : 'M'}</span><span><strong>Mental math</strong><small>{duration(session.settings.mentalSeconds)} · {session.mentalCompletedAt ? t('已完成', 'Complete') : t('待完成', 'Pending')}</small></span></button>}
           {KINDS.map(kind => {
             const questions = session.questions.filter(item => item.kind === kind);
             if (!questions.length) return null;
             return <div className="pd-nav-group" key={kind}><p>{LABELS[kind]} <span>{questions.filter(item => session.answers?.[item.id]?.completedAt).length}/{questions.length}</span></p>{questions.map((item, index) => {
               const done = Boolean(session.answers?.[item.id]?.completedAt);
-              return <button type="button" className={`pd-nav-item ${selected === item.id ? 'pd-nav-active' : ''}`} aria-current={selected === item.id ? 'step' : undefined} key={item.id} onClick={() => { setSelectedQuestionId(item.id); setNotice(''); }}><span className={`pd-step-dot ${done ? 'pd-step-done' : ''}`}>{done ? '✓' : String(index + 1).padStart(2, '0')}</span><span><strong>{en ? item.titleEn || item.title : item.title}</strong><small>{done ? t('已完成', 'Complete') : session.answers?.[item.id]?.text ? t('草稿已保留', 'Draft saved') : `${item.budgetSeconds / 60} ${t('分钟', 'min')}`}</small></span></button>;
+              return <button type="button" className={`pd-nav-item ${selected === item.id ? 'pd-nav-active' : ''}`} aria-current={selected === item.id ? 'step' : undefined} key={item.id} onClick={() => { selectQuestion(item.id); setNotice(''); }}><span className={`pd-step-dot ${done ? 'pd-step-done' : ''}`}>{done ? '✓' : String(index + 1).padStart(2, '0')}</span><span><strong>{en ? item.titleEn || item.title : item.title}</strong><small>{done ? t('已完成', 'Complete') : session.answers?.[item.id]?.text ? t('草稿已保留', 'Draft saved') : `${item.budgetSeconds / 60} ${t('分钟', 'min')}`}</small></span></button>;
             })}</div>;
           })}
         </nav>
@@ -144,6 +170,7 @@ export function DailyMockWorkspace({ state, update, language = 'zh', legacyState
             <details className="pd-reference" open={Boolean(answer.reviewed)} onToggle={event => { if (!answer.completedAt && event.currentTarget.open !== Boolean(answer.reviewed)) patchAnswer({ reviewed: event.currentTarget.open }); }}><summary>{question.kind === 'behavioral' ? t('查看自评要点', 'View review criteria') : t('查看参考答案', 'View reference answer')}</summary><div>{question.kind === 'coding' ? <><pre><code>{question.solutions?.[answer.codeLanguage || 'python']}</code></pre><p className="pd-complexity">{question.complexity}</p></> : <DailyQuestionText className="pd-reference-text" content={en ? question.referenceEn || question.reference : question.reference} language={language} />}</div></details>
             <fieldset className="pd-self-review" disabled={Boolean(answer.completedAt)}><legend>{t('自评', 'Self-review')} <span>{t('记录本次表现，不是自动评分', 'Your assessment, not an automatic grade')}</span></legend><div>{Object.entries(ASSESSMENTS).map(([value, labels]) => <label key={value} className={answer.selfAssessment === value ? 'pd-assessment pd-assessment-selected' : 'pd-assessment'}><input type="radio" name={`pd-review-${session.id}-${question.id}`} value={value} checked={answer.selfAssessment === value} onChange={() => patchAnswer({ selfAssessment: value })} />{labels[en ? 1 : 0]}</label>)}</div></fieldset>
             <div className="pd-answer-footer"><p role="status">{notice || (answer.completedAt ? t('✓ 本题已完成并计入日历。', '✓ Completed and recorded in your calendar.') : !answer.text?.trim() ? t('填写回答并选择自评后，可标记完成。', 'Write an answer and select a self-review to complete this question.') : !answer.selfAssessment ? t('请选择本次自评。', 'Choose your self-review.') : elapsed > question.budgetSeconds ? t('已超出预算，仍可继续作答。', 'You are over the time budget; you can keep working.') : '')}</p>{answer.completedAt ? !progress.complete && <button type="button" className="pd-primary" onClick={nextIncomplete}>{t('下一项', 'Next item')} →</button> : <button type="button" className="pd-primary" disabled={!answer.text?.trim() || !answer.selfAssessment} onClick={finishQuestion}>{t('标记已完成', 'Mark complete')} ✓</button>}</div>
+            {answer.completedAt && ['review', 'with-help'].includes(answer.selfAssessment) && <p className="pd-source-note"><Link to="/review">{t('这道题已进入复习清单，去重新回忆 →', 'This question is in your review queue. Recall it again →')}</Link></p>}
           </section>}
         </div>
       </div>
@@ -151,7 +178,7 @@ export function DailyMockWorkspace({ state, update, language = 'zh', legacyState
 
     {sessions.length > 0 && <details className="pd-history"><summary>{t('训练记录', 'Session history')} <span>{sessions.length}</span></summary><div className="pd-history-list">{[...sessions].reverse().map(item => {
       const itemProgress = getDailyProgress(item);
-      return <button type="button" key={item.id} className={`pd-history-row ${item.id === session?.id ? 'pd-history-selected' : ''}`} onClick={() => { setSelectedSessionId(item.id); setSelectedQuestionId(null); setShowSetup(false); setNotice(''); }}><span><strong>{item.dateKey}</strong><small>{new Date(item.startedAt).toLocaleTimeString(en ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' })}</small></span><span>{itemProgress.completed}/{itemProgress.total} {t('项', 'items')}</span><span>{itemProgress.complete ? t('查看记录', 'View record') : t('继续练习', 'Resume')} →</span></button>;
+      return <button type="button" key={item.id} className={`pd-history-row ${item.id === session?.id ? 'pd-history-selected' : ''}`} onClick={() => { selectSavedItem(item.id); setNotice(''); }}><span><strong>{item.dateKey}</strong><small>{new Date(item.startedAt).toLocaleTimeString(en ? 'en-US' : 'zh-CN', { hour: '2-digit', minute: '2-digit' })}</small></span><span>{itemProgress.completed}/{itemProgress.total} {t('项', 'items')}</span><span>{itemProgress.complete ? t('查看记录', 'View record') : t('继续练习', 'Resume')} →</span></button>;
     })}</div></details>}
   </div>;
 }

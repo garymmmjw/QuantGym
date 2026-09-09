@@ -263,7 +263,7 @@ function InterviewConsoleInner({ session, model }) {
             rows={1}
             placeholder={action.answerPlaceholder || "输入你的回答"}
             disabled={action.answerDisabled}
-            onInput={model.autoSizeAnswer}
+            onInput={event => { model.autoSizeAnswer(); model.api?.persistDraft?.(event.currentTarget.value); }}
             onKeyDown={model.handleAnswerKeydown}
           />
           <div id="interviewAttachmentPreview" className="interview-attachment-preview hidden" />

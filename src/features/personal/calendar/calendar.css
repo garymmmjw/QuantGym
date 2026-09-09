@@ -107,6 +107,12 @@
 .personal-calendar .pc-data-note { margin-top: 22px; color: var(--pc-muted); font-size: 10px; line-height: 1.8; }
 .personal-calendar .pc-footer { margin-top: 32px; padding-top: 17px; border-top: 1px solid var(--pc-line); color: var(--pc-muted); font-size: 10px; line-height: 1.85; }
 .personal-calendar .pc-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+:root[data-prep-mode="personal"][data-qg-theme="dark"] .personal-calendar { --pc-ink:var(--prep-ink); --pc-muted:var(--prep-muted); --pc-line:var(--prep-line); --pc-surface:var(--prep-surface); --pc-soft:var(--prep-soft); --pc-accent:var(--prep-accent); --qg-brand-ink:var(--prep-accent); --qg-brand-soft:var(--prep-soft); --qg-success:var(--prep-accent); --qg-done-soft:var(--prep-soft); --qg-track:var(--prep-soft); --qg-danger:#ffb4a7; }
+:root[data-prep-mode="personal"][data-qg-theme="dark"] .personal-calendar :is(h1,h2,h3,.pc-stat dd strong,.pc-activity-description strong,.pc-activity-meta strong) { color:var(--prep-ink); }
+:root[data-prep-mode="personal"][data-qg-theme="dark"] .personal-calendar .pc-date.is-selected,
+:root[data-prep-mode="personal"][data-qg-theme="dark"] .personal-calendar .pc-date.is-selected strong { color:var(--prep-surface); }
+:root[data-prep-mode="personal"][data-qg-theme="dark"] .personal-calendar .pc-date.is-selected .pc-date-dot.has-activity { background:var(--prep-surface); }
+:root[data-prep-mode="personal"][data-qg-theme="dark"] .personal-calendar input::placeholder { color:var(--prep-muted); opacity:1; }
 @media (max-width: 1100px) {
   .personal-calendar .pc-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 25px; }
   .personal-calendar .pc-stat:nth-child(4) { border-left: 0; padding-left: 0; }

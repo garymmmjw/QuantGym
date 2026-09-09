@@ -1,10 +1,11 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppChromeLayout } from "../layouts/AppChromeLayout.jsx";
 import { AuthLayout } from "../layouts/AuthLayout.jsx";
 import { useAppServicesContext, useAuthStore } from "../stores/AppServicesContext.jsx";
 import { ProtectedRoute } from "./ProtectedRoute.jsx";
 import { routeConfig } from "./routeConfig.js";
+import { RETIRED_MODULE_IDS } from "../components/shell/personalNavigation.js";
 
 const NewsPage = lazy(() => import("../pages/NewsPage.jsx").then((m) => ({ default: m.NewsPage })));
 const CompaniesPage = lazy(() => import("../pages/CompaniesPage.jsx").then((m) => ({ default: m.CompaniesPage })));
@@ -30,7 +31,12 @@ const CalendarPage = lazy(() => import("../pages/CalendarPage.jsx").then((m) => 
 const DailyMockPage = lazy(() => import("../pages/DailyMockPage.jsx").then((m) => ({ default: m.DailyMockPage })));
 const LeaguePage = lazy(() => import("../pages/LeaguePage.jsx").then((m) => ({ default: m.LeaguePage })));
 
+const ReviewPage = lazy(() => import("../pages/ReviewPage.jsx").then((m) => ({ default: m.ReviewPage })));
+const ApplicationsPage = lazy(() => import("../pages/ApplicationsPage.jsx").then((m) => ({ default: m.ApplicationsPage })));
+
 const REACT_PAGES = {
+  review: ReviewPage,
+  applications: ApplicationsPage,
   overview: OverviewPage,
   plan: PlanPage,
   skills: SkillsPage,
@@ -77,6 +83,10 @@ function RouteLoadingFallback() {
   );
 }
 
+function PersonalModeNotice() {
+  return <div className="prep-retired"><h1>回到个人备战工作台</h1><p>当前版本聚焦训练、复习与申请追踪。这个扩展模块已收起，原有数据仍然保留。</p><Link to="/">打开今日工作台 →</Link></div>;
+}
+
 function AppRouteElements() {
   return routeConfig.map((route) => {
     const Page = REACT_PAGES[route.id];
@@ -89,7 +99,7 @@ function AppRouteElements() {
         path={route.path}
         element={(
           <Suspense fallback={<RouteLoadingFallback />}>
-            <Page />
+            {RETIRED_MODULE_IDS.has(route.id) ? <PersonalModeNotice /> : <Page />}
           </Suspense>
         )}
       />
