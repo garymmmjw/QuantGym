@@ -97,7 +97,7 @@ export function OverviewPageContent() {
     { id: "daily-problem", icon: "list-checks", title: "完成每日一题", sub: "概率 · 中等难度", xp: 20 },
     { id: "mental-90", icon: "calculator", title: "Mental Math 达到 90% 正确率", sub: "限时挑战", xp: 30 },
     { id: "review-cards", icon: "notebook-pen", title: "复习 3 张资料卡", sub: "间隔记忆", xp: 15 },
-    { id: "poker-session", icon: "spade", title: "完成一手扑克决策复盘", sub: "决策直觉", xp: 25 },
+    { id: "behavioral-review", icon: "messages-square", title: "复盘一个行为面试回答", sub: "表达与沟通", xp: 25 },
     { id: "read-exp", icon: "newspaper", title: "读一篇市场面经", sub: "Quant Wire", xp: 10 }
   ];
   const planItems = model.todayPlan?.items || [];

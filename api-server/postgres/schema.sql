@@ -21,6 +21,14 @@ CREATE TABLE user_states (
   updated_at timestamptz NOT NULL
 );
 
+-- Private application-preparation snapshots, never joined into public profiles.
+CREATE TABLE user_personal_prep (
+  user_id text PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  data_json jsonb NOT NULL,
+  revision integer NOT NULL CHECK (revision > 0),
+  updated_at timestamptz NOT NULL
+);
+
 CREATE TABLE community (
   id integer PRIMARY KEY CHECK (id = 1),
   community_json jsonb NOT NULL,

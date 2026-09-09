@@ -12,6 +12,7 @@ import { RouteProgressBar } from "./RouteProgressBar.jsx";
 const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
 
 const SHEET_NAV_GROUPS = [
+  { label: "个人备考", items: [["calendar", "训练日历", "calendar-days"], ["daily-mock", "Daily Mock", "clipboard-check"]] },
   {
     label: "成长",
     items: [
@@ -27,7 +28,6 @@ const SHEET_NAV_GROUPS = [
       ["interview", "模拟面试", "messages-square"],
       ["problems", "题目", "library-big"],
       ["tools", "Mental Math", "brain"],
-      ["poker", "Poker", "spade"],
       ["pk", "PK 对战", "zap"],
       ["experiences", "面经", "notebook-pen"]
     ]
@@ -67,10 +67,10 @@ const SHEET_NAV_GROUPS = [
 ];
 
 const BOTTOM_TABS = [
-  ["overview", "总览", "layout-dashboard"],
-  ["plan", "计划", "calendar-check-2"],
-  ["problems", "题目", "library-big"],
-  ["interview", "面试", "messages-square"]
+  ["calendar", "日历", "calendar-days"],
+  ["daily-mock", "Daily Mock", "clipboard-check"],
+  ["tools", "速算", "calculator"],
+  ["problems", "题目", "library-big"]
 ];
 
 function getStoredTheme() {
@@ -269,6 +269,13 @@ export function AppShellMain() {
               <img src="/assets/generated/playful-precision/brand-q-mark.webp" alt="" />
               <strong>Quant<span className="qg-brand-accent">Gym</span></strong>
             </div>
+            <div className="module-nav-group" aria-label="个人备考">
+              <button className="module-nav-trigger" type="button" aria-haspopup="true"><span>个人备考</span></button>
+              <div className="module-nav-menu">
+                <button className="module-tab" type="button" data-module-tab="calendar"><i data-lucide="calendar-days"></i><span data-i18n="calendar">训练日历</span></button>
+                <button className="module-tab" type="button" data-module-tab="daily-mock"><i data-lucide="clipboard-check"></i>Daily Mock</button>
+              </div>
+            </div>
             <div className="module-nav-group" aria-label="成长" data-i18n-aria-label="navGrowth">
               <button className="module-nav-trigger" type="button" aria-haspopup="true">
                 <span data-i18n="navGrowth">成长</span>
@@ -308,10 +315,6 @@ export function AppShellMain() {
                 <button className="module-tab" type="button" data-module-tab="tools">
                   <i data-lucide="brain"></i>
                   Mental Math
-                </button>
-                <button className="module-tab" type="button" data-module-tab="poker">
-                  <i data-lucide="spade"></i>
-                  Poker
                 </button>
                 <button className="module-tab" type="button" data-module-tab="pk">
                   <i data-lucide="zap"></i>
