@@ -89,7 +89,11 @@ export function getSerializableInterviewTranscript(messages = []) {
     }));
 }
 
+const resolveKey = key => typeof key === 'function' ? key() : key;
+
 export function loadInterviewHistory(storageKey) {
+  storageKey = resolveKey(storageKey);
+  if (!storageKey) return [];
   try {
     const parsed = JSON.parse(localStorage.getItem(storageKey) || "[]");
     return Array.isArray(parsed) ? parsed : [];
@@ -99,17 +103,24 @@ export function loadInterviewHistory(storageKey) {
 }
 
 export function saveInterviewHistoryEntry(storageKey, entry, options = {}) {
-  const limit = Number(options.limit || 50);
+  storageKey = resolveKey(storageKey);
+  if (!storageKey) return false;
   try {
     const history = loadInterviewHistory(storageKey);
-    history.push(entry);
-    localStorage.setItem(storageKey, JSON.stringify(history.slice(-limit)));
+    const raw = localStorage.getItem(storageKey);
+    if (raw && !Array.isArray(JSON.parse(raw))) return false;
+    const merged = [...history.filter(item => !entry.id || item.id !== entry.id), entry];
+    const encoded = JSON.stringify(merged);
+    localStorage.setItem(storageKey, encoded);
+    return localStorage.getItem(storageKey) === encoded;
   } catch {
-    /* ignore storage quota / disabled storage */
+    return false;
   }
 }
 
 export function clearInterviewSessionSnapshot(storageKey) {
+  storageKey = resolveKey(storageKey);
+  if (!storageKey) return false;
   try {
     sessionStorage.removeItem(storageKey);
   } catch {
@@ -125,7 +136,7 @@ export function buildInterviewSessionSnapshot(options = {}) {
     interviewMessages = [],
     summarizeAttachment = () => null
   } = options;
-  if (!interviewSession || interviewSession.completed) return null;
+  if (!interviewSession) return null;
   return {
     interviewLanguage,
     interviewPanelExpandedIndex,
@@ -152,20 +163,25 @@ export function buildInterviewSessionSnapshot(options = {}) {
 }
 
 export function writeInterviewSessionSnapshot(storageKey, snapshot) {
-  if (!snapshot) {
-    clearInterviewSessionSnapshot(storageKey);
-    return false;
-  }
+  storageKey = resolveKey(storageKey);
+  if (!storageKey) return false;
+  if (!snapshot) return false;
   try {
+    const prior = sessionStorage.getItem(storageKey);
+    if (prior) {
+      const parsed = JSON.parse(prior);
+      if (!parsed?.session || (snapshot.ownerId && parsed.ownerId !== snapshot.ownerId)) return false;
+    }
     sessionStorage.setItem(storageKey, JSON.stringify(snapshot));
     return true;
   } catch {
-    clearInterviewSessionSnapshot(storageKey);
     return false;
   }
 }
 
 export function readInterviewSessionSnapshot(storageKey) {
+  storageKey = resolveKey(storageKey);
+  if (!storageKey) return null;
   let raw = "";
   try {
     raw = sessionStorage.getItem(storageKey) || "";
@@ -175,18 +191,16 @@ export function readInterviewSessionSnapshot(storageKey) {
   if (!raw) return null;
   try {
     const snapshot = JSON.parse(raw);
-    if (!snapshot?.session || snapshot.session.completed) {
-      clearInterviewSessionSnapshot(storageKey);
-      return null;
-    }
+    if (!snapshot?.session) return null;
     return snapshot;
   } catch {
-    clearInterviewSessionSnapshot(storageKey);
     return null;
   }
 }
 
 export function hasDurableInterview(storageKey) {
+  storageKey = resolveKey(storageKey);
+  if (!storageKey) return false;
   try {
     return Boolean(localStorage.getItem(storageKey));
   } catch {
@@ -195,6 +209,8 @@ export function hasDurableInterview(storageKey) {
 }
 
 export function clearDurableInterview(storageKey) {
+  storageKey = resolveKey(storageKey);
+  if (!storageKey) return false;
   try {
     localStorage.removeItem(storageKey);
   } catch {
@@ -203,6 +219,9 @@ export function clearDurableInterview(storageKey) {
 }
 
 export function copySessionSnapshotToDurable(sessionStorageKey, durableStorageKey) {
+  sessionStorageKey = resolveKey(sessionStorageKey);
+  durableStorageKey = resolveKey(durableStorageKey);
+  if (!sessionStorageKey || !durableStorageKey) return false;
   try {
     const snapshot = sessionStorage.getItem(sessionStorageKey);
     if (!snapshot) return false;
@@ -214,6 +233,9 @@ export function copySessionSnapshotToDurable(sessionStorageKey, durableStorageKe
 }
 
 export function copyDurableInterviewToSession(durableStorageKey, sessionStorageKey) {
+  sessionStorageKey = resolveKey(sessionStorageKey);
+  durableStorageKey = resolveKey(durableStorageKey);
+  if (!sessionStorageKey || !durableStorageKey) return false;
   try {
     const snapshot = localStorage.getItem(durableStorageKey);
     if (!snapshot) return false;
@@ -222,4 +244,28 @@ export function copyDurableInterviewToSession(durableStorageKey, sessionStorageK
   } catch {
     return false;
   }
+}
+
+export function writeDurableInterview(storageKey, snapshot) {
+  storageKey = resolveKey(storageKey);
+  if (!storageKey || !snapshot) return false;
+  try {
+    const prior = localStorage.getItem(storageKey);
+    if (prior) {
+      const parsed = JSON.parse(prior);
+      if (!parsed?.session || (snapshot.ownerId && parsed.ownerId !== snapshot.ownerId)) return false;
+    }
+    const raw = JSON.stringify(snapshot);
+    localStorage.setItem(storageKey, raw);
+    return localStorage.getItem(storageKey) === raw;
+  } catch { return false; }
+}
+
+export function readDurableInterview(storageKey) {
+  storageKey = resolveKey(storageKey);
+  if (!storageKey) return null;
+  try {
+    const value = JSON.parse(localStorage.getItem(storageKey) || 'null');
+    return value?.session ? value : null;
+  } catch { return null; }
 }

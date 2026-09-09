@@ -70,7 +70,7 @@ export function getLibraryTechQuestions(problems = []) {
   });
 }
 
-export function selectDailyQuestions(settings, seed, problems = []) {
+export function selectDailyQuestions(settings, seed, problems = [], priorSessions = []) {
   const normalized = normalizeDailySettings(settings);
   let number = 2166136261;
   for (const char of String(seed)) number = Math.imul(number ^ char.charCodeAt(0), 16777619) >>> 0;
@@ -86,9 +86,13 @@ export function selectDailyQuestions(settings, seed, problems = []) {
     }
     return pool;
   };
+  const recentLibraryIds = new Set((Array.isArray(priorSessions) ? [...priorSessions] : [])
+    .sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt)).slice(0, 3)
+    .flatMap(session => (session.questions || []).filter(question => question.source === 'library').map(question => question.id)));
   return KINDS.flatMap(kind => {
     const count = normalized[`${kind}Count`];
-    const library = kind === 'tech' && normalized.techSource === 'library' ? shuffle(getLibraryTechQuestions(problems)).slice(0, count) : [];
+    const candidates = kind === 'tech' && normalized.techSource === 'library' ? shuffle(getLibraryTechQuestions(problems)) : [];
+    const library = [...candidates.filter(question => !recentLibraryIds.has(question.id)), ...candidates.filter(question => recentLibraryIds.has(question.id))].slice(0, count);
     const pool = [...library, ...shuffle(DAILY_QUESTION_BANK[kind]).slice(0, count - library.length)];
     return pool.map(question => JSON.parse(JSON.stringify({
       ...question, budgetSeconds: normalized[`${kind}Minutes`] * 60,
@@ -105,7 +109,7 @@ export function createDailySession(settings, options = {}) {
   return {
     id, dateKey, startedAt, completedAt: null, status: 'active',
     settings: normalized,
-    questions: selectDailyQuestions(normalized, `${dateKey}:${id}`, options.problems),
+    questions: selectDailyQuestions(normalized, `${dateKey}:${id}`, options.problems, options.priorSessions),
     answers: {}, mentalTrialId: null, mentalCompletedAt: null,
   };
 }
@@ -212,4 +216,14 @@ export function completeDailyMental(state, sessionId, trial, now = new Date().to
 
 export function preferredDailySession(sessions = [], today = localDateKey()) {
   return [...sessions].reverse().find(session => session.status === 'active') || [...sessions].reverse().find(session => session.dateKey === today) || null;
+}
+
+export function resolveDailyDeepLink(sessions = [], search = '') {
+  const params = new URLSearchParams(search);
+  const sessionId = params.get('session');
+  const questionId = params.get('question');
+  const session = sessions.find(item => item.id === sessionId);
+  return { sessionId, questionId, missingSession: Boolean(sessionId && !session),
+    missingQuestion: Boolean(session && questionId && !(questionId === 'mental' && session.settings.mentalEnabled)
+      && !session.questions.some(question => question.id === questionId)) };
 }

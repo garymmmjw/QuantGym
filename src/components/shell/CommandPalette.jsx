@@ -12,6 +12,8 @@ import { useBodyScrollLock } from "./useBodyScrollLock.js";
 
 const MODULE_ICONS = {
   overview: "layout-dashboard",
+  review: "repeat-2",
+  applications: "briefcase-business",
   plan: "calendar-check-2",
   skills: "radar",
   interview: "messages-square",
@@ -124,7 +126,7 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
         run: () => {
           const services = appServices.services || {};
           services.rebindElements?.();
-          services.switchModule?.("plan");
+          services.switchModule?.("daily-mock");
         }
       }
     ];

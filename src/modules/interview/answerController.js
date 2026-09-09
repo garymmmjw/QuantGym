@@ -49,7 +49,14 @@ export function createInterviewAnswerController(deps = {}) {
     return attachment ? `[${getLanguage() === "zh" ? "上传附件" : "Attachment"}: ${attachment.name}]` : "";
   }
 
+  function currentRequest() {
+    const session = getState().session;
+    const owner = deps.getOwnerId?.();
+    return () => getState().session === session && deps.getOwnerId?.() === owner;
+  }
+
   function clearAnswerInputs() {
+    getState().answerDraft = '';
     if (elements.interviewAnswer) elements.interviewAnswer.value = "";
     if (elements.interviewAnswerFile) elements.interviewAnswerFile.value = "";
     deps.updateAnswerFileMeta?.();
@@ -88,7 +95,9 @@ export function createInterviewAnswerController(deps = {}) {
       return;
     }
 
+    const isCurrent = currentRequest();
     const answerPayload = await collect();
+    if (!isCurrent()) return;
     if (!answerPayload.text && !answerPayload.attachment) {
       elements.interviewAnswer?.focus();
       return;
@@ -104,6 +113,7 @@ export function createInterviewAnswerController(deps = {}) {
 
   async function submitPractice(problem, answerPayload) {
     const state = getState();
+    const isCurrent = currentRequest();
     deps.clearQuestionTimer?.();
     const displayAnswer = [
       answerPayload.text || "",
@@ -114,6 +124,7 @@ export function createInterviewAnswerController(deps = {}) {
       attachments: answerPayload.attachment ? [answerPayload.attachment] : []
     });
     clearAnswerInputs();
+    deps.persistSnapshot?.();
     const thinkingId = deps.appendMessage?.("coach", "", { thinking: true });
     let feedback;
 
@@ -123,8 +134,10 @@ export function createInterviewAnswerController(deps = {}) {
         answerPayload.text,
         answerPayload.requestAttachment || answerPayload.attachment
       );
+      if (!isCurrent()) return;
       feedback = deps.normalizeFeedback?.(reply, problem, answerPayload.text);
     } catch {
+      if (!isCurrent()) return;
       feedback = deps.normalizeFeedback?.(
         deps.localFeedback?.(problem, answerPayload.text),
         problem,
@@ -142,6 +155,7 @@ export function createInterviewAnswerController(deps = {}) {
 
   async function submitLiveTurn(problem, answerPayload) {
     const state = getState();
+    const isCurrent = currentRequest();
     if (state.session.submitting) return;
     state.session.submitting = true;
     const conversation = deps.getCurrentConversation?.();
@@ -161,6 +175,7 @@ export function createInterviewAnswerController(deps = {}) {
     });
     clearAnswerInputs();
     deps.updateActionPanel?.();
+    deps.persistSnapshot?.();
     const thinkingId = deps.appendMessage?.("coach", "", { thinking: true });
 
     try {
@@ -168,6 +183,7 @@ export function createInterviewAnswerController(deps = {}) {
         ...answerPayload,
         attachment: answerPayload.requestAttachment || answerPayload.attachment
       }, conversation);
+      if (!isCurrent()) return;
       const normalized = deps.normalizeConverseReply?.(reply, problem, conversation);
       applyLiveCoachReply({
         problem,
@@ -177,6 +193,7 @@ export function createInterviewAnswerController(deps = {}) {
         typewriter: true
       });
     } catch {
+      if (!isCurrent()) return;
       const fallback = deps.normalizeConverseReply?.(deps.localConverse?.(problem, conversation), problem, conversation);
       applyLiveCoachReply({
         problem,
@@ -186,6 +203,7 @@ export function createInterviewAnswerController(deps = {}) {
         typewriter: true
       });
     } finally {
+      if (!isCurrent()) return;
       state.session.submitting = false;
       deps.renderQuestionPanel?.();
       deps.updateActionPanel?.();
@@ -240,12 +258,13 @@ export function createInterviewAnswerController(deps = {}) {
     }
     const problem = deps.getSelectedProblem?.();
     if (!problem) return;
+    const isCurrent = currentRequest();
     const thinkingId = deps.appendMessage?.("coach", getLanguage() === "zh" ? "生成 hint 中..." : "Generating hint...");
     try {
       const hint = await deps.requestHintFromApi?.(problem, elements.interviewAnswer?.value.trim() || "");
-      deps.updateMessage?.(thinkingId, hint, { typewriter: true });
+      if (isCurrent()) deps.updateMessage?.(thinkingId, hint, { typewriter: true });
     } catch {
-      deps.updateMessage?.(thinkingId, deps.localHint?.(problem), { typewriter: true });
+      if (isCurrent()) deps.updateMessage?.(thinkingId, deps.localHint?.(problem), { typewriter: true });
     }
   }
 

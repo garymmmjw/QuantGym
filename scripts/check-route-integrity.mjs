@@ -115,14 +115,14 @@ function checkPageWrappers() {
     const pagePath = path.join(src, "pages", `${pageName}.jsx`);
     expectFile(pagePath, `page wrapper for ${id}`);
     if (!fs.existsSync(pagePath)) continue;
-    const text = fs.readFileSync(pagePath, "utf8");
+    const text = fs.readFileSync(pagePath, "utf8").replaceAll("'", '"');
     expect(text.includes('import { useSyncModuleRoute } from "../hooks/useSyncModuleRoute.js";'), `${pageName}.jsx must import useSyncModuleRoute.`);
     expect(text.includes(`export function ${pageName}()`), `${pageName}.jsx must export function ${pageName}.`);
     expect(text.includes(`useSyncModuleRoute("${id}")`), `${pageName}.jsx must sync module route "${id}".`);
-    const personalPages = { calendar: "TrainingCalendar", "daily-mock": "DailyMockWorkspace", tools: "MentalMathTrainer" };
+    const personalPages = { overview: "PreparationDashboard", review: "ReviewWorkspace", applications: "ApplicationTracker", calendar: "TrainingCalendar", "daily-mock": "DailyMockWorkspace", tools: "MentalMathTrainer" };
     if (personalPages[id]) {
       expect(text.includes("<PersonalWorkspace>"), `${pageName} must use account-scoped personal storage.`);
-      expect(text.includes(`<${personalPages[id]} {...props} />`), `${pageName} must render its training component.`);
+      expect(new RegExp(`<${personalPages[id]}\\b[^>]*\\{\\.\\.\\.props\\}[^>]*\\/>`).test(text), `${pageName} must render its training component with workspace props.`);
     } else {
       expect(text.includes(`import { ${featureName} } from "../features/${id}/${featureName}.jsx";`), `${pageName}.jsx must import ${featureName} from the matching feature folder.`);
       expect(text.includes(`return <${featureName} />;`), `${pageName}.jsx must render ${featureName}.`);

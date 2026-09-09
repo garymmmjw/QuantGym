@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
@@ -22,39 +23,6 @@ const COMPANY_BRAND_COLORS = {
   hrt: "#7161f2",
   "hudson river trading": "#7161f2"
 };
-
-/* Static tracker rail from the design (投递追踪 demo board). */
-const TRACKER_GROUPS = [
-  {
-    title: "想投",
-    dot: "#c3c2d8",
-    items: [
-      { company: "HRT", abbr: "HRT", color: "#7161f2", stage: "官网 · 未开放", pill: "待投", pillColor: "#8988a8", pillBg: "#f2f1fb" }
-    ]
-  },
-  {
-    title: "已投",
-    dot: "#5b5ff5",
-    items: [
-      { company: "Jane Street", abbr: "JS", color: "#1b1a38", stage: "OA 待发", pill: "已投", pillColor: "#5b5ff5", pillBg: "#eef0ff" },
-      { company: "DRW", abbr: "DRW", color: "#2f9be0", stage: "简历筛选", pill: "已投", pillColor: "#5b5ff5", pillBg: "#eef0ff" }
-    ]
-  },
-  {
-    title: "面试中",
-    dot: "#ff9f2e",
-    items: [
-      { company: "Optiver", abbr: "OP", color: "#e0562e", stage: "速算轮 · 明天", pill: "面试", pillColor: "#b3610a", pillBg: "#fff3dd" }
-    ]
-  },
-  {
-    title: "Offer",
-    dot: "#16a06a",
-    items: [
-      { company: "IMC", abbr: "IMC", color: "#c8102e", stage: "Superday 通过", pill: "Offer", pillColor: "#0f9d63", pillBg: "#e3f7ee" }
-    ]
-  }
-];
 
 function companyBrandColor(company = "") {
   return COMPANY_BRAND_COLORS[String(company).trim().toLowerCase()] || "";
@@ -120,7 +88,7 @@ export function JobsPageContent() {
           <h2>
             求职 <span className="jobs-title-accent">Jobs</span>
           </h2>
-          <small id="jobsSummary">头部做市商 &amp; 对冲基金职位 · 直连官方 ATS · 投递全程追踪</small>
+          <small id="jobsSummary">查看岗位原始链接，保存到自己的申请清单。</small>
         </div>
         <div className="view-tabs" role="tablist" aria-label={t("jobsFilterAria")}>
           {FILTERS.map((value) => (
@@ -167,6 +135,7 @@ export function JobsPageContent() {
                 pageApi.openExternalUrl?.(job.url);
               }}
               onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return;
                 if (event.key !== "Enter" && event.key !== " ") return;
                 event.preventDefault();
                 pageApi.openExternalUrl?.(job.url);
@@ -211,62 +180,14 @@ export function JobsPageContent() {
                   >
                     投递
                   </a>
-                  <button type="button" className="job-save-btn" onClick={(event) => event.stopPropagation()}>
-                    收藏
-                  </button>
+                  <Link className="job-save-btn" to={`/applications?${new URLSearchParams({company:job.company || '',role:job.title || '',location:job.location || '',url:pageApi.safeExternalUrl?.(job.url) || ''}).toString()}`}>加入申请追踪</Link>
                 </div>
               </div>
             </article>
           );
         })}
       </div>
-      <aside className="jobs-side" aria-label="投递追踪">
-        <div className="jobs-tracker">
-          <div className="jobs-tracker-head">
-            <div className="jobs-tracker-title">投递追踪</div>
-            <span className="jobs-tracker-total">12 家 · 本季</span>
-          </div>
-          <div className="jobs-tracker-groups">
-            {TRACKER_GROUPS.map((group) => (
-              <div className="jobs-tracker-group" key={group.title}>
-                <div className="jobs-tracker-group-head">
-                  <span className="jobs-tracker-dot" style={{ background: group.dot }} aria-hidden="true" />
-                  <span className="jobs-tracker-group-title">{group.title}</span>
-                  <span className="jobs-tracker-count">{group.items.length}</span>
-                </div>
-                <div className="jobs-tracker-items">
-                  {group.items.map((item) => (
-                    <div className="jobs-tracker-item" key={`${group.title}-${item.company}`}>
-                      <div className="jobs-tracker-logo" style={{ background: item.color }} aria-hidden="true">
-                        {item.abbr}
-                      </div>
-                      <div className="jobs-tracker-item-main">
-                        <div className="jobs-tracker-item-company">{item.company}</div>
-                        <div className="jobs-tracker-item-stage">{item.stage}</div>
-                      </div>
-                      <span
-                        className="jobs-tracker-pill"
-                        style={{ color: item.pillColor, background: item.pillBg }}
-                      >
-                        {item.pill}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="jobs-match-banner">
-          <img src="/assets/generated/playful-precision/mascot-trophy-v2.png" alt="" />
-          <div>
-            <div className="jobs-match-kicker">匹配度最高</div>
-            <div className="jobs-match-copy">
-              你的画像与 <span className="jobs-match-accent">Optiver 速算轮</span> 匹配度 92% — 先去 Mental Math 冲一把。
-            </div>
-          </div>
-        </div>
-      </aside>
+      <aside className="jobs-side prep-jobs-note"><h3>我的申请追踪</h3><p>保存感兴趣的岗位，记录投递、OA 和面试进度。截止日期会显示在今日工作台。</p><Link to="/applications">打开申请追踪 →</Link></aside>
       </div>
     </section>
   );

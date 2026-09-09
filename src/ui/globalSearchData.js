@@ -1,3 +1,4 @@
+import { PERSONAL_MODULE_IDS } from "../components/shell/personalNavigation.js";
 import {
   matchesNormalizedText,
   matchesQuery,
@@ -137,13 +138,16 @@ export function buildGlobalSearchResults(query, deps = {}) {
   });
 
   return results
+    .filter(result => !result.module || PERSONAL_MODULE_IDS.has(result.module))
     .sort((a, b) => (a.rank ?? 40) - (b.rank ?? 40))
     .slice(0, 14);
 }
 
 export function getModuleSearchDefs(t = (key) => key) {
   return [
-    { module: "overview", label: t("overview"), detail: "Dashboard / 总览", fields: [t("overview"), "overview", "dashboard", "总览", "首页", "home"] },
+    { module: "review", label: "错题与复习 / Review", detail: "按自评安排的复习队列", fields: ["review", "错题", "复习", "spaced repetition"] },
+    { module: "applications", label: "申请追踪 / Applications", detail: "投递、OA、面试与下一步", fields: ["applications", "tracker", "申请", "投递", "截止日期"] },
+    { module: "overview", label: "今日工作台 / Today", detail: "Personal preparation / 个人备战", fields: [t("overview"), "overview", "dashboard", "总览", "首页", "home"] },
     { module: "plan", label: t("plan"), detail: "Interview prep plan / 备战计划", fields: [t("plan"), "plan", "计划", "备战", "schedule", "baseline"] },
     { module: "experiences", label: t("experiences"), detail: "Interview log / 面经", fields: [t("experiences"), "interview log", "面经", "复盘", "debrief", "experience"] },
     { module: "community", label: t("community"), detail: "Forum / 论坛", fields: [t("community"), "community", "forum", "论坛", "社区", "动态"] },
@@ -163,5 +167,5 @@ export function getModuleSearchDefs(t = (key) => key) {
     { module: "tools", label: t("tools"), detail: "Mental math / 速算", fields: [t("tools"), "tools", "drills", "速算", "mental math"] },
     { module: "memory", label: t("memory"), detail: "Memory / 资料笔记", fields: [t("memory"), "memory", "notes", "资料", "笔记"] },
     { module: "settings", label: t("settings"), detail: "Settings / 设置", fields: [t("settings"), "settings", "设置", "config"] }
-  ];
+  ].filter(item => PERSONAL_MODULE_IDS.has(item.module));
 }

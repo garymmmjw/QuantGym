@@ -126,7 +126,7 @@ export function createAppShellController(deps = {}) {
   function renderAll() {
     deps.consumePendingCapture?.();
     deps.renderTodoDock?.();
-    deps.maybeAutoRefreshNews?.();
+    // Personal preparation does not need background public-news traffic.
     deps.maybeAutoRefreshJobs?.();
     deps.updatePreview?.();
     refreshIcons();
