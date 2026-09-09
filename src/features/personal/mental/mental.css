@@ -65,17 +65,8 @@
 .pm-section-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
 .personal-mental .pm-section-heading h3 { font-size: 16px; font-weight: 600; color: var(--pm-ink); margin: 0 0 6px; }
 .pm-section-heading p { font-size: 11px; color: var(--pm-muted); margin: 0; line-height: 1.6; }
-.pm-compare { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: var(--pm-muted); cursor: pointer; }
-.pm-compare input { accent-color: var(--pm-blue); }
-.pm-scatter { margin: 18px 0 15px; }
-.pm-scatter svg { display: block; width: 100%; min-height: 175px; overflow: visible; }
 .pm-chart-grid { stroke: #e9ecf0; stroke-width: 1; }
 .pm-chart-label { fill: #858c98; font-size: 11px; font-family: inherit; }
-.pm-chart-empty { fill: #9198a4; font-size: 13px; font-family: inherit; }
-.pm-chart-legend { display: flex; align-items: center; flex-wrap: wrap; gap: 9px 18px; padding-left: 6%; color: var(--pm-muted); font-size: 10px; }
-.pm-chart-legend > span { display: inline-flex; align-items: center; gap: 6px; }
-.pm-chart-legend i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
-.pm-chart-key { flex: 1 0 100%; margin-top: 2px; }
 .pm-trial-summary { display: flex; flex-wrap: wrap; gap: 12px 28px; padding: 20px 0; font-size: 11px; color: var(--pm-muted); border-bottom: 1px solid var(--pm-line); }
 .pm-trial-summary strong { color: #434d61; font-weight: 600; margin-left: 6px; }
 .pm-question-details summary { padding-left: 0; padding-right: 0; font-size: 12px; }
@@ -113,6 +104,31 @@
   .pm-mode-label { font-size: 10px; }
   .pm-heading { margin-bottom: 20px; }
   .pm-range-settings summary span { font-size: 10px; margin-left: 6px; }
-  .pm-chart-legend { padding-left: 0; }
   .pm-ready { padding: 30px 18px; }
+}
+
+/* Attempt history controls use the existing Mental Math type, colors and borders. */
+.pm-trend-filters { display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+.pm-trend-filters label { display: flex; flex-direction: column; gap: 7px; color: var(--pm-muted); font-size: 11px; min-width: 0; }
+.pm-trend-filters select { width: 100%; min-width: 0; min-height: 40px; padding: 8px; border: 1px solid var(--pm-line); border-radius: 5px; background: #fff; color: var(--pm-ink); font: inherit; text-overflow: ellipsis; }
+.pm-trend-filters select:focus-visible { outline: 3px solid #acb8ff; outline-offset: 3px; }
+.pm-filter-description { margin-top: 12px; overflow-wrap: anywhere; }
+.pm-attempt-chart { margin: 20px 0 14px; }
+.pm-attempt-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.pm-trend-line { stroke: var(--pm-blue); stroke-width: 2; fill: none; vector-effect: non-scaling-stroke; }
+.pm-trend-point { cursor: pointer; }
+.pm-trend-point[aria-disabled="true"] { cursor: default; }
+.pm-trend-dot { fill: var(--pm-blue); }
+.pm-trend-ring { fill: none; stroke: var(--pm-blue); stroke-width: 1; }
+.pm-trend-caption { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding-top: 10px; font-size: 11px; color: var(--pm-muted); line-height: 1.7; }
+.pm-trend-caption strong { color: var(--pm-ink); font-weight: 600; }
+.pm-trend-caption > span:last-of-type { flex-basis: 100%; overflow-wrap: anywhere; }
+.pm-trial-details, .pm-setup { scroll-margin-top: 100px; }
+.pm-trial-details:focus { outline: none; }
+.pm-history-settings summary { cursor: pointer; }
+.pm-history-settings p { width: 220px; max-width: 60vw; white-space: normal; line-height: 1.7; font-size: 10px; }
+.personal-mental .pm-sign-toggle { margin-top: 8px; padding: 6px 14px; min-height: 40px; }
+@media (max-width: 700px) {
+  .pm-trend-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .pm-trend-filters > label:first-child { grid-column: 1 / -1; }
 }
