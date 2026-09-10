@@ -67,14 +67,15 @@ export function generateMentalQuestion(input, index = 1, now = Date.now(), rng =
   };
 }
 
-export function createTrial(settings, { now = Date.now(), id, dailySessionId = null, rng = Math.random } = {}) {
+export function createTrial(settings, { now = Date.now(), id, dailySessionId = null, rng = Math.random, preparationSeconds = 0 } = {}) {
   const normalized = normalizeMentalSettings(settings);
+  const startsAt = now + Math.max(0, Math.min(5, Number(preparationSeconds) || 0)) * 1000;
   const trialId = id || globalThis.crypto?.randomUUID?.() || `trial-${now}-${Math.random().toString(36).slice(2)}`;
   return { id: trialId, status: 'active', settings: normalized, settingsKey: mentalSettingsKey(normalized),
-    dailySessionId, startedAt: new Date(now).toISOString(),
-    deadlineAt: new Date(now + normalized.durationSeconds * 1000).toISOString(),
+    dailySessionId, startedAt: new Date(startsAt).toISOString(),
+    deadlineAt: new Date(startsAt + normalized.durationSeconds * 1000).toISOString(),
     completedAt: null, correct: 0, questions: [],
-    currentQuestion: generateMentalQuestion(normalized, 1, now, rng), currentAnswer: '',
+    currentQuestion: generateMentalQuestion(normalized, 1, startsAt, rng), currentAnswer: '',
   };
 }
 
@@ -91,7 +92,7 @@ function closeQuestion(question, outcome, value, now) {
 }
 
 export function transitionTrial(trial, action, now = Date.now(), rng = Math.random) {
-  if (!trial || trial.status !== 'active') return trial;
+  if (!trial || trial.status !== 'active' || (trial.settings?.trainer && trial.settings.trainer !== 'math') || now < Date.parse(trial.startedAt)) return trial;
   const deadline = Date.parse(trial.deadlineAt);
   // The deadline wins even when the page was asleep or an answer arrives on its boundary.
   if (now >= deadline || action.type === 'abort') {
@@ -147,7 +148,7 @@ export function summarizeTrial(trial) {
 
 export function getPersonalBests(trials = [], settings) {
   const key = mentalSettingsKey(settings);
-  const matching = trials.filter((trial) => trial.status === 'completed' && mentalSettingsKey(trial.settings) === key);
+  const matching = trials.filter((trial) => trial.status === 'completed' && (!trial.settings?.trainer || trial.settings.trainer === 'math') && mentalSettingsKey(trial.settings) === key);
   const summaries = matching.map(summarizeTrial);
   const means = summaries.map((s) => s.meanMs).filter((n) => n != null);
   const fastest = summaries.map((s) => s.fastestMs).filter((n) => n != null);

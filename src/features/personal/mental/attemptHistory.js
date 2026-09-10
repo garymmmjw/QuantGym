@@ -1,4 +1,5 @@
-import { getPersonalBests, mentalSettingsKey, normalizeMentalSettings, summarizeTrial } from './mentalEngine.js';
+import { summarizeTrial } from './mentalEngine.js';
+import { getTrainingBests as getPersonalBests, trainingSettingsKey as mentalSettingsKey, normalizeTrainingSettings as normalizeMentalSettings, trainerKind, difficultyLabel, sequenceTypeLabel } from './trainingSettings.js';
 
 const SYMBOLS = { add: '+', subtract: '−', multiply: '×', divide: '÷' };
 const compareText = (a, b) => a < b ? -1 : a > b ? 1 : 0;
@@ -13,6 +14,7 @@ function localDateKey(timestamp) {
 
 function rangeLabel(settings, language) {
   const en = language === 'en';
+  if (trainerKind(settings) !== 'math') return '';
   return settings.operations.map(operation => {
     const { minA, maxA, minB, maxB } = settings.ranges[operation];
     return operation === 'divide'
@@ -23,6 +25,7 @@ function rangeLabel(settings, language) {
 
 export function formatAttemptSettings(input, language = 'zh') {
   const settings = normalizeMentalSettings(input);
+  if (trainerKind(settings) !== 'math') return `${settings.durationSeconds}${language === 'en' ? 's' : ' 秒'} · ${difficultyLabel(settings.difficulty, language)}${settings.trainer === 'sequence' ? ` · ${sequenceTypeLabel(settings.sequenceType, language)}` : ''}`;
   return `${settings.durationSeconds}${language === 'en' ? 's' : ' 秒'} · ${rangeLabel(settings, language)}`;
 }
 
@@ -30,7 +33,7 @@ function completedTrials(trials) {
   const byId = new Map();
   const quality = trial => {
     const questions = Array.isArray(trial.questions) ? trial.questions : [];
-    return [trial.correct, questions.filter(question => ['correct', 'skipped'].includes(question.outcome)).length,
+    return [trial.correct, questions.filter(question => ['correct', 'wrong', 'skipped'].includes(question.outcome)).length,
       questions.length, questions.reduce((sum, question) => sum + (question.mistakes?.length || 0), 0), Date.parse(trial.completedAt)];
   };
   const prefer = (a, b) => {
@@ -115,11 +118,12 @@ export function exportAttemptHistoryCsv(points = [], { language = 'zh', includeB
   const header = en
     ? ['Attempt', 'Trial ID', 'Started at', 'Completed at', 'Local date', 'Duration (s)', 'Operations', 'Ranges', 'Score', 'Mean correct time (s)', 'Status']
     : ['完整试次序号', '试次 ID', '开始时间', '完成时间', '本地日期', '时长（秒）', '运算', '数字范围', '正确数', '正确题均时（秒）', '状态'];
+  header.push(...(en ? ['Trainer', 'Difficulty', 'Sequence type'] : ['训练模块', '难度', '序列类型']));
   const rows = points.map(point => {
     const settings = normalizeMentalSettings(point.settings);
     return [point.ordinal, point.id, point.startedAt, point.completedAt, point.dateKey, settings.durationSeconds,
-      settings.operations.map(operation => SYMBOLS[operation]).join(' '), rangeLabel(settings, language), point.score,
-      point.meanMs == null ? '' : point.meanMs / 1000, en ? 'Completed' : '完整完成'];
+      (settings.operations || []).map(operation => SYMBOLS[operation]).join(' '), rangeLabel(settings, language), point.score,
+      point.meanMs == null ? '' : point.meanMs / 1000, en ? 'Completed' : '完整完成', trainerKind(settings), settings.difficulty || '', settings.sequenceType || ''];
   });
   return `${includeBom ? '\uFEFF' : ''}${[header, ...rows].map(row => row.map(formatCsvCell).join(',')).join('\r\n')}\r\n`;
 }

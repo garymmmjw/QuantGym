@@ -1,8 +1,13 @@
+import { patternCellKey, validatePatternCell } from "./mental/patternQuestions.js";
+
 export const PERSONAL_VERSION = 1;
 const PREFIX = "quantgym.personal-prep.v1:";
 const ARRAY_FIELDS = ["trials", "dailySessions", "activities"];
 const OPERATIONS = ["add", "subtract", "multiply", "divide"];
 const DAILY_KINDS = ["tech", "coding", "behavioral"];
+const REASONING_KINDS = ["sequence", "pattern"];
+const DIFFICULTIES = ["easy", "medium", "hard"];
+const trainerOf = (trial) => trial?.settings?.trainer || "math";
 const object = (value) => Boolean(value) && typeof value === "object" && !Array.isArray(value);
 const id = (value) => typeof value === "string" && value.trim().length > 0;
 const timestamp = (value) => typeof value === "string" && value.length > 0 && Number.isFinite(Date.parse(value));
@@ -16,7 +21,8 @@ function optionalStrings(value, fields) {
 }
 
 function validateMentalSettings(settings) {
-  requireData(object(settings) && integer(settings.durationSeconds, 10, 3600) && Array.isArray(settings.operations)
+  requireData(object(settings) && (settings.trainer == null || settings.trainer === "math")
+    && integer(settings.durationSeconds, 10, 3600) && Array.isArray(settings.operations)
     && settings.operations.length > 0 && settings.operations.every((operation) => OPERATIONS.includes(operation)) && object(settings.ranges), "mental settings");
   for (const operation of settings.operations) {
     const range = settings.ranges[operation];
@@ -35,18 +41,79 @@ function validateMentalQuestion(question, active = false) {
     && ["correct", "skipped", "timeout", "aborted"].includes(question.outcome), "completed mental question");
 }
 
+function validateReasoningSettings(settings) {
+  requireData(object(settings) && REASONING_KINDS.includes(settings.trainer)
+    && integer(settings.durationSeconds, 10, 3600) && DIFFICULTIES.includes(settings.difficulty)
+    && (settings.trainer === "sequence" ? ["numbers", "letters", "mixed"].includes(settings.sequenceType)
+      : settings.sequenceType == null), "reasoning settings");
+}
+
+function validateReasoningQuestion(question, settings, active = false) {
+  requireData(object(question) && id(question.id) && integer(question.index, 1)
+    && question.kind === settings.trainer && id(question.family) && question.difficulty === settings.difficulty
+    && id(question.answer) && typeof question.explanation === "string" && typeof question.explanationEn === "string"
+    && timestamp(question.startedAt) && (question.submittedAnswer == null || typeof question.submittedAnswer === "string")
+    && Array.isArray(question.mistakes) && question.mistakes.every((mistake) => object(mistake)
+      && typeof mistake.value === "string" && timestamp(mistake.submittedAt) && finite(mistake.elapsedMs)), "reasoning question");
+  if (settings.trainer === "sequence") {
+    requireData(Array.isArray(question.tokens) && question.tokens.length >= 2 && question.tokens.length <= 64
+      && Array.from(question.tokens).every((token) => typeof token === "string" && token.length > 0), "sequence tokens");
+  } else {
+    requireData(Array.isArray(question.grid) && question.grid.length === 9 && question.grid[8] === null
+      && Array.isArray(question.options) && question.options.length === 6
+      && Array.from(question.options).every((option, index) => object(option) && option.id === "ABCDEF"[index])
+      && question.options.some((option) => option.id === question.answer), "pattern question");
+    try {
+      Array.from(question.grid.slice(0, 8)).forEach(validatePatternCell);
+      question.options.forEach((option) => validatePatternCell(option.cell));
+      requireData(new Set(question.options.map((option) => patternCellKey(option.cell))).size === 6, "pattern choices");
+    } catch {
+      requireData(false, "pattern cells");
+    }
+  }
+  if (active) {
+    requireData(question.completedAt == null && question.elapsedMs == null && question.outcome == null
+      && question.submittedAnswer == null, "active reasoning question");
+  } else {
+    requireData(timestamp(question.completedAt) && finite(question.elapsedMs)
+      && ["correct", "wrong", "skipped", "timeout", "aborted"].includes(question.outcome), "completed reasoning question");
+  }
+}
+
 function validateTrial(trial, active = false) {
   requireData(object(trial) && id(trial.id) && (active ? trial.status === "active" : ["completed", "aborted"].includes(trial.status))
     && timestamp(trial.startedAt) && timestamp(trial.deadlineAt) && Date.parse(trial.deadlineAt) >= Date.parse(trial.startedAt)
     && integer(trial.correct) && Array.isArray(trial.questions), "trial");
-  validateMentalSettings(trial.settings);
-  trial.questions.forEach((question) => validateMentalQuestion(question));
+  const reasoning = REASONING_KINDS.includes(trainerOf(trial));
+  if (reasoning) {
+    validateReasoningSettings(trial.settings);
+    requireData(trial.dailySessionId == null, "reasoning daily reference");
+    for (const [index, question] of trial.questions.entries()) {
+      validateReasoningQuestion(question, trial.settings);
+      requireData(question.index === index + 1, "reasoning question order");
+    }
+    requireData(new Set(trial.questions.map((question) => question.id)).size === trial.questions.length, "reasoning question ids");
+  } else {
+    validateMentalSettings(trial.settings);
+    trial.questions.forEach((question) => validateMentalQuestion(question));
+  }
   requireData(trial.correct === trial.questions.filter((question) => question.outcome === "correct").length, "trial score");
   requireData(optionalStrings(trial, ["dailySessionId", "settingsKey"]), "trial references");
   if (active) {
-    validateMentalQuestion(trial.currentQuestion, true);
+    if (!reasoning) validateMentalQuestion(trial.currentQuestion, true);
+    else if (trial.currentQuestion == null) {
+      requireData(id(trial.feedbackQuestionId) && trial.questions.at(-1)?.id === trial.feedbackQuestionId,
+        "reasoning feedback reference");
+    } else {
+      validateReasoningQuestion(trial.currentQuestion, trial.settings, true);
+      requireData(trial.feedbackQuestionId == null && trial.currentQuestion.index === trial.questions.length + 1
+        && !trial.questions.some((question) => question.id === trial.currentQuestion.id), "active reasoning question order");
+    }
     requireData(typeof trial.currentAnswer === "string", "active answer");
-  } else requireData(timestamp(trial.completedAt), "trial completion time");
+  } else {
+    requireData(timestamp(trial.completedAt), "trial completion time");
+    if (reasoning) requireData(trial.currentQuestion == null && trial.currentAnswer === "", "finished reasoning trial");
+  }
 }
 
 function validateDailySettings(settings) {
@@ -84,7 +151,7 @@ function validateDailySession(session) {
 }
 
 function validateActivity(activity) {
-  requireData(object(activity) && id(activity.id) && ["quant", "mental", ...DAILY_KINDS, "daily"].includes(activity.kind)
+  requireData(object(activity) && id(activity.id) && ["quant", "mental", ...REASONING_KINDS, ...DAILY_KINDS, "daily"].includes(activity.kind)
     && integer(activity.count) && timestamp(activity.completedAt)
     && optionalStrings(activity, ["source", "note", "title", "titleEn", "status", "trialId", "dailySessionId", "sessionId", "questionId", "problemId"]), "activity");
 }
@@ -113,17 +180,24 @@ function mergeDailySession(current, incoming) {
 }
 
 function preferTrialProgress(current, incoming) {
+  requireData(trainerOf(current) === trainerOf(incoming), "conflicting trial modules");
   // Pick one coherent snapshot; never splice independently generated question paths.
   // Correct answers and resolved questions only grow as a real trial progresses.
   const progress = (trial) => [trial.correct,
-    trial.questions.filter((question) => ["correct", "skipped"].includes(question.outcome)).length,
-    trial.status === "completed" ? 2 : trial.status === "aborted" ? 1 : 0];
+    trial.questions.filter((question) => ["correct", "wrong", "skipped"].includes(question.outcome)).length,
+    trial.status === "completed" ? 2 : trial.status === "aborted" ? 1 : 0,
+    REASONING_KINDS.includes(trainerOf(trial)) ? trial.currentQuestion?.index || trial.questions.at(-1)?.index || 0 : 0];
   const localProgress = progress(current);
   const remoteProgress = progress(incoming);
   for (let index = 0; index < localProgress.length; index += 1) {
     if (localProgress[index] !== remoteProgress[index]) return localProgress[index] > remoteProgress[index] ? current : incoming;
   }
   return current;
+}
+
+function hasTrialWork(trial) {
+  return Boolean(trial.currentAnswer) || Boolean(trial.currentQuestion?.mistakes?.length)
+    || trial.questions.some((question) => ["correct", "wrong", "skipped"].includes(question.outcome) || question.mistakes?.length);
 }
 
 export function createPersonalState() {
@@ -168,13 +242,26 @@ export function mergePersonalData(currentValue, incomingValue) {
     }
     next[field] = [...byId.values()];
   }
+  next.removedActivityIds = [...new Set([...current.removedActivityIds, ...incoming.removedActivityIds])].sort();
+  const cancelledPreparations = new Set(next.removedActivityIds.filter((value) => value.startsWith("cancel-preparation:"))
+    .map((value) => value.slice("cancel-preparation:".length)));
   const finishedIds = new Set(next.trials.map((trial) => trial.id));
-  const active = [current.activeTrial, incoming.activeTrial].filter((trial) => trial && !finishedIds.has(trial.id));
+  for (const trial of [current.activeTrial, incoming.activeTrial].filter(Boolean)) {
+    const finished = next.trials.find((entry) => entry.id === trial.id);
+    if (finished) requireData(trainerOf(finished) === trainerOf(trial), "conflicting trial modules");
+  }
+  const active = [current.activeTrial, incoming.activeTrial].filter((trial) => trial && !finishedIds.has(trial.id)
+    && !(cancelledPreparations.has(trial.id) && !hasTrialWork(trial)));
+  if (active.length === 2 && active[0].id !== active[1].id
+    && active.some((trial) => REASONING_KINDS.includes(trainerOf(trial)))) {
+    throw new Error("另一个试次尚未结束。请先完成当前试次，再同步另一个试次。Finish the current trial before syncing another active trial.");
+  }
   next.activeTrial = active.length === 2 && active[0].id === active[1].id ? preferTrialProgress(active[0], active[1]) : active[0] || null;
   for (const trial of next.trials) {
-    const activityId = `mental:${trial.id}`;
+    const kind = trainerOf(trial) === "math" ? "mental" : trainerOf(trial);
+    const activityId = `${kind}:${trial.id}`;
     const index = next.activities.findIndex((activity) => activity.id === activityId);
-    const activity = { ...(index < 0 ? {} : next.activities[index]), id: activityId, kind: "mental", count: trial.correct,
+    const activity = { ...(index < 0 ? {} : next.activities[index]), id: activityId, kind, count: trial.correct,
       completedAt: trial.completedAt, trialId: trial.id, dailySessionId: trial.dailySessionId };
     if (index < 0) next.activities.push(activity);
     else next.activities[index] = activity;
@@ -183,7 +270,6 @@ export function mergePersonalData(currentValue, incomingValue) {
     if (session.status !== "completed" || next.activities.some((activity) => activity.id === `daily:${session.id}:complete`)) continue;
     next.activities.push({ id: `daily:${session.id}:complete`, kind: "daily", count: 1, completedAt: session.completedAt, sessionId: session.id });
   }
-  next.removedActivityIds = [...new Set([...current.removedActivityIds, ...incoming.removedActivityIds])].sort();
   const removedIds = new Set(next.removedActivityIds);
   next.activities = next.activities.filter((activity) => !removedIds.has(activity.id));
   next.mentalSettings = current.mentalSettings || incoming.mentalSettings;

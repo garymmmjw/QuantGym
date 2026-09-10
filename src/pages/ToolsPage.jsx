@@ -1,8 +1,8 @@
 import { useSyncModuleRoute } from "../hooks/useSyncModuleRoute.js";
 import { PersonalWorkspace } from "../features/personal/PersonalWorkspace.jsx";
-import { MentalMathTrainer } from "../features/personal/mental/MentalMathTrainer.jsx";
+import { TrainingWorkspace } from "../features/personal/mental/TrainingWorkspace.jsx";
 
 export function ToolsPage() {
   useSyncModuleRoute("tools");
-  return <PersonalWorkspace>{(props) => <MentalMathTrainer {...props} />}</PersonalWorkspace>;
+  return <PersonalWorkspace>{(props) => <TrainingWorkspace {...props} />}</PersonalWorkspace>;
 }

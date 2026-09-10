@@ -373,6 +373,62 @@ class PersonalPrepApiTests(unittest.TestCase):
                 self.assert_private(headers)
                 self.assertEqual(self.request("GET", token=token)[1], saved)
 
+    def test_reasoning_trainers_round_trip_inside_existing_version_one_fields(self):
+        token, owner = self.new_user()
+        def trial(trainer, identity, feedback=False):
+            settings = {"trainer": trainer, "durationSeconds": 30, "difficulty": "medium"}
+            if trainer == "sequence":
+                settings["sequenceType"] = "numbers"
+            question = {
+                "id": "q1", "index": 1, "kind": trainer, "family": "arithmetic" if trainer == "sequence" else "count",
+                "difficulty": "medium", "answer": "12" if trainer == "sequence" else "B",
+                "explanation": "有效的离线规则说明", "explanationEn": "A stored offline explanation.",
+                "startedAt": "2026-09-10T12:00:05.000Z", "completedAt": None,
+                "elapsedMs": None, "outcome": None, "submittedAnswer": None, "mistakes": [],
+            }
+            if trainer == "sequence":
+                question["tokens"] = ["2", "4", "6", "8", "10"]
+            else:
+                cells = [{"shape": shape, "fill": fill, "rotation": 0, "positions": [4]}
+                         for shape in ("circle", "square") for fill in ("outline", "solid", "striped")]
+                question["grid"] = [copy.deepcopy(cells[index % 6]) for index in range(8)] + [None]
+                question["options"] = [{"id": chr(65 + index), "cell": cell} for index, cell in enumerate(cells)]
+            result = {
+                "id": identity, "status": "active", "settings": settings, "dailySessionId": None,
+                "startedAt": "2026-09-10T12:00:05.000Z", "deadlineAt": "2026-09-10T12:00:35.000Z",
+                "completedAt": None, "correct": 0, "questions": [], "currentQuestion": question,
+                "currentAnswer": "", "feedbackQuestionId": None,
+            }
+            if feedback:
+                question.update({"completedAt": "2026-09-10T12:00:06.000Z", "elapsedMs": 1000,
+                                 "outcome": "wrong", "submittedAnswer": "13" if trainer == "sequence" else "A"})
+                result.update({"questions": [question], "currentQuestion": None, "feedbackQuestionId": "q1"})
+            return result
+
+        data = empty_state()
+        data["trials"] = []
+        for trainer in ("sequence", "pattern"):
+            finished = trial(trainer, f"finished-{trainer}", feedback=True)
+            finished.update({"status": "completed", "completedAt": finished["deadlineAt"], "feedbackQuestionId": None})
+            data["trials"].append(finished)
+            data["activities"].append({"id": f"{trainer}:{finished['id']}", "kind": trainer, "count": 0,
+                                       "trialId": finished["id"], "completedAt": finished["completedAt"]})
+        revision = 0
+        for trainer, feedback in (("sequence", False), ("pattern", False), ("sequence", True), ("pattern", True)):
+            with self.subTest(trainer=trainer, feedback=feedback):
+                data["activeTrial"] = trial(trainer, f"active-{trainer}", feedback=feedback)
+                status, saved, _ = self.put(token, data, revision)
+                self.assertEqual(status, 200, saved)
+                self.assertEqual(saved["data"], data)
+                self.assertEqual(self.request("GET", token=token)[1], saved)
+                revision = saved["revision"]
+        self.stop_server()
+        self.start_server()
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+        with self.connect_database() as conn:
+            stored = conn.execute(self.sql("SELECT data_json FROM user_personal_prep WHERE user_id = ?"), (owner,)).fetchone()[0]
+        self.assertEqual(json.loads(stored) if isinstance(stored, str) else stored, data)
+
     def test_concurrent_first_writes_and_updates_have_exactly_one_winner(self):
         token, _ = self.new_user()
         for revision in (0, 1):

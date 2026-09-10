@@ -52,8 +52,15 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
       const local = store.getSnapshot().data;
       const remoteData = remote.data || createPersonalState();
       const [localHash, remoteHash] = await Promise.all([personalFingerprint(local), personalFingerprint(remoteData)]);
+      const hasReasoningActive = [local.activeTrial, remoteData.activeTrial]
+        .some(trial => ['sequence', 'pattern'].includes(trial?.settings?.trainer));
       let next;
       if (localHash === remoteHash) next = local;
+      // New modules share one active slot. Reconcile divergent trials rather than
+      // replacing one through the metadata fast path. A known unchanged side
+      // still acknowledges the other side's explicit preparation cancellation.
+      else if (hasReasoningActive && meta?.fingerprint !== remoteHash
+        && !(meta?.fingerprint === localHash && remoteData.activeTrial == null)) next = mergePersonalData(local, remoteData);
       else if (meta?.fingerprint === localHash) next = remoteData;
       else if (remote.data === null || meta?.fingerprint === remoteHash) next = local;
       else next = mergePersonalData(local, remoteData);

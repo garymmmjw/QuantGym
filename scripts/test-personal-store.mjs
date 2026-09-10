@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createPersonalState, createPersonalStore, mergePersonalData, personalStorageKey, validatePersonalData } from "../src/features/personal/personalStore.js";
 import { createTrial, persistTrialTransition, transitionTrial } from "../src/features/personal/mental/mentalEngine.js";
 import { createDailySession, updateDailyAnswer, completeDailyQuestion, getDailyProgress } from "../src/features/personal/daily/dailyEngine.js";
+import { createReasoningTrial, transitionReasoningTrial, persistReasoningTransition, cancelTrialPreparation } from "../src/features/personal/mental/reasoningEngine.js";
 
 function memoryStorage() {
   const values = new Map();
@@ -307,4 +308,229 @@ test("same-id active trial merges retain the most progressed complete snapshot i
   }
   const skipped = transitionTrial(original, { type: "skip" }, now + 1000, () => 0);
   assert.deepEqual(mergePersonalData(stale, { ...newer, activeTrial: skipped }).activeTrial, skipped);
+});
+
+const reasoningStart = Date.parse("2026-09-10T12:00:00Z");
+function reasoningFixture(trainer = "sequence", trialId = `saved-${trainer}`, preparationSeconds = 0) {
+  return createReasoningTrial({ trainer, durationSeconds: 30, difficulty: "medium", ...(trainer === "sequence" ? { sequenceType: "mixed" } : {}) },
+    { id: trialId, now: reasoningStart, rng: () => 0.2, preparationSeconds });
+}
+const reasoningState = (trial) => persistReasoningTransition(createPersonalState(), trial);
+const feedbackFor = (trial, value = trial.currentQuestion.answer) => transitionReasoningTrial(trial, { type: "submit", value }, reasoningStart + 1000);
+
+test("old math backups and explicit math trainer settings remain valid", () => {
+  const old = createTrial({}, { now: reasoningStart, id: "old-math" });
+  const explicit = { ...old, settings: { ...old.settings, trainer: "math" } };
+  for (const activeTrial of [old, explicit]) {
+    assert.equal(validatePersonalData({ ...createPersonalState(), activeTrial }).activeTrial, activeTrial);
+  }
+  assert.throws(() => validatePersonalData({ ...createPersonalState(), mentalSettings: reasoningFixture().settings }), /mental settings/);
+});
+
+test("sequence and pattern preparation, drafts, and feedback survive durable reload and private backup restore", () => {
+  for (const trainer of ["sequence", "pattern"]) {
+    const storage = memoryStorage();
+    const store = createPersonalStore({ ownerId: "reasoning-owner", storage });
+    const preparing = reasoningFixture(trainer, `preparing-${trainer}`, 5);
+    assert.equal(store.update(() => reasoningState(preparing)).ok, true);
+    assert.deepEqual(createPersonalStore({ ownerId: "reasoning-owner", storage }).getSnapshot().data.activeTrial, preparing);
+    assert.equal(store.update((state) => cancelTrialPreparation(state, preparing.id, reasoningStart + 2000)).ok, true);
+    assert.equal(store.getSnapshot().data.activeTrial, null);
+    assert.equal(store.getSnapshot().data.trials.length, 0);
+    assert.equal(store.getSnapshot().data.activities.length, 0);
+
+    const running = reasoningFixture(trainer);
+    const drafted = transitionReasoningTrial(running, { type: "input", value: trainer === "pattern" ? "A" : "-17" }, reasoningStart + 500);
+    assert.equal(store.update(() => reasoningState(drafted)).ok, true);
+    assert.deepEqual(createPersonalStore({ ownerId: "reasoning-owner", storage }).getSnapshot().data.activeTrial, drafted);
+    const feedback = feedbackFor(drafted);
+    assert.equal(store.update(() => reasoningState(feedback)).ok, true);
+    const backup = store.exportBackup();
+    const restored = createPersonalStore({ ownerId: "reasoning-owner", storage: memoryStorage() });
+    assert.equal(restored.restoreBackup(backup).ok, true);
+    assert.deepEqual(restored.getSnapshot().data.activeTrial, feedback);
+    assert.equal(restored.getSnapshot().data.activeTrial.currentQuestion, null);
+    assert.equal(restored.getSnapshot().data.activeTrial.feedbackQuestionId, feedback.questions[0].id);
+    assert.throws(() => createPersonalStore({ ownerId: "different-owner", storage: memoryStorage() }).restoreBackup(backup), /different account/);
+  }
+});
+
+test("malformed reasoning settings, references and nested puzzle content cannot overwrite valid records", () => {
+  const store = createPersonalStore({ ownerId: "reasoning-owner", storage: memoryStorage() });
+  store.update(() => reasoningState(reasoningFixture()));
+  const before = store.exportBackup();
+  const invalid = [];
+  const bad = (trainer, mutate) => {
+    const trial = structuredClone(reasoningFixture(trainer));
+    mutate(trial);
+    invalid.push(trial);
+  };
+  bad("sequence", (trial) => { trial.settings.durationSeconds = 9; });
+  bad("sequence", (trial) => { trial.settings.difficulty = "expert"; });
+  bad("sequence", (trial) => { trial.settings.sequenceType = "symbols"; });
+  bad("sequence", (trial) => { trial.currentQuestion.tokens[0] = { unsafe: true }; });
+  bad("sequence", (trial) => { trial.currentQuestion.answer = 12; });
+  bad("sequence", (trial) => { trial.currentQuestion.explanation = {}; });
+  bad("sequence", (trial) => { trial.currentQuestion.kind = "pattern"; });
+  bad("sequence", (trial) => { trial.currentQuestion = null; });
+  bad("sequence", (trial) => { trial.feedbackQuestionId = "nonexistent"; });
+  bad("sequence", (trial) => { trial.dailySessionId = "unrelated-daily"; });
+  bad("pattern", (trial) => { trial.currentQuestion.grid[0] = null; });
+  bad("pattern", (trial) => { trial.currentQuestion.grid[8] = trial.currentQuestion.grid[0]; });
+  bad("pattern", (trial) => { trial.currentQuestion.options.pop(); });
+  bad("pattern", (trial) => { trial.currentQuestion.options[1].id = "A"; });
+  bad("pattern", (trial) => { trial.currentQuestion.options[1].cell = trial.currentQuestion.options[0].cell; });
+  bad("pattern", (trial) => { trial.currentQuestion.options[0].cell.positions = [0, 0]; });
+  bad("pattern", (trial) => { trial.currentQuestion.answer = "Z"; });
+  const badFeedback = feedbackFor(reasoningFixture());
+  invalid.push({ ...badFeedback, feedbackQuestionId: "not-the-last-question" });
+  invalid.push({ ...badFeedback, questions: [{ ...badFeedback.questions[0], outcome: "unexpected" }] });
+  for (const trial of invalid) {
+    assert.throws(() => store.restoreBackup(backupWith(store, reasoningState(trial))), /Invalid/);
+    assert.deepEqual(JSON.parse(store.exportBackup()).data, JSON.parse(before).data);
+  }
+});
+
+test("failed writes preserve a new-module feedback answer in memory and keep its previous durable draft", () => {
+  const storage = memoryStorage();
+  const store = createPersonalStore({ ownerId: "reasoning-owner", storage });
+  const running = reasoningFixture("pattern");
+  store.update(() => reasoningState(running));
+  const durable = storage.getItem(personalStorageKey("reasoning-owner"));
+  const write = storage.setItem;
+  storage.setItem = () => { throw new Error("QuotaExceededError"); };
+  const feedback = feedbackFor(running);
+  assert.equal(store.update(() => reasoningState(feedback)).ok, false);
+  assert.deepEqual(store.getSnapshot().data.activeTrial, feedback);
+  assert.equal(storage.getItem(personalStorageKey("reasoning-owner")), durable);
+  assert.deepEqual(JSON.parse(store.exportBackup()).data.activeTrial, feedback);
+  storage.setItem = write;
+  assert.equal(store.retry().ok, true);
+  assert.deepEqual(createPersonalStore({ ownerId: "reasoning-owner", storage }).getSnapshot().data.activeTrial, feedback);
+});
+
+test("wrong answers and next-question advancement cannot regress to an older reasoning snapshot", () => {
+  for (const trainer of ["sequence", "pattern"]) {
+    const running = reasoningFixture(trainer);
+    const wrongValue = trainer === "pattern" ? running.currentQuestion.options.find((option) => option.id !== running.currentQuestion.answer).id : "999999";
+    const feedback = feedbackFor(running, wrongValue);
+    assert.equal(feedback.questions[0].outcome, "wrong");
+    const next = transitionReasoningTrial(feedback, { type: "next" }, reasoningStart + 2000, () => 0.4);
+    for (const [older, newer] of [[running, feedback], [feedback, next]]) {
+      for (const merged of [mergePersonalData(reasoningState(older), reasoningState(newer)), mergePersonalData(reasoningState(newer), reasoningState(older))]) {
+        assert.deepEqual(merged.activeTrial, newer);
+        assert.equal(merged.activities.length, 0);
+      }
+    }
+  }
+});
+
+test("new-module terminal trials never revive from an old active copy and rebuild the correct activity kind", () => {
+  for (const trainer of ["sequence", "pattern"]) {
+    const running = reasoningFixture(trainer);
+    const feedback = feedbackFor(running);
+    const finished = transitionReasoningTrial(feedback, { type: "tick" }, reasoningStart + 30000);
+    const completed = { ...reasoningState(finished), activities: [] };
+    for (const merged of [mergePersonalData(reasoningState(running), completed), mergePersonalData(completed, reasoningState(feedback))]) {
+      assert.equal(merged.activeTrial, null);
+      assert.deepEqual(merged.trials, [finished]);
+      assert.equal(merged.activities.length, 1);
+      assert.equal(merged.activities[0].id, `${trainer}:${finished.id}`);
+      assert.equal(merged.activities[0].kind, trainer);
+      assert.equal(merged.activities[0].count, 1);
+      assert.equal(mergePersonalData(merged, completed).activities.length, 1);
+    }
+  }
+});
+
+test("completed math, sequence and pattern histories merge without crossing activity modules", () => {
+  const math = createTrial({ durationSeconds: 10 }, { id: "math-history", now: reasoningStart });
+  let merged = persistTrialTransition(createPersonalState(), transitionTrial(math, { type: "tick" }, reasoningStart + 10000));
+  for (const trainer of ["sequence", "pattern"]) {
+    const done = transitionReasoningTrial(feedbackFor(reasoningFixture(trainer)), { type: "tick" }, reasoningStart + 30000);
+    merged = mergePersonalData(merged, reasoningState(done));
+  }
+  assert.equal(merged.trials.length, 3);
+  assert.deepEqual(merged.activities.map((entry) => entry.kind).sort(), ["mental", "pattern", "sequence"]);
+  assert.deepEqual(merged.activities.map((entry) => entry.id).sort(), ["mental:math-history", "pattern:saved-pattern", "sequence:saved-sequence"]);
+});
+
+test("same-id trial modules cannot be confused in active or completed backup merges", () => {
+  const sequence = reasoningFixture("sequence", "collision");
+  const pattern = reasoningFixture("pattern", "collision");
+  const sequenceDone = transitionReasoningTrial(sequence, { type: "tick" }, reasoningStart + 30000);
+  const patternDone = transitionReasoningTrial(pattern, { type: "tick" }, reasoningStart + 30000);
+  for (const [left, right] of [[sequence, pattern], [sequenceDone, patternDone], [sequence, patternDone], [sequenceDone, pattern]]) {
+    assert.throws(() => mergePersonalData(reasoningState(left), reasoningState(right)), /conflicting trial modules/);
+    assert.throws(() => mergePersonalData(reasoningState(right), reasoningState(left)), /conflicting trial modules/);
+  }
+});
+
+test("different active trial IDs involving a new module reject merging without discarding either saved copy", () => {
+  const storage = memoryStorage();
+  const store = createPersonalStore({ ownerId: "reasoning-owner", storage });
+  const first = reasoningFixture("sequence", "active-sequence");
+  const second = reasoningFixture("pattern", "active-pattern");
+  store.update(() => reasoningState(first));
+  const before = storage.getItem(personalStorageKey("reasoning-owner"));
+  assert.throws(() => store.mergeFromCloud(reasoningState(second)), /Finish the current trial/);
+  assert.deepEqual(store.getSnapshot().data.activeTrial, first);
+  assert.equal(storage.getItem(personalStorageKey("reasoning-owner")), before);
+  assert.deepEqual(second.currentQuestion, reasoningFixture("pattern", "active-pattern").currentQuestion);
+  const math = createTrial({}, { now: reasoningStart, id: "active-math" });
+  for (const [left, right] of [[first, math], [math, first]]) {
+    assert.throws(() => mergePersonalData({ ...createPersonalState(), activeTrial: left }, { ...createPersonalState(), activeTrial: right }), /Finish the current trial/);
+  }
+});
+
+test("preparation cancellation markers suppress untouched snapshots in either merge direction without creating history", () => {
+  for (const trainer of ["math", "sequence", "pattern"]) {
+    const preparing = trainer === "math"
+      ? createTrial({}, { id: "cancel-math", now: reasoningStart, preparationSeconds: 5 })
+      : reasoningFixture(trainer, `cancel-${trainer}`, 5);
+    const older = { ...createPersonalState(), activeTrial: preparing };
+    const cancelled = { ...createPersonalState(), removedActivityIds: [`cancel-preparation:${preparing.id}`] };
+    for (const merged of [mergePersonalData(older, cancelled), mergePersonalData(cancelled, older)]) {
+      assert.equal(merged.activeTrial, null);
+      assert.equal(merged.trials.length, 0);
+      assert.equal(merged.activities.length, 0);
+      assert.deepEqual(merged.removedActivityIds, cancelled.removedActivityIds);
+      assert.equal(mergePersonalData(merged, older).activeTrial, null);
+    }
+  }
+});
+
+test("preparation cancellation never deletes drafts, mistakes, resolved questions or completed records", () => {
+  const original = reasoningFixture();
+  const marker = { ...createPersonalState(), removedActivityIds: [`cancel-preparation:${original.id}`] };
+  const drafted = transitionReasoningTrial(original, { type: "input", value: "123" }, reasoningStart + 500);
+  const wrong = feedbackFor(original, "999999");
+  const skipped = transitionReasoningTrial(original, { type: "skip" }, reasoningStart + 1000);
+  const correct = feedbackFor(original);
+  const finished = transitionReasoningTrial(correct, { type: "tick" }, reasoningStart + 30000);
+  for (const trial of [drafted, wrong, skipped, correct, finished]) {
+    for (const merged of [mergePersonalData(marker, reasoningState(trial)), mergePersonalData(reasoningState(trial), marker)]) {
+      if (trial.status === "active") assert.deepEqual(merged.activeTrial, trial);
+      else {
+        assert.deepEqual(merged.trials, [trial]);
+        assert.equal(merged.activities[0].count, 1);
+      }
+    }
+  }
+  const math = createTrial({}, { id: "math-mistake", now: reasoningStart });
+  const withMistake = transitionTrial(math, { type: "submit", value: String(math.currentQuestion.answer + 1) }, reasoningStart + 500);
+  const clearedDraft = transitionTrial(withMistake, { type: "input", value: "" }, reasoningStart + 1000);
+  const mathMarker = { ...createPersonalState(), removedActivityIds: ["cancel-preparation:math-mistake"] };
+  assert.deepEqual(mergePersonalData(mathMarker, { ...createPersonalState(), activeTrial: clearedDraft }).activeTrial, clearedDraft);
+});
+
+test("a cancellation marker can discard an old preparation while retaining a different active trial", () => {
+  const cancelled = reasoningFixture("sequence", "cancelled-pending", 5);
+  const retained = reasoningFixture("pattern", "new-pattern", 5);
+  const current = { ...reasoningState(retained), removedActivityIds: ["cancel-preparation:cancelled-pending"] };
+  for (const merged of [mergePersonalData(current, reasoningState(cancelled)), mergePersonalData(reasoningState(cancelled), current)]) {
+    assert.deepEqual(merged.activeTrial, retained);
+    assert.equal(merged.trials.length, 0);
+    assert.equal(merged.activities.length, 0);
+  }
 });

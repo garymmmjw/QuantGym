@@ -5,6 +5,9 @@ import {
 } from './mentalEngine.js';
 import { AttemptTrend, TrialHistory } from './AttemptTrend.jsx';
 import { formatAttemptSettings } from './attemptHistory.js';
+import { PreparationCountdown } from './PreparationCountdown.jsx';
+import { trainerKind, TRAINER_LABELS } from './trainingSettings.js';
+import { cancelTrialPreparation } from './reasoningEngine.js';
 import './mental.css';
 
 const SYMBOLS = { add: '+', subtract: '−', multiply: '×', divide: '÷' };
@@ -23,7 +26,7 @@ function outcomeLabel(outcome, en) {
     timeout: en ? 'Timed out' : '到期未完成', aborted: en ? 'Stopped' : '中止未完成' })[outcome] || '—';
 }
 
-export function MentalMathTrainer({ state, update, language = 'zh', dailySessionId = null, onComplete, durationSeconds }) {
+export function MentalMathTrainer({ state, update, language = 'zh', dailySessionId = null, onComplete, durationSeconds, embedded = false }) {
   const en = language === 'en';
   const configId = useId();
   const settingsSignature = mentalSettingsKey(state.mentalSettings);
@@ -37,8 +40,10 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
   const callbacks = useRef({ update, onComplete, dailySessionId });
   callbacks.current = { update, onComplete, dailySessionId };
   const reported = useRef(new Set());
-  const active = state.activeTrial?.status === 'active' ? state.activeTrial : null;
-  const trials = useMemo(() => Array.isArray(state.trials) ? [...state.trials].sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt)) : [], [state.trials]);
+  const active = state.activeTrial?.status === 'active' && trainerKind(state.activeTrial) === 'math' ? state.activeTrial : null;
+  const foreignActive = state.activeTrial?.status === 'active' && !active ? state.activeTrial : null;
+  const preparing = Boolean(active && now < Date.parse(active.startedAt));
+  const trials = useMemo(() => Array.isArray(state.trials) ? state.trials.filter(trial => trainerKind(trial) === 'math').sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt)) : [], [state.trials]);
   const selected = active || trials.find((entry) => entry.id === selectedId) || trials[0] || null;
   const effectiveDraft = useMemo(() => normalizeMentalSettings({ ...draft, ...(durationSeconds != null ? { durationSeconds } : {}) }), [draft, durationSeconds]);
   const bestSettings = active?.settings || effectiveDraft;
@@ -68,6 +73,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
   function applyAction(action, at = Date.now()) {
     let finished = null;
     callbacks.current.update((latest) => {
+      if (latest.activeTrial?.id !== active?.id || trainerKind(latest.activeTrial) !== 'math') return latest;
       const next = transitionTrial(latest.activeTrial, action, at);
       if (!next || next === latest.activeTrial) return latest;
       if (next.status !== 'active') finished = next;
@@ -122,7 +128,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
     };
   }, [active?.id, active?.deadlineAt]);
 
-  useEffect(() => { if (active) inputRef.current?.focus(); }, [active?.id, active?.currentQuestion?.id]);
+  useEffect(() => { if (active && !preparing) inputRef.current?.focus(); }, [active?.id, active?.currentQuestion?.id, preparing]);
 
   function start(event) {
     event.preventDefault();
@@ -130,7 +136,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
     callbacks.current.update((latest) => {
       if (latest.activeTrial?.status === 'active') return latest;
       const settings = normalizeMentalSettings({ ...draft, ...(durationSeconds != null ? { durationSeconds } : {}) });
-      return { ...latest, mentalSettings: settings, activeTrial: createTrial(settings, { now: at, dailySessionId }) };
+      return { ...latest, mentalSettings: settings, activeTrial: createTrial(settings, { now: at, dailySessionId, preparationSeconds: 5 }) };
     });
     setSelectedId(null);
     setNow(at);
@@ -142,12 +148,13 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
     } }));
   }
 
-  return <section className="personal-mental" aria-label="Mental Math">
-    <header className="pm-heading">
-      <div><p className="pm-eyebrow">{en ? 'FOCUS / SPEED / PRECISION' : '专注 · 速度 · 准确'}</p><h2>Mental Math</h2></div>
+  return <section className="personal-mental" aria-label="Math Trainer">
+    {!embedded && <header className="pm-heading">
+      <div><p className="pm-eyebrow">{en ? 'FOCUS / SPEED / PRECISION' : '专注 · 速度 · 准确'}</p><h2>Math Trainer</h2></div>
       <span className="pm-mode-label">{dailySessionId ? 'Daily Mock' : en ? 'Personal practice' : '个人练习'}</span>
-    </header>
+    </header>}
 
+    {foreignActive && <p className="pm-context-note">{en ? `A ${TRAINER_LABELS[trainerKind(foreignActive)]} trial is still running.` : `${TRAINER_LABELS[trainerKind(foreignActive)]} 仍在计时，请先完成当前试次。`} <a href="/tools">{en ? 'Continue trial' : '继续当前训练'}</a></p>}
     {!active && <form ref={setupRef} className="pm-setup" onSubmit={start}>
       <div className="pm-setup-toolbar">
         <label className="pm-duration" htmlFor={`${configId}-duration`}>{en ? 'Duration' : '时长'}
@@ -180,12 +187,13 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
       <div className="pm-ready">
         <p className="pm-ready-clock">{clockLabel(effectiveDraft.durationSeconds * 1000)}</p>
         <p>{en ? 'A clear mind. One answer at a time.' : '只看眼前这一题。'}</p>
-        <button type="submit" className="pm-primary">{en ? 'Start trial' : '开始试次'} <span aria-hidden="true">↗</span></button>
-        <p className="pm-note">{en ? 'Correct answers advance automatically. The clock keeps running if you leave or refresh.' : '答对自动进入下一题。切换页面或刷新后继续计时。'}</p>
+        <button type="submit" className="pm-primary" disabled={Boolean(foreignActive)}>{en ? 'Start trial' : '开始试次'} <span aria-hidden="true">↗</span></button>
+        <p className="pm-note">{en ? 'Starts after a 5-second countdown. Correct answers advance automatically. The clock keeps running if you leave or refresh.' : '开始前准备 5 秒，答对自动进入下一题。切换页面或刷新后继续计时。'}</p>
       </div>
     </form>}
 
-    {active && <div className="pm-arena">
+    {preparing && <PreparationCountdown trial={active} now={now} language={language} onCancel={() => update(latest => cancelTrialPreparation(latest, active.id))} />}
+    {active && !preparing && <div className="pm-arena">
       {(active.dailySessionId || null) !== (dailySessionId || null) && <p className="pm-context-note">{en ? 'An earlier trial is still running. Finish it before starting this session.' : '另一个试次仍在计时，请先继续完成或提前结束，再开始本次训练。'}</p>}
       <div className="pm-arena-stats"><div><span>{en ? 'Remaining' : '剩余时间'}</span><strong className={remaining <= 10000 ? 'pm-time-low' : ''}>{clockLabel(remaining)}</strong></div><div><span>{en ? 'Correct' : '已答对'}</span><strong>{active.correct}</strong></div></div>
       <form className="pm-question-form" onSubmit={(event) => { event.preventDefault(); applyAction({ type: 'submit' }); inputRef.current?.select(); }}>
@@ -210,7 +218,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
     <AttemptTrend trials={trials} currentSettings={bestSettings} language={language} selectedId={selected?.id} disabled={Boolean(active)} onSelect={selectTrial} dayKey={new Date(now).toDateString()} />
 
     <section className="pm-analysis pm-trial-details" ref={detailsRef} tabIndex={-1} aria-label={en ? 'Selected trial details' : '所选试次详情'}>
-      <div className="pm-section-heading"><div><h3>{en ? 'Trial details' : '试次详情'}</h3><p>{selected ? `${dateLabel(selected.startedAt, language)} · ${selected.status === 'active' ? en ? 'In progress' : '进行中' : selected.status === 'completed' ? en ? 'Completed' : '已完成' : en ? 'Ended early' : '已提前结束'}` : en ? 'Your question timings will appear after a trial.' : '完成试次后，可在这里查看每一道题的用时。'}</p></div>
+      <div className="pm-section-heading"><div><h3>{en ? 'Trial details' : '试次详情'}</h3><p>{selected ? `${dateLabel(selected.startedAt, language)} · ${selected.status === 'active' ? preparing ? en ? 'Preparing' : '准备中' : en ? 'In progress' : '进行中' : selected.status === 'completed' ? en ? 'Completed' : '已完成' : en ? 'Ended early' : '已提前结束'}` : en ? 'Your question timings will appear after a trial.' : '完成试次后，可在这里查看每一道题的用时。'}</p></div>
         {selected && !active && <button type="button" className="pm-text-button" onClick={reuseSettings}>{en ? 'Use these settings' : '使用该次设置'} ↗</button>}
       </div>
       {selected && <p className="pm-note pm-filter-description">{formatAttemptSettings(selected.settings, language)}{durationSeconds != null && !active && (en ? ` · Daily Mock duration stays at ${durationSeconds}s when reusing settings.` : ` · 使用该次设置时，Daily Mock 时长保持 ${durationSeconds} 秒。`)}</p>}

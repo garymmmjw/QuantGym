@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createPersonalCloudSync, personalFingerprint } from '../src/features/personal/personalCloud.js';
 import { createPersonalStore, createPersonalState } from '../src/features/personal/personalStore.js';
 import { createTrial } from '../src/features/personal/mental/mentalEngine.js';
+import { createReasoningTrial, transitionReasoningTrial, persistReasoningTransition, cancelTrialPreparation } from '../src/features/personal/mental/reasoningEngine.js';
 import { createDailySession, updateDailyAnswer } from '../src/features/personal/daily/dailyEngine.js';
 
 const iso = '2026-09-09T12:00:00.000Z';
@@ -352,4 +353,123 @@ test('stopping an idle controller does not trigger a redundant request', async (
   await first.cloud.stop();
   await first.cloud.sync();
   assert.equal(server.calls.length, calls);
+});
+
+const reasoningAt = Date.parse(iso);
+function cloudReasoning(trainer, id) {
+  return createReasoningTrial({ trainer, durationSeconds: 30, difficulty: 'medium', ...(trainer === 'sequence' ? { sequenceType: 'mixed' } : {}) },
+    { now: reasoningAt, id, rng: () => 0.3, preparationSeconds: 0 });
+}
+function completedReasoning(trainer, id) {
+  let trial = cloudReasoning(trainer, id);
+  trial = transitionReasoningTrial(trial, { type: 'submit', value: trial.currentQuestion.answer }, reasoningAt + 1000);
+  return transitionReasoningTrial(trial, { type: 'tick' }, reasoningAt + 30000);
+}
+
+test('new modules use the existing private cloud envelope and retain feedback when a second device reconnects', async () => {
+  const server = memoryServer();
+  const first = device(server);
+  const pattern = cloudReasoning('pattern', 'private-pattern-feedback');
+  const feedback = transitionReasoningTrial(pattern, { type: 'submit', value: pattern.currentQuestion.answer }, reasoningAt + 1000);
+  first.store.update(state => ({ ...persistReasoningTransition(state, completedReasoning('sequence', 'private-sequence-history')), activeTrial: feedback }));
+  await first.cloud.sync();
+  assert.equal(server.data.activeTrial.currentQuestion, null);
+  assert.equal(server.data.activeTrial.feedbackQuestionId, feedback.questions[0].id);
+  assert.equal(server.data.trials[0].settings.trainer, 'sequence');
+  assert.equal(server.data.activities[0].kind, 'sequence');
+  const second = device(server);
+  await second.cloud.sync();
+  assert.deepEqual(second.store.getSnapshot().data.activeTrial, feedback);
+  assert.equal(second.statuses.at(-1).phase, 'synced');
+  assert.equal(server.revision, 1);
+  assert.deepEqual(Object.keys(server.calls.find(call => call.method === 'PUT').body).sort(), ['baseRevision', 'data', 'version']);
+});
+
+test('offline sequence and pattern completions merge through cloud with distinct calendar events', async () => {
+  const server = memoryServer();
+  const first = device(server), second = device(server);
+  first.store.update(state => persistReasoningTransition(state, completedReasoning('sequence', 'sequence-device-one')));
+  second.store.update(state => persistReasoningTransition(state, completedReasoning('pattern', 'pattern-device-two')));
+  await first.cloud.sync();
+  await second.cloud.sync();
+  await first.cloud.sync();
+  assert.deepEqual(server.data.trials.map(trial => trial.settings.trainer).sort(), ['pattern', 'sequence']);
+  assert.deepEqual(ids(server.data), ['pattern:pattern-device-two', 'sequence:sequence-device-one']);
+  assert.deepEqual(second.store.getSnapshot().data.trials, first.store.getSnapshot().data.trials);
+  assert.ok(server.data.activities.every(entry => entry.kind !== 'mental'));
+});
+
+test('new-module active conflicts do not replace either device or cloud record', async () => {
+  const remote = cloudReasoning('pattern', 'cloud-active-pattern');
+  const server = memoryServer({ ...createPersonalState(), activeTrial: remote }, 1);
+  const first = device(server);
+  const local = cloudReasoning('sequence', 'local-active-sequence');
+  first.store.update(state => ({ ...state, activeTrial: local }));
+  await first.cloud.sync();
+  assert.equal(first.statuses.at(-1).phase, 'error');
+  assert.deepEqual(first.store.getSnapshot().data.activeTrial, local);
+  assert.deepEqual(server.data.activeTrial, remote);
+  assert.equal(server.calls.filter(call => call.method === 'PUT').length, 0);
+});
+
+test('sync metadata cannot bypass a new-module active conflict when local data has not changed', async () => {
+  const server = memoryServer();
+  const first = device(server);
+  const local = cloudReasoning('sequence', 'previously-synced-active');
+  first.store.update(state => ({ ...state, activeTrial: local }));
+  await first.cloud.sync();
+  const remote = cloudReasoning('pattern', 'another-device-active');
+  server.change({ ...server.data, activeTrial: remote });
+  const puts = server.calls.filter(call => call.method === 'PUT').length;
+  await first.cloud.sync();
+  assert.equal(first.statuses.at(-1).phase, 'error');
+  assert.deepEqual(first.store.getSnapshot().data.activeTrial, local);
+  assert.deepEqual(server.data.activeTrial, remote);
+  assert.equal(server.calls.filter(call => call.method === 'PUT').length, puts);
+});
+
+test('canceling preparation uploads the cleared slot and another synced device does not revive it', async () => {
+  for (const trainer of ['sequence', 'pattern']) {
+    const server = memoryServer();
+    const first = device(server), second = device(server);
+    const preparing = createReasoningTrial({ trainer, durationSeconds: 30, difficulty: 'easy', ...(trainer === 'sequence' ? { sequenceType: 'numbers' } : {}) },
+      { id: `cancel-${trainer}`, now: reasoningAt, preparationSeconds: 5, rng: () => 0.2 });
+    first.store.update(state => ({ ...state, activeTrial: preparing }));
+    await first.cloud.sync();
+    await second.cloud.sync();
+    first.store.update(state => cancelTrialPreparation(state, preparing.id, reasoningAt + 1000));
+    await first.cloud.sync();
+    assert.equal(server.data.activeTrial, null);
+    assert.equal(server.data.trials.length, 0);
+    assert.equal(server.data.activities.length, 0);
+    await second.cloud.sync();
+    assert.equal(second.store.getSnapshot().data.activeTrial, null);
+    assert.equal(second.statuses.at(-1).phase, 'synced');
+    assert.equal(server.data.activeTrial, null);
+    assert.equal(server.revision, 2);
+  }
+});
+
+test('offline preparation cancellation survives unrelated edits on both devices and later stale backups', async () => {
+  const server = memoryServer();
+  const first = device(server), second = device(server);
+  const preparing = createReasoningTrial({ trainer: 'sequence', durationSeconds: 30, difficulty: 'easy', sequenceType: 'numbers' },
+    { id: 'offline-preparation-cancel', now: reasoningAt, preparationSeconds: 5, rng: () => 0.2 });
+  first.store.update(state => ({ ...state, activeTrial: preparing }));
+  await first.cloud.sync();
+  await second.cloud.sync();
+  const staleBackup = second.store.exportBackup();
+  first.store.update(state => add('local-offline-work')(cancelTrialPreparation(state, preparing.id, reasoningAt + 1000)));
+  second.store.update(add('remote-offline-work'));
+  await second.cloud.sync();
+  await first.cloud.sync();
+  await second.cloud.sync();
+  assert.equal(server.data.activeTrial, null);
+  assert.equal(first.store.getSnapshot().data.activeTrial, null);
+  assert.equal(second.store.getSnapshot().data.activeTrial, null);
+  assert.deepEqual(ids(server.data), ['local-offline-work', 'remote-offline-work']);
+  assert.ok(server.data.removedActivityIds.includes('cancel-preparation:offline-preparation-cancel'));
+  second.store.restoreBackup(staleBackup);
+  assert.equal(second.store.getSnapshot().data.activeTrial, null);
+  assert.equal(second.store.getSnapshot().data.trials.length, 0);
 });

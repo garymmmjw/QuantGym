@@ -1,4 +1,5 @@
-export const ACTIVITY_KINDS = ["quant", "mental", "tech", "coding", "behavioral", "daily"];
+export const ACTIVITY_KINDS = ["quant", "mental", "sequence", "pattern", "tech", "coding", "behavioral", "daily"];
+export const TRIAL_KINDS = ["mental", "sequence", "pattern"];
 export const MANUAL_KINDS = ACTIVITY_KINDS.filter((kind) => kind !== "daily");
 
 const list = (value) => Array.isArray(value) ? value : [];
@@ -46,7 +47,7 @@ function normalizedActivity(raw, index) {
     count: countOf(raw.count),
     dayKey: localDayKey(raw.completedAt),
     source: raw.source || "automatic",
-    trialCount: raw.kind === "mental" ? (raw.source === "manual" ? 0 : countOf(raw.trialCount ?? 1)) : 0
+    trialCount: TRIAL_KINDS.includes(raw.kind) ? (raw.source === "manual" ? 0 : countOf(raw.trialCount ?? 1)) : 0
   };
 }
 
@@ -67,11 +68,14 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
   };
   list(state.activities).forEach(add);
   const explicit = [...byId.values()];
-  const linkedTrials = new Set(explicit.filter((item) => item.kind === "mental").flatMap((item) => [item.trialId, item.id.startsWith("mental:") ? item.id.slice(7) : ""]).filter(Boolean));
+  const linkedTrials = new Set(explicit.filter((item) => TRIAL_KINDS.includes(item.kind)).flatMap((item) =>
+    [item.trialId, item.id.startsWith(`${item.kind}:`) ? item.id.slice(item.kind.length + 1) : ""]
+      .filter(Boolean).map((trialId) => `${item.kind}:${trialId}`)));
   const linkedDaily = new Set(explicit.filter((item) => item.kind === "daily").flatMap((item) => [item.dailySessionId, item.sessionId, item.id.startsWith("daily:") ? item.id.slice(6) : ""]).filter(Boolean));
   list(state.trials).forEach((trial) => {
-    if (!trial?.id || !["completed", "aborted"].includes(trial.status) || linkedTrials.has(trial.id)) return;
-    add({ id: `mental:${trial.id}`, kind: "mental", count: trial.correct, trialId: trial.id, completedAt: trial.completedAt, status: trial.status });
+    const kind = trial?.settings?.trainer == null || trial.settings.trainer === "math" ? "mental" : trial.settings.trainer;
+    if (!trial?.id || !TRIAL_KINDS.includes(kind) || !["completed", "aborted"].includes(trial.status) || linkedTrials.has(`${kind}:${trial.id}`)) return;
+    add({ id: `${kind}:${trial.id}`, kind, count: trial.correct, trialId: trial.id, completedAt: trial.completedAt, status: trial.status });
   });
   list(state.dailySessions).forEach((session) => {
     if (!session?.id || session.status !== "completed" || linkedDaily.has(session.id)) return;
@@ -94,7 +98,7 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
   list(legacyState.mentalMathRecords).forEach((record, index) => {
     if (!record) return;
     if (!localDayKey(record.createdAt)) { undatedLegacyCount += 1; return; }
-    if (record.id && (linkedTrials.has(record.id) || legacyReferences.has(record.id))) return;
+    if (record.id && (linkedTrials.has(`mental:${record.id}`) || legacyReferences.has(record.id))) return;
     add({ id: `legacy:mental:${record.id || `${record.createdAt}:${index}`}`, kind: "mental", count: record.correct, completedAt: record.createdAt, title: record.label || "", source: "legacy" });
   });
   // Practice entries are account-scoped and timestamped per answered question. The old
@@ -114,14 +118,15 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
 }
 
 export function summarizeActivities(activities = []) {
-  const result = { quant: 0, mental: 0, mentalTrials: 0, tech: 0, coding: 0, behavioral: 0, daily: 0, totalQuestions: 0, activityCount: 0 };
+  const result = { quant: 0, mental: 0, mentalTrials: 0, sequence: 0, sequenceTrials: 0, pattern: 0, patternTrials: 0,
+    tech: 0, coding: 0, behavioral: 0, daily: 0, totalQuestions: 0, activityCount: 0 };
   list(activities).forEach((item) => {
     if (!ACTIVITY_KINDS.includes(item?.kind)) return;
     const count = countOf(item.count);
     result[item.kind] += count;
     result.activityCount += 1;
     if (item.kind !== "daily") result.totalQuestions += count;
-    if (item.kind === "mental") result.mentalTrials += countOf(item.trialCount ?? (item.source === "manual" ? 0 : 1));
+    if (TRIAL_KINDS.includes(item.kind)) result[`${item.kind}Trials`] += countOf(item.trialCount ?? (item.source === "manual" ? 0 : 1));
   });
   return result;
 }
