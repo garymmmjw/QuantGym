@@ -216,3 +216,55 @@ test("seven-day aggregation excludes out-of-range records without changing histo
   assert.equal(days.reduce((sum, day) => sum + day.totalQuestions, 0), 5);
   assert.equal(activities.length, 4);
 });
+
+test("sequence and pattern events and fallback histories have separate question and trial totals", () => {
+  const sequence = { id: "sequence:seq-one", kind: "sequence", trialId: "seq-one", count: 3, completedAt: at };
+  const pattern = { id: "pattern:pat-one", kind: "pattern", trialId: "pat-one", count: 2, completedAt: at };
+  const { activities } = collectCalendarActivities({
+    activities: [sequence, pattern],
+    trials: [
+      { id: "seq-one", settings: { trainer: "sequence" }, status: "completed", correct: 3, completedAt: at },
+      { id: "pat-one", settings: { trainer: "pattern" }, status: "completed", correct: 2, completedAt: at },
+      { id: "seq-aborted", settings: { trainer: "sequence" }, status: "aborted", correct: 1, completedAt: at },
+      { id: "pat-zero", settings: { trainer: "pattern" }, status: "completed", correct: 0, completedAt: at },
+      { id: "seq-running", settings: { trainer: "sequence" }, status: "active", correct: 99, completedAt: at },
+      { id: "math-old", status: "completed", correct: 8, completedAt: at },
+      { id: "math-explicit", settings: { trainer: "math" }, status: "completed", correct: 4, completedAt: at },
+    ],
+  });
+  assert.equal(activities.length, 6);
+  assert.deepEqual(activities.map((item) => item.id).sort(), ["mental:math-explicit", "mental:math-old", "pattern:pat-one", "pattern:pat-zero", "sequence:seq-aborted", "sequence:seq-one"]);
+  const summary = summarizeActivities(activities);
+  assert.equal(summary.mental, 12);
+  assert.equal(summary.mentalTrials, 2);
+  assert.equal(summary.sequence, 4);
+  assert.equal(summary.sequenceTrials, 2);
+  assert.equal(summary.pattern, 2);
+  assert.equal(summary.patternTrials, 2);
+  assert.equal(summary.totalQuestions, 18);
+  const day = buildDailySummaries(activities, localDayKey(at), 1)[0];
+  assert.equal(day.sequence, 4);
+  assert.equal(day.pattern, 2);
+});
+
+test("reasoning manual entries add correct answers without inventing timed trials", () => {
+  for (const kind of ["sequence", "pattern"]) {
+    const entry = createManualActivity({ kind, count: 4, dateKey: "2026-09-08" }, { id: kind, now: at });
+    const { activities } = collectCalendarActivities({ activities: [entry] });
+    const summary = summarizeActivities(activities);
+    assert.equal(summary[kind], 4);
+    assert.equal(summary[`${kind}Trials`], 0);
+    assert.equal(summary.mental, 0);
+    assert.equal(summary.mentalTrials, 0);
+  }
+});
+
+test("reasoning links cannot suppress dated legacy math records with the same external ID", () => {
+  const { activities } = collectCalendarActivities({ activities: [
+    { id: "sequence:shared", kind: "sequence", trialId: "shared", count: 2, completedAt: at },
+  ] }, { mentalMathRecords: [{ id: "shared", createdAt: at, correct: 7 }] });
+  const summary = summarizeActivities(activities);
+  assert.equal(summary.sequence, 2);
+  assert.equal(summary.mental, 7);
+  assert.equal(summary.activityCount, 2);
+});

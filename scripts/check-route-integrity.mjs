@@ -119,7 +119,7 @@ function checkPageWrappers() {
     expect(text.includes('import { useSyncModuleRoute } from "../hooks/useSyncModuleRoute.js";'), `${pageName}.jsx must import useSyncModuleRoute.`);
     expect(text.includes(`export function ${pageName}()`), `${pageName}.jsx must export function ${pageName}.`);
     expect(text.includes(`useSyncModuleRoute("${id}")`), `${pageName}.jsx must sync module route "${id}".`);
-    const personalPages = { calendar: "TrainingCalendar", "daily-mock": "DailyMockWorkspace", tools: "MentalMathTrainer" };
+    const personalPages = { calendar: "TrainingCalendar", "daily-mock": "DailyMockWorkspace", tools: "TrainingWorkspace" };
     if (personalPages[id]) {
       expect(text.includes("<PersonalWorkspace>"), `${pageName} must use account-scoped personal storage.`);
       expect(text.includes(`<${personalPages[id]} {...props} />`), `${pageName} must render its training component.`);

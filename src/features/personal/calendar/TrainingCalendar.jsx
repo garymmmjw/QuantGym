@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ACTIVITY_KINDS, MANUAL_KINDS, addLocalDays, buildDailySummaries, collectCalendarActivities, createManualActivity, localDayKey, parseLocalDay, recordManualActivity, summarizeActivities } from "./calendarModel.js";
+import { ACTIVITY_KINDS, MANUAL_KINDS, TRIAL_KINDS, addLocalDays, buildDailySummaries, collectCalendarActivities, createManualActivity, localDayKey, parseLocalDay, recordManualActivity, summarizeActivities } from "./calendarModel.js";
 import "./calendar.css";
 
 const KIND_LABELS = {
-  zh: { quant: "量化题目", mental: "Mental Math", tech: "Tech Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "Daily Mock" },
-  en: { quant: "Quant questions", mental: "Mental Math", tech: "Tech Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "Daily Mock" }
+  zh: { quant: "量化题目", mental: "Mental Math", sequence: "数列 / 字母推理", pattern: "图形推理", tech: "Tech Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "Daily Mock" },
+  en: { quant: "Quant questions", mental: "Mental Math", sequence: "Sequences", pattern: "Patterns", tech: "Tech Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "Daily Mock" }
 };
 
 export function TrainingCalendar({ state = {}, update, legacyState = {}, language = "zh" }) {
@@ -104,7 +104,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
 
   const activityAmount = (activity) => activity.kind === "daily"
     ? t(`${activity.count} 轮`, `${activity.count} ${activity.count === 1 ? "round" : "rounds"}`)
-    : activity.kind === "mental"
+    : TRIAL_KINDS.includes(activity.kind)
       ? t(`${activity.count} 题正确${activity.trialCount ? ` · ${activity.trialCount} trial` : ""}`, `${activity.count} correct${activity.trialCount ? ` · ${activity.trialCount} trial` : ""}`)
       : t(`${activity.count} 题`, `${activity.count} ${activity.count === 1 ? "question" : "questions"}`);
 
@@ -179,7 +179,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
           {ACTIVITY_KINDS.map((kind) => <div className={`pc-stat pc-kind-${kind}`} key={kind}>
             <dt>{labels[kind]}</dt>
             <dd><strong>{selectedSummary[kind].toLocaleString(locale)}</strong><span>{kind === "daily" ? t("轮", "rounds") : t("题", "questions")}</span></dd>
-            <p>{kind === "mental" ? t(`正确作答 · ${selectedSummary.mentalTrials} 次 trial`, `Correct · ${selectedSummary.mentalTrials} trials`) : kind === "daily" ? t("整套完成", "Full sets completed") : kind === "tech" ? t("面试练习", "Interview practice") : kind === "coding" ? t("编程训练", "Coding practice") : kind === "behavioral" ? t("表达练习", "Behavioral practice") : t("完成题目", "Problems completed")}</p>
+            <p>{TRIAL_KINDS.includes(kind) ? t(`正确作答 · ${selectedSummary[`${kind}Trials`]} 次 trial`, `Correct · ${selectedSummary[`${kind}Trials`]} trials`) : kind === "daily" ? t("整套完成", "Full sets completed") : kind === "tech" ? t("面试练习", "Interview practice") : kind === "coding" ? t("编程训练", "Coding practice") : kind === "behavioral" ? t("表达练习", "Behavioral practice") : t("完成题目", "Problems completed")}</p>
           </div>)}
         </dl>
 
@@ -192,18 +192,18 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
           <div className="pc-form-heading"><h3>{t("补记线下训练", "Record offline practice")}</h3><p>{t("在这里记录尚未计入的练习；应用内完成的训练会自动出现。", "Add practice that has not been recorded. In-app training appears automatically.")}</p></div>
           <div className="pc-form-fields">
             <label>{t("训练类型", "Activity")}<select value={manual.kind} onChange={(event) => setManual({ ...manual, kind: event.target.value })}>{MANUAL_KINDS.map((kind) => <option key={kind} value={kind}>{labels[kind]}</option>)}</select></label>
-            <label>{manual.kind === "mental" ? t("正确题数", "Correct answers") : t("完成题数", "Questions completed")}<input type="number" inputMode="numeric" min="1" max="10000" step="1" required value={manual.count} onChange={(event) => setManual({ ...manual, count: event.target.value })} /></label>
+            <label>{TRIAL_KINDS.includes(manual.kind) ? t("正确题数", "Correct answers") : t("完成题数", "Questions completed")}<input type="number" inputMode="numeric" min="1" max="10000" step="1" required value={manual.count} onChange={(event) => setManual({ ...manual, count: event.target.value })} /></label>
             <label>{t("完成日期", "Date completed")}<input type="date" required value={manual.dateKey} onChange={(event) => setManual({ ...manual, dateKey: event.target.value })} /></label>
             <label className="pc-note-field">{t("备注（可选）", "Note (optional)")}<input type="text" maxLength="500" value={manual.note} placeholder={t("例如：复盘条件概率、练习项目介绍", "e.g. Conditional probability review")} onChange={(event) => setManual({ ...manual, note: event.target.value })} /></label>
           </div>
-          {manual.kind === "mental" && <p className="pc-form-help">{t("手动补记只增加正确题数，不计入 trial 或速度纪录。", "Manual entries add correct answers; they do not add timed trials or speed records.")}</p>}
+          {TRIAL_KINDS.includes(manual.kind) && <p className="pc-form-help">{t("手动补记只增加正确题数，不计入 trial 或速度纪录。", "Manual entries add correct answers; they do not add timed trials or speed records.")}</p>}
           <div className="pc-form-actions"><button type="button" className="pc-text-button" onClick={() => setShowManual(false)}>{t("取消", "Cancel")}</button><button type="submit" className="pc-primary">{t("保存补记", "Save entry")}</button></div>
         </form>}
 
         <div className="pc-activity-heading"><h3>{t("完成记录", "Completed activity")}</h3><span>{t(`${selectedActivities.length} 条记录`, `${selectedActivities.length} records`)}</span></div>
         {selectedActivities.length ? <ol className="pc-activity-list">
           {selectedActivities.map((activity) => <li key={activity.id} className={`pc-activity pc-kind-${activity.kind}`}>
-            <span className="pc-activity-mark" aria-hidden="true">{activity.kind === "daily" ? "✓" : activity.kind === "mental" ? "±" : activity.kind === "coding" ? "⌘" : "·"}</span>
+            <span className="pc-activity-mark" aria-hidden="true">{activity.kind === "daily" ? "✓" : activity.kind === "mental" ? "±" : activity.kind === "sequence" ? "⋯" : activity.kind === "pattern" ? "◇" : activity.kind === "coding" ? "⌘" : "·"}</span>
             <div className="pc-activity-description"><strong>{labels[activity.kind]}</strong><p>{activity.note || (en ? activity.titleEn || activity.title : activity.title) || (activity.status === "aborted" ? t("提前结束的 trial", "Trial ended early") : activity.kind === "daily" ? t("所有训练板块已完成", "All training sections completed") : t("训练已记录", "Practice recorded"))}</p></div>
             <div className="pc-activity-meta"><strong>{activityAmount(activity)}</strong><span>{activity.source === "manual" ? t("手动补记", "Manual entry") : activity.source === "legacy" ? t("历史训练", "Previous training") : timeFormatter.format(new Date(activity.completedAt))}</span></div>
           </li>)}
@@ -224,7 +224,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
             <span>{weekdayFormatter.format(parseLocalDay(day.key))}</span><small>{shortDateFormatter.format(parseLocalDay(day.key))}</small>
           </button>)}
         </div>
-        <p className="pc-data-note">{t("柱状图按完成题数统计，Mental Math 只计正确作答；Daily Mock 轮数单独统计。", "Bars show completed questions, with correct answers only for Mental Math. Daily Mock rounds are counted separately.")}</p>
+        <p className="pc-data-note">{t("柱状图按完成题数统计；心算、数列与图形推理只计正确作答，Daily Mock 轮数单独统计。", "Bars show completed questions; math, sequences and patterns count correct answers only. Daily Mock rounds are counted separately.")}</p>
       </section>
 
       <footer className="pc-footer"><p>{t("记录按你设备的本地日期归档。已有明确完成时间的旧训练会自动汇入，未记录完成日期的历史进度可手动补记。", "Records follow your device’s local dates. Dated training history is included automatically; older progress without a completion date can be added manually.")}{undatedLegacyCount > 0 && <span> {t(`有 ${undatedLegacyCount} 条旧记录因缺少可靠日期未计入。`, `${undatedLegacyCount} older records have no reliable date and are not included.`)}</span>}</p></footer>
