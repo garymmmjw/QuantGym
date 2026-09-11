@@ -240,8 +240,8 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
       <p className="pm-record-note">{en ? `Current settings records · ${bests.trialCount} completed trials. Early endings excluded.` : `当前设置纪录 · ${bests.trialCount} 次完整试次，提前结束不计入。`}<br />{formatAttemptSettings(bestSettings, language)}</p>
     </div>
 
-    <TrialHistory trials={trials} selectedId={selected?.id} disabled={Boolean(active)} language={language} onSelect={selectTrial} />
     <AttemptTrend trials={trials} currentSettings={bestSettings} language={language} selectedId={selected?.id} disabled={Boolean(active)} onSelect={selectTrial} dayKey={new Date(now).toDateString()} />
+    <TrialHistory trials={trials} selectedId={selected?.id} disabled={Boolean(active)} language={language} onSelect={selectTrial} />
 
     <section className="pm-analysis pm-trial-details" ref={detailsRef} tabIndex={-1} aria-label={en ? 'Selected trial details' : '所选试次详情'}>
       <div className="pm-section-heading"><div><h3>{en ? 'Trial details' : '试次详情'}</h3><p>{selected ? `${dateLabel(selected.startedAt, language)} · ${selected.status === 'active' ? preparing ? en ? 'Preparing' : '准备中' : en ? 'In progress' : '进行中' : selected.status === 'completed' ? en ? 'Completed' : '已完成' : en ? 'Ended early' : '已提前结束'}` : en ? 'Your question timings will appear after a trial.' : '完成试次后，可在这里查看每一道题的用时。'}</p></div>
