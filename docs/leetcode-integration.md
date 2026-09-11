@@ -4,6 +4,21 @@ QuantGym supports LeetCode China (`leetcode.cn`) public-profile connections. In 
 
 The LeetCode module displays the public solved count, difficulty distribution, total submissions, and a review pool assembled from known accepted problems. Random review respects the current filters, avoids an immediate repeat when alternatives exist, and opens the original LeetCode problem in a new tab. Opening a problem does not mark it complete.
 
+## Per-problem spaced review
+
+The review workspace prioritizes due problems and shows a suggested next review date and local time for every dated problem. Difficulty, text search, and due/upcoming/first-review filters remain available, as does random practice. The schedule is a recommendation, not an exact prediction of when a person will forget a solution.
+
+Scheduling follows the [original SuperMemo SM-2 algorithm](https://super-memory.org/archive/english/ol/sm2.htm). The four recall ratings map to quality scores 1, 3, 4, and 5: **忘记了 / 费力想起 / 记得 / 很熟悉**. Successful reviews use intervals of 1 day, 6 days, then the previous interval multiplied by the previous ease factor and rounded up. Failure restarts the interval at one day; ease adapts to feedback with a floor of 1.3. Intervals are bounded at 36,500 days. Ratings describe recall, rather than the problem's Easy/Medium/Hard difficulty.
+
+- A known last accepted submission seeds one successful exposure and a first suggestion one day later. This is an initial assumption, not a fabricated historical self-assessment.
+- Imported problems without submission timestamps remain **待首次复习**. Their first explicit successful recall starts a one-day interval.
+- Once a user records feedback, that saved schedule survives refresh, subsequent AC submissions, and history imports. An AC result alone does not establish unaided recall and does not overwrite the user's feedback.
+- Only explicitly recording feedback changes a schedule. Opening a LeetCode tab, drawing a question, and filtering the list do not. Self-assessments never increase LeetCode solved counts, accepted submissions, or completed calendar activity.
+- The API timestamps reviews in UTC and computes the saved date. The UI displays local date/time and approximate interval previews. Intervals are elapsed 24-hour days, including across daylight-saving transitions.
+- A failed save keeps the old schedule and offers a retry of the same event. Conflicting changes from another session require a refresh rather than silently applying another review.
+
+Review state belongs to the current QuantGym account and linked LeetCode profile. Disconnecting or replacing that profile removes its review state together with the corresponding LeetCode snapshot; reconnecting the same active profile preserves it. Existing training records in other QuantGym modules are separate.
+
 ## Daily records and history coverage
 
 - Calendar problem counts come only from dated accepted submissions. The same problem counts once per device-local day; practicing it on another day counts again.
@@ -29,9 +44,12 @@ All endpoints require the existing QuantGym Bearer session and return `private, 
 | `POST /api/leetcode/connect` | Validate and connect a CN username or profile URL |
 | `POST /api/leetcode/sync` | Refresh the current connection |
 | `POST /api/leetcode/import` | Merge matching-account metadata |
+| `POST /api/leetcode/review` | Record one explicit recall rating and calculate the next review |
 | `DELETE /api/leetcode` | Remove the linked records |
 
 `user_leetcode` is created idempotently by the existing database initialization, for SQLite and PostgreSQL. Optimistic revisions prevent an in-flight sync from restoring a disconnected or replaced connection. Upstream failures retain the previous snapshot. Network requests use fixed CN endpoints, bounded responses, TLS verification, and no redirects.
+
+Review commands contain only `username`, `linkedAt`, `problemSlug`, `rating`, a UUID `eventId`, and the problem's `expectedVersion`. User ownership comes from the authenticated session. Connection identity and per-problem versions reject stale writes; replaying an identical event is idempotent, including concurrent delivery. Clients cannot supply review timestamps, due dates, or intervals. Private `_reviewStates` and `_reviewEvents` remain inside the existing JSON snapshot, while responses project `problems[].review` plus `reviewPolicy`. GET never writes review state. Commands are limited to 4 KiB, 60 requests per minute per user, and 20,000 retained review events within the existing snapshot size bound.
 
 ## Verification
 

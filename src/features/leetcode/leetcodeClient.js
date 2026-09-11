@@ -21,12 +21,17 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
       reportCloudSessionResponse({ endpoint, token, userId }, response.status);
       if (!response.ok) throw Object.assign(new Error(payload.error || "request_failed"), { status: response.status });
       if (!Object.hasOwn(payload, "connection") || !Array.isArray(payload.problems) || !Array.isArray(payload.submissions)) throw new Error("invalid_response");
+      if (path === "/review" && (payload.connection?.username !== body?.username
+        || payload.connection?.linkedAt !== body?.linkedAt
+        || !(payload.problems.find((problem) => problem.slug === body?.problemSlug)?.review?.version > body?.expectedVersion))) {
+        throw new Error("invalid_review_response");
+      }
       return payload;
     } finally { clearTimeout(timeout); }
   }
 
-  function perform(path, method, body, phase) {
-    if (running) return running.then(() => perform(path, method, body, phase));
+  function perform(path, method, body, phase, onError) {
+    if (running) return running.then(() => perform(path, method, body, phase, onError));
     publish({ phase, error: null });
     running = (async () => {
       try {
@@ -35,6 +40,7 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
         publish({ data, phase: "ready", error: null });
         return data;
       } catch (error) {
+        onError?.(error);
         publish({ phase: "error", error });
         return null;
       } finally { running = null; }
@@ -56,5 +62,10 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
     sync: () => perform("/sync", "POST", {}, "syncing"),
     disconnect: () => perform("", "DELETE", undefined, "disconnecting"),
     importRecords: (payload) => perform("/import", "POST", payload, "importing"),
+    async recordReview(payload) {
+      let operationError = null;
+      const data = await perform("/review", "POST", payload, "reviewing", (error) => { operationError = error; });
+      return { data, error: operationError };
+    },
   };
 }

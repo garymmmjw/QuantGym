@@ -7,9 +7,11 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import re
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from uuid import UUID
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
@@ -17,6 +19,9 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 MAX_IMPORT_BYTES = 5 * 1024 * 1024
 MAX_SNAPSHOT_BYTES = 16 * 1024 * 1024
 MAX_RECORDS = 20_000
+MAX_REVIEW_EVENTS = 20_000
+MAX_REVIEW_INTERVAL_DAYS = 36_500
+REVIEW_RATINGS = {"again": 1, "hard": 3, "good": 4, "easy": 5}
 MIN_SYNC_SECONDS = 60
 FETCH_TIMEOUT_SECONDS = 10
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
@@ -214,7 +219,97 @@ def get_record(conn, user_id):
 
 
 def public_snapshot(snapshot):
-    return {key: value for key, value in snapshot.items() if not key.startswith("_")}
+    # Due state is a projection of server time. Reading a schedule never writes
+    # or advances it, and the generated fields never enter imported metadata.
+    generated_at = now_iso()
+    result = copy.deepcopy({key: value for key, value in snapshot.items() if not key.startswith("_")})
+    result["problems"] = [{**problem, "review": problem_review(snapshot, problem, generated_at)} for problem in result.get("problems", [])]
+    result["reviewPolicy"] = {"algorithm": "sm2", "version": 1, "generatedAt": generated_at}
+    return result
+
+
+def problem_review(snapshot, problem, generated_at=None):
+    generated_at = generated_at or now_iso()
+    stored = snapshot.get("_reviewStates", {}).get(problem["slug"])
+    if stored is not None:
+        state = copy.deepcopy(stored)
+    else:
+        anchor = problem.get("lastAcceptedAt")
+        state = {"version": 0, "source": "accepted" if anchor else "unknown", "anchorAt": anchor,
+                 "lastReviewedAt": None, "nextReviewAt": add_review_days(anchor, 1) if anchor else None,
+                 "reviewCount": 0, "intervalDays": 1 if anchor else 0,
+                 "repetitions": 1 if anchor else 0, "easeFactor": 2.5, "lapses": 0, "lastRating": None}
+    due = state.get("nextReviewAt")
+    state["status"] = "uninitialized" if due is None else "due" if due <= generated_at else "upcoming"
+    return state
+
+
+def add_review_days(value, days):
+    return (datetime.fromisoformat(value.replace("Z", "+00:00")) + timedelta(days=days)).astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def validate_review(snapshot, payload):
+    fields = {"username", "linkedAt", "problemSlug", "rating", "eventId", "expectedVersion"}
+    if not isinstance(payload, dict) or set(payload) != fields:
+        raise LeetCodeError("Provide the linked account, problem, rating and review version only.")
+    connection = snapshot.get("connection")
+    if not connection or payload["username"] != connection.get("username") or payload["linkedAt"] != connection.get("linkedAt"):
+        raise LeetCodeError("Your LeetCode connection changed. Reload before recording a review.", 409)
+    slug = payload["problemSlug"]
+    if not isinstance(slug, str) or not PROBLEM_SLUG.fullmatch(slug):
+        raise LeetCodeError("Invalid review problem slug.")
+    if not isinstance(payload["rating"], str) or payload["rating"] not in REVIEW_RATINGS:
+        raise LeetCodeError("Choose again, hard, good or easy for this review.")
+    if type(payload["expectedVersion"]) is not int or payload["expectedVersion"] < 0 or payload["expectedVersion"] > MAX_REVIEW_EVENTS:
+        raise LeetCodeError("Invalid review version.")
+    try:
+        if not isinstance(payload["eventId"], str) or str(UUID(payload["eventId"])) != payload["eventId"]:
+            raise ValueError()
+    except (ValueError, AttributeError):
+        raise LeetCodeError("A canonical UUID is required for this review event.") from None
+    return next((problem for problem in snapshot.get("problems", []) if problem["slug"] == slug), None)
+
+
+def review_is_replay(snapshot, payload):
+    """A receipt is valid only in this connection, including after a CAS race."""
+    problem = validate_review(snapshot, payload)
+    if problem is None:
+        raise LeetCodeError("This problem is not in your completed LeetCode collection.", 404)
+    previous = snapshot.get("_reviewEvents", {}).get(payload["eventId"])
+    if previous is None:
+        return False
+    if any(previous.get(key) != value for key, value in payload.items()):
+        raise LeetCodeError("This review event was already used for a different action.", 409)
+    return True
+
+
+def apply_review(previous, payload):
+    if review_is_replay(previous, payload):
+        return previous
+    problem = next(problem for problem in previous["problems"] if problem["slug"] == payload["problemSlug"])
+    reviewed_at = now_iso()
+    state = problem_review(previous, problem, reviewed_at)
+    if payload["expectedVersion"] != state["version"]:
+        raise LeetCodeError("This review changed in another session. Reload and try again.", 409)
+    if len(previous.get("_reviewEvents", {})) >= MAX_REVIEW_EVENTS:
+        raise LeetCodeError("The saved review history has reached its 20,000 event limit.", 413)
+    quality = REVIEW_RATINGS[payload["rating"]]
+    old_ease = state["easeFactor"]
+    if quality < 3:
+        repetitions = 0
+        interval = 1
+    else:
+        repetitions = state["repetitions"] + 1
+        interval = 1 if repetitions == 1 else 6 if repetitions == 2 else min(MAX_REVIEW_INTERVAL_DAYS, math.ceil(state["intervalDays"] * old_ease))
+    ease = round(max(1.3, old_ease + 0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)), 8)
+    updated = {"version": state["version"] + 1, "source": "review", "anchorAt": state["anchorAt"] or reviewed_at,
+               "lastReviewedAt": reviewed_at, "nextReviewAt": add_review_days(reviewed_at, interval),
+               "reviewCount": state["reviewCount"] + 1, "intervalDays": interval, "repetitions": repetitions,
+               "easeFactor": ease, "lapses": state["lapses"] + (quality < 3), "lastRating": payload["rating"]}
+    snapshot = copy.deepcopy(previous)
+    snapshot.setdefault("_reviewStates", {})[problem["slug"]] = updated
+    snapshot.setdefault("_reviewEvents", {})[payload["eventId"]] = {**payload, "reviewedAt": reviewed_at, "resultVersion": updated["version"]}
+    return snapshot
 
 
 def get_snapshot(conn, user_id):

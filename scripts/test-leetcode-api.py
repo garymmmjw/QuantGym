@@ -17,6 +17,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from uuid import uuid4
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -119,8 +120,19 @@ class LeetCodeApiTests(unittest.TestCase):
     def connect(self, token, username="fixture-a"):
         return self.request("POST", "/api/leetcode/connect", token, {"profileUrl": f"https://leetcode.cn/u/{username}/"})
 
+    def review_payload(self, snapshot, slug="two-sum", rating="good"):
+        problem = next(row for row in snapshot["problems"] if row["slug"] == slug)
+        return {"username": snapshot["connection"]["username"], "linkedAt": snapshot["connection"]["linkedAt"],
+                "problemSlug": slug, "rating": rating, "eventId": str(uuid4()), "expectedVersion": problem["review"]["version"]}
+
+    def assert_snapshot_equal(self, left, right):
+        left, right = copy.deepcopy(left), copy.deepcopy(right)
+        for snapshot in (left, right):
+            snapshot.get("reviewPolicy", {}).pop("generatedAt", None)
+        self.assertEqual(left, right)
+
     def test_authentication_required_and_responses_are_private(self):
-        for method, path in (("GET", "/api/leetcode"), ("DELETE", "/api/leetcode"), ("POST", "/api/leetcode/connect"), ("POST", "/api/leetcode/sync"), ("POST", "/api/leetcode/import")):
+        for method, path in (("GET", "/api/leetcode"), ("DELETE", "/api/leetcode"), ("POST", "/api/leetcode/connect"), ("POST", "/api/leetcode/sync"), ("POST", "/api/leetcode/import"), ("POST", "/api/leetcode/review")):
             status, body, headers = self.request(method, path)
             self.assertEqual(status, 401, body)
             self.assertIn("private", headers.get("Cache-Control", ""))
@@ -172,7 +184,7 @@ class LeetCodeApiTests(unittest.TestCase):
         for path, body in (("/api/leetcode/sync", {}), ("/api/leetcode/connect", {"username": "different-user"})):
             status, _, _ = self.request("POST", path, token, body)
             self.assertEqual(status, 502)
-            self.assertEqual(self.request("GET", token=token)[1], saved)
+            self.assert_snapshot_equal(self.request("GET", token=token)[1], saved)
 
     def test_credentials_urls_and_owner_injection_rejected_without_fetch(self):
         token, _ = self.user()
@@ -207,7 +219,7 @@ class LeetCodeApiTests(unittest.TestCase):
         for payload in invalid:
             status, body, _ = self.request("POST", "/api/leetcode/import", token, payload)
             self.assertEqual(status, 400, body)
-            self.assertEqual(self.request("GET", token=token)[1], before)
+            self.assert_snapshot_equal(self.request("GET", token=token)[1], before)
 
     def test_cas_rejects_sync_started_before_disconnect(self):
         token, owner = self.user()
@@ -237,6 +249,216 @@ class LeetCodeApiTests(unittest.TestCase):
         self.assertEqual(status, 200, data)
         self.assertEqual(data["connection"]["username"], "fixture-b")
         self.assertNotIn("imported-only", [row["slug"] for row in data["problems"]])
+
+    def test_review_persists_without_changing_submissions_or_upstream_stats(self):
+        token, owner = self.user()
+        _, before, _ = self.connect(token)
+        payload = self.review_payload(before)
+        with patch.object(lc, "now_iso", return_value="2026-09-12T13:24:30.123Z"):
+            status, saved, headers = self.request("POST", "/api/leetcode/review", token, payload)
+        self.assertEqual(status, 200, saved)
+        self.assertIn("no-store", headers["Cache-Control"])
+        state = next(row["review"] for row in saved["problems"] if row["slug"] == "two-sum")
+        self.assertEqual(state["nextReviewAt"], "2026-09-18T13:24:30.123Z")
+        self.assertEqual(state["reviewCount"], 1)
+        self.assertEqual(state["version"], 1)
+        self.assertEqual(state["source"], "review")
+        self.assertEqual(state["status"], "upcoming")
+        for key in ("stats", "submissions", "calendar", "coverage"):
+            self.assertEqual(saved[key], before[key])
+        self.assertFalse(any(key.startswith("_") for key in saved))
+        self.age_snapshot(owner)
+        newer = upstream()
+        newer["submissions"].append(record("200", "two-sum", when="2026-09-10T12:30:00Z"))
+        self.mock_fetch.return_value = newer
+        self.mock_fetch.side_effect = None
+        with patch.object(lc, "now_iso", return_value="2026-09-12T13:25:00.000Z"):
+            self.assertEqual(self.request("POST", "/api/leetcode/sync", token, {})[0], 200)
+            self.assertEqual(self.request("POST", "/api/leetcode/import", token, {"username": "fixture-a", "problems": [{"slug": "two-sum", "title": "Enriched title"}]})[0], 200)
+            restored = self.request("GET", token=token)[1]
+        self.assertEqual(next(row["review"] for row in restored["problems"] if row["slug"] == "two-sum"), state)
+
+    def test_review_idempotency_stale_version_and_action_conflict(self):
+        token, owner = self.user()
+        _, before, _ = self.connect(token)
+        payload = self.review_payload(before)
+        status, saved, _ = self.request("POST", "/api/leetcode/review", token, payload)
+        self.assertEqual(status, 200, saved)
+        with self.api.db.connect() as conn:
+            revision = lc.get_record(conn, owner)[0]
+        status, replayed, _ = self.request("POST", "/api/leetcode/review", token, payload)
+        self.assertEqual(status, 200, replayed)
+        self.assert_snapshot_equal(replayed, saved)
+        with self.api.db.connect() as conn:
+            self.assertEqual(lc.get_record(conn, owner)[0], revision)
+        for changed in ({**payload, "rating": "easy"}, {**payload, "eventId": str(uuid4())}):
+            self.assertEqual(self.request("POST", "/api/leetcode/review", token, changed)[0], 409)
+
+    def test_review_account_isolation_disconnect_relink_and_switch(self):
+        token, _ = self.user()
+        other, _ = self.user()
+        with patch.object(lc, "now_iso", return_value="2026-09-12T12:00:00.000Z"):
+            _, before, _ = self.connect(token)
+        payload = self.review_payload(before)
+        self.assertEqual(self.request("POST", "/api/leetcode/review", other, payload)[0], 409)
+        self.assertEqual(self.request("POST", "/api/leetcode/review", token, payload)[0], 200)
+        self.request("DELETE", token=token)
+        self.assertEqual(self.request("POST", "/api/leetcode/review", token, payload)[0], 409)
+        with patch.object(lc, "now_iso", return_value="2026-09-12T12:01:00.000Z"):
+            _, relinked, _ = self.connect(token)
+        self.assertEqual(next(row["review"]["version"] for row in relinked["problems"] if row["slug"] == "two-sum"), 0)
+        self.assertEqual(self.request("POST", "/api/leetcode/review", token, payload)[0], 409)
+        self.assertEqual(self.request("POST", "/api/leetcode/review", token, self.review_payload(relinked))[0], 200)
+        _, switched, _ = self.connect(token, "fixture-b")
+        self.assertEqual(next(row["review"]["version"] for row in switched["problems"] if row["slug"] == "two-sum"), 0)
+
+    def test_review_rejects_invalid_fields_unknown_problems_and_private_injection(self):
+        token, _ = self.user()
+        _, before, _ = self.connect(token)
+        payload = self.review_payload(before)
+        invalid = [
+            {**payload, "rating": "perfect"}, {**payload, "rating": 5}, {**payload, "expectedVersion": True},
+            {**payload, "expectedVersion": -1}, {**payload, "eventId": "not-a-uuid"},
+            {**payload, "userId": "another-owner"}, {**payload, "nextReviewAt": "2099-01-01T00:00:00Z"},
+            {**payload, "reviewedAt": "2026-09-01T00:00:00Z"}, {**payload, "problemSlug": "../bad"},
+        ]
+        for bad in invalid:
+            status, body, _ = self.request("POST", "/api/leetcode/review", token, bad)
+            self.assertEqual(status, 400, body)
+        self.assertEqual(self.request("POST", "/api/leetcode/review", token, {**payload, "problemSlug": "unknown-problem"})[0], 404)
+        self.assertEqual(self.request("POST", "/api/leetcode/review", token, {**payload, "username": "another-account"})[0], 409)
+        self.assertEqual(self.request("POST", "/api/leetcode/review", token, {**payload, "ignored": "x" * 4096})[0], 413)
+        self.assert_snapshot_equal(self.request("GET", token=token)[1], before)
+        self.assertEqual(self.mock_fetch.call_count, 1)
+
+    def test_review_and_sync_cas_preserve_winning_state(self):
+        token, owner = self.user()
+        _, before, _ = self.connect(token)
+        with self.api.db.connect() as conn:
+            old_revision, old = lc.get_record(conn, owner)
+        payload = self.review_payload(before)
+        self.assertEqual(self.request("POST", "/api/leetcode/review", token, payload)[0], 200)
+        with self.api.db.connect() as conn:
+            with self.assertRaises(lc.LeetCodeError) as caught:
+                lc.save_snapshot(conn, owner, old_revision, lc.fresh_snapshot(old, upstream()))
+        self.assertEqual(caught.exception.status, 409)
+        self.assertEqual(next(row["review"]["version"] for row in self.request("GET", token=token)[1]["problems"] if row["slug"] == "two-sum"), 1)
+
+    def test_review_simultaneous_replay_is_one_event(self):
+        token, owner = self.user()
+        _, before, _ = self.connect(token)
+        payload = self.review_payload(before)
+        original_save = lc.save_snapshot
+        barrier = threading.Barrier(2)
+        def concurrent_save(*args, **kwargs):
+            barrier.wait(timeout=5)
+            return original_save(*args, **kwargs)
+        responses = []
+        with patch.object(lc, "save_snapshot", side_effect=concurrent_save):
+            threads = [threading.Thread(target=lambda: responses.append(self.request("POST", "/api/leetcode/review", token, payload))) for _ in range(2)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join(timeout=10)
+        self.assertEqual([response[0] for response in responses], [200, 200])
+        with self.api.db.connect() as conn:
+            _, stored = lc.get_record(conn, owner)
+        self.assertEqual(len(stored["_reviewEvents"]), 1)
+        self.assertEqual(stored["_reviewStates"]["two-sum"]["reviewCount"], 1)
+
+    def test_review_wins_over_an_older_in_flight_upstream_sync(self):
+        token, owner = self.user()
+        _, before, _ = self.connect(token)
+        self.age_snapshot(owner)
+        fetch_started = threading.Event()
+        release_fetch = threading.Event()
+        def delayed_fetch(username):
+            fetch_started.set()
+            if not release_fetch.wait(timeout=5):
+                raise RuntimeError("Test did not release upstream response")
+            incoming = upstream(username)
+            incoming["submissions"].append(record("201", "two-sum", when="2026-09-10T12:30:00Z"))
+            return incoming
+        self.mock_fetch.side_effect = delayed_fetch
+        responses = []
+        thread = threading.Thread(target=lambda: responses.append(self.request("POST", "/api/leetcode/sync", token, {})))
+        thread.start()
+        try:
+            self.assertTrue(fetch_started.wait(timeout=5))
+            status, saved, _ = self.request("POST", "/api/leetcode/review", token, self.review_payload(before))
+            self.assertEqual(status, 200, saved)
+        finally:
+            release_fetch.set()
+            thread.join(timeout=10)
+        self.assertEqual(responses[0][0], 409, responses)
+        self.assert_snapshot_equal(self.request("GET", token=token)[1], saved)
+
+
+class ReviewAlgorithmTests(unittest.TestCase):
+    def snapshot(self, known=True):
+        result = lc.fresh_snapshot(lc.empty_snapshot(), upstream())
+        if not known:
+            result = lc.import_metadata(result, {"username": "fixture-a", "problems": [{"slug": "unknown-date"}]})
+        return result
+
+    def grade(self, snapshot, rating, slug="two-sum", when="2026-09-12T15:30:45.123Z"):
+        state = lc.problem_review(snapshot, next(row for row in snapshot["problems"] if row["slug"] == slug), when)
+        payload = {"username": "fixture-a", "linkedAt": snapshot["connection"]["linkedAt"], "problemSlug": slug,
+                   "rating": rating, "eventId": str(uuid4()), "expectedVersion": state["version"]}
+        with patch.object(lc, "now_iso", return_value=when):
+            return lc.apply_review(snapshot, payload)
+
+    def test_initial_accepted_and_unknown_dates_and_read_only_due_projection(self):
+        snapshot = self.snapshot(known=False)
+        before = copy.deepcopy(snapshot)
+        problem = next(row for row in snapshot["problems"] if row["slug"] == "two-sum")
+        state = lc.problem_review(snapshot, problem, "2026-09-09T23:44:59.999Z")
+        self.assertEqual(state["nextReviewAt"], "2026-09-09T23:45:00.000Z")
+        self.assertEqual((state["source"], state["repetitions"], state["intervalDays"], state["easeFactor"]), ("accepted", 1, 1, 2.5))
+        self.assertEqual(state["status"], "upcoming")
+        self.assertEqual(lc.problem_review(snapshot, problem, state["nextReviewAt"])["status"], "due")
+        unknown = next(row for row in snapshot["problems"] if row["slug"] == "unknown-date")
+        state = lc.problem_review(snapshot, unknown)
+        self.assertEqual((state["source"], state["status"], state["repetitions"], state["intervalDays"]), ("unknown", "uninitialized", 0, 0))
+        self.assertIsNone(state["nextReviewAt"])
+        self.assertEqual(snapshot, before)
+
+    def test_exact_rating_outputs_known_seed_and_old_ease_multiplier(self):
+        for rating, reps, interval, ease, lapses in (("again", 0, 1, 1.96, 1), ("hard", 2, 6, 2.36, 0), ("good", 2, 6, 2.5, 0), ("easy", 2, 6, 2.6, 0)):
+            saved = self.grade(self.snapshot(), rating)
+            state = saved["_reviewStates"]["two-sum"]
+            self.assertEqual((state["repetitions"], state["intervalDays"], state["easeFactor"], state["lapses"]), (reps, interval, ease, lapses))
+            self.assertEqual((state["source"], state["reviewCount"], state["version"]), ("review", 1, 1))
+            self.assertEqual(state["nextReviewAt"], f"2026-09-{12 + interval:02d}T15:30:45.123Z")
+        saved = self.grade(self.grade(self.snapshot(), "good"), "easy")
+        self.assertEqual(saved["_reviewStates"]["two-sum"]["intervalDays"], 15)  # ceil(6 * old EF 2.5), not 16 from new EF 2.6.
+        self.assertEqual(saved["_reviewStates"]["two-sum"]["easeFactor"], 2.6)
+
+    def test_unknown_seed_failure_recovery_ease_floor_and_cap(self):
+        saved = self.grade(self.snapshot(known=False), "good", "unknown-date")
+        state = saved["_reviewStates"]["unknown-date"]
+        self.assertEqual((state["intervalDays"], state["repetitions"]), (1, 1))
+        self.assertEqual(state["anchorAt"], state["lastReviewedAt"])
+        for _ in range(5):
+            saved = self.grade(saved, "again", "unknown-date")
+        state = saved["_reviewStates"]["unknown-date"]
+        self.assertEqual((state["easeFactor"], state["lapses"], state["repetitions"]), (1.3, 5, 0))
+        saved = self.grade(saved, "good", "unknown-date")
+        self.assertEqual(saved["_reviewStates"]["unknown-date"]["intervalDays"], 1)
+        state = saved["_reviewStates"]["unknown-date"]
+        state.update({"repetitions": 10, "intervalDays": 36000, "easeFactor": 2.5})
+        saved = self.grade(saved, "easy", "unknown-date")
+        self.assertEqual(saved["_reviewStates"]["unknown-date"]["intervalDays"], 36500)
+
+    def test_event_bound_is_atomic(self):
+        snapshot = self.snapshot()
+        with patch.object(lc, "MAX_REVIEW_EVENTS", 1):
+            saved = self.grade(snapshot, "good")
+            before = copy.deepcopy(saved)
+            with self.assertRaises(lc.LeetCodeError) as caught:
+                self.grade(saved, "good")
+        self.assertEqual(caught.exception.status, 413)
+        self.assertEqual(saved, before)
 
 
 class AdapterTests(unittest.TestCase):
