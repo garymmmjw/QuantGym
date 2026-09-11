@@ -106,3 +106,69 @@
 @media(max-width:950px) { .lc-overview { grid-template-columns:.8fr 1fr; gap:25px; }.lc-extra-stats { grid-column:1/-1; justify-content:flex-start; border-left:0; border-top:1px solid var(--lc-line); padding:22px 0 0; gap:55px; }.lc-extra-stats > div { display:flex; gap:15px; align-items:center; }.lc-extra-stats dd { margin-top:0; }.lc-profile-sync { align-items:flex-end; flex-direction:column; gap:6px; } }
 @media(max-width:650px) { .lc-page { padding:24px 16px 36px; }.lc-header { align-items:flex-start; flex-direction:column; gap:17px; }.lc-header h1 { font-size:34px; }.lc-profile-bar { align-items:flex-start; gap:14px; flex-direction:column; }.lc-profile-sync { width:100%; flex-direction:row; justify-content:space-between; align-items:center; }.lc-profile-sync .lc-updated { font-size:11px; }.lc-overview { padding:26px 0; gap:22px; }.lc-solved-total > strong { font-size:55px; }.lc-difficulty-overview dl { gap:10px; }.lc-extra-stats { gap:24px; }.lc-extra-stats > div { align-items:flex-start; flex-direction:column; gap:8px; }.lc-extra-stats dd { font-size:28px; }.lc-review { grid-template-columns:1fr; margin-top:27px; }.lc-review-main { padding:25px 22px; }.lc-review-aside { border-left:0; border-top:1px solid var(--lc-line); padding:20px 22px; }.lc-aside-icon { display:none; }.lc-review-aside h3 { font-size:15px; }.lc-review-aside p { margin:8px 0 13px; }.lc-review h2 { font-size:22px; }.lc-drawn-problem h3 { font-size:26px; }.lc-problem-controls { align-items:stretch; flex-direction:column; gap:12px; }.lc-filter-group { align-self:flex-start; }.lc-page .lc-search { width:100%; }.lc-problem-list li { gap:11px; }.lc-problem-id { flex-basis:31px; font-size:12px; }.lc-problem-launch { width:26px; }.lc-section-title { align-items:flex-start; flex-wrap:wrap; gap:12px; }.lc-history-import, .lc-connection { padding:22px 19px; }.lc-history-import .lc-status { white-space:normal; font-size:11px; }.lc-input-row { flex-direction:column; }.lc-input-row .lc-button { align-self:flex-start; } }
 @media(prefers-reduced-motion:reduce) { .lc-page *, .lc-connection * { transition:none!important; scroll-behavior:auto!important; } }
+
+.lc-memory-review .lc-review-main { min-width:0; }
+.lc-memory-review .lc-drawn-meta { flex-wrap:wrap; }
+.lc-memory-review .lc-drawn-meta .lc-problem-due { margin-left:auto; text-align:right; align-items:flex-end; }
+.lc-memory-review .lc-drawn-problem h3:focus { outline:none; }
+.lc-page .lc-review-footnote { margin-top:24px; color:var(--lc-muted); font-size:11px; line-height:1.8; }
+.lc-recall { margin-top:25px; padding-top:21px; border-top:1px solid var(--lc-line); }
+.lc-recall h4 { margin:0; font-size:14px; font-weight:650; line-height:1.6; }
+.lc-recall > p { margin-top:7px; color:var(--lc-muted); font-size:12px; line-height:1.8; }
+.lc-recall-options { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:16px; }
+.lc-recall-options button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:7px; min-height:76px; min-width:0; padding:11px 6px; border:1px solid var(--lc-line); border-radius:8px; color:var(--lc-ink); background:var(--lc-surface); transition:border-color .16s,background .16s; }
+.lc-recall-options button:not(:disabled):hover { border-color:var(--lc-accent); background:var(--lc-soft); }
+.lc-recall-options strong { font-size:12px; font-weight:650; line-height:1.5; overflow-wrap:anywhere; }
+.lc-recall-options span { color:var(--lc-muted); font-size:11px; line-height:1.5; }
+.lc-recall .lc-review-origin, .lc-page .lc-review-note { margin-top:13px; color:var(--lc-muted); font-size:12px; line-height:1.8; }
+.lc-page .lc-review-saved { display:flex; align-items:flex-start; gap:11px; margin-top:25px; padding:15px; border:1px solid var(--lc-line); border-radius:8px; background:var(--lc-soft); font-size:13px; }
+.lc-review-saved-mark { color:var(--qg-success,#11805b); font-size:17px; line-height:1.5; }
+.lc-review-saved strong { font-size:13px; font-weight:650; line-height:1.8; }
+.lc-review-saved p { margin-top:4px; color:var(--lc-muted); font-size:12px; line-height:1.8; }
+.lc-review-saved time { display:inline-block; overflow-wrap:anywhere; }
+.lc-memory-aside { justify-content:flex-start; }
+.lc-memory-aside .lc-review-counts { width:100%; margin:21px 0 6px; }
+.lc-review-counts > div { display:flex; align-items:center; justify-content:space-between; gap:15px; padding:11px 0; border-bottom:1px solid var(--lc-line); }
+.lc-review-counts dt { color:var(--lc-muted); font-size:12px; }
+.lc-review-counts dd { font-family:var(--qg-font-number,inherit); font-size:25px; line-height:1.1; letter-spacing:-.04em; }
+.lc-memory-aside > p:not(.lc-eyebrow) { margin:15px 0 12px; font-size:12px; }
+.lc-review-aside-note { color:var(--lc-muted); font-size:11px; line-height:1.8; }
+.lc-review-filters { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+.lc-review-filters > span { color:var(--lc-muted); font-size:11px; line-height:1.6; }
+.lc-scheduled-problems li { display:grid; grid-template-columns:40px minmax(0,1fr) 48px minmax(145px,170px) 46px 30px; column-gap:13px; row-gap:10px; }
+.lc-problem-due { display:flex; flex-direction:column; align-items:flex-start; gap:3px; min-width:0; font-size:11px; line-height:1.7; }
+.lc-problem-due > span { font-size:11px; color:var(--lc-muted); }
+.lc-problem-due.is-due > span { color:color-mix(in srgb,var(--qg-warning,#976d18) 50%,var(--lc-ink)); }
+.lc-problem-due time, .lc-problem-due small { color:var(--lc-muted); font-size:11px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.lc-page .lc-row-review { min-height:35px; padding:6px 8px; border:1px solid var(--lc-line); border-radius:7px; background:var(--lc-surface); color:var(--lc-ink); font-size:12px; line-height:1.5; }
+.lc-page .lc-row-review:not(:disabled):hover { border-color:var(--lc-accent); color:var(--lc-accent); }
+.lc-scheduled-problems .lc-problem-launch { width:30px; }
+@media(max-width:1050px) {
+  .lc-memory-review { grid-template-columns:minmax(0,1.7fr) minmax(210px,1fr); }
+  .lc-memory-review .lc-review-main { padding:25px 22px; }
+  .lc-memory-aside { padding:25px 22px; }
+  .lc-recall-options { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .lc-recall-options button { min-height:66px; }
+  .lc-scheduled-problems li { grid-template-columns:32px minmax(0,1fr) 46px 26px; column-gap:11px; }
+  .lc-scheduled-problems .lc-problem-id { grid-column:1; grid-row:1; }
+  .lc-scheduled-problems .lc-problem-name { grid-column:2; grid-row:1; }
+  .lc-scheduled-problems .lc-difficulty { grid-column:3; grid-row:1; }
+  .lc-scheduled-problems .lc-problem-launch { grid-column:4; grid-row:1; width:26px; }
+  .lc-scheduled-problems .lc-problem-due { grid-column:2; grid-row:2; }
+  .lc-scheduled-problems .lc-row-review { grid-column:3/5; grid-row:2; justify-self:end; min-width:54px; }
+}
+@media(max-width:650px) {
+  .lc-memory-review { grid-template-columns:minmax(0,1fr); }
+  .lc-memory-review .lc-drawn-meta .lc-problem-due { flex-basis:100%; margin-left:0; align-items:flex-start; text-align:left; }
+  .lc-memory-aside { padding:20px 22px; }
+  .lc-memory-aside .lc-review-counts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:13px; margin:16px 0 5px; }
+  .lc-review-counts > div { flex-direction:column; align-items:flex-start; gap:9px; padding:0 0 14px; }
+  .lc-review-counts dt { font-size:11px; line-height:1.7; }
+  .lc-review-counts dd { font-size:24px; }
+  .lc-review-filters { align-items:flex-start; gap:8px; }
+  .lc-review-filters .lc-filter-group { flex-wrap:wrap; }
+  .lc-review-filters .lc-filter-group button { flex:1 0 auto; padding-inline:11px; }
+  .lc-scheduled-problems li { grid-template-columns:26px minmax(0,1fr) 43px 24px; column-gap:8px; padding-block:16px; }
+  .lc-scheduled-problems .lc-problem-launch { width:24px; }
+  .lc-page .lc-review-footnote { margin-top:20px; }
+}

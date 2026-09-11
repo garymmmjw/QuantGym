@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { LeetCodeConnection } from "./LeetCodeConnection.jsx";
 import { useLeetCode } from "./useLeetCode.js";
-import { drawReviewProblem, leetcodeError, prepareHistory, problemUrl, reviewPool } from "./leetcodeModel.js";
+import { leetcodeError, prepareHistory, problemUrl, reviewPool } from "./leetcodeModel.js";
+import { filterReviewProblems } from "./leetcodeReviewModel.js";
+import { LeetcodeReviewPanel, ReviewDueDate } from "./LeetcodeReviewPanel.jsx";
 import "./leetcode.css";
 
 const difficultyLabels = { zh: { 1: "简单", 2: "中等", 3: "困难" }, en: { 1: "Easy", 2: "Medium", 3: "Hard" } };
@@ -20,22 +22,38 @@ function LeetcodeWorkspace({ lc }) {
   const [difficulty, setDifficulty] = useState("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
+  const [reviewFilter, setReviewFilter] = useState("all");
+  const [reviewLocked, setReviewLocked] = useState(false);
+  const [now, setNow] = useState(Date.now);
   const [page, setPage] = useState(1);
   const [pending, setPending] = useState(null);
   const [pendingWarning, setPendingWarning] = useState("");
   const [importNote, setImportNote] = useState("");
   const fileRef = useRef(null);
   const seenTransfers = useRef(new Set());
-  const pool = useMemo(() => reviewPool(problems, difficulty, search), [problems, difficulty, search]);
+  const pool = useMemo(() => filterReviewProblems(reviewPool(problems, difficulty, search), reviewFilter, now), [problems, difficulty, search, reviewFilter, now]);
   const allProblems = useMemo(() => reviewPool(problems), [problems]);
-  const selectedProblem = selected ? pool.find((item) => item.slug === selected.slug) : null;
+  const connectionKey = JSON.stringify([lc.ownerId, connection?.username, connection?.linkedAt]);
+  const selectedProblem = selected?.connectionKey === connectionKey ? allProblems.find((item) => item.slug === selected.slug) : null;
   const labels = difficultyLabels[en ? "en" : "zh"];
   const pageSize = 20;
   const pages = Math.max(1, Math.ceil(pool.length / pageSize));
   const currentPage = Math.min(page, pages);
 
-  useEffect(() => { setSelected(null); setPage(1); setSearch(""); setDifficulty("all"); }, [connection?.username]);
-  useEffect(() => { setPage(1); }, [search, difficulty]);
+  useEffect(() => { setSelected(null); setReviewLocked(false); setPage(1); setSearch(""); setDifficulty("all"); setReviewFilter("all"); }, [connection?.username, connection?.linkedAt]);
+  useEffect(() => { setPage(1); }, [search, difficulty, reviewFilter]);
+  useEffect(() => {
+    const refreshTime = () => setNow(Date.now());
+    const timer = window.setInterval(refreshTime, 30000);
+    window.addEventListener("focus", refreshTime);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", refreshTime); };
+  }, []);
+  const selectReview = problem => setSelected(problem ? { slug: problem.slug, connectionKey } : null);
+  const openReview = problem => {
+    if (reviewLocked || lc.busy) return;
+    selectReview(problem);
+    document.getElementById("lc-review-title")?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+  };
   useEffect(() => {
     const receive = (event) => {
       if (event.source !== window || event.origin !== window.location.origin || event.data?.source !== "quantgym-collector-extension") return;
@@ -103,12 +121,18 @@ function LeetcodeWorkspace({ lc }) {
         <div className="lc-difficulty-overview"><div className="lc-difficulty-bar" aria-hidden="true">{[1, 2, 3].map((level) => <span key={level} className={`lc-level-${level}`} style={{ flex: stats?.[["", "easy", "medium", "hard"][level]] || 0 }} />)}</div><dl>{[[1, "easy"], [2, "medium"], [3, "hard"]].map(([level, key]) => <div key={key}><dt><span className={`lc-level-dot lc-level-${level}`} />{labels[level]}</dt><dd>{stats?.[key]?.toLocaleString(locale) ?? "—"}</dd></div>)}</dl></div>
         <dl className="lc-extra-stats"><div><dt>{t("总提交次数", "Total submissions")}</dt><dd>{stats?.totalSubmissions?.toLocaleString(locale) ?? "—"}</dd></div><div><dt>{t("可复习题目", "Review pool")}</dt><dd>{allProblems.length.toLocaleString(locale)}<small> / {stats?.solved ?? "—"}</small></dd></div></dl>
       </section>
-      <section className="lc-review" aria-labelledby="lc-review-title"><div className="lc-review-main"><p className="lc-eyebrow">REVISIT & REMEMBER</p><h2 id="lc-review-title">{t("随机复习一道", "Revisit a solved problem")}</h2><p className="lc-muted">{t(`从当前筛选的 ${pool.length} 道已通过题目中抽取。`, `Draw from ${pool.length} solved problems in your current filter.`)}</p>
-        {selectedProblem ? <div className="lc-drawn-problem" aria-live="polite"><div className="lc-drawn-meta"><span>#{selectedProblem.frontendId || "—"}</span>{labels[selectedProblem.difficulty] && <span className={`lc-difficulty lc-difficulty-${selectedProblem.difficulty}`}>{labels[selectedProblem.difficulty]}</span>}</div><h3>{en ? selectedProblem.titleEn || selectedProblem.title : selectedProblem.title || selectedProblem.titleEn}</h3><div className="lc-actions"><a className="lc-button is-primary" href={problemUrl(selectedProblem.slug)} target="_blank" rel="noopener noreferrer">{t("去力扣挑战", "Solve on LeetCode")} ↗</a><button className="lc-button" type="button" onClick={() => setSelected(drawReviewProblem(pool, selectedProblem.slug))}>{t("换一道", "Draw another")}</button></div></div> : <div className="lc-review-start"><span className="lc-review-symbol" aria-hidden="true">⌘</span><p>{pool.length ? t("重新做一遍，看看这次能否独立解出。", "Try it again and see what you remember.") : t("还没有符合筛选条件的已通过题目。", "No solved problems match this filter.")}</p><button className="lc-button is-primary" type="button" disabled={!pool.length} onClick={() => setSelected(drawReviewProblem(pool))}>{t("随机抽一道", "Draw a problem")} <span aria-hidden="true">↗</span></button></div>}
-      </div><aside className="lc-review-aside"><span className="lc-aside-icon" aria-hidden="true">↗</span><h3>{t("熟悉的题，也值得再做一次", "Practice what you already know")}</h3><p>{t("抽题后会打开力扣的做题页面。完成练习后回到 QuantGym 刷新，近期通过记录会自动合并。", "Open the problem on LeetCode, then return and refresh QuantGym to merge your recent accepted submissions.")}</p><Link to="/calendar">{t("查看每日刷题记录", "View daily practice")} →</Link></aside></section>
+      <LeetcodeReviewPanel key={connectionKey} lc={lc} pool={pool} allProblems={allProblems} selectedProblem={selectedProblem} onSelect={selectReview} now={now} onLockChange={setReviewLocked} />
       <section className="lc-problems" aria-labelledby="lc-problems-title"><div className="lc-section-title"><div><p className="lc-eyebrow">SOLVED PROBLEMS</p><h2 id="lc-problems-title">{t("我的复习题库", "My review pool")}</h2></div><span className="lc-muted">{t(`已同步 ${allProblems.length} / ${stats?.solved ?? "—"} 题`, `${allProblems.length} / ${stats?.solved ?? "—"} problems synced`)}</span></div>
         <div className="lc-problem-controls"><div className="lc-filter-group" role="group" aria-label={t("按难度筛选", "Filter difficulty")}>{["all", "1", "2", "3"].map((value) => <button key={value} type="button" aria-pressed={difficulty === value} onClick={() => setDifficulty(value)}>{value === "all" ? t("全部", "All") : labels[value]}</button>)}</div><input className="lc-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("搜索题名或编号", "Search title or number")} aria-label={t("搜索已通过题目", "Search solved problems")} /></div>
-        {pool.length ? <ul className="lc-problem-list">{pool.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((problem) => <li key={problem.slug}><span className="lc-problem-id">{problem.frontendId || "—"}</span><a href={problemUrl(problem.slug)} target="_blank" rel="noopener noreferrer"><strong>{en ? problem.titleEn || problem.title : problem.title || problem.titleEn || problem.slug}</strong><span>{en ? problem.title || problem.slug : problem.titleEn || problem.slug}</span></a><span className={`lc-difficulty lc-difficulty-${problem.difficulty || "unknown"}`}>{labels[problem.difficulty] || t("已通过", "Solved")}</span><a className="lc-problem-launch" href={problemUrl(problem.slug)} target="_blank" rel="noopener noreferrer" aria-label={`${t("去力扣练习", "Practice on LeetCode")} ${problem.title || problem.slug}`}>↗</a></li>)}</ul> : <div className="lc-list-empty">{t("没有符合条件的题目。试试其他筛选，或导入以前的通过记录。", "No matching problems. Change the filter or import older accepted history.")}</div>}
+        <div className="lc-review-filters"><div className="lc-filter-group" role="group" aria-label={t("按复习状态筛选", "Filter review status")}>{[["all", "全部", "All"], ["due", "待复习", "Due"], ["upcoming", "未到期", "Upcoming"], ["uninitialized", "待首次复习", "First review"]].map(([value, zh, english]) => <button key={value} type="button" aria-pressed={reviewFilter === value} onClick={() => setReviewFilter(value)}>{t(zh, english)}</button>)}</div><span>{t("建议复习时间 · 本地时区", "Suggested review time · local timezone")}</span></div>
+        {pool.length ? <ul className="lc-problem-list lc-scheduled-problems">{pool.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((problem) => <li key={problem.slug}>
+          <span className="lc-problem-id">{problem.frontendId || "—"}</span>
+          <a className="lc-problem-name" href={problemUrl(problem.slug)} target="_blank" rel="noopener noreferrer"><strong>{en ? problem.titleEn || problem.title : problem.title || problem.titleEn || problem.slug}</strong><span>{en ? problem.title || problem.slug : problem.titleEn || problem.slug}</span></a>
+          <span className={`lc-difficulty lc-difficulty-${problem.difficulty || "unknown"}`}>{labels[problem.difficulty] || t("已通过", "Solved")}</span>
+          <ReviewDueDate problem={problem} language={lc.language} now={now} />
+          <button type="button" className="lc-row-review" disabled={reviewLocked || lc.busy} onClick={() => openReview(problem)} aria-label={`${t("复习", "Review")} ${problem.title || problem.titleEn || problem.slug}`}>{t("复习", "Review")}</button>
+          <a className="lc-problem-launch" href={problemUrl(problem.slug)} target="_blank" rel="noopener noreferrer" aria-label={`${t("去力扣练习", "Practice on LeetCode")} ${problem.title || problem.slug}`}>↗</a>
+        </li>)}</ul> : <div className="lc-list-empty">{t("没有符合条件的题目。试试其他筛选，或导入以前的通过记录。", "No matching problems. Change the filter or import older accepted history.")}</div>}
         {pages > 1 && <nav className="lc-pagination" aria-label={t("题目分页", "Problem pages")}><button type="button" className="lc-button" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>{t("上一页", "Previous")}</button><span>{currentPage} / {pages}</span><button type="button" className="lc-button" disabled={currentPage === pages} onClick={() => setPage(currentPage + 1)}>{t("下一页", "Next")}</button></nav>}
         <p className="lc-data-note">{coverage.problemPoolComplete ? t("题库数量已与力扣通过题数对齐。", "Your review pool matches the solved count on LeetCode.") : t("题库仅包含已同步的通过题目。公开记录范围有限，历史导入后会补充到这里。", "This pool contains synced solved problems. Public history is limited; import older records to expand it.")}{t(" 难度未知的题目会保留在「全部」中。", " Problems without difficulty data remain under All.")}</p>
       </section>
