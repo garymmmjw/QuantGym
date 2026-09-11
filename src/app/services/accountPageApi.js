@@ -98,7 +98,8 @@ export function createAccountPageApi(deps = {}) {
         deps.syncAccountStores?.();
         deps.queueCloudSync?.("state", 0);
         deps.queueCloudSync?.("account", 0);
-        deps.queueCloudSync?.("community", 0);
+        // Enabling a personal account must not publish a stale shared community
+        // snapshot. Community changes use their own normal save/merge flow.
         deps.renderUserChip?.();
         return { ok: true, message: text("云端账户已启用，本机训练记录正在同步。", "Cloud sync is enabled. Your device's training records are syncing.") };
       } catch (error) {

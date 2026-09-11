@@ -179,10 +179,12 @@ test('existing cloud account cannot receive a new registration verification code
   assert.equal(h.calls.length, 1);
 });
 
-test('activation keeps the original owner, local records and hash, then queues cloud sync', async () => {
+test('activation syncs the original owner and personal records without publishing shared community', async () => {
   const h = harness({ cloud: false });
   const owner = h.appState.currentUser;
   const state = h.userState.value;
+  const community = { posts: [{ id: 'device-community-snapshot' }] };
+  h.appState.community = community;
   const result = await h.api.activateCloudAccount({ password: fields.currentPassword, verificationCode: 'fixture-code' });
   assert.equal(result.ok, true);
   const request = h.calls[0];
@@ -190,14 +192,17 @@ test('activation keeps the original owner, local records and hash, then queues c
   assert.equal(request.options.auth, false);
   assert.equal(request.options.body.account.id, owner.id);
   assert.equal(request.options.body.account.passwordHash, undefined);
+  assert.equal(request.options.body.community, undefined);
   assert.equal(request.options.body.password, fields.currentPassword);
   assert.equal(request.options.body.verificationCode, 'fixture-code');
   assert.equal(h.appState.currentUser, owner);
   assert.equal(h.appState.auth.currentUserId, owner.id);
   assert.equal(h.userState.value, state);
+  assert.equal(h.appState.community, community);
+  assert.deepEqual(community, { posts: [{ id: 'device-community-snapshot' }] });
   assert.equal(h.appState.cloudConfig.userId, owner.id);
   assert.equal(h.appState.cloudConfig.token, 'fixture-new-token');
-  assert.deepEqual(h.calls.slice(1), ['save-cloud', 'sync-stores', 'queue:state', 'queue:account', 'queue:community']);
+  assert.deepEqual(h.calls.slice(1), ['save-cloud', 'sync-stores', 'queue:state', 'queue:account']);
 });
 
 test('activation cannot call register with an incorrect password or missing code', async () => {
