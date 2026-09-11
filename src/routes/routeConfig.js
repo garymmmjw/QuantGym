@@ -9,6 +9,7 @@ export const REACT_PAGE_IDS = new Set([
   "interview",
   "problems",
   "tools",
+  "leetcode",
   "calendar",
   "daily-mock",
   "experiences",

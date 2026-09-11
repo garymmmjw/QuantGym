@@ -48,9 +48,15 @@
 .personal-calendar .pc-date.is-selected { background: var(--pc-accent); color: #fff; border-color: var(--pc-accent); }
 .personal-calendar .pc-date.is-selected strong { color: #fff; }
 .personal-calendar .pc-date-dot { width: 4px; height: 4px; border-radius: 50%; background: transparent; }
+.personal-calendar .pc-date-dots { display: flex; align-items: center; justify-content: center; gap: 5px; height: 5px; }
 .personal-calendar .pc-date-dot.has-activity { background: var(--pc-accent); }
 .personal-calendar .pc-date.is-selected .pc-date-dot.has-activity { background: #fff; }
+.personal-calendar .pc-leetcode-source-dot { width: 5px; height: 5px; }
+.personal-calendar .pc-leetcode-source-dot.has-activity { background: transparent; border: 1px solid var(--pc-accent); }
+.personal-calendar .pc-date.is-selected .pc-leetcode-source-dot.has-activity { background: transparent; border-color: #fff; }
 .personal-calendar .pc-swipe-hint { text-align: center; font-size: 10px; color: var(--pc-muted); margin-top: 8px; }
+.personal-calendar .pc-source-legend { color: var(--pc-muted); text-align: center; font-size: 10px; line-height: 1.7; margin-top: 5px; }
+.personal-calendar .pc-source-legend > span { color: var(--pc-accent); }
 .personal-calendar .pc-section-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
 .personal-calendar .pc-section-heading .pc-eyebrow { margin-bottom: 7px; }
 .personal-calendar h2 { font-size: 18px; font-weight: 680; letter-spacing: -.025em; line-height: 1.5; }
@@ -63,6 +69,19 @@
 .personal-calendar .pc-stat dd strong { font-family: var(--qg-font-number, inherit); font-size: clamp(25px, 2.65vw, 36px); font-weight: 550; line-height: 1.2; letter-spacing: -.065em; }
 .personal-calendar .pc-stat dd > span { font-size: 10px; color: var(--pc-muted); }
 .personal-calendar .pc-stat p { font-size: 10px; color: var(--pc-muted); line-height: 1.7; }
+.personal-calendar .pc-leetcode { padding: 22px 0; border-bottom: 1px solid var(--pc-line); }
+.personal-calendar .pc-leetcode-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.personal-calendar .pc-leetcode-heading h3 { font-size: 14px; }
+.personal-calendar .pc-leetcode-heading p { margin-top: 4px; font-size: 11px; line-height: 1.7; color: var(--pc-muted); overflow-wrap: anywhere; }
+.personal-calendar .pc-leetcode-heading .pc-text-button { padding-right: 0; }
+.personal-calendar .pc-leetcode-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 20px; }
+.personal-calendar .pc-leetcode-stats > div + div { border-left: 1px solid var(--pc-line); padding-left: 22px; }
+.personal-calendar .pc-leetcode-stats dt { color: var(--pc-muted); font-size: 11px; font-weight: 600; line-height: 1.6; }
+.personal-calendar .pc-leetcode-stats dd { display: flex; align-items: baseline; gap: 6px; margin-top: 7px; }
+.personal-calendar .pc-leetcode-stats strong { font-family: var(--qg-font-number, inherit); font-weight: 550; font-size: 30px; letter-spacing: -.06em; line-height: 1.3; }
+.personal-calendar .pc-leetcode-stats dd span { font-size: 10px; color: var(--pc-muted); }
+.personal-calendar .pc-leetcode-stats p { color: var(--pc-muted); font-size: 10px; line-height: 1.8; margin-top: 4px; }
+.personal-calendar .pc-leetcode-note { color: var(--pc-muted); font-size: 10px; line-height: 1.9; margin-top: 14px; }
 .personal-calendar .pc-notice { display: flex; gap: 12px; justify-content: space-between; align-items: center; font-size: 12px; color: var(--qg-success, #11805b); padding: 10px 14px; margin-top: 18px; border-radius: 7px; background: var(--qg-done-soft, #f0faf5); }
 .personal-calendar .pc-notice.is-error { color: var(--qg-danger, #b94739); background: var(--pc-surface); border: 1px solid currentColor; }
 .personal-calendar .pc-manual-form { margin-top: 24px; padding: 22px; background: var(--pc-soft); border: 1px solid var(--pc-line); border-radius: 10px; }
@@ -83,6 +102,8 @@
 .personal-calendar .pc-activity-description { min-width: 0; flex: 1; }
 .personal-calendar .pc-activity-description strong, .personal-calendar .pc-activity-meta strong { font-size: 12px; font-weight: 650; }
 .personal-calendar .pc-activity-description p { font-size: 11px; line-height: 1.7; color: var(--pc-muted); margin-top: 3px; overflow-wrap: anywhere; }
+.personal-calendar .pc-activity-description a { color: var(--qg-brand-ink, #5255da); }
+.personal-calendar .pc-activity-description a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .personal-calendar .pc-activity-meta { text-align: right; display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; }
 .personal-calendar .pc-activity-meta span { color: var(--pc-muted); font-size: 10px; }
 .personal-calendar .pc-empty { min-height: 220px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -130,6 +151,11 @@
   .personal-calendar .pc-stat dt { font-size: 10px; }
   .personal-calendar .pc-stat dd strong { font-size: 30px; }
   .personal-calendar .pc-stat p { font-size: 9px; }
+  .personal-calendar .pc-leetcode-heading { align-items: flex-start; }
+  .personal-calendar .pc-leetcode-heading .pc-text-button { font-size: 10px; gap: 6px; white-space: normal; flex-shrink: 0; max-width: 145px; }
+  .personal-calendar .pc-leetcode-stats { gap: 14px; }
+  .personal-calendar .pc-leetcode-stats > div + div { padding-left: 14px; }
+  .personal-calendar .pc-leetcode-stats dt { font-size: 10px; }
   .personal-calendar .pc-form-fields { grid-template-columns: 1fr 1fr; }
   .personal-calendar .pc-form-fields label:first-child { grid-column: 1 / -1; }
   .personal-calendar .pc-manual-form { padding: 17px; }

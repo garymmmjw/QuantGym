@@ -12,7 +12,7 @@ import { RouteProgressBar } from "./RouteProgressBar.jsx";
 const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
 
 const SHEET_NAV_GROUPS = [
-  { label: "个人备考", items: [["calendar", "训练日历", "calendar-days"], ["daily-mock", "Daily Mock", "clipboard-check"]] },
+  { label: "个人备考", items: [["calendar", "训练日历", "calendar-days"], ["daily-mock", "Daily Mock", "clipboard-check"], ["leetcode", "LeetCode", "code-2"]] },
   {
     label: "成长",
     items: [
@@ -274,6 +274,7 @@ export function AppShellMain() {
               <div className="module-nav-menu">
                 <button className="module-tab" type="button" data-module-tab="calendar"><i data-lucide="calendar-days"></i><span data-i18n="calendar">训练日历</span></button>
                 <button className="module-tab" type="button" data-module-tab="daily-mock"><i data-lucide="clipboard-check"></i>Daily Mock</button>
+                <button className="module-tab" type="button" data-module-tab="leetcode"><i data-lucide="code-2"></i>LeetCode</button>
               </div>
             </div>
             <div className="module-nav-group" aria-label="成长" data-i18n-aria-label="navGrowth">
