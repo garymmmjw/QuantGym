@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AUTH_KEY, USER_STATE_PREFIX } from "../../constants.js";
 import { isItemOwned } from "../../modules/economy/index.js";
-import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
-import { getCloudReauthentication } from "../../state/cloudReauthentication.js";
+import { useAppServicesContext, useAuthStore, useUserStateStore } from "../../stores/AppServicesContext.jsx";
+import { getCloudReauthentication, subscribeCloudReauthentication } from "../../state/cloudReauthentication.js";
 import "../../features/account/cloudSession.css";
 
 // Idle status copy written by the Google login runtime — the design keeps this
@@ -27,6 +27,7 @@ const authSharkLines = [
   "Quant workout 开始。",
   "刷题别慌，节奏最重要。"
 ];
+const noAccounts = [];
 
 function formatAuthStat(value) {
   return String(value);
@@ -53,7 +54,22 @@ function lastLocalAccountOwnsSleepWallpaper() {
 }
 
 export function AuthShell() {
-  const recovery = getCloudReauthentication();
+  const services = useAppServicesContext();
+  const recovery = useSyncExternalStore(subscribeCloudReauthentication, getCloudReauthentication, getCloudReauthentication);
+  const savedAccounts = useAuthStore(state => state.auth?.accounts || noAccounts);
+  const [loginEmail, setLoginEmail] = useState(recovery?.email || "");
+  const en = services.getLanguage?.() === "en";
+  const hasDeviceAccount = savedAccounts.some(account => account.provider === "local"
+    && String(account.email || "").trim().toLowerCase() === loginEmail.trim().toLowerCase()
+    && typeof account.passwordHash === "string" && Boolean(account.passwordHash));
+  const useDeviceAccount = () => {
+    services.services?.rebindElements?.();
+    return services.pageApi?.account?.loginDeviceAccount?.();
+  };
+  const cancelRecovery = () => {
+    services.services?.rebindElements?.();
+    return services.pageApi?.account?.cancelCloudRecovery?.();
+  };
   const [sharkBubbleText, setSharkBubbleText] = useState("");
   const [sharkBubbleVisible, setSharkBubbleVisible] = useState(false);
   const [sharkPoked, setSharkPoked] = useState(false);
@@ -156,6 +172,7 @@ export function AuthShell() {
     };
 
     const handleEmailInput = () => {
+      setLoginEmail(emailInput?.value || "");
       window.clearTimeout(restoreTimer);
       restoreTimer = window.setTimeout(() => {
         if (!passwordInput) return;
@@ -166,6 +183,7 @@ export function AuthShell() {
 
     passwordInput?.addEventListener("input", handlePasswordInput);
     emailInput?.addEventListener("input", handleEmailInput);
+    setLoginEmail(emailInput?.value || "");
 
     const clearIdleMessage = () => {
       const value = messageNode?.textContent?.trim() || "";
@@ -311,7 +329,10 @@ export function AuthShell() {
           </div>
 
           <div className="auth-panel qg-auth-card" role="dialog" aria-labelledby="authTitle" aria-describedby="authSubtitle">
-            {recovery && <p className="qg-auth-recovery-note" role="status" data-i18n="authCloudRecoveryNotice">请重新登录以恢复云端连接。本机训练记录已保留，登录成功后会返回刚才的页面。</p>}
+            {recovery && <div className="qg-auth-recovery-note">
+              <p role="status" data-i18n="authCloudRecoveryNotice">请重新登录以恢复云端连接。本机训练记录已保留，登录成功后会返回刚才的页面。</p>
+              <button type="button" className="auth-link-button" onClick={cancelRecovery}>{en ? "Not now · keep device access" : "暂不恢复云端"}</button>
+            </div>}
             <div className="auth-copy sr-only">
               <h2 id="authTitle" data-i18n="authTitle">登录或注册</h2>
               <p id="authSubtitle" data-i18n="authSubtitle">同步你的题库、模拟面试复盘、简历和训练进度。</p>
@@ -325,7 +346,7 @@ export function AuthShell() {
             <form className="auth-form auth-email-flow" id="loginForm" autoComplete="on" data-auth-step="email">
               <div className="auth-field">
                 <label className="auth-field-label" htmlFor="loginEmail" data-i18n="email">邮箱</label>
-                <input id="loginEmail" type="email" autoComplete="email" placeholder="you@example.com" defaultValue={recovery?.email || ""} />
+                <input id="loginEmail" type="email" autoComplete="email" placeholder="you@example.com" defaultValue={recovery?.email || ""} onChange={event => setLoginEmail(event.target.value)} onFocus={event => setLoginEmail(event.target.value)} />
               </div>
               <div className="auth-field auth-field-password">
                 <label className="auth-field-label" htmlFor="loginPassword" data-i18n="password">密码</label>
@@ -333,6 +354,10 @@ export function AuthShell() {
               </div>
               <button className="auth-link-button" id="forgotPasswordBtn" type="button" data-i18n="forgotPassword">忘记密码？</button>
               <button className="primary-button auth-submit" type="submit" data-i18n="login">登录</button>
+              {hasDeviceAccount && <div className="qg-auth-device-entry" data-device-account>
+                <p>{en ? "This browser has saved this account. Enter its device password to continue your saved practice. Cloud sync will stay off." : "此浏览器保存过这个账户。输入此设备账户的密码，即可继续已有训练；云端同步暂不启用。"}</p>
+                <button className="secondary-button" type="button" onClick={useDeviceAccount}>{en ? "Use this device's account" : "使用此设备的账户"}</button>
+              </div>}
             </form>
 
             <form className="auth-form auth-register-flow hidden" id="registerForm" autoComplete="on" data-register-stage={registerStage}>

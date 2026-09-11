@@ -9,7 +9,6 @@ import {
   getTotalXp
 } from "../../modules/skills/data.js";
 import { getEffectiveTotalXp } from "../../modules/economy/index.js";
-import { hashPassword } from "../../state/auth.js";
 
 function canCurrentUserReadAdminOverview(user = {}) {
   const tier = String(user?.subscriptionTier || user?.plan || "").toLowerCase();
@@ -51,6 +50,7 @@ export function useAccountPageModel() {
   const currentUser = auth.currentUser;
   const t = appServices.t || ((key) => key);
   const [message, setMessage] = useState("");
+  const [passwordChanging, setPasswordChanging] = useState(false);
   const [resumeMeta, setResumeMeta] = useState(() => accountApi?.getResumeMeta?.() || "");
   const [adminOverview, setAdminOverview] = useState({
     status: "idle",
@@ -183,38 +183,24 @@ export function useAccountPageModel() {
       setMessage(t("accountPwNeedCurrent") || "请先输入当前密码。");
       return { ok: false };
     }
-    const account = (appServices.appState?.auth?.accounts || []).find((item) => item.id === currentUser.id);
-    if (currentUser.provider !== "local" || !account?.passwordHash) {
-      setMessage(t("accountPwThirdParty") || "该账户由第三方登录管理，暂不支持在此修改密码。");
-      return { ok: false };
-    }
-    const currentHash = await hashPassword(account.email, form.currentPassword);
-    if (currentHash !== account.passwordHash) {
-      setMessage(t("accountPwWrongCurrent") || "当前密码不对，密码没有修改。");
-      return { ok: false };
-    }
-    account.passwordHash = await hashPassword(account.email, form.newPassword);
-    // Persist through the normal account save flow (writes auth + queues cloud sync)
-    // using the stored profile values so nothing else changes.
-    const result = await accountApi?.save?.({
-      name: currentUser.name || form.name,
-      email: currentUser.email || form.email,
-      country: currentUser.country || form.country,
-      region: currentUser.region || form.region,
-      graduationTerm: currentUser.graduationTerm || form.graduationTerm,
-      avatarUrl: currentUser.picture || "",
-      avatarData: "",
-      avatarCleared: false,
-      currentPassword: ""
-    });
-    if (!result?.ok) {
-      setMessage(result?.message || t("accountSaveFailed") || "保存失败。");
+    if (passwordChanging) return { ok: false, code: "busy" };
+    setPasswordChanging(true);
+    try {
+      const result = await accountApi?.changePassword?.({
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword
+      });
+      if (!result?.ok) {
+        setMessage(result?.message || t("accountSaveFailed") || "保存失败。");
+        return result;
+      }
+      setForm((prev) => ({ ...prev, currentPassword: "", newPassword: "" }));
+      setMessage(result.message);
       return result;
+    } finally {
+      setPasswordChanging(false);
     }
-    setForm((prev) => ({ ...prev, currentPassword: "", newPassword: "" }));
-    setMessage(t("accountPwChanged") || "密码已修改，下次登录请使用新密码。");
-    return { ok: true };
-  }, [accountApi, appServices, currentUser, form, t]);
+  }, [accountApi, currentUser, form, passwordChanging, t]);
 
   const canRequestAdminOverview = Boolean(
     currentUser?.id
@@ -309,6 +295,7 @@ export function useAccountPageModel() {
     logout,
     changePassword,
     passwordValid,
+    passwordChanging,
     stats,
     registeredLabel,
     lastAuthenticatedAt,

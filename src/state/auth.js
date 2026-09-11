@@ -3,11 +3,13 @@ import { normalizeEmail } from "../lib/text.js";
 export function normalizeAuth(raw = {}, options = {}) {
   const defaultGoogleClientId = options.defaultGoogleClientId || "";
   const normalizeAccount = options.normalizeAccount || ((account) => account || {});
-  const hasGoogleClientId = Object.prototype.hasOwnProperty.call(raw, "googleClientId");
+  const savedGoogleClientId = String(raw.googleClientId || "").trim();
   return {
     accounts: Array.isArray(raw.accounts) ? raw.accounts.map(normalizeAccount) : [],
     currentUserId: raw.currentUserId || "",
-    googleClientId: hasGoogleClientId ? String(raw.googleClientId || "").trim() : defaultGoogleClientId,
+    // Older device profiles saved an empty field before Google was enabled.
+    // Keep explicit nonempty overrides while adopting a later deployment ID.
+    googleClientId: savedGoogleClientId || defaultGoogleClientId,
     lastAuthenticatedAt: raw.lastAuthenticatedAt || ""
   };
 }

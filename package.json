@@ -6,6 +6,8 @@
     "node": ">=20.19.0 <21 || >=22.12.0 <25"
   },
   "scripts": {
+    "test:account": "node --test scripts/test-cloud-session-status.mjs scripts/test-cloud-reauth-controller.mjs scripts/test-account-password-api.mjs scripts/test-auth-google-config.mjs",
+    "test:account:api": "python3 scripts/test-account-password-api.py",
     "test:cloud-session": "node --test scripts/test-cloud-session-status.mjs scripts/test-cloud-reauth-controller.mjs",
     "dev": "vite",
     "start": "node llm-proxy/server.mjs",
