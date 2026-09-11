@@ -6,6 +6,8 @@ import {
 import { AttemptTrend, TrialHistory } from './AttemptTrend.jsx';
 import { formatAttemptSettings } from './attemptHistory.js';
 import { PreparationCountdown } from './PreparationCountdown.jsx';
+import { PracticeFocus, requestPracticeFullscreen } from './PracticeFocus.jsx';
+import './moduleSetup.css';
 import { trainerKind, TRAINER_LABELS } from './trainingSettings.js';
 import { cancelTrialPreparation } from './reasoningEngine.js';
 import './mental.css';
@@ -81,6 +83,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
     });
     if (finished) {
       setSelectedId(finished.id);
+      setDetailsOpen(true);
       if (!reported.current.has(finished.id)) {
         reported.current.add(finished.id);
         if ((finished.dailySessionId || null) === (callbacks.current.dailySessionId || null)) callbacks.current.onComplete?.(finished);
@@ -130,8 +133,20 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
 
   useEffect(() => { if (active && !preparing) inputRef.current?.focus(); }, [active?.id, active?.currentQuestion?.id, preparing]);
 
+  function exitPractice() {
+    if (!active) return;
+    const at = Date.now();
+    if (at < Date.parse(active.startedAt)) {
+      update(latest => cancelTrialPreparation(latest, active.id, at));
+    } else {
+      applyAction({ type: 'abort' }, at);
+    }
+  }
+
   function start(event) {
     event.preventDefault();
+    if (state.activeTrial?.status === 'active') return;
+    requestPracticeFullscreen();
     const at = Date.now();
     callbacks.current.update((latest) => {
       if (latest.activeTrial?.status === 'active') return latest;
@@ -139,6 +154,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
       return { ...latest, mentalSettings: settings, activeTrial: createTrial(settings, { now: at, dailySessionId, preparationSeconds: 5 }) };
     });
     setSelectedId(null);
+    setDetailsOpen(false);
     setNow(at);
   }
 
@@ -155,7 +171,9 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
     </header>}
 
     {foreignActive && <p className="pm-context-note">{en ? `A ${TRAINER_LABELS[trainerKind(foreignActive)]} trial is still running.` : `${TRAINER_LABELS[trainerKind(foreignActive)]} 仍在计时，请先完成当前试次。`} <a href="/tools">{en ? 'Continue trial' : '继续当前训练'}</a></p>}
+    <div className="pm-module-layout">
     {!active && <form ref={setupRef} className="pm-setup" onSubmit={start}>
+      <div className="pm-setup-title"><h3>{en ? 'Session settings' : '训练设置'}</h3><span>{en ? 'Make it your own' : '按你的节奏'}</span></div>
       <div className="pm-setup-toolbar">
         <label className="pm-duration" htmlFor={`${configId}-duration`}>{en ? 'Duration' : '时长'}
           <input id={`${configId}-duration`} type="number" min="10" max="3600" step="1" required disabled={durationSeconds != null}
@@ -185,14 +203,16 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
         <p className="pm-note">{en ? 'Subtraction can be negative. Division is generated from divisor × integer quotient. Reversed ranges are automatically ordered.' : '减法可能出现负数；除法按「除数 × 整数商」生成。范围上下限填反时会自动排序。'}</p>
       </details>
       <div className="pm-ready">
+        <span className="pm-ready-label">{en ? 'YOUR NEXT SESSION' : '下一场训练'}</span>
         <p className="pm-ready-clock">{clockLabel(effectiveDraft.durationSeconds * 1000)}</p>
-        <p>{en ? 'A clear mind. One answer at a time.' : '只看眼前这一题。'}</p>
-        <button type="submit" className="pm-primary" disabled={Boolean(foreignActive)}>{en ? 'Start trial' : '开始试次'} <span aria-hidden="true">↗</span></button>
-        <p className="pm-note">{en ? 'Starts after a 5-second countdown. Correct answers advance automatically. The clock keeps running if you leave or refresh.' : '开始前准备 5 秒，答对自动进入下一题。切换页面或刷新后继续计时。'}</p>
+        <p>{en ? 'A clear mind. One answer at a time.' : '静下心，只看眼前这一题。'}</p>
+        <button type="submit" className="pm-primary" data-pm-start disabled={Boolean(foreignActive)}>{en ? 'Start practice' : '开始训练'} <span aria-hidden="true">↗</span></button>
+        <p className="pm-note">{en ? 'Enter fullscreen · 5 seconds to get ready. Correct answers advance automatically. Return here when time is up.' : '全屏进入 · 5 秒准备。答对自动切题，计时结束后自动返回这里。'}</p>
       </div>
     </form>}
 
-    {preparing && <PreparationCountdown trial={active} now={now} language={language} onCancel={() => update(latest => cancelTrialPreparation(latest, active.id))} />}
+    {active && <PracticeFocus active language={language} title="Math Trainer" onExit={exitPractice}>
+    {preparing && <PreparationCountdown trial={active} now={now} language={language} onCancel={exitPractice} />}
     {active && !preparing && <div className="pm-arena">
       {(active.dailySessionId || null) !== (dailySessionId || null) && <p className="pm-context-note">{en ? 'An earlier trial is still running. Finish it before starting this session.' : '另一个试次仍在计时，请先继续完成或提前结束，再开始本次训练。'}</p>}
       <div className="pm-arena-stats"><div><span>{en ? 'Remaining' : '剩余时间'}</span><strong className={remaining <= 10000 ? 'pm-time-low' : ''}>{clockLabel(remaining)}</strong></div><div><span>{en ? 'Correct' : '已答对'}</span><strong>{active.correct}</strong></div></div>
@@ -204,10 +224,15 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
         {active.settings.operations.includes('subtract') && <button type="button" className="pm-text-button pm-sign-toggle" aria-label={en ? 'Toggle answer sign' : '切换答案正负号'} onMouseDown={event => event.preventDefault()} onClick={() => { const value = active.currentAnswer || ''; applyAction({ type: 'input', value: value.startsWith('-') ? value.slice(1) : `-${value}` }); inputRef.current?.focus(); }}>± {en ? 'Change sign' : '正负号'}</button>}
         <p className="pm-question-meta">{en ? 'Question' : '第'} {active.currentQuestion?.index} {en ? '' : '题'} · {en ? 'Time on this question' : '本题用时'} <span>{seconds(Math.max(0, Math.min(now, Date.parse(active.deadlineAt)) - Date.parse(active.currentQuestion?.startedAt)))}</span></p>
         {active.currentQuestion?.mistakes?.length > 0 && <p className="pm-wrong-note" role="status">{en ? 'Not yet — try again. Wrong submissions:' : '答案还不对，继续试试。已记录错误提交：'} {active.currentQuestion.mistakes.length}</p>}
-        <div className="pm-answer-controls"><button type="button" className="pm-text-button" onClick={() => applyAction({ type: 'skip' })}>{en ? 'Skip question' : '跳过本题'}</button><span>{en ? 'Correct = next · Enter = submit' : '答对自动下一题 · Enter 提交'}</span><button type="button" className="pm-text-button" onClick={() => applyAction({ type: 'abort' })}>{en ? 'End early (saved, no best score)' : '提前结束（保存，但不计纪录）'}</button></div>
+        <div className="pm-answer-controls"><button type="button" className="pm-text-button" onClick={() => applyAction({ type: 'skip' })}>{en ? 'Skip question' : '跳过本题'}</button><span>{en ? 'Correct = next · Enter = submit' : '答对自动下一题 · Enter 提交'}</span></div>
       </form>
     </div>}
 
+    </PracticeFocus>}
+
+    <aside className="pm-module-history" aria-label={en ? 'Practice history and results' : '训练历史与成绩'}>
+    <div className="pm-history-heading"><span className="pm-ready-label">{en ? 'YOUR PROGRESS' : '每次练习，都有迹可循'}</span><h3>{en ? 'Practice history' : '训练记录'}</h3></div>
+    {!active && selectedId && selected && <div className="pm-session-result" role="status"><div><strong>{selected.status === 'completed' ? en ? 'Session complete' : '训练完成' : en ? 'Session saved' : '训练已保存'}</strong><span>{en ? 'Average per correct answer' : '正确题平均用时'} · {seconds(summary.meanMs)}</span></div><b>{summary.correct}<small>{en ? 'correct' : '题正确'}</small></b></div>}
     <div className="pm-records" aria-label={en ? 'Personal records' : '个人纪录'}>
       <div className="pm-record"><span>{en ? 'Highest score' : '最高正确数'}</span><strong>{bests.bestCorrect ?? '—'}<small>{en ? 'correct' : '题'}</small></strong></div>
       <div className="pm-record"><span>{en ? 'Fastest question' : '最快单题'}</span><strong>{seconds(bests.fastestMs)}</strong></div>
@@ -215,6 +240,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
       <p className="pm-record-note">{en ? `Current settings records · ${bests.trialCount} completed trials. Early endings excluded.` : `当前设置纪录 · ${bests.trialCount} 次完整试次，提前结束不计入。`}<br />{formatAttemptSettings(bestSettings, language)}</p>
     </div>
 
+    <TrialHistory trials={trials} selectedId={selected?.id} disabled={Boolean(active)} language={language} onSelect={selectTrial} />
     <AttemptTrend trials={trials} currentSettings={bestSettings} language={language} selectedId={selected?.id} disabled={Boolean(active)} onSelect={selectTrial} dayKey={new Date(now).toDateString()} />
 
     <section className="pm-analysis pm-trial-details" ref={detailsRef} tabIndex={-1} aria-label={en ? 'Selected trial details' : '所选试次详情'}>
@@ -233,6 +259,7 @@ export function MentalMathTrainer({ state, update, language = 'zh', dailySession
       </>}
     </section>
 
-    <TrialHistory trials={trials} selectedId={selected?.id} disabled={Boolean(active)} language={language} onSelect={selectTrial} />
+    </aside>
+    </div>
   </section>;
 }

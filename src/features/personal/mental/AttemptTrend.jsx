@@ -86,9 +86,9 @@ export const AttemptTrend = memo(function AttemptTrend({ trials, currentSettings
     </div>
     <p className="pm-note pm-filter-description">{settingsFilter === 'all' ? (en ? 'Different durations, difficulty levels and number ranges affect scores. Use matching settings to compare your progress.' : '不同时长、难度和数字范围会影响得分；比较进步时建议选择相同设置。') : formatAttemptSettings(settingsFilter === 'current' ? currentSettings : history.settingsOptions.find(option => option.key === settingsFilter)?.settings, language)}</p>
     <figure className="pm-attempt-chart" ref={chartRef}>
-      <svg viewBox={`0 0 ${width} ${height}`} role="group" aria-labelledby={`${chartId}-title ${chartId}-description`}>
+      {points.length > 0 && <svg viewBox={`0 0 ${width} ${height}`} role="group" aria-labelledby={`${chartId}-title ${chartId}-description`}>
         <title id={`${chartId}-title`}>{en ? 'Scores across attempts' : '历次 Attempt 得分曲线'}</title>
-        <desc id={`${chartId}-description`}>{en ? 'Use arrow keys to inspect points and Enter to open question details. Early endings are excluded. The full trial history is also available below.' : '使用方向键查看各点，Enter 打开逐题明细。提前结束不计入曲线，下方保留全部试次历史。'}</desc>
+        <desc id={`${chartId}-description`}>{en ? 'Use arrow keys to inspect points and Enter to open question details. Early endings are excluded. The full trial history is also available on this page.' : '使用方向键查看各点，Enter 打开逐题明细。提前结束不计入曲线，本页保留全部试次历史。'}</desc>
         {yTicks.map(tick => <g key={tick} aria-hidden="true"><line x1={left} x2={width - right} y1={y(tick)} y2={y(tick)} className="pm-chart-grid" /><text x={left - 10} y={y(tick) + 4} textAnchor="end" className="pm-chart-label">{tick}</text></g>)}
         <text x={left} y="12" className="pm-chart-label" aria-hidden="true">{en ? 'Score' : '得分'}</text>
         {xTicks.map(point => <text key={point.id} x={x(point.x)} y={height - bottom + 23} textAnchor="middle" className="pm-chart-label" aria-hidden="true">{xAxis === 'attempt' ? point.ordinal : new Date(point.timestamp).toLocaleDateString(en ? 'en-US' : 'zh-CN', { month: 'numeric', day: 'numeric', ...(xDomain[1] - xDomain[0] > 31536000000 ? { year: '2-digit' } : {}) })}</text>)}
@@ -103,11 +103,11 @@ export const AttemptTrend = memo(function AttemptTrend({ trials, currentSettings
           <circle cx={x(point.x)} cy={y(point.score)} r={inspected?.id === point.id ? 5.5 : 3.5} className="pm-trend-dot" />
           {selectedId === point.id && <circle cx={x(point.x)} cy={y(point.score)} r="9" className="pm-trend-ring" />}
         </g>)}
-      </svg>
+      </svg>}
       {!points.length && <p className="pm-history-empty">{history.emptyReason === 'no-history' ? en ? 'Complete a full trial to start your progress curve.' : '完成一次完整试次后，成绩会出现在这里。' : en ? 'No completed attempts match these filters. Try all settings or a wider time range.' : '当前筛选下没有完整试次，可切换所有设置或扩大时间范围。'}</p>}
       {inspected && <figcaption className="pm-trend-caption"><strong>Attempt #{inspected.ordinal} · {inspected.score} {en ? 'correct' : '题'}</strong><span>{dateLabel(inspected.startedAt, language)} · {en ? 'Average' : '正确题均时'} {seconds(inspected.meanMs)}</span><span>{inspected.settingsLabel}</span><button type="button" className="pm-text-button" disabled={disabled} onClick={() => onSelect(inspected.id)}>{en ? 'View question details' : '查看该次逐题明细'} ↗</button></figcaption>}
     </figure>
-    <p className="pm-note">{en ? `${points.length} completed attempts shown. Attempt numbers keep their original order after filtering. Early endings stay in history below.` : `显示 ${points.length} 次完整试次。筛选后保留原始 Attempt 序号；提前结束的记录仍在下方历史中。`}{disabled && (en ? ' Finish the running trial to open past question details.' : ' 当前试次结束后可打开历史逐题明细。')}</p>
+    <p className="pm-note">{en ? `${points.length} completed attempts shown. Attempt numbers keep their original order after filtering. Early endings stay in trial history.` : `显示 ${points.length} 次完整试次。筛选后保留原始 Attempt 序号；提前结束的记录仍保留在试次历史中。`}{disabled && (en ? ' Finish the running trial to open past question details.' : ' 当前试次结束后可打开历史逐题明细。')}</p>
   </section>;
 });
 

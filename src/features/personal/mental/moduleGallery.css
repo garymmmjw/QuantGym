@@ -1,0 +1,72 @@
+.pm-workspace-heading { align-items: flex-start; margin-bottom: 34px; }
+.pm-workspace-heading .pm-mode-label { padding-top: 6px; }
+.personal-mental .pm-workspace-heading h2:focus { outline: none; }
+.pm-workspace-description { margin: 12px 0 0; color: var(--pm-muted); font-size: 13px; line-height: 1.8; }
+.pm-module-navigation { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 28px; }
+.personal-mental .pm-module-back { display: inline-flex; align-items: center; gap: 10px; min-height: 36px; padding: 0; border: 0; border-radius: 0; background: transparent; color: #64719a; font-size: 12px; box-shadow: none; }
+.personal-mental .pm-module-back:hover:not(:disabled) { color: var(--pm-blue); }
+.pm-module-back > span { font-size: 19px; line-height: 1; }
+.pm-module-breadcrumb { font-size: 11px; color: var(--pm-muted); }
+
+.pm-module-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 22px; padding: 10px 0 20px; isolation: isolate; }
+.personal-mental .pm-module-card { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 465px; padding: 0; overflow: hidden; text-align: left; color: var(--pm-ink); border: 1px solid #e0e5ef; border-radius: 15px; background: #fff; box-shadow: 0 4px 12px -10px #34488536; transform: translateY(0) scale(1); transform-origin: center center; transition: transform 300ms cubic-bezier(.2,.7,.2,1), box-shadow 300ms ease, border-color 300ms ease; }
+.pm-module-art { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 222px; overflow: hidden; background: #f0f3fc; border-bottom: 1px solid #e8ecf7; }
+.pm-module-card-sequence .pm-module-art { background: #f2f4fb; }
+.pm-module-card-pattern .pm-module-art { background: #eef2fa; }
+.pm-module-index { position: absolute; top: 21px; left: 25px; color: #8794b8; font-size: 10px; letter-spacing: .08em; }
+.pm-module-illustration { display: block; width: 100%; height: auto; overflow: visible; color: var(--pm-blue); }
+.pm-art-guide { stroke: #ccd5ee; stroke-width: 1; }
+.pm-art-stroke { stroke: #6276cf; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pm-art-accent { stroke: #697ddb; stroke-width: 2; stroke-linecap: round; }
+.pm-art-number, .pm-art-operator, .pm-art-small-number, .pm-art-missing { fill: #586ac1; font-family: var(--qg-font-number, system-ui, sans-serif); font-weight: 400; }
+.pm-art-number { font-size: 48px; letter-spacing: -.04em; }
+.pm-art-operator { font-size: 34px; fill: #8a9adb; }
+.pm-art-small-number { font-size: 22px; }
+.pm-art-missing { font-size: 24px; }
+.pm-art-dot, .pm-art-point { fill: #6579cf; }
+.pm-art-halo { fill: #e1e7fa; stroke: #b8c6ee; stroke-width: 1; }
+.pm-art-fill { fill: #b5c3ed; }
+.pm-module-content { display: flex; flex: 1; flex-direction: column; align-items: flex-start; padding: 27px 25px 23px; }
+.pm-module-category { color: var(--pm-muted); font-size: 10px; letter-spacing: .05em; }
+.pm-module-title { display: block; margin-top: 10px; font-size: clamp(22px, 2.2vw, 29px); font-weight: 550; letter-spacing: -.045em; line-height: 1.25; }
+.pm-module-description { display: block; max-width: 29em; margin-top: 14px; color: var(--pm-muted); font-size: 13px; font-weight: 400; line-height: 1.85; }
+.pm-module-link { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: auto; padding-top: 32px; color: var(--pm-blue); font-size: 12px; font-weight: 550; }
+.pm-module-arrow { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid #dce3f6; border-radius: 50%; font-size: 20px; font-weight: 400; transition: transform 300ms ease, color 300ms ease, background 300ms ease; }
+.personal-mental .pm-module-card:focus-visible { z-index: 2; border-color: #b1bfe9; box-shadow: 0 20px 34px -22px #35498350; }
+@media (hover: hover) and (pointer: fine) {
+  .pm-module-gallery:has(.pm-module-card:hover) .pm-module-card:not(:hover),
+  .pm-module-gallery:has(.pm-module-card:focus-visible) .pm-module-card:not(:focus-visible):not(:hover) { transform: translateY(3px) scale(.98); }
+  .personal-mental .pm-module-card:hover, .personal-mental .pm-module-card:focus-visible { z-index: 2; transform: translateY(-9px) scale(1.015); border-color: #b1bfe9; box-shadow: 0 24px 40px -24px #35498355; }
+  .pm-module-card:hover .pm-module-arrow, .pm-module-card:focus-visible .pm-module-arrow { transform: rotate(45deg); color: #fff; background: var(--pm-blue); border-color: var(--pm-blue); }
+}
+@media (max-width: 1000px) {
+  .pm-module-gallery { gap: 15px; }
+  .pm-module-content { padding: 23px 20px 20px; }
+  .pm-module-art { min-height: 205px; }
+  .personal-mental .pm-module-card { min-height: 440px; }
+  .pm-module-title { font-size: 24px; }
+}
+@media (max-width: 800px) {
+  .pm-module-gallery { grid-template-columns: 1fr; gap: 20px; padding-top: 0; }
+  .personal-mental .pm-module-card { flex-direction: row; min-height: 252px; }
+  .pm-module-art { width: 37%; min-height: 100%; border-bottom: 0; border-right: 1px solid #e8ecf7; }
+  .pm-module-content { width: 63%; }
+  .pm-module-title { font-size: 28px; }
+  .pm-module-index { top: 19px; left: 19px; }
+}
+@media (max-width: 520px) {
+  .pm-workspace-heading { margin-bottom: 25px; gap: 12px; }
+  .pm-workspace-heading .pm-mode-label { padding-top: 3px; font-size: 9px; }
+  .pm-workspace-description { font-size: 12px; }
+  .pm-module-navigation { margin-bottom: 20px; }
+  .personal-mental .pm-module-card { flex-direction: column; min-height: 0; }
+  .pm-module-art { width: 100%; min-height: 190px; height: 190px; border-right: 0; border-bottom: 1px solid #e8ecf7; }
+  .pm-module-illustration { width: 320px; max-width: 100%; height: auto; }
+  .pm-module-content { width: 100%; padding: 23px; }
+  .pm-module-title { font-size: 28px; }
+  .pm-module-link { padding-top: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .personal-mental .pm-module-card, .pm-module-arrow { transition: none; }
+  .pm-module-gallery .pm-module-card, .pm-module-gallery:has(.pm-module-card:hover) .pm-module-card:not(:hover), .pm-module-gallery:has(.pm-module-card:focus-visible) .pm-module-card:not(:focus-visible):not(:hover), .personal-mental .pm-module-card:hover, .personal-mental .pm-module-card:focus-visible, .pm-module-card:hover .pm-module-arrow, .pm-module-card:focus-visible .pm-module-arrow { transform: none; }
+}
