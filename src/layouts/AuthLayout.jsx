@@ -1,10 +1,21 @@
-import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { AuthShell } from "../components/shell/AuthShell.jsx";
 import { useAppServicesContext, useAuthStore } from "../stores/AppServicesContext.jsx";
+import { clearCloudReauthentication, getCloudReauthentication, safeReturnPath } from "../state/cloudReauthentication.js";
+
+function LoginSuccessRedirect() {
+  const location = useLocation();
+  const from = location.state?.from;
+  const previousPath = typeof from === "string" ? from : from?.pathname ? `${from.pathname}${from.search || ""}${from.hash || ""}` : "/";
+  const target = safeReturnPath(getCloudReauthentication()?.returnTo || previousPath, "/");
+  useEffect(() => { clearCloudReauthentication(); }, []);
+  return <Navigate to={target} replace />;
+}
 
 export function AuthLayout() {
   const appServices = useAppServicesContext();
   const currentUser = useAuthStore((state) => state.currentUser) || appServices.appState?.currentUser;
-  if (currentUser) return <Navigate to="/" replace />;
+  if (currentUser) return <LoginSuccessRedirect />;
   return <AuthShell />;
 }

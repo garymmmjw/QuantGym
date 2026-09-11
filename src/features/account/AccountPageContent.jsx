@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useAccountPageModel } from "./accountHooks.js";
 import { LeetCodeConnection } from "../leetcode/LeetCodeConnection.jsx";
+import { useCloudSession } from "./useCloudSession.js";
 
 function countAuthEvents(metrics = {}) {
   return (metrics.audit?.authEvents24h || []).reduce((total, item) => total + Number(item.count || 0), 0);
@@ -109,6 +110,7 @@ function AdminOverviewPanel({ model }) {
 
 export function AccountPageContent() {
   const model = useAccountPageModel();
+  const cloudSession = useCloudSession();
   const countryRef = useRef(null);
   const regionRef = useRef(null);
 
@@ -152,7 +154,7 @@ export function AccountPageContent() {
     <section className="qg-support-page qg-account-page">
       <div className="section-heading account-header">
         <div>
-          <span className="account-kicker">{model.t("accountKicker") || "ACCOUNT · 云同步已开启"}</span>
+          <span className="account-kicker">ACCOUNT · {cloudSession.label}</span>
           <h2>{model.t("accountHeading") || "账户"}</h2>
           <small id="accountMessage">{model.message || model.t("accountHeaderSub") || "个人资料 · 头像 · 登录与安全"}</small>
         </div>

@@ -6,6 +6,7 @@
     "node": ">=20.19.0 <21 || >=22.12.0 <25"
   },
   "scripts": {
+    "test:cloud-session": "node --test scripts/test-cloud-session-status.mjs scripts/test-cloud-reauth-controller.mjs",
     "dev": "vite",
     "start": "node llm-proxy/server.mjs",
     "build": "node scripts/build-static-site.mjs",

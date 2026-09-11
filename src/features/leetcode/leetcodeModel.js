@@ -68,7 +68,8 @@ export function drawReviewProblem(problems, previousSlug = "", random = Math.ran
 }
 
 export function leetcodeError(error, en = false) {
-  if (error?.status === 401 || error?.status === 403) return en ? "Sign in to your QuantGym cloud account again." : "请重新登录 QuantGym 云端账户。";
+  if (error?.status === 401) return en ? "Your cloud session is no longer valid. Sign in again to reconnect." : "云端登录已失效，请重新登录以恢复连接。";
+  if (error?.status === 403) return en ? "This account does not have access to this cloud feature." : "当前账户没有此云端功能的访问权限。";
   if (error?.status === 429) return en ? "Please wait a moment before syncing again." : "同步较频繁，请稍后再试。";
   if (error?.status === 404) return en ? "The account or connection could not be found." : "未找到该账号或关联记录，请检查主页链接。";
   if (error?.status === 409) return en ? "The linked account changed. Refresh and try again." : "关联账号已变化，请刷新后重试。";

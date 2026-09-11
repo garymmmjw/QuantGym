@@ -1,4 +1,5 @@
 import { createPersonalState, mergePersonalData, validatePersonalData } from './personalStore.js';
+import { reportCloudSessionResponse } from '../../state/cloudSessionStatus.js';
 
 export async function personalFingerprint(data) {
   // Postgres jsonb can return object keys in a different order than the browser.
@@ -21,6 +22,7 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
   try { meta = JSON.parse(storage?.getItem(metaKey) || 'null'); } catch { /* Reconcile safely without metadata. */ }
   let stopped = false, running = null, requested = false, timer = null, interval = null, unsubscribe = null;
   let applyingRemote = false, flushOnStop = false;
+  let authRejected = false;
   const status = (value) => { if (!stopped) onStatus(value); };
   async function request(method, body) {
     const controller = new AbortController();
@@ -31,6 +33,8 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
         body: body ? JSON.stringify(body) : undefined, cache: 'no-store', signal: controller.signal,
       });
       const payload = await response.json().catch(() => ({}));
+      reportCloudSessionResponse({ endpoint: base, token, userId: ownerId }, response.status);
+      if (response.status === 401) authRejected = true;
       if (!response.ok) throw Object.assign(new Error(payload.error || `HTTP ${response.status}`), { status: response.status });
       if (payload.version !== 1 || !Number.isInteger(payload.revision) || payload.revision < 0) throw new Error('Invalid cloud revision.');
       if (payload.data !== null) payload.data = validatePersonalData(payload.data);
@@ -95,6 +99,7 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
     }
   }
   function sync() {
+    if (authRejected) { status({ phase: 'auth' }); return Promise.resolve(); }
     if (stopped && !flushOnStop) return Promise.resolve();
     if (running) { requested = true; return running; }
     clearTimeout(timer);
@@ -105,7 +110,7 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
         await perform().catch(error => {
           status({ phase: error.status === 401 ? 'auth' : 'error', message: error.message });
         });
-      } while (requested && (!stopped || flushOnStop));
+      } while (requested && !authRejected && (!stopped || flushOnStop));
     })().finally(() => {
       running = null;
       flushOnStop = false;
@@ -114,6 +119,7 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
   }
   function schedule() {
     if (!enabled || stopped || applyingRemote) return;
+    if (authRejected) { status({ phase: 'auth' }); return; }
     status({ phase: 'pending' });
     if (running) { requested = true; return; }
     clearTimeout(timer);

@@ -1,4 +1,5 @@
 import { requestJson } from './client.js';
+import { reportCloudSessionResponse } from '../state/cloudSessionStatus.js';
 
 export function normalizeCloudConfig(raw = {}, defaultEndpoint = "") {
   return {
@@ -47,14 +48,23 @@ export function getLlmRequestHeaders(config = {}) {
 }
 
 export async function cloudApi(path, options = {}) {
-  const config = options.config || {};
-  return requestJson(path, {
-    baseUrl: getCloudApiBase(config, options.defaultEndpoint || ""),
-    method: options.method || "GET",
-    token: config.token,
-    auth: options.auth !== false,
-    body: options.body
-  });
+  const config = { ...(options.config || {}) };
+  try {
+    const data = await requestJson(path, {
+      baseUrl: getCloudApiBase(config, options.defaultEndpoint || ""),
+      method: options.method || "GET",
+      token: config.token,
+      auth: options.auth !== false,
+      body: options.body
+    });
+    // Public endpoints also use this client. Only an authenticated endpoint
+    // can establish that the server has accepted the active credentials.
+    if (options.auth !== false && ["/account", "/sync"].includes(path)) reportCloudSessionResponse(config, 200);
+    return data;
+  } catch (error) {
+    if (options.auth !== false) reportCloudSessionResponse(config, error.status);
+    throw error;
+  }
 }
 
 export function sanitizeAccountForCloud(account = {}) {

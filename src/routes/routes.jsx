@@ -1,8 +1,7 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { AppChromeLayout } from "../layouts/AppChromeLayout.jsx";
 import { AuthLayout } from "../layouts/AuthLayout.jsx";
-import { useAppServicesContext, useAuthStore } from "../stores/AppServicesContext.jsx";
 import { ProtectedRoute } from "./ProtectedRoute.jsx";
 import { routeConfig } from "./routeConfig.js";
 
@@ -99,21 +98,9 @@ function AppRouteElements() {
   });
 }
 
-function AuthenticatedLoginRedirect() {
-  const appServices = useAppServicesContext();
-  const currentUser = useAuthStore((state) => state.currentUser) || appServices.appState?.currentUser;
-  const location = useLocation();
-
-  if (currentUser && location.pathname === "/login") {
-    return <Navigate to="/" replace />;
-  }
-  return null;
-}
-
 export function AppRoutes() {
   return (
     <>
-      <AuthenticatedLoginRedirect />
       <Routes>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={null} />
