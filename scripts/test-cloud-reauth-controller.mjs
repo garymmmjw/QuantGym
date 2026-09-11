@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createAccountAuthController } from '../src/modules/account/authController.js';
 import { applyGoogleAccount, buildGoogleAccountFromPayload, upsertAuthAccount } from '../src/state/auth.js';
+import { beginCloudReauthentication, cancelCloudReauthentication, clearCloudReauthentication, clearPendingAuthReturnPath, getCloudReauthentication, getPendingAuthReturnPath } from '../src/state/cloudReauthentication.js';
 
 const localAccount = { id: 'local:fixture', provider: 'local', email: 'fixture@example.test', name: 'Fixture', passwordHash: 'fixture-hash' };
 const googleAccount = { id: 'google:fixture', provider: 'google', email: 'fixture@example.test', name: 'Fixture Google' };
@@ -18,6 +19,7 @@ function setup({ recovery = false, provider = 'local', failure, session } = {}) 
     getAppState: () => appState,
     getUserStateStore: () => userState,
     getCloudReauthentication: () => recovery ? { ownerId: account.id, email: account.email, returnTo: '/leetcode' } : null,
+    cancelCloudReauthentication: () => { recovery = false; calls.push('cancel-recovery'); },
     elements: { loginEmail: { value: account.email }, loginPassword: { value: 'fixture-password' }, loginForm: { dataset: {}, reset: () => calls.push('reset-form') }, resetPasswordEmail: { value: account.email }, resetPasswordNewPassword: { value: 'fixture-new-password' }, resetPasswordVerificationCode: { value: '123456' }, resetPasswordForm: { reset: () => calls.push('reset-password-form') } },
     normalizeEmail: value => String(value || '').trim().toLowerCase(),
     normalizeAccount: value => value,
@@ -34,7 +36,7 @@ function setup({ recovery = false, provider = 'local', failure, session } = {}) 
     applyCloudSession: (payload, options) => {
       calls.push('apply-cloud');
       assert.equal(options.localState, records);
-      upsertAuthAccount(appState.auth, payload.account);
+      upsertAuthAccount(appState.auth, payload.account, { localFields: options.passwordHash ? { passwordHash: options.passwordHash } : {} });
       appState.currentUser = payload.account;
       appState.cloudConfig = { ...appState.cloudConfig, token: payload.token, userId: payload.account.id, lastError: '' };
     },
@@ -116,15 +118,14 @@ for (const provider of ['local', 'google']) {
     assert.equal(harness.calls.includes('render'), true);
   });
 
-  test(`${provider}: ordinary offline sign-in still works with old cloud credentials cleared first`, async () => {
+  test(`${provider}: ordinary cloud sign-in requires server success even when a device account exists`, async () => {
     const harness = setup({ provider, failure: cloudError() });
+    const before = structuredClone(harness.appState);
     await login(harness);
-    assert.equal(harness.appState.currentUser.id, provider === 'google' ? 'google:fixture' : 'local:fixture');
-    assert.equal(harness.appState.cloudConfig.token, '');
-    assert.equal(harness.appState.cloudConfig.userId, '');
-    assert.equal(harness.appState.cloudConfig.lastSyncAt, '');
-    assert.equal(harness.appState.cloudConfig.lastError, provider === 'google' ? 'authGoogleLocalSession' : 'authCloudLocalSession');
-    assert.deepEqual(harness.savedTokens, ['']);
+    assert.deepEqual(harness.appState, before);
+    assert.equal(harness.calls.includes('apply-google-local'), false);
+    assert.deepEqual(harness.savedTokens, []);
+    assert.equal(harness.messages.at(-1).error, true);
     assert.equal(harness.userState.value, harness.records);
     assert.equal(harness.cloudCalls, 1);
   });
@@ -248,7 +249,8 @@ for (const name of ['email', 'google']) {
 test('a newer sign-in supersedes an older password hash that is still resolving', async () => {
   const harness = setup({ recovery: true });
   const hashing = deferred();
-  harness.deps.hashPassword = () => hashing.promise;
+  let hashCalls = 0;
+  harness.deps.hashPassword = () => ++hashCalls === 1 ? hashing.promise : Promise.resolve('fixture-hash');
   const older = harness.controller.resetPassword();
   await Promise.resolve();
   const current = harness.controller.loginLocal();
@@ -260,4 +262,144 @@ test('a newer sign-in supersedes an older password hash that is still resolving'
   assert.deepEqual(harness.appState, stateAfterSuccess);
   assert.deepEqual(harness.calls, callsAfterSuccess);
   assert.equal(harness.appState.auth.accounts[0].passwordHash, 'fixture-hash');
+});
+
+test('explicit device login verifies its password, clears cloud credentials first and retains saved records', async () => {
+  const harness = setup({ recovery: true });
+  const savedRecords = structuredClone(harness.records);
+  const result = await harness.controller.loginLocal({ deviceOnly: true });
+  assert.deepEqual(result, { ok: true, mode: 'device' });
+  assert.equal(harness.cloudCalls, 0);
+  assert.equal(harness.appState.currentUser.id, localAccount.id);
+  assert.equal(harness.appState.cloudConfig.token, '');
+  assert.equal(harness.appState.cloudConfig.userId, '');
+  assert.equal(harness.appState.cloudConfig.lastSyncAt, '');
+  assert.equal(harness.appState.cloudConfig.lastError, 'authDeviceSession');
+  assert.deepEqual(harness.savedTokens, ['']);
+  assert.equal(harness.deps.getCloudReauthentication(), null);
+  assert.equal(harness.calls.includes('migrate'), false);
+  assert.equal(harness.calls.includes('apply-cloud'), false);
+  assert.deepEqual(harness.records, savedRecords);
+  assert.equal(harness.userState.value, harness.records);
+  assert.equal(harness.messages.at(-1).message, 'authDeviceSession');
+});
+
+test('device login rejects missing, incorrect and unavailable device credentials without changing identity or data', async () => {
+  for (const kind of ['empty-password', 'wrong-password', 'missing-account', 'google-account', 'missing-hash']) {
+    const harness = setup({ recovery: true, provider: kind === 'google-account' ? 'google' : 'local' });
+    if (kind === 'empty-password') harness.deps.elements.loginPassword.value = '';
+    if (kind === 'wrong-password') harness.deps.hashPassword = async () => 'wrong-hash';
+    if (kind === 'missing-account') harness.appState.auth.accounts = [];
+    if (kind === 'missing-hash') delete harness.appState.auth.accounts[0].passwordHash;
+    const before = structuredClone(harness.appState);
+    const records = structuredClone(harness.records);
+    const result = await harness.controller.loginDeviceAccount();
+    assert.equal(result.ok, false, kind);
+    assert.deepEqual(harness.appState, before, kind);
+    assert.deepEqual(harness.records, records, kind);
+    assert.equal(harness.cloudCalls, 0, kind);
+    assert.equal(harness.calls.includes('save-auth'), false, kind);
+    assert.equal(harness.calls.includes('cancel-recovery'), false, kind);
+    assert.equal(harness.messages.at(-1).error, true, kind);
+  }
+});
+
+test('a missing cloud account can still explicitly unlock its matching device history after a 401', async () => {
+  const harness = setup({ recovery: true, failure: cloudError(401) });
+  harness.deps.checkCloudAccountStatus = async () => ({ exists: false });
+  await harness.controller.loginLocal();
+  assert.equal(harness.appState.currentUser, null);
+  assert.equal(harness.messages.at(-1).message, 'authCloudAccountMissing');
+  assert.equal(harness.deps.getCloudReauthentication()?.ownerId, localAccount.id);
+  await harness.controller.loginDeviceAccount();
+  assert.equal(harness.appState.currentUser.id, localAccount.id);
+  assert.equal(harness.appState.cloudConfig.token, '');
+  assert.equal(harness.cloudCalls, 1);
+  assert.equal(harness.userState.value, harness.records);
+});
+
+test('canceling cloud recovery releases the restriction without authenticating and invalidates pending requests', async () => {
+  const harness = setup({ recovery: true });
+  const pending = deferred();
+  harness.deps.loginCloudAccount = () => pending.promise;
+  const attempted = harness.controller.loginLocal();
+  const before = structuredClone(harness.appState);
+  harness.controller.logout({ cancelRecovery: true });
+  assert.equal(harness.deps.getCloudReauthentication(), null);
+  assert.deepEqual(harness.appState, before);
+  pending.resolve({ token: 'cancelled-session', account: localAccount });
+  await attempted;
+  assert.deepEqual(harness.appState, before);
+  assert.equal(harness.calls.includes('apply-cloud'), false);
+  assert.equal(harness.messages.at(-1).message, 'authCloudRecoveryCancelled');
+});
+
+test('late cloud responses cannot replace an explicit device login', async () => {
+  const harness = setup({ recovery: true });
+  const pending = deferred();
+  harness.deps.loginCloudAccount = () => pending.promise;
+  const cloudAttempt = harness.controller.loginLocal();
+  await harness.controller.loginDeviceAccount();
+  const afterDeviceLogin = structuredClone(harness.appState);
+  pending.resolve({ token: 'late-cloud-session', account: { ...localAccount, id: 'other-owner' } });
+  await cloudAttempt;
+  assert.deepEqual(harness.appState, afterDeviceLogin);
+  assert.equal(harness.calls.includes('apply-cloud'), false);
+});
+
+test('a device password check cannot replace a newer successful cloud login', async () => {
+  const harness = setup({ recovery: true });
+  const hashing = deferred();
+  let count = 0;
+  harness.deps.hashPassword = () => ++count === 1 ? hashing.promise : Promise.resolve('new-verified-hash');
+  const deviceAttempt = harness.controller.loginDeviceAccount();
+  await harness.controller.loginLocal();
+  const afterCloudLogin = structuredClone(harness.appState);
+  hashing.resolve('fixture-hash');
+  await deviceAttempt;
+  assert.deepEqual(harness.appState, afterCloudLogin);
+  assert.equal(harness.appState.auth.accounts[0].passwordHash, 'new-verified-hash');
+  assert.equal(harness.calls.includes('cancel-recovery'), false);
+});
+
+test('device login uses the matched account owner and leaves another saved owner untouched', async () => {
+  const harness = setup({ recovery: true });
+  const other = { ...localAccount, id: 'local:other-owner', email: 'other@example.test', passwordHash: 'other-hash' };
+  harness.appState.auth.accounts.push(other);
+  harness.deps.elements.loginEmail.value = ' Other@Example.Test ';
+  harness.deps.hashPassword = async (email, password) => {
+    assert.equal(email, 'other@example.test');
+    assert.equal(password, 'fixture-password');
+    return 'other-hash';
+  };
+  const originalAccounts = structuredClone(harness.appState.auth.accounts);
+  await harness.controller.loginDeviceAccount();
+  assert.equal(harness.appState.currentUser.id, other.id);
+  assert.deepEqual(harness.appState.auth.accounts, originalAccounts);
+  assert.equal(harness.appState.cloudConfig.token, '');
+});
+
+test('cloud-only recovery never sends an unknown email into a blocked registration form', async () => {
+  const harness = setup({ recovery: true });
+  harness.deps.elements.loginEmail.value = 'new@example.test';
+  harness.deps.elements.loginPassword.value = '';
+  harness.deps.checkCloudAccountStatus = async () => ({ exists: false });
+  await harness.controller.submitEmailAuth();
+  assert.equal(harness.messages.at(-1).message, 'authCloudAccountMissing');
+  assert.equal(harness.appState.currentUser, null);
+  assert.equal(harness.deps.elements.loginForm.dataset.authStep, undefined);
+});
+
+test('canceling recovery preserves only a safe destination for the eventual successful login', () => {
+  beginCloudReauthentication({ ownerId: 'fixture-owner', email: 'fixture@example.test', returnTo: '/tools?trainer=math#history' });
+  cancelCloudReauthentication();
+  assert.equal(getCloudReauthentication(), null);
+  assert.equal(getPendingAuthReturnPath(), '/tools?trainer=math#history');
+  clearPendingAuthReturnPath();
+  assert.equal(getPendingAuthReturnPath(), '');
+  beginCloudReauthentication({ ownerId: 'fixture-owner', email: 'fixture@example.test', returnTo: '//outside.example.test' });
+  cancelCloudReauthentication();
+  assert.equal(getPendingAuthReturnPath(), '/account');
+  clearCloudReauthentication();
+  clearPendingAuthReturnPath();
 });

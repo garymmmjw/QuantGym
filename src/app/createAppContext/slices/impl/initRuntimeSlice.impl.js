@@ -539,7 +539,15 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
   const resetState = backupController.resetState;
   const exportState = backupController.exportState;
   const importState = backupController.importState;
-  const saveCloudConfig = cloudRuntime.saveConfig;
+  const saveCloudConfig = (...args) => {
+    try {
+      return cloudRuntime.saveConfig(...args);
+    } finally {
+      // Session consumers must see credential replacement immediately, even
+      // when browser storage fails. Otherwise they can keep using a stale token.
+      domainStores.syncAppStore();
+    }
+  };
   const getCloudApiBase = cloudRuntime.getApiBase;
   const canUseCloud = cloudRuntime.canUse;
   const getLlmRequestHeaders = cloudRuntime.getRequestHeaders;

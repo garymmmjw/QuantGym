@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useAccountPageModel } from "./accountHooks.js";
 import { LeetCodeConnection } from "../leetcode/LeetCodeConnection.jsx";
 import { useCloudSession } from "./useCloudSession.js";
+import { CloudActivationPanel } from "./CloudActivationPanel.jsx";
 
 function countAuthEvents(metrics = {}) {
   return (metrics.audit?.authEvents24h || []).reduce((total, item) => total + Number(item.count || 0), 0);
@@ -326,8 +327,9 @@ export function AccountPageContent() {
                   autoComplete="email"
                   placeholder="you@example.com"
                   value={model.form.email}
-                  onChange={(event) => model.update("email", event.target.value)}
+                  readOnly
                 />
+                <small>{cloudSession.en ? "Your sign-in email cannot be changed in profile settings." : "登录邮箱暂不支持在资料中修改。"}</small>
               </label>
               <label className="account-field-resume">
                 {model.t("resumeUpload") || "简历"}
@@ -350,6 +352,7 @@ export function AccountPageContent() {
             </button>
           </form>
 
+          <CloudActivationPanel />
           <LeetCodeConnection compact />
 
           <aside className="account-panel account-security-panel">
@@ -358,13 +361,17 @@ export function AccountPageContent() {
               <span id="accountProviderText">
                 {model.currentUser?.provider === "google"
                   ? (model.t("accountProviderGoogle") || "已绑定 Google 登录")
-                  : (model.t("accountProviderLocal") || "本地账户")}
+                  : (cloudSession.en ? "Email and password" : "邮箱与密码")}
               </span>
               {model.lastAuthenticatedAt
                 ? model.t("accountLastLogin", { date: model.formatDate?.(model.lastAuthenticatedAt) || model.lastAuthenticatedAt })
                 : ""}
               {model.currentUser?.region ? ` · ${model.currentUser.region}` : ""}
             </div>
+            {model.currentUser?.provider === "google" ? <p>{cloudSession.en ? "Manage your password in your Google account." : "请在 Google 账户中管理登录密码。"}</p> : <>
+            <p className="account-password-scope">{cloudSession.phase === "local"
+              ? (cloudSession.en ? "This changes only the password saved on this device. It does not change a cloud account's password." : "此处修改的是此设备保存的密码，不会修改云端账户的密码。")
+              : (cloudSession.en ? "Updates your cloud sign-in password. Other devices will need to sign in again." : "修改云端登录密码后，其他设备需要重新登录。")}</p>
             <div className="account-security-fields">
               <label>
                 {model.t("currentPassword") || "当前密码"}
@@ -389,14 +396,17 @@ export function AccountPageContent() {
                 />
               </label>
             </div>
+            </>}
             <div className="account-security-actions">
+              {model.currentUser?.provider !== "google" &&
               <button
                 className={`account-password-btn${model.passwordValid ? "" : " is-disabled"}`}
                 type="button"
                 onClick={model.changePassword}
+                disabled={!model.passwordValid || model.passwordChanging}
               >
-                {model.t("accountChangePassword") || "修改密码"}
-              </button>
+                {model.passwordChanging ? (cloudSession.en ? "Updating…" : "修改中…") : cloudSession.phase === "local" ? (cloudSession.en ? "Change device password" : "修改本机密码") : (cloudSession.en ? "Change sign-in password" : "修改登录密码")}
+              </button>}
               <button className="secondary-button danger account-logout-btn" type="button" onClick={model.logout}>
                 {model.t("logout") || "退出登录"} →
               </button>

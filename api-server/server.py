@@ -2866,7 +2866,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         sys.stderr.write("%s - - [%s] %s\n" % (self.client_address[0], self.log_date_time_string(), fmt % args))
 
     def end_headers(self):
-        if urlparse(self.path).path.rstrip("/") == "/api/personal-prep" or urlparse(self.path).path.startswith("/api/leetcode"):
+        if urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password"} or urlparse(self.path).path.startswith("/api/leetcode"):
             self.send_header("Cache-Control", "private, no-store")
             self.send_header("Pragma", "no-cache")
             self.send_header("Vary", "Authorization")
@@ -2916,6 +2916,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.login()
             if path == "/api/auth/reset-password" and self.command == "POST":
                 return self.reset_password()
+            if path == "/api/auth/change-password" and self.command == "POST":
+                return self.change_password()
             if path == "/api/auth/google" and self.command == "POST":
                 return self.google_login()
             if path == "/api/account" and self.command == "GET":
@@ -3575,6 +3577,53 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             self.audit_event("auth.login", user=user_dict, status="success", metadata={"provider": "local"}, conn=conn)
             self.send_json(200, self.auth_response(conn, user_dict, token))
 
+    def change_password(self):
+        user = self.require_user()
+        self.enforce_rate_limit("auth:change-password", 10, user["id"])
+        if user["provider"] != "local":
+            raise HttpError(400, "This account uses Google sign-in. Manage its password with Google.")
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            raise HttpError(400, "Invalid Content-Length")
+        if length < 0:
+            raise HttpError(400, "Invalid Content-Length")
+        if length > 16384:
+            raise HttpError(413, "Password change request is too large")
+        data = self.read_json()
+        if set(data) != {"currentPassword", "newPassword"}:
+            raise HttpError(400, "Provide currentPassword and newPassword only")
+        current_password, new_password = data["currentPassword"], data["newPassword"]
+        if not isinstance(current_password, str) or not 1 <= len(current_password) <= 4096:
+            raise HttpError(400, "Current password is required")
+        if not isinstance(new_password, str) or not 8 <= len(new_password) <= 4096 or not re.search(r"[A-Za-z]", new_password) or not re.search(r"[0-9]", new_password):
+            raise HttpError(400, "New password must contain at least 8 characters, including a letter and a number")
+        if not user.get("password_salt") or not user.get("password_hash"):
+            raise HttpError(400, "Password login is not configured. Use email password reset.")
+        if not verify_password(user["email_norm"], current_password, user["password_salt"], user["password_hash"]):
+            raise HttpError(400, "Current password is incorrect")
+        salt_hex, password_hash = make_password_hash(user["email_norm"], new_password)
+        now = utc_now()
+        with db.connect() as conn:
+            # Compare-and-swap keeps two concurrent password changes from both
+            # accepting the same old password or revoking the newer session.
+            cursor = conn.execute(
+                """UPDATE users SET password_salt = ?, password_hash = ?, updated_at = ?
+                   WHERE id = ? AND provider = 'local' AND email_norm = ?
+                     AND password_salt = ? AND password_hash = ?""",
+                (salt_hex, password_hash, now, user["id"], user["email_norm"], user["password_salt"], user["password_hash"]),
+            )
+            if cursor.rowcount != 1:
+                raise HttpError(409, "Your password changed in another session. Sign in again.")
+            conn.execute("DELETE FROM sessions WHERE user_id = ?", (user["id"],))
+            token = db.create_session(conn, user["id"])
+            refreshed = conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone()
+            self.audit_event("auth.password_changed", user=dict(refreshed), conn=conn)
+            response = self.auth_response(conn, dict(refreshed), token)
+        # The old sessions are revoked and the new session is committed before
+        # acknowledging success, so an immediate subsequent request is valid.
+        self.send_json(200, response)
+
     def reset_password(self):
         data = self.read_json()
         email = normalize_email(data.get("email"))
@@ -3720,8 +3769,9 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         updates = sanitize_account({**parse_json(user["account_json"], {}), **(data.get("updates") or {})}, user["id"])
         updates["id"] = user["id"]
         updates["provider"] = user["provider"]
+        updates["email"] = user["email_norm"]
         updates["updatedAt"] = utc_now()
-        email = normalize_email(updates.get("email"))
+        email = user["email_norm"]
         if not email:
             raise HttpError(400, "Email is required")
         ensure_email_allowed(email)
@@ -4074,6 +4124,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 updates = sanitize_account({**account, **data["account"]}, user["id"])
                 updates["id"] = user["id"]
                 updates["provider"] = user["provider"]
+                updates["email"] = user["email_norm"]
                 updates["updatedAt"] = utc_now()
                 email_owner = conn.execute(
                     "SELECT id FROM users WHERE email_norm = ? AND id != ?",

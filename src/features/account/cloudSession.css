@@ -7,4 +7,22 @@
 [data-qg-theme="dark"] .qg-cloud-session-badge, [data-qg-theme="dark"] .qg-cloud-session-notice { background: #222038; border-color: #45405f; color: #ede9ff; }
 [data-qg-theme="dark"] .qg-cloud-session-notice p { color: #c2bad9; }
 .qg-auth-recovery-note { margin: 0 0 18px; padding: 12px 16px; border-radius: 12px; background: #f1efff; color: #534a91; font-size: 14px; line-height: 1.6; }
+.qg-auth-recovery-note p { margin: 0 0 8px; }
+.qg-auth-device-entry { margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--qg-border, #e4def8); }
+.qg-auth-device-entry p { margin: 0 0 12px; color: var(--qg-muted, #76708e); font-size: 13px; line-height: 1.6; }
+.qg-auth-device-entry .secondary-button { width: 100%; justify-content: center; }
+.qg-cloud-activation p, .account-password-scope { font-size: 14px; line-height: 1.65; color: var(--qg-muted, #76708e); }
+.qg-cloud-activation-email { overflow-wrap: anywhere; font-weight: 600; }
+.qg-cloud-activation form { display: grid; gap: 12px; margin: 14px 0; }
+.qg-cloud-activation label { font-size: 14px; font-weight: 600; }
+.qg-cloud-activation input { min-width: 0; width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid var(--qg-border, #e4def8); border-radius: 12px; background: var(--qg-surface, #fff); color: inherit; font: inherit; }
+.qg-cloud-activation-code-row { display: flex; gap: 10px; }
+.qg-cloud-activation-code-row button { flex-shrink: 0; }
+.qg-cloud-activation-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.qg-cloud-activation > .qg-cloud-signin-link { display: block; margin-top: 16px; padding: 0; border: 0; background: transparent; color: var(--qg-accent, #6455d8); text-align: left; font: inherit; font-size: 14px; cursor: pointer; }
+.qg-account-page .account-panel.qg-cloud-activation p.qg-cloud-activation-error { color: #be3e46; }
+.qg-cloud-activation button:disabled, .account-password-btn:disabled { opacity: .55; cursor: not-allowed; }
+.qg-cloud-activation input:focus-visible, .qg-auth-device-entry button:focus-visible { outline: 3px solid #b7aff9; outline-offset: 3px; }
+[data-qg-theme="dark"] .qg-auth-recovery-note { background: #29233f; color: #d6ccec; }
+[data-qg-theme="dark"] .qg-cloud-activation input { background: #222038; border-color: #45405f; color: #ede9ff; }
 @media (max-width: 640px) { .qg-cloud-session-notice { align-items: flex-start; flex-direction: column; padding: 16px; gap: 12px; } .qg-cloud-session-badge { font-size: 11px; padding: 5px 8px; } }
