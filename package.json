@@ -98,7 +98,9 @@
     "google:token-helper": "node scripts/create-google-token-helper.mjs",
     "google:token-helper:deployed": "node scripts/create-google-token-helper.mjs --deployed",
     "google:token-helper:deployed:clipboard": "node scripts/create-google-token-helper.mjs --deployed --copy-snippet --open-deployed",
-    "test:personal-prep": "node --test scripts/test-personal-*.mjs"
+    "test:personal-prep": "node --test scripts/test-personal-*.mjs",
+    "test:leetcode": "node --test scripts/test-leetcode-*.mjs",
+    "test:leetcode:api": "python3 scripts/test-leetcode-api.py"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",

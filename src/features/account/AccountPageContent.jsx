@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useAccountPageModel } from "./accountHooks.js";
+import { LeetCodeConnection } from "../leetcode/LeetCodeConnection.jsx";
 
 function countAuthEvents(metrics = {}) {
   return (metrics.audit?.authEvents24h || []).reduce((total, item) => total + Number(item.count || 0), 0);
@@ -346,6 +347,8 @@ export function AccountPageContent() {
               {model.t("accountSaveProfile") || "保存资料"}
             </button>
           </form>
+
+          <LeetCodeConnection compact />
 
           <aside className="account-panel account-security-panel">
             <div className="account-panel-title">{model.t("accountSecurityTitle") || "登录与安全"}</div>

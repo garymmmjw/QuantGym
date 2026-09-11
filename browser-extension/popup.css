@@ -122,3 +122,8 @@ button:first-child {
   border-color: var(--green);
   color: white;
 }
+
+[hidden] { display: none !important; }
+.leetcode-sync { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.leetcode-sync p { color: var(--muted); font-size: 12px; }
+button:disabled { cursor: wait; opacity: .6; }

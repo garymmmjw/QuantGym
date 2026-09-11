@@ -159,6 +159,7 @@ export function getModuleSearchDefs(t = (key) => key) {
     { module: "courses", label: t("courses"), detail: "Courses / 课程", fields: [t("courses"), "course", "courses", "课程", "视频", "youtube", "bilibili", "b站"] },
     { module: "skills", label: t("skills"), detail: "Ability radar / 能力值", fields: [t("skills"), "skills", "ability", "能力值", "雷达", "知识点"] },
     { module: "calendar", label: "训练日历 / Calendar", detail: "个人每日完成记录", fields: ["calendar", "日历", "日期", "完成记录", "daily activity"] },
+    { module: "leetcode", label: "LeetCode / 力扣", detail: "刷题进度 · 随机复习", fields: ["leetcode", "力扣", "刷题", "随机复习", "coding"] },
     { module: "daily-mock", label: "Daily Mock", detail: "速算 · Tech · Coding OA · Behavioral", fields: ["daily", "mock", "每日模拟", "coding oa", "behavioral"] },
     { module: "tools", label: t("tools"), detail: "Mental math / 速算", fields: [t("tools"), "tools", "drills", "速算", "mental math"] },
     { module: "memory", label: t("memory"), detail: "Memory / 资料笔记", fields: [t("memory"), "memory", "notes", "资料", "笔记"] },

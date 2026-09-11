@@ -30,6 +30,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qs, quote, unquote, urlparse
 from urllib.request import Request, urlopen
 
+import leetcode_sync
+
 from personal_prep import (
     MAX_PERSONAL_PREP_BYTES,
     PersonalPrepValidationError,
@@ -1606,6 +1608,14 @@ class Database:
                   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
 
+                CREATE TABLE IF NOT EXISTS user_leetcode (
+                  user_id TEXT PRIMARY KEY,
+                  data_json TEXT NOT NULL,
+                  revision INTEGER NOT NULL CHECK (revision > 0),
+                  updated_at TEXT NOT NULL,
+                  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
+
                 CREATE TABLE IF NOT EXISTS community (
                   id INTEGER PRIMARY KEY CHECK (id = 1),
                   community_json TEXT NOT NULL,
@@ -2856,7 +2866,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         sys.stderr.write("%s - - [%s] %s\n" % (self.client_address[0], self.log_date_time_string(), fmt % args))
 
     def end_headers(self):
-        if urlparse(self.path).path.rstrip("/") == "/api/personal-prep":
+        if urlparse(self.path).path.rstrip("/") == "/api/personal-prep" or urlparse(self.path).path.startswith("/api/leetcode"):
             self.send_header("Cache-Control", "private, no-store")
             self.send_header("Pragma", "no-cache")
             self.send_header("Vary", "Authorization")
@@ -2931,6 +2941,10 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.get_personal_preparation()
             if path == "/api/personal-prep" and self.command == "PUT":
                 return self.put_personal_preparation()
+            if path == "/api/leetcode" and self.command in {"GET", "DELETE"}:
+                return self.leetcode_connection()
+            if path in {"/api/leetcode/connect", "/api/leetcode/sync", "/api/leetcode/import"} and self.command == "POST":
+                return self.leetcode_connection()
             if path == "/api/problems" and self.command == "GET":
                 return self.get_problems()
             if path == "/api/problems" and self.command == "PUT":
@@ -3729,6 +3743,53 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         user = self.require_user()
         with db.connect() as conn:
             self.send_json(200, {"state": db.get_state(conn, user["id"])})
+
+    def leetcode_connection(self):
+        # Connection data belongs only to this QuantGym session; request bodies
+        # can never select another owner. Reads never make upstream requests.
+        user = self.require_user()
+        path = urlparse(self.path).path.rstrip("/")
+        try:
+            with db.connect() as conn:
+                revision, previous = leetcode_sync.get_record(conn, user["id"])
+            if self.command == "GET":
+                return self.send_json(200, leetcode_sync.public_snapshot(previous))
+            if self.command == "DELETE":
+                next_snapshot = leetcode_sync.empty_snapshot()
+            else:
+                try:
+                    length = int(self.headers.get("Content-Length", "0"))
+                except ValueError:
+                    raise HttpError(400, "Invalid Content-Length")
+                if length < 0:
+                    raise HttpError(400, "Invalid Content-Length")
+                if length > leetcode_sync.MAX_IMPORT_BYTES:
+                    raise HttpError(413, "LeetCode metadata request exceeds the 5 MiB limit.")
+                payload = self.read_json()
+                if path.endswith("/import"):
+                    self.enforce_rate_limit("leetcode-import", 10, user["id"])
+                    next_snapshot = leetcode_sync.import_metadata(previous, payload)
+                else:
+                    self.enforce_rate_limit("leetcode-sync", 6, user["id"])
+                    if path.endswith("/connect"):
+                        username = leetcode_sync.parse_profile(payload)
+                    else:
+                        if payload:
+                            raise leetcode_sync.LeetCodeError("Sync does not accept account data or credentials.")
+                        if not previous.get("connection"):
+                            raise leetcode_sync.LeetCodeError("Connect a LeetCode profile first.", 409)
+                        username = previous["connection"]["username"]
+                    if previous.get("connection") and previous["connection"]["username"] == username and leetcode_sync.sync_is_recent(previous):
+                        return self.send_json(200, leetcode_sync.public_snapshot(previous))
+                    incoming = leetcode_sync.fetch_profile(username)
+                    next_snapshot = leetcode_sync.fresh_snapshot(previous, incoming)
+            with db.connect() as conn:
+                result = leetcode_sync.save_snapshot(conn, user["id"], revision, next_snapshot)
+            # Commit before sending success. Revision checks protect disconnect
+            # or account changes made while an upstream request was in flight.
+            self.send_json(200, result)
+        except leetcode_sync.LeetCodeError as error:
+            raise HttpError(error.status, str(error))
 
     def get_personal_preparation(self):
         user = self.require_user()

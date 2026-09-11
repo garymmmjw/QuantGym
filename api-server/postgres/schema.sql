@@ -29,6 +29,14 @@ CREATE TABLE user_personal_prep (
   updated_at timestamptz NOT NULL
 );
 
+-- Private linked public profiles and user-provided submission metadata.
+CREATE TABLE user_leetcode (
+  user_id text PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  data_json jsonb NOT NULL,
+  revision integer NOT NULL CHECK (revision > 0),
+  updated_at timestamptz NOT NULL
+);
+
 CREATE TABLE community (
   id integer PRIMARY KEY CHECK (id = 1),
   community_json jsonb NOT NULL,

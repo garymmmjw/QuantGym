@@ -1,7 +1,7 @@
 {
   "name": "QuantGym Collector",
-  "shortDescription": "Record visible quant interview problems into your QuantGym study board.",
-  "detailedDescription": "QuantGym Collector helps QuantGym beta users record a problem that is visible in the current browser viewport. When the user clicks Record, the extension captures the active tab screenshot, attaches lightweight page context such as title and source URL, opens QuantGym, and sends the capture to the QuantGym web app for OCR/vision extraction and saving. A JSON copy fallback remains available for text-based captures. The extension runs only after explicit user action and does not collect page content in the background.",
+  "shortDescription": "Import selected problems and your LeetCode study history into QuantGym.",
+  "detailedDescription": "QuantGym Collector helps QuantGym beta users record a problem that is visible in the current browser viewport. When the user clicks Record, the extension captures the active tab screenshot, attaches lightweight page context such as title and source URL, opens QuantGym, and sends the capture to the QuantGym web app for OCR/vision extraction and saving. A JSON copy fallback remains available for text-based captures. The extension runs only after explicit user action and does not collect page content in the background. On LeetCode CN, a separate user-clicked Sync button reads the signed-in account username, completed problem metadata and accepted submission timestamps through the existing page session. No passwords, cookies, tokens or solution code are read or transferred. The history is sent only to an allowlisted QuantGym LeetCode page for review and explicit import confirmation. Incomplete history is labeled; an optional local JSON download is available if delivery fails. History is held in memory and is not stored in extension storage.",
   "category": "Productivity",
   "language": "en-US",
   "homepageUrl": "https://beta.quantgym.app/",
@@ -17,25 +17,30 @@
     "small": "store-assets/small-promo-440x280.png",
     "marquee": "store-assets/marquee-promo-1400x560.png"
   },
-  "singlePurpose": "Record the current visible problem into QuantGym for study tracking.",
+  "singlePurpose": "Bring user-selected problems and personal study records into QuantGym for study tracking.",
   "permissionJustifications": {
     "activeTab": "Used only after the user opens the popup, so the extension can read the active problem page.",
-    "scripting": "Used to run the page extraction script on the active tab after user interaction.",
+    "scripting": "Used after user interaction to extract a visible problem or read the active LeetCode CN tab’s own signed-in account and submission metadata without accessing cookies or solution code.",
     "storage": "Used to remember the user's preferred QuantGym board URL locally in Chrome.",
-    "tabs": "Used after the user clicks Record to capture the visible active tab, open QuantGym in an inactive tab, send the capture, and then focus QuantGym."
+    "tabs": "Used after the user clicks Record to capture the visible active tab, open QuantGym in an inactive tab, send the capture, and then focus QuantGym. For user-clicked LeetCode sync, opens the QuantGym LeetCode module and delivers metadata for review."
   },
   "dataUsage": {
-    "collectsPersonalData": false,
+    "collectsPersonalData": true,
     "handlesActiveTabContent": true,
     "handlesVisibleTabScreenshot": true,
     "sellsData": false,
     "usesDataForAds": false,
     "backgroundCollection": false,
-    "remoteCode": false
+    "remoteCode": false,
+    "handlesLeetCodeAccountMetadata": true,
+    "handlesAuthenticationSecrets": false
   },
   "reviewNotes": [
     "Host permissions are limited to quantgym.app so the bridge script can deliver user-triggered captures to the QuantGym web app.",
     "No remote scripts are loaded.",
-    "Captured content is sent only after the user clicks Record, and the screenshot is processed by the user's configured QuantGym LLM endpoint through the signed-in web app."
+    "Captured content is sent only after the user clicks Record, and the screenshot is processed by the user's configured QuantGym LLM endpoint through the signed-in web app.",
+    "LeetCode sync is a separate explicit click and sends only username, completed problem metadata and accepted submission identifiers/timestamps. It reads no passwords, cookies, tokens or solution code.",
+    "Imported history requires a second explicit confirmation in the signed-in QuantGym LeetCode module and must match the linked account. History does not go to an LLM endpoint.",
+    "The bridge also matches localhost and 127.0.0.1 HTTP pages for local development; LeetCode history delivery is restricted to allowlisted QuantGym or loopback origins and the /leetcode path."
   ]
 }

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "QuantGym Collector",
-  "version": "0.3.0",
-  "description": "Record visible interview problems into QuantGym.",
+  "version": "0.4.0",
+  "description": "Record interview problems and import your LeetCode study history into QuantGym.",
   "permissions": ["activeTab", "scripting", "storage", "tabs"],
   "host_permissions": [
     "https://beta.quantgym.app/*",
@@ -28,7 +28,9 @@
       "matches": [
         "https://beta.quantgym.app/*",
         "https://quantgym.app/*",
-        "https://www.quantgym.app/*"
+        "https://www.quantgym.app/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
       ],
       "js": ["quantgym-bridge.js"],
       "run_at": "document_idle"

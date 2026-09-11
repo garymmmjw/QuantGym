@@ -15,6 +15,21 @@ The production default board URL is `https://beta.quantgym.app/`. Remote Board U
 
 Open a LeetCode or interview-problem page, scroll or zoom until the problem is visible in the current browser viewport, click the extension, then click "记录题目". The extension captures the visible tab, opens QuantGym, and sends the screenshot plus page context to the QuantGym web app so the signed-in app can extract and save the problem. If you only want the text-based fallback, use "复制 JSON" and paste it into the app manually later.
 
+## Import your LeetCode CN history
+
+1. Associate your LeetCode CN profile in your QuantGym account.
+2. Open `https://leetcode.cn/` in Chrome and sign in to that same LeetCode account.
+3. Open this extension and click **同步力扣记录**. Keep the popup open while it reads your completed problem list and accepted submission metadata.
+4. QuantGym opens its LeetCode module with an import preview. Check the username, counts, and any incomplete-history message, then click **导入到当前关联账号**. Delivery alone does not save records to your account.
+
+The import uses your existing browser login only inside the LeetCode tab. It never reads, stores, or transfers passwords, cookies, tokens, or solution code. It exports only the profile username, problem identifiers/titles/difficulty, and accepted submission identifiers/times. The account is checked again after pagination; switching accounts interrupts the import.
+
+Daily completed counts deduplicate accepted submissions by problem and calendar day. Multiple accepted submissions of the same problem in one day count as one completed problem. Random review uses the imported completed problem list. A question's `lastSubmittedAt` is not treated as its accepted date.
+
+Each click includes at most 20,000 combined problem/submission records and less than 5 MiB, with a three-minute overall paging limit and individual request timeouts. Upstream changes, interrupted pagination, missing mappings, or limits produce an explicit partial-history notice. Such an import does not establish complete historical coverage. This depends on the currently available LeetCode CN site queries and may need updating if they change.
+
+History can be sent only to `https://beta.quantgym.app`, `https://quantgym.app`, `https://www.quantgym.app`, or loopback HTTP development origins, always on `/leetcode`. Production permissions remain QuantGym-only; the content bridge also supports localhost and 127.0.0.1 development pages. If delivery is unavailable, click **下载记录 JSON** and select that file in QuantGym's LeetCode module. History stays in popup/page memory until closed and is not persisted in extension storage. The downloaded JSON is an explicit local export chosen by you.
+
 ## Validate and package
 
 Run the extension gate before shipping:
@@ -27,6 +42,12 @@ Run the popup runtime smoke to execute the real popup script with simulated Chro
 
 ```bash
 npm run check:browser-extension:runtime-smoke
+```
+
+Validate LeetCode metadata pagination, account consistency, origin restrictions, and the review-delivery handshake:
+
+```bash
+node scripts/test-leetcode-extension.mjs
 ```
 
 Run the Chrome Web Store readiness gate before submitting:
@@ -59,7 +80,7 @@ QUANTGYM_CHROME_WEB_STORE_ITEM_ID="$REAL_CHROME_ITEM_ID" \
 QUANTGYM_CHROME_WEB_STORE_LISTING_URL="https://chromewebstore.google.com/detail/quantgym-collector/$REAL_CHROME_ITEM_ID" \
 QUANTGYM_CHROME_WEB_STORE_EVIDENCE_URL="https://chromewebstore.google.com/detail/quantgym-collector/$REAL_CHROME_ITEM_ID" \
 QUANTGYM_CHROME_WEB_STORE_STATUS="published" \
-QUANTGYM_CHROME_WEB_STORE_SUBMITTED_VERSION="0.3.0" \
+QUANTGYM_CHROME_WEB_STORE_SUBMITTED_VERSION="0.4.0" \
 QUANTGYM_CHROME_WEB_STORE_UPLOAD_SHA256="$REAL_UPLOAD_SHA256" \
 npm run check:chrome-store-publication:published
 ```

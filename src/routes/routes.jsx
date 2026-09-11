@@ -24,6 +24,7 @@ const ProblemsPage = lazy(() => import("../pages/ProblemsPage.jsx").then((m) => 
 const InterviewPage = lazy(() => import("../pages/InterviewPage.jsx").then((m) => ({ default: m.InterviewPage })));
 const SkillsPage = lazy(() => import("../pages/SkillsPage.jsx").then((m) => ({ default: m.SkillsPage })));
 const ToolsPage = lazy(() => import("../pages/ToolsPage.jsx").then((m) => ({ default: m.ToolsPage })));
+const LeetcodePage = lazy(() => import("../pages/LeetcodePage.jsx").then((m) => ({ default: m.LeetcodePage })));
 const PlanPage = lazy(() => import("../pages/PlanPage.jsx").then((m) => ({ default: m.PlanPage })));
 const PkPage = lazy(() => import("../pages/PkPage.jsx").then((m) => ({ default: m.PkPage })));
 const CalendarPage = lazy(() => import("../pages/CalendarPage.jsx").then((m) => ({ default: m.CalendarPage })));
@@ -38,6 +39,7 @@ const REACT_PAGES = {
   interview: InterviewPage,
   problems: ProblemsPage,
   tools: ToolsPage,
+  leetcode: LeetcodePage,
   calendar: CalendarPage,
   "daily-mock": DailyMockPage,
   experiences: ExperiencesPage,

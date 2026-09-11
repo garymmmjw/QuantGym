@@ -29,6 +29,12 @@
         <button id="copyBtn" type="button">复制 JSON</button>
       </div>
 
+      <section id="leetcodeSync" class="leetcode-sync" hidden>
+        <button id="syncLeetcodeBtn" type="button">同步力扣记录</button>
+        <p>从当前登录的力扣账号读取已通过题目和提交时间，前往 QuantGym 确认导入。同步时请保持弹窗打开。</p>
+        <button id="downloadLeetcodeBtn" type="button" hidden>下载记录 JSON</button>
+      </section>
+
       <p id="status" aria-live="polite"></p>
     </main>
     <script src="popup.js"></script>

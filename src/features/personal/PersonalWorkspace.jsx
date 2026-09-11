@@ -89,6 +89,7 @@ function ScopedWorkspace({ ownerId, cloudConfig = {}, language, legacyState, chi
         <NavLink to="/calendar">{en ? "Calendar" : "训练日历"}</NavLink>
         <NavLink to="/daily-mock">Daily Mock</NavLink>
         <NavLink to="/tools">Mental Math</NavLink>
+        <NavLink to="/leetcode">LeetCode</NavLink>
       </nav>
     </header>
     {snapshot.error && <div className="personal-recovery" role="alert">

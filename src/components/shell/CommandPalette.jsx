@@ -18,6 +18,7 @@ const MODULE_ICONS = {
   problems: "library-big",
   tools: "brain",
   calendar: "calendar-days",
+  leetcode: "code-2",
   "daily-mock": "clipboard-check",
   pk: "zap",
   experiences: "notebook-pen",

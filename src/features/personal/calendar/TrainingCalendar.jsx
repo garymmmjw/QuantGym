@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ACTIVITY_KINDS, MANUAL_KINDS, TRIAL_KINDS, addLocalDays, buildDailySummaries, collectCalendarActivities, createManualActivity, localDayKey, parseLocalDay, recordManualActivity, summarizeActivities } from "./calendarModel.js";
+import { collectLeetCodeActivities, leetcodeDailySummary } from "./leetcodeCalendar.js";
 import "./calendar.css";
 
 const KIND_LABELS = {
@@ -8,7 +9,7 @@ const KIND_LABELS = {
   en: { quant: "Quant questions", mental: "Mental Math", sequence: "Sequences", pattern: "Patterns", tech: "Tech Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "Daily Mock" }
 };
 
-export function TrainingCalendar({ state = {}, update, legacyState = {}, language = "zh" }) {
+export function TrainingCalendar({ state = {}, update, legacyState = {}, language = "zh", leetcode }) {
   const en = language === "en";
   const locale = en ? "en-US" : "zh-CN";
   const t = (zh, english) => en ? english : zh;
@@ -23,9 +24,14 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
   const selectedRef = useRef(null);
   const formRef = useRef(null);
   const pendingManualRef = useRef(null);
-  const { activities, undatedLegacyCount } = useMemo(() => collectCalendarActivities(state, legacyState), [state, legacyState]);
+  const { activities: personalActivities, undatedLegacyCount } = useMemo(() => collectCalendarActivities(state, legacyState), [state, legacyState]);
+  const leetcodeRecords = useMemo(() => collectLeetCodeActivities(leetcode?.data), [leetcode?.data]);
+  const leetcodeLinked = leetcode?.data?.connection?.site === "cn";
+  const leetcodeDay = useMemo(() => leetcodeDailySummary(leetcodeRecords, selectedDay), [leetcodeRecords, selectedDay]);
+  const leetcodeSourceDays = useMemo(() => new Set(leetcodeRecords.calendarDays.filter((day) => day.submissions > 0).map((day) => day.dayKey)), [leetcodeRecords]);
+  const activities = useMemo(() => [...personalActivities, ...leetcodeRecords.activities].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt) || a.id.localeCompare(b.id)), [personalActivities, leetcodeRecords]);
   const selectedActivities = useMemo(() => activities.filter((item) => item.dayKey === selectedDay), [activities, selectedDay]);
-  const selectedSummary = useMemo(() => summarizeActivities(selectedActivities), [selectedActivities]);
+  const selectedSummary = useMemo(() => summarizeActivities(selectedActivities.filter((item) => item.source !== "leetcode")), [selectedActivities]);
   const recentDays = useMemo(() => buildDailySummaries(activities, selectedDay), [activities, selectedDay]);
   const visibleDays = useMemo(() => Array.from({ length: 15 }, (_, index) => addLocalDays(selectedDay, index - 7)).filter((key) => parseLocalDay(key)), [selectedDay]);
   const allDays = useMemo(() => new Set(activities.map((item) => item.dayKey)), [activities]);
@@ -146,7 +152,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
                 className={`pc-date${selected ? " is-selected" : ""}${key === today ? " is-today" : ""}`}
                 aria-pressed={selected}
                 aria-current={key === today ? "date" : undefined}
-                aria-label={`${fullDateFormatter.format(date)}${allDays.has(key) ? t("，有训练记录", ", training recorded") : ""}`}
+                aria-label={`${fullDateFormatter.format(date)}${allDays.has(key) ? t("，有训练记录", ", training recorded") : ""}${leetcodeSourceDays.has(key) ? t("，有力扣源站日历提交", ", submissions in the LeetCode source calendar") : ""}`}
                 onClick={() => selectDate(key)}
                 onKeyDown={(event) => {
                   if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -157,13 +163,14 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
               >
                 <span>{key === today ? t("今天", "Today") : weekdayFormatter.format(date)}</span>
                 <strong>{String(date.getDate()).padStart(2, "0")}</strong>
-                <span className={`pc-date-dot${allDays.has(key) ? " has-activity" : ""}`} aria-hidden="true" />
+                <span className="pc-date-dots" aria-hidden="true"><span className={`pc-date-dot${allDays.has(key) ? " has-activity" : ""}`} /><span className={`pc-date-dot pc-leetcode-source-dot${leetcodeSourceDays.has(key) ? " has-activity" : ""}`} /></span>
               </button>;
             })}
           </div>
           <button type="button" className="pc-icon-button pc-day-arrow" aria-label={t("后一天", "Next day")} onClick={() => selectDate(addLocalDays(selectedDay, 1))}>→</button>
         </div>
         <p className="pc-swipe-hint">{t("左右滑动日期，或直接跳转到任意一天", "Swipe the dates, or jump directly to any day")}</p>
+        {leetcodeLinked && <p className="pc-source-legend"><span aria-hidden="true">○</span> {t(`空心圆：力扣日历的提交日期${leetcodeRecords.calendarTimeZone ? `（${leetcodeRecords.calendarTimeZone}）` : "（源站时区）"}`, `Hollow dot: LeetCode calendar submission date (${leetcodeRecords.calendarTimeZone || "source time zone"})`)}</p>}
       </section>
 
       <section className="pc-selected-day" aria-labelledby="pc-day-title">
@@ -182,6 +189,18 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
             <p>{TRIAL_KINDS.includes(kind) ? t(`正确作答 · ${selectedSummary[`${kind}Trials`]} 次 trial`, `Correct · ${selectedSummary[`${kind}Trials`]} trials`) : kind === "daily" ? t("整套完成", "Full sets completed") : kind === "tech" ? t("面试练习", "Interview practice") : kind === "coding" ? t("编程训练", "Coding practice") : kind === "behavioral" ? t("表达练习", "Behavioral practice") : t("完成题目", "Problems completed")}</p>
           </div>)}
         </dl>
+
+        {leetcode && <section className="pc-leetcode" aria-labelledby="pc-leetcode-title">
+          <div className="pc-leetcode-heading"><div><h3 id="pc-leetcode-title">LeetCode</h3><p>{leetcodeLinked ? leetcode.data.connection.displayName || leetcode.data.connection.username : t("把力扣刷题也放进训练日历", "Include your LeetCode practice in the calendar")}</p></div><Link className="pc-text-button" to="/leetcode">{leetcodeLinked ? t("进入 LeetCode 模块", "Open LeetCode") : t("关联力扣账号", "Connect LeetCode")} <span aria-hidden="true">↗</span></Link></div>
+          {leetcodeLinked ? <>
+            <dl className="pc-leetcode-stats">
+              <div><dt>{t("这一天已同步的通过题目", "Known problems solved this day")}</dt><dd><strong>{leetcodeDay.solved === null ? "—" : leetcodeDay.solved.toLocaleString(locale)}</strong>{leetcodeDay.solved !== null && <span>{t("题", "problems")}</span>}</dd><p>{leetcodeDay.solved === null ? t("题目明细未同步", "Problem details not synced") : t(`同题当天只计一次 · ${leetcodeDay.acceptedSubmissions} 次通过提交`, `Each problem counts once per day · ${leetcodeDay.acceptedSubmissions} accepted submissions`)}</p></div>
+              <div><dt>{t("力扣日历当日提交", "Submissions in LeetCode’s daily calendar")}</dt><dd><strong>{leetcodeDay.sourceSubmissions === null ? "—" : leetcodeDay.sourceSubmissions.toLocaleString(locale)}</strong>{leetcodeDay.sourceSubmissions !== null && <span>{t("次", "submissions")}</span>}</dd><p>{leetcodeDay.sourceSubmissions === null ? t("源站当日记录未同步", "No source record synced for this day") : t("包含重复提交，不等于通过题数", "Includes repeated attempts; not a solved count")}</p></div>
+            </dl>
+            <p className="pc-leetcode-note">{t("通过题目按设备本地日期归档；力扣日历提交量保留源站日期", "Solved problems use your device’s local date; daily submission totals retain LeetCode’s source date")}{leetcodeRecords.calendarTimeZone ? ` (${leetcodeRecords.calendarTimeZone})` : t("（源站时区未提供）", " (source time zone unavailable)")}{t("，跨日记录可能不同。", "; dates near midnight can differ.")}{!leetcodeRecords.historyComplete && t(" 公开近期记录不包含完整历史；题数与下方周统计仅计已同步的通过题目。", " Recent public records do not cover your full history. Problem counts and the weekly chart include only synced accepted problems.")}</p>
+            {leetcode.error && <p className="pc-leetcode-note" role="status">{t("力扣数据暂时无法更新，当前展示已保存的记录。可进入 LeetCode 模块重试。", "LeetCode could not be updated. Saved records are shown; retry from the LeetCode module.")}</p>}
+          </> : <p className="pc-leetcode-note">{leetcode.phase === "loading" ? t("正在读取关联状态…", "Loading connection…") : t("关联后查看每日通过题目、提交次数，并从完成记录跳转回力扣复习。", "Connect to see daily solved problems and submissions, and revisit problems on LeetCode.")}</p>}
+        </section>}
 
         {notice && <div className={`pc-notice${notice.error ? " is-error" : ""}`} role={notice.error ? "alert" : "status"}>
           <span>{notice.text}</span>
@@ -204,13 +223,13 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
         {selectedActivities.length ? <ol className="pc-activity-list">
           {selectedActivities.map((activity) => <li key={activity.id} className={`pc-activity pc-kind-${activity.kind}`}>
             <span className="pc-activity-mark" aria-hidden="true">{activity.kind === "daily" ? "✓" : activity.kind === "mental" ? "±" : activity.kind === "sequence" ? "⋯" : activity.kind === "pattern" ? "◇" : activity.kind === "coding" ? "⌘" : "·"}</span>
-            <div className="pc-activity-description"><strong>{labels[activity.kind]}</strong><p>{activity.note || (en ? activity.titleEn || activity.title : activity.title) || (activity.status === "aborted" ? t("提前结束的 trial", "Trial ended early") : activity.kind === "daily" ? t("所有训练板块已完成", "All training sections completed") : t("训练已记录", "Practice recorded"))}</p></div>
-            <div className="pc-activity-meta"><strong>{activityAmount(activity)}</strong><span>{activity.source === "manual" ? t("手动补记", "Manual entry") : activity.source === "legacy" ? t("历史训练", "Previous training") : timeFormatter.format(new Date(activity.completedAt))}</span></div>
+            <div className="pc-activity-description"><strong>{activity.source === "leetcode" ? "LeetCode" : labels[activity.kind]}</strong><p>{activity.source === "leetcode" ? <a href={activity.problemUrl} target="_blank" rel="noopener noreferrer">{activity.frontendId ? `${activity.frontendId}. ` : ""}{en ? activity.titleEn : activity.title} <span aria-hidden="true">↗</span><span className="pc-sr-only">{t("（在新标签页打开力扣）", " (opens LeetCode in a new tab)")}</span></a> : activity.note || (en ? activity.titleEn || activity.title : activity.title) || (activity.status === "aborted" ? t("提前结束的 trial", "Trial ended early") : activity.kind === "daily" ? t("所有训练板块已完成", "All training sections completed") : t("训练已记录", "Practice recorded"))}</p></div>
+            <div className="pc-activity-meta"><strong>{activityAmount(activity)}</strong>{activity.source === "leetcode" && <span>{t(`${activity.submissionCount} 次通过提交`, `${activity.submissionCount} accepted submissions`)}</span>}<span>{activity.source === "manual" ? t("手动补记", "Manual entry") : activity.source === "legacy" ? t("历史训练", "Previous training") : timeFormatter.format(new Date(activity.completedAt))}</span></div>
           </li>)}
         </ol> : <div className="pc-empty">
           <span className="pc-empty-symbol" aria-hidden="true">○</span>
-          <h3>{t("这一天，还没有训练记录", "No training recorded for this day")}</h3>
-          <p>{t("完成一次练习后，它会出现在对应日期。也可以补记线下完成的训练。", "Completed practice appears on its date. You can also add your offline training.")}</p>
+          <h3>{leetcodeDay.sourceSubmissions > 0 ? t("这一天的题目明细尚未同步", "Problem details have not been synced for this day") : t("这一天，还没有训练记录", "No training recorded for this day")}</h3>
+          <p>{leetcodeDay.sourceSubmissions > 0 ? t("力扣日历中有提交记录，但没有对应的已同步通过题目。提交次数不计入完成题数。", "LeetCode’s calendar has submissions, but no accepted problem details are synced. Submission totals do not count as completed problems.") : t("完成一次练习后，它会出现在对应日期。也可以补记线下完成的训练。", "Completed practice appears on its date. You can also add your offline training.")}</p>
           <div className="pc-empty-links"><Link to="/tools">Mental Math <span aria-hidden="true">↗</span></Link><Link to="/problems">{t("量化题库", "Question bank")} <span aria-hidden="true">↗</span></Link></div>
         </div>}
       </section>
@@ -224,7 +243,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
             <span>{weekdayFormatter.format(parseLocalDay(day.key))}</span><small>{shortDateFormatter.format(parseLocalDay(day.key))}</small>
           </button>)}
         </div>
-        <p className="pc-data-note">{t("柱状图按完成题数统计；心算、数列与图形推理只计正确作答，Daily Mock 轮数单独统计。", "Bars show completed questions; math, sequences and patterns count correct answers only. Daily Mock rounds are counted separately.")}</p>
+        <p className="pc-data-note">{t("柱状图按完成题数统计；心算、数列与图形推理只计正确作答，Daily Mock 轮数单独统计。", "Bars show completed questions; math, sequences and patterns count correct answers only. Daily Mock rounds are counted separately.")}{leetcodeLinked && t(" LeetCode 仅计已同步的通过题目，同题当天计一次；源站日历提交量不计入。", " LeetCode includes synced accepted problems, once per problem per day. Source-calendar submission totals are excluded.")}</p>
       </section>
 
       <footer className="pc-footer"><p>{t("记录按你设备的本地日期归档。已有明确完成时间的旧训练会自动汇入，未记录完成日期的历史进度可手动补记。", "Records follow your device’s local dates. Dated training history is included automatically; older progress without a completion date can be added manually.")}{undatedLegacyCount > 0 && <span> {t(`有 ${undatedLegacyCount} 条旧记录因缺少可靠日期未计入。`, `${undatedLegacyCount} older records have no reliable date and are not included.`)}</span>}</p></footer>

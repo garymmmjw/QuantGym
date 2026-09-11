@@ -122,7 +122,7 @@ function checkPageWrappers() {
     const personalPages = { calendar: "TrainingCalendar", "daily-mock": "DailyMockWorkspace", tools: "TrainingWorkspace" };
     if (personalPages[id]) {
       expect(text.includes("<PersonalWorkspace>"), `${pageName} must use account-scoped personal storage.`);
-      expect(text.includes(`<${personalPages[id]} {...props} />`), `${pageName} must render its training component.`);
+      expect(new RegExp(`<${personalPages[id]}\\s+\\{\\.\\.\\.props\\}(?:\\s+leetcode=\\{leetcode\\})?\\s*/>`).test(text), `${pageName} must render its training component.`);
     } else {
       expect(text.includes(`import { ${featureName} } from "../features/${id}/${featureName}.jsx";`), `${pageName}.jsx must import ${featureName} from the matching feature folder.`);
       expect(text.includes(`return <${featureName} />;`), `${pageName}.jsx must render ${featureName}.`);
