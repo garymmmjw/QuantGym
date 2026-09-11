@@ -1,6 +1,7 @@
 import { EMPTY_LEETCODE } from "./leetcodeModel.js";
+import { reportCloudSessionResponse } from "../../state/cloudSessionStatus.js";
 
-export function createLeetCodeClient({ endpoint, token, fetchImpl = globalThis.fetch, now = Date.now }) {
+export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = globalThis.fetch, now = Date.now }) {
   const base = String(endpoint || "").replace(/\/+$/, "");
   let snapshot = { data: EMPTY_LEETCODE, phase: "idle", error: null };
   const listeners = new Set();
@@ -17,6 +18,7 @@ export function createLeetCodeClient({ endpoint, token, fetchImpl = globalThis.f
         body: body === undefined ? undefined : JSON.stringify(body), signal: controller.signal, cache: "no-store",
       });
       const payload = await response.json().catch(() => ({}));
+      reportCloudSessionResponse({ endpoint, token, userId }, response.status);
       if (!response.ok) throw Object.assign(new Error(payload.error || "request_failed"), { status: response.status });
       if (!Object.hasOwn(payload, "connection") || !Array.isArray(payload.problems) || !Array.isArray(payload.submissions)) throw new Error("invalid_response");
       return payload;
@@ -45,6 +47,7 @@ export function createLeetCodeClient({ endpoint, token, fetchImpl = globalThis.f
     subscribe: (listener) => { listeners.add(listener); return () => listeners.delete(listener); },
     reload: () => running || perform("", "GET", undefined, "loading"),
     async wake() {
+      if (snapshot.error?.status === 401) return;
       if (running || now() - loadedAt < 30000) return;
       const data = await perform("", "GET", undefined, "loading");
       if (data?.connection && now() - new Date(data.connection.lastSyncedAt || 0).getTime() > 300000) await perform("/sync", "POST", {}, "syncing");

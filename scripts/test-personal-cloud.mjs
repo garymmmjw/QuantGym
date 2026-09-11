@@ -67,6 +67,27 @@ function device(server, { ownerId = 'alice', storage = memoryStorage(), token = 
   return { store, cloud, storage, statuses };
 }
 
+test('invalid credentials stop automatic retries while keeping subsequent local edits', async () => {
+  const server = memoryServer();
+  let calls = 0;
+  const first = device(server, { token: 'expired-recovery-test', fetchImpl: async () => {
+    calls++;
+    return response(401, { error: 'Invalid or expired token' });
+  } });
+  first.store.update(add('before-expiry'));
+  await first.cloud.start();
+  first.store.update(add('after-expiry'));
+  await first.cloud.sync();
+  assert.equal(calls, 1);
+  assert.equal(first.statuses.at(-1).phase, 'auth');
+  assert.deepEqual(ids(first.store.getSnapshot().data), ['after-expiry', 'before-expiry']);
+  await first.cloud.stop();
+  const recovered = device(server, { storage: first.storage, token: 'fresh-recovery-test' });
+  await recovered.cloud.start();
+  assert.equal(recovered.statuses.at(-1).phase, 'synced');
+  assert.deepEqual(ids(server.data), ['after-expiry', 'before-expiry']);
+});
+
 test('first upload saves the complete private snapshot and revision metadata', async () => {
   const server = memoryServer();
   const first = device(server);

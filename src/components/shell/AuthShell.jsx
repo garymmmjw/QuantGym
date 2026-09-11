@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { AUTH_KEY, USER_STATE_PREFIX } from "../../constants.js";
 import { isItemOwned } from "../../modules/economy/index.js";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
+import { getCloudReauthentication } from "../../state/cloudReauthentication.js";
+import "../../features/account/cloudSession.css";
 
 // Idle status copy written by the Google login runtime — the design keeps this
 // slot empty unless something actionable (an error) needs to be shown.
@@ -51,6 +53,7 @@ function lastLocalAccountOwnsSleepWallpaper() {
 }
 
 export function AuthShell() {
+  const recovery = getCloudReauthentication();
   const [sharkBubbleText, setSharkBubbleText] = useState("");
   const [sharkBubbleVisible, setSharkBubbleVisible] = useState(false);
   const [sharkPoked, setSharkPoked] = useState(false);
@@ -308,6 +311,7 @@ export function AuthShell() {
           </div>
 
           <div className="auth-panel qg-auth-card" role="dialog" aria-labelledby="authTitle" aria-describedby="authSubtitle">
+            {recovery && <p className="qg-auth-recovery-note" role="status" data-i18n="authCloudRecoveryNotice">请重新登录以恢复云端连接。本机训练记录已保留，登录成功后会返回刚才的页面。</p>}
             <div className="auth-copy sr-only">
               <h2 id="authTitle" data-i18n="authTitle">登录或注册</h2>
               <p id="authSubtitle" data-i18n="authSubtitle">同步你的题库、模拟面试复盘、简历和训练进度。</p>
@@ -315,13 +319,13 @@ export function AuthShell() {
 
             <div className="auth-tab-switch" role="tablist" aria-label="登录或注册">
               <button className="auth-tab active" type="button" role="tab" data-auth-tab="login" data-i18n="login">登录</button>
-              <button className="auth-tab" type="button" role="tab" data-auth-tab="register" data-i18n="register">注册</button>
+              {!recovery && <button className="auth-tab" type="button" role="tab" data-auth-tab="register" data-i18n="register">注册</button>}
             </div>
 
             <form className="auth-form auth-email-flow" id="loginForm" autoComplete="on" data-auth-step="email">
               <div className="auth-field">
                 <label className="auth-field-label" htmlFor="loginEmail" data-i18n="email">邮箱</label>
-                <input id="loginEmail" type="email" autoComplete="email" placeholder="you@example.com" />
+                <input id="loginEmail" type="email" autoComplete="email" placeholder="you@example.com" defaultValue={recovery?.email || ""} />
               </div>
               <div className="auth-field auth-field-password">
                 <label className="auth-field-label" htmlFor="loginPassword" data-i18n="password">密码</label>

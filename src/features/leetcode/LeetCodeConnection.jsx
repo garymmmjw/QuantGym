@@ -25,7 +25,7 @@ export function LeetCodeConnection({ connectionState, compact = false }) {
   };
   return <section className={`lc-connection${compact ? " is-compact" : ""}`} aria-labelledby="lc-connect-title">
     <div className="lc-section-title"><div><p className="lc-eyebrow">CONNECTED ACCOUNT</p><h3 id="lc-connect-title">{t("关联 LeetCode", "Connect LeetCode")}</h3></div><span className={`lc-status${connection ? " is-linked" : ""}`}>{connection ? t("已关联", "Connected") : t("未关联", "Not connected")}</span></div>
-    {!lc.enabled ? <p className="lc-muted">{t("登录 QuantGym 云端账户后，即可关联力扣并在不同设备查看记录。", "Sign in to a QuantGym cloud account to connect LeetCode and access your records across devices.")}</p> : <>
+    {lc.error?.status === 401 ? <p className="lc-muted">{t("请先点击上方「重新登录」恢复 QuantGym 连接，然后继续关联力扣。", "Use Sign in again above to reconnect QuantGym, then link LeetCode.")}</p> : !lc.enabled ? <p className="lc-muted">{t("登录 QuantGym 云端账户后，即可关联力扣并在不同设备查看记录。", "Sign in to a QuantGym cloud account to connect LeetCode and access your records across devices.")}</p> : <>
       {connection && !editing ? <>
         <div className="lc-linked-profile"><span className="lc-account-mark" aria-hidden="true">&lt;/&gt;</span><div><strong>{connection.displayName || connection.username}</strong><a href={connection.profileUrl} target="_blank" rel="noopener noreferrer">{connection.username} · {t("力扣中国站", "LeetCode China")} ↗</a></div></div>
         <p className="lc-muted">{t("同步公开统计和近期通过记录。更早的题目可通过扩展补充。", "Syncs public statistics and recent accepted submissions. Import older history with the extension.")}</p>
@@ -39,6 +39,6 @@ export function LeetCodeConnection({ connectionState, compact = false }) {
       </form>}
       {connection?.lastSyncedAt && <p className="lc-updated">{t("最近同步", "Last synced")} · {new Date(connection.lastSyncedAt).toLocaleString(en ? "en-US" : "zh-CN")}</p>}
     </>}
-    {(notice || lc.error) && <p className={`lc-feedback${lc.error ? " is-error" : ""}`} role={lc.error ? "alert" : "status"}>{lc.error ? leetcodeError(lc.error, en) : notice}</p>}
+    {(notice || lc.error) && lc.error?.status !== 401 && <p className={`lc-feedback${lc.error ? " is-error" : ""}`} role={lc.error ? "alert" : "status"}>{lc.error ? leetcodeError(lc.error, en) : notice}</p>}
   </section>;
 }

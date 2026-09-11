@@ -104,10 +104,10 @@ function ScopedWorkspace({ ownerId, cloudConfig = {}, language, legacyState, chi
         pending: en ? "Saved locally · waiting to sync" : "已保存在本机 · 等待云端同步",
         syncing: en ? "Syncing your private training records…" : "正在同步个人训练记录…",
         synced: en ? "Saved to your account · synced across devices" : "已保存到你的账户 · 支持跨设备继续",
-        auth: en ? "Cloud login expired. Sign in again; local records are kept." : "云端登录已过期，请重新登录；本机记录已保留。",
+        auth: en ? "Saved on this device · reconnect above to resume cloud sync." : "已保存在本机 · 点击上方「重新登录」恢复云端同步。",
         error: en ? "Cloud sync is unavailable. Local records are kept; retry when connected." : "云端暂未同步，本机记录已保留；联网后可重试。",
       })[cloud.phase]}</span>
-      {cloud.phase !== "local" && <button type="button" disabled={cloud.phase === "syncing"} onClick={() => syncRef.current?.sync()}>{en ? "Sync now" : "立即同步"}</button>}
+      {!['local', 'auth'].includes(cloud.phase) && <button type="button" disabled={cloud.phase === "syncing"} onClick={() => syncRef.current?.sync()}>{en ? "Sync now" : "立即同步"}</button>}
     </div>
     <PersonalErrorBoundary>{children({ state: snapshot.data, update: store.update, legacyState, language })}</PersonalErrorBoundary>
     <footer className="personal-workspace-footer">

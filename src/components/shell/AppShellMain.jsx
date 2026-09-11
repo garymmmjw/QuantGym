@@ -8,6 +8,7 @@ import { getEffectiveTotalXp } from "../../modules/economy/index.js";
 import { CommandPalette } from "./CommandPalette.jsx";
 import { OnboardingTour } from "./OnboardingTour.jsx";
 import { RouteProgressBar } from "./RouteProgressBar.jsx";
+import { CloudSessionBadge, CloudSessionNotice } from "../../features/account/CloudSessionNotice.jsx";
 
 const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
 
@@ -521,6 +522,7 @@ export function AppShellMain() {
                 <i data-lucide={theme === "dark" ? "sun" : "moon-star"}></i>
               </button>
               <span className="qg-command-divider" aria-hidden="true"></span>
+              <CloudSessionBadge />
               <button className="app-account-chip" type="button" data-jump-module="account" aria-label="打开账号" data-i18n-aria-label="openAccount">
                 <span className="avatar app-account-avatar" id="commandUserAvatar" aria-hidden="true">Q</span>
                 <span className="app-account-meta">
@@ -566,6 +568,7 @@ export function AppShellMain() {
 
           <section className="module-view active" data-module-view="route" aria-live="polite">
             <div className="app-route-root qg-route-container">
+              <CloudSessionNotice />
               <Outlet />
             </div>
           </section>
