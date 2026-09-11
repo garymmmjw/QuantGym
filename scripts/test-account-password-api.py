@@ -119,6 +119,48 @@ class AccountPasswordApiTests(unittest.TestCase):
         self.assertEqual(self.login(owner)[0], 401)
         self.assertEqual(self.login(owner, "New-fixture-password-123")[0], 200)
 
+    def test_graduation_term_survives_registration_profile_sync_and_login(self):
+        owner = "graduation-term-fixture"
+        private_fields = {key: "fixture-private-value" for key in (
+            "password", "passwordHash", "password_hash", "password_salt", "token", "refreshToken"
+        )}
+        status, registered, _ = self.request("POST", "/api/auth/register", payload={
+            "password": "fixture-only-password",
+            "account": {"id": owner, "provider": "local", "email": owner + "@example.com",
+                        "name": "Graduation fixture", "graduationTerm": "2027-09", **private_fields},
+        })
+        self.assertEqual(status, 201, registered)
+        token = registered["token"]
+
+        def assert_profile(account, term):
+            self.assertEqual(account["id"], owner)
+            self.assertEqual(account["graduationTerm"], term)
+            for field in private_fields:
+                self.assertNotIn(field, account)
+
+        assert_profile(registered["account"], "2027-09")
+        for method, path, field, changes, expected in (
+            ("PATCH", "/api/account", "updates", {"name": "Renamed fixture"}, "2027-09"),
+            ("PATCH", "/api/account", "updates", {"graduationTerm": "2028-06"}, "2028-06"),
+            ("POST", "/api/sync", "account", {"graduationTerm": " 2029-09 "}, "2029-09"),
+        ):
+            status, result, _ = self.request(method, path, token, {field: {**changes, **private_fields}})
+            self.assertEqual(status, 200, result)
+            assert_profile(result["account"], expected)
+            status, account, _ = self.request("GET", "/api/account", token)
+            self.assertEqual(status, 200, account)
+            assert_profile(account["account"], expected)
+            status, signed_in, _ = self.login(owner)
+            self.assertEqual(status, 200, signed_in)
+            assert_profile(signed_in["account"], expected)
+
+    def test_graduation_term_sanitization_keeps_older_profiles_compatible(self):
+        self.assertNotIn("graduationTerm", self.api.sanitize_account({"id": "old-profile"}))
+        for value in (None, "", "2027-00", "2027-13", "2027-9", "<script>", 202709, {"year": 2027}):
+            with self.subTest(value=value):
+                account = self.api.sanitize_account({"id": "invalid-term", "graduationTerm": value})
+                self.assertNotIn("graduationTerm", account)
+
     def test_two_changes_using_same_old_password_have_only_one_winner(self):
         token, owner = self.user()
         verify = self.api.verify_password

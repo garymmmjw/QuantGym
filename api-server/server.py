@@ -243,6 +243,7 @@ PUBLIC_ACCOUNT_FIELDS = {
     "email",
     "country",
     "region",
+    "graduationTerm",
     "picture",
     "createdAt",
     "updatedAt",
@@ -1033,6 +1034,11 @@ def sanitize_account(account: dict | None, fallback_id: str | None = None) -> di
     public["email"] = normalize_email(public.get("email"))
     public["country"] = str(public.get("country") or "china")
     public["region"] = str(public.get("region") or "上海")
+    graduation_term = public.get("graduationTerm")
+    if isinstance(graduation_term, str) and re.fullmatch(r"[0-9]{4}-(?:0[1-9]|1[0-2])", graduation_term.strip()):
+        public["graduationTerm"] = graduation_term.strip()
+    else:
+        public.pop("graduationTerm", None)
     public["picture"] = str(public.get("picture") or "")
     public["createdAt"] = str(public.get("createdAt") or now)
     public["updatedAt"] = str(public.get("updatedAt") or now)
