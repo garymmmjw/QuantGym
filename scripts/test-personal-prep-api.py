@@ -27,6 +27,7 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "api-server"))
 from technical_practice import load_technical_questions, normalize_technical_questions
+from technical_reading_list import load_technical_supplements, normalize_technical_supplements
 USE_POSTGRES = "--postgres" in sys.argv
 if USE_POSTGRES:
     sys.argv.remove("--postgres")
@@ -76,6 +77,16 @@ def practice_session(kind="tech", completed=False):
         "startedAt": "2026-09-13T12:00:00.000Z", "updatedAt": "2026-09-13T12:05:00.000Z", "completedAt": "2026-09-13T12:05:00.000Z" if completed else None,
         "question": question, "text": "My private fixture solution" if completed else "", "codeLanguage": "python", "selfAssessment": "independent" if completed else "",
         "elapsedSeconds": 300 if completed else 0, "timerStartedAt": None, "reviewed": False,
+    }
+
+
+def provenance_fixture():
+    return {
+        "version": 1, "originalNumber": "2.7", "chapter": "2. Probability", "section": "Conditional probability",
+        "sourcePage": "19", "pdfPage": 23, "edition": "Synthetic fixture edition",
+        "sourceHashSHA256": "a" * 64, "sourceUrl": "https://drive.google.com/file/d/fixture-source/view?ts=fixture",
+        "answerStatus": "corrected", "sourceReference": "Original fixture answer.", "sourceReferenceEn": "Original fixture answer.",
+        "reviewNotes": "The displayed fixture reasoning explains the correction.", "reviewNotesEn": "Fixture editorial note.",
     }
 
 
@@ -259,15 +270,41 @@ class PersonalPrepApiTests(unittest.TestCase):
         status, data, headers = self.request("GET", path, token=token)
         self.assertEqual(status, 200, data)
         self.assert_private(headers)
-        self.assertEqual(set(data), {"source", "questions"})
+        self.assertEqual(set(data), {"source", "questions", "readingList", "sourceMetadata"})
         self.assertEqual(data["source"], "question-bank")
         self.assertGreater(len(data["questions"]), 50)
         self.assertEqual(data["questions"], load_technical_questions())
+        self.assertEqual(data["readingList"], load_technical_supplements()["readingList"])
+        reading_rows = [question for group in data["readingList"] for question in group["questions"]]
+        self.assertTrue(all(row["url"] == f"https://leetcode.cn/problems/{row['slug']}/" for row in reading_rows))
+        self.assertTrue(all(not {"prompt", "answer", "reference", "sourceDifficulty"} & set(row) for row in reading_rows))
+        self.assertEqual(data["sourceMetadata"], load_technical_supplements()["sourceMetadata"])
+        if data["sourceMetadata"] is not None:
+            self.assertIsInstance(data["sourceMetadata"]["pdfPageCount"], int)
+            self.assertTrue(data["sourceMetadata"]["author"])
+        self.assertTrue(all(row["id"] not in {entry["frontendId"] for entry in reading_rows} for row in data["questions"]))
         expected_fields = {"id", "title", "titleEn", "prompt", "promptEn", "reference", "referenceEn", "source", "sourceLabel"}
-        self.assertTrue(all(set(question) == expected_fields and question["source"] == "question-bank" for question in data["questions"]))
+        self.assertTrue(all(expected_fields.issubset(question) and not set(question) - expected_fields - {"provenance"}
+                            and question["source"] == "question-bank" for question in data["questions"]))
         public = self.request("GET", "/api/problems")[1]
         self.assertEqual(public.get("problems"), [])
         self.assertEqual(self.request("GET", token=token)[1]["data"], None)
+
+    def test_private_reading_list_projects_links_only_and_rejects_invalid_source_metadata(self):
+        row = {"frontendId": "32", "titleZh": "Fixture title", "slug": "longest-valid-parentheses", "sourcePage": "161", "pdfPage": 161,
+               "url": "https://attacker.invalid/", "prompt": "Never project this field.", "sourceDifficulty": "Hard"}
+        payload = {"groups": [{"id": "fixture", "label": "Fixture group", "questions": [row, row,
+                   {**row, "frontendId": "42", "slug": "../../unsafe"}, {**row, "frontendId": "53", "pdfPage": True}]}],
+                   "sourceMetadata": {"title": "Fixture book", "author": "Fixture author", "edition": "Fixture edition", "pdfPageCount": 162,
+                                      "sourceUrl": "https://attacker.invalid/file/d/fixture/view"}}
+        projected = normalize_technical_supplements(payload)
+        self.assertIsNone(projected["sourceMetadata"])
+        self.assertEqual(len(projected["readingList"]), 1)
+        self.assertEqual(projected["readingList"][0]["questions"], [{
+            "frontendId": "32", "titleZh": "Fixture title", "slug": "longest-valid-parentheses",
+            "url": "https://leetcode.cn/problems/longest-valid-parentheses/", "sourcePage": "161", "pdfPage": 161,
+        }])
+        self.assertEqual(normalize_technical_supplements(None), {"readingList": [], "sourceMetadata": None})
 
     def test_technical_source_projection_rejects_other_sources_missing_answers_and_embedded_media(self):
         eligible = {"id": "fixture-purple-one", "source": "question-bank", "titleZh": "Fixture", "category": "statistics", "promptZh": "Show that $E[X] = 0$.", "explanation": "Use symmetry and linearity."}
@@ -283,6 +320,109 @@ class PersonalPrepApiTests(unittest.TestCase):
         self.assertEqual(projected[0]["id"], eligible["id"])
         self.assertEqual(projected[0]["promptEn"], projected[0]["prompt"])
         self.assertEqual(len(normalize_technical_questions([{**eligible, "promptZh": "For $X<p$ and $Y>p$, compare the two expectations."}])), 1)
+
+    def test_systematic_source_preserves_numbering_and_distinguishes_original_answer(self):
+        row = {"id": "stable-legacy-id", "source": "question-bank", "category": "programming", "titleZh": "Synthetic programming question",
+               "promptZh": "Explain this synthetic algorithm.", "explanation": "Reviewed fixture reasoning.", "provenance": provenance_fixture()}
+        original = copy.deepcopy(row)
+        projected = normalize_technical_questions([row])
+        self.assertEqual(len(projected), 1)
+        self.assertEqual(projected[0]["id"], "stable-legacy-id")
+        self.assertEqual(projected[0]["reference"], "Reviewed fixture reasoning.")
+        self.assertEqual(projected[0]["provenance"], row["provenance"])
+        self.assertNotEqual(projected[0]["reference"], projected[0]["provenance"]["sourceReference"])
+        self.assertEqual(row, original)
+        # Older unverified archive rows keep their existing eligibility rules.
+        row.pop("provenance")
+        self.assertEqual(normalize_technical_questions([row]), [])
+
+    def test_systematic_source_keeps_explicitly_missing_answers_without_inventing_text(self):
+        row = {"id": "fixture-unanswered-exercise", "source": "question-bank", "category": "statistics",
+               "promptZh": "Prove the synthetic exercise.", "provenance": {"version": 1, "answerStatus": "missing", "originalNumber": "练习 3.1"}}
+        projected = normalize_technical_questions([row])
+        self.assertEqual(len(projected), 1)
+        self.assertEqual(projected[0]["reference"], "")
+        self.assertEqual(projected[0]["referenceEn"], "")
+        for status in ("source", "reviewed", "corrected", "supplemented"):
+            self.assertEqual(normalize_technical_questions([{**row, "provenance": {"version": 1, "answerStatus": status}}]), [])
+        self.assertEqual(normalize_technical_questions([{**row, "provenance": {"version": 1}}]), [])
+
+    def test_systematic_source_rejects_invalid_metadata_and_unsafe_embedded_source_media(self):
+        row = {"id": "fixture-question", "source": "question-bank", "promptZh": "A synthetic question.", "explanation": "A synthetic answer."}
+        invalid = [None, [], {}, {"version": True}, {"version": 2}, {"version": 1, "unexpected": "text"},
+                   {"version": 1, "pdfPage": 0}, {"version": 1, "sourcePage": 2}, {"version": 1, "sourceHashSHA256": "not-a-hash"},
+                   {"version": 1, "answerStatus": []}, {"version": 1, "sourceReference": "![Diagram](private.png)"},
+                   {"version": 1, "sourceUrl": "https://drive.google.com.attacker.invalid/file/d/fixture/view"}]
+        for provenance in invalid:
+            with self.subTest(provenance=provenance):
+                self.assertEqual(normalize_technical_questions([{**row, "provenance": provenance}]), [])
+
+    def test_practice_provenance_roundtrip_preserves_old_and_new_source_snapshots(self):
+        token, _ = self.new_user()
+        old = practice_session(completed=True)
+        state = empty_state()
+        state["practiceSessions"] = [old]
+        status, saved, _ = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        new = practice_session()
+        new["id"] = "new-edition-practice"
+        new["question"].update(provenance=provenance_fixture(), reference="New edition fixture reasoning.")
+        state["practiceSessions"] = [old, new]
+        status, saved, _ = self.put(token, state, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        by_id = {row["id"]: row for row in saved["data"]["practiceSessions"]}
+        self.assertEqual(by_id[old["id"]], old)
+        self.assertEqual(by_id[new["id"]], new)
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+        # An older device without the new attempt cannot erase its metadata.
+        stale = empty_state()
+        stale["practiceSessions"] = [old]
+        status, merged, _ = self.put(token, stale, saved["revision"])
+        self.assertEqual(status, 200, merged)
+        self.assertEqual({row["id"]: row for row in merged["data"]["practiceSessions"]}, by_id)
+
+    def test_practice_missing_reference_is_allowed_only_for_explicit_missing_source_answer(self):
+        token, _ = self.new_user()
+        state = empty_state()
+        session = practice_session()
+        session["question"].update(reference="", referenceEn="")
+        state["practiceSessions"] = [session]
+        self.assertEqual(self.put(token, state)[0], 400)
+        for status in ("source", "reviewed", "corrected", "supplemented"):
+            session["question"]["provenance"] = {"version": 1, "answerStatus": status}
+            self.assertEqual(self.put(token, state)[0], 400)
+        session["question"]["provenance"] = {"version": 1, "answerStatus": "missing", "originalNumber": "练习 3.1"}
+        status, saved, _ = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["practiceSessions"], [session])
+
+    def test_practice_provenance_validates_version_types_limits_and_source_links(self):
+        token, _ = self.new_user()
+        state = empty_state()
+        state["practiceSessions"] = [practice_session()]
+        status, saved, _ = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        invalid = [None, [], {}, {"version": True}, {"version": 2}, {"version": 1, "unexpected": "field"},
+                   {"version": 1, "pdfPage": True}, {"version": 1, "pdfPage": 0}, {"version": 1, "pdfPage": 1.5},
+                   {"version": 1, "pdfPage": 100001}, {"version": 1, "sourcePage": 19},
+                   {"version": 1, "originalNumber": "x" * 101}, {"version": 1, "chapter": "🌊" * 251},
+                   {"version": 1, "reviewNotes": "x" * 80001}, {"version": 1, "sourceHashSHA256": "a" * 63},
+                   {"version": 1, "sourceHashSHA256": "x" * 64}, {"version": 1, "answerStatus": []},
+                   {"version": 1, "answerStatus": "authoritative"}]
+        for source_url in ("javascript:alert(1)", "http://drive.google.com/file/d/fixture/view",
+                           "https://attacker.invalid/file/d/fixture/view", "https://drive.google.com.attacker.invalid/file/d/fixture/view",
+                           "https://user:pass@drive.google.com/file/d/fixture/view", "https://drive.google.com:444/file/d/fixture/view",
+                           "https://drive.google.com/redirect?url=https://attacker.invalid", " https://drive.google.com/file/d/fixture/view"):
+            invalid.append({"version": 1, "sourceUrl": source_url})
+        for metadata in invalid:
+            candidate = copy.deepcopy(state)
+            candidate["practiceSessions"][0]["question"]["provenance"] = metadata
+            self.assertEqual(self.put(token, candidate, saved["revision"])[0], 400)
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+        coding = empty_state()
+        coding["practiceSessions"] = [practice_session("coding")]
+        coding["practiceSessions"][0]["question"]["provenance"] = provenance_fixture()
+        self.assertEqual(self.put(token, coding, saved["revision"])[0], 400)
 
     def test_standalone_practice_roundtrip_preserves_daily_history_and_records_only_completion(self):
         token, _ = self.new_user()

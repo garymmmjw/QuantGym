@@ -11423,6 +11423,37 @@ body.is-authenticated .global-search-result {
   text-decoration: none;
 }
 
+.rich-text pre.rich-code-block {
+  box-sizing: border-box;
+  max-width: 100%;
+  margin: 12px 0;
+  padding: 16px 18px;
+  overflow-x: auto;
+  border: 1px solid var(--qg-border, rgba(24, 24, 27, 0.08));
+  border-radius: 12px;
+  background: var(--qg-surface-2, #f5f4f0);
+  color: var(--qg-text, #232521);
+  line-height: 1.65;
+  tab-size: 4;
+  white-space: pre;
+}
+
+.rich-text pre.rich-code-block:focus-visible {
+  outline: 2px solid var(--qg-brand, #7562e8);
+  outline-offset: 3px;
+}
+
+.rich-text pre.rich-code-block code {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 0.875rem;
+  white-space: pre;
+}
+
 .rich-text a:hover {
   text-decoration: underline;
 }

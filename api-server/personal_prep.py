@@ -11,6 +11,7 @@ import math
 import re
 from datetime import date, datetime, timezone
 from urllib.parse import urlsplit
+from technical_metadata import validate_technical_provenance
 
 PERSONAL_PREP_VERSION = 1
 MAX_PERSONAL_PREP_BYTES = 8 * 1024 * 1024
@@ -177,14 +178,22 @@ def validate_practice_session(session):
         raise PersonalPrepValidationError("Active practice cannot have a completion time.")
     question = session["question"]
     required = {"id", "source", "title", "titleEn", "prompt", "promptEn", "reference", "referenceEn", "url"}
-    optional = {"slug", "username", "linkedAt", "sourceLabel"}
+    optional = {"slug", "username", "linkedAt", "sourceLabel", "provenance"}
     if not isinstance(question, dict) or not required.issubset(question) or set(question) - required - optional or not valid_record_id(question.get("id")) or not bounded_practice_text(question["id"], 512):
         raise PersonalPrepValidationError("Invalid practice question.")
     limits = {"title": 500, "titleEn": 500, "prompt": 80_000, "promptEn": 80_000, "reference": 80_000, "referenceEn": 80_000, "url": 2048, "sourceLabel": 500}
     if any(not bounded_practice_text(question[field], maximum) for field, maximum in limits.items() if field in question):
         raise PersonalPrepValidationError("Invalid practice question text.")
+    if "provenance" in question:
+        if session["kind"] != "tech":
+            raise PersonalPrepValidationError("Only Purple Book practice supports provenance.")
+        try:
+            validate_technical_provenance(question["provenance"])
+        except ValueError as exc:
+            raise PersonalPrepValidationError(str(exc)) from exc
     if session["kind"] == "tech":
-        if question["source"] != "question-bank" or question["url"] != "" or not question["prompt"].strip() or not question["reference"].strip() or any(question.get(field) for field in ("slug", "username", "linkedAt")):
+        missing_answer = question.get("provenance", {}).get("answerStatus") == "missing"
+        if question["source"] != "question-bank" or question["url"] != "" or not question["prompt"].strip() or not (question["reference"].strip() or missing_answer) or any(question.get(field) for field in ("slug", "username", "linkedAt")):
             raise PersonalPrepValidationError("Technical practice requires a Purple Book question.")
     elif question["source"] != "leetcode" or not isinstance(question.get("slug"), str) or not re.fullmatch(r"[a-zA-Z0-9_-]{1,200}", question["slug"]) or question["id"] != question["slug"] or question["url"] != f"https://leetcode.cn/problems/{question['slug']}/" or not isinstance(question.get("username"), str) or not re.fullmatch(r"[a-zA-Z0-9_-]{1,100}", question["username"]) or not valid_event_timestamp(question.get("linkedAt")):
         raise PersonalPrepValidationError("Coding practice requires a linked LeetCode problem.")

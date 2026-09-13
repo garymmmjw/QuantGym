@@ -85,6 +85,14 @@ export QUANTGYM_SMTP_FROM="QuantGym <no-reply@quantgym.app>"
 
 For local development, CORS defaults to `*` and `QUANTGYM_HOST` defaults to `127.0.0.1`. For deployment, set `QUANTGYM_ALLOWED_ORIGINS` to the production web origin and set `QUANTGYM_HOST=0.0.0.0` only when the platform or reverse proxy needs a non-loopback listener.
 
+### Render private technical question bundle
+
+Keep restricted question text outside the public repository. Upload a JSON Secret File named `quantgym-purple-book.json` to the Render API service; the loader reads `/etc/secrets/quantgym-purple-book.json` by default. Set `QUANTGYM_TECHNICAL_BUNDLE_PATH` only to select another runtime path or an ignored local test fixture. The bundle contains `version: 1`, `source: "question-bank"`, a `problems` array, a `supplements` object, and a `metadata` object whose `problemCount` matches the array length. The questions and supplements use one cached snapshot until the process restarts.
+
+If no path override is set and the default file is absent, the API continues using the existing repository question bank and any existing local reading-list file. An explicit missing path, a broken symlink, an invalid bundle, or a file larger than 1 MiB makes the private question endpoint unavailable instead of silently falling back. This does not change the endpoint's existing account access requirements.
+
+Do not commit the real bundle, its source captures, or private release backups. Keep them in ignored `artifacts/` or secure storage, and check the staged diff before publishing. Render Secret Files become runtime files when the service deploys; replacing the file and deploying refreshes the cached edition. See [Render Secret Files](https://render.com/docs/configure-environment-variables#secret-files) for the combined upload limit and runtime paths. Run public synthetic coverage with `python3 scripts/test-technical-source.py`; run the full private review with `QUANTGYM_TECHNICAL_BUNDLE_PATH=/absolute/path/to/private-bundle.json python3 scripts/test-purple-book-catalog.py`.
+
 Set `QUANTGYM_BETA_EMAIL_ALLOWLIST` during a closed beta to accept only those exact email addresses for local-account registration/login and Google cloud sessions. Leave it empty for local development.
 
 Set `QUANTGYM_ADMIN_EMAILS` to a comma-separated list of admin emails that may read basic admin metrics and audit events. Accounts whose stored plan/subscription tier is `admin` also pass the admin check.
