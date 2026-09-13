@@ -25,6 +25,8 @@ from datetime import date, datetime, timezone
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "api-server"))
+from technical_practice import load_technical_questions, normalize_technical_questions
 USE_POSTGRES = "--postgres" in sys.argv
 if USE_POSTGRES:
     sys.argv.remove("--postgres")
@@ -41,6 +43,7 @@ def empty_state(marker=None):
         "removedActivityIds": [],
         "applicationEvents": [],
         "reviewEvents": [],
+        "practiceSessions": [],
     }
 
 
@@ -57,6 +60,22 @@ def archived_event_state():
             "id": "review-event-one", "questionKey": "quant:fixture-question",
             "reviewedAt": "2026-09-09T12:00:00.000Z", "rating": "good", "note": "保留复习记录",
         }],
+    }
+
+
+def practice_session(kind="tech", completed=False):
+    question = {
+        "id": "catalog-practice-fixture", "source": "question-bank", "title": "Fixture technical question", "titleEn": "Fixture technical question",
+        "prompt": "Explain your reasoning for this synthetic fixture.", "promptEn": "Explain your reasoning for this synthetic fixture.",
+        "reference": "A synthetic solution for a private fixture.", "referenceEn": "A synthetic solution for a private fixture.", "url": "",
+    }
+    if kind == "coding":
+        question.update(id="two-sum", source="leetcode", prompt="", promptEn="", reference="", referenceEn="", url="https://leetcode.cn/problems/two-sum/", slug="two-sum", username="fixture-user", linkedAt="2026-09-01T12:00:00.000Z")
+    return {
+        "id": f"fixture-practice-{kind}", "kind": kind, "status": "completed" if completed else "active",
+        "startedAt": "2026-09-13T12:00:00.000Z", "updatedAt": "2026-09-13T12:05:00.000Z", "completedAt": "2026-09-13T12:05:00.000Z" if completed else None,
+        "question": question, "text": "My private fixture solution" if completed else "", "codeLanguage": "python", "selfAssessment": "independent" if completed else "",
+        "elapsedSeconds": 300 if completed else 0, "timerStartedAt": None, "reviewed": False,
     }
 
 
@@ -228,6 +247,159 @@ class PersonalPrepApiTests(unittest.TestCase):
                 self.assertEqual(status, 401, data)
                 self.assertNotIn("data", data)
                 self.assert_private(headers)
+
+    def test_private_technical_source_requires_auth_and_stays_out_of_public_catalog(self):
+        path = "/api/practice/technical/questions"
+        for token in (None, "invalid-fixture-token"):
+            status, data, headers = self.request("GET", path, token=token)
+            self.assertEqual(status, 401, data)
+            self.assertNotIn("questions", data)
+            self.assert_private(headers)
+        token, _ = self.new_user()
+        status, data, headers = self.request("GET", path, token=token)
+        self.assertEqual(status, 200, data)
+        self.assert_private(headers)
+        self.assertEqual(set(data), {"source", "questions"})
+        self.assertEqual(data["source"], "question-bank")
+        self.assertGreater(len(data["questions"]), 50)
+        self.assertEqual(data["questions"], load_technical_questions())
+        expected_fields = {"id", "title", "titleEn", "prompt", "promptEn", "reference", "referenceEn", "source", "sourceLabel"}
+        self.assertTrue(all(set(question) == expected_fields and question["source"] == "question-bank" for question in data["questions"]))
+        public = self.request("GET", "/api/problems")[1]
+        self.assertEqual(public.get("problems"), [])
+        self.assertEqual(self.request("GET", token=token)[1]["data"], None)
+
+    def test_technical_source_projection_rejects_other_sources_missing_answers_and_embedded_media(self):
+        eligible = {"id": "fixture-purple-one", "source": "question-bank", "titleZh": "Fixture", "category": "statistics", "promptZh": "Show that $E[X] = 0$.", "explanation": "Use symmetry and linearity."}
+        rows = [eligible, copy.deepcopy(eligible)]
+        for index, patch in enumerate([
+            {"source": "green-book"}, {"category": "leetcode"}, {"explanation": ""},
+            {"promptZh": "![Diagram](secret.png)"}, {"explanation": "<script>alert(1)</script>"},
+            {"promptZh": "Read \\includegraphics{diagram}"}, {"promptEn": "<img src=x>"},
+        ]):
+            rows.append({**eligible, "id": f"fixture-rejected-{index}", **patch})
+        projected = normalize_technical_questions(rows)
+        self.assertEqual(len(projected), 1)
+        self.assertEqual(projected[0]["id"], eligible["id"])
+        self.assertEqual(projected[0]["promptEn"], projected[0]["prompt"])
+        self.assertEqual(len(normalize_technical_questions([{**eligible, "promptZh": "For $X<p$ and $Y>p$, compare the two expectations."}])), 1)
+
+    def test_standalone_practice_roundtrip_preserves_daily_history_and_records_only_completion(self):
+        token, _ = self.new_user()
+        state = empty_state()
+        state["dailySessions"] = [{"id": "legacy-daily-history", "marker": "preserved"}]
+        state["activities"] = [{"id": "legacy-daily-activity", "kind": "daily", "count": 1, "completedAt": "2026-09-12T12:00:00.000Z"}]
+        state["practiceSessions"] = [practice_session("tech"), practice_session("coding")]
+        status, saved, _ = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"], state)
+        completed = copy.deepcopy(state)
+        completed["practiceSessions"] = [practice_session("tech", True), practice_session("coding", True)]
+        status, saved, _ = self.put(token, completed, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["dailySessions"], state["dailySessions"])
+        self.assertEqual(len(saved["data"]["activities"]), 3)
+        standalone = [row for row in saved["data"]["activities"] if row.get("source") == "standalone"]
+        self.assertEqual({row["id"] for row in standalone}, {"practice:fixture-practice-tech", "practice:fixture-practice-coding"})
+        self.assertTrue(all(row["count"] == 1 and "sessionId" not in row and "dailySessionId" not in row for row in standalone))
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+
+    def test_old_client_cannot_erase_practice_sessions_or_their_calendar_activities(self):
+        token, _ = self.new_user()
+        state = empty_state()
+        state["practiceSessions"] = [practice_session("tech", True), practice_session("coding")]
+        status, saved, _ = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        for omitted in (True, False):
+            incoming = empty_state("old-client")
+            if omitted:
+                del incoming["practiceSessions"]
+            status, saved, _ = self.put(token, incoming, saved["revision"])
+            self.assertEqual(status, 200, saved)
+            self.assertEqual(saved["data"]["practiceSessions"], state["practiceSessions"])
+            self.assertEqual(len(saved["data"]["activities"]), 1)
+            self.assertEqual(saved["data"]["activities"][0]["id"], "practice:fixture-practice-tech")
+
+    def test_practice_merge_keeps_latest_draft_and_never_reopens_completed_work(self):
+        token, _ = self.new_user()
+        state = empty_state()
+        state["practiceSessions"] = [practice_session()]
+        state["practiceSessions"][0]["text"] = "latest draft"
+        status, saved, _ = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        stale = copy.deepcopy(state)
+        stale["practiceSessions"][0].update(text="old draft", updatedAt="2026-09-13T12:01:00.000Z")
+        status, saved, _ = self.put(token, stale, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["practiceSessions"][0]["text"], "latest draft")
+        completed = copy.deepcopy(state)
+        completed["practiceSessions"] = [practice_session(completed=True)]
+        status, saved, _ = self.put(token, completed, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        stale["practiceSessions"][0]["updatedAt"] = "2026-09-13T13:00:00.000Z"
+        status, saved, _ = self.put(token, stale, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["practiceSessions"][0], completed["practiceSessions"][0])
+
+    def test_old_client_cannot_revive_removed_practice_calendar_activity(self):
+        token, _ = self.new_user()
+        state = empty_state()
+        state["practiceSessions"] = [practice_session("tech", True), practice_session("coding", True)]
+        status, original, _ = self.put(token, state)
+        self.assertEqual(status, 200, original)
+        removed = "practice:fixture-practice-tech"
+        changed = copy.deepcopy(original["data"])
+        changed["removedActivityIds"] = [removed]
+        changed["activities"] = [activity for activity in changed["activities"] if activity["id"] != removed]
+        status, saved, _ = self.put(token, changed, original["revision"])
+        self.assertEqual(status, 200, saved)
+        for omitted in (True, False):
+            # An old snapshot still carries the deleted activity and lacks
+            # practice sessions and either the marker field or its contents.
+            incoming = copy.deepcopy(original["data"])
+            del incoming["practiceSessions"]
+            if omitted:
+                del incoming["removedActivityIds"]
+            status, saved, _ = self.put(token, incoming, saved["revision"])
+            self.assertEqual(status, 200, saved)
+            self.assertEqual(saved["data"]["removedActivityIds"], [removed])
+            self.assertEqual(saved["data"]["practiceSessions"], state["practiceSessions"])
+            self.assertEqual([activity["id"] for activity in saved["data"]["activities"]], ["practice:fixture-practice-coding"])
+            self.assertEqual(self.request("GET", token=token)[1], saved)
+
+    def test_practice_identity_conflict_rejects_whole_snapshot(self):
+        token, _ = self.new_user()
+        original = empty_state()
+        original["practiceSessions"] = [practice_session("coding")]
+        status, saved, _ = self.put(token, original)
+        self.assertEqual(status, 200, saved)
+        for key, value in (("id", "different-question"), ("username", "other-account"), ("linkedAt", "2026-09-02T12:00:00.000Z")):
+            changed = copy.deepcopy(original)
+            changed["practiceSessions"][0]["question"][key] = value
+            changed["practiceSessions"][0]["updatedAt"] = "2026-09-13T14:00:00.000Z"
+            status, _, _ = self.put(token, changed, saved["revision"])
+            self.assertEqual(status, 400, key)
+            self.assertEqual(self.request("GET", token=token)[1], saved)
+
+    def test_practice_validation_and_account_isolation(self):
+        token, _ = self.new_user()
+        other, _ = self.new_user()
+        original = empty_state()
+        original["practiceSessions"] = [practice_session()]
+        status, saved, _ = self.put(token, original)
+        self.assertEqual(status, 200, saved)
+        self.assertIsNone(self.request("GET", token=other)[1]["data"])
+        patches = [{"kind": "daily"}, {"kind": []}, {"status": []}, {"codeLanguage": []}, {"selfAssessment": []}, {"elapsedSeconds": -1}, {"elapsedSeconds": True}, {"elapsedSeconds": 10 ** 1000}, {"text": "x" * 80001}, {"text": "🌊" * 40001}, {"timerStartedAt": "invalid"}, {"status": "completed"}, {"completedAt": "2026-09-13T12:05:00.000Z"}]
+        for patch in patches:
+            changed = copy.deepcopy(original)
+            changed["practiceSessions"][0].update(patch)
+            status, _, _ = self.put(token, changed, saved["revision"])
+            self.assertEqual(status, 400, str(list(patch)))
+        bad_link = empty_state()
+        bad_link["practiceSessions"] = [practice_session("coding")]
+        bad_link["practiceSessions"][0]["question"]["url"] = "https://attacker.invalid/problems/two-sum/"
+        self.assertEqual(self.put(token, bad_link, saved["revision"])[0], 400)
+        self.assertEqual(self.request("GET", token=token)[1], saved)
 
     def test_json_response_dates_are_supported_but_other_types_still_fail(self):
         # Load only the pure formatters, avoiding server import side effects.

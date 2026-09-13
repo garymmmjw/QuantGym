@@ -12,7 +12,8 @@ const ROUTE_ALIASES = new Map([
   ["", DEFAULT_ROUTE_MODULE],
   ["/", DEFAULT_ROUTE_MODULE],
   ["home", DEFAULT_ROUTE_MODULE],
-  ["dashboard", DEFAULT_ROUTE_MODULE]
+  ["dashboard", DEFAULT_ROUTE_MODULE],
+  ["daily-mock", "coding-oa"]
 ]);
 
 export function getAvailableRouteModules(root = document) {

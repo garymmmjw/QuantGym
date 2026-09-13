@@ -259,24 +259,6 @@ try {
     await exitChecks(mobile);
     return { gallery, setup, math, pattern, overlay };
   });
-  await check('Daily Mock at 820px keeps embedded math setup and history stacked', async () => {
-    const daily = await makePage({ viewport: { width: 820, height: 1080 } });
-    await daily.clock.resume();
-    await daily.goto(`${baseUrl}/daily-mock`, { waitUntil: 'domcontentloaded' });
-    await daily.locator('.pd-setup').waitFor();
-    await daily.clock.pauseAt(new Date(await daily.evaluate(() => Date.now() + 100)));
-    await daily.getByRole('button', { name: /开始这一轮/ }).click();
-    await daily.locator('.pd-mental-panel .pm-module-layout').waitFor();
-    const setup = await daily.locator('.pm-setup').boundingBox();
-    const history = await daily.locator('.pm-module-history').boundingBox();
-    assert.ok(history.y >= setup.y + setup.height - 1, JSON.stringify({ setup, history }));
-    await noOverflow(daily);
-    await capture(daily, 'daily-mock-tablet', true);
-    await startPractice(daily);
-    await daily.locator('.pm-focus-exit').click();
-    await exitChecks(daily);
-    return { setup, history };
-  });
   await check('Reduced motion disables gallery scale animation', async () => {
     const reduced = await makePage({ reducedMotion: 'reduce' });
     await reduced.locator('.pm-module-card-math').hover();

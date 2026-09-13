@@ -58,13 +58,73 @@ export function reviewPool(problems = [], difficulty = "all", query = "") {
   });
 }
 
-export function drawReviewProblem(problems, previousSlug = "", random = Math.random) {
-  const pool = reviewPool(problems);
-  const candidates = pool.length > 1 ? pool.filter((item) => item.slug !== previousSlug) : pool;
+const REVIEW_DAY = 86400000;
+const reviewInstant = (value) => {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return null;
+  const instant = Date.parse(value), civilDate = new Date(`${value.slice(0, 10)}T00:00:00Z`);
+  return Number.isFinite(instant) && Number.isFinite(civilDate.getTime()) && civilDate.toISOString().slice(0, 10) === value.slice(0, 10) ? instant : null;
+};
+
+// This weights the known history; it does not claim that a partial import is a
+// complete attempt count. Every item in the solved pool has at least one AC.
+export function reviewDrawWeights(problems, { now = Date.now(), submissions = [], practiceSessions = [], connection = null } = {}) {
+  const time = Number(now instanceof Date ? now.getTime() : now);
+  if (!Number.isFinite(time)) throw new TypeError("Invalid review draw time");
+  const accepted = new Map(), seenSubmissions = new Set();
+  for (const row of Array.isArray(submissions) ? submissions : []) {
+    const id = typeof row?.id === "string" || Number.isSafeInteger(row?.id) ? String(row.id) : "";
+    const submittedAt = reviewInstant(row?.submittedAt);
+    if (!/^[a-zA-Z0-9_-]{1,100}$/.test(id) || seenSubmissions.has(id) || row?.status !== "AC"
+      || !problemUrl(row.problemSlug) || submittedAt === null) continue;
+    seenSubmissions.add(id);
+    const previous = accepted.get(row.problemSlug);
+    accepted.set(row.problemSlug, { count: (previous?.count || 0) + 1, latest: Math.max(previous?.latest ?? -Infinity, submittedAt) });
+  }
+  const coding = new Map(), seenPractice = new Set();
+  for (const session of Array.isArray(practiceSessions) ? practiceSessions : []) {
+    const question = session?.question;
+    const completedAt = reviewInstant(session?.completedAt);
+    if (!connection?.username || !connection?.linkedAt || session?.kind !== "coding" || session?.status !== "completed"
+      || typeof session.id !== "string" || !session.id.trim() || seenPractice.has(session.id) || completedAt === null
+      || question?.source !== "leetcode" || !problemUrl(question.slug) || question.id !== question.slug
+      || question.username !== connection.username || question.linkedAt !== connection.linkedAt) continue;
+    seenPractice.add(session.id);
+    const previous = coding.get(question.slug);
+    coding.set(question.slug, { count: (previous?.count || 0) + 1, latest: Math.max(previous?.latest ?? -Infinity, completedAt) });
+  }
+  const history = reviewPool(problems).map(problem => {
+    const records = accepted.get(problem.slug);
+    const sessions = coding.get(problem.slug);
+    const times = [reviewInstant(problem.lastAcceptedAt), reviewInstant(problem.review?.lastReviewedAt), records?.latest, sessions?.latest]
+      .filter(value => Number.isFinite(value));
+    const latest = times.length ? Math.max(...times) : null;
+    const knownAcceptedCount = Math.max(1, records?.count || 0);
+    const reviewCount = Number.isSafeInteger(problem.review?.reviewCount) && problem.review.reviewCount > 0 ? problem.review.reviewCount : 0;
+    return { problem, lastPracticedAt: latest === null ? null : new Date(latest).toISOString(),
+      elapsedDays: latest === null ? null : Math.max(0, (time - latest) / REVIEW_DAY), knownAcceptedCount, reviewCount, codingOACount: sessions?.count || 0 };
+  });
+  // Missing dates stay unknown. A neutral median age prevents missing history
+  // from being interpreted as either "just practiced" or "very old".
+  const ages = history.map(row => row.elapsedDays).filter(value => value !== null).sort((a, b) => a - b);
+  const middle = Math.floor(ages.length / 2);
+  const neutralAge = !ages.length ? 0 : ages.length % 2 ? ages[middle] : (ages[middle - 1] + ages[middle]) / 2;
+  return history.map(row => ({ ...row,
+    weight: (1 + Math.log1p(row.elapsedDays ?? neutralAge)) / Math.sqrt(row.knownAcceptedCount + row.reviewCount + row.codingOACount),
+  }));
+}
+
+export function drawReviewProblem(problems, previousSlug = "", random = Math.random, options = {}) {
+  const weighted = reviewDrawWeights(problems, options);
+  const candidates = weighted.length > 1 ? weighted.filter(({ problem }) => problem.slug !== previousSlug) : weighted;
   if (!candidates.length) return null;
   const value = Number(random());
-  const index = Math.floor(Math.min(Math.max(Number.isFinite(value) ? value : 0, 0), 0.9999999999999999) * candidates.length);
-  return candidates[index];
+  const fraction = Math.min(Math.max(Number.isFinite(value) ? value : 0, 0), 0.9999999999999999);
+  let remaining = fraction * candidates.reduce((total, row) => total + row.weight, 0);
+  for (const row of candidates) {
+    if (remaining < row.weight) return row.problem;
+    remaining -= row.weight;
+  }
+  return candidates[candidates.length - 1].problem;
 }
 
 export function leetcodeError(error, en = false) {

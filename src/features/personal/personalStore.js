@@ -1,4 +1,5 @@
 import { patternCellKey, validatePatternCell } from "./mental/patternQuestions.js";
+import { validatePracticeSession, mergePracticeSessions, withPracticeActivities } from "./practice/practiceModel.js";
 
 export const PERSONAL_VERSION = 1;
 const PREFIX = "quantgym.personal-prep.v1:";
@@ -201,7 +202,7 @@ function hasTrialWork(trial) {
 }
 
 export function createPersonalState() {
-  return { mentalSettings: null, activeTrial: null, trials: [], dailySettings: null, dailySessions: [], activities: [], removedActivityIds: [] };
+  return { mentalSettings: null, activeTrial: null, trials: [], dailySettings: null, dailySessions: [], activities: [], removedActivityIds: [], practiceSessions: [] };
 }
 
 export function personalStorageKey(ownerId) {
@@ -220,12 +221,16 @@ export function validatePersonalData(data) {
   data.trials.forEach((trial) => validateTrial(trial));
   data.dailySessions.forEach(validateDailySession);
   data.activities.forEach(validateActivity);
+  const practiceSessions = data.practiceSessions === undefined ? [] : data.practiceSessions;
+  requireData(Array.isArray(practiceSessions) && practiceSessions.length <= 100000
+    && new Set(practiceSessions.map(session => session?.id)).size === practiceSessions.length, "practice sessions");
+  practiceSessions.forEach(validatePracticeSession);
   if (data.activeTrial != null) validateTrial(data.activeTrial, true);
   if (data.mentalSettings != null) validateMentalSettings(data.mentalSettings);
   if (data.dailySettings != null) validateDailySettings(data.dailySettings);
   const removedActivityIds = data.removedActivityIds === undefined ? [] : data.removedActivityIds;
   requireData(Array.isArray(removedActivityIds) && removedActivityIds.every(id), "removed activity ids");
-  return { ...createPersonalState(), ...data, removedActivityIds: [...new Set(removedActivityIds)] };
+  return { ...createPersonalState(), ...data, practiceSessions, removedActivityIds: [...new Set(removedActivityIds)] };
 }
 
 /** Merge valid backups or cloud snapshots without reviving terminal work or deleted entries. */
@@ -243,6 +248,8 @@ export function mergePersonalData(currentValue, incomingValue) {
     next[field] = [...byId.values()];
   }
   next.removedActivityIds = [...new Set([...current.removedActivityIds, ...incoming.removedActivityIds])].sort();
+  next.practiceSessions = mergePracticeSessions(current.practiceSessions, incoming.practiceSessions);
+  next.activities = withPracticeActivities(next).activities;
   const cancelledPreparations = new Set(next.removedActivityIds.filter((value) => value.startsWith("cancel-preparation:"))
     .map((value) => value.slice("cancel-preparation:".length)));
   const finishedIds = new Set(next.trials.map((trial) => trial.id));

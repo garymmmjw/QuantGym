@@ -7,6 +7,7 @@ catalog, profile, or leaderboard query should join or serialize its contents.
 from __future__ import annotations
 
 import json
+import math
 import re
 from datetime import date, datetime, timezone
 from urllib.parse import urlsplit
@@ -17,7 +18,7 @@ MAX_PERSONAL_PREP_RECORDS = 100_000
 PERSONAL_PREP_FIELDS = {
     "mentalSettings", "activeTrial", "trials", "dailySettings", "dailySessions", "activities"
 }
-OPTIONAL_PERSONAL_FIELDS = {"removedActivityIds", "applicationEvents", "reviewEvents"}
+OPTIONAL_PERSONAL_FIELDS = {"removedActivityIds", "applicationEvents", "reviewEvents", "practiceSessions"}
 APPLICATION_FIELDS = {"company", "role", "location", "url", "status", "deadline", "nextAction", "nextActionDate", "notes", "archived"}
 APPLICATION_STATUSES = {"wishlist", "applied", "oa", "interview", "offer", "rejected", "withdrawn"}
 APPLICATION_LIMITS = {"company": 200, "role": 300, "location": 300, "url": 2048, "nextAction": 2000, "notes": 20000}
@@ -50,7 +51,7 @@ def validate_personal_prep_request(payload: dict) -> tuple[int, str]:
     active = data["activeTrial"]
     if active is not None and (not isinstance(active, dict) or not valid_record_id(active.get("id"))):
         raise PersonalPrepValidationError("Invalid activeTrial.")
-    for field in ("trials", "dailySessions", "activities", "applicationEvents", "reviewEvents"):
+    for field in ("trials", "dailySessions", "activities", "applicationEvents", "reviewEvents", "practiceSessions"):
         rows = data[field]
         if not isinstance(rows, list) or len(rows) > MAX_PERSONAL_PREP_RECORDS:
             raise PersonalPrepValidationError(f"Invalid {field} collection.")
@@ -63,6 +64,8 @@ def validate_personal_prep_request(payload: dict) -> tuple[int, str]:
                 validate_application_event(row)
             elif field == "reviewEvents":
                 validate_review_event(row)
+            elif field == "practiceSessions":
+                validate_practice_session(row)
         if field in {"applicationEvents", "reviewEvents"}:
             time_field = "createdAt" if field == "applicationEvents" else "reviewedAt"
             data[field] = sorted(rows, key=lambda event: event_order(event, time_field))
@@ -143,6 +146,82 @@ def validate_review_event(event):
         raise PersonalPrepValidationError("Invalid review event.")
 
 
+def bounded_practice_text(value, maximum):
+    if not isinstance(value, str):
+        return False
+    try:
+        # Match JavaScript string limits, including non-BMP characters.
+        return len(value.encode("utf-16-le")) // 2 <= maximum
+    except UnicodeEncodeError:
+        return False
+
+
+def validate_practice_session(session):
+    fields = {"id", "kind", "status", "startedAt", "updatedAt", "completedAt", "question", "text", "codeLanguage", "selfAssessment", "elapsedSeconds", "timerStartedAt", "reviewed"}
+    if set(session) != fields or not bounded_practice_text(session["id"], 512) or not isinstance(session.get("kind"), str) or session["kind"] not in {"tech", "coding"} or not isinstance(session.get("status"), str) or session["status"] not in {"active", "completed"}:
+        raise PersonalPrepValidationError("Invalid practice session.")
+    if not all(valid_event_timestamp(session.get(field)) for field in ("startedAt", "updatedAt")):
+        raise PersonalPrepValidationError("Invalid practice session timestamps.")
+    for field in ("completedAt", "timerStartedAt"):
+        if session[field] is not None and not valid_event_timestamp(session[field]):
+            raise PersonalPrepValidationError(f"Invalid practice {field}.")
+    if not bounded_practice_text(session["text"], 80_000) or not isinstance(session["codeLanguage"], str) or session["codeLanguage"] not in {"python", "javascript", "cpp"} or not isinstance(session["selfAssessment"], str) or session["selfAssessment"] not in {"", "independent", "with-help", "review"} or type(session["reviewed"]) is not bool:
+        raise PersonalPrepValidationError("Invalid practice answer.")
+    elapsed = session["elapsedSeconds"]
+    if type(elapsed) not in (int, float) or not 0 <= elapsed <= 1_000_000_000_000 or not math.isfinite(elapsed):
+        raise PersonalPrepValidationError("Invalid practice elapsed time.")
+    if session["status"] == "completed":
+        if not session["text"].strip() or not session["selfAssessment"] or not session["completedAt"] or session["timerStartedAt"] is not None:
+            raise PersonalPrepValidationError("Invalid completed practice answer.")
+    elif session["completedAt"] is not None:
+        raise PersonalPrepValidationError("Active practice cannot have a completion time.")
+    question = session["question"]
+    required = {"id", "source", "title", "titleEn", "prompt", "promptEn", "reference", "referenceEn", "url"}
+    optional = {"slug", "username", "linkedAt", "sourceLabel"}
+    if not isinstance(question, dict) or not required.issubset(question) or set(question) - required - optional or not valid_record_id(question.get("id")) or not bounded_practice_text(question["id"], 512):
+        raise PersonalPrepValidationError("Invalid practice question.")
+    limits = {"title": 500, "titleEn": 500, "prompt": 80_000, "promptEn": 80_000, "reference": 80_000, "referenceEn": 80_000, "url": 2048, "sourceLabel": 500}
+    if any(not bounded_practice_text(question[field], maximum) for field, maximum in limits.items() if field in question):
+        raise PersonalPrepValidationError("Invalid practice question text.")
+    if session["kind"] == "tech":
+        if question["source"] != "question-bank" or question["url"] != "" or not question["prompt"].strip() or not question["reference"].strip() or any(question.get(field) for field in ("slug", "username", "linkedAt")):
+            raise PersonalPrepValidationError("Technical practice requires a Purple Book question.")
+    elif question["source"] != "leetcode" or not isinstance(question.get("slug"), str) or not re.fullmatch(r"[a-zA-Z0-9_-]{1,200}", question["slug"]) or question["id"] != question["slug"] or question["url"] != f"https://leetcode.cn/problems/{question['slug']}/" or not isinstance(question.get("username"), str) or not re.fullmatch(r"[a-zA-Z0-9_-]{1,100}", question["username"]) or not valid_event_timestamp(question.get("linkedAt")):
+        raise PersonalPrepValidationError("Coding practice requires a linked LeetCode problem.")
+
+
+def merge_practice_sessions(current, incoming):
+    sessions = {session["id"]: session for session in current}
+    for candidate in incoming:
+        previous = sessions.get(candidate["id"])
+        if previous:
+            identity = lambda item: (item["kind"], *(item["question"].get(field) for field in ("id", "source", "slug", "username", "linkedAt")))
+            if identity(previous) != identity(candidate):
+                raise PersonalPrepValidationError("Conflicting practice question identity.")
+            if previous["status"] == "completed" and candidate["status"] != "completed":
+                continue
+            if candidate["status"] == previous["status"] and event_order(candidate, "updatedAt") <= event_order(previous, "updatedAt"):
+                continue
+        sessions[candidate["id"]] = candidate
+    return list(sessions.values())
+
+
+def restore_practice_activities(data):
+    removed = set(data["removedActivityIds"])
+    activities = {activity["id"]: activity for activity in data["activities"]
+                  if not (activity["id"].startswith("practice:") and activity["id"] in removed)}
+    for session in data["practiceSessions"]:
+        identity = f"practice:{session['id']}"
+        if session["status"] != "completed" or identity in removed:
+            continue
+        activities[identity] = {
+            "id": identity, "kind": session["kind"], "count": 1, "title": session["question"]["title"],
+            "titleEn": session["question"]["titleEn"], "completedAt": session["completedAt"],
+            "questionId": session["question"]["id"], "source": "standalone", "selfAssessment": session["selfAssessment"],
+        }
+    data["activities"] = list(activities.values())
+
+
 def get_personal_prep(conn, user_id: str) -> dict:
     row = conn.execute(
         "SELECT data_json, revision, updated_at FROM user_personal_prep WHERE user_id = ?",
@@ -173,8 +252,8 @@ def save_personal_prep(conn, user_id: str, base_revision: int, data_json: str) -
     current = get_personal_prep(conn, user_id)
     if current["revision"] != base_revision:
         return False, current
+    incoming = json.loads(data_json)
     if current["data"] is not None:
-        incoming = json.loads(data_json)
         for field, time_field in (("applicationEvents", "createdAt"), ("reviewEvents", "reviewedAt")):
             events = {}
             for event in [*current["data"].get(field, []), *incoming.get(field, [])]:
@@ -183,7 +262,13 @@ def save_personal_prep(conn, user_id: str, base_revision: int, data_json: str) -
                     raise PersonalPrepValidationError(f"Conflicting immutable event in {field}.")
                 events[event["id"]] = event
             incoming[field] = sorted(events.values(), key=lambda event: event_order(event, time_field))
-        _, data_json = validate_personal_prep_request({"version": PERSONAL_PREP_VERSION, "baseRevision": base_revision, "data": incoming})
+        incoming["practiceSessions"] = merge_practice_sessions(current["data"].get("practiceSessions", []), incoming.get("practiceSessions", []))
+        # An older client can omit new sessions and their deletion markers.
+        # Retain practice tombstones before reconstructing calendar activities.
+        retained = {identity for identity in current["data"].get("removedActivityIds", []) if identity.startswith("practice:")}
+        incoming["removedActivityIds"] = sorted(retained | set(incoming["removedActivityIds"]))
+    restore_practice_activities(incoming)
+    _, data_json = validate_personal_prep_request({"version": PERSONAL_PREP_VERSION, "baseRevision": base_revision, "data": incoming})
     now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     if base_revision == 0:
         cursor = conn.execute(

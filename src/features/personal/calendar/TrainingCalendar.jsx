@@ -5,8 +5,8 @@ import { collectLeetCodeActivities, leetcodeDailySummary } from "./leetcodeCalen
 import "./calendar.css";
 
 const KIND_LABELS = {
-  zh: { quant: "量化题目", mental: "Mental Math", sequence: "数列 / 字母推理", pattern: "图形推理", tech: "Tech Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "Daily Mock" },
-  en: { quant: "Quant questions", mental: "Mental Math", sequence: "Sequences", pattern: "Patterns", tech: "Tech Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "Daily Mock" }
+  zh: { quant: "量化题目", mental: "Mental Math", sequence: "数列 / 字母推理", pattern: "图形推理", tech: "Technical Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "历史综合训练" },
+  en: { quant: "Quant questions", mental: "Mental Math", sequence: "Sequences", pattern: "Patterns", tech: "Technical Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "Past combined practice" }
 };
 
 export function TrainingCalendar({ state = {}, update, legacyState = {}, language = "zh", leetcode }) {
@@ -122,7 +122,10 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
           <h1 id="pc-title">{t("训练日历", "Training calendar")}</h1>
           <p className="pc-intro">{t("把申请准备，落实到每一天。", "A record of your preparation, one day at a time.")}</p>
         </div>
-        <Link className="pc-primary" to="/daily-mock">{t("开始 Daily Mock", "Start Daily Mock")} <span aria-hidden="true">↗</span></Link>
+        <div className="pc-practice-links">
+          <Link className="pc-primary" to="/coding-oa">Coding OA <span aria-hidden="true">↗</span></Link>
+          <Link className="pc-secondary" to="/technical-interview">Technical Interview <span aria-hidden="true">↗</span></Link>
+        </div>
       </header>
 
       <section className="pc-calendar" aria-label={t("选择训练日期", "Choose a training date")}>
@@ -183,7 +186,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
         </div>
 
         <dl className="pc-stats">
-          {ACTIVITY_KINDS.map((kind) => <div className={`pc-stat pc-kind-${kind}`} key={kind}>
+          {ACTIVITY_KINDS.filter((kind) => kind !== "daily" || selectedSummary.daily > 0).map((kind) => <div className={`pc-stat pc-kind-${kind}`} key={kind}>
             <dt>{labels[kind]}</dt>
             <dd><strong>{selectedSummary[kind].toLocaleString(locale)}</strong><span>{kind === "daily" ? t("轮", "rounds") : t("题", "questions")}</span></dd>
             <p>{TRIAL_KINDS.includes(kind) ? t(`正确作答 · ${selectedSummary[`${kind}Trials`]} 次 trial`, `Correct · ${selectedSummary[`${kind}Trials`]} trials`) : kind === "daily" ? t("整套完成", "Full sets completed") : kind === "tech" ? t("面试练习", "Interview practice") : kind === "coding" ? t("编程训练", "Coding practice") : kind === "behavioral" ? t("表达练习", "Behavioral practice") : t("完成题目", "Problems completed")}</p>
@@ -230,20 +233,20 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
           <span className="pc-empty-symbol" aria-hidden="true">○</span>
           <h3>{leetcodeDay.sourceSubmissions > 0 ? t("这一天的题目明细尚未同步", "Problem details have not been synced for this day") : t("这一天，还没有训练记录", "No training recorded for this day")}</h3>
           <p>{leetcodeDay.sourceSubmissions > 0 ? t("力扣日历中有提交记录，但没有对应的已同步通过题目。提交次数不计入完成题数。", "LeetCode’s calendar has submissions, but no accepted problem details are synced. Submission totals do not count as completed problems.") : t("完成一次练习后，它会出现在对应日期。也可以补记线下完成的训练。", "Completed practice appears on its date. You can also add your offline training.")}</p>
-          <div className="pc-empty-links"><Link to="/tools">Mental Math <span aria-hidden="true">↗</span></Link><Link to="/problems">{t("量化题库", "Question bank")} <span aria-hidden="true">↗</span></Link></div>
+          <div className="pc-empty-links"><Link to="/tools">Mental Math <span aria-hidden="true">↗</span></Link><Link to="/coding-oa">Coding OA <span aria-hidden="true">↗</span></Link><Link to="/technical-interview">Technical Interview <span aria-hidden="true">↗</span></Link></div>
         </div>}
       </section>
 
       <section className="pc-week" aria-labelledby="pc-week-title">
         <div className="pc-section-heading"><div><p className="pc-eyebrow">LAST 7 DAYS</p><h2 id="pc-week-title">{t("近 7 天的训练节奏", "Your last seven days")}</h2><p className="pc-week-range">{shortDateFormatter.format(parseLocalDay(recentDays[0].key))} – {shortDateFormatter.format(parseLocalDay(selectedDay))}</p></div><p className="pc-week-total"><strong>{recentActiveDays}</strong> / 7 {t("天有训练", "days active")}<span>{t(`共完成 ${recentTotal.toLocaleString(locale)} 题`, `${recentTotal.toLocaleString(locale)} questions completed`)}</span></p></div>
         <div className="pc-week-chart" role="group" aria-label={t("近七天每日完成题数", "Questions completed each day")}>
-          {recentDays.map((day) => <button type="button" key={day.key} className={`pc-week-day${day.key === selectedDay ? " is-selected" : ""}`} onClick={() => selectDate(day.key)} aria-label={`${fullDateFormatter.format(parseLocalDay(day.key))} · ${t(`${day.totalQuestions} 题，${day.daily} 轮 Daily Mock`, `${day.totalQuestions} questions, ${day.daily} Daily Mock rounds`)}`}>
+          {recentDays.map((day) => <button type="button" key={day.key} className={`pc-week-day${day.key === selectedDay ? " is-selected" : ""}`} onClick={() => selectDate(day.key)} aria-label={`${fullDateFormatter.format(parseLocalDay(day.key))} · ${t(`${day.totalQuestions} 题`, `${day.totalQuestions} questions`)}${day.daily ? t(`，${day.daily} 轮历史综合训练`, `, ${day.daily} past combined practice rounds`) : ""}`}>
             <strong>{day.totalQuestions.toLocaleString(locale)}</strong>
             <span className="pc-bar-track"><span className="pc-bar" style={{ height: `${day.activityCount ? Math.max(5, day.totalQuestions / recentMax * 100) : 0}%` }} /></span>
             <span>{weekdayFormatter.format(parseLocalDay(day.key))}</span><small>{shortDateFormatter.format(parseLocalDay(day.key))}</small>
           </button>)}
         </div>
-        <p className="pc-data-note">{t("柱状图按完成题数统计；心算、数列与图形推理只计正确作答，Daily Mock 轮数单独统计。", "Bars show completed questions; math, sequences and patterns count correct answers only. Daily Mock rounds are counted separately.")}{leetcodeLinked && t(" LeetCode 仅计已同步的通过题目，同题当天计一次；源站日历提交量不计入。", " LeetCode includes synced accepted problems, once per problem per day. Source-calendar submission totals are excluded.")}</p>
+        <p className="pc-data-note">{t("柱状图按完成题数统计；心算、数列与图形推理只计正确作答。", "Bars show completed questions; math, sequences and patterns count correct answers only.")}{recentDays.some((day) => day.daily > 0) && t(" 历史综合训练的轮数单独保留。", " Past combined practice rounds are retained separately.")}{leetcodeLinked && t(" LeetCode 仅计已同步的通过题目，同题当天计一次；源站日历提交量不计入。", " LeetCode includes synced accepted problems, once per problem per day. Source-calendar submission totals are excluded.")}</p>
       </section>
 
       <footer className="pc-footer"><p>{t("记录按你设备的本地日期归档。已有明确完成时间的旧训练会自动汇入，未记录完成日期的历史进度可手动补记。", "Records follow your device’s local dates. Dated training history is included automatically; older progress without a completion date can be added manually.")}{undatedLegacyCount > 0 && <span> {t(`有 ${undatedLegacyCount} 条旧记录因缺少可靠日期未计入。`, `${undatedLegacyCount} older records have no reliable date and are not included.`)}</span>}</p></footer>

@@ -9,12 +9,12 @@ import "./leetcode.css";
 
 const difficultyLabels = { zh: { 1: "简单", 2: "中等", 3: "困难" }, en: { 1: "Easy", 2: "Medium", 3: "Hard" } };
 
-export function LeetcodePageContent() {
+export function LeetcodePageContent({ practiceSessions = [] }) {
   const lc = useLeetCode();
-  return <LeetcodeWorkspace key={lc.ownerId || "signed-out"} lc={lc} />;
+  return <LeetcodeWorkspace key={lc.ownerId || "signed-out"} lc={lc} practiceSessions={practiceSessions} />;
 }
 
-function LeetcodeWorkspace({ lc }) {
+function LeetcodeWorkspace({ lc, practiceSessions }) {
   const en = lc.language === "en";
   const t = (zh, english) => en ? english : zh;
   const locale = en ? "en-US" : "zh-CN";
@@ -121,7 +121,7 @@ function LeetcodeWorkspace({ lc }) {
         <div className="lc-difficulty-overview"><div className="lc-difficulty-bar" aria-hidden="true">{[1, 2, 3].map((level) => <span key={level} className={`lc-level-${level}`} style={{ flex: stats?.[["", "easy", "medium", "hard"][level]] || 0 }} />)}</div><dl>{[[1, "easy"], [2, "medium"], [3, "hard"]].map(([level, key]) => <div key={key}><dt><span className={`lc-level-dot lc-level-${level}`} />{labels[level]}</dt><dd>{stats?.[key]?.toLocaleString(locale) ?? "—"}</dd></div>)}</dl></div>
         <dl className="lc-extra-stats"><div><dt>{t("总提交次数", "Total submissions")}</dt><dd>{stats?.totalSubmissions?.toLocaleString(locale) ?? "—"}</dd></div><div><dt>{t("可复习题目", "Review pool")}</dt><dd>{allProblems.length.toLocaleString(locale)}<small> / {stats?.solved ?? "—"}</small></dd></div></dl>
       </section>
-      <LeetcodeReviewPanel key={connectionKey} lc={lc} pool={pool} allProblems={allProblems} selectedProblem={selectedProblem} onSelect={selectReview} now={now} onLockChange={setReviewLocked} />
+      <LeetcodeReviewPanel key={connectionKey} lc={lc} practiceSessions={practiceSessions} pool={pool} allProblems={allProblems} selectedProblem={selectedProblem} onSelect={selectReview} now={now} onLockChange={setReviewLocked} />
       <section className="lc-problems" aria-labelledby="lc-problems-title"><div className="lc-section-title"><div><p className="lc-eyebrow">SOLVED PROBLEMS</p><h2 id="lc-problems-title">{t("我的复习题库", "My review pool")}</h2></div><span className="lc-muted">{t(`已同步 ${allProblems.length} / ${stats?.solved ?? "—"} 题`, `${allProblems.length} / ${stats?.solved ?? "—"} problems synced`)}</span></div>
         <div className="lc-problem-controls"><div className="lc-filter-group" role="group" aria-label={t("按难度筛选", "Filter difficulty")}>{["all", "1", "2", "3"].map((value) => <button key={value} type="button" aria-pressed={difficulty === value} onClick={() => setDifficulty(value)}>{value === "all" ? t("全部", "All") : labels[value]}</button>)}</div><input className="lc-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("搜索题名或编号", "Search title or number")} aria-label={t("搜索已通过题目", "Search solved problems")} /></div>
         <div className="lc-review-filters"><div className="lc-filter-group" role="group" aria-label={t("按复习状态筛选", "Filter review status")}>{[["all", "全部", "All"], ["due", "待复习", "Due"], ["upcoming", "未到期", "Upcoming"], ["uninitialized", "待首次复习", "First review"]].map(([value, zh, english]) => <button key={value} type="button" aria-pressed={reviewFilter === value} onClick={() => setReviewFilter(value)}>{t(zh, english)}</button>)}</div><span>{t("建议复习时间 · 本地时区", "Suggested review time · local timezone")}</span></div>
