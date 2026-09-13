@@ -20,6 +20,7 @@
 .personal-calendar a { text-decoration: none; }
 .personal-calendar button:focus-visible, .personal-calendar a:focus-visible, .personal-calendar input:focus-visible, .personal-calendar select:focus-visible { outline: 3px solid var(--pc-accent); outline-offset: 4px; }
 .personal-calendar .pc-header { display: flex; justify-content: space-between; gap: 24px; align-items: center; margin-bottom: 38px; }
+.personal-calendar .pc-practice-links { display: flex; flex-wrap: wrap; gap: 10px; }
 .personal-calendar .pc-eyebrow { font-size: 10px; line-height: 1.5; font-weight: 800; letter-spacing: .16em; color: var(--pc-muted); margin-bottom: 10px; }
 .personal-calendar h1 { font-size: clamp(28px, 3vw, 38px); letter-spacing: -.055em; font-weight: 750; line-height: 1.2; }
 .personal-calendar .pc-intro { margin-top: 12px; font-size: 13px; color: var(--pc-muted); line-height: 1.7; }
@@ -65,6 +66,7 @@
 .personal-calendar .pc-stat:nth-child(6n + 1) { border-left: 0; padding-left: 0; }
 .personal-calendar .pc-stat:last-child { padding-right: 0; }
 .personal-calendar .pc-stat dt { font-size: 11px; font-weight: 650; color: var(--pc-muted); line-height: 1.5; white-space: nowrap; }
+.personal-calendar .pc-kind-tech dt { white-space: normal; }
 .personal-calendar .pc-stat dd { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px; margin: 8px 0 5px; }
 .personal-calendar .pc-stat dd strong { font-family: var(--qg-font-number, inherit); font-size: clamp(25px, 2.65vw, 36px); font-weight: 550; line-height: 1.2; letter-spacing: -.065em; }
 .personal-calendar .pc-stat dd > span { font-size: 10px; color: var(--pc-muted); }

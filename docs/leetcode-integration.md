@@ -4,6 +4,16 @@ QuantGym supports LeetCode China (`leetcode.cn`) public-profile connections. In 
 
 The LeetCode module displays the public solved count, difficulty distribution, total submissions, and a review pool assembled from known accepted problems. Random review respects the current filters, avoids an immediate repeat when alternatives exist, and opens the original LeetCode problem in a new tab. Opening a problem does not mark it complete.
 
+## Weighted random practice
+
+LeetCode random practice and the standalone **Coding OA** module share `drawReviewProblem(problems, previousSlug, random, { now, submissions, practiceSessions, connection })`. The first three arguments remain compatible with existing callers; the fourth supplies an injectable clock and the current account's accepted submissions, saved personal practice sessions, and active LeetCode connection. The function returns the original problem object or `null`. It respects the supplied pool and excludes the immediately previous problem whenever alternatives exist. The separate SM-2 due-first action continues choosing the earliest due problem.
+
+For each candidate, the latest practice time is the newest known `lastAcceptedAt`, accepted-submission timestamp, saved `review.lastReviewedAt`, or the latest completed Coding OA session timestamp. Frequency uses unique accepted submission IDs for that problem (with a minimum of one, since it is in the solved pool) plus saved `review.reviewCount` and completed Coding OA session IDs for the current linked profile. Coding OA drafts and draws are excluded. Sessions must match both `question.username` and `question.linkedAt`; disconnected/replaced profiles and other accounts do not affect the weights. This is a count of known accepted records, explicit review feedback, and completed Coding OA attempts, not an all-time count of distinct practice sessions or failed attempts. Public history can be incomplete, and a practice session followed by both an AC and recall feedback contributes both signals.
+
+The weight is `(1 + log(1 + elapsedDays)) / sqrt(knownAcceptedCount + reviewCount + codingOACount)`. Holding frequency constant, increasing the time since practice strictly increases the weight; holding time constant, increasing frequency strictly decreases it. The logarithm and square root keep either factor from overwhelming the other. Each candidate retains a positive chance. Selection uses cumulative weights, with deterministic random/clock injection available for tests.
+
+Missing timestamps remain unknown and use the median known elapsed time of the current pool for weighting; if every date is unknown, recency weights are equal. Future timestamps have zero elapsed days. Duplicate submissions, invalid dates, and non-AC rows do not inflate history. Drawing or opening a question never changes its dates, counts, schedule, or cloud records. Only actual synchronized history, explicit saved feedback, and completed Coding OA attempts affect future weights.
+
 ## Per-problem spaced review
 
 The review workspace prioritizes due problems and shows a suggested next review date and local time for every dated problem. Difficulty, text search, and due/upcoming/first-review filters remain available, as does random practice. The schedule is a recommendation, not an exact prediction of when a person will forget a solution.

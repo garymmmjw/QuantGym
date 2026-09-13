@@ -13,7 +13,7 @@ import { CloudSessionBadge, CloudSessionNotice } from "../../features/account/Cl
 const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
 
 const SHEET_NAV_GROUPS = [
-  { label: "个人备考", items: [["calendar", "训练日历", "calendar-days"], ["daily-mock", "Daily Mock", "clipboard-check"], ["leetcode", "LeetCode", "code-2"]] },
+  { label: "个人备考", items: [["calendar", "训练日历", "calendar-days"], ["coding-oa", "Coding OA", "square-terminal"], ["technical-interview", "Technical Interview", "messages-square"], ["leetcode", "LeetCode", "code-2"]] },
   {
     label: "成长",
     items: [
@@ -69,7 +69,7 @@ const SHEET_NAV_GROUPS = [
 
 const BOTTOM_TABS = [
   ["calendar", "日历", "calendar-days"],
-  ["daily-mock", "Daily Mock", "clipboard-check"],
+  ["coding-oa", "Coding OA", "square-terminal"],
   ["tools", "速算", "calculator"],
   ["problems", "题目", "library-big"]
 ];
@@ -274,7 +274,8 @@ export function AppShellMain() {
               <button className="module-nav-trigger" type="button" aria-haspopup="true"><span>个人备考</span></button>
               <div className="module-nav-menu">
                 <button className="module-tab" type="button" data-module-tab="calendar"><i data-lucide="calendar-days"></i><span data-i18n="calendar">训练日历</span></button>
-                <button className="module-tab" type="button" data-module-tab="daily-mock"><i data-lucide="clipboard-check"></i>Daily Mock</button>
+                <button className="module-tab" type="button" data-module-tab="coding-oa"><i data-lucide="square-terminal"></i><span data-i18n="codingOa">Coding OA</span></button>
+                <button className="module-tab" type="button" data-module-tab="technical-interview"><i data-lucide="messages-square"></i><span data-i18n="technicalInterview">Technical Interview</span></button>
                 <button className="module-tab" type="button" data-module-tab="leetcode"><i data-lucide="code-2"></i>LeetCode</button>
               </div>
             </div>

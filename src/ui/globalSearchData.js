@@ -160,7 +160,8 @@ export function getModuleSearchDefs(t = (key) => key) {
     { module: "skills", label: t("skills"), detail: "Ability radar / 能力值", fields: [t("skills"), "skills", "ability", "能力值", "雷达", "知识点"] },
     { module: "calendar", label: "训练日历 / Calendar", detail: "个人每日完成记录", fields: ["calendar", "日历", "日期", "完成记录", "daily activity"] },
     { module: "leetcode", label: "LeetCode / 力扣", detail: "刷题进度 · 随机复习", fields: ["leetcode", "力扣", "刷题", "随机复习", "coding"] },
-    { module: "daily-mock", label: "Daily Mock", detail: "速算 · Tech · Coding OA · Behavioral", fields: ["daily", "mock", "每日模拟", "coding oa", "behavioral"] },
+    { module: "coding-oa", label: "Coding OA", detail: "从已通过的 LeetCode 题目中抽一道练习", fields: ["coding oa", "编程", "力扣", "leetcode", "编程笔试", "已完成题目"] },
+    { module: "technical-interview", label: "Technical Interview", detail: "从紫皮书抽一道技术面试题", fields: ["technical interview", "tech interview", "技术面试", "紫皮书", "purple book"] },
     { module: "tools", label: t("tools"), detail: "Mental math / 速算", fields: [t("tools"), "tools", "drills", "速算", "mental math"] },
     { module: "memory", label: t("memory"), detail: "Memory / 资料笔记", fields: [t("memory"), "memory", "notes", "资料", "笔记"] },
     { module: "settings", label: t("settings"), detail: "Settings / 设置", fields: [t("settings"), "settings", "设置", "config"] }

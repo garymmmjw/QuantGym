@@ -31,6 +31,7 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 from urllib.request import Request, urlopen
 
 import leetcode_sync
+from technical_practice import load_technical_questions
 
 from personal_prep import (
     MAX_PERSONAL_PREP_BYTES,
@@ -2872,7 +2873,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         sys.stderr.write("%s - - [%s] %s\n" % (self.client_address[0], self.log_date_time_string(), fmt % args))
 
     def end_headers(self):
-        if urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password"} or urlparse(self.path).path.startswith("/api/leetcode"):
+        if urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password"} or urlparse(self.path).path.startswith(("/api/leetcode", "/api/practice/")):
             self.send_header("Cache-Control", "private, no-store")
             self.send_header("Pragma", "no-cache")
             self.send_header("Vary", "Authorization")
@@ -2949,6 +2950,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.get_personal_preparation()
             if path == "/api/personal-prep" and self.command == "PUT":
                 return self.put_personal_preparation()
+            if path == "/api/practice/technical/questions" and self.command == "GET":
+                return self.get_technical_practice_questions()
             if path == "/api/leetcode" and self.command in {"GET", "DELETE"}:
                 return self.leetcode_connection()
             if path in {"/api/leetcode/connect", "/api/leetcode/sync", "/api/leetcode/import", "/api/leetcode/review"} and self.command == "POST":
@@ -3864,6 +3867,14 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             self.send_json(200, result)
         except leetcode_sync.LeetCodeError as error:
             raise HttpError(error.status, str(error))
+
+    def get_technical_practice_questions(self):
+        self.require_user()
+        try:
+            questions = load_technical_questions()
+        except (OSError, ValueError, TypeError):
+            raise HttpError(503, "Technical practice questions are temporarily unavailable.")
+        self.send_json(200, {"source": "question-bank", "questions": questions})
 
     def get_personal_preparation(self):
         user = self.require_user()

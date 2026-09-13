@@ -184,34 +184,61 @@ const contracts = [
     ]
   },
   {
-    route: "poker",
-    files: [
-      {
-        path: "src/features/poker/PokerPageContent.jsx",
-        checks: [
-          ["table/lobby/action/preflop components receive action bundle", all("<PokerTable table={game?.table} actions={model.actions}", "<PokerLobbyPanel game={game} actions={model.actions}", "<PokerActionBar table={game?.table} actions={model.actions}", "onPositionChange={model.actions.setPreflopPosition}", "onHandSelect={model.actions.setPreflopHand}")],
-          ["visible leave-table action routes back to tools", all("id=\"pokerLeaveTableBtn\"", "className=\"poker-leave-table-button\"", "model.openModule(\"tools\")")]
-        ]
-      },
-      {
-        path: "src/features/poker/PokerActionBar.jsx",
-        checks: [
-          ["bet actions and quick bets submit through actions", all("data-poker-action=\"call\"", "actions.submitAction?.(\"call\")", "data-poker-action=\"raise\"", "actions.submitAction?.(\"raise\")", "data-poker-quick-bet=", "actions.applyQuickBet?.(size)", "id=\"nextPokerGameBtn\"", "actions.nextHand?.()")]
-        ]
-      },
-      {
-        path: "src/features/poker/PokerTable.jsx",
-        checks: [
-          ["seat grid can sit/add/remove players", all("onSit={actions.sitAtSeat}", "onAddBot={actions.addBotAtSeat}", "onRemove={actions.removePlayer}")]
-        ]
-      },
-      {
-        path: "src/features/poker/PokerPreflopMatrix.jsx",
-        checks: [
-          ["preflop position and hand cells update selection", all("id=\"pokerPreflopPositionSelect\"", "onChange={(event) => onPositionChange?.(event.target.value)}", "data-hand={handKey}", "onClick={() => onHandSelect?.(handKey)}")]
-        ]
-      }
-    ]
+    route: "calendar",
+    files: [{
+      path: "src/features/personal/calendar/TrainingCalendar.jsx",
+      checks: [
+        ["calendar provides separate coding and technical practice links", all('to="/coding-oa"', 'to="/technical-interview"')],
+        ["manual entries save, undo and select a day", all('onSubmit={saveManual}', 'onClick={undoManual}', 'onClick={() => selectDate(day.key)}')],
+        ["historical combined practice stays visible only when recorded", all('kind !== "daily" || selectedSummary.daily > 0', '历史综合训练')]
+      ]
+    }]
+  },
+  {
+    route: "coding-oa",
+    files: [{
+      path: "src/features/personal/practice/CodingOaWorkspace.jsx",
+      checks: [
+        ["coding draws from linked solved LeetCode history with practice weights", all('useLeetCode()', 'reviewPool(lc.data.problems)', 'drawReviewProblem(', 'practiceSessions:', 'connection')],
+        ["coding exposes a source management link", all('sourceLink="/leetcode"', 'kind="coding"')]
+      ]
+    }, {
+      path: "src/features/personal/practice/PracticeWorkspace.jsx",
+      checks: [
+        ["single question drawing and completion are separate explicit actions", all('onClick={start}', 'onClick={finish}', 'completePracticeSession(')],
+        ["answer edits and saved history selections remain interactive", all('onChange={event => patch({ text: event.target.value })}', 'setSelectedId(item.id)')]
+      ]
+    }]
+  },
+  {
+    route: "technical-interview",
+    files: [{
+      path: "src/features/personal/practice/TechnicalInterviewWorkspace.jsx",
+      checks: [
+        ["technical interviews use the dedicated book library", all('useTechnicalQuestions()', 'drawTechnicalQuestion(source.questions, previous)', 'kind="tech"')],
+        ["technical source loading gates drawing", all("source.phase === 'ready'", 'source.questions.length > 0')]
+      ]
+    }, {
+      path: "src/features/personal/practice/PracticeWorkspace.jsx",
+      checks: [
+        ["reference reasoning and explicit self assessment support review", all('practice-reference', 'question.reference', 'selfAssessment: value', 'disabled={!session.text.trim() || !session.selfAssessment}')]
+      ]
+    }]
+  },
+  {
+    route: "leetcode",
+    files: [{
+      path: "src/features/leetcode/LeetcodePageContent.jsx",
+      checks: [
+        ["LeetCode filters and private practice history reach the review panel", all('onClick={() => setDifficulty(value)}', 'setSearch(event.target.value)', 'practiceSessions={practiceSessions}')],
+        ["sync and history imports remain explicit actions", all('onClick={() => lc.sync?.()}', 'onClick={importHistory}')]
+      ]
+    }, {
+      path: "src/features/leetcode/LeetcodeReviewPanel.jsx",
+      checks: [
+        ["random draw uses history and ratings remain explicit", all('drawReviewProblem(', 'practiceSessions, connection', 'onClick={() => record(rating.value)}')]
+      ]
+    }]
   },
   {
     route: "experiences",

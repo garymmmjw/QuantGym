@@ -7,7 +7,8 @@ const HASH_ALIASES = new Map([
   ["", "overview"],
   ["home", "overview"],
   ["dashboard", "overview"],
-  ["poker", "calendar"]
+  ["poker", "calendar"],
+  ["daily-mock", "coding-oa"]
 ]);
 
 function readHashModule() {

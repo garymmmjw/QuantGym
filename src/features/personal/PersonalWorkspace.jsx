@@ -1,19 +1,7 @@
-import { Component, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Component, useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { useAuthStore, useAppStore, useAppServicesContext, useUserStateStore } from "../../stores/AppServicesContext.jsx";
-import { createPersonalStore } from "./personalStore.js";
-import { createPersonalCloudSync } from "./personalCloud.js";
+import { usePersonalData } from "./usePersonalData.js";
 import "./personalWorkspace.css";
-
-const stores = new Map();
-function getStore(ownerId) {
-  if (!stores.has(ownerId)) {
-    let storage;
-    try { storage = window.localStorage; } catch { /* Render a visible recovery state below. */ }
-    stores.set(ownerId, createPersonalStore({ ownerId, storage, eventTarget: window }));
-  }
-  return stores.get(ownerId);
-}
 
 class PersonalErrorBoundary extends Component {
   state = { failed: false };
@@ -25,33 +13,16 @@ class PersonalErrorBoundary extends Component {
 }
 
 export function PersonalWorkspace({ children }) {
-  const services = useAppServicesContext();
-  const user = useAuthStore((state) => state.currentUser);
-  const legacyState = useUserStateStore((state) => state.value || {});
-  const cloudConfig = useAppStore((state) => state.cloudConfig);
-  const language = services.getLanguage?.() || "zh";
-  const ownerId = user?.id;
-  if (!ownerId) return <p role="status">请先登录你的个人账户。</p>;
-  return <ScopedWorkspace key={ownerId} ownerId={ownerId} cloudConfig={cloudConfig} language={language} legacyState={legacyState}>{children}</ScopedWorkspace>;
+  const personal = usePersonalData();
+  if (!personal.ownerId) return <p role="status">请先登录你的个人账户。</p>;
+  return <ScopedWorkspace key={personal.ownerId} personal={personal}>{children}</ScopedWorkspace>;
 }
 
-function ScopedWorkspace({ ownerId, cloudConfig = {}, language, legacyState, children }) {
-  const store = useMemo(() => getStore(ownerId), [ownerId]);
-  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+function ScopedWorkspace({ personal, children }) {
+  const { store, snapshot, cloud, sync, language, legacyState } = personal;
   const [backupMessage, setBackupMessage] = useState("");
   const inputRef = useRef(null);
-  const syncRef = useRef(null);
-  const [cloud, setCloud] = useState({ phase: "local" });
   const en = language === "en";
-
-  useEffect(() => {
-    let storage;
-    try { storage = window.localStorage; } catch { /* Local recovery message remains visible. */ }
-    const sync = createPersonalCloudSync({ store, ownerId, config: cloudConfig, storage, eventTarget: window, onStatus: setCloud });
-    syncRef.current = sync;
-    sync.start();
-    return () => { sync.stop(); syncRef.current = null; };
-  }, [store, ownerId, cloudConfig.endpoint, cloudConfig.token, cloudConfig.userId]);
 
   useEffect(() => {
     if (!snapshot.dirty) return undefined;
@@ -87,7 +58,8 @@ function ScopedWorkspace({ ownerId, cloudConfig = {}, language, legacyState, chi
       <div><span className="personal-workspace-kicker">{en ? "MY PREPARATION" : "我的申请备考"}</span><p>{en ? "Practice, review, repeat." : "训练、复盘，记录每一天。"}</p></div>
       <nav aria-label={en ? "Personal preparation" : "个人备考导航"} className="personal-workspace-nav">
         <NavLink to="/calendar">{en ? "Calendar" : "训练日历"}</NavLink>
-        <NavLink to="/daily-mock">Daily Mock</NavLink>
+        <NavLink to="/coding-oa">Coding OA</NavLink>
+        <NavLink to="/technical-interview">Technical Interview</NavLink>
         <NavLink to="/tools">Mental Math</NavLink>
         <NavLink to="/leetcode">LeetCode</NavLink>
       </nav>
@@ -107,7 +79,7 @@ function ScopedWorkspace({ ownerId, cloudConfig = {}, language, legacyState, chi
         auth: en ? "Saved on this device · reconnect above to resume cloud sync." : "已保存在本机 · 点击上方「重新登录」恢复云端同步。",
         error: en ? "Cloud sync is unavailable. Local records are kept; retry when connected." : "云端暂未同步，本机记录已保留；联网后可重试。",
       })[cloud.phase]}</span>
-      {!['local', 'auth'].includes(cloud.phase) && <button type="button" disabled={cloud.phase === "syncing"} onClick={() => syncRef.current?.sync()}>{en ? "Sync now" : "立即同步"}</button>}
+      {!['local', 'auth'].includes(cloud.phase) && <button type="button" disabled={cloud.phase === "syncing"} onClick={sync}>{en ? "Sync now" : "立即同步"}</button>}
     </div>
     <PersonalErrorBoundary>{children({ state: snapshot.data, update: store.update, legacyState, language })}</PersonalErrorBoundary>
     <footer className="personal-workspace-footer">
