@@ -11,7 +11,8 @@ import { initialReview } from '../src/features/leetcode/leetcodeReviewModel.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const recoveryOnly = process.argv.includes('--recovery-only');
-const output = path.join(root, 'artifacts/personal-practice', ...(recoveryOnly ? ['recovery'] : []));
+const catalogOnly = process.argv.includes('--technical-catalog-only');
+const output = path.join(root, 'artifacts/personal-practice', ...(recoveryOnly ? ['recovery'] : catalogOnly ? ['catalog'] : []));
 fs.mkdirSync(output, { recursive: true });
 const port = recoveryOnly ? 5214 : 5213, baseUrl = `http://127.0.0.1:${port}`;
 const endpoint = 'https://personal-practice-fixture.invalid/api';
@@ -41,7 +42,7 @@ const summary = { startedAt: new Date().toISOString(), isolation: 'Fresh headles
 const contexts = [];
 let browser, server, currentPage;
 
-async function makePage({ name = 'desktop', pathname = '/coding-oa', viewport = { width: 1440, height: 1000 }, mobile = false, dark = false, remote = freshRemote(), linked = true, technicalError = false } = {}) {
+async function makePage({ name = 'desktop', pathname = '/coding-oa', viewport = { width: 1440, height: 1000 }, mobile = false, dark = false, remote = freshRemote(), linked = true, technicalError = false, technicalQuestions = technical, technicalSupplements = {} } = {}) {
   const context = await browser.newContext({ viewport, locale: 'zh-CN', timezoneId: 'America/Chicago', deviceScaleFactor: 1, isMobile: mobile,
     hasTouch: mobile, colorScheme: dark ? 'dark' : 'light', reducedMotion: 'reduce', serviceWorkers: 'block' });
   contexts.push(context);
@@ -78,7 +79,7 @@ async function makePage({ name = 'desktop', pathname = '/coding-oa', viewport = 
       }
       if (requestPath === '/leetcode' || requestPath === '/leetcode/sync') return fulfill(route, linked ? leetcode : { connection: null, stats: null, submissions: [], problems: [], calendar: [], coverage: {} });
       if (requestPath === '/leetcode/review') { remote.reviewWrites.push(request.postDataJSON()); return fulfill(route, { error: 'unexpected-review-write' }, 500); }
-      if (requestPath === '/practice/technical/questions') return technicalError ? fulfill(route, { error: 'fixture-unavailable' }, 503) : fulfill(route, { source: 'question-bank', questions: technical });
+      if (requestPath === '/practice/technical/questions') return technicalError ? fulfill(route, { error: 'fixture-unavailable' }, 503) : fulfill(route, { source: 'question-bank', questions: technicalQuestions, ...technicalSupplements });
       if (requestPath === '/account') return fulfill(route, { account: { ...account, passwordHash: undefined } });
       if (requestPath === '/sync') return fulfill(route, { account: { ...account, passwordHash: undefined }, state: {}, problemStates: [], community: { posts: [] }, syncedAt: iso(now) });
       return fulfill(route, { problems: [], jobs: [], news: [], leaderboard: [], profiles: [], community: { posts: [] }, state: {}, syncedAt: iso(now) });
@@ -115,6 +116,7 @@ async function noOverflow(page) {
 }
 async function check(name, action) {
   if (recoveryOnly && !name.startsWith('Storage quota')) return;
+  if (catalogOnly && !name.startsWith('Systematic Purple Book')) return;
   process.stdout.write(`${name}\n`); const details = await action(); summary.checks.push({ name, status: 'passed', ...(details || {}) });
 }
 
@@ -201,6 +203,66 @@ try {
     await page.getByRole('heading', { name: '骰子期望', exact: true }).waitFor();
     assert.equal(remote.envelope.data.activities.filter(item => item.kind === 'tech').length, 1);
   });
+  await check('Systematic Purple Book catalog filters original numbers, selects questions, and preserves source snapshots', async () => {
+    const source = { version: 1, chapter: '第一章 概率', section: '独立试验', sourcePage: '18', pdfPage: 22, edition: '浏览器测试版本',
+      sourceHashSHA256: 'a'.repeat(64), sourceUrl: 'https://drive.google.com/file/d/fixture-source/view', answerStatus: 'corrected',
+      sourceReference: '原书答案对照测试。', reviewNotes: '勘误说明测试：明确独立性假设。' };
+    const catalog = [
+      { ...technical[0], provenance: { ...source, originalNumber: '1.1' } },
+      { ...technical[1], provenance: { ...source, originalNumber: '1.2', section: '期望', answerStatus: 'source' } },
+      { ...technical[1], id: 'missing-answer-fixture', title: '线性代数练习', prompt: '请推导这道测试练习。', reference: '', referenceEn: '',
+        provenance: { version: 1, originalNumber: '2.1', chapter: '第二章 线性代数', section: '特征值', sourcePage: '39', pdfPage: 43, answerStatus: 'missing' } },
+    ];
+    const fixture = await makePage({ name: 'systematic-technical', pathname: '/technical-interview', technicalQuestions: catalog });
+    const view = fixture.page;
+    await view.locator('.practice-catalog > summary').click();
+    await view.getByLabel('章节', { exact: true }).selectOption('第二章 线性代数');
+    await view.getByLabel('小节', { exact: true }).selectOption('特征值');
+    await view.getByRole('searchbox', { name: '查找题目', exact: true }).fill('2.1');
+    assert.equal(await view.locator('.practice-catalog-list > li').count(), 1);
+    await noOverflow(view); await capture(view, 'technical-catalog-filtered');
+    await view.getByRole('button', { name: '练习 2.1 线性代数练习', exact: true }).click();
+    await view.getByRole('heading', { level: 2, name: '线性代数练习', exact: true }).waitFor();
+    assert.equal(await view.locator('.practice-catalog').getAttribute('open'), null);
+    assert.equal(await view.locator('.practice-provenance').getByText('原书未附答案', { exact: true }).count(), 1);
+    await view.getByText('查看答案说明', { exact: true }).click();
+    await view.getByText('原书未附本题答案。你可以先记录自己的推导。', { exact: true }).waitFor();
+    await view.getByRole('textbox', { name: '你的思路与回答', exact: true }).fill('没有原书答案的题目仍能保存推导。');
+    await waitFor(() => fixture.remote.envelope.data.practiceSessions?.some(item => item.question.id === 'missing-answer-fixture'), 'missing-answer draft saved');
+    await view.locator('.practice-catalog > summary').click();
+    await view.getByLabel('章节', { exact: true }).selectOption('第一章 概率');
+    assert.equal(await view.getByLabel('小节', { exact: true }).inputValue(), '');
+    await view.getByRole('searchbox', { name: '查找题目', exact: true }).fill('1.1');
+    assert.equal(await view.locator('.practice-catalog-list > li').count(), 1);
+    await view.clock.setFixedTime(new Date(now + 1000));
+    await view.getByRole('button', { name: '随机练习当前范围 ↗', exact: true }).click();
+    await view.getByRole('heading', { level: 2, name: '硬币与概率', exact: true }).waitFor();
+    assert.equal(await view.locator('.practice-catalog').getAttribute('open'), null);
+    await view.locator('.practice-reference > summary').click();
+    await view.getByText('整理后的参考解答', { exact: true }).waitFor();
+    await view.getByText('勘误说明测试：明确独立性假设。', { exact: true }).waitFor();
+    await view.getByText('对照原书答案', { exact: true }).click();
+    await view.getByText('原书答案对照测试。', { exact: true }).waitFor();
+    await waitFor(() => fixture.remote.envelope.data.practiceSessions?.some(item => item.question.id === technical[0].id), 'provenance saved');
+    const stored = structuredClone(fixture.remote.envelope.data.practiceSessions.find(item => item.question.id === technical[0].id).question);
+    assert.deepEqual(stored.provenance, catalog[0].provenance);
+    await noOverflow(view); await capture(view, 'technical-provenance-reference');
+    catalog[0].provenance = { ...catalog[0].provenance, originalNumber: '9.9', reviewNotes: '后续版本的说明。' };
+    catalog[0].reference = '后续版本的答案。';
+    await view.reload({ waitUntil: 'domcontentloaded' });
+    await view.locator('.practice-provenance').getByText('原书题号 1.1', { exact: true }).waitFor();
+    assert.equal(await view.getByText('后续版本的答案。', { exact: true }).count(), 0);
+    assert.deepEqual(fixture.remote.envelope.data.practiceSessions.find(item => item.question.id === technical[0].id).question, stored);
+    assert.equal(fixture.remote.envelope.data.activities.filter(item => item.kind === 'tech').length, 0);
+    await view.setViewportSize({ width: 390, height: 844 });
+    await view.locator('.practice-catalog > summary').click();
+    await view.getByRole('searchbox', { name: '查找题目', exact: true }).fill('不存在的题号');
+    await view.getByText('没有匹配的题目，试试其他章节或更短的关键词。', { exact: true }).waitFor();
+    assert.ok(await view.getByRole('button', { name: '从筛选范围抽题', exact: true }).isDisabled());
+    await view.getByRole('button', { name: '清除筛选', exact: true }).click();
+    await noOverflow(view); await capture(view, 'technical-catalog-mobile');
+    return { catalogQuestions: catalog.length, oldSnapshotsPreserved: true, fabricatedCompletedAttempts: 0 };
+  });
   await check('Training calendar shows the new independent attempts while retaining earlier history', async () => {
     await page.goto(`${baseUrl}/calendar`, { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: '训练日历', level: 1, exact: true }).waitFor();
@@ -209,6 +271,45 @@ try {
     assert.deepEqual(remote.envelope.data.dailySessions, [legacyDaily]);
     assert.deepEqual(remote.envelope.data.activities.find(item => item.id === legacyActivity.id), legacyActivity);
     await noOverflow(page); await capture(page, 'calendar-independent-attempts');
+  });
+  await check('Systematic Purple Book appendix stays separate from random draws and opens official problem links', async () => {
+    // Synthetic private API additions keep this public test independent of any book content.
+    const technicalSupplements = {
+      sourceMetadata: { title: 'Fixture book', author: 'Fixture author', edition: 'Fixture edition', pdfPageCount: 12,
+        sourceUrl: 'https://drive.google.com/file/d/fixture/view' },
+      readingList: [
+        { id: 'fixture-first', label: 'Fixture section one', questions: [{ frontendId: '32', titleZh: '最长有效括号',
+          slug: 'longest-valid-parentheses', url: 'https://leetcode.cn/problems/longest-valid-parentheses/', sourcePage: '11', pdfPage: 11 }] },
+        { id: 'fixture-second', label: 'Fixture section two', questions: [{ frontendId: '20', titleZh: '有效的括号',
+          slug: 'valid-parentheses', url: 'https://leetcode.cn/problems/valid-parentheses/', sourcePage: '12', pdfPage: 12 }] },
+      ],
+    };
+    const fixture = await makePage({ name: 'private-reading-list', pathname: '/technical-interview', technicalSupplements });
+    const view = fixture.page;
+    await view.locator('.practice-reading-list > summary').waitFor();
+    assert.equal(await view.locator('.practice-reading-list').getAttribute('open'), null);
+    assert.match(await view.locator('.practice-source-credit').innerText(), /Fixture author.*Fixture edition/);
+    assert.equal(await view.locator('.practice-source').innerText(), '紫皮书 · 2 道题');
+    assert.match(await view.locator('.practice-start small').innerText(), /2 道题/);
+    await view.locator('.practice-reading-list > summary').click();
+    assert.equal(await view.locator('.practice-reading-content li a').count(), 2);
+    assert.equal(await view.locator('.practice-reading-content').getByText(/Hard|Medium|Easy/).count(), 0);
+    const link = view.getByRole('link', { name: '打开力扣 32. 最长有效括号', exact: true });
+    assert.equal(await link.getAttribute('href'), 'https://leetcode.cn/problems/longest-valid-parentheses/');
+    await waitFor(() => fixture.remote.envelope.data.activities.some(item => item.id === 'daily:legacy-daily-preserved:complete'), 'existing daily history normalization');
+    const beforeLink = structuredClone(fixture.remote.envelope.data);
+    const writesBeforeLink = fixture.remote.writes.length;
+    const popupPromise = view.waitForEvent('popup'); await link.click();
+    const popup = await popupPromise; await popup.waitForURL('https://leetcode.cn/problems/longest-valid-parentheses/'); await popup.close();
+    assert.equal(fixture.remote.envelope.data.practiceSessions.length, 0);
+    assert.equal(fixture.remote.reviewWrites.length, 0);
+    assert.deepEqual(fixture.remote.envelope.data, beforeLink);
+    assert.equal(fixture.remote.writes.length, writesBeforeLink);
+    await noOverflow(view); await capture(view, 'technical-appendix-desktop');
+    await view.setViewportSize({ width: 390, height: 844 });
+    await view.locator('.practice-reading-list > summary').scrollIntoViewIfNeeded();
+    await noOverflow(view); await capture(view, 'technical-appendix-mobile');
+    return { recommendationCount: 2, availablePracticeQuestions: 2, writesFromOpeningLink: fixture.remote.writes.length - writesBeforeLink };
   });
   await check('Mobile and dark mode retain readable independent practice controls without overflow', async () => {
     for (const pathname of ['/coding-oa', '/technical-interview']) {

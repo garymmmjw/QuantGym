@@ -104,3 +104,43 @@ test('technical draw uses only Purple Book and avoids immediate repeats', () => 
   assert.equal(drawTechnicalQuestion([], '', () => 0), null);
   assert.equal(drawTechnicalQuestion([question], 'purple-1', () => 1).id, 'purple-1');
 });
+
+test('new practice snapshots retain original numbering and source answers independently of later catalog edits', () => {
+  const provenance = { version: 1, originalNumber: '2.3', chapter: 'Probability', section: 'Conditioning', sourcePage: '18', pdfPage: 22,
+    edition: 'Fixture edition', sourceHashSHA256: 'a'.repeat(64), sourceUrl: 'https://drive.google.com/file/d/fixture/view',
+    answerStatus: 'corrected', sourceReference: 'Original fixture answer.', reviewNotes: 'Fixture correction.' };
+  const current = { ...question, provenance, reference: 'Reviewed fixture answer.' };
+  const old = session('old-source');
+  const created = createPracticeSession('tech', current, { id: 'new-source', now });
+  const snapshot = structuredClone(created);
+  provenance.originalNumber = '3.9';
+  provenance.sourceReference = 'Later source text.';
+  current.reference = 'Later reasoning.';
+  assert.deepEqual(created, snapshot);
+  const state = stateWith(old, created);
+  const restored = validatePersonalData(JSON.parse(JSON.stringify(state)));
+  assert.deepEqual(restored.practiceSessions, [old, snapshot]);
+  assert.deepEqual(mergePersonalData(stateWith(old), restored).practiceSessions.find(item => item.id === 'new-source'), snapshot);
+  assert.equal(created.question.reference, 'Reviewed fixture answer.');
+  assert.equal(created.question.provenance.sourceReference, 'Original fixture answer.');
+});
+
+test('missing source answers remain usable only when explicitly labelled and never create an answer', () => {
+  const missing = { ...question, reference: '', provenance: { version: 1, originalNumber: '练习 3.1', answerStatus: 'missing' } };
+  const created = createPracticeSession('tech', missing, { id: 'missing-reference', now });
+  assert.equal(created.question.reference, '');
+  assert.equal(created.question.referenceEn, '');
+  assert.equal(finish(stateWith(created), created.id).practiceSessions[0].status, 'completed');
+  for (const status of ['source', 'reviewed', 'corrected', 'supplemented']) {
+    assert.throws(() => createPracticeSession('tech', { ...missing, provenance: { version: 1, answerStatus: status } }, { id: 'invalid', now }), /source/);
+  }
+  assert.throws(() => createPracticeSession('tech', { ...question, reference: '' }, { id: 'invalid', now }), /source/);
+});
+
+test('practice metadata matches cloud validation and cannot be attached to Coding OA', () => {
+  for (const provenance of [null, {}, { version: 2 }, { version: 1, pdfPage: true }, { version: 1, sourcePage: 2 }, { version: 1, unexpected: 'field' }]) {
+    assert.throws(() => createPracticeSession('tech', { ...question, provenance }, { id: 'invalid', now }), /provenance|Purple Book/);
+  }
+  assert.throws(() => createPracticeSession('coding', { ...coding, provenance: { version: 1 } }, { id: 'invalid', now }), /provenance/);
+  assert.throws(() => createPracticeSession('tech', { ...question, unexpected: 'not-a-snapshot-field' }, { id: 'invalid', now }), /question/);
+});

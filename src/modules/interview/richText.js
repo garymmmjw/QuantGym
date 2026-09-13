@@ -7,7 +7,7 @@ export function renderRichText(node, text, options = {}) {
   const normalized = normalizeRichTextContent(text).replace(/\r/g, "");
   if (renderInterviewQuestionCard(node, normalized, options)) return;
   if (renderInterviewFeedbackCard(node, normalized, options)) return;
-  const lines = normalized.split("\n");
+  const lines = richTextLines(normalized);
   let paragraph = [];
   let list = null;
 
@@ -20,9 +20,17 @@ export function renderRichText(node, text, options = {}) {
   };
 
   lines.forEach((line) => {
+    if (typeof line !== "string") {
+      flushParagraph();
+      list = null;
+      if (line.type === "code") appendFencedCode(node, line);
+      else appendMathBlock(node, line.text);
+      return;
+    }
     const heading = line.match(/^(#{1,4})\s+(.+)$/);
     const bullet = line.match(/^\s*[-*]\s+(.+)$/);
-    const displayMathParts = splitDisplayMathLine(line);
+    const hasInlineCode = /`[^`]+`/.test(line);
+    const displayMathParts = hasInlineCode ? null : splitDisplayMathLine(line);
     if (!line.trim()) {
       flushParagraph();
       list = null;
@@ -43,7 +51,7 @@ export function renderRichText(node, text, options = {}) {
       });
       return;
     }
-    if (isStandaloneLatexLine(line)) {
+    if (!hasInlineCode && isStandaloneLatexLine(line)) {
       flushParagraph();
       list = null;
       appendDisplayMath(node, line);
@@ -76,7 +84,7 @@ export function renderRichText(node, text, options = {}) {
 }
 
 export function renderRichTextBlocks(node, text) {
-  const lines = String(text || "").split("\n");
+  const lines = richTextLines(text);
   let paragraph = [];
   let list = null;
   const flush = () => {
@@ -87,6 +95,13 @@ export function renderRichTextBlocks(node, text) {
     paragraph = [];
   };
   lines.forEach((line) => {
+    if (typeof line !== "string") {
+      flush();
+      list = null;
+      if (line.type === "code") appendFencedCode(node, line);
+      else appendMathBlock(node, line.text);
+      return;
+    }
     const bullet = line.match(/^\s*[-*]\s+(.+)$/);
     if (!line.trim()) {
       flush();
@@ -141,12 +156,85 @@ export function appendInlineRichText(node, text) {
 }
 
 export function normalizeRichTextContent(text) {
-  return normalizeLatexSource(String(text || ""))
-    .replace(/\u00a0/g, " ")
-    .replace(/\\\[/g, "\\[")
-    .replace(/\\\]/g, "\\]")
-    .replace(/\\\(/g, "\\(")
-    .replace(/\\\)/g, "\\)");
+  // Formula cleanup applies to prose only: code may contain literal TeX,
+  // nonbreaking spaces, or operators whose spelling must remain unchanged.
+  return splitFencedCodeBlocks(text).map((part) => part.type === "code"
+    ? part.raw
+    : normalizeLatexSource(part.text)
+      .replace(/\u00a0/g, " ")
+      .replace(/\\\[/g, "\\[")
+      .replace(/\\\]/g, "\\]")
+      .replace(/\\\(/g, "\\(")
+      .replace(/\\\)/g, "\\)")
+  ).join("");
+}
+
+function richTextLines(text) {
+  return splitFencedCodeBlocks(text).flatMap((part) => {
+    if (part.type === "code") return [part];
+    const lines = [];
+    let cursor = 0;
+    // Keep a delimited display expression in one DOM node, including every
+    // aligned/cases row. Inline code is consumed first so its delimiters stay
+    // literal. The existing line heuristics only receive the remaining prose.
+    const pattern = /(`+)[\s\S]*?\1|(?<!\\)\\\[([\s\S]*?)(?<!\\)\\\]|(?<!\\)\$\$([\s\S]*?)(?<!\\)\$\$/g;
+    for (const match of part.text.matchAll(pattern)) {
+      if (match[1]) continue;
+      lines.push(...part.text.slice(cursor, match.index).split("\n"));
+      lines.push({ type: "math", text: match[2] ?? match[3] });
+      cursor = match.index + match[0].length;
+    }
+    lines.push(...part.text.slice(cursor).split("\n"));
+    return lines;
+  });
+}
+
+function splitFencedCodeBlocks(text) {
+  const source = String(text || "").replace(/\r\n?/g, "\n");
+  const lines = source.match(/[^\n]*(?:\n|$)/g)?.filter((line) => line !== "") || [];
+  const parts = [];
+  let prose = [];
+  for (let index = 0; index < lines.length; index += 1) {
+    const opening = lines[index].replace(/\n$/, "").match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (!opening || (opening[1][0] === "`" && opening[2].includes("`"))) {
+      prose.push(lines[index]);
+      continue;
+    }
+    if (prose.length) {
+      parts.push({ type: "text", text: prose.join("") });
+      prose = [];
+    }
+    const start = index;
+    const closing = new RegExp(`^ {0,3}${opening[1][0]}{${opening[1].length},}[ \\t]*$`);
+    const code = [];
+    index += 1;
+    while (index < lines.length && !closing.test(lines[index].replace(/\n$/, ""))) {
+      code.push(lines[index]);
+      index += 1;
+    }
+    const language = opening[2].trim().split(/\s+/)[0] || "";
+    parts.push({
+      type: "code",
+      text: code.join(""),
+      raw: lines.slice(start, index + 1).join(""),
+      language: /^[a-z0-9_+.#-]{1,40}$/i.test(language) ? language.toLowerCase() : ""
+    });
+  }
+  if (prose.length) parts.push({ type: "text", text: prose.join("") });
+  return parts;
+}
+
+function appendFencedCode(node, part) {
+  const pre = document.createElement("pre");
+  // MathJax also skips pre/code by default; this explicit ignore class keeps
+  // literal dollar signs and backslashes safe if the global tag list changes.
+  pre.className = "rich-code-block tex2jax_ignore";
+  pre.tabIndex = 0;
+  const code = document.createElement("code");
+  if (part.language) code.className = `language-${part.language}`;
+  code.textContent = part.text;
+  pre.appendChild(code);
+  node.appendChild(pre);
 }
 
 export function isSafeRichMediaUrl(url, options = {}) {
@@ -410,9 +498,13 @@ function looksLikeLatex(value) {
 }
 
 function appendDisplayMath(node, text) {
+  appendMathBlock(node, cleanDisplayLatex(text));
+}
+
+function appendMathBlock(node, latex) {
   const block = document.createElement("div");
   block.className = "rich-math-display";
-  block.textContent = `\\[${cleanDisplayLatex(text)}\\]`;
+  block.textContent = `\\[${latex}\\]`;
   node.appendChild(block);
 }
 

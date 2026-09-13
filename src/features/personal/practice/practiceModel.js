@@ -1,3 +1,5 @@
+import { validateTechnicalProvenance } from './technicalQuestionModel.js';
+
 const ASSESSMENTS = ['', 'independent', 'with-help', 'review'];
 const LANGUAGES = ['python', 'javascript', 'cpp'];
 const stamp = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value) && Number.isFinite(Date.parse(value));
@@ -17,7 +19,13 @@ export function validatePracticeSession(session) {
     || !ASSESSMENTS.includes(session.selfAssessment) || !finite(session.elapsedSeconds)
     || typeof session.reviewed !== 'boolean' || session.timerStartedAt != null && !stamp(session.timerStartedAt)
     || session.completedAt != null && !stamp(session.completedAt)) throw new Error('Invalid practice session.');
-  if (session.kind === 'tech' && (q.source !== 'question-bank' || q.url !== '' || !q.prompt.trim() || !q.reference.trim()
+  const questionFields = ['id', 'source', 'title', 'titleEn', 'prompt', 'promptEn', 'reference', 'referenceEn', 'url', 'slug', 'username', 'linkedAt', 'sourceLabel', 'provenance'];
+  if (Object.keys(q).some(key => !questionFields.includes(key)) || 'sourceLabel' in q && !text(q.sourceLabel, 500)) throw new Error('Invalid practice question.');
+  if ('provenance' in q) {
+    if (session.kind !== 'tech') throw new Error('Invalid technical question provenance.');
+    validateTechnicalProvenance(q.provenance);
+  }
+  if (session.kind === 'tech' && (q.source !== 'question-bank' || q.url !== '' || !q.prompt.trim() || !q.reference.trim() && q.provenance?.answerStatus !== 'missing'
     || q.slug || q.username || q.linkedAt)) throw new Error('Invalid technical question source.');
   if (session.kind === 'coding' && (q.source !== 'leetcode' || !/^[a-zA-Z0-9_-]{1,200}$/.test(q.slug)
     || q.id !== q.slug || q.url !== `https://leetcode.cn/problems/${q.slug}/`
@@ -61,7 +69,8 @@ export function withPracticeActivities(state) {
 
 export function createPracticeSession(kind, question, { now = new Date().toISOString(), id = globalThis.crypto.randomUUID() } = {}) {
   return validatePracticeSession({ id, kind, status: 'active', startedAt: now, updatedAt: now, completedAt: null,
-    question: { titleEn: '', prompt: '', promptEn: '', reference: '', referenceEn: '', url: '', ...question },
+    question: { titleEn: '', prompt: '', promptEn: '', reference: '', referenceEn: '', url: '', ...question,
+      ...('provenance' in question ? { provenance: { ...question.provenance } } : {}) },
     text: '', codeLanguage: 'python', selfAssessment: '', elapsedSeconds: 0, timerStartedAt: null, reviewed: false });
 }
 

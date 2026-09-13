@@ -32,6 +32,7 @@ from urllib.request import Request, urlopen
 
 import leetcode_sync
 from technical_practice import load_technical_questions
+from technical_reading_list import load_technical_supplements
 
 from personal_prep import (
     MAX_PERSONAL_PREP_BYTES,
@@ -3874,7 +3875,11 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             questions = load_technical_questions()
         except (OSError, ValueError, TypeError):
             raise HttpError(503, "Technical practice questions are temporarily unavailable.")
-        self.send_json(200, {"source": "question-bank", "questions": questions})
+        try:
+            supplements = load_technical_supplements()
+        except (OSError, ValueError, TypeError):
+            supplements = {"readingList": [], "sourceMetadata": None}
+        self.send_json(200, {"source": "question-bank", "questions": questions, **supplements})
 
     def get_personal_preparation(self):
         user = self.require_user()
