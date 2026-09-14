@@ -112,6 +112,9 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
     ? t(`${activity.count} 轮`, `${activity.count} ${activity.count === 1 ? "round" : "rounds"}`)
     : TRIAL_KINDS.includes(activity.kind)
       ? t(`${activity.count} 题正确${activity.trialCount ? ` · ${activity.trialCount} trial` : ""}`, `${activity.count} correct${activity.trialCount ? ` · ${activity.trialCount} trial` : ""}`)
+    : activity.countedAsSolved === false
+      ? activity.kind === "coding" ? t(`${activity.count} 次复盘 · 不计通过题数`, `${activity.count} reviews · excluded from solved counts`)
+        : t("未确认完成", "Completion not confirmed")
       : t(`${activity.count} 题`, `${activity.count} ${activity.count === 1 ? "question" : "questions"}`);
 
   return (
@@ -189,7 +192,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
           {ACTIVITY_KINDS.filter((kind) => kind !== "daily" || selectedSummary.daily > 0).map((kind) => <div className={`pc-stat pc-kind-${kind}`} key={kind}>
             <dt>{labels[kind]}</dt>
             <dd><strong>{selectedSummary[kind].toLocaleString(locale)}</strong><span>{kind === "daily" ? t("轮", "rounds") : t("题", "questions")}</span></dd>
-            <p>{TRIAL_KINDS.includes(kind) ? t(`正确作答 · ${selectedSummary[`${kind}Trials`]} 次 trial`, `Correct · ${selectedSummary[`${kind}Trials`]} trials`) : kind === "daily" ? t("整套完成", "Full sets completed") : kind === "tech" ? t("面试练习", "Interview practice") : kind === "coding" ? t("编程训练", "Coding practice") : kind === "behavioral" ? t("表达练习", "Behavioral practice") : t("完成题目", "Problems completed")}</p>
+            <p>{TRIAL_KINDS.includes(kind) ? t(`正确作答 · ${selectedSummary[`${kind}Trials`]} 次 trial`, `Correct · ${selectedSummary[`${kind}Trials`]} trials`) : kind === "daily" ? t("整套完成", "Full sets completed") : kind === "tech" ? t("已确认完成", "Completion confirmed") : kind === "coding" ? selectedSummary.codingReviews ? t(`另有 ${selectedSummary.codingReviews} 次力扣复盘，不计入刷题数`, `${selectedSummary.codingReviews} LeetCode reviews excluded from solved counts`) : t("力扣通过题数见下方", "See synced LeetCode solves below") : kind === "behavioral" ? t("表达练习", "Behavioral practice") : t("完成题目", "Problems completed")}</p>
           </div>)}
         </dl>
 
@@ -211,7 +214,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
         </div>}
 
         {showManual && <form className="pc-manual-form" id="pc-manual-form" ref={formRef} onSubmit={saveManual}>
-          <div className="pc-form-heading"><h3>{t("补记线下训练", "Record offline practice")}</h3><p>{t("在这里记录尚未计入的练习；应用内完成的训练会自动出现。", "Add practice that has not been recorded. In-app training appears automatically.")}</p></div>
+          <div className="pc-form-heading"><h3>{t("补记线下训练", "Record offline practice")}</h3><p>{t("仅补记已经做完的练习。Coding OA 补记保留为力扣复盘，通过题数以账号同步为准。", "Record only practice you have finished. Coding OA entries are reviews; LeetCode solved counts come from account sync.")}</p></div>
           <div className="pc-form-fields">
             <label>{t("训练类型", "Activity")}<select value={manual.kind} onChange={(event) => setManual({ ...manual, kind: event.target.value })}>{MANUAL_KINDS.map((kind) => <option key={kind} value={kind}>{labels[kind]}</option>)}</select></label>
             <label>{TRIAL_KINDS.includes(manual.kind) ? t("正确题数", "Correct answers") : t("完成题数", "Questions completed")}<input type="number" inputMode="numeric" min="1" max="10000" step="1" required value={manual.count} onChange={(event) => setManual({ ...manual, count: event.target.value })} /></label>
@@ -242,11 +245,11 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
         <div className="pc-week-chart" role="group" aria-label={t("近七天每日完成题数", "Questions completed each day")}>
           {recentDays.map((day) => <button type="button" key={day.key} className={`pc-week-day${day.key === selectedDay ? " is-selected" : ""}`} onClick={() => selectDate(day.key)} aria-label={`${fullDateFormatter.format(parseLocalDay(day.key))} · ${t(`${day.totalQuestions} 题`, `${day.totalQuestions} questions`)}${day.daily ? t(`，${day.daily} 轮历史综合训练`, `, ${day.daily} past combined practice rounds`) : ""}`}>
             <strong>{day.totalQuestions.toLocaleString(locale)}</strong>
-            <span className="pc-bar-track"><span className="pc-bar" style={{ height: `${day.activityCount ? Math.max(5, day.totalQuestions / recentMax * 100) : 0}%` }} /></span>
+            <span className="pc-bar-track"><span className="pc-bar" style={{ height: `${day.totalQuestions ? Math.max(5, day.totalQuestions / recentMax * 100) : 0}%` }} /></span>
             <span>{weekdayFormatter.format(parseLocalDay(day.key))}</span><small>{shortDateFormatter.format(parseLocalDay(day.key))}</small>
           </button>)}
         </div>
-        <p className="pc-data-note">{t("柱状图按完成题数统计；心算、数列与图形推理只计正确作答。", "Bars show completed questions; math, sequences and patterns count correct answers only.")}{recentDays.some((day) => day.daily > 0) && t(" 历史综合训练的轮数单独保留。", " Past combined practice rounds are retained separately.")}{leetcodeLinked && t(" LeetCode 仅计已同步的通过题目，同题当天计一次；源站日历提交量不计入。", " LeetCode includes synced accepted problems, once per problem per day. Source-calendar submission totals are excluded.")}</p>
+        <p className="pc-data-note">{t("刷题总数只计已确认完成的题目；Mental Math、数列和图形训练单独统计，不计入总数。抽题、保存草稿和力扣复盘不增加刷题数。", "Solved totals include confirmed completions. Mental Math, sequences, and patterns keep separate training stats. Drawing questions, saving drafts, and LeetCode reviews do not add to solved totals.")}{recentDays.some((day) => day.daily > 0) && t(" 历史综合训练的轮数单独保留。", " Past combined practice rounds are retained separately.")}{leetcodeLinked && t(" LeetCode 仅计从账号同步的通过题目，同题当天计一次；导入记录和源站日历提交量不计入。", " LeetCode includes accepted problems synced from the account, once per problem per day. Imported history and source-calendar submission totals are excluded.")}</p>
       </section>
 
       <footer className="pc-footer"><p>{t("记录按你设备的本地日期归档。已有明确完成时间的旧训练会自动汇入，未记录完成日期的历史进度可手动补记。", "Records follow your device’s local dates. Dated training history is included automatically; older progress without a completion date can be added manually.")}{undatedLegacyCount > 0 && <span> {t(`有 ${undatedLegacyCount} 条旧记录因缺少可靠日期未计入。`, `${undatedLegacyCount} older records have no reliable date and are not included.`)}</span>}</p></footer>

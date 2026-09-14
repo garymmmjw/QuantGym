@@ -1,4 +1,5 @@
 import { dayKey, shiftDate } from '../../lib/date.js';
+import { countsTowardProblemTotal, hasExplicitProblemCompletion } from '../problems/completion.js';
 
 export function getDailyXpSeries(options = {}) {
   const {
@@ -28,26 +29,25 @@ export function getContributionStatsByDay(options = {}) {
   const {
     entries = [],
     problemStates = [],
-    leetcodeHot100Done = [],
-    normalizeLeetcodeHot100Done = (items) => Array.isArray(items) ? items : [],
+    problems = [],
     today = new Date()
   } = options;
   const xpByDay = new Map();
   const completedByDay = new Map();
+  const catalog = new Map((Array.isArray(problems) ? problems : []).map(problem => [problem.id, problem]));
+  const completedIds = new Set();
   (Array.isArray(entries) ? entries : []).forEach((entry) => {
     const key = dayKey(entry.date);
     xpByDay.set(key, (xpByDay.get(key) || 0) + Number(entry.totalXp || 0));
   });
   (Array.isArray(problemStates) ? problemStates : []).forEach((item) => {
-    if (!item.completedAt) return;
+    if (!item.problemId || completedIds.has(item.problemId) || !hasExplicitProblemCompletion(item)
+      || !countsTowardProblemTotal(catalog.get(item.problemId) || { id: item.problemId })
+      || Date.parse(item.completedAt) > new Date(today).getTime()) return;
     const key = dayKey(item.completedAt);
+    completedIds.add(item.problemId);
     completedByDay.set(key, (completedByDay.get(key) || 0) + 1);
   });
-  const hotDoneCount = normalizeLeetcodeHot100Done(leetcodeHot100Done).length;
-  if (hotDoneCount) {
-    const key = dayKey(today);
-    completedByDay.set(key, (completedByDay.get(key) || 0) + Math.min(5, Math.ceil(hotDoneCount / 20)));
-  }
   const keys = new Set([...xpByDay.keys(), ...completedByDay.keys()]);
   return new Map([...keys].map((key) => {
     const xp = xpByDay.get(key) || 0;

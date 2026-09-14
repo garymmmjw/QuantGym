@@ -1,3 +1,4 @@
+import { countsTowardProblemTotal } from './completion.js';
 import { escapeHtml } from "../../lib/text.js";
 import { difficultyClass, normalizeDifficultyFilter } from "./format.js";
 
@@ -62,11 +63,10 @@ export function renderProblemDifficultyFilter(options = {}) {
 }
 
 export function buildProblemProgressItems(options = {}) {
-  const problems = options.problems || [];
+  const problems = (options.problems || []).filter(countsTowardProblemTotal);
   const activeTheme = options.activeTheme || "all";
   const normalizeCategory = options.normalizeCategory || ((category) => category);
   const getCompletionCount = options.getCompletionCount || (() => 0);
-  const hot = options.getHotStats?.() || { done: 0, total: 0 };
   const activeThemeProblems = problems.filter((problem) => normalizeCategory(problem.category) === activeTheme);
   const themeEntries = (options.themeEntries || [])
     .map((item) => {
@@ -86,12 +86,6 @@ export function buildProblemProgressItems(options = {}) {
       label: options.isEnglish ? "All problems" : "全部题库",
       done: getCompletionCount(problems),
       total: problems.length
-    },
-    {
-      key: "leetcode-hot",
-      label: "LeetCode Hot 100",
-      done: hot.done,
-      total: hot.total
     }
   ];
 
@@ -129,7 +123,7 @@ export function renderProgressGroup(container, items = []) {
 }
 
 export function getProblemCollectionEntries(options = {}) {
-  const problems = options.problems || [];
+  const problems = (options.problems || []).filter(countsTowardProblemTotal);
   const isEnglish = Boolean(options.isEnglish);
   const normalizeCategory = options.normalizeCategory || ((category) => category);
   const getCompletionCount = options.getCompletionCount || (() => 0);
@@ -172,7 +166,7 @@ export function getProblemCollectionEntries(options = {}) {
       icon: "heart",
       accent: "violet",
       title: "LeetCode Hot 100",
-      description: isEnglish ? "Top 100 liked study plan with completion tracking." : "官方 Top 100 liked 题单，跳转原题并记录完成。",
+      description: isEnglish ? "Open original problems; progress comes from your linked LeetCode account." : "跳转原题，完成进度以关联的力扣账号为准。",
       total: hot.total,
       done: hot.done
     },
@@ -236,9 +230,11 @@ export function renderProblemCollectionGrid(options = {}) {
         <small>${escapeHtml(entry.description)}</small>
       </span>
       <span class="problem-collection-bottom">
-        <span><strong>${escapeHtml(String(entry.done))}</strong> / ${escapeHtml(String(entry.total))}</span>
-        <small>${escapeHtml(options.isEnglish ? "completed" : "完成进度")}</small>
-        <i aria-hidden="true"><span></span></i>
+        ${entry.mode === "leetcode"
+          ? `<span>${options.isEnglish ? "Progress from linked account" : "进度以关联账号为准"}</span>`
+          : `<span><strong>${escapeHtml(String(entry.done))}</strong> / ${escapeHtml(String(entry.total))}</span>
+             <small>${escapeHtml(options.isEnglish ? "completed" : "完成进度")}</small>
+             <i aria-hidden="true"><span></span></i>`}
       </span>
       <span class="problem-collection-go" aria-hidden="true"><i data-lucide="arrow-up-right"></i></span>
     `;

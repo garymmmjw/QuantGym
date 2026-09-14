@@ -112,7 +112,7 @@ export function ProblemsPageContent() {
             </div>
             <div className="qg-problems-stats" aria-label={isEnglish ? "Practice stats" : "刷题统计"}>
               <div className="qg-problems-stat">
-                <span>{isEnglish ? "Solved" : "已解"}</span>
+                <span>{isEnglish ? "Completed" : "已完成"}</span>
                 <b>{stats.solved}</b>
               </div>
               <div className="qg-problems-stat is-acc">
@@ -208,7 +208,7 @@ export function ProblemsPageContent() {
                 <span className="rank-label">PLAYLISTS</span>
                 <h3 id="problemCollectionsTitle">题单集合</h3>
               </div>
-              <p>从常刷集合直接进入题库；LeetCode 会展开原题清单并记录完成状态。</p>
+              <p>从常刷集合直接进入题库；LeetCode 完成进度以关联账号的同步记录为准。</p>
             </div>
             <div id="problemCollectionGrid" className="problem-collection-grid" aria-label="题单集合">
               <ProblemCollectionGrid

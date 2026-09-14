@@ -1,4 +1,5 @@
 import { getLeaderboardScopeSummaryViewModel } from "../../modules/overview/leaderboard.js";
+import { countsTowardProblemTotal } from "../../modules/problems/completion.js";
 import {
   buildRecentContributionHeatmap as buildRecentContributionHeatmapFallback,
   getDailyXpSeries as getDailyXpSeriesFallback
@@ -28,11 +29,11 @@ function getOverviewCatalogProblems(deps) {
 }
 
 function getFallbackProblemProgressItems(deps, problems) {
+  problems = problems.filter(countsTowardProblemTotal);
   const isEnglish = deps.getLanguage?.() === "en";
   const getCompletionCount = deps.getProblemCompletionCount || (() => 0);
   const normalizeCategory = deps.normalizeCategory || ((category) => category || "uncategorized");
   const formatCategory = deps.formatCategoryLabel || ((category) => category || "Other");
-  const hot = deps.getLeetcodeHotCompletionStats?.() || { done: 0, total: 0 };
   const themeLabels = new Map(
     safeArray(deps.getProblemThemeEntries?.(problems))
       .map((item) => [item.key, item.label])
@@ -68,12 +69,6 @@ function getFallbackProblemProgressItems(deps, problems) {
       label: isEnglish ? "All problems" : "全部题库",
       done: getCompletionCount(problems),
       total: problems.length
-    },
-    {
-      key: "leetcode-hot",
-      label: "LeetCode Hot 100",
-      done: hot.done || 0,
-      total: hot.total || 100
     },
     ...categoryItems
   ].filter((item) => Number(item.total || 0) > 0);
@@ -158,8 +153,7 @@ export function createOverviewPageApi(deps = {}) {
         locale: deps.getLocale?.(),
         entries: getStateList(deps, "entries"),
         problemStates: getStateList(deps, "problemStates"),
-        leetcodeHot100Done: getStateList(deps, "leetcodeHot100Done"),
-        normalizeLeetcodeHot100Done: deps.normalizeLeetcodeHot100Done
+        problems: getOverviewCatalogProblems(deps)
       });
     }
     if (!heatmap) return null;

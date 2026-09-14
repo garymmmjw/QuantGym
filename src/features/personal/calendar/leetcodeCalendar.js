@@ -32,7 +32,9 @@ export function collectLeetCodeActivities(snapshot = {}, { timeZone } = {}) {
   if (snapshot?.connection?.site !== "cn") return empty;
   const byDayAndProblem = new Map();
   const seenSubmissions = new Set();
-  for (const submission of list(snapshot.submissions)) {
+  // This list is projected by the server from real account syncs. The ordinary
+  // submissions list also contains imported/manual history and is not proof of a solve.
+  for (const submission of list(snapshot.syncedSubmissions)) {
     if (submission?.status !== "AC") continue;
     const dayKey = leetcodeSubmissionDay(submission.submittedAt, timeZone);
     const problemUrl = leetcodeProblemUrl(snapshot.connection.site, submission.problemSlug);

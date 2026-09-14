@@ -250,6 +250,75 @@ class LeetCodeApiTests(unittest.TestCase):
         self.assertEqual(data["connection"]["username"], "fixture-b")
         self.assertNotIn("imported-only", [row["slug"] for row in data["problems"]])
 
+    def test_synced_provenance_excludes_imports_and_resets_on_switch_disconnect_and_relink(self):
+        token, owner = self.user()
+        self.assertEqual(self.request("GET", token=token)[1]["syncedSubmissions"], [])
+        status, snapshot, _ = self.connect(token)
+        self.assertEqual(status, 200, snapshot)
+        self.assertEqual({row["id"] for row in snapshot["syncedSubmissions"]}, {"101", "102", "103"})
+        self.assertFalse(any(key.startswith("_") for key in snapshot))
+        status, imported, _ = self.request("POST", "/api/leetcode/import", token, {
+            "username": "fixture-a", "submissions": [record("imported", "fabricated-accepted")],
+        })
+        self.assertEqual(status, 200, imported)
+        self.assertIn("imported", {row["id"] for row in imported["submissions"]})
+        self.assertNotIn("imported", {row["id"] for row in imported["syncedSubmissions"]})
+        for private_field in ("syncedSubmissions", "_syncedAcceptedSubmissions", "_syncedAcceptedConnection"):
+            status, data, _ = self.request("POST", "/api/leetcode/import", token, {
+                "username": "fixture-a", "submissions": [record("injected", "fake")], private_field: [],
+            })
+            self.assertEqual(status, 400, data)
+        self.age_snapshot(owner)
+        incoming = upstream()
+        incoming["submissions"] = [record("new-public", "newly-accepted")]
+        self.mock_fetch.side_effect = lambda username: {**incoming, "username": username}
+        status, resynced, _ = self.request("POST", "/api/leetcode/sync", token, {})
+        self.assertEqual(status, 200, resynced)
+        self.assertEqual({row["id"] for row in resynced["syncedSubmissions"]}, {"101", "102", "103", "new-public"})
+        status, switched, _ = self.connect(token, "fixture-b")
+        self.assertEqual(status, 200, switched)
+        self.assertEqual({row["id"] for row in switched["syncedSubmissions"]}, {"new-public"})
+        self.assertEqual(self.request("DELETE", token=token)[1]["syncedSubmissions"], [])
+        status, relinked, _ = self.connect(token)
+        self.assertEqual(status, 200, relinked)
+        self.assertEqual({row["id"] for row in relinked["syncedSubmissions"]}, {"new-public"})
+
+    def test_legacy_snapshot_gains_countable_provenance_only_after_real_sync(self):
+        token, owner = self.user()
+        self.connect(token)
+        with self.api.db.connect() as conn:
+            revision, saved = lc.get_record(conn, owner)
+            saved.pop("_syncedAcceptedSubmissions", None)
+            saved.pop("_syncedAcceptedConnection", None)
+            lc.save_snapshot(conn, owner, revision, saved)
+        self.assertEqual(self.request("GET", token=token)[1]["syncedSubmissions"], [])
+        self.age_snapshot(owner)
+        status, resynced, _ = self.request("POST", "/api/leetcode/sync", token, {})
+        self.assertEqual(status, 200, resynced)
+        self.assertEqual(len(resynced["syncedSubmissions"]), 3)
+
+    def test_successful_leetcode_sync_reconciles_guardian_goal_in_same_transaction(self):
+        token, owner = self.user()
+        status, access, _ = self.request("GET", "/api/guardian/access", token)
+        self.assertEqual(status, 200, access)
+        status, session, _ = self.request("POST", "/api/guardian/session", payload={"code": access["code"]})
+        self.assertEqual(status, 200, session)
+        status, created, _ = self.request("POST", "/api/guardian/goals", session["token"], {
+            "title": "Synced accepted questions", "targetCount": 2, "startDate": "2026-09-08",
+            "endDate": "2026-09-09", "timeZone": "UTC", "reward": "Fixture reward",
+        })
+        self.assertEqual(status, 201, created)
+        self.assertNotEqual(created["goal"]["status"], "completed")
+        self.assertEqual(self.connect(token)[0], 200)
+        # This test server has no background guardian worker. Inspect the DB
+        # before any dashboard read to prove the sync write itself reconciled it.
+        with self.api.db.connect() as conn:
+            goal = conn.execute("SELECT status, completion_count FROM guardian_goals WHERE id = ?", (created["goal"]["id"],)).fetchone()
+            queued = conn.execute("SELECT COUNT(*) FROM guardian_notifications WHERE goal_id = ?", (created["goal"]["id"],)).fetchone()[0]
+        self.assertEqual(goal["status"], "completed")
+        self.assertEqual(goal["completion_count"], 2)
+        self.assertEqual(queued, 1)
+
     def test_review_persists_without_changing_submissions_or_upstream_stats(self):
         token, owner = self.user()
         _, before, _ = self.connect(token)

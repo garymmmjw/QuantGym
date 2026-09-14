@@ -68,7 +68,8 @@ export function PracticeWorkspace({ state, update, language = 'zh', kind, sessio
     if (!session.text.trim() || !session.selfAssessment) return;
     const saved = save(latest => completePracticeSession(latest, session.id));
     if (saved.ok) setNotice(saved.data?.practiceSessions?.some(item => item.id === session.id && item.status === 'completed')
-      ? t('已记录本题自评，训练日历已更新。', 'Self-review recorded and training calendar updated.')
+      ? coding ? t('复盘已保存，不会增加力扣通过题数。通过题数以账号同步结果为准。', 'Review saved. Solved counts come from synced accepted submissions, not this review.')
+        : t('已确认完成本题，刷题记录已更新。', 'Question marked complete and your practice record updated.')
       : t('练习状态已变化，请确认回答和自评后重试。', 'The practice state changed. Check your answer and assessment, then retry.'));
   };
 
@@ -104,13 +105,16 @@ export function PracticeWorkspace({ state, update, language = 'zh', kind, sessio
             <summary>{question.provenance?.answerStatus === 'missing' && !question.reference ? t('查看答案说明', 'View answer note') : t('查看参考思路', 'View reference reasoning')}</summary><TechnicalQuestionReference question={question} language={language} /></details>}
           <fieldset className="practice-assessments" disabled={completed}><legend>{t('本次自评', 'Self-assessment')}</legend><div>{Object.entries(labels).map(([value, label]) => <label key={value} className={session.selfAssessment === value ? 'is-selected' : ''}>
             <input type="radio" name={`practice-assessment-${session.id}`} checked={session.selfAssessment === value} onChange={() => patch({ selfAssessment: value })} />{label[en ? 1 : 0]}</label>)}</div></fieldset>
-          <div className="practice-actions">{!completed && <button type="button" className="practice-primary" disabled={!session.text.trim() || !session.selfAssessment} onClick={finish}>{t('完成本题', 'Complete question')}</button>}
+          <div className="practice-actions">{!completed && <button type="button" className="practice-primary" disabled={!session.text.trim() || !session.selfAssessment} onClick={finish}>{coding ? t('保存复盘', 'Save review') : t('我做完了', 'I finished this question')}</button>}
             <button type="button" className="practice-secondary" disabled={!canDraw} onClick={() => start()}>{drawLabel || t('再抽一道', 'Draw another')}</button></div>
-          <p className="practice-notice" role="status">{notice || (completed ? t('✓ 本题已记录到训练日历。', '✓ Recorded in your training calendar.') : t('填写回答并选择自评后，才会记录为完成。', 'Write an answer and choose a self-assessment to record completion.'))}</p>
+          <p className="practice-notice" role="status">{notice || (coding
+            ? t('抽题和保存复盘不计入刷题数；只有从力扣账号同步的通过记录才计入。', 'Drawing a question or saving a review does not add to solved counts; only accepted submissions synced from LeetCode count.')
+            : completed ? t('✓ 已确认完成，并记录到训练日历。', '✓ Completion confirmed and recorded in your training calendar.')
+              : t('填写回答、选择自评并点击「我做完了」后才计入刷题数；抽题、查看答案和保存草稿都不计入。', 'Write your answer, choose an assessment, then click “I finished this question” to count it. Drawing, viewing a reference, and saving a draft do not count.'))}</p>
         </>}
       </section>
       <aside className="practice-history" aria-label={t('历史记录', 'Practice history')}><p className="practice-eyebrow">YOUR PRACTICE</p><h2>{t('历史记录', 'Practice history')}</h2>
-        <p>{t(`${ordered.filter(s => s.status === 'completed').length} 次已完成`, `${ordered.filter(s => s.status === 'completed').length} completed attempts`)}</p>
+        <p>{coding ? t(`${ordered.filter(s => s.status === 'completed').length} 次复盘已保存`, `${ordered.filter(s => s.status === 'completed').length} saved reviews`) : t(`${ordered.filter(s => s.status === 'completed').length} 次已完成`, `${ordered.filter(s => s.status === 'completed').length} completed attempts`)}</p>
         {!ordered.length ? <p className="practice-empty-history">{t('完成第一道题，开始积累你的练习记录。', 'Complete your first question to begin your practice history.')}</p>
           : <ol>{ordered.map(item => <li key={item.id}><button type="button" className={item.id === session?.id ? 'is-selected' : ''} aria-current={item.id === session?.id ? 'true' : undefined}
             onClick={() => { const saved = session && session.id !== item.id ? save(latest => setPracticeTimer(latest, session.id, false)) : { ok: true }; setSelectedId(item.id); if (saved.ok) setNotice(''); }}>

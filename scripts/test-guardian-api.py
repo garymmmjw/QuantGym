@@ -27,6 +27,8 @@ import unittest
 from urllib.parse import urlencode
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "api-server"))
+import leetcode_sync as lc
 USE_POSTGRES = "--postgres" in sys.argv
 if USE_POSTGRES:
     sys.argv.remove("--postgres")
@@ -299,6 +301,24 @@ class GuardianApiTests(unittest.TestCase):
         self.assertIn(status, (200, 201), data)
         return data["goal"]
 
+    def save_leetcode_fixture(self, user, snapshot):
+        with self.connect_database() as connection:
+            placeholder = "CAST(? AS jsonb)" if USE_POSTGRES else "?"
+            connection.execute(self.sql(
+                "INSERT INTO user_leetcode (user_id, data_json, revision, updated_at) "
+                f"VALUES (?, {placeholder}, 1, ?) ON CONFLICT(user_id) DO UPDATE SET "
+                "data_json = excluded.data_json, revision = user_leetcode.revision + 1, updated_at = excluded.updated_at"),
+                (user["id"], json.dumps(snapshot), datetime.now(timezone.utc).isoformat()))
+
+    def synced_snapshot(self, records, username="private-synced-profile"):
+        return lc.fresh_snapshot(lc.empty_snapshot(), {
+            "username": username, "displayName": "Private connected profile", "stats": {"solved": 5000},
+            "submissions": records, "calendar": [{"date": "2026-09-14", "submissions": 9999}], "calendarYear": 2026,
+        })
+
+    def accepted(self, identity, slug, when):
+        return lc.submission({"id": identity, "problemSlug": slug, "submittedAt": when, "status": "AC", "title": slug})
+
     def wait_until(self, function, timeout=12):
         deadline = time.monotonic() + timeout
         result = None
@@ -385,7 +405,7 @@ class GuardianApiTests(unittest.TestCase):
         self.assertEqual(status, 404, data)
         self.assertEqual(self.dashboard(first_guardian)["goals"][0]["status"], "active")
 
-    def test_dashboard_counts_local_days_deduplicates_trials_and_excludes_daily_rollups(self):
+    def test_dashboard_counts_local_days_and_excludes_trainers_and_daily_rollups(self):
         user = self.new_user()
         guardian = self.guardian(user)
         state = empty_state()
@@ -400,16 +420,16 @@ class GuardianApiTests(unittest.TestCase):
         self.put_personal(user, state)
         chicago = self.dashboard(guardian, "2026-09-14", "America/Chicago")
         utc = self.dashboard(guardian, "2026-09-14", "UTC")
-        self.assertEqual(chicago["summary"]["todayCount"], 5, chicago)
-        self.assertEqual(utc["summary"]["todayCount"], 8, utc)
-        self.assertEqual(chicago["summary"]["totalCount"], 8)
+        self.assertEqual(chicago["summary"]["todayCount"], 1, chicago)
+        self.assertEqual(utc["summary"]["todayCount"], 4, utc)
+        self.assertEqual(chicago["summary"]["totalCount"], 4)
         self.assertEqual(chicago["summary"]["activeDays"], 2)
-        self.assertEqual(sum(row["count"] for row in chicago["questions"]), 5)
+        self.assertEqual(sum(row["count"] for row in chicago["questions"]), 1)
         for query in ({"date": "2026-02-30"}, {"date": "2026-9-14"}, {"timeZone": "not/a-zone"}):
             status, data, _ = self.request("GET", "/api/guardian/dashboard?" + urlencode(query), guardian)
             self.assertEqual(status, 400, data)
 
-    def test_detailed_attempts_include_wrong_answers_and_deduplicate_daily_and_legacy_records(self):
+    def test_trainer_details_and_inferred_interview_completions_are_excluded(self):
         user = self.new_user()
         guardian = self.guardian(user)
         when = "2026-09-14T12:00:00Z"
@@ -448,14 +468,153 @@ class GuardianApiTests(unittest.TestCase):
         status, data, _ = self.request("PUT", "/api/problem-states", user["token"], {"problemStates": legacy["problemStates"]})
         self.assertEqual(status, 200, data)
         dashboard = self.dashboard(guardian, "2026-09-14")
-        # 2 attempted trial questions + 1 active answer + 2 daily answers +
-        # 1 deduplicated problem + 2 old mental records + 3 aggregate fallback
-        # questions without a detail array + 1 interview question.
-        self.assertEqual(dashboard["summary"]["todayCount"], 12, dashboard)
-        self.assertEqual(len(dashboard["questions"]), 9)
+        # Only two explicitly completed daily questions and one catalog done
+        # record count. Trainer answers, aggregates and interview scores do not.
+        self.assertEqual(dashboard["summary"]["todayCount"], 3, dashboard)
+        self.assertEqual(len(dashboard["questions"]), 3)
         self.assertNotIn("PRIVATE", json.dumps(dashboard))
         self.assertNotIn("submittedAnswer", json.dumps(dashboard))
-        self.assertEqual(sum(row["count"] for row in dashboard["questions"] if row["kind"] == "mental"), 7)
+        self.assertEqual(sum(row["count"] for row in dashboard["questions"] if row["kind"] == "mental"), 0)
+
+    def test_manual_mental_and_category_math_never_count_or_complete_goals(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        goal = self.create_goal(guardian, targetCount=1)
+        when = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()
+        state = empty_state()
+        state["activities"] = [activity(f"manual-{kind}", when, count=100, kind=kind, source="manual")
+                               for kind in ("mental", "sequence", "pattern")]
+        state["activities"].append(activity("category-math-activity", when, count=100, kind="quant", category="mentalMath"))
+        state["dailySessions"] = [{"id": "daily-mental", "questions": [{"id": "q", "kind": "mental", "title": "Math"},
+                                                                         {"id": "categorized", "kind": "tech", "category": "mentalMath", "title": "Math"}],
+                                    "answers": {"q": {"text": "42", "completedAt": when}, "categorized": {"text": "42", "completedAt": when}}}]
+        self.put_personal(user, state)
+        self.request("PUT", "/api/state", user["token"], {"state": {
+            "mentalMathRecords": [{"id": "old-math", "correct": 100, "createdAt": when}],
+            "problems": [{"id": "category-math", "category": "mentalMath", "titleEn": "Math"}],
+            "problemStates": [{"problemId": "category-math", "completed": True, "completedAt": when},
+                              {"problemId": "raw-category-math", "category": "mentalMath", "completed": True, "completedAt": when}],
+        }})
+        dashboard = self.dashboard(guardian)
+        self.assertEqual(dashboard["summary"]["totalCount"], 0)
+        self.assertEqual(dashboard["questions"], [])
+        self.assertEqual(dashboard["goals"][0]["id"], goal["id"])
+        self.assertEqual(dashboard["goals"][0]["status"], "active")
+        self.assertEqual(dashboard["goals"][0]["progress"], 0)
+        self.assertEqual(self.smtp.messages_for(user["email"]), [])
+        status, restored, _ = self.request("GET", "/api/personal-prep", user["token"])
+        self.assertEqual(status, 200)
+        self.assertEqual(len(restored["data"]["activities"]), 4)
+        self.assertEqual(restored["data"]["dailySessions"], state["dailySessions"])
+
+    def test_draw_only_and_draft_records_do_not_count_but_explicit_done_does(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        when = "2026-09-14T12:00:00Z"
+        state = empty_state()
+        state["activities"] = [activity("random-draw", when, kind="tech", source="draw"),
+                               activity("draft-activity", when, kind="tech", status="active")]
+        state["dailySessions"] = [{"id": "drawn-daily", "questions": [{"id": "q", "kind": "tech", "title": "Drawn question"}],
+                                    "answers": {"q": {"text": "A draft only"}}}]
+        self.put_personal(user, state)
+        self.request("PUT", "/api/state", user["token"], {"state": {
+            "entries": [{"id": "scored", "problemId": "drawn", "date": when, "interviewScore": 88}],
+            "problemStates": [{"problemId": "drawn", "lastPracticedAt": when, "lastScore": 88}],
+        }})
+        self.assertEqual(self.dashboard(guardian, "2026-09-14")["summary"]["totalCount"], 0)
+        status, data, _ = self.request("PUT", "/api/problem-states", user["token"], {"problemState": {
+            "problemId": "drawn", "completed": True, "completedAt": when,
+        }})
+        self.assertEqual(status, 200, data)
+        self.assertEqual(self.dashboard(guardian, "2026-09-14")["summary"]["todayCount"], 1)
+
+    def test_legacy_leetcode_identifiers_source_variants_and_catalog_trainers_match_frontend_exclusions(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        when = "2026-09-14T12:00:00Z"
+        status, data, _ = self.request("PUT", "/api/problems", user["token"], {"problem": {
+            "id": "catalog-trainer", "category": "quant", "source": "trainer",
+            "titleEn": "Stored trainer", "promptEn": "Training only",
+        }})
+        self.assertEqual(status, 200, data)
+        state = empty_state()
+        state["activities"] = [
+            activity("leetcode:old-activity", when),
+            activity("linked-old-id", when, problemId="LeetCode-old-missing-catalog"),
+            activity("source-cn", when, source="LeetCode-CN"),
+            activity("source-com", when, sourceType="leetcode_com"),
+            activity("direct-trainer", when, source=" Trainer "),
+            activity("catalog-trainer-activity", when, problemId="catalog-trainer"),
+        ]
+        state["dailySessions"] = [{"id": "trainer-daily", "questions": [{"id": "q", "kind": "coding", "source": "trainer"}],
+                                    "answers": {"q": {"text": "training answer", "completedAt": when}}}]
+        self.put_personal(user, state)
+        status, data, _ = self.request("PUT", "/api/problem-states", user["token"], {"problemStates": [
+            {"problemId": "leetcode:missing-metadata", "completed": True, "completedAt": when},
+            {"problemId": "source-only", "sourceType": "LeetCode com", "completed": True, "completedAt": when},
+            {"problemId": "raw-trainer", "source": "trainer", "completed": True, "completedAt": when},
+            {"problemId": "catalog-trainer", "completed": True, "completedAt": when},
+            {"problemId": "onsite-coding", "category": "coding", "source": "onsite", "completed": True, "completedAt": when},
+        ]})
+        self.assertEqual(status, 200, data)
+        status, data, _ = self.request("PUT", "/api/state", user["token"], {"state": {
+            "entries": [{"id": "legacy-done", "problemId": "leetcode-old-entry", "completed": True, "completedAt": when}],
+        }})
+        self.assertEqual(status, 200, data)
+        dashboard = self.dashboard(guardian, "2026-09-14")
+        self.assertEqual(dashboard["summary"]["totalCount"], 1)
+        self.assertEqual([row["id"] for row in dashboard["questions"]], ["legacy:problem:onsite-coding"])
+
+    def test_leetcode_uses_only_current_connection_synced_ac_once_per_problem_and_local_day(self):
+        user, other = self.new_user(), self.new_user()
+        guardian = self.guardian(user)
+        rows = [self.accepted("ac1", "two-sum", "2026-09-14T01:00:00Z"),
+                self.accepted("ac2", "two-sum", "2026-09-14T08:00:00Z"),
+                self.accepted("ac3", "two-sum", "2026-09-14T08:05:00Z"),
+                self.accepted("ac4", "three-sum", "2026-09-14T09:00:00Z")]
+        snapshot = self.synced_snapshot(rows)
+        snapshot = lc.import_metadata(snapshot, {"username": snapshot["connection"]["username"],
+                                                 "submissions": [self.accepted("imported", "not-publicly-synced", "2026-09-14T09:30:00Z")]})
+        self.save_leetcode_fixture(user, snapshot)
+        utc = self.dashboard(guardian, "2026-09-14")
+        chicago = self.dashboard(guardian, "2026-09-14", "America/Chicago")
+        self.assertEqual(utc["summary"]["todayCount"], 2)
+        self.assertEqual(utc["summary"]["totalCount"], 2)
+        self.assertEqual(chicago["summary"]["todayCount"], 2)
+        self.assertEqual(chicago["summary"]["totalCount"], 3)
+        self.assertEqual(chicago["summary"]["activeDays"], 2)
+        self.assertEqual({row["source"] for row in utc["questions"]}, {"leetcode"})
+        self.assertNotIn("private-synced-profile", json.dumps(utc))
+        self.assertNotIn("not-publicly-synced", json.dumps(utc))
+        self.assertEqual(self.dashboard(self.guardian(other))["summary"]["totalCount"], 0)
+        utc_goal = self.create_goal(guardian, targetCount=3, startDate="2026-09-13", endDate="2026-09-14", timeZone="UTC")
+        chicago_goal = self.create_goal(guardian, targetCount=3, startDate="2026-09-13", endDate="2026-09-14", timeZone="America/Chicago")
+        self.assertEqual(utc_goal["progress"], 2)
+        self.assertNotEqual(utc_goal["status"], "completed")
+        self.assertEqual(chicago_goal["progress"], 3)
+        self.assertEqual(chicago_goal["status"], "completed")
+        snapshot["connection"]["username"] = "different-linked-account"
+        self.save_leetcode_fixture(user, snapshot)
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 0)
+        self.save_leetcode_fixture(user, self.synced_snapshot([rows[3]], "next-account"))
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 1)
+        self.assertEqual(self.request("DELETE", "/api/leetcode", user["token"])[0], 200)
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 0)
+
+    def test_leetcode_without_server_provenance_and_failed_or_future_submissions_never_count(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        accepted = self.accepted("accepted", "two-sum", "2026-09-14T08:00:00Z")
+        snapshot = self.synced_snapshot([accepted])
+        snapshot.pop("_syncedAcceptedSubmissions")
+        snapshot.pop("_syncedAcceptedConnection")
+        self.save_leetcode_fixture(user, snapshot)
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 0)
+        snapshot = self.synced_snapshot([])
+        snapshot["_syncedAcceptedSubmissions"] = [{**accepted, "status": "WA"},
+                                                   {**accepted, "id": "future", "submittedAt": "2099-01-01T00:00:00Z"}]
+        self.save_leetcode_fixture(user, snapshot)
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 0)
 
     def test_invalid_future_deleted_and_undated_records_do_not_inflate_progress(self):
         user = self.new_user()
@@ -577,10 +736,10 @@ class GuardianApiTests(unittest.TestCase):
         self.assertNotIn("Private catalog prompt", json.dumps(dashboard))
         self.assertNotIn("Private catalog answer", json.dumps(dashboard))
 
-    def test_standalone_technical_and_coding_completions_count_once_without_private_answers(self):
+    def test_explicit_technical_completion_counts_but_manual_leetcode_practice_does_not(self):
         user = self.new_user()
         guardian = self.guardian(user)
-        self.create_goal(guardian, targetCount=2)
+        self.create_goal(guardian, targetCount=1)
         when = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()
         state = empty_state()
         state["practiceSessions"] = []
@@ -603,9 +762,9 @@ class GuardianApiTests(unittest.TestCase):
             })
         revision = self.put_personal(user, state)
         dashboard = self.dashboard(guardian)
-        self.assertEqual(dashboard["summary"]["totalCount"], 2)
-        self.assertEqual({row["id"] for row in dashboard["questions"]}, {"practice:standalone-tech", "practice:standalone-coding"})
-        self.assertEqual({row["kind"] for row in dashboard["questions"]}, {"tech", "coding"})
+        self.assertEqual(dashboard["summary"]["totalCount"], 1)
+        self.assertEqual({row["id"] for row in dashboard["questions"]}, {"practice:standalone-tech"})
+        self.assertEqual({row["kind"] for row in dashboard["questions"]}, {"tech"})
         self.assertEqual(dashboard["goals"][0]["status"], "completed")
         for private in ("PRIVATE STANDALONE ANSWER", "PRIVATE TECHNICAL PROMPT", "PRIVATE TECHNICAL REFERENCE", "private-linked-profile", "leetcode.cn"):
             self.assertNotIn(private, json.dumps(dashboard))
@@ -615,12 +774,12 @@ class GuardianApiTests(unittest.TestCase):
             placeholder = "CAST(? AS jsonb)" if USE_POSTGRES else "?"
             connection.execute(self.sql(f"UPDATE user_personal_prep SET data_json = {placeholder} WHERE user_id = ?"),
                                (json.dumps(state), user["id"]))
-        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 2)
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 1)
         revision = self.put_personal(user, state, revision)
-        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 2)
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 1)
         state["removedActivityIds"] = ["practice:standalone-tech"]
         self.put_personal(user, state, revision)
-        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 1)
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 0)
         self.wait_until(lambda: self.smtp.messages_for(user["email"]))
         self.assertEqual(len(self.smtp.messages_for(user["email"])), 1)
 

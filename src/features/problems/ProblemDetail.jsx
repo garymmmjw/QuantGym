@@ -78,9 +78,10 @@ export function ProblemDetail({
 
   if (!detail) return null;
 
+  const canComplete = detail.manualCompletionAllowed !== false;
   const completeLabel = detail.completed
-    ? (isEnglish ? "Completed" : "已完成")
-    : (isEnglish ? "Mark completed" : "标记完成");
+    ? (isEnglish ? "Completed · Undo" : "已完成 · 撤销")
+    : (isEnglish ? "I finished this problem" : "我做完了");
 
   const info = getCatalogProblemInfo(detail.id);
   const difficulty = info?.difficulty || detail.meta?.[1] || "";
@@ -154,15 +155,16 @@ export function ProblemDetail({
             </button>
           </div>
           <div className="problem-detail-actions">
-            <button
+            {canComplete ? <button
               type="button"
+              aria-pressed={Boolean(detail.completed)}
               className={`secondary-button problem-detail-complete${detail.completed ? " active" : ""}`}
               onClick={() => onToggleCompleted(detail.id)}
             >
               <i data-lucide={detail.completed ? "check-circle-2" : "circle"} />
               {" "}
               {completeLabel}
-            </button>
+            </button> : <a className="secondary-button" href="/leetcode">{isEnglish ? "View synced LeetCode progress" : "查看力扣同步进度"}</a>}
             <button
               type="button"
               className={`secondary-button problem-detail-save${detail.favorite ? " active" : ""}`}
@@ -244,15 +246,14 @@ export function ProblemDetail({
         />
 
         <div className="qg-detail-cta-row">
-          <button
+          {canComplete ? <button
             type="button"
+            aria-pressed={Boolean(detail.completed)}
             className={`qg-detail-solve${detail.completed ? " is-done" : ""}`}
             onClick={() => onToggleCompleted(detail.id)}
           >
-            {detail.completed
-              ? (isEnglish ? "Solved ✓" : "已解决 ✓")
-              : (isEnglish ? "Done · Mark solved" : "做完了 · 标记已解")}
-          </button>
+            {completeLabel}
+          </button> : <a className="qg-detail-solve" href="/leetcode">{isEnglish ? "View synced LeetCode progress" : "查看力扣同步进度"}</a>}
           <button
             type="button"
             className={`qg-detail-bookmark${detail.favorite ? " active" : ""}`}
@@ -263,6 +264,14 @@ export function ProblemDetail({
             <i data-lucide={detail.favorite ? "bookmark-check" : "bookmark"} />
           </button>
         </div>
+
+        <p className="problem-completion-note">
+          {!canComplete
+            ? (isEnglish ? "Completion comes from your linked LeetCode account. Opening or drawing a problem does not count." : "完成记录以关联的力扣账号为准，打开或抽取题目不会计数。")
+            : detail.countsTowardPractice === false
+              ? (isEnglish ? "This training item can be marked for your own progress; it is excluded from completed-problem totals." : "可标记这道训练题的个人进度；心算与推理训练不计入刷题数量。")
+              : (isEnglish ? "Only clicking “I finished this problem” records completion. Opening a question or revealing its answer does not count." : "点击「我做完了」才记录完成；打开题目、查看答案不会增加刷题数量。")}
+        </p>
 
         <section className="problem-social-panel">
           <div className="problem-social-header">

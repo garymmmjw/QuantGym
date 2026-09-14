@@ -27,6 +27,7 @@ const problems = [['two-sum', '两数之和', '1'], ['valid-parentheses', '有�
   return { ...row, review: initialReview(row) };
 });
 const leetcode = { connection, problems, submissions: problems.map((row, index) => ({ id: `fixture-ac-${index}`, problemSlug: row.slug, status: 'AC', submittedAt: row.lastAcceptedAt })),
+  syncedSubmissions: problems.map((row, index) => ({ id: `fixture-ac-${index}`, problemSlug: row.slug, status: 'AC', submittedAt: row.lastAcceptedAt })),
   stats: { solved: 2, easy: 2, medium: 0, hard: 0, totalSubmissions: 5 }, calendar: [], coverage: { problemPoolComplete: true }, reviewPolicy: { algorithm: 'sm2', version: 1, generatedAt: iso(now) } };
 const technical = [
   { id: 'purple-probability-fixture', title: '硬币与概率', titleEn: 'Coin probability', prompt: '一枚公平硬币连续投掷两次，两次均为正面的概率是多少？', promptEn: 'What is the probability of two heads in two fair coin tosses?', reference: '两次投掷独立，因此概率为 $\\frac{1}{2} \\times \\frac{1}{2} = \\frac{1}{4}$。', referenceEn: 'Independent tosses give probability 1/4.', source: 'question-bank', sourceLabel: '紫皮书' },
@@ -147,7 +148,7 @@ try {
     await page.getByRole('button', { name: '开始计时', exact: true }).click();
     const answer = page.getByRole('textbox', { name: '你的代码与复盘', exact: true });
     await answer.fill('def two_sum(nums, target):\n    # fixture answer: hash map, O(n) time\n    return []');
-    assert.ok(await page.getByRole('button', { name: '完成本题', exact: true }).isDisabled());
+    assert.ok(await page.getByRole('button', { name: '保存复盘', exact: true }).isDisabled());
     await page.reload({ waitUntil: 'domcontentloaded' });
     assert.match(await answer.inputValue(), /fixture answer/);
     assert.equal(remote.reviewWrites.length, 0);
@@ -155,7 +156,7 @@ try {
   });
   await check('Completing Coding OA saves exactly one private attempt and calendar activity', async () => {
     await page.getByRole('radio', { name: '独立完成', exact: true }).check();
-    await page.getByRole('button', { name: '完成本题', exact: true }).click();
+    await page.getByRole('button', { name: '保存复盘', exact: true }).click();
     await waitFor(() => remote.envelope.data.practiceSessions?.some(item => item.kind === 'coding' && item.status === 'completed'), 'Coding OA cloud save');
     const completed = remote.envelope.data.practiceSessions.filter(item => item.kind === 'coding' && item.status === 'completed');
     assert.equal(completed.length, 1);
@@ -191,7 +192,8 @@ try {
     await page.locator('.practice-reference mjx-container').waitFor();
     await page.getByRole('textbox', { name: '你的思路与回答', exact: true }).fill('两次投掷相互独立，概率相乘，结果为四分之一。');
     await page.getByRole('radio', { name: '独立完成', exact: true }).check();
-    await page.getByRole('button', { name: '完成本题', exact: true }).click();
+    assert.equal(remote.envelope.data.activities.filter(item => item.kind === 'tech').length, 0, 'drawing and reviewing a reference do not mark the question complete');
+    await page.getByRole('button', { name: '我做完了', exact: true }).click();
     await waitFor(() => remote.envelope.data.practiceSessions?.some(item => item.kind === 'tech' && item.status === 'completed'), 'Technical Interview cloud save');
     assert.equal(remote.envelope.data.practiceSessions.filter(item => item.status === 'completed').length, 2);
     const saved = remote.envelope.data.practiceSessions.find(item => item.kind === 'tech' && item.status === 'completed');
@@ -354,7 +356,7 @@ try {
     const answer = quota.page.getByRole('textbox', { name: '你的代码与复盘', exact: true });
     await answer.fill('Quota fixture answer stays visible.');
     await quota.page.getByRole('radio', { name: '独立完成', exact: true }).check();
-    await quota.page.getByRole('button', { name: '完成本题', exact: true }).click();
+    await quota.page.getByRole('button', { name: '保存复盘', exact: true }).click();
     await quota.page.getByText('当前作答暂存在本页，请按上方提示重试保存或导出备份。', { exact: true }).waitFor();
     assert.equal(await answer.inputValue(), 'Quota fixture answer stays visible.');
     assert.equal(await quota.page.getByText('已记录本题自评，训练日历已更新。', { exact: true }).count(), 0);

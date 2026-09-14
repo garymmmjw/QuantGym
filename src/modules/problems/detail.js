@@ -1,3 +1,4 @@
+import { hasExplicitProblemCompletion, isLeetcodeCatalogProblem } from './completion.js';
 import { escapeHtml } from "../../lib/text.js";
 import { cleanProblemTagValue, getLocalizedProblemField } from "./format.js";
 
@@ -64,11 +65,19 @@ export function renderProblemDetailView(options = {}) {
   practice.addEventListener("click", () => options.selectForInterview?.(problem.id));
 
   const personal = options.getPersonalState?.(problem.id) || {};
-  const complete = document.createElement("button");
-  complete.className = `secondary-button problem-detail-complete${personal.completed ? " active" : ""}`;
-  complete.type = "button";
-  complete.innerHTML = `<i data-lucide="${personal.completed ? "check-circle-2" : "circle"}"></i> ${personal.completed ? (isEnglish ? "Completed" : "已完成") : (isEnglish ? "Mark completed" : "标记完成")}`;
-  complete.addEventListener("click", () => options.toggleCompleted?.(problem.id));
+  const canComplete = !isLeetcodeCatalogProblem(problem);
+  const completed = canComplete && hasExplicitProblemCompletion(personal);
+  const complete = document.createElement(canComplete ? "button" : "a");
+  complete.className = `secondary-button problem-detail-complete${completed ? " active" : ""}`;
+  if (canComplete) {
+    complete.type = "button";
+    complete.setAttribute("aria-pressed", String(completed));
+    complete.innerHTML = `<i data-lucide="${completed ? "check-circle-2" : "circle"}"></i> ${completed ? (isEnglish ? "Completed · Undo" : "已完成 · 撤销") : (isEnglish ? "I finished this problem" : "我做完了")}`;
+    complete.addEventListener("click", () => options.toggleCompleted?.(problem.id));
+  } else {
+    complete.href = "/leetcode";
+    complete.textContent = isEnglish ? "View synced LeetCode progress" : "查看力扣同步进度";
+  }
 
   const save = document.createElement("button");
   save.className = `secondary-button problem-detail-save${personal.favorite ? " active" : ""}`;

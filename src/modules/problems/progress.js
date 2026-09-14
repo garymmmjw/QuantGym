@@ -1,38 +1,25 @@
+import { countsTowardProblemTotal, hasExplicitProblemCompletion } from './completion.js';
+
 export function getCatalogProblems(problems = [], isCatalogProblem = () => true) {
   return (Array.isArray(problems) ? problems : []).filter(isCatalogProblem);
 }
 
 export function isProblemCompleted(problemId, getPersonalState = () => ({})) {
-  return Boolean(getPersonalState(problemId)?.completed);
+  return hasExplicitProblemCompletion(getPersonalState(problemId));
 }
 
 export function getProblemCompletionCount(problems = [], getPersonalState = () => ({})) {
-  return (Array.isArray(problems) ? problems : []).filter((problem) => isProblemCompleted(problem.id, getPersonalState)).length;
+  return new Set((Array.isArray(problems) ? problems : [])
+    .filter(problem => isProblemCompleted(problem.id, getPersonalState) && countsTowardProblemTotal(problem))
+    .map(problem => problem.id)).size;
 }
 
-export function getLeetcodeHotCompletionStats(doneIds = [], hotItems = []) {
-  return {
-    done: (Array.isArray(doneIds) ? doneIds : []).length,
-    total: hotItems.length || 100
-  };
+export function getLeetcodeHotCompletionStats(_doneIds = [], hotItems = []) {
+  // The legacy list cannot verify a linked account. Never publish local flags
+  // as LeetCode completions; the LeetCode page owns synced progress.
+  return { done: 0, total: hotItems.length || 100, requiresSync: true };
 }
 
-export function toggleLeetcodeHotDoneState(options = {}) {
-  const {
-    problemId = "",
-    doneIds = [],
-    hotItems = [],
-    currentLeetcodeSkill = 0,
-    normalizeDoneIds = (ids) => ids
-  } = options;
-  const valid = new Set((Array.isArray(hotItems) ? hotItems : []).map((item) => item.id));
-  if (!valid.has(problemId)) return null;
-  const done = new Set(normalizeDoneIds(doneIds));
-  if (done.has(problemId)) done.delete(problemId);
-  else done.add(problemId);
-  const nextDoneIds = [...done];
-  return {
-    doneIds: nextDoneIds,
-    leetcodeSkill: Math.max(Number(currentLeetcodeSkill || 0), Math.min(100, nextDoneIds.length))
-  };
+export function toggleLeetcodeHotDoneState() {
+  return null;
 }

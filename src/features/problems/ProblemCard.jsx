@@ -42,7 +42,7 @@ export function ProblemCard({
         <div className="qg-problem-title-row">
           <h3>{main}</h3>
           {item.completed ? (
-            <span className="qg-problem-solved" title={isEnglish ? "Solved" : "已解决"}>✓</span>
+            <span className="qg-problem-solved" title={isEnglish ? "Completed" : "已完成"}>✓</span>
           ) : null}
         </div>
         {sub ? <div className="qg-problem-sub">{sub}</div> : null}

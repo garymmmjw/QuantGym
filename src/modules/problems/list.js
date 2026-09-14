@@ -1,3 +1,4 @@
+import { hasExplicitProblemCompletion, isLeetcodeCatalogProblem } from './completion.js';
 import {
   cleanProblemTagValue,
   difficultyClass,
@@ -36,17 +37,21 @@ export function createProblemCard(problem, options = {}) {
   const title = document.createElement("h3");
   title.textContent = titleText;
 
+  const canComplete = !isLeetcodeCatalogProblem(problem);
+  const completed = canComplete && hasExplicitProblemCompletion(personal);
   const complete = document.createElement("button");
   complete.type = "button";
-  complete.className = `problem-complete-button problem-complete-corner${personal.completed ? " active" : ""}`;
-  complete.title = personal.completed
+  complete.className = `problem-complete-button problem-complete-corner${completed ? " active" : ""}`;
+  complete.title = completed
     ? (isEnglish ? "Mark unfinished" : "标记为未完成")
-    : (isEnglish ? "Mark completed" : "标记完成");
+    : (isEnglish ? "I finished this problem" : "我做完了");
+  complete.hidden = !canComplete;
+  complete.setAttribute("aria-pressed", String(completed));
   complete.setAttribute("aria-label", complete.title);
-  complete.innerHTML = `<i data-lucide="${personal.completed ? "check-circle-2" : "circle"}"></i>`;
+  complete.innerHTML = `<i data-lucide="${completed ? "check-circle-2" : "circle"}"></i>`;
   complete.addEventListener("click", (event) => {
     event.stopPropagation();
-    options.toggleCompleted?.(problem.id);
+    if (canComplete) options.toggleCompleted?.(problem.id);
   });
 
   const meta = document.createElement("div");

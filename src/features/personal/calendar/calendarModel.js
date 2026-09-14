@@ -1,3 +1,5 @@
+import { countsTowardProblemTotal, hasExplicitProblemCompletion, isLeetcodeCatalogProblem, isTrainerCatalogProblem } from '../../../modules/problems/completion.js';
+
 export const ACTIVITY_KINDS = ["quant", "mental", "sequence", "pattern", "tech", "coding", "behavioral", "daily"];
 export const TRIAL_KINDS = ["mental", "sequence", "pattern"];
 export const MANUAL_KINDS = ACTIVITY_KINDS.filter((kind) => kind !== "daily");
@@ -53,7 +55,11 @@ function normalizedActivity(raw, index) {
 
 function problemKind(problem, isInterview = false) {
   const category = String(problem?.category || "").toLowerCase();
-  if (["leetcode", "coding", "programming", "algorithms"].includes(category)) return "coding";
+  if (isTrainerCatalogProblem(problem)) {
+    const trainer = category.replace(/[\s_-]/g, '');
+    return ['sequence', 'pattern'].includes(trainer) ? trainer : 'mental';
+  }
+  if (isLeetcodeCatalogProblem(problem) || ["coding", "programming", "algorithms"].includes(category)) return "coding";
   if (category === "behavioral" || category === "behavioural") return "behavioral";
   return isInterview ? "tech" : "quant";
 }
@@ -61,12 +67,31 @@ function problemKind(problem, isInterview = false) {
 /** Read dated records only. Events are authoritative; linked trial/session records are fallbacks. */
 export function collectCalendarActivities(state = {}, legacyState = {}) {
   const byId = new Map();
+  const problemCompletions = new Set();
+  const completionKey = (problemId, completedAt) => JSON.stringify([problemId, Date.parse(completedAt)]);
+  const problems = new Map(list(legacyState.problems).map((problem) => [problem.id, problem]));
   let undatedLegacyCount = 0;
   const add = (raw) => {
     const activity = normalizedActivity(raw, byId.size);
-    if (activity && !byId.has(activity.id)) byId.set(activity.id, activity);
+    if (activity && !byId.has(activity.id)) {
+      byId.set(activity.id, activity);
+      const problemId = activity.problemId || activity.questionId;
+      if (problemId && activity.countedAsSolved !== false) problemCompletions.add(completionKey(problemId, activity.completedAt));
+    }
   };
-  list(state.activities).forEach(add);
+  const practiceById = new Map(list(state.practiceSessions).map(session => [`practice:${session.id}`, session]));
+  list(state.activities).forEach(raw => {
+    const session = practiceById.get(raw?.id);
+    const problemId = raw?.problemId || raw?.questionId;
+    const problem = problems.get(problemId) || { id: problemId };
+    // A local Coding OA review is not a verified LeetCode accepted submission.
+    // Keep its history while separating it from solved-problem statistics.
+    const localLeetCode = raw?.kind === 'coding' && (raw.source === 'standalone' || raw.source === 'manual'
+      || raw.source === 'leetcode' || session?.question?.source === 'leetcode');
+    const unconfirmedPractice = raw?.source === 'standalone' && session?.status !== 'completed';
+    add({ ...raw, ...(isTrainerCatalogProblem(problem) ? { kind: problemKind(problem) } : {}),
+      countedAsSolved: !localLeetCode && !unconfirmedPractice && countsTowardProblemTotal(problem) });
+  });
   const explicit = [...byId.values()];
   const linkedTrials = new Set(explicit.filter((item) => TRIAL_KINDS.includes(item.kind)).flatMap((item) =>
     [item.trialId, item.id.startsWith(`${item.kind}:`) ? item.id.slice(item.kind.length + 1) : ""]
@@ -82,18 +107,15 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
     add({ id: `daily:${session.id}`, kind: "daily", count: 1, dailySessionId: session.id, completedAt: session.completedAt });
   });
 
-  const problems = new Map(list(legacyState.problems).map((problem) => [problem.id, problem]));
   const legacyReferences = new Set(explicit.flatMap((item) => [item.legacyId, item.sourceId]).filter(Boolean));
-  const hasSameProblemEvent = (kind, problemId, completedAt) => explicit.some((event) => (
-    event.kind === kind && event.problemId === problemId && event.completedAt === completedAt
-  ));
+  const hasSameProblemEvent = (problemId, completedAt) => problemCompletions.has(completionKey(problemId, completedAt));
   list(legacyState.problemStates).forEach((record) => {
-    if (!record?.completed || !record.problemId) return;
-    if (!localDayKey(record.completedAt)) { undatedLegacyCount += 1; return; }
-    const problem = problems.get(record.problemId);
+    if (record?.completed !== true || !record.problemId) return;
+    if (!hasExplicitProblemCompletion(record) || !localDayKey(record.completedAt)) { undatedLegacyCount += 1; return; }
+    const problem = problems.get(record.problemId) || { id: record.problemId };
     const kind = problemKind(problem);
-    if (legacyReferences.has(record.problemId) || hasSameProblemEvent(kind, record.problemId, record.completedAt)) return;
-    add({ id: `legacy:problem:${record.problemId}`, kind, count: 1, completedAt: record.completedAt, problemId: record.problemId, title: problem?.titleZh || problem?.titleEn || "", titleEn: problem?.titleEn || "", source: "legacy" });
+    if (legacyReferences.has(record.problemId) || hasSameProblemEvent(record.problemId, record.completedAt)) return;
+    add({ id: `legacy:problem:${record.problemId}`, kind, count: 1, completedAt: record.completedAt, problemId: record.problemId, title: problem?.titleZh || problem?.titleEn || "", titleEn: problem?.titleEn || "", source: "legacy", countedAsSolved: countsTowardProblemTotal(problem) });
   });
   list(legacyState.mentalMathRecords).forEach((record, index) => {
     if (!record) return;
@@ -101,15 +123,15 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
     if (record.id && (linkedTrials.has(`mental:${record.id}`) || legacyReferences.has(record.id))) return;
     add({ id: `legacy:mental:${record.id || `${record.createdAt}:${index}`}`, kind: "mental", count: record.correct, completedAt: record.createdAt, title: record.label || "", source: "legacy" });
   });
-  // Practice entries are account-scoped and timestamped per answered question. The old
-  // global interview-history storage has no account boundary and is deliberately not read.
+  // Scores, evaluations, and the entry's logging date do not prove completion.
+  // Only an explicit confirmation with its own completion timestamp can count.
   list(legacyState.entries).forEach((entry, index) => {
-    if (!entry?.problemId || !(Object.hasOwn(entry, "interviewScore") || Object.hasOwn(entry, "interviewEvaluation"))) return;
-    if (!localDayKey(entry.date)) { undatedLegacyCount += 1; return; }
-    const problem = problems.get(entry.problemId);
+    if (!entry?.problemId || entry.completed !== true) return;
+    if (!hasExplicitProblemCompletion(entry) || !localDayKey(entry.completedAt)) { undatedLegacyCount += 1; return; }
+    const problem = problems.get(entry.problemId) || { id: entry.problemId };
     const kind = problemKind(problem, true);
-    if (legacyReferences.has(entry.id) || hasSameProblemEvent(kind, entry.problemId, entry.date)) return;
-    add({ id: `legacy:interview:${entry.id || `${entry.problemId}:${entry.date}:${index}`}`, kind, count: 1, completedAt: entry.date, problemId: entry.problemId, title: problem?.titleZh || problem?.titleEn || "", titleEn: problem?.titleEn || "", source: "legacy" });
+    if (legacyReferences.has(entry.id) || hasSameProblemEvent(entry.problemId, entry.completedAt)) return;
+    add({ id: `legacy:interview:${entry.id || `${entry.problemId}:${entry.completedAt}:${index}`}`, kind, count: 1, completedAt: entry.completedAt, problemId: entry.problemId, title: problem?.titleZh || problem?.titleEn || "", titleEn: problem?.titleEn || "", source: "legacy", countedAsSolved: countsTowardProblemTotal(problem) });
   });
   return {
     activities: [...byId.values()].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt) || a.id.localeCompare(b.id)),
@@ -119,13 +141,15 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
 
 export function summarizeActivities(activities = []) {
   const result = { quant: 0, mental: 0, mentalTrials: 0, sequence: 0, sequenceTrials: 0, pattern: 0, patternTrials: 0,
-    tech: 0, coding: 0, behavioral: 0, daily: 0, totalQuestions: 0, activityCount: 0 };
+    tech: 0, coding: 0, codingReviews: 0, behavioral: 0, daily: 0, totalQuestions: 0, activityCount: 0 };
   list(activities).forEach((item) => {
     if (!ACTIVITY_KINDS.includes(item?.kind)) return;
     const count = countOf(item.count);
-    result[item.kind] += count;
+    if (item.countedAsSolved === false && !TRIAL_KINDS.includes(item.kind)) {
+      if (item.kind === 'coding') result.codingReviews += count;
+    } else result[item.kind] += count;
     result.activityCount += 1;
-    if (item.kind !== "daily") result.totalQuestions += count;
+    if (item.kind !== "daily" && !TRIAL_KINDS.includes(item.kind) && item.countedAsSolved !== false) result.totalQuestions += count;
     if (TRIAL_KINDS.includes(item.kind)) result[`${item.kind}Trials`] += countOf(item.trialCount ?? (item.source === "manual" ? 0 : 1));
   });
   return result;

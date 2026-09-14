@@ -31,8 +31,7 @@ export function createOverviewActivityController(deps = {}) {
     return getContributionStatsByDayValue({
       entries: state.entries,
       problemStates: state.problemStates,
-      leetcodeHot100Done: state.leetcodeHot100Done,
-      normalizeLeetcodeHot100Done: deps.normalizeLeetcodeHot100Done,
+      problems: state.problems,
       today
     });
   }
@@ -64,8 +63,7 @@ export function createOverviewActivityController(deps = {}) {
       today: new Date(),
       entries: state.entries,
       problemStates: state.problemStates,
-      leetcodeHot100Done: state.leetcodeHot100Done,
-      normalizeLeetcodeHot100Done: deps.normalizeLeetcodeHot100Done
+      problems: state.problems
     });
   }
 

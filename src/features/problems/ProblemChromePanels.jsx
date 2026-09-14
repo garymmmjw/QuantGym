@@ -49,9 +49,11 @@ export function ProblemCollectionGrid({ entries = [], filters = {}, leetcodeExpa
           <small>{entry.description}</small>
         </span>
         <span className="problem-collection-bottom">
-          <span><strong>{entry.done}</strong> / {entry.total}</span>
-          <small>{isEnglish ? "completed" : "完成进度"}</small>
-          <i aria-hidden="true"><span /></i>
+          {entry.mode === "leetcode" ? <span>{isEnglish ? "Progress from linked account" : "进度以关联账号为准"}</span> : <>
+            <span><strong>{entry.done}</strong> / {entry.total}</span>
+            <small>{isEnglish ? "completed" : "完成进度"}</small>
+            <i aria-hidden="true"><span /></i>
+          </>}
         </span>
         <span className="problem-collection-go" aria-hidden="true"><i data-lucide="arrow-up-right" /></span>
       </button>
@@ -59,28 +61,20 @@ export function ProblemCollectionGrid({ entries = [], filters = {}, leetcodeExpa
   });
 }
 
-export function ProblemLeetcodeHotList({ items = [], doneIds = [], expanded, isEnglish, t, emptyText, onToggleDone }) {
+export function ProblemLeetcodeHotList({ items = [], expanded, isEnglish, t, emptyText }) {
   if (!expanded) return null;
   if (!items.length) return emptyText ? <EmptyState title={emptyText} /> : null;
 
   return items.map((item) => {
-    const isDone = doneIds.includes(item.id);
     return (
-      <article key={item.id} className={`leetcode-hot-item${isDone ? " is-done" : ""}`}>
-        <button
-          className="leetcode-hot-done"
-          type="button"
-          data-leetcode-hot-toggle={item.id}
-          aria-label={isDone ? t("leetcodeHotUndo") : t("leetcodeHotMarkDone")}
-          onClick={() => onToggleDone(item.id)}
-        >
-          <i data-lucide={isDone ? "check" : "circle"} />
-        </button>
+      <article key={item.id} className="leetcode-hot-item">
+        <a className="leetcode-hot-done" href="/leetcode" aria-label={isEnglish ? "View synced LeetCode progress" : "查看力扣同步进度"}>
+          <i data-lucide="refresh-cw" />
+        </a>
         <div className="leetcode-hot-main">
           <strong>{item.number}. {item.title}</strong>
           <span>
-            {item.topic} · {item.difficulty}
-            {isDone ? ` · ${t("leetcodeHotDone")}` : ""}
+            {item.topic} · {item.difficulty} · {isEnglish ? "Synced account progress" : "关联账号同步进度"}
           </span>
         </div>
         <a
