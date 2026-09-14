@@ -28,6 +28,9 @@ REDACTED_VALUE_COLUMNS = {
     "token_hash",
     "code_salt",
     "code_hash",
+    "code_value",
+    "bucket_key",
+    "lease_token",
     "storage_path",
 }
 
@@ -37,11 +40,17 @@ REDACTED_TEXT_COLUMNS = {
     "prompt_zh",
     "answer",
     "explanation",
+    "subject",
+    "body",
+    "last_error",
+    "reward",
+    "title",
 }
 
 REDACTED_JSON_COLUMNS = {
     "account_json",
     "state_json",
+    "data_json",
     "community_json",
     "metadata_json",
     "problem_json",

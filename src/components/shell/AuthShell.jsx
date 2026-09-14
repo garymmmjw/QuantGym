@@ -1,3 +1,4 @@
+import { GuardianEntry } from "../../features/guardian/GuardianEntry.jsx";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AUTH_KEY, USER_STATE_PREFIX } from "../../constants.js";
 import { isItemOwned } from "../../modules/economy/index.js";
@@ -430,6 +431,8 @@ export function AuthShell() {
             </div>
 
             <p id="authMessage" className="auth-message" aria-live="polite"></p>
+
+            <GuardianEntry />
 
             <p className="auth-legal-note">私测阶段需要白名单邮箱 · 继续即同意 <span className="auth-legal-link">服务条款</span> 与 <span className="auth-legal-link">隐私政策</span></p>
 

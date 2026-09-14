@@ -170,4 +170,65 @@ ON poker_rooms (host_user_id, updated_at);
 CREATE INDEX idx_poker_rooms_active_updated
 ON poker_rooms (archived_at, updated_at);
 
+-- Private scoped guardian credentials, goals, and durable notification outbox.
+
+CREATE TABLE guardian_access (
+  user_id text PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  code_hash text UNIQUE,
+  code_value text,
+  enabled integer NOT NULL DEFAULT 1 CHECK (enabled IN (0, 1)),
+  generation integer NOT NULL DEFAULT 1,
+  created_at timestamptz NOT NULL,
+  updated_at timestamptz NOT NULL
+);
+CREATE TABLE guardian_sessions (
+  token_hash text PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  generation integer NOT NULL,
+  created_at timestamptz NOT NULL,
+  expires_at timestamptz NOT NULL
+);
+CREATE INDEX idx_guardian_sessions_user ON guardian_sessions (user_id);
+CREATE INDEX idx_guardian_sessions_expiry ON guardian_sessions (expires_at);
+CREATE TABLE guardian_goals (
+  id text PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  target_count integer NOT NULL CHECK (target_count BETWEEN 1 AND 100000),
+  start_date text NOT NULL,
+  end_date text NOT NULL,
+  time_zone text NOT NULL,
+  reward text NOT NULL,
+  status text NOT NULL CHECK (status IN ('active', 'completed', 'cancelled')),
+  completion_count integer,
+  completed_at timestamptz,
+  created_at timestamptz NOT NULL,
+  updated_at timestamptz NOT NULL
+);
+CREATE INDEX idx_guardian_goals_user ON guardian_goals (user_id, created_at);
+CREATE INDEX idx_guardian_goals_status ON guardian_goals (status, user_id);
+CREATE TABLE guardian_notifications (
+  id text PRIMARY KEY,
+  user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  goal_id text UNIQUE REFERENCES guardian_goals(id) ON DELETE CASCADE,
+  kind text NOT NULL CHECK (kind IN ('goal_completed', 'reminder')),
+  subject text NOT NULL,
+  body text NOT NULL,
+  status text NOT NULL CHECK (status IN ('pending', 'sending', 'sent', 'disabled', 'retry', 'failed', 'cancelled')),
+  attempts integer NOT NULL DEFAULT 0,
+  next_attempt_at timestamptz NOT NULL,
+  lease_token text,
+  lease_until timestamptz,
+  last_error text,
+  created_at timestamptz NOT NULL,
+  sent_at timestamptz
+);
+CREATE INDEX idx_guardian_notifications_due ON guardian_notifications (status, next_attempt_at);
+CREATE INDEX idx_guardian_notifications_user ON guardian_notifications (user_id, created_at);
+CREATE TABLE guardian_rate_limits (
+  bucket_key text PRIMARY KEY,
+  window_started_at timestamptz NOT NULL,
+  request_count integer NOT NULL
+);
+
 COMMIT;
