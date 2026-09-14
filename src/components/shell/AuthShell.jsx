@@ -91,6 +91,49 @@ export function AuthShell() {
   }, [passwordVisible]);
 
   useEffect(() => {
+    const slot = document.getElementById("googleButton");
+    if (!slot) return undefined;
+    // GIS can render a personalized button in a cross-origin iframe. Retain
+    // its native viewport and scale its hit area, using GIS's own margins to
+    // exclude the transparent padding around the real button.
+    const fitGoogleFrames = () => {
+      const { width, height } = slot.getBoundingClientRect();
+      if (!width || !height) return;
+      slot.querySelectorAll("iframe").forEach(frame => {
+        const nativeWidth = Number.parseFloat(frame.style.width);
+        const nativeHeight = Number.parseFloat(frame.style.height);
+        const left = Number.parseFloat(frame.style.marginLeft) || 0;
+        const right = Number.parseFloat(frame.style.marginRight) || 0;
+        const top = Number.parseFloat(frame.style.marginTop) || 0;
+        const bottom = Number.parseFloat(frame.style.marginBottom) || 0;
+        const buttonWidth = nativeWidth + left + right;
+        const buttonHeight = nativeHeight + top + bottom;
+        if (!(buttonWidth > 0 && buttonHeight > 0)) return;
+        const properties = {
+          "--qg-google-frame-width": `${nativeWidth}px`,
+          "--qg-google-frame-height": `${nativeHeight}px`,
+          "--qg-google-frame-left": `${left}px`,
+          "--qg-google-frame-top": `${top}px`,
+          "--qg-google-origin-x": `${-left}px`,
+          "--qg-google-origin-y": `${-top}px`,
+          "--qg-google-scale-x": String(width / buttonWidth),
+          "--qg-google-scale-y": String(height / buttonHeight)
+        };
+        Object.entries(properties).forEach(([name, value]) => {
+          if (frame.style.getPropertyValue(name) !== value) frame.style.setProperty(name, value);
+        });
+        frame.classList.add("qg-google-fitted");
+      });
+    };
+    const resize = new ResizeObserver(fitGoogleFrames);
+    const changes = new MutationObserver(fitGoogleFrames);
+    resize.observe(slot);
+    changes.observe(slot, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
+    fitGoogleFrames();
+    return () => { resize.disconnect(); changes.disconnect(); };
+  }, []);
+
+  useEffect(() => {
     setSleepWallpaperOwned(lastLocalAccountOwnsSleepWallpaper());
   }, []);
 
