@@ -219,6 +219,7 @@ body:not(.is-authenticated) #authShell .qg-auth-card {
 #authShell #googleButton iframe.qg-google-fitted {
   position: absolute !important;
   width: var(--qg-google-frame-width) !important;
+  max-width: none !important;
   height: var(--qg-google-frame-height) !important;
   left: var(--qg-google-frame-left) !important;
   top: var(--qg-google-frame-top) !important;
