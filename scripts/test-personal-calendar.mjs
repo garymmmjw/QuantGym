@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { addLocalDays, buildDailySummaries, collectCalendarActivities, createManualActivity, dayRange, localDayKey, parseLocalDay, recordManualActivity, summarizeActivities } from "../src/features/personal/calendar/calendarModel.js";
+import { addLocalDays, buildDailySummaries, collectCalendarActivities, createManualActivity, dayRange, formatCalendarQuestionTitle, localDayKey, parseLocalDay, recordManualActivity, summarizeActivities } from "../src/features/personal/calendar/calendarModel.js";
+import { createTrial, persistTrialTransition, transitionTrial } from "../src/features/personal/mental/mentalEngine.js";
+import { createReasoningTrial, persistReasoningTransition, transitionReasoningTrial } from "../src/features/personal/mental/reasoningEngine.js";
 
 const modelUrl = new URL("../src/features/personal/calendar/calendarModel.js", import.meta.url).href;
 const at = "2026-09-08T16:00:00.000Z";
@@ -68,7 +70,7 @@ test("event ids and linked trial/session records are counted only once", () => {
   assert.equal(summary.mental, 25);
   assert.equal(summary.mentalTrials, 1);
   assert.equal(summary.daily, 1);
-  assert.equal(summary.totalQuestions, 0);
+  assert.equal(summary.totalQuestions, 1);
 });
 
 test("fallbacks include finished and early-ended trials but exclude active trials and unfinished daily mocks", () => {
@@ -172,7 +174,7 @@ test("explicit references prevent importing the same legacy activity twice", () 
   assert.equal(activities.length, 2);
 });
 
-test("manual mental entries preserve training stats without adding solved questions, trials, or speed records", () => {
+test("manual mental entries count once while preserving correct questions without inventing trials or speed records", () => {
   const activity = createManualActivity({ kind: "mental", count: "12", dateKey: "2026-09-08", note: "  Offline practice  " }, { id: "a", now: at });
   assert.equal(activity.id, "manual:a");
   assert.equal(activity.source, "manual");
@@ -181,7 +183,7 @@ test("manual mental entries preserve training stats without adding solved questi
   const { activities } = collectCalendarActivities({ activities: [activity] });
   assert.equal(summarizeActivities(activities).mental, 12);
   assert.equal(summarizeActivities(activities).mentalTrials, 0);
-  assert.equal(summarizeActivities(activities).totalQuestions, 0);
+  assert.equal(summarizeActivities(activities).totalQuestions, 1);
 });
 
 test("manual records reject invalid counts, dates, or a fabricated daily completion", () => {
@@ -245,7 +247,7 @@ test("sequence and pattern events and fallback histories have separate question 
   assert.equal(summary.sequenceTrials, 2);
   assert.equal(summary.pattern, 2);
   assert.equal(summary.patternTrials, 2);
-  assert.equal(summary.totalQuestions, 0);
+  assert.equal(summary.totalQuestions, 5);
   const day = buildDailySummaries(activities, localDayKey(at), 1)[0];
   assert.equal(day.sequence, 4);
   assert.equal(day.pattern, 2);
@@ -273,7 +275,7 @@ test("reasoning links cannot suppress dated legacy math records with the same ex
   assert.equal(summary.activityCount, 2);
 });
 
-test("solved totals exclude trainer and manual LeetCode counts while retaining explicitly completed non-LeetCode coding", () => {
+test("completed totals include one per trainer session and explicit non-LeetCode coding while excluding manual LeetCode counts", () => {
   const raw = { activities: [
     { id: 'mental:done', kind: 'mental', count: 100, completedAt: at },
     { id: 'sequence:done', kind: 'sequence', count: 30, completedAt: at },
@@ -292,8 +294,8 @@ test("solved totals exclude trainer and manual LeetCode counts while retaining e
   assert.equal(summary.codingReviews, 13);
   assert.equal(summary.coding, 1);
   assert.equal(summary.tech, 2);
-  assert.equal(summary.totalQuestions, 3);
-  assert.equal(buildDailySummaries(activities, localDayKey(at), 1)[0].totalQuestions, 3);
+  assert.equal(summary.totalQuestions, 6);
+  assert.equal(buildDailySummaries(activities, localDayKey(at), 1)[0].totalQuestions, 6);
   assert.deepEqual(raw, before, 'changing the counting rule does not delete practice history');
 });
 
@@ -311,7 +313,7 @@ test("an active or missing standalone practice session cannot be counted as expl
   assert.equal(activities.length, 3, 'draft and orphan history is retained without credit');
 });
 
-test("legacy and linked calendar records share catalog exclusions for trainer and LeetCode metadata", () => {
+test("legacy and linked calendar records include trainers and share LeetCode exclusions", () => {
   const problems = [
     { id: 'math', category: 'mentalMath' },
     { id: 'sequence', category: 'sequence' },
@@ -325,7 +327,7 @@ test("legacy and linked calendar records share catalog exclusions for trainer an
   const problemStates = [...problems, { id: 'leetcode-old-slug' }].map(problem => ({ problemId: problem.id, completed: true, completedAt: at }));
   const legacy = { problems, problemStates };
   const summary = summarizeActivities(collectCalendarActivities({}, legacy).activities);
-  assert.equal(summary.totalQuestions, 1);
+  assert.equal(summary.totalQuestions, 5);
   assert.equal(summary.coding, 1);
   assert.equal(summary.codingReviews, 4);
   assert.equal(summary.mental, 2);
@@ -335,7 +337,7 @@ test("legacy and linked calendar records share catalog exclusions for trainer an
     { id: 'linked-math', problemId: 'math', kind: 'quant', count: 1, completedAt: at },
     { id: 'linked-lc', problemId: 'source-lc', kind: 'coding', count: 1, completedAt: at },
   ] }, { problems });
-  assert.equal(summarizeActivities(linked.activities).totalQuestions, 0);
+  assert.equal(summarizeActivities(linked.activities).totalQuestions, 1);
   assert.equal(summarizeActivities(linked.activities).mental, 1);
 });
 
@@ -369,4 +371,107 @@ test("catalog and interview mirrors of the same completion count once even with 
   assert.equal(activities.length, 2);
   assert.equal(summarizeActivities(activities).totalQuestions, 2);
   assert.deepEqual(activities.map(item => item.id).sort(), ['legacy:interview:later-repeat', 'legacy:problem:same-question']);
+});
+
+test("Mental Math counts finished questions during a trial without counting wrong attempts or unfinished questions", () => {
+  const start = Date.parse(at), rng = () => 0.4;
+  let trial = createTrial({ durationSeconds: 120 }, { now: start, id: 'math-live', rng });
+  const summary = () => summarizeActivities(collectCalendarActivities({ activeTrial: trial }).activities);
+  assert.equal(summary().totalQuestions, 0, 'drawing a question is not completion');
+  const wrong = String(trial.currentQuestion.answer + 1);
+  trial = transitionTrial(trial, { type: 'submit', value: wrong }, start + 1000, rng);
+  trial = transitionTrial(trial, { type: 'submit', value: wrong }, start + 2000, rng);
+  assert.equal(trial.currentQuestion.mistakes.length, 2);
+  assert.equal(summary().totalQuestions, 0);
+  trial = transitionTrial(trial, { type: 'input', value: String(trial.currentQuestion.answer) }, start + 3000, rng);
+  assert.equal(summary().totalQuestions, 1);
+  assert.equal(summary().mentalCorrect, 1);
+  assert.equal(summary().mentalTrials, 0, 'an in-progress trial is not a finished trial');
+  trial = transitionTrial(trial, { type: 'skip' }, start + 4000, rng);
+  trial = transitionTrial(trial, { type: 'abort' }, start + 5000, rng);
+  const state = persistTrialTransition({ activities: [], trials: [] }, trial);
+  const { activities } = collectCalendarActivities(state, { mentalMathRecords: [{ id: trial.id, createdAt: trial.completedAt, correct: 1 }] });
+  assert.equal(activities.length, 1);
+  assert.equal(summarizeActivities(activities).totalQuestions, 1);
+  assert.equal(summarizeActivities(activities).mentalCorrect, 1);
+  assert.equal(summarizeActivities(activities).mentalTrials, 1);
+});
+
+test("sequence and pattern wrong answers finish one question while repeated submit and skipped questions do not add more", () => {
+  for (const kind of ['sequence', 'pattern']) {
+    const start = Date.parse(at), rng = () => 0.4;
+    let trial = createReasoningTrial({ trainer: kind, durationSeconds: 120 }, { now: start, id: `${kind}-live`, preparationSeconds: 0, rng });
+    const wrong = kind === 'pattern' ? trial.currentQuestion.options.find(option => option.id !== trial.currentQuestion.answer).id : '999999';
+    trial = transitionReasoningTrial(trial, { type: 'submit', value: wrong }, start + 1000, rng);
+    assert.equal(trial.questions[0].outcome, 'wrong');
+    trial = transitionReasoningTrial(trial, { type: 'submit', value: wrong }, start + 2000, rng);
+    let summary = summarizeActivities(collectCalendarActivities({ activeTrial: trial }).activities);
+    assert.equal(summary.totalQuestions, 1);
+    assert.equal(summary[`${kind}Correct`], 0);
+    trial = transitionReasoningTrial(trial, { type: 'next' }, start + 3000, rng);
+    trial = transitionReasoningTrial(trial, { type: 'submit', value: String(trial.currentQuestion.answer) }, start + 4000, rng);
+    trial = transitionReasoningTrial(trial, { type: 'next' }, start + 5000, rng);
+    trial = transitionReasoningTrial(trial, { type: 'skip' }, start + 6000, rng);
+    trial = transitionReasoningTrial(trial, { type: 'next' }, start + 7000, rng);
+    trial = transitionReasoningTrial(trial, { type: 'tick' }, Date.parse(trial.deadlineAt), rng);
+    const state = persistReasoningTransition({ trials: [], activities: [] }, trial);
+    const before = structuredClone(state);
+    const { activities } = collectCalendarActivities(state);
+    summary = summarizeActivities(activities);
+    assert.equal(state.activities[0].count, 1, 'stored correct-answer performance remains intact');
+    assert.equal(activities.length, 1);
+    assert.equal(summary.totalQuestions, 1);
+    assert.equal(summary[kind], 2);
+    assert.equal(summary[`${kind}Correct`], 1);
+    assert.equal(summary[`${kind}Trials`], 1);
+    assert.deepEqual(state, before, 'derived completion counts never rewrite persisted stats');
+  }
+});
+
+test("detailed trainer questions are authoritative, deduplicated, and grouped into one row for 58 finished questions", () => {
+  const questions = Array.from({ length: 58 }, (_, index) => ({ id: `q-${index}`, outcome: index % 2 ? 'wrong' : 'correct', completedAt: at, expression: 'private expression' }));
+  const trial = { id: 'fifty-eight', settings: { trainer: 'sequence' }, status: 'completed', completedAt: at, correct: 999,
+    questions: [...questions, questions[0], { id: 'open', outcome: 'wrong' }, { id: 'skip', outcome: 'skipped', completedAt: at }, { id: 'timeout', outcome: 'timeout', completedAt: at }] };
+  const state = { trials: [trial], activities: [{ id: 'sequence:fifty-eight', trialId: trial.id, kind: 'sequence', count: 999, completedAt: at }] };
+  const { activities } = collectCalendarActivities(state);
+  assert.equal(activities.length, 1);
+  assert.equal(activities[0].count, 58);
+  assert.equal(activities[0].correctCount, 29);
+  assert.equal(summarizeActivities(activities).totalQuestions, 1);
+  assert.ok(!JSON.stringify(activities).includes('private expression'));
+  for (const status of ['completed', 'active']) {
+    const empty = { id: 'empty', status, completedAt: at, questions: [], correct: 100 };
+    const result = collectCalendarActivities({ trials: [empty], activities: [{ id: 'mental:empty', kind: 'mental', trialId: 'empty', count: 100, completedAt: at }] },
+      { mentalMathRecords: [{ id: 'empty', createdAt: at, correct: 100 }] });
+    assert.equal(summarizeActivities(result.activities).totalQuestions, 0, `${status} detail cannot fall back to stale aggregates`);
+  }
+});
+
+test("a trainer session crossing midnight counts once on the latest finished question date", () => {
+  const first = new Date(2026, 8, 8, 23, 59, 58).toISOString();
+  const second = new Date(2026, 8, 9, 0, 0, 2).toISOString();
+  const { activities } = collectCalendarActivities({ trials: [{ id: 'overnight', settings: { trainer: 'pattern' }, status: 'completed', completedAt: second,
+    questions: [{ id: 'before', outcome: 'correct', completedAt: first }, { id: 'after', outcome: 'wrong', completedAt: second }] }] });
+  assert.equal(activities.length, 1);
+  assert.equal(activities[0].completedAt, second);
+  assert.equal(activities[0].count, 2);
+  const days = buildDailySummaries(activities, localDayKey(second), 2);
+  assert.deepEqual(days.map(day => [day.totalQuestions, day.patternCorrect, day.patternTrials]), [[0, 0, 0], [1, 1, 1]]);
+  assert.equal(summarizeActivities(activities).patternTrials, 1);
+  const endedAfterMidnight = collectCalendarActivities({ trials: [{ id: 'stopped-later', status: 'aborted', completedAt: second,
+    questions: [{ id: 'last-finished', outcome: 'correct', completedAt: first }, { id: 'unfinished', outcome: 'aborted', completedAt: second }] }] }).activities;
+  assert.equal(endedAfterMidnight[0].completedAt, first, 'stopping an unfinished question does not move completion to the next day');
+  assert.deepEqual(buildDailySummaries(endedAfterMidnight, localDayKey(second), 2).map(day => day.totalQuestions), [1, 0]);
+});
+
+test("Technical Interview calendar titles use the original question number without inventing an index", () => {
+  const { activities } = collectCalendarActivities({
+    activities: [{ id: 'practice:technical', kind: 'tech', source: 'standalone', count: 1, completedAt: at, questionId: 'tech-question', title: '条件概率', titleEn: 'Conditional probability' }],
+    practiceSessions: [{ id: 'technical', status: 'completed', question: { id: 'tech-question', provenance: { originalNumber: '4.12' } } }],
+  }, { problems: [{ id: 'tech-question', provenance: { originalNumber: '99' } }] });
+  assert.equal(activities[0].questionNumber, '4.12');
+  assert.equal(formatCalendarQuestionTitle(activities[0]), '4.12 · 条件概率');
+  assert.equal(formatCalendarQuestionTitle(activities[0], 'en'), '4.12 · Conditional probability');
+  assert.equal(formatCalendarQuestionTitle({ title: 'Unnumbered' }), 'Unnumbered');
+  assert.equal(formatCalendarQuestionTitle({ questionNumber: '4.12', title: '4.12 Existing number' }), '4.12 Existing number');
 });

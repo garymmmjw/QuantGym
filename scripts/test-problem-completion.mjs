@@ -136,16 +136,16 @@ test('legacy Hot 100 actions cannot mutate completion lists or inflate LeetCode 
   assert.deepEqual(chrome.collections.leetcode.doneIds, []);
   assert.ok(Array.isArray(chrome.progress));
   assert.ok(!chrome.progress.some(item => item.key === 'leetcode-hot'));
-  assert.equal(chrome.progress.find(item => item.key === 'all').total, 2);
+  assert.equal(chrome.progress.find(item => item.key === 'all').total, 3);
 });
 
-test('completed-problem totals exclude trainer and LeetCode records and duplicate catalog entries', () => {
+test('completed-problem totals include trainers but exclude LeetCode and duplicate catalog entries', () => {
   const completed = { completed: true, completedAt: NOW };
   const questions = [problem('one'), problem('one'), problem('two', 'cppProgramming'),
-    problem('math', 'mentalMath'), problem('mental', 'mental_math'), problem('sequence', 'sequence'),
+    problem('math', 'mentalMath'), problem('mental', 'mental_math'), problem('sequence', 'sequence'), problem('pattern', 'pattern'),
     problem('lc', 'leetcode'), problem('lc-url', 'coding', { sourceUrl: 'https://leetcode.cn/problems/two-sum/' })];
-  assert.equal(getProblemCompletionCount(questions, () => completed), 2);
-  assert.equal(countsTowardProblemTotal(problem('trainer', 'probabilityExpectation', { source: 'trainer' })), false);
+  assert.equal(getProblemCompletionCount(questions, () => completed), 6);
+  assert.equal(countsTowardProblemTotal(problem('trainer', 'probabilityExpectation', { source: 'trainer' })), true);
   for (const value of [{ completed: false, completedAt: NOW }, { completed: true }, { completed: true, completedAt: '2026-09-14' }, null]) {
     assert.equal(hasExplicitProblemCompletion(value), false);
   }
