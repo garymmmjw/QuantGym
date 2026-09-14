@@ -216,4 +216,14 @@ body:not(.is-authenticated) #authShell .qg-auth-card {
 /* The old cover forced PingFang on every descendant, including Latin branding. */
 #authShell.qg-auth-welcome, #authShell.qg-auth-welcome :where(p, span, strong, small, label, button, input, summary, div) { font-family: var(--qg-font-ui) !important; }
 #authShell .qg-welcome-logo strong { font-family: var(--qg-font-number) !important; }
+#authShell #googleButton iframe.qg-google-fitted {
+  position: absolute !important;
+  width: var(--qg-google-frame-width) !important;
+  height: var(--qg-google-frame-height) !important;
+  left: var(--qg-google-frame-left) !important;
+  top: var(--qg-google-frame-top) !important;
+  margin: 0 !important;
+  transform: scale(var(--qg-google-scale-x), var(--qg-google-scale-y)) !important;
+  transform-origin: var(--qg-google-origin-x) var(--qg-google-origin-y) !important;
+}
 @media (min-width: 861px) { #authShell .qg-welcome-headline h1 { font-size: clamp(42px, 4.8vw, 78px); line-height: 1.25; } }
