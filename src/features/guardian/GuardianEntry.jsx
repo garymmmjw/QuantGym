@@ -26,7 +26,7 @@ export function GuardianEntry() {
   }
   return (
     <details className="qg-guardian-entry">
-      <summary>我是监护人 <span>凭监护码进入，无需注册</span></summary>
+      <summary><span className="qg-guardian-entry-icon"><i data-lucide="shield-check" aria-hidden="true" /></span><span className="qg-guardian-entry-copy"><strong>我是监护人</strong><span>使用监护码进入</span></span><i className="qg-guardian-entry-arrow" data-lucide="arrow-right" aria-hidden="true" /></summary>
       <form onSubmit={enter}>
         <label htmlFor="guardianAccessCode">监护码</label>
         <input id="guardianAccessCode" value={code} onChange={event => setCode(event.target.value)} required maxLength={100} autoComplete="off" autoCapitalize="none" spellCheck="false" placeholder="粘贴用户分享的监护码" />

@@ -5,6 +5,8 @@ import { isItemOwned } from "../../modules/economy/index.js";
 import { useAppServicesContext, useAuthStore, useUserStateStore } from "../../stores/AppServicesContext.jsx";
 import { getCloudReauthentication, subscribeCloudReauthentication } from "../../state/cloudReauthentication.js";
 import "../../features/account/cloudSession.css";
+import { refreshIcons } from "../../ui/icons.js";
+import "../../styles/auth-welcome.css";
 
 // Idle status copy written by the Google login runtime — the design keeps this
 // slot empty unless something actionable (an error) needs to be shown.
@@ -29,10 +31,6 @@ const authSharkLines = [
   "刷题别慌，节奏最重要。"
 ];
 const noAccounts = [];
-
-function formatAuthStat(value) {
-  return String(value);
-}
 
 /* 晚安主题壁纸 (shop item `sleep`): the login screen is rendered before any
    user is signed in, so ownership is read from the LAST account persisted on
@@ -74,8 +72,7 @@ export function AuthShell() {
   const [sharkBubbleText, setSharkBubbleText] = useState("");
   const [sharkBubbleVisible, setSharkBubbleVisible] = useState(false);
   const [sharkPoked, setSharkPoked] = useState(false);
-  const [authStats, setAuthStats] = useState({ problems: 0, books: 0 });
-  const [statsRolling, setStatsRolling] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
   // Register flow runs as two screens per design: info (邮箱+密码) → verify
   // (mascot + six code boxes). The legacy controller still owns submission.
   const [registerStage, setRegisterStage] = useState("info");
@@ -88,6 +85,10 @@ export function AuthShell() {
   // Cosmetics (shop): both reads are strictly read-only via the economy API.
   const [sleepWallpaperOwned, setSleepWallpaperOwned] = useState(false);
   const frameOwned = useUserStateStore((state) => isItemOwned(state.value, "frame"));
+
+  useEffect(() => {
+    refreshIcons({ root: document.getElementById("authShell") });
+  }, [passwordVisible]);
 
   useEffect(() => {
     setSleepWallpaperOwned(lastLocalAccountOwnsSleepWallpaper());
@@ -106,45 +107,6 @@ export function AuthShell() {
   useEffect(() => () => {
     if (bubbleTimerRef.current) window.clearTimeout(bubbleTimerRef.current);
     if (pokeTimerRef.current) window.clearTimeout(pokeTimerRef.current);
-  }, []);
-
-  useEffect(() => {
-    const targets = { problems: 2500, books: 130 };
-    const duration = 1800;
-    let frameId = 0;
-    let start = 0;
-    let settleTimer = 0;
-
-    function easeOutQuart(t) {
-      return 1 - (1 - t) ** 4;
-    }
-
-    function step(timestamp) {
-      if (!start) start = timestamp;
-      const progress = Math.min((timestamp - start) / duration, 1);
-      const eased = easeOutQuart(progress);
-
-      setAuthStats({
-        problems: Math.floor(targets.problems * eased),
-        books: Math.floor(targets.books * eased)
-      });
-
-      if (progress < 1) {
-        frameId = window.requestAnimationFrame(step);
-        return;
-      }
-
-      setAuthStats(targets);
-      settleTimer = window.setTimeout(() => setStatsRolling(false), 280);
-    }
-
-    setStatsRolling(true);
-    frameId = window.requestAnimationFrame(step);
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      window.clearTimeout(settleTimer);
-    };
   }, []);
 
   useEffect(() => {
@@ -288,45 +250,27 @@ export function AuthShell() {
   };
 
   return (
-    <section className={`auth-shell qg-auth-screen${sleepWallpaperOwned ? " qg-auth-sleep" : ""}`} id="authShell">
-          <div className="auth-brand qg-auth-brand" aria-label="QuantGym 备考封面">
-            <div className="auth-brand-logo">
-              <span className="auth-brand-q-badge" aria-hidden="true">Q</span>
-              <strong data-wordmark="QuantGym">QuantGym</strong>
+    <section className={`auth-shell qg-auth-screen qg-auth-welcome${sleepWallpaperOwned ? " qg-auth-sleep" : ""}`} id="authShell">
+          <header className="qg-welcome-header">
+            <a className="qg-welcome-logo" href="/login" aria-label="QuantGym">
+              <img src="/assets/generated/playful-precision/brand-q-mark.webp" alt="" width="44" height="44" />
+              <strong>Quant<span>Gym</span></strong>
+            </a>
+            <p>{en ? "A better you. One question at a time." : "更好的你 · 从一道题开始"}</p>
+          </header>
+          <div className="qg-welcome-hero" aria-label="QuantGym 备考封面">
+            <div className="qg-welcome-headline">
+              <h1><span>{en ? "Build your confidence." : "今天的底气，"}</span><span>{en ? "One question at a time." : "从这一题开始。"}</span></h1>
+              <p>{en ? "Practice with Quanty. Make progress every day." : "和 Quanty 一起，把练习变成进步。"}</p>
             </div>
-            <div className="auth-cover-visual">
-              <div className="auth-cover-shark-stage">
-                <div className={`auth-cover-shark-bubble${sharkBubbleVisible ? " is-visible" : ""}`} role="status" aria-live="polite">
-                  {sharkBubbleText}
-                </div>
-                <button
-                  className={`auth-cover-shark-button${sharkPoked ? " is-poked" : ""}`}
-                  type="button"
-                  aria-label="戳一下 Quanty"
-                  onClick={pokeAuthShark}
-                >
-                  <span className="auth-cover-shark-glow" aria-hidden="true" />
-                  <img className="auth-cover-mascot" src="/assets/generated/playful-precision/mascot-hero-v5-clean.png" alt="" draggable="false" />
-                </button>
-              </div>
+            <div className="qg-welcome-scene">
+              <img className="qg-welcome-scene-backdrop" src="/assets/generated/playful-precision/auth-welcome-scene.png" alt="" aria-hidden="true" draggable="false" />
+              <div className={`qg-welcome-bubble${sharkBubbleVisible ? " is-visible" : ""}`} role="status" aria-live="polite">{sharkBubbleText}</div>
+              <button className={`qg-welcome-mascot-button${sharkPoked ? " is-poked" : ""}`} type="button" aria-label={en ? "Say hello to Quanty" : "戳一下 Quanty"} onClick={pokeAuthShark}>
+                <img className="qg-welcome-mascot" src="/assets/generated/playful-precision/mascot-auth-welcome.png" alt={en ? "Quanty waves hello" : "挥手欢迎你的 Quanty"} draggable="false" fetchPriority="high" />
+              </button>
             </div>
-            <div className="auth-brand-body">
-              <h2>
-                <span className="auth-title-line">量化面试，</span>
-                <span className="auth-title-line"><span className="auth-title-gradient">练出来的底气。</span></span>
-              </h2>
-              <p>
-                <span className="auth-copy-line"><strong className="auth-copy-keyword">2,997 道真题</strong> · <strong className="auth-copy-keyword auth-copy-english">Mental Math</strong> · <strong className="auth-copy-keyword auth-copy-english">AI 模拟面试</strong> · 段位联赛。</span>
-                <span className="auth-copy-line">每天 20 分钟，把 offer 变成时间问题。</span>
-              </p>
-            </div>
-            <div className="auth-brand-stats auth-brand-stats-roadmap">
-              <span className="auth-brand-chip auth-brand-chip-hot">
-                <span className="auth-brand-chip-icon" aria-hidden="true">🔥</span>
-                <span className="auth-brand-chip-count">12,400+ 训练者</span>
-              </span>
-              <span className="auth-brand-chip auth-brand-chip-firms">Jane Street · Citadel · Optiver 真题</span>
-            </div>
+            <p className="qg-welcome-topics">{en ? "Practice · Mental Math · Mock interviews" : "刷题 · Mental Math · 模拟面试"}</p>
           </div>
 
           <div className="auth-panel qg-auth-card" role="dialog" aria-labelledby="authTitle" aria-describedby="authSubtitle">
@@ -334,31 +278,25 @@ export function AuthShell() {
               <p role="status" data-i18n="authCloudRecoveryNotice">请重新登录以恢复云端连接。本机训练记录已保留，登录成功后会返回刚才的页面。</p>
               <button type="button" className="auth-link-button" onClick={cancelRecovery}>{en ? "Not now · keep device access" : "暂不恢复云端"}</button>
             </div>}
-            <div className="auth-copy sr-only">
-              <h2 id="authTitle" data-i18n="authTitle">登录或注册</h2>
-              <p id="authSubtitle" data-i18n="authSubtitle">同步你的题库、模拟面试复盘、简历和训练进度。</p>
-            </div>
-
-            <div className="auth-tab-switch" role="tablist" aria-label="登录或注册">
-              <button className="auth-tab active" type="button" role="tab" data-auth-tab="login" data-i18n="login">登录</button>
-              {!recovery && <button className="auth-tab" type="button" role="tab" data-auth-tab="register" data-i18n="register">注册</button>}
+            <div className="auth-copy qg-welcome-copy">
+              <h2 id="authTitle"><span className="qg-login-only">{en ? "Welcome back" : "欢迎回来"}</span><span className="qg-register-only">{en ? "Start your journey" : "开始你的训练"}</span><span className="qg-reset-only">{en ? "Reset password" : "找回密码"}</span></h2>
+              <p id="authSubtitle"><span className="qg-login-only">{en ? "Continue your quant interview practice." : "继续你的量化面试训练。"}</span><span className="qg-register-only">{en ? "Practice with Quanty. Grow a little every day." : "和 Quanty 一起，每天进步一点。"}</span><span className="qg-reset-only">{en ? "Get back to your practice with a new password." : "找回账户，继续你的训练。"}</span></p>
             </div>
 
             <form className="auth-form auth-email-flow" id="loginForm" autoComplete="on" data-auth-step="email">
               <div className="auth-field">
                 <label className="auth-field-label" htmlFor="loginEmail" data-i18n="email">邮箱</label>
-                <input id="loginEmail" type="email" autoComplete="email" placeholder="you@example.com" defaultValue={recovery?.email || ""} onChange={event => setLoginEmail(event.target.value)} onFocus={event => setLoginEmail(event.target.value)} />
+                <div className="qg-welcome-input"><i data-lucide="mail" aria-hidden="true" /><input id="loginEmail" type="email" autoComplete="email" placeholder={en ? "Email address" : "输入邮箱地址"} defaultValue={recovery?.email || ""} onChange={event => setLoginEmail(event.target.value)} onFocus={event => setLoginEmail(event.target.value)} /></div>
               </div>
               <div className="auth-field auth-field-password">
                 <label className="auth-field-label" htmlFor="loginPassword" data-i18n="password">密码</label>
-                <input id="loginPassword" className="auth-password-field" type="password" autoComplete="current-password" placeholder="输入密码" />
+                <div className="qg-welcome-input"><i data-lucide="lock-keyhole" aria-hidden="true" />
+                  <input id="loginPassword" className="auth-password-field" type={passwordVisible ? "text" : "password"} autoComplete="current-password" placeholder={en ? "Password" : "输入密码"} />
+                  <button className="qg-password-toggle" type="button" aria-label={passwordVisible ? (en ? "Hide password" : "隐藏密码") : (en ? "Show password" : "显示密码")} aria-pressed={passwordVisible} onClick={() => setPasswordVisible(value => !value)}><i data-lucide={passwordVisible ? "eye-off" : "eye"} aria-hidden="true" /></button>
+                </div>
               </div>
               <button className="auth-link-button" id="forgotPasswordBtn" type="button" data-i18n="forgotPassword">忘记密码？</button>
               <button className="primary-button auth-submit" type="submit" data-i18n="login">登录</button>
-              {hasDeviceAccount && <div className="qg-auth-device-entry" data-device-account>
-                <p>{en ? "This browser has saved this account. Enter its device password to continue your saved practice. Cloud sync will stay off." : "此浏览器保存过这个账户。输入此设备账户的密码，即可继续已有训练；云端同步暂不启用。"}</p>
-                <button className="secondary-button" type="button" onClick={useDeviceAccount}>{en ? "Use this device's account" : "使用此设备的账户"}</button>
-              </div>}
             </form>
 
             <form className="auth-form auth-register-flow hidden" id="registerForm" autoComplete="on" data-register-stage={registerStage}>
@@ -397,7 +335,7 @@ export function AuthShell() {
             </form>
 
             <form className="auth-form auth-reset-flow hidden" id="resetPasswordForm" autoComplete="on">
-              <h3 className="auth-reset-title">重置密码</h3>
+
               <p className="auth-flow-note" data-i18n="resetPasswordNote">输入邮箱验证码并设置新密码。</p>
               <div className="auth-field">
                 <label className="auth-field-label" htmlFor="resetPasswordEmail" data-i18n="email">邮箱</label>
@@ -423,8 +361,8 @@ export function AuthShell() {
             <div className="auth-provider-stack">
               <div className="auth-google-slot">
                 <span className="auth-provider-button auth-google-visual" aria-hidden="true">
-                  <span className="google-mark">G</span>
-                  <span>使用 Google 继续</span>
+                  <img className="qg-google-mark" src="/assets/generated/playful-precision/google-g.png" alt="" width="24" height="24" />
+                  <span>{en ? "Continue with Google" : "使用 Google 继续"}</span>
                 </span>
                 <div id="googleButton" className="google-button"></div>
               </div>
@@ -432,9 +370,22 @@ export function AuthShell() {
 
             <p id="authMessage" className="auth-message" aria-live="polite"></p>
 
+            <div className="qg-welcome-switch">
+              {!recovery && <span className="qg-login-only">{en ? "New here? " : "还没有账户？ "}<button className="auth-tab" type="button" data-auth-tab="register">{en ? "Sign up free" : "免费注册"}</button></span>}
+              <span className="qg-register-only">{en ? "Already have an account? " : "已经有账户？ "}</span><button className="auth-tab qg-register-only qg-return-login" type="button" data-auth-tab="login" data-i18n="login">登录</button>
+            </div>
+
             <GuardianEntry />
 
-            <p className="auth-legal-note">私测阶段需要白名单邮箱 · 继续即同意 <span className="auth-legal-link">服务条款</span> 与 <span className="auth-legal-link">隐私政策</span></p>
+            <details className="qg-welcome-other qg-login-only">
+              <summary>{en ? "Other ways to sign in" : "其他登录方式"}<i data-lucide="chevron-down" aria-hidden="true" /></summary>
+              {hasDeviceAccount ? <div className="qg-auth-device-entry" data-device-account>
+                <p>{en ? "Use the password saved on this device to continue your practice. Cloud sync will stay off." : "输入此设备账户的密码，继续已有训练。此方式暂不连接云端。"}</p>
+                <button className="secondary-button" type="button" onClick={useDeviceAccount}>{en ? "Use this device's account" : "使用此设备的账户"}</button>
+              </div> : <p>{en ? "Enter an email saved on this device above to use its local account." : "在上方输入此设备保存过的账户邮箱，即可使用本机账户登录。"}</p>}
+            </details>
+
+            <p className="auth-legal-note">内测期间仅限白名单邮箱 · <span className="auth-legal-link">服务条款</span> 与 <span className="auth-legal-link">隐私政策</span></p>
 
             <details className="google-config hidden" aria-hidden="true">
               <summary data-i18n="googleClientSummary">配置 Google Client ID</summary>
