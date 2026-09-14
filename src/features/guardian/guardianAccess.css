@@ -1,0 +1,23 @@
+.qg-guardian-access { min-width: 0; }
+.qg-guardian-access-heading { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+.qg-guardian-access-heading h3 { margin: 4px 0 0; }
+.qg-guardian-access-heading a { color: var(--qg-brand-ink); font-size: 13px; font-weight: 650; }
+.qg-guardian-access-kicker { font-size: 11px; color: var(--qg-muted); letter-spacing: .06em; }
+.qg-guardian-access p { font-size: 13px; line-height: 1.8; color: var(--qg-text-2); }
+.qg-guardian-access small { display: block; font-size: 12px; line-height: 1.8; color: var(--qg-muted); }
+.qg-guardian-code-row { display: flex; gap: 12px; align-items: center; padding: 16px; margin: 16px 0; border: 1px solid var(--qg-border); background: var(--qg-surface-2); border-radius: 12px; }
+.qg-guardian-code-row code { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 15px; color: var(--qg-text); user-select: all; }
+.qg-guardian-code-row button { border: 0; padding: 8px; border-radius: 8px; color: var(--qg-brand-ink); background: var(--qg-brand-soft); cursor: pointer; white-space: nowrap; }
+.qg-guardian-access-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.qg-guardian-access-actions button { min-height: 42px; font-size: 13px; cursor: pointer; }
+.qg-guardian-access-actions button:disabled { opacity: .6; cursor: wait; }
+.qg-guardian-access-revoke { color: var(--qg-danger); background: transparent; border: 0; padding: 8px 0; }
+.qg-guardian-access .qg-guardian-access-notice { padding: 10px 14px; border-radius: 10px; background: var(--qg-brand-soft); color: var(--qg-text-2); }
+.qg-guardian-access .qg-guardian-access-message { color: var(--qg-success); }
+.qg-guardian-access .qg-guardian-access-error { color: var(--qg-danger); }
+.qg-guardian-owner-goals { margin-top: 24px; border-top: 1px solid var(--qg-border); padding-top: 18px; }
+.qg-guardian-owner-goals h4 { font-size: 14px; margin: 0 0 12px; }
+.qg-guardian-owner-goals article { padding: 12px 0; border-top: 1px solid var(--qg-border); }
+.qg-guardian-owner-goals article > div { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+.qg-guardian-owner-goals article span { color: var(--qg-muted); white-space: nowrap; }
+.qg-guardian-owner-goals article p { margin: 4px 0 0; }

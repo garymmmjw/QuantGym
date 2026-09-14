@@ -41,6 +41,7 @@ from personal_prep import (
     save_personal_prep,
     validate_personal_prep_request,
 )
+from guardian import GUARDIAN_SCHEMA, GuardianService
 
 try:
     import psycopg
@@ -426,10 +427,19 @@ def send_email_verification_code(email: str, code: str, purpose: str) -> str:
         print(f"[QuantGym email verification] {email} {purpose} code: {code}", flush=True)
         return "dev"
 
+    return send_smtp_email(email, subject, body)
+
+
+def send_smtp_email(email: str, subject: str, body: str, notification_id: str | None = None) -> str:
+    if not SMTP_HOST:
+        raise RuntimeError("Email delivery is not configured")
+
     message = EmailMessage()
     message["Subject"] = subject
     message["From"] = SMTP_FROM
     message["To"] = email
+    if notification_id:
+        message["Message-ID"] = f"<guardian-{notification_id}@quantgym.app>"
     message.set_content(body)
 
     smtp_cls = smtplib.SMTP_SSL if SMTP_SSL else smtplib.SMTP
@@ -1767,6 +1777,7 @@ class Database:
                 ON poker_rooms (archived_at, updated_at);
                 """
             )
+            conn.executescript(GUARDIAN_SCHEMA)
 
     def health(self) -> dict:
         if self.backend == "postgres":
@@ -1826,6 +1837,7 @@ class Database:
         }
 
     def create_session(self, conn: sqlite3.Connection, user_id: str) -> str:
+        guardian.ensure_access(conn, user_id)
         token = secrets.token_urlsafe(32)
         now = utc_now()
         expires_at = (
@@ -2121,6 +2133,7 @@ class Database:
             """,
             (user_id, compact_json(next_state), next_state["updatedAt"]),
         )
+        guardian.evaluate(conn, user_id)
         return next_state
 
     def get_community(self, conn: sqlite3.Connection) -> dict:
@@ -2283,6 +2296,7 @@ class Database:
                 """,
                 (user_id, state["problemId"], compact_json(state), created_at, updated_at),
             )
+        guardian.evaluate(conn, user_id)
         return self.get_problem_states(conn, user_id)
 
     def ensure_visible_problem(self, conn: sqlite3.Connection, problem_id: str, user_id: str | None = None) -> None:
@@ -2504,6 +2518,7 @@ class Database:
 
 
 db = Database(DB_PATH, backend=DATABASE_BACKEND, postgres_url=POSTGRES_DATABASE_URL)
+guardian = GuardianService(db, HttpError, send_smtp_email, lambda: bool(SMTP_HOST))
 IMPORTED_CATALOG_COUNT = db.import_problem_catalog(PROBLEM_CATALOG_PATH)
 
 
@@ -2874,10 +2889,12 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         sys.stderr.write("%s - - [%s] %s\n" % (self.client_address[0], self.log_date_time_string(), fmt % args))
 
     def end_headers(self):
-        if urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password"} or urlparse(self.path).path.startswith(("/api/leetcode", "/api/practice/")):
+        if urlparse(self.path).path.rstrip("/") in {"/api/personal-prep", "/api/auth/change-password"} or urlparse(self.path).path.startswith(("/api/leetcode", "/api/practice/", "/api/guardian/")):
             self.send_header("Cache-Control", "private, no-store")
             self.send_header("Pragma", "no-cache")
             self.send_header("Vary", "Authorization")
+        if urlparse(self.path).path.startswith("/api/guardian/"):
+            self.send_header("Referrer-Policy", "no-referrer")
         origin = self.headers.get("Origin")
         if ALLOWED_ORIGINS == ["*"]:
             self.send_header("Access-Control-Allow-Origin", "*")
@@ -2914,6 +2931,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         try:
             if path in {"/health", "/api/health"} and self.command == "GET":
                 return self.send_json(200, {"ok": True, "database": db.health()})
+            if path.startswith("/api/guardian/"):
+                return guardian.handle(self, path)
             if path == "/api/auth/verification-code" and self.command == "POST":
                 return self.send_verification_code()
             if path == "/api/auth/account-status" and self.command == "GET":
@@ -3908,11 +3927,14 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         try:
             with db.connect() as conn:
                 saved, envelope = save_personal_prep(conn, user["id"], base_revision, data_json)
+                if saved:
+                    guardian.evaluate(conn, user["id"])
         except PersonalPrepValidationError as error:
             raise HttpError(error.status, str(error))
         # The transaction has committed before the client sees an acknowledgement.
         if not saved:
             return self.send_json(409, {**envelope, "error": "Personal preparation changed. Reload the current revision before retrying."})
+        guardian.wake()
         self.send_json(200, envelope)
 
     def put_state(self):
@@ -4206,6 +4228,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
 
 def main():
     server = ThreadingHTTPServer((HOST, PORT), QuantGymHandler)
+    guardian.start()
     print(f"QuantGym API listening on http://{HOST}:{PORT}")
     if db.backend == "postgres":
         print("Database backend: postgres")

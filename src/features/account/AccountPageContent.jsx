@@ -1,3 +1,4 @@
+import { GuardianAccessPanel } from "../guardian/GuardianAccessPanel.jsx";
 import { useEffect, useRef } from "react";
 import { useAccountPageModel } from "./accountHooks.js";
 import { LeetCodeConnection } from "../leetcode/LeetCodeConnection.jsx";
@@ -263,6 +264,7 @@ export function AccountPageContent() {
         </div>
 
         <div className="account-main-stack">
+          <GuardianAccessPanel />
           <form id="accountForm" className="account-panel account-profile-panel" onSubmit={handleSubmit}>
             <div className="account-panel-title">{model.t("accountProfileTitle") || "个人资料"}</div>
             <div className="account-fields">

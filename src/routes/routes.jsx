@@ -5,6 +5,7 @@ import { AuthLayout } from "../layouts/AuthLayout.jsx";
 import { ProtectedRoute } from "./ProtectedRoute.jsx";
 import { routeConfig } from "./routeConfig.js";
 
+const GuardianPage = lazy(() => import("../features/guardian/GuardianPage.jsx").then((m) => ({ default: m.GuardianPage })));
 const NewsPage = lazy(() => import("../pages/NewsPage.jsx").then((m) => ({ default: m.NewsPage })));
 const CompaniesPage = lazy(() => import("../pages/CompaniesPage.jsx").then((m) => ({ default: m.CompaniesPage })));
 const SettingsPage = lazy(() => import("../pages/SettingsPage.jsx").then((m) => ({ default: m.SettingsPage })));
@@ -104,6 +105,7 @@ export function AppRoutes() {
   return (
     <>
       <Routes>
+        <Route path="/guardian" element={<Suspense fallback={<RouteLoadingFallback />}><GuardianPage /></Suspense>} />
         <Route element={<AuthLayout />}>
           <Route path="/login" element={null} />
         </Route>

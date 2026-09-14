@@ -24,6 +24,105 @@ api-server/data/quantgym.sqlite3
 
 ## Configuration
 
+### Guardian access and email notifications
+
+The `/guardian` page has a separate code entry and dashboard. An authenticated
+student can view their persistent guardian code in account settings, rotate it,
+or revoke access. New cloud sessions provision a 192-bit random code; existing
+accounts also receive one lazily when opening guardian settings. Treat the code
+as a private capability: anyone the student shares it with can view basic
+practice history, set goals/reward descriptions, and request reminder emails.
+
+The API exchanges that code for a dedicated bearer token valid for eight hours
+by default. Guardian tokens cannot log in as the student or call account, sync,
+personal preparation, admin, or other student APIs. The dashboard returns only a
+display name, dated practice counts/question labels, and guardian goals. It does
+not expose the registered email address, answers, private notes, job applications,
+or the full underlying state. All guardian responses use `private, no-store`.
+
+| Endpoint | Authorization | Result |
+| --- | --- | --- |
+| `GET /api/guardian/access` | Student bearer | Code, enabled state, goals, SMTP availability |
+| `POST /api/guardian/access/rotate` | Student bearer | New code; immediately invalidates every old guardian session |
+| `POST /api/guardian/access/revoke` | Student bearer | Disables code, invalidates guardian sessions, cancels open goals and queued mail |
+| `POST /api/guardian/session` | `{ "code": "QG-…" }` | Guardian token, expiry, student display name |
+| `DELETE /api/guardian/session` | Guardian bearer | Invalidates this guardian session |
+| `GET /api/guardian/dashboard?date=YYYY-MM-DD&timeZone=Asia/Shanghai` | Guardian bearer | Selected date's question list, counts, goals, delivery state |
+| `POST /api/guardian/goals` | Guardian bearer | Creates `{title,targetCount,startDate,endDate,timeZone,reward}` |
+| `DELETE /api/guardian/goals/:id` | Guardian bearer | Cancels an unfinished goal belonging to this student |
+| `POST /api/guardian/reminders` | Guardian bearer | Queues `{message}` for the student's registered email only |
+
+Goal dates include both endpoints and use the goal's stored IANA time zone, even
+if the viewer changes the dashboard's time zone. A goal accepts 1–100,000 recorded
+questions over at most 366 days; title/reward limits are 120/1,000 characters.
+There can be up to 30 unexpired unfinished goals and 20 newly created goals per
+rolling 24 hours. Rewards are descriptions of an agreement with the guardian;
+QuantGym records and emails the achievement and does not purchase or distribute
+the reward. Completed goals retain the count recorded when they were achieved.
+
+Practice counting uses synced, valid timestamped records. Detailed mental math,
+sequence, and pattern questions count both correct and wrong answers; skipped,
+timed-out and aborted questions do not count. Explicit activity rows, completed
+daily questions, problem completion records, and account-scoped interview entries
+are deduplicated by their linked IDs and timestamps. Daily-session totals are not
+added again. Historical aggregate-only trainer records retain their old recorded
+count (which may count only correct answers). Manual calendar entries count but
+are marked `manual`; the dashboard's `countingNote` explains these limitations.
+Undated, malformed and future records are ignored. Only synced practice is visible;
+offline work appears after the student's next successful cloud sync. The question
+list is capped at 200 rows per selected day, with `questionsTruncated` indicating
+additional rows; counts still cover every eligible row.
+
+Standalone technical and coding practice sessions are included once per completed
+session, using the canonical `practice:<session.id>` activity or a session
+fallback. Their source prompts, reference answers, written answers, linked
+LeetCode usernames and URLs stay private. External LeetCode submissions, public
+profile counters and calendar aggregates are excluded from guardian goal totals:
+public sync can be incomplete and a profile link does not verify ownership. A
+QuantGym coding practice completion counts normally.
+
+Guardian emails reuse `QUANTGYM_SMTP_*`. The API starts a durable outbox worker
+alongside the HTTP server. Goal completion and its unique notification row commit
+in one transaction, are checked during practice sync, and are also reconciled
+every 15 seconds. If SMTP is unavailable, a completed goal is shown as complete
+with notification status `disabled`; no sent claim is made. Configuring SMTP and
+restarting the API lets those notifications resume. An unconfigured manual
+reminder returns HTTP 503 and queues nothing. A configured reminder returns HTTP
+202 with `pending`; `sent` is recorded only after SMTP accepts it. The dashboard
+exposes the latest reminder status, request/sent time, and next permitted time.
+
+Code exchange is limited to 20 attempts per IP per 15 minutes in persistent
+database buckets. Reminder cooldowns are enforced across all guardian sessions
+and processes for the student: one hour between requests and three per rolling
+24 hours by default. Reminder messages accept at most 1,000 characters, and no
+endpoint accepts a custom recipient or student ID. Expired code sessions and rate
+buckets are cleaned up. Pending mail uses database claim leases, retries SMTP
+failures up to eight attempts with backoff (30 seconds through one hour), and
+survives API restarts. Enqueueing a completed goal is idempotent; SMTP delivery is
+at-least-once across a crash after the provider accepted the message but before
+the database recorded `sent`. Retries use a stable Message-ID. Already in-flight
+mail may finish during revocation; queued mail is cancelled.
+
+Optional guardian settings:
+
+```bash
+export QUANTGYM_GUARDIAN_SESSION_HOURS=8 # clamped to 1–24 hours
+export QUANTGYM_GUARDIAN_POLL_SECONDS=15
+export QUANTGYM_GUARDIAN_REMINDER_COOLDOWN_SECONDS=3600 # minimum 60
+export QUANTGYM_GUARDIAN_REMINDER_DAILY_MAX=3 # 1–10
+```
+
+SQLite creates the guardian tables on startup; Postgres uses the matching
+idempotent schema initialization in `api-server/postgres/schema.sql`. Use
+persistent database storage so codes, goals, cooldowns and pending mail survive
+deployments. Backups contain sensitive guardian codes and messages; the default
+database exporter redacts them. A safe local test uses a disposable database and
+a loopback SMTP fixture only:
+
+```bash
+python3 scripts/test-guardian-api.py
+```
+
 Optional environment variables:
 
 ```bash
