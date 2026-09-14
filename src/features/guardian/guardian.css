@@ -101,6 +101,8 @@
 .guardian-question-table td strong { display: block; color: #504260; font-size: 14px; font-weight: 550; line-height: 1.7; overflow-wrap: anywhere; }
 .guardian-question-table td small { display: block; font-size: 13px; color: #8f819c; margin-top: 3px; line-height: 1.7; }
 .guardian-question-kind { white-space: nowrap; }
+.guardian-completion-count { white-space: nowrap; }
+.guardian-problem-number { font-weight: 650; }
 .guardian-source-label { display: inline-block; margin-top: 6px; padding: 1px 5px; border-radius: 4px; background: #f2eef8; color: #867394; font-size: 12px; }
 .guardian-table-note { margin-top: 19px !important; padding-top: 15px; border-top: 1px solid #eeebf6; font-size: 13px; color: #897b98; }
 .guardian-empty { display: grid; justify-items: center; text-align: center; padding: 31px 8px 25px; }

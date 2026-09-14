@@ -6,6 +6,8 @@ export const MANUAL_KINDS = ACTIVITY_KINDS.filter((kind) => kind !== "daily");
 
 const list = (value) => Array.isArray(value) ? value : [];
 const countOf = (value) => Number.isFinite(Number(value)) ? Math.max(0, Math.floor(Number(value))) : 0;
+const trialKind = (trial) => trial?.settings?.trainer == null || trial.settings.trainer === 'math' ? 'mental' : trial.settings.trainer;
+const questionNumber = (question) => String(question?.provenance?.originalNumber || '').trim();
 
 // Date-only strings are civil dates, never UTC instants. Noon avoids DST gaps at midnight.
 export function parseLocalDay(key) {
@@ -47,6 +49,7 @@ function normalizedActivity(raw, index) {
     ...raw,
     id: String(raw.id || `event:${index}`),
     count: countOf(raw.count),
+    ...(TRIAL_KINDS.includes(raw.kind) ? { correctCount: countOf(raw.correctCount ?? raw.count) } : {}),
     dayKey: localDayKey(raw.completedAt),
     source: raw.source || "automatic",
     trialCount: TRIAL_KINDS.includes(raw.kind) ? (raw.source === "manual" ? 0 : countOf(raw.trialCount ?? 1)) : 0
@@ -64,7 +67,45 @@ function problemKind(problem, isInterview = false) {
   return isInterview ? "tech" : "quant";
 }
 
-/** Read dated records only. Events are authoritative; linked trial/session records are fallbacks. */
+export function formatCalendarQuestionTitle(activity, language = 'zh') {
+  const title = language === 'en' ? activity.titleEn || activity.title || '' : activity.title || activity.titleEn || '';
+  const number = String(activity.questionNumber || '').trim();
+  if (!number || title === number || title.startsWith(`${number} `) || title.startsWith(`${number}. `)) return title;
+  return title ? `${number} · ${title}` : number;
+}
+
+// Preserve finished-question and correct-answer detail in one activity per trial.
+// Each trial with finished questions contributes one to the completion total.
+function trainerActivities(trial, kind, fallback = {}) {
+  const terminal = ['completed', 'aborted'].includes(trial.status);
+  if (!terminal && trial.status !== 'active') return [];
+  if (!Array.isArray(trial.questions)) {
+    if (!terminal) return [];
+    const correct = countOf(trial.correct ?? fallback.count);
+    return [{ ...fallback, id: `${kind}:${trial.id}`, kind, count: correct, correctCount: correct,
+      trialId: trial.id, trialCount: 1, completedAt: trial.completedAt || fallback.completedAt, status: trial.status }];
+  }
+  const seen = new Set();
+  const activity = { legacyId: fallback.legacyId, sourceId: fallback.sourceId,
+    id: `${kind}:${trial.id}`, kind, count: 0, correctCount: 0, trialId: trial.id,
+    trialCount: terminal ? 1 : 0, completedAt: null, status: trial.status, source: 'automatic' };
+  for (const question of trial.questions) {
+    if (!question?.id || seen.has(question.id) || !['correct', 'wrong'].includes(question.outcome)
+      || !hasExplicitProblemCompletion({ completed: true, completedAt: question.completedAt })) continue;
+    const key = localDayKey(question.completedAt);
+    if (!key) continue;
+    seen.add(question.id);
+    activity.count += 1;
+    activity.correctCount += question.outcome === 'correct' ? 1 : 0;
+    if (!activity.completedAt || Date.parse(question.completedAt) > Date.parse(activity.completedAt)) activity.completedAt = question.completedAt;
+  }
+  // An overnight session stays together on its latest finished question's date.
+  // Keep empty terminal trials for trial stats, with zero completion credit.
+  if (!activity.completedAt && terminal) activity.completedAt = trial.completedAt;
+  return activity.completedAt ? [activity] : [];
+}
+
+/** Read dated records only. Detailed trainer questions override their aggregate event counts. */
 export function collectCalendarActivities(state = {}, legacyState = {}) {
   const byId = new Map();
   const problemCompletions = new Set();
@@ -79,8 +120,26 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
       if (problemId && activity.countedAsSolved !== false) problemCompletions.add(completionKey(problemId, activity.completedAt));
     }
   };
+  const trialsById = new Map();
+  for (const trial of [...list(state.trials), ...(state.activeTrial ? [state.activeTrial] : [])]) {
+    const kind = trialKind(trial);
+    if (!trial?.id || !TRIAL_KINDS.includes(kind)) continue;
+    const key = `${kind}:${trial.id}`;
+    if (!trialsById.has(key)) trialsById.set(key, trial);
+  }
+  const recordedTrials = new Set();
+  const addTrial = (key, kind, fallback) => {
+    if (recordedTrials.has(key)) return;
+    recordedTrials.add(key);
+    trainerActivities(trialsById.get(key), kind, fallback).forEach(add);
+  };
   const practiceById = new Map(list(state.practiceSessions).map(session => [`practice:${session.id}`, session]));
   list(state.activities).forEach(raw => {
+    if (TRIAL_KINDS.includes(raw?.kind) && raw.source !== 'manual') {
+      const trialId = raw.trialId || (String(raw.id).startsWith(`${raw.kind}:`) ? String(raw.id).slice(raw.kind.length + 1) : '');
+      const key = `${raw.kind}:${trialId}`;
+      if (trialsById.has(key)) { addTrial(key, raw.kind, raw); return; }
+    }
     const session = practiceById.get(raw?.id);
     const problemId = raw?.problemId || raw?.questionId;
     const problem = problems.get(problemId) || { id: problemId };
@@ -90,18 +149,15 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
       || raw.source === 'leetcode' || session?.question?.source === 'leetcode');
     const unconfirmedPractice = raw?.source === 'standalone' && session?.status !== 'completed';
     add({ ...raw, ...(isTrainerCatalogProblem(problem) ? { kind: problemKind(problem) } : {}),
+      questionNumber: questionNumber(session?.question || problem),
       countedAsSolved: !localLeetCode && !unconfirmedPractice && countsTowardProblemTotal(problem) });
   });
+  for (const [key, trial] of trialsById) addTrial(key, trialKind(trial));
   const explicit = [...byId.values()];
-  const linkedTrials = new Set(explicit.filter((item) => TRIAL_KINDS.includes(item.kind)).flatMap((item) =>
+  const linkedTrials = new Set([...trialsById.keys(), ...explicit.filter((item) => TRIAL_KINDS.includes(item.kind)).flatMap((item) =>
     [item.trialId, item.id.startsWith(`${item.kind}:`) ? item.id.slice(item.kind.length + 1) : ""]
-      .filter(Boolean).map((trialId) => `${item.kind}:${trialId}`)));
+      .filter(Boolean).map((trialId) => `${item.kind}:${trialId}`))]);
   const linkedDaily = new Set(explicit.filter((item) => item.kind === "daily").flatMap((item) => [item.dailySessionId, item.sessionId, item.id.startsWith("daily:") ? item.id.slice(6) : ""]).filter(Boolean));
-  list(state.trials).forEach((trial) => {
-    const kind = trial?.settings?.trainer == null || trial.settings.trainer === "math" ? "mental" : trial.settings.trainer;
-    if (!trial?.id || !TRIAL_KINDS.includes(kind) || !["completed", "aborted"].includes(trial.status) || linkedTrials.has(`${kind}:${trial.id}`)) return;
-    add({ id: `${kind}:${trial.id}`, kind, count: trial.correct, trialId: trial.id, completedAt: trial.completedAt, status: trial.status });
-  });
   list(state.dailySessions).forEach((session) => {
     if (!session?.id || session.status !== "completed" || linkedDaily.has(session.id)) return;
     add({ id: `daily:${session.id}`, kind: "daily", count: 1, dailySessionId: session.id, completedAt: session.completedAt });
@@ -115,7 +171,7 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
     const problem = problems.get(record.problemId) || { id: record.problemId };
     const kind = problemKind(problem);
     if (legacyReferences.has(record.problemId) || hasSameProblemEvent(record.problemId, record.completedAt)) return;
-    add({ id: `legacy:problem:${record.problemId}`, kind, count: 1, completedAt: record.completedAt, problemId: record.problemId, title: problem?.titleZh || problem?.titleEn || "", titleEn: problem?.titleEn || "", source: "legacy", countedAsSolved: countsTowardProblemTotal(problem) });
+    add({ id: `legacy:problem:${record.problemId}`, kind, count: 1, completedAt: record.completedAt, problemId: record.problemId, title: problem?.titleZh || problem?.titleEn || "", titleEn: problem?.titleEn || "", questionNumber: questionNumber(problem), source: "legacy", countedAsSolved: countsTowardProblemTotal(problem) });
   });
   list(legacyState.mentalMathRecords).forEach((record, index) => {
     if (!record) return;
@@ -131,7 +187,7 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
     const problem = problems.get(entry.problemId) || { id: entry.problemId };
     const kind = problemKind(problem, true);
     if (legacyReferences.has(entry.id) || hasSameProblemEvent(entry.problemId, entry.completedAt)) return;
-    add({ id: `legacy:interview:${entry.id || `${entry.problemId}:${entry.completedAt}:${index}`}`, kind, count: 1, completedAt: entry.completedAt, problemId: entry.problemId, title: problem?.titleZh || problem?.titleEn || "", titleEn: problem?.titleEn || "", source: "legacy", countedAsSolved: countsTowardProblemTotal(problem) });
+    add({ id: `legacy:interview:${entry.id || `${entry.problemId}:${entry.completedAt}:${index}`}`, kind, count: 1, completedAt: entry.completedAt, problemId: entry.problemId, title: problem?.titleZh || problem?.titleEn || "", titleEn: problem?.titleEn || "", questionNumber: questionNumber(problem), source: "legacy", countedAsSolved: countsTowardProblemTotal(problem) });
   });
   return {
     activities: [...byId.values()].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt) || a.id.localeCompare(b.id)),
@@ -140,7 +196,7 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
 }
 
 export function summarizeActivities(activities = []) {
-  const result = { quant: 0, mental: 0, mentalTrials: 0, sequence: 0, sequenceTrials: 0, pattern: 0, patternTrials: 0,
+  const result = { quant: 0, mental: 0, mentalCorrect: 0, mentalTrials: 0, sequence: 0, sequenceCorrect: 0, sequenceTrials: 0, pattern: 0, patternCorrect: 0, patternTrials: 0,
     tech: 0, coding: 0, codingReviews: 0, behavioral: 0, daily: 0, totalQuestions: 0, activityCount: 0 };
   list(activities).forEach((item) => {
     if (!ACTIVITY_KINDS.includes(item?.kind)) return;
@@ -149,8 +205,11 @@ export function summarizeActivities(activities = []) {
       if (item.kind === 'coding') result.codingReviews += count;
     } else result[item.kind] += count;
     result.activityCount += 1;
-    if (item.kind !== "daily" && !TRIAL_KINDS.includes(item.kind) && item.countedAsSolved !== false) result.totalQuestions += count;
-    if (TRIAL_KINDS.includes(item.kind)) result[`${item.kind}Trials`] += countOf(item.trialCount ?? (item.source === "manual" ? 0 : 1));
+    if (item.kind !== "daily" && item.countedAsSolved !== false) result.totalQuestions += TRIAL_KINDS.includes(item.kind) ? (count > 0 ? 1 : 0) : count;
+    if (TRIAL_KINDS.includes(item.kind)) {
+      result[`${item.kind}Correct`] += countOf(item.correctCount ?? item.count);
+      result[`${item.kind}Trials`] += countOf(item.trialCount ?? (item.source === "manual" ? 0 : 1));
+    }
   });
   return result;
 }

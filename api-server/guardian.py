@@ -18,6 +18,7 @@ from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from leetcode_sync import synced_accepted_submissions
+from technical_practice import load_technical_questions
 
 
 GUARDIAN_SCHEMA = """
@@ -81,12 +82,15 @@ CREATE TABLE IF NOT EXISTS guardian_rate_limits (
 );
 """
 
-KINDS = {"quant", "tech", "coding", "behavioral"}
+TRAINER_KINDS = {"mental", "sequence", "pattern"}
+KINDS = {"quant", "tech", "coding", "behavioral", *TRAINER_KINDS}
 LABELS = {"quant": "量化题", "mental": "心算", "sequence": "数列推理", "pattern": "图形推理",
           "tech": "技术面试题", "coding": "编程题", "behavioral": "行为面试题"}
+TRAINER_LABELS_EN = {"mental": "Mental Math", "sequence": "Sequence reasoning", "pattern": "Pattern reasoning"}
 COUNTING_NOTE = (
     "仅统计已同步的完成记录：非 LeetCode 题需主动标记「我做完了」，抽题、查看、草稿和面试评分不计数；"
-    "Mental Math（心算、数列、图形）不计入刷题数。LeetCode 按当前关联账号公开同步的 AC 记录计数，"
+    "Mental Math（心算、数列、图形）每次有已完成题的训练在总数和目标中计 1 次，列表展示该次完成题数；答对和答错均算完成，跳过、超时和未完成不算；"
+    "监护列表每次训练仅显示一行，按最后一道完成题的时间归属日期，不显示逐题内容。旧训练仅有汇总时采用原有记录题数。LeetCode 按当前关联账号公开同步的 AC 记录计数，"
     "同一题在所选时区每天只计一次，导入记录和资料页汇总不计入。手动补记单独标注；每日套题汇总不重复计数。"
 )
 
@@ -160,13 +164,29 @@ def student_name(user):
 
 def problem_kind(problem, interview=False):
     category = key(problem.get("category")).lower()
-    if re.sub(r"[\s_-]", "", category) in {"mental", "mentalmath", "sequence", "pattern"} or key(problem.get("source")).lower() == "trainer":
+    normalized = re.sub(r"[\s_-]", "", category)
+    if normalized in {"sequence", "pattern"}:
+        return normalized
+    if normalized in {"mental", "mentalmath"} or key(problem.get("source")).lower() == "trainer":
         return "mental"
     if category in {"leetcode", "coding", "programming", "algorithms"}:
         return "coding"
     if category in {"behavioral", "behavioural"}:
         return "behavioral"
     return "tech" if interview else "quant"
+
+
+def problem_number(problem):
+    """Return an explicit source number; never guess from a title or record ID."""
+    problem = obj(problem)
+    candidates = [obj(problem.get("provenance")).get("originalNumber")]
+    candidates.extend(problem.get(field) for field in ("frontendId", "questionFrontendId", "problemNumber", "originalNumber", "questionNumber", "number"))
+    for value in candidates:
+        if type(value) is int and 0 <= value <= 1_000_000_000:
+            return str(value)
+        if isinstance(value, str) and value.strip() and len(value.strip()) <= 100 and re.search(r"\d", value) and not re.search(r"[<>\x00-\x1f\x7f]", value):
+            return re.sub(r"\s+", " ", value.strip())
+    return ""
 
 
 def is_leetcode_question(record):
@@ -187,34 +207,57 @@ def is_leetcode_question(record):
 
 
 def counted_practice(practice, zone):
-    """Count a synced LeetCode problem once per civil day in this exact zone."""
-    result, seen = [], set()
+    """Count each trainer session once and distinct LeetCode problems per day."""
+    result, seen, trainers = [], set(), {}
     for item in practice:
+        day = timestamp(item["completedAt"]).astimezone(zone).date().isoformat()
+        if item["kind"] in TRAINER_KINDS:
+            identity = (item["kind"], item["_trainerKey"])
+            if identity not in trainers:
+                trainers[identity] = {
+                    "id": f"trainer:{item['kind']}:{digest(item['_trainerKey'])[:20]}",
+                    "kind": item["kind"], "title": LABELS[item["kind"]], "titleEn": TRAINER_LABELS_EN[item["kind"]],
+                    "count": 1, "completedCount": 0, "completedAt": item["completedAt"], "source": item["source"],
+                    "problemNumber": "", "isSummary": True,
+                }
+            trainers[identity]["completedCount"] += item["count"]
+            trainers[identity]["completedAt"] = max(trainers[identity]["completedAt"], item["completedAt"])
+            continue
         if item["source"] == "leetcode":
             # These IDs are generated below from validated slugs, never user
             # activity IDs. Neither the connected profile nor raw state escapes.
             slug = item["id"].split(":", 2)[1]
-            identity = (slug, timestamp(item["completedAt"]).astimezone(zone).date())
+            identity = (slug, day)
             if identity in seen:
                 continue
             seen.add(identity)
         result.append(item)
-    return result
+    return sorted([*result, *trainers.values()], key=lambda item: (item["completedAt"], item["id"]), reverse=True)
 
 
-def collect_practice(personal, legacy, problem_states, catalog=None, at=None, leetcode=None):
+def collect_practice(personal, legacy, problem_states, catalog=None, at=None, leetcode=None, technical_numbers=None):
     """Project recorded practice into deduplicated, minimal display rows.
 
-    Explicit completion activities take priority over legacy fallbacks. Trainer
-    records are retained by their own module but do not count as solved questions.
+    Explicit completions take priority over legacy fallbacks. Trainer details
+    retain only completion timestamps internally, then collapse into session rows.
     No answers, evaluations, prompts or application data are serialized.
     """
     at = at or now_utc()
     personal, legacy = obj(personal), obj(legacy)
     catalog = catalog or {}
+    technical_numbers = technical_numbers or {}
     removed = {key(value) for value in personal.get("removedActivityIds", []) if isinstance(value, str)} if isinstance(personal.get("removedActivityIds"), list) else set()
     events, identities = {}, set()
-    problem_times, legacy_ids, daily_questions = set(), set(), set()
+    problem_times, legacy_ids, daily_questions, trainer_sessions = set(), set(), set(), set()
+
+    def question_number(question):
+        explicit = problem_number(question)
+        if explicit:
+            return explicit
+        if key(question.get("source")) in {"question-bank", "library"}:
+            identity = key(question.get("sourceProblemId")) or key(question.get("id"))
+            return technical_numbers.get(identity, "")
+        return ""
 
     def add(raw, identity=None):
         event_id = key(raw.get("id"))
@@ -227,11 +270,14 @@ def collect_practice(personal, legacy, problem_states, catalog=None, at=None, le
         if identity and identity in identities:
             return False
         events[event_id] = {
-            "id": event_id, "title": clean_text(raw.get("title")) or LABELS[kind],
-            "titleEn": clean_text(raw.get("titleEn")), "kind": kind, "count": count,
+            "id": event_id, "title": LABELS[kind] if kind in TRAINER_KINDS else clean_text(raw.get("title")) or LABELS[kind],
+            "titleEn": TRAINER_LABELS_EN[kind] if kind in TRAINER_KINDS else clean_text(raw.get("titleEn")), "kind": kind, "count": count,
             "completedAt": stamp(when),
             "source": key(raw.get("source")) if key(raw.get("source")) in {"manual", "legacy", "leetcode"} else "automatic",
+            "problemNumber": "" if kind in TRAINER_KINDS else problem_number(raw), "isSummary": kind in TRAINER_KINDS,
         }
+        if kind in TRAINER_KINDS:
+            events[event_id]["_trainerKey"] = key(raw.get("_trainerKey")) or event_id
         if identity:
             identities.add(identity)
         if key(raw.get("problemId")):
@@ -245,51 +291,114 @@ def collect_practice(personal, legacy, problem_states, catalog=None, at=None, le
     daily = {key(session.get("id")): session for session in rows(personal.get("dailySessions"))}
 
     activities = rows(personal.get("activities"))
+    trials = {}
+    for trial in rows(personal.get("trials")) + ([personal["activeTrial"]] if isinstance(personal.get("activeTrial"), dict) else []):
+        tid = key(trial.get("id"))
+        kind = key(obj(trial.get("settings")).get("trainer")) or "math"
+        kind = "mental" if kind == "math" else kind
+        if not tid or kind not in TRAINER_KINDS:
+            continue
+        previous = trials.get((kind, tid))
+        if previous is None or len(rows(trial.get("questions"))) >= len(rows(previous.get("questions"))):
+            trials[(kind, tid)] = trial
+    removed_trials = {(kind, tid) for kind, tid in trials if f"{kind}:{tid}" in removed}
     for activity in activities:
         aid, kind = key(activity.get("id")), key(activity.get("kind"))
+        tid = key(activity.get("trialId")) or (aid[len(kind) + 1:] if kind in TRAINER_KINDS and aid.startswith(kind + ":") else "")
+        if tid and kind in TRAINER_KINDS and aid in removed:
+            removed_trials.add((kind, tid))
+        if aid not in removed:
+            legacy_ids.update(key(activity.get(field)) for field in ("legacyId", "sourceId") if key(activity.get(field)))
+    for (kind, tid), trial in trials.items():
+        trainer_sessions.add((kind, tid))
+        if (kind, tid) in removed_trials:
+            continue
+        if isinstance(trial.get("questions"), list):
+            for question in rows(trial["questions"]):
+                qid = key(question.get("id"))
+                if not qid or key(question.get("outcome")) not in {"correct", "wrong"}:
+                    continue
+                add({"id": f"trainer-detail:{kind}:{digest(tid + chr(0) + qid)}", "kind": kind, "count": 1,
+                     "completedAt": question.get("completedAt"), "_trainerKey": f"trial:{tid}"}, ("trainer-question", kind, tid, qid))
+        elif key(trial.get("status")) in {"completed", "aborted"}:
+            add({"id": f"{kind}:{tid}", "kind": kind, "count": trial.get("correct"),
+                 "completedAt": trial.get("completedAt"), "source": "legacy", "_trainerKey": f"trial:{tid}"}, ("trainer", kind, tid))
+
+    for activity in activities:
+        aid, kind = key(activity.get("id")), key(activity.get("kind"))
+        classified = problem_kind(activity)
+        kind = classified if classified in TRAINER_KINDS else kind
         if not aid or aid in removed or kind not in KINDS:
             continue
-        if is_leetcode_question(activity) or problem_kind(activity) == "mental" or key(activity.get("source")) in {"random", "draw", "selection"} or key(activity.get("status")) in {"active", "draft", "drawn", "selected"}:
+        if is_leetcode_question(activity) or key(activity.get("source")) in {"random", "draw", "selection"} or key(activity.get("status")) in {"active", "draft", "drawn", "selected"}:
             continue
+        linked_question = {}
         if aid.startswith("practice:"):
             session = standalone.get(aid[len("practice:"):])
-            if not session or session.get("status") != "completed" or is_leetcode_question(obj(session.get("question"))) or problem_kind(obj(session.get("question"))) == "mental":
+            if not session or session.get("status") != "completed" or is_leetcode_question(obj(session.get("question"))):
                 continue
-        if key(activity.get("sessionId")) and key(activity.get("questionId")):
+            linked_question = obj(session.get("question"))
+        tid = key(activity.get("trialId")) or (aid[len(kind) + 1:] if kind in TRAINER_KINDS and aid.startswith(kind + ":") else "")
+        if kind in TRAINER_KINDS and tid:
+            if (kind, tid) in trainer_sessions or (kind, tid) in removed_trials:
+                continue
+            identity = ("trainer", kind, tid)
+        elif key(activity.get("sessionId")) and key(activity.get("questionId")):
             session = daily.get(key(activity["sessionId"]))
             if session:
                 question = next((q for q in rows(session.get("questions")) if key(q.get("id")) == key(activity["questionId"])), {})
                 answer = obj(obj(session.get("answers")).get(key(activity["questionId"])))
-                if not timestamp(answer.get("completedAt")) or is_leetcode_question(question) or problem_kind(question) == "mental":
+                if not timestamp(answer.get("completedAt")) or is_leetcode_question(question):
                     continue
+                linked_question = question
+                if problem_kind(question) in TRAINER_KINDS:
+                    kind = problem_kind(question)
             identity = ("daily", key(activity["sessionId"]), key(activity["questionId"]))
         elif key(activity.get("problemId")) and timestamp(activity.get("completedAt")):
             identity = ("problem", key(activity["problemId"]), stamp(timestamp(activity["completedAt"])))
         else:
             identity = ("activity", aid)
-        raw = {**activity}
+        raw = {**activity, "kind": kind, "problemNumber": question_number(linked_question) or problem_number(activity)}
+        if kind in TRAINER_KINDS:
+            raw["_trainerKey"] = f"trial:{tid}" if tid else f"daily:{key(activity['sessionId'])}" if key(activity.get("sessionId")) else f"activity:{aid}"
         if key(activity.get("problemId")):
             problem = catalog.get(key(activity["problemId"]), {})
-            if is_leetcode_question(problem) or problem_kind(problem) == "mental":
+            if is_leetcode_question(problem):
                 continue
+            if problem_kind(problem) in TRAINER_KINDS:
+                raw["kind"] = problem_kind(problem)
+                raw["_trainerKey"] = f"problem:{key(activity['problemId'])}"
             raw["title"] = raw.get("title") or problem.get("titleZh") or problem.get("titleEn")
             raw["titleEn"] = raw.get("titleEn") or problem.get("titleEn")
+            raw["problemNumber"] = question_number(problem) or raw["problemNumber"]
         if add(raw, identity):
+            if kind in TRAINER_KINDS and tid:
+                trainer_sessions.add((kind, tid))
             if identity[0] == "daily":
                 daily_questions.add(identity[1:])
+
+    for index, record in enumerate(rows(legacy.get("mentalMathRecords"))):
+        rid = key(record.get("id"))
+        if rid and (("mental", rid) in trainer_sessions or ("mental", rid) in removed_trials or rid in legacy_ids):
+            continue
+        rid = rid or digest(str(record.get("createdAt")) + ":" + str(record.get("correct")))
+        add({"id": f"legacy:mental:{rid}", "kind": "mental", "count": record.get("correct"),
+             "completedAt": record.get("createdAt"), "source": "legacy", "_trainerKey": f"trial:{rid}"}, ("trainer", "mental", rid))
 
     for session in rows(personal.get("dailySessions")):
         sid, answers = key(session.get("id")), obj(session.get("answers"))
         for question in rows(session.get("questions")):
             qid = key(question.get("id"))
-            if not sid or not qid or (sid, qid) in daily_questions or is_leetcode_question(question) or problem_kind(question) == "mental":
+            if not sid or not qid or (sid, qid) in daily_questions or is_leetcode_question(question):
                 continue
             answer = obj(answers.get(qid))
             if not clean_text(answer.get("text"), 1):
                 continue
-            add({"id": f"daily:{sid}:{qid}", "kind": question.get("kind"), "count": 1,
+            kind = problem_kind(question) if problem_kind(question) in TRAINER_KINDS else question.get("kind")
+            add({"id": f"daily:{sid}:{qid}", "kind": kind, "count": 1,
                  "title": question.get("title"), "titleEn": question.get("titleEn"),
-                 "completedAt": answer.get("completedAt")}, ("daily", sid, qid))
+                 "completedAt": answer.get("completedAt"), "problemNumber": question_number(question),
+                 "_trainerKey": f"daily:{sid}"}, ("daily", sid, qid))
 
     # Current standalone technical/coding sessions normally have a canonical
     # practice:<id> activity restored by personal_prep. Older snapshots may not;
@@ -299,39 +408,45 @@ def collect_practice(personal, legacy, problem_states, catalog=None, at=None, le
         if not sid or kind not in {"tech", "coding"} or session.get("status") != "completed" or not clean_text(session.get("text"), 1):
             continue
         question = obj(session.get("question"))
-        if is_leetcode_question(question) or problem_kind(question) == "mental":
+        if is_leetcode_question(question):
             continue
+        kind = problem_kind(question) if problem_kind(question) in TRAINER_KINDS else kind
         add({"id": f"practice:{sid}", "kind": kind, "count": 1,
              "title": question.get("title"), "titleEn": question.get("titleEn"),
-             "completedAt": session.get("completedAt")}, ("activity", f"practice:{sid}"))
+             "completedAt": session.get("completedAt"), "problemNumber": question_number(question),
+             "_trainerKey": f"practice:{sid}"}, ("activity", f"practice:{sid}"))
 
     for record in rows(problem_states) + rows(legacy.get("problemStates")):
         pid, when = key(record.get("problemId")), timestamp(record.get("completedAt"))
         if record.get("completed") is not True or not pid or when is None or pid in legacy_ids or (pid, stamp(when)) in problem_times:
             continue
         problem = catalog.get(pid, {})
-        if is_leetcode_question(problem) or is_leetcode_question(record) or problem_kind(record) == "mental":
+        if is_leetcode_question(problem) or is_leetcode_question(record):
             continue
-        add({"id": f"legacy:problem:{pid}", "kind": problem_kind(problem), "count": 1,
+        kind = problem_kind(record) if problem_kind(record) in TRAINER_KINDS else problem_kind(problem)
+        add({"id": f"legacy:problem:{pid}", "kind": kind, "count": 1,
              "completedAt": record.get("completedAt"), "problemId": pid,
              "title": problem.get("titleZh") or problem.get("titleEn"), "titleEn": problem.get("titleEn"),
-             "source": "legacy"}, ("problem", pid, stamp(when)))
+             "source": "legacy", "problemNumber": question_number(problem) or problem_number(record),
+             "_trainerKey": f"problem:{pid}"}, ("problem", pid, stamp(when)))
 
     for index, entry in enumerate(rows(legacy.get("entries"))):
         pid, when, eid = key(entry.get("problemId")), timestamp(entry.get("completedAt")), key(entry.get("id"))
         if not pid or when is None or entry.get("completed") is not True or eid in legacy_ids or (pid, stamp(when)) in problem_times:
             continue
         problem = catalog.get(pid, {})
-        if is_leetcode_question(problem) or is_leetcode_question(entry) or problem_kind(entry) == "mental":
+        if is_leetcode_question(problem) or is_leetcode_question(entry):
             continue
-        add({"id": f"legacy:interview:{eid or str(index)}", "kind": problem_kind(problem, True), "count": 1,
+        kind = problem_kind(entry) if problem_kind(entry) in TRAINER_KINDS else problem_kind(problem, True)
+        add({"id": f"legacy:interview:{eid or str(index)}", "kind": kind, "count": 1,
              "completedAt": entry.get("completedAt"), "problemId": pid,
              "title": problem.get("titleZh") or problem.get("titleEn"), "titleEn": problem.get("titleEn"),
-             "source": "legacy"}, ("problem", pid, stamp(when)))
+             "source": "legacy", "problemNumber": question_number(problem) or problem_number(entry),
+             "_trainerKey": f"problem:{pid}"}, ("problem", pid, stamp(when)))
     for submission in synced_accepted_submissions(obj(leetcode)):
         add({"id": f"leetcode:{submission['problemSlug']}:{submission['id']}", "kind": "coding", "count": 1,
              "title": submission.get("title") or submission["problemSlug"], "titleEn": submission.get("titleEn"),
-             "completedAt": submission["submittedAt"], "source": "leetcode"}, ("leetcode", submission["id"]))
+             "completedAt": submission["submittedAt"], "source": "leetcode", "problemNumber": submission.get("frontendId")}, ("leetcode", submission["id"]))
     return sorted(events.values(), key=lambda event: (event["completedAt"], event["id"]), reverse=True)
 
 
@@ -471,12 +586,24 @@ class GuardianService:
         for offset in range(0, len(pids), 200):
             batch = pids[offset:offset + 200]
             found = conn.execute("SELECT id, title_en, title_zh, category, source, source_url, problem_json FROM problems WHERE id IN (" + ",".join("?" for _ in batch) + ") AND (visibility = 'public' OR owner_user_id = ?)", (*batch, user_id)).fetchall()
-            catalog.update({p["id"]: {"titleEn": p["title_en"], "titleZh": p["title_zh"], "category": p["category"],
-                                     "source": p["source"], "sourceUrl": p["source_url"], "sourceType": obj(p["problem_json"]).get("sourceType")} for p in found})
+            catalog.update({p["id"]: {"id": p["id"], "titleEn": p["title_en"], "titleZh": p["title_zh"], "category": p["category"],
+                                     "source": p["source"], "sourceUrl": p["source_url"], "sourceType": obj(p["problem_json"]).get("sourceType"),
+                                     "problemNumber": problem_number(obj(p["problem_json"]))} for p in found})
         updated = [timestamp(row["updated_at"]) for row in ([personal_row, legacy_row, leetcode_row] + list(state_rows)) if row is not None]
         updated = [value for value in updated if value is not None]
         leetcode = obj(leetcode_row["data_json"]) if leetcode_row else {}
-        return collect_practice(personal, legacy, states, catalog, leetcode=leetcode), stamp(max(updated)) if updated else None
+        technical_numbers = {}
+        questions = [obj(session.get("question")) for session in rows(personal.get("practiceSessions"))]
+        questions.extend(question for session in rows(personal.get("dailySessions")) for question in rows(session.get("questions")))
+        questions.extend(catalog.values())
+        if any(key(question.get("source")) in {"question-bank", "library"} and not problem_number(question) for question in questions):
+            try:
+                # The underlying loader is cached. Only explicit source numbers
+                # are projected, matched by exact persisted question identity.
+                technical_numbers = {key(question.get("id")): problem_number(question) for question in load_technical_questions()}
+            except (OSError, ValueError, TypeError):
+                technical_numbers = {}
+        return collect_practice(personal, legacy, states, catalog, leetcode=leetcode, technical_numbers=technical_numbers), stamp(max(updated)) if updated else None
 
     def goal_progress(self, goal, practice):
         zone = self.zone(goal["time_zone"])

@@ -10,7 +10,7 @@ const context = await browser.newContext({ viewport: { width: 1440, height: 1000
 const errors = [];
 const session = { token: 'fixture-guardian-token', expiresAt: new Date(Date.now() + 3600000).toISOString(), student: { name: '测试同学' } };
 const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
-let goals = [{ id: 'fixture-goal', title: '每天向前一步', targetCount: 10, progress: 2, startDate: date, endDate: date, timeZone: 'America/Chicago', reward: '周末一起看电影', status: 'active', createdAt: new Date().toISOString(), notificationStatus: null }];
+let goals = [{ id: 'fixture-goal', title: '每天向前一步', targetCount: 10, progress: 3, startDate: date, endDate: date, timeZone: 'America/Chicago', reward: '周末一起看电影', status: 'active', createdAt: new Date().toISOString(), notificationStatus: null }];
 let reminderCalls = 0;
 let reminder = { lastSentAt: null, nextAllowedAt: null, status: null };
 await context.route('**/api/guardian/**', async route => {
@@ -25,7 +25,7 @@ await context.route('**/api/guardian/**', async route => {
     else if (body.code === 'valid-fixture-code') data = session;
     else { status = 401; data = { error: 'Invalid guardian code' }; }
   } else if (path === '/api/guardian/dashboard') {
-    data = { student: session.student, date, timeZone: 'America/Chicago', summary: { todayCount: 2, totalCount: 28, activeDays: 6, completedGoals: 1 }, questions: [{ id: 'q1', title: '抛硬币的期望次数', titleEn: 'Coin flips', kind: 'quant', count: 1, completedAt: new Date().toISOString(), source: 'manual' }, { id: 'q2', title: 'Two Sum', kind: 'coding', count: 1, completedAt: new Date().toISOString(), source: 'leetcode' }], goals, emailConfigured: true, reminder, syncedAt: new Date().toISOString(), countingNote: 'Mental Math 不计入刷题数；题目需主动标记完成，LeetCode 按账户同步记录统计。' };
+    data = { student: session.student, date, timeZone: 'America/Chicago', summary: { todayCount: 3, totalCount: 28, activeDays: 6, completedGoals: 1 }, questions: [{ id: 'q1', title: '抛硬币的期望次数', titleEn: 'Coin flips', kind: 'tech', problemNumber: '4.2', count: 1, completedAt: new Date().toISOString(), source: 'manual' }, { id: 'q2', title: 'Two Sum', kind: 'coding', problemNumber: '1', count: 1, completedAt: new Date().toISOString(), source: 'leetcode' }, { id: 'math-session', title: 'Mental Math', kind: 'mental', count: 1, completedCount: 58, isSummary: true, completedAt: new Date().toISOString(), source: 'automatic' }], goals, emailConfigured: true, reminder, syncedAt: new Date().toISOString(), countingNote: 'Mental Math 每次训练计入总数 1 题，明细显示完成题数；LeetCode 按账户同步记录统计。' };
   } else if (path === '/api/guardian/goals') {
     const goal = { ...body, id: 'new-goal', status: 'active', progress: 0, createdAt: new Date().toISOString() };
     goals = [goal, ...goals];
@@ -52,14 +52,18 @@ try {
   await page.locator('#guardianAccessCode').fill('valid-fixture-code');
   await page.getByRole('button', { name: '进入监护人系统', exact: true }).click();
   await page.waitForURL('**/guardian');
-  await page.getByText('抛硬币的期望次数', { exact: true }).waitFor();
+  await page.locator('.guardian-question-table strong').filter({ hasText: '抛硬币的期望次数' }).waitFor();
+  assert.equal(await page.locator('.guardian-question-table tbody tr').count(), 3, '58 math questions occupy one summary row');
+  assert.equal(await page.locator('.guardian-stat-featured strong').innerText(), '3', '58 math questions plus two regular questions add only 3 to the total');
+  await page.getByText('完成了 58 道', { exact: true }).waitFor();
+  assert.deepEqual(await page.locator('.guardian-problem-number').allTextContents(), ['题号 4.2 · ', '题号 1 · ']);
   assert.equal(await page.locator('#appShell').count(), 0, 'guardian must not render student shell');
   assert.equal(await page.locator('#loginForm').count(), 0);
   await page.screenshot({ path: new URL('dashboard-desktop.png', output).pathname, fullPage: true });
   const storage = await page.evaluate(() => JSON.stringify(Object.fromEntries(Object.entries(sessionStorage))));
   assert.ok(!storage.includes('valid-fixture-code'), 'shared access code must not persist');
   await page.reload();
-  await page.getByText('抛硬币的期望次数', { exact: true }).waitFor();
+  await page.locator('.guardian-question-table strong').filter({ hasText: '抛硬币的期望次数' }).waitFor();
   await page.getByRole('button', { name: '设置目标', exact: true }).click();
   await page.locator('[name=title]').fill('一周挑战');
   await page.locator('[name=targetCount]').fill('25');

@@ -24,11 +24,14 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import MagicMock, patch
+from zoneinfo import ZoneInfo
 from urllib.parse import urlencode
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "api-server"))
 import leetcode_sync as lc
+import guardian as guardian_module
 USE_POSTGRES = "--postgres" in sys.argv
 if USE_POSTGRES:
     sys.argv.remove("--postgres")
@@ -399,13 +402,13 @@ class GuardianApiTests(unittest.TestCase):
         for private in (first["email"], first["token"], "SECRET", "password", "applicationEvents", "dailySettings"):
             self.assertNotIn(private, encoded)
         for question in first_dashboard["questions"]:
-            self.assertLessEqual(set(question), {"id", "title", "titleEn", "kind", "count", "completedAt", "source"})
+            self.assertLessEqual(set(question), {"id", "title", "titleEn", "kind", "count", "completedAt", "source", "problemNumber", "isSummary", "completedCount"})
         goal = self.create_goal(first_guardian)
         status, data, _ = self.request("DELETE", f'/api/guardian/goals/{goal["id"]}', second_guardian)
         self.assertEqual(status, 404, data)
         self.assertEqual(self.dashboard(first_guardian)["goals"][0]["status"], "active")
 
-    def test_dashboard_counts_local_days_and_excludes_trainers_and_daily_rollups(self):
+    def test_dashboard_counts_local_days_and_deduplicates_trainer_and_daily_rollups(self):
         user = self.new_user()
         guardian = self.guardian(user)
         state = empty_state()
@@ -420,16 +423,16 @@ class GuardianApiTests(unittest.TestCase):
         self.put_personal(user, state)
         chicago = self.dashboard(guardian, "2026-09-14", "America/Chicago")
         utc = self.dashboard(guardian, "2026-09-14", "UTC")
-        self.assertEqual(chicago["summary"]["todayCount"], 1, chicago)
-        self.assertEqual(utc["summary"]["todayCount"], 4, utc)
-        self.assertEqual(chicago["summary"]["totalCount"], 4)
+        self.assertEqual(chicago["summary"]["todayCount"], 2, chicago)
+        self.assertEqual(utc["summary"]["todayCount"], 5, utc)
+        self.assertEqual(chicago["summary"]["totalCount"], 5)
         self.assertEqual(chicago["summary"]["activeDays"], 2)
-        self.assertEqual(sum(row["count"] for row in chicago["questions"]), 1)
+        self.assertEqual(sum(row["count"] for row in chicago["questions"]), 2)
         for query in ({"date": "2026-02-30"}, {"date": "2026-9-14"}, {"timeZone": "not/a-zone"}):
             status, data, _ = self.request("GET", "/api/guardian/dashboard?" + urlencode(query), guardian)
             self.assertEqual(status, 400, data)
 
-    def test_trainer_details_and_inferred_interview_completions_are_excluded(self):
+    def test_trainer_details_count_once_and_inferred_interview_completions_are_excluded(self):
         user = self.new_user()
         guardian = self.guardian(user)
         when = "2026-09-14T12:00:00Z"
@@ -468,15 +471,15 @@ class GuardianApiTests(unittest.TestCase):
         status, data, _ = self.request("PUT", "/api/problem-states", user["token"], {"problemStates": legacy["problemStates"]})
         self.assertEqual(status, 200, data)
         dashboard = self.dashboard(guardian, "2026-09-14")
-        # Only two explicitly completed daily questions and one catalog done
-        # record count. Trainer answers, aggregates and interview scores do not.
-        self.assertEqual(dashboard["summary"]["todayCount"], 3, dashboard)
-        self.assertEqual(len(dashboard["questions"]), 3)
+        # Four trainer sessions, two daily answers and one explicit catalog done.
+        # Trainer detail counts remain available only within summary rows.
+        self.assertEqual(dashboard["summary"]["todayCount"], 7, dashboard)
+        self.assertEqual(len(dashboard["questions"]), 7)
         self.assertNotIn("PRIVATE", json.dumps(dashboard))
         self.assertNotIn("submittedAnswer", json.dumps(dashboard))
-        self.assertEqual(sum(row["count"] for row in dashboard["questions"] if row["kind"] == "mental"), 0)
+        self.assertEqual(sum(row["completedCount"] for row in dashboard["questions"] if row["kind"] == "mental"), 7)
 
-    def test_manual_mental_and_category_math_never_count_or_complete_goals(self):
+    def test_manual_and_historical_trainer_counts_are_summary_rows_and_complete_goals(self):
         user = self.new_user()
         guardian = self.guardian(user)
         goal = self.create_goal(guardian, targetCount=1)
@@ -496,16 +499,167 @@ class GuardianApiTests(unittest.TestCase):
                               {"problemId": "raw-category-math", "category": "mentalMath", "completed": True, "completedAt": when}],
         }})
         dashboard = self.dashboard(guardian)
-        self.assertEqual(dashboard["summary"]["totalCount"], 0)
-        self.assertEqual(dashboard["questions"], [])
+        self.assertEqual(dashboard["summary"]["totalCount"], 8)
+        self.assertEqual(sum(row["completedCount"] for row in dashboard["questions"]), 504)
+        self.assertTrue(all(row["isSummary"] for row in dashboard["questions"]))
+        self.assertEqual(sum(row["completedCount"] for row in dashboard["questions"] if row["source"] == "manual"), 300)
         self.assertEqual(dashboard["goals"][0]["id"], goal["id"])
-        self.assertEqual(dashboard["goals"][0]["status"], "active")
-        self.assertEqual(dashboard["goals"][0]["progress"], 0)
-        self.assertEqual(self.smtp.messages_for(user["email"]), [])
+        self.assertEqual(dashboard["goals"][0]["status"], "completed")
+        self.assertGreaterEqual(dashboard["goals"][0]["progress"], 4)
+        self.wait_until(lambda: self.smtp.messages_for(user["email"]))
+        self.assertEqual(len(self.smtp.messages_for(user["email"])), 1)
         status, restored, _ = self.request("GET", "/api/personal-prep", user["token"])
         self.assertEqual(status, 200)
         self.assertEqual(len(restored["data"]["activities"]), 4)
         self.assertEqual(restored["data"]["dailySessions"], state["dailySessions"])
+
+    def test_fifty_eight_trainer_completions_and_real_technical_leetcode_numbers(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        when = "2026-09-14T12:00:00Z"
+        state = empty_state()
+        state["trials"] = [{"id": "math-58", "settings": {"trainer": "math"}, "status": "completed",
+                            "correct": 58, "completedAt": when, "questions": [
+                                {"id": f"math-{i}", "outcome": "correct", "completedAt": when,
+                                 "expression": "PRIVATE EXPRESSION", "submittedAnswer": "PRIVATE ANSWER",
+                                 "mistakes": [{"answer": "PRIVATE MISTAKE"}] if i == 0 else []}
+                                for i in range(58)]}]
+        state["activities"] = [activity("mental:math-58", when, count=58, kind="mental", trialId="math-58")]
+        state["practiceSessions"] = [{
+            "id": "tech-numbered", "kind": "tech", "status": "completed", "startedAt": when,
+            "updatedAt": when, "completedAt": when, "text": "PRIVATE TECHNICAL ANSWER", "selfAssessment": "independent",
+            "elapsedSeconds": 60, "timerStartedAt": None, "reviewed": False, "codeLanguage": "python",
+            "question": {"id": "catalog-problem-015", "source": "question-bank", "title": "Technical fixture",
+                         "titleEn": "Technical fixture", "prompt": "PRIVATE PROMPT", "promptEn": "",
+                         "reference": "PRIVATE REFERENCE", "referenceEn": "", "url": "",
+                         "provenance": {"version": 1, "originalNumber": "4.2", "sourceReference": "PRIVATE SOURCE"}},
+        }]
+        self.put_personal(user, state)
+        status, restored, _ = self.request("GET", "/api/personal-prep", user["token"])
+        self.assertEqual(status, 200)
+        self.assertIn("practice:tech-numbered", {row["id"] for row in restored["data"]["activities"]})
+        accepted = {**self.accepted("submission-900001", "two-sum", when), "frontendId": "1"}
+        self.save_leetcode_fixture(user, self.synced_snapshot([accepted]))
+        status, data, _ = self.request("PUT", "/api/state", user["token"], {"state": {
+            "mentalMathRecords": [{"id": "math-58", "correct": 58, "createdAt": when}],
+        }})
+        self.assertEqual(status, 200, data)
+        dashboard = self.dashboard(guardian, "2026-09-14")
+        self.assertEqual(dashboard["summary"]["todayCount"], 3)
+        self.assertEqual(len(dashboard["questions"]), 3)
+        by_kind = {row["kind"]: row for row in dashboard["questions"]}
+        self.assertEqual(by_kind["mental"]["count"], 1)
+        self.assertEqual(by_kind["mental"]["completedCount"], 58)
+        self.assertTrue(by_kind["mental"]["isSummary"])
+        self.assertEqual(by_kind["mental"]["problemNumber"], "")
+        self.assertEqual(by_kind["tech"]["problemNumber"], "4.2")
+        self.assertEqual(by_kind["coding"]["problemNumber"], "1")
+        self.assertFalse(by_kind["coding"]["isSummary"])
+        for private in ("PRIVATE", "mistakes", "expression", "submittedAnswer", "provenance", "_trainerKey"):
+            self.assertNotIn(private, json.dumps(dashboard))
+
+    def test_trainer_session_cross_midnight_counts_once_on_latest_completion_day(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        state = empty_state()
+        first, second = "2026-09-14T01:00:00Z", "2026-09-14T08:00:00Z"
+        state["activeTrial"] = {
+            "id": "cross-midnight", "settings": {"trainer": "sequence"}, "status": "active", "correct": 1,
+            "questions": [{"id": "closed-1", "outcome": "correct", "completedAt": first},
+                          {"id": "closed-2", "outcome": "wrong", "completedAt": second},
+                          {"id": "closed-2", "outcome": "wrong", "completedAt": second},
+                          {"id": "skip", "outcome": "skipped", "completedAt": second},
+                          {"id": "timeout", "outcome": "timeout", "completedAt": second},
+                          {"id": "abort", "outcome": "aborted", "completedAt": second},
+                          {"id": "undated", "outcome": "correct"}],
+            "currentQuestion": {"id": "unfinished", "mistakes": [{"answer": "PRIVATE WRONG INPUT"}]},
+        }
+        state["activities"] = [activity("sequence:cross-midnight", second, count=99, kind="sequence", trialId="cross-midnight")]
+        self.put_personal(user, state)
+        utc = self.dashboard(guardian, "2026-09-14")
+        chicago = self.dashboard(guardian, "2026-09-14", "America/Chicago")
+        previous = self.dashboard(guardian, "2026-09-13", "America/Chicago")
+        self.assertEqual(utc["summary"]["totalCount"], 1)
+        self.assertEqual(len(utc["questions"]), 1)
+        self.assertEqual(utc["questions"][0]["count"], 1)
+        self.assertEqual(utc["questions"][0]["completedCount"], 2)
+        self.assertEqual(chicago["summary"]["totalCount"], 1)
+        self.assertEqual(chicago["summary"]["activeDays"], 1)
+        self.assertEqual([row["count"] for row in chicago["questions"]], [1])
+        self.assertEqual(previous["questions"], [])
+        self.assertEqual(chicago["questions"][0]["id"], utc["questions"][0]["id"])
+        utc_goal = self.create_goal(guardian, targetCount=1, startDate="2026-09-14", endDate="2026-09-14", timeZone="UTC")
+        chicago_goal = self.create_goal(guardian, targetCount=1, startDate="2026-09-13", endDate="2026-09-13", timeZone="America/Chicago")
+        two_session_goal = self.create_goal(guardian, targetCount=2, startDate="2026-09-14", endDate="2026-09-14", timeZone="UTC")
+        self.assertEqual(utc_goal["status"], "completed")
+        self.assertEqual(utc_goal["progress"], 1)
+        self.assertNotEqual(chicago_goal["status"], "completed")
+        self.assertEqual(chicago_goal["progress"], 0)
+        self.assertNotEqual(two_session_goal["status"], "completed")
+        self.assertEqual(two_session_goal["progress"], 1)
+
+    def test_trainer_empty_details_and_tombstones_suppress_aggregate_fallbacks(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        when = "2026-09-14T12:00:00Z"
+        state = empty_state()
+        state["trials"] = [
+            {"id": "empty", "settings": {"trainer": "math"}, "status": "completed", "correct": 88,
+             "completedAt": when, "questions": []},
+            {"id": "deleted", "settings": {"trainer": "math"}, "status": "completed", "correct": 1,
+             "completedAt": when, "questions": [{"id": "q", "outcome": "correct", "completedAt": when}]},
+        ]
+        state["activities"] = [activity("manual-copy", when, count=88, kind="mental", trialId="empty", source="manual"),
+                               activity("deleted-copy", when, count=1, kind="mental", trialId="deleted")]
+        state["removedActivityIds"] = ["deleted-copy"]
+        self.put_personal(user, state)
+        self.request("PUT", "/api/state", user["token"], {"state": {"mentalMathRecords": [
+            {"id": "empty", "correct": 88, "createdAt": when}, {"id": "deleted", "correct": 1, "createdAt": when}]}})
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 0)
+
+    def test_technical_number_recovery_is_exact_preserves_snapshot_and_fails_gracefully(self):
+        when = "2026-09-14T12:00:00Z"
+        state = empty_state()
+        state["practiceSessions"] = [
+            {"id": identity, "kind": "tech", "status": "completed", "text": "PRIVATE ANSWER", "completedAt": when,
+             "question": {"id": question_id, "source": "question-bank", "title": "PRIVATE QUESTION TITLE", **metadata}}
+            for identity, question_id, metadata in [
+                ("known", "catalog-problem-015", {}),
+                ("snapshot", "catalog-problem-107", {"provenance": {"originalNumber": "A.22"}}),
+                ("unknown", "catalog-problem-999", {}),
+            ]]
+        state["activities"] = [activity("practice:" + session["id"], when, kind="tech") for session in state["practiceSessions"]]
+
+        def collect():
+            conn = MagicMock()
+            cursors = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
+            cursors[0].fetchone.return_value = {"data_json": state, "updated_at": when}
+            cursors[1].fetchone.return_value = None
+            cursors[2].fetchone.return_value = None
+            cursors[3].fetchall.return_value = []
+            conn.execute.side_effect = cursors
+            return guardian_module.GuardianService.practice(None, conn, "fixture-user")[0]
+
+        with patch.object(guardian_module, "load_technical_questions", return_value=[
+            {"id": "catalog-problem-015", "provenance": {"originalNumber": "1.2.1"}, "prompt": "PRIVATE BUNDLE PROMPT"},
+            {"id": "catalog-problem-107", "provenance": {"originalNumber": "1.1.15"}},
+        ]) as loader:
+            rows = collect()
+            loader.assert_called_once()
+        self.assertEqual({row["id"]: row["problemNumber"] for row in rows}, {
+            "practice:known": "1.2.1", "practice:snapshot": "A.22", "practice:unknown": "",
+        })
+        self.assertNotIn("PRIVATE BUNDLE", json.dumps(rows))
+        for error in (ValueError("bad bundle"), OSError("missing bundle")):
+            with patch.object(guardian_module, "load_technical_questions", side_effect=error):
+                recovered = {row["id"]: row["problemNumber"] for row in collect()}
+                self.assertEqual(recovered["practice:known"], "")
+                self.assertEqual(recovered["practice:snapshot"], "A.22")
+        for number in ("1.2.1", "A.22", "LCR 001", "面试题 01.01"):
+            self.assertEqual(guardian_module.problem_number({"problemNumber": number}), number)
+        for number in ("<b>4</b>", "1\n2", "no number", "9" * 101):
+            self.assertEqual(guardian_module.problem_number({"problemNumber": number}), "")
+        self.assertEqual(guardian_module.problem_number({"id": "problem-015", "title": "Question 42"}), "")
 
     def test_draw_only_and_draft_records_do_not_count_but_explicit_done_does(self):
         user = self.new_user()
@@ -528,7 +682,7 @@ class GuardianApiTests(unittest.TestCase):
         self.assertEqual(status, 200, data)
         self.assertEqual(self.dashboard(guardian, "2026-09-14")["summary"]["todayCount"], 1)
 
-    def test_legacy_leetcode_identifiers_source_variants_and_catalog_trainers_match_frontend_exclusions(self):
+    def test_legacy_leetcode_identifiers_are_excluded_and_catalog_trainers_are_summarized(self):
         user = self.new_user()
         guardian = self.guardian(user)
         when = "2026-09-14T12:00:00Z"
@@ -562,8 +716,9 @@ class GuardianApiTests(unittest.TestCase):
         }})
         self.assertEqual(status, 200, data)
         dashboard = self.dashboard(guardian, "2026-09-14")
-        self.assertEqual(dashboard["summary"]["totalCount"], 1)
-        self.assertEqual([row["id"] for row in dashboard["questions"]], ["legacy:problem:onsite-coding"])
+        self.assertEqual(dashboard["summary"]["totalCount"], 5)
+        self.assertEqual([row["id"] for row in dashboard["questions"] if not row["isSummary"]], ["legacy:problem:onsite-coding"])
+        self.assertEqual(sum(row["count"] for row in dashboard["questions"] if row["isSummary"]), 4)
 
     def test_leetcode_uses_only_current_connection_synced_ac_once_per_problem_and_local_day(self):
         user, other = self.new_user(), self.new_user()

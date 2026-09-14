@@ -65,11 +65,20 @@ Non-LeetCode problems count only after an explicit completion action such as
 **我做完了**: a completed catalog state, a completed standalone technical session,
 or a completed daily answer. Random draws, viewed questions, drafts, interview
 scores/evaluations, and last-practiced timestamps do not imply completion.
-Mental Math, sequence and pattern trainer records are excluded from solved totals
-and guardian goals, including detailed attempts, aggregates, manual entries and
-legacy records; their training history remains stored and available to the student.
-Manual non-trainer completion entries remain labelled `manual`. Daily-session
-rollups never add another question. Undated, malformed and future records are
+Mental Math, sequence and pattern count **one per training session** in totals
+and goals when the session contains at least one closed `correct` or `wrong`
+question with a valid completion time, including closed questions in an active
+session. Wrong arithmetic inputs that only add a mistake to the current
+question do not add a completion. Skips, timeouts and unfinished questions do not
+count. The guardian list combines these into one summary per trainer session: for
+example, 58 completed questions produce one row with `count: 1`,
+`completedCount: 58` and `isSummary: true`, without arithmetic expressions or
+answers. A session spanning midnight counts once, on the date of its latest
+completed question in the viewer's or goal's time zone.
+Detailed question records, including an empty list, take priority over duplicate
+trial/activity/legacy aggregates. Historical records without detail use their
+stored count (often the correct-only lower bound); manual entries remain labelled
+`manual`. Daily-session rollups never add another question. Undated, malformed and future records are
 ignored. Offline completions appear after the student's next successful sync.
 
 Standalone technical completions use the canonical `practice:<session.id>`
@@ -77,7 +86,13 @@ activity or a deduplicated session fallback. LeetCode-linked standalone practice
 manual catalog checkmarks and local review actions do not count as a LeetCode
 solve. Daily coding exercises that are not sourced from LeetCode still count when
 explicitly completed. Prompts, reference answers, written answers, linked profile
-names and URLs stay out of the guardian response.
+names and URLs stay out of the guardian response. Non-trainer rows include
+`problemNumber` only from explicit source metadata: LeetCode `frontendId`, Purple
+Book `provenance.originalNumber`, or an explicit catalog number. Older Purple
+Book snapshots may recover the number by exact question ID from the cached
+private runtime bundle; saved snapshot metadata takes priority. Missing or invalid
+numbers stay blank, and unavailable bundles do not prevent loading the dashboard.
+Numbers are never guessed from record IDs, titles, slugs or list positions.
 
 LeetCode counts come only from accepted submissions observed by the server's
 public sync for the student's **current** connected profile. Each problem counts

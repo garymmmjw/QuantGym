@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { getContributionStatsByDay } from '../src/modules/overview/data.js';
 import { dayKey } from '../src/lib/date.js';
 
-test('completion heatmap excludes old Hot100 flags, trainer records, draws and undone questions', () => {
+test('completion heatmap includes explicit trainer completions but excludes old Hot100 flags, draws and undone questions', () => {
   const today = new Date('2026-09-14T18:00:00Z');
   const at = '2026-09-14T12:00:00Z';
   const records = [
@@ -19,14 +19,14 @@ test('completion heatmap excludes old Hot100 flags, trainer records, draws and u
   const stats = getContributionStatsByDay({ today, problemStates:records,
     problems:[{id:'mental',category:'mentalMath'},{id:'lc',sourceUrl:'https://leetcode.cn/problems/two-sum/'}],
     leetcodeHot100Done:['two-sum'], entries:[{date:at,totalXp:10}] });
-  assert.equal(stats.get(dayKey(at)).completed,1);
+  assert.equal(stats.get(dayKey(at)).completed,2);
   assert.equal(stats.get(dayKey(at)).xp,10);
   assert.equal(stats.size,1);
   const oldFlagsOnly = getContributionStatsByDay({today,leetcodeHot100Done:['two-sum']});
   assert.equal(oldFlagsOnly.size,0);
 });
 
-test('league milestones cannot be unlocked by trainer, local LeetCode or undated completion flags', async () => {
+test('league milestones cannot be unlocked by local LeetCode or undated completion flags', async () => {
   const { createLeaguePageApi } = await import('../src/app/services/leaguePageApi.js');
   const problems = Array.from({length:100},(_,i)=>({id:`problem-${i}`,category:i<40?'mentalMath':i<80?'leetcode':'statistics'}));
   const at='2026-09-14T12:00:00Z';

@@ -20,7 +20,7 @@ export function isTrainerCatalogProblem(problem = {}) {
 }
 
 export function countsTowardProblemTotal(problem = {}) {
-  return !isLeetcodeCatalogProblem(problem) && !isTrainerCatalogProblem(problem);
+  return !isLeetcodeCatalogProblem(problem);
 }
 
 export function hasExplicitProblemCompletion(state = {}) {

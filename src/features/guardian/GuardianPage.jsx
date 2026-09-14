@@ -74,12 +74,33 @@ const TIME_ZONE_LABELS = {
 };
 const GOAL_STATUS = { active: "进行中", completed: "已达成", expired: "已结束", cancelled: "已取消" };
 const KIND_LABELS = { quant: "量化题", problem: "题库练习", interview: "面试练习", mental: "心算", sequence: "数列", pattern: "图形推理", tech: "技术面试", behavioral: "行为面试", daily: "每日训练", quiz: "答题练习", manual: "题库练习", coding: "编程题" };
+const TRAINER_LABELS = { mental: "Mental Math", sequence: "数列推理", pattern: "图形推理" };
 const DELIVERY_LABELS = { pending: "达标邮件待发送", sent: "达标邮件已发送", disabled: "邮件服务尚未配置", retry: "达标邮件等待重试", failed: "达标邮件发送失败" };
 const REMINDER_STATUS_LABELS = { pending: "提醒邮件待发送", sent: "提醒邮件已发送", disabled: "邮件服务尚未配置", retry: "提醒邮件等待重试", failed: "提醒邮件发送失败", cancelled: "提醒已取消" };
 
 function Notice({ children, error = false }) {
   if (!children) return null;
   return <div className={`guardian-notice${error ? " guardian-notice-error" : ""}`} role={error ? "alert" : "status"}>{children}</div>;
+}
+
+function PracticeRecordRow({ question, timeZone }) {
+  const trainer = TRAINER_LABELS[question.kind];
+  const count = Number(trainer ? question.completedCount ?? question.count : question.count) || 0;
+  const number = typeof question.problemNumber === "string" ? question.problemNumber.trim() : "";
+  return <tr>
+    <td>
+      {trainer ? <><strong>{trainer}</strong><small>本次训练 · 总数计 1 题</small></> : <>
+        <strong>{number && <span className="guardian-problem-number">题号 {number} · </span>}{question.title || question.titleEn || "练习题目"}</strong>
+        {question.titleEn && question.title && question.titleEn !== question.title && <small>{question.titleEn}</small>}
+      </>}
+      {question.source === "leetcode" && <span className="guardian-source-label">LeetCode 账户同步</span>}
+      {question.source === "manual" && <span className="guardian-source-label">手动记录</span>}
+      {question.source === "legacy" && <span className="guardian-source-label">历史记录</span>}
+    </td>
+    <td><span className="guardian-question-kind">{KIND_LABELS[question.kind] || question.kind || "练习"}</span></td>
+    <td className="guardian-completion-count">完成了 {count.toLocaleString("zh-CN")} 道</td>
+    <td><time dateTime={question.completedAt}>{displayTime(question.completedAt, timeZone)}</time></td>
+  </tr>;
 }
 
 function GoalItem({ goal, onCancel, cancelling }) {
@@ -367,13 +388,13 @@ export function GuardianPage() {
             {[{ label: date === localToday ? "今天刷题" : "当日刷题", value: summary.todayCount, unit: "题", featured: true }, { label: "累计刷题", value: summary.totalCount, unit: "题" }, { label: "累计学习", value: summary.activeDays, unit: "天" }, { label: "达成目标", value: summary.completedGoals, unit: "个" }].map((stat) => <div key={stat.label} className={`guardian-stat${stat.featured ? " guardian-stat-featured" : ""}`}><span>{stat.label}</span><p><strong>{Number(stat.value || 0).toLocaleString("zh-CN")}</strong><small>{stat.unit}</small></p></div>)}
           </section>
 
-          <p className="guardian-table-note">刷题数不含 Mental Math、数列与图形训练。其他题目点击「我做完了」后计入；LeetCode 以关联账户同步的通过记录为准，随机抽题不计数。</p>
+          <p className="guardian-table-note">Mental Math、数列与图形每次训练计入总数 1 题，明细显示本次完成了多少道。其他题目点击「我做完了」后逐题计入，LeetCode 以关联账户同步的通过记录为准。</p>
 
           <div className="guardian-workspace">
             <div className="guardian-primary-column">
               <section className="guardian-panel guardian-records" aria-labelledby="guardian-records-title">
                 <div className="guardian-section-heading"><div><h2 id="guardian-records-title">{date === localToday ? "今天" : "当日"}练习了什么</h2><p>{date} · 已同步的练习记录</p></div><span className="guardian-small-count">{questions.length}{dashboard.questionsTruncated ? "+" : ""} 条记录</span></div>
-                {questions.length ? <div className="guardian-question-table"><table><thead><tr><th scope="col">练习题目</th><th scope="col">类型</th><th scope="col">次数</th><th scope="col">最近完成</th></tr></thead><tbody>{questions.map((question, index) => <tr key={`${question.source || question.kind}-${question.id}-${index}`}><td><strong>{question.title || question.titleEn || "练习题目"}</strong>{question.titleEn && question.title && question.titleEn !== question.title && <small>{question.titleEn}</small>}{question.source === "leetcode" && <span className="guardian-source-label">LeetCode 账户同步</span>}{question.source === "manual" && <span className="guardian-source-label">手动记录</span>}{question.source === "legacy" && <span className="guardian-source-label">历史汇总</span>}</td><td><span className="guardian-question-kind">{KIND_LABELS[question.kind] || question.kind || "练习"}</span></td><td>{Number(question.count || 1)}</td><td><time dateTime={question.completedAt}>{displayTime(question.completedAt, timeZone)}</time></td></tr>)}</tbody></table></div> : <div className="guardian-empty"><span className="guardian-empty-icon"><GuardianIcon name="book" size={26} /></span><h3>这一天还没有完成记录</h3><p>点击「我做完了」或同步 LeetCode 通过记录后，会显示在这里。</p></div>}
+                {questions.length ? <div className="guardian-question-table"><table><thead><tr><th scope="col">练习内容</th><th scope="col">类型</th><th scope="col">完成数量</th><th scope="col">最近完成</th></tr></thead><tbody>{questions.map((question, index) => <PracticeRecordRow key={`${question.source || question.kind}-${question.id}-${index}`} question={question} timeZone={timeZone} />)}</tbody></table></div> : <div className="guardian-empty"><span className="guardian-empty-icon"><GuardianIcon name="book" size={26} /></span><h3>这一天还没有完成记录</h3><p>完成训练、点击「我做完了」或同步 LeetCode 通过记录后，会显示在这里。</p></div>}
                 {dashboard.questionsTruncated && <p className="guardian-table-note">当前展示最近 200 条记录，统计数量包含全部记录。</p>}
               </section>
 
