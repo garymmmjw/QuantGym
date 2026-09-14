@@ -53,10 +53,11 @@ for (const marker of [
 
 for (const marker of [
   "qg-auth-screen",
-  "qg-auth-brand",
+  "qg-welcome-hero",
   "qg-auth-card",
-  "auth-brand-q-badge",
-  "/assets/generated/playful-precision/mascot-hero-v5-clean.png"
+  "qg-welcome-logo",
+  "/assets/generated/playful-precision/brand-q-mark.webp",
+  "/assets/generated/playful-precision/mascot-auth-welcome.png"
 ]) {
   expect(authShell.includes(marker), `AuthShell.jsx missing ${marker}`);
 }

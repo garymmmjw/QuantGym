@@ -1,0 +1,219 @@
+/* Approved welcome cover. IDs scope the new surface above legacy auth styles. */
+body:not(.is-authenticated):has(#authShell.qg-auth-welcome) { background: #fbfbff; }
+body:not(.is-authenticated) #authShell.qg-auth-welcome {
+  --qg-text: #1b1a38;
+  --qg-muted: #72718e;
+  --qg-muted-2: #82819f;
+  --qg-brand: #5b5ff5;
+  --qg-brand-ink: #5b5ff5;
+  --qg-border: #dcdcef;
+  --qg-surface: #fff;
+  --qg-surface-2: #fff;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.58fr) minmax(360px, 1fr) !important;
+  grid-template-rows: auto 1fr;
+  gap: 46px 80px;
+  align-items: start;
+  width: 100%;
+  max-width: 1680px;
+  min-height: 100dvh !important;
+  margin: 0 auto;
+  padding: 28px clamp(32px, 4.4vw, 74px) 32px !important;
+  overflow: visible !important;
+  color: #1b1a38;
+  background: #fbfbff !important;
+  font-family: var(--qg-font-ui);
+  box-sizing: border-box;
+  color-scheme: light;
+}
+#authShell .qg-welcome-header { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+#authShell .qg-welcome-logo { display: inline-flex; align-items: center; gap: 14px; width: fit-content; text-decoration: none; }
+#authShell .qg-welcome-logo img { width: 46px; height: 48px; object-fit: contain; }
+#authShell .qg-welcome-logo strong { font: 700 26px/1.2 var(--qg-font-number); letter-spacing: 0; color: #1b1a38; }
+#authShell .qg-welcome-logo strong span { color: #5b5ff5; }
+#authShell .qg-welcome-header p { margin: 0; color: #8b89a6; font-size: 16px; }
+#authShell .qg-welcome-hero { min-width: 0; padding: 0 0 0 24px; }
+#authShell .qg-welcome-headline h1 { margin: 0; font-size: clamp(42px, 4.55vw, 74px); line-height: 1.32; font-weight: 800; letter-spacing: -.035em; color: #15142f; }
+#authShell .qg-welcome-headline h1 span { display: block; }
+#authShell .qg-welcome-headline h1 span + span { color: #5b5ff5; }
+#authShell .qg-welcome-headline p { margin: 14px 0 0; color: #686784; font-size: clamp(18px, 1.72vw, 28px); line-height: 1.6; font-weight: 500; }
+#authShell .qg-welcome-scene { position: relative; display: grid; place-items: center; margin: -20px 0 0; }
+#authShell .qg-welcome-mascot-button { display: block; width: 62%; max-width: 460px; padding: 0; margin: 0; border: 0; background: none; box-shadow: none; cursor: pointer; transition: transform 200ms ease; }
+#authShell .qg-welcome-mascot-button:hover { transform: translateY(-4px) rotate(-1deg); }
+#authShell .qg-welcome-mascot-button.is-poked { animation: qg-welcome-wave 600ms ease; }
+#authShell .qg-welcome-mascot { display: block; width: 100%; height: auto; }
+#authShell .qg-welcome-bubble { position: absolute; z-index: 2; top: 28%; right: 0; max-width: 190px; padding: 12px 16px; border: 1px solid #dedcf7; border-radius: 16px; background: #fff; color: #5b5ff5; box-shadow: 0 8px 26px #403aac12; opacity: 0; transform: translateY(5px); pointer-events: none; transition: opacity 160ms, transform 160ms; }
+#authShell .qg-welcome-bubble.is-visible { opacity: 1; transform: translateY(0); }
+#authShell .qg-welcome-topics { margin: 16px 0 0; text-align: center; font-size: clamp(14px, 1.25vw, 20px); color: #6e6c8e; }
+body:not(.is-authenticated) #authShell .qg-auth-card {
+  display: flex !important; flex-direction: column; gap: 0 !important;
+  align-self: start !important; justify-self: stretch !important;
+  width: 100% !important; max-width: 520px; min-width: 0;
+  margin: 0 !important; padding: 0 !important;
+  border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; box-shadow: none !important;
+  text-align: left !important; animation: none;
+}
+#authShell .qg-auth-card > * { max-width: none; }
+#authShell .qg-auth-card .auth-copy { margin: 0 0 32px !important; text-align: left; }
+#authShell .qg-auth-card .auth-copy h2 { margin: 0; font-size: clamp(32px, 2.65vw, 43px) !important; line-height: 1.35; font-weight: 800; letter-spacing: -.025em; }
+#authShell .qg-auth-card .auth-copy p { margin: 5px 0 0; font-size: clamp(16px, 1.33vw, 21px); font-weight: 400; color: #72718e; }
+#authShell .qg-register-only, #authShell .qg-reset-only { display: none; }
+#authShell:has(#registerForm:not(.hidden)) .qg-register-only { display: inline; }
+#authShell:has(#resetPasswordForm:not(.hidden)) .qg-reset-only { display: inline; }
+#authShell:has(#registerForm:not(.hidden)) .qg-login-only,
+#authShell:has(#resetPasswordForm:not(.hidden)) .qg-login-only { display: none; }
+#authShell:has(#resetPasswordForm:not(.hidden)) .qg-welcome-switch,
+#authShell:has(#resetPasswordForm:not(.hidden)) .auth-provider-stack,
+#authShell:has(#resetPasswordForm:not(.hidden)) .auth-provider-divider { display: none; }
+#authShell .qg-auth-card .auth-form { gap: 20px !important; margin: 0; width: 100%; }
+#authShell .qg-auth-card .auth-field-label { margin: 0 0 8px; color: #252440; font-size: 16px; font-weight: 600; }
+#authShell .qg-auth-card input { width: 100%; height: 60px; min-height: 0 !important; padding: 16px 18px !important; border: 1px solid #d6d5e9 !important; border-radius: 12px !important; background: #ffffffb8 !important; font-size: 18px !important; font-weight: 400 !important; box-shadow: none; }
+#authShell .qg-auth-card input::placeholder { color: #9593ac; }
+#authShell .qg-auth-card input:focus { outline: none; border-color: #6c63f4 !important; box-shadow: 0 0 0 3px #5b5ff518; }
+#authShell .qg-welcome-input { position: relative; }
+#authShell .qg-welcome-input > i { position: absolute; top: 50%; left: 21px; transform: translateY(-50%); display: flex; color: #8582a5; pointer-events: none; }
+#authShell .qg-welcome-input svg { width: 23px; height: 23px; stroke-width: 1.8; }
+#authShell .qg-welcome-input input { padding-left: 62px !important; padding-right: 56px !important; }
+#authShell .qg-password-toggle { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 8px; color: #8582a5; background: transparent; cursor: pointer; }
+#authShell .qg-password-toggle i { display: flex; }
+#authShell .qg-password-toggle:hover { background: #f0efff; color: #5b5ff5; }
+#authShell .qg-auth-card #loginForm #forgotPasswordBtn { margin: -10px 0 0; font-size: 16px; line-height: 1.5; min-height: 24px; }
+#authShell .qg-auth-card .primary-button { min-height: 60px !important; margin-top: 2px; padding: 16px !important; border: 1px solid #5b5ff5; border-radius: 12px !important; color: #fff; background: #5b5ff5; font-size: 20px !important; font-weight: 700 !important; box-shadow: none; transition: background 150ms, transform 150ms; }
+#authShell .qg-auth-card .primary-button:hover { background: #4b4fe0; }
+#authShell .qg-auth-card .primary-button:active { transform: translateY(1px); }
+#authShell .qg-auth-card .primary-button:disabled { opacity: .55; cursor: not-allowed; }
+#authShell .qg-auth-card .auth-provider-divider { gap: 20px; margin: 24px 0 !important; }
+#authShell .qg-auth-card .auth-provider-divider span { font-size: 16px; }
+#authShell .qg-auth-card .auth-google-visual { min-height: 60px; padding: 15px !important; gap: 18px !important; border-width: 1px !important; border-color: #d6d5e9 !important; border-radius: 12px !important; background: #ffffffb8 !important; font-size: 18px !important; }
+#authShell .qg-google-mark { width: 25px; height: 25px; object-fit: contain; }
+#authShell .auth-google-slot:focus-within { outline: 3px solid #5b5ff540; outline-offset: 3px; border-radius: 12px; }
+#authShell .auth-google-slot:has(.disabled) .auth-google-visual { opacity: .6; }
+#authShell .qg-welcome-switch { display: flex; align-items: baseline; justify-content: center; gap: 5px; margin-top: 18px; color: #72718e; font-size: 16px; }
+#authShell .qg-welcome-switch .auth-tab { margin: 0; padding: 0; border: 0; background: none; color: #5b5ff5; font: inherit; font-weight: 650; cursor: pointer; }
+#authShell .qg-auth-card .qg-guardian-entry { border-top: 1px solid #deddf0; border-bottom: 1px solid #deddf0; margin: 24px 0 0; padding: 18px 0; }
+#authShell .qg-guardian-entry > summary { display: flex; align-items: center; gap: 16px; list-style: none; font-size: 17px; }
+#authShell summary::-webkit-details-marker { display: none; }
+#authShell .qg-guardian-entry summary span { margin: 0; }
+#authShell .qg-guardian-entry-icon { display: grid; place-items: center; flex: 0 0 50px; width: 50px; height: 50px; border-radius: 50%; background: #eeecff; color: #625bfa; }
+#authShell .qg-guardian-entry-icon i { display: flex; }
+#authShell .qg-guardian-entry-icon svg { width: 28px; height: 28px; stroke-width: 1.8; }
+#authShell .qg-guardian-entry-copy { display: grid; gap: 2px; }
+#authShell .qg-guardian-entry-copy strong { font-size: 17px; font-weight: 600; color: #252440; }
+#authShell .qg-guardian-entry-copy span { font-size: 16px; color: #82809e; }
+#authShell .qg-guardian-entry-arrow { display: flex; margin-left: auto; color: #82809e; }
+#authShell .qg-guardian-entry-arrow svg { width: 22px; height: 22px; }
+#authShell .qg-guardian-entry[open] .qg-guardian-entry-arrow { transform: rotate(90deg); }
+#authShell .qg-welcome-other { margin: 0; padding: 20px 0 0; }
+#authShell .qg-welcome-other summary { display: flex; align-items: center; justify-content: space-between; cursor: pointer; list-style: none; font-size: 16px; font-weight: 500; }
+#authShell .qg-welcome-other summary i { display: flex; color: #82809e; }
+#authShell .qg-welcome-other summary svg { width: 20px; height: 20px; }
+#authShell .qg-welcome-other[open] summary i { transform: rotate(180deg); }
+#authShell .qg-welcome-other p { margin: 14px 0 0; font-size: 14px; color: #72718e; line-height: 1.7; }
+#authShell .qg-welcome-other .qg-auth-device-entry { margin: 0; padding: 0; border: 0; background: transparent; }
+#authShell .qg-welcome-other .secondary-button { width: 100%; margin-top: 12px; }
+#authShell .qg-auth-card .auth-legal-note { margin: 38px 0 0; color: #9390ad; font-size: 13px; font-weight: 400; line-height: 1.8; }
+#authShell :is(button,a,summary):focus-visible { outline: 3px solid #5b5ff55c; outline-offset: 4px; }
+#authShell .qg-auth-card .auth-message { font-size: 14px !important; line-height: 1.6; text-align: left; }
+@keyframes qg-welcome-wave { 20%, 60% { transform: rotate(-3deg); } 40%, 80% { transform: rotate(3deg); } }
+@media (max-width: 1400px) and (min-width: 861px) {
+  body:not(.is-authenticated) #authShell.qg-auth-welcome { gap: 36px 58px; padding-top: 24px !important; }
+  #authShell .qg-welcome-logo img { width: 40px; height: 42px; }
+  #authShell .qg-welcome-logo strong { font-size: 23px; }
+  #authShell .qg-welcome-hero { padding-left: 10px; }
+  #authShell .qg-welcome-scene { margin-top: -8px; }
+  #authShell .qg-auth-card .auth-copy { margin-bottom: 24px !important; }
+  #authShell .qg-auth-card .auth-form { gap: 16px !important; }
+  #authShell .qg-auth-card input { height: 52px; font-size: 16px !important; }
+  #authShell .qg-auth-card .auth-field-label { font-size: 14px; margin-bottom: 6px; }
+  #authShell .qg-auth-card .primary-button { min-height: 52px !important; padding: 12px !important; font-size: 18px !important; }
+  #authShell .qg-auth-card .auth-google-visual { min-height: 52px; padding: 12px !important; font-size: 16px !important; }
+  #authShell .qg-auth-card #loginForm #forgotPasswordBtn { font-size: 14px; }
+  #authShell .qg-auth-card .auth-provider-divider { margin: 19px 0 !important; }
+  #authShell .qg-auth-card .qg-guardian-entry { margin-top: 20px; padding: 16px 0; }
+  #authShell .qg-welcome-switch { font-size: 14px; margin-top: 14px; }
+  #authShell .qg-guardian-entry-copy strong, #authShell .qg-welcome-other summary { font-size: 15px; }
+  #authShell .qg-guardian-entry-copy span { font-size: 14px; }
+  #authShell .qg-welcome-other { padding-top: 16px; }
+  #authShell .qg-auth-card .auth-legal-note { margin-top: 28px; font-size: 11px; }
+}
+@media (max-width: 860px) {
+  body:not(.is-authenticated) #authShell.qg-auth-welcome { grid-template-columns: 1fr !important; grid-template-rows: auto auto auto; gap: 28px; padding: 22px 26px 30px !important; max-width: 620px; }
+  #authShell .qg-welcome-header { grid-column: 1; }
+  #authShell .qg-welcome-logo { gap: 10px; }
+  #authShell .qg-welcome-logo img { width: 36px; height: 38px; }
+  #authShell .qg-welcome-logo strong { font-size: 22px; }
+  #authShell .qg-welcome-header p { display: none; }
+  #authShell .qg-welcome-hero { position: relative; padding: 4px 105px 0 0; min-height: 112px; }
+  #authShell .qg-welcome-headline h1 { font-size: clamp(25px, 5.7vw, 35px); line-height: 1.42; letter-spacing: -.03em; }
+  #authShell .qg-welcome-headline p { margin-top: 8px; font-size: 13px; line-height: 1.6; max-width: 260px; }
+  #authShell .qg-welcome-scene { position: absolute; right: -7px; top: -9px; margin: 0; width: 112px; }
+  #authShell .qg-welcome-mascot-button { width: 100%; }
+  #authShell .qg-welcome-topics { display: none; }
+  #authShell .qg-welcome-bubble { top: -18px; right: 0; font-size: 12px; width: 140px; }
+  body:not(.is-authenticated) #authShell .qg-auth-card { max-width: none; margin: 0 !important; }
+  #authShell .qg-auth-card .auth-copy { margin-bottom: 22px !important; }
+  #authShell .qg-auth-card .auth-copy h2 { font-size: 28px !important; }
+  #authShell .qg-auth-card .auth-copy p { font-size: 14px; }
+  #authShell .qg-auth-card .auth-form { gap: 16px !important; }
+  #authShell .qg-auth-card .auth-field-label { font-size: 14px; margin-bottom: 7px; }
+  #authShell .qg-auth-card input { height: 52px; font-size: 16px !important; }
+  #authShell .qg-auth-card #loginForm #forgotPasswordBtn { font-size: 14px; }
+  #authShell .qg-auth-card .primary-button { min-height: 52px !important; padding: 13px !important; font-size: 17px !important; }
+  #authShell .qg-auth-card .auth-google-visual { min-height: 52px; font-size: 16px !important; padding: 13px !important; }
+  #authShell .qg-auth-card .auth-provider-divider { margin: 19px 0 !important; }
+  #authShell .qg-welcome-switch { margin-top: 16px; font-size: 14px; }
+  #authShell .qg-auth-card .qg-guardian-entry { margin-top: 22px; padding: 16px 0; }
+  #authShell .qg-guardian-entry-copy strong { font-size: 15px; }
+  #authShell .qg-guardian-entry-copy span { font-size: 14px; }
+  #authShell .qg-guardian-entry-icon { flex-basis: 44px; width: 44px; height: 44px; }
+  #authShell .qg-welcome-other summary { font-size: 14px; }
+  #authShell .qg-auth-card .auth-legal-note { margin-top: 26px; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #authShell .qg-welcome-mascot-button, #authShell .qg-welcome-bubble { animation: none !important; transition: none !important; transform: none !important; }
+}
+/* Reset legacy centered headings and raised buttons inside this cover. */
+#authShell .qg-auth-card .qg-welcome-copy { display: block; }
+#authShell .qg-auth-card .qg-welcome-copy :is(h2,p) { width: 100%; max-width: none; text-align: left !important; }
+#authShell .qg-auth-card .primary-button { background: #5b5ff5 !important; box-shadow: none !important; }
+#authShell .qg-auth-card .primary-button:hover { background: #4b4fe0 !important; }
+@media (min-width: 861px) {
+  #authShell .qg-welcome-scene { margin-top: -62px; }
+  #authShell .qg-welcome-mascot-button { max-width: 485px; }
+}
+@font-face { font-family: "QuantGym Welcome Han"; src: url("/assets/fonts/auth-heading-zh.ttf") format("truetype"); font-style: normal; font-weight: 800; font-display: swap; }
+#authShell .qg-welcome-headline h1, #authShell .qg-auth-card .qg-welcome-copy h2 { font-family: "QuantGym Welcome Han", var(--qg-font-ui); }
+#authShell .qg-welcome-headline p { font-weight: 400; }
+/* Keep the purchased sleep companion visible for owners using dark mode. */
+:root[data-qg-theme="dark"] #authShell.qg-auth-sleep .qg-welcome-scene::after { content: ""; position: absolute; right: 0; bottom: 0; width: 24%; aspect-ratio: 1; background: url("/assets/generated/playful-precision/mascot-sleep.png") center / contain no-repeat; pointer-events: none; }
+#authShell .qg-welcome-scene-backdrop { position: absolute; top: 40px; left: 0; width: 100%; height: auto; pointer-events: none; }
+#authShell .qg-welcome-mascot-button { position: relative; z-index: 1; }
+#authShell #googleButton [role="button"] { width: 100% !important; max-width: none !important; height: 100% !important; }
+@media (max-width: 1400px) { #authShell .qg-welcome-scene-backdrop { top: 30px; } }
+@media (max-width: 860px) { #authShell .qg-welcome-scene-backdrop { display: none; } }
+#authShell .qg-welcome-headline, #authShell .qg-welcome-topics { position: relative; z-index: 2; }
+#authShell .qg-welcome-headline h1, #authShell .qg-auth-card .qg-welcome-copy h2 { font-family: "QuantGym Welcome Han", var(--qg-font-ui) !important; }
+#authShell #googleButton [role="button"] { position: absolute !important; inset: 0 !important; margin: 0 !important; }
+@media (min-width: 1401px) { body:not(.is-authenticated) #authShell.qg-auth-welcome { padding-bottom: 24px !important; } }
+@media (min-width: 861px) and (max-width: 1400px) and (max-height: 850px) {
+  body:not(.is-authenticated) #authShell.qg-auth-welcome { padding-bottom: 16px !important; }
+  #authShell .qg-auth-card .auth-copy { margin-bottom: 20px !important; }
+  #authShell .qg-auth-card .auth-form { gap: 14px !important; }
+  #authShell .qg-auth-card .auth-provider-divider { margin: 14px 0 !important; }
+  #authShell .qg-auth-card .qg-guardian-entry { margin-top: 16px; padding: 14px 0; }
+  #authShell .qg-auth-card .auth-legal-note { margin-top: 20px; }
+  #authShell .qg-welcome-mascot-button { width: 58%; }
+  #authShell .qg-welcome-scene-backdrop { top: 20px; height: 100%; }
+}
+@media (max-width: 380px) {
+  #authShell .qg-welcome-hero { padding-right: 94px; }
+  #authShell .qg-welcome-headline h1 { font-size: 22px; }
+  #authShell .qg-welcome-scene { width: 100px; }
+}
+#authShell .qg-welcome-headline h1 span, #authShell .qg-welcome-copy h2 span, #authShell .qg-welcome-logo strong span { font-family: inherit !important; }
+#authShell .qg-auth-card .auth-legal-note, #authShell .qg-guardian-entry-copy span { color: #72718e; }
+/* The old cover forced PingFang on every descendant, including Latin branding. */
+#authShell.qg-auth-welcome, #authShell.qg-auth-welcome :where(p, span, strong, small, label, button, input, summary, div) { font-family: var(--qg-font-ui) !important; }
+#authShell .qg-welcome-logo strong { font-family: var(--qg-font-number) !important; }
+@media (min-width: 861px) { #authShell .qg-welcome-headline h1 { font-size: clamp(42px, 4.8vw, 78px); line-height: 1.25; } }
