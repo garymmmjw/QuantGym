@@ -226,9 +226,35 @@ def public_snapshot(snapshot):
     # Imported history remains useful for review, but solved-question counters
     # use only submissions observed by our fixed public-profile sync endpoint.
     result["syncedSubmissions"] = synced_accepted_submissions(snapshot)
+    result["syncedLifetimeSolvedCount"] = synced_lifetime_solved_count(snapshot)
     result["problems"] = [{**problem, "review": problem_review(snapshot, problem, generated_at)} for problem in result.get("problems", [])]
     result["reviewPolicy"] = {"algorithm": "sm2", "version": 1, "generatedAt": generated_at}
     return result
+
+
+def synced_lifetime_solved_count(snapshot):
+    """Return the current profile's server-observed all-time distinct solves.
+
+    Stats are written only by fresh_snapshot after the fixed public-profile
+    fetch; import_metadata does not accept them. Require the same account binding
+    as accepted records so legacy, disconnected, or mismatched snapshots cannot
+    supply history. This number has no individual completion dates.
+    """
+    if not isinstance(snapshot, dict):
+        return None
+    connection, binding, stats = snapshot.get("connection"), snapshot.get("_syncedAcceptedConnection"), snapshot.get("stats")
+    if not isinstance(connection, dict) or connection.get("site") != "cn" or not isinstance(stats, dict):
+        return None
+    if not connection.get("username") or not connection.get("linkedAt") or binding != {"username": connection["username"], "linkedAt": connection["linkedAt"]}:
+        return None
+    try:
+        linked = timestamp(connection["linkedAt"])
+        synced = timestamp(connection.get("lastSyncedAt"))
+        if synced < linked or synced > now_iso():
+            return None
+        return nonnegative(stats.get("solved"))
+    except LeetCodeError:
+        return None
 
 
 def synced_accepted_submissions(snapshot):
@@ -240,7 +266,21 @@ def synced_accepted_submissions(snapshot):
         return []
     result, seen = [], set()
     records = snapshot.get("_syncedAcceptedSubmissions", [])
-    for row in records if isinstance(records, list) else []:
+    records = list(records) if isinstance(records, list) else []
+    # Before the dedicated sync ledger existed, public submissions were already
+    # saved in _records. Every version of the importer marked submission IDs;
+    # recover only untouched public history, with the explicit ledger winning.
+    imported = snapshot.get("_importedSubmissionIds", [])
+    coverage = snapshot.get("coverage")
+    import_count = coverage.get("importedSubmissionCount", 0) if isinstance(coverage, dict) else 0
+    markers_valid = (isinstance(imported, list) and all(isinstance(value, str) for value in imported)
+                     and type(import_count) is int and 0 <= import_count <= len(set(imported)))
+    if markers_valid:
+        imported_ids = set(imported)
+        legacy = snapshot.get("_records", [])
+        if isinstance(legacy, list):
+            records.extend(row for row in legacy if isinstance(row, dict) and str(row.get("id")) not in imported_ids)
+    for row in records:
         try:
             record = submission(row)
         except (LeetCodeError, TypeError, ValueError):

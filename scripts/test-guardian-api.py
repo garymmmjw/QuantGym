@@ -313,9 +313,10 @@ class GuardianApiTests(unittest.TestCase):
                 "data_json = excluded.data_json, revision = user_leetcode.revision + 1, updated_at = excluded.updated_at"),
                 (user["id"], json.dumps(snapshot), datetime.now(timezone.utc).isoformat()))
 
-    def synced_snapshot(self, records, username="private-synced-profile"):
+    def synced_snapshot(self, records, username="private-synced-profile", lifetime_solved=None):
         return lc.fresh_snapshot(lc.empty_snapshot(), {
-            "username": username, "displayName": "Private connected profile", "stats": {"solved": 5000},
+            "username": username, "displayName": "Private connected profile",
+            "stats": {"solved": len({row["problemSlug"] for row in records if row["status"] == "AC"}) if lifetime_solved is None else lifetime_solved},
             "submissions": records, "calendar": [{"date": "2026-09-14", "submissions": 9999}], "calendarYear": 2026,
         })
 
@@ -720,7 +721,7 @@ class GuardianApiTests(unittest.TestCase):
         self.assertEqual([row["id"] for row in dashboard["questions"] if not row["isSummary"]], ["legacy:problem:onsite-coding"])
         self.assertEqual(sum(row["count"] for row in dashboard["questions"] if row["isSummary"]), 4)
 
-    def test_leetcode_uses_only_current_connection_synced_ac_once_per_problem_and_local_day(self):
+    def test_leetcode_uses_current_connection_synced_ac_and_three_hour_repeats(self):
         user, other = self.new_user(), self.new_user()
         guardian = self.guardian(user)
         rows = [self.accepted("ac1", "two-sum", "2026-09-14T01:00:00Z"),
@@ -733,8 +734,8 @@ class GuardianApiTests(unittest.TestCase):
         self.save_leetcode_fixture(user, snapshot)
         utc = self.dashboard(guardian, "2026-09-14")
         chicago = self.dashboard(guardian, "2026-09-14", "America/Chicago")
-        self.assertEqual(utc["summary"]["todayCount"], 2)
-        self.assertEqual(utc["summary"]["totalCount"], 2)
+        self.assertEqual(utc["summary"]["todayCount"], 3)
+        self.assertEqual(utc["summary"]["totalCount"], 3)
         self.assertEqual(chicago["summary"]["todayCount"], 2)
         self.assertEqual(chicago["summary"]["totalCount"], 3)
         self.assertEqual(chicago["summary"]["activeDays"], 2)
@@ -744,8 +745,8 @@ class GuardianApiTests(unittest.TestCase):
         self.assertEqual(self.dashboard(self.guardian(other))["summary"]["totalCount"], 0)
         utc_goal = self.create_goal(guardian, targetCount=3, startDate="2026-09-13", endDate="2026-09-14", timeZone="UTC")
         chicago_goal = self.create_goal(guardian, targetCount=3, startDate="2026-09-13", endDate="2026-09-14", timeZone="America/Chicago")
-        self.assertEqual(utc_goal["progress"], 2)
-        self.assertNotEqual(utc_goal["status"], "completed")
+        self.assertEqual(utc_goal["progress"], 3)
+        self.assertEqual(utc_goal["status"], "completed")
         self.assertEqual(chicago_goal["progress"], 3)
         self.assertEqual(chicago_goal["status"], "completed")
         snapshot["connection"]["username"] = "different-linked-account"
@@ -755,6 +756,207 @@ class GuardianApiTests(unittest.TestCase):
         self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 1)
         self.assertEqual(self.request("DELETE", "/api/leetcode", user["token"])[0], 200)
         self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 0)
+
+    def test_leetcode_three_hour_boundary_anchors_to_last_counted_ac_across_midnight(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        times = ["2026-09-13T23:00:00Z", "2026-09-14T00:00:00Z", "2026-09-14T02:00:00Z",
+                 "2026-09-14T04:59:59Z", "2026-09-14T05:00:00Z"]
+        records = [self.accepted(f"same-{i}", "same-problem", when) for i, when in enumerate(times)]
+        records.append(self.accepted("other", "other-problem", "2026-09-14T00:00:00Z"))
+        # Imported order and timezone must not affect which acceptances count.
+        self.save_leetcode_fixture(user, self.synced_snapshot(list(reversed(records))))
+        utc = self.dashboard(guardian, "2026-09-14")
+        chicago = self.dashboard(guardian, "2026-09-14", "America/Chicago")
+        yesterday = self.dashboard(guardian, "2026-09-13")
+        self.assertEqual(utc["summary"]["totalCount"], 4)
+        self.assertEqual(chicago["summary"]["totalCount"], 4)
+        self.assertEqual(utc["summary"]["todayCount"], 3)
+        self.assertEqual(chicago["summary"]["todayCount"], 1)
+        self.assertEqual(yesterday["summary"]["todayCount"], 1)
+        self.assertEqual({row["id"] for row in utc["questions"]}, {
+            "leetcode:same-problem:same-2", "leetcode:same-problem:same-4", "leetcode:other-problem:other",
+        })
+        goal = self.create_goal(guardian, targetCount=4, startDate="2026-09-14", endDate="2026-09-14")
+        self.assertEqual(goal["progress"], 3)
+        self.assertNotEqual(goal["status"], "completed")
+        self.assertEqual(self.smtp.messages_for(user["email"]), [])
+        self.restart_server()
+        self.assertEqual(self.dashboard(guardian, "2026-09-14")["summary"]["totalCount"], 4)
+
+    def test_lifetime_leetcode_fills_undated_history_without_today_or_goal_credit(self):
+        user, other = self.new_user(), self.new_user()
+        guardian = self.guardian(user)
+        self.save_leetcode_fixture(user, self.synced_snapshot([], lifetime_solved=50))
+        history_only = self.dashboard(guardian, "2026-09-14")
+        self.assertEqual(history_only["summary"]["totalCount"], 50)
+        self.assertEqual(history_only["summary"]["datedCount"], 0)
+        self.assertEqual(history_only["summary"]["undatedLeetcodeCount"], 50)
+        self.assertEqual(history_only["summary"]["leetcodeLifetimeSolvedCount"], 50)
+        self.assertEqual(history_only["summary"]["todayCount"], 0)
+        self.assertEqual(history_only["summary"]["activeDays"], 0)
+        self.assertEqual(history_only["questions"], [])
+        goal = self.create_goal(guardian, targetCount=6, startDate="2026-09-14", endDate="2026-09-14")
+        self.assertEqual(goal["progress"], 0)
+        self.assertNotEqual(goal["status"], "completed")
+        self.assertEqual(self.dashboard(self.guardian(other))["summary"]["totalCount"], 0)
+        records = [self.accepted("first", "two-sum", "2026-09-14T09:00:00Z"),
+                   self.accepted("first-repeat", "two-sum", "2026-09-14T12:00:00Z"),
+                   self.accepted("second", "three-sum", "2026-09-14T10:00:00Z"),
+                   self.accepted("second-repeat", "three-sum", "2026-09-14T13:00:00Z")]
+        snapshot = self.synced_snapshot(records, lifetime_solved=50)
+        self.save_leetcode_fixture(user, snapshot)
+        state = empty_state()
+        state["activities"] = [activity("manual-math", "2026-09-14T12:00:00Z", count=58, kind="mental", source="manual")]
+        self.put_personal(user, state)
+        dashboard = self.dashboard(guardian, "2026-09-14")
+        self.assertEqual(dashboard["summary"]["totalCount"], 53)
+        self.assertEqual(dashboard["summary"]["datedCount"], 5)
+        self.assertEqual(dashboard["summary"]["undatedLeetcodeCount"], 48)
+        self.assertEqual(dashboard["summary"]["todayCount"], 5)
+        self.assertEqual(dashboard["summary"]["activeDays"], 1)
+        self.assertEqual(len(dashboard["questions"]), 5)
+        self.assertEqual(dashboard["goals"][0]["progress"], 5)
+        self.assertNotEqual(dashboard["goals"][0]["status"], "completed")
+        self.assertEqual(self.smtp.messages_for(user["email"]), [])
+        self.assertNotIn("private-synced-profile", json.dumps(dashboard))
+        # A lower profile count never subtracts known dated completions.
+        snapshot["stats"]["solved"] = 1
+        self.save_leetcode_fixture(user, snapshot)
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 5)
+        # Relinking or deleting a connection removes its historical floor too.
+        snapshot["connection"]["username"] = "different-profile"
+        self.save_leetcode_fixture(user, snapshot)
+        relinked = self.dashboard(guardian)
+        self.assertEqual(relinked["summary"]["totalCount"], 1)
+        self.assertIsNone(relinked["summary"]["leetcodeLifetimeSolvedCount"])
+        self.save_leetcode_fixture(user, self.synced_snapshot([], "different-profile", lifetime_solved=2))
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 3)
+        self.assertEqual(self.request("DELETE", "/api/leetcode", user["token"])[0], 200)
+        self.assertEqual(self.dashboard(guardian)["summary"]["totalCount"], 1)
+
+    def test_older_public_leetcode_records_restore_dates_but_imported_history_stays_excluded(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        current = self.accepted("current", "two-sum", "2026-09-14T12:00:00Z")
+        snapshot = self.synced_snapshot([current], lifetime_solved=50)
+        snapshot = lc.import_metadata(snapshot, {"username": snapshot["connection"]["username"], "submissions": [
+            self.accepted("imported-old", "imported-only", "2026-09-12T12:00:00Z"),
+        ]})
+        snapshot["_records"].append(self.accepted("public-old", "three-sum", "2026-09-12T12:00:00Z"))
+        # A later metadata copy must not replace the explicit synced ledger row.
+        snapshot["_records"].append({**current, "problemSlug": "conflicting-metadata"})
+        self.save_leetcode_fixture(user, snapshot)
+        dashboard = self.dashboard(guardian, "2026-09-14")
+        older = self.dashboard(guardian, "2026-09-12")
+        self.assertEqual(dashboard["summary"]["totalCount"], 50)
+        self.assertEqual(dashboard["summary"]["datedCount"], 2)
+        self.assertEqual(dashboard["summary"]["undatedLeetcodeCount"], 48)
+        self.assertEqual(dashboard["summary"]["activeDays"], 2)
+        self.assertEqual(dashboard["summary"]["todayCount"], 1)
+        self.assertEqual([row["id"] for row in older["questions"]], ["leetcode:three-sum:public-old"])
+        self.assertEqual([row["id"] for row in dashboard["questions"]], ["leetcode:two-sum:current"])
+        for private in ("imported-only", "conflicting-metadata", "_records", "_importedSubmissionIds"):
+            self.assertNotIn(private, json.dumps([dashboard, older]))
+        goal = self.create_goal(guardian, targetCount=2, startDate="2026-09-14", endDate="2026-09-14")
+        self.assertEqual(goal["progress"], 1)
+        self.assertNotEqual(goal["status"], "completed")
+        for malformed in (None, [123]):
+            snapshot["_importedSubmissionIds"] = malformed
+            self.save_leetcode_fixture(user, snapshot)
+            guarded = self.dashboard(guardian, "2026-09-12")
+            self.assertEqual(guarded["summary"]["datedCount"], 1)
+            self.assertEqual(guarded["summary"]["totalCount"], 50)
+            self.assertEqual(guarded["questions"], [])
+        snapshot.pop("_importedSubmissionIds")
+        self.save_leetcode_fixture(user, snapshot)
+        self.assertEqual(self.dashboard(guardian)["summary"]["datedCount"], 1)
+        self.assertEqual(self.smtp.messages_for(user["email"]), [])
+
+    def test_dashboard_does_not_mix_dated_history_with_a_concurrently_relinked_profile_total(self):
+        original = self.synced_snapshot([self.accepted("first", "two-sum", "2026-09-14T12:00:00Z")], lifetime_solved=50)
+        replacement = self.synced_snapshot([], "replacement-profile", lifetime_solved=2)
+        leetcode_reads = []
+        conn = MagicMock()
+
+        def execute(query, params=()):
+            cursor = MagicMock()
+            cursor.fetchone.return_value = None
+            cursor.fetchall.return_value = []
+            if "FROM user_leetcode" in query:
+                snapshot = original if not leetcode_reads else replacement
+                leetcode_reads.append(snapshot)
+                cursor.fetchone.return_value = {"data_json": snapshot, "updated_at": "2026-09-14T12:00:00Z"}
+            elif "COUNT(*) FROM guardian_goals" in query:
+                cursor.fetchone.return_value = [0]
+            return cursor
+
+        conn.execute.side_effect = execute
+        service = MagicMock()
+        service.db.connect.return_value.__enter__.return_value = conn
+        service.zone.return_value = ZoneInfo("UTC")
+        service.require_guardian.return_value = {"id": "fixture-user", "account_json": {"name": "Fixture"}}
+        service.goals.return_value = []
+        service.email_configured.return_value = False
+        service.reminder_status.return_value = {}
+        service.practice.side_effect = lambda connection, user_id, **kwargs: guardian_module.GuardianService.practice(service, connection, user_id, **kwargs)
+        dashboard = guardian_module.GuardianService.dashboard(service, "guardian-fixture", {"date": "2026-09-14", "timeZone": "UTC"})
+        self.assertEqual(dashboard["summary"]["datedCount"], 1)
+        self.assertEqual(dashboard["summary"]["leetcodeLifetimeSolvedCount"], 50)
+        self.assertEqual(dashboard["summary"]["totalCount"], 50)
+        self.assertEqual(len(leetcode_reads), 1)
+
+    def test_legacy_trainer_aliases_recover_zero_and_stale_counts_without_duplicates(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        when = "2026-09-14T12:00:00Z"
+        state = empty_state()
+        state["activities"] = [
+            activity("zero-alias", when, kind="mental", count=0, source="legacy", legacyId="wrong-only"),
+            activity("duplicate-alias", when, kind="mental", count=0, source="legacy", sourceId="wrong-only"),
+            activity("legacy:mental:mixed", when, kind="mental", count=2, source="legacy"),
+            activity("modern-alias", when, kind="mental", count=0, source="legacy", legacyId="modern"),
+            activity("removed-alias", when, kind="mental", count=0, source="legacy", sourceId="removed"),
+            activity("empty-alias", when, kind="mental", count=0, source="legacy", legacyId="empty-modern"),
+        ]
+        state["trials"] = [
+            {"id": "modern", "settings": {"trainer": "math"}, "status": "completed", "correct": 1,
+             "completedAt": when, "questions": [{"id": "q", "outcome": "correct", "completedAt": when}]},
+            {"id": "empty-modern", "settings": {"trainer": "math"}, "status": "completed", "correct": 0,
+             "completedAt": when, "questions": []},
+        ]
+        state["removedActivityIds"] = ["removed-alias"]
+        self.put_personal(user, state)
+        status, data, _ = self.request("PUT", "/api/state", user["token"], {"state": {"mentalMathRecords": [
+            {"id": "wrong-only", "correct": 0, "incorrect": 3, "createdAt": when},
+            {"id": "mixed", "correct": 2, "incorrect": 3, "createdAt": when},
+            {"id": "modern", "correct": 0, "incorrect": 99, "createdAt": when},
+            {"id": "removed", "correct": 0, "incorrect": 99, "createdAt": when},
+            {"id": "empty-modern", "correct": 0, "incorrect": 99, "createdAt": when},
+        ]}})
+        self.assertEqual(status, 200, data)
+        dashboard = self.dashboard(guardian, "2026-09-14")
+        self.assertEqual(dashboard["summary"]["totalCount"], 3)
+        self.assertEqual(sorted(row["completedCount"] for row in dashboard["questions"]), [1, 3, 5])
+        self.assertEqual(len(dashboard["questions"]), 3)
+        self.assertEqual(len({row["id"] for row in dashboard["questions"]}), 3)
+
+    def test_legacy_wrong_answers_are_finished_questions_but_skips_and_configured_total_are_not(self):
+        user = self.new_user()
+        guardian = self.guardian(user)
+        when = "2026-09-14T12:00:00Z"
+        status, data, _ = self.request("PUT", "/api/state", user["token"], {"state": {"mentalMathRecords": [
+            {"id": "wrong-only", "correct": 0, "incorrect": 3, "skipped": 2, "total": 20, "createdAt": when},
+            {"id": "mixed", "correct": 2, "incorrect": 3, "skipped": 1, "total": 20, "createdAt": when},
+            {"id": "old-correct-only", "correct": 4, "createdAt": when},
+            {"id": "skipped-only", "correct": 0, "incorrect": 0, "skipped": 20, "total": 20, "createdAt": when},
+            {"id": "unfinished", "total": 20, "createdAt": when},
+        ]}})
+        self.assertEqual(status, 200, data)
+        dashboard = self.dashboard(guardian, "2026-09-14")
+        self.assertEqual(dashboard["summary"]["totalCount"], 3)
+        self.assertEqual(sorted(row["completedCount"] for row in dashboard["questions"]), [3, 4, 5])
+        self.assertTrue(all(row["count"] == 1 and row["isSummary"] for row in dashboard["questions"]))
 
     def test_leetcode_without_server_provenance_and_failed_or_future_submissions_never_count(self):
         user = self.new_user()

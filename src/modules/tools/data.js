@@ -14,8 +14,8 @@ export function normalizeMentalMathRecords(records = [], deps = {}) {
       durationSeconds: Math.max(0, Number(record?.durationSeconds || 0)),
       createdAt: record?.createdAt || new Date().toISOString()
     }))
-    .filter((record) => record.total > 0 || record.score !== 0)
-    .slice(-80);
+    // Keep history in storage; record lists and sparklines apply their own UI limits.
+    .filter((record) => record.total > 0 || record.score !== 0);
 }
 
 export function normalizeGameRecords(records = [], deps = {}) {

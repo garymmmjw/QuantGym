@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from leetcode_sync import synced_accepted_submissions
+from leetcode_sync import synced_accepted_submissions, synced_lifetime_solved_count
 from technical_practice import load_technical_questions
 
 
@@ -91,7 +91,7 @@ COUNTING_NOTE = (
     "仅统计已同步的完成记录：非 LeetCode 题需主动标记「我做完了」，抽题、查看、草稿和面试评分不计数；"
     "Mental Math（心算、数列、图形）每次有已完成题的训练在总数和目标中计 1 次，列表展示该次完成题数；答对和答错均算完成，跳过、超时和未完成不算；"
     "监护列表每次训练仅显示一行，按最后一道完成题的时间归属日期，不显示逐题内容。旧训练仅有汇总时采用原有记录题数。LeetCode 按当前关联账号公开同步的 AC 记录计数，"
-    "同一题在所选时区每天只计一次，导入记录和资料页汇总不计入。手动补记单独标注；每日套题汇总不重复计数。"
+    "同一题距离上次计入的 AC 至少 3 小时可再次计数，跨日不重置间隔。可信资料页累计用于补齐缺少日期的历史题数，仅计入累计，不计入今天、活跃天数或目标；导入记录不计入。手动补记单独标注；每日套题汇总不重复计数。"
 )
 
 
@@ -207,10 +207,11 @@ def is_leetcode_question(record):
 
 
 def counted_practice(practice, zone):
-    """Count each trainer session once and distinct LeetCode problems per day."""
-    result, seen, trainers = [], set(), {}
-    for item in practice:
-        day = timestamp(item["completedAt"]).astimezone(zone).date().isoformat()
+    """Count each trainer session once and LeetCode retries at least 3h apart."""
+    result, last_counted, trainers = [], {}, {}
+    # Ascending order makes the cooldown anchor the last counted AC, including
+    # records before the selected day or goal period. Civil midnight never resets it.
+    for item in sorted(practice, key=lambda row: (row["completedAt"], row["id"])):
         if item["kind"] in TRAINER_KINDS:
             identity = (item["kind"], item["_trainerKey"])
             if identity not in trainers:
@@ -227,10 +228,11 @@ def counted_practice(practice, zone):
             # These IDs are generated below from validated slugs, never user
             # activity IDs. Neither the connected profile nor raw state escapes.
             slug = item["id"].split(":", 2)[1]
-            identity = (slug, day)
-            if identity in seen:
+            when = timestamp(item["completedAt"])
+            previous = last_counted.get(slug)
+            if previous is not None and when - previous < timedelta(hours=3):
                 continue
-            seen.add(identity)
+            last_counted[slug] = when
         result.append(item)
     return sorted([*result, *trainers.values()], key=lambda item: (item["completedAt"], item["id"]), reverse=True)
 
@@ -301,6 +303,25 @@ def collect_practice(personal, legacy, problem_states, catalog=None, at=None, le
         previous = trials.get((kind, tid))
         if previous is None or len(rows(trial.get("questions"))) >= len(rows(previous.get("questions"))):
             trials[(kind, tid)] = trial
+    legacy_mental = {key(record.get("id")): record for record in rows(legacy.get("mentalMathRecords"))
+                     if key(record.get("id")) and timestamp(record.get("createdAt")) is not None}
+    enriched_activities = []
+    for activity in activities:
+        # Older aliases stored only the correct count, sometimes zero even when
+        # the original drill had finished wrong answers. Recover only exact
+        # references to that original record; modern trial details still win.
+        aid = key(activity.get("id"))
+        tid = key(activity.get("trialId")) or (aid[len("mental:"):] if aid.startswith("mental:") else "")
+        if (key(activity.get("kind")) == "mental" and ("mental", tid) not in trials
+                and (key(activity.get("source")) == "legacy" or key(activity.get("legacyId")) or key(activity.get("sourceId")))):
+            refs = [activity.get("legacyId"), activity.get("sourceId"), activity.get("trialId"), re.sub(r"^(?:legacy:)?mental:", "", aid)]
+            rid = next((key(ref) for ref in refs if key(ref) in legacy_mental), None)
+            if rid:
+                record = legacy_mental[rid]
+                activity = {**activity, "trialId": rid, "completedAt": record["createdAt"],
+                            "count": sum(safe_count(record.get(field)) for field in ("correct", "incorrect"))}
+        enriched_activities.append(activity)
+    activities = enriched_activities
     removed_trials = {(kind, tid) for kind, tid in trials if f"{kind}:{tid}" in removed}
     for activity in activities:
         aid, kind = key(activity.get("id")), key(activity.get("kind"))
@@ -382,7 +403,11 @@ def collect_practice(personal, legacy, problem_states, catalog=None, at=None, le
         if rid and (("mental", rid) in trainer_sessions or ("mental", rid) in removed_trials or rid in legacy_ids):
             continue
         rid = rid or digest(str(record.get("createdAt")) + ":" + str(record.get("correct")))
-        add({"id": f"legacy:mental:{rid}", "kind": "mental", "count": record.get("correct"),
+        # The legacy tools engine closes both correct and incorrect answers;
+        # unlike modern arithmetic mistakes, incorrect is not a retry counter.
+        # Configured total/skipped cannot prove how many questions were finished.
+        completed = sum(safe_count(record.get(field)) for field in ("correct", "incorrect"))
+        add({"id": f"legacy:mental:{rid}", "kind": "mental", "count": completed,
              "completedAt": record.get("createdAt"), "source": "legacy", "_trainerKey": f"trial:{rid}"}, ("trainer", "mental", rid))
 
     for session in rows(personal.get("dailySessions")):
@@ -572,7 +597,7 @@ class GuardianService:
                          (digest(token), user["id"], access["generation"], stamp(when), expires_at))
         return {"token": token, "expiresAt": expires_at, "student": {"name": student_name(user)}}
 
-    def practice(self, conn, user_id):
+    def practice(self, conn, user_id, *, summary_metadata=None):
         personal_row = conn.execute("SELECT data_json, updated_at FROM user_personal_prep WHERE user_id = ?", (user_id,)).fetchone()
         leetcode_row = conn.execute("SELECT data_json, updated_at FROM user_leetcode WHERE user_id = ?", (user_id,)).fetchone()
         legacy_row = conn.execute("SELECT state_json, updated_at FROM user_states WHERE user_id = ?", (user_id,)).fetchone()
@@ -592,6 +617,11 @@ class GuardianService:
         updated = [timestamp(row["updated_at"]) for row in ([personal_row, legacy_row, leetcode_row] + list(state_rows)) if row is not None]
         updated = [value for value in updated if value is not None]
         leetcode = obj(leetcode_row["data_json"]) if leetcode_row else {}
+        if summary_metadata is not None:
+            # Share this exact snapshot with the dashboard's historical total.
+            # A concurrent sync/relink must not mix one account's dated records
+            # with another snapshot's lifetime count under READ COMMITTED.
+            summary_metadata["leetcodeLifetimeSolvedCount"] = synced_lifetime_solved_count(leetcode)
         technical_numbers = {}
         questions = [obj(session.get("question")) for session in rows(personal.get("practiceSessions"))]
         questions.extend(question for session in rows(personal.get("dailySessions")) for question in rows(session.get("questions")))
@@ -693,13 +723,19 @@ class GuardianService:
             raise self.error(400, "date must be YYYY-MM-DD")
         with self.db.connect() as conn:
             user = self.require_guardian(conn, token)
-            practice, synced_at = self.practice(conn, user["id"])
+            summary_metadata = {}
+            practice, synced_at = self.practice(conn, user["id"], summary_metadata=summary_metadata)
             self.evaluate(conn, user["id"], practice)
             goals = self.goals(conn, user["id"], practice)
             practice = counted_practice(practice, zone)
             today = [item for item in practice if timestamp(item["completedAt"]).astimezone(zone).date().isoformat() == day]
+            lifetime_solved = summary_metadata["leetcodeLifetimeSolvedCount"]
+            known_problems = {item["id"].split(":", 2)[1] for item in practice if item["source"] == "leetcode"}
+            undated_leetcode = max(0, (lifetime_solved or 0) - len(known_problems))
+            dated_count = sum(item["count"] for item in practice)
             result = {"student": {"name": student_name(user)}, "date": day, "timeZone": zone_name,
-                      "summary": {"todayCount": sum(item["count"] for item in today), "totalCount": sum(item["count"] for item in practice),
+                      "summary": {"todayCount": sum(item["count"] for item in today), "totalCount": dated_count + undated_leetcode,
+                                  "datedCount": dated_count, "undatedLeetcodeCount": undated_leetcode, "leetcodeLifetimeSolvedCount": lifetime_solved,
                                   "activeDays": len({timestamp(item["completedAt"]).astimezone(zone).date().isoformat() for item in practice}),
                                   "completedGoals": conn.execute("SELECT COUNT(*) FROM guardian_goals WHERE user_id = ? AND status = 'completed'", (user["id"],)).fetchone()[0]},
                       "questions": today[:200], "questionsTruncated": len(today) > 200, "goals": goals,

@@ -77,8 +77,12 @@ answers. A session spanning midnight counts once, on the date of its latest
 completed question in the viewer's or goal's time zone.
 Detailed question records, including an empty list, take priority over duplicate
 trial/activity/legacy aggregates. Historical records without detail use their
-stored count (often the correct-only lower bound); manual entries remain labelled
-`manual`. Daily-session rollups never add another question. Undated, malformed and future records are
+stored count (often the correct-only lower bound). Legacy tool records explicitly
+store finished `correct` and `incorrect` questions, so both contribute to the
+session's displayed completed count; configured total and skipped do not imply
+completion. Legacy activity aliases recover that count only through an exact
+record ID reference; modern trial details and deletion markers take priority.
+Manual entries remain labelled `manual`. Daily-session rollups never add another question. Undated, malformed and future records are
 ignored. Offline completions appear after the student's next successful sync.
 
 Standalone technical completions use the canonical `practice:<session.id>`
@@ -96,15 +100,29 @@ Numbers are never guessed from record IDs, titles, slugs or list positions.
 
 LeetCode counts come only from accepted submissions observed by the server's
 public sync for the student's **current** connected profile. Each problem counts
-once per civil day, using the dashboard's selected IANA time zone or the goal's
-stored time zone. Failed submissions, imported metadata, problem-pool draws,
-profile totals and calendar submission aggregates do not count. Public sync can
+once initially and again when an accepted submission is at least three hours
+after that problem's last **counted** acceptance. Records are processed oldest
+first; intermediate submissions do not move this anchor, and midnight does not
+reset the interval. Local time zones determine which date a counted record
+belongs to, not whether it counts. The current profile's verified lifetime solved
+count fills gaps in older dated history: cumulative total equals dated completions plus
+`max(0, lifetime solved problems − distinct problems in known accepted history)`.
+Known qualifying repeat completions remain additional counts. This undated
+historical portion does not create question rows, active days, today's progress,
+goal progress, or achievement emails. The response exposes `datedCount`,
+`undatedLeetcodeCount`, and nullable `leetcodeLifetimeSolvedCount` in `summary`.
+Failed submissions, imported metadata, problem-pool draws, unverified profile
+totals and calendar submission aggregates do not count. Public sync can
 be incomplete and a profile link does not verify ownership. The server stores
 private `_syncedAcceptedSubmissions` and `_syncedAcceptedConnection` provenance;
 `GET /api/leetcode` projects the safe `syncedSubmissions` array for matching frontend
-counters. Sync preserves previously observed records for the same connection;
-switching profiles or disconnecting resets that scope. Existing snapshots without
-provenance contribute only after their next successful public sync. Imports cannot
+counters. For the same verified connection, older server-observed `_records`
+are also recovered when their IDs were never marked as imported; dedicated synced
+ledger entries take priority. Invalid import markers, or missing markers alongside
+a reported import history, disable that legacy recovery. Sync preserves previously
+observed records for the same connection; switching profiles or disconnecting
+resets that scope. Snapshots without a matching connection binding contribute only
+after their next successful public sync. Imports cannot
 set or promote provenance. Successful sync reevaluates guardian goals in the same
 transaction, without waiting for a dashboard visit.
 

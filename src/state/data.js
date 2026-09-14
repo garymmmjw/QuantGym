@@ -121,6 +121,7 @@ export function mergeCloudState(remoteState = {}, localState = {}, deps = {}) {
     entries: mergeRecords(remote.entries, local.entries),
     resources: mergeRecords(remote.resources, local.resources),
     network: mergeRecords(remote.network, local.network),
+    mentalMathRecords: mergeRecords(remote.mentalMathRecords, local.mentalMathRecords),
     interviewFavorites: mergeRecords(remote.interviewFavorites, local.interviewFavorites),
     interviewExperiences: mergeRecords(remote.interviewExperiences, local.interviewExperiences).map(normalizeInterviewExperience),
     courseStates: mergeCourseStates(remote.courseStates, local.courseStates),
