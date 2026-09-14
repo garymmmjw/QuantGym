@@ -9,6 +9,7 @@ import {
 } from "../../modules/economy/index.js";
 import { loadInterviewHistory } from "../../modules/interview/session.js";
 import { localDateKey, timestampOrZero } from "../../lib/date.js";
+import { getProblemCompletionCount } from "../../modules/problems/progress.js";
 
 /* Storage key defined in initRuntimeSlice (not exported there); value is stable. */
 const INTERVIEW_HISTORY_STORAGE_KEY = "quantgym-interview-history-v1";
@@ -380,13 +381,13 @@ export function createLeaguePageApi(deps = {}) {
   function countCompleted(problems) {
     const getPersonal = deps.getProblemPersonalState;
     if (typeof getPersonal === "function") {
-      return problems.reduce((sum, problem) => {
+      return getProblemCompletionCount(problems, (problemId) => {
         try {
-          return sum + (getPersonal(problem?.id)?.completed ? 1 : 0);
+          return getPersonal(problemId);
         } catch {
-          return sum;
+          return {};
         }
-      }, 0);
+      });
     }
     return Number(deps.getProblemCompletionCount?.(problems) || 0);
   }

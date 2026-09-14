@@ -3872,6 +3872,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             try:
                 with db.connect() as conn:
                     result = leetcode_sync.save_snapshot(conn, user["id"], revision, next_snapshot)
+                    guardian.evaluate(conn, user["id"])
             except leetcode_sync.LeetCodeError as error:
                 if not path.endswith("/review") or error.status != 409:
                     raise
@@ -3884,6 +3885,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 result = leetcode_sync.public_snapshot(latest)
             # Commit before sending success. Revision checks protect disconnect
             # or account changes made while an upstream request was in flight.
+            guardian.wake()
             self.send_json(200, result)
         except leetcode_sync.LeetCodeError as error:
             raise HttpError(error.status, str(error))

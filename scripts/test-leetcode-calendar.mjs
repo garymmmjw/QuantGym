@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { collectLeetCodeActivities, leetcodeDailySummary, leetcodeProblemUrl, leetcodeSubmissionDay } from "../src/features/personal/calendar/leetcodeCalendar.js";
 
 const submission = (id, submittedAt, problemSlug = "two-sum") => ({ id, submittedAt, problemSlug, title: "两数之和", titleEn: "Two Sum", status: "AC" });
-const snapshot = (submissions = [], extra = {}) => ({ connection: { site: "cn", username: "fixture" }, submissions, ...extra });
+const snapshot = (submissions = [], extra = {}) => ({ connection: { site: "cn", username: "fixture" }, submissions, syncedSubmissions: submissions, ...extra });
 
 test("accepted submission instants follow the selected local time zone across a date boundary", () => {
   assert.equal(leetcodeSubmissionDay("2026-09-11T01:00:00Z", "America/Chicago"), "2026-09-10");
@@ -35,6 +35,15 @@ test("invalid or dateless timestamps and non-accepted submissions cannot create 
   ]));
   assert.equal(records.activities.length, 0);
   assert.equal(leetcodeSubmissionDay("2026-09-11T01:00:00Z", "Invalid/Zone"), "");
+});
+
+test("imported or manual accepted history never counts without server-synced evidence", () => {
+  const imported = [submission("manual-ac", "2026-09-11T01:00:00Z")];
+  assert.equal(collectLeetCodeActivities({ connection: { site: 'cn', username: 'fixture' }, submissions: imported }).activities.length, 0);
+  assert.equal(collectLeetCodeActivities(snapshot(imported, { syncedSubmissions: [] })).activities.length, 0);
+  const records = collectLeetCodeActivities(snapshot(imported, { syncedSubmissions: [submission('real-ac', '2026-09-11T02:00:00Z', 'three-sum')] }), { timeZone: 'UTC' });
+  assert.deepEqual(records.activities.map(item => item.problemSlug), ['three-sum']);
+  assert.equal(leetcodeDailySummary(records, '2026-09-11').solved, 1);
 });
 
 test("historical heatmap buckets stay on their source date and never become solved problems", () => {

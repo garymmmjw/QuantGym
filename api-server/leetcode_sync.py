@@ -223,8 +223,31 @@ def public_snapshot(snapshot):
     # or advances it, and the generated fields never enter imported metadata.
     generated_at = now_iso()
     result = copy.deepcopy({key: value for key, value in snapshot.items() if not key.startswith("_")})
+    # Imported history remains useful for review, but solved-question counters
+    # use only submissions observed by our fixed public-profile sync endpoint.
+    result["syncedSubmissions"] = synced_accepted_submissions(snapshot)
     result["problems"] = [{**problem, "review": problem_review(snapshot, problem, generated_at)} for problem in result.get("problems", [])]
     result["reviewPolicy"] = {"algorithm": "sm2", "version": 1, "generatedAt": generated_at}
+    return result
+
+
+def synced_accepted_submissions(snapshot):
+    connection = snapshot.get("connection") if isinstance(snapshot, dict) else None
+    binding = snapshot.get("_syncedAcceptedConnection") if isinstance(snapshot, dict) else None
+    if not isinstance(connection, dict) or connection.get("site") != "cn" or not isinstance(binding, dict):
+        return []
+    if not connection.get("username") or not connection.get("linkedAt") or binding != {"username": connection["username"], "linkedAt": connection["linkedAt"]}:
+        return []
+    result, seen = [], set()
+    records = snapshot.get("_syncedAcceptedSubmissions", [])
+    for row in records if isinstance(records, list) else []:
+        try:
+            record = submission(row)
+        except (LeetCodeError, TypeError, ValueError):
+            continue
+        if record["status"] == "AC" and record["id"] not in seen:
+            result.append(record)
+            seen.add(record["id"])
     return result
 
 
@@ -372,6 +395,15 @@ def fresh_snapshot(previous, incoming):
     snapshot = copy.deepcopy(previous) if same_user else empty_snapshot()
     now = now_iso()
     snapshot["connection"] = {"site": "cn", "username": username, "displayName": incoming["displayName"], "profileUrl": f"https://leetcode.cn/u/{username}/", "linkedAt": snapshot.get("connection", {}).get("linkedAt", now) if same_user else now, "lastSyncedAt": now}
+    synced = {row["id"]: row for row in synced_accepted_submissions(snapshot)}
+    for row in incoming["submissions"]:
+        record = submission(row)
+        if record["status"] == "AC":
+            synced[record["id"]] = record
+    if len(synced) > MAX_RECORDS:
+        raise LeetCodeError("The synced submission collection exceeds the 20,000 record limit.", 413)
+    snapshot["_syncedAcceptedConnection"] = {"username": username, "linkedAt": snapshot["connection"]["linkedAt"]}
+    snapshot["_syncedAcceptedSubmissions"] = list(synced.values())
     snapshot["stats"] = incoming["stats"]
     year = incoming["calendarYear"]
     calendar = {row["date"]: row for row in snapshot["calendar"] if not row["date"].startswith(f"{year}-")}

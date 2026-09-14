@@ -1,3 +1,5 @@
+import { hasExplicitProblemCompletion } from './completion.js';
+
 export function upsertCatalogProblems(existingProblems = [], incomingProblems = [], options = {}) {
   const {
     normalizeProblem = (problem) => problem,
@@ -82,7 +84,7 @@ export function getProblemSavedToggle(current = {}, options = {}) {
 }
 
 export function getProblemCompletedToggle(current = {}, options = {}) {
-  const isCompleted = Boolean(current.completed);
+  const isCompleted = hasExplicitProblemCompletion(current);
   const nowIso = options.nowIso || (() => new Date().toISOString());
   return {
     completed: !isCompleted,

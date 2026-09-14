@@ -1,3 +1,4 @@
+import { countsTowardProblemTotal } from './completion.js';
 import {
   formatCategoryLabel as formatCategoryLabelValue,
   getUserCatalogProblems as getUserCatalogProblemsValue,
@@ -29,6 +30,17 @@ import {
 export function createProblemProvider(deps = {}) {
   const getState = () => deps.getState?.() || {};
   const getSkillDefs = () => deps.skillDefs || {};
+  let catalogSource = null;
+  let catalogLookup = new Map();
+
+  function getProblem(problemId) {
+    const problems = getState().problems || [];
+    if (problems !== catalogSource) {
+      catalogSource = problems;
+      catalogLookup = new Map(problems.map(problem => [problem.id, problem]));
+    }
+    return catalogLookup.get(problemId);
+  }
 
   function getDataDeps() {
     return {
@@ -86,7 +98,8 @@ export function createProblemProvider(deps = {}) {
   }
 
   function isProblemCompleted(problemId) {
-    return isProblemCompletedValue(problemId, deps.getPersonalState);
+    const problem = getProblem(problemId);
+    return Boolean(problem && countsTowardProblemTotal(problem) && isProblemCompletedValue(problemId, deps.getPersonalState));
   }
 
   function getProblemCompletionCount(problems = getCatalogProblems()) {

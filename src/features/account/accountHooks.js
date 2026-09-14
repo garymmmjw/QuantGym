@@ -9,6 +9,7 @@ import {
   getTotalXp
 } from "../../modules/skills/data.js";
 import { getEffectiveTotalXp } from "../../modules/economy/index.js";
+import { getProblemCompletionCount } from "../../modules/problems/progress.js";
 
 function canCurrentUserReadAdminOverview(user = {}) {
   const tier = String(user?.subscriptionTier || user?.plan || "").toLowerCase();
@@ -259,8 +260,9 @@ export function useAccountPageModel() {
   const stats = useMemo(() => {
     const skills = userStateValue.skills || {};
     const totalXp = getEffectiveTotalXp(userStateValue);
-    const solved = (Array.isArray(userStateValue.problemStates) ? userStateValue.problemStates : [])
-      .filter((item) => item?.completed).length;
+    const problemStates = new Map((Array.isArray(userStateValue.problemStates) ? userStateValue.problemStates : [])
+      .map(item => [item.problemId, item]));
+    const solved = getProblemCompletionCount(userStateValue.problems, id => problemStates.get(id));
     const streak = getStreak(userStateValue.entries || [], userStateValue.checkIns || [], new Date(), userStateValue.economy?.frozenDays || []);
     return {
       totalXp,

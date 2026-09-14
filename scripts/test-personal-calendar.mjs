@@ -68,7 +68,7 @@ test("event ids and linked trial/session records are counted only once", () => {
   assert.equal(summary.mental, 25);
   assert.equal(summary.mentalTrials, 1);
   assert.equal(summary.daily, 1);
-  assert.equal(summary.totalQuestions, 25);
+  assert.equal(summary.totalQuestions, 0);
 });
 
 test("fallbacks include finished and early-ended trials but exclude active trials and unfinished daily mocks", () => {
@@ -119,7 +119,8 @@ test("legacy completion dates are imported without assigning undated totals to t
   const result = collectCalendarActivities({}, legacyState);
   const summary = summarizeActivities(result.activities);
   assert.equal(summary.quant, 1);
-  assert.equal(summary.coding, 1);
+  assert.equal(summary.coding, 0);
+  assert.equal(summary.codingReviews, 1);
   assert.equal(summary.behavioral, 1);
   assert.equal(result.undatedLegacyCount, 1);
   assert.equal(JSON.stringify(legacyState), snapshot, "history must remain read-only");
@@ -139,7 +140,7 @@ test("legacy mental records use their original date and correct answers", () => 
   assert.equal(undatedLegacyCount, 1);
 });
 
-test("interview entries count actual dated practice; generic XP and global reports are not inferred", () => {
+test("interview scores, evaluations, entry dates and XP never substitute for explicit completion", () => {
   const { activities } = collectCalendarActivities({}, {
     problems: [{ id: "behavior", category: "behavioral" }, { id: "code", category: "leetcode" }],
     entries: [
@@ -152,10 +153,12 @@ test("interview entries count actual dated practice; generic XP and global repor
     interviewReports: [{ questionCount: 99, date: at }]
   });
   const summary = summarizeActivities(activities);
-  assert.equal(summary.tech, 1);
-  assert.equal(summary.coding, 1);
-  assert.equal(summary.behavioral, 1);
-  assert.equal(summary.totalQuestions, 3);
+  assert.equal(summary.tech, 0);
+  assert.equal(summary.coding, 0);
+  assert.equal(summary.codingReviews, 0);
+  assert.equal(summary.behavioral, 0);
+  assert.equal(summary.totalQuestions, 0);
+  assert.equal(activities.length, 0);
 });
 
 test("explicit references prevent importing the same legacy activity twice", () => {
@@ -163,13 +166,13 @@ test("explicit references prevent importing the same legacy activity twice", () 
     { id: "event", sourceId: "e1", kind: "tech", count: 1, completedAt: at },
     { id: "quant-event", problemId: "q1", kind: "quant", count: 1, completedAt: at }
   ] }, {
-    entries: [{ id: "e1", problemId: "q1", interviewScore: 90, date: at }],
+    entries: [{ id: "e1", problemId: "q1", interviewScore: 90, date: at, completed: true, completedAt: at }],
     problemStates: [{ problemId: "q1", completed: true, completedAt: at }]
   });
   assert.equal(activities.length, 2);
 });
 
-test("manual mental entries add questions but never invent a trial or speed record", () => {
+test("manual mental entries preserve training stats without adding solved questions, trials, or speed records", () => {
   const activity = createManualActivity({ kind: "mental", count: "12", dateKey: "2026-09-08", note: "  Offline practice  " }, { id: "a", now: at });
   assert.equal(activity.id, "manual:a");
   assert.equal(activity.source, "manual");
@@ -178,6 +181,7 @@ test("manual mental entries add questions but never invent a trial or speed reco
   const { activities } = collectCalendarActivities({ activities: [activity] });
   assert.equal(summarizeActivities(activities).mental, 12);
   assert.equal(summarizeActivities(activities).mentalTrials, 0);
+  assert.equal(summarizeActivities(activities).totalQuestions, 0);
 });
 
 test("manual records reject invalid counts, dates, or a fabricated daily completion", () => {
@@ -241,7 +245,7 @@ test("sequence and pattern events and fallback histories have separate question 
   assert.equal(summary.sequenceTrials, 2);
   assert.equal(summary.pattern, 2);
   assert.equal(summary.patternTrials, 2);
-  assert.equal(summary.totalQuestions, 18);
+  assert.equal(summary.totalQuestions, 0);
   const day = buildDailySummaries(activities, localDayKey(at), 1)[0];
   assert.equal(day.sequence, 4);
   assert.equal(day.pattern, 2);
@@ -267,4 +271,102 @@ test("reasoning links cannot suppress dated legacy math records with the same ex
   assert.equal(summary.sequence, 2);
   assert.equal(summary.mental, 7);
   assert.equal(summary.activityCount, 2);
+});
+
+test("solved totals exclude trainer and manual LeetCode counts while retaining explicitly completed non-LeetCode coding", () => {
+  const raw = { activities: [
+    { id: 'mental:done', kind: 'mental', count: 100, completedAt: at },
+    { id: 'sequence:done', kind: 'sequence', count: 30, completedAt: at },
+    { id: 'pattern:done', kind: 'pattern', count: 20, completedAt: at },
+    { id: 'manual:lc', kind: 'coding', source: 'manual', count: 12, completedAt: at },
+    { id: 'practice:lc', kind: 'coding', source: 'standalone', count: 1, completedAt: at },
+    { id: 'daily:code', kind: 'coding', source: 'daily', count: 1, completedAt: at },
+    { id: 'manual:tech', kind: 'tech', source: 'manual', count: 2, completedAt: at },
+  ] };
+  const before = structuredClone(raw);
+  const { activities } = collectCalendarActivities(raw);
+  const summary = summarizeActivities(activities);
+  assert.equal(summary.mental, 100);
+  assert.equal(summary.sequence, 30);
+  assert.equal(summary.pattern, 20);
+  assert.equal(summary.codingReviews, 13);
+  assert.equal(summary.coding, 1);
+  assert.equal(summary.tech, 2);
+  assert.equal(summary.totalQuestions, 3);
+  assert.equal(buildDailySummaries(activities, localDayKey(at), 1)[0].totalQuestions, 3);
+  assert.deepEqual(raw, before, 'changing the counting rule does not delete practice history');
+});
+
+test("an active or missing standalone practice session cannot be counted as explicitly completed", () => {
+  const { activities } = collectCalendarActivities({
+    activities: [
+      { id: 'practice:draw-only', kind: 'tech', source: 'standalone', count: 1, completedAt: at },
+      { id: 'practice:missing', kind: 'tech', source: 'standalone', count: 1, completedAt: at },
+      { id: 'practice:done', kind: 'tech', source: 'standalone', count: 1, completedAt: at },
+    ],
+    practiceSessions: [{ id: 'draw-only', status: 'active' }, { id: 'done', status: 'completed' }],
+  });
+  assert.equal(summarizeActivities(activities).totalQuestions, 1);
+  assert.equal(summarizeActivities(activities).tech, 1);
+  assert.equal(activities.length, 3, 'draft and orphan history is retained without credit');
+});
+
+test("legacy and linked calendar records share catalog exclusions for trainer and LeetCode metadata", () => {
+  const problems = [
+    { id: 'math', category: 'mentalMath' },
+    { id: 'sequence', category: 'sequence' },
+    { id: 'pattern', category: 'pattern' },
+    { id: 'trainer', category: 'probabilityExpectation', source: 'trainer' },
+    { id: 'source-lc', category: 'coding', source: 'leetcode' },
+    { id: 'source-type-lc', sourceType: 'leetcode' },
+    { id: 'url-lc', category: 'coding', sourceUrl: 'https://leetcode.com/problems/two-sum/' },
+    { id: 'ordinary-code', category: 'coding' },
+  ];
+  const problemStates = [...problems, { id: 'leetcode-old-slug' }].map(problem => ({ problemId: problem.id, completed: true, completedAt: at }));
+  const legacy = { problems, problemStates };
+  const summary = summarizeActivities(collectCalendarActivities({}, legacy).activities);
+  assert.equal(summary.totalQuestions, 1);
+  assert.equal(summary.coding, 1);
+  assert.equal(summary.codingReviews, 4);
+  assert.equal(summary.mental, 2);
+  assert.equal(summary.sequence, 1);
+  assert.equal(summary.pattern, 1);
+  const linked = collectCalendarActivities({ activities: [
+    { id: 'linked-math', problemId: 'math', kind: 'quant', count: 1, completedAt: at },
+    { id: 'linked-lc', problemId: 'source-lc', kind: 'coding', count: 1, completedAt: at },
+  ] }, { problems });
+  assert.equal(summarizeActivities(linked.activities).totalQuestions, 0);
+  assert.equal(summarizeActivities(linked.activities).mental, 1);
+});
+
+test("legacy completion requires strict true and a zoned completion timestamp", () => {
+  const rows = [
+    { problemId: 'confirmed', completed: true, completedAt: at, date: '2020-01-01T00:00:00Z' },
+    { problemId: 'string', completed: 'true', completedAt: at },
+    { problemId: 'number', completed: 1, completedAt: at },
+    { problemId: 'date-only', completed: true, completedAt: '2026-09-08' },
+    { problemId: 'unconfirmed', completed: false, completedAt: at },
+    { problemId: 'missing-time', completed: true, date: at },
+  ];
+  for (const field of ['problemStates', 'entries']) {
+    const { activities } = collectCalendarActivities({}, { [field]: rows });
+    assert.equal(summarizeActivities(activities).totalQuestions, 1);
+    assert.equal(activities.length, 1);
+    assert.equal(activities[0].problemId, 'confirmed');
+    assert.equal(activities[0].completedAt, at);
+  }
+});
+
+test("catalog and interview mirrors of the same completion count once even with different timezone strings", () => {
+  const { activities } = collectCalendarActivities({}, {
+    problemStates: [{ problemId: 'same-question', completed: true, completedAt: at }],
+    entries: [
+      { id: 'mirror', problemId: 'same-question', completed: true, completedAt: '2026-09-08T11:00:00-05:00' },
+      { id: 'later-repeat', problemId: 'same-question', completed: true, completedAt: '2026-09-08T17:00:00Z' },
+      { id: 'duplicate-later', problemId: 'same-question', completed: true, completedAt: '2026-09-08T17:00:00.000Z' },
+    ],
+  });
+  assert.equal(activities.length, 2);
+  assert.equal(summarizeActivities(activities).totalQuestions, 2);
+  assert.deepEqual(activities.map(item => item.id).sort(), ['legacy:interview:later-repeat', 'legacy:problem:same-question']);
 });

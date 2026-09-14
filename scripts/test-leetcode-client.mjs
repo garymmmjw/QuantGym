@@ -7,6 +7,23 @@ const linked = (username) => ({ ...EMPTY_LEETCODE, connection: { username, lastS
 const response = (data, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => data });
 const deferred = () => { let resolve; const promise = new Promise((done) => { resolve = done; }); return { resolve, promise }; };
 
+test("verified account submissions stay separate from imported history and clear on disconnect", async () => {
+  const imported = { id: "import-1", problemSlug: "two-sum", status: "AC", submittedAt: "2026-09-14T12:00:00Z" };
+  const synced = { ...imported, id: "sync-1", problemSlug: "valid-parentheses" };
+  let payload = { ...linked("fixture-profile"), submissions: [imported] };
+  delete payload.syncedSubmissions;
+  const client = createLeetCodeClient({ endpoint: "https://api.example.test/api", token: "fixture", fetchImpl: async () => response(payload) });
+  await client.reload();
+  assert.deepEqual(client.getSnapshot().data.syncedSubmissions, []);
+  assert.deepEqual(client.getSnapshot().data.submissions, [imported]);
+  payload = { ...payload, syncedSubmissions: [synced] };
+  await client.sync();
+  assert.deepEqual(client.getSnapshot().data.syncedSubmissions, [synced]);
+  payload = { ...EMPTY_LEETCODE, syncedSubmissions: [synced] };
+  await client.disconnect();
+  assert.deepEqual(client.getSnapshot().data.syncedSubmissions, []);
+});
+
 test("each cloud account keeps its own cached snapshot and sends only its own bearer token", async () => {
   const calls = [];
   const fetchImpl = async (url, options) => { calls.push({ url, options }); return response(linked(options.headers.Authorization)); };

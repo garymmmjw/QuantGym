@@ -2,18 +2,14 @@ import {
   createLeetcodeHotPanelState,
   renderLeetcodeHotPanel
 } from './leetcodeHot.js';
-import { toggleLeetcodeHotDoneState } from './progress.js';
 
 export function createLeetcodeHotController(deps = {}) {
   const panelState = createLeetcodeHotPanelState(Boolean(deps.initialExpanded));
   const getElements = () => deps.elements || {};
-  const getState = () => deps.getState?.() || {};
   const getItems = () => deps.items || [];
-  const normalizeDoneIds = (ids) => deps.normalizeDoneIds?.(ids) || [];
 
   function render() {
-    const state = getState();
-    const done = new Set(normalizeDoneIds(state.leetcodeHot100Done));
+    const done = new Set();
     deps.renderProblemCollectionGrid?.();
     renderLeetcodeHotPanel({
       elements: getElements(),
@@ -28,25 +24,8 @@ export function createLeetcodeHotController(deps = {}) {
     deps.refreshIcons?.();
   }
 
-  function toggleDone(problemId) {
-    const state = getState();
-    const next = toggleLeetcodeHotDoneState({
-      problemId,
-      doneIds: state.leetcodeHot100Done,
-      hotItems: getItems(),
-      currentLeetcodeSkill: state.skills?.leetcode,
-      normalizeDoneIds
-    });
-    if (!next) return null;
-    state.leetcodeHot100Done = next.doneIds;
-    if (!state.skills) state.skills = {};
-    state.skills.leetcode = next.leetcodeSkill;
-    deps.saveState?.();
-    render();
-    deps.renderSummary?.();
-    deps.renderProblemCompletionDashboard?.();
-    deps.renderSkills?.();
-    return next;
+  function toggleDone() {
+    return null;
   }
 
   function togglePanel() {

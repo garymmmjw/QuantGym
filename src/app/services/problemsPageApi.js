@@ -1,3 +1,4 @@
+import { countsTowardProblemTotal, hasExplicitProblemCompletion, isLeetcodeCatalogProblem } from '../../modules/problems/completion.js';
 import { leetcodeHot100 } from "../../constants.js";
 import {
   buildProblemProgressItems,
@@ -53,15 +54,7 @@ export function createProblemsPageApi(deps = {}) {
   }
 
   function getLeetcodeHotStats(hotItems = getLeetcodeHotItems()) {
-    const state = getState();
-    const hasStateDoneIds = Array.isArray(state.leetcodeHot100Done);
-    const doneIds = deps.normalizeLeetcodeHot100Done?.(state.leetcodeHot100Done, hotItems)
-      || (hasStateDoneIds ? state.leetcodeHot100Done : []);
-    const stats = deps.getLeetcodeHotCompletionStats?.() || {};
-    return {
-      done: hasStateDoneIds ? doneIds.length : Math.max(0, Number(stats.done || 0)),
-      total: Math.max(0, Number(stats.total || 0)) || hotItems.length || 100
-    };
+    return { done: 0, total: hotItems.length || 100, requiresSync: true };
   }
 
   function isLeetcodeHotExpanded() {
@@ -258,7 +251,7 @@ export function createProblemsPageApi(deps = {}) {
     const buildCollectionEntries = deps.getProblemCollectionEntries || getProblemCollectionEntries;
     const collectionEntries = buildCollectionEntries(collectionEntryOptions);
     const leetcodeExpanded = isLeetcodeHotExpanded();
-    const doneIds = deps.normalizeLeetcodeHot100Done?.(state.leetcodeHot100Done, hotItems) || state.leetcodeHot100Done || [];
+    const doneIds = [];
     const progressItemOptions = {
       problems: scopes.sourceProblems,
       activeTheme: filters.theme,
@@ -431,7 +424,9 @@ export function createProblemsPageApi(deps = {}) {
       answer: answerContent,
       hintRevealed: Boolean(deps.isProblemDetailBlockRevealed?.(problem.id, "hint")),
       answerRevealed: Boolean(deps.isProblemDetailBlockRevealed?.(problem.id, "answer")),
-      completed: Boolean(personal.completed),
+      completed: !isLeetcodeCatalogProblem(problem) && hasExplicitProblemCompletion(personal),
+      manualCompletionAllowed: !isLeetcodeCatalogProblem(problem),
+      countsTowardPractice: countsTowardProblemTotal(problem),
       favorite: Boolean(personal.favorite),
       social: {
         liked: Boolean(social.liked),
@@ -537,7 +532,9 @@ export function createProblemsPageApi(deps = {}) {
         difficulty: problem.difficulty,
         difficultyClass: difficultyClass(problem.difficulty),
         tags,
-        completed: Boolean(personal.completed),
+        completed: !isLeetcodeCatalogProblem(problem) && hasExplicitProblemCompletion(personal),
+        manualCompletionAllowed: !isLeetcodeCatalogProblem(problem),
+        countsTowardPractice: countsTowardProblemTotal(problem),
         favorite: Boolean(personal.favorite),
         likeCount: Number(social.likeCount || 0),
         commentCount: Number(social.commentCount || 0),
@@ -650,6 +647,8 @@ export function createProblemsPageApi(deps = {}) {
     },
 
     toggleCompleted(problemId) {
+      const problem = getProblems().find(item => item.id === problemId);
+      if (!problem || isLeetcodeCatalogProblem(problem)) return false;
       deps.toggleProblemCompleted?.(problemId);
       sync();
     },
@@ -681,21 +680,8 @@ export function createProblemsPageApi(deps = {}) {
       sync();
     },
 
-    toggleLeetcodeHotDone(problemId) {
-      const state = getState();
-      const hotItems = getLeetcodeHotItems();
-      const validIds = new Set(hotItems.map((item) => item.id));
-      if (!validIds.has(problemId)) return;
-      const done = new Set(deps.normalizeLeetcodeHot100Done?.(state.leetcodeHot100Done, hotItems) || []);
-      if (done.has(problemId)) done.delete(problemId);
-      else done.add(problemId);
-      state.leetcodeHot100Done = [...done];
-      state.skills = {
-        ...(state.skills || {}),
-        leetcode: Math.max(Number(state.skills?.leetcode || 0), Math.min(100, state.leetcodeHot100Done.length))
-      };
-      deps.saveState?.();
-      sync();
+    toggleLeetcodeHotDone() {
+      return null;
     },
 
     addFromForm(payload) {

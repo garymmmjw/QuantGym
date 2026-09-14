@@ -21,12 +21,15 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
       reportCloudSessionResponse({ endpoint, token, userId }, response.status);
       if (!response.ok) throw Object.assign(new Error(payload.error || "request_failed"), { status: response.status });
       if (!Object.hasOwn(payload, "connection") || !Array.isArray(payload.problems) || !Array.isArray(payload.submissions)) throw new Error("invalid_response");
+      if (payload.syncedSubmissions !== undefined && !Array.isArray(payload.syncedSubmissions)) throw new Error("invalid_response");
       if (path === "/review" && (payload.connection?.username !== body?.username
         || payload.connection?.linkedAt !== body?.linkedAt
         || !(payload.problems.find((problem) => problem.slug === body?.problemSlug)?.review?.version > body?.expectedVersion))) {
         throw new Error("invalid_review_response");
       }
-      return payload;
+      // Older API deployments have no verified source list. Imported history
+      // must never become a substitute for account-synced completion records.
+      return { ...payload, syncedSubmissions: payload.connection ? payload.syncedSubmissions || [] : [] };
     } finally { clearTimeout(timeout); }
   }
 

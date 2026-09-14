@@ -35,16 +35,17 @@ test('timers retain elapsed time across pauses/reloads and only one practice tim
   assert.equal(data.practiceSessions[1].elapsedSeconds, 30);
 });
 
-test('completing each standalone kind records exactly one calendar item and never a Daily Mock', () => {
+test('explicit technical completion counts once while local Coding OA review only preserves practice history', () => {
   let data = stateWith(session(), session('fixture-2', 'coding'));
   data = finish(data, 'fixture-1');
   data = finish(data, 'fixture-2');
   assert.equal(completePracticeSession(data, 'fixture-2'), data);
   const summary = summarizeActivities(collectCalendarActivities(data).activities);
   assert.equal(summary.tech, 1);
-  assert.equal(summary.coding, 1);
+  assert.equal(summary.coding, 0);
+  assert.equal(summary.codingReviews, 1);
   assert.equal(summary.daily, 0);
-  assert.equal(summary.totalQuestions, 2);
+  assert.equal(summary.totalQuestions, 1);
   assert.equal(data.practiceSessions.every(s => s.status === 'completed' && !s.timerStartedAt), true);
 });
 

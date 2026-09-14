@@ -10,7 +10,7 @@ const context = await browser.newContext({ viewport: { width: 1440, height: 1000
 const errors = [];
 const session = { token: 'fixture-guardian-token', expiresAt: new Date(Date.now() + 3600000).toISOString(), student: { name: '测试同学' } };
 const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago' }).format(new Date());
-let goals = [{ id: 'fixture-goal', title: '每天向前一步', targetCount: 10, progress: 3, startDate: date, endDate: date, timeZone: 'America/Chicago', reward: '周末一起看电影', status: 'active', createdAt: new Date().toISOString(), notificationStatus: null }];
+let goals = [{ id: 'fixture-goal', title: '每天向前一步', targetCount: 10, progress: 2, startDate: date, endDate: date, timeZone: 'America/Chicago', reward: '周末一起看电影', status: 'active', createdAt: new Date().toISOString(), notificationStatus: null }];
 let reminderCalls = 0;
 let reminder = { lastSentAt: null, nextAllowedAt: null, status: null };
 await context.route('**/api/guardian/**', async route => {
@@ -25,7 +25,7 @@ await context.route('**/api/guardian/**', async route => {
     else if (body.code === 'valid-fixture-code') data = session;
     else { status = 401; data = { error: 'Invalid guardian code' }; }
   } else if (path === '/api/guardian/dashboard') {
-    data = { student: session.student, date, timeZone: 'America/Chicago', summary: { todayCount: 3, totalCount: 28, activeDays: 6, completedGoals: 1 }, questions: [{ id: 'q1', title: '抛硬币的期望次数', titleEn: 'Coin flips', kind: 'quant', count: 1, completedAt: new Date().toISOString(), source: 'manual' }, { id: 'q2', title: '17 × 23', kind: 'mental', count: 2, completedAt: new Date().toISOString(), source: 'automatic' }], goals, emailConfigured: true, reminder, syncedAt: new Date().toISOString(), countingNote: '按已同步的答题记录统计；手动补录单独标记。' };
+    data = { student: session.student, date, timeZone: 'America/Chicago', summary: { todayCount: 2, totalCount: 28, activeDays: 6, completedGoals: 1 }, questions: [{ id: 'q1', title: '抛硬币的期望次数', titleEn: 'Coin flips', kind: 'quant', count: 1, completedAt: new Date().toISOString(), source: 'manual' }, { id: 'q2', title: 'Two Sum', kind: 'coding', count: 1, completedAt: new Date().toISOString(), source: 'leetcode' }], goals, emailConfigured: true, reminder, syncedAt: new Date().toISOString(), countingNote: 'Mental Math 不计入刷题数；题目需主动标记完成，LeetCode 按账户同步记录统计。' };
   } else if (path === '/api/guardian/goals') {
     const goal = { ...body, id: 'new-goal', status: 'active', progress: 0, createdAt: new Date().toISOString() };
     goals = [goal, ...goals];

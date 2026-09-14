@@ -1,3 +1,4 @@
+import { getProblemCompletionCount } from '../../modules/problems/progress.js';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getStreak } from "../../modules/skills/data.js";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
@@ -83,11 +84,11 @@ export function useProblemsPageModel() {
       : rawStates && typeof rawStates === "object"
         ? Object.values(rawStates)
         : [];
-    let solved = 0;
+    const statesById = new Map(states.filter(Boolean).map(state => [state.problemId, state]));
+    const solved = getProblemCompletionCount(userState.problems || [], id => statesById.get(id));
     const scores = [];
     states.forEach((state) => {
       if (!state) return;
-      if (state.completed) solved += 1;
       const score = Number(state.lastScore);
       if (Number.isFinite(score)) scores.push(score);
     });
@@ -101,7 +102,7 @@ export function useProblemsPageModel() {
       streak = 0;
     }
     return { solved, accuracy, streak };
-  }, [revision, userState.problemStates, userState.entries, userState.checkIns]);
+  }, [revision, userState.problems, userState.problemStates, userState.entries, userState.checkIns]);
 
   useEffect(() => {
     api?.sync?.();

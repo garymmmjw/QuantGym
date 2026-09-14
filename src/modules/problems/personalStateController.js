@@ -1,3 +1,4 @@
+import { isLeetcodeCatalogProblem } from './completion.js';
 import {
   getProblemPersonalState as getProblemPersonalStateValue,
   toggleProblemCompletedState,
@@ -13,6 +14,17 @@ export function createProblemPersonalStateController(deps = {}) {
 
   const getState = () => deps.getState?.() || {};
   const nowIso = () => deps.nowIso?.() || new Date().toISOString();
+  let catalogSource = null;
+  let catalogLookup = new Map();
+
+  function getProblem(problemId) {
+    const problems = getState().problems || [];
+    if (problems !== catalogSource) {
+      catalogSource = problems;
+      catalogLookup = new Map(problems.map(problem => [problem.id, problem]));
+    }
+    return catalogLookup.get(problemId);
+  }
 
   function clearStateCache() {
     cache.clear();
@@ -23,9 +35,11 @@ export function createProblemPersonalStateController(deps = {}) {
   }
 
   function getPersonalState(problemId) {
-    return getProblemPersonalStateValue(getStateCache(), problemId, {
+    const personal = getProblemPersonalStateValue(getStateCache(), problemId, {
       fallback: deps.normalizeProblemState?.({ problemId }) || { problemId }
     });
+    const problem = getProblem(problemId) || { id: problemId };
+    return personal.completed && isLeetcodeCatalogProblem(problem) ? { ...personal, completed: false, completedAt: "" } : personal;
   }
 
   function update(problemId, updateValue) {
@@ -53,6 +67,8 @@ export function createProblemPersonalStateController(deps = {}) {
 
   function toggleCompleted(problemId) {
     const state = getState();
+    const problem = getProblem(problemId);
+    if (!problem || isLeetcodeCatalogProblem(problem)) return false;
     state.problemStates = toggleProblemCompletedState(state.problemStates || [], problemId, {
       normalizeProblemState: deps.normalizeProblemState,
       mergeProblemStates: deps.mergeProblemStates,

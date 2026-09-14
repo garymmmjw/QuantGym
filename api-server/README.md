@@ -60,26 +60,43 @@ rolling 24 hours. Rewards are descriptions of an agreement with the guardian;
 QuantGym records and emails the achievement and does not purchase or distribute
 the reward. Completed goals retain the count recorded when they were achieved.
 
-Practice counting uses synced, valid timestamped records. Detailed mental math,
-sequence, and pattern questions count both correct and wrong answers; skipped,
-timed-out and aborted questions do not count. Explicit activity rows, completed
-daily questions, problem completion records, and account-scoped interview entries
-are deduplicated by their linked IDs and timestamps. Daily-session totals are not
-added again. Historical aggregate-only trainer records retain their old recorded
-count (which may count only correct answers). Manual calendar entries count but
-are marked `manual`; the dashboard's `countingNote` explains these limitations.
-Undated, malformed and future records are ignored. Only synced practice is visible;
-offline work appears after the student's next successful cloud sync. The question
-list is capped at 200 rows per selected day, with `questionsTruncated` indicating
-additional rows; counts still cover every eligible row.
+Solved-question counting uses synced, valid timestamped completion records.
+Non-LeetCode problems count only after an explicit completion action such as
+**我做完了**: a completed catalog state, a completed standalone technical session,
+or a completed daily answer. Random draws, viewed questions, drafts, interview
+scores/evaluations, and last-practiced timestamps do not imply completion.
+Mental Math, sequence and pattern trainer records are excluded from solved totals
+and guardian goals, including detailed attempts, aggregates, manual entries and
+legacy records; their training history remains stored and available to the student.
+Manual non-trainer completion entries remain labelled `manual`. Daily-session
+rollups never add another question. Undated, malformed and future records are
+ignored. Offline completions appear after the student's next successful sync.
 
-Standalone technical and coding practice sessions are included once per completed
-session, using the canonical `practice:<session.id>` activity or a session
-fallback. Their source prompts, reference answers, written answers, linked
-LeetCode usernames and URLs stay private. External LeetCode submissions, public
-profile counters and calendar aggregates are excluded from guardian goal totals:
-public sync can be incomplete and a profile link does not verify ownership. A
-QuantGym coding practice completion counts normally.
+Standalone technical completions use the canonical `practice:<session.id>`
+activity or a deduplicated session fallback. LeetCode-linked standalone practice,
+manual catalog checkmarks and local review actions do not count as a LeetCode
+solve. Daily coding exercises that are not sourced from LeetCode still count when
+explicitly completed. Prompts, reference answers, written answers, linked profile
+names and URLs stay out of the guardian response.
+
+LeetCode counts come only from accepted submissions observed by the server's
+public sync for the student's **current** connected profile. Each problem counts
+once per civil day, using the dashboard's selected IANA time zone or the goal's
+stored time zone. Failed submissions, imported metadata, problem-pool draws,
+profile totals and calendar submission aggregates do not count. Public sync can
+be incomplete and a profile link does not verify ownership. The server stores
+private `_syncedAcceptedSubmissions` and `_syncedAcceptedConnection` provenance;
+`GET /api/leetcode` projects the safe `syncedSubmissions` array for matching frontend
+counters. Sync preserves previously observed records for the same connection;
+switching profiles or disconnecting resets that scope. Existing snapshots without
+provenance contribute only after their next successful public sync. Imports cannot
+set or promote provenance. Successful sync reevaluates guardian goals in the same
+transaction, without waiting for a dashboard visit.
+
+The question list is capped at 200 rows per selected day, with
+`questionsTruncated` indicating additional rows; counts cover every eligible row.
+Completed goals keep their historical awarded count; this counting correction
+does not retract previously issued rewards or resend their notifications.
 
 Guardian emails reuse `QUANTGYM_SMTP_*`. The API starts a durable outbox worker
 alongside the HTTP server. Goal completion and its unique notification row commit

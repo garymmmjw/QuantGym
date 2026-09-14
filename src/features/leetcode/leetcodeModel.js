@@ -1,4 +1,4 @@
-export const EMPTY_LEETCODE = Object.freeze({ connection: null, stats: null, submissions: [], problems: [], calendar: [], coverage: {} });
+export const EMPTY_LEETCODE = Object.freeze({ connection: null, stats: null, submissions: [], syncedSubmissions: [], problems: [], calendar: [], coverage: {} });
 
 export function problemUrl(slug) {
   return typeof slug === "string" && /^[a-zA-Z0-9_-]{1,200}$/.test(slug)
