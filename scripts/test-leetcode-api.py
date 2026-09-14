@@ -283,6 +283,29 @@ class LeetCodeApiTests(unittest.TestCase):
         self.assertEqual(status, 200, relinked)
         self.assertEqual({row["id"] for row in relinked["syncedSubmissions"]}, {"new-public"})
 
+    def test_lifetime_solved_count_uses_profile_history_and_rejects_import_overrides(self):
+        token, owner = self.user()
+        self.assertIsNone(self.request("GET", token=token)[1]["syncedLifetimeSolvedCount"])
+        incoming = upstream()
+        incoming["stats"] = {"solved": 56, "easy": 20, "medium": 30, "hard": 6, "totalSubmissions": 100}
+        self.mock_fetch.side_effect = lambda username: {**incoming, "username": username}
+        status, snapshot, _ = self.connect(token)
+        self.assertEqual(status, 200, snapshot)
+        self.assertEqual(snapshot["syncedLifetimeSolvedCount"], 56)
+        self.assertEqual(len(snapshot["syncedSubmissions"]), 3)
+        status, imported, _ = self.request("POST", "/api/leetcode/import", token, {
+            "username": "fixture-a", "submissions": [record("imported-history", "unverified-history")],
+        })
+        self.assertEqual(status, 200, imported)
+        self.assertEqual(imported["syncedLifetimeSolvedCount"], 56)
+        for field in ("stats", "syncedLifetimeSolvedCount", "_syncedProfileStats"):
+            self.assertEqual(self.request("POST", "/api/leetcode/import", token, {
+                "username": "fixture-a", "submissions": [record("fake-history", "fake")], field: 999,
+            })[0], 400)
+        self.mock_fetch.side_effect = lambda username: upstream(username)
+        self.assertEqual(self.connect(token, "fixture-b")[1]["syncedLifetimeSolvedCount"], 2)
+        self.assertIsNone(self.request("DELETE", token=token)[1]["syncedLifetimeSolvedCount"])
+
     def test_legacy_snapshot_gains_countable_provenance_only_after_real_sync(self):
         token, owner = self.user()
         self.connect(token)
@@ -528,6 +551,58 @@ class ReviewAlgorithmTests(unittest.TestCase):
                 self.grade(saved, "good")
         self.assertEqual(caught.exception.status, 413)
         self.assertEqual(saved, before)
+
+
+class LifetimeCountTests(unittest.TestCase):
+    def test_old_public_history_is_recovered_but_imports_cannot_gain_provenance(self):
+        snapshot = lc.fresh_snapshot(lc.empty_snapshot(), upstream())
+        old = record("old-public", "oldly-accepted", when="2026-01-01T12:00:00Z")
+        imported = record("import-only", "imported-problem", when="2026-01-02T12:00:00Z")
+        snapshot["_records"].extend([old, imported])
+        snapshot["_importedSubmissionIds"] = ["import-only"]
+        snapshot["coverage"]["importedSubmissionCount"] = 1
+        ids = {row["id"] for row in lc.synced_accepted_submissions(snapshot)}
+        self.assertEqual(ids, {"101", "102", "103", "old-public"})
+        snapshot["_importedSubmissionIds"].append("101")
+        self.assertIn("101", {row["id"] for row in lc.synced_accepted_submissions(snapshot)}, "explicit public ledger has priority")
+        snapshot["_syncedAcceptedConnection"]["username"] = "different-profile"
+        self.assertEqual(lc.synced_accepted_submissions(snapshot), [])
+
+    def test_missing_or_malformed_import_markers_fail_closed_for_old_history(self):
+        snapshot = lc.fresh_snapshot(lc.empty_snapshot(), upstream())
+        snapshot["_records"].append(record("old-public", "oldly-accepted"))
+        self.assertIn("old-public", {row["id"] for row in lc.synced_accepted_submissions(snapshot)})
+        for marker in (None, {}, [123]):
+            invalid = copy.deepcopy(snapshot)
+            invalid["_importedSubmissionIds"] = marker
+            self.assertNotIn("old-public", {row["id"] for row in lc.synced_accepted_submissions(invalid)})
+        snapshot["coverage"]["importedSubmissionCount"] = 1
+        snapshot.pop("_importedSubmissionIds", None)
+        self.assertNotIn("old-public", {row["id"] for row in lc.synced_accepted_submissions(snapshot)})
+        snapshot["_importedSubmissionIds"] = []
+        self.assertNotIn("old-public", {row["id"] for row in lc.synced_accepted_submissions(snapshot)})
+        for value in (-1, True, "1", None):
+            snapshot["coverage"]["importedSubmissionCount"] = value
+            self.assertNotIn("old-public", {row["id"] for row in lc.synced_accepted_submissions(snapshot)})
+
+    def test_lifetime_count_requires_current_sync_binding_and_valid_server_statistics(self):
+        snapshot = lc.fresh_snapshot(lc.empty_snapshot(), upstream())
+        self.assertEqual(lc.synced_lifetime_solved_count(snapshot), 2)
+        for field, value in (("connection", None), ("_syncedAcceptedConnection", {}), ("stats", None)):
+            invalid = copy.deepcopy(snapshot)
+            invalid[field] = value
+            self.assertIsNone(lc.synced_lifetime_solved_count(invalid))
+        for value in (-1, True, "56", None, 100_000_001):
+            invalid = copy.deepcopy(snapshot)
+            invalid["stats"]["solved"] = value
+            self.assertIsNone(lc.synced_lifetime_solved_count(invalid))
+        for value in (None, "invalid", "2099-01-01T00:00:00Z", "2020-01-01T00:00:00Z"):
+            invalid = copy.deepcopy(snapshot)
+            invalid["connection"]["lastSyncedAt"] = value
+            self.assertIsNone(lc.synced_lifetime_solved_count(invalid))
+        invalid = copy.deepcopy(snapshot)
+        invalid["connection"]["username"] = "different-profile"
+        self.assertIsNone(lc.synced_lifetime_solved_count(invalid))
 
 
 class AdapterTests(unittest.TestCase):

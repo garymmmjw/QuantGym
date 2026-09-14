@@ -111,6 +111,7 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
   const problemCompletions = new Set();
   const completionKey = (problemId, completedAt) => JSON.stringify([problemId, Date.parse(completedAt)]);
   const problems = new Map(list(legacyState.problems).map((problem) => [problem.id, problem]));
+  const legacyMentalById = new Map(list(legacyState.mentalMathRecords).filter(record => record?.id && localDayKey(record.createdAt)).map(record => [record.id, record]));
   let undatedLegacyCount = 0;
   const add = (raw) => {
     const activity = normalizedActivity(raw, byId.size);
@@ -134,11 +135,25 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
     trainerActivities(trialsById.get(key), kind, fallback).forEach(add);
   };
   const practiceById = new Map(list(state.practiceSessions).map(session => [`practice:${session.id}`, session]));
+  const recordedLegacyMental = new Set();
   list(state.activities).forEach(raw => {
     if (TRIAL_KINDS.includes(raw?.kind) && raw.source !== 'manual') {
       const trialId = raw.trialId || (String(raw.id).startsWith(`${raw.kind}:`) ? String(raw.id).slice(raw.kind.length + 1) : '');
       const key = `${raw.kind}:${trialId}`;
       if (trialsById.has(key)) { addTrial(key, raw.kind, raw); return; }
+    }
+    if (raw?.kind === 'mental' && (raw.source === 'legacy' || raw.legacyId || raw.sourceId)) {
+      const legacyId = [raw.legacyId, raw.sourceId, raw.trialId, String(raw.id || '').replace(/^(?:legacy:)?mental:/, '')]
+        .find(id => legacyMentalById.has(id));
+      if (legacyId) {
+        const trialKey = `mental:${legacyId}`;
+        if (trialsById.has(trialKey)) { addTrial(trialKey, 'mental'); return; }
+        if (recordedLegacyMental.has(legacyId)) return;
+        recordedLegacyMental.add(legacyId);
+        const record = legacyMentalById.get(legacyId);
+        add({ ...raw, legacyId, count: countOf(record.correct) + countOf(record.incorrect), correctCount: countOf(record.correct), completedAt: record.createdAt });
+        return;
+      }
     }
     const session = practiceById.get(raw?.id);
     const problemId = raw?.problemId || raw?.questionId;
@@ -177,7 +192,9 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
     if (!record) return;
     if (!localDayKey(record.createdAt)) { undatedLegacyCount += 1; return; }
     if (record.id && (linkedTrials.has(`mental:${record.id}`) || legacyReferences.has(record.id))) return;
-    add({ id: `legacy:mental:${record.id || `${record.createdAt}:${index}`}`, kind: "mental", count: record.correct, completedAt: record.createdAt, title: record.label || "", source: "legacy" });
+    // The old drill closes a question after either answer; its incorrect count
+    // represents finished questions, unlike modern in-question math mistakes.
+    add({ id: `legacy:mental:${record.id || `${record.createdAt}:${index}`}`, kind: "mental", count: countOf(record.correct) + countOf(record.incorrect), correctCount: countOf(record.correct), completedAt: record.createdAt, title: record.label || "", source: "legacy" });
   });
   // Scores, evaluations, and the entry's logging date do not prove completion.
   // Only an explicit confirmation with its own completion timestamp can count.

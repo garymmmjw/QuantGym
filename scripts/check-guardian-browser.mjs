@@ -25,7 +25,7 @@ await context.route('**/api/guardian/**', async route => {
     else if (body.code === 'valid-fixture-code') data = session;
     else { status = 401; data = { error: 'Invalid guardian code' }; }
   } else if (path === '/api/guardian/dashboard') {
-    data = { student: session.student, date, timeZone: 'America/Chicago', summary: { todayCount: 3, totalCount: 28, activeDays: 6, completedGoals: 1 }, questions: [{ id: 'q1', title: '抛硬币的期望次数', titleEn: 'Coin flips', kind: 'tech', problemNumber: '4.2', count: 1, completedAt: new Date().toISOString(), source: 'manual' }, { id: 'q2', title: 'Two Sum', kind: 'coding', problemNumber: '1', count: 1, completedAt: new Date().toISOString(), source: 'leetcode' }, { id: 'math-session', title: 'Mental Math', kind: 'mental', count: 1, completedCount: 58, isSummary: true, completedAt: new Date().toISOString(), source: 'automatic' }], goals, emailConfigured: true, reminder, syncedAt: new Date().toISOString(), countingNote: 'Mental Math 每次训练计入总数 1 题，明细显示完成题数；LeetCode 按账户同步记录统计。' };
+    data = { student: session.student, date, timeZone: 'America/Chicago', summary: { todayCount: 3, totalCount: 58, datedCount: 3, undatedLeetcodeCount: 55, leetcodeLifetimeSolvedCount: 56, activeDays: 1, completedGoals: 1 }, questions: [{ id: 'q1', title: '抛硬币的期望次数', titleEn: 'Coin flips', kind: 'tech', problemNumber: '4.2', count: 1, completedAt: new Date().toISOString(), source: 'manual' }, { id: 'q2', title: 'Two Sum', kind: 'coding', problemNumber: '1', count: 1, completedAt: new Date().toISOString(), source: 'leetcode' }, { id: 'math-session', title: 'Mental Math', kind: 'mental', count: 1, completedCount: 58, isSummary: true, completedAt: new Date().toISOString(), source: 'automatic' }], goals, emailConfigured: true, reminder, syncedAt: new Date().toISOString(), countingNote: 'Mental Math 每次训练计入总数 1 题，明细显示完成题数；LeetCode 按账户同步记录统计。' };
   } else if (path === '/api/guardian/goals') {
     const goal = { ...body, id: 'new-goal', status: 'active', progress: 0, createdAt: new Date().toISOString() };
     goals = [goal, ...goals];
@@ -54,7 +54,9 @@ try {
   await page.waitForURL('**/guardian');
   await page.locator('.guardian-question-table strong').filter({ hasText: '抛硬币的期望次数' }).waitFor();
   assert.equal(await page.locator('.guardian-question-table tbody tr').count(), 3, '58 math questions occupy one summary row');
-  assert.equal(await page.locator('.guardian-stat-featured strong').innerText(), '3', '58 math questions plus two regular questions add only 3 to the total');
+  assert.equal(await page.locator('.guardian-stat-featured strong').innerText(), '3', '58 math questions plus two regular questions add only 3 to today');
+  assert.equal(await page.locator('.guardian-stat strong').nth(1).innerText(), '58', 'lifetime LeetCode history is included without duplicating known problems');
+  assert.match(await page.locator('.guardian-history-note').innerText(), /56.*55/);
   await page.getByText('完成了 58 道', { exact: true }).waitFor();
   assert.deepEqual(await page.locator('.guardian-problem-number').allTextContents(), ['题号 4.2 · ', '题号 1 · ']);
   assert.equal(await page.locator('#appShell').count(), 0, 'guardian must not render student shell');

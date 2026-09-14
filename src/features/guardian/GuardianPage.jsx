@@ -388,7 +388,8 @@ export function GuardianPage() {
             {[{ label: date === localToday ? "今天刷题" : "当日刷题", value: summary.todayCount, unit: "题", featured: true }, { label: "累计刷题", value: summary.totalCount, unit: "题" }, { label: "累计学习", value: summary.activeDays, unit: "天" }, { label: "达成目标", value: summary.completedGoals, unit: "个" }].map((stat) => <div key={stat.label} className={`guardian-stat${stat.featured ? " guardian-stat-featured" : ""}`}><span>{stat.label}</span><p><strong>{Number(stat.value || 0).toLocaleString("zh-CN")}</strong><small>{stat.unit}</small></p></div>)}
           </section>
 
-          <p className="guardian-table-note">Mental Math、数列与图形每次训练计入总数 1 题，明细显示本次完成了多少道。其他题目点击「我做完了」后逐题计入，LeetCode 以关联账户同步的通过记录为准。</p>
+          <p className="guardian-table-note">Mental Math、数列与图形每次训练计入总数 1 题，明细显示本次完成了多少道。其他题目点击「我做完了」后逐题计入。LeetCode 同一题距离上一次计数的通过提交满 3 小时，可再次计入。</p>
+          {Number(summary.undatedLeetcodeCount) > 0 && <p className="guardian-history-note">累计已包含 LeetCode 账户历史已解的 {Number(summary.leetcodeLifetimeSolvedCount).toLocaleString("zh-CN")} 道题，以及符合间隔要求的重复练习。其中 {Number(summary.undatedLeetcodeCount).toLocaleString("zh-CN")} 道历史题尚无提交明细，暂不归入某一天或日期目标。</p>}
 
           <div className="guardian-workspace">
             <div className="guardian-primary-column">

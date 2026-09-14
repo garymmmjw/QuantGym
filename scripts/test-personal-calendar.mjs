@@ -128,18 +128,55 @@ test("legacy completion dates are imported without assigning undated totals to t
   assert.equal(JSON.stringify(legacyState), snapshot, "history must remain read-only");
 });
 
-test("legacy mental records use their original date and correct answers", () => {
+test("legacy mental records use their original date and count both correct and wrong finished answers", () => {
   const { activities, undatedLegacyCount } = collectCalendarActivities({}, {
     mentalMathRecords: [
-      { id: "old", createdAt: "2025-03-09T15:30:00Z", correct: 14, score: 900, total: 20 },
+      { id: "old", createdAt: "2025-03-09T15:30:00Z", correct: 14, incorrect: 3, skipped: 3, score: 900, total: 20 },
       { id: "undated", correct: 80, updatedAt: at }
     ]
   });
   assert.equal(activities.length, 1);
-  assert.equal(activities[0].count, 14);
+  assert.equal(activities[0].count, 17);
+  assert.equal(activities[0].correctCount, 14);
   assert.equal(activities[0].dayKey, localDayKey("2025-03-09T15:30:00Z"));
   assert.equal(summarizeActivities(activities).mentalTrials, 1);
   assert.equal(undatedLegacyCount, 1);
+});
+
+test("an all-wrong legacy math session counts once while configured, skipped, and unanswered questions do not", () => {
+  const legacy = { mentalMathRecords: [
+    { id: 'all-wrong', createdAt: at, correct: 0, incorrect: 5, total: 20, skipped: 15 },
+    { id: 'only-skipped', createdAt: at, correct: 0, incorrect: 0, total: 100, skipped: 100 },
+  ] };
+  const before = structuredClone(legacy);
+  const { activities } = collectCalendarActivities({}, legacy);
+  const summary = summarizeActivities(activities);
+  assert.equal(summary.totalQuestions, 1);
+  assert.equal(summary.mental, 5);
+  assert.equal(summary.mentalCorrect, 0);
+  assert.equal(activities.find(activity => activity.id === 'legacy:mental:all-wrong').count, 5);
+  assert.deepEqual(legacy, before);
+});
+
+test("a linked legacy math activity uses original finished counts without counting the same session twice", () => {
+  const legacy = { mentalMathRecords: [{ id: 'all-wrong', createdAt: at, correct: 0, incorrect: 5, total: 10 }] };
+  const references = [
+    { id: 'legacy:mental:all-wrong' },
+    { id: 'mental:all-wrong', trialId: 'all-wrong' },
+    { id: 'migrated-record', legacyId: 'all-wrong' },
+    { id: 'migrated-record', sourceId: 'all-wrong' },
+  ];
+  for (const reference of references) {
+    const { activities } = collectCalendarActivities({ activities: [{ ...reference, kind: 'mental', source: 'legacy', count: 0, completedAt: at }] }, legacy);
+    assert.equal(activities.length, 1);
+    assert.equal(activities[0].count, 5);
+    assert.equal(activities[0].correctCount, 0);
+    assert.equal(summarizeActivities(activities).totalQuestions, 1);
+  }
+  const aliases = references.map(reference => ({ ...reference, kind: 'mental', source: 'legacy', count: 0, completedAt: at }));
+  assert.equal(summarizeActivities(collectCalendarActivities({ activities: aliases }, legacy).activities).totalQuestions, 1);
+  const modern = { activities: aliases, trials: [{ id: 'all-wrong', status: 'completed', completedAt: at, questions: [] }] };
+  assert.equal(summarizeActivities(collectCalendarActivities(modern, legacy).activities).totalQuestions, 0, 'modern detailed questions override stale legacy mirrors');
 });
 
 test("interview scores, evaluations, entry dates and XP never substitute for explicit completion", () => {

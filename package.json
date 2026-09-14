@@ -106,7 +106,7 @@
     "test:personal-prep": "node --test scripts/test-personal-*.mjs",
     "test:leetcode": "node --test scripts/test-leetcode-*.mjs",
     "test:leetcode:api": "python3 scripts/test-leetcode-api.py",
-    "test:completion": "node --test scripts/test-problem-completion.mjs scripts/test-overview-completion.mjs scripts/test-personal-calendar.mjs scripts/test-personal-practice.mjs scripts/test-leetcode-calendar.mjs"
+    "test:completion": "node --test scripts/test-problem-completion.mjs scripts/test-overview-completion.mjs scripts/test-personal-calendar.mjs scripts/test-personal-practice.mjs scripts/test-leetcode-calendar.mjs scripts/test-mental-math-history.mjs"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",
