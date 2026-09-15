@@ -223,11 +223,12 @@ test("manual mental entries count once while preserving correct questions withou
   assert.equal(summarizeActivities(activities).totalQuestions, 1);
 });
 
-test("manual records reject invalid counts, dates, or a fabricated daily completion", () => {
+test("manual records reject invalid counts, dates, retired coding practice, or a fabricated daily completion", () => {
   const valid = { kind: "tech", count: 3, dateKey: "2026-09-08" };
   for (const count of [0, -1, 1.5, Infinity, NaN, 10001, "text"]) assert.throws(() => createManualActivity({ ...valid, count }), /invalid_count/);
   assert.throws(() => createManualActivity({ ...valid, dateKey: "2026-02-30" }), /invalid_date/);
   assert.throws(() => createManualActivity({ ...valid, kind: "daily" }), /invalid_kind/);
+  assert.throws(() => createManualActivity({ ...valid, kind: "coding" }), /invalid_kind/);
 });
 
 test("retrying a manual save updates one entry even when a failed write already changed memory", () => {

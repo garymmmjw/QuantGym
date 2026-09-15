@@ -2,7 +2,8 @@ import { countsTowardProblemTotal, hasExplicitProblemCompletion, isLeetcodeCatal
 
 export const ACTIVITY_KINDS = ["quant", "mental", "sequence", "pattern", "tech", "coding", "behavioral", "daily"];
 export const TRIAL_KINDS = ["mental", "sequence", "pattern"];
-export const MANUAL_KINDS = ACTIVITY_KINDS.filter((kind) => kind !== "daily");
+export const DISPLAY_KINDS = ACTIVITY_KINDS.filter((kind) => kind !== "coding");
+export const MANUAL_KINDS = DISPLAY_KINDS.filter((kind) => kind !== "daily");
 
 const list = (value) => Array.isArray(value) ? value : [];
 const countOf = (value) => Number.isFinite(Number(value)) ? Math.max(0, Math.floor(Number(value))) : 0;
@@ -158,7 +159,7 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
     const session = practiceById.get(raw?.id);
     const problemId = raw?.problemId || raw?.questionId;
     const problem = problems.get(problemId) || { id: problemId };
-    // A local Coding OA review is not a verified LeetCode accepted submission.
+    // A historical local coding review is not a verified LeetCode accepted submission.
     // Keep its history while separating it from solved-problem statistics.
     const localLeetCode = raw?.kind === 'coding' && (raw.source === 'standalone' || raw.source === 'manual'
       || raw.source === 'leetcode' || session?.question?.source === 'leetcode');

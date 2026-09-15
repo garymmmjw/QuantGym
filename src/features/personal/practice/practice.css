@@ -77,12 +77,9 @@ body.is-authenticated .practice-page .practice-catalog-filters :is(select,input)
 .practice-question-text .rich-text { white-space:normal; }
 .practice-question-text mjx-container[display="true"],.practice-question-text .rich-math-display { max-width:100%; overflow-x:auto; overflow-y:hidden; }
 .practice-page .pd-math-retry { background:transparent; border:0; padding:10px 0; color:var(--practice-accent); }
-.practice-coding-link p { color:var(--practice-muted); font-size:14px; line-height:1.8; margin:0 0 17px; }
 .practice-answer-heading { display:flex; gap:12px; align-items:center; justify-content:space-between; margin:30px 0 12px; font-size:14px; font-weight:650; }
 .practice-answer-heading label { flex-shrink:0; }
-body.is-authenticated .practice-page .practice-answer-heading select { flex:0 0 auto; width:auto; max-width:45%; background:var(--practice-surface); border:1px solid var(--practice-line); border-radius:7px; color:var(--practice-ink); padding:7px; font-size:12px; }
 body.is-authenticated .practice-page .practice-answer { display:block; width:100%; min-height:230px; resize:vertical; border:1px solid var(--practice-line); border-radius:12px; background:var(--practice-surface); padding:18px; color:var(--practice-ink); line-height:1.85; font-size:14px!important; }
-.practice-answer.is-code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace!important; tab-size:2; }
 .practice-answer::placeholder { color:var(--practice-muted); opacity:.8; }
 .practice-draft-note { font-size:12px; color:var(--practice-muted); margin:10px 0 25px; }
 .practice-reference { border-block:1px solid var(--practice-line); margin:26px 0; padding:18px 0; }

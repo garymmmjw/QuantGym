@@ -96,8 +96,10 @@ function checkRoutesJsx() {
   expect(routesText.includes("routeConfig.map"), "routes.jsx must derive app routes from routeConfig.map.");
   expect(routesText.includes('<Route path="*" element={<Navigate to="/" replace />} />'), "routes.jsx must keep wildcard navigation fallback to overview.");
   expect(routesText.includes('<Route path="/login" element={null} />'), "routes.jsx must keep the /login auth-shell route.");
-  expect(routesText.includes('<Route path="/daily-mock/*" element={<Navigate to="/coding-oa" replace />} />'), "Old Daily Mock links must redirect to Coding OA.");
+  expect(routesText.includes('<Route path="/daily-mock/*" element={<Navigate to="/leetcode" replace />} />'), "Old Daily Mock links must redirect to LeetCode.");
   expect(!manifestIds.includes("daily-mock"), "Daily Mock must not remain an active module.");
+  expect(!manifestIds.includes("coding-oa"), "Coding OA must not remain an active module.");
+  expect(routesText.includes('<Route path="/coding-oa/*" element={<Navigate to="/leetcode" replace />} />'), "Old Coding OA links must redirect to LeetCode.");
   expect(routesText.includes("<ProtectedRoute />"), "routes.jsx must wrap app routes in ProtectedRoute.");
   expect(routesText.includes("<AppChromeLayout />"), "routes.jsx must render protected routes inside AppChromeLayout.");
 
@@ -121,7 +123,7 @@ function checkPageWrappers() {
     expect(/import \{ useSyncModuleRoute \} from ["']\.\.\/hooks\/useSyncModuleRoute\.js["'];/.test(text), `${pageName}.jsx must import useSyncModuleRoute.`);
     expect(text.includes(`export function ${pageName}()`), `${pageName}.jsx must export function ${pageName}.`);
     expect(new RegExp(`useSyncModuleRoute\\(["']${id}["']\\)`).test(text), `${pageName}.jsx must sync module route "${id}".`);
-    const personalPages = { calendar: "TrainingCalendar", "coding-oa": "CodingOaWorkspace", "technical-interview": "TechnicalInterviewWorkspace", tools: "TrainingWorkspace" };
+    const personalPages = { calendar: "TrainingCalendar", "technical-interview": "TechnicalInterviewWorkspace", tools: "TrainingWorkspace" };
     if (personalPages[id]) {
       expect(text.includes("<PersonalWorkspace>"), `${pageName} must use account-scoped personal storage.`);
       expect(new RegExp(`<${personalPages[id]}\\s+\\{\\.\\.\\.props\\}(?:\\s+leetcode=\\{leetcode\\})?\\s*/>`).test(text), `${pageName} must render its training component.`);

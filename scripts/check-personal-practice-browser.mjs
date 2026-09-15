@@ -38,12 +38,16 @@ const legacyDaily = { id: 'legacy-daily-preserved', status: 'completed', started
   settings: { mentalEnabled: false, mentalSeconds: 120, techSource: 'library', techCount: 1, codingCount: 0, behavioralCount: 0, techMinutes: 5, codingMinutes: 20, behavioralMinutes: 3 },
   questions: [{ id: 'legacy-question', kind: 'tech', title: 'Earlier question', prompt: 'Legacy fixture prompt.', budgetSeconds: 300 }],
   answers: { 'legacy-question': { text: 'Preserved earlier answer.', selfAssessment: 'independent', elapsedSeconds: 60, completedAt: iso(now - 5 * 86400000 + 60000) } } };
+const legacyCoding = { id: 'legacy-coding-preserved', kind: 'coding', status: 'completed', startedAt: iso(now - 60000), updatedAt: iso(now), completedAt: iso(now),
+  question: { id: 'two-sum', slug: 'two-sum', source: 'leetcode', title: '两数之和', titleEn: 'Two Sum', prompt: '', promptEn: '', reference: '', referenceEn: '',
+    url: 'https://leetcode.cn/problems/two-sum/', username: connection.username, linkedAt: connection.linkedAt },
+  text: 'Earlier saved coding review: hash map, O(n) time.', codeLanguage: 'python', selfAssessment: 'independent', elapsedSeconds: 60, timerStartedAt: null, reviewed: false };
 const freshRemote = () => ({ envelope: { version: 1, revision: 1, data: { ...createPersonalState(), activities: [structuredClone(legacyActivity)], dailySessions: [structuredClone(legacyDaily)] }, updatedAt: iso(now) }, writes: [], requests: [], reviewWrites: [] });
 const summary = { startedAt: new Date().toISOString(), isolation: 'Fresh headless contexts; mock-only accounts; every API/application external request intercepted. Only the existing public MathJax script/font CDN is allowed for formula rendering.', checks: [], screenshots: [], runtimeErrors: [], unexpectedLocalResponses: [] };
 const contexts = [];
 let browser, server, currentPage;
 
-async function makePage({ name = 'desktop', pathname = '/coding-oa', viewport = { width: 1440, height: 1000 }, mobile = false, dark = false, remote = freshRemote(), linked = true, technicalError = false, technicalQuestions = technical, technicalSupplements = {} } = {}) {
+async function makePage({ name = 'desktop', pathname = '/technical-interview', viewport = { width: 1440, height: 1000 }, mobile = false, dark = false, remote = freshRemote(), linked = true, technicalError = false, technicalQuestions = technical, technicalSupplements = {} } = {}) {
   const context = await browser.newContext({ viewport, locale: 'zh-CN', timezoneId: 'America/Chicago', deviceScaleFactor: 1, isMobile: mobile,
     hasTouch: mobile, colorScheme: dark ? 'dark' : 'light', reducedMotion: 'reduce', serviceWorkers: 'block' });
   contexts.push(context);
@@ -97,7 +101,7 @@ async function makePage({ name = 'desktop', pathname = '/coding-oa', viewport = 
   page.on('response', response => { if (response.url().startsWith(baseUrl) && response.status() >= 400) summary.unexpectedLocalResponses.push({ context: name, status: response.status(), url: response.url() }); });
   await page.clock.setFixedTime(new Date(now));
   await page.goto(`${baseUrl}${pathname}`, { waitUntil: 'domcontentloaded' });
-  await page.getByRole('heading', { level: 1, name: pathname === '/technical-interview' ? 'Technical Interview' : pathname === '/leetcode' ? 'LeetCode' : 'Coding OA', exact: true }).waitFor();
+  await page.getByRole('heading', { level: 1, name: pathname === '/technical-interview' ? 'Technical Interview' : 'LeetCode', exact: true }).waitFor();
   return { page, remote, context };
 }
 
@@ -126,62 +130,31 @@ try {
   await server.listen();
   browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-first-run', '--no-default-browser-check'] });
   const { page, remote } = await makePage();
-  await check('Personal menu exposes both independent modules and no Daily Mock entry', async () => {
-    assert.ok(await page.getByRole('link', { name: 'Coding OA', exact: true }).count() > 0);
+  await check('Personal menu retains Technical Interview and redirects retired Coding OA and Daily Mock links to LeetCode', async () => {
+    assert.equal(await page.getByRole('link', { name: /Coding OA|Daily Mock|每日模拟/i }).count(), 0);
     assert.ok(await page.getByRole('link', { name: 'Technical Interview', exact: true }).count() > 0);
-    assert.equal(await page.getByRole('link', { name: /Daily Mock|每日模拟/i }).count(), 0);
-    await noOverflow(page); await capture(page, 'coding-desktop-ready');
-    for (const pathname of ['/daily-mock', '/#daily-mock']) {
+    await noOverflow(page); await capture(page, 'technical-desktop-ready');
+    for (const pathname of ['/coding-oa', '/daily-mock', '/#coding-oa', '/#daily-mock']) {
       await page.goto(`${baseUrl}${pathname}`, { waitUntil: 'domcontentloaded' });
-      await page.waitForURL(`${baseUrl}/coding-oa`);
-      await page.getByRole('heading', { level: 1, name: 'Coding OA', exact: true }).waitFor();
+      await page.waitForURL(`${baseUrl}/leetcode`);
+      await page.getByRole('heading', { level: 1, name: 'LeetCode', exact: true }).waitFor();
+      assert.equal(await page.getByRole('link', { name: /Coding OA|Daily Mock|每日模拟/i }).count(), 0);
     }
   });
-  await check('Coding OA draws only from solved history, opens LeetCode safely, and restores a draft after reload', async () => {
-    await page.getByRole('button', { name: '抽取一道题', exact: true }).click();
-    await page.getByRole('heading', { name: '两数之和', exact: true }).waitFor();
-    assert.equal((remote.envelope.data.practiceSessions || []).filter(item => item.status === 'completed').length, 0);
-    const launch = page.getByRole('link', { name: /力扣/ }).filter({ hasText: /挑战|做题|练习/ }).first();
-    assert.equal(await launch.getAttribute('href'), 'https://leetcode.cn/problems/two-sum/');
-    const popupPromise = page.waitForEvent('popup'); await launch.click();
-    const popup = await popupPromise; await popup.waitForURL('https://leetcode.cn/problems/two-sum/'); await popup.close();
-    await page.getByRole('button', { name: '开始计时', exact: true }).click();
-    const answer = page.getByRole('textbox', { name: '你的代码与复盘', exact: true });
-    await answer.fill('def two_sum(nums, target):\n    # fixture answer: hash map, O(n) time\n    return []');
-    assert.ok(await page.getByRole('button', { name: '保存复盘', exact: true }).isDisabled());
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    assert.match(await answer.inputValue(), /fixture answer/);
-    assert.equal(remote.reviewWrites.length, 0);
-    await capture(page, 'coding-desktop-draft');
-  });
-  await check('Completing Coding OA saves exactly one private attempt and calendar activity', async () => {
-    await page.getByRole('radio', { name: '独立完成', exact: true }).check();
-    await page.getByRole('button', { name: '保存复盘', exact: true }).click();
-    await waitFor(() => remote.envelope.data.practiceSessions?.some(item => item.kind === 'coding' && item.status === 'completed'), 'Coding OA cloud save');
-    const completed = remote.envelope.data.practiceSessions.filter(item => item.kind === 'coding' && item.status === 'completed');
-    assert.equal(completed.length, 1);
-    assert.equal(completed[0].question.slug, 'two-sum');
-    assert.equal(completed[0].question.username, connection.username);
-    assert.equal(completed[0].question.linkedAt, connection.linkedAt);
-    assert.equal(remote.envelope.data.activities.filter(item => item.id === `practice:${completed[0].id}`).length, 1);
-    assert.deepEqual(remote.envelope.data.dailySessions, [legacyDaily]);
-    assert.deepEqual(remote.envelope.data.activities.find(item => item.id === legacyActivity.id), legacyActivity);
-    assert.equal(remote.reviewWrites.length, 0);
-    await capture(page, 'coding-desktop-completed');
-    return { completedCodingAttempts: completed.length, activityCount: remote.envelope.data.activities.length };
-  });
-  await check('LeetCode opened first on another device restores Coding OA history and applies it to weighted draws', async () => {
-    const fresh = await makePage({ name: 'new-device-leetcode', pathname: '/leetcode', remote });
+  await check('LeetCode restores saved legacy coding history and applies it to weighted draws', async () => {
+    const legacyRemote = freshRemote();
+    legacyRemote.envelope.data.practiceSessions = [structuredClone(legacyCoding)];
+    const fresh = await makePage({ name: 'new-device-leetcode', pathname: '/leetcode', remote: legacyRemote });
     await fresh.page.locator('.lc-memory-review').waitFor();
-    await waitFor(() => remote.requests.filter(item => item.path === '/personal-prep' && item.method === 'GET').length >= 2, 'personal history fetched on LeetCode');
+    await waitFor(() => legacyRemote.requests.some(item => item.path === '/personal-prep' && item.method === 'GET'), 'personal history fetched on LeetCode');
     await fresh.page.getByRole('button', { name: '随机抽一道', exact: true }).click();
     assert.equal(await fresh.page.locator('.lc-drawn-problem h3').innerText(), '有效的括号');
-    assert.equal(remote.reviewWrites.length, 0);
-    assert.equal(remote.envelope.data.practiceSessions.filter(item => item.status === 'completed').length, 1);
+    assert.equal(legacyRemote.reviewWrites.length, 0);
+    assert.deepEqual(legacyRemote.envelope.data.practiceSessions, [legacyCoding]);
     assert.equal(await fresh.page.locator('.lc-solved-total strong').innerText(), '2');
     await capture(fresh.page, 'leetcode-cloud-weighted');
   });
-  await check('Technical Interview draws purple-book questions and independently saves an answer', async () => {
+  await check('Technical Interview renders formulas, restores drafts after reload, and saves exactly one private answer', async () => {
     currentPage = page;
     await page.goto(`${baseUrl}/technical-interview`, { waitUntil: 'domcontentloaded' });
     await page.getByRole('button', { name: '抽取一道题', exact: true }).click();
@@ -190,16 +163,26 @@ try {
     assert.equal(await page.locator('.practice-reference').getAttribute('open'), null);
     await page.locator('.practice-reference summary').click();
     await page.locator('.practice-reference mjx-container').waitFor();
-    await page.getByRole('textbox', { name: '你的思路与回答', exact: true }).fill('两次投掷相互独立，概率相乘，结果为四分之一。');
+    await page.getByRole('button', { name: '开始计时', exact: true }).click();
+    const answer = page.getByRole('textbox', { name: '你的思路与回答', exact: true });
+    await answer.fill('两次投掷相互独立，概率相乘，结果为四分之一。');
+    assert.ok(await page.getByRole('button', { name: '我做完了', exact: true }).isDisabled());
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    assert.equal(await answer.inputValue(), '两次投掷相互独立，概率相乘，结果为四分之一。');
+    await capture(page, 'technical-desktop-draft');
     await page.getByRole('radio', { name: '独立完成', exact: true }).check();
     assert.equal(remote.envelope.data.activities.filter(item => item.kind === 'tech').length, 0, 'drawing and reviewing a reference do not mark the question complete');
     await page.getByRole('button', { name: '我做完了', exact: true }).click();
     await waitFor(() => remote.envelope.data.practiceSessions?.some(item => item.kind === 'tech' && item.status === 'completed'), 'Technical Interview cloud save');
-    assert.equal(remote.envelope.data.practiceSessions.filter(item => item.status === 'completed').length, 2);
+    assert.equal(remote.envelope.data.practiceSessions.filter(item => item.status === 'completed').length, 1);
     const saved = remote.envelope.data.practiceSessions.find(item => item.kind === 'tech' && item.status === 'completed');
     assert.equal(saved.question.source, 'question-bank');
     assert.equal(saved.question.id, technical[0].id);
     assert.equal(saved.question.reference, technical[0].reference);
+    assert.equal(remote.envelope.data.activities.filter(item => item.id === `practice:${saved.id}`).length, 1);
+    assert.deepEqual(remote.envelope.data.dailySessions, [legacyDaily]);
+    assert.deepEqual(remote.envelope.data.activities.find(item => item.id === legacyActivity.id), legacyActivity);
+    assert.equal(remote.reviewWrites.length, 0);
     await capture(page, 'technical-desktop-completed');
     await page.getByRole('button', { name: '再抽一道', exact: true }).click();
     await page.getByRole('heading', { name: '骰子期望', exact: true }).waitFor();
@@ -269,7 +252,7 @@ try {
     await page.goto(`${baseUrl}/calendar`, { waitUntil: 'domcontentloaded' });
     await page.getByRole('heading', { name: '训练日历', level: 1, exact: true }).waitFor();
     await page.getByText('硬币与概率', { exact: true }).waitFor();
-    await page.getByText('两数之和', { exact: true }).waitFor();
+    assert.equal(await page.getByText('Coding OA', { exact: true }).count(), 0);
     assert.deepEqual(remote.envelope.data.dailySessions, [legacyDaily]);
     assert.deepEqual(remote.envelope.data.activities.find(item => item.id === legacyActivity.id), legacyActivity);
     await noOverflow(page); await capture(page, 'calendar-independent-attempts');
@@ -313,14 +296,15 @@ try {
     await noOverflow(view); await capture(view, 'technical-appendix-mobile');
     return { recommendationCount: 2, availablePracticeQuestions: 2, writesFromOpeningLink: fixture.remote.writes.length - writesBeforeLink };
   });
-  await check('Mobile and dark mode retain readable independent practice controls without overflow', async () => {
-    for (const pathname of ['/coding-oa', '/technical-interview']) {
-      const name = pathname.slice(1);
-      const mobile = await makePage({ name: `mobile-${name}`, pathname, mobile: true, viewport: { width: 390, height: 844 }, dark: pathname === '/technical-interview' });
+  await check('Mobile Technical Interview controls remain readable in light and dark mode without overflow', async () => {
+    for (const dark of [false, true]) {
+      const name = `technical-${dark ? 'dark' : 'light'}`;
+      const mobile = await makePage({ name: `mobile-${name}`, mobile: true, viewport: { width: 390, height: 844 }, dark });
       await mobile.page.getByRole('button', { name: '抽取一道题', exact: true }).click();
-      const input = mobile.page.getByRole('textbox', { name: pathname === '/coding-oa' ? '你的代码与复盘' : '你的思路与回答', exact: true });
+      const input = mobile.page.getByRole('textbox', { name: '你的思路与回答', exact: true });
       await input.waitFor(); await input.fill('移动端输入测试');
-      if (pathname === '/technical-interview') {
+      assert.equal(await mobile.page.getByRole('link', { name: /Coding OA|Daily Mock|每日模拟/i }).count(), 0);
+      if (dark) {
         const colors = await input.evaluate(element => ({ foreground: getComputedStyle(element).color, background: getComputedStyle(element).backgroundColor }));
         const luminance = color => color.match(/[\d.]+/g).slice(0, 3).map(Number).map(channel => {
           const normalized = channel / 255;
@@ -334,14 +318,6 @@ try {
       assert.notEqual(await mobile.page.evaluate(() => document.activeElement?.tagName), 'BODY');
     }
   });
-  await check('An unlinked Coding OA account shows connection guidance instead of fabricated questions', async () => {
-    const unlinked = await makePage({ name: 'unlinked-coding', linked: false });
-    await unlinked.page.getByText('先关联 LeetCode 账号，再从你做过的题目中抽取。', { exact: true }).waitFor();
-    assert.equal(await unlinked.page.getByRole('link', { name: /管理 LeetCode 题库/ }).getAttribute('href'), '/leetcode');
-    assert.equal(await unlinked.page.getByRole('button', { name: '抽取一道题', exact: true }).isEnabled().catch(() => false), false);
-    assert.equal((unlinked.remote.envelope.data.practiceSessions || []).length, 0);
-    await capture(unlinked.page, 'coding-unlinked');
-  });
   await check('Storage quota failure keeps the answer visible and reports recovery instead of claiming a save', async () => {
     const quota = await makePage({ name: 'storage-quota' });
     await quota.page.evaluate(() => {
@@ -353,14 +329,14 @@ try {
       };
     });
     await quota.page.getByRole('button', { name: '抽取一道题', exact: true }).click();
-    const answer = quota.page.getByRole('textbox', { name: '你的代码与复盘', exact: true });
+    const answer = quota.page.getByRole('textbox', { name: '你的思路与回答', exact: true });
     await answer.fill('Quota fixture answer stays visible.');
     await quota.page.getByRole('radio', { name: '独立完成', exact: true }).check();
-    await quota.page.getByRole('button', { name: '保存复盘', exact: true }).click();
+    await quota.page.getByRole('button', { name: '我做完了', exact: true }).click();
     await quota.page.getByText('当前作答暂存在本页，请按上方提示重试保存或导出备份。', { exact: true }).waitFor();
     assert.equal(await answer.inputValue(), 'Quota fixture answer stays visible.');
-    assert.equal(await quota.page.getByText('已记录本题自评，训练日历已更新。', { exact: true }).count(), 0);
-    await capture(quota.page, 'coding-storage-recovery');
+    assert.equal(await quota.page.getByText('✓ 已确认完成，并记录到训练日历。', { exact: true }).count(), 0);
+    await capture(quota.page, 'technical-storage-recovery');
     await quota.page.evaluate(() => window.restoreFixtureStorage());
     await quota.page.getByRole('button', { name: '重试保存', exact: true }).click();
     await waitFor(() => quota.remote.envelope.data.practiceSessions?.some(item => item.status === 'completed'), 'recovered private cloud save');

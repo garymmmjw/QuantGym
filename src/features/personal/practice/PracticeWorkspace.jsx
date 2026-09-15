@@ -10,9 +10,9 @@ const duration = seconds => `${String(Math.floor(seconds / 60)).padStart(2, '0')
 
 export function PracticeWorkspace({ state, update, language = 'zh', kind, sessions, draw, canDraw, sourceCount,
   sourceSummary, sourceMessage, sourceLink, sourceLinkLabel, onRetry, renderLibrary, drawLabel }) {
-  const en = language === 'en', coding = kind === 'coding';
+  const en = language === 'en';
   const t = (zh, english) => en ? english : zh;
-  const title = coding ? 'Coding OA' : 'Technical Interview';
+  const title = 'Technical Interview';
   const [selectedId, setSelectedId] = useState(null);
   const [notice, setNotice] = useState('');
   const [now, setNow] = useState(Date.now());
@@ -68,14 +68,13 @@ export function PracticeWorkspace({ state, update, language = 'zh', kind, sessio
     if (!session.text.trim() || !session.selfAssessment) return;
     const saved = save(latest => completePracticeSession(latest, session.id));
     if (saved.ok) setNotice(saved.data?.practiceSessions?.some(item => item.id === session.id && item.status === 'completed')
-      ? coding ? t('复盘已保存，不会增加力扣通过题数。通过题数以账号同步结果为准。', 'Review saved. Solved counts come from synced accepted submissions, not this review.')
-        : t('已确认完成本题，刷题记录已更新。', 'Question marked complete and your practice record updated.')
+      ? t('已确认完成本题，刷题记录已更新。', 'Question marked complete and your practice record updated.')
       : t('练习状态已变化，请确认回答和自评后重试。', 'The practice state changed. Check your answer and assessment, then retry.'));
   };
 
   return <div className="practice-page">
-    <header className="practice-header"><p className="practice-eyebrow">{coding ? 'SOLVE & REVISIT' : 'THINK & EXPLAIN'}</p><h1>{title}</h1>
-      <p>{coding ? t('从做过的题里，再练一道。', 'Revisit one of the problems you have solved.') : t('从紫皮书抽一道题，把思路讲清楚。', 'Draw a Purple Book question and explain your reasoning.')}</p>
+    <header className="practice-header"><p className="practice-eyebrow">THINK & EXPLAIN</p><h1>{title}</h1>
+      <p>{t('从紫皮书抽一道题，把思路讲清楚。', 'Draw a Purple Book question and explain your reasoning.')}</p>
     </header>
     <div className="practice-source"><span>{sourceSummary}</span>{sourceLink && <Link to={sourceLink}>{sourceLinkLabel}</Link>}</div>
     {sourceMessage && <div className="practice-notice" role={onRetry ? 'alert' : 'status'}>{sourceMessage}{onRetry && <button type="button" onClick={onRetry}>{t('重试', 'Retry')}</button>}</div>}
@@ -83,38 +82,33 @@ export function PracticeWorkspace({ state, update, language = 'zh', kind, sessio
     {!session && notice && <p role="status" className="practice-notice">{notice}</p>}
     <div className="practice-grid">
       <section className="practice-main" aria-label={title}>
-        {!session ? <div className="practice-start"><span className="practice-mark" aria-hidden="true">{coding ? '</>' : '∑'}</span>
+        {!session ? <div className="practice-start"><span className="practice-mark" aria-hidden="true">∑</span>
           <h2>{t('专注这一道。', 'One question. Full focus.')}</h2>
-          <p>{coding ? t('越久没做、已知练习次数越少的题，抽中的机会越大。', 'Problems practiced less often and less recently are more likely to be drawn.') : t('读题、推导、对照参考思路，再记录本次表现。', 'Read, reason, compare with the reference, and record your assessment.')}</p>
+          <p>{t('读题、推导、对照参考思路，再记录本次表现。', 'Read, reason, compare with the reference, and record your assessment.')}</p>
           <button type="button" className="practice-primary" disabled={!canDraw} onClick={() => start()}>{drawLabel || t('抽取一道题', 'Draw a question')} <span aria-hidden="true">↗</span></button>
           <small>{t(`当前可抽取 ${sourceCount} 道题`, `${sourceCount} questions available`)}</small>
         </div> : <>
-          <div className="practice-question-top"><span>{coding ? 'LEETCODE' : t('紫皮书', 'PURPLE BOOK')}</span><div className="practice-timer"><time>{duration(elapsed)}</time>
+          <div className="practice-question-top"><span>{t('紫皮书', 'PURPLE BOOK')}</span><div className="practice-timer"><time>{duration(elapsed)}</time>
             {!completed && <button type="button" onClick={() => { setNow(Date.now()); save(latest => setPracticeTimer(latest, session.id, !session.timerStartedAt)); }}>{session.timerStartedAt ? t('暂停计时', 'Pause timer') : t('开始计时', 'Start timer')}</button>}</div></div>
           <h2 ref={questionTitle} tabIndex={-1} className="practice-question-title">{en ? question.titleEn || question.title : question.title}</h2>
-          {!coding && <TechnicalQuestionProvenance question={question} language={language} />}
-          {coding ? <div className="practice-coding-link"><p>{t('前往力扣作答，回来记录你的解法与复盘。', 'Solve the problem on LeetCode, then return to record your solution and reflections.')}</p>
-            <a className="practice-primary" href={question.url} target="_blank" rel="noreferrer">{t('去力扣挑战', 'Solve on LeetCode')} ↗</a></div>
-            : <DailyQuestionText content={en ? question.promptEn || question.prompt : question.prompt} language={language} className="practice-question-text" />}
-          <div className="practice-answer-heading"><label htmlFor={`practice-answer-${kind}`}>{coding ? t('你的代码与复盘', 'Your code and reflections') : t('你的思路与回答', 'Your reasoning and answer')}</label>
-            {coding && <select aria-label={t('编程语言', 'Code language')} value={session.codeLanguage} disabled={completed} onChange={event => patch({ codeLanguage: event.target.value })}><option value="python">Python</option><option value="javascript">JavaScript</option><option value="cpp">C++</option></select>}</div>
-          <textarea id={`practice-answer-${kind}`} className={coding ? 'practice-answer is-code' : 'practice-answer'} value={session.text} readOnly={completed} maxLength={80000}
-            onChange={event => patch({ text: event.target.value })} spellCheck={!coding} placeholder={coding ? t('记录解法、复杂度和需要注意的边界…', 'Record your solution, complexity, and edge cases…') : t('写出假设、推导过程和结论…', 'Write your assumptions, reasoning, and conclusion…')} />
+          <TechnicalQuestionProvenance question={question} language={language} />
+          <DailyQuestionText content={en ? question.promptEn || question.prompt : question.prompt} language={language} className="practice-question-text" />
+          <div className="practice-answer-heading"><label htmlFor={`practice-answer-${kind}`}>{t('你的思路与回答', 'Your reasoning and answer')}</label></div>
+          <textarea id={`practice-answer-${kind}`} className="practice-answer" value={session.text} readOnly={completed} maxLength={80000}
+            onChange={event => patch({ text: event.target.value })} spellCheck placeholder={t('写出假设、推导过程和结论…', 'Write your assumptions, reasoning, and conclusion…')} />
           <p className="practice-draft-note">{completed ? t('本次作答已完成。', 'This attempt is complete.') : t('作答草稿自动保存，可稍后继续。', 'Your draft is saved automatically so you can return later.')}</p>
-          {!coding && <details key={session.id} className="practice-reference" open={session.reviewed} onToggle={event => { if (!completed && event.currentTarget.open !== session.reviewed) patch({ reviewed: event.currentTarget.open }); }}>
-            <summary>{question.provenance?.answerStatus === 'missing' && !question.reference ? t('查看答案说明', 'View answer note') : t('查看参考思路', 'View reference reasoning')}</summary><TechnicalQuestionReference question={question} language={language} /></details>}
+          <details key={session.id} className="practice-reference" open={session.reviewed} onToggle={event => { if (!completed && event.currentTarget.open !== session.reviewed) patch({ reviewed: event.currentTarget.open }); }}>
+            <summary>{question.provenance?.answerStatus === 'missing' && !question.reference ? t('查看答案说明', 'View answer note') : t('查看参考思路', 'View reference reasoning')}</summary><TechnicalQuestionReference question={question} language={language} /></details>
           <fieldset className="practice-assessments" disabled={completed}><legend>{t('本次自评', 'Self-assessment')}</legend><div>{Object.entries(labels).map(([value, label]) => <label key={value} className={session.selfAssessment === value ? 'is-selected' : ''}>
             <input type="radio" name={`practice-assessment-${session.id}`} checked={session.selfAssessment === value} onChange={() => patch({ selfAssessment: value })} />{label[en ? 1 : 0]}</label>)}</div></fieldset>
-          <div className="practice-actions">{!completed && <button type="button" className="practice-primary" disabled={!session.text.trim() || !session.selfAssessment} onClick={finish}>{coding ? t('保存复盘', 'Save review') : t('我做完了', 'I finished this question')}</button>}
+          <div className="practice-actions">{!completed && <button type="button" className="practice-primary" disabled={!session.text.trim() || !session.selfAssessment} onClick={finish}>{t('我做完了', 'I finished this question')}</button>}
             <button type="button" className="practice-secondary" disabled={!canDraw} onClick={() => start()}>{drawLabel || t('再抽一道', 'Draw another')}</button></div>
-          <p className="practice-notice" role="status">{notice || (coding
-            ? t('抽题和保存复盘不计入刷题数；只有从力扣账号同步的通过记录才计入。', 'Drawing a question or saving a review does not add to solved counts; only accepted submissions synced from LeetCode count.')
-            : completed ? t('✓ 已确认完成，并记录到训练日历。', '✓ Completion confirmed and recorded in your training calendar.')
+          <p className="practice-notice" role="status">{notice || (completed ? t('✓ 已确认完成，并记录到训练日历。', '✓ Completion confirmed and recorded in your training calendar.')
               : t('填写回答、选择自评并点击「我做完了」后才计入刷题数；抽题、查看答案和保存草稿都不计入。', 'Write your answer, choose an assessment, then click “I finished this question” to count it. Drawing, viewing a reference, and saving a draft do not count.'))}</p>
         </>}
       </section>
       <aside className="practice-history" aria-label={t('历史记录', 'Practice history')}><p className="practice-eyebrow">YOUR PRACTICE</p><h2>{t('历史记录', 'Practice history')}</h2>
-        <p>{coding ? t(`${ordered.filter(s => s.status === 'completed').length} 次复盘已保存`, `${ordered.filter(s => s.status === 'completed').length} saved reviews`) : t(`${ordered.filter(s => s.status === 'completed').length} 次已完成`, `${ordered.filter(s => s.status === 'completed').length} completed attempts`)}</p>
+        <p>{t(`${ordered.filter(s => s.status === 'completed').length} 次已完成`, `${ordered.filter(s => s.status === 'completed').length} completed attempts`)}</p>
         {!ordered.length ? <p className="practice-empty-history">{t('完成第一道题，开始积累你的练习记录。', 'Complete your first question to begin your practice history.')}</p>
           : <ol>{ordered.map(item => <li key={item.id}><button type="button" className={item.id === session?.id ? 'is-selected' : ''} aria-current={item.id === session?.id ? 'true' : undefined}
             onClick={() => { const saved = session && session.id !== item.id ? save(latest => setPracticeTimer(latest, session.id, false)) : { ok: true }; setSelectedId(item.id); if (saved.ok) setNotice(''); }}>
