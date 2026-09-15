@@ -2,7 +2,6 @@ export const i18n = {
   zh: {
     calendar: "训练日历",
     leetcode: "LeetCode",
-    codingOa: "Coding OA",
     technicalInterview: "Technical Interview",
     appTitle: "QuantGym",
     loading: "Loading",
@@ -956,7 +955,6 @@ export const i18n = {
   en: {
     calendar: "Training Calendar",
     leetcode: "LeetCode",
-    codingOa: "Coding OA",
     technicalInterview: "Technical Interview",
     appTitle: "QuantGym",
     loading: "Loading",

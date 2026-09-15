@@ -19,7 +19,6 @@ const MODULE_ICONS = {
   tools: "brain",
   calendar: "calendar-days",
   leetcode: "code-2",
-  "coding-oa": "square-terminal",
   "technical-interview": "messages-square",
   pk: "zap",
   experiences: "notebook-pen",

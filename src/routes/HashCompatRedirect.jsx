@@ -8,7 +8,8 @@ const HASH_ALIASES = new Map([
   ["home", "overview"],
   ["dashboard", "overview"],
   ["poker", "calendar"],
-  ["daily-mock", "coding-oa"]
+  ["daily-mock", "leetcode"],
+  ["coding-oa", "leetcode"]
 ]);
 
 function readHashModule() {
@@ -32,7 +33,7 @@ export function HashCompatRedirect() {
 
   useEffect(() => {
     function navigateToModule(moduleId, options = {}) {
-      const targetPath = getModulePath(moduleId);
+      const targetPath = getModulePath(normalizeHashModule(moduleId));
       const nextUrl = `${targetPath}${window.location.search}`;
       if (window.location.pathname === targetPath) {
         if (window.location.hash) window.history.replaceState(null, "", nextUrl);

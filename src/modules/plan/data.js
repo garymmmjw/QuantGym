@@ -155,7 +155,7 @@ export function getPrepDailyTasks(plan, deps = {}) {
     },
     {
       id: "speed",
-      title: plan.role === "quantDeveloper" ? "限时 Coding OA" : "OA 速度训练",
+      title: plan.role === "quantDeveloper" ? "限时 LeetCode 练习" : "OA 速度训练",
       detail: plan.role === "quantDeveloper"
         ? "限时完成 2 道算法题，复盘复杂度与边界情况。"
         : "完成一轮速算，再做 2 道概率或期望短题。",

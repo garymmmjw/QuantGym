@@ -28,7 +28,6 @@ const LeetcodePage = lazy(() => import("../pages/LeetcodePage.jsx").then((m) => 
 const PlanPage = lazy(() => import("../pages/PlanPage.jsx").then((m) => ({ default: m.PlanPage })));
 const PkPage = lazy(() => import("../pages/PkPage.jsx").then((m) => ({ default: m.PkPage })));
 const CalendarPage = lazy(() => import("../pages/CalendarPage.jsx").then((m) => ({ default: m.CalendarPage })));
-const CodingOaPage = lazy(() => import("../pages/CodingOaPage.jsx").then((m) => ({ default: m.CodingOaPage })));
 const TechnicalInterviewPage = lazy(() => import("../pages/TechnicalInterviewPage.jsx").then((m) => ({ default: m.TechnicalInterviewPage })));
 const LeaguePage = lazy(() => import("../pages/LeaguePage.jsx").then((m) => ({ default: m.LeaguePage })));
 
@@ -42,7 +41,6 @@ const REACT_PAGES = {
   tools: ToolsPage,
   leetcode: LeetcodePage,
   calendar: CalendarPage,
-  "coding-oa": CodingOaPage,
   "technical-interview": TechnicalInterviewPage,
   experiences: ExperiencesPage,
   news: NewsPage,
@@ -112,7 +110,8 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppChromeLayout />}>
             {AppRouteElements()}
-            <Route path="/daily-mock/*" element={<Navigate to="/coding-oa" replace />} />
+            <Route path="/daily-mock/*" element={<Navigate to="/leetcode" replace />} />
+            <Route path="/coding-oa/*" element={<Navigate to="/leetcode" replace />} />
             <Route path="/poker/*" element={<Navigate to="/calendar" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

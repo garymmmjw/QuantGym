@@ -58,7 +58,6 @@ function ScopedWorkspace({ personal, children }) {
       <div><span className="personal-workspace-kicker">{en ? "MY PREPARATION" : "我的申请备考"}</span><p>{en ? "Practice, review, repeat." : "训练、复盘，记录每一天。"}</p></div>
       <nav aria-label={en ? "Personal preparation" : "个人备考导航"} className="personal-workspace-nav">
         <NavLink to="/calendar">{en ? "Calendar" : "训练日历"}</NavLink>
-        <NavLink to="/coding-oa">Coding OA</NavLink>
         <NavLink to="/technical-interview">Technical Interview</NavLink>
         <NavLink to="/tools">Mental Math</NavLink>
         <NavLink to="/leetcode">LeetCode</NavLink>

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ACTIVITY_KINDS, MANUAL_KINDS, TRIAL_KINDS, addLocalDays, buildDailySummaries, collectCalendarActivities, createManualActivity, formatCalendarQuestionTitle, localDayKey, parseLocalDay, recordManualActivity, summarizeActivities } from "./calendarModel.js";
+import { DISPLAY_KINDS, MANUAL_KINDS, TRIAL_KINDS, addLocalDays, buildDailySummaries, collectCalendarActivities, createManualActivity, formatCalendarQuestionTitle, localDayKey, parseLocalDay, recordManualActivity, summarizeActivities } from "./calendarModel.js";
 import { collectLeetCodeActivities, leetcodeDailySummary } from "./leetcodeCalendar.js";
 import "./calendar.css";
 
 const KIND_LABELS = {
-  zh: { quant: "量化题目", mental: "Mental Math", sequence: "数列 / 字母推理", pattern: "图形推理", tech: "Technical Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "历史综合训练" },
-  en: { quant: "Quant questions", mental: "Mental Math", sequence: "Sequences", pattern: "Patterns", tech: "Technical Interview", coding: "Coding OA", behavioral: "Behavioral", daily: "Past combined practice" }
+  zh: { quant: "量化题目", mental: "Mental Math", sequence: "数列 / 字母推理", pattern: "图形推理", tech: "Technical Interview", coding: "编程练习（历史）", behavioral: "Behavioral", daily: "历史综合训练" },
+  en: { quant: "Quant questions", mental: "Mental Math", sequence: "Sequences", pattern: "Patterns", tech: "Technical Interview", coding: "Past coding practice", behavioral: "Behavioral", daily: "Past combined practice" }
 };
 
 export function TrainingCalendar({ state = {}, update, legacyState = {}, language = "zh", leetcode }) {
@@ -126,7 +126,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
           <p className="pc-intro">{t("把申请准备，落实到每一天。", "A record of your preparation, one day at a time.")}</p>
         </div>
         <div className="pc-practice-links">
-          <Link className="pc-primary" to="/coding-oa">Coding OA <span aria-hidden="true">↗</span></Link>
+          <Link className="pc-primary" to="/leetcode">LeetCode <span aria-hidden="true">↗</span></Link>
           <Link className="pc-secondary" to="/technical-interview">Technical Interview <span aria-hidden="true">↗</span></Link>
         </div>
       </header>
@@ -189,10 +189,10 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
         </div>
 
         <dl className="pc-stats">
-          {ACTIVITY_KINDS.filter((kind) => kind !== "daily" || selectedSummary.daily > 0).map((kind) => <div className={`pc-stat pc-kind-${kind}`} key={kind}>
+          {DISPLAY_KINDS.filter((kind) => kind !== "daily" || selectedSummary.daily > 0).map((kind) => <div className={`pc-stat pc-kind-${kind}`} key={kind}>
             <dt>{labels[kind]}</dt>
             <dd><strong>{selectedSummary[kind].toLocaleString(locale)}</strong><span>{kind === "daily" ? t("轮", "rounds") : t("题", "questions")}</span></dd>
-            <p>{TRIAL_KINDS.includes(kind) ? t(`其中正确 ${selectedSummary[`${kind}Correct`]} 题 · ${selectedSummary[`${kind}Trials`]} 次 trial`, `${selectedSummary[`${kind}Correct`]} correct · ${selectedSummary[`${kind}Trials`]} trials`) : kind === "daily" ? t("整套完成", "Full sets completed") : kind === "tech" ? t("已确认完成", "Completion confirmed") : kind === "coding" ? selectedSummary.codingReviews ? t(`另有 ${selectedSummary.codingReviews} 次力扣复盘，不计入刷题数`, `${selectedSummary.codingReviews} LeetCode reviews excluded from solved counts`) : t("力扣通过题数见下方", "See synced LeetCode solves below") : kind === "behavioral" ? t("表达练习", "Behavioral practice") : t("完成题目", "Problems completed")}</p>
+            <p>{TRIAL_KINDS.includes(kind) ? t(`其中正确 ${selectedSummary[`${kind}Correct`]} 题 · ${selectedSummary[`${kind}Trials`]} 次 trial`, `${selectedSummary[`${kind}Correct`]} correct · ${selectedSummary[`${kind}Trials`]} trials`) : kind === "daily" ? t("整套完成", "Full sets completed") : kind === "tech" ? t("已确认完成", "Completion confirmed") : kind === "behavioral" ? t("表达练习", "Behavioral practice") : t("完成题目", "Problems completed")}</p>
           </div>)}
         </dl>
 
@@ -214,7 +214,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
         </div>}
 
         {showManual && <form className="pc-manual-form" id="pc-manual-form" ref={formRef} onSubmit={saveManual}>
-          <div className="pc-form-heading"><h3>{t("补记线下训练", "Record offline practice")}</h3><p>{t("仅补记已经做完的练习。Coding OA 补记保留为力扣复盘，通过题数以账号同步为准。", "Record only practice you have finished. Coding OA entries are reviews; LeetCode solved counts come from account sync.")}</p></div>
+          <div className="pc-form-heading"><h3>{t("补记线下训练", "Record offline practice")}</h3><p>{t("仅补记已经做完的练习。LeetCode 通过题数以账号同步为准。", "Record only practice you have finished. LeetCode solved counts come from account sync.")}</p></div>
           <div className="pc-form-fields">
             <label>{t("训练类型", "Activity")}<select value={manual.kind} onChange={(event) => setManual({ ...manual, kind: event.target.value })}>{MANUAL_KINDS.map((kind) => <option key={kind} value={kind}>{labels[kind]}</option>)}</select></label>
             <label>{TRIAL_KINDS.includes(manual.kind) ? t("正确题数", "Correct answers") : t("完成题数", "Questions completed")}<input type="number" inputMode="numeric" min="1" max="10000" step="1" required value={manual.count} onChange={(event) => setManual({ ...manual, count: event.target.value })} /></label>
@@ -236,7 +236,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
           <span className="pc-empty-symbol" aria-hidden="true">○</span>
           <h3>{leetcodeDay.acceptedSubmissions > 0 ? t("这一天的通过记录尚未达到再次计数间隔", "Accepted attempts are within the repeat-count interval") : leetcodeDay.sourceSubmissions > 0 ? t("这一天的题目明细尚未同步", "Problem details have not been synced for this day") : t("这一天，还没有训练记录", "No training recorded for this day")}</h3>
           <p>{leetcodeDay.acceptedSubmissions > 0 ? t(`已保留 ${leetcodeDay.acceptedSubmissions} 次通过提交；与同题上次计入记录相隔不足 3 小时，总数不再增加。`, `${leetcodeDay.acceptedSubmissions} accepted submissions are retained. They are less than 3 hours after the last counted solve of the same problem, so the total does not increase.`) : leetcodeDay.sourceSubmissions > 0 ? t("力扣日历中有提交记录，但没有对应的已同步通过题目。提交次数不计入完成题数。", "LeetCode’s calendar has submissions, but no accepted problem details are synced. Submission totals do not count as completed problems.") : t("完成一次练习后，它会出现在对应日期。也可以补记线下完成的训练。", "Completed practice appears on its date. You can also add your offline training.")}</p>
-          <div className="pc-empty-links"><Link to="/tools">Mental Math <span aria-hidden="true">↗</span></Link><Link to="/coding-oa">Coding OA <span aria-hidden="true">↗</span></Link><Link to="/technical-interview">Technical Interview <span aria-hidden="true">↗</span></Link></div>
+          <div className="pc-empty-links"><Link to="/tools">Mental Math <span aria-hidden="true">↗</span></Link><Link to="/leetcode">LeetCode <span aria-hidden="true">↗</span></Link><Link to="/technical-interview">Technical Interview <span aria-hidden="true">↗</span></Link></div>
         </div>}
       </section>
 
