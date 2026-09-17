@@ -1,6 +1,8 @@
 import { STATUS_META } from './dataModel.js';
 
-const VERSION = 1;
+// Keep the same key so date-only records migrate on their next successful save.
+// Old v1 tabs reject v2 envelopes instead of rewriting away deadline clock times.
+const VERSION = 2;
 const UPDATED_EVENT = 'quantgym:tracker-updated';
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -35,9 +37,12 @@ export function validateApplications(applications) {
     const events = application.events.map(event => {
       if (!object(event) || !validText(event.id, 200) || eventIds.has(event.id) || !Object.hasOwn(STATUS_META, event.type)) throw new Error('申请进展格式无效。');
       eventIds.add(event.id);
-      if (!validDate(event.date, true) || (event.dueDate && !validDate(event.dueDate))) throw new Error('申请进展的日期无效。');
+      const dueDate = event.dueDate ?? '';
+      const dueTime = event.dueTime ?? '';
+      if (!validDate(event.date, true) || (dueDate !== '' && !validDate(dueDate))) throw new Error('申请进展的日期无效。');
+      if (typeof dueTime !== 'string' || (dueTime !== '' && (!dueDate || !/^([01]\d|2[0-3]):[0-5]\d$/.test(dueTime)))) throw new Error('截止时间无效，请先填写截止日期，再填写小时和分钟。');
       if (event.year != null && (!Number.isInteger(event.year) || event.year < 1 || event.year > 9999)) throw new Error('申请进展的年份无效。');
-      return { id: event.id, type: event.type, date: event.date, dueDate: event.dueDate || '', ...(event.year ? { year: event.year } : {}) };
+      return { id: event.id, type: event.type, date: event.date, dueDate, dueTime, ...(event.year ? { year: event.year } : {}) };
     });
     if (events[0].type !== 'submitted') throw new Error('第一条进展应为投递记录。');
     return { id: application.id, company: application.company.trim(), role: application.role.trim(), prepPhase: application.prepPhase || '', season: String(application.season || '').slice(0, 20), events };
@@ -98,7 +103,7 @@ export function createTrackerStore({ ownerId, namespace = '', storage = globalTh
     if (raw === null) return [];
     let envelope;
     try { envelope = JSON.parse(raw); } catch { throw new Error('投递记录无法读取，原始数据已保留。'); }
-    if (!object(envelope) || envelope.version !== VERSION || envelope.ownerId !== ownerId) throw new Error('投递记录的账户或版本不匹配，原始数据已保留。');
+    if (!object(envelope) || ![1, VERSION].includes(envelope.version) || envelope.ownerId !== ownerId) throw new Error('投递记录的账户或版本不匹配，原始数据已保留。');
     return validateApplications(envelope.applications);
   }
   function refresh() {
@@ -146,11 +151,26 @@ export function createTrackerStore({ ownerId, namespace = '', storage = globalTh
         const latest = applications.find(item => item.id === incoming.id);
         if (!latest) throw new Error('没有找到这份申请，请刷新后重试。');
         // Forms can stay open while another tab records progress. There is no
-        // event deletion/editing UI, so retain durable events and append only
+        // event replacement here, so retain durable events and append only
         // genuinely new IDs from the submitted form.
         const eventIds = new Set(latest.events.map(event => event.id));
         const events = [...latest.events, ...incoming.events.filter(event => !eventIds.has(event.id))];
         return applications.map(item => item.id === incoming.id ? {...incoming, events} : item);
+      });
+    },
+    updateEventDeadline(applicationId, eventId, changes = {}) {
+      mutate(applications => {
+        const application = applications.find(item => item.id === applicationId);
+        if (!application) throw new Error('没有找到这份申请，请刷新后重试。');
+        if (!application.events.some(event => event.id === eventId)) throw new Error('没有找到这条进展，请刷新后重试。');
+        const events = application.events.map(event => {
+          if (event.id !== eventId) return event;
+          const hasDate = Object.hasOwn(changes, 'dueDate');
+          const dueDate = hasDate ? changes.dueDate ?? '' : event.dueDate;
+          const dueTime = hasDate && dueDate === '' ? '' : Object.hasOwn(changes, 'dueTime') ? changes.dueTime ?? '' : event.dueTime;
+          return { ...event, dueDate, dueTime };
+        });
+        return applications.map(item => item.id === applicationId ? { ...item, events } : item);
       });
     },
     mergeApplications(imports) {

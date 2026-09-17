@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { filterApplications, groupApplications, sortApplications } from './dataModel.js';
+import { deadlineDateTime, filterApplications, formatDeadline, getCurrentDeadline, getCurrentDeadlineEvent, groupApplications, sortApplications } from './dataModel.js';
 
 const stages = [
   { id: 's1', label: 'Stage 1' },
@@ -66,4 +66,29 @@ test('complete dates honor explicit years and invalid dates stay last', () => {
   const rows = [app('a', '2025-12-31'), app('b', '2026-01-01'), app('bad', '2026-02-30'), app('partial', '02/01')];
   rows[3].events[0].year = 2026;
   assert.deepEqual(ids(sortApplications(rows)), ['partial', 'b', 'a', 'bad']);
+});
+
+test('only the latest progress can carry the current deadline', () => {
+  const row = app('a', '2026-09-17');
+  const oa = { id: 'oa', type: 'oa_received', date: '2026-09-17', dueDate: '2026-09-19', dueTime: '14:30' };
+  row.events.push(oa);
+  assert.equal(getCurrentDeadlineEvent(row), oa);
+  assert.equal(getCurrentDeadline(row), '2026-09-19');
+  row.events.push({ id: 'done', type: 'oa_completed', date: '2026-09-18', dueDate: '' });
+  assert.equal(getCurrentDeadlineEvent(row), null);
+  assert.equal(getCurrentDeadline(row), '');
+  assert.equal(getCurrentDeadlineEvent({ events: [] }), null);
+});
+
+test('deadline formatting preserves entered minutes and never invents a time for old dates', () => {
+  const event = { dueDate: '2026-09-19', dueTime: '00:05' };
+  assert.equal(formatDeadline(event), '09/19 00:05');
+  assert.equal(formatDeadline(event, { fullDate: true }), '2026.09.19 00:05');
+  assert.equal(deadlineDateTime(event), '2026-09-19T00:05');
+  const legacy = { dueDate: '2026-09-19' };
+  assert.equal(formatDeadline(legacy), '09/19');
+  assert.equal(formatDeadline(legacy, { fullDate: true }), '2026.09.19');
+  assert.equal(deadlineDateTime(legacy), '2026-09-19');
+  assert.equal(formatDeadline(null), '');
+  assert.equal(deadlineDateTime({ dueDate: '', dueTime: '12:30' }), '');
 });

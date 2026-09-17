@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { STATUS_META, getCurrentStatus, getSummary, filterApplications, groupApplications, sortApplications, localToday } from './dataModel.js';
+import { getSummary, filterApplications, groupApplications, sortApplications, localToday } from './dataModel.js';
 import DetailDrawer from './DetailDrawer.jsx';
 import ProgressDialog from './ProgressDialog.jsx';
+import DeadlineDialog from './DeadlineDialog.jsx';
+import ApplicationRow from './ApplicationRow.jsx';
 import StagePanel from '../careerStages/StagePanel.jsx';
 import { useCareerStages } from '../careerStages/useCareerStages.js';
 import { getCurrentStage } from '../careerStages/stageStore.js';
@@ -12,12 +14,6 @@ import { createTrackerStore, importTrackerPayload } from './trackerStore.js';
 import Icon from './TrackerIcon.jsx';
 import './style.css';
 
-function EventPill({ event }) {
-  if (!event) return <span className="qt-empty-step" aria-label="暂无进展">—</span>;
-  const meta = STATUS_META[event.type] || { label: event.type, tone: 'neutral' };
-  const shortDate = /^\d{4}-\d{2}-\d{2}$/.test(event.date || '') ? event.date.slice(5).replace('-', '/') : event.date;
-  return <span className="qt-event-with-deadline"><span className={`qt-event-pill qt-${meta.tone}`} title={event.date}><span className="qt-event-label">{meta.label}</span><span className="qt-event-date">{shortDate || '日期未填'}</span></span>{event.dueDate && <span className="qt-event-deadline" title={`截止日期 ${event.dueDate}`}>截止 {event.dueDate.slice(5).replace('-', '/')}</span>}</span>;
-}
 function NewApplication({ phases, currentPhaseId, onClose, onCreate }) {
   const ref = useRef(null);
   const [error, setError] = useState('');
@@ -65,6 +61,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   const [collapsed, setCollapsed] = useState({});
   const [selectedId, setSelectedId] = useState(null);
   const [progressId, setProgressId] = useState(null);
+  const [deadlineTarget, setDeadlineTarget] = useState(null);
   const [adding, setAdding] = useState(false);
   const [addStageRequest, setAddStageRequest] = useState(0);
   const { store: stageStore, snapshot: stageSnapshot } = useCareerStages({ownerId, namespace});
@@ -85,6 +82,17 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   const groups = useMemo(() => groupApplications(filtered, stageDefinitions), [filtered, stageDefinitions]);
   const activeApplication = resolvedApplications.find(a => a.id === selectedId) || null;
   const progressApplication = resolvedApplications.find(a => a.id === progressId) || null;
+  const deadlineApplication = resolvedApplications.find(a => a.id === deadlineTarget?.applicationId) || null;
+  const deadlineEvent = deadlineApplication?.events.find(event => event.id === deadlineTarget?.eventId) || null;
+  const editDeadline = (application, event) => setDeadlineTarget({applicationId:application.id, eventId:event.id});
+  const saveDeadline = values => {
+    if (!deadlineTarget) return false;
+    try {
+      trackerStore.updateEventDeadline(deadlineTarget.applicationId, deadlineTarget.eventId, values);
+      setToast('截止时间已保存');
+      return true;
+    } catch { return false; }
+  };
   const update = next => {
     try { trackerStore.updateApplication(next); setToast('已保存这份申请'); return true; }
     catch { return false; }
@@ -114,12 +122,19 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
           {importError && <p className="qt-tracker-error" role="alert">{importError}</p>}
           <input ref={fileRef} type="file" accept=".json,application/json" onChange={importFile} hidden aria-label="导入投递记录文件"/>
           <div className="qt-table-toolbar"><div className="qt-filter-tabs" aria-label="申请状态筛选">{statusFilters.map(([id,label,count]) => <button key={id} className={status===id?'qt-active':''} onClick={()=>setStatus(id)} aria-pressed={status===id}>{label}<span>{count}</span></button>)}</div><div className="qt-search-sort"><label className="qt-search"><Icon name="Search" size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="搜索公司、岗位…" aria-label="搜索公司或岗位"/>{query&&<button aria-label="清除搜索" onClick={()=>setQuery('')}><Icon name="X" size={14}/></button>}</label><label className="qt-sort"><Icon name="ArrowDownWideNarrow" size={15}/><select aria-label="排序方式" value={order} onChange={e=>setOrder(e.target.value)}><option value="recent">最近投递</option><option value="original">添加顺序</option><option value="company">公司名称</option></select></label></div></div>
-          <div className={`qt-table-scroll qt-${view}`} tabIndex={0} aria-label="横向滚动查看申请进展"><table><colgroup><col className="qt-col-company"/><col className="qt-col-role"/><col className="qt-col-event"/><col className="qt-col-event"/><col className="qt-col-latest"/><col className="qt-col-open"/></colgroup><thead><tr><th scope="col">公司</th><th scope="col">岗位</th><th scope="col"><span className="qt-step-number">01</span>投递</th><th scope="col"><span className="qt-step-number">02</span>后续进展</th><th scope="col"><span className="qt-step-number">03</span>最新进展</th><th scope="col"><span className="qt-sr-only">详情</span></th></tr></thead>
-            {groups.map(({stage: phase, applications: group}) => { if(!group.length && (query || status !== 'all'))return null; return <tbody key={phase.id}><tr className="qt-phase-row"><th colSpan={6} scope="rowgroup"><button aria-expanded={!collapsed[phase.id]} onClick={()=>setCollapsed({...collapsed,[phase.id]:!collapsed[phase.id]})}><Icon name={collapsed[phase.id]?'ChevronRight':'ChevronDown'} size={16}/><span className="qt-phase-badge">{phase.label}</span><span className="qt-phase-description">{phase.description}</span><span className="qt-phase-count">{group.length} 份申请</span><span className="qt-phase-caption">{phase.recordedDate ? `${phase.recordedDate.replaceAll('-', '.')} · 阶段刷题 ${phase.questionCount ?? '—'} 题` : '投递时的准备阶段'}</span></button></th></tr>{!collapsed[phase.id] && !group.length && <tr className="qt-empty-phase-row"><td colSpan={6}>这个阶段还没有投递，添加申请时可选择此 Stage。</td></tr>}{!collapsed[phase.id]&&group.map(a => <tr className={`qt-application-row ${['rejected','withdrawn'].includes(getCurrentStatus(a))?'archived':''}`} key={a.id}><td className="qt-company-cell"><strong className="qt-company-name">{a.company.trim()}</strong></td><td className="qt-role-cell"><button className="qt-role-link" title={a.role} onClick={()=>setSelectedId(a.id)} aria-label={`查看 ${a.company.trim()} 的 ${a.role}`}><span>{a.role}</span></button></td><td className="qt-progress-cell"><EventPill event={a.events[0]}/></td><td className="qt-progress-cell"><EventPill event={a.events[1]}/></td><td className="qt-latest-cell qt-progress-cell"><div className="qt-latest-content">{a.events.length > 2 && <button className="qt-event-link" onClick={()=>setSelectedId(a.id)} aria-label={`查看 ${a.company.trim()} ${a.role} 的进展历史`}><EventPill event={a.events[a.events.length-1]}/>{a.events.length>3&&<small>+{a.events.length-3} 条历史</small>}</button>}<button className="qt-add-progress" onClick={()=>setProgressId(a.id)} aria-label={`更新 ${a.company.trim()} ${a.role} 的进展`}><Icon name="Plus" size={13}/><span>更新进展</span></button></div></td><td className="qt-details-cell"><button className="qt-row-open" onClick={()=>setSelectedId(a.id)} title="查看申请详情" aria-label={`查看 ${a.company.trim()} ${a.role} 的申请详情`}><Icon name="ChevronRight" size={17}/></button></td></tr>)}</tbody>;})}
+          <div className={`qt-table-scroll qt-${view}`} tabIndex={0} aria-label="横向滚动查看申请进展"><table><colgroup><col className="qt-col-company"/><col className="qt-col-role"/><col className="qt-col-event"/><col className="qt-col-event"/><col className="qt-col-latest"/><col className="qt-col-deadline"/><col className="qt-col-open"/></colgroup><thead><tr><th scope="col">公司</th><th scope="col">岗位</th><th scope="col"><span className="qt-step-number">01</span>投递</th><th scope="col"><span className="qt-step-number">02</span>后续进展</th><th scope="col"><span className="qt-step-number">03</span>最新进展</th><th scope="col" className="qt-deadline-heading">DDL</th><th scope="col"><span className="qt-sr-only">详情</span></th></tr></thead>
+            {groups.map(({stage: phase, applications: group}) => { if(!group.length && (query || status !== 'all'))return null; return <tbody key={phase.id}><tr className="qt-phase-row"><th colSpan={7} scope="rowgroup"><button aria-expanded={!collapsed[phase.id]} onClick={()=>setCollapsed({...collapsed,[phase.id]:!collapsed[phase.id]})}><Icon name={collapsed[phase.id]?'ChevronRight':'ChevronDown'} size={16}/><span className="qt-phase-badge">{phase.label}</span><span className="qt-phase-description">{phase.description}</span><span className="qt-phase-count">{group.length} 份申请</span><span className="qt-phase-caption">{phase.recordedDate ? `${phase.recordedDate.replaceAll('-', '.')} · 阶段刷题 ${phase.questionCount ?? '—'} 题` : '投递时的准备阶段'}</span></button></th></tr>{!collapsed[phase.id] && !group.length && <tr className="qt-empty-phase-row"><td colSpan={7}>这个阶段还没有投递，添加申请时可选择此 Stage。</td></tr>}{!collapsed[phase.id]&&group.map(application => <ApplicationRow
+              key={application.id}
+              application={application}
+              onOpenDetails={()=>setSelectedId(application.id)}
+              onUpdateProgress={()=>setProgressId(application.id)}
+              onEditDeadline={event=>editDeadline(application,event)}
+            />)}</tbody>;})}
           </table>{!filtered.length&&<div className="qt-empty-state"><Icon name={applications.length ? 'SearchX' : 'BriefcaseBusiness'} size={30}/><h3>{applications.length ? '这里还没有匹配的申请' : '从第一份申请开始'}</h3><p>{applications.length ? '试试其他关键词，或者切回全部状态。' : '记录公司、岗位和每一次进展，也可以导入自己的已有记录。'}</p><button className="qt-btn" onClick={()=>applications.length ? (setQuery(''),setStatus('all')) : setAdding(true)}>{applications.length ? '查看全部申请' : '添加申请'}</button></div>}</div>
           <div className="qt-table-footer"><span>显示 {filtered.length} / {applications.length} 份申请</span><span><Icon name="MousePointer2" size={13}/>点击岗位查看完整进展</span></div>
         </section>
-    <DetailDrawer application={activeApplication} phases={stageDefinitions} onClose={()=>setSelectedId(null)} onUpdate={update}/>
+    <DetailDrawer application={activeApplication} phases={stageDefinitions} onClose={()=>setSelectedId(null)} onUpdate={update} onEditDeadline={event=>editDeadline(activeApplication,event)}/>
+    {deadlineApplication && deadlineEvent && <DeadlineDialog key={`${deadlineApplication.id}:${deadlineEvent.id}`} application={deadlineApplication} event={deadlineEvent} onClose={()=>setDeadlineTarget(null)} onSave={saveDeadline}/>}
     {progressApplication&&<ProgressDialog key={progressApplication.id} application={progressApplication} onClose={()=>setProgressId(null)} onUpdate={update}/>}
     {adding&&<NewApplication phases={stageDefinitions} currentPhaseId={currentStage?.id} onClose={()=>setAdding(false)} onCreate={a=>{try {trackerStore.addApplication(a);setAdding(false);setStatus('all');setQuery('');setToast('新申请已添加');return true;} catch {return false;}}}/>}
     {toast&&<div className="qt-toast" role="status"><Icon name="CircleCheck" size={18}/>{toast}</div>}

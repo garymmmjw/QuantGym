@@ -52,3 +52,50 @@
   flex-direction: column;
   align-items: flex-start;
 }
+
+/* Give the current deadline its own column and highlight the whole application. */
+.quantgym-tracker .qt-table-scroll table { min-width: 1080px; }
+.quantgym-tracker .qt-col-deadline { width: 145px; }
+.quantgym-tracker .qt-application-row td.qt-deadline-cell { vertical-align: top; }
+.quantgym-tracker .qt-progress-cell > .qt-event-pill { vertical-align: top; }
+.quantgym-tracker .qt-application-row.qt-has-deadline td {
+  background: #fff1f3;
+  border-bottom-color: #f4cbd3;
+}
+.quantgym-tracker .qt-application-row.qt-has-deadline:hover td { background: #ffe7ec; }
+.quantgym-tracker .qt-has-deadline .qt-company-cell {
+  box-shadow: inset 3px 0 0 #dc526f, 1px 0 0 #f4cbd3;
+}
+.quantgym-tracker .qt-has-deadline .qt-company-name { color: #962e45; }
+.quantgym-tracker .qt-deadline-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 8px;
+  border: 1px solid #edb0be;
+  border-radius: 5px;
+  background: #ffdee6;
+  color: #a72946;
+  font-size: 11px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.quantgym-tracker .qt-deadline-button:hover { background: #ffd0dc; border-color: #d7748c; }
+.quantgym-tracker .qt-deadline-fields { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; }
+.quantgym-tracker .qt-deadline-fields input { min-width: 0; width: 100%; }
+.quantgym-tracker .qt-deadline-fields input:disabled { background: #f2eff6; color: #a79aaf; cursor: not-allowed; }
+.quantgym-tracker .qt-deadline-clear { margin-right: auto; }
+.quantgym-tracker .qt-td-event-deadline { flex-wrap: wrap; align-items: center; }
+.quantgym-tracker .qt-deadline-edit-link {
+  padding: 4px 0;
+  background: transparent;
+  color: #8d4055;
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media(max-width:600px) {
+  .quantgym-tracker .qt-table-scroll table { width: 1039px; min-width: 1039px; }
+  .quantgym-tracker .qt-deadline-fields { grid-template-columns: 1fr; gap: 0; }
+}

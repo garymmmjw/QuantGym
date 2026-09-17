@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { STATUS_META } from './dataModel.js';
+import { STATUS_META, deadlineDateTime, formatDeadline } from './dataModel.js';
 
 function readableDate(date) {
   if (!date) return '日期待补充';
   return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.replaceAll('-', '.') : date;
 }
 
-export default function DetailDrawer({ application, phases, onClose, onUpdate }) {
+export default function DetailDrawer({ application, phases, onClose, onUpdate, onEditDeadline }) {
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
   const [prepPhase, setPrepPhase] = useState('');
@@ -32,6 +32,8 @@ export default function DetailDrawer({ application, phases, onClose, onUpdate })
     dialogRef.current?.focus();
 
     function handleKeyDown(event) {
+      // Native dialogs own keyboard focus while editing a deadline above this drawer.
+      if (document.querySelector('dialog[open]')) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         closeRef.current();
@@ -139,7 +141,10 @@ export default function DetailDrawer({ application, phases, onClose, onUpdate })
                         <strong>{STATUS_META[event.type]?.label || event.type}</strong>
                         <span className="qt-td-event-date">{readableDate(event.date)}</span>
                       </div>
-                      {event.dueDate && <p className="qt-td-event-deadline">截止日期 <time dateTime={event.dueDate}>{readableDate(event.dueDate)}</time></p>}
+                      {event.dueDate && <p className="qt-td-event-deadline">
+                        <span>截止 <time dateTime={deadlineDateTime(event)}>{formatDeadline(event, { fullDate: true })}</time></span>
+                        {onEditDeadline && <button type="button" className="qt-deadline-edit-link" onClick={() => onEditDeadline(event)}>修改截止时间</button>}
+                      </p>}
                     </div>
                   </li>
                 ))}

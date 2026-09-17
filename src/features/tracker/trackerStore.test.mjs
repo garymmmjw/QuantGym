@@ -138,3 +138,123 @@ test('StrictMode subscribe/cleanup reconnects without leaked listeners', () => {
   tracker.addApplication(application());assert.equal(tracker.getSnapshot().applications.length,1);
   replay();assert.equal(handlers.get('storage').size,0);
 });
+
+test('deadline clock times survive import, storage and reload; legacy dates remain time-free', () => {
+  const context = stores();
+  const timed = application('timed');
+  timed.events.push({ id: 'oa', type: 'oa_received', date: '2026-09-18', dueDate: '2026-09-22', dueTime: '00:05' });
+  const legacy = application('legacy');
+  legacy.events[0].dueDate = '2026-09-22';
+  const payload = { applications: [timed, legacy] };
+  assert.equal(importTrackerPayload({ ...context, payload }), 2);
+  const reloaded = stores(context.storage).trackerStore.getSnapshot().applications;
+  assert.equal(reloaded[0].events[1].dueTime, '00:05');
+  assert.equal(reloaded[0].events[1].dueDate, '2026-09-22');
+  assert.equal(reloaded[1].events[0].dueTime, '');
+  const next = { id: 'interview', type: 'interview', date: '2026-09-19', dueDate: '2026-09-25', dueTime: '23:59' };
+  context.trackerStore.updateApplication({ ...reloaded[0], events: [...reloaded[0].events, next] });
+  assert.equal(stores(context.storage).trackerStore.getSnapshot().applications[0].events.at(-1).dueTime, '23:59');
+  assert.equal(JSON.parse(context.storage.getItem(context.trackerStore.key)).version, 2);
+});
+
+test('version 1 date-only records upgrade in place only after a successful save', () => {
+  const storage = memoryStorage();
+  const key = trackerStorageKey('alice');
+  const legacy = application();
+  legacy.events[0].dueDate = '2026-09-20';
+  const original = JSON.stringify({ version: 1, ownerId: 'alice', applications: [legacy] });
+  storage.setItem(key, original);
+  const { trackerStore } = stores(storage);
+  assert.equal(trackerStore.getSnapshot().error, '');
+  assert.equal(trackerStore.getSnapshot().applications[0].events[0].dueDate, '2026-09-20');
+  assert.equal(trackerStore.getSnapshot().applications[0].events[0].dueTime, '');
+  assert.equal(storage.getItem(key), original);
+  trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueTime: '13:45' });
+  const envelope = JSON.parse(storage.getItem(key));
+  assert.equal(envelope.version, 2);
+  assert.equal(envelope.ownerId, 'alice');
+  assert.equal(envelope.applications.length, 1);
+  assert.equal(envelope.applications[0].events[0].dueDate, '2026-09-20');
+  assert.equal(envelope.applications[0].events[0].dueTime, '13:45');
+  assert.equal(stores(storage).trackerStore.getSnapshot().applications[0].events[0].dueTime, '13:45');
+  assert.deepEqual([...storage.values.keys()], [key]);
+});
+
+test('unknown storage versions reject reads and writes without changing the original envelope', () => {
+  for (const version of [0, 3, '2', null]) {
+    const storage = memoryStorage();
+    const key = trackerStorageKey('alice');
+    const original = JSON.stringify({ version, ownerId: 'alice', applications: [application()] });
+    storage.setItem(key, original);
+    const { trackerStore } = stores(storage);
+    assert.match(trackerStore.getSnapshot().error, /版本/);
+    assert.throws(() => trackerStore.addApplication(application('new')), /版本/);
+    assert.throws(() => trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueDate: '2026-09-19', dueTime: '14:30' }), /版本/);
+    assert.equal(storage.getItem(key), original);
+  }
+});
+
+test('invalid deadline times reject the entire import before either store writes', () => {
+  for (const dueTime of ['24:00', '12:60', '9:30', '09:3', '09:30:00', ' 09:30', '09:30Z', 930, 0, false]) {
+    const context = stores();
+    const invalid = application();
+    invalid.events[0] = { ...invalid.events[0], dueDate: '2026-09-19', dueTime };
+    const payload = { applications: [invalid], stages: [{ id: 'stage-1', label: 'Stage 1' }] };
+    assert.throws(() => importTrackerPayload({ ...context, payload }), /截止时间/);
+    assert.equal(context.storage.values.size, 0);
+  }
+  const orphan = application();
+  orphan.events[0].dueTime = '12:30';
+  assert.throws(() => validateTrackerImport({ applications: [orphan] }), /截止时间/);
+});
+
+test('editing a deadline reads the latest row and preserves concurrent progress and application changes', () => {
+  const storage = memoryStorage();
+  const first = stores(storage).trackerStore;
+  const second = stores(storage).trackerStore;
+  first.addApplication(application());
+  const stale = first.getSnapshot().applications[0];
+  second.updateApplication({ ...stale, role: 'Changed in another tab', events: [...stale.events,
+    { id: 'oa', type: 'oa_received', date: '2026-09-18', dueDate: '2026-09-22', dueTime: '14:30' },
+  ] });
+  first.updateEventDeadline('a1', 'a1-submitted', { dueDate: '2026-09-20', dueTime: '09:45', type: 'rejected' });
+  const latest = first.getSnapshot().applications[0];
+  assert.equal(latest.role, 'Changed in another tab');
+  assert.deepEqual(latest.events.map(event => event.id), ['a1-submitted', 'oa']);
+  assert.equal(latest.events[0].type, 'submitted');
+  assert.equal(latest.events[0].date, '2026-09-17');
+  assert.equal(latest.events[0].dueTime, '09:45');
+  assert.equal(latest.events[1].dueTime, '14:30');
+  // A stale append-only form must also keep the explicitly edited deadline.
+  second.updateApplication(stale);
+  assert.equal(second.getSnapshot().applications[0].events[0].dueTime, '09:45');
+  assert.equal(second.getSnapshot().applications[0].events.length, 2);
+});
+
+test('deadline edits preserve omitted fields and explicit date removal also clears the clock time', () => {
+  const { trackerStore, storage } = stores();
+  trackerStore.addApplication(application());
+  trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueDate: '2026-09-20', dueTime: '09:45' });
+  trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueTime: '10:00' });
+  let event = trackerStore.getSnapshot().applications[0].events[0];
+  assert.equal(event.dueDate, '2026-09-20');
+  assert.equal(event.dueTime, '10:00');
+  trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueDate: '2026-09-21' });
+  assert.equal(trackerStore.getSnapshot().applications[0].events[0].dueTime, '10:00');
+  trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueDate: '', dueTime: '10:00' });
+  event = stores(storage).trackerStore.getSnapshot().applications[0].events[0];
+  assert.equal(event.dueDate, '');
+  assert.equal(event.dueTime, '');
+});
+
+test('invalid or missing-target deadline edits leave saved records untouched', () => {
+  const { trackerStore, storage } = stores();
+  trackerStore.addApplication(application());
+  const saved = storage.getItem(trackerStore.key);
+  assert.throws(() => trackerStore.updateEventDeadline('missing', 'a1-submitted', { dueDate: '' }), /申请/);
+  assert.throws(() => trackerStore.updateEventDeadline('a1', 'missing', { dueDate: '' }), /进展/);
+  assert.throws(() => trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueDate: '2026-02-30', dueTime: '10:00' }), /日期/);
+  assert.throws(() => trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueDate: '2026-09-19', dueTime: '25:00' }), /截止时间/);
+  assert.throws(() => trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueTime: '12:30' }), /截止时间/);
+  assert.equal(storage.getItem(trackerStore.key), saved);
+});
