@@ -39,3 +39,16 @@
 .quantgym-tracker .qt-import-button{background:transparent;color:#7b64a4;padding:6px;font-size:11px;white-space:nowrap}.quantgym-tracker .qt-import-button:hover{text-decoration:underline}.quantgym-tracker .qt-tracker-error{margin:0 20px 16px;color:#b23553;font-size:12px}.quantgym-tracker .qt-new-dialog{margin:auto;max-height:calc(100dvh - 32px);overflow:auto}.quantgym-tracker .qt-panel-header-right{flex-wrap:wrap;justify-content:flex-end}.quantgym-tracker .qt-save-state{max-width:300px}.quantgym-tracker .qt-table-scroll{overscroll-behavior:contain}.quantgym-tracker .qt-td-overlay{z-index:2000}.quantgym-tracker .qt-td-drawer{position:relative;inset:auto;border:0;border-radius:0;transform:none;max-height:none;margin:0;padding:0}.quantgym-tracker .qt-td-event-interview .qt-td-event-dot{background:#933cc8}.quantgym-tracker .qt-td-event-offer .qt-td-event-dot{background:#08775b}.quantgym-tracker .qt-td-event-withdrawn .qt-td-event-dot{background:#6b587e}
 @media(max-width:600px){.quantgym-tracker .qt-summary-strip{overflow-x:auto}.quantgym-tracker .qt-metric{min-width:70px}.quantgym-tracker .qt-panel-header{gap:10px;align-items:flex-start}.quantgym-tracker .qt-panel-header-right{gap:4px}.quantgym-tracker .qt-save-state{flex-basis:100%;font-size:9px;justify-content:flex-end}.quantgym-tracker .qt-heading-actions{justify-content:flex-start}.quantgym-tracker .qt-page-heading{align-items:flex-start}.quantgym-tracker .qt-table-toolbar{flex-direction:column;align-items:stretch}.quantgym-tracker .qt-search-sort{justify-content:space-between}.quantgym-tracker .qt-form-columns,.quantgym-tracker .qt-td-field-row{grid-template-columns:1fr}.quantgym-tracker .qt-new-dialog .qt-btn{min-height:44px}.quantgym-tracker .qt-metric small{display:none}}
 @media(prefers-reduced-motion:reduce){.quantgym-tracker .qt-td-drawer{animation:none}}
+
+/* Deadlines and history grow downward without moving the row's progress pills. */
+.quantgym-tracker .qt-application-row td.qt-progress-cell {
+  vertical-align: top;
+}
+.quantgym-tracker .qt-progress-cell .qt-event-with-deadline {
+  display: flex;
+}
+.quantgym-tracker .qt-progress-cell .qt-event-link {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
