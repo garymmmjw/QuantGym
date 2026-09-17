@@ -14,6 +14,41 @@ const app = (id, date, prepPhase = 's2', company = id) => ({
 const ids = rows => rows.map(row => row.id);
 const display = (rows, order) => groupApplications(sortApplications(rows, order), stages);
 
+test('received milestones count each application once and preserve separate current outcomes', () => {
+  const withProgress = (id, types) => {
+    const row = app(id, '2026-09-17');
+    row.events.push(...types.map((type, index) => ({ id: `${id}-${index}`, type, date: '2026-09-17' })));
+    return row;
+  };
+  const rows = [
+    withProgress('waiting', []),
+    withProgress('oa', ['oa_received', 'oa_received', 'oa_completed']),
+    withProgress('interview', ['oa_received', 'interview', 'interview']),
+    withProgress('offer', ['oa_received', 'interview', 'offer']),
+    withProgress('rejected', ['oa_received', 'interview', 'rejected']),
+    withProgress('withdrawn', ['oa_received', 'withdrawn']),
+    withProgress('direct-offer', ['offer']),
+    withProgress('direct-rejection', ['rejected']),
+  ];
+  const before = structuredClone(rows);
+  const summary = getSummary(rows);
+  assert.deepEqual(summary, { total: 8, ddl: 0, awaiting: 1, oa: 1, interview: 1, offer: 2, rejected: 2, closed: 3, receivedOa: 5, receivedInterview: 3 });
+  for (const [mode, key, expected] of [
+    ['received-oa', 'receivedOa', ['oa', 'interview', 'offer', 'rejected', 'withdrawn']],
+    ['received-interview', 'receivedInterview', ['interview', 'offer', 'rejected']],
+    ['rejected', 'rejected', ['rejected', 'direct-rejection']],
+    ['offer', 'offer', ['offer', 'direct-offer']],
+    ['closed', 'closed', ['rejected', 'withdrawn', 'direct-rejection']],
+  ]) {
+    const view = getApplicationView(rows, stages, mode);
+    assert.equal(view.applications.length, summary[key]);
+    assert.deepEqual(ids(view.applications).sort(), [...expected].sort());
+  }
+  assert.deepEqual(ids(filterApplications(rows, { status: 'oa' })), ['oa']);
+  assert.deepEqual(ids(filterApplications(rows, { status: 'interview' })), ['interview']);
+  assert.deepEqual(rows, before);
+});
+
 test('progress columns expose every event and remain shared across applications with different histories', () => {
   const short = app('short', '2026-09-17');
   const long = app('long', '2026-09-16');

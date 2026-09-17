@@ -4,7 +4,7 @@ export const STATUS_META = Object.freeze({
   oa_completed: { label: 'OA 已完成', tone: 'blue' },
   interview: { label: '面试中', tone: 'purple' },
   offer: { label: 'Offer', tone: 'green' },
-  rejected: { label: '未通过', tone: 'red' },
+  rejected: { label: '已拒绝', tone: 'red' },
   withdrawn: { label: '已撤回', tone: 'muted' },
 });
 
@@ -57,13 +57,21 @@ export function localToday(date = new Date()) {
 }
 
 export function getSummary(applications) {
-  const summary = { total: applications.length, ddl: 0, awaiting: 0, oa: 0, interview: 0, offer: 0, closed: 0 };
+  const summary = { total: applications.length, ddl: 0, awaiting: 0, oa: 0, interview: 0, offer: 0, rejected: 0, closed: 0, receivedOa: 0, receivedInterview: 0 };
   for (const application of applications) {
     if (getCurrentDeadlineEvent(application)) summary.ddl += 1;
     const group = STATUS_GROUPS[getCurrentStatus(application)];
     if (group) summary[group] += 1;
+    if (getCurrentStatus(application) === 'rejected') summary.rejected += 1;
+    // Count applications, not rounds. Later progress keeps received milestones.
+    if (hasReceivedProgress(application, 'oa')) summary.receivedOa += 1;
+    if (hasReceivedProgress(application, 'interview')) summary.receivedInterview += 1;
   }
   return summary;
+}
+
+function hasReceivedProgress(application, group) {
+  return application.events?.some(event => STATUS_GROUPS[event.type] === group) ?? false;
 }
 
 export function filterApplications(applications, { query = '', status = 'all', phase = 'all' } = {}) {
@@ -73,6 +81,10 @@ export function filterApplications(applications, { query = '', status = 'all', p
     const group = STATUS_GROUPS[getCurrentStatus(application)];
     if (status === 'ddl') {
       if (!getCurrentDeadlineEvent(application)) return false;
+    } else if (status === 'rejected') {
+      if (getCurrentStatus(application) !== 'rejected') return false;
+    } else if (status === 'received-oa' || status === 'received-interview') {
+      if (!hasReceivedProgress(application, status === 'received-oa' ? 'oa' : 'interview')) return false;
     } else if (status === 'interview-offer') {
       if (group !== 'interview' && group !== 'offer') return false;
     } else if (status && status !== 'all' && group !== status) return false;
