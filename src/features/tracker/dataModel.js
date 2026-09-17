@@ -81,7 +81,7 @@ function submissionDate(application) {
   return { year, monthDay: month * 100 + day };
 }
 
-export function sortApplications(applications, order = 'original') {
+export function sortApplications(applications, order = 'recent') {
   const sourceSorted = [...applications].sort((a, b) => sourceRow(a) - sourceRow(b));
   if (order === 'company') {
     return sourceSorted.sort((a, b) => String(a.company ?? '').trim().localeCompare(
@@ -89,15 +89,36 @@ export function sortApplications(applications, order = 'original') {
     ));
   }
   if (order !== 'recent') return sourceSorted;
+  const addedOrder = new Map(sourceSorted.map((application, index) => [application, index]));
+  const dates = new Map(sourceSorted.map(application => [application, submissionDate(application)]));
+  // Yearless imports use the latest explicitly recorded year only as a sort
+  // reference. Keep their stored/displayed year unknown. One reference for the
+  // whole list avoids contradictory pairwise comparisons across year boundaries.
+  const referenceYear = Math.max(0, ...[...dates.values()].map(date => date?.year || 0));
   return sourceSorted.sort((a, b) => {
-    const left = submissionDate(a);
-    const right = submissionDate(b);
+    const left = dates.get(a);
+    const right = dates.get(b);
     if (!left || !right) return left ? -1 : right ? 1 : 0;
-    // A recruitment season is not an event year. Compare complete dates only
-    // when both are known; month/day is the available order for imported dates.
-    if (left.year !== null && right.year !== null && left.year !== right.year) {
-      return right.year - left.year;
-    }
-    return right.monthDay - left.monthDay;
+    const leftKey = (left.year ?? referenceYear) * 10000 + left.monthDay;
+    const rightKey = (right.year ?? referenceYear) * 10000 + right.monthDay;
+    return rightKey - leftKey || addedOrder.get(b) - addedOrder.get(a);
   });
+}
+
+// Keep Stage groups together while letting the selected sort determine both
+// their first visible application and the order of the groups themselves.
+export function groupApplications(sortedApplications, stages) {
+  const groups = stages.map(stage => ({ stage, applications: [], rank: Infinity }));
+  const byStage = new Map();
+  for (const group of groups) {
+    for (const id of [group.stage.id, ...(group.stage.importedIds || [])]) byStage.set(id, group);
+  }
+  const ungrouped = { stage: { id: '', label: '未分组', description: '' }, applications: [], rank: Infinity };
+  sortedApplications.forEach((application, rank) => {
+    const group = byStage.get(application.prepPhase) || ungrouped;
+    group.rank = Math.min(group.rank, rank);
+    group.applications.push(application);
+  });
+  if (ungrouped.applications.length) groups.push(ungrouped);
+  return groups.sort((a, b) => a.rank - b.rank);
 }
