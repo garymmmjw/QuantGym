@@ -28,6 +28,7 @@ export const MODULE_MANIFEST = [
   { id: "community", hash: "#community", path: "/community", labelKey: "community", navGroup: "social", protected: true, stage2Priority: 11, navTab: true },
   { id: "messages", hash: "#messages", path: "/messages", labelKey: "messages", navGroup: "social", protected: true, stage2Priority: 10, navTab: true },
   { id: "network", hash: "#network", path: "/network", labelKey: "network", navGroup: "social", protected: true, stage2Priority: 9, navTab: true },
+  { id: "tracker", hash: "#tracker", path: "/tracker", labelKey: "applicationTracker", navGroup: "career", protected: true, stage2Priority: 26, navTab: true },
   { id: "resume", hash: "#resume", path: "/resume", labelKey: "resume", navGroup: "career", protected: true, stage2Priority: 8, navTab: true },
   { id: "jobs", hash: "#jobs", path: "/jobs", labelKey: "jobs", navGroup: "career", protected: true, stage2Priority: 7, navTab: true },
   { id: "companies", hash: "#companies", path: "/companies", labelKey: "companies", navGroup: "career", protected: true, stage2Priority: 6, navTab: true },

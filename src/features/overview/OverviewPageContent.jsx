@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useOverviewPageModel } from "./overviewHooks.js";
+import { isModuleVisible } from "../../modules/availability.js";
+import { OverviewCareerStage } from "../careerStages/OverviewCareerStage.jsx";
 
 function LeaderboardTrend({ delta }) {
   if (delta === null) {
@@ -96,10 +98,10 @@ export function OverviewPageContent() {
   const defaultQuests = [
     { id: "daily-problem", icon: "list-checks", title: "完成每日一题", sub: "概率 · 中等难度", xp: 20 },
     { id: "mental-90", icon: "calculator", title: "Mental Math 达到 90% 正确率", sub: "限时挑战", xp: 30 },
-    { id: "review-cards", icon: "notebook-pen", title: "复习 3 张资料卡", sub: "间隔记忆", xp: 15 },
-    { id: "behavioral-review", icon: "messages-square", title: "复盘一个行为面试回答", sub: "表达与沟通", xp: 25 },
-    { id: "read-exp", icon: "newspaper", title: "读一篇市场面经", sub: "Quant Wire", xp: 10 }
-  ];
+    { id: "review-cards", module: "memory", icon: "notebook-pen", title: "复习 3 张资料卡", sub: "间隔记忆", xp: 15 },
+    { id: "behavioral-review", module: "interview", icon: "messages-square", title: "复盘一个行为面试回答", sub: "表达与沟通", xp: 25 },
+    { id: "read-exp", module: "news", icon: "newspaper", title: "读一篇市场面经", sub: "Quant Wire", xp: 10 }
+  ].filter((quest) => isModuleVisible(quest.module));
   const planItems = model.todayPlan?.items || [];
   const quests = planItems.length
     ? planItems.map((item, index) => ({
@@ -173,7 +175,7 @@ export function OverviewPageContent() {
 
   return (
     <div className="overview-route-page qg-growth-page qg-overview-page">
-      <section className="news-ticker qg-overview-ticker" aria-label="Quant 新闻滚动条" data-i18n-aria-label="newsTickerLabel">
+      {isModuleVisible("news") ? <section className="news-ticker qg-overview-ticker" aria-label="Quant 新闻滚动条" data-i18n-aria-label="newsTickerLabel">
         <div className="ticker-label">
           <i data-lucide="radio" />
           <span data-i18n="newsTickerTitle">{model.t("newsTickerTitle") || "Quant Wire"}</span>
@@ -201,7 +203,7 @@ export function OverviewPageContent() {
             )}
           </div>
         </div>
-      </section>
+      </section> : null}
 
       <section className="quanty-hero qg-overview-hero">
         <div className="quanty-hero-copy">
@@ -311,13 +313,15 @@ export function OverviewPageContent() {
         </div>
       </section>
 
+      <OverviewCareerStage />
+
       <section className="feature-launch-grid hidden" aria-label="主要功能入口">
         {[
           ["problems", "feature-learn.webp?v=premium-system-2", "题库"],
           ["tools", "feature-practice.webp?v=premium-system-2", "限时训练"],
           ["skills", "feature-quest.webp?v=premium-system-2", "能力值"],
           ["experiences", "feature-notebook.webp?v=premium-system-2", "面经记录"]
-        ].map(([moduleId, image, label]) => (
+        ].filter(([moduleId]) => isModuleVisible(moduleId)).map(([moduleId, image, label]) => (
           <button
             className="feature-launch-card"
             type="button"
@@ -753,7 +757,7 @@ export function OverviewPageContent() {
         </div>
       </section>
 
-      <section className="community-panel overview-community hidden" aria-hidden="true">
+      {isModuleVisible("community") ? <section className="community-panel overview-community hidden" aria-hidden="true">
         <div className="section-heading">
           <div>
             <h2>社区</h2>
@@ -791,7 +795,7 @@ export function OverviewPageContent() {
           </div>
         </form>
         <div id="overviewCommunityList" className="community-list compact" />
-      </section>
+      </section> : null}
     </div>
   );
 }

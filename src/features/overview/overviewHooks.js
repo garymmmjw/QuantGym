@@ -4,6 +4,8 @@ import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { locationDefs } from "../../prep-data.js";
 import { skillDefs } from "../../skills.js";
 import { getRank } from "../../modules/skills/data.js";
+import { isModuleVisible } from "../../modules/availability.js";
+import { isPlanTaskVisible } from "../../modules/plan/data.js";
 import {
   getCountryLabel,
   getRegionLabel,
@@ -51,14 +53,17 @@ export function useOverviewPageModel() {
   const tickerNews = useMemo(() => {
     void revision;
     void userState.news;
-    return api?.getTickerNews?.() || [];
+    return isModuleVisible("news") ? api?.getTickerNews?.() || [] : [];
   }, [api, revision, userState.news]);
 
   const todayPlan = useMemo(() => {
     void revision;
     void userState.prepPlan;
     void userState.studyPlan;
-    return api?.getTodayPlan?.() || null;
+    const plan = api?.getTodayPlan?.();
+    if (!plan) return null;
+    const items = (plan.items || []).filter(isPlanTaskVisible);
+    return items.length ? { ...plan, items } : null;
   }, [api, revision, userState.prepPlan, userState.studyPlan]);
 
   const problemProgress = useMemo(() => {

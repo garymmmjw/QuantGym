@@ -7,8 +7,14 @@ import {
 } from '../../prep-data.js';
 import { skillDefs } from '../../skills.js';
 import { timestampOrZero } from '../../lib/date.js';
+import { isModuleVisible } from '../availability.js';
 
 export const PREP_TASK_STATUSES = ["todo", "doing", "done"];
+
+export function isPlanTaskVisible(task) {
+  const target = task.module || task.action || task.skill;
+  return isModuleVisible(target === "interview-behavioral" ? "interview" : target);
+}
 
 export function normalizePrepTaskStatus(value) {
   // 兼容旧布尔数据：true → 'done'，false/缺失/未知 → 'todo'
@@ -194,7 +200,7 @@ export function getPrepDailyTasks(plan, deps = {}) {
   ];
   const limit = plan.weeklyHours <= 5 ? 3 : plan.weeklyHours <= 8 ? 4 : 5;
   const dateKey = localDateKey();
-  const preparedTasks = tasks.slice(0, limit).map((task) => {
+  const preparedTasks = tasks.filter(isPlanTaskVisible).slice(0, limit).map((task) => {
     const key = `${dateKey}:${task.id}`;
     const override = plan.taskOverrides?.[key] || {};
     const status = normalizePrepTaskStatus(plan.completedTasks[key]);
@@ -221,7 +227,7 @@ export function getPrepDailyTasks(plan, deps = {}) {
         deletable: true
       };
     });
-  return [...preparedTasks, ...customTasks];
+  return [...preparedTasks, ...customTasks].filter(isPlanTaskVisible);
 }
 
 export function buildLegacyTodayStudyPlan(options = {}) {
@@ -292,7 +298,7 @@ export function buildLegacyTodayStudyPlan(options = {}) {
         minutes: 15,
         skill: "jobs"
       }
-    ]
+    ].filter(isPlanTaskVisible)
   };
 }
 

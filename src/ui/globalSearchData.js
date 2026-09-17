@@ -3,6 +3,7 @@ import {
   matchesQuery,
   normalizeSearchQuery
 } from '../lib/text.js';
+import { isModuleVisible } from '../modules/availability.js';
 
 export function buildGlobalSearchResults(query, deps = {}) {
   const {
@@ -29,6 +30,7 @@ export function buildGlobalSearchResults(query, deps = {}) {
   const results = [];
 
   getDefs().forEach((item) => {
+    if (!isModuleVisible(item.module)) return;
     if (!matchesQuery(item.fields, normalized)) return;
     results.push({
       type: "module",
@@ -54,6 +56,7 @@ export function buildGlobalSearchResults(query, deps = {}) {
   });
 
   quantCompanyDefs.forEach((company) => {
+    if (!isModuleVisible("companies")) return;
     const summary = getLanguage() === "en" ? company.summaryEn : company.summaryZh;
     const stats = getCompanyProblemStats(company);
     const fields = [
@@ -78,6 +81,7 @@ export function buildGlobalSearchResults(query, deps = {}) {
   });
 
   normalizeJobs(state.jobs).forEach((job) => {
+    if (!isModuleVisible("jobs")) return;
     const fields = [job.company, job.title, job.type, job.location, job.postedAt, (job.tags || []).join(" ")];
     if (!matchesQuery(fields, normalized)) return;
     results.push({
@@ -91,6 +95,7 @@ export function buildGlobalSearchResults(query, deps = {}) {
   });
 
   normalizeCourses(state.courses).forEach((course) => {
+    if (!isModuleVisible("courses")) return;
     const fields = [
       course.title,
       course.platform,
@@ -125,6 +130,7 @@ export function buildGlobalSearchResults(query, deps = {}) {
   });
 
   sortNews(state.news || []).forEach((item) => {
+    if (!isModuleVisible("news")) return;
     const fields = [item.title, item.titleZh, item.source, item.summary, item.insight, (item.tags || []).join(" ")];
     if (!matchesQuery(fields, normalized)) return;
     results.push({
@@ -161,8 +167,9 @@ export function getModuleSearchDefs(t = (key) => key) {
     { module: "calendar", label: "训练日历 / Calendar", detail: "个人每日完成记录", fields: ["calendar", "日历", "日期", "完成记录", "daily activity"] },
     { module: "leetcode", label: "LeetCode / 力扣", detail: "刷题进度 · 随机复习", fields: ["leetcode", "力扣", "刷题", "随机复习", "coding"] },
     { module: "technical-interview", label: "Technical Interview", detail: "从紫皮书抽一道技术面试题", fields: ["technical interview", "tech interview", "技术面试", "紫皮书", "purple book"] },
+    { module: "tracker", label: t("applicationTracker"), detail: "投递记录与求职阶段", fields: ["tracker", "application", "投递", "申请", "stage", "求职阶段"] },
     { module: "tools", label: t("tools"), detail: "Mental math / 速算", fields: [t("tools"), "tools", "drills", "速算", "mental math"] },
     { module: "memory", label: t("memory"), detail: "Memory / 资料笔记", fields: [t("memory"), "memory", "notes", "资料", "笔记"] },
     { module: "settings", label: t("settings"), detail: "Settings / 设置", fields: [t("settings"), "settings", "设置", "config"] }
-  ];
+  ].filter((item) => isModuleVisible(item.module));
 }
