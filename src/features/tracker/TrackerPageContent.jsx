@@ -69,7 +69,13 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   }), [applications, stageDefinitions]);
   const currentStage = getCurrentStage(stageDefinitions);
   const [toast, setToast] = useState('');
+  const [deletedRecord, setDeletedRecord] = useState(null);
   useEffect(() => { if (toast) { const timer = setTimeout(() => setToast(''), 3200); return () => clearTimeout(timer); } }, [toast]);
+  useEffect(() => {
+    if (!deletedRecord) return;
+    const timer = setTimeout(() => setDeletedRecord(null), 10000);
+    return () => clearTimeout(timer);
+  }, [deletedRecord]);
   const summary = getSummary(applications);
   const activeApplication = resolvedApplications.find(a => a.id === selectedId) || null;
   const progressApplication = resolvedApplications.find(a => a.id === progressId) || null;
@@ -86,6 +92,26 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
       return true;
     } catch { return false; }
   };
+  const deleteEvent = () => {
+    if (!eventTarget) return false;
+    const token = trackerStore.deleteEvent(eventTarget.applicationId, eventTarget.eventId);
+    setToast('');
+    setDeletedRecord({ token, error: '' });
+    return true;
+  };
+  const undoDelete = () => {
+    if (!deletedRecord) return;
+    try {
+      trackerStore.restoreEvent(deletedRecord.token);
+      setDeletedRecord(null);
+      setToast('记录已恢复');
+      (document.querySelector('.quantgym-tracker .qt-td-drawer')
+        || document.querySelector('.quantgym-tracker .qt-filter-tabs button.qt-active')
+        || document.querySelector('.quantgym-tracker .qt-metric.qt-selected'))?.focus();
+    } catch (error) {
+      setDeletedRecord(current => ({ ...current, error: error.message || '恢复失败，请重试。' }));
+    }
+  };
   const editDeadline = (application, event) => setDeadlineTarget({applicationId:application.id, eventId:event.id});
   const saveDeadline = values => {
     if (!deadlineTarget) return false;
@@ -99,6 +125,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
     try { trackerStore.updateApplication(next); setToast('已保存这份申请'); return true; }
     catch { return false; }
   };
+  const deletionNotice = deletedRecord && <div className={`${activeApplication ? 'qt-td-deletion-notice' : 'qt-toast'} qt-delete-notice`} role="status"><span>{deletedRecord.error || '记录已删除'}</span><button type="button" className="qt-btn" onClick={undoDelete}>撤销</button></div>;
   return <div className="quantgym-tracker">
         <div className="qt-page-heading"><div><div className="qt-eyebrow">APPLICATION TRACKER </div><h1>我的投递<span className="qt-heading-dot">.</span></h1><p>从第一次投递，到下一次好消息。</p></div><div className="qt-heading-actions"><button className="qt-btn" onClick={() => setAddStageRequest(value => value+1)}><Icon name="Flag" size={16}/>添加 Stage</button><button className="qt-btn qt-primary" onClick={() => setAdding(true)}><Icon name="Plus" size={17}/>添加申请</button></div></div>
         <section className="qt-summary-strip" aria-label="申请统计">
@@ -123,12 +150,12 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
           onEditDeadline={editDeadline}
           onAddApplication={() => setAdding(true)}
         />
-    <DetailDrawer application={activeApplication} phases={stageDefinitions} onClose={()=>setSelectedId(null)} onUpdate={update} onEditEvent={editEvent}/>
-    {editingApplication && editingEvent && <EventEditDialog key={`${editingApplication.id}:${editingEvent.id}`} application={editingApplication} event={editingEvent} onClose={()=>setEventTarget(null)} onSave={saveEvent}/>}
+    <DetailDrawer application={activeApplication} phases={stageDefinitions} onClose={()=>setSelectedId(null)} onUpdate={update} onEditEvent={editEvent} deletionNotice={deletionNotice}/>
+    {editingApplication && editingEvent && <EventEditDialog key={`${editingApplication.id}:${editingEvent.id}`} application={editingApplication} event={editingEvent} onClose={()=>setEventTarget(null)} onSave={saveEvent} onDelete={deleteEvent}/>}
     {deadlineApplication && deadlineEvent && <DeadlineDialog key={`${deadlineApplication.id}:${deadlineEvent.id}`} application={deadlineApplication} event={deadlineEvent} onClose={()=>setDeadlineTarget(null)} onSave={saveDeadline}/>}
     {progressApplication&&<ProgressDialog key={progressApplication.id} application={progressApplication} onClose={()=>setProgressId(null)} onUpdate={update}/>}
     {adding&&<NewApplication phases={stageDefinitions} currentPhaseId={currentStage?.id} onClose={()=>setAdding(false)} onCreate={a=>{try {trackerStore.addApplication(a);setAdding(false);setStatus('all');setToast('新申请已添加');return true;} catch {return false;}}}/>}
-    {toast&&<div className="qt-toast" role="status"><Icon name="CircleCheck" size={18}/>{toast}</div>}
+    {deletedRecord ? !activeApplication && deletionNotice : toast && <div className="qt-toast" role="status"><Icon name="CircleCheck" size={18}/>{toast}</div>}
   </div>;
 }
 export function TrackerPageContent() {

@@ -15,7 +15,7 @@ function validOccurrenceDate(value, allowYearless) {
   return month >= 1 && month <= 12 && day >= 1 && day <= [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1];
 }
 
-export default function EventEditDialog({ application, event, onClose, onSave }) {
+export default function EventEditDialog({ application, event, onClose, onSave, onDelete }) {
   const dialogRef = useRef(null);
   const original = useRef({
     type: event.type,
@@ -41,7 +41,8 @@ export default function EventEditDialog({ application, event, onClose, onSave })
       dialog.close();
       document.body.style.overflow = oldOverflow;
       const fallbackFilter = tracker?.querySelector('.qt-filter-tabs button.qt-active');
-      const focusTarget = [previouslyFocused, drawer, rowLink, fallbackFilter].find(element =>
+      const fallbackMetric = tracker?.querySelector('.qt-summary-strip button.qt-selected');
+      const focusTarget = [previouslyFocused, drawer, rowLink, fallbackFilter, fallbackMetric].find(element =>
         element instanceof HTMLElement && element.isConnected && element.getClientRects().length > 0,
       );
       focusTarget?.focus();
@@ -67,6 +68,16 @@ export default function EventEditDialog({ application, event, onClose, onSave })
       else setError('没有保存成功，请检查记录信息后重试。');
     } catch (failure) {
       setError(failure.message || '没有保存成功，请重试。');
+    }
+  }
+
+  function deleteEvent() {
+    if (isSubmission || typeof onDelete !== 'function') return;
+    try {
+      if (onDelete()) onClose();
+      else setError('没有删除成功，请重试。');
+    } catch (failure) {
+      setError(failure?.message || '没有删除成功，请重试。');
     }
   }
 
@@ -114,11 +125,17 @@ export default function EventEditDialog({ application, event, onClose, onSave })
         </label>
         {usesYearlessDate && <p id="event-edit-date-hint" className="qt-event-date-hint">原记录未标年份，可保留月/日，或填写完整日期（YYYY-MM-DD）。</p>}
         <DeadlineFields idPrefix="event-edit-deadline" dueDate={values.dueDate} dueTime={values.dueTime} onChange={updateValues} />
+        <button type="button" className="qt-btn qt-event-clear-deadline" disabled={!values.dueDate && !values.dueTime} onClick={() => updateValues({ dueDate: '', dueTime: '' })}>清除截止时间</button>
         {error && <p className="qt-tracker-error" role="alert">{error}</p>}
-        <footer className="qt-progress-dialog-actions">
-          <button type="button" className="qt-btn qt-deadline-clear" disabled={!values.dueDate && !values.dueTime} onClick={() => updateValues({ dueDate: '', dueTime: '' })}>清除截止时间</button>
-          <button type="button" className="qt-btn" onClick={onClose}>取消</button>
-          <button type="submit" className="qt-btn qt-primary">保存修改</button>
+        <footer className="qt-progress-dialog-actions qt-event-edit-actions">
+          <div className="qt-event-action-row">
+            <button type="button" className="qt-btn qt-event-delete" disabled={isSubmission || typeof onDelete !== 'function'} aria-describedby={isSubmission ? 'event-delete-hint' : undefined} onClick={deleteEvent}>删除记录</button>
+            <div className="qt-event-save-actions">
+              <button type="button" className="qt-btn" onClick={onClose}>取消</button>
+              <button type="submit" className="qt-btn qt-primary">保存修改</button>
+            </div>
+          </div>
+          {isSubmission && <p className="qt-event-delete-hint" id="event-delete-hint">投递记录是申请起点，可修改但不能删除。</p>}
         </footer>
       </form>
     </dialog>

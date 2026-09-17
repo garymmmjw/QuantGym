@@ -6,7 +6,7 @@ function readableDate(date) {
   return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.replaceAll('-', '.') : date;
 }
 
-export default function DetailDrawer({ application, phases, onClose, onUpdate, onEditEvent }) {
+export default function DetailDrawer({ application, phases, onClose, onUpdate, onEditEvent, deletionNotice }) {
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
   const [prepPhase, setPrepPhase] = useState('');
@@ -125,6 +125,7 @@ export default function DetailDrawer({ application, phases, onClose, onUpdate, o
           <button type="button" className="qt-td-close" onClick={onClose} aria-label="关闭申请详情">×</button>
         </header>
 
+        {deletionNotice}
         <div className="qt-td-body">
           <section className="qt-td-section" aria-labelledby="td-timeline-heading">
             <div className="qt-td-section-heading">

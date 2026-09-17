@@ -154,7 +154,7 @@ test('deadline clock times survive import, storage and reload; legacy dates rema
   const next = { id: 'interview', type: 'interview', date: '2026-09-19', dueDate: '2026-09-25', dueTime: '23:59' };
   context.trackerStore.updateApplication({ ...reloaded[0], events: [...reloaded[0].events, next] });
   assert.equal(stores(context.storage).trackerStore.getSnapshot().applications[0].events.at(-1).dueTime, '23:59');
-  assert.equal(JSON.parse(context.storage.getItem(context.trackerStore.key)).version, 2);
+  assert.equal(JSON.parse(context.storage.getItem(context.trackerStore.key)).version, 3);
 });
 
 test('version 1 date-only records upgrade in place only after a successful save', () => {
@@ -171,7 +171,7 @@ test('version 1 date-only records upgrade in place only after a successful save'
   assert.equal(storage.getItem(key), original);
   trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueTime: '13:45' });
   const envelope = JSON.parse(storage.getItem(key));
-  assert.equal(envelope.version, 2);
+  assert.equal(envelope.version, 3);
   assert.equal(envelope.ownerId, 'alice');
   assert.equal(envelope.applications.length, 1);
   assert.equal(envelope.applications[0].events[0].dueDate, '2026-09-20');
@@ -181,7 +181,7 @@ test('version 1 date-only records upgrade in place only after a successful save'
 });
 
 test('unknown storage versions reject reads and writes without changing the original envelope', () => {
-  for (const version of [0, 3, '2', null]) {
+  for (const version of [0, 4, '3', null]) {
     const storage = memoryStorage();
     const key = trackerStorageKey('alice');
     const original = JSON.stringify({ version, ownerId: 'alice', applications: [application()] });
@@ -281,7 +281,7 @@ test('editing existing progress updates status and deadline without creating ano
   assert.equal(getCurrentStatus(completed), 'oa_completed');
   assert.equal(getCurrentDeadline(completed), '');
   assert.equal(completed.events[1].dueTime, '');
-  assert.equal(JSON.parse(storage.getItem(trackerStore.key)).version, 2);
+  assert.equal(JSON.parse(storage.getItem(trackerStore.key)).version, 3);
 });
 
 test('editing submission date changes recent sorting and derives its year from the chosen ISO date', () => {
@@ -348,7 +348,7 @@ test('editing version 1 history upgrades its envelope without changing its event
   const { trackerStore } = stores(storage);
   trackerStore.updateEvent('a1', 'oa', { dueTime: '10:30' });
   const envelope = JSON.parse(storage.getItem(key));
-  assert.equal(envelope.version, 2);
+  assert.equal(envelope.version, 3);
   assert.deepEqual(envelope.applications[0].events.map(event => event.id), ['first', 'oa']);
   assert.equal(envelope.applications[0].events[0].date, '9/17');
   assert.equal(envelope.applications[0].events[0].year, undefined);
@@ -417,4 +417,205 @@ test('failed progress saves keep the original event visible and report the stora
   assert.equal(trackerStore.getSnapshot().applications[0].events[0].date, '2026-09-17');
   assert.match(trackerStore.getSnapshot().error, /Storage full/);
   assert.equal(storage.getItem(trackerStore.key), original);
+});
+
+function applicationWithProgress(id = 'a1') {
+  return { ...application(id), events: [...application(id).events,
+    { id: 'oa', type: 'oa_received', date: '9/18', dueDate: '2026-09-22', dueTime: '14:30' },
+    { id: 'done', type: 'oa_completed', date: '2026-09-19', dueDate: '', dueTime: '' },
+    { id: 'interview', type: 'interview', date: '2026-09-20', dueDate: '2026-09-24', dueTime: '10:00' },
+  ] };
+}
+const eventIds = store => store.getSnapshot().applications[0].events.map(event => event.id);
+
+test('deleting the latest progress persists its removal and updates status, DDL and summary', () => {
+  const { trackerStore, storage } = stores();
+  trackerStore.addApplication(applicationWithProgress());
+  const token = trackerStore.deleteEvent('a1', 'interview');
+  assert.equal(Object.isFrozen(token), true);
+  const reloaded = stores(storage).trackerStore;
+  assert.deepEqual(eventIds(reloaded), ['a1-submitted', 'oa', 'done']);
+  const row = reloaded.getSnapshot().applications[0];
+  assert.equal(getCurrentStatus(row), 'oa_completed');
+  assert.equal(getCurrentDeadline(row), '');
+  assert.equal(getSummary([row]).interview, 0);
+  assert.equal(getSummary([row]).oa, 1);
+  const envelope = JSON.parse(storage.getItem(trackerStore.key));
+  assert.equal(envelope.version, 3);
+  assert.equal(envelope.deletedEvents.length, 1);
+  assert.equal(envelope.deletedEvents[0].event.id, 'interview');
+  reloaded.restoreEvent(JSON.parse(JSON.stringify(token)));
+  assert.deepEqual(eventIds(reloaded), ['a1-submitted', 'oa', 'done', 'interview']);
+  assert.equal(getCurrentDeadline(reloaded.getSnapshot().applications[0]), '2026-09-24');
+});
+
+test('middle-event undo restores its exact yearless content and order while preserving newer events and metadata', () => {
+  const storage = memoryStorage();
+  const first = stores(storage).trackerStore;
+  const second = stores(storage).trackerStore;
+  first.addApplication(applicationWithProgress());
+  const originalEvent = first.getSnapshot().applications[0].events[1];
+  const token = first.deleteEvent('a1', 'oa');
+  assert.deepEqual(eventIds(first), ['a1-submitted', 'done', 'interview']);
+  second.refresh();
+  const current = second.getSnapshot().applications[0];
+  second.updateApplication({ ...current, role: 'Updated role', prepPhase: 'stage-3', events: [...current.events,
+    { id: 'offer', type: 'offer', date: '2026-09-25', dueDate: '2026-09-30', dueTime: '18:00' },
+  ] });
+  second.updateEvent('a1', 'done', { date: '2026-09-21' });
+  first.restoreEvent(token);
+  const restored = first.getSnapshot().applications[0];
+  assert.deepEqual(eventIds(first), ['a1-submitted', 'oa', 'done', 'interview', 'offer']);
+  assert.deepEqual(restored.events[1], originalEvent);
+  assert.equal(restored.role, 'Updated role');
+  assert.equal(restored.prepPhase, 'stage-3');
+  assert.equal(restored.events[2].date, '2026-09-21');
+  assert.equal(getCurrentStatus(restored), 'offer');
+});
+
+test('undo a deleted last event inserts it before concurrently appended progress', () => {
+  const { trackerStore } = stores();
+  trackerStore.addApplication(applicationWithProgress());
+  const token = trackerStore.deleteEvent('a1', 'interview');
+  const current = trackerStore.getSnapshot().applications[0];
+  trackerStore.updateApplication({ ...current, events: [...current.events, { id: 'offer', type: 'offer', date: '2026-09-25' }] });
+  trackerStore.restoreEvent(token);
+  assert.deepEqual(eventIds(trackerStore), ['a1-submitted', 'oa', 'done', 'interview', 'offer']);
+  assert.equal(getCurrentStatus(trackerStore.getSnapshot().applications[0]), 'offer');
+});
+
+test('durable tombstones prevent stale forms from resurrecting deleted progress after reload', () => {
+  const storage = memoryStorage();
+  const first = stores(storage).trackerStore;
+  first.addApplication(applicationWithProgress());
+  const stale = first.getSnapshot().applications[0];
+  first.deleteEvent('a1', 'oa');
+  const reloaded = stores(storage).trackerStore;
+  reloaded.updateApplication({ ...stale, role: 'Edited by stale form', events: [...stale.events,
+    { id: 'offer', type: 'offer', date: '2026-09-25' },
+  ] });
+  assert.deepEqual(eventIds(reloaded), ['a1-submitted', 'done', 'interview', 'offer']);
+  assert.equal(reloaded.getSnapshot().applications[0].role, 'Edited by stale form');
+  assert.equal(JSON.parse(storage.getItem(first.key)).deletedEvents.length, 1);
+  first.refresh();
+  assert.deepEqual(eventIds(first), ['a1-submitted', 'done', 'interview', 'offer']);
+});
+
+test('consecutive deletes can undo in either order without changing event order', () => {
+  for (const deletionOrder of [['oa', 'done'], ['done', 'oa']]) {
+    for (const restoreReverse of [false, true]) {
+      for (const appendBetween of [false, true]) {
+        const { trackerStore: first, storage } = stores();
+        const second = stores(storage).trackerStore;
+        first.addApplication(applicationWithProgress());
+        const firstToken = first.deleteEvent('a1', deletionOrder[0]);
+        if (appendBetween) {
+          const current = first.getSnapshot().applications[0];
+          second.updateApplication({ ...current, events: [...current.events, { id: 'offer', type: 'offer', date: '2026-09-25' }] });
+        }
+        const secondToken = second.deleteEvent('a1', deletionOrder[1]);
+        const tokens = [firstToken, secondToken];
+        const restoreOrder = restoreReverse ? tokens.reverse() : tokens;
+        first.restoreEvent(restoreOrder[0]);
+        second.restoreEvent(restoreOrder[1]);
+        assert.deepEqual(eventIds(second), ['a1-submitted', 'oa', 'done', 'interview', ...(appendBetween ? ['offer'] : [])],
+          `delete ${deletionOrder.join(',')}; reverse undo ${restoreReverse}; append ${appendBetween}`);
+      }
+    }
+  }
+});
+
+test('restoring a used or superseded token never overwrites re-edited progress', () => {
+  const { trackerStore, storage } = stores();
+  trackerStore.addApplication(applicationWithProgress());
+  const token = trackerStore.deleteEvent('a1', 'oa');
+  trackerStore.restoreEvent(token);
+  trackerStore.updateEvent('a1', 'oa', { dueTime: '20:15' });
+  const afterEdit = storage.getItem(trackerStore.key);
+  assert.throws(() => trackerStore.restoreEvent(token), /已恢复|失效/);
+  assert.equal(storage.getItem(trackerStore.key), afterEdit);
+  assert.equal(trackerStore.getSnapshot().applications[0].events[1].dueTime, '20:15');
+  const newerToken = trackerStore.deleteEvent('a1', 'oa');
+  assert.throws(() => trackerStore.restoreEvent(token), /已恢复|失效/);
+  trackerStore.restoreEvent(newerToken);
+  assert.equal(trackerStore.getSnapshot().applications[0].events[1].dueTime, '20:15');
+});
+
+test('first/missing events and cross-account or namespace restore tokens cannot mutate records', () => {
+  const storage = memoryStorage();
+  const alice = stores(storage).trackerStore;
+  const bob = stores(storage, 'bob').trackerStore;
+  const qa = stores(storage, 'alice', 'qa').trackerStore;
+  for (const store of [alice, bob, qa]) store.addApplication(applicationWithProgress());
+  const original = storage.getItem(alice.key);
+  assert.throws(() => alice.deleteEvent('a1', 'a1-submitted'), /首次投递/);
+  assert.throws(() => alice.deleteEvent('missing', 'oa'), /申请/);
+  assert.throws(() => alice.deleteEvent('a1', 'missing'), /进展/);
+  assert.equal(storage.getItem(alice.key), original);
+  const token = alice.deleteEvent('a1', 'oa');
+  assert.throws(() => alice.deleteEvent('a1', 'oa'), /进展/);
+  const bobOriginal = storage.getItem(bob.key);
+  const qaOriginal = storage.getItem(qa.key);
+  assert.throws(() => bob.restoreEvent(token), /账户/);
+  assert.throws(() => qa.restoreEvent(token), /账户/);
+  assert.throws(() => alice.restoreEvent(null), /账户/);
+  assert.throws(() => alice.restoreEvent({ ...token, id: 'forged' }), /失效/);
+  assert.equal(storage.getItem(bob.key), bobOriginal);
+  assert.equal(storage.getItem(qa.key), qaOriginal);
+});
+
+test('failed deletion and undo writes preserve saved records and the undo token can be retried', () => {
+  const { trackerStore, storage } = stores();
+  trackerStore.addApplication(applicationWithProgress());
+  const write = storage.setItem;
+  let original = storage.getItem(trackerStore.key);
+  storage.setItem = () => { throw new Error('Storage full'); };
+  assert.throws(() => trackerStore.deleteEvent('a1', 'oa'), /Storage full/);
+  assert.equal(storage.getItem(trackerStore.key), original);
+  assert.deepEqual(eventIds(trackerStore), ['a1-submitted', 'oa', 'done', 'interview']);
+  storage.setItem = write;
+  const token = trackerStore.deleteEvent('a1', 'oa');
+  original = storage.getItem(trackerStore.key);
+  storage.setItem = () => { throw new Error('Storage full'); };
+  assert.throws(() => trackerStore.restoreEvent(token), /Storage full/);
+  assert.equal(storage.getItem(trackerStore.key), original);
+  assert.deepEqual(eventIds(trackerStore), ['a1-submitted', 'done', 'interview']);
+  storage.setItem = write;
+  trackerStore.restoreEvent(token);
+  assert.deepEqual(eventIds(trackerStore), ['a1-submitted', 'oa', 'done', 'interview']);
+});
+
+test('version 1 and 2 histories migrate on deletion while malformed v3 tombstones preserve the original data', () => {
+  for (const version of [1, 2]) {
+    const storage = memoryStorage();
+    const key = trackerStorageKey('alice');
+    const original = JSON.stringify({ version, ownerId: 'alice', applications: [applicationWithProgress()] });
+    storage.setItem(key, original);
+    const { trackerStore } = stores(storage);
+    assert.equal(storage.getItem(key), original);
+    trackerStore.deleteEvent('a1', 'oa');
+    assert.equal(JSON.parse(storage.getItem(key)).version, 3);
+    assert.equal(stores(storage).trackerStore.getSnapshot().applications[0].events.length, 3);
+  }
+  const context = stores();
+  context.trackerStore.addApplication(applicationWithProgress());
+  context.trackerStore.deleteEvent('a1', 'oa');
+  const valid = JSON.parse(context.storage.getItem(context.trackerStore.key));
+  const corruptions = [
+    envelope => { delete envelope.deletedEvents; },
+    envelope => { envelope.deletedEvents[0].applicationId = 'another-account-app'; },
+    envelope => { envelope.deletedEvents[0].order = ['oa', 'a1-submitted']; },
+    envelope => { envelope.deletedEvents[0].event.dueTime = '29:00'; },
+    envelope => { envelope.deletedEvents.push({ ...envelope.deletedEvents[0], id: 'duplicate-target' }); },
+  ];
+  for (const corrupt of corruptions) {
+    const envelope = structuredClone(valid);
+    corrupt(envelope);
+    const original = JSON.stringify(envelope);
+    context.storage.setItem(context.trackerStore.key, original);
+    const broken = stores(context.storage).trackerStore;
+    assert.ok(broken.getSnapshot().error);
+    assert.throws(() => broken.addApplication(application('new')));
+    assert.equal(context.storage.getItem(context.trackerStore.key), original);
+  }
 });
