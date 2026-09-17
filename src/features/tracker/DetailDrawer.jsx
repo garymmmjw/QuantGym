@@ -6,7 +6,7 @@ function readableDate(date) {
   return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date.replaceAll('-', '.') : date;
 }
 
-export default function DetailDrawer({ application, phases, onClose, onUpdate, onEditDeadline }) {
+export default function DetailDrawer({ application, phases, onClose, onUpdate, onEditEvent }) {
   const [company, setCompany] = useState('');
   const [role, setRole] = useState('');
   const [prepPhase, setPrepPhase] = useState('');
@@ -27,12 +27,13 @@ export default function DetailDrawer({ application, phases, onClose, onUpdate, o
   useEffect(() => {
     if (!isOpen) return;
     const previouslyFocused = document.activeElement;
+    const tracker = dialogRef.current?.closest('.quantgym-tracker');
     const oldOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     dialogRef.current?.focus();
 
     function handleKeyDown(event) {
-      // Native dialogs own keyboard focus while editing a deadline above this drawer.
+      // Native dialogs own keyboard focus while editing a record above this drawer.
       if (document.querySelector('dialog[open]')) return;
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -65,9 +66,9 @@ export default function DetailDrawer({ application, phases, onClose, onUpdate, o
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = oldOverflow;
-      if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
+      if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected && previouslyFocused.getClientRects().length > 0) {
         previouslyFocused.focus();
-      }
+      } else tracker?.querySelector('.qt-filter-tabs button.qt-active')?.focus();
     };
   }, [isOpen]);
 
@@ -143,8 +144,8 @@ export default function DetailDrawer({ application, phases, onClose, onUpdate, o
                       </div>
                       {event.dueDate && <p className="qt-td-event-deadline">
                         <span>截止 <time dateTime={deadlineDateTime(event)}>{formatDeadline(event, { fullDate: true })}</time></span>
-                        {onEditDeadline && <button type="button" className="qt-deadline-edit-link" onClick={() => onEditDeadline(event)}>修改截止时间</button>}
                       </p>}
+                      {onEditEvent && <div className="qt-td-event-actions"><button type="button" className="qt-deadline-edit-link qt-event-edit-link" aria-label={`修改 ${STATUS_META[event.type]?.label || event.type} ${readableDate(event.date)} 记录`} onClick={() => onEditEvent(application, event)}>修改记录</button></div>}
                     </div>
                   </li>
                 ))}

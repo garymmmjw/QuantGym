@@ -45,6 +45,10 @@ export function deadlineDateTime(event) {
   return `${event.dueDate}${event.dueTime ? `T${event.dueTime}` : ''}`;
 }
 
+export function getProgressColumnCount(applications) {
+  return applications.reduce((count, application) => Math.max(count, application.events?.length || 0), 2);
+}
+
 export function localToday(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

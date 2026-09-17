@@ -3,6 +3,7 @@ import { getSummary, localToday } from './dataModel.js';
 import DetailDrawer from './DetailDrawer.jsx';
 import ProgressDialog from './ProgressDialog.jsx';
 import DeadlineDialog from './DeadlineDialog.jsx';
+import EventEditDialog from './EventEditDialog.jsx';
 import ApplicationList from './ApplicationList.jsx';
 import StagePanel from '../careerStages/StagePanel.jsx';
 import { useCareerStages } from '../careerStages/useCareerStages.js';
@@ -56,6 +57,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   const [selectedId, setSelectedId] = useState(null);
   const [progressId, setProgressId] = useState(null);
   const [deadlineTarget, setDeadlineTarget] = useState(null);
+  const [eventTarget, setEventTarget] = useState(null);
   const [adding, setAdding] = useState(false);
   const [addStageRequest, setAddStageRequest] = useState(0);
   const { store: stageStore, snapshot: stageSnapshot } = useCareerStages({ownerId, namespace});
@@ -73,6 +75,17 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   const progressApplication = resolvedApplications.find(a => a.id === progressId) || null;
   const deadlineApplication = resolvedApplications.find(a => a.id === deadlineTarget?.applicationId) || null;
   const deadlineEvent = deadlineApplication?.events.find(event => event.id === deadlineTarget?.eventId) || null;
+  const editingApplication = resolvedApplications.find(a => a.id === eventTarget?.applicationId) || null;
+  const editingEvent = editingApplication?.events.find(event => event.id === eventTarget?.eventId) || null;
+  const editEvent = (application, event) => setEventTarget({applicationId:application.id, eventId:event.id});
+  const saveEvent = changes => {
+    if (!eventTarget) return false;
+    try {
+      trackerStore.updateEvent(eventTarget.applicationId, eventTarget.eventId, changes);
+      setToast('记录已修改');
+      return true;
+    } catch { return false; }
+  };
   const editDeadline = (application, event) => setDeadlineTarget({applicationId:application.id, eventId:event.id});
   const saveDeadline = values => {
     if (!deadlineTarget) return false;
@@ -100,10 +113,12 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
           saveError={saveError}
           onOpenDetails={application => setSelectedId(application.id)}
           onUpdateProgress={application => setProgressId(application.id)}
+          onEditEvent={editEvent}
           onEditDeadline={editDeadline}
           onAddApplication={() => setAdding(true)}
         />
-    <DetailDrawer application={activeApplication} phases={stageDefinitions} onClose={()=>setSelectedId(null)} onUpdate={update} onEditDeadline={event=>editDeadline(activeApplication,event)}/>
+    <DetailDrawer application={activeApplication} phases={stageDefinitions} onClose={()=>setSelectedId(null)} onUpdate={update} onEditEvent={editEvent}/>
+    {editingApplication && editingEvent && <EventEditDialog key={`${editingApplication.id}:${editingEvent.id}`} application={editingApplication} event={editingEvent} onClose={()=>setEventTarget(null)} onSave={saveEvent}/>}
     {deadlineApplication && deadlineEvent && <DeadlineDialog key={`${deadlineApplication.id}:${deadlineEvent.id}`} application={deadlineApplication} event={deadlineEvent} onClose={()=>setDeadlineTarget(null)} onSave={saveDeadline}/>}
     {progressApplication&&<ProgressDialog key={progressApplication.id} application={progressApplication} onClose={()=>setProgressId(null)} onUpdate={update}/>}
     {adding&&<NewApplication phases={stageDefinitions} currentPhaseId={currentStage?.id} onClose={()=>setAdding(false)} onCreate={a=>{try {trackerStore.addApplication(a);setAdding(false);setStatus('all');setToast('新申请已添加');return true;} catch {return false;}}}/>}

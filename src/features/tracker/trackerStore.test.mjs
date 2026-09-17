@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createTrackerStore, trackerStorageKey, validateTrackerImport, importTrackerPayload } from './trackerStore.js';
 import { createCareerStageStore, stageStorageKey } from '../careerStages/stageStore.js';
-import { filterApplications, getSummary, sortApplications } from './dataModel.js';
+import { filterApplications, getCurrentDeadline, getCurrentStatus, getSummary, sortApplications } from './dataModel.js';
 
 function memoryStorage() {
   const values = new Map();
@@ -257,4 +257,164 @@ test('invalid or missing-target deadline edits leave saved records untouched', (
   assert.throws(() => trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueDate: '2026-09-19', dueTime: '25:00' }), /截止时间/);
   assert.throws(() => trackerStore.updateEventDeadline('a1', 'a1-submitted', { dueTime: '12:30' }), /截止时间/);
   assert.equal(storage.getItem(trackerStore.key), saved);
+});
+
+test('editing existing progress updates status and deadline without creating another application or event', () => {
+  const { trackerStore, storage } = stores();
+  const row = application();
+  row.events.push({ id: 'oa', type: 'oa_received', date: '2026-09-18', dueDate: '2026-09-20', dueTime: '12:30' });
+  trackerStore.addApplication(row);
+  const before = trackerStore.getSnapshot().applications[0];
+  trackerStore.updateEvent('a1', 'oa', { id: 'replacement-not-allowed', type: 'interview', date: '2026-09-19', dueDate: '2026-09-22', dueTime: '14:45' });
+  const rows = stores(storage).trackerStore.getSnapshot().applications;
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].id, before.id);
+  assert.deepEqual(rows[0].events.map(event => event.id), ['a1-submitted', 'oa']);
+  assert.deepEqual(rows[0].events[0], before.events[0]);
+  assert.equal(getCurrentStatus(rows[0]), 'interview');
+  assert.equal(getCurrentDeadline(rows[0]), '2026-09-22');
+  assert.equal(rows[0].events[1].dueTime, '14:45');
+  assert.equal(getSummary(rows).interview, 1);
+  trackerStore.updateEvent('a1', 'oa', { type: 'oa_completed', dueDate: '' });
+  const completed = trackerStore.getSnapshot().applications[0];
+  assert.equal(completed.events.length, 2);
+  assert.equal(getCurrentStatus(completed), 'oa_completed');
+  assert.equal(getCurrentDeadline(completed), '');
+  assert.equal(completed.events[1].dueTime, '');
+  assert.equal(JSON.parse(storage.getItem(trackerStore.key)).version, 2);
+});
+
+test('editing submission date changes recent sorting and derives its year from the chosen ISO date', () => {
+  const { trackerStore } = stores();
+  trackerStore.addApplication(application('a1'));
+  trackerStore.addApplication({ ...application('a2'), events: [{ id: 'a2-submitted', type: 'submitted', date: '2026-09-18' }] });
+  assert.deepEqual(sortApplications(trackerStore.getSnapshot().applications).map(row => row.id), ['a2', 'a1']);
+  trackerStore.updateEvent('a1', 'a1-submitted', { date: '2027-01-01', year: 2026 });
+  const rows = trackerStore.getSnapshot().applications;
+  assert.deepEqual(sortApplications(rows).map(row => row.id), ['a1', 'a2']);
+  assert.equal(rows[0].events[0].year, 2027);
+  assert.equal(rows[0].events[0].type, 'submitted');
+});
+
+test('editing a legacy event preserves its unknown year until an actual dated correction is provided', () => {
+  const { trackerStore } = stores();
+  trackerStore.addApplication({ ...application(), events: [
+    { id: 'first', type: 'submitted', date: '9/17', year: null },
+    { id: 'oa', type: 'oa_received', date: '9/18', year: null },
+  ] });
+  trackerStore.updateEvent('a1', 'oa', { type: 'oa_completed', dueDate: '2026-09-22', dueTime: '10:00' });
+  let event = trackerStore.getSnapshot().applications[0].events[1];
+  assert.equal(event.date, '9/18');
+  assert.equal(event.year, undefined);
+  trackerStore.updateEvent('a1', 'oa', { date: '9/18', dueTime: '11:00' });
+  assert.equal(trackerStore.getSnapshot().applications[0].events[1].year, undefined);
+  trackerStore.updateEvent('a1', 'oa', { date: '9/19' });
+  assert.equal(trackerStore.getSnapshot().applications[0].events[1].date, '9/19');
+  assert.equal(trackerStore.getSnapshot().applications[0].events[1].year, undefined);
+  assert.throws(() => trackerStore.updateEvent('a1', 'oa', { date: '2/30' }), /日期/);
+  trackerStore.updateEvent('a1', 'oa', { date: '2024-02-29', year: 2025 });
+  event = trackerStore.getSnapshot().applications[0].events[1];
+  assert.equal(event.date, '2024-02-29');
+  assert.equal(event.year, 2024);
+  assert.equal(event.dueTime, '11:00');
+  assert.equal(trackerStore.getSnapshot().applications[0].events[0].date, '9/17');
+});
+
+test('legacy year corrections validate the actual calendar date and support removing an unconfirmed year', () => {
+  const { trackerStore, storage } = stores();
+  trackerStore.addApplication({ ...application(), events: [{ id: 'first', type: 'submitted', date: '2/29' }] });
+  const original = storage.getItem(trackerStore.key);
+  assert.throws(() => trackerStore.updateEvent('a1', 'first', { year: 2025 }), /年份或日期/);
+  assert.throws(() => trackerStore.updateEvent('a1', 'first', { year: '2024' }), /年份/);
+  assert.equal(storage.getItem(trackerStore.key), original);
+  trackerStore.updateEvent('a1', 'first', { year: 2024 });
+  assert.equal(trackerStore.getSnapshot().applications[0].events[0].year, 2024);
+  trackerStore.updateEvent('a1', 'first', { date: '3/01' });
+  assert.equal(trackerStore.getSnapshot().applications[0].events[0].year, 2024);
+  trackerStore.updateEvent('a1', 'first', { date: '2/29' });
+  trackerStore.updateEvent('a1', 'first', { year: null });
+  const event = trackerStore.getSnapshot().applications[0].events[0];
+  assert.equal(event.date, '2/29');
+  assert.equal(event.year, undefined);
+});
+
+test('editing version 1 history upgrades its envelope without changing its events or unknown original date', () => {
+  const storage = memoryStorage();
+  const key = trackerStorageKey('alice');
+  storage.setItem(key, JSON.stringify({ version: 1, ownerId: 'alice', applications: [{ ...application(), events: [
+    { id: 'first', type: 'submitted', date: '9/17' },
+    { id: 'oa', type: 'oa_received', date: '9/18', dueDate: '2026-09-20' },
+  ] }] }));
+  const { trackerStore } = stores(storage);
+  trackerStore.updateEvent('a1', 'oa', { dueTime: '10:30' });
+  const envelope = JSON.parse(storage.getItem(key));
+  assert.equal(envelope.version, 2);
+  assert.deepEqual(envelope.applications[0].events.map(event => event.id), ['first', 'oa']);
+  assert.equal(envelope.applications[0].events[0].date, '9/17');
+  assert.equal(envelope.applications[0].events[0].year, undefined);
+  assert.equal(envelope.applications[0].events[1].date, '9/18');
+  assert.equal(envelope.applications[0].events[1].year, undefined);
+  assert.equal(stores(storage).trackerStore.getSnapshot().applications[0].events[1].dueTime, '10:30');
+});
+
+test('targeted progress edits retain concurrently added events, application metadata and unrelated event edits', () => {
+  const storage = memoryStorage();
+  const first = stores(storage).trackerStore;
+  const second = stores(storage).trackerStore;
+  const row = application();
+  row.events.push({ id: 'oa', type: 'oa_received', date: '2026-09-18', dueDate: '2026-09-22' });
+  first.addApplication(row);
+  const stale = first.getSnapshot().applications[0];
+  second.updateApplication({ ...stale, role: 'New role in another tab', prepPhase: 'stage-2', events: [...stale.events,
+    { id: 'interview', type: 'interview', date: '2026-09-20', dueDate: '2026-09-24', dueTime: '10:00' },
+  ] });
+  second.updateEventDeadline('a1', 'oa', { dueTime: '18:30' });
+  first.updateEvent('a1', 'oa', { date: '2026-09-19' });
+  const current = first.getSnapshot().applications[0];
+  assert.equal(current.role, 'New role in another tab');
+  assert.equal(current.prepPhase, 'stage-2');
+  assert.deepEqual(current.events.map(event => event.id), ['a1-submitted', 'oa', 'interview']);
+  assert.equal(current.events[1].dueTime, '18:30');
+  assert.equal(current.events[1].date, '2026-09-19');
+  assert.equal(getCurrentStatus(current), 'interview');
+  assert.equal(getCurrentDeadline(current), '2026-09-24');
+  assert.equal(current.events[2].dueTime, '10:00');
+});
+
+test('invalid progress edits reject without changing the stored history or first-event invariant', () => {
+  const { trackerStore, storage } = stores();
+  const row = application();
+  row.events.push({ id: 'oa', type: 'oa_received', date: '2026-09-18' });
+  trackerStore.addApplication(row);
+  const original = storage.getItem(trackerStore.key);
+  const invalid = [
+    ['a1', 'a1-submitted', { type: 'interview' }],
+    ['a1', 'oa', { type: 'submitted' }],
+    ['a1', 'oa', { type: 'unknown' }],
+    ['a1', 'oa', { date: '' }],
+    ['a1', 'oa', { date: null }],
+    ['a1', 'oa', { date: '2026-02-30' }],
+    ['a1', 'oa', { date: '9/19' }],
+    ['a1', 'oa', { dueDate: '2026-02-30' }],
+    ['a1', 'oa', { dueDate: '2026-09-21', dueTime: '24:00' }],
+    ['a1', 'oa', { dueTime: '12:30' }],
+    ['missing', 'oa', { date: '2026-09-19' }],
+    ['a1', 'missing', { date: '2026-09-19' }],
+    ['a1', 'oa', null],
+  ];
+  for (const args of invalid) {
+    assert.throws(() => trackerStore.updateEvent(...args));
+    assert.equal(storage.getItem(trackerStore.key), original);
+  }
+});
+
+test('failed progress saves keep the original event visible and report the storage error', () => {
+  const { trackerStore, storage } = stores();
+  trackerStore.addApplication(application());
+  const original = storage.getItem(trackerStore.key);
+  storage.setItem = () => { throw new Error('Storage full'); };
+  assert.throws(() => trackerStore.updateEvent('a1', 'a1-submitted', { date: '2026-09-20' }), /Storage full/);
+  assert.equal(trackerStore.getSnapshot().applications[0].events[0].date, '2026-09-17');
+  assert.match(trackerStore.getSnapshot().error, /Storage full/);
+  assert.equal(storage.getItem(trackerStore.key), original);
 });

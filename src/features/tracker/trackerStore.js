@@ -158,6 +158,39 @@ export function createTrackerStore({ ownerId, namespace = '', storage = globalTh
         return applications.map(item => item.id === incoming.id ? {...incoming, events} : item);
       });
     },
+    updateEvent(applicationId, eventId, changes = {}) {
+      mutate(applications => {
+        if (!object(changes)) throw new Error('请填写有效的进展信息。');
+        const application = applications.find(item => item.id === applicationId);
+        if (!application) throw new Error('没有找到这份申请，请刷新后重试。');
+        const index = application.events.findIndex(event => event.id === eventId);
+        if (index < 0) throw new Error('没有找到这条进展，请刷新后重试。');
+        const existing = application.events[index];
+        const edited = { ...existing };
+        for (const field of ['type', 'date', 'year', 'dueDate', 'dueTime']) {
+          if (Object.hasOwn(changes, field)) edited[field] = changes[field];
+        }
+        if (index === 0 && edited.type !== 'submitted') throw new Error('第一条进展应为投递记录。');
+        if (index > 0 && edited.type === 'submitted') throw new Error('后续进展不能改为投递记录。');
+        // Yearless imports may correct their month/day without guessing a year.
+        // Full-date records retain a full date; an ISO correction owns its year.
+        const changedDate = Object.hasOwn(changes, 'date') && edited.date !== existing.date;
+        const legacyDate = /^\d{1,2}\/\d{1,2}$/.test(existing.date);
+        if (!validDate(edited.date, legacyDate)) throw new Error('请填写有效的发生日期。');
+        if (/^\d{4}-\d{2}-\d{2}$/.test(edited.date)) edited.year = Number(edited.date.slice(0, 4));
+        else if ((Object.hasOwn(changes, 'year') || changedDate) && edited.year != null) {
+          const [month, day] = edited.date.split('/');
+          const dated = `${String(edited.year).padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+          if (!validDate(dated)) throw new Error('申请进展的年份或日期无效。');
+        }
+        if (Object.hasOwn(changes, 'dueDate') && (edited.dueDate === '' || edited.dueDate == null)) {
+          edited.dueDate = '';
+          edited.dueTime = '';
+        }
+        const events = application.events.map((event, eventIndex) => eventIndex === index ? edited : event);
+        return applications.map(item => item.id === applicationId ? { ...item, events } : item);
+      });
+    },
     updateEventDeadline(applicationId, eventId, changes = {}) {
       mutate(applications => {
         const application = applications.find(item => item.id === applicationId);

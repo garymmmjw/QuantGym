@@ -8,14 +8,14 @@ function EventPill({ event }) {
   const shortDate = /^\d{4}-\d{2}-\d{2}$/.test(event.date || '')
     ? event.date.slice(5).replace('-', '/') : event.date;
   return (
-    <span className={`qt-event-pill qt-${meta.tone}`} title={event.date}>
+    <span className={`qt-event-pill qt-${meta.tone}`} title={`${event.date} · 点击修改记录`}>
       <span className="qt-event-label">{meta.label}</span>
       <span className="qt-event-date">{shortDate || '日期未填'}</span>
     </span>
   );
 }
 
-export default function ApplicationRow({ application, onOpenDetails, onUpdateProgress, onEditDeadline }) {
+export default function ApplicationRow({ application, progressColumnCount, onOpenDetails, onUpdateProgress, onEditEvent, onEditDeadline }) {
   const { company, role, events } = application;
   const deadline = getCurrentDeadlineEvent(application);
   const archived = ['rejected', 'withdrawn'].includes(getCurrentStatus(application));
@@ -27,20 +27,19 @@ export default function ApplicationRow({ application, onOpenDetails, onUpdatePro
           <span>{role}</span>
         </button>
       </td>
-      <td className="qt-progress-cell"><EventPill event={events[0]} /></td>
-      <td className="qt-progress-cell"><EventPill event={events[1]} /></td>
-      <td className="qt-latest-cell qt-progress-cell">
-        <div className="qt-latest-content">
-          {events.length > 2 && (
-            <button className="qt-event-link" onClick={onOpenDetails} aria-label={`查看 ${company.trim()} ${role} 的进展历史`}>
-              <EventPill event={events.at(-1)} />
-              {events.length > 3 && <small>+{events.length - 3} 条历史</small>}
-            </button>
-          )}
-          <button className="qt-add-progress" onClick={onUpdateProgress} aria-label={`更新 ${company.trim()} ${role} 的进展`}>
-            <Icon name="Plus" size={13} /><span>更新进展</span>
-          </button>
-        </div>
+      {Array.from({ length: progressColumnCount }, (_, index) => <td className="qt-progress-cell" key={index}>
+        {events[index] ? <button
+          type="button"
+          className="qt-edit-progress"
+          onClick={() => onEditEvent(events[index])}
+          title="点击修改这条记录"
+          aria-label={`修改 ${company.trim()} ${role} 的${index === 0 ? '投递' : `阶段 ${index + 1}`}记录`}
+        ><EventPill event={events[index]}/></button> : <EventPill/>}
+      </td>)}
+      <td className="qt-update-cell">
+        <button type="button" className="qt-add-progress" onClick={onUpdateProgress} aria-label={`更新 ${company.trim()} ${role} 的进展`}>
+          <Icon name="Plus" size={13} /><span>更新进展</span>
+        </button>
       </td>
       <td className="qt-deadline-cell">
         {deadline ? (
@@ -50,11 +49,6 @@ export default function ApplicationRow({ application, onOpenDetails, onUpdatePro
             <time dateTime={deadlineDateTime(deadline)}>{formatDeadline(deadline)}</time>
           </button>
         ) : <span className="qt-empty-step" aria-label="无截止时间">—</span>}
-      </td>
-      <td className="qt-details-cell">
-        <button className="qt-row-open" onClick={onOpenDetails} title="查看申请详情" aria-label={`查看 ${company.trim()} ${role} 的申请详情`}>
-          <Icon name="ChevronRight" size={17} />
-        </button>
       </td>
     </tr>
   );

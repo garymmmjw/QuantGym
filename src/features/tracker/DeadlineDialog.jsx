@@ -12,7 +12,7 @@ export default function DeadlineDialog({ application, event, onClose, onSave }) 
   useEffect(() => {
     const previouslyFocused = document.activeElement;
     const fallbackFocus = previouslyFocused instanceof HTMLElement
-      ? previouslyFocused.closest('.qt-td-drawer') || previouslyFocused.closest('.qt-application-row')?.querySelector('.qt-row-open')
+      ? previouslyFocused.closest('.qt-td-drawer') || previouslyFocused.closest('.qt-application-row')?.querySelector('.qt-role-link')
       : null;
     const oldOverflow = document.body.style.overflow;
     const dialog = dialogRef.current;
@@ -23,6 +23,7 @@ export default function DeadlineDialog({ application, event, onClose, onSave }) 
       document.body.style.overflow = oldOverflow;
       if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) previouslyFocused.focus();
       else if (fallbackFocus instanceof HTMLElement && fallbackFocus.isConnected) fallbackFocus.focus();
+      else document.querySelector('.qt-filter-tabs button.qt-active')?.focus();
     };
   }, []);
 

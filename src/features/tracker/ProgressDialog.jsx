@@ -20,6 +20,7 @@ export default function ProgressDialog({ application, onClose, onUpdate }) {
     return () => {
       document.body.style.overflow = oldOverflow;
       if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) previouslyFocused.focus();
+      else document.querySelector('.qt-filter-tabs button.qt-active')?.focus();
     };
   }, []);
 
