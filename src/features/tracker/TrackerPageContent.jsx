@@ -102,7 +102,13 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   return <div className="quantgym-tracker">
         <div className="qt-page-heading"><div><div className="qt-eyebrow">APPLICATION TRACKER </div><h1>我的投递<span className="qt-heading-dot">.</span></h1><p>从第一次投递，到下一次好消息。</p></div><div className="qt-heading-actions"><button className="qt-btn" onClick={() => setAddStageRequest(value => value+1)}><Icon name="Flag" size={16}/>添加 Stage</button><button className="qt-btn qt-primary" onClick={() => setAdding(true)}><Icon name="Plus" size={17}/>添加申请</button></div></div>
         <section className="qt-summary-strip" aria-label="申请统计">
-          {[['all','申请总数',summary.total,'all'],['awaiting','等待回复',summary.awaiting,'waiting'],['oa','OA 阶段',summary.oa,'oa'],['interview-offer','面试 / Offer',summary.interview+summary.offer,'interview'],['closed','已结束',summary.closed,'closed']].map(([id,label,count,tone]) => <button key={id} className={`qt-metric qt-metric-${tone}${status===id?' qt-selected':''}`} onClick={() => setStatus(status === id ? 'all' : id)} aria-label={`${label} ${count}，查看申请`}><span className="qt-metric-label"><span className="qt-metric-dot"/>{label}</span><strong>{String(count).padStart(2,'0')}</strong>{id==='all'&&<small>份申请 · 持续积累</small>}</button>)}
+          {[
+            ['all', '申请总数', summary.total, 'all'],
+            ['received-oa', '收到 OA', summary.receivedOa, 'oa'],
+            ['received-interview', '收到 Interview', summary.receivedInterview, 'interview'],
+            ['rejected', '已拒绝', summary.rejected, 'closed'],
+            ['offer', 'Offer', summary.offer, 'offer'],
+          ].map(([id, label, count, tone]) => <button key={id} className={`qt-metric qt-metric-${tone}${status === id ? ' qt-selected' : ''}`} onClick={() => setStatus(status === id ? 'all' : id)} aria-pressed={status === id} aria-label={`${label} ${count}，查看申请`} title={id.startsWith('received-') ? '累计收到过的申请数，同一申请只计一次' : undefined}><span className="qt-metric-label"><span className="qt-metric-dot"/>{label}</span><strong>{String(count).padStart(2, '0')}</strong>{id === 'all' && <small>份申请 · 持续积累</small>}</button>)}
         </section>
         <StagePanel key={ownerId+namespace} stageStore={stageStore} practice={practice} addRequest={addStageRequest} showAddButton={false}/>
         <ApplicationList
