@@ -99,3 +99,11 @@
   .quantgym-tracker .qt-table-scroll table { width: 1039px; min-width: 1039px; }
   .quantgym-tracker .qt-deadline-fields { grid-template-columns: 1fr; gap: 0; }
 }
+
+.quantgym-tracker .qt-filter-tabs { max-width: 100%; flex-wrap: wrap; justify-content: flex-start; gap: 8px 3px; }
+.quantgym-tracker .qt-filter-tabs .qt-ddl-tab { color: #ba304b; }
+.quantgym-tracker .qt-filter-tabs .qt-ddl-tab span { color: #ba304b; }
+.quantgym-tracker .qt-filter-tabs .qt-ddl-tab:hover { background: #fff1f3; }
+.quantgym-tracker .qt-filter-tabs .qt-ddl-tab.qt-active { background: #ffe1e7; color: #a7203e; }
+.quantgym-tracker .qt-filter-tabs .qt-ddl-tab.qt-active span { color: #a7203e; }
+.quantgym-tracker .qt-filter-tabs .qt-company-tab { margin-left: 4px; }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { deadlineDateTime, filterApplications, formatDeadline, getCurrentDeadline, getCurrentDeadlineEvent, groupApplications, sortApplications } from './dataModel.js';
+import { deadlineDateTime, filterApplications, formatDeadline, getApplicationView, getCurrentDeadline, getCurrentDeadlineEvent, getSummary, groupApplications, sortApplications } from './dataModel.js';
 
 const stages = [
   { id: 's1', label: 'Stage 1' },
@@ -13,6 +13,37 @@ const app = (id, date, prepPhase = 's2', company = id) => ({
 });
 const ids = rows => rows.map(row => row.id);
 const display = (rows, order) => groupApplications(sortApplications(rows, order), stages);
+
+test('DDL view lists all current deadlines across Stages and ignores completed historical deadlines', () => {
+  const dated = app('dated', '2026-09-14', 's1');
+  dated.events.push({ id: 'dated-oa', type: 'oa_received', date: '2026-09-16', dueDate: '2026-09-19' });
+  const timed = app('timed', '2026-09-17', 's2');
+  timed.events.push({ id: 'timed-interview', type: 'interview', date: '2026-09-17', dueDate: '2026-09-20', dueTime: '14:30' });
+  const completed = app('completed', '2026-09-18', 's3');
+  completed.events.push({ id: 'old-oa', type: 'oa_received', date: '2026-09-18', dueDate: '2026-09-19' }, { id: 'done', type: 'oa_completed', date: '2026-09-18' });
+  const rows = [dated, timed, completed, app('waiting', '2026-09-19')];
+  const result = getApplicationView(rows, stages, 'ddl');
+  assert.equal(getSummary(rows).ddl, 2);
+  assert.equal(result.groups, null);
+  assert.deepEqual(ids(result.applications), ['timed', 'dated']);
+  assert.deepEqual(ids(getApplicationView(rows, stages, 'awaiting').applications), ['waiting']);
+  const cleared = { ...timed, events: timed.events.map(event => ({ ...event, dueDate: '', dueTime: '' })) };
+  assert.equal(getApplicationView([completed, cleared], stages, 'ddl').applications.length, 0);
+});
+
+test('company view sorts globally without Stages and preserves separate roles at the same company', () => {
+  const rows = [app('zulu', '2026-09-17', 's1', 'Zulu'), app('alpha-qr', '2026-09-15', 's2', 'Alpha'), app('alpha-qt', '2026-09-16', 's1', 'Alpha')];
+  rows[2].role = 'Trading Intern';
+  const original = structuredClone(rows);
+  const company = getApplicationView(rows, stages, 'company');
+  assert.equal(company.groups, null);
+  assert.deepEqual(ids(company.applications), ['alpha-qr', 'alpha-qt', 'zulu']);
+  assert.equal(company.applications[1].role, 'Trading Intern');
+  const all = getApplicationView(rows, stages);
+  assert.deepEqual(ids(all.applications), ['zulu', 'alpha-qt', 'alpha-qr']);
+  assert.deepEqual(all.groups.filter(group => group.applications.length).map(group => group.stage.id), ['s1', 's2']);
+  assert.deepEqual(rows, original);
+});
 
 test('recent is the default: latest submission leads its Stage and latest Stage leads the table', () => {
   const rows = [app('app-001', '09/10', 's1'), app('app-002', '09/13'), app('app-003', '9/16')];

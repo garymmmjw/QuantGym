@@ -4,6 +4,7 @@ import { countsTowardProblemTotal, hasExplicitProblemCompletion } from '../../mo
 import { sortCareerStages } from './stageStore.js';
 import { USER_STATE_PREFIX } from '../../constants.js';
 import { userStateKey } from '../../state/auth.js';
+import { EMPTY_LEETCODE } from '../leetcode/leetcodeModel.js';
 
 const list = value => Array.isArray(value) ? value : [];
 const QUESTION_KINDS = new Set(['quant', 'coding', 'tech', 'behavioral']);
@@ -50,6 +51,39 @@ export function collectStagePractice(personalState = {}, legacyState = {}, leetc
   return { records: [...records.values()], available: true };
 }
 
+// One unavailable source must not hide verified records from another source.
+// An unconnected/disabled LeetCode account has no expected synced records; an
+// initial request still loading is different from a confirmed empty account.
+export function resolveStagePractice({ ownerId, namespace = '', personal = {}, leetcode = {}, leetcodeOptions } = {}) {
+  if (namespace) return { ...collectStagePractice(), countStatus: 'ready', countSourceNote: '' };
+  if (!ownerId || ownerId === 'guest') return { records: [], available: false, countStatus: 'unavailable', countSourceNote: '登录后显示刷题统计' };
+  const personalReady = personal.ownerId === ownerId && Boolean(personal.snapshot?.data)
+    && !personal.snapshot.error?.startsWith('read:') && !personal.snapshot.conflict;
+  let leetcodeStatus = 'unavailable';
+  if (leetcode.ownerId === ownerId) {
+    if (leetcode.enabled === false) leetcodeStatus = 'not-connected';
+    else if (leetcode.data && leetcode.data !== EMPTY_LEETCODE) {
+      leetcodeStatus = !leetcode.data.connection ? 'not-connected'
+        : Array.isArray(leetcode.data.syncedSubmissions) ? 'ready' : 'unavailable';
+    } else if (leetcode.enabled && leetcode.phase !== 'error') leetcodeStatus = 'loading';
+  }
+  const leetcodeReady = leetcodeStatus === 'ready';
+  const available = personalReady || leetcodeReady;
+  const complete = personalReady && (leetcodeReady || leetcodeStatus === 'not-connected');
+  const countStatus = complete ? 'ready' : available ? 'partial' : 'unavailable';
+  const notes = [];
+  if (!personalReady) notes.push('站内刷题记录暂不可用');
+  if (leetcodeStatus === 'loading') notes.push('LeetCode 记录加载中');
+  else if (leetcodeStatus === 'unavailable') notes.push('LeetCode 记录暂不可用');
+  return {
+    ...collectStagePractice(personalReady ? personal.snapshot.data : {}, personalReady ? personal.legacyState : {}, leetcodeReady ? leetcode.data : {}, leetcodeOptions),
+    available,
+    countStatus,
+    countSourceNote: notes.join('；'),
+    sources: { personal: personalReady ? 'ready' : 'unavailable', leetcode: leetcodeStatus },
+  };
+}
+
 export function stagePracticeKeys(ownerId) {
   return {
     legacy: userStateKey(USER_STATE_PREFIX, ownerId),
@@ -73,23 +107,32 @@ export function readStagePractice({ ownerId, namespace = '', storage, legacyStat
   } catch { return { records: [], available: false }; }
 }
 
-export function summarizeStagePractice(stages, practice = {}) {
+export function summarizeStagePractice(stages, practice = {}, { today = practice.asOfDay || new Date() } = {}) {
   const ordered = sortCareerStages(stages);
   return ordered.map((stage, index) => {
-    const previous = ordered[index - 1];
-    const end = localDayKey(stage.recordedDate);
+    // Imported current stages may have no checkpoint date. Their live interval
+    // ends today without altering the saved Stage date or historical checkpoints.
+    const usesTodayBoundary = index === ordered.length - 1 && !stage.recordedDate;
+    const previous = usesTodayBoundary
+      ? ordered.slice(0, index).findLast(item => localDayKey(item.recordedDate))
+      : ordered[index - 1];
+    const end = localDayKey(usesTodayBoundary ? today : stage.recordedDate);
     const boundary = previous ? localDayKey(previous.recordedDate) : '';
     const knownRange = Boolean(end && (!previous || (boundary && boundary <= end)));
-    const matching = knownRange && practice.available !== false
+    const matching = knownRange && practice.available === true
       ? new Set(list(practice.records).filter(record => record.day <= end && (!boundary || record.day > boundary)).map(record => record.key))
       : null;
+    const countStatus = !matching ? 'unavailable' : practice.countStatus || 'ready';
     return {
       ...stage,
-      questionCount: matching ? matching.size : null,
+      questionCount: matching && (countStatus === 'ready' || matching.size > 0) ? matching.size : null,
+      countStatus,
+      countSourceNote: knownRange ? practice.countSourceNote || '' : '暂无法确定统计区间',
       periodStart: boundary ? addLocalDays(boundary, 1) : '',
       periodEnd: end,
       previousLabel: previous?.label || '',
       sameDay: Boolean(boundary && boundary === end),
+      usesTodayBoundary,
     };
   });
 }
