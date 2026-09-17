@@ -13,6 +13,7 @@ export const REACT_PAGE_IDS = new Set([
   "leetcode",
   "calendar",
   "technical-interview",
+  "behavioral-interview",
   "experiences",
   "news",
   "community",

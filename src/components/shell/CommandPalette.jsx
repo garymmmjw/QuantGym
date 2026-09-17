@@ -20,6 +20,7 @@ const MODULE_ICONS = {
   calendar: "calendar-days",
   leetcode: "code-2",
   "technical-interview": "messages-square",
+  "behavioral-interview": "speech",
   pk: "zap",
   experiences: "notebook-pen",
   news: "newspaper",

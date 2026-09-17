@@ -14,49 +14,39 @@ import { isModuleVisible } from "../../modules/availability.js";
 const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
 
 const SHEET_NAV_GROUPS = [
-  { label: "", items: [["overview", "总览", "layout-dashboard"]] },
-  { label: "个人备考", items: [["calendar", "训练日历", "calendar-days"], ["technical-interview", "Technical Interview", "messages-square"], ["leetcode", "LeetCode", "code-2"]] },
-  {
-    label: "训练",
-    items: [
-      ["interview", "模拟面试", "messages-square"],
-      ["problems", "题目", "library-big"],
-      ["tools", "Mental Math", "brain"],
-      ["pk", "PK 对战", "zap"],
-      ["experiences", "面经", "notebook-pen"]
-    ]
-  },
-  {
-    label: "社群",
-    items: [
-      ["news", "新闻", "newspaper"],
-      ["community", "论坛", "message-circle-heart"],
-      ["messages", "聊天", "message-square-text"],
-      ["network", "人脉", "network"]
-    ]
-  },
+  { label: "", items: [["overview", "总览", "layout-dashboard", "overview"]] },
   {
     label: "求职",
+    labelKey: "navCareer",
     items: [
-      ["tracker", "投递 Tracker", "list-checks"],
-      ["resume", "简历", "file-user"],
-      ["jobs", "求职", "briefcase-business"],
-      ["companies", "公司", "building-2"]
+      ["calendar", "训练日历", "calendar-days", "calendar"],
+      ["tracker", "投递 Tracker", "list-checks", "applicationTracker"]
+    ]
+  },
+  {
+    label: "训练",
+    labelKey: "navTraining",
+    items: [
+      ["technical-interview", "Technical Interview", "messages-square", "technicalInterview"],
+      ["behavioral-interview", "Behavioral Interview", "speech", "behavioralInterview", "Beta"],
+      ["leetcode", "LeetCode", "code-2"],
+      ["tools", "Mental Math", "brain"]
     ]
   },
   {
     label: "资源",
+    labelKey: "navResources",
     items: [
-      ["courses", "课程", "video"],
-      ["library", "书城", "book-open"],
-      ["memory", "资料笔记", "archive"]
+      ["problems", "题目", "library-big", "problems"],
+      ["experiences", "面经", "notebook-pen", "experiences"]
     ]
   },
   {
     label: "我的",
+    labelKey: "navMine",
     items: [
-      ["account", "账户", "user"],
-      ["settings", "设置", "settings"]
+      ["account", "账户", "user", "account"],
+      ["settings", "设置", "settings", "settings"]
     ]
   }
 ];
@@ -89,10 +79,7 @@ export function AppShellMain() {
   const [navSheetOpen, setNavSheetOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const overviewApi = usePageApi("overview");
-  const planApi = usePageApi("plan");
   const newsState = useUserStateStore((state) => state.value?.news);
-  const prepPlanState = useUserStateStore((state) => state.value?.prepPlan);
-  const studyPlanState = useUserStateStore((state) => state.value?.studyPlan);
   const skillsState = useUserStateStore((state) => state.value?.skills);
   const bonusXpState = useUserStateStore((state) => state.value?.bonusXp);
 
@@ -211,38 +198,6 @@ export function AppShellMain() {
     }
   }, [overviewApi, newsState]);
 
-  const helperProgress = useMemo(() => {
-    void prepPlanState;
-    void studyPlanState;
-    try {
-      const view = planApi?.getViewModel?.();
-      if (view?.mode === "dashboard") {
-        return {
-          total: view.tasks?.length || 0,
-          done: view.doneCount || 0
-        };
-      }
-    } catch {}
-    try {
-      const today = overviewApi?.getTodayPlan?.();
-      if (today?.items?.length) {
-        return {
-          total: today.items.length,
-          done: today.items.filter((item) => item?.done).length
-        };
-      }
-    } catch {}
-    return { total: 0, done: 0 };
-  }, [planApi, overviewApi, prepPlanState, studyPlanState]);
-
-  const helperLeft = Math.max(0, helperProgress.total - helperProgress.done);
-  const helperPct = helperProgress.total
-    ? Math.round((helperProgress.done / helperProgress.total) * 100)
-    : 0;
-  const helperText = !helperProgress.total
-    ? "生成今日计划，开始训练"
-    : (helperLeft === 0 ? "今日目标已全部达成" : `离今日目标还差 ${helperLeft} 项`);
-
   const openWireNews = (id) => {
     const targetId = String(id || "").trim();
     const shell = getShellServices();
@@ -273,136 +228,24 @@ export function AppShellMain() {
               <i data-lucide="layout-dashboard"></i>
               <span data-i18n="overview">总览</span>
             </button>
-            <div className="module-nav-group" aria-label="个人备考">
-              <button className="module-nav-trigger" type="button" aria-haspopup="true"><span>个人备考</span></button>
-              <div className="module-nav-menu">
-                <button className="module-tab" type="button" data-module-tab="calendar"><i data-lucide="calendar-days"></i><span data-i18n="calendar">训练日历</span></button>
-                <button className="module-tab" type="button" data-module-tab="technical-interview"><i data-lucide="messages-square"></i><span data-i18n="technicalInterview">Technical Interview</span></button>
-                <button className="module-tab" type="button" data-module-tab="leetcode"><i data-lucide="code-2"></i>LeetCode</button>
-              </div>
-            </div>
-            <div className="module-nav-group" aria-label="训练" data-i18n-aria-label="navTraining">
-              <button className="module-nav-trigger" type="button" aria-haspopup="true">
-                <span data-i18n="navTraining">训练</span>
-              </button>
-              <div className="module-nav-menu wide">
-                {isModuleVisible("interview") && (<button className="module-tab" type="button" data-module-tab="interview">
-                  <i data-lucide="messages-square"></i>
-                  模拟面试
-                </button>)}
-                <button className="module-tab" type="button" data-module-tab="problems">
-                  <i data-lucide="library-big"></i>
-                  题目
+            {VISIBLE_NAV_GROUPS.filter((group) => group.label).map((group) => (
+              <div className="module-nav-group" key={group.label} aria-label={group.label} data-i18n-aria-label={group.labelKey}>
+                <button className="module-nav-trigger" type="button" aria-haspopup="true">
+                  <span data-i18n={group.labelKey}>{group.label}</span>
                 </button>
-                <button className="module-tab" type="button" data-module-tab="tools">
-                  <i data-lucide="brain"></i>
-                  Mental Math
-                </button>
-                <button className="module-tab" type="button" data-module-tab="pk">
-                  <i data-lucide="zap"></i>
-                  PK 对战
-                </button>
-                <button className="module-tab" type="button" data-module-tab="experiences">
-                  <i data-lucide="notebook-pen"></i>
-                  面经
-                </button>
-              </div>
-            </div>
-            {["news", "community", "messages", "network"].some(isModuleVisible) && (
-            <div className="module-nav-group" aria-label="社群" data-i18n-aria-label="navSocial">
-              <button className="module-nav-trigger" type="button" aria-haspopup="true">
-                <span data-i18n="navSocial">社群</span>
-              </button>
-              <div className="module-nav-menu">
-                {isModuleVisible("news") && (<button className="module-tab" type="button" data-module-tab="news">
-                  <i data-lucide="newspaper"></i>
-                  新闻
-                </button>)}
-                {isModuleVisible("community") && (<button className="module-tab" type="button" data-module-tab="community">
-                  <i data-lucide="message-circle-heart"></i>
-                  论坛
-                </button>)}
-                {isModuleVisible("messages") && (<button className="module-tab" type="button" data-module-tab="messages">
-                  <i data-lucide="message-square-text"></i>
-                  聊天
-                </button>)}
-                {isModuleVisible("network") && (<button className="module-tab" type="button" data-module-tab="network">
-                  <i data-lucide="network"></i>
-                  人脉
-                </button>)}
-              </div>
-            </div>
-            )}
-            {["tracker", "resume", "jobs", "companies"].some(isModuleVisible) && (
-            <div className="module-nav-group" aria-label="求职" data-i18n-aria-label="navCareer">
-              <button className="module-nav-trigger" type="button" aria-haspopup="true">
-                <span data-i18n="navCareer">求职</span>
-              </button>
-              <div className="module-nav-menu">
-                <button className="module-tab" type="button" data-module-tab="tracker"><i data-lucide="list-checks"></i><span data-i18n="applicationTracker">投递 Tracker</span></button>
-                {isModuleVisible("resume") && (<button className="module-tab" type="button" data-module-tab="resume">
-                  <i data-lucide="file-user"></i>
-                  简历
-                </button>)}
-                {isModuleVisible("jobs") && (<button className="module-tab" type="button" data-module-tab="jobs">
-                  <i data-lucide="briefcase-business"></i>
-                  求职
-                </button>)}
-                {isModuleVisible("companies") && (<button className="module-tab" type="button" data-module-tab="companies">
-                  <i data-lucide="building-2"></i>
-                  公司
-                </button>)}
-              </div>
-            </div>
-            )}
-            {["courses", "library", "memory"].some(isModuleVisible) && (
-            <div className="module-nav-group" aria-label="资源" data-i18n-aria-label="navResources">
-              <button className="module-nav-trigger" type="button" aria-haspopup="true">
-                <span data-i18n="navResources">资源</span>
-              </button>
-              <div className="module-nav-menu">
-                {isModuleVisible("courses") && (<button className="module-tab" type="button" data-module-tab="courses">
-                  <i data-lucide="video"></i>
-                  课程
-                </button>)}
-                {isModuleVisible("library") && (<button className="module-tab" type="button" data-module-tab="library">
-                  <i data-lucide="book-open"></i>
-                  书城
-                </button>)}
-                {isModuleVisible("memory") && (<button className="module-tab" type="button" data-module-tab="memory">
-                  <i data-lucide="archive"></i>
-                  资料笔记
-                </button>)}
-              </div>
-            </div>
-            )}
-            <div className="module-nav-group" aria-label="我的" data-i18n-aria-label="navMine">
-              <button className="module-nav-trigger" type="button" aria-haspopup="true">
-                <span data-i18n="navMine">我的</span>
-              </button>
-              <div className="module-nav-menu">
-                <button className="module-tab" type="button" data-module-tab="account">
-                  <i data-lucide="user"></i>
-                  账户
-                </button>
-                <button className="module-tab" type="button" data-module-tab="settings">
-                  <i data-lucide="settings"></i>
-                  设置
-                </button>
-              </div>
-            </div>
-            <aside className="sidebar-helper qg-nav-helper" aria-label="Today guide">
-              <div className="qg-nav-helper-row">
-                <img src="/assets/generated/playful-precision/avatar-focused-v2.png" alt="" loading="lazy" decoding="async" />
-                <div className="qg-nav-helper-copy">
-                  <strong>今日向导</strong>
-                  <span>{helperText}</span>
+                <div className="module-nav-menu">
+                  {group.items.map(([moduleId, label, icon, labelKey, badge]) => (
+                    <button className="module-tab" type="button" key={moduleId} data-module-tab={moduleId}>
+                      <i data-lucide={icon}></i>
+                      <span className="qg-nav-item-copy">
+                        <span data-i18n={labelKey}>{label}</span>
+                        {badge && <small className="qg-nav-beta">{badge}</small>}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="qg-nav-helper-track" aria-hidden="true">
-                <div className="qg-nav-helper-fill" style={{ width: `${Math.max(helperPct, helperProgress.total ? 4 : 0)}%` }} />
-              </div>
-            </aside>
+            ))}
           </nav>
 
           <section className="app-command-bar qg-command-bar" aria-label="全局搜索和状态" data-i18n-aria-label="commandBarLabel">
@@ -604,9 +447,9 @@ export function AppShellMain() {
               <div className="qg-nav-sheet-groups">
                 {VISIBLE_NAV_GROUPS.map((group) => (
                   <div className="qg-nav-sheet-group" key={group.label}>
-                    {group.label && <span className="qg-nav-sheet-label">{group.label}</span>}
+                    {group.label && <span className="qg-nav-sheet-label" data-i18n={group.labelKey}>{group.label}</span>}
                     <div className="qg-nav-sheet-grid">
-                      {group.items.map(([moduleId, label, icon]) => (
+                      {group.items.map(([moduleId, label, icon, labelKey, badge]) => (
                         <button
                           className="qg-nav-sheet-item"
                           type="button"
@@ -615,7 +458,10 @@ export function AppShellMain() {
                           onClick={closeNavSheet}
                         >
                           <i data-lucide={icon}></i>
-                          <span>{label}</span>
+                          <span className="qg-nav-item-copy">
+                            <span data-i18n={labelKey}>{label}</span>
+                            {badge && <small className="qg-nav-beta">{badge}</small>}
+                          </span>
                         </button>
                       ))}
                     </div>
