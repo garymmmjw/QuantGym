@@ -209,6 +209,14 @@ body.is-authenticated .qg-shell-rail .module-tab svg {
   color: currentColor;
 }
 
+body.is-authenticated .qg-shell-rail > .qg-nav-overview {
+  flex: 0 0 auto;
+}
+
+.qg-nav-sheet-grid > [data-module-tab="overview"] {
+  grid-column: 1 / -1;
+}
+
 body.is-authenticated .qg-shell-rail .module-tab:hover,
 body.is-authenticated .qg-shell-rail .module-tab:focus-visible {
   background: var(--qg-nav-hover) !important;

@@ -14,16 +14,8 @@ import { isModuleVisible } from "../../modules/availability.js";
 const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
 
 const SHEET_NAV_GROUPS = [
+  { label: "", items: [["overview", "总览", "layout-dashboard"]] },
   { label: "个人备考", items: [["calendar", "训练日历", "calendar-days"], ["technical-interview", "Technical Interview", "messages-square"], ["leetcode", "LeetCode", "code-2"]] },
-  {
-    label: "成长",
-    items: [
-      ["overview", "总览", "layout-dashboard"],
-      ["plan", "计划", "calendar-check-2"],
-      ["skills", "能力值", "radar"],
-      ["league", "联赛", "trophy"]
-    ]
-  },
   {
     label: "训练",
     items: [
@@ -277,35 +269,16 @@ export function AppShellMain() {
               <img src="/assets/generated/playful-precision/brand-q-mark.webp" alt="" />
               <strong>Quant<span className="qg-brand-accent">Gym</span></strong>
             </div>
+            <button className="module-tab qg-nav-overview" type="button" data-module-tab="overview">
+              <i data-lucide="layout-dashboard"></i>
+              <span data-i18n="overview">总览</span>
+            </button>
             <div className="module-nav-group" aria-label="个人备考">
               <button className="module-nav-trigger" type="button" aria-haspopup="true"><span>个人备考</span></button>
               <div className="module-nav-menu">
                 <button className="module-tab" type="button" data-module-tab="calendar"><i data-lucide="calendar-days"></i><span data-i18n="calendar">训练日历</span></button>
                 <button className="module-tab" type="button" data-module-tab="technical-interview"><i data-lucide="messages-square"></i><span data-i18n="technicalInterview">Technical Interview</span></button>
                 <button className="module-tab" type="button" data-module-tab="leetcode"><i data-lucide="code-2"></i>LeetCode</button>
-              </div>
-            </div>
-            <div className="module-nav-group" aria-label="成长" data-i18n-aria-label="navGrowth">
-              <button className="module-nav-trigger" type="button" aria-haspopup="true">
-                <span data-i18n="navGrowth">成长</span>
-              </button>
-              <div className="module-nav-menu">
-                <button className="module-tab active" type="button" data-module-tab="overview">
-                  <i data-lucide="layout-dashboard"></i>
-                  总览
-                </button>
-                <button className="module-tab" type="button" data-module-tab="plan">
-                  <i data-lucide="calendar-check-2"></i>
-                  计划
-                </button>
-                <button className="module-tab" type="button" data-module-tab="skills">
-                  <i data-lucide="radar"></i>
-                  能力值
-                </button>
-                <button className="module-tab" type="button" data-module-tab="league">
-                  <i data-lucide="trophy"></i>
-                  联赛
-                </button>
               </div>
             </div>
             <div className="module-nav-group" aria-label="训练" data-i18n-aria-label="navTraining">
@@ -631,7 +604,7 @@ export function AppShellMain() {
               <div className="qg-nav-sheet-groups">
                 {VISIBLE_NAV_GROUPS.map((group) => (
                   <div className="qg-nav-sheet-group" key={group.label}>
-                    <span className="qg-nav-sheet-label">{group.label}</span>
+                    {group.label && <span className="qg-nav-sheet-label">{group.label}</span>}
                     <div className="qg-nav-sheet-grid">
                       {group.items.map(([moduleId, label, icon]) => (
                         <button
