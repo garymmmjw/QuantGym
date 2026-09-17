@@ -151,6 +151,12 @@ export function getApplicationView(applications, stages, mode = 'all') {
   const rows = filterApplications(sortApplications(applications, mode === 'company' ? 'company' : 'recent'), {
     status: mode === 'company' ? 'all' : mode,
   });
+  if (mode === 'ddl') {
+    // Compare entered local dates/times without timezone conversion. A date-only
+    // deadline leads that day rather than assuming an unrecorded end-of-day time.
+    // Equal deadlines retain the recent-submission order established above.
+    rows.sort((a, b) => deadlineDateTime(getCurrentDeadlineEvent(a)).localeCompare(deadlineDateTime(getCurrentDeadlineEvent(b))));
+  }
   return {
     applications: rows,
     // These views always expose every matching row, regardless of collapsed Stages.
