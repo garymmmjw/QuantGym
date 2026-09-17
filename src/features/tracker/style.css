@@ -128,8 +128,49 @@
 .quantgym-tracker .qt-td-event-actions { margin-top: 7px; }
 .quantgym-tracker .qt-event-edit-link { font-size: 11px; }
 .quantgym-tracker .qt-event-date-hint { display: block; font-size: 10px; line-height: 1.6; color: #9687a1; }
+.quantgym-tracker .qt-event-edit-dialog .qt-event-clear-deadline {
+  min-height: 32px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #8a769a;
+  font-size: 11px;
+}
+.quantgym-tracker .qt-event-edit-dialog .qt-event-clear-deadline:hover:not(:disabled) { color: #634b84; text-decoration: underline; text-underline-offset: 3px; }
+.quantgym-tracker .qt-progress-dialog-actions.qt-event-edit-actions { display: block; }
+.quantgym-tracker .qt-event-action-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.quantgym-tracker .qt-event-save-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-left: auto; }
+.quantgym-tracker .qt-event-edit-actions .qt-btn.qt-event-delete { color: #b32d48; border-color: #efc4ce; background: #fff3f5; }
+.quantgym-tracker .qt-event-edit-actions .qt-btn.qt-event-delete:hover:not(:disabled) { color: #98213b; border-color: #df90a2; background: #ffe4ea; }
+.quantgym-tracker .qt-event-delete-hint { margin: 12px 0 0; color: #9687a1; font-size: 10px; line-height: 1.7; }
+.quantgym-tracker .qt-delete-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  color: #796686;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.quantgym-tracker .qt-delete-notice .qt-btn { min-height: 32px; padding: 5px 11px; flex-shrink: 0; font-size: 11px; white-space: nowrap; }
+.quantgym-tracker .qt-td-deletion-notice {
+  position: static;
+  transform: none;
+  margin: 0 24px 12px;
+  padding: 10px 12px;
+  border: 1px solid #e4ddec;
+  border-radius: 8px;
+  background: #f8f5fc;
+  box-shadow: none;
+  max-width: none;
+  flex-shrink: 0;
+  animation: none;
+}
 .quantgym-tracker .qt-table-footer { flex-wrap: wrap; gap: 8px; }
 @media(max-width:600px) {
+  .quantgym-tracker .qt-event-edit-dialog .qt-event-clear-deadline { min-height: 40px; }
   .quantgym-tracker .qt-table-scroll .qt-progress-table {
     width: calc(690px + var(--qt-progress-column-count) * 140px);
     min-width: calc(690px + var(--qt-progress-column-count) * 140px);

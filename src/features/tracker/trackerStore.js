@@ -1,8 +1,8 @@
 import { STATUS_META } from './dataModel.js';
 
-// Keep the same key so date-only records migrate on their next successful save.
-// Old v1 tabs reject v2 envelopes instead of rewriting away deadline clock times.
-const VERSION = 2;
+// Keep the same key and migrate on the next successful save. Earlier tabs reject
+// v3 envelopes instead of dropping deletion tombstones and resurrecting events.
+const VERSION = 3;
 const UPDATED_EVENT = 'quantgym:tracker-updated';
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const copy = value => JSON.parse(JSON.stringify(value));
@@ -74,6 +74,32 @@ export function validateTrackerImport(payload) {
   }), stages: normalizedStages };
 }
 
+function validateDeletedEvents(deletedEvents, applications) {
+  if (!Array.isArray(deletedEvents) || deletedEvents.length > 10000) throw new Error('已删除进展的记录格式无效，原始数据已保留。');
+  const ids = new Set();
+  const targets = new Set();
+  return deletedEvents.map(item => {
+    if (!object(item) || !validText(item.id, 200) || ids.has(item.id) || !validText(item.applicationId, 200)) throw new Error('已删除进展的编号无效，原始数据已保留。');
+    const application = applications.find(row => row.id === item.applicationId);
+    const target = JSON.stringify([item.applicationId, item.event?.id]);
+    if (!application || targets.has(target) || application.events.some(event => event.id === item.event?.id)) throw new Error('已删除进展与现有记录不匹配，原始数据已保留。');
+    if (!Array.isArray(item.order) || item.order.length < 2 || item.order.length > 11000
+      || item.order.some(id => !validText(id, 200)) || new Set(item.order).size !== item.order.length
+      || item.order[0] !== application.events[0].id || item.order.indexOf(item.event?.id) < 1) throw new Error('已删除进展的顺序无效，原始数据已保留。');
+    const event = validateApplications([{ ...application, events: [application.events[0], item.event] }])[0].events[1];
+    ids.add(item.id);
+    targets.add(target);
+    return { id: item.id, applicationId: item.applicationId, event, order: [...item.order] };
+  });
+}
+
+function restoredEventIndex(originalOrder, eventId, currentOrder) {
+  const originalIndex = originalOrder.indexOf(eventId);
+  const followingId = originalOrder.slice(originalIndex + 1).find(id => currentOrder.includes(id));
+  const previousId = originalOrder.slice(0, originalIndex).findLast(id => currentOrder.includes(id));
+  return followingId ? currentOrder.indexOf(followingId) : currentOrder.indexOf(previousId) + 1;
+}
+
 function frozenSnapshot(applications, error = '') {
   const value = copy({ applications, error });
   value.applications.forEach(application => {
@@ -100,25 +126,28 @@ export function createTrackerStore({ ownerId, namespace = '', storage = globalTh
   function read() {
     if (!storage?.getItem || !storage?.setItem) throw new Error('此浏览器暂时无法保存投递记录。');
     const raw = storage.getItem(key);
-    if (raw === null) return [];
+    if (raw === null) return { applications: [], deletedEvents: [] };
     let envelope;
     try { envelope = JSON.parse(raw); } catch { throw new Error('投递记录无法读取，原始数据已保留。'); }
-    if (!object(envelope) || ![1, VERSION].includes(envelope.version) || envelope.ownerId !== ownerId) throw new Error('投递记录的账户或版本不匹配，原始数据已保留。');
-    return validateApplications(envelope.applications);
+    if (!object(envelope) || ![1, 2, VERSION].includes(envelope.version) || envelope.ownerId !== ownerId) throw new Error('投递记录的账户或版本不匹配，原始数据已保留。');
+    const applications = validateApplications(envelope.applications);
+    const deletedEvents = validateDeletedEvents(envelope.version === VERSION ? envelope.deletedEvents : [], applications);
+    return { applications, deletedEvents };
   }
   function refresh() {
-    try { publish(read()); } catch (error) { publish(snapshot.applications, error.message); }
+    try { publish(read().applications); } catch (error) { publish(snapshot.applications, error.message); }
     return snapshot;
   }
   function mutate(update) {
     let latest;
     try {
       latest = read();
-      const next = validateApplications(update(latest));
-      storage.setItem(key, JSON.stringify({ version: VERSION, ownerId, applications: next }));
+      const next = validateApplications(update(latest.applications, latest.deletedEvents));
+      const deletedEvents = validateDeletedEvents(latest.deletedEvents, next);
+      storage.setItem(key, JSON.stringify({ version: VERSION, ownerId, applications: next, deletedEvents }));
       publish(next);
     } catch (error) {
-      publish(latest || snapshot.applications, error.message || '保存失败，请检查浏览器存储空间。');
+      publish(latest?.applications || snapshot.applications, error.message || '保存失败，请检查浏览器存储空间。');
       throw error;
     }
     try {
@@ -147,14 +176,15 @@ export function createTrackerStore({ ownerId, namespace = '', storage = globalTh
     },
     updateApplication(application) {
       const incoming = validateApplications([application])[0];
-      mutate(applications => {
+      mutate((applications, deletedEvents) => {
         const latest = applications.find(item => item.id === incoming.id);
         if (!latest) throw new Error('没有找到这份申请，请刷新后重试。');
         // Forms can stay open while another tab records progress. There is no
         // event replacement here, so retain durable events and append only
         // genuinely new IDs from the submitted form.
         const eventIds = new Set(latest.events.map(event => event.id));
-        const events = [...latest.events, ...incoming.events.filter(event => !eventIds.has(event.id))];
+        const removedIds = new Set(deletedEvents.filter(item => item.applicationId === incoming.id).map(item => item.event.id));
+        const events = [...latest.events, ...incoming.events.filter(event => !eventIds.has(event.id) && !removedIds.has(event.id))];
         return applications.map(item => item.id === incoming.id ? {...incoming, events} : item);
       });
     },
@@ -204,6 +234,43 @@ export function createTrackerStore({ ownerId, namespace = '', storage = globalTh
           return { ...event, dueDate, dueTime };
         });
         return applications.map(item => item.id === applicationId ? { ...item, events } : item);
+      });
+    },
+    deleteEvent(applicationId, eventId) {
+      let token;
+      mutate((applications, deletedEvents) => {
+        const application = applications.find(item => item.id === applicationId);
+        if (!application) throw new Error('没有找到这份申请，请刷新后重试。');
+        const index = application.events.findIndex(event => event.id === eventId);
+        if (index < 0) throw new Error('没有找到这条进展，请刷新后重试。');
+        if (index === 0) throw new Error('首次投递记录不能删除。');
+        const id = globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+        // Include already-deleted neighbors so a later undo still knows where
+        // they belong when another tab restores them first. New events stay in
+        // their current order after the restored historical anchors.
+        const order = application.events.map(event => event.id);
+        for (const removed of deletedEvents.filter(item => item.applicationId === applicationId)) {
+          order.splice(restoredEventIndex(removed.order, removed.event.id, order), 0, removed.event.id);
+        }
+        deletedEvents.push({ id, applicationId, event: application.events[index], order });
+        token = Object.freeze({ scope: key, id });
+        return applications.map(item => item.id === applicationId ? { ...item, events: item.events.filter(event => event.id !== eventId) } : item);
+      });
+      return token;
+    },
+    restoreEvent(token) {
+      mutate((applications, deletedEvents) => {
+        if (!object(token) || token.scope !== key || !validText(token.id, 200)) throw new Error('无法在此账户恢复这条记录。');
+        const removedIndex = deletedEvents.findIndex(item => item.id === token.id);
+        if (removedIndex < 0) throw new Error('这条记录已恢复，或撤销操作已失效。');
+        const removed = deletedEvents[removedIndex];
+        const application = applications.find(item => item.id === removed.applicationId);
+        if (!application) throw new Error('没有找到这份申请，请刷新后重试。');
+        if (application.events.some(event => event.id === removed.event.id)) throw new Error('这条进展已存在，现有内容已保留。');
+        const insertAt = restoredEventIndex(removed.order, removed.event.id, application.events.map(event => event.id));
+        const events = [...application.events.slice(0, insertAt), removed.event, ...application.events.slice(insertAt)];
+        deletedEvents.splice(removedIndex, 1);
+        return applications.map(item => item.id === application.id ? { ...item, events } : item);
       });
     },
     mergeApplications(imports) {
