@@ -107,3 +107,31 @@
 .quantgym-tracker .qt-filter-tabs .qt-ddl-tab.qt-active { background: #ffe1e7; color: #a7203e; }
 .quantgym-tracker .qt-filter-tabs .qt-ddl-tab.qt-active span { color: #a7203e; }
 .quantgym-tracker .qt-filter-tabs .qt-company-tab { margin-left: 4px; }
+
+/* Every event owns one column; update and deadline are always the final two. */
+.quantgym-tracker .qt-table-scroll .qt-progress-table {
+  width: 100%;
+  min-width: calc(720px + var(--qt-progress-column-count) * 140px);
+}
+.quantgym-tracker .qt-progress-table .qt-col-event { width: 140px; }
+.quantgym-tracker .qt-progress-table .qt-col-update { width: 135px; }
+.quantgym-tracker .qt-application-row .qt-update-cell { vertical-align: top; }
+.quantgym-tracker .qt-edit-progress {
+  display: inline-flex;
+  padding: 0;
+  background: transparent;
+  border-radius: 5px;
+  text-align: left;
+  vertical-align: top;
+}
+.quantgym-tracker .qt-edit-progress:hover .qt-event-pill { box-shadow: 0 0 0 2px #8b70b32e; }
+.quantgym-tracker .qt-td-event-actions { margin-top: 7px; }
+.quantgym-tracker .qt-event-edit-link { font-size: 11px; }
+.quantgym-tracker .qt-event-date-hint { display: block; font-size: 10px; line-height: 1.6; color: #9687a1; }
+.quantgym-tracker .qt-table-footer { flex-wrap: wrap; gap: 8px; }
+@media(max-width:600px) {
+  .quantgym-tracker .qt-table-scroll .qt-progress-table {
+    width: calc(690px + var(--qt-progress-column-count) * 140px);
+    min-width: calc(690px + var(--qt-progress-column-count) * 140px);
+  }
+}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { deadlineDateTime, filterApplications, formatDeadline, getApplicationView, getCurrentDeadline, getCurrentDeadlineEvent, getSummary, groupApplications, sortApplications } from './dataModel.js';
+import { deadlineDateTime, filterApplications, formatDeadline, getApplicationView, getCurrentDeadline, getCurrentDeadlineEvent, getProgressColumnCount, getSummary, groupApplications, sortApplications } from './dataModel.js';
 
 const stages = [
   { id: 's1', label: 'Stage 1' },
@@ -13,6 +13,17 @@ const app = (id, date, prepPhase = 's2', company = id) => ({
 });
 const ids = rows => rows.map(row => row.id);
 const display = (rows, order) => groupApplications(sortApplications(rows, order), stages);
+
+test('progress columns expose every event and remain shared across applications with different histories', () => {
+  const short = app('short', '2026-09-17');
+  const long = app('long', '2026-09-16');
+  long.events.push(...['oa_received', 'oa_completed', 'interview', 'offer'].map((type, index) => ({ id: `e-${index}`, type, date: '2026-09-17' })));
+  assert.equal(getProgressColumnCount([]), 2);
+  assert.equal(getProgressColumnCount([short]), 2);
+  assert.equal(getProgressColumnCount([short, long]), 5);
+  long.events.push({ id: 'e-next', type: 'interview', date: '2026-09-18' });
+  assert.equal(getProgressColumnCount([short, long]), 6);
+});
 
 test('DDL view lists all current deadlines across Stages and ignores completed historical deadlines', () => {
   const dated = app('dated', '2026-09-14', 's1');

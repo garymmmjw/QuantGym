@@ -1,12 +1,15 @@
 import React, { useMemo, useState } from 'react';
-import { getApplicationView, getSummary } from './dataModel.js';
+import { getApplicationView, getProgressColumnCount, getSummary } from './dataModel.js';
 import ApplicationRow from './ApplicationRow.jsx';
 import Icon from './TrackerIcon.jsx';
 
-export default function ApplicationList({ applications, stages, status, onStatusChange, saveError, onOpenDetails, onUpdateProgress, onEditDeadline, onAddApplication }) {
+export default function ApplicationList({ applications, stages, status, onStatusChange, saveError, onOpenDetails, onUpdateProgress, onEditEvent, onEditDeadline, onAddApplication }) {
   const [view, setView] = useState('table');
   const [collapsed, setCollapsed] = useState({});
   const summary = getSummary(applications);
+  const progressColumnCount = getProgressColumnCount(applications);
+  const progressColumns = Array.from({ length: progressColumnCount }, (_, index) => index);
+  const columnCount = progressColumnCount + 4;
   const { applications: visible, groups } = useMemo(() => getApplicationView(applications, stages, status), [applications, stages, status]);
   const views = [
     ['all', '全部', summary.total],
@@ -21,8 +24,10 @@ export default function ApplicationList({ applications, stages, status, onStatus
   const renderRow = application => <ApplicationRow
     key={application.id}
     application={application}
+    progressColumnCount={progressColumnCount}
     onOpenDetails={() => onOpenDetails(application)}
     onUpdateProgress={() => onUpdateProgress(application)}
+    onEditEvent={event => onEditEvent(application, event)}
     onEditDeadline={event => onEditDeadline(application, event)}
   />;
 
@@ -47,13 +52,13 @@ export default function ApplicationList({ applications, stages, status, onStatus
       </div>
     </div>
     <div className={`qt-table-scroll qt-${view}`} tabIndex={0} aria-label="横向滚动查看申请进展">
-      <table>
-        <colgroup><col className="qt-col-company"/><col className="qt-col-role"/><col className="qt-col-event"/><col className="qt-col-event"/><col className="qt-col-latest"/><col className="qt-col-deadline"/><col className="qt-col-open"/></colgroup>
-        <thead><tr><th scope="col">公司</th><th scope="col">岗位</th><th scope="col"><span className="qt-step-number">01</span>投递</th><th scope="col"><span className="qt-step-number">02</span>后续进展</th><th scope="col"><span className="qt-step-number">03</span>最新进展</th><th scope="col">DDL</th><th scope="col"><span className="qt-sr-only">详情</span></th></tr></thead>
+      <table className="qt-progress-table" style={{ '--qt-progress-column-count': progressColumnCount }}>
+        <colgroup><col className="qt-col-company"/><col className="qt-col-role"/>{progressColumns.map(index => <col className="qt-col-event" key={index}/>)}<col className="qt-col-update"/><col className="qt-col-deadline"/></colgroup>
+        <thead><tr><th scope="col">公司</th><th scope="col">岗位</th>{progressColumns.map(index => <th scope="col" key={index}>{index === 0 ? '投递' : `阶段 ${index + 1}`}</th>)}<th scope="col">更新进展</th><th scope="col">DDL</th></tr></thead>
         {groups ? groups.map(({ stage, applications: rows }) => {
           if (!rows.length && status !== 'all') return null;
           return <tbody key={stage.id}>
-            <tr className="qt-phase-row"><th colSpan={7} scope="rowgroup">
+            <tr className="qt-phase-row"><th colSpan={columnCount} scope="rowgroup">
               <button type="button" aria-expanded={!collapsed[stage.id]} onClick={() => setCollapsed(value => ({ ...value, [stage.id]: !value[stage.id] }))}>
                 <Icon name={collapsed[stage.id] ? 'ChevronRight' : 'ChevronDown'} size={16}/>
                 <span className="qt-phase-badge">{stage.label}</span>
@@ -62,7 +67,7 @@ export default function ApplicationList({ applications, stages, status, onStatus
                 <span className="qt-phase-caption">{stage.recordedDate || stage.usesTodayBoundary ? `${stage.usesTodayBoundary ? '截至今天' : stage.recordedDate.replaceAll('-', '.')} · 阶段刷题 ${stage.questionCount ?? '—'} 题` : '投递时的准备阶段'}</span>
               </button>
             </th></tr>
-            {!collapsed[stage.id] && (rows.length ? rows.map(renderRow) : <tr className="qt-empty-phase-row"><td colSpan={7}>这个阶段还没有投递，添加申请时可选择此 Stage。</td></tr>)}
+            {!collapsed[stage.id] && (rows.length ? rows.map(renderRow) : <tr className="qt-empty-phase-row"><td colSpan={columnCount}>这个阶段还没有投递，添加申请时可选择此 Stage。</td></tr>)}
           </tbody>;
         }) : <tbody>{visible.map(renderRow)}</tbody>}
       </table>
@@ -73,6 +78,6 @@ export default function ApplicationList({ applications, stages, status, onStatus
         <button type="button" className="qt-btn" onClick={() => applications.length ? onStatusChange('all') : onAddApplication()}>{applications.length ? '查看全部申请' : '添加申请'}</button>
       </div>}
     </div>
-    <div className="qt-table-footer"><span>显示 {visible.length} / {applications.length} 份申请</span><span><Icon name="MousePointer2" size={13}/>点击岗位查看完整进展</span></div>
+    <div className="qt-table-footer"><span>显示 {visible.length} / {applications.length} 份申请</span><span><Icon name="MousePointer2" size={13}/>点击进展修改 · 点击岗位查看详情</span></div>
   </section>;
 }
