@@ -9,6 +9,7 @@ import { CommandPalette } from "./CommandPalette.jsx";
 import { OnboardingTour } from "./OnboardingTour.jsx";
 import { RouteProgressBar } from "./RouteProgressBar.jsx";
 import { CloudSessionBadge, CloudSessionNotice } from "../../features/account/CloudSessionNotice.jsx";
+import { isModuleVisible } from "../../modules/availability.js";
 
 const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
 
@@ -45,6 +46,7 @@ const SHEET_NAV_GROUPS = [
   {
     label: "求职",
     items: [
+      ["tracker", "投递 Tracker", "list-checks"],
       ["resume", "简历", "file-user"],
       ["jobs", "求职", "briefcase-business"],
       ["companies", "公司", "building-2"]
@@ -66,6 +68,10 @@ const SHEET_NAV_GROUPS = [
     ]
   }
 ];
+
+const VISIBLE_NAV_GROUPS = SHEET_NAV_GROUPS
+  .map((group) => ({ ...group, items: group.items.filter(([moduleId]) => isModuleVisible(moduleId)) }))
+  .filter((group) => group.items.length > 0);
 
 const BOTTOM_TABS = [
   ["calendar", "日历", "calendar-days"],
@@ -205,6 +211,7 @@ export function AppShellMain() {
 
   const wireItems = useMemo(() => {
     void newsState;
+    if (!isModuleVisible("news")) return [];
     try {
       return overviewApi?.getTickerNews?.() || [];
     } catch {
@@ -306,10 +313,10 @@ export function AppShellMain() {
                 <span data-i18n="navTraining">训练</span>
               </button>
               <div className="module-nav-menu wide">
-                <button className="module-tab" type="button" data-module-tab="interview">
+                {isModuleVisible("interview") && (<button className="module-tab" type="button" data-module-tab="interview">
                   <i data-lucide="messages-square"></i>
                   模拟面试
-                </button>
+                </button>)}
                 <button className="module-tab" type="button" data-module-tab="problems">
                   <i data-lucide="library-big"></i>
                   题目
@@ -328,67 +335,74 @@ export function AppShellMain() {
                 </button>
               </div>
             </div>
+            {["news", "community", "messages", "network"].some(isModuleVisible) && (
             <div className="module-nav-group" aria-label="社群" data-i18n-aria-label="navSocial">
               <button className="module-nav-trigger" type="button" aria-haspopup="true">
                 <span data-i18n="navSocial">社群</span>
               </button>
               <div className="module-nav-menu">
-                <button className="module-tab" type="button" data-module-tab="news">
+                {isModuleVisible("news") && (<button className="module-tab" type="button" data-module-tab="news">
                   <i data-lucide="newspaper"></i>
                   新闻
-                </button>
-                <button className="module-tab" type="button" data-module-tab="community">
+                </button>)}
+                {isModuleVisible("community") && (<button className="module-tab" type="button" data-module-tab="community">
                   <i data-lucide="message-circle-heart"></i>
                   论坛
-                </button>
-                <button className="module-tab" type="button" data-module-tab="messages">
+                </button>)}
+                {isModuleVisible("messages") && (<button className="module-tab" type="button" data-module-tab="messages">
                   <i data-lucide="message-square-text"></i>
                   聊天
-                </button>
-                <button className="module-tab" type="button" data-module-tab="network">
+                </button>)}
+                {isModuleVisible("network") && (<button className="module-tab" type="button" data-module-tab="network">
                   <i data-lucide="network"></i>
                   人脉
-                </button>
+                </button>)}
               </div>
             </div>
+            )}
+            {["tracker", "resume", "jobs", "companies"].some(isModuleVisible) && (
             <div className="module-nav-group" aria-label="求职" data-i18n-aria-label="navCareer">
               <button className="module-nav-trigger" type="button" aria-haspopup="true">
                 <span data-i18n="navCareer">求职</span>
               </button>
               <div className="module-nav-menu">
-                <button className="module-tab" type="button" data-module-tab="resume">
+                <button className="module-tab" type="button" data-module-tab="tracker"><i data-lucide="list-checks"></i><span data-i18n="applicationTracker">投递 Tracker</span></button>
+                {isModuleVisible("resume") && (<button className="module-tab" type="button" data-module-tab="resume">
                   <i data-lucide="file-user"></i>
                   简历
-                </button>
-                <button className="module-tab" type="button" data-module-tab="jobs">
+                </button>)}
+                {isModuleVisible("jobs") && (<button className="module-tab" type="button" data-module-tab="jobs">
                   <i data-lucide="briefcase-business"></i>
                   求职
-                </button>
-                <button className="module-tab" type="button" data-module-tab="companies">
+                </button>)}
+                {isModuleVisible("companies") && (<button className="module-tab" type="button" data-module-tab="companies">
                   <i data-lucide="building-2"></i>
                   公司
-                </button>
+                </button>)}
               </div>
             </div>
+            )}
+            {["courses", "library", "memory"].some(isModuleVisible) && (
             <div className="module-nav-group" aria-label="资源" data-i18n-aria-label="navResources">
               <button className="module-nav-trigger" type="button" aria-haspopup="true">
                 <span data-i18n="navResources">资源</span>
               </button>
               <div className="module-nav-menu">
-                <button className="module-tab" type="button" data-module-tab="courses">
+                {isModuleVisible("courses") && (<button className="module-tab" type="button" data-module-tab="courses">
                   <i data-lucide="video"></i>
                   课程
-                </button>
-                <button className="module-tab" type="button" data-module-tab="library">
+                </button>)}
+                {isModuleVisible("library") && (<button className="module-tab" type="button" data-module-tab="library">
                   <i data-lucide="book-open"></i>
                   书城
-                </button>
-                <button className="module-tab" type="button" data-module-tab="memory">
+                </button>)}
+                {isModuleVisible("memory") && (<button className="module-tab" type="button" data-module-tab="memory">
                   <i data-lucide="archive"></i>
                   资料笔记
-                </button>
+                </button>)}
               </div>
             </div>
+            )}
             <div className="module-nav-group" aria-label="我的" data-i18n-aria-label="navMine">
               <button className="module-nav-trigger" type="button" aria-haspopup="true">
                 <span data-i18n="navMine">我的</span>
@@ -440,7 +454,7 @@ export function AppShellMain() {
               }}
             >
               <i data-lucide="search"></i>
-              <input id="globalSearchInput" type="search" placeholder="搜索题目、公司、课程，或跳转模块…" aria-label="Search topics" />
+              <input id="globalSearchInput" type="search" placeholder="搜索题目、训练，或跳转模块…" aria-label="Search topics" />
               <span className="qg-kbd" aria-hidden="true">⌘K</span>
               <div id="globalSearchResults" className="global-search-results hidden" role="listbox" aria-label="搜索结果" data-i18n-aria-label="searchResultsLabel"></div>
             </div>
@@ -476,11 +490,11 @@ export function AppShellMain() {
                 <img src="/assets/generated/playful-precision/reward-xp.webp" alt="" loading="lazy" decoding="async" />
                 <strong id="qgLevelPillValue">Lv.{levelInfo.level}</strong>
               </button>
-              <button className="app-stat-pill chat-pill" id="commandChatBtn" type="button" data-jump-module="messages" aria-label="打开聊天" data-i18n-aria-label="openChat">
+              {isModuleVisible("messages") && (<button className="app-stat-pill chat-pill" id="commandChatBtn" type="button" data-jump-module="messages" aria-label="打开聊天" data-i18n-aria-label="openChat">
                 <span className="stat-art stat-art-chat" aria-hidden="true"><i data-lucide="message-square-text"></i></span>
                 <strong id="commandUnreadCount">0</strong>
                 <small>聊天</small>
-              </button>
+              </button>)}
               <div className="qg-notif">
                 <button
                   className="qg-notif-btn"
@@ -504,7 +518,7 @@ export function AppShellMain() {
                     <div className="qg-notif-empty">
                       <img src="/assets/generated/playful-precision/avatar-happy-v2.png" alt="" loading="lazy" decoding="async" />
                       <strong>暂时没有新通知</strong>
-                      <span>完成训练、升级、求职进展都会出现在这里</span>
+                      <span>训练记录与升级进展会出现在这里</span>
                     </div>
                   </div>
                   <div className="qg-notif-foot">点击通知跳转对应模块 · 关闭即全部标记已读</div>
@@ -536,6 +550,7 @@ export function AppShellMain() {
             </div>
           </section>
 
+          {isModuleVisible("news") && (
           <div className="qg-wire-bar" aria-label="Quant Wire">
             <span className="qg-wire-pill">
               <i aria-hidden="true"></i>
@@ -565,6 +580,7 @@ export function AppShellMain() {
               </div>
             </div>
           </div>
+          )}
 
           <section className="module-view active" data-module-view="route" aria-live="polite">
             <div className="app-route-root qg-route-container">
@@ -613,7 +629,7 @@ export function AppShellMain() {
                 </button>
               </div>
               <div className="qg-nav-sheet-groups">
-                {SHEET_NAV_GROUPS.map((group) => (
+                {VISIBLE_NAV_GROUPS.map((group) => (
                   <div className="qg-nav-sheet-group" key={group.label}>
                     <span className="qg-nav-sheet-label">{group.label}</span>
                     <div className="qg-nav-sheet-grid">

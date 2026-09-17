@@ -3,6 +3,7 @@ import { MODULE_MANIFEST } from "../modules/manifest.js";
 /** Full React pages: no createBridgePage, PartialBridgeContent, or ReactPageShell. */
 export const REACT_PAGE_IDS = new Set([
   "overview",
+  "tracker",
   "plan",
   "skills",
   "league",

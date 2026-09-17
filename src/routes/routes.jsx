@@ -17,6 +17,7 @@ const MessagesPage = lazy(() => import("../pages/MessagesPage.jsx").then((m) => 
 const NetworkPage = lazy(() => import("../pages/NetworkPage.jsx").then((m) => ({ default: m.NetworkPage })));
 const MemoryPage = lazy(() => import("../pages/MemoryPage.jsx").then((m) => ({ default: m.MemoryPage })));
 const OverviewPage = lazy(() => import("../pages/OverviewPage.jsx").then((m) => ({ default: m.OverviewPage })));
+const TrackerPage = lazy(() => import("../pages/TrackerPage.jsx").then((m) => ({ default: m.TrackerPage })));
 const AccountPage = lazy(() => import("../pages/AccountPage.jsx").then((m) => ({ default: m.AccountPage })));
 const LibraryPage = lazy(() => import("../pages/LibraryPage.jsx").then((m) => ({ default: m.LibraryPage })));
 const CommunityPage = lazy(() => import("../pages/CommunityPage.jsx").then((m) => ({ default: m.CommunityPage })));
@@ -33,6 +34,7 @@ const LeaguePage = lazy(() => import("../pages/LeaguePage.jsx").then((m) => ({ d
 
 const REACT_PAGES = {
   overview: OverviewPage,
+  tracker: TrackerPage,
   plan: PlanPage,
   skills: SkillsPage,
   league: LeaguePage,

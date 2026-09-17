@@ -11,7 +11,8 @@ import {
 } from './todayPlan.js';
 import {
   buildLegacyTodayStudyPlan as buildLegacyTodayStudyPlanValue,
-  buildTodayStudyPlan as buildTodayStudyPlanValue
+  buildTodayStudyPlan as buildTodayStudyPlanValue,
+  isPlanTaskVisible
 } from '../plan/data.js';
 
 export function createOverviewActivityController(deps = {}) {
@@ -96,7 +97,9 @@ export function createOverviewActivityController(deps = {}) {
     const state = getState();
     const prepPlan = deps.normalizePrepPlan?.(state.prepPlan);
     const plan = prepPlan ? buildTodayStudyPlan() : deps.normalizeStudyPlan?.(state.studyPlan);
-    const result = renderTodayPlanCard(elements.todayPlanCard, plan, {
+    const items = (plan?.items || []).filter(isPlanTaskVisible);
+    const visiblePlan = items.length ? { ...plan, items } : null;
+    const result = renderTodayPlanCard(elements.todayPlanCard, visiblePlan, {
       documentRef: deps.documentRef,
       prepPlanActive: Boolean(prepPlan),
       t: deps.t,
