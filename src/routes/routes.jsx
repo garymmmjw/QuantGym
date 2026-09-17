@@ -30,6 +30,7 @@ const PlanPage = lazy(() => import("../pages/PlanPage.jsx").then((m) => ({ defau
 const PkPage = lazy(() => import("../pages/PkPage.jsx").then((m) => ({ default: m.PkPage })));
 const CalendarPage = lazy(() => import("../pages/CalendarPage.jsx").then((m) => ({ default: m.CalendarPage })));
 const TechnicalInterviewPage = lazy(() => import("../pages/TechnicalInterviewPage.jsx").then((m) => ({ default: m.TechnicalInterviewPage })));
+const BehavioralInterviewPage = lazy(() => import("../pages/BehavioralInterviewPage.jsx").then((m) => ({ default: m.BehavioralInterviewPage })));
 const LeaguePage = lazy(() => import("../pages/LeaguePage.jsx").then((m) => ({ default: m.LeaguePage })));
 
 const REACT_PAGES = {
@@ -44,6 +45,7 @@ const REACT_PAGES = {
   leetcode: LeetcodePage,
   calendar: CalendarPage,
   "technical-interview": TechnicalInterviewPage,
+  "behavioral-interview": BehavioralInterviewPage,
   experiences: ExperiencesPage,
   news: NewsPage,
   community: CommunityPage,

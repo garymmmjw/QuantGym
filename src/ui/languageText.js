@@ -58,7 +58,14 @@ export function applyAppLanguageText(options = {}) {
     ["memory", t("memory")],
     ["account", t("account")],
     ["settings", t("settings")]
-  ].forEach(([key, value]) => button(`[data-module-tab="${key}"]`, value));
+  ].forEach(([key, value]) => {
+    const selector = `[data-module-tab="${key}"]`;
+    const navButton = root.querySelector(selector);
+    const label = navButton?.querySelector("[data-i18n], .qg-nav-item-copy > span");
+    // React owns the icon, label wrapper and optional Beta badge.
+    if (label) label.textContent = value;
+    else button(selector, value);
+  });
 
   text('[data-problem-view="all"]', t("allProblems"));
   text('[data-problem-view="saved"]', t("savedProblems"));
