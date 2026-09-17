@@ -36,10 +36,38 @@ test('DDL view lists all current deadlines across Stages and ignores completed h
   const result = getApplicationView(rows, stages, 'ddl');
   assert.equal(getSummary(rows).ddl, 2);
   assert.equal(result.groups, null);
-  assert.deepEqual(ids(result.applications), ['timed', 'dated']);
+  assert.deepEqual(ids(result.applications), ['dated', 'timed']);
   assert.deepEqual(ids(getApplicationView(rows, stages, 'awaiting').applications), ['waiting']);
   const cleared = { ...timed, events: timed.events.map(event => ({ ...event, dueDate: '', dueTime: '' })) };
   assert.equal(getApplicationView([completed, cleared], stages, 'ddl').applications.length, 0);
+});
+
+test('DDL urgency orders days and clock times, keeps date-only deadlines first that day, and preserves recent ties', () => {
+  const deadlineApp = (id, submitted, dueDate, dueTime = '') => {
+    const row = app(id, submitted);
+    row.events.push({ id: `${id}-oa`, type: 'oa_received', date: submitted, dueDate, dueTime });
+    return row;
+  };
+  const rows = [
+    deadlineApp('late', '2026-09-17', '2026-09-19', '18:00'),
+    deadlineApp('morning-old', '2026-09-13', '2026-09-19', '09:30'),
+    deadlineApp('next-year', '2026-09-17', '2027-01-01', '00:00'),
+    deadlineApp('overdue', '2026-09-16', '2026-09-16', '08:00'),
+    deadlineApp('date-only', '2026-09-14', '2026-09-19'),
+    deadlineApp('morning-new', '2026-09-16', '2026-09-19', '09:30'),
+    deadlineApp('midnight', '2026-09-15', '2026-09-19', '00:00'),
+    deadlineApp('earlier-day', '2026-09-17', '2026-09-18', '23:59'),
+  ];
+  const before = structuredClone(rows);
+  const recent = ids(getApplicationView(rows, stages).applications);
+  assert.deepEqual(ids(getApplicationView(rows, stages, 'ddl').applications), [
+    'overdue', 'earlier-day', 'date-only', 'midnight', 'morning-new', 'morning-old', 'late', 'next-year',
+  ]);
+  assert.deepEqual(ids(getApplicationView(rows, stages).applications), recent);
+  assert.deepEqual(rows, before);
+  rows[0].events.at(-1).dueDate = '2026-09-15';
+  assert.equal(getApplicationView(rows, stages, 'ddl').applications[0].id, 'late');
+  assert.equal(getApplicationView(rows, stages, 'ddl').groups, null);
 });
 
 test('company view sorts globally without Stages and preserves separate roles at the same company', () => {
