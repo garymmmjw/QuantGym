@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { STATUS_META, localToday } from './dataModel.js';
+import DeadlineFields from './DeadlineFields.jsx';
 
 const PROGRESS_TYPES = ['oa_received', 'oa_completed', 'interview', 'offer', 'rejected', 'withdrawn'];
 
@@ -8,6 +9,7 @@ export default function ProgressDialog({ application, onClose, onUpdate }) {
   const [eventType, setEventType] = useState('oa_received');
   const [eventDate, setEventDate] = useState(localToday);
   const [dueDate, setDueDate] = useState('');
+  const [dueTime, setDueTime] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -32,6 +34,7 @@ export default function ProgressDialog({ application, onClose, onUpdate }) {
         date: eventDate,
         year: Number(eventDate.slice(0, 4)),
         dueDate,
+        dueTime: dueDate ? dueTime : '',
       }],
     });
     if (saved) onClose();
@@ -58,10 +61,11 @@ export default function ProgressDialog({ application, onClose, onUpdate }) {
           <span>发生日期 <span className="qt-td-required">*</span></span>
           <input id="progress-date" type="date" required value={eventDate} onInput={event => setEventDate(event.target.value)} onChange={event => setEventDate(event.target.value)} />
         </label>
-        <label className="qt-td-field" htmlFor="progress-deadline">
-          <span>截止日期 <span className="qt-td-optional">选填</span></span>
-          <input id="progress-deadline" type="date" value={dueDate} onInput={event => setDueDate(event.target.value)} onChange={event => setDueDate(event.target.value)} />
-        </label>
+        <DeadlineFields idPrefix="progress-deadline" dueDate={dueDate} dueTime={dueTime} onChange={value => {
+          setDueDate(value.dueDate);
+          setDueTime(value.dueTime);
+          setError('');
+        }} />
         {error && <p className="qt-tracker-error" role="alert">{error}</p>}
         <footer className="qt-progress-dialog-actions">
           <button type="button" className="qt-btn" onClick={onClose}>取消</button>

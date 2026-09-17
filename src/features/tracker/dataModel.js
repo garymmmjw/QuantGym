@@ -25,7 +25,24 @@ export function getCurrentStatus(application) {
 }
 
 export function getCurrentDeadline(application) {
-  return application.events?.at(-1)?.dueDate || '';
+  return getCurrentDeadlineEvent(application)?.dueDate || '';
+}
+
+export function getCurrentDeadlineEvent(application) {
+  const event = application.events?.at(-1);
+  return event?.dueDate ? event : null;
+}
+
+// Deadlines are the date and clock time entered by the user, not a UTC instant.
+export function formatDeadline(event, { fullDate = false } = {}) {
+  if (!event?.dueDate) return '';
+  const date = fullDate ? event.dueDate.replaceAll('-', '.') : event.dueDate.slice(5).replace('-', '/');
+  return `${date}${event.dueTime ? ` ${event.dueTime}` : ''}`;
+}
+
+export function deadlineDateTime(event) {
+  if (!event?.dueDate) return '';
+  return `${event.dueDate}${event.dueTime ? `T${event.dueTime}` : ''}`;
 }
 
 export function localToday(date = new Date()) {
