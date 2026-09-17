@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { collectStagePractice, summarizeStagePractice, readStagePractice, stagePracticeKeys } from '../src/features/careerStages/stagePractice.js';
+import { collectStagePractice, summarizeStagePractice, readStagePractice, resolveStagePractice, stagePracticeKeys } from '../src/features/careerStages/stagePractice.js';
+import { EMPTY_LEETCODE } from '../src/features/leetcode/leetcodeModel.js';
 
 const stages = [
   { id: 's3', label: 'Stage 3', recordedDate: '2026-09-19', solvedCount: 999 },
@@ -154,4 +155,112 @@ test('production completion rules exclude drafts, local coding and undated legac
   ], entries: [{ problemId: 'score-only', createdAt: at, evaluation: { score: 100 } }],
   leetcodeHot100Done: ['leetcode-1'], leetcodeHot100CompletedAt: { 'leetcode-1': at } };
   assert.deepEqual(collectStagePractice(personal, legacy).records, [{ key: 'real-tech', day: '2026-09-17' }]);
+});
+
+test('the current undated imported Stage counts from the last checkpoint through today without changing saved dates', () => {
+  const imported = [
+    { id: 's1', label: 'Stage 1', recordedDate: '2026-08-21' },
+    { id: 's2', label: 'Stage 2', recordedDate: null, description: 'Resume Ready + 50 Leetcode' },
+  ];
+  const before = structuredClone(imported);
+  const practice = collectStagePractice({}, { problemStates: [
+    done('old', '2026-08-21'), done('first', '2026-08-22'), done('recent', '2026-09-17'), done('future', '2026-09-18'),
+  ] });
+  const result = summarizeStagePractice(imported, practice, { today: '2026-09-17' });
+  assert.deepEqual(result.map(stage => stage.questionCount), [1, 2]);
+  assert.equal(result[1].recordedDate, null);
+  assert.equal(result[1].usesTodayBoundary, true);
+  assert.equal(result[1].periodStart, '2026-08-22');
+  assert.equal(result[1].periodEnd, '2026-09-17');
+  assert.equal(result[1].previousLabel, 'Stage 1');
+  assert.equal(result[0].usesTodayBoundary, false);
+  assert.deepEqual(imported, before);
+  const tomorrow = summarizeStagePractice(imported, practice, { today: '2026-09-18' });
+  assert.deepEqual(tomorrow.map(stage => stage.questionCount), [1, 3]);
+});
+
+test('only an undated current Stage gets a live interval; historical unknown and inverted ranges remain unknown', () => {
+  const sequence = [
+    { id: 's1', label: 'Stage 1', recordedDate: '2026-08-21' },
+    { id: 's2', label: 'Stage 2', recordedDate: null },
+    { id: 's3', label: 'Stage 3', recordedDate: null },
+  ];
+  const practice = collectStagePractice({}, { problemStates: [done('x', '2026-09-17')] });
+  const result = summarizeStagePractice(sequence, practice, { today: '2026-09-17' });
+  assert.deepEqual(result.map(stage => stage.questionCount), [0, null, 1]);
+  assert.equal(result[2].previousLabel, 'Stage 1');
+  assert.equal(result[2].periodStart, '2026-08-22');
+  assert.equal(result[1].usesTodayBoundary, false);
+  const only = summarizeStagePractice([{ id: 's1', label: 'Stage 1', recordedDate: null }], practice, { today: '2026-09-17' })[0];
+  assert.equal(only.questionCount, 1);
+  assert.equal(only.periodStart, '');
+  assert.equal(only.usesTodayBoundary, true);
+  const inverted = summarizeStagePractice(sequence, practice, { today: '2026-08-20' });
+  assert.equal(inverted.at(-1).questionCount, null);
+  // A recorded final Stage is still a historical checkpoint, not an open range.
+  const dated = summarizeStagePractice(stages, practice, { today: '2026-12-31' });
+  assert.equal(dated.at(-1).periodEnd, '2026-09-19');
+  assert.equal(dated.at(-1).usesTodayBoundary, false);
+});
+
+test('live ranges use the viewer local day and update from the hook day metadata', () => {
+  const stage = [{ id: 's1', label: 'Stage 1', recordedDate: null }];
+  const practice = collectStagePractice({}, { problemStates: [done('x', '2026-09-17')] });
+  const localLateNight = new Date(2026, 8, 17, 23, 59);
+  assert.equal(summarizeStagePractice(stage, practice, { today: localLateNight })[0].periodEnd, '2026-09-17');
+  assert.equal(summarizeStagePractice(stage, { ...practice, asOfDay: '2026-09-18' })[0].periodEnd, '2026-09-18');
+});
+
+const personalSource = (records = []) => ({ ownerId: 'alice', snapshot: { data: {}, error: '', conflict: false }, legacyState: { problemStates: records } });
+const pendingLeetCode = { ownerId: 'alice', enabled: true, data: EMPTY_LEETCODE, phase: 'loading' };
+
+test('LeetCode loading does not hide known site completions and an unknown combined zero stays unknown', () => {
+  const practice = resolveStagePractice({ ownerId: 'alice', personal: personalSource([done('site', '2026-09-17')]), leetcode: pendingLeetCode });
+  assert.equal(practice.available, true);
+  assert.equal(practice.countStatus, 'partial');
+  assert.equal(practice.sources.leetcode, 'loading');
+  assert.match(practice.countSourceNote, /LeetCode.*加载/);
+  const stage = summarizeStagePractice(stages, practice)[1];
+  assert.equal(stage.questionCount, 1);
+  assert.equal(stage.countStatus, 'partial');
+  const unknownZero = resolveStagePractice({ ownerId: 'alice', personal: personalSource(), leetcode: pendingLeetCode });
+  assert.equal(summarizeStagePractice(stages, unknownZero)[1].questionCount, null);
+  const failed = resolveStagePractice({ ownerId: 'alice', personal: personalSource([done('site', '2026-09-17')]), leetcode: { ...pendingLeetCode, phase: 'error' } });
+  assert.equal(failed.countStatus, 'partial');
+  assert.equal(failed.sources.leetcode, 'unavailable');
+  assert.doesNotMatch(failed.countSourceNote, /加载/);
+  assert.equal(summarizeStagePractice(stages)[1].questionCount, null);
+});
+
+test('confirmed unconnected and disabled LeetCode sources allow accurate local counts including zero', () => {
+  for (const leetcode of [
+    { ownerId: 'alice', enabled: true, phase: 'ready', data: { ...EMPTY_LEETCODE } },
+    { ownerId: 'alice', enabled: false, phase: 'local', data: EMPTY_LEETCODE },
+  ]) {
+    const empty = resolveStagePractice({ ownerId: 'alice', personal: personalSource(), leetcode });
+    assert.equal(empty.countStatus, 'ready');
+    assert.equal(empty.countSourceNote, '');
+    assert.equal(summarizeStagePractice(stages, empty)[1].questionCount, 0);
+    const completed = resolveStagePractice({ ownerId: 'alice', personal: personalSource([done('site', '2026-09-17')]), leetcode });
+    assert.equal(summarizeStagePractice(stages, completed)[1].questionCount, 1);
+  }
+});
+
+test('valid synced LeetCode counts survive unavailable site records and incomplete sources cannot fabricate a total', () => {
+  const leetcode = { ownerId: 'alice', enabled: true, phase: 'ready', data: {
+    connection: { site: 'cn', username: 'alice' },
+    syncedSubmissions: [{ id: '1', problemSlug: 'two-sum', status: 'AC', submittedAt: '2026-09-17T12:00:00Z' }],
+  } };
+  const personal = { ...personalSource([done('not-trusted', '2026-09-17')]), snapshot: { data: {}, error: 'read:failed' } };
+  const practice = resolveStagePractice({ ownerId: 'alice', personal, leetcode, leetcodeOptions: { now: '2026-09-20T12:00:00Z' } });
+  assert.equal(practice.countStatus, 'partial');
+  assert.match(practice.countSourceNote, /站内/);
+  assert.deepEqual(practice.records.map(record => record.key), ['leetcode:cn:two-sum']);
+  assert.equal(summarizeStagePractice(stages, practice)[1].questionCount, 1);
+  const missing = resolveStagePractice({ ownerId: 'alice', personal, leetcode: pendingLeetCode });
+  assert.equal(missing.available, false);
+  assert.equal(summarizeStagePractice(stages, missing)[1].questionCount, null);
+  const otherOwner = resolveStagePractice({ ownerId: 'bob', personal: personalSource([done('alice-private', '2026-09-17')]), leetcode });
+  assert.deepEqual(otherOwner.records, []);
+  assert.equal(otherOwner.available, false);
 });

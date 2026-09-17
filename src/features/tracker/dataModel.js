@@ -53,8 +53,9 @@ export function localToday(date = new Date()) {
 }
 
 export function getSummary(applications) {
-  const summary = { total: applications.length, awaiting: 0, oa: 0, interview: 0, offer: 0, closed: 0 };
+  const summary = { total: applications.length, ddl: 0, awaiting: 0, oa: 0, interview: 0, offer: 0, closed: 0 };
   for (const application of applications) {
+    if (getCurrentDeadlineEvent(application)) summary.ddl += 1;
     const group = STATUS_GROUPS[getCurrentStatus(application)];
     if (group) summary[group] += 1;
   }
@@ -66,7 +67,9 @@ export function filterApplications(applications, { query = '', status = 'all', p
   return applications.filter(application => {
     if (phase && phase !== 'all' && application.prepPhase !== phase) return false;
     const group = STATUS_GROUPS[getCurrentStatus(application)];
-    if (status === 'interview-offer') {
+    if (status === 'ddl') {
+      if (!getCurrentDeadlineEvent(application)) return false;
+    } else if (status === 'interview-offer') {
       if (group !== 'interview' && group !== 'offer') return false;
     } else if (status && status !== 'all' && group !== status) return false;
     if (!normalizedQuery) return true;
@@ -138,4 +141,15 @@ export function groupApplications(sortedApplications, stages) {
   });
   if (ungrouped.applications.length) groups.push(ungrouped);
   return groups.sort((a, b) => a.rank - b.rank);
+}
+
+export function getApplicationView(applications, stages, mode = 'all') {
+  const rows = filterApplications(sortApplications(applications, mode === 'company' ? 'company' : 'recent'), {
+    status: mode === 'company' ? 'all' : mode,
+  });
+  return {
+    applications: rows,
+    // These views always expose every matching row, regardless of collapsed Stages.
+    groups: mode === 'company' || mode === 'ddl' ? null : groupApplications(rows, stages),
+  };
 }
