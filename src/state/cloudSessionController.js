@@ -5,7 +5,7 @@ export function createCloudSessionController(deps = {}) {
   function apply(payload = {}, options = {}) {
     const appState = getAppState();
     const userStateStore = getUserStateStore();
-    const account = payload.account ? deps.normalizeAccount?.(payload.account) : null;
+    const account = payload.account ? deps.normalizeAccount?.({ ...payload.account, cloudLinked: true }) : null;
     if (!account) return;
     const localFields = options.passwordHash ? { passwordHash: options.passwordHash } : {};
     deps.upsertLocalAccount?.(account, localFields);

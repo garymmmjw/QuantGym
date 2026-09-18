@@ -14,6 +14,7 @@ export function GuardianAccessPanel() {
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [confirmAction, setConfirmAction] = useState("");
   const [visible, setVisible] = useState(false);
   const connected = Boolean(user?.id && config.endpoint && config.token && config.userId === user.id)
     && !["expired", "restricted"].includes(cloudSession.phase);
@@ -26,6 +27,7 @@ export function GuardianAccessPanel() {
   useEffect(() => {
     const epoch = ++requestEpoch.current;
     setAccess(null);
+    setConfirmAction("");
     setVisible(false);
     setError("");
     setMessage("");
@@ -53,6 +55,7 @@ export function GuardianAccessPanel() {
       const result = await guardianOwnerRequest(path, { method: action === "load" ? "GET" : "POST", config });
       if (!current()) return;
       setAccess(result);
+      setConfirmAction("");
       setVisible(false);
       if (action === "rotate") setMessage("新监护码已生成。旧监护码和已打开的监护会话已失效。");
       if (action === "revoke") setMessage("监护访问已停用，未完成的目标和排队中的邮件已取消。重新生成监护码即可恢复访问。");
@@ -90,9 +93,13 @@ export function GuardianAccessPanel() {
           </div>
           <div className="qg-guardian-access-actions">
             {access.enabled && <button type="button" className="primary-button" onClick={copyCode} disabled={Boolean(busy)}>复制监护码</button>}
-            <button type="button" className="secondary-button" onClick={() => change("rotate")} disabled={Boolean(busy)}>{busy === "rotate" ? "正在生成…" : access.enabled ? "重置监护码" : "重新启用并生成监护码"}</button>
-            {access.enabled && <button type="button" className="qg-guardian-access-revoke" onClick={() => change("revoke")} disabled={Boolean(busy)}>{busy === "revoke" ? "正在停用…" : "停用监护访问"}</button>}
+            <button type="button" className="secondary-button" onClick={() => setConfirmAction("rotate")} disabled={Boolean(busy)}>{busy === "rotate" ? "正在生成…" : access.enabled ? "重置监护码" : "重新启用并生成监护码"}</button>
+            {access.enabled && <button type="button" className="qg-guardian-access-revoke" onClick={() => setConfirmAction("revoke")} disabled={Boolean(busy)}>{busy === "revoke" ? "正在停用…" : "停用监护访问"}</button>}
           </div>
+          {confirmAction && <div className="ac-confirm" role="group" aria-label={cloudSession.en ? "Confirm guardian change" : "确认监护访问变更"}>
+            <p>{confirmAction === "rotate" ? (cloudSession.en ? "Generate a new code? The old code and existing guardian sessions will stop working." : "生成新的监护码？旧码及已有监护会话将立即失效。") : (cloudSession.en ? "Disable access? Current sessions, unfinished goals and queued emails will be cancelled." : "停用监护访问？现有会话、未完成的目标和排队中的邮件将被取消。")}</p>
+            <div className="ac-actions"><button type="button" className="secondary-button" disabled={Boolean(busy)} onClick={() => setConfirmAction("")}>{cloudSession.en ? "Cancel" : "取消"}</button><button type="button" className="secondary-button" disabled={Boolean(busy)} onClick={() => change(confirmAction)}>{cloudSession.en ? "Confirm" : "确认操作"}</button></div>
+          </div>}
           <small>持有码的人即可使用监护功能，请只分享给信任的人。重置或停用后，旧码及已有监护会话立即失效。停用还会取消未完成的目标和尚未发送的邮件。</small>
           {!access.emailConfigured && <p className="qg-guardian-access-notice">邮件服务尚未配置，提醒和达标邮件暂时无法发出。</p>}
           {access.goals?.length > 0 && <div className="qg-guardian-owner-goals">

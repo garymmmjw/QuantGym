@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppServices } from "../../stores/usePageApi.js";
 import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
@@ -38,6 +39,7 @@ const MODULE_ICONS = {
 };
 
 const TYPE_ICONS = {
+  setting: "sliders-horizontal",
   module: "compass",
   problem: "library-big",
   company: "building-2",
@@ -51,6 +53,11 @@ const MAX_ROWS = 12;
 
 export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
   const appServices = useAppServices();
+  const navigate = useNavigate();
+  const panelRef = useRef(null);
+  const runRef = useRef(null);
+  const composingRef = useRef(false);
+  const readyRef = useRef(true);
   const userStateValue = useUserStateStore((state) => state.value || {});
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -67,6 +74,7 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
 
   useEffect(() => {
     if (!open) return undefined;
+    const previousFocus = document.activeElement;
     setQuery("");
     setDebouncedQuery("");
     setActiveIndex(0);
@@ -74,7 +82,7 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
       inputRef.current?.focus();
       inputRef.current?.select?.();
     }, 40);
-    return () => window.clearTimeout(timer);
+    return () => { window.clearTimeout(timer); previousFocus?.focus?.(); };
   }, [open]);
 
   useEffect(() => {
@@ -97,6 +105,7 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
       return;
     }
     activateGlobalSearchResult({ getMatch: () => row.result }, 0, {
+      navigate,
       switchModule: services.switchModule,
       setCompanyTier: (value) => appServices.companyTierFilterState?.setTier?.(value),
       clear: () => {}
@@ -179,6 +188,8 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
   }, [open, debouncedQuery, theme, userStateValue, appServices, t, onToggleTheme]);
 
   rowsRef.current = rows;
+  runRef.current = runRow;
+  readyRef.current = query === debouncedQuery;
 
   useEffect(() => {
     setActiveIndex(0);
@@ -187,6 +198,14 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
   useEffect(() => {
     if (!open) return undefined;
     const onKeydown = (event) => {
+      if (event.isComposing || event.keyCode === 229 || composingRef.current) return;
+      if (event.key === "Tab") {
+        const focusable = [...(panelRef.current?.querySelectorAll('input,button,[tabindex="0"]') || [])];
+        const first = focusable[0], last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+        return;
+      }
       if (event.key === "Escape") {
         event.preventDefault();
         onClose();
@@ -202,10 +221,11 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
         setActiveIndex((index) => Math.max(0, index - 1));
         return;
       }
-      if (event.key === "Enter") {
+      if (event.key === "Enter" && event.target === inputRef.current) {
         event.preventDefault();
+        if (!readyRef.current) return;
         const row = rowsRef.current[Math.min(activeIndexRef.current, rowsRef.current.length - 1)];
-        if (row) runRow(row);
+        if (row) runRef.current?.(row);
       }
     };
     window.addEventListener("keydown", onKeydown);
@@ -238,7 +258,7 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="qg-cmdk-panel" role="dialog" aria-modal="true" aria-label={t("cmdkPanelAria")}>
+      <div ref={panelRef} className="qg-cmdk-panel" role="dialog" aria-modal="true" aria-label={t("cmdkPanelAria")}>
         <div className="qg-cmdk-head">
           <span className="qg-cmdk-head-icon" aria-hidden="true">
             <i data-lucide="search"></i>
@@ -247,6 +267,14 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
             ref={inputRef}
             className="qg-cmdk-input"
             type="text"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls="commandSearchResults"
+            aria-autocomplete="list"
+            aria-activedescendant={rows.length ? `command-option-${boundedIndex}` : undefined}
+            autoComplete="off"
+            onCompositionStart={() => { composingRef.current = true; }}
+            onCompositionEnd={() => { composingRef.current = false; }}
             value={query}
             placeholder={t("cmdkSearchPlaceholder")}
             aria-label={t("cmdkSearchAria")}
@@ -254,11 +282,12 @@ export function CommandPalette({ open, onClose, theme, onToggleTheme }) {
           />
           <button className="qg-cmdk-esc" type="button" onClick={onClose}>ESC</button>
         </div>
-        <div className="qg-cmdk-list" ref={listRef} role="listbox" aria-label={t("cmdkResultsAria")}>
+        <div id="commandSearchResults" className="qg-cmdk-list" ref={listRef} role="listbox" aria-label={t("cmdkResultsAria")}>
           {rows.length ? rows.map((row, index) => (
             <div
               className={index === boundedIndex ? "qg-cmdk-row is-active" : "qg-cmdk-row"}
               key={row.id}
+              id={`command-option-${index}`}
               role="option"
               aria-selected={index === boundedIndex}
               onMouseEnter={() => setActiveIndex(index)}

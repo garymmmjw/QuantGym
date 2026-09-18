@@ -12,6 +12,7 @@ export function createCloudSyncController(options = {}) {
   } = options;
   let timer = null;
   let inFlight = false;
+  let activeFlush = null;
   let dirty = createDirtyState();
 
   function clearTimer() {
@@ -29,35 +30,35 @@ export function createCloudSyncController(options = {}) {
     timer = scheduler.setTimeout?.(flush, delay) || null;
   }
 
-  async function flush() {
-    if (!canUseCloud()) return;
-    if (inFlight) {
-      clearTimer();
-      timer = scheduler.setTimeout?.(flush, defaultDelay) || null;
-      return;
-    }
-
+  function flush() {
+    if (!canUseCloud()) return Promise.resolve({ ok: false });
+    if (activeFlush) return activeFlush.then(result => {
+      if (!result?.ok) return result;
+      return (dirty.state || dirty.community || dirty.account) ? flush() : result;
+    });
+    clearTimer();
     const pending = { ...dirty };
-    if (!pending.state && !pending.community && !pending.account) return;
+    if (!pending.state && !pending.community && !pending.account) return Promise.resolve({ ok: true });
+    const ownerId = getCurrentUser()?.id;
+    const sessionToken = getConfig().token;
+    const sameSession = () => getCurrentUser()?.id === ownerId && getConfig().token === sessionToken;
     dirty = createDirtyState();
     inFlight = true;
-
-    try {
-      const result = await cloudApi("/sync", {
-        method: "POST",
-        body: buildBody(pending)
-      });
-      onSuccess(result, pending);
-    } catch (error) {
-      dirty = {
-        state: dirty.state || pending.state,
-        community: dirty.community || pending.community,
-        account: dirty.account || pending.account
-      };
-      onError(error, pending);
-    } finally {
-      inFlight = false;
-    }
+    activeFlush = Promise.resolve().then(async () => {
+      try {
+        if (!sameSession()) return { ok: false };
+        const result = await cloudApi("/sync", { method: "POST", body: buildBody(pending) });
+        if (sameSession()) onSuccess(result, pending);
+        return { ok: sameSession(), result };
+      } catch (error) {
+        if (sameSession()) {
+          dirty = { state: dirty.state || pending.state, community: dirty.community || pending.community, account: dirty.account || pending.account };
+          onError(error, pending);
+        }
+        return { ok: false, error };
+      } finally { inFlight = false; activeFlush = null; }
+    });
+    return activeFlush;
   }
 
   function markAllDirty() {

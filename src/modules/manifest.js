@@ -36,7 +36,7 @@ export const MODULE_MANIFEST = [
   { id: "library", hash: "#library", path: "/library", labelKey: "library", navGroup: "resources", protected: true, stage2Priority: 5, navTab: true },
   { id: "courses", hash: "#courses", path: "/courses", labelKey: "courses", navGroup: "resources", protected: true, stage2Priority: 4, navTab: true },
   { id: "memory", hash: "#memory", path: "/memory", labelKey: "memory", navGroup: "resources", protected: true, stage2Priority: 3, navTab: true },
-  { id: "settings", hash: "#settings", path: "/settings", labelKey: "settings", navGroup: "utility", protected: true, stage2Priority: 2, navTab: true },
+  { id: "settings", hash: "#settings", path: "/settings", labelKey: "settings", navGroup: "utility", protected: true, stage2Priority: 2, navTab: false },
   { id: "account", hash: "#account", path: "/account", labelKey: "account", navGroup: "utility", protected: true, stage2Priority: 19, navTab: false },
   { id: "pk", hash: "#pk", path: "/pk", labelKey: "pk", navGroup: "training", protected: true, stage2Priority: 0, navTab: false }
 ];

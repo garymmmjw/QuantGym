@@ -2097,3 +2097,17 @@ body.is-authenticated .qg-command-actions .qg-level-pill strong {
     transition-duration: 1ms !important;
   }
 }
+
+/* One accessible search entry point, shared by pointer and keyboard users. */
+body.is-authenticated .qg-search-trigger { cursor: pointer; text-align: left; color: var(--qg-muted); font: inherit; }
+.qg-search-trigger-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.qg-search-trigger:focus-visible { outline: 2px solid var(--qg-brand); outline-offset: 3px; }
+@media (max-width: 860px) {
+  body.is-authenticated .qg-command-bar .qg-search-trigger { display: flex !important; flex: 0 0 36px !important; min-width: 36px !important; width: 36px !important; height: 36px !important; padding: 8px !important; border-radius: 10px !important; }
+  .qg-search-trigger .qg-search-trigger-label, .qg-search-trigger .qg-kbd { display: none !important; }
+}
+@media (max-width: 420px) {
+  body.is-authenticated .qg-command-brand strong { display: none !important; }
+  body.is-authenticated .qg-command-actions .qg-cloud-session-badge { display: none; }
+}
+.qg-theme-error { margin: 8px 18px; color: #ae4b4e; font-size: 12px; }

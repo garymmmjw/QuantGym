@@ -96,12 +96,12 @@ export function mergeImportedState(currentState = {}, importedRaw = {}, deps = {
     ...currentState,
     ...importedState,
     skills: { ...(currentState.skills || {}), ...(importedState.skills || {}) },
-    entries: Array.isArray(importedState.entries) ? importedState.entries : [],
-    resources: Array.isArray(importedState.resources) ? importedState.resources : [],
-    network: Array.isArray(importedState.network) ? importedState.network : [],
-    interviewFavorites: Array.isArray(importedState.interviewFavorites) ? importedState.interviewFavorites : [],
-    mentalMathRecords: normalizeMentalMathRecords(importedState.mentalMathRecords),
-    gameRecords: normalizeGameRecords(importedState.gameRecords),
+    entries: mergeBackupRecords(currentState.entries, importedState.entries),
+    resources: mergeBackupRecords(currentState.resources, importedState.resources),
+    network: mergeBackupRecords(currentState.network, importedState.network),
+    interviewFavorites: mergeBackupRecords(currentState.interviewFavorites, importedState.interviewFavorites),
+    mentalMathRecords: normalizeMentalMathRecords(mergeBackupRecords(currentState.mentalMathRecords, importedState.mentalMathRecords)),
+    gameRecords: normalizeGameRecords(mergeBackupRecords(currentState.gameRecords, importedState.gameRecords)),
     problemStates: mergeProblemStates(
       currentState.problemStates || [],
       Array.isArray(importedState.problemStates) ? importedState.problemStates : [],
@@ -142,4 +142,12 @@ function passthroughArray(value = []) {
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function mergeBackupRecords(current = [], incoming = []) {
+  const records = new Map();
+  for (const item of [...(Array.isArray(incoming) ? incoming : []), ...(Array.isArray(current) ? current : [])]) {
+    records.set(item?.id || JSON.stringify(item), item);
+  }
+  return [...records.values()];
 }

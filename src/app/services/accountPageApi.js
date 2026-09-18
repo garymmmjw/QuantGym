@@ -5,6 +5,9 @@ import { normalizeResumeState } from "../../modules/resume/data.js";
 import { formatResumeUploadMeta } from "../../modules/resume/file.js";
 
 export function createAccountPageApi(deps = {}) {
+  const connected = () => Boolean(deps.appState?.cloudConfig?.token && deps.appState?.cloudConfig?.userId === deps.appState?.currentUser?.id);
+  const requiresCloud = () => Boolean(deps.appState?.currentUser?.cloudLinked || deps.appState?.cloudConfig?.userId === deps.appState?.currentUser?.id);
+  const fail = error => ({ ok: false, code: error?.status === 401 ? "reauthenticate" : "saveFailed", message: error?.status === 401 ? "会话已失效或当前密码不正确，请重新登录或检查密码。 / Session expired or incorrect password." : error?.message || "保存失败，请重试。 / Could not save. Try again." });
   let passwordChangePending = false;
   let activationPending = false;
   const text = (zh, en) => deps.getLanguage?.() === "en" ? en : zh;
@@ -124,18 +127,19 @@ export function createAccountPageApi(deps = {}) {
     async save(values = {}) {
       const currentUser = deps.appState?.currentUser;
       if (!currentUser) return { ok: false, code: "missingUser" };
+      const token = deps.appState?.cloudConfig?.token;
+      const sameSession = () => currentUser.id === deps.appState?.currentUser?.id && token === deps.appState?.cloudConfig?.token;
 
-      // Email is the login identity on the server. Profile saves must never
-      // silently change only its local copy or re-key a password hash.
-      if (normalizeEmail(values.email) !== normalizeEmail(currentUser.email)) {
-        return {
-          ok: false,
-          code: "emailReadOnly",
-          message: text("登录邮箱暂不支持在资料中修改。", "Your sign-in email cannot be changed in profile settings.")
-        };
-      }
+      const mergedValues = {
+        name: currentUser.name, email: currentUser.email, country: currentUser.country,
+        region: currentUser.region, graduationTerm: currentUser.graduationTerm,
+        ...values
+      };
+      const emailChanged = String(mergedValues.email).trim().toLowerCase() !== currentUser.email;
+      if (emailChanged && requiresCloud() && !connected()) return { ok: false, message: "请重新登录云端账户后修改邮箱。 / Sign in again before changing your email." };
       const result = await buildAccountSaveResult({
-        values: { ...values, email: currentUser.email },
+        values: mergedValues,
+        verifyOnServer: connected(),
         currentUser,
         accounts: deps.appState?.auth?.accounts || [],
         normalizeEmail: deps.normalizeEmail,
@@ -152,17 +156,32 @@ export function createAccountPageApi(deps = {}) {
       });
 
       if (!result.ok) return result;
+      if (!sameSession()) return { ok: false, message: "账户已切换。 / Account changed." };
 
+      if (connected()) {
+        try {
+          const editable = ["name", "email", "country", "region", "graduationTerm", "goal", "preferences", "integrations"];
+          const updates = Object.fromEntries(editable.filter(key => Object.hasOwn(values, key)).map(key => [key, result.updates[key]]));
+          if (["avatarUrl", "avatarData", "avatarCleared"].some(key => Object.hasOwn(values, key))) updates.picture = result.updates.picture;
+          const payload = await deps.cloudApi("/account", { method: "PATCH", body: { updates, currentPassword: values.currentPassword || "" } });
+          if (!payload?.account) throw new Error("服务未返回账户资料。 / Missing account response.");
+          result.updates = { ...result.updates, ...payload.account, cloudLinked: true };
+          result.country = result.updates.country;
+          result.region = result.updates.region;
+        } catch (error) { return fail(error); }
+      }
+      if (!sameSession()) return { ok: false, message: "账户已切换。 / Account changed." };
+      result.accounts = deps.appState.auth.accounts.map(account => account.id === currentUser.id ? { ...account, ...result.updates } : account);
       applyAccountSaveResult(deps.appState.auth, deps.userState?.value, result, {
         normalizeLeaderboardSettings: deps.normalizeLeaderboardSettings
       });
       deps.saveAuth?.();
       deps.appState.currentUser = deps.getCurrentUser?.() || deps.appState.currentUser;
-      deps.saveState?.();
-      deps.queueCloudSync?.("account", 0);
+      deps.saveState?.({ checkIn: false });
+      if (!connected()) deps.queueCloudSync?.("account", 0);
       deps.renderUserChip?.();
       deps.renderAll?.();
-      return { ok: true, message: deps.t?.("accountUpdated") || "账户已更新。" };
+      return { ok: true, code: "saved", message: deps.t?.("accountUpdated") || "账户已更新。" };
     },
 
     async changePassword({ currentPassword = "", newPassword = "" } = {}) {
@@ -178,7 +197,7 @@ export function createAccountPageApi(deps = {}) {
       const account = (deps.appState.auth?.accounts || []).find(item => item.id === currentUser.id);
       if (!account || !deps.hashPassword) return { ok: false, code: "missingAccount" };
       const config = { ...(deps.appState.cloudConfig || {}) };
-      const cloudAccount = config.userId === currentUser.id;
+      const cloudAccount = config.userId === currentUser.id || Boolean(currentUser.cloudLinked);
       const isCurrentSession = () => sameSession(currentUser.id, config);
       if (cloudAccount && (!config.token || !deps.cloudApi)) {
         return { ok: false, code: "reauthRequired", message: text("请先恢复云端登录，再修改登录密码。", "Reconnect your cloud account before changing its sign-in password.") };
@@ -272,13 +291,15 @@ export function createAccountPageApi(deps = {}) {
 
     async uploadResume(file) {
       if (!file) return { ok: false, code: "missingFile" };
+      const ownerId = deps.appState?.currentUser?.id;
       const result = await buildResumeUploadState(file, deps.userState?.value?.resume || {}, {
         fileTooLargeLabel: deps.t?.("resumeFileTooLarge") || "简历文件太大。"
       });
       if (!result.ok) return result;
+      if (ownerId !== deps.appState?.currentUser?.id) return { ok: false, message: "账户已切换。 / Account changed." };
       const resume = normalizeResumeState(result.resume);
       Object.assign(deps.userState.value, { resume });
-      deps.saveState?.();
+      deps.saveState?.({ checkIn: false });
       return { ok: true, resume, meta: formatResumeUploadMeta(resume) };
     },
 

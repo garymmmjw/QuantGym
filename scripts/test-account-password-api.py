@@ -101,12 +101,16 @@ class AccountPasswordApiTests(unittest.TestCase):
             renamed = owner + "-renamed@example.com"
             updates = {"id": "different-user", "provider": "google", "email": renamed, "name": "Updated display name", "passwordHash": "untrusted-client-hash"}
             status, data, _ = self.request(method, path, token, {field: updates})
-            self.assertEqual(status, 200, data)
-            account = data["account"]
+            if method == "PATCH":
+                self.assertEqual(status, 403, data)
+                account = self.request("GET", "/api/account", token)[1]["account"]
+            else:
+                self.assertEqual(status, 200, data)
+                account = data["account"]
+                self.assertEqual(account["name"], "Updated display name")
             self.assertEqual(account["id"], owner)
             self.assertEqual(account["provider"], "local")
             self.assertEqual(account["email"], owner + "@example.com")
-            self.assertEqual(account["name"], "Updated display name")
             self.assertEqual(self.login(owner)[0], 200)
             self.assertFalse(self.request("GET", "/api/auth/account-status?email=" + renamed)[1]["exists"])
 

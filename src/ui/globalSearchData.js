@@ -1,3 +1,4 @@
+import { findAccountSections } from "../features/account/accountCenterData.js";
 import {
   matchesNormalizedText,
   matchesQuery,
@@ -27,7 +28,12 @@ export function buildGlobalSearchResults(query, deps = {}) {
   } = deps;
   const normalized = normalizeSearchQuery(query);
   if (!normalized) return [];
-  const results = [];
+  const results = findAccountSections(query).map(section => ({
+    type: "setting", typeLabel: getLanguage() === "en" ? "Account & settings" : "账户与设置",
+    title: getLanguage() === "en" ? section.en : section.zh,
+    detail: section.description[getLanguage() === "en" ? 1 : 0],
+    id: section.id, module: "account", rank: 0
+  }));
 
   getDefs().forEach((item) => {
     if (!isModuleVisible(item.module)) return;
@@ -171,6 +177,6 @@ export function getModuleSearchDefs(t = (key) => key) {
     { module: "tracker", label: t("applicationTracker"), detail: "投递记录与求职阶段", fields: ["tracker", "application", "投递", "申请", "stage", "求职阶段"] },
     { module: "tools", label: t("tools"), detail: "Mental math / 速算", fields: [t("tools"), "tools", "drills", "速算", "mental math"] },
     { module: "memory", label: t("memory"), detail: "Memory / 资料笔记", fields: [t("memory"), "memory", "notes", "资料", "笔记"] },
-    { module: "settings", label: t("settings"), detail: "Settings / 设置", fields: [t("settings"), "settings", "设置", "config"] }
+    { module: "account", label: t("account"), detail: "Account & settings / 账户与设置", fields: [t("account"), "account", "账户", "账号", "settings", "设置", "config"] }
   ].filter((item) => isModuleVisible(item.module));
 }

@@ -247,6 +247,9 @@ PUBLIC_ACCOUNT_FIELDS = {
     "country",
     "region",
     "graduationTerm",
+    "goal",
+    "preferences",
+    "integrations",
     "picture",
     "createdAt",
     "updatedAt",
@@ -1025,6 +1028,7 @@ def account_is_admin(user: dict) -> bool:
 
 def account_response_payload(user: dict) -> dict:
     account = parse_json(user.get("account_json") if isinstance(user, dict) else "", {})
+    account.update(id=user["id"], provider=user["provider"], email=user["email_norm"])
     account["isAdmin"] = account_is_admin(user)
     return account
 
@@ -1052,6 +1056,16 @@ def sanitize_account(account: dict | None, fallback_id: str | None = None) -> di
     else:
         public.pop("graduationTerm", None)
     public["picture"] = str(public.get("picture") or "")
+    public["goal"] = str(raw.get("goal") or "")[:160]
+    prefs = raw.get("preferences") if isinstance(raw.get("preferences"), dict) else {}
+    public["preferences"] = {key: prefs[key] for key, allowed in {"language": {"zh", "en"}, "theme": {"light", "dark"}}.items() if isinstance(prefs.get(key), str) and prefs[key] in allowed}
+    integrations = raw.get("integrations") if isinstance(raw.get("integrations"), dict) else {}
+    leetcode = integrations.get("leetcode")
+    if leetcode is not None:
+        if not isinstance(leetcode, dict) or leetcode.get("site") not in ("leetcode.com", "leetcode.cn") or not re.fullmatch(r"[A-Za-z0-9_-]{1,40}", str(leetcode.get("username") or "")):
+            raise HttpError(400, "Invalid LeetCode profile")
+        leetcode = {"site": leetcode["site"], "username": str(leetcode["username"])}
+    public["integrations"] = {"leetcode": leetcode}
     public["createdAt"] = str(public.get("createdAt") or now)
     public["updatedAt"] = str(public.get("updatedAt") or now)
     return public
@@ -3678,7 +3692,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 raise HttpError(404, "No local account exists for this email")
             self.consume_verification_code(conn, email, "password_reset", verification_code)
             user_dict = dict(user)
-            account = sanitize_account(parse_json(user_dict["account_json"], {}), user_dict["id"])
+            previous_account = parse_json(user_dict["account_json"], {})
+            account = {**previous_account, **sanitize_account(previous_account, user_dict["id"])}
             account["email"] = email
             account["provider"] = "local"
             account["updatedAt"] = now
@@ -3742,6 +3757,9 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 same_google_account = existing_id == account["id"]
                 if same_google_account:
                     next_account = {**previous, **account, "createdAt": previous.get("createdAt") or account["createdAt"]}
+                    for field in ("name", "picture", "country", "region", "graduationTerm", "goal", "preferences", "integrations"):
+                        if field in previous:
+                            next_account[field] = previous[field]
                     next_provider = account["provider"]
                 else:
                     next_account = {
@@ -3795,28 +3813,46 @@ class QuantGymHandler(BaseHTTPRequestHandler):
     def patch_account(self):
         user = self.require_user()
         data = self.read_json()
-        updates = sanitize_account({**parse_json(user["account_json"], {}), **(data.get("updates") or {})}, user["id"])
-        updates["id"] = user["id"]
-        updates["provider"] = user["provider"]
-        updates["email"] = user["email_norm"]
-        updates["updatedAt"] = utc_now()
-        email = user["email_norm"]
-        if not email:
-            raise HttpError(400, "Email is required")
-        ensure_email_allowed(email)
+        if not isinstance(data.get("updates"), dict):
+            raise HttpError(400, "Account updates are required")
+        self.enforce_rate_limit("account:update", AUTH_LOGIN_RATE_LIMIT_MAX, user["id"])
         with db.connect() as conn:
-            owner = conn.execute("SELECT id FROM users WHERE email_norm = ? AND id != ?", (email, user["id"])).fetchone()
-            if owner:
-                raise HttpError(409, "Email already exists")
-            conn.execute(
-                "UPDATE users SET email_norm = ?, account_json = ?, updated_at = ? WHERE id = ?",
-                (email, compact_json(updates), updates["updatedAt"], user["id"]),
-            )
-            refreshed = dict(user)
-            refreshed["email_norm"] = email
-            refreshed["account_json"] = compact_json(updates)
-            self.audit_event("account.update", user=user, metadata={"emailChanged": email != normalize_email(user.get("email_norm"))}, conn=conn)
-            self.send_json(200, {"account": account_response_payload(refreshed)})
+            user = dict(conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone())
+            previous = parse_json(user["account_json"], {})
+            updates = sanitize_account({**previous, **data["updates"]}, user["id"])
+            updates.update(id=user["id"], provider=user["provider"], createdAt=previous.get("createdAt"), updatedAt=utc_now())
+            # Privileged, server-owned fields must never be lost or writable by clients.
+            for field in ("subscriptionTier", "plan", "googleId", "googleLinkedAt", "googlePicture"):
+                if field in previous:
+                    updates[field] = previous[field]
+            email = normalize_email(updates.get("email"))
+            ensure_valid_email(email)
+            ensure_email_allowed(email)
+            changed = email != user["email_norm"]
+            if changed:
+                if previous.get("googleId"):
+                    raise HttpError(400, "Email changes are unavailable while Google sign-in is linked")
+                if user["provider"] != "local":
+                    raise HttpError(400, "Manage your email with your sign-in provider")
+                current = str(data.get("currentPassword") or "")
+                if not current or not verify_password(user["email_norm"], current, user["password_salt"], user["password_hash"]):
+                    raise HttpError(403, "Incorrect current password")
+                owner = conn.execute("SELECT id FROM users WHERE email_norm = ? AND id != ?", (email, user["id"])).fetchone()
+                if owner:
+                    raise HttpError(409, "Email already exists")
+                salt, password_hash = make_password_hash(email, current)
+                changed_credentials = conn.execute("UPDATE users SET password_salt = ?, password_hash = ? WHERE id = ? AND email_norm = ? AND password_salt = ? AND password_hash = ?", (salt, password_hash, user["id"], user["email_norm"], user["password_salt"], user["password_hash"]))
+                if changed_credentials.rowcount != 1:
+                    raise HttpError(409, "Your sign-in details changed in another session. Sign in again.")
+                token = self.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+                conn.execute("DELETE FROM sessions WHERE user_id = ? AND token_hash != ?", (user["id"], token_hash(token)))
+            saved = conn.execute("UPDATE users SET email_norm = ?, account_json = ?, updated_at = ? WHERE id = ? AND email_norm = ?",
+                         (email, compact_json(updates), updates["updatedAt"], user["id"], user["email_norm"]))
+            if saved.rowcount != 1:
+                raise HttpError(409, "Your sign-in details changed in another session. Sign in again.")
+            user.update(email_norm=email, account_json=compact_json(updates))
+            self.audit_event("account.update", user=user, metadata={"emailChanged": changed}, conn=conn)
+            self.send_json(200, {"account": account_response_payload(user)})
 
     def get_state(self):
         user = self.require_user()
@@ -4183,12 +4219,17 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         user = self.require_user()
         data = self.read_json()
         with db.connect() as conn:
+            user = dict(conn.execute("SELECT * FROM users WHERE id = ?", (user["id"],)).fetchone())
             account = parse_json(user["account_json"], {})
             if isinstance(data.get("account"), dict):
                 updates = sanitize_account({**account, **data["account"]}, user["id"])
                 updates["id"] = user["id"]
                 updates["provider"] = user["provider"]
                 updates["email"] = user["email_norm"]
+                for field in ("subscriptionTier", "plan", "googleId", "googleLinkedAt", "googlePicture"):
+                    if field in account:
+                        updates[field] = account[field]
+                updates["createdAt"] = account.get("createdAt")
                 updates["updatedAt"] = utc_now()
                 email_owner = conn.execute(
                     "SELECT id FROM users WHERE email_norm = ? AND id != ?",
@@ -4197,10 +4238,12 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 if email_owner:
                     raise HttpError(409, "Email already exists")
                 ensure_email_allowed(updates["email"])
-                conn.execute(
-                    "UPDATE users SET email_norm = ?, account_json = ?, updated_at = ? WHERE id = ?",
-                    (normalize_email(updates["email"]), compact_json(updates), updates["updatedAt"], user["id"]),
+                saved = conn.execute(
+                    "UPDATE users SET account_json = ?, updated_at = ? WHERE id = ? AND email_norm = ?",
+                    (compact_json(updates), updates["updatedAt"], user["id"], user["email_norm"]),
                 )
+                if saved.rowcount != 1:
+                    raise HttpError(409, "Your sign-in details changed during sync. Retry with the current account.")
                 account = updates
             if isinstance(data.get("state"), dict):
                 state = db.save_state(conn, user["id"], data["state"])

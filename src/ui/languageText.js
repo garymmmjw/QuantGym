@@ -32,7 +32,7 @@ export function applyAppLanguageText(options = {}) {
   const texts = (selector, values) => setTexts(selector, values, root);
   const placeholder = (id, value) => setPlaceholder(elements[id], value);
   const selectOptions = (id, values) => setSelectOptionLabels(elements[id], values);
-  const labelFor = (id, value) => setLabelText(elements[id], value);
+  const labelFor = (id, value) => { if (!elements[id]?.closest?.("[data-react-owned]")) setLabelText(elements[id], value); };
 
   applyStaticTranslations(root, t);
 
@@ -56,7 +56,7 @@ export function applyAppLanguageText(options = {}) {
     ["league", t("league")],
     ["tools", t("tools")],
     ["memory", t("memory")],
-    ["account", t("account")],
+    ["account", language === "en" ? "Account & settings" : "账户与设置"],
     ["settings", t("settings")]
   ].forEach(([key, value]) => {
     const selector = `[data-module-tab="${key}"]`;
