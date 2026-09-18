@@ -12,15 +12,16 @@ export function createBackupController(deps = {}) {
   const resetMessage = deps.resetMessage || "清空当前账户的训练记录？已连接云端时也会同步为空。";
   const importErrorMessage = deps.importErrorMessage || "备份文件无法读取。";
 
-  function resetState() {
-    const ok = windowRef.confirm?.(resetMessage);
+  function resetState(options = {}) {
+    const ok = options.confirmed === true || windowRef.confirm?.(resetMessage);
     if (!ok) return;
     const currentUser = deps.getCurrentUser?.();
     if (currentUser) deps.clearStateForUser?.(currentUser.id);
     deps.setState?.(deps.loadState?.());
     deps.clearProblemLookupCaches?.();
-    deps.saveState?.();
+    deps.saveState?.({ checkIn: false });
     deps.renderAll?.();
+    return { ok: true, message: "训练数据已清空。 / Training data cleared." };
   }
 
   function exportState() {
@@ -41,6 +42,7 @@ export function createBackupController(deps = {}) {
       ? eventOrFile
       : input?.files?.[0] || eventOrFile?.files?.[0];
     if (!file) return;
+    const ownerId = deps.getCurrentUser?.()?.id;
     try {
       const result = await mergeBackupFile(file, deps.getState?.(), {
         readFileAsText,
@@ -57,7 +59,8 @@ export function createBackupController(deps = {}) {
         normalizeState: deps.normalizeState,
         nowIso: deps.nowIso?.() || new Date().toISOString()
       });
-      if (!result.changed) return;
+      if (deps.getCurrentUser?.()?.id !== ownerId) return { ok: false, message: "账户已切换，请重新选择备份。 / Account changed. Select the backup again." };
+      if (!result.changed) return { ok: false, message: "备份中没有可恢复的数据。 / No recoverable data in this backup." };
       deps.setState?.(result.state);
       if (result.community) {
         deps.setCommunity?.(result.community);
@@ -67,11 +70,12 @@ export function createBackupController(deps = {}) {
         }
       }
       deps.clearProblemLookupCaches?.();
-      deps.saveState?.();
+      deps.saveState?.({ checkIn: false });
       deps.renderAll?.();
+      return { ok: true, message: "备份已导入。 / Backup imported." };
     } catch (error) {
       console.error("[QuantGym] Failed to import backup", error?.stack || error?.message || error);
-      windowRef.alert?.(importErrorMessage);
+      return { ok: false, message: importErrorMessage };
     } finally {
       if (input) input.value = "";
     }

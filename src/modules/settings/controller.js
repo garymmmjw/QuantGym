@@ -78,13 +78,13 @@ export function createSettingsController(deps = {}) {
     deps.saveAuth?.();
     appState.currentUser = deps.getCurrentUser?.();
     userState.leaderboard = result.leaderboard;
-    deps.saveState?.();
+    deps.saveState?.({ checkIn: false });
     deps.syncStores?.();
     deps.queueCloudSync?.("account", 0);
     if (result.cloudEndpointChanged) deps.invalidateLeaderboardCloud?.({ clear: true, refresh: true });
     deps.renderGoogleClientInput?.();
     deps.renderAll?.();
-    deps.switchModule?.("settings");
+
     if (elements.settingsMessage) {
       elements.settingsMessage.textContent = `${deps.t?.("settingsSaved")} ${getCloudStatusText()}`;
     }

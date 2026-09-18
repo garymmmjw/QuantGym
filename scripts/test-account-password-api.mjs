@@ -150,11 +150,11 @@ test('incorrect device password cannot change credentials', async () => {
   assert.equal(stored(h), before);
 });
 
-test('profile save rejects an email change before touching local account or queuing sync', async () => {
+test('profile save requires current password for email changes without mutating records', async () => {
   const h = harness();
   const before = stored(h);
   const result = await h.api.save({ name: 'Updated', email: 'different@example.test' });
-  assert.equal(result.code, 'emailReadOnly');
+  assert.equal(result.code, 'passwordRequired');
   assert.equal(stored(h), before);
   assert.deepEqual(h.calls, []);
 });

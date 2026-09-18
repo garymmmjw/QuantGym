@@ -120,6 +120,10 @@ function checkPageWrappers() {
     expectFile(pagePath, `page wrapper for ${id}`);
     if (!fs.existsSync(pagePath)) continue;
     const text = fs.readFileSync(pagePath, "utf8");
+    if (id === "settings") {
+      expect(text.includes("<Navigate") && text.includes("/account?") && text.includes('"preferences"'), "Settings must redirect to the account preferences section.");
+      continue;
+    }
     expect(/import \{ useSyncModuleRoute \} from ["']\.\.\/hooks\/useSyncModuleRoute\.js["'];/.test(text), `${pageName}.jsx must import useSyncModuleRoute.`);
     expect(text.includes(`export function ${pageName}()`), `${pageName}.jsx must export function ${pageName}.`);
     expect(new RegExp(`useSyncModuleRoute\\(["']${id}["']\\)`).test(text), `${pageName}.jsx must sync module route "${id}".`);

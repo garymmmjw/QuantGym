@@ -1,7 +1,8 @@
-import { useSyncModuleRoute } from "../hooks/useSyncModuleRoute.js";
-import { SettingsPageContent } from "../features/settings/SettingsPageContent.jsx";
+import { Navigate, useLocation } from "react-router-dom";
 
 export function SettingsPage() {
-  useSyncModuleRoute("settings");
-  return <SettingsPageContent />;
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  if (!params.has("section")) params.set("section", "preferences");
+  return <Navigate to={`/account?${params}`} replace />;
 }

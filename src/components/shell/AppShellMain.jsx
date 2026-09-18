@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
-import { useUserStateStore } from "../../stores/AppServicesContext.jsx";
+import { useUserStateStore, useAuthStore, useAppStore } from "../../stores/AppServicesContext.jsx";
 import { setStreakPanelOpen as setStreakPanelOpenView } from "../../ui/streak.js";
 import { getLevelInfo } from "../../modules/skills/data.js";
 import { getEffectiveTotalXp } from "../../modules/economy/index.js";
@@ -45,8 +45,7 @@ const SHEET_NAV_GROUPS = [
     label: "我的",
     labelKey: "navMine",
     items: [
-      ["account", "账户", "user", "account"],
-      ["settings", "设置", "settings", "settings"]
+      ["account", "账户与设置", "user", "account"]
     ]
   }
 ];
@@ -78,7 +77,19 @@ export function AppShellMain() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [navSheetOpen, setNavSheetOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [themeError, setThemeError] = useState("");
+  const themeSaving = useRef(false);
+  const accountUser = useAuthStore(store => store.currentUser);
+  const accountRef = useRef(accountUser);
+  accountRef.current = accountUser;
+  const shellLanguage = useAppStore(store => store.appPrefs?.language || "zh");
+  useEffect(() => {
+    const prefs = accountUser?.preferences;
+    if (prefs?.language && prefs.language !== appServices.getLanguage?.()) appServices.setLanguage?.(prefs.language);
+    if (prefs?.theme) setTheme(prefs.theme);
+  }, [accountUser?.id, accountUser?.preferences?.language, accountUser?.preferences?.theme]);
   const overviewApi = usePageApi("overview");
+  const accountApi = usePageApi("account");
   const newsState = useUserStateStore((state) => state.value?.news);
   const skillsState = useUserStateStore((state) => state.value?.skills);
   const bonusXpState = useUserStateStore((state) => state.value?.bonusXp);
@@ -133,9 +144,28 @@ export function AppShellMain() {
     }
   };
 
-  const toggleTheme = () => {
-    setTheme((current) => current === "dark" ? "light" : "dark");
+  const toggleTheme = async () => {
+    if (themeSaving.current) return;
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    const ownerId = accountUser?.id;
+    setTheme(nextTheme);
+    setThemeError("");
+    if (!ownerId || !accountApi?.save) return;
+    themeSaving.current = true;
+    try {
+      const result = await accountApi.save({ preferences: { ...accountUser.preferences, language: shellLanguage, theme: nextTheme } });
+      if (!result?.ok && accountRef.current?.id === ownerId) {
+        setTheme(theme);
+        setThemeError(shellLanguage === "en" ? "Theme could not be saved. Please try again." : "主题保存失败，请重试。");
+      }
+    } catch {
+      if (accountRef.current?.id === ownerId) {
+        setTheme(theme);
+        setThemeError(shellLanguage === "en" ? "Theme could not be saved. Please try again." : "主题保存失败，请重试。");
+      }
+    } finally { themeSaving.current = false; }
   };
+
 
   useEffect(() => {
     const closeStreakPanel = (event) => {
@@ -259,21 +289,11 @@ export function AppShellMain() {
             <button className="sidebar-toggle-button" id="sidebarToggleBtn" type="button" aria-controls="moduleNav" aria-expanded="true" aria-label="隐藏模块列表" title="隐藏模块列表">
               <i data-lucide="panel-left-close"></i>
             </button>
-            <div
-              className="app-search qg-command-search"
-              role="search"
-              onMouseDown={(event) => {
-                if (event.button !== 0) return;
-                if (event.target?.closest?.("#globalSearchResults")) return;
-                event.preventDefault();
-                setPaletteOpen(true);
-              }}
-            >
-              <i data-lucide="search"></i>
-              <input id="globalSearchInput" type="search" placeholder="搜索题目、训练，或跳转模块…" aria-label="Search topics" />
+            <button className="app-search qg-command-search qg-search-trigger" type="button" aria-label={appServices.getLanguage?.() === "en" ? "Search QuantGym" : "搜索 QuantGym"} aria-haspopup="dialog" aria-expanded={paletteOpen} onClick={() => setPaletteOpen(true)}>
+              <i data-lucide="search" aria-hidden="true"></i>
+              <span className="qg-search-trigger-label">{appServices.getLanguage?.() === "en" ? "Search problems, training, settings…" : "搜索题目、训练、设置…"}</span>
               <span className="qg-kbd" aria-hidden="true">⌘K</span>
-              <div id="globalSearchResults" className="global-search-results hidden" role="listbox" aria-label="搜索结果" data-i18n-aria-label="searchResultsLabel"></div>
-            </div>
+            </button>
             <div className="app-command-actions qg-command-actions">
               <div className="streak-widget" id="streakWidget">
                 <button className="app-stat-pill streak-pill" id="checkInPill" type="button" aria-expanded="false" aria-controls="streakCalendarPanel" data-streak-react-handler="true" onClick={toggleStreakPanel}>
@@ -360,12 +380,10 @@ export function AppShellMain() {
                   <small id="commandUserProvider">账号</small>
                 </span>
               </button>
-              <button className="app-settings-button" type="button" data-jump-module="settings" aria-label="设置" data-i18n-aria-label="openSettings">
-                <i data-lucide="settings"></i>
-              </button>
             </div>
           </section>
 
+          {themeError && <p className="qg-theme-error" role="alert">{themeError}</p>}
           {isModuleVisible("news") && (
           <div className="qg-wire-bar" aria-label="Quant Wire">
             <span className="qg-wire-pill">

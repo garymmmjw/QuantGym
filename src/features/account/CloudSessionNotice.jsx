@@ -4,7 +4,7 @@ import "./cloudSession.css";
 
 export function CloudSessionBadge() {
   const session = useCloudSession();
-  if (session.phase === "local") return <Link className="qg-cloud-session-badge" to="/account">{session.en ? "This device only" : "仅此设备"}</Link>;
+  if (session.phase === "local") return <Link className="qg-cloud-session-badge" to="/account?section=data">{session.en ? "This device only" : "仅此设备"}</Link>;
   if (session.phase !== "expired") return null;
   return <button className="qg-cloud-session-badge" type="button" onClick={session.reconnect}>{session.label}</button>;
 }

@@ -163,6 +163,14 @@ export function activateGlobalSearchResult(controller, index, actions = {}) {
 
   actions.clear?.();
 
+  if (result.type === "setting") {
+    actions.navigate?.(`/account?section=${encodeURIComponent(result.id)}`);
+    if (!actions.navigate) {
+      if (windowRef?.location?.assign) windowRef.location.assign(`/account?section=${encodeURIComponent(result.id)}`);
+      else actions.switchModule?.("account");
+    }
+    return true;
+  }
   if (result.type === "module") {
     actions.switchModule?.(result.module);
     return true;

@@ -20,8 +20,8 @@ export function buildSettingsSaveResult(options = {}) {
   const normalizeLeaderboardSettings = options.normalizeLeaderboardSettings || ((settings) => settings || {});
   const now = options.now || new Date().toISOString();
   const language = normalizeLanguage(values.language);
-  const country = normalizeCountry(values.country);
-  const region = normalizeRegionForCountry(values.region, country);
+  const country = normalizeCountry(values.country ?? currentUser.country);
+  const region = normalizeRegionForCountry(values.region ?? currentUser.region, country);
   const previousCloudEndpoint = options.cloudConfig?.endpoint || "";
 
   return {
@@ -35,7 +35,9 @@ export function buildSettingsSaveResult(options = {}) {
     },
     cloudConfig: {
       ...(options.cloudConfig || {}),
-      endpoint: values.cloudEndpoint || options.defaultCloudEndpoint || ""
+      endpoint: values.cloudEndpoint || options.defaultCloudEndpoint || "",
+      ...(previousCloudEndpoint !== (values.cloudEndpoint || options.defaultCloudEndpoint || "")
+        ? { token: "", userId: "", lastSyncAt: "", lastError: "" } : {})
     },
     auth: {
       ...(options.auth || {}),
