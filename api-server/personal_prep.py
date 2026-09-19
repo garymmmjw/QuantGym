@@ -19,7 +19,7 @@ MAX_PERSONAL_PREP_RECORDS = 100_000
 PERSONAL_PREP_FIELDS = {
     "mentalSettings", "activeTrial", "trials", "dailySettings", "dailySessions", "activities"
 }
-OPTIONAL_PERSONAL_FIELDS = {"removedActivityIds", "applicationEvents", "reviewEvents", "practiceSessions"}
+OPTIONAL_PERSONAL_FIELDS = {"removedActivityIds", "applicationEvents", "reviewEvents", "practiceSessions", "behavioralAnswers"}
 APPLICATION_FIELDS = {"company", "role", "location", "url", "status", "deadline", "nextAction", "nextActionDate", "notes", "archived"}
 APPLICATION_STATUSES = {"wishlist", "applied", "oa", "interview", "offer", "rejected", "withdrawn"}
 APPLICATION_LIMITS = {"company": 200, "role": 300, "location": 300, "url": 2048, "nextAction": 2000, "notes": 20000}
@@ -52,9 +52,9 @@ def validate_personal_prep_request(payload: dict) -> tuple[int, str]:
     active = data["activeTrial"]
     if active is not None and (not isinstance(active, dict) or not valid_record_id(active.get("id"))):
         raise PersonalPrepValidationError("Invalid activeTrial.")
-    for field in ("trials", "dailySessions", "activities", "applicationEvents", "reviewEvents", "practiceSessions"):
+    for field in ("trials", "dailySessions", "activities", "applicationEvents", "reviewEvents", "practiceSessions", "behavioralAnswers"):
         rows = data[field]
-        if not isinstance(rows, list) or len(rows) > MAX_PERSONAL_PREP_RECORDS:
+        if not isinstance(rows, list) or len(rows) > (10000 if field == "behavioralAnswers" else MAX_PERSONAL_PREP_RECORDS):
             raise PersonalPrepValidationError(f"Invalid {field} collection.")
         ids = set()
         for row in rows:
@@ -65,6 +65,9 @@ def validate_personal_prep_request(payload: dict) -> tuple[int, str]:
                 validate_application_event(row)
             elif field == "reviewEvents":
                 validate_review_event(row)
+            elif field == "behavioralAnswers":
+                if set(row) != {"id", "text", "updatedAt"} or not isinstance(row["text"], str) or len(row["text"]) > 20000 or not valid_event_timestamp(row["updatedAt"]):
+                    raise PersonalPrepValidationError("Invalid behavioral answer.")
             elif field == "practiceSessions":
                 validate_practice_session(row)
         if field in {"applicationEvents", "reviewEvents"}:
@@ -263,6 +266,12 @@ def save_personal_prep(conn, user_id: str, base_revision: int, data_json: str) -
         return False, current
     incoming = json.loads(data_json)
     if current["data"] is not None:
+        answers = {}
+        for answer in [*current["data"].get("behavioralAnswers", []), *incoming.get("behavioralAnswers", [])]:
+            previous = answers.get(answer["id"])
+            if previous is None or (event_order(answer, "updatedAt"), answer["text"]) > (event_order(previous, "updatedAt"), previous["text"]):
+                answers[answer["id"]] = answer
+        incoming["behavioralAnswers"] = sorted(answers.values(), key=lambda answer: answer["id"])
         for field, time_field in (("applicationEvents", "createdAt"), ("reviewEvents", "reviewedAt")):
             events = {}
             for event in [*current["data"].get(field, []), *incoming.get(field, [])]:

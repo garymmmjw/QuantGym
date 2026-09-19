@@ -28,7 +28,7 @@ const SHEET_NAV_GROUPS = [
     labelKey: "navTraining",
     items: [
       ["technical-interview", "Technical Interview", "messages-square", "technicalInterview"],
-      ["behavioral-interview", "Behavioral Interview", "speech", "behavioralInterview", "Beta"],
+      ["behavioral-interview", "Behavioral Interview", "speech", "behavioralInterview"],
       ["leetcode", "LeetCode", "code-2"],
       ["tools", "Mental Math", "brain"]
     ]
