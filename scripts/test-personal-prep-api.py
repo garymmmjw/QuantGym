@@ -45,6 +45,7 @@ def empty_state(marker=None):
         "applicationEvents": [],
         "reviewEvents": [],
         "practiceSessions": [],
+        "behavioralAnswers": [],
     }
 
 
@@ -582,6 +583,41 @@ class PersonalPrepApiTests(unittest.TestCase):
         self.assertEqual(status, 200, cleared)
         self.assertEqual(cleared["revision"], 3)
         self.assertEqual(self.request("GET", token=token)[1]["data"], empty_state())
+
+    def test_behavioral_answers_round_trip_legacy_writes_and_explicit_clear(self):
+        token, _ = self.new_user()
+        state = empty_state()
+        answer = {"id": "bofa-why", "text": "My answer with a real project example.", "updatedAt": "2026-09-19T12:00:00.000Z"}
+        state["behavioralAnswers"] = [answer]
+        status, saved, headers = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        self.assert_private(headers)
+        self.assertEqual(self.request("GET", token=token)[1]["data"]["behavioralAnswers"], [answer])
+        legacy = empty_state()
+        del legacy["behavioralAnswers"]
+        status, saved, _ = self.put(token, legacy, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["behavioralAnswers"], [answer])
+        cleared = {**answer, "text": "", "updatedAt": "2026-09-19T13:00:00.000Z"}
+        state["behavioralAnswers"] = [cleared]
+        status, saved, _ = self.put(token, state, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        state["behavioralAnswers"] = [answer]
+        status, saved, _ = self.put(token, state, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["behavioralAnswers"], [cleared])
+        other_token, _ = self.new_user()
+        self.assertIsNone(self.request("GET", token=other_token)[1]["data"])
+
+    def test_invalid_behavioral_answers_never_replace_a_saved_draft(self):
+        token, _ = self.new_user()
+        answer = {"id": "bofa-why", "text": "Saved draft", "updatedAt": "2026-09-19T12:00:00.000Z"}
+        state = {**empty_state(), "behavioralAnswers": [answer]}
+        _, saved, _ = self.put(token, state)
+        for invalid in [None, {}, [{**answer, "text": 42}], [{**answer, "text": "x" * 20001}], [{**answer, "updatedAt": "invalid"}], [answer, answer]]:
+            with self.subTest(invalid=type(invalid).__name__):
+                self.assertEqual(self.put(token, {**state, "behavioralAnswers": invalid}, saved["revision"])[0], 400)
+                self.assertEqual(self.request("GET", token=token)[1], saved)
 
     def test_cross_account_isolation_and_no_client_selected_owner(self):
         first, first_id = self.new_user()

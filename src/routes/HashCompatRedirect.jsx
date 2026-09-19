@@ -4,6 +4,7 @@ import { useAppServicesContext } from "../stores/AppServicesContext.jsx";
 import { getModulePath, getRouteModuleId } from "./routeConfig.js";
 
 const HASH_ALIASES = new Map([
+  ["behavioral", "behavioral-interview"],
   ["", "overview"],
   ["home", "overview"],
   ["dashboard", "overview"],

@@ -59,6 +59,7 @@ function ScopedWorkspace({ personal, children }) {
       <nav aria-label={en ? "Personal preparation" : "个人备考导航"} className="personal-workspace-nav">
         <NavLink to="/calendar">{en ? "Calendar" : "训练日历"}</NavLink>
         <NavLink to="/technical-interview">Technical Interview</NavLink>
+        <NavLink to="/behavioral-interview">Behavioral</NavLink>
         <NavLink to="/tools">Mental Math</NavLink>
         <NavLink to="/leetcode">LeetCode</NavLink>
       </nav>

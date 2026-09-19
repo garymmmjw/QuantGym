@@ -2,6 +2,10 @@
 
 登录后从左侧「个人备考」进入训练日历、Technical Interview 或 LeetCode。Mental Math 位于训练导航及个人备考页顶栏。手机底部提供日历、LeetCode、速算和题目入口，完整导航菜单中也可进入 Technical Interview。
 
+## Behavioral Interview
+
+`/behavioral-interview` 分为 General questions 和 Company-specific questions。通用题包含自我介绍、优势、不足、冲突和领导力；Bank of America 预置可编辑的 Quant 方向 “Why BofA?” 英文初稿、中文思路及官网来源。回答按账户自动保存，支持复制、字数和预计口述时长。`/behavioral` 是兼容入口。可选 `behavioralAnswers` 字段保留旧存档兼容性，按更新时间合并；清空回答也会保存，旧客户端不会清除新草稿。发布需同步更新网页与 API。
+
 ## 训练流程
 
 - `/calendar`：左右滑动日期，查看量化题、心算、数列与图形推理的正确题数及试次数，以及 Technical Interview、LeetCode 和 Behavioral。支持日期跳转、近七天统计、补记与撤销。按设备本地日期归档，不把缺少完成日期的旧总数虚构为历史记录。

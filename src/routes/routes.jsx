@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppChromeLayout } from "../layouts/AppChromeLayout.jsx";
 import { AuthLayout } from "../layouts/AuthLayout.jsx";
 import { ProtectedRoute } from "./ProtectedRoute.jsx";
@@ -103,6 +103,11 @@ function AppRouteElements() {
   });
 }
 
+function BehavioralRedirect() {
+  const location = useLocation();
+  return <Navigate to={`/behavioral-interview${location.search}`} replace />;
+}
+
 export function AppRoutes() {
   return (
     <>
@@ -114,6 +119,7 @@ export function AppRoutes() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppChromeLayout />}>
             {AppRouteElements()}
+            <Route path="/behavioral" element={<BehavioralRedirect />} />
             <Route path="/daily-mock/*" element={<Navigate to="/leetcode" replace />} />
             <Route path="/coding-oa/*" element={<Navigate to="/leetcode" replace />} />
             <Route path="/poker/*" element={<Navigate to="/calendar" replace />} />

@@ -202,7 +202,7 @@ function hasTrialWork(trial) {
 }
 
 export function createPersonalState() {
-  return { mentalSettings: null, activeTrial: null, trials: [], dailySettings: null, dailySessions: [], activities: [], removedActivityIds: [], practiceSessions: [] };
+  return { mentalSettings: null, activeTrial: null, trials: [], dailySettings: null, dailySessions: [], activities: [], removedActivityIds: [], practiceSessions: [], behavioralAnswers: [] };
 }
 
 export function personalStorageKey(ownerId) {
@@ -230,7 +230,12 @@ export function validatePersonalData(data) {
   if (data.dailySettings != null) validateDailySettings(data.dailySettings);
   const removedActivityIds = data.removedActivityIds === undefined ? [] : data.removedActivityIds;
   requireData(Array.isArray(removedActivityIds) && removedActivityIds.every(id), "removed activity ids");
-  return { ...createPersonalState(), ...data, practiceSessions, removedActivityIds: [...new Set(removedActivityIds)] };
+  const behavioralAnswers = data.behavioralAnswers === undefined ? [] : data.behavioralAnswers;
+  requireData(Array.isArray(behavioralAnswers) && behavioralAnswers.length <= 10000
+    && behavioralAnswers.every(answer => object(answer) && id(answer.id) && answer.id.length <= 512
+      && typeof answer.text === "string" && answer.text.length <= 20000 && timestamp(answer.updatedAt))
+    && new Set(behavioralAnswers.map(answer => answer.id)).size === behavioralAnswers.length, "behavioral answers");
+  return { ...createPersonalState(), ...data, practiceSessions, behavioralAnswers, removedActivityIds: [...new Set(removedActivityIds)] };
 }
 
 /** Merge valid backups or cloud snapshots without reviving terminal work or deleted entries. */
@@ -238,6 +243,14 @@ export function mergePersonalData(currentValue, incomingValue) {
   const current = validatePersonalData(currentValue);
   const incoming = validatePersonalData(incomingValue);
   const next = { ...current };
+  const answers = new Map(incoming.behavioralAnswers.map(answer => [answer.id, answer]));
+  for (const answer of current.behavioralAnswers) {
+    const other = answers.get(answer.id);
+    // An explicitly cleared answer is still a revision; never revive an older draft.
+    if (!other || Date.parse(answer.updatedAt) > Date.parse(other.updatedAt)
+      || (Date.parse(answer.updatedAt) === Date.parse(other.updatedAt) && answer.text >= other.text)) answers.set(answer.id, answer);
+  }
+  next.behavioralAnswers = [...answers.values()].sort((a, b) => a.id.localeCompare(b.id));
   for (const field of ARRAY_FIELDS) {
     const byId = new Map(incoming[field].map((row) => [row.id, row]));
     for (const row of current[field]) {
