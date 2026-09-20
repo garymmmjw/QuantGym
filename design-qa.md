@@ -212,3 +212,7 @@ Final result: passed for this change.
 ## Daily task list restoration — September 20, 2026
 
 Restored the former vertical quest layout, target illustration, progress bar, points pills and circular completion marks while retaining the five current task links and real activity counts. Reused the existing quest styles and removed the newer card-grid overrides. Desktop 1440px and mobile 390/320px checks confirmed five full-width rows, correct 1/5 completion state, no horizontal overflow or label/badge overlap, a working task link and no console errors. Strict build, growth check and diff check passed. No data or scoring changes.
+
+## Interactive activity panel — September 20, 2026
+
+Refreshed activity with a blue-violet tonal surface, prominent weekly score, today's score, confirmed active-day count, selectable daily bars and a per-category count × points breakdown. Retained existing activity data and weights. The bar scale remains linear; zero has no filled height. Future days are disabled, unknown values remain dashes and partial-source values are labeled as recorded. Desktop 1440px and mobile 390/320px passed visual/overflow checks. Clicking a past day and Enter-key selection updated the details and aria-pressed state; future selection was disabled. No console errors. All 17 activity tests, the growth check, strict build and diff check passed. Independent review found no P1/P2 issues.
