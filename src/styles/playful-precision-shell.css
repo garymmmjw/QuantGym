@@ -2111,3 +2111,8 @@ body.is-authenticated .qg-search-trigger { cursor: pointer; text-align: left; co
   body.is-authenticated .qg-command-actions .qg-cloud-session-badge { display: none; }
 }
 .qg-theme-error { margin: 8px 18px; color: #ae4b4e; font-size: 12px; }
+
+/* Temporarily hide optional topbar widgets while preserving their data and bindings. */
+body.is-authenticated .qg-command-actions > :is(.streak-widget, .qg-level-pill, .qg-notif) {
+  display: none !important;
+}
