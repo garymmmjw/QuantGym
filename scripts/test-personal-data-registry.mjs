@@ -106,3 +106,44 @@ test('signed-out access is disabled; accounts and credential changes stay separa
   await settle();
   assert.ok(instances.every(instance => instance.stops === 1));
 });
+
+test('manual owner sync joins the current writer and reports errors instead of pretending success', async () => {
+  const { registry, instances } = fixture();
+  assert.equal(registry.getExistingStore('owner-a'), null);
+  assert.deepEqual(await registry.syncOwner('', config), { phase: 'local' });
+  assert.equal(instances.length, 0);
+  const connection = registry.getConnection('owner-a', config);
+  const release = connection.retain();
+  assert.equal(registry.getExistingStore('owner-a'), instances[0].options.store);
+  instances[0].sync = async () => { instances[0].syncs += 1; instances[0].options.onStatus({ phase: 'error', message: 'fixture network unavailable' }); };
+  assert.deepEqual(await registry.syncOwner('owner-a', config), { phase: 'error', message: 'fixture network unavailable' });
+  assert.equal(instances.length, 1);
+  assert.equal(instances[0].syncs, 1);
+  await settle();
+  assert.equal(instances[0].stops, 0);
+  release();
+  await settle();
+  assert.equal(instances[0].stops, 1);
+});
+
+test('manual sync starts and releases a shared connection even before any page subscribes', async () => {
+  const { registry, instances } = fixture();
+  const status = await registry.syncOwner('owner-a', config);
+  assert.equal(status.phase, 'syncing');
+  assert.equal(instances.length, 1);
+  assert.equal(instances[0].starts, 1);
+  assert.equal(instances[0].syncs, 1);
+  await settle();
+  assert.equal(instances[0].stops, 1);
+});
+
+test('a server acknowledgement cannot report full success while the local store is dirty or conflicted', async () => {
+  for (const local of [{ dirty: true }, { conflict: true }, { error: 'read:damaged local data' }]) {
+    const registry = createPersonalDataRegistry({
+      getStorage: () => undefined,
+      createStore: () => ({ getSnapshot: () => local }),
+      createCloudSync: ({ onStatus }) => ({ start() {}, async sync() { onStatus({ phase: 'synced' }); }, stop() {} }),
+    });
+    assert.equal((await registry.syncOwner('owner-a', config)).phase, 'error');
+  }
+});

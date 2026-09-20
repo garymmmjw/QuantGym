@@ -1,5 +1,6 @@
 import { GuardianEntry } from "../../features/guardian/GuardianEntry.jsx";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useLocation } from "react-router-dom";
 import { AUTH_KEY, USER_STATE_PREFIX } from "../../constants.js";
 import { isItemOwned } from "../../modules/economy/index.js";
 import { useAppServicesContext, useAuthStore, useUserStateStore } from "../../stores/AppServicesContext.jsx";
@@ -11,6 +12,8 @@ import "../../styles/auth-welcome.css";
 // Idle status copy written by the Google login runtime — the design keeps this
 // slot empty unless something actionable (an error) needs to be shown.
 const authIdleMessages = new Set([
+  "邮箱登录已可用；注册需完成邮箱验证。",
+  "Email sign-in is available. Registration requires email verification.",
   "Google 登录组件还在加载，稍后会自动可用。",
   "Google 登录已启用。云端同步会校验 ID token。",
   "邮箱账户会优先尝试云端同步；注册时先发送邮箱验证码。",
@@ -54,17 +57,14 @@ function lastLocalAccountOwnsSleepWallpaper() {
 
 export function AuthShell() {
   const services = useAppServicesContext();
+  const location = useLocation();
   const recovery = useSyncExternalStore(subscribeCloudReauthentication, getCloudReauthentication, getCloudReauthentication);
   const savedAccounts = useAuthStore(state => state.auth?.accounts || noAccounts);
-  const [loginEmail, setLoginEmail] = useState(recovery?.email || "");
+  const savedAccountId = useAuthStore(state => state.auth?.currentUserId || "");
+  const savedAccount = savedAccounts.find(account => account.id === savedAccountId);
+  const legacyAccount = savedAccount && !savedAccount.cloudLinked ? savedAccount : null;
+  const prefilledEmail = recovery?.email || location.state?.email || savedAccount?.email || "";
   const en = services.getLanguage?.() === "en";
-  const hasDeviceAccount = savedAccounts.some(account => account.provider === "local"
-    && String(account.email || "").trim().toLowerCase() === loginEmail.trim().toLowerCase()
-    && typeof account.passwordHash === "string" && Boolean(account.passwordHash));
-  const useDeviceAccount = () => {
-    services.services?.rebindElements?.();
-    return services.pageApi?.account?.loginDeviceAccount?.();
-  };
   const cancelRecovery = () => {
     services.services?.rebindElements?.();
     return services.pageApi?.account?.cancelCloudRecovery?.();
@@ -85,6 +85,11 @@ export function AuthShell() {
   // Cosmetics (shop): both reads are strictly read-only via the economy API.
   const [sleepWallpaperOwned, setSleepWallpaperOwned] = useState(false);
   const frameOwned = useUserStateStore((state) => isItemOwned(state.value, "frame"));
+
+  useEffect(() => {
+    const input = document.getElementById("loginEmail");
+    if (input && !input.value) input.value = prefilledEmail;
+  }, [prefilledEmail]);
 
   useEffect(() => {
     refreshIcons({ root: document.getElementById("authShell") });
@@ -178,7 +183,6 @@ export function AuthShell() {
     };
 
     const handleEmailInput = () => {
-      setLoginEmail(emailInput?.value || "");
       window.clearTimeout(restoreTimer);
       restoreTimer = window.setTimeout(() => {
         if (!passwordInput) return;
@@ -189,7 +193,6 @@ export function AuthShell() {
 
     passwordInput?.addEventListener("input", handlePasswordInput);
     emailInput?.addEventListener("input", handleEmailInput);
-    setLoginEmail(emailInput?.value || "");
 
     const clearIdleMessage = () => {
       const value = messageNode?.textContent?.trim() || "";
@@ -318,9 +321,10 @@ export function AuthShell() {
 
           <div className="auth-panel qg-auth-card" role="dialog" aria-labelledby="authTitle" aria-describedby="authSubtitle">
             {recovery && <div className="qg-auth-recovery-note">
-              <p role="status" data-i18n="authCloudRecoveryNotice">请重新登录以恢复云端连接。本机训练记录已保留，登录成功后会返回刚才的页面。</p>
-              <button type="button" className="auth-link-button" onClick={cancelRecovery}>{en ? "Not now · keep device access" : "暂不恢复云端"}</button>
+              <p role="status" data-i18n="authCloudRecoveryNotice">请重新登录。此设备的记录已保留，登录成功后会返回刚才的页面。</p>
+              <button type="button" className="auth-link-button" onClick={cancelRecovery}>{en ? "Cancel" : "取消"}</button>
             </div>}
+            {!recovery && (legacyAccount || location.state?.needsVerification) && <p className="qg-auth-recovery-note" role="status">{en ? "Your previous records on this device are kept. Sign in or verify your email to merge them into your account." : "此设备的旧记录已保留，登录或验证邮箱后会合并到你的账号。"}</p>}
             <div className="auth-copy qg-welcome-copy">
               <h2 id="authTitle"><span className="qg-login-only">{en ? "Welcome back" : "欢迎回来"}</span><span className="qg-register-only">{en ? "Start your journey" : "开始你的训练"}</span><span className="qg-reset-only">{en ? "Reset password" : "找回密码"}</span></h2>
               <p id="authSubtitle"><span className="qg-login-only">{en ? "Continue your quant interview practice." : "继续你的量化面试训练。"}</span><span className="qg-register-only">{en ? "Practice with Quanty. Grow a little every day." : "和 Quanty 一起，每天进步一点。"}</span><span className="qg-reset-only">{en ? "Get back to your practice with a new password." : "找回账户，继续你的训练。"}</span></p>
@@ -329,7 +333,7 @@ export function AuthShell() {
             <form className="auth-form auth-email-flow" id="loginForm" autoComplete="on" data-auth-step="email">
               <div className="auth-field">
                 <label className="auth-field-label" htmlFor="loginEmail" data-i18n="email">邮箱</label>
-                <div className="qg-welcome-input"><i data-lucide="mail" aria-hidden="true" /><input id="loginEmail" type="email" autoComplete="email" placeholder={en ? "Email address" : "输入邮箱地址"} defaultValue={recovery?.email || ""} onChange={event => setLoginEmail(event.target.value)} onFocus={event => setLoginEmail(event.target.value)} /></div>
+                <div className="qg-welcome-input"><i data-lucide="mail" aria-hidden="true" /><input id="loginEmail" type="email" autoComplete="email" placeholder={en ? "Email address" : "输入邮箱地址"} defaultValue={prefilledEmail} /></div>
               </div>
               <div className="auth-field auth-field-password">
                 <label className="auth-field-label" htmlFor="loginPassword" data-i18n="password">密码</label>
@@ -361,7 +365,7 @@ export function AuthShell() {
               <div className="auth-verify-head auth-register-verify-only" aria-hidden={registerStage !== "verify"}>
                 <img className="auth-verify-mascot" src="/assets/generated/playful-precision/mascot-search.png" alt="" draggable="false" />
                 <h3 className="auth-verify-title">查收验证码</h3>
-                <p className="auth-verify-sub">已发送 6 位验证码到<br /><b>{registerVerifyEmail || "你的邮箱"}</b></p>
+                <p className="auth-verify-sub">{en ? "Enter the 6-digit verification code for" : "输入此邮箱收到的 6 位验证码"}<br /><b>{registerVerifyEmail || (en ? "your email" : "你的邮箱")}</b></p>
                 <div className="auth-code-boxes" aria-hidden="true">
                   {[0, 1, 2, 3, 4, 5].map((slot) => (
                     <span key={slot} className={`auth-code-box${registerCode[slot] ? " is-filled" : ""}`}>{registerCode[slot] || ""}</span>
@@ -370,7 +374,7 @@ export function AuthShell() {
               </div>
               <div className="auth-field auth-register-verify-only auth-register-code-field">
                 <label className="auth-field-label" htmlFor="registerVerificationCode" data-i18n="verificationCode">邮箱验证码</label>
-                <input id="registerVerificationCode" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength="6" placeholder="邮箱验证码" data-i18n-placeholder="verificationCode" />
+                <input id="registerVerificationCode" type="text" inputMode="numeric" autoComplete="one-time-code" maxLength="6" pattern="[0-9]{6}" required={registerStage === "verify"} placeholder="邮箱验证码" data-i18n-placeholder="verificationCode" />
               </div>
               <button className="primary-button auth-submit auth-register-verify-only" type="submit" data-i18n="createAccount">创建账户</button>
               <p className="auth-resend-row auth-register-verify-only">没收到？<button className="secondary-button" id="sendRegisterCodeBtn" type="button" data-i18n="sendVerificationCode">发送验证码</button></p>
@@ -419,14 +423,6 @@ export function AuthShell() {
             </div>
 
             <GuardianEntry />
-
-            <details className="qg-welcome-other qg-login-only">
-              <summary>{en ? "Other ways to sign in" : "其他登录方式"}<i data-lucide="chevron-down" aria-hidden="true" /></summary>
-              {hasDeviceAccount ? <div className="qg-auth-device-entry" data-device-account>
-                <p>{en ? "Use the password saved on this device to continue your practice. Cloud sync will stay off." : "输入此设备账户的密码，继续已有训练。此方式暂不连接云端。"}</p>
-                <button className="secondary-button" type="button" onClick={useDeviceAccount}>{en ? "Use this device's account" : "使用此设备的账户"}</button>
-              </div> : <p>{en ? "Enter an email saved on this device above to use its local account." : "在上方输入此设备保存过的账户邮箱，即可使用本机账户登录。"}</p>}
-            </details>
 
             <p className="auth-legal-note">内测期间仅限白名单邮箱 · <span className="auth-legal-link">服务条款</span> 与 <span className="auth-legal-link">隐私政策</span></p>
 

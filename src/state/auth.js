@@ -6,6 +6,8 @@ export function normalizeAuth(raw = {}, options = {}) {
   const savedGoogleClientId = String(raw.googleClientId || "").trim();
   return {
     accounts: Array.isArray(raw.accounts) ? raw.accounts.map(normalizeAccount) : [],
+    // Recovery metadata only; these profiles never provide a current user.
+    legacyAccounts: Array.isArray(raw.legacyAccounts) ? raw.legacyAccounts.map(normalizeAccount) : [],
     currentUserId: raw.currentUserId || "",
     // Older device profiles saved an empty field before Google was enabled.
     // Keep explicit nonempty overrides while adopting a later deployment ID.
@@ -65,8 +67,13 @@ export function upsertAuthAccount(auth = {}, account = {}, options = {}) {
   const existing = accounts.find((item) => item.id === normalized.id);
   const merged = { ...(existing || {}), ...normalized, ...(options.localFields || {}) };
   const normalizedEmail = normalizeEmail(normalized.email);
+  const replaced = accounts.filter(item => item.id !== normalized.id && normalizedEmail && normalizeEmail(item.email) === normalizedEmail);
+  // Keep old owner IDs and password proofs available for a later verified
+  // migration. Removing an email duplicate must not orphan its saved records.
+  auth.legacyAccounts = [...new Map([...(Array.isArray(auth.legacyAccounts) ? auth.legacyAccounts : []), ...replaced]
+    .filter(item => item?.id && item.id !== normalized.id).map(item => [item.id, item])).values()];
   auth.accounts = [
-    ...accounts.filter((item) => item.id !== normalized.id && normalizeEmail(item.email) !== normalizedEmail),
+    ...accounts.filter((item) => item.id !== normalized.id && (!normalizedEmail || normalizeEmail(item.email) !== normalizedEmail)),
     merged
   ];
   setCurrentUserId(auth, normalized.id);

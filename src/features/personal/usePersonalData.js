@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { useAuthStore, useAppStore, useAppServicesContext, useUserStateStore } from '../../stores/AppServicesContext.jsx';
 import { createPersonalState } from './personalStore.js';
-import { createPersonalDataRegistry } from './personalDataRegistry.js';
+import { personalDataRegistry as registry } from './personalDataRegistry.js';
 
-const registry = createPersonalDataRegistry();
 const emptyLegacyState = {};
 const disabledSnapshot = { data: createPersonalState(), error: '', dirty: false, conflict: false };
 const disabledCloud = { phase: 'local' };

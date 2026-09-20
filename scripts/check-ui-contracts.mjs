@@ -1367,9 +1367,12 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(data.unauthenticated?.redirectPath === "/login" || data.unauthenticated?.path === "/login", `${label} logged-out protected route must redirect to /login`);
   const localEmailAuth = data.unauthenticated?.localEmailAuth || {};
   expect(localEmailAuth.redirectedToLogin === true, `${label} must verify protected route redirects to the auth shell`);
-  expect(localEmailAuth.registrationFormShown === true, `${label} must verify missing local email can enter registration`);
-  expect(localEmailAuth.verificationOptional === true, `${label} must verify static local registration fallback when cloud verification is unavailable`);
-  expect(localEmailAuth.registered === true, `${label} must verify local email registration`);
+  expect(localEmailAuth.registrationFormShown === true, `${label} must verify an email absent on the server can enter registration`);
+  expect(localEmailAuth.verificationOptional === false, `${label} must never bypass registration verification`);
+  expect(localEmailAuth.offlineVerificationRejected === true, `${label} must keep verification required when its service is unavailable`);
+  expect(localEmailAuth.offlineRegistrationRejected === true, `${label} must reject offline registration without creating a device account`);
+  expect(localEmailAuth.serverSessionVerified === true, `${label} must verify the server identity and token before authentication`);
+  expect(localEmailAuth.registered === true, `${label} must verify server email registration`);
   expect(localEmailAuth.accountPersisted === true, `${label} must verify local auth account persistence`);
   expect(localEmailAuth.logoutReturnedToAuth === true, `${label} must verify logout returns to auth`);
   expect(localEmailAuth.passwordStepShown === true, `${label} must verify existing local email reaches password step`);

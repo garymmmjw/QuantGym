@@ -12,6 +12,8 @@ export function createTrackerSyncBridge({ ownerId, personalStore, storage, event
   const listeners = new Set();
   let status = { error: '' };
   let active = false, applying = false, committing = false, unsubscribe = null, scheduled = false;
+  const cacheReads = new Map();
+  let mutationBaseline = null;
   const setError = error => {
     const message = error?.message || '';
     if (status.error === message) return;
@@ -55,15 +57,26 @@ export function createTrackerSyncBridge({ ownerId, personalStore, storage, event
     queueMicrotask(() => { scheduled = false; apply(); });
   }
   const cacheStorage = {
-    getItem: key => storage?.getItem(key),
+    getItem(key) {
+      if (mutationBaseline?.has(key)) return mutationBaseline.get(key);
+      const raw = storage?.getItem(key);
+      if (!applying && !mutationBaseline) cacheReads.set(key, raw);
+      return raw;
+    },
     setItem(key, raw) {
       if (applying) { storage.setItem(key, raw); return; }
       if (!active) throw new Error('投递记录正在初始化，请稍后重试。');
+      const originalRaw = cacheReads.get(key);
       // Refresh the shared journal before assigning a Lamport revision when a
       // second browser tab has saved but its storage event has not fired yet.
       committing = true;
       try { personalStore.update(data => data); } finally { committing = false; }
-      const before = local();
+      // Another tab can update its cache during the journal refresh above.
+      // Diff against the snapshot this mutation actually read, or unchanged
+      // fields from its older copy would become fresh edits over that tab.
+      let before;
+      mutationBaseline = new Map([[key, originalRaw]]);
+      try { before = local(); } finally { mutationBaseline = null; }
       const envelope = JSON.parse(raw);
       const after = key === trackerKey ? { ...before, applications: envelope.applications, deletedEvents: envelope.deletedEvents }
         : key === stageKey ? { ...before, stages: envelope.stages } : null;
@@ -85,17 +98,16 @@ export function createTrackerSyncBridge({ ownerId, personalStore, storage, event
       if (active) return;
       try {
         if (!storage?.getItem || !personalStore) throw new Error('此浏览器暂时无法同步投递记录。');
-        if (storage.getItem(migrationKey) !== '1' || !operations().length) {
-          const original = local();
-          // Do not overwrite the only copy of a pre-sync account, even if a
-          // migration or a page load is interrupted and retried later.
-          for (const key of [trackerKey, stageKey]) {
-            const raw = storage.getItem(key);
-            if (raw !== null && storage.getItem(`${key}:before-cloud-sync`) === null) storage.setItem(`${key}:before-cloud-sync`, raw);
-          }
-          commit(migrateTrackerOperations(original, operations()));
-          storage.setItem(migrationKey, '1');
+        const original = local();
+        // A pre-sync tab can remain open after the first migration and add
+        // more records to the cache. Import missing records on every start;
+        // migration never overwrites fields already present in the journal.
+        for (const key of [trackerKey, stageKey]) {
+          const raw = storage.getItem(key);
+          if (raw !== null && storage.getItem(`${key}:before-cloud-sync`) === null) storage.setItem(`${key}:before-cloud-sync`, raw);
         }
+        commit(migrateTrackerOperations(original, operations()));
+        if (storage.getItem(migrationKey) !== '1') storage.setItem(migrationKey, '1');
         active = true;
         unsubscribe = personalStore.subscribe(() => { if (!committing) apply(); });
         apply();

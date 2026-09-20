@@ -1,3 +1,4 @@
+import { syncAccountData as syncAllAccountData } from "./accountDataSync.js";
 import { useCloudSession } from "./useCloudSession.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppStore, useAuthStore, useUserStateStore } from "../../stores/AppServicesContext.jsx";
@@ -18,7 +19,12 @@ export function useAccountPageModel() {
   const busyRef = useRef(false);
   const userRef = useRef(user?.id);
   userRef.current = user?.id;
-  const connected = Boolean(user?.id && cloud.token && cloud.userId === user.id);
+  const connected = cloudSession.canManageAccount;
+  const sessionRef = useRef({ user, config: cloud });
+  sessionRef.current = { user, config: cloud };
+  const syncAccountData = useCallback(() => syncAllAccountData({
+    getSession: () => sessionRef.current, syncProfile: () => services.syncCloudNow(), en: language === "en"
+  }), [services, language]);
   const zh = language !== "en";
   const copy = (cn, en) => zh ? cn : en;
   const run = useCallback(async (section, action) => {
@@ -51,7 +57,7 @@ export function useAccountPageModel() {
     if (userRef.current === ownerId) setAdminOverview(result.ok ? { status: "ready", ...result } : { status: "hidden" });
   }, [admin, connected, api]);
   useEffect(() => { refreshAdminOverview(); }, [refreshAdminOverview]);
-  return { services, api, user, state, cloud, connected, cloudSession, zh, copy, stats, status, busy, run,
+  return { services, api, user, state, cloud, connected, cloudSession, syncAccountData, zh, copy, stats, status, busy, run,
     t: services.t, formatDate: services.formatNewsDate, adminOverview: admin ? adminOverview : { status: "hidden" }, refreshAdminOverview };
 }
 

@@ -6,7 +6,7 @@ import { buildSettingsSaveResult } from '../src/modules/settings/save.js';
 import { buildGlobalSearchResults, getModuleSearchDefs } from '../src/ui/globalSearchData.js';
 import { normalizeLeetcodeConnection } from '../src/features/account/accountCenterData.js';
 
-function fixture({ connected = true, cloudApi = async () => ({ account: {} }) } = {}) {
+function fixture({ connected = true, cloudApi = async () => ({ account: { id: 'owner' } }) } = {}) {
   const account = { id: 'owner', name: 'Fixture', email: 'fixture@example.invalid', provider: 'local', passwordHash: 'hash:fixture@example.invalid:Original123', country: 'china', region: '上海', graduationTerm: '2027-09', goal: 'Original' };
   const appState = { currentUser: account, auth: { accounts: [account] }, cloudConfig: connected ? { userId: 'owner', token: 'fixture-only' } : {} };
   let saved = 0;
@@ -24,7 +24,7 @@ test('failed cloud save leaves all local profile and credential data untouched',
 });
 test('saving independent sections preserves the other profile values and server authority', async () => {
   const calls = [];
-  const { appState, api } = fixture({ cloudApi: async (path, options) => { calls.push({ path, ...options }); return { account: { ...options.body.updates } }; } });
+  const { appState, api } = fixture({ cloudApi: async (path, options) => { calls.push({ path, ...options }); return { account: { id: 'owner', ...options.body.updates } }; } });
   assert.equal((await api.save({ preferences: { language: 'en', theme: 'dark' } })).ok, true);
   assert.equal(appState.currentUser.goal, 'Original');
   assert.equal((await api.save({ email: 'changed@example.invalid', currentPassword: 'Original123' })).ok, true);
@@ -38,16 +38,20 @@ test('account switching while saving cannot write into the next user account', a
   const pending = api.save({ name: 'Changed' });
   await new Promise(done => setImmediate(done));
   appState.currentUser = { id: 'second' };
-  resolve({ account: { name: 'Changed' } });
+  resolve({ account: { id: 'owner', name: 'Changed' } });
   assert.equal((await pending).ok, false);
   assert.equal(appState.auth.accounts[0].name, 'Fixture');
 });
-test('local password verification is atomic and cloud-linked users cannot change credentials offline', async () => {
-  const { appState, api } = fixture({ connected: false });
-  assert.equal((await api.changePassword({ currentPassword: 'wrong', newPassword: 'Updated456', confirmPassword: 'Updated456' })).ok, false);
-  assert.equal((await api.changePassword({ currentPassword: 'Original123', newPassword: 'Updated456', confirmPassword: 'Updated456' })).ok, true);
-  appState.currentUser.cloudLinked = true;
-  assert.equal((await api.changePassword({ currentPassword: 'Updated456', newPassword: 'Again7890', confirmPassword: 'Again7890' })).ok, false);
+test('legacy and expired identities cannot edit profile or passwords without server authorization', async () => {
+  const { appState, api, saves } = fixture({ connected: false });
+  for (const cloudLinked of [false, true]) {
+    appState.currentUser.cloudLinked = cloudLinked;
+    const before = structuredClone(appState);
+    assert.equal((await api.changePassword({ currentPassword: 'Original123', newPassword: 'Updated456' })).code, 'reauthRequired');
+    assert.equal((await api.save({ name: 'New name' })).code, 'reauthRequired');
+    assert.deepEqual(appState, before);
+  }
+  assert.equal(saves(), 0);
 });
 test('switching endpoint clears credentials rather than forwarding them to another service', () => {
   const result = buildSettingsSaveResult({ cloudConfig: { endpoint: 'https://one.invalid/api', token: 'private', userId: 'owner', lastSyncAt: 'yesterday' }, currentUser: { country: 'unitedStates', region: 'California' }, values: { cloudEndpoint: 'https://two.invalid/api' } });
@@ -105,8 +109,8 @@ test('manual sync waits for an active request and then flushes pending edits', a
 test('profile and preferences saves do not award training activity', async () => {
   let options;
   const user = {id:'local',provider:'local',email:'local@example.invalid',name:'Local'};
-  const appState = {currentUser:user,auth:{accounts:[user]},cloudConfig:{}};
-  const api = createAccountPageApi({appState,userState:{value:{}},saveState:value=>{options=value;}});
+  const appState = {currentUser:user,auth:{accounts:[user]},cloudConfig:{userId:user.id,token:'fixture'}};
+  const api = createAccountPageApi({appState,cloudApi:async()=>({account:{...user,name:"New name"}}),userState:{value:{}},saveState:value=>{options=value;}});
   await api.save({name:'New name'});
   assert.equal(options.checkIn, false);
 });
@@ -121,4 +125,26 @@ test('a queued sync cannot send data after its owning session changes', async ()
   user = {id:'second'};
   assert.equal((await result).ok, false);
   assert.equal(calls, 0);
+});
+
+for (const change of ['token', 'userId', 'endpoint']) {
+  test(`profile save ignores a response after ${change} changes`, async () => {
+    let resolve;
+    const { appState, api, saves } = fixture({ cloudApi: () => new Promise(done => { resolve = done; }) });
+    const pending = api.save({ name: 'Changed' });
+    await new Promise(done => setImmediate(done));
+    appState.cloudConfig[change] = 'changed';
+    resolve({ account: { id: 'owner', name: 'Changed' } });
+    assert.equal((await pending).ok, false);
+    assert.equal(appState.auth.accounts[0].name, 'Fixture');
+    assert.equal(saves(), 0);
+  });
+}
+
+test('wrong-owner profile response cannot replace the current account', async () => {
+  const { appState, api, saves } = fixture({ cloudApi: async () => ({ account: { id: 'another', name: 'Changed' } }) });
+  const before = structuredClone(appState);
+  assert.equal((await api.save({ name: 'Changed' })).ok, false);
+  assert.deepEqual(appState, before);
+  assert.equal(saves(), 0);
 });

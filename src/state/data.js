@@ -122,6 +122,8 @@ export function mergeCloudState(remoteState = {}, localState = {}, deps = {}) {
     resources: mergeRecords(remote.resources, local.resources),
     network: mergeRecords(remote.network, local.network),
     mentalMathRecords: mergeRecords(remote.mentalMathRecords, local.mentalMathRecords),
+    gameRecords: mergeRecords(remote.gameRecords, local.gameRecords),
+    leetcodeHot100Done: [...new Set([...remote.leetcodeHot100Done, ...local.leetcodeHot100Done])],
     interviewFavorites: mergeRecords(remote.interviewFavorites, local.interviewFavorites),
     interviewExperiences: mergeRecords(remote.interviewExperiences, local.interviewExperiences).map(normalizeInterviewExperience),
     courseStates: mergeCourseStates(remote.courseStates, local.courseStates),

@@ -37,8 +37,17 @@ export async function syncSettingsCloudNow(elements = {}, config = {}, options =
 
   getSyncController()?.markAllDirty?.();
   if (elements.settingsMessage) elements.settingsMessage.textContent = t("cloudSyncing");
-  await flushSync();
+  let result;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    result = await flushSync();
+    if (result?.ok !== true) break;
+    const dirty = getSyncController()?.getDirty?.() || {};
+    if (!Object.values(dirty).some(Boolean)) break;
+    // Edits made while /sync was in flight belong to this manual sync too.
+    // Continuous editing leaves an honest pending result after bounded retries.
+    result = { ok: false };
+  }
   const statusText = getStatusText();
   if (elements.settingsMessage) elements.settingsMessage.textContent = statusText;
-  return statusText || true;
+  return result?.ok === true ? result : { ok: false, error: result?.error };
 }

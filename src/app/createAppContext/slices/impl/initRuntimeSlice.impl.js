@@ -419,6 +419,7 @@ export function initRuntimeSliceImpl(shared, ctx = {}) {
     storageKey: AUTH_KEY,
     defaultGoogleClientId: DEFAULT_GOOGLE_CLIENT_ID,
     getAuth: () => appState.auth,
+    getCloudConfig: () => appState.cloudConfig,
     normalizeAccount,
     setCurrentUser(user) {
       appState.currentUser = user;

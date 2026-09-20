@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { normalizeMentalMathRecords } from '../src/modules/tools/data.js';
+import { normalizeGameRecords, normalizeMentalMathRecords } from '../src/modules/tools/data.js';
 import { buildCloudSessionState, cloudStatePayload, mergeCloudState, normalizeState } from '../src/state/data.js';
 import { createCloudSessionController } from '../src/state/cloudSessionController.js';
+import { createAccountAuthController } from '../src/modules/account/authController.js';
+import { normalizeLeetcodeHot100Done } from '../src/modules/problems/data.js';
+import { upsertAuthAccount } from '../src/state/auth.js';
 
 const deps = { normalizeMentalMathRecords };
 const record = (id, day = 1) => ({ id, mode: 'numberLogic', correct: 3, incorrect: 2,
@@ -66,4 +69,65 @@ test('an explicit replacement still clears history instead of restoring prior lo
     normalizeState: normalize,
   });
   assert.deepEqual(nextState.mentalMathRecords, []);
+});
+
+const gameRecord = (id, day = 1) => ({ id, game: 'market', score: 3, detail: id, createdAt: `2026-09-${String(day).padStart(2, '0')}T12:00:00Z` });
+const historyDeps = { normalizeMentalMathRecords, normalizeGameRecords,
+  createBaseState: () => ({ createdAt: '2026-09-01T00:00:00Z' }),
+  normalizeLeetcodeHot100Done: values => normalizeLeetcodeHot100Done(values, ['source-one', 'source-two', 'target', 'cloud'].map(id => ({ id }))) };
+const mergeHistory = (remote, local) => mergeCloudState(remote, local, historyDeps);
+
+test('game history and Hot 100 completions survive a fresh device and repeated state merges', () => {
+  const remote = { gameRecords: [gameRecord('cloud')], leetcodeHot100Done: ['cloud'] };
+  const local = { gameRecords: [gameRecord('target', 2)], leetcodeHot100Done: ['target'] };
+  const downloaded = mergeHistory(remote, {});
+  assert.deepEqual(downloaded.gameRecords.map(row => row.id), ['cloud']);
+  assert.deepEqual(downloaded.leetcodeHot100Done, ['cloud']);
+  const combined = mergeHistory(remote, local);
+  assert.deepEqual(combined.gameRecords.map(row => row.id), ['cloud', 'target']);
+  assert.deepEqual(new Set(combined.leetcodeHot100Done), new Set(['cloud', 'target']));
+  assert.deepEqual(mergeHistory(remote, combined), combined);
+});
+
+test('normalization, cloud round trips and appending retain game sessions beyond the old 80 record cap', () => {
+  const history = Array.from({ length: 81 }, (_, index) => gameRecord(`game-${index}`));
+  const normalized = normalizeState({ gameRecords: history }, historyDeps);
+  assert.equal(normalized.gameRecords.length, 81);
+  const restored = mergeHistory(JSON.parse(JSON.stringify(cloudStatePayload(normalized))), {});
+  assert.deepEqual(new Set(restored.gameRecords.map(row => row.id)), new Set(history.map(row => row.id)));
+  assert.equal(normalizeGameRecords([...restored.gameRecords, gameRecord('new-game')]).length, 82);
+});
+
+test('real verified multi-owner login merges all game histories and completions without duplicating a later login', async () => {
+  const email = 'verified@example.test', targetId = 'cloud-owner';
+  const profiles = ['source-one', 'source-two'].map(id => ({ id, provider: 'local', email, passwordHash: 'verified-old-hash' }));
+  const states = new Map([...profiles.map(profile => [profile.id, { gameRecords: [gameRecord(profile.id)], leetcodeHot100Done: [profile.id] }]),
+    [targetId, { gameRecords: [gameRecord('target', 2)], leetcodeHot100Done: ['target'] }]]);
+  const appState = { auth: { accounts: profiles, currentUserId: '' }, community: {}, cloudConfig: {} };
+  const cloudSession = { token: 'verified-token', account: { id: targetId, provider: 'local', email }, state: { gameRecords: [gameRecord('cloud', 3)], leetcodeHot100Done: ['cloud'] } };
+  const session = createCloudSessionController({
+    getAppState: () => appState, normalizeAccount: value => value,
+    upsertLocalAccount: (account, localFields) => upsertAuthAccount(appState.auth, account, { localFields }),
+    migrateVerifiedCareerOwner: () => ({ migrated: false }),
+    buildCloudSessionState, mergeCloudState: mergeHistory,
+    normalizeState: value => normalizeState(value, historyDeps),
+    writeUserState: (owner, value) => states.set(owner, value),
+  });
+  const controller = createAccountAuthController({
+    getAppState: () => appState, elements: { loginEmail: { value: email }, loginPassword: { value: 'verified-password' }, loginForm: { reset() {} } },
+    normalizeEmail: value => String(value || '').trim().toLowerCase(), normalizeAccount: value => value,
+    loginCloudAccount: async () => cloudSession, hashPassword: async () => 'verified-old-hash',
+    loadStateForUser: owner => normalizeState(states.get(owner) || {}, historyDeps), mergeCloudState: mergeHistory,
+    applyCloudSession: session.apply,
+  });
+  const expected = new Set(['source-one', 'source-two', 'target', 'cloud']);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await controller.loginLocal();
+    assert.equal(appState.auth.currentUserId, targetId);
+    assert.deepEqual(new Set(states.get(targetId).gameRecords.map(row => row.id)), expected);
+    assert.equal(states.get(targetId).gameRecords.length, 4);
+    assert.deepEqual(new Set(states.get(targetId).leetcodeHot100Done), expected);
+  }
+  assert.deepEqual(states.get('source-one').gameRecords, [gameRecord('source-one')]);
+  assert.deepEqual(states.get('source-two').gameRecords, [gameRecord('source-two')]);
 });

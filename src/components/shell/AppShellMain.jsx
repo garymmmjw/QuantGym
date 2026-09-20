@@ -9,6 +9,7 @@ import { CommandPalette } from "./CommandPalette.jsx";
 import { OnboardingTour } from "./OnboardingTour.jsx";
 import { RouteProgressBar } from "./RouteProgressBar.jsx";
 import { CloudSessionBadge, CloudSessionNotice } from "../../features/account/CloudSessionNotice.jsx";
+import { AccountDataSync } from "../../features/account/AccountDataSync.jsx";
 import { isModuleVisible } from "../../modules/availability.js";
 
 const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
@@ -418,6 +419,7 @@ export function AppShellMain() {
 
           <section className="module-view active" data-module-view="route" aria-live="polite">
             <div className="app-route-root qg-route-container">
+              <AccountDataSync />
               <CloudSessionNotice />
               <Outlet />
             </div>

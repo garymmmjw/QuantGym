@@ -13,6 +13,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
 const summaryPath = getArgValue("--summary") || "docs/browser-audit-screenshots/328-browser-route-smoke-summary.json";
 const skipBuild = args.includes("--no-build");
+const authOnly = args.includes("--auth-only");
 const keepTemp = args.includes("--keep-temp");
 const onlyInteraction = getArgValue("--only-interaction") || "";
 const quietProgress = args.includes("--quiet-progress") || process.env.QUANTGYM_BROWSER_SMOKE_PROGRESS === "0";
@@ -70,7 +71,7 @@ try {
     path: entry.path || "/"
   }));
   const missingTargets = routes.filter((route) => !routeTargets[route.id]);
-  if (missingTargets.length) {
+  if (!authOnly && missingTargets.length) {
     throw new Error(`Missing browser route smoke targets for: ${missingTargets.map((route) => route.id).join(", ")}`);
   }
 
@@ -112,7 +113,7 @@ try {
   attachPageCollectors(page, baseUrl);
 
   const routeResults = [];
-  for (const [index, route] of routes.entries()) {
+  for (const [index, route] of (authOnly ? [] : routes).entries()) {
     logProgress(`route ${index + 1}/${routes.length}: ${route.id}`);
     const result = await checkRoute(page, baseUrl, route);
     routeResults.push(result);
@@ -189,7 +190,7 @@ try {
     ["settings backup restores community posts and messages", runSettingsBackupCommunityRestoreFlow],
     ["settings backup export, import, and reset state", runSettingsBackupImportResetFlow]
   ];
-  const selectedInteractionChecks = onlyInteraction
+  const selectedInteractionChecks = authOnly ? [] : onlyInteraction
     ? interactionChecks.filter(([name]) => name.includes(onlyInteraction))
     : interactionChecks;
   if (onlyInteraction && !selectedInteractionChecks.length) {
@@ -295,6 +296,7 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
   const context = await browserInstance.newContext({ viewport: { width: 1365, height: 900 }, locale: "zh-CN" });
   const apiEndpoint = `${baseUrl}/api`;
   await context.addInitScript((endpoint) => {
+    if (localStorage.getItem("quantMemoryBoard.cloud.v1")) return;
     localStorage.setItem("quantMemoryBoard.cloud.v1", JSON.stringify({
       endpoint,
       token: "",
@@ -305,19 +307,20 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
   }, apiEndpoint);
   let registeredAccountId = "";
   let activePassword = "";
+  let registrationOnline = false;
   await context.route("**/api/**", async (route) => {
     const requestUrl = new URL(route.request().url());
     if (requestUrl.pathname.endsWith("/auth/account-status")) {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ exists: false })
+        body: JSON.stringify({ exists: Boolean(registeredAccountId) })
       });
       return;
     }
     if (requestUrl.pathname.endsWith("/auth/verification-code")) {
       const body = readRequestJson(route.request());
-      if (body?.purpose === "password_reset") {
+      if (body?.purpose === "password_reset" || registrationOnline) {
         await route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -331,6 +334,28 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
         return;
       }
       await route.abort("failed");
+      return;
+    }
+    if (requestUrl.pathname.endsWith("/auth/register")) {
+      if (!registrationOnline) {
+        await route.abort("failed");
+        return;
+      }
+      const body = readRequestJson(route.request());
+      if (body?.verificationCode !== "123456" || body?.account?.email !== email) {
+        await route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ error: "Invalid verification code" }) });
+        return;
+      }
+      registeredAccountId = `server:${unique}`;
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({ token: `browser-register-token-${unique}`, account: { ...body.account, id: registeredAccountId }, state: {}, community: {} })
+      });
+      return;
+    }
+    if (requestUrl.pathname.endsWith('/account') && registeredAccountId) {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ account: { id: registeredAccountId, email, provider: 'local', name: 'Browser Auth Smoke' } }) });
       return;
     }
     if (requestUrl.pathname.endsWith("/auth/reset-password")) {
@@ -391,13 +416,15 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
     await route.abort("failed");
   });
   const page = await context.newPage();
+  const authPageErrors = [];
+  page.on('pageerror', error => authPageErrors.push(error.message));
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const email = `browser-auth-${unique}@quantgym.local`;
   const password = `BrowserAuth-${unique}`;
   const resetPassword = `BrowserReset-${unique}`;
   activePassword = password;
   const result = {
-    name: "protected route redirects to auth and local email auth works",
+    name: "protected route requires verified server email authentication",
     status: "pass",
     localEmailAuth: {
       email,
@@ -405,6 +432,9 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
       accountStatusChecked: false,
       registrationFormShown: false,
       verificationOptional: false,
+      offlineVerificationRejected: false,
+      offlineRegistrationRejected: false,
+      serverSessionVerified: false,
       registered: false,
       accountPersisted: false,
       logoutReturnedToAuth: false,
@@ -433,24 +463,50 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
 
     await page.locator("#registerName").fill("Browser Auth Smoke");
     await page.locator("#registerPassword").fill(password);
-    await page.locator("#sendRegisterCodeBtn").click({ timeout: 10000 });
+    await page.locator("#registerForm").evaluate((form) => form.requestSubmit());
     await page.waitForFunction(() => (
-      document.querySelector("#registerForm")?.dataset.verificationOptional === "true"
+      document.querySelector("#registerForm")?.dataset.registerStage === "verify"
+      && document.querySelector("#sendRegisterCodeBtn")?.disabled === false
+      && Boolean(document.querySelector("#authMessage")?.textContent?.trim())
     ), null, { timeout: 10000 });
-    result.localEmailAuth.verificationOptional = true;
+    const verificationMessage = await page.locator("#authMessage").textContent();
+    result.localEmailAuth.verificationOptional = await page.locator("#registerForm").evaluate(form => form.dataset.verificationOptional === "true");
+    if (result.localEmailAuth.verificationOptional) throw new Error("Verification failure must not enable offline registration.");
+    result.localEmailAuth.offlineVerificationRejected = true;
+
+    await page.locator("#registerVerificationCode").fill("123456");
+    await page.locator("#registerForm").evaluate((form) => form.requestSubmit());
+    await page.waitForFunction(previousMessage => {
+      const message = document.querySelector("#authMessage")?.textContent || "";
+      const auth = JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}");
+      const cloud = JSON.parse(localStorage.getItem("quantMemoryBoard.cloud.v1") || "{}");
+      return message.trim() && message !== previousMessage && !auth.currentUserId
+        && !(auth.accounts || []).length && !cloud.token;
+    }, verificationMessage, { timeout: 10000 });
+    result.localEmailAuth.offlineRegistrationRejected = true;
+
+    registrationOnline = true;
+    await page.locator("#sendRegisterCodeBtn").click({ timeout: 10000 });
+    await page.waitForFunction(() => /123456/.test(document.querySelector("#authMessage")?.textContent || ""), null, { timeout: 10000 });
 
     await page.locator("#registerForm").evaluate((form) => form.requestSubmit());
     await waitForAuthenticatedShell(page);
+    await page.getByRole('button', { name: '跳过', exact: true }).click({ timeout: 10000 });
     result.localEmailAuth.registered = true;
     const registeredAuth = await expectLocalAuthAccount(page, email);
     result.localEmailAuth.accountPersisted = true;
     result.localEmailAuth.accountId = registeredAuth.currentUserId;
-    registeredAccountId = registeredAuth.currentUserId;
+    result.localEmailAuth.serverSessionVerified = await page.evaluate(expectedId => {
+      const cloud = JSON.parse(localStorage.getItem("quantMemoryBoard.cloud.v1") || "{}");
+      return cloud.userId === expectedId && Boolean(cloud.token);
+    }, registeredAccountId);
+    if (registeredAuth.currentUserId !== registeredAccountId || !result.localEmailAuth.serverSessionVerified) {
+      throw new Error("Registration must use the server identity and session.");
+    }
 
-    await page.goto(`${baseUrl}/settings`, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.goto(`${baseUrl}/account?section=security`, { waitUntil: "domcontentloaded", timeout: 20000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#logoutBtn", { state: "visible", timeout: 10000 });
-    await page.locator("#logoutBtn").click({ timeout: 10000 });
+    await page.getByRole("button", { name: "退出登录", exact: true }).click({ timeout: 10000 });
     await page.waitForURL(/\/login$/, { timeout: 10000 });
     await page.waitForSelector("#authShell:not(.hidden)", { state: "visible", timeout: 10000 });
     await page.waitForFunction(() => {
@@ -470,10 +526,9 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
     result.localEmailAuth.reloginSucceeded = true;
     result.localEmailAuth.reloginPath = new URL(page.url()).pathname;
 
-    await page.goto(`${baseUrl}/settings`, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.goto(`${baseUrl}/account?section=security`, { waitUntil: "domcontentloaded", timeout: 20000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#logoutBtn", { state: "visible", timeout: 10000 });
-    await page.locator("#logoutBtn").click({ timeout: 10000 });
+    await page.getByRole("button", { name: "退出登录", exact: true }).click({ timeout: 10000 });
     await page.waitForURL(/\/login$/, { timeout: 10000 });
     await page.waitForSelector("#authShell:not(.hidden)", { state: "visible", timeout: 10000 });
     await page.locator("#loginEmail").fill(email);
@@ -496,10 +551,9 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
     });
     result.localEmailAuth.resetSucceeded = true;
 
-    await page.goto(`${baseUrl}/settings`, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.goto(`${baseUrl}/account?section=security`, { waitUntil: "domcontentloaded", timeout: 20000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#logoutBtn", { state: "visible", timeout: 10000 });
-    await page.locator("#logoutBtn").click({ timeout: 10000 });
+    await page.getByRole("button", { name: "退出登录", exact: true }).click({ timeout: 10000 });
     await page.waitForURL(/\/login$/, { timeout: 10000 });
     await page.waitForSelector("#authShell:not(.hidden)", { state: "visible", timeout: 10000 });
 
@@ -507,7 +561,7 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
     await page.waitForFunction(() => {
       const auth = JSON.parse(localStorage.getItem("quantMemoryBoard.auth.v1") || "{}");
       const message = document.querySelector("#authMessage")?.textContent || "";
-      return !auth.currentUserId && /密码不对|Wrong password/i.test(message);
+      return !auth.currentUserId && /密码不正确|password is incorrect/i.test(message);
     }, null, { timeout: 10000 });
     result.localEmailAuth.resetOldPasswordRejected = true;
 
@@ -523,6 +577,8 @@ async function checkUnauthenticatedAuthFlow(browserInstance, baseUrl) {
   } catch (error) {
     result.status = "fail";
     result.error = error.message;
+    result.pageErrors = authPageErrors;
+    result.visibleText = (await page.locator('body').innerText().catch(() => '')).slice(0, 2000);
     fail(`Unauthenticated auth flow failed: ${error.message}`);
   } finally {
     await context.close();
@@ -9351,6 +9407,7 @@ function seedAuthenticatedStorage(config = {}) {
   const accountPasswordHash = config.passwordHash || "6246e686ac437c36bc94b6bd3b6cf9e578267cad791c8b2c1ea13e286b011f92";
   const account = {
     id: accountId,
+    cloudLinked: true,
     provider: "local",
     name: "Browser Route Smoke",
     email: accountEmail,

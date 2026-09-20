@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createPersonalStore } from '../personal/personalStore.js';
+import { createPersonalStore, personalStorageKey } from '../personal/personalStore.js';
 import { createPersonalCloudSync } from '../personal/personalCloud.js';
 import { createTrackerSyncBridge, getTrackerWorkspace } from './trackerSyncBridge.js';
 import { createTrackerStore, trackerStorageKey } from './trackerStore.js';
@@ -53,6 +53,57 @@ test('offline additions and independent edits on both devices converge', async (
   assert.equal(state(a).applications.length, 3);
   const merged = state(a).applications.find(item => item.id === 'app-1');
   assert.equal(merged.company, 'New Company'); assert.equal(merged.role, 'New Role');
+});
+
+test('another tab saving between cache read and journal refresh cannot turn unchanged fields into stale edits', async () => {
+  const storage = memoryStorage(); seed(storage);
+  const first = device(storage), second = device(storage);
+  const input = { ...first.trackerStore.getSnapshot().applications[0], role: 'Role edited in first tab' };
+  const read = storage.getItem;
+  let concurrent = true;
+  storage.getItem = key => {
+    if (key === personalStorageKey(ownerId) && concurrent) {
+      concurrent = false;
+      second.trackerStore.updateApplication({ ...second.trackerStore.getSnapshot().applications[0], company: 'Company edited in second tab' });
+    }
+    return read(key);
+  };
+  first.trackerStore.updateApplication(input);
+  await flush();
+  assert.equal(state(first).applications[0].company, 'Company edited in second tab');
+  assert.equal(state(first).applications[0].role, 'Role edited in first tab');
+});
+
+test('concurrent Stage description and date edits use the original mutation baseline', async () => {
+  const storage = memoryStorage();
+  createCareerStageStore({ ownerId, storage }).addStage({ label: 'Stage 1', description: 'Original', recordedDate: '2026-08-21' });
+  const first = device(storage), second = device(storage);
+  const stageId = first.stageStore.getSnapshot().stages[0].id;
+  const read = storage.getItem;
+  let concurrent = true;
+  storage.getItem = key => {
+    if (key === personalStorageKey(ownerId) && concurrent) {
+      concurrent = false;
+      second.stageStore.updateStage(stageId, { description: 'New description' });
+    }
+    return read(key);
+  };
+  first.stageStore.updateStage(stageId, { recordedDate: '2026-09-19' });
+  await flush();
+  assert.equal(first.stageStore.readSyncState()[0].description, 'New description');
+  assert.equal(first.stageStore.readSyncState()[0].recordedDate, '2026-09-19');
+});
+
+test('records added by an older tab after the first migration join the journal on the next start', () => {
+  const storage = memoryStorage(); seed(storage);
+  const first = device(storage);
+  first.stop();
+  // A still-open pre-sync tab uses the original cache store directly.
+  createTrackerStore({ ownerId, storage }).addApplication(app('added-by-older-tab'));
+  const reopened = device(storage);
+  assert.deepEqual(state(reopened).applications.map(row => row.id).sort(), ['added-by-older-tab', 'app-1']);
+  const phone = device(); transfer(reopened, phone);
+  assert.deepEqual(state(phone).applications.map(row => row.id).sort(), ['added-by-older-tab', 'app-1']);
 });
 
 test('delete wins over a stale phone edit and undo survives subsequent sync', async () => {

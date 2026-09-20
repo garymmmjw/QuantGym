@@ -28,6 +28,7 @@ export function normalizeGameRecords(records = [], deps = {}) {
       detail: String(record?.detail || "").trim().slice(0, 280),
       createdAt: record?.createdAt || new Date().toISOString()
     }))
-    .filter((record) => record.game)
-    .slice(-80);
+    // Storage must retain every historical session across account migration.
+    // Any display limit belongs to the view, not to record normalization.
+    .filter((record) => record.game);
 }
