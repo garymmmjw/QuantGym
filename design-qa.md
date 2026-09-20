@@ -322,3 +322,9 @@ Removed the visible 当前阶段 label and its reserved top spacing; retained th
 Measured the real shared component in the synthetic browser fixture: at 1280px the header and all three group centers match within 0.01px, and both label starts and number ends match across rows. The same center check passes at 1024px. At 390/320px the paired counts remain on one line, contained within their row, with document width equal to viewport width. Current/history desktop row heights are 56/46px. No data or calculation changes.
 
 final result: passed
+
+## Stage count label spacing — 2026-09-20
+
+Tightened the shared Stage LeetCode group from 224px to 180px and aligned each value to the start of its slot. Browser measurements at 1280px confirm a 5px label-to-value gap in every row, identical label/number anchors, and unchanged header/group center alignment. At 320px the gap is 3px; both counts remain on one line and contained, with no page overflow. Only the shared Stage summary selector changes.
+
+final result: passed
