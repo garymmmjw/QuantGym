@@ -117,3 +117,22 @@
 }
 .quantgym-tracker .qt-cloud-status { display: flex; align-items: center; gap: 10px; margin: -8px 0 14px; color: var(--qt-muted, #807789); font-size: 12px; }
 .quantgym-tracker .qt-cloud-status button { border: 0; padding: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
+
+/* The panel's lower edge adjusts only the table viewport, leaving its controls intact. */
+.quantgym-tracker .qt-table-resizer {
+  display: flex; align-items: center; justify-content: center;
+  height: 24px; width: 100%; cursor: ns-resize; touch-action: none;
+  user-select: none; -webkit-user-select: none;
+  background: #fff; border-top: 1px solid #f3eff6; outline-offset: -3px;
+}
+.quantgym-tracker .qt-table-resizer > span {
+  width: 36px; height: 4px; border-radius: 4px; background: #d4c9dd;
+}
+.quantgym-tracker .qt-table-resizer:hover,
+.quantgym-tracker .qt-table-resizer:focus-visible,
+.quantgym-tracker .qt-table-resizer.is-resizing { background: #f8f5fa; }
+.quantgym-tracker .qt-table-resizer:focus-visible { outline: 2px solid #a48caf; }
+.quantgym-tracker .qt-table-resizer:hover > span,
+.quantgym-tracker .qt-table-resizer:focus-visible > span,
+.quantgym-tracker .qt-table-resizer.is-resizing > span { background: #9879a5; }
+@media (pointer: coarse) { .quantgym-tracker .qt-table-resizer { height: 32px; } }

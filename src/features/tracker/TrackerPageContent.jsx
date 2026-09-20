@@ -137,6 +137,8 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
         </section>
         <StagePanel key={ownerId+namespace} stageStore={stageStore} practice={practice} addRequest={addStageRequest} showAddButton={false}/>
         <ApplicationList
+          ownerId={ownerId}
+          namespace={namespace}
           applications={resolvedApplications}
           stages={stageDefinitions}
           status={status}
