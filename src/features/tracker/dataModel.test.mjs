@@ -14,6 +14,34 @@ const app = (id, date, prepPhase = 's2', company = id) => ({
 const ids = rows => rows.map(row => row.id);
 const display = (rows, order) => groupApplications(sortApplications(rows, order), stages);
 
+test('company and role search intersects every view without changing totals or ordering', () => {
+  const research = app('research', '2026-09-16', 's2', 'BlackRock');
+  research.events.push({ id: 'research-oa', type: 'oa_received', date: '2026-09-17', dueDate: '2026-09-22' });
+  const trading = app('trading', '2026-09-15', 's1', 'BlackRock');
+  trading.role = 'Trading Intern';
+  trading.events.push({ id: 'trading-oa', type: 'oa_received', date: '2026-09-17', dueDate: '2026-09-20', dueTime: '18:00' });
+  const waiting = app('waiting', '2026-09-19', 's2', 'Goldman Sachs');
+  const chinese = app('chinese', '2026-09-14', '', '量化公司');
+  chinese.role = '研究实习生';
+  const rows = [research, trading, waiting, chinese];
+  const before = structuredClone(rows);
+  const summary = getSummary(rows);
+  assert.deepEqual(ids(getApplicationView(rows, stages, 'all', '  BLACKrock  ').applications), ['research', 'trading']);
+  assert.deepEqual(ids(getApplicationView(rows, stages, 'all', 'trading').applications), ['trading']);
+  assert.deepEqual(ids(getApplicationView(rows, stages, 'ddl', 'black').applications), ['trading', 'research']);
+  assert.equal(getApplicationView(rows, stages, 'ddl', 'black').groups, null);
+  assert.deepEqual(ids(getApplicationView(rows, stages, 'awaiting', 'black').applications), []);
+  assert.deepEqual(ids(getApplicationView(rows, stages, 'received-oa', 'trading').applications), ['trading']);
+  assert.deepEqual(ids(getApplicationView(rows, stages, 'all', '研究').applications), ['chinese']);
+  assert.deepEqual(ids(getApplicationView(rows, stages, 'company', 'BLACK').applications), ['research', 'trading']);
+  assert.equal(getApplicationView(rows, stages, 'company', 'BLACK').groups, null);
+  const filtered = getApplicationView(rows, stages, 'all', 'Goldman');
+  assert.deepEqual(ids(filtered.groups.find(group => group.stage.id === 's2').applications), ['waiting']);
+  assert.deepEqual(getApplicationView(rows, stages, 'ddl', '  '), getApplicationView(rows, stages, 'ddl'));
+  assert.deepEqual(rows, before);
+  assert.deepEqual(getSummary(rows), summary);
+});
+
 test('received milestones count each application once and preserve separate current outcomes', () => {
   const withProgress = (id, types) => {
     const row = app(id, '2026-09-17');

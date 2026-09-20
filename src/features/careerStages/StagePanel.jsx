@@ -1,19 +1,12 @@
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { Pencil } from 'lucide-react';
 import { localDateKey, nextStageLabel } from './stageStore.js';
-import { summarizeStagePractice } from './stagePractice.js';
+import { formatStagePeriod, summarizeStagePractice } from './stagePractice.js';
 import './stagePanel.css';
 
-function formatDate(value) {
-  return value ? value.replaceAll('-', '.') : '';
-}
-
-function periodText(stage) {
-  if (!stage.periodEnd) return '';
-  const end = stage.usesTodayBoundary ? '今天' : formatDate(stage.periodEnd);
-  if (stage.sameDay) return `${end} · 与上一 Stage 同日`;
-  if (stage.periodStart === stage.periodEnd) return end;
-  if (stage.periodStart) return `${formatDate(stage.periodStart)} – ${end}`;
-  return `${stage.previousLabel ? '' : '截至 '}${end}`;
+function periodNote(stage) {
+  if (!stage.periodStart || !stage.periodEnd || stage.periodStart > stage.periodEnd) return '暂无法确定统计区间，请补充或修改阶段日期。';
+  return `统计 ${stage.periodStart} 之后至 ${stage.periodEnd} 当日完成的题目，不含起始日、包含结束日。`;
 }
 
 function StageDialog({ stageStore, stage, practice, onClose }) {
@@ -24,7 +17,8 @@ function StageDialog({ stageStore, stage, practice, onClose }) {
   const [date, setDate] = useState(stage?.recordedDate || today);
   const [error, setError] = useState('');
   const draft = { ...stage, id: stage?.id || 'new-stage-preview', label, recordedDate: date };
-  const draftStages = [...stageStore.getSnapshot().stages.filter(item => item.id !== stage?.id), draft];
+  const savedStages = stageStore.getSnapshot().stages;
+  const draftStages = stage ? savedStages.map(item => item.id === stage.id ? draft : item) : [...savedStages, draft];
   const preview = summarizeStagePractice(draftStages, practice).find(item => item.id === draft.id);
 
   useEffect(() => {
@@ -65,7 +59,7 @@ function StageDialog({ stageStore, stage, practice, onClose }) {
         </div>
         <label>准备状态<input value={description} maxLength={200} onChange={event => setDescription(event.target.value)} placeholder="例如：简历完成，开始集中投递" /></label>
         <div className="career-auto-count" aria-label="系统统计的阶段刷题数"><span>本阶段刷题 · {preview.countStatus === 'partial' ? '已确认' : '系统统计'}</span><output>{preview.questionCount ?? '—'}<small>题</small></output></div>
-        <p className="career-form-hint">{preview.previousLabel ? `统计 ${preview.previousLabel} 日期之后、到本 Stage 当日完成的题目。` : '统计截至本 Stage 当日完成的题目。'}仅计有完成日期的系统记录，同一阶段内同题计一次。{preview.countSourceNote}</p>
+        <p className="career-form-hint">{preview.nextLabel ? `统计本 Stage 日期之后、到 ${preview.nextLabel} 当日完成的题目。` : '统计本 Stage 日期之后、截至今天完成的题目。'}不含起始日、包含结束日。仅计有完成日期的系统记录，同一阶段内同题计一次。{preview.countSourceNote}</p>
         {error && <p className="career-error" role="alert">{error}</p>}
         <footer><button type="button" className="career-button" onClick={onClose}>取消</button><button type="submit" className="career-button career-primary">保存 Stage</button></footer>
       </form>
@@ -79,25 +73,28 @@ export default function StagePanel({ stageStore, practice, variant = 'tracker', 
   const orderedStages = summarizeStagePractice(stages, practice);
   const current = orderedStages.at(-1);
   useEffect(() => { if (addRequest) setEditor({ stage: null }); }, [addRequest]);
-  const previousStages = orderedStages.slice(0, -1);
+  const displayStages = [...orderedStages].reverse();
   return (
     <section className={`career-stage-panel career-stage-${variant}`} aria-label="求职准备阶段">
-      <div className="career-stage-heading">
-        <div><span className="career-eyebrow">MY PREPARATION</span><h2>求职准备阶段</h2></div>
-        <div className="career-stage-heading-actions">{headerActions}{showAddButton && <button type="button" className="career-button career-add" onClick={() => setEditor({ stage: null })}>＋ 添加 Stage</button>}</div>
-      </div>
-      {current ? <div className="career-current-stage">
-        <div className="career-stage-identity"><span className="career-current-label">当前阶段</span><h3><button type="button" className="career-stage-name" aria-label={`编辑 ${current.label}`} title="点击修改阶段信息" onClick={() => setEditor({ stage: current })}>{current.label}</button></h3>{current.description && <p>{current.description}</p>}</div>
-        <div className="career-stage-metric" title={current.countSourceNote || '按有完成日期的系统记录统计，同一阶段内同题计一次'}><span>{current.countStatus === 'partial' && current.questionCount !== null ? '本阶段已确认刷题' : '本阶段刷题'}</span><div><strong>{current.questionCount ?? '—'}</strong><span>题</span></div>{periodText(current) && <small>{periodText(current)}</small>}{current.countSourceNote && current.countStatus !== 'ready' && <small className="career-stage-count-note">{current.countSourceNote}</small>}</div>
-      </div> : <div className="career-empty"><p>添加第一个 Stage，记录当前的求职准备状态。</p>{!showAddButton && <button className="career-button" type="button" onClick={() => setEditor({ stage: null })}>＋ 添加 Stage</button>}</div>}
-      {previousStages.length > 0 && <div className="career-history">
-        <ol aria-label="之前的 Stage">{previousStages.map(stage => <li className="career-history-stage" key={stage.id}>
-          <h3><button type="button" className="career-stage-name" aria-label={`编辑 ${stage.label}`} title={`${stage.label} · 点击修改阶段信息`} onClick={() => setEditor({ stage })}>{stage.label}</button></h3>
-          {stage.recordedDate ? <time className="career-history-date" dateTime={stage.recordedDate}>{formatDate(stage.recordedDate)}</time> : <span className="career-history-date" aria-hidden="true" />}
-          <p className="career-history-description" title={stage.description}>{stage.description}</p>
-          <span className="career-history-count" title={stage.countSourceNote || '按有完成日期的系统记录统计，同一阶段内同题计一次'}><span>{stage.countStatus === 'partial' && stage.questionCount !== null ? '已确认' : '阶段刷题'}</span><strong>{stage.questionCount ?? '—'}</strong><span>题</span></span>
-        </li>)}</ol>
-      </div>}
+      {(headerActions || showAddButton) && <div className="career-stage-heading-actions">{headerActions}{showAddButton && <button type="button" className="career-button career-add" onClick={() => setEditor({ stage: null })}>＋ 添加 Stage</button>}</div>}
+      {current ? <ol className="career-stage-list" aria-label="准备阶段，按新到旧排列">{displayStages.map(stage => {
+        const isCurrent = stage.id === current.id;
+        const partial = stage.countStatus === 'partial' && stage.questionCount !== null;
+        return <li className={`career-stage-row${isCurrent ? ' career-stage-row-current' : ''}`} key={stage.id} aria-current={isCurrent ? 'step' : undefined}>
+          <div className="career-stage-row-identity">
+            {isCurrent && <span className="career-current-label">当前阶段</span>}
+            <h3><button type="button" className="career-stage-name" aria-label={`编辑 ${stage.label}`} title="点击修改阶段信息" onClick={() => setEditor({ stage })}>
+              <span>{stage.label}</span><Pencil className="career-stage-edit-icon" size={14} strokeWidth={1.6} aria-hidden="true" />
+            </button></h3>
+          </div>
+          <span className="career-stage-period" title={periodNote(stage)}>{formatStagePeriod(stage)}</span>
+          <p className="career-stage-description">{stage.description || '—'}</p>
+          <div className="career-stage-count" title={`${periodNote(stage)}同一阶段内同题计一次。${stage.countSourceNote || ''}`}>
+            <div className="career-stage-count-line" aria-label={`${partial ? '本阶段已确认刷题' : '本阶段刷题'} ${stage.questionCount ?? '未知'} 题`}><span>本阶段刷题</span><strong>{stage.questionCount ?? '—'}</strong><span>题</span></div>
+            {(partial || stage.countSourceNote) && <small className="career-stage-source-note">{[partial ? '已确认' : '', stage.countSourceNote].filter(Boolean).join(' · ')}</small>}
+          </div>
+        </li>;
+      })}</ol> : <div className="career-empty"><p>添加第一个 Stage，记录当前的求职准备状态。</p>{!showAddButton && <button className="career-button" type="button" onClick={() => setEditor({ stage: null })}>＋ 添加 Stage</button>}</div>}
       {error && <p className="career-error" role="alert">{error}</p>}
       {editor && <StageDialog key={editor.stage?.id || 'new'} stageStore={stageStore} stage={editor.stage} practice={practice} onClose={() => setEditor(null)} />}
     </section>

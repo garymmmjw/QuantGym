@@ -1,4 +1,5 @@
 import React from 'react';
+import { Clock3 } from 'lucide-react';
 import { STATUS_META, getCurrentStatus, getCurrentDeadlineEvent, formatDeadline, deadlineDateTime } from './dataModel.js';
 import Icon from './TrackerIcon.jsx';
 
@@ -9,6 +10,7 @@ function EventPill({ event }) {
     ? event.date.slice(5).replace('-', '/') : event.date;
   return (
     <span className={`qt-event-pill qt-${meta.tone}`} title={`${event.date} · 点击修改记录`}>
+      <span className="qt-event-dot" aria-hidden="true"/>
       <span className="qt-event-label">{meta.label}</span>
       <span className="qt-event-date">{shortDate || '日期未填'}</span>
     </span>
@@ -46,7 +48,7 @@ export default function ApplicationRow({ application, progressColumnCount, onOpe
           <button className="qt-deadline-button" onClick={() => onEditDeadline(deadline)}
             title={`截止 ${formatDeadline(deadline, { fullDate: true })} · 点击修改`}
             aria-label={`修改 ${company.trim()} ${role} 的截止时间，${formatDeadline(deadline, { fullDate: true })}`}>
-            <time dateTime={deadlineDateTime(deadline)}>{formatDeadline(deadline)}</time>
+            <Clock3 size={16} strokeWidth={1.7} aria-hidden="true"/><time dateTime={deadlineDateTime(deadline)}>{formatDeadline(deadline)}</time>
           </button>
         ) : <span className="qt-empty-step" aria-label="无截止时间">—</span>}
       </td>
