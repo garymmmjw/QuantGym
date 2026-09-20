@@ -2944,7 +2944,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         path = urlparse(self.path).path.rstrip("/") or "/"
         try:
             if path in {"/health", "/api/health"} and self.command == "GET":
-                return self.send_json(200, {"ok": True, "database": db.health()})
+                return self.send_json(200, {"ok": True, "database": db.health(), "capabilities": {"careerTrackerSync": 1}})
             if path.startswith("/api/guardian/"):
                 return guardian.handle(self, path)
             if path == "/api/auth/verification-code" and self.command == "POST":

@@ -1,0 +1,127 @@
+{
+  "generatedBy": "trackerSyncModel migrateTrackerOperations + diffTrackerOperations + mergeTrackerOperations; deterministic fixture IDs",
+  "operations": [
+    {
+      "id": "migration-application-000000-8cd43da4bfd9612acadfd57cbcd873c2",
+      "clock": 0,
+      "kind": "application",
+      "applicationId": "fixture-app",
+      "fields": {
+        "company": "协议公司 🌱",
+        "role": "Quant researcher",
+        "prepPhase": "fixture-stage",
+        "season": "2027"
+      }
+    },
+    {
+      "id": "migration-event-000000-91ff0fcdffacf51fd09d09b59f250da7",
+      "clock": 0,
+      "kind": "event",
+      "applicationId": "fixture-app",
+      "eventId": "fixture-oa",
+      "fields": {
+        "type": "oa_received",
+        "date": "2026-09-19",
+        "year": 2026,
+        "dueDate": "2026-09-23",
+        "dueTime": "14:30"
+      },
+      "order": [
+        "fixture-submitted",
+        "fixture-oa"
+      ]
+    },
+    {
+      "id": "migration-event-000000-f060549fc1922fd17fa514f7e0939fa9",
+      "clock": 0,
+      "kind": "event",
+      "applicationId": "fixture-app",
+      "eventId": "fixture-submitted",
+      "fields": {
+        "type": "submitted",
+        "date": "8/21",
+        "year": null,
+        "dueDate": "",
+        "dueTime": ""
+      },
+      "order": [
+        "fixture-submitted"
+      ]
+    },
+    {
+      "id": "migration-stage-000000-ba2f64deeeb46bfcccd37976f07b33f4",
+      "clock": 0,
+      "kind": "stage",
+      "stageId": "fixture-stage",
+      "fields": {
+        "label": "Stage 1",
+        "description": "保留原始阶段",
+        "recordedDate": "2026-08-21",
+        "createdAt": "2026-08-21T12:00:00.000Z",
+        "capturedAt": null,
+        "updatedAt": "2026-09-19T08:00:00+08:00",
+        "trackerImportDate": "2026-09-19"
+      },
+      "aliases": [
+        "legacy-stage-a",
+        "legacy-stage-z"
+      ]
+    },
+    {
+      "id": "fixture-edit-1",
+      "clock": 1,
+      "kind": "delete",
+      "applicationId": "fixture-app",
+      "eventId": "fixture-oa",
+      "deleteId": "fixture-delete",
+      "event": {
+        "id": "fixture-oa",
+        "type": "oa_received",
+        "date": "2026-09-19",
+        "year": 2026,
+        "dueDate": "2026-09-23",
+        "dueTime": "14:30"
+      },
+      "order": [
+        "fixture-submitted",
+        "fixture-oa"
+      ]
+    },
+    {
+      "id": "fixture-edit-2",
+      "clock": 2,
+      "kind": "application",
+      "applicationId": "fixture-app",
+      "fields": {
+        "role": "Quant developer"
+      }
+    },
+    {
+      "id": "fixture-edit-3",
+      "clock": 2,
+      "kind": "event",
+      "applicationId": "fixture-app",
+      "eventId": "fixture-oa",
+      "fields": {
+        "dueTime": "18:00"
+      }
+    },
+    {
+      "id": "fixture-edit-4",
+      "clock": 2,
+      "kind": "restore",
+      "applicationId": "fixture-app",
+      "eventId": "fixture-oa",
+      "deleteId": "fixture-delete"
+    },
+    {
+      "id": "fixture-edit-5",
+      "clock": 2,
+      "kind": "stage",
+      "stageId": "fixture-stage",
+      "fields": {
+        "description": "撤销删除后的阶段"
+      }
+    }
+  ]
+}
