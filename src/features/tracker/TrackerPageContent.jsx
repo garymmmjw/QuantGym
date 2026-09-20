@@ -14,6 +14,7 @@ import { useAuthStore, useUserStateStore } from '../../stores/AppServicesContext
 import { createTrackerStore } from './trackerStore.js';
 import Icon from './TrackerIcon.jsx';
 import './style.css';
+import './reviewed-ui.css';
 
 function NewApplication({ phases, currentPhaseId, onClose, onCreate }) {
   const ref = useRef(null);
@@ -127,7 +128,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   };
   const deletionNotice = deletedRecord && <div className={`${activeApplication ? 'qt-td-deletion-notice' : 'qt-toast'} qt-delete-notice`} role="status"><span>{deletedRecord.error || '记录已删除'}</span><button type="button" className="qt-btn" onClick={undoDelete}>撤销</button></div>;
   return <div className="quantgym-tracker">
-        <div className="qt-page-heading"><div><div className="qt-eyebrow">APPLICATION TRACKER </div><h1>我的投递<span className="qt-heading-dot">.</span></h1><p>从第一次投递，到下一次好消息。</p></div><div className="qt-heading-actions"><button className="qt-btn" onClick={() => setAddStageRequest(value => value+1)}><Icon name="Flag" size={16}/>添加 Stage</button><button className="qt-btn qt-primary" onClick={() => setAdding(true)}><Icon name="Plus" size={17}/>添加申请</button></div></div>
+        <div className="qt-page-heading"><div><h1>我的投递<span className="qt-heading-dot">.</span></h1></div><div className="qt-heading-actions"><button className="qt-btn" onClick={() => setAddStageRequest(value => value+1)}><Icon name="Flag" size={16}/>添加 Stage</button><button className="qt-btn qt-primary" onClick={() => setAdding(true)}><Icon name="Plus" size={17}/>添加申请</button></div></div>
         <section className="qt-summary-strip" aria-label="申请统计">
           {[
             ['all', '申请总数', summary.total, 'all'],
@@ -135,7 +136,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
             ['received-interview', '收到 Interview', summary.receivedInterview, 'interview'],
             ['rejected', '已拒绝', summary.rejected, 'closed'],
             ['offer', 'Offer', summary.offer, 'offer'],
-          ].map(([id, label, count, tone]) => <button key={id} className={`qt-metric qt-metric-${tone}${status === id ? ' qt-selected' : ''}`} onClick={() => setStatus(status === id ? 'all' : id)} aria-pressed={status === id} aria-label={`${label} ${count}，查看申请`} title={id.startsWith('received-') ? '累计收到过的申请数，同一申请只计一次' : undefined}><span className="qt-metric-label"><span className="qt-metric-dot"/>{label}</span><strong>{String(count).padStart(2, '0')}</strong>{id === 'all' && <small>份申请 · 持续积累</small>}</button>)}
+          ].map(([id, label, count, tone]) => <button key={id} className={`qt-metric qt-metric-${tone}${status === id ? ' qt-selected' : ''}`} onClick={() => setStatus(status === id ? 'all' : id)} aria-pressed={status === id} aria-label={`${label} ${count}，查看申请`} title={id.startsWith('received-') ? '累计收到过的申请数，同一申请只计一次' : undefined}><span className="qt-metric-label"><span className="qt-metric-dot"/>{label}</span><strong>{String(count).padStart(2, '0')}</strong></button>)}
         </section>
         <StagePanel key={ownerId+namespace} stageStore={stageStore} practice={practice} addRequest={addStageRequest} showAddButton={false}/>
         <ApplicationList

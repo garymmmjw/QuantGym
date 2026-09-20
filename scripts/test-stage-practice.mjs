@@ -1,25 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { collectStagePractice, summarizeStagePractice, readStagePractice, resolveStagePractice, stagePracticeKeys } from '../src/features/careerStages/stagePractice.js';
+import { collectStagePractice, summarizeStagePractice, formatStagePeriod, readStagePractice, resolveStagePractice, stagePracticeKeys } from '../src/features/careerStages/stagePractice.js';
 import { EMPTY_LEETCODE } from '../src/features/leetcode/leetcodeModel.js';
 
 const stages = [
-  { id: 's3', label: 'Stage 3', recordedDate: '2026-09-19', solvedCount: 999 },
-  { id: 's1', label: 'Stage 1', recordedDate: '2026-09-15' },
-  { id: 's2', label: 'Stage 2', recordedDate: '2026-09-17', solvedCount: 50 },
+  { id: 's3', label: 'Stage 3', recordedDate: '2026-09-17', solvedCount: 999 },
+  { id: 's1', label: 'Stage 1', recordedDate: '2026-09-13' },
+  { id: 's2', label: 'Stage 2', recordedDate: '2026-09-15', solvedCount: 50 },
 ];
 const stamp = value => /^\d{4}-\d{2}-\d{2}$/.test(value || '') ? `${value}T12:00:00Z` : value;
 const done = (problemId, completedAt) => ({ problemId, completedAt: stamp(completedAt), completed: true });
 
-test('counts the prior boundary exclusively and current boundary inclusively, in natural Stage order', () => {
+test('counts after each Stage date through the next date inclusively, in natural Stage order', () => {
   const practice = collectStagePractice({}, { problemStates: [
     done('before', '2026-09-14'), done('boundary', '2026-09-15'),
     done('middle', '2026-09-16'), done('end', '2026-09-17'),
     done('next', '2026-09-18'), done('future', '2026-09-20'),
   ] });
-  const result = summarizeStagePractice(stages, practice);
+  const result = summarizeStagePractice(stages, practice, { today: '2026-09-19' });
   assert.deepEqual(result.map(s => [s.label, s.questionCount]), [['Stage 1', 2], ['Stage 2', 2], ['Stage 3', 1]]);
-  assert.equal(result[1].periodStart, '2026-09-16');
+  assert.equal(result[1].periodStart, '2026-09-15');
   assert.equal(result[1].periodEnd, '2026-09-17');
   assert.deepEqual(stages.map(s => s.id), ['s3', 's1', 's2']);
 });
@@ -52,21 +52,21 @@ test('daily question fallbacks deduplicate with activity and source problem, exc
 });
 
 test('unknown dates and unavailable sources stay unknown, valid empty ranges and same-day stages are zero', () => {
-  const missing = summarizeStagePractice([{ id: 'a', label: 'Stage 1' }, { id: 'b', label: 'Stage 2', recordedDate: '2026-09-17' }], collectStagePractice());
-  assert.deepEqual(missing.map(s => s.questionCount), [null, null]);
+  const missing = summarizeStagePractice([{ id: 'a', label: 'Stage 1' }, { id: 'b', label: 'Stage 2', recordedDate: '2026-09-17' }], collectStagePractice(), { today: '2026-09-19' });
+  assert.deepEqual(missing.map(s => s.questionCount), [null, 0]);
   assert.deepEqual(summarizeStagePractice(stages, { available: false }).map(s => s.questionCount), [null, null, null]);
-  assert.deepEqual(summarizeStagePractice(stages, collectStagePractice()).map(s => s.questionCount), [0, 0, 0]);
-  const same = summarizeStagePractice(stages.slice(1).map(s => ({ ...s, recordedDate: '2026-09-17' })), collectStagePractice({}, { problemStates: [done('x', '2026-09-17')] }));
-  assert.deepEqual(same.map(s => s.questionCount), [1, 0]);
-  assert.equal(same[1].sameDay, true);
+  assert.deepEqual(summarizeStagePractice(stages, collectStagePractice(), { today: '2026-09-19' }).map(s => s.questionCount), [0, 0, 0]);
+  const same = summarizeStagePractice(stages.slice(1).map(s => ({ ...s, recordedDate: '2026-09-17' })), collectStagePractice({}, { problemStates: [done('x', '2026-09-17')] }), { today: '2026-09-19' });
+  assert.deepEqual(same.map(s => s.questionCount), [0, 0]);
+  assert.equal(same[0].sameDay, true);
 });
 
 test('date edits recalculate from records and inverted intervals never produce a guessed number', () => {
   const practice = collectStagePractice({}, { problemStates: [done('x', '2026-09-16'), done('y', '2026-09-18')] });
-  const changed = stages.map(s => s.id === 's2' ? { ...s, recordedDate: '2026-09-18' } : s);
-  assert.deepEqual(summarizeStagePractice(changed, practice).map(s => s.questionCount), [0, 2, 0]);
+  const changed = stages.map(s => ({ ...s, recordedDate: s.id === 's2' ? '2026-09-18' : s.id === 's3' ? '2026-09-19' : '2026-09-15' }));
+  assert.deepEqual(summarizeStagePractice(changed, practice, { today: '2026-09-19' }).map(s => s.questionCount), [2, 0, 0]);
   changed.find(s => s.id === 's2').recordedDate = '2026-09-14';
-  assert.equal(summarizeStagePractice(changed, practice)[1].questionCount, null);
+  assert.equal(summarizeStagePractice(changed, practice, { today: '2026-09-19' })[0].questionCount, null);
 });
 
 test('timestamp records use local calendar dates rather than their UTC date substring', () => {
@@ -157,58 +157,93 @@ test('production completion rules exclude drafts, local coding and undated legac
   assert.deepEqual(collectStagePractice(personal, legacy).records, [{ key: 'real-tech', day: '2026-09-17' }]);
 });
 
-test('the current undated imported Stage counts from the last checkpoint through today without changing saved dates', () => {
-  const imported = [
+test('dated current stages stay live and new interval ownership comes from records without changing saved dates', () => {
+  const sequence = [
     { id: 's1', label: 'Stage 1', recordedDate: '2026-08-21' },
-    { id: 's2', label: 'Stage 2', recordedDate: null, description: 'Resume Ready + 50 Leetcode' },
+    { id: 's2', label: 'Stage 2', recordedDate: '2026-09-13', solvedCount: 999 },
+    { id: 's3', label: 'Stage 3', recordedDate: '2026-09-19' },
   ];
-  const before = structuredClone(imported);
+  const before = structuredClone(sequence);
   const practice = collectStagePractice({}, { problemStates: [
-    done('old', '2026-08-21'), done('first', '2026-08-22'), done('recent', '2026-09-17'), done('future', '2026-09-18'),
+    done('before-first', '2026-08-20'), done('first-boundary', '2026-08-21'),
+    ...Array.from({ length: 34 }, (_, index) => done(`first-${index}`, '2026-09-13')),
+    ...Array.from({ length: 37 }, (_, index) => done(`second-${index}`, '2026-09-19')),
+    done('tomorrow', '2026-09-20'),
   ] });
-  const result = summarizeStagePractice(imported, practice, { today: '2026-09-17' });
-  assert.deepEqual(result.map(stage => stage.questionCount), [1, 2]);
-  assert.equal(result[1].recordedDate, null);
-  assert.equal(result[1].usesTodayBoundary, true);
-  assert.equal(result[1].periodStart, '2026-08-22');
-  assert.equal(result[1].periodEnd, '2026-09-17');
-  assert.equal(result[1].previousLabel, 'Stage 1');
+  const result = summarizeStagePractice(sequence, practice, { today: '2026-09-19' });
+  assert.deepEqual(result.map(stage => stage.questionCount), [34, 37, 0]);
+  assert.deepEqual([...result].reverse().map(stage => stage.questionCount), [0, 37, 34]);
+  assert.equal(result[2].recordedDate, '2026-09-19');
+  assert.equal(result[2].usesTodayBoundary, true);
+  assert.equal(result[1].periodStart, '2026-09-13');
+  assert.equal(result[1].periodEnd, '2026-09-19');
+  assert.equal(result[1].nextLabel, 'Stage 3');
   assert.equal(result[0].usesTodayBoundary, false);
-  assert.deepEqual(imported, before);
-  const tomorrow = summarizeStagePractice(imported, practice, { today: '2026-09-18' });
-  assert.deepEqual(tomorrow.map(stage => stage.questionCount), [1, 3]);
+  assert.deepEqual(sequence, before);
+  const tomorrow = summarizeStagePractice(sequence, practice, { today: '2026-09-20' });
+  assert.deepEqual(tomorrow.map(stage => stage.questionCount), [34, 37, 1]);
+  assert.equal(tomorrow[2].periodEnd, '2026-09-20');
 });
 
-test('only an undated current Stage gets a live interval; historical unknown and inverted ranges remain unknown', () => {
+test('missing adjacent dates and inverted ranges stay unknown instead of borrowing another Stage boundary', () => {
   const sequence = [
     { id: 's1', label: 'Stage 1', recordedDate: '2026-08-21' },
     { id: 's2', label: 'Stage 2', recordedDate: null },
-    { id: 's3', label: 'Stage 3', recordedDate: null },
+    { id: 's3', label: 'Stage 3', recordedDate: '2026-09-17' },
   ];
   const practice = collectStagePractice({}, { problemStates: [done('x', '2026-09-17')] });
   const result = summarizeStagePractice(sequence, practice, { today: '2026-09-17' });
-  assert.deepEqual(result.map(stage => stage.questionCount), [0, null, 1]);
-  assert.equal(result[2].previousLabel, 'Stage 1');
-  assert.equal(result[2].periodStart, '2026-08-22');
+  assert.deepEqual(result.map(stage => stage.questionCount), [null, null, 0]);
+  assert.equal(result[0].periodEnd, '');
+  assert.equal(result[1].periodStart, '');
+  assert.equal(result[2].periodStart, '2026-09-17');
   assert.equal(result[1].usesTodayBoundary, false);
   const only = summarizeStagePractice([{ id: 's1', label: 'Stage 1', recordedDate: null }], practice, { today: '2026-09-17' })[0];
-  assert.equal(only.questionCount, 1);
+  assert.equal(only.questionCount, null);
   assert.equal(only.periodStart, '');
   assert.equal(only.usesTodayBoundary, true);
   const inverted = summarizeStagePractice(sequence, practice, { today: '2026-08-20' });
   assert.equal(inverted.at(-1).questionCount, null);
-  // A recorded final Stage is still a historical checkpoint, not an open range.
-  const dated = summarizeStagePractice(stages, practice, { today: '2026-12-31' });
-  assert.equal(dated.at(-1).periodEnd, '2026-09-19');
-  assert.equal(dated.at(-1).usesTodayBoundary, false);
+  assert.equal(inverted.at(-1).countSourceNote, '暂无法确定统计区间');
 });
 
 test('live ranges use the viewer local day and update from the hook day metadata', () => {
-  const stage = [{ id: 's1', label: 'Stage 1', recordedDate: null }];
-  const practice = collectStagePractice({}, { problemStates: [done('x', '2026-09-17')] });
+  const stage = [{ id: 's1', label: 'Stage 1', recordedDate: '2026-09-16' }];
+  const practice = collectStagePractice({}, { problemStates: [done('x', '2026-09-17'), done('y', '2026-09-18')] });
   const localLateNight = new Date(2026, 8, 17, 23, 59);
-  assert.equal(summarizeStagePractice(stage, practice, { today: localLateNight })[0].periodEnd, '2026-09-17');
-  assert.equal(summarizeStagePractice(stage, { ...practice, asOfDay: '2026-09-18' })[0].periodEnd, '2026-09-18');
+  const today = summarizeStagePractice(stage, practice, { today: localLateNight })[0];
+  assert.equal(today.periodEnd, '2026-09-17');
+  assert.equal(today.questionCount, 1);
+  const tomorrow = summarizeStagePractice(stage, { ...practice, asOfDay: '2026-09-18' })[0];
+  assert.equal(tomorrow.periodEnd, '2026-09-18');
+  assert.equal(tomorrow.questionCount, 2);
+});
+
+test('period labels use short boundaries and include years across a year boundary', () => {
+  assert.equal(formatStagePeriod({ periodStart: '2026-09-13', periodEnd: '2026-09-19' }), '9/13 - 9/19');
+  assert.equal(formatStagePeriod({ periodStart: '2026-09-19', periodEnd: '2026-09-19', usesTodayBoundary: true }), '9/19 - 至今');
+  assert.equal(formatStagePeriod({ periodStart: '2025-12-31', periodEnd: '2026-01-02' }), '2025/12/31 - 2026/1/2');
+  assert.equal(formatStagePeriod({ periodStart: '2025-12-31', periodEnd: '2026-01-02', usesTodayBoundary: true }), '2025/12/31 - 至今');
+  assert.equal(formatStagePeriod({ periodStart: '', periodEnd: '2026-09-19' }), '日期待补充');
+  assert.equal(formatStagePeriod({ periodStart: '2026-09-20', periodEnd: '2026-09-19' }), '日期待校正');
+});
+
+test('distinct questions are counted once per shifted interval and a boundary event is never counted twice', () => {
+  const practice = { available: true, countStatus: 'ready', records: [
+    { key: 'repeat', day: '2026-09-14' }, { key: 'repeat', day: '2026-09-15' },
+    { key: 'boundary', day: '2026-09-15' },
+    { key: 'repeat', day: '2026-09-16' }, { key: 'repeat', day: '2026-09-17' },
+  ] };
+  assert.deepEqual(summarizeStagePractice(stages, practice, { today: '2026-09-19' }).map(stage => stage.questionCount), [2, 1, 0]);
+});
+
+test('a current empty interval is zero only when sources are complete', () => {
+  const stage = [{ id: 's1', label: 'Stage 1', recordedDate: '2026-09-19' }];
+  for (const [countStatus, available, expected] of [['ready', true, 0], ['partial', true, null], ['unavailable', false, null]]) {
+    const result = summarizeStagePractice(stage, { records: [], available, countStatus }, { today: '2026-09-19' })[0];
+    assert.equal(result.questionCount, expected);
+    assert.equal(result.countStatus, countStatus);
+  }
 });
 
 const personalSource = (records = []) => ({ ownerId: 'alice', snapshot: { data: {}, error: '', conflict: false }, legacyState: { problemStates: records } });

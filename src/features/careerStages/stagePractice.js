@@ -1,4 +1,4 @@
-import { collectCalendarActivities, localDayKey, addLocalDays } from '../personal/calendar/calendarModel.js';
+import { collectCalendarActivities, localDayKey } from '../personal/calendar/calendarModel.js';
 import { collectLeetCodeActivities } from '../personal/calendar/leetcodeCalendar.js';
 import { countsTowardProblemTotal, hasExplicitProblemCompletion } from '../../modules/problems/completion.js';
 import { sortCareerStages } from './stageStore.js';
@@ -110,29 +110,40 @@ export function readStagePractice({ ownerId, namespace = '', storage, legacyStat
 export function summarizeStagePractice(stages, practice = {}, { today = practice.asOfDay || new Date() } = {}) {
   const ordered = sortCareerStages(stages);
   return ordered.map((stage, index) => {
-    // Imported current stages may have no checkpoint date. Their live interval
-    // ends today without altering the saved Stage date or historical checkpoints.
-    const usesTodayBoundary = index === ordered.length - 1 && !stage.recordedDate;
-    const previous = usesTodayBoundary
-      ? ordered.slice(0, index).findLast(item => localDayKey(item.recordedDate))
-      : ordered[index - 1];
-    const end = localDayKey(usesTodayBoundary ? today : stage.recordedDate);
-    const boundary = previous ? localDayKey(previous.recordedDate) : '';
-    const knownRange = Boolean(end && (!previous || (boundary && boundary <= end)));
+    // Each Stage owns the interval after its saved date through the next Stage's
+    // date. The final interval stays live; missing dates must never be guessed.
+    const next = ordered[index + 1];
+    const usesTodayBoundary = !next;
+    const boundary = localDayKey(stage.recordedDate);
+    const end = localDayKey(usesTodayBoundary ? today : next.recordedDate);
+    const knownRange = Boolean(boundary && end && boundary <= end);
     const matching = knownRange && practice.available === true
-      ? new Set(list(practice.records).filter(record => record.day <= end && (!boundary || record.day > boundary)).map(record => record.key))
+      ? new Set(list(practice.records).filter(record => record.day > boundary && record.day <= end).map(record => record.key))
       : null;
     const countStatus = !matching ? 'unavailable' : practice.countStatus || 'ready';
     return {
       ...stage,
-      questionCount: matching && (countStatus === 'ready' || matching.size > 0) ? matching.size : null,
+      questionCount: matching && (countStatus === 'ready' || (countStatus === 'partial' && matching.size > 0)) ? matching.size : null,
       countStatus,
       countSourceNote: knownRange ? practice.countSourceNote || '' : '暂无法确定统计区间',
-      periodStart: boundary ? addLocalDays(boundary, 1) : '',
+      periodStart: boundary,
       periodEnd: end,
-      previousLabel: previous?.label || '',
+      nextLabel: next?.label || '',
       sameDay: Boolean(boundary && boundary === end),
       usesTodayBoundary,
     };
   });
+}
+
+export function formatStagePeriod(stage) {
+  const start = localDayKey(stage.periodStart);
+  const end = localDayKey(stage.periodEnd);
+  if (!start || !end) return '日期待补充';
+  if (start > end) return '日期待校正';
+  const includeYear = start.slice(0, 4) !== end.slice(0, 4);
+  const format = value => {
+    const [year, month, day] = value.split('-');
+    return `${includeYear ? `${year}/` : ''}${Number(month)}/${Number(day)}`;
+  };
+  return `${format(start)} - ${stage.usesTodayBoundary ? '至今' : format(end)}`;
 }

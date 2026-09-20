@@ -159,9 +159,10 @@ export function groupApplications(sortedApplications, stages) {
   return groups.sort((a, b) => a.rank - b.rank);
 }
 
-export function getApplicationView(applications, stages, mode = 'all') {
+export function getApplicationView(applications, stages, mode = 'all', query = '') {
   const rows = filterApplications(sortApplications(applications, mode === 'company' ? 'company' : 'recent'), {
     status: mode === 'company' ? 'all' : mode,
+    query,
   });
   if (mode === 'ddl') {
     // Compare entered local dates/times without timezone conversion. A date-only
