@@ -208,3 +208,7 @@ final result: passed
 - Local screenshots: /Users/miujiawei/.codex/visualizations/2026/09/19/overview-dashboard/desktop.png, desktop-detail.png, mobile.png, mobile-detail.png.
 
 Final result: passed for this change.
+
+## Daily task list restoration — September 20, 2026
+
+Restored the former vertical quest layout, target illustration, progress bar, points pills and circular completion marks while retaining the five current task links and real activity counts. Reused the existing quest styles and removed the newer card-grid overrides. Desktop 1440px and mobile 390/320px checks confirmed five full-width rows, correct 1/5 completion state, no horizontal overflow or label/badge overlap, a working task link and no console errors. Strict build, growth check and diff check passed. No data or scoring changes.
