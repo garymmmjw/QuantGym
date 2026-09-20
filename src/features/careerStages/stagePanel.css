@@ -71,7 +71,7 @@
 .career-stage-count-line strong { color: #73518f; font-size: 20px; line-height: 1.4; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
 .career-stage-tracker .career-stage-row-current + .career-stage-row { border-top-color: #1c1c1c; }
 .career-stage-tracker .career-stage-count-line { grid-template-columns: minmax(0, 1fr) 52px 12px; }
-.career-stage-tracker .career-stage-count-line strong { color: #356b66; font-size: 20px; line-height: 1.4; }
+.career-stage-tracker .career-stage-count-line strong { color: #1c1c1c; font-size: 20px; line-height: 1.4; }
 .career-stage-tracker .career-stage-row-current h3 { color: var(--qt-accent, #5b5ff5); }
 .career-stage-tracker .career-stage-row-current .career-stage-count-line strong { color: var(--qt-accent, #5b5ff5); font-size: 28px; line-height: 1; }
 .career-stage-source-note { display: block; margin-top: 4px; color: #9a889f; font-size: 10px; line-height: 1.5; }
