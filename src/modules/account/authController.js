@@ -5,6 +5,8 @@ export function createAccountAuthController(deps = {}) {
   const getAppState = () => deps.getAppState?.() || {};
   const getUserStateStore = () => deps.getUserStateStore?.() || null;
   const text = (key, params) => deps.t?.(key, params) || key;
+  const authErrorMessage = error => error?.code === 'CAREER_OWNER_MIGRATION_FAILED'
+    ? error.message : deps.getAuthErrorMessage?.(error);
   const nowIso = () => deps.nowIso?.() || new Date().toISOString();
   const requiresCloudLogin = () => Boolean((deps.getCloudReauthentication || getCloudReauthentication)());
   let authAttemptSequence = 0;
@@ -302,7 +304,7 @@ export function createAccountAuthController(deps = {}) {
       deps.renderSession?.();
     } catch (error) {
       if (!isCurrentAttempt(attempt)) return;
-      deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error), true);
+      deps.showAuthMessage?.(authErrorMessage(error), true);
     }
   }
 
@@ -324,9 +326,21 @@ export function createAccountAuthController(deps = {}) {
         const localState = localAccount ? deps.loadStateForUser?.(localAccount.id) : deps.createBaseState?.();
         const localFields = { passwordHash: await deps.hashPassword?.(email, password) };
         if (!isCurrentAttempt(attempt)) return;
+        // A matching email alone does not prove ownership of a device profile.
+        // Bind the two IDs only after this same password passed both the server
+        // login and the cached local credential, while this attempt still owns
+        // the session. Never discover orphan storage keys by email.
+        const careerOwnerLink = localAccount?.provider === 'local'
+          && localAccount.id !== remoteAccount.id
+          && typeof localAccount.passwordHash === 'string' && localAccount.passwordHash
+          && localAccount.passwordHash === localFields.passwordHash
+          && deps.normalizeEmail?.(remoteAccount.email) === email
+          ? { sourceOwnerId: localAccount.id, targetOwnerId: remoteAccount.id, method: 'password' }
+          : undefined;
         deps.applyCloudSession?.(cloudSession, {
           localState,
           localCommunity: appState.community,
+          careerOwnerLink,
           ...localFields
         });
         markAuthenticated(appState.auth);
@@ -345,12 +359,12 @@ export function createAccountAuthController(deps = {}) {
             return;
           }
         }
-        deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error), true);
+        deps.showAuthMessage?.(authErrorMessage(error), true);
         return;
       }
     } catch (error) {
       if (!isCurrentAttempt(attempt)) return;
-      deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error), true);
+      deps.showAuthMessage?.(authErrorMessage(error), true);
     }
   }
 
@@ -497,14 +511,20 @@ export function createAccountAuthController(deps = {}) {
         return;
       }
       deps.migrateLegacyState?.(id);
-      deps.applyCloudSession?.(cloudSession, { localState: deps.loadStateForUser?.(id) || localState, localCommunity: appState.community });
+      const remoteAccount = cloudSession.account;
+      const careerOwnerLink = remoteAccount.id !== id && payload.sub
+        && deps.normalizeEmail?.(payload.email)
+        && deps.normalizeEmail?.(remoteAccount.email) === deps.normalizeEmail?.(payload.email)
+        ? { sourceOwnerId: id, targetOwnerId: remoteAccount.id, method: 'google' }
+        : undefined;
+      deps.applyCloudSession?.(cloudSession, { localState: deps.loadStateForUser?.(id) || localState, localCommunity: appState.community, careerOwnerLink });
       markAuthenticated(appState.auth);
       deps.saveAuth?.();
       deps.showAuthMessage?.("");
       deps.renderSession?.();
-    } catch {
+    } catch (error) {
       if (!isCurrentAttempt(attempt)) return;
-      deps.showAuthMessage?.(text("authGoogleParseFailed"));
+      deps.showAuthMessage?.(error?.code === 'CAREER_OWNER_MIGRATION_FAILED' ? authErrorMessage(error) : text("authGoogleParseFailed"), true);
     }
   }
 

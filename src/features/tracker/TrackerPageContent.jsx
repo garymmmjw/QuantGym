@@ -11,7 +11,6 @@ import { getCurrentStage } from '../careerStages/stageStore.js';
 import { summarizeStagePractice } from '../careerStages/stagePractice.js';
 import { useStagePractice } from '../careerStages/useStagePractice.js';
 import { useAuthStore, useUserStateStore } from '../../stores/AppServicesContext.jsx';
-import { createTrackerStore } from './trackerStore.js';
 import Icon from './TrackerIcon.jsx';
 import './style.css';
 import './reviewed-ui.css';
@@ -47,13 +46,8 @@ function NewApplication({ phases, currentPhaseId, onClose, onCreate }) {
   </dialog>;
 }
 function AccountTracker({ ownerId, namespace, legacyState }) {
-  const trackerStore = useMemo(() => {
-    let storage;
-    try { storage = window.localStorage; } catch { storage = null; }
-    return createTrackerStore({ownerId, namespace, storage, eventTarget: window});
-  }, [ownerId, namespace]);
+  const { store: stageStore, snapshot: stageSnapshot, trackerStore, cloud, sync, syncError } = useCareerStages({ownerId, namespace});
   const { applications, error: saveError } = useSyncExternalStore(trackerStore.subscribe, trackerStore.getSnapshot, trackerStore.getSnapshot);
-  useEffect(() => () => trackerStore.dispose(), [trackerStore]);
   const [status, setStatus] = useState('all');
   const [selectedId, setSelectedId] = useState(null);
   const [progressId, setProgressId] = useState(null);
@@ -61,7 +55,6 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   const [eventTarget, setEventTarget] = useState(null);
   const [adding, setAdding] = useState(false);
   const [addStageRequest, setAddStageRequest] = useState(0);
-  const { store: stageStore, snapshot: stageSnapshot } = useCareerStages({ownerId, namespace});
   const practice = useStagePractice({ownerId, namespace, legacyState});
   const stageDefinitions = useMemo(() => summarizeStagePractice(stageSnapshot.stages, practice), [stageSnapshot.stages, practice]);
   const resolvedApplications = useMemo(() => applications.map(application => {
@@ -129,6 +122,10 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   const deletionNotice = deletedRecord && <div className={`${activeApplication ? 'qt-td-deletion-notice' : 'qt-toast'} qt-delete-notice`} role="status"><span>{deletedRecord.error || '记录已删除'}</span><button type="button" className="qt-btn" onClick={undoDelete}>撤销</button></div>;
   return <div className="quantgym-tracker">
         <div className="qt-page-heading"><div><h1>我的投递<span className="qt-heading-dot">.</span></h1></div><div className="qt-heading-actions"><button className="qt-btn" onClick={() => setAddStageRequest(value => value+1)}><Icon name="Flag" size={16}/>添加 Stage</button><button className="qt-btn qt-primary" onClick={() => setAdding(true)}><Icon name="Plus" size={17}/>添加申请</button></div></div>
+        {!namespace && <div className="qt-cloud-status" role="status">
+          <span>{syncError || (cloud.phase === 'synced' ? '已同步至账号' : cloud.phase === 'syncing' || cloud.phase === 'pending' ? '正在同步…' : cloud.phase === 'auth' ? '登录已过期，请重新登录以同步记录' : cloud.phase === 'error' ? '暂未同步，记录保存在此设备' : '记录保存在此设备，登录云账号后同步')}</span>
+          {cloud.phase === 'error' && <button type="button" onClick={sync}>重试同步</button>}
+        </div>}
         <section className="qt-summary-strip" aria-label="申请统计">
           {[
             ['all', '申请总数', summary.total, 'all'],

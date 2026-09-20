@@ -1,4 +1,5 @@
 import { createPersonalState, mergePersonalData, validatePersonalData } from './personalStore.js';
+import { mergeTrackerOperations } from '../tracker/trackerSyncModel.js';
 import { reportCloudSessionResponse } from '../../state/cloudSessionStatus.js';
 
 export async function personalFingerprint(data) {
@@ -68,6 +69,10 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
       else if (meta?.fingerprint === localHash) next = remoteData;
       else if (remote.data === null || meta?.fingerprint === remoteHash) next = local;
       else next = mergePersonalData(local, remoteData);
+      // Tracker deletions and restores are immutable operations. Even a known
+      // unchanged side cannot acknowledge another client's missing journal.
+      const careerTrackerOperations = mergeTrackerOperations(local.careerTrackerOperations, remoteData.careerTrackerOperations);
+      if (JSON.stringify(next.careerTrackerOperations) !== JSON.stringify(careerTrackerOperations)) next = { ...next, careerTrackerOperations };
       // Inputs typed during the request always participate in the saved snapshot.
       if (next !== local || store.getSnapshot().data !== local) {
         applyingRemote = true;
@@ -89,8 +94,22 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
       try {
         const saved = await request('PUT', { version: 1, baseRevision: remote.revision, data: outgoing });
         if (saved.revision <= remote.revision) throw new Error('Cloud write did not advance its revision.');
-        remember(outgoingHash, saved);
-        if (store.getSnapshot().data !== outgoing) requested = true;
+        if (saved.data === null) throw new Error('Cloud write did not return the saved data.');
+        // The server may retain immutable records omitted by an older client.
+        // Its acknowledged snapshot, not our outgoing body, is the sync baseline.
+        const confirmedHash = await personalFingerprint(saved.data);
+        applyingRemote = true;
+        try {
+          store.update(latest => {
+            const candidate = latest === outgoing
+              ? { ...saved.data, careerTrackerOperations: mergeTrackerOperations(outgoing.careerTrackerOperations, saved.data.careerTrackerOperations) }
+              : mergePersonalData(latest, saved.data);
+            return JSON.stringify(candidate) === JSON.stringify(latest) ? latest : candidate;
+          });
+        } finally { applyingRemote = false; }
+        remember(confirmedHash, saved);
+        const acknowledgedLocal = store.getSnapshot().data;
+        if (await personalFingerprint(acknowledgedLocal) !== confirmedHash || store.getSnapshot().data !== acknowledgedLocal) requested = true;
         status(requested ? { phase: 'pending' } : { phase: 'synced', syncedAt: meta.syncedAt });
         return;
       } catch (error) {

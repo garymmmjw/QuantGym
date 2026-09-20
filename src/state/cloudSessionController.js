@@ -1,3 +1,5 @@
+import { migrateVerifiedCareerOwner } from './careerOwnerMigration.js';
+
 export function createCloudSessionController(deps = {}) {
   const getAppState = () => deps.getAppState?.() || {};
   const getUserStateStore = () => deps.getUserStateStore?.() || null;
@@ -7,6 +9,21 @@ export function createCloudSessionController(deps = {}) {
     const userStateStore = getUserStateStore();
     const account = payload.account ? deps.normalizeAccount?.({ ...payload.account, cloudLinked: true }) : null;
     if (!account) return;
+    const link = options.careerOwnerLink;
+    if (link) {
+      if (link.targetOwnerId !== account.id || !['password', 'google'].includes(link.method)
+        || typeof payload.token !== 'string' || !payload.token.trim()) {
+        const error = new Error('投递记录账号关联未通过本次登录验证，原始记录已保留。');
+        error.code = 'CAREER_OWNER_MIGRATION_FAILED';
+        throw error;
+      }
+      let storage;
+      try { storage = deps.storage || globalThis.localStorage; } catch { storage = null; }
+      (deps.migrateVerifiedCareerOwner || migrateVerifiedCareerOwner)({
+        sourceOwnerId: link.sourceOwnerId, targetOwnerId: account.id, verified: true,
+        storage, eventTarget: deps.eventTarget || globalThis.window,
+      });
+    }
     const localFields = options.passwordHash ? { passwordHash: options.passwordHash } : {};
     deps.upsertLocalAccount?.(account, localFields);
 

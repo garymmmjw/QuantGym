@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { STATUS_META, deadlineDateTime, formatDeadline } from './dataModel.js';
+import { changedFormFields } from './formChanges.js';
 
 function readableDate(date) {
   if (!date) return '日期待补充';
@@ -12,6 +13,7 @@ export default function DetailDrawer({ application, phases, onClose, onUpdate, o
   const [prepPhase, setPrepPhase] = useState('');
   const [savedMessage, setSavedMessage] = useState('');
   const dialogRef = useRef(null);
+  const original = useRef({});
   const closeRef = useRef(onClose);
   const isOpen = Boolean(application);
   closeRef.current = onClose;
@@ -21,6 +23,7 @@ export default function DetailDrawer({ application, phases, onClose, onUpdate, o
     setCompany(application.company || '');
     setRole(application.role || '');
     setPrepPhase(application.prepPhase || '');
+    original.current = { company: application.company || '', role: application.role || '', prepPhase: application.prepPhase || '' };
     setSavedMessage('');
   }, [application?.id]);
 
@@ -91,12 +94,17 @@ export default function DetailDrawer({ application, phases, onClose, onUpdate, o
   function saveDetails(event) {
     event.preventDefault();
     if (!company.trim() || !role.trim()) return;
-    const saved = onUpdate({
+    const next = {
       ...application,
-      company: company.trim(),
-      role: role.trim(),
-      prepPhase,
-    });
+      ...changedFormFields(original.current, { company: company.trim(), role: role.trim(), prepPhase }),
+    };
+    const saved = onUpdate(next);
+    if (saved) {
+      original.current = { company: next.company, role: next.role, prepPhase: next.prepPhase || '' };
+      setCompany(next.company);
+      setRole(next.role);
+      setPrepPhase(next.prepPhase || '');
+    }
     setSavedMessage(saved ? '更改已保存' : '保存失败，请检查浏览器存储空间后重试。');
   }
 
