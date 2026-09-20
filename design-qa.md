@@ -304,3 +304,13 @@ Browser evidence: `artifacts/stage-summary-qa/inline-desktop.png` and `artifacts
 Sync validation: 76 LeetCode Node tests and 55 API tests passed, alongside the focused 87-test Stage/calendar/overview/activity regression run. Coverage includes continuing new problems after a historical repair, three-hour repeats, next-stage checkpoints, repeat sync, missing upstream history, account binding, late older ACs, legacy repaired snapshots, refresh lifecycle and retrying a failed upstream sync. Required syntax checks and strict production build passed. Complete-history coverage is not advanced from a limited public feed.
 
 final result: passed
+
+## Content-fitting Tracker and denser Stage rows — 2026-09-20
+
+Reproduced the user's progress-pill overflow with a local synthetic application: adding OA 已完成 produced a 136px pill inside a 142.5px cell, exceeding the right edge after cell padding. The progress table now uses automatic column sizing. The same cell expands to 157px, leaving the intended 10px right inset. All visible progress, update and deadline controls remain within their cells; the existing table scroller contains the wider table.
+
+The shared Overview/Tracker Stage header places Mental Math and 平均分 on one line. Rebalanced column widths keep the other headers on one line at 1280px and 1024px. Current and historical rows measure 64px and 46px respectively; the header measures approximately 34px. Current-stage color, dark divider, edit controls and aligned dates remain. Phone cards also use less padding and abbreviated labels.
+
+Browser checks: 1280/1024/390/320px, no document-level horizontal overflow, new/total LeetCode pairs share one line, and progress pills fit their cells after saving a new event in the isolated fixture. No real application record was changed. Calculation and synchronization code are unchanged.
+
+final result: passed
