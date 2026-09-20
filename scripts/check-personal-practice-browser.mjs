@@ -130,9 +130,9 @@ try {
   await server.listen();
   browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-first-run', '--no-default-browser-check'] });
   const { page, remote } = await makePage();
-  await check('Personal menu retains Technical Interview and redirects retired Coding OA and Daily Mock links to LeetCode', async () => {
+  await check('Main navigation retains Technical Interview and redirects retired Coding OA and Daily Mock links to LeetCode', async () => {
     assert.equal(await page.getByRole('link', { name: /Coding OA|Daily Mock|每日模拟/i }).count(), 0);
-    assert.ok(await page.getByRole('link', { name: 'Technical Interview', exact: true }).count() > 0);
+    assert.equal(await page.locator('.module-tab[data-module-tab="technical-interview"]').isVisible(), true);
     await noOverflow(page); await capture(page, 'technical-desktop-ready');
     for (const pathname of ['/coding-oa', '/daily-mock', '/#coding-oa', '/#daily-mock']) {
       await page.goto(`${baseUrl}${pathname}`, { waitUntil: 'domcontentloaded' });

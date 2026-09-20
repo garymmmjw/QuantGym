@@ -2151,10 +2151,6 @@ body.is-authenticated .qg-command-actions > :is(.streak-widget, .qg-level-pill, 
     min-width: 0;
   }
 
-  body.is-authenticated .qg-app-shell .personal-workspace-bar {
-    display: none;
-  }
-
   body.is-authenticated .qg-app-shell .ac-center {
     padding: 4px 0 20px;
   }
