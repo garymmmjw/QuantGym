@@ -13,6 +13,7 @@ async function componentModule(path, replacements = {}) {
   const source = (await readFile(url, 'utf8')).replace(/^import ['"].*\.css['"];?$/gm, '');
   let { code } = await transformWithOxc(source, fileURLToPath(url), { jsx: { runtime: 'automatic' } });
   const imports = { react: pathToFileURL(require.resolve('react')).href,
+    'lucide-react': pathToFileURL(require.resolve('lucide-react')).href,
     'react/jsx-runtime': pathToFileURL(require.resolve('react/jsx-runtime')).href, ...replacements };
   for (const [dependency, target] of Object.entries(imports)) for (const quote of ['"', "'"]) {
     code = code.replaceAll(`from ${quote}${dependency}${quote}`, `from ${quote}${target}${quote}`);
@@ -80,4 +81,33 @@ test('Stage overview retains the other training columns while exposing both Leet
   assert.match(html, /aria-label="总完成：51 次，已记录次数，补齐历史后可能重新归属"/);
   assert.doesNotMatch(html, /≥/);
   assert.match(html, />12\.5</);
+  assert.doesNotMatch(html, /<(?:button|a)\b/, 'Overview Stage remains read-only');
+});
+
+test('shared Stage table exposes editing only when requested and passes the displayed row', () => {
+  const rows = [
+    { id: 'older', label: 'Stage 8', isCurrent: false, periodStart: '2026-08-21', periodEnd: '2026-09-13' },
+    { id: 'current', label: 'Current preparation', description: 'Resume prepared', isCurrent: true, periodStart: '2026-09-13', periodEnd: '2026-09-20' },
+  ];
+  const before = structuredClone(rows);
+  const clicked = [];
+  const tree = OverviewCareerStage({ rows, onEdit: row => clicked.push(row) });
+  const buttons = [];
+  function visit(node) {
+    if (Array.isArray(node)) return node.forEach(visit);
+    if (!node || typeof node !== 'object' || !node.props) return;
+    if (node.type === 'button') buttons.push(node);
+    visit(node.props.children);
+  }
+  visit(tree);
+  assert.deepEqual(buttons.map(button => button.props['aria-label']), ['编辑 Current preparation', '编辑 Stage 8']);
+  assert.equal(buttons[0].props.title, 'Resume prepared');
+  buttons[0].props.onClick();
+  assert.equal(clicked[0], rows[1]);
+  assert.deepEqual(rows, before, 'rendering does not reorder or mutate source rows');
+  const html = renderToStaticMarkup(tree);
+  assert.equal((html.match(/aria-current="step"/g) || []).length, 1);
+  assert.ok(html.indexOf('当前阶段') < html.indexOf('aria-label="编辑 Current preparation"'));
+  const readOnly = renderToStaticMarkup(createElement(OverviewCareerStage, { rows }));
+  assert.doesNotMatch(readOnly, /<(?:button|a)\b/);
 });

@@ -10,6 +10,7 @@ import { useCareerStages } from '../careerStages/useCareerStages.js';
 import { getCurrentStage } from '../careerStages/stageStore.js';
 import { summarizeStagePractice } from '../careerStages/stagePractice.js';
 import { useStagePractice } from '../careerStages/useStagePractice.js';
+import { useOverviewActivity } from '../overview/useOverviewActivity.js';
 import { useAuthStore, useUserStateStore } from '../../stores/AppServicesContext.jsx';
 import Icon from './TrackerIcon.jsx';
 import './style.css';
@@ -56,6 +57,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
   const [adding, setAdding] = useState(false);
   const [addStageRequest, setAddStageRequest] = useState(0);
   const practice = useStagePractice({ownerId, namespace, legacyState});
+  const activity = useOverviewActivity();
   const stageDefinitions = useMemo(() => summarizeStagePractice(stageSnapshot.stages, practice), [stageSnapshot.stages, practice]);
   const resolvedApplications = useMemo(() => applications.map(application => {
     const stage = stageDefinitions.find(item => item.id === application.prepPhase || item.importedIds?.includes(application.prepPhase));
@@ -135,7 +137,7 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
             ['offer', 'Offer', summary.offer, 'offer'],
           ].map(([id, label, count, tone]) => <button key={id} className={`qt-metric qt-metric-${tone}${status === id ? ' qt-selected' : ''}`} onClick={() => setStatus(status === id ? 'all' : id)} aria-pressed={status === id} aria-label={`${label} ${count}，查看申请`} title={id.startsWith('received-') ? '累计收到过的申请数，同一申请只计一次' : undefined}><span className="qt-metric-label"><span className="qt-metric-dot"/>{label}</span><strong>{String(count).padStart(2, '0')}</strong></button>)}
         </section>
-        <StagePanel key={ownerId+namespace} stageStore={stageStore} practice={practice} addRequest={addStageRequest} showAddButton={false}/>
+        <StagePanel key={ownerId+namespace} stageStore={stageStore} practice={practice} summaryRows={activity.stageRows} summaryNote={activity.leetcodeStageNote} addRequest={addStageRequest} showAddButton={false}/>
         <ApplicationList
           applications={resolvedApplications}
           stages={stageDefinitions}

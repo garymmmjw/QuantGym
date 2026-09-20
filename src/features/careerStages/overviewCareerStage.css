@@ -1,4 +1,5 @@
 .overview-stage-summary {
+  --stage-summary-accent: var(--qt-accent, #8657db);
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--qg-border, #ecebf7);
@@ -8,18 +9,21 @@
 }
 .overview-stage-summary-table {
   width: 100%;
+  min-width: 0;
   margin: 0;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 14px;
   line-height: 1.5;
 }
-.overview-stage-summary-stage-column { width: 15%; }
-.overview-stage-summary-period-column { width: 20%; }
-.overview-stage-summary-leetcode-column { width: 17%; }
+.overview-stage-summary-table thead { position: static; }
+.overview-stage-summary .overview-stage-summary-table thead th { position: static; height: auto; border: 0; white-space: normal; }
+.overview-stage-summary-stage-column { width: 20%; }
+.overview-stage-summary-period-column { width: 16%; }
+.overview-stage-summary-leetcode-column { width: 18%; }
 .overview-stage-summary-table th,
 .overview-stage-summary-table td {
-  padding: 16px 12px;
+  padding: 20px 12px;
   border: 0;
   text-align: right;
   vertical-align: middle;
@@ -34,7 +38,7 @@
   padding-top: 14px;
   padding-bottom: 14px;
   color: var(--qg-muted, #6d6c8e);
-  background: var(--qg-surface-2, #fbfbfd);
+  background: transparent;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0;
@@ -42,19 +46,28 @@
 }
 .overview-stage-summary-heading-detail { display: block; margin-top: 2px; font-size: 10px; font-weight: 500; }
 .overview-stage-summary-table tbody tr { border-top: 1px solid var(--qg-border, #ecebf7); }
-.overview-stage-summary-table tbody tr.is-current { background: var(--qg-brand-soft, #eef0ff); }
-.overview-stage-summary-table tbody tr.is-current + tr { border-top-color: var(--qg-text, #1c1c1c); }
+.overview-stage-summary-table tbody tr.is-current { background: transparent; }
+.overview-stage-summary-table tbody tr.is-current > * { padding-top: 34px; padding-bottom: 24px; }
+.overview-stage-summary-table tbody tr.is-current + tr { border-top: 2px solid var(--qg-text, #1c1c1c); }
 .overview-stage-summary-leetcode .leetcode-counts { max-width: 154px; margin-left: auto; --leetcode-count-size: 18px; }
 .overview-stage-summary-leetcode .leetcode-count { flex-wrap: wrap; gap: 0 5px; }
 .overview-stage-summary-leetcode .leetcode-count dd { margin-left: auto; }
-.overview-stage-summary-table .is-current .leetcode-counts { --leetcode-count-ink: var(--qg-brand-ink, #5b5ff5); }
-.overview-stage-summary-name { display: block; font-size: 16px; font-weight: 650; color: var(--qg-text, #1b1a38); }
-.overview-stage-summary-current { display: block; margin-top: 3px; font-size: 10px; font-weight: 500; color: var(--qg-brand-ink, #5b5ff5); }
+.overview-stage-summary-table .is-current .leetcode-counts { --leetcode-count-ink: var(--stage-summary-accent); --leetcode-count-size: 22px; }
+.overview-stage-summary-identity-content { position: relative; min-width: 0; }
+.overview-stage-summary-name { display: block; font-size: 18px; font-weight: 600; line-height: 1.35; color: var(--qg-text, #1b1a38); }
+.overview-stage-summary-current { position: absolute; left: 0; bottom: calc(100% + 5px); color: var(--qg-muted, #6d6c8e); font-size: 11px; font-weight: 400; white-space: nowrap; }
+.overview-stage-summary-table .is-current .overview-stage-summary-name { font-size: 30px; font-weight: 650; letter-spacing: -.6px; }
+.overview-stage-summary-edit { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; margin: 0; padding: 0; border: 0; border-radius: 4px; background: transparent; text-align: left; font: inherit; cursor: pointer; }
+.overview-stage-summary-edit .overview-stage-summary-name { min-width: 0; }
+.overview-stage-summary-edit svg { flex: 0 0 14px; margin-left: auto; color: var(--stage-summary-accent); }
+.overview-stage-summary-edit:hover .overview-stage-summary-name { color: var(--stage-summary-accent); }
+.overview-stage-summary-edit:focus-visible { outline: 2px solid var(--stage-summary-accent); outline-offset: 4px; }
 .overview-stage-summary-period { color: var(--qg-muted, #6d6c8e); font-size: 12px; font-variant-numeric: tabular-nums; }
 .overview-stage-summary-value { font-family: var(--qg-font-number, inherit); font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .overview-stage-summary-unit { margin-left: 3px; font-family: var(--qg-font-ui, inherit); font-size: 10px; font-weight: 500; color: var(--qg-muted, #6d6c8e); }
 .overview-stage-summary-table .is-current .overview-stage-summary-name,
-.overview-stage-summary-table .is-current .overview-stage-summary-value { color: var(--qg-brand-ink, #5b5ff5); }
+.overview-stage-summary-table .is-current .overview-stage-summary-value { color: var(--stage-summary-accent); }
+.overview-stage-summary-table .is-current .overview-stage-summary-value { font-size: 25px; }
 .overview-stage-summary-unknown { color: var(--qg-muted-2, #9998b6); font-size: 17px; }
 .overview-stage-summary-mobile-label { display: none; }
 .overview-stage-summary-empty { margin: 0; padding: 22px 24px; color: var(--qg-muted, #6d6c8e); font-size: 13px; line-height: 1.8; }
@@ -66,6 +79,13 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+/* Tracker owns editing; both pages share the same aligned statistics surface. */
+.career-stage-panel.career-stage-panel-summary { padding: 0; border: 0; background: transparent; }
+.career-stage-panel-summary > .career-stage-heading-actions { margin: 0 0 12px; }
+@media (min-width: 761px) and (max-width: 1100px) {
+  .overview-stage-summary-table .is-current .overview-stage-summary-name { font-size: 25px; }
+  .overview-stage-summary-edit { gap: 6px; }
 }
 @media (max-width: 760px) {
   .overview-stage-summary { border: 0; border-radius: 0; background: transparent; overflow: visible; }
@@ -82,6 +102,9 @@
     border-radius: 12px;
     background: var(--qg-surface, #fff);
   }
+  .overview-stage-summary-table tbody tr.is-current { padding-top: 32px; background: var(--qg-surface, #fff); }
+  .overview-stage-summary-table tbody tr.is-current + tr { border-top: 1px solid var(--qg-border, #ecebf7); }
+  .overview-stage-summary-table .is-current .overview-stage-summary-name { font-size: 27px; }
   .overview-stage-summary-table th,
   .overview-stage-summary-table td,
   .overview-stage-summary-table th:first-child,
@@ -91,6 +114,7 @@
     padding: 0;
     text-align: left;
   }
+  .overview-stage-summary-table tbody tr.is-current > * { padding-top: 0; padding-bottom: 0; }
   .overview-stage-summary-identity { align-self: start; }
   .overview-stage-summary-table td.overview-stage-summary-period { text-align: right; align-self: start; padding-top: 2px; }
   .overview-stage-summary-table td.overview-stage-summary-metric {
@@ -101,8 +125,11 @@
     padding: 12px 0;
     border-top: 1px solid var(--qg-border, #ecebf7);
   }
+  .overview-stage-summary-table .is-current td.overview-stage-summary-metric { padding: 12px 0; }
   .overview-stage-summary-metric:nth-child(3),
   .overview-stage-summary-metric:nth-child(4) { margin-top: 14px; }
+  .overview-stage-summary-table .is-current .overview-stage-summary-metric:nth-child(3),
+  .overview-stage-summary-table .is-current .overview-stage-summary-metric:nth-child(4) { border-top-color: var(--qg-text, #1c1c1c); }
   .overview-stage-summary-table td.overview-stage-summary-average { grid-column: 1 / -1; }
   .overview-stage-summary-table td.overview-stage-summary-leetcode { display: grid; align-items: start; gap: 7px; }
   .overview-stage-summary-leetcode .leetcode-counts { width: 100%; max-width: none; margin-left: 0; --leetcode-count-size: 18px; }
@@ -111,5 +138,9 @@
   .overview-stage-summary-mobile-label { display: block; min-width: 0; color: var(--qg-muted, #6d6c8e); font-size: 11px; line-height: 1.5; }
   .overview-stage-summary-value { font-size: 19px; }
   .overview-stage-summary-empty { padding: 20px; border: 1px solid var(--qg-border, #ecebf7); border-radius: 12px; background: var(--qg-surface, #fff); }
+}
+@media (max-width: 380px) {
+  .overview-stage-summary-table .is-current .overview-stage-summary-name { font-size: 24px; }
+  .overview-stage-summary-edit { gap: 6px; }
 }
 .overview-stage-count-note { margin: 14px 0 0; color: var(--qg-muted, #6d6c8e); font-size: 12px; line-height: 1.6; }
