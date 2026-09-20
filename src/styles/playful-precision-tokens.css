@@ -14,6 +14,9 @@
   --qg-muted-3: #a3a2bd;
   --qg-track: #eeedfa;
   --qg-nav-hover: #edecfb;
+  --qg-nav-accent: #5b5ff5;
+  --qg-nav-accent-end: #7d6cff;
+  --qg-nav-active-gradient: linear-gradient(135deg, var(--qg-nav-accent), var(--qg-nav-accent-end));
   --qg-header-bg: #f5f6fc;
   --qg-aside-grad: linear-gradient(180deg, #fbfbfe, #f7f7fc);
   --qg-hero-grad: linear-gradient(130deg, #f2f2ff 0%, #edefff 52%, #e9e6ff 100%);

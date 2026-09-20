@@ -1,29 +1,37 @@
 /* Approved compact Tracker layout. Dialogs retain their existing behavior. */
-.quantgym-tracker { color: #625b73; font-size: 14px; }
+.quantgym-tracker {
+  --qt-accent: var(--qg-nav-accent, #5b5ff5);
+  --qt-accent-end: var(--qg-nav-accent-end, #7d6cff);
+  --qt-accent-gradient: var(--qg-nav-active-gradient, linear-gradient(135deg, #5b5ff5, #7d6cff));
+  --qt-accent-soft: color-mix(in srgb, var(--qt-accent) 9%, white);
+  --qt-accent-hover: color-mix(in srgb, var(--qt-accent) 15%, white);
+  --qt-accent-border: color-mix(in srgb, var(--qt-accent) 20%, white);
+  color: #625b73; font-size: 14px;
+}
 .quantgym-tracker .qt-page-heading { margin-bottom: 18px; gap: 16px; }
 .quantgym-tracker .qt-page-heading h1 { margin: 0; font-size: 32px; line-height: 1.35; color: #201c39; letter-spacing: -1px; }
-.quantgym-tracker .qt-heading-dot { padding-left: 7px; color: #7151d1; }
+.quantgym-tracker .qt-heading-dot { padding-left: 7px; color: var(--qt-accent); }
 .quantgym-tracker .qt-heading-actions { padding-top: 0; }
 .quantgym-tracker .qt-heading-actions .qt-btn { font-size: 13px; min-height: 42px; padding: 10px 16px; }
-.quantgym-tracker .qt-heading-actions .qt-primary { background: #7052d6; border-color: #7052d6; box-shadow: 0 2px 5px #7151d119; }
+.quantgym-tracker .qt-heading-actions .qt-primary { background: var(--qt-accent-gradient); border-color: transparent; box-shadow: 0 2px 5px #5b5ff519; }
 .quantgym-tracker .qt-summary-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 15px 0; margin-bottom: 16px; border-radius: 10px; box-shadow: none; }
 .quantgym-tracker .qt-metric { padding: 0 26px; display: block; }
 .quantgym-tracker .qt-metric-label { font-size: 13px; line-height: 19px; margin-bottom: 6px; color: #827391; }
 .quantgym-tracker .qt-metric strong { font-size: 36px; font-family: inherit; font-weight: 600; letter-spacing: -1px; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.quantgym-tracker .qt-metric-all { --metric-color: #6341de; }
+.quantgym-tracker .qt-metric-all { --metric-color: var(--qt-accent); }
 .quantgym-tracker .qt-metric-oa { --metric-color: #4364be; }
 .quantgym-tracker .qt-metric-interview { --metric-color: #8556b1; }
 .quantgym-tracker .qt-metric-closed { --metric-color: #b44e76; }
 .quantgym-tracker .qt-metric-offer { --metric-color: #17766d; }
-.quantgym-tracker .qt-metric.qt-selected .qt-metric-label { color: #746384; }
+.quantgym-tracker .qt-metric.qt-selected .qt-metric-label { color: var(--metric-color); }
 .quantgym-tracker .qt-metric.qt-selected .qt-metric-dot { box-shadow: none; }
 .quantgym-tracker .qt-tracker-panel { border-radius: 10px; box-shadow: none; }
 .quantgym-tracker .qt-table-toolbar { display: flex; flex-direction: row; align-items: center; flex-wrap: wrap; justify-content: space-between; padding: 8px 14px 0; gap: 0 16px; }
 .quantgym-tracker .qt-filter-tabs { flex: 0 1 auto; display: flex; flex-wrap: nowrap; min-width: 0; max-width: 100%; overflow-x: auto; gap: 2px; scrollbar-width: thin; }
 .quantgym-tracker .qt-filter-tabs button { position: relative; flex-shrink: 0; gap: 6px; padding: 12px 12px 14px; border-radius: 0; color: #655d75; font-size: 14px; min-height: 44px; background: transparent; }
 .quantgym-tracker .qt-filter-tabs button span { font: inherit; opacity: 1; font-variant-numeric: tabular-nums; }
-.quantgym-tracker .qt-filter-tabs button.qt-active { color: #754577; background: transparent; font-weight: 650; box-shadow: inset 0 -2px #815086; }
-.quantgym-tracker .qt-filter-tabs button:hover { background: #f7f4f9; }
+.quantgym-tracker .qt-filter-tabs button.qt-active { color: var(--qt-accent); background: transparent; font-weight: 650; box-shadow: inset 0 -2px var(--qt-accent); }
+.quantgym-tracker .qt-filter-tabs button:hover { background: var(--qt-accent-soft); }
 .quantgym-tracker .qt-filter-tabs .qt-company-tab { margin-left: 0; }
 .quantgym-tracker .qt-filter-tabs .qt-ddl-tab,
 .quantgym-tracker .qt-filter-tabs .qt-ddl-tab span,
@@ -39,7 +47,7 @@
 .quantgym-tracker .qt-search button { padding: 3px; }
 .quantgym-tracker .qt-view-switch { flex: 0 0 auto; gap: 2px; padding: 3px; background: #f6f4f8; }
 .quantgym-tracker .qt-view-switch button { padding: 7px 9px; color: #a49bb2; }
-.quantgym-tracker .qt-view-switch button.qt-active { color: #794d7b; background: #eee5f0; box-shadow: none; }
+.quantgym-tracker .qt-view-switch button.qt-active { color: var(--qt-accent); background: var(--qt-accent-soft); box-shadow: none; }
 .quantgym-tracker .qt-table-scroll { max-height: clamp(560px, calc(100dvh - 260px), 900px); }
 .quantgym-tracker .qt-table-scroll .qt-progress-table { min-width: calc(720px + var(--qt-progress-column-count) * 140px); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 14px; }
 .quantgym-tracker .qt-progress-table .qt-col-company { width: 165px; }
@@ -48,14 +56,14 @@
 .quantgym-tracker .qt-progress-table .qt-col-deadline { width: 150px; }
 .quantgym-tracker .qt-progress-table thead th { height: 38px; font-size: 13px; padding: 0 14px; color: #81768d; background: #f7f6fa; border-color: #ebe7f0; }
 .quantgym-tracker .qt-progress-table thead th:first-child { padding-left: 20px; }
-.quantgym-tracker .qt-phase-row th { background: #f1edf4; border-bottom-color: #e9e4ee; }
+.quantgym-tracker .qt-phase-row th { background: color-mix(in srgb, var(--qt-accent) 5%, white); border-bottom-color: var(--qt-accent-border); }
 .quantgym-tracker .qt-phase-row button { padding: 8px 18px; min-height: 40px; gap: 12px; }
 .quantgym-tracker .qt-phase-row .qt-icon { color: #797083; }
-.quantgym-tracker .qt-phase-badge { font-family: inherit; color: #774c7a; background: #e9dfee; border-color: transparent; border-radius: 4px; font-size: 14px; font-weight: 600; padding: 3px 8px; white-space: nowrap; }
+.quantgym-tracker .qt-phase-badge { font-family: inherit; color: var(--qt-accent); background: var(--qt-accent-soft); border-color: transparent; border-radius: 4px; font-size: 14px; font-weight: 600; padding: 3px 8px; white-space: nowrap; }
 .quantgym-tracker .qt-phase-description { font-size: 13px; font-weight: 400; color: #7d7189; letter-spacing: 0; }
 .quantgym-tracker .qt-phase-count { font-size: 12px; color: #8d8099; white-space: nowrap; }
 .quantgym-tracker .qt-phase-caption { font-size: 12px; color: #87788f; white-space: nowrap; }
-.quantgym-tracker .qt-phase-caption strong { color: #795486; font-size: 13px; }
+.quantgym-tracker .qt-phase-caption strong { color: var(--qt-accent); font-size: 13px; }
 .quantgym-tracker .qt-application-row td { height: 47px; padding: 7px 10px; border-bottom: 1px solid #eeebf2; vertical-align: middle; }
 .quantgym-tracker .qt-application-row td + td { border-left: 1px solid #efedf3; }
 .quantgym-tracker .qt-application-row td.qt-company-cell { padding-left: 20px; }
@@ -74,9 +82,9 @@
 .quantgym-tracker .qt-event-pill.qt-red { background: #fbecf0; border-color: #f1dbe3; color: #ac4b68; }
 .quantgym-tracker .qt-event-pill.qt-muted { background: #f1eef4; border-color: #e6dfec; color: #807187; }
 .quantgym-tracker .qt-empty-step { color: #aaa0b9; padding: 5px 9px; font-size: 14px; }
-.quantgym-tracker .qt-add-progress { color: #87558b; background: #f4eef6; border-color: #e9dfed; border-radius: 4px; min-height: 33px; padding: 6px 10px; font-size: 13px; font-weight: 500; }
+.quantgym-tracker .qt-add-progress { color: var(--qt-accent); background: var(--qt-accent-soft); border-color: var(--qt-accent-border); border-radius: 4px; min-height: 33px; padding: 6px 10px; font-size: 13px; font-weight: 500; }
 .quantgym-tracker .qt-application-row:hover .qt-add-progress,
-.quantgym-tracker .qt-add-progress:hover { color: #744578; background: #eee4f1; border-color: #e0d0e6; }
+.quantgym-tracker .qt-add-progress:hover { color: var(--qt-accent); background: var(--qt-accent-hover); border-color: var(--qt-accent-border); }
 .quantgym-tracker .qt-application-row.qt-has-deadline td { background: #fff; border-bottom-color: #eeebf2; }
 .quantgym-tracker .qt-application-row:hover td,
 .quantgym-tracker .qt-application-row.qt-has-deadline:hover td { background: #faf8fd; }
@@ -116,3 +124,27 @@
 }
 .quantgym-tracker .qt-cloud-status { display: flex; align-items: center; gap: 10px; margin: -8px 0 14px; color: var(--qt-muted, #807789); font-size: 12px; }
 .quantgym-tracker .qt-cloud-status button { border: 0; padding: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
+
+/* Share the navigation accent across Tracker actions and their dialogs. */
+.quantgym-tracker .qt-btn.qt-primary,
+.quantgym-tracker .qt-td-button-primary,
+.quantgym-tracker .career-button.career-primary { background: var(--qt-accent-gradient); border-color: transparent; color: #fff; }
+.quantgym-tracker .qt-btn.qt-primary:hover,
+.quantgym-tracker .qt-td-button-primary:hover,
+.quantgym-tracker .career-button.career-primary:hover { background: var(--qt-accent); }
+.quantgym-tracker .qt-btn:not(.qt-primary):not(.qt-event-delete):hover,
+.quantgym-tracker .career-button:not(.career-primary):hover { background: var(--qt-accent-soft); border-color: var(--qt-accent-border); }
+.quantgym-tracker .qt-td-button-secondary,
+.quantgym-tracker .qt-td-count { color: var(--qt-accent); background: var(--qt-accent-soft); border-color: var(--qt-accent-border); }
+.quantgym-tracker .qt-search:focus-within { border-color: var(--qt-accent); box-shadow: 0 0 0 2px var(--qt-accent-soft); }
+.quantgym-tracker :is(button, a, input, select, textarea):focus-visible,
+.quantgym-tracker :is(input, select, textarea):focus { outline-color: var(--qt-accent); }
+.quantgym-tracker .qt-role-link:hover,
+.quantgym-tracker .qt-row-open:hover,
+.quantgym-tracker .qt-event-edit-link,
+.quantgym-tracker .career-stage-name:hover,
+.quantgym-tracker .career-stage-edit-icon,
+.quantgym-tracker .career-auto-count output,
+.quantgym-tracker .qt-event-edit-dialog .qt-event-clear-deadline:hover:not(:disabled) { color: var(--qt-accent); }
+.quantgym-tracker .qt-add-progress:focus-visible { color: var(--qt-accent); background: var(--qt-accent-hover); border-color: var(--qt-accent-border); }
+.quantgym-tracker .qt-edit-progress:hover .qt-event-pill { box-shadow: 0 0 0 2px var(--qt-accent-border); }

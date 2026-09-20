@@ -259,7 +259,7 @@ body.is-authenticated .qg-shell-rail .module-tab:focus-visible {
 body.is-authenticated .qg-shell-rail .module-tab.active,
 body.is-authenticated .qg-shell-rail .module-tab.active:hover,
 body.is-authenticated .qg-shell-rail .module-tab.active:focus-visible {
-  background: linear-gradient(135deg, #5b5ff5, #7d6cff) !important;
+  background: var(--qg-nav-active-gradient) !important;
   color: #ffffff !important;
   box-shadow: 0 9px 18px -9px rgba(91, 95, 245, 0.7) !important;
   transform: translateX(1px);
