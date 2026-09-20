@@ -120,14 +120,10 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
   return (
     <main className="personal-calendar" aria-labelledby="pc-title">
       <header className="pc-header">
-        <div>
-          <p className="pc-eyebrow">PERSONAL PRACTICE</p>
-          <h1 id="pc-title">{t("训练日历", "Training calendar")}</h1>
-          <p className="pc-intro">{t("把申请准备，落实到每一天。", "A record of your preparation, one day at a time.")}</p>
-        </div>
+        <h1 id="pc-title">{t("训练日历", "Training calendar")}</h1>
         <div className="pc-practice-links">
-          <Link className="pc-primary" to="/leetcode">LeetCode <span aria-hidden="true">↗</span></Link>
-          <Link className="pc-secondary" to="/technical-interview">Technical Interview <span aria-hidden="true">↗</span></Link>
+          <Link className="pc-text-button" to="/leetcode">LeetCode <span aria-hidden="true">↗</span></Link>
+          <Link className="pc-text-button" to="/technical-interview">Technical Interview <span aria-hidden="true">↗</span></Link>
         </div>
       </header>
 

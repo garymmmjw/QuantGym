@@ -1,12 +1,5 @@
 .personal-workspace { --personal-ink:#1f2937; --personal-muted:#667085; --personal-line:#e4e7ec; --personal-accent:#315bea; color:var(--personal-ink); max-width:1200px; margin:0 auto; padding:16px 4px 36px; }
 .personal-workspace *, .personal-workspace *::before, .personal-workspace *::after { box-sizing:border-box; }
-.personal-workspace-bar { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:0 0 24px; margin:0 0 24px; border-bottom:1px solid var(--personal-line); }
-.personal-workspace-kicker { font-size:13px; font-weight:750; letter-spacing:.08em; }
-.personal-workspace-bar p { margin:5px 0 0; font-size:13px; color:var(--personal-muted); }
-.personal-workspace-nav { display:flex; gap:5px; flex-wrap:wrap; }
-.personal-workspace-nav a { text-decoration:none; color:var(--personal-muted); padding:10px 14px; border-radius:8px; font-size:14px; font-weight:650; white-space:nowrap; }
-.personal-workspace-nav a.active { background:#edf2ff; color:var(--personal-accent); }
-.personal-workspace-nav a:hover { background:#f1f4f9; }
 .personal-workspace button, .personal-workspace input, .personal-workspace select, .personal-workspace textarea { font:inherit; }
 .personal-workspace button { cursor:pointer; }
 .personal-workspace button:disabled { cursor:not-allowed; }
@@ -14,14 +7,9 @@
 .personal-workspace-footer { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; padding-top:24px; margin-top:32px; border-top:1px solid var(--personal-line); color:var(--personal-muted); font-size:12px; }
 .personal-workspace-footer button { border:1px solid var(--personal-line); border-radius:6px; padding:8px 12px; background:#fff; color:var(--personal-ink); margin-left:8px; }
 .personal-workspace-footer p { flex-basis:100%; margin:0; }
-.personal-cloud-status { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:-4px 0 22px; font-size:12px; color:var(--personal-muted); }
-.personal-cloud-status button { border:0; background:transparent; color:var(--personal-accent); font-size:12px; white-space:nowrap; padding:6px; }
-.personal-cloud-synced { color:#39735b; }
-.personal-cloud-error, .personal-cloud-auth { color:#97692b; }
 .personal-recovery { padding:16px; margin-bottom:20px; background:#fff7e8; border:1px solid #efc370; border-radius:8px; color:#713c00; }
 .personal-recovery p { margin:6px 0 12px; }
 .personal-recovery button { background:white; padding:8px 14px; border:1px solid #a9762c; border-radius:6px; margin-right:8px; }
 [data-qg-theme="dark"] .personal-workspace { --personal-ink:#e5eaf3; --personal-muted:#a4b1c6; --personal-line:#35425a; --personal-accent:#94afff; }
-[data-qg-theme="dark"] .personal-workspace-nav a.active { background:#253457; }
 [data-qg-theme="dark"] .personal-workspace-footer button { background:#1b2535; }
-@media(max-width:640px) { .personal-workspace { padding:4px 0 28px; } .personal-workspace-bar { display:block; padding-bottom:16px; margin-bottom:20px; } .personal-workspace-nav { margin-top:16px; gap:0; justify-content:space-between; } .personal-workspace-nav a { padding:10px 8px; font-size:13px; } .personal-workspace-footer { align-items:flex-start; } .personal-workspace-footer button { margin:0 8px 0 0; } }
+@media(max-width:640px) { .personal-workspace { padding:4px 0 28px; } .personal-workspace-footer { align-items:flex-start; } .personal-workspace-footer button { margin:0 8px 0 0; } }
