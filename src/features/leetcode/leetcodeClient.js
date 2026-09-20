@@ -22,14 +22,16 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
       if (!response.ok) throw Object.assign(new Error(payload.error || "request_failed"), { status: response.status });
       if (!Object.hasOwn(payload, "connection") || !Array.isArray(payload.problems) || !Array.isArray(payload.submissions)) throw new Error("invalid_response");
       if (payload.syncedSubmissions !== undefined && !Array.isArray(payload.syncedSubmissions)) throw new Error("invalid_response");
+      if (payload.importedSubmissions !== undefined && !Array.isArray(payload.importedSubmissions)) throw new Error("invalid_response");
       if (path === "/review" && (payload.connection?.username !== body?.username
         || payload.connection?.linkedAt !== body?.linkedAt
         || !(payload.problems.find((problem) => problem.slug === body?.problemSlug)?.review?.version > body?.expectedVersion))) {
         throw new Error("invalid_review_response");
       }
-      // Older API deployments have no verified source list. Imported history
-      // must never become a substitute for account-synced completion records.
-      return { ...payload, syncedSubmissions: payload.connection ? payload.syncedSubmissions || [] : [] };
+      // Keep public sync and user-imported history separate. Older API versions
+      // cannot supply imported counting records by falling back to submissions.
+      return { ...payload, syncedSubmissions: payload.connection ? payload.syncedSubmissions || [] : [],
+        importedSubmissions: payload.connection ? payload.importedSubmissions || [] : [] };
     } finally { clearTimeout(timeout); }
   }
 

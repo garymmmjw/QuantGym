@@ -1,6 +1,6 @@
 import { addLocalDays, collectCalendarActivities, localDayKey, parseLocalDay } from '../personal/calendar/calendarModel.js';
 import { leetcodeSubmissionDay } from '../personal/calendar/leetcodeCalendar.js';
-import { summarizeLeetCodeProgress } from '../leetcode/leetcodeProgress.js';
+import { summarizeLeetCodeProgress, summarizeLeetCodeRange } from '../leetcode/leetcodeProgress.js';
 import { countsTowardProblemTotal, hasExplicitProblemCompletion } from '../../modules/problems/completion.js';
 import { sortCareerStages } from '../careerStages/stageStore.js';
 
@@ -27,7 +27,7 @@ export function collectOverviewRecords({ applications = [], personalState = {}, 
   const removed = new Set(list(personalState.removedActivityIds));
   const sources = { personal: availability.personal !== false, applications: availability.applications !== false,
     leetcode: availability.leetcode !== false && leetcodeSnapshot?.connection?.site === 'cn'
-      && Array.isArray(leetcodeSnapshot.syncedSubmissions) };
+      && (Array.isArray(leetcodeSnapshot.syncedSubmissions) || Array.isArray(leetcodeSnapshot.importedSubmissions)) };
   const nowMs = new Date(now).getTime();
   const dayOf = timestamp => {
     if (!hasExplicitProblemCompletion({ completed: true, completedAt: timestamp }) || Date.parse(timestamp) > nowMs) return '';
@@ -97,10 +97,15 @@ export function collectOverviewRecords({ applications = [], personalState = {}, 
     });
   }
   const leetcodeProgress = sources.leetcode ? summarizeLeetCodeProgress(leetcodeSnapshot, { now, timeZone }) : null;
+  const firstLeetcodeIds = new Set(leetcodeProgress?.firstCompletions.map(completion => completion.id));
   leetcodeProgress?.completions.forEach(completion => {
-    add('leetcode', completion.id, completion.dayKey, { problemSlug: completion.problemSlug });
+    add('leetcode', completion.id, completion.dayKey, { problemSlug: completion.problemSlug, isFirstLeetcode: firstLeetcodeIds.has(completion.id) });
   });
   return { records: [...records.values()], sources, leetcodeTotal: leetcodeProgress?.total ?? null,
+    leetcodeProgress,
+    leetcodeNewTotal: leetcodeProgress?.newTotal ?? null,
+    leetcodeNewStatus: leetcodeProgress?.newStatus || 'unavailable',
+    leetcodeCountStatus: leetcodeProgress?.countStatus || 'unavailable',
     leetcodeMissingDates: leetcodeProgress?.missingDates ?? 0,
     personalComplete: availability.personalComplete !== false, applicationsComplete: availability.applicationsComplete !== false,
     leetcodeComplete: sources.leetcode && leetcodeProgress.complete };
@@ -143,6 +148,7 @@ export function summarizeOverviewStages(stages = [], bundle, { today = localDayK
     const result = { ...stage, isCurrent: !next, periodStart, periodEnd, usesTodayBoundary: !next };
     for (const kind of ['applications', 'leetcode', 'technical', 'behavioral']) result[kind] = known
       ? periodStart === periodEnd && sourceAvailable(bundle, kind) ? 0 : metricCount(bundle, records, kind) : null;
+    Object.assign(result, summarizeLeetCodeRange(bundle.leetcodeProgress, periodStart, periodEnd, known && bundle.sources.leetcode));
     const trials = records.filter(record => record.kind === 'mentalMath');
     result.mentalMathAverage = known && bundle.sources.personal && trials.length
       ? trials.reduce((total, trial) => total + trial.score, 0) / trials.length : null;
@@ -160,6 +166,7 @@ export function buildOverviewActivity(input = {}, { today = localDayKey(), now =
   // Include the profile's missing first solves, never invent their dates or
   // unknown repeat attempts. Known three-hour repeats add to this lower bound.
   totals.leetcode = bundle.leetcodeTotal ?? (bundle.leetcodeComplete ? distinct(past, 'leetcode') : null);
+  totals.leetcodeNew = bundle.leetcodeNewTotal;
   totals.mock = null;
   const currentCounts = dailyCounts(bundle, past.filter(record => record.day === todayKey));
   const date = parseLocalDay(todayKey);
@@ -181,8 +188,11 @@ export function buildOverviewActivity(input = {}, { today = localDayKey(), now =
   else if (!bundle.personalComplete) notes.push('账户记录尚未同步完成，显示已记录活动');
   if (!bundle.sources.applications) notes.push('投递记录暂不可用');
   if (!bundle.sources.leetcode) notes.push('LeetCode 尚未同步');
-  else if (!bundle.leetcodeComplete) notes.push('LeetCode 日期统计仅含已同步记录');
+  else if (!bundle.leetcodeComplete && !bundle.leetcodeProgress?.calendar.historyCompleteThrough) {
+    notes.push('LeetCode 日期统计仅含已记录历史，尚无法确认各阶段首次完成题数');
+  }
   return { totals, today: { counts: currentCounts, activityScore: scoreActivity(currentCounts) }, days,
+    leetcodeNewStatus: bundle.leetcodeNewStatus, leetcodeCountStatus: bundle.leetcodeCountStatus,
     stageRows, leetcodeStageNote: stageNotes.length ? `LeetCode：${stageNotes.join('，')}，未计入 Stage。` : '',
     statusNote: notes.join('；'), recordBundle: bundle };
 }
@@ -194,7 +204,8 @@ export function resolveOverviewActivity({ ownerId, namespace = '', personal = {}
     && !personal.snapshot.error?.startsWith('read:') && !personal.snapshot.conflict;
   const trackerReady = active && tracker.ownerId === ownerId && !tracker.error && !tracker.syncError && Array.isArray(tracker.applications);
   const lcReady = active && !namespace && leetcode.ownerId === ownerId && leetcode.enabled !== false
-    && leetcode.data?.connection?.site === 'cn' && Array.isArray(leetcode.data.syncedSubmissions);
+    && leetcode.data?.connection?.site === 'cn'
+    && (Array.isArray(leetcode.data.syncedSubmissions) || Array.isArray(leetcode.data.importedSubmissions));
   const personalComplete = !personal.cloudExpected || personal.cloud?.phase === 'synced';
   const result = buildOverviewActivity({ applications: trackerReady ? tracker.applications : [], stages: active ? stages : [],
     personalState: personalReady ? personal.snapshot.data : {}, legacyState: personalReady ? personal.legacyState : {},

@@ -122,7 +122,7 @@ test("invalid or dateless timestamps and non-accepted submissions cannot create 
   assert.equal(leetcodeSubmissionDay("2026-09-11T01:00:00Z", "Invalid/Zone"), "");
 });
 
-test("imported or manual accepted history never counts without server-synced evidence", () => {
+test("the mixed legacy submissions array cannot masquerade as explicit personal history", () => {
   const imported = [submission("manual-ac", "2026-09-11T01:00:00Z")];
   assert.equal(collectLeetCodeActivities({ connection: { site: 'cn', username: 'fixture' }, submissions: imported }).activities.length, 0);
   assert.equal(collectLeetCodeActivities(snapshot(imported, { syncedSubmissions: [] })).activities.length, 0);
@@ -230,4 +230,53 @@ test('completion events reject unverified, invalid, future and repeated submissi
   assert.deepEqual(collectLeetCodeActivities({ connection: input.connection, submissions: [valid] }).completions, []);
   assert.deepEqual(collectLeetCodeActivities({}).completions, []);
   assert.deepEqual(collectLeetCodeActivities(input, { now: 'invalid' }).completions, []);
+});
+
+test('explicit imported history merges by submission ID with public precedence and one shared repeat clock', () => {
+  const input = snapshot([
+    submission('public', '2026-09-12T02:00:00Z'),
+    { ...submission('rejected', '2026-09-12T12:00:00Z', 'not-solved'), status: 'WA' },
+  ], { importedSubmissions: [
+    submission('old', '2026-09-11T23:00:00Z'),
+    submission('near', '2026-09-12T00:00:00Z'),
+    submission('public', '2026-09-01T00:00:00Z', 'conflicting-import'),
+    submission('rejected', '2026-09-12T12:00:00Z', 'not-solved'),
+    submission('repeat', '2026-09-12T05:00:00Z'),
+    submission('repeat', '2026-09-12T05:00:00Z'),
+  ] });
+  const before = structuredClone(input);
+  const records = collectLeetCodeActivities(input, { timeZone: 'UTC' });
+  assert.deepEqual(records.completions.map(item => [item.submissionId, item.submissionSource]), [
+    ['old', 'import'], ['public', 'public'], ['repeat', 'import'],
+  ]);
+  assert.deepEqual(records.firstCompletions.map(item => item.submissionId), ['old']);
+  assert.equal(leetcodeDailySummary(records, '2026-09-12').solved, 2);
+  assert.equal(leetcodeDailySummary(records, '2026-09-12').acceptedSubmissions, 3);
+  assert.deepEqual(input, before);
+  assert.deepEqual(collectLeetCodeActivities({ ...input, importedSubmissions: [...input.importedSubmissions].reverse() }, { timeZone: 'UTC' }), records);
+});
+
+test('complete private import metadata never promotes the public coverage or trusted submission list', () => {
+  const input = snapshot([], { importedSubmissions: [submission('old', '2026-09-11T12:00:00Z')],
+    coverage: { historyComplete: false, personalHistoryComplete: true, personalHistoryCompleteThrough: '2026-09-12T12:00:00Z' } });
+  const records = collectLeetCodeActivities(input, { timeZone: 'UTC', now: '2026-09-12T12:00:00Z' });
+  assert.equal(records.historyComplete, true);
+  assert.equal(records.historyCompleteThroughDay, '2026-09-12');
+  assert.equal(input.coverage.historyComplete, false);
+  assert.deepEqual(input.syncedSubmissions, []);
+  assert.equal(leetcodeDailySummary(records, '2026-09-10').solved, 0);
+});
+
+test('private calendar coverage proves zero only before its cutoff day and survives later public refreshes', () => {
+  const input = snapshot([], { connection: { site: 'cn', username: 'fixture', lastSyncedAt: '2026-09-18T12:00:00Z' },
+    importedSubmissions: [submission('old', '2026-09-17T12:00:00Z')],
+    coverage: { personalHistoryComplete: true, personalHistoryCompleteThrough: '2026-09-18T13:00:00Z' } });
+  for (const lastSyncedAt of ['2026-09-18T12:00:00Z', '2026-09-20T12:00:00Z']) {
+    const records = collectLeetCodeActivities({ ...input, connection: { ...input.connection, lastSyncedAt } }, { timeZone: 'UTC', now: '2026-09-20T13:00:00Z' });
+    assert.equal(leetcodeDailySummary(records, '2026-09-16').solved, 0);
+    assert.equal(leetcodeDailySummary(records, '2026-09-17').solved, 1);
+    assert.equal(leetcodeDailySummary(records, '2026-09-18').solved, null);
+    assert.equal(leetcodeDailySummary(records, '2026-09-19').solved, null);
+    assert.equal(leetcodeDailySummary(records, '2026-09-20').solved, null);
+  }
 });

@@ -3,6 +3,7 @@ import { Pencil } from 'lucide-react';
 import { localDateKey, nextStageLabel } from './stageStore.js';
 import { formatStagePeriod, summarizeStagePractice } from './stagePractice.js';
 import { stageFormChanges } from '../tracker/formChanges.js';
+import { LeetCodeCounts } from './LeetCodeCounts.jsx';
 import './stagePanel.css';
 
 function periodNote(stage) {
@@ -67,8 +68,9 @@ function StageDialog({ stageStore, stage, practice, onClose }) {
           <label>记录日期<input type="date" required value={date} onInput={event => setDate(event.target.value)} onChange={event => setDate(event.target.value)} /></label>
         </div>
         <label>准备状态<input value={description} maxLength={200} onChange={event => setDescription(event.target.value)} placeholder="例如：简历完成，开始集中投递" /></label>
-        <div className="career-auto-count" aria-label="系统统计的阶段刷题数"><span>本阶段刷题 · {preview.countStatus === 'partial' ? '已确认' : '系统统计'}</span><output>{preview.questionCount ?? '—'}<small>题</small></output></div>
-        <p className="career-form-hint">{preview.nextLabel ? `统计本 Stage 日期之后、到 ${preview.nextLabel} 当日完成的题目。` : '统计本 Stage 日期之后、截至今天完成的题目。'}不含起始日、包含结束日。仅计有完成日期的系统记录，同一阶段内同题计一次。{preview.countSourceNote}</p>
+        <div className="career-stage-dialog-counts"><span>LeetCode · 本阶段</span><LeetCodeCounts newCount={preview.leetcodeNew} totalCount={preview.leetcode} newStatus={preview.leetcodeNewStatus} totalStatus={preview.leetcodeCountStatus} layout="inline" scope="stage" /></div>
+        <div className="career-auto-count" aria-label="系统统计的阶段刷题合计"><span>全部刷题{preview.countStatus === 'partial' ? ' · 已记录' : ''}</span><output>{preview.questionCount ?? '—'}<small>题</small></output></div>
+        <p className="career-form-hint">{preview.nextLabel ? `统计本 Stage 日期之后、到 ${preview.nextLabel} 当日的记录。` : '统计本 Stage 日期之后、截至今天的记录。'}不含起始日、包含结束日。新完成按全历史首次通过日期归属；总完成含间隔至少 3 小时的有效重做。其他题目同阶段计一次。{preview.countSourceNote}</p>
         {error && <p className="career-error" role="alert">{error}</p>}
         <footer><button type="button" className="career-button" onClick={onClose}>取消</button><button type="submit" className="career-button career-primary">保存 Stage</button></footer>
       </form>
@@ -88,7 +90,7 @@ export default function StagePanel({ stageStore, practice, variant = 'tracker', 
       {(headerActions || showAddButton) && <div className="career-stage-heading-actions">{headerActions}{showAddButton && <button type="button" className="career-button career-add" onClick={() => setEditor({ stage: null })}>＋ 添加 Stage</button>}</div>}
       {current ? <ol className="career-stage-list" aria-label="准备阶段，按新到旧排列">{displayStages.map(stage => {
         const isCurrent = stage.id === current.id;
-        const partial = stage.countStatus === 'partial' && stage.questionCount !== null;
+        const partial = stage.countStatus === 'partial' && Number.isSafeInteger(stage.questionCount);
         return <li className={`career-stage-row${isCurrent ? ' career-stage-row-current' : ''}`} key={stage.id} aria-current={isCurrent ? 'step' : undefined}>
           <div className="career-stage-row-identity">
             {isCurrent && <span className="career-current-label">当前阶段</span>}
@@ -98,9 +100,11 @@ export default function StagePanel({ stageStore, practice, variant = 'tracker', 
           </div>
           <span className="career-stage-period" title={periodNote(stage)}>{formatStagePeriod(stage)}</span>
           <p className="career-stage-description">{stage.description || '—'}</p>
-          <div className="career-stage-count" title={`${periodNote(stage)}LeetCode 同题距上次计入的通过记录至少 3 小时可再计一次；其他题目同阶段计一次。${stage.countSourceNote || ''}`}>
-            <div className="career-stage-count-line" aria-label={`${partial ? '本阶段已确认刷题' : '本阶段刷题'} ${stage.questionCount ?? '未知'} 题`}><span>本阶段刷题</span><strong>{stage.questionCount ?? '—'}</strong><span>题</span></div>
-            {(partial || stage.countSourceNote) && <small className="career-stage-source-note">{[partial ? '已确认' : '', stage.countSourceNote].filter(Boolean).join(' · ')}</small>}
+          <div className="career-stage-count">
+            <span className="career-stage-count-title">LeetCode</span>
+            <LeetCodeCounts newCount={stage.leetcodeNew} totalCount={stage.leetcode} newStatus={stage.leetcodeNewStatus} totalStatus={stage.leetcodeCountStatus} layout="inline" scope="stage" />
+            <div className="career-stage-site-count" title={`${periodNote(stage)}站内题目和 LeetCode 有效完成的合计。其他题目同阶段计一次。${partial ? '已记录次数，补齐历史后可能重新归属。' : ''}`}><span>全部刷题</span><strong>{stage.questionCount ?? '—'}</strong><span>题</span></div>
+            {(partial || stage.countSourceNote) && <small className="career-stage-source-note">{[partial ? '已记录' : '', stage.countSourceNote].filter(Boolean).join(' · ')}</small>}
           </div>
         </li>;
       })}</ol> : <div className="career-empty"><p>添加第一个 Stage，记录当前的求职准备状态。</p>{!showAddButton && <button className="career-button" type="button" onClick={() => setEditor({ stage: null })}>＋ 添加 Stage</button>}</div>}

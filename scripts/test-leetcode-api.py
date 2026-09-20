@@ -36,6 +36,14 @@ def record(identity, slug, status="AC", when="2026-09-08T23:45:00Z"):
     return lc.submission({"id": identity, "problemSlug": slug, "title": slug, "titleEn": "", "frontendId": "1", "difficulty": None, "submittedAt": when, "status": status})
 
 
+def full_history(records=None, captured_at="2026-09-10T12:00:00Z"):
+    records = records if records is not None else [*upstream()["submissions"], record("history-1", "binary-search", when="2026-08-01T09:00:00Z")]
+    return {"username": "fixture-a", "submissions": records,
+            "problems": [{"slug": slug} for slug in sorted({row["problemSlug"] for row in records})],
+            "capturedAt": captured_at, "coverage": {"problemsComplete": True, "submissionsComplete": True,
+            "complete": True, "skippedRecords": 0, "reason": ""}}
+
+
 class LeetCodeApiTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -220,6 +228,66 @@ class LeetCodeApiTests(unittest.TestCase):
             status, body, _ = self.request("POST", "/api/leetcode/import", token, payload)
             self.assertEqual(status, 400, body)
             self.assert_snapshot_equal(self.request("GET", token=token)[1], before)
+
+    def test_imported_history_is_a_private_bound_source_and_reimport_is_idempotent(self):
+        token, owner = self.user()
+        other, _ = self.user()
+        _, before, _ = self.connect(token)
+        payload = full_history()
+        for _ in range(2):
+            status, saved, _ = self.request("POST", "/api/leetcode/import", token, payload)
+            self.assertEqual(status, 200, saved)
+            self.assertEqual([row["id"] for row in saved["importedSubmissions"]], ["history-1"])
+            self.assertEqual(saved["syncedSubmissions"], before["syncedSubmissions"])
+            self.assertEqual(saved["syncedLifetimeSolvedCount"], 2)
+            self.assertEqual(saved["stats"], before["stats"])
+            self.assertEqual(saved["coverage"]["personalHistoryCompleteThrough"], "2026-09-10T12:00:00.000Z")
+            self.assertTrue(saved["coverage"]["personalHistoryComplete"])
+            self.assertFalse(saved["coverage"]["historyComplete"])
+            self.assertEqual(saved["coverage"]["personalHistorySource"], "user_import")
+            self.assertEqual(saved["coverage"]["importedAcceptedSubmissions"], 1)
+            self.assertEqual(saved["coverage"]["knownAcceptedSubmissions"], 4)
+            self.assertFalse(any(key.startswith("_") for key in saved))
+        self.assertEqual(self.request("GET", token=other)[1]["importedSubmissions"], [])
+        # Once the same genuine ID appears publicly, only the public ledger emits
+        # it, without double counting or trusting the remainder of the import.
+        self.age_snapshot(owner)
+        incoming = upstream()
+        incoming["submissions"].append(payload["submissions"][-1])
+        self.mock_fetch.side_effect = lambda username: {**incoming, "username": username}
+        status, synced, _ = self.request("POST", "/api/leetcode/sync", token, {})
+        self.assertEqual(status, 200, synced)
+        self.assertEqual(synced["importedSubmissions"], [])
+        self.assertEqual(len(synced["syncedSubmissions"]), 4)
+        self.assertTrue(synced["coverage"]["personalHistoryComplete"])
+        switched = self.connect(token, "fixture-b")[1]
+        self.assertEqual(switched["importedSubmissions"], [])
+        self.assertFalse(switched["coverage"]["personalHistoryComplete"])
+        cleared = self.request("DELETE", token=token)[1]
+        self.assertEqual(cleared["importedSubmissions"], [])
+        self.assertIsNone(cleared["coverage"]["personalHistoryCompleteThrough"])
+
+    def test_complete_import_does_not_supply_guardian_progress(self):
+        token, _ = self.user()
+        self.connect(token)
+        access = self.request("GET", "/api/guardian/access", token)[1]
+        guardian = self.request("POST", "/api/guardian/session", payload={"code": access["code"]})[1]["token"]
+        status, created, _ = self.request("POST", "/api/guardian/goals", guardian, {
+            "title": "Public accepted history only", "targetCount": 3, "startDate": "2026-09-08",
+            "endDate": "2026-09-09", "timeZone": "UTC", "reward": "Fixture reward",
+        })
+        self.assertEqual(status, 201, created)
+        payload = full_history([*upstream()["submissions"], record("imported-goal", "third-question")])
+        status, imported, _ = self.request("POST", "/api/leetcode/import", token, payload)
+        self.assertEqual(status, 200, imported)
+        self.assertTrue(imported["coverage"]["personalHistoryComplete"])
+        self.assertEqual(len(imported["importedSubmissions"]), 1)
+        with self.api.db.connect() as conn:
+            goal = conn.execute("SELECT status, completion_count FROM guardian_goals WHERE id = ?", (created["goal"]["id"],)).fetchone()
+        self.assertNotEqual(goal["status"], "completed")
+        status, dashboard, _ = self.request("GET", "/api/guardian/dashboard?date=2026-09-09&timeZone=UTC", guardian)
+        self.assertEqual(status, 200, dashboard)
+        self.assertEqual(next(row["progress"] for row in dashboard["goals"] if row["id"] == created["goal"]["id"]), 2)
 
     def test_cas_rejects_sync_started_before_disconnect(self):
         token, owner = self.user()
@@ -551,6 +619,116 @@ class ReviewAlgorithmTests(unittest.TestCase):
                 self.grade(saved, "good")
         self.assertEqual(caught.exception.status, 413)
         self.assertEqual(saved, before)
+
+
+class ImportedHistoryTests(unittest.TestCase):
+    def snapshot(self):
+        return lc.fresh_snapshot(lc.empty_snapshot(), upstream())
+
+    def test_legacy_imports_recover_as_partial_and_public_metadata_wins(self):
+        saved = lc.import_metadata(self.snapshot(), {"username": "fixture-a", "submissions": [
+            record("old-import", "older-question"), record("failed", "failed-question", "WA"),
+            {**upstream()["submissions"][0], "title": "Imported title"},
+        ]})
+        saved.pop("_importedAcceptedConnection")
+        result = lc.public_snapshot(saved)
+        self.assertEqual([row["id"] for row in result["importedSubmissions"]], ["old-import"])
+        self.assertEqual(next(row["title"] for row in result["syncedSubmissions"] if row["id"] == "101"), "two-sum")
+        self.assertFalse(result["coverage"]["personalHistoryComplete"])
+        self.assertIsNone(result["coverage"]["personalHistoryCompleteThrough"])
+        self.assertEqual(result["coverage"]["personalHistorySource"], "user_import")
+
+    def test_binding_mismatch_and_invalid_legacy_markers_fail_closed(self):
+        saved = lc.import_metadata(self.snapshot(), full_history())
+        for update in ({"username": "other", "linkedAt": saved["connection"]["linkedAt"]},
+                       {"username": "fixture-a", "linkedAt": "2020-01-01T00:00:00Z"}, None):
+            broken = copy.deepcopy(saved)
+            broken["_importedAcceptedConnection"] = update
+            result = lc.public_snapshot(broken)
+            self.assertEqual(result["importedSubmissions"], [])
+            self.assertFalse(result["coverage"]["personalHistoryComplete"])
+        for markers in (None, {}, [123]):
+            broken = copy.deepcopy(saved)
+            broken["_importedSubmissionIds"] = markers
+            result = lc.public_snapshot(broken)
+            self.assertEqual(result["importedSubmissions"], [])
+            self.assertFalse(result["coverage"]["personalHistoryComplete"])
+
+    def test_full_coverage_requires_explicit_consistent_collection_not_equal_counts(self):
+        # Public distinct total equals the two known slugs, but recent records
+        # are still not proof of full submission history.
+        result = lc.public_snapshot(lc.import_metadata(self.snapshot(), {
+            "username": "fixture-a", "submissions": upstream()["submissions"],
+        }))
+        self.assertEqual(result["syncedLifetimeSolvedCount"], 2)
+        self.assertFalse(result["coverage"]["personalHistoryComplete"])
+        base = full_history()
+        invalid = [
+            {**base, "coverage": {**base["coverage"], "complete": "true"}},
+            {**base, "coverage": {**base["coverage"], "skippedRecords": True}},
+            {**base, "coverage": {**base["coverage"], "skippedRecords": 1}},
+            {**base, "coverage": {**base["coverage"], "reason": "page limit"}},
+            {**base, "coverage": {**base["coverage"], "submissionsComplete": False}},
+            {**base, "coverage": {**base["coverage"], "trusted": True}},
+            {**base, "coverage": None},
+            {**base, "capturedAt": "2099-01-01T00:00:00Z"},
+            {**base, "capturedAt": "2026-09-08T00:00:00Z"},
+            {**base, "problems": [{"slug": "missing-history"}]},
+            {**base, "submissions": base["submissions"][1:]},
+            {**base, "submissions": [*base["submissions"], record("failed", "binary-search", "WA")]},
+        ]
+        for field in ("capturedAt", "coverage"):
+            missing = copy.deepcopy(base)
+            missing.pop(field)
+            invalid.append(missing)
+        original = self.snapshot()
+        before = copy.deepcopy(original)
+        for payload in invalid:
+            with self.subTest(payload=payload), self.assertRaises(lc.LeetCodeError):
+                lc.import_metadata(original, payload)
+            self.assertEqual(original, before)
+
+    def test_partial_and_older_reimports_preserve_cutoff_and_new_complete_advances_it(self):
+        saved = lc.import_metadata(self.snapshot(), full_history())
+        later = full_history(captured_at="2026-09-11T12:00:00Z")
+        saved = lc.import_metadata(saved, later)
+        saved = lc.import_metadata(saved, full_history())
+        partial = full_history()
+        partial["coverage"] = {"problemsComplete": True, "submissionsComplete": False,
+                               "complete": False, "skippedRecords": 0, "reason": "page timeout"}
+        partial["submissions"] = partial["submissions"][-1:]
+        saved = lc.import_metadata(saved, partial)
+        result = lc.public_snapshot(saved)
+        self.assertEqual(result["coverage"]["personalHistoryCompleteThrough"], "2026-09-11T12:00:00.000Z")
+        self.assertEqual(len(result["importedSubmissions"]), 1)
+
+    def test_new_older_ac_disproves_prior_complete_import_but_newer_ac_does_not(self):
+        original = lc.import_metadata(self.snapshot(), full_history())
+        for public in (False, True):
+            for when, complete in (("2026-09-01T00:00:00Z", False), ("2026-09-12T00:00:00Z", True)):
+                added = record("newly-discovered", "another-question", when=when)
+                if public:
+                    incoming = upstream()
+                    incoming["submissions"].append(added)
+                    saved = lc.fresh_snapshot(original, incoming)
+                else:
+                    saved = lc.import_metadata(original, {"username": "fixture-a", "submissions": [added]})
+                with self.subTest(public=public, when=when):
+                    self.assertEqual(lc.public_snapshot(saved)["coverage"]["personalHistoryComplete"], complete)
+        added = record("newly-discovered", "another-question", when="2026-09-01T00:00:00Z")
+        incomplete = lc.import_metadata(original, {"username": "fixture-a", "submissions": [added]})
+        repaired = lc.import_metadata(incomplete, full_history([*full_history()["submissions"], added], captured_at="2026-09-13T00:00:00Z"))
+        self.assertEqual(lc.public_snapshot(repaired)["coverage"]["personalHistoryCompleteThrough"], "2026-09-13T00:00:00.000Z")
+
+    def test_same_id_conflicts_fail_atomically_for_prior_and_duplicate_imports(self):
+        original = lc.import_metadata(self.snapshot(), full_history())
+        before = copy.deepcopy(original)
+        for rows in ([record("history-1", "different-question", when="2026-08-01T09:00:00Z")],
+                     [record("history-1", "binary-search", when="2026-08-02T09:00:00Z")],
+                     [record("duplicate", "first-question"), record("duplicate", "other-question")]):
+            with self.assertRaises(lc.LeetCodeError):
+                lc.import_metadata(original, {"username": "fixture-a", "submissions": rows})
+            self.assertEqual(original, before)
 
 
 class LifetimeCountTests(unittest.TestCase):

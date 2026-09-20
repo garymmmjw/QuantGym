@@ -15,13 +15,33 @@ test("verified account submissions stay separate from imported history and clear
   const client = createLeetCodeClient({ endpoint: "https://api.example.test/api", token: "fixture", fetchImpl: async () => response(payload) });
   await client.reload();
   assert.deepEqual(client.getSnapshot().data.syncedSubmissions, []);
+  assert.deepEqual(client.getSnapshot().data.importedSubmissions, []);
   assert.deepEqual(client.getSnapshot().data.submissions, [imported]);
-  payload = { ...payload, syncedSubmissions: [synced] };
+  payload = { ...payload, syncedSubmissions: [synced], importedSubmissions: [imported] };
   await client.sync();
   assert.deepEqual(client.getSnapshot().data.syncedSubmissions, [synced]);
-  payload = { ...EMPTY_LEETCODE, syncedSubmissions: [synced] };
+  assert.deepEqual(client.getSnapshot().data.importedSubmissions, [imported]);
+  payload = { ...EMPTY_LEETCODE, syncedSubmissions: [synced], importedSubmissions: [imported] };
   await client.disconnect();
   assert.deepEqual(client.getSnapshot().data.syncedSubmissions, []);
+  assert.deepEqual(client.getSnapshot().data.importedSubmissions, []);
+});
+
+test('history coverage survives sanitization without forwarding extra fields', () => {
+  const base = { username: 'fixture-profile', problems: [{ slug: 'two-sum' }],
+    submissions: [{ id: '1', problemSlug: 'two-sum', submittedAt: '2026-09-11T12:00:00Z', status: 'AC' }] };
+  const coverage = { problemsComplete: true, submissionsComplete: true, complete: true, skippedRecords: 0, reason: '' };
+  const payload = prepareHistory({ ...base, capturedAt: '2026-09-12T12:00:00Z', coverage: { ...coverage, cookie: 'discard' } });
+  assert.deepEqual(payload.coverage, coverage);
+  assert.equal(payload.capturedAt, '2026-09-12T12:00:00Z');
+  assert.equal(JSON.stringify(payload).includes('discard'), false);
+  assert.equal(prepareHistory(base).coverage, undefined);
+  for (const invalid of [{ complete: 'yes' }, { submissionsComplete: false }, { skippedRecords: 1 }, { reason: 'partial' }, { skippedRecords: -1 }]) {
+    assert.throws(() => prepareHistory({ ...base, capturedAt: '2026-09-12T12:00:00Z', coverage: { ...coverage, ...invalid } }), /invalid_import/);
+  }
+  for (const capturedAt of ['2026-09-12', '2026-02-30T12:00:00Z', 'invalid']) {
+    assert.throws(() => prepareHistory({ ...base, capturedAt, coverage }), /invalid_import/);
+  }
 });
 
 test("each cloud account keeps its own cached snapshot and sends only its own bearer token", async () => {

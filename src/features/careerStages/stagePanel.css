@@ -33,7 +33,7 @@
 .career-stage-list { list-style: none; margin: 0; padding: 0; }
 .career-stage-row {
   display: grid;
-  grid-template-columns: 155px 160px minmax(0, 1fr) 175px;
+  grid-template-columns: 155px 160px minmax(0, 1fr) 204px;
   align-items: center;
   gap: 20px;
   min-height: 44px;
@@ -59,6 +59,16 @@
 .career-stage-description { margin: 0; min-width: 0; color: #91809f; font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
 .career-stage-row-current .career-stage-description { color: #7c6e8a; }
 .career-stage-count { min-width: 0; }
+.career-stage-count-title { display: block; margin-bottom: 6px; color: #877b98; font-size: 11px; font-weight: 500; }
+.career-stage-count .leetcode-counts { --leetcode-count-ink: #24212a; --leetcode-count-muted: #877b98; --leetcode-count-size: 21px; }
+.career-stage-row-current .career-stage-count .leetcode-counts { --leetcode-count-ink: var(--qt-accent, #5b5ff5); --leetcode-count-size: 27px; }
+.career-stage-site-count { display: flex; align-items: baseline; gap: 5px; margin-top: 7px; color: #92829f; font-size: 10px; line-height: 1.5; }
+.career-stage-site-count strong { color: inherit; font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.career-stage-dialog-counts { margin-top: 2px; padding-top: 14px; border-top: 1px solid #ece5f3; }
+.career-stage-dialog-counts > span { display: block; margin-bottom: 10px; font-size: 12px; color: #877b98; }
+.career-stage-dialog-counts .leetcode-counts { --leetcode-count-ink: #6743d5; --leetcode-count-size: 26px; }
+.career-stage-dialog-counts + .career-auto-count { padding-top: 10px; margin-top: 10px; border-top: 0; }
+.career-stage-dialog-counts + .career-auto-count output { font-size: 17px; color: #887494; }
 .career-stage-count-line {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 4ch 12px;
@@ -77,12 +87,12 @@
 .career-stage-source-note { display: block; margin-top: 4px; color: #9a889f; font-size: 10px; line-height: 1.5; }
 .career-stage-overview { margin-top: 18px; }
 @media (max-width: 1050px) {
-  .career-stage-row { grid-template-columns: 112px 116px minmax(0, 1fr) 145px; gap: 12px; }
+  .career-stage-row { grid-template-columns: 112px 116px minmax(0, 1fr) 178px; gap: 12px; }
   .career-stage-row-current h3 { font-size: 22px; }
 }
 @media (max-width: 760px) {
   .career-stage-panel { padding: 10px 16px; }
-  .career-stage-row { grid-template-columns: minmax(90px, 1fr) minmax(98px, 1fr) 145px; gap: 8px 12px; padding: 12px 0; }
+  .career-stage-row { grid-template-columns: minmax(90px, 1fr) minmax(98px, 1fr) 164px; gap: 8px 12px; padding: 12px 0; }
   .career-stage-row-current { padding-top: 24px; }
   .career-stage-row-identity { grid-column: 1; grid-row: 1; }
   .career-stage-period { grid-column: 2; grid-row: 1; font-size: 11px; }
@@ -91,6 +101,9 @@
 }
 @media (max-width: 460px) {
   .career-stage-row { grid-template-columns: minmax(90px, 1fr) minmax(90px, 1fr); }
-  .career-stage-count { grid-column: 1 / -1; grid-row: 3; width: 158px; }
+  .career-stage-count { grid-column: 1 / -1; grid-row: 3; width: 100%; margin-top: 3px; }
+  .career-stage-count .leetcode-counts-inline { gap: 12px; }
+  .career-stage-count .leetcode-counts-inline .leetcode-count { display: flex; justify-content: space-between; gap: 6px; }
+  .career-stage-count .leetcode-counts-inline .leetcode-count dd { justify-content: flex-end; }
   .career-stage-row .career-stage-name { min-height: 32px; }
 }

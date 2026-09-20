@@ -1,5 +1,5 @@
 import { collectCalendarActivities, localDayKey } from '../personal/calendar/calendarModel.js';
-import { summarizeLeetCodeProgress } from '../leetcode/leetcodeProgress.js';
+import { summarizeLeetCodeProgress, summarizeLeetCodeRange } from '../leetcode/leetcodeProgress.js';
 import { countsTowardProblemTotal, hasExplicitProblemCompletion } from '../../modules/problems/completion.js';
 import { sortCareerStages } from './stageStore.js';
 import { USER_STATE_PREFIX } from '../../constants.js';
@@ -43,14 +43,17 @@ export function collectStagePractice(personalState = {}, legacyState = {}, leetc
       || !answer?.text?.trim() || !['independent', 'with-help', 'review'].includes(answer.selfAssessment)) return;
     add(question.sourceProblemId || question.id, answer.completedAt);
   }));
-  // Only verified account-sync ACs qualify. Local Hot100 flags, imported history,
-  // saved reviews and source-calendar submission totals cannot create credit.
+  // Personal LeetCode history includes explicit submission imports. Local
+  // Hot100 flags, reviews and calendar aggregates still cannot create credit.
   const leetcodeProgress = summarizeLeetCodeProgress(leetcodeSnapshot, leetcodeOptions);
   leetcodeProgress.completions.forEach(activity => {
     add(activity.id, activity.completedAt, activity.dayKey);
   });
   return { records: [...records.values()], available: true,
-    leetcodeMissingDates: leetcodeProgress.missingDates, leetcodeComplete: leetcodeProgress.complete };
+    leetcodeMissingDates: leetcodeProgress.missingDates, leetcodeComplete: leetcodeProgress.complete,
+    leetcodeAvailable: leetcodeSnapshot?.connection?.site === 'cn'
+      && (Array.isArray(leetcodeSnapshot.syncedSubmissions) || Array.isArray(leetcodeSnapshot.importedSubmissions)),
+    leetcodeProgress };
 }
 
 // One unavailable source must not hide verified records from another source.
@@ -66,7 +69,7 @@ export function resolveStagePractice({ ownerId, namespace = '', personal = {}, l
     if (leetcode.enabled === false) leetcodeStatus = 'not-connected';
     else if (leetcode.data && leetcode.data !== EMPTY_LEETCODE) {
       leetcodeStatus = !leetcode.data.connection ? 'not-connected'
-        : Array.isArray(leetcode.data.syncedSubmissions) ? 'ready' : 'unavailable';
+        : Array.isArray(leetcode.data.syncedSubmissions) || Array.isArray(leetcode.data.importedSubmissions) ? 'ready' : 'unavailable';
     } else if (leetcode.enabled && leetcode.phase !== 'error') leetcodeStatus = 'loading';
   }
   const leetcodeReady = leetcodeStatus === 'ready';
@@ -78,7 +81,8 @@ export function resolveStagePractice({ ownerId, namespace = '', personal = {}, l
   if (!personalReady) notes.push('站内刷题记录暂不可用');
   if (leetcodeStatus === 'loading') notes.push('LeetCode 记录加载中');
   else if (leetcodeStatus === 'unavailable') notes.push('LeetCode 记录暂不可用');
-  else if (leetcodeReady && !collected.leetcodeComplete) notes.push('LeetCode 仅含已同步记录');
+  else if (leetcodeReady && !collected.leetcodeComplete) notes.push(collected.leetcodeProgress?.calendar.historyCompleteThrough
+    ? 'LeetCode 统计截至已记录快照' : 'LeetCode 历史记录尚不完整');
   return {
     ...collected,
     available,
@@ -124,12 +128,31 @@ export function summarizeStagePractice(stages, practice = {}, { today = practice
     const matching = knownRange && practice.available === true
       ? new Set(list(practice.records).filter(record => record.day > boundary && record.day <= end).map(record => record.key))
       : null;
-    const countStatus = !matching ? 'unavailable' : practice.countStatus || 'ready';
+    const leetcodeRange = summarizeLeetCodeRange(practice.leetcodeProgress, boundary, end, knownRange && practice.leetcodeAvailable === true);
+    let countStatus = !matching ? 'unavailable' : practice.countStatus || 'ready';
+    let countSourceNote = knownRange ? practice.countSourceNote || '' : '暂无法确定统计区间';
+    if (knownRange && practice.sources) {
+      const personalReady = practice.sources.personal === 'ready';
+      const lcSource = practice.sources.leetcode;
+      const leetcodeCovered = lcSource === 'not-connected' || lcSource === 'ready' && leetcodeRange.leetcodeCountStatus === 'ready';
+      // Global LeetCode history can be partial while this closed interval is
+      // fully covered. Keep missing personal data independent of LC coverage.
+      countStatus = !matching ? 'unavailable' : personalReady && leetcodeCovered ? 'ready'
+        : personalReady || lcSource === 'ready' ? 'partial' : 'unavailable';
+      const notes = [];
+      if (!personalReady) notes.push('站内刷题记录暂不可用');
+      if (lcSource === 'loading') notes.push('LeetCode 记录加载中');
+      else if (lcSource === 'unavailable') notes.push('LeetCode 记录暂不可用');
+      else if (lcSource === 'ready' && !leetcodeCovered) notes.push(practice.leetcodeProgress?.calendar.historyCompleteThrough
+        ? 'LeetCode 本阶段仅含已记录数据' : 'LeetCode 本阶段历史记录尚不完整');
+      countSourceNote = notes.join('；');
+    }
     return {
       ...stage,
+      ...leetcodeRange,
       questionCount: matching && (countStatus === 'ready' || (countStatus === 'partial' && matching.size > 0)) ? matching.size : null,
       countStatus,
-      countSourceNote: knownRange ? practice.countSourceNote || '' : '暂无法确定统计区间',
+      countSourceNote,
       periodStart: boundary,
       periodEnd: end,
       nextLabel: next?.label || '',

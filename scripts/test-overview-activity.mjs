@@ -31,13 +31,51 @@ test('71 different problems plus 14 qualifying repeats total 85 across calendar,
   const snapshot = lc(submissions, { syncedLifetimeSolvedCount: 71 });
   const model = buildOverviewActivity({ stages, leetcodeSnapshot: snapshot }, options);
   assert.equal(model.totals.leetcode, 85);
+  assert.equal(model.totals.leetcodeNew, 71);
   assert.deepEqual(model.stageRows.map(row => row.leetcode), [34, 51, 0]);
+  assert.deepEqual(model.stageRows.map(row => row.leetcodeNew), [34, 37, 0]);
   assert.equal(model.days.find(day => day.day === '2026-09-18').counts.leetcode, 51);
   assert.equal(model.days.find(day => day.day === '2026-09-18').activityScore, 255);
   assert.equal(collectLeetCodeActivities(snapshot, options).activities.reduce((sum, item) => sum + item.count, 0), 85);
   const tracker = summarizeStagePractice(stages, collectStagePractice({}, {}, snapshot, options), options);
   assert.deepEqual(tracker.map(row => row.questionCount), [34, 51, 0]);
+  assert.deepEqual(tracker.map(row => row.leetcodeNew), [34, 37, 0]);
+  assert.deepEqual(tracker.map(row => row.leetcode), [34, 51, 0]);
   assert.equal(model.leetcodeStageNote, '');
+});
+
+test('full imported history assigns only first-ever ACs as new and keeps repeats in their actual Stage', () => {
+  const snapshot = lc([ac('repeat', '2026-09-18', 'old-problem', '15:00')], {
+    syncedLifetimeSolvedCount: 2,
+    importedSubmissions: [ac('first', '2026-09-12', 'old-problem'), ac('new', '2026-09-18', 'new-problem'),
+      ac('repeat', '2026-09-18', 'old-problem', '15:00')],
+    coverage: { historyComplete: false, personalHistoryComplete: true, personalHistoryCompleteThrough: stamp('2026-09-19', '23:30') },
+  });
+  const before = structuredClone(snapshot);
+  const model = buildOverviewActivity({ stages, leetcodeSnapshot: snapshot }, options);
+  const tracker = summarizeStagePractice(stages, collectStagePractice({}, {}, snapshot, options), options);
+  assert.deepEqual(model.stageRows.map(row => [row.leetcodeNew, row.leetcode]), [[1, 1], [1, 2], [0, 0]]);
+  assert.deepEqual(tracker.map(row => [row.leetcodeNew, row.leetcode]), model.stageRows.map(row => [row.leetcodeNew, row.leetcode]));
+  assert.equal(model.totals.leetcodeNew, 2);
+  assert.equal(model.totals.leetcode, 3);
+  assert.equal(model.leetcodeNewStatus, 'ready');
+  assert.equal(model.leetcodeCountStatus, 'partial');
+  assert.equal(model.statusNote, '', 'a valid history cutoff uses metric status instead of a persistent long warning');
+  assert.deepEqual(snapshot, before);
+});
+
+test('incomplete imported history keeps global distinct profile totals and never labels an observed AC as certainly new', () => {
+  const snapshot = lc([], { importedSubmissions: [ac('known', '2026-09-18')], syncedLifetimeSolvedCount: 85,
+    coverage: { personalHistoryComplete: false } });
+  const model = buildOverviewActivity({ stages, leetcodeSnapshot: snapshot }, options);
+  const tracker = summarizeStagePractice(stages, collectStagePractice({}, {}, snapshot, options), options);
+  assert.equal(model.totals.leetcodeNew, 85);
+  assert.equal(model.leetcodeNewStatus, 'ready');
+  assert.equal(model.stageRows[1].leetcodeNew, null);
+  assert.equal(model.stageRows[1].leetcode, 1);
+  assert.equal(model.stageRows[1].leetcodeNewStatus, 'partial');
+  assert.equal(tracker[1].leetcodeNew, null);
+  assert.equal(tracker[1].leetcode, 1);
 });
 
 test('undated profile history stays in the lifetime floor and never fabricates Stage or daily work', () => {
@@ -95,7 +133,7 @@ test('six cumulative metrics use real distinct records, with Mock explicitly unk
     leetcodeSnapshot: lc([ac('1', '2026-09-19')], { stats: { solved: 118 }, submissions: [ac('imported', '2026-09-19', 'imported-only')] }),
   };
   const before = structuredClone(input);
-  assert.deepEqual(buildOverviewActivity(input, options).totals, { applications: 2, technical: 1, behavioral: 1, experiences: 1, leetcode: 118, mock: null });
+  assert.deepEqual(buildOverviewActivity(input, options).totals, { applications: 2, technical: 1, behavioral: 1, experiences: 1, leetcode: 118, leetcodeNew: 118, mock: null });
   assert.deepEqual(input, before);
 });
 
@@ -216,7 +254,7 @@ test('unlinked, partial and genuinely empty LeetCode data stay distinguishable',
   assert.equal(partial.stageRows[0].leetcode, null);
   assert.equal(partial.stageRows[1].leetcode, 1);
   assert.equal(partial.stageRows[2].leetcode, 0, 'an empty same-day interval is mathematically zero');
-  assert.match(partial.statusNote, /仅含已同步/);
+  assert.match(partial.statusNote, /仅含已记录历史/);
 });
 
 test('unknown application years count cumulatively but cannot earn daily or Stage credit', () => {
@@ -243,7 +281,7 @@ test('owner changes, read conflicts and QA cannot leak other-account training or
   const personal = { ownerId: 'old', snapshot: { data: { activities: [activity('behavioral', 'b1', 'private')] } }, legacyState: { problemStates: [done('private-tech', '2026-09-19')] } };
   const other = { ownerId: 'new', personal, leetcode: { ownerId: 'old', enabled: true, data: lc([ac('1', '2026-09-19')]) },
     tracker: { ownerId: 'old', applications: [submitted('private', '2026-09-19')] } };
-  assert.deepEqual(resolveOverviewActivity(other, options).totals, { applications: null, technical: null, behavioral: null, experiences: null, leetcode: null, mock: null });
+  assert.deepEqual(resolveOverviewActivity(other, options).totals, { applications: null, technical: null, behavioral: null, experiences: null, leetcode: null, leetcodeNew: null, mock: null });
   const own = { ...other, ownerId: 'old' };
   assert.equal(resolveOverviewActivity(own, options).totals.technical, 1);
   assert.equal(resolveOverviewActivity({ ...own, namespace: 'qa', tracker: { ownerId: 'old', applications: [] } }, options).totals.technical, null);

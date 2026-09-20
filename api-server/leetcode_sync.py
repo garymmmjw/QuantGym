@@ -223,10 +223,12 @@ def public_snapshot(snapshot):
     # or advances it, and the generated fields never enter imported metadata.
     generated_at = now_iso()
     result = copy.deepcopy({key: value for key, value in snapshot.items() if not key.startswith("_")})
-    # Imported history remains useful for review, but solved-question counters
-    # use only submissions observed by our fixed public-profile sync endpoint.
+    # Keep user-provided history separate from the public-source ledger. Private
+    # calendars may combine both, while Guardian continues to use only sync.
     result["syncedSubmissions"] = synced_accepted_submissions(snapshot)
+    result["importedSubmissions"] = imported_accepted_submissions(snapshot, result["syncedSubmissions"])
     result["syncedLifetimeSolvedCount"] = synced_lifetime_solved_count(snapshot)
+    result.setdefault("coverage", {}).update(personal_history_coverage(snapshot, result["importedSubmissions"]))
     result["problems"] = [{**problem, "review": problem_review(snapshot, problem, generated_at)} for problem in result.get("problems", [])]
     result["reviewPolicy"] = {"algorithm": "sm2", "version": 1, "generatedAt": generated_at}
     return result
@@ -289,6 +291,87 @@ def synced_accepted_submissions(snapshot):
             result.append(record)
             seen.add(record["id"])
     return result
+
+
+def imported_connection_matches(snapshot):
+    connection = snapshot.get("connection") if isinstance(snapshot, dict) else None
+    if not isinstance(connection, dict) or connection.get("site") != "cn" or not connection.get("username") or not connection.get("linkedAt"):
+        return False
+    # Older importers already checked the connected username and marked every
+    # imported ID. Recover that history only with a matching public-sync binding;
+    # an explicit new import binding always takes precedence, including mismatch.
+    binding = snapshot.get("_importedAcceptedConnection", snapshot.get("_syncedAcceptedConnection"))
+    return binding == {"username": connection["username"], "linkedAt": connection["linkedAt"]}
+
+
+def imported_accepted_submissions(snapshot, synced=None):
+    if not imported_connection_matches(snapshot):
+        return []
+    ids = imported_submission_ids(snapshot)
+    if ids is None:
+        return []
+    seen = {row["id"] for row in (synced_accepted_submissions(snapshot) if synced is None else synced)}
+    result = []
+    records = snapshot.get("_records", [])
+    for row in records if isinstance(records, list) else []:
+        try:
+            record = submission(row)
+        except (LeetCodeError, TypeError, ValueError):
+            continue
+        if record["status"] == "AC" and record["id"] in ids and record["id"] not in seen:
+            result.append(record)
+            seen.add(record["id"])
+    return sorted(result, key=lambda row: (row["submittedAt"], row["id"]), reverse=True)
+
+
+def imported_submission_ids(snapshot):
+    markers, coverage = snapshot.get("_importedSubmissionIds"), snapshot.get("coverage", {})
+    count = coverage.get("importedSubmissionCount") if isinstance(coverage, dict) else None
+    if not isinstance(markers, list) or not all(isinstance(value, str) for value in markers) or type(count) is not int or not 0 <= count <= len(set(markers)):
+        return None
+    return set(markers)
+
+
+def personal_history_coverage(snapshot, imported):
+    # This is a user's bounded completeness declaration, never proof of source
+    # ownership and never the trusted coverage.historyComplete flag.
+    through = None
+    saved = snapshot.get("_importedHistoryCoverage")
+    if imported_connection_matches(snapshot) and imported_submission_ids(snapshot) is not None and isinstance(saved, dict) and saved.get("complete") is True:
+        try:
+            value = timestamp(saved.get("capturedAt"))
+            if value <= now_iso():
+                through = value
+        except LeetCodeError:
+            pass
+    return {"personalHistoryComplete": through is not None, "personalHistoryCompleteThrough": through,
+            "personalHistorySource": "user_import" if through is not None or imported else "public_recent",
+            "importedAcceptedSubmissions": len(imported)}
+
+
+def import_history_coverage(previous, payload, records, problems):
+    if "capturedAt" not in payload and "coverage" not in payload:
+        return None
+    value = payload.get("coverage")
+    fields = {"problemsComplete", "submissionsComplete", "complete", "skippedRecords", "reason"}
+    if not isinstance(value, dict) or set(value) != fields or any(type(value.get(key)) is not bool for key in ("problemsComplete", "submissionsComplete", "complete")):
+        raise LeetCodeError("Import coverage must contain the collector's completeness flags, skippedRecords and reason.")
+    if type(value["skippedRecords"]) is not int or not 0 <= value["skippedRecords"] <= MAX_RECORDS or not isinstance(value["reason"], str) or len(value["reason"]) > 1000:
+        raise LeetCodeError("Invalid import coverage details.")
+    captured = timestamp(payload.get("capturedAt"))
+    if captured > now_iso() or any(row["submittedAt"] > captured for row in records) or any(row.get("lastAcceptedAt") and row["lastAcceptedAt"] > captured for row in problems):
+        raise LeetCodeError("Imported history must not extend beyond its capture time.")
+    if value["complete"] != (value["problemsComplete"] and value["submissionsComplete"]):
+        raise LeetCodeError("Import completeness flags disagree.")
+    if value["complete"]:
+        if value["skippedRecords"] or value["reason"].strip() or any(row["status"] != "AC" for row in records):
+            raise LeetCodeError("Complete accepted history cannot contain skipped, failed or incomplete records.")
+        if {row["problemSlug"] for row in records} != {row["slug"] for row in problems}:
+            raise LeetCodeError("Complete history must contain accepted submissions for every imported solved problem.")
+        incoming_ids = {row["id"] for row in records}
+        if any(row["status"] == "AC" and row["submittedAt"] <= captured and row["id"] not in incoming_ids for row in previous.get("_records", [])):
+            raise LeetCodeError("Complete history is missing previously saved accepted submissions.")
+    return {"complete": value["complete"], "capturedAt": captured}
 
 
 def problem_review(snapshot, problem, generated_at=None):
@@ -418,6 +501,11 @@ def merge_records(snapshot, incoming):
         previous = records.get(row["id"])
         if previous and (previous["problemSlug"] != row["problemSlug"] or previous["submittedAt"] != row["submittedAt"]):
             raise LeetCodeError("An imported submission id conflicts with an existing record.")
+        coverage = snapshot.get("_importedHistoryCoverage", {})
+        if coverage.get("complete") and row["status"] == "AC" and (not previous or previous["status"] != "AC") and row["submittedAt"] <= coverage.get("capturedAt", ""):
+            # A newly discovered older AC disproves that the earlier export was
+            # complete. This applies to both subsequent imports and public sync.
+            snapshot.pop("_importedHistoryCoverage", None)
         # Metadata enrichment is allowed; public accepted status must not regress.
         merged = merge_metadata(previous or {}, row)
         if previous and previous["status"] == "AC":
@@ -460,8 +548,8 @@ def sync_is_recent(snapshot):
 
 
 def import_metadata(previous, payload):
-    if not isinstance(payload, dict) or set(payload) - {"username", "submissions", "problems"}:
-        raise LeetCodeError("Import username, submissions and problem metadata only.")
+    if not isinstance(payload, dict) or set(payload) - {"username", "submissions", "problems", "capturedAt", "coverage"}:
+        raise LeetCodeError("Import username, submissions, problem metadata and optional history coverage only.")
     connection = previous.get("connection")
     if not connection:
         raise LeetCodeError("Connect your LeetCode profile before importing records.", 409)
@@ -476,6 +564,7 @@ def import_metadata(previous, payload):
         if not isinstance(row, dict) or set(row) - {"slug", "title", "titleEn", "frontendId", "difficulty", "lastAcceptedAt"}:
             raise LeetCodeError("Problem imports may contain metadata only.")
         validated_problems.append({**metadata(row), "lastAcceptedAt": timestamp(row.get("lastAcceptedAt"), nullable=True)})
+    history_coverage = import_history_coverage(previous, payload, validated_records, validated_problems)
     snapshot = copy.deepcopy(previous)
     imported = {row["slug"]: row for row in snapshot.get("_importedProblems", [])}
     for row in validated_problems:
@@ -485,5 +574,12 @@ def import_metadata(previous, payload):
     snapshot["_importedProblems"] = list(imported.values())
     ids = set(snapshot.get("_importedSubmissionIds", [])) | {row["id"] for row in validated_records}
     snapshot["_importedSubmissionIds"] = sorted(ids)
+    snapshot["_importedAcceptedConnection"] = {"username": connection["username"], "linkedAt": connection["linkedAt"]}
     snapshot["coverage"].update({"historySource": "public_recent_and_import", "importedSubmissionCount": len(ids), "lastImportedAt": now_iso()})
-    return merge_records(snapshot, validated_records)
+    merge_records(snapshot, validated_records)
+    # Union imports are idempotent. A later partial export cannot erase a prior
+    # complete cutoff, and an older complete export cannot move it backwards.
+    prior_coverage = snapshot.get("_importedHistoryCoverage", {})
+    if history_coverage and history_coverage["complete"] and (not prior_coverage.get("complete") or history_coverage["capturedAt"] > prior_coverage.get("capturedAt", "")):
+        snapshot["_importedHistoryCoverage"] = history_coverage
+    return snapshot

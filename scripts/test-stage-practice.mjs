@@ -299,3 +299,70 @@ test('valid synced LeetCode counts survive unavailable site records and incomple
   assert.deepEqual(otherOwner.records, []);
   assert.equal(otherOwner.available, false);
 });
+
+test('imported first completions and public repeats use one global clock across the Stage boundary', () => {
+  const options = { today: '2026-09-19', now: '2026-09-19T23:00:00Z', timeZone: 'UTC' };
+  const snapshot = { connection: { site: 'cn', username: 'alice', lastSyncedAt: '2026-09-19T12:00:00Z' },
+    syncedLifetimeSolvedCount: 1,
+    importedSubmissions: [{ id: 'first', status: 'AC', problemSlug: 'one', submittedAt: '2026-09-15T23:00:00Z' }],
+    syncedSubmissions: [
+      { id: 'too-near', status: 'AC', problemSlug: 'one', submittedAt: '2026-09-16T00:00:00Z' },
+      { id: 'repeat', status: 'AC', problemSlug: 'one', submittedAt: '2026-09-16T02:00:00Z' },
+    ], coverage: { personalHistoryComplete: true, personalHistoryCompleteThrough: '2026-09-19T13:00:00Z' } };
+  const practice = collectStagePractice({}, { problemStates: [done('a-tech-question', '2026-09-16')] }, snapshot, options);
+  const result = summarizeStagePractice(stages, practice, options);
+  assert.deepEqual(result.map(row => [row.leetcodeNew, row.leetcode]), [[1, 1], [0, 1], [0, 0]]);
+  assert.deepEqual(result.map(row => row.questionCount), [1, 2, 0], 'the compatible all-question total retains Tech without mixing it into LeetCode');
+  const shifted = summarizeStagePractice(stages.map(stage => stage.id === 's2' ? { ...stage, recordedDate: '2026-09-14' } : stage), practice, options);
+  assert.deepEqual(shifted.map(row => [row.leetcodeNew, row.leetcode]), [[0, 0], [1, 2], [0, 0]], 'editing dates reassigns original first completions, rather than treating a repeat as new');
+});
+
+test('combined Stage status follows its covered range rather than the global snapshot cutoff', () => {
+  const options = { today: '2026-09-20', now: '2026-09-20T18:00:00Z', timeZone: 'UTC' };
+  const sequence = [
+    { id: 'one', label: 'Stage 1', recordedDate: '2026-08-21' },
+    { id: 'two', label: 'Stage 2', recordedDate: '2026-09-13' },
+    { id: 'three', label: 'Stage 3', recordedDate: '2026-09-19' },
+  ];
+  const leetcode = { ownerId: 'alice', enabled: true, phase: 'ready', data: {
+    connection: { site: 'cn', username: 'alice', lastSyncedAt: '2026-09-20T17:00:00Z' },
+    syncedLifetimeSolvedCount: 2, syncedSubmissions: [],
+    importedSubmissions: [
+      { id: 'first', status: 'AC', problemSlug: 'one', submittedAt: '2026-09-12T12:00:00Z' },
+      { id: 'second', status: 'AC', problemSlug: 'two', submittedAt: '2026-09-18T12:00:00Z' },
+    ], coverage: { personalHistoryComplete: true, personalHistoryCompleteThrough: '2026-09-20T13:00:00Z' },
+  } };
+  const practice = resolveStagePractice({ ownerId: 'alice', personal: personalSource([done('tech', '2026-09-18')]), leetcode, leetcodeOptions: options });
+  assert.equal(practice.countStatus, 'partial');
+  assert.doesNotMatch(practice.countSourceNote, /历史记录尚不完整/);
+  const rows = summarizeStagePractice(sequence, practice, options);
+  assert.deepEqual(rows.map(row => row.countStatus), ['ready', 'ready', 'partial']);
+  assert.deepEqual(rows.slice(0, 2).map(row => row.questionCount), [1, 2]);
+  assert.deepEqual(rows.slice(0, 2).map(row => row.countSourceNote), ['', '']);
+  assert.match(rows[2].countSourceNote, /本阶段仅含已记录/);
+  const noPersonal = resolveStagePractice({ ownerId: 'alice', personal: { ownerId: 'alice', snapshot: { error: 'read:failed' } }, leetcode, leetcodeOptions: options });
+  const missingRows = summarizeStagePractice(sequence, noPersonal, options);
+  assert.deepEqual(missingRows.slice(0, 2).map(row => row.countStatus), ['partial', 'partial']);
+  assert.deepEqual(missingRows.slice(0, 2).map(row => row.countSourceNote), ['站内刷题记录暂不可用', '站内刷题记录暂不可用']);
+  assert.equal(missingRows[0].leetcodeCountStatus, 'ready');
+  assert.equal(missingRows[0].questionCount, 1);
+  const incomplete = resolveStagePractice({ ownerId: 'alice', personal: personalSource(),
+    leetcode: { ...leetcode, data: { ...leetcode.data, coverage: {} } }, leetcodeOptions: options });
+  const partialRows = summarizeStagePractice(sequence, incomplete, options);
+  assert.equal(partialRows[0].countStatus, 'partial');
+  assert.match(partialRows[0].countSourceNote, /本阶段历史记录尚不完整/);
+});
+
+test('legacy callers without source metadata retain their stated status and namespace counts stay independent', () => {
+  const partial = summarizeStagePractice(stages, { available: true, countStatus: 'partial', countSourceNote: 'Legacy coverage notice',
+    records: [{ key: 'known', day: '2026-09-16' }] }, { today: '2026-09-19' });
+  assert.equal(partial[1].countStatus, 'partial');
+  assert.equal(partial[1].questionCount, 1);
+  assert.equal(partial[1].countSourceNote, 'Legacy coverage notice');
+  const namespace = resolveStagePractice({ ownerId: 'alice', namespace: 'preview' });
+  assert.equal(summarizeStagePractice(stages, namespace)[1].countStatus, 'ready');
+  assert.equal(summarizeStagePractice(stages, namespace)[1].countSourceNote, '');
+  const read = readStagePractice({ ownerId: 'alice', storage: { getItem: () => null }, legacyState: { problemStates: [done('legacy', '2026-09-16')] } });
+  assert.equal(summarizeStagePractice(stages, read)[1].questionCount, 1);
+  assert.equal(summarizeStagePractice(stages, read)[1].countStatus, 'ready');
+});
