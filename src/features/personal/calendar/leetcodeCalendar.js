@@ -29,7 +29,7 @@ export function leetcodeSubmissionDay(value, timeZone) {
 
 /** Personal history combines public syncs and explicitly imported submission records. */
 export function collectLeetCodeActivities(snapshot = {}, { timeZone, now = Date.now() } = {}) {
-  const empty = { activities: [], completions: [], firstCompletions: [], acceptedDays: [], calendarDays: [], calendarTimeZone: null,
+  const empty = { activities: [], completions: [], firstCompletions: [], firstSolveBounds: [], acceptedDays: [], calendarDays: [], calendarTimeZone: null,
     historyComplete: false, historyCompleteThrough: null, historyCompleteThroughDay: null };
   if (snapshot?.connection?.site !== "cn") return empty;
   const nowMs = new Date(now).getTime();
@@ -129,10 +129,25 @@ export function collectLeetCodeActivities(snapshot = {}, { timeZone, now = Date.
   const observedAt = accepted.reduce((latest, item) => Math.max(latest, item.timestamp), syncedAt);
   const historyComplete = snapshot.coverage?.historyComplete === true
     || Boolean(importedComplete && observedAt <= Date.parse(through));
+  const firstBySlug = new Map(firstCompletions.map(item => [item.problemSlug, item]));
+  const boundsBySlug = new Map();
+  const conflictingSlugs = new Set();
+  for (const bound of list(snapshot.personalFirstSolveBounds)) {
+    const first = firstBySlug.get(bound?.problemSlug);
+    const afterDay = leetcodeSubmissionDay(bound?.after, timeZone);
+    const byDay = leetcodeSubmissionDay(bound?.by, timeZone);
+    const after = Date.parse(bound?.after), by = Date.parse(bound?.by);
+    if (!first || !afterDay || !byDay || after < Date.UTC(2000, 0, 1) || !(after < by && by <= nowMs)
+      || by !== Date.parse(first.completedAt)) continue;
+    const prior = boundsBySlug.get(bound.problemSlug);
+    if (prior && (Date.parse(prior.after) !== after || Date.parse(prior.by) !== by)) conflictingSlugs.add(bound.problemSlug);
+    boundsBySlug.set(bound.problemSlug, { problemSlug: bound.problemSlug, after: bound.after, by: bound.by, afterDay, byDay });
+  }
   return {
     activities: [...byDayAndProblem.values()].filter(item => item.count > 0).sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt) || a.id.localeCompare(b.id)),
     completions,
     firstCompletions,
+    firstSolveBounds: [...boundsBySlug.values()].filter(bound => !conflictingSlugs.has(bound.problemSlug)),
     acceptedDays: [...byAcceptedDay].map(([dayKey, submissions]) => ({ dayKey, submissions })),
     calendarDays: [...bySourceDay].map(([dayKey, submissions]) => ({ dayKey, submissions })),
     calendarTimeZone: typeof snapshot.coverage?.calendarTimeZone === "string" ? snapshot.coverage.calendarTimeZone : null,

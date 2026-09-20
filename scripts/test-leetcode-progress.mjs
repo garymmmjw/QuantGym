@@ -53,8 +53,74 @@ test('later refreshes preserve closed Stage accuracy while retaining known newer
     leetcodeNew: 1, leetcode: 1, leetcodeNewStatus: 'ready', leetcodeCountStatus: 'ready',
   });
   assert.deepEqual(summarizeLeetCodeRange(progress, '2026-09-19', '2026-09-20'), {
-    leetcodeNew: 1, leetcode: 2, leetcodeNewStatus: 'partial', leetcodeCountStatus: 'partial',
+    leetcodeNew: 2, leetcode: 2, leetcodeNewStatus: 'partial', leetcodeCountStatus: 'partial',
   });
+});
+
+test('normal post-repair progress from 85 to 87 counts the new problems inside the current Stage', () => {
+  const now = '2026-09-21T20:00:00Z';
+  const input = snapshot({ connection: { site: 'cn', username: 'fixture', lastSyncedAt: now },
+    syncedLifetimeSolvedCount: 87,
+    importedSubmissions: Array.from({ length: 85 }, (_, i) => row(`old-${i}`, `old-${i}`, '2026-09-18T12:00:00Z')),
+    syncedSubmissions: [row('new-1', 'new-one', '2026-09-21T12:00:00Z'), row('new-2', 'new-two', '2026-09-21T13:00:00Z'),
+      row('redo', 'old-0', '2026-09-21T14:00:00Z')],
+    coverage: { personalHistoryComplete: true, personalHistoryCompleteThrough: '2026-09-20T12:00:00Z' },
+  });
+  const progress = summarizeLeetCodeProgress(input, { now, timeZone: 'UTC' });
+  assert.equal(progress.newTotal, 87);
+  assert.equal(progress.total, 88);
+  assert.deepEqual(summarizeLeetCodeRange(progress, '2026-09-19', '2026-09-21'), {
+    leetcodeNew: 2, leetcode: 3, leetcodeNewStatus: 'partial', leetcodeCountStatus: 'partial',
+  });
+  assert.deepEqual(summarizeLeetCodeRange(progress, '2026-09-13', '2026-09-19'), {
+    leetcodeNew: 85, leetcode: 85, leetcodeNewStatus: 'ready', leetcodeCountStatus: 'ready',
+  });
+  const repeated = summarizeLeetCodeProgress({ ...input, syncedSubmissions: [...input.syncedSubmissions, ...input.syncedSubmissions] }, { now, timeZone: 'UTC' });
+  assert.deepEqual(summarizeLeetCodeRange(repeated, '2026-09-19', '2026-09-21'), summarizeLeetCodeRange(progress, '2026-09-19', '2026-09-21'));
+});
+
+test('a later solved-set checkpoint carries confirmed new problems into a later Stage without extending AC coverage', () => {
+  const now = '2026-09-25T20:00:00Z';
+  const input = snapshot({ connection: { site: 'cn', username: 'fixture', lastSyncedAt: now }, syncedLifetimeSolvedCount: 2,
+    importedSubmissions: [row('old', 'one', '2026-09-18T12:00:00Z')],
+    syncedSubmissions: [row('new', 'two', '2026-09-25T12:00:00Z')],
+    coverage: { personalHistoryComplete: true, personalHistoryCompleteThrough: '2026-09-20T12:00:00Z' },
+    personalFirstSolveBounds: [{ problemSlug: 'two', after: '2026-09-24T12:00:00Z', by: '2026-09-25T12:00:00Z' }],
+  });
+  const progress = summarizeLeetCodeProgress(input, { now, timeZone: 'UTC' });
+  assert.deepEqual(summarizeLeetCodeRange(progress, '2026-09-23', '2026-09-25'), {
+    leetcodeNew: 1, leetcode: 1, leetcodeNewStatus: 'partial', leetcodeCountStatus: 'partial',
+  });
+  assert.equal(progress.calendar.historyCompleteThrough, input.coverage.personalHistoryCompleteThrough);
+  assert.equal(progress.complete, false);
+  const uncertain = summarizeLeetCodeProgress({ ...input, personalFirstSolveBounds: [] }, { now, timeZone: 'UTC' });
+  assert.equal(summarizeLeetCodeRange(uncertain, '2026-09-23', '2026-09-25').leetcodeNew, null);
+  assert.equal(summarizeLeetCodeRange(progress, '2026-09-24', '2026-09-25').leetcodeNew, null,
+    'the earliest possible first may still lie on the excluded start day');
+});
+
+test('first-solve bounds follow the viewer time zone and never assign uncertain firsts across a Stage boundary', () => {
+  const input = snapshot({ connection: { site: 'cn', username: 'fixture', lastSyncedAt: now }, syncedLifetimeSolvedCount: 1,
+    syncedSubmissions: [row('new', 'one', '2026-09-20T12:00:00Z')],
+    personalFirstSolveBounds: [{ problemSlug: 'one', after: '2026-09-20T02:00:00Z', by: '2026-09-20T12:00:00Z' }],
+  });
+  const utc = summarizeLeetCodeProgress(input, options);
+  const pacific = summarizeLeetCodeProgress(input, { now, timeZone: 'America/Los_Angeles' });
+  assert.equal(summarizeLeetCodeRange(utc, '2026-09-19', '2026-09-20').leetcodeNew, 1);
+  assert.equal(summarizeLeetCodeRange(pacific, '2026-09-19', '2026-09-20').leetcodeNew, null);
+});
+
+test('malformed, future, stale or contradictory first-solve bounds cannot establish a new problem date', () => {
+  const by = '2026-09-20T12:00:00Z';
+  const good = { problemSlug: 'one', after: '2026-09-19T12:00:00Z', by };
+  for (const personalFirstSolveBounds of [undefined, {}, [{ ...good, by: '2026-09-20T13:00:00Z' }],
+    [{ ...good, after: by }], [{ ...good, after: '2026-02-30T12:00:00Z' }],
+    [{ ...good, by: '2026-09-21T12:00:00Z' }], [{ ...good, problemSlug: 'unseen' }],
+    [good, { ...good, after: '2026-09-18T12:00:00Z' }]]) {
+    const progress = summarizeLeetCodeProgress(snapshot({ syncedLifetimeSolvedCount: 1,
+      syncedSubmissions: [row('one', 'one', by)], personalFirstSolveBounds }), options);
+    assert.equal(summarizeLeetCodeRange(progress, '2026-09-18', '2026-09-20').leetcodeNew, null);
+  }
 });
 
 test('fresh sync timestamps alone do not downgrade a historically closed Stage', () => {

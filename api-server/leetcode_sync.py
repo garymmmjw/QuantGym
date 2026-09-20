@@ -173,6 +173,9 @@ def submission(row):
 
 
 def fetch_profile(username):
+    # A solved-set checkpoint must precede the profile observation. The later
+    # recent-AC response is not evidence that every intervening AC was returned.
+    profile_observed_after = now_iso()
     profile_data = graphql(PROFILE_QUERY, {"userSlug": username})
     profile = profile_data.get("userProfilePublicProfile")
     if profile is None:
@@ -207,7 +210,7 @@ def fetch_profile(username):
             calendar.append({"date": day.isoformat(), "submissions": nonnegative(value)})
     except (KeyError, TypeError, ValueError, OverflowError, OSError):
         raise LeetCodeError("LeetCode returned incomplete activity data. Your saved records are unchanged.", 502) from None
-    return {"username": username, "displayName": (profile.get("profile") or {}).get("realName") or profile.get("username") or username, "stats": stats, "submissions": records, "calendar": sorted(calendar, key=lambda row: row["date"]), "calendarYear": year}
+    return {"username": username, "displayName": (profile.get("profile") or {}).get("realName") or profile.get("username") or username, "stats": stats, "submissions": records, "calendar": sorted(calendar, key=lambda row: row["date"]), "calendarYear": year, "profileObservedAfter": profile_observed_after}
 
 
 def empty_snapshot():
@@ -233,6 +236,8 @@ def public_snapshot(snapshot):
     result["importedSubmissions"] = imported_accepted_submissions(snapshot, result["syncedSubmissions"])
     result["syncedLifetimeSolvedCount"] = synced_lifetime_solved_count(snapshot)
     result.setdefault("coverage", {}).update(personal_history_coverage(snapshot, result["importedSubmissions"]))
+    state = personal_solved_set(snapshot)
+    result["personalFirstSolveBounds"] = state["bounds"] if state else []
     result["problems"] = [{**problem, "review": problem_review(snapshot, problem, generated_at)} for problem in result.get("problems", [])]
     result["reviewPolicy"] = {"algorithm": "sm2", "version": 1, "generatedAt": generated_at}
     return result
@@ -351,6 +356,99 @@ def personal_history_coverage(snapshot, imported):
     return {"personalHistoryComplete": through is not None, "personalHistoryCompleteThrough": through,
             "personalHistorySource": "user_import" if through is not None or imported else "public_recent",
             "importedAcceptedSubmissions": len(imported)}
+
+
+def personal_solved_set(snapshot, *, state=None, use_saved=True):
+    """Private first-solve intervals, separate from complete submission history.
+
+    Absence from an exhaustive solved set at A and an AC at B proves only that
+    the first solve lies in (A, B]. Recent-feed overlap never proves every AC.
+    The raw state is not importable and is scoped to this exact CN connection.
+    """
+    connection = snapshot.get("connection")
+    if not isinstance(connection, dict) or connection.get("site") != "cn" or not connection.get("username") or not connection.get("linkedAt"):
+        return None
+    binding = {"username": connection["username"], "linkedAt": connection["linkedAt"]}
+    public = synced_accepted_submissions(snapshot)
+    records = [*public, *imported_accepted_submissions(snapshot, public)]
+    current_time = now_iso()
+    firsts = {}
+    for row in records:
+        if row["submittedAt"] > current_time:
+            continue
+        firsts[row["problemSlug"]] = min(firsts.get(row["problemSlug"], row["submittedAt"]), row["submittedAt"])
+    if use_saved and "_personalSolvedSet" in snapshot:
+        state = snapshot["_personalSolvedSet"]
+    if state is None and (not use_saved or "_personalSolvedSet" not in snapshot):
+        through = personal_history_coverage(snapshot, [])["personalHistoryCompleteThrough"]
+        if not through:
+            return None
+        slugs = sorted(slug for slug, first in firsts.items() if first <= through)
+        count = synced_lifetime_solved_count(snapshot)
+        synced_at = connection.get("lastSyncedAt", "")
+        if count is not None and synced_at <= through and count > len(slugs):
+            return None
+        state = {"binding": binding, "through": through, "slugs": slugs, "bounds": []}
+    if not isinstance(state, dict) or state.get("binding") != binding:
+        return None
+    try:
+        through = timestamp(state.get("through"))
+        slugs = state.get("slugs")
+        bounds = state.get("bounds")
+        if through > current_time or not isinstance(slugs, list) or len(slugs) > MAX_RECORDS or any(not isinstance(slug, str) or not PROBLEM_SLUG.fullmatch(slug) for slug in slugs) or not isinstance(bounds, list) or len(bounds) > MAX_RECORDS:
+            return None
+        known = set(slugs)
+        # A late-arriving older new problem disproves this checkpoint. Do not
+        # reuse any intervals derived from an incomplete set.
+        if known != {slug for slug, first in firsts.items() if first <= through}:
+            return None
+        validated = {}
+        for bound in bounds:
+            if not isinstance(bound, dict) or set(bound) != {"problemSlug", "after", "by"}:
+                return None
+            slug, after, by = bound["problemSlug"], timestamp(bound["after"]), timestamp(bound["by"])
+            first = firsts.get(slug)
+            if not first or not after < by <= current_time or not after < first or after > through:
+                return None
+            validated[slug] = {"problemSlug": slug, "after": after, "by": first}
+        for slug, first in firsts.items():
+            if slug not in known:
+                validated[slug] = {"problemSlug": slug, "after": through, "by": first}
+        return {"binding": binding, "through": through, "slugs": sorted(known),
+                "bounds": sorted(validated.values(), key=lambda row: row["problemSlug"])}
+    except (LeetCodeError, TypeError, ValueError):
+        return None
+
+
+def update_personal_solved_set(snapshot, *, prior=None, profile_observed_after=None, seed_import=False):
+    # Imports can start a new, explicitly declared personal history checkpoint.
+    # Otherwise use only the previous checkpoint, validated against the union.
+    state = personal_solved_set(snapshot, state=prior, use_saved=False) if prior else None
+    if seed_import:
+        seeded = personal_solved_set({key: value for key, value in snapshot.items() if key != "_personalSolvedSet"})
+        if seeded and (not state or seeded["through"] > state["through"]):
+            state = seeded
+    snapshot["_personalSolvedSet"] = state
+    if profile_observed_after is None:
+        return snapshot
+    try:
+        observed = timestamp(profile_observed_after)
+        if observed > now_iso() or state and observed <= state["through"]:
+            return snapshot
+        count = synced_lifetime_solved_count(snapshot)
+        public = synced_accepted_submissions(snapshot)
+        records = [*public, *imported_accepted_submissions(snapshot, public)]
+        slugs = sorted({row["problemSlug"] for row in records if row["submittedAt"] <= observed})
+        if count is None or len(slugs) != count:
+            return snapshot
+        snapshot["_personalSolvedSet"] = {"binding": {"username": snapshot["connection"]["username"], "linkedAt": snapshot["connection"]["linkedAt"]},
+            "through": observed, "slugs": slugs, "bounds": state["bounds"] if state else []}
+        # Records newer than the profile request remain bounded by that request,
+        # but cannot contribute to proving its solved set was exhaustive.
+        snapshot["_personalSolvedSet"] = personal_solved_set(snapshot)
+    except (LeetCodeError, TypeError, ValueError):
+        pass
+    return snapshot
 
 
 def import_history_coverage(previous, payload, records, problems):
@@ -533,6 +631,7 @@ def canonical_import_record(record, public):
 def fresh_snapshot(previous, incoming):
     username = incoming["username"]
     same_user = previous.get("connection") and previous["connection"]["username"] == username
+    prior_solved = personal_solved_set(previous) if same_user else None
     snapshot = copy.deepcopy(previous) if same_user else empty_snapshot()
     now = now_iso()
     snapshot["connection"] = {"site": "cn", "username": username, "displayName": incoming["displayName"], "profileUrl": f"https://leetcode.cn/u/{username}/", "linkedAt": snapshot.get("connection", {}).get("linkedAt", now) if same_user else now, "lastSyncedAt": now}
@@ -560,7 +659,8 @@ def fresh_snapshot(previous, incoming):
     snapshot["calendar"] = sorted(calendar.values(), key=lambda row: row["date"])
     snapshot["coverage"]["calendarYears"] = sorted(set([*snapshot["coverage"].get("calendarYears", []), year]))
     snapshot["warning"] = None
-    return merge_records(snapshot, incoming_records)
+    merge_records(snapshot, incoming_records)
+    return update_personal_solved_set(snapshot, prior=prior_solved, profile_observed_after=incoming.get("profileObservedAfter"))
 
 
 def sync_is_recent(snapshot):
@@ -607,4 +707,4 @@ def import_metadata(previous, payload):
     prior_coverage = snapshot.get("_importedHistoryCoverage", {})
     if history_coverage and history_coverage["complete"] and (not prior_coverage.get("complete") or history_coverage["capturedAt"] > prior_coverage.get("capturedAt", "")):
         snapshot["_importedHistoryCoverage"] = history_coverage
-    return snapshot
+    return update_personal_solved_set(snapshot, prior=personal_solved_set(previous), seed_import=True)

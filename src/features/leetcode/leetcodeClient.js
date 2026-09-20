@@ -1,12 +1,27 @@
-import { EMPTY_LEETCODE } from "./leetcodeModel.js";
+import { EMPTY_LEETCODE, problemUrl } from "./leetcodeModel.js";
 import { reportCloudSessionResponse } from "../../state/cloudSessionStatus.js";
 
-export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = globalThis.fetch, now = Date.now }) {
+function boundInstant(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(value)) return null;
+  const instant = Date.parse(value);
+  const civil = new Date(`${value.slice(0, 10)}T00:00:00Z`);
+  return Number.isFinite(instant) && Number.isFinite(civil.getTime()) && civil.toISOString().slice(0, 10) === value.slice(0, 10)
+    ? instant : null;
+}
+
+export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = globalThis.fetch, now = Date.now,
+  eventTarget = globalThis.window, visibilityTarget = globalThis.document }) {
   const base = String(endpoint || "").replace(/\/+$/, "");
   let snapshot = { data: EMPTY_LEETCODE, phase: "idle", error: null };
   const listeners = new Set();
   let running = null;
-  let loadedAt = 0;
+  let syncing = null;
+  let waking = null;
+  let loadedAt = -Infinity;
+  let checkedAt = -Infinity;
+  let failedPath = null;
+  let retainCount = 0;
+  let stopRefresh = null;
   const publish = (patch) => { snapshot = { ...snapshot, ...patch }; listeners.forEach((fn) => fn()); };
 
   async function request(path, method, body) {
@@ -23,6 +38,10 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
       if (!Object.hasOwn(payload, "connection") || !Array.isArray(payload.problems) || !Array.isArray(payload.submissions)) throw new Error("invalid_response");
       if (payload.syncedSubmissions !== undefined && !Array.isArray(payload.syncedSubmissions)) throw new Error("invalid_response");
       if (payload.importedSubmissions !== undefined && !Array.isArray(payload.importedSubmissions)) throw new Error("invalid_response");
+      if (payload.personalFirstSolveBounds !== undefined && (!Array.isArray(payload.personalFirstSolveBounds)
+        || payload.personalFirstSolveBounds.some(bound => !bound || !problemUrl(bound.problemSlug)
+          || boundInstant(bound.after) === null || boundInstant(bound.by) === null
+          || boundInstant(bound.after) >= boundInstant(bound.by)))) throw new Error("invalid_response");
       if (path === "/review" && (payload.connection?.username !== body?.username
         || payload.connection?.linkedAt !== body?.linkedAt
         || !(payload.problems.find((problem) => problem.slug === body?.problemSlug)?.review?.version > body?.expectedVersion))) {
@@ -31,7 +50,8 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
       // Keep public sync and user-imported history separate. Older API versions
       // cannot supply imported counting records by falling back to submissions.
       return { ...payload, syncedSubmissions: payload.connection ? payload.syncedSubmissions || [] : [],
-        importedSubmissions: payload.connection ? payload.importedSubmissions || [] : [] };
+        importedSubmissions: payload.connection ? payload.importedSubmissions || [] : [],
+        personalFirstSolveBounds: payload.connection ? payload.personalFirstSolveBounds || [] : [] };
     } finally { clearTimeout(timeout); }
   }
 
@@ -42,9 +62,11 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
       try {
         const data = await request(path, method, body);
         loadedAt = now();
+        failedPath = null;
         publish({ data, phase: "ready", error: null });
         return data;
       } catch (error) {
+        failedPath = path;
         onError?.(error);
         publish({ phase: "error", error });
         return null;
@@ -53,18 +75,60 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
     return running;
   }
 
+  function sync() {
+    if (!syncing) syncing = perform("/sync", "POST", {}, "syncing").finally(() => { syncing = null; });
+    return syncing;
+  }
+
+  function wake() {
+    if (waking) return waking;
+    if (snapshot.error?.status === 401) return Promise.resolve(null);
+    if (running) return running;
+    if (now() - Math.max(loadedAt, checkedAt) < 30000) return Promise.resolve(snapshot.data);
+    checkedAt = now();
+    waking = (async () => {
+      const data = await perform("", "GET", undefined, "loading");
+      if (!data?.connection) return data;
+      const syncedAt = typeof data.connection.lastSyncedAt === "string" ? Date.parse(data.connection.lastSyncedAt) : NaN;
+      if (!Number.isFinite(syncedAt) || now() - syncedAt >= 300000) return sync();
+      return data;
+    })().finally(() => { waking = null; });
+    return waking;
+  }
+
+  // Multiple pages/hooks share one client and one visible-page refresh lifecycle.
+  function retain() {
+    retainCount += 1;
+    if (retainCount === 1) {
+      const refresh = () => { if (visibilityTarget?.visibilityState !== "hidden") void wake(); };
+      for (const event of ["focus", "online", "pageshow"]) eventTarget?.addEventListener(event, refresh);
+      visibilityTarget?.addEventListener("visibilitychange", refresh);
+      const timer = eventTarget?.setInterval(refresh, 60000);
+      stopRefresh = () => {
+        for (const event of ["focus", "online", "pageshow"]) eventTarget?.removeEventListener(event, refresh);
+        visibilityTarget?.removeEventListener("visibilitychange", refresh);
+        if (timer !== undefined) eventTarget?.clearInterval(timer);
+      };
+      refresh();
+    }
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      retainCount -= 1;
+      if (!retainCount) { stopRefresh?.(); stopRefresh = null; }
+    };
+  }
+
   return {
     getSnapshot: () => snapshot,
     subscribe: (listener) => { listeners.add(listener); return () => listeners.delete(listener); },
     reload: () => running || perform("", "GET", undefined, "loading"),
-    async wake() {
-      if (snapshot.error?.status === 401) return;
-      if (running || now() - loadedAt < 30000) return;
-      const data = await perform("", "GET", undefined, "loading");
-      if (data?.connection && now() - new Date(data.connection.lastSyncedAt || 0).getTime() > 300000) await perform("/sync", "POST", {}, "syncing");
-    },
+    retry: () => failedPath === "/sync" && snapshot.data.connection ? sync() : running || perform("", "GET", undefined, "loading"),
+    wake,
+    retain,
     connect: (username) => perform("/connect", "POST", { username }, "connecting"),
-    sync: () => perform("/sync", "POST", {}, "syncing"),
+    sync,
     disconnect: () => perform("", "DELETE", undefined, "disconnecting"),
     importRecords: (payload) => perform("/import", "POST", payload, "importing"),
     async recordReview(payload) {
