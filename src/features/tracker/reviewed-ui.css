@@ -40,7 +40,7 @@
 .quantgym-tracker .qt-view-switch { flex: 0 0 auto; gap: 2px; padding: 3px; background: #f6f4f8; }
 .quantgym-tracker .qt-view-switch button { padding: 7px 9px; color: #a49bb2; }
 .quantgym-tracker .qt-view-switch button.qt-active { color: #794d7b; background: #eee5f0; box-shadow: none; }
-.quantgym-tracker .qt-table-scroll { max-height: clamp(320px, calc(100dvh - 610px), 650px); }
+.quantgym-tracker .qt-table-scroll { max-height: clamp(560px, calc(100dvh - 260px), 900px); }
 .quantgym-tracker .qt-table-scroll .qt-progress-table { min-width: calc(720px + var(--qt-progress-column-count) * 140px); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 14px; }
 .quantgym-tracker .qt-progress-table .qt-col-company { width: 165px; }
 .quantgym-tracker .qt-progress-table .qt-col-role { width: 285px; }
@@ -86,7 +86,7 @@
 .quantgym-tracker .qt-deadline-button:hover { background: #fce2e8; border-color: #f0bcc8; }
 .quantgym-tracker .qt-compact .qt-application-row td { height: 38px; padding-top: 4px; padding-bottom: 4px; }
 .quantgym-tracker .qt-compact .qt-event-pill { padding-top: 5px; padding-bottom: 5px; }
-.quantgym-tracker .qt-table-footer { padding: 16px 19px; background: #fff; color: #8a7c98; font-size: 12px; gap: 12px; }
+
 .quantgym-tracker .qt-tracker-panel > .qt-tracker-error { margin-top: 12px; }
 @media (max-width: 1100px) {
   .quantgym-tracker .qt-metric { padding: 0 16px; }
@@ -113,26 +113,6 @@
   .quantgym-tracker .qt-company-name { font-size: 13px; }
   .quantgym-tracker .qt-application-row td.qt-company-cell { padding-left: 12px; }
   .quantgym-tracker .qt-phase-count { display: inline; }
-  .quantgym-tracker .qt-table-footer { align-items: flex-start; flex-direction: column; padding: 12px; font-size: 11px; gap: 7px; }
 }
 .quantgym-tracker .qt-cloud-status { display: flex; align-items: center; gap: 10px; margin: -8px 0 14px; color: var(--qt-muted, #807789); font-size: 12px; }
 .quantgym-tracker .qt-cloud-status button { border: 0; padding: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
-
-/* The panel's lower edge adjusts only the table viewport, leaving its controls intact. */
-.quantgym-tracker .qt-table-resizer {
-  display: flex; align-items: center; justify-content: center;
-  height: 24px; width: 100%; cursor: ns-resize; touch-action: none;
-  user-select: none; -webkit-user-select: none;
-  background: #fff; border-top: 1px solid #f3eff6; outline-offset: -3px;
-}
-.quantgym-tracker .qt-table-resizer > span {
-  width: 36px; height: 4px; border-radius: 4px; background: #d4c9dd;
-}
-.quantgym-tracker .qt-table-resizer:hover,
-.quantgym-tracker .qt-table-resizer:focus-visible,
-.quantgym-tracker .qt-table-resizer.is-resizing { background: #f8f5fa; }
-.quantgym-tracker .qt-table-resizer:focus-visible { outline: 2px solid #a48caf; }
-.quantgym-tracker .qt-table-resizer:hover > span,
-.quantgym-tracker .qt-table-resizer:focus-visible > span,
-.quantgym-tracker .qt-table-resizer.is-resizing > span { background: #9879a5; }
-@media (pointer: coarse) { .quantgym-tracker .qt-table-resizer { height: 32px; } }

@@ -14,7 +14,6 @@ const paths = {
   CheckCheck: ['m3 12 4 4L19 4', 'm12 16 2 2 8-8'],
   CircleCheck: ['m8 12 3 3 5-6'],
   CircleAlert: ['M12 7v6', 'M12 17h.01'],
-  MousePointer2: ['m4 3 7.5 18 2.8-6.7L21 11 4 3Z'],
   BriefcaseBusiness: ['M8 7V4h8v3', 'M3 12c6 4 12 4 18 0', 'M12 12v4'],
 };
 
