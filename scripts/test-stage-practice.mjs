@@ -91,7 +91,7 @@ test('shared readers use account storage keys and refresh from durable completio
   assert.equal(readStagePractice(options).available, false);
 });
 
-test('only synced LeetCode ACs count, with distinct problems per Stage and no imported or review credit', () => {
+test('synced LeetCode repeats count separately per Stage with no imported or review credit', () => {
   const submission = (id, slug, submittedAt, status = 'AC') => ({ id, problemSlug: slug, submittedAt, status });
   const leetcode = {
     connection: { site: 'cn', username: 'alice' },
@@ -109,8 +109,8 @@ test('only synced LeetCode ACs count, with distinct problems per Stage and no im
     problems: [{ slug: 'reviewed', review: { completedAt: '2026-09-17T12:00:00Z' } }],
   };
   const practice = collectStagePractice({}, {}, leetcode, { now: '2026-09-20T12:00:00Z' });
-  assert.equal(summarizeStagePractice(stages, practice)[1].questionCount, 2);
-  assert.deepEqual([...new Set(practice.records.map(record => record.key))].sort(), ['leetcode:cn:two-sum', 'leetcode:cn:valid-parentheses']);
+  assert.equal(summarizeStagePractice(stages, practice)[1].questionCount, 4);
+  assert.deepEqual([...new Set(practice.records.map(record => record.key))].sort(), ['leetcode:cn:alice:ac:1', 'leetcode:cn:alice:ac:2', 'leetcode:cn:alice:ac:3', 'leetcode:cn:alice:ac:4']);
   assert.deepEqual(collectStagePractice({}, {}, { ...leetcode, connection: null }).records, []);
 });
 
@@ -290,7 +290,7 @@ test('valid synced LeetCode counts survive unavailable site records and incomple
   const practice = resolveStagePractice({ ownerId: 'alice', personal, leetcode, leetcodeOptions: { now: '2026-09-20T12:00:00Z' } });
   assert.equal(practice.countStatus, 'partial');
   assert.match(practice.countSourceNote, /站内/);
-  assert.deepEqual(practice.records.map(record => record.key), ['leetcode:cn:two-sum']);
+  assert.deepEqual(practice.records.map(record => record.key), ['leetcode:cn:alice:ac:1']);
   assert.equal(summarizeStagePractice(stages, practice)[1].questionCount, 1);
   const missing = resolveStagePractice({ ownerId: 'alice', personal, leetcode: pendingLeetCode });
   assert.equal(missing.available, false);

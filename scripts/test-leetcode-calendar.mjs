@@ -157,3 +157,77 @@ test("unlinked snapshots and arbitrary external problem URLs are ignored", () =>
   for (const value of ["//evil.example", "../other", "two-sum?next=evil", "https://evil.example", "a/b", ""]) assert.equal(leetcodeProblemUrl("cn", value), "");
   assert.equal(leetcodeProblemUrl("unexpected", "two-sum"), "");
 });
+
+test('individual completions preserve each inclusive three-hour solve while grouped calendar rows stay compact', () => {
+  const records = collectLeetCodeActivities(snapshot([
+    submission('a', '2026-09-11T00:00:00Z'),
+    submission('ignored', '2026-09-11T02:59:59Z'),
+    submission('b', '2026-09-11T03:00:00Z'),
+    submission('c', '2026-09-11T06:00:00Z'),
+    submission('different', '2026-09-11T01:00:00Z', 'three-sum'),
+  ]), { timeZone: 'UTC' });
+  assert.deepEqual(records.completions.map(item => item.submissionId), ['a', 'different', 'b', 'c']);
+  assert.equal(new Set(records.completions.map(item => item.id)).size, 4);
+  assert.ok(records.completions.every(item => item.count === 1 && item.source === 'leetcode' && item.kind === 'coding' && item.status === 'AC'));
+  assert.deepEqual(records.completions.filter(item => item.problemSlug === 'two-sum').map(item => item.completedAt), [
+    '2026-09-11T00:00:00Z', '2026-09-11T03:00:00Z', '2026-09-11T06:00:00Z',
+  ]);
+  assert.equal(records.activities.length, 2);
+  assert.equal(records.activities.find(item => item.problemSlug === 'two-sum').count, 3);
+  assert.equal(records.completions.length, records.activities.reduce((sum, item) => sum + item.count, 0));
+});
+
+test('completion qualification runs across midnight and ignored ACs do not move its anchor', () => {
+  const records = collectLeetCodeActivities(snapshot([
+    submission('start', '2026-09-11T23:00:00Z'),
+    submission('midnight', '2026-09-12T00:00:00Z'),
+    submission('near-boundary', '2026-09-12T01:59:59Z'),
+    submission('boundary', '2026-09-12T02:00:00Z'),
+    submission('too-soon-again', '2026-09-12T04:59:59Z'),
+    submission('second-boundary', '2026-09-12T05:00:00Z'),
+  ]), { timeZone: 'UTC' });
+  assert.deepEqual(records.completions.map(item => [item.submissionId, item.dayKey]), [
+    ['start', '2026-09-11'], ['boundary', '2026-09-12'], ['second-boundary', '2026-09-12'],
+  ]);
+  assert.equal(leetcodeDailySummary(records, '2026-09-12').acceptedSubmissions, 5);
+  assert.equal(leetcodeDailySummary(records, '2026-09-12').solved, 2);
+});
+
+test('completion IDs and chronological selection are stable under duplicate delivery, input ordering and local-zone changes', () => {
+  const one = submission('one', '2026-09-11T01:00:00Z');
+  const two = submission('two', '2026-09-11T04:00:00Z');
+  const input = snapshot([two, one, { ...two }, submission('near', '2026-09-11T03:00:00Z'), { ...one }]);
+  const before = structuredClone(input);
+  const utc = collectLeetCodeActivities(input, { timeZone: 'UTC' });
+  const shuffled = collectLeetCodeActivities(snapshot([...input.syncedSubmissions].reverse()), { timeZone: 'UTC' });
+  const local = collectLeetCodeActivities(input, { timeZone: 'America/Los_Angeles' });
+  assert.deepEqual(utc.completions, shuffled.completions);
+  assert.deepEqual(utc.completions.map(item => item.id), local.completions.map(item => item.id));
+  assert.deepEqual(utc.completions.map(item => item.submissionId), ['one', 'two']);
+  assert.deepEqual(local.completions.map(item => item.dayKey), ['2026-09-10', '2026-09-10']);
+  assert.deepEqual(input, before);
+  const noIds = collectLeetCodeActivities(snapshot([
+    submission('', '2026-09-11T01:00:00Z'), submission('', '2026-09-11T04:00:00Z'),
+  ]), { timeZone: 'UTC' });
+  assert.equal(new Set(noIds.completions.map(item => item.id)).size, 2);
+});
+
+test('completion events reject unverified, invalid, future and repeated submission identities', () => {
+  const now = Date.parse('2026-09-12T12:00:00Z');
+  const valid = submission('valid', '2026-09-12T12:00:00Z');
+  const input = snapshot([
+    submission('valid', '2026-09-12T12:00:00.001Z'),
+    submission('invalid-date', '2026-02-30T01:00:00Z'),
+    submission('no-zone', '2026-09-12T01:00:00'),
+    submission('date-only', '2026-09-12'),
+    submission('old', '1999-12-31T23:59:59Z'),
+    { ...submission('wa', '2026-09-12T01:00:00Z'), status: 'WA' },
+    valid, { ...valid },
+  ], { submissions: [submission('import', '2026-09-12T01:00:00Z', 'imported-problem')],
+    calendar: [{ date: '2026-09-12', submissions: 900 }] });
+  const records = collectLeetCodeActivities(input, { now, timeZone: 'UTC' });
+  assert.deepEqual(records.completions.map(item => item.submissionId), ['valid']);
+  assert.deepEqual(collectLeetCodeActivities({ connection: input.connection, submissions: [valid] }).completions, []);
+  assert.deepEqual(collectLeetCodeActivities({}).completions, []);
+  assert.deepEqual(collectLeetCodeActivities(input, { now: 'invalid' }).completions, []);
+});

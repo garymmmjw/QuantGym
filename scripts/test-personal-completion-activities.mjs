@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPersonalState, createPersonalStore, mergePersonalData, validatePersonalData } from '../src/features/personal/personalStore.js';
-import { completeBehavioralPractice, hasExplicitCompletion, hasPersonalBehavioralAnswer, markExperienceRead, retainExplicitCompletionActivities } from '../src/features/personal/completionActivities.js';
+import { completeBehavioralPractice, hasExplicitCompletion, hasPersonalBehavioralAnswer, markExperienceRead, retainExplicitCompletionActivities, saveBehavioralAnswer } from '../src/features/personal/completionActivities.js';
+import { collectCalendarActivities } from '../src/features/personal/calendar/calendarModel.js';
 import { BEHAVIORAL_PREP_QUESTIONS } from '../src/features/personal/behavioral/questions.js';
 
 const question = BEHAVIORAL_PREP_QUESTIONS.at(-1);
@@ -16,24 +17,26 @@ function storage() {
   return { getItem: key => rows.get(key) ?? null, setItem: (key, value) => rows.set(key, value) };
 }
 
-test('behavioral confirmation requires a personal answer and rejects built-in or whitespace-only examples', () => {
-  for (const state of [createPersonalState(), ownAnswer(' \n '), ownAnswer(question.answer), ownAnswer(`\n ${question.answer.replace(/\n/g, ' ')} `)]) {
+test('behavioral preparation requires a persisted nonempty answer, without comparing its content to a template', () => {
+  for (const state of [createPersonalState(), ownAnswer(' \n ')]) {
     assert.equal(hasPersonalBehavioralAnswer(state, question), false);
     assert.throws(() => completeBehavioralPractice(state, question, morning), /own answer/);
     assert.deepEqual(state.activities, []);
   }
   const state = ownAnswer();
   assert.equal(hasPersonalBehavioralAnswer(state, question), true);
-  assert.equal(state.activities.length, 0, 'saving a draft does not complete the question');
+  assert.equal(hasPersonalBehavioralAnswer(ownAnswer(question.answer), question), true);
+  assert.equal(collectCalendarActivities(state).activities.length, 1, 'old saved answers count without a separate confirmation');
 });
 
-test('one behavioral question counts once per local day, while next-day practice is a new event', () => {
+test('one behavioral question keeps its original answer date across later confirmations', () => {
   const first = completeBehavioralPractice(ownAnswer(), question, morning);
   assert.equal(completeBehavioralPractice(first, question, afternoon), first);
   assert.equal(hasExplicitCompletion(first, 'behavioral', question.id, afternoon), true);
   assert.equal(hasExplicitCompletion(first, 'behavioral', question.id, tomorrow), false);
   const second = completeBehavioralPractice(first, question, tomorrow);
-  assert.equal(second.activities.length, 2);
+  assert.equal(second, first);
+  assert.equal(second.activities.length, 1);
   assert.equal(second.activities[0].sourceId, question.id);
   assert.equal(second.activities[0].questionId, question.id);
   assert.equal(second.activities[0].dateKey, '2026-09-19');
@@ -41,6 +44,68 @@ test('one behavioral question counts once per local day, while next-day practice
   assert.equal(second.activities[0].count, 1);
   assert.equal('text' in second.activities[0], false, 'activity metadata never copies a private answer');
   validatePersonalData(second);
+});
+
+test('saving the first nonempty answer records preparation atomically and later edits never create daily repeats', () => {
+  const empty = saveBehavioralAnswer(createPersonalState(), question, ' \n ', morning);
+  assert.deepEqual(empty.activities, []);
+  const first = saveBehavioralAnswer(empty, question, 'My first answer', morning);
+  assert.equal(first.activities.length, 1);
+  assert.equal(first.activities[0].completedAt, morning.toISOString());
+  const later = saveBehavioralAnswer(first, question, 'My revised answer', tomorrow);
+  assert.deepEqual(later.activities, first.activities);
+  assert.equal(later.behavioralAnswers[0].updatedAt, tomorrow.toISOString());
+  assert.equal(later.behavioralAnswers[0].text, 'My revised answer');
+  assert.equal(collectCalendarActivities(later).activities[0].completedAt, morning.toISOString());
+  validatePersonalData(later);
+});
+
+test('editing an old saved answer materializes its known historical date before replacing its text', () => {
+  const revised = saveBehavioralAnswer(ownAnswer(), question, 'Updated next day', tomorrow);
+  assert.equal(revised.activities.length, 1);
+  assert.equal(revised.activities[0].completedAt, morning.toISOString());
+  assert.equal(revised.behavioralAnswers[0].updatedAt, tomorrow.toISOString());
+  const clearedOld = saveBehavioralAnswer(ownAnswer(), question, '', tomorrow);
+  assert.deepEqual(clearedOld.activities, revised.activities, 'clearing retains the historical preparation already represented by the old answer');
+  const cleared = saveBehavioralAnswer(revised, question, '', tomorrow);
+  assert.deepEqual(cleared.activities, revised.activities);
+  const rewritten = saveBehavioralAnswer(cleared, question, 'A different answer', tomorrow);
+  assert.deepEqual(rewritten.activities, revised.activities);
+});
+
+test('directly clearing and rewriting an old answer preserves exactly one preparation on its original date', () => {
+  const original = ownAnswer();
+  assert.deepEqual(original.activities, []);
+  const cleared = saveBehavioralAnswer(original, question, ' \n ', tomorrow);
+  assert.equal(cleared.behavioralAnswers[0].text, ' \n ');
+  assert.equal(cleared.activities.length, 1);
+  const rewritten = saveBehavioralAnswer(cleared, question, 'Rewritten after clearing', tomorrow);
+  const calendar = collectCalendarActivities(rewritten).activities;
+  assert.equal(rewritten.activities.length, 1);
+  assert.equal(calendar.length, 1);
+  assert.equal(calendar[0].completedAt, morning.toISOString());
+  assert.equal(calendar[0].count, 1);
+  validatePersonalData(rewritten);
+});
+
+test('concurrent first answers on different days converge to one calendar record at the earliest completion', () => {
+  const first = saveBehavioralAnswer(createPersonalState(), question, 'First device', morning);
+  const later = saveBehavioralAnswer(createPersonalState(), question, 'Second device', tomorrow);
+  const a = mergePersonalData(first, later), b = mergePersonalData(later, first);
+  const calendar = collectCalendarActivities(a).activities;
+  assert.deepEqual(calendar, collectCalendarActivities(b).activities);
+  assert.equal(calendar.length, 1);
+  assert.equal(calendar[0].completedAt, morning.toISOString());
+  assert.equal(a.behavioralAnswers[0].text, 'Second device');
+  assert.equal(saveBehavioralAnswer(a, question, 'Later revision', tomorrow).activities.length, 2, 'existing historical events are kept, without creating another');
+});
+
+test('saved answers and later edits cannot revive explicitly removed preparation records', () => {
+  const first = saveBehavioralAnswer(createPersonalState(), question, 'My answer', morning);
+  const deleted = { ...first, activities: [], removedActivityIds: [first.activities[0].id] };
+  const revised = saveBehavioralAnswer(deleted, question, 'Another edit', tomorrow);
+  assert.deepEqual(revised.activities, []);
+  assert.deepEqual(collectCalendarActivities(revised).activities, []);
 });
 
 test('experience reading counts only its first explicit confirmation, across days and after reload', () => {

@@ -1,5 +1,5 @@
 import { collectCalendarActivities, localDayKey } from '../personal/calendar/calendarModel.js';
-import { collectLeetCodeActivities } from '../personal/calendar/leetcodeCalendar.js';
+import { summarizeLeetCodeProgress } from '../leetcode/leetcodeProgress.js';
 import { countsTowardProblemTotal, hasExplicitProblemCompletion } from '../../modules/problems/completion.js';
 import { sortCareerStages } from './stageStore.js';
 import { USER_STATE_PREFIX } from '../../constants.js';
@@ -9,15 +9,15 @@ import { EMPTY_LEETCODE } from '../leetcode/leetcodeModel.js';
 const list = value => Array.isArray(value) ? value : [];
 const QUESTION_KINDS = new Set(['quant', 'coding', 'tech', 'behavioral']);
 
-// A count represents distinct completed questions, never trial/session totals.
+// Site questions remain distinct; each qualifying LeetCode repeat is one solve.
 export function collectStagePractice(personalState = {}, legacyState = {}, leetcodeSnapshot = {}, leetcodeOptions = {}) {
   const records = new Map();
   const sessionQuestions = new Map();
   list(personalState.dailySessions).forEach(session => list(session.questions).forEach(question => {
     sessionQuestions.set(`${session.id}:${question.id}`, question);
   }));
-  function add(id, completedAt) {
-    const day = localDayKey(completedAt);
+  function add(id, completedAt, dayKey) {
+    const day = localDayKey(dayKey || completedAt);
     if (!id || !day || !hasExplicitProblemCompletion({ completed: true, completedAt })) return;
     const key = String(id);
     records.set(`${key}:${day}`, { key, day });
@@ -45,10 +45,12 @@ export function collectStagePractice(personalState = {}, legacyState = {}, leetc
   }));
   // Only verified account-sync ACs qualify. Local Hot100 flags, imported history,
   // saved reviews and source-calendar submission totals cannot create credit.
-  collectLeetCodeActivities(leetcodeSnapshot, leetcodeOptions).activities.forEach(activity => {
-    add(`leetcode:cn:${activity.problemSlug}`, activity.completedAt);
+  const leetcodeProgress = summarizeLeetCodeProgress(leetcodeSnapshot, leetcodeOptions);
+  leetcodeProgress.completions.forEach(activity => {
+    add(activity.id, activity.completedAt, activity.dayKey);
   });
-  return { records: [...records.values()], available: true };
+  return { records: [...records.values()], available: true,
+    leetcodeMissingDates: leetcodeProgress.missingDates, leetcodeComplete: leetcodeProgress.complete };
 }
 
 // One unavailable source must not hide verified records from another source.
@@ -68,15 +70,17 @@ export function resolveStagePractice({ ownerId, namespace = '', personal = {}, l
     } else if (leetcode.enabled && leetcode.phase !== 'error') leetcodeStatus = 'loading';
   }
   const leetcodeReady = leetcodeStatus === 'ready';
+  const collected = collectStagePractice(personalReady ? personal.snapshot.data : {}, personalReady ? personal.legacyState : {}, leetcodeReady ? leetcode.data : {}, leetcodeOptions);
   const available = personalReady || leetcodeReady;
-  const complete = personalReady && (leetcodeReady || leetcodeStatus === 'not-connected');
+  const complete = personalReady && (leetcodeReady && collected.leetcodeComplete || leetcodeStatus === 'not-connected');
   const countStatus = complete ? 'ready' : available ? 'partial' : 'unavailable';
   const notes = [];
   if (!personalReady) notes.push('站内刷题记录暂不可用');
   if (leetcodeStatus === 'loading') notes.push('LeetCode 记录加载中');
   else if (leetcodeStatus === 'unavailable') notes.push('LeetCode 记录暂不可用');
+  else if (leetcodeReady && !collected.leetcodeComplete) notes.push('LeetCode 仅含已同步记录');
   return {
-    ...collectStagePractice(personalReady ? personal.snapshot.data : {}, personalReady ? personal.legacyState : {}, leetcodeReady ? leetcode.data : {}, leetcodeOptions),
+    ...collected,
     available,
     countStatus,
     countSourceNote: notes.join('；'),

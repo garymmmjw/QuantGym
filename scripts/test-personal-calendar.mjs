@@ -57,6 +57,62 @@ test("new accounts produce only empty statistics", () => {
   assert.ok(days.every((day) => day.totalQuestions === 0 && day.activityCount === 0 && day.daily === 0));
 });
 
+test('saved behavioral answers count without confirmation and reuse their existing dates', () => {
+  const answers = [
+    { id: 'written', text: 'My answer', updatedAt: at },
+    { id: 'empty', text: ' \n ', updatedAt: at },
+    { id: 'missing-date', text: 'An older answer' },
+    { id: 'invalid-date', text: 'Another older answer', updatedAt: '2026-02-30T12:00:00Z' },
+  ];
+  const result = collectCalendarActivities({ behavioralAnswers: answers });
+  assert.equal(result.activities.length, 1);
+  assert.equal(result.activities[0].kind, 'behavioral');
+  assert.equal(result.activities[0].questionId, 'written');
+  assert.equal(result.activities[0].completedAt, at);
+  assert.equal(result.activities[0].source, 'saved-answer');
+  assert.equal(summarizeActivities(result.activities).behavioral, 1);
+  assert.equal(result.undatedLegacyCount, 2, 'missing and impossible dates remain undated rather than becoming today');
+});
+
+test('behavioral projection chooses the earliest confirmation and counts old answer and repeat events only once', () => {
+  const earlier = '2026-09-08T17:00:00.000Z';
+  const later = '2026-09-09T17:00:00.000Z';
+  const event = (id, completedAt) => ({ id, kind: 'behavioral', source: 'explicit', sourceId: 'written', questionId: 'written', count: 1, completedAt });
+  const state = { behavioralAnswers: [{ id: 'written', text: 'An answer before confirmation', updatedAt: at }],
+    activities: [event('later', later), event('earlier', earlier)] };
+  const result = collectCalendarActivities(state);
+  assert.equal(result.activities.length, 1);
+  assert.equal(result.activities[0].id, 'earlier');
+  assert.equal(result.activities[0].completedAt, earlier, 'a known confirmation takes precedence over the historical edit timestamp');
+  assert.deepEqual(collectCalendarActivities({ ...state, activities: [...state.activities].reverse() }), result);
+  assert.equal(collectCalendarActivities({ ...state, behavioralAnswers: [{ ...state.behavioralAnswers[0], text: '' }] }).activities.length, 1, 'clearing the answer retains recorded history');
+});
+
+test('behavioral source tombstones suppress legacy-answer fallback without hiding other questions', () => {
+  const sourceId = 'written';
+  const id = `behavioral:explicit:${sourceId}:2026-09-08`;
+  const state = { behavioralAnswers: [
+    { id: sourceId, text: 'Old answer', updatedAt: at },
+    { id: 'other', text: 'Another answer', updatedAt: at },
+  ], removedActivityIds: [id] };
+  assert.deepEqual(collectCalendarActivities(state).activities.map(activity => activity.questionId), ['other']);
+});
+
+test('behavioral deletion markers remove only their event ids, preserving other confirmed history for the same question', () => {
+  const earlier = { id: 'behavioral:explicit:written:2026-09-08', kind: 'behavioral', source: 'explicit', sourceId: 'written',
+    questionId: 'written', count: 1, completedAt: at };
+  const later = { ...earlier, id: 'behavioral:explicit:written:2026-09-09', completedAt: '2026-09-09T16:00:00.000Z' };
+  const state = { behavioralAnswers: [{ id: 'written', text: 'Saved answer', updatedAt: at }],
+    activities: [earlier, later], removedActivityIds: [earlier.id] };
+  const surviving = collectCalendarActivities(state).activities;
+  assert.equal(surviving.length, 1);
+  assert.equal(surviving[0].id, later.id);
+  assert.equal(surviving[0].completedAt, later.completedAt);
+  assert.deepEqual(collectCalendarActivities({ ...state, activities: [later, earlier] }).activities, surviving);
+  assert.deepEqual(collectCalendarActivities({ ...state, activities: [later] }).activities, surviving);
+  assert.deepEqual(collectCalendarActivities({ ...state, removedActivityIds: [earlier.id, later.id] }).activities, []);
+});
+
 test("event ids and linked trial/session records are counted only once", () => {
   const event = { id: "mental:t1", kind: "mental", count: 25, completedAt: at, trialId: "t1" };
   const state = {

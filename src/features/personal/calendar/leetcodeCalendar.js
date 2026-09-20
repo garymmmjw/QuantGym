@@ -29,7 +29,7 @@ export function leetcodeSubmissionDay(value, timeZone) {
 
 /** Count synced ACs at least three hours after the previous counted AC for that problem. */
 export function collectLeetCodeActivities(snapshot = {}, { timeZone, now = Date.now() } = {}) {
-  const empty = { activities: [], acceptedDays: [], calendarDays: [], calendarTimeZone: null, historyComplete: false };
+  const empty = { activities: [], completions: [], acceptedDays: [], calendarDays: [], calendarTimeZone: null, historyComplete: false };
   if (snapshot?.connection?.site !== "cn") return empty;
   const nowMs = new Date(now).getTime();
   if (!Number.isFinite(nowMs)) return empty;
@@ -38,6 +38,7 @@ export function collectLeetCodeActivities(snapshot = {}, { timeZone, now = Date.
   const lastCountedByProblem = new Map();
   const seenSubmissions = new Set();
   const accepted = [];
+  const completions = [];
   // This list is projected by the server from real account syncs. The ordinary
   // submissions list also contains imported/manual history and is not proof of a solve.
   for (const submission of list(snapshot.syncedSubmissions)) {
@@ -55,7 +56,7 @@ export function collectLeetCodeActivities(snapshot = {}, { timeZone, now = Date.
   // Select counted attempts before bucketing by day, so midnight cannot reset
   // the interval and an uncounted attempt cannot extend it.
   accepted.sort((a, b) => a.timestamp - b.timestamp || a.submissionId.localeCompare(b.submissionId));
-  for (const { submission, timestamp, dayKey, problemUrl } of accepted) {
+  for (const { submission, submissionId, timestamp, dayKey, problemUrl } of accepted) {
     byAcceptedDay.set(dayKey, (byAcceptedDay.get(dayKey) || 0) + 1);
     const key = `${dayKey}:${submission.problemSlug}`;
     if (!byDayAndProblem.has(key)) byDayAndProblem.set(key, {
@@ -81,6 +82,23 @@ export function collectLeetCodeActivities(snapshot = {}, { timeZone, now = Date.
     lastCountedByProblem.set(submission.problemSlug, timestamp);
     activity.count += 1;
     activity.completedAt = submission.submittedAt;
+    // Keep the qualifying event identity, independently of its day bucket or
+    // problem. Stage and overview totals must not collapse valid later repeats.
+    completions.push({
+      id: `leetcode:${snapshot.connection.site}:${snapshot.connection.username}:ac:${submissionId}`,
+      submissionId,
+      kind: 'coding',
+      source: 'leetcode',
+      count: 1,
+      dayKey,
+      completedAt: submission.submittedAt,
+      title: submission.title || submission.titleEn || submission.problemSlug,
+      titleEn: submission.titleEn || submission.title || submission.problemSlug,
+      problemSlug: submission.problemSlug,
+      frontendId: submission.frontendId || '',
+      problemUrl,
+      status: 'AC',
+    });
   }
   const bySourceDay = new Map();
   for (const day of list(snapshot.calendar)) {
@@ -92,6 +110,7 @@ export function collectLeetCodeActivities(snapshot = {}, { timeZone, now = Date.
   }
   return {
     activities: [...byDayAndProblem.values()].filter(item => item.count > 0).sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt) || a.id.localeCompare(b.id)),
+    completions,
     acceptedDays: [...byAcceptedDay].map(([dayKey, submissions]) => ({ dayKey, submissions })),
     calendarDays: [...bySourceDay].map(([dayKey, submissions]) => ({ dayKey, submissions })),
     calendarTimeZone: typeof snapshot.coverage?.calendarTimeZone === "string" ? snapshot.coverage.calendarTimeZone : null,

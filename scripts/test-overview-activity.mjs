@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildOverviewActivity, collectOverviewRecords, resolveOverviewActivity, summarizeOverviewStages } from '../src/features/overview/activityMetrics.js';
 import { createPracticeSession, completePracticeSession } from '../src/features/personal/practice/practiceModel.js';
-import { completeBehavioralPractice, markExperienceRead } from '../src/features/personal/completionActivities.js';
+import { completeBehavioralPractice, markExperienceRead, saveBehavioralAnswer } from '../src/features/personal/completionActivities.js';
+import { collectStagePractice, summarizeStagePractice } from '../src/features/careerStages/stagePractice.js';
+import { collectLeetCodeActivities } from '../src/features/personal/calendar/leetcodeCalendar.js';
 
 const stamp = (day, time = '12:00') => `${day}T${time}:00Z`;
 const options = { today: '2026-09-19', now: stamp('2026-09-19', '23:59'), timeZone: 'UTC' };
@@ -20,6 +22,67 @@ const stages = [
   { id: 's2', label: 'Stage 2', recordedDate: '2026-09-13', description: '' },
 ];
 
+test('71 different problems plus 14 qualifying repeats total 85 across calendar, overview and both Stage views', () => {
+  const submissions = [
+    ...Array.from({ length: 34 }, (_, i) => ac(`old-${i}`, '2026-09-12', `old-${i}`, '08:00')),
+    ...Array.from({ length: 37 }, (_, i) => ac(`new-${i}`, '2026-09-18', `new-${i}`, '08:00')),
+    ...Array.from({ length: 14 }, (_, i) => ac(`repeat-${i}`, '2026-09-18', `new-${i}`, '12:00')),
+  ];
+  const snapshot = lc(submissions, { syncedLifetimeSolvedCount: 71 });
+  const model = buildOverviewActivity({ stages, leetcodeSnapshot: snapshot }, options);
+  assert.equal(model.totals.leetcode, 85);
+  assert.deepEqual(model.stageRows.map(row => row.leetcode), [34, 51, 0]);
+  assert.equal(model.days.find(day => day.day === '2026-09-18').counts.leetcode, 51);
+  assert.equal(model.days.find(day => day.day === '2026-09-18').activityScore, 255);
+  assert.equal(collectLeetCodeActivities(snapshot, options).activities.reduce((sum, item) => sum + item.count, 0), 85);
+  const tracker = summarizeStagePractice(stages, collectStagePractice({}, {}, snapshot, options), options);
+  assert.deepEqual(tracker.map(row => row.questionCount), [34, 51, 0]);
+  assert.equal(model.leetcodeStageNote, '');
+});
+
+test('undated profile history stays in the lifetime floor and never fabricates Stage or daily work', () => {
+  const snapshot = lc([ac('known', '2026-09-18'), ac('repeat', '2026-09-18', 'two-sum', '16:00')], {
+    syncedLifetimeSolvedCount: 85, stats: { solved: 999 }, coverage: { historyComplete: false },
+  });
+  const model = buildOverviewActivity({ stages, leetcodeSnapshot: snapshot }, options);
+  assert.equal(model.totals.leetcode, 86);
+  assert.equal(model.recordBundle.leetcodeMissingDates, 84);
+  assert.equal(model.recordBundle.leetcodeComplete, false);
+  assert.equal(model.stageRows[1].leetcode, 2);
+  assert.equal(model.today.counts.leetcode, null);
+  assert.match(model.leetcodeStageNote, /84 次缺少日期/);
+  const noTrustedTotal = buildOverviewActivity({ leetcodeSnapshot: { ...snapshot, syncedLifetimeSolvedCount: null } }, options);
+  assert.equal(noTrustedTotal.totals.leetcode, 2, 'an explicit missing trusted total cannot fall back to arbitrary stats');
+});
+
+test('Stage ranges never restart the three-hour clock and out-of-range dates remain unassigned', () => {
+  const snapshot = lc([
+    ac('start-day', '2026-08-21', 'before'),
+    ac('boundary', '2026-09-13', 'same', '23:30'),
+    ac('too-soon', '2026-09-14', 'same', '00:30'),
+    ac('three-hours', '2026-09-14', 'same', '02:30'),
+  ]);
+  const model = buildOverviewActivity({ stages, leetcodeSnapshot: snapshot }, options);
+  assert.equal(model.totals.leetcode, 3);
+  assert.deepEqual(model.stageRows.map(row => row.leetcode), [1, 1, 0]);
+  assert.match(model.leetcodeStageNote, /1 次在阶段范围外/);
+  const tracker = summarizeStagePractice(stages, collectStagePractice({}, {}, snapshot, options), options);
+  assert.deepEqual(tracker.map(row => row.questionCount), [1, 1, 0]);
+});
+
+test('writing a Behavioral answer counts immediately across overview, activity and Tracker; editing does not count twice', () => {
+  const question = { id: 'general-introduction' };
+  let state = saveBehavioralAnswer({ activities: [], behavioralAnswers: [] }, question, 'My project experience.', stamp('2026-09-18'));
+  state = saveBehavioralAnswer(state, question, 'My revised project experience.', stamp('2026-09-19'));
+  const model = buildOverviewActivity({ stages, personalState: state }, options);
+  assert.equal(model.totals.behavioral, 1);
+  assert.equal(model.today.counts.behavioral, 0);
+  assert.equal(model.days.find(day => day.day === '2026-09-18').counts.behavioral, 1);
+  assert.deepEqual(model.stageRows.map(row => row.behavioral), [0, 1, 0]);
+  const tracker = summarizeStagePractice(stages, collectStagePractice(state), options);
+  assert.deepEqual(tracker.map(row => row.questionCount), [0, 1, 0]);
+});
+
 test('six cumulative metrics use real distinct records, with Mock explicitly unknown', () => {
   const input = {
     applications: [submitted('a', '2026-09-19'), submitted('b', '8/21'), submitted('a', '2026-09-19')],
@@ -36,7 +99,7 @@ test('six cumulative metrics use real distinct records, with Mock explicitly unk
   assert.deepEqual(input, before);
 });
 
-test('daily counts credit each question once and each complete math trial once using the requested weights', () => {
+test('daily counts include three-hour LeetCode repeats and use the requested weights', () => {
   const model = buildOverviewActivity({
     applications: [submitted('a', '2026-09-19')],
     personalState: { activities: [activity('behavioral', 'b1', 'bq1'), activity('behavioral', 'b2', 'bq1')], trials: [trial('t1', 12)] },
@@ -44,20 +107,20 @@ test('daily counts credit each question once and each complete math trial once u
       entries: [{ id: 'same-q', ...done('q1', '2026-09-19') }] },
     leetcodeSnapshot: lc([ac('1', '2026-09-19', 'two-sum', '01:00'), ac('2', '2026-09-19', 'two-sum', '06:00')]),
   }, options);
-  assert.deepEqual(model.today.counts, { applications: 1, leetcode: 1, technical: 2, behavioral: 1, mentalMath: 1 });
-  assert.equal(model.today.activityScore, 42);
+  assert.deepEqual(model.today.counts, { applications: 1, leetcode: 2, technical: 2, behavioral: 1, mentalMath: 1 });
+  assert.equal(model.today.activityScore, 47);
   assert.deepEqual(model.days.map(item => item.day), ['2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17', '2026-09-18', '2026-09-19', '2026-09-20']);
   assert.equal(model.days.filter(item => item.isToday).length, 1);
   assert.equal(model.days.at(-1).activityScore, 0);
   assert.ok(Object.values(model.days.at(-1).counts).every(value => value === 0));
 });
 
-test('daily distinct solves are independent across midnight without changing the calendar repeat rule', () => {
+test('midnight does not reset the LeetCode three-hour repeat interval', () => {
   const model = buildOverviewActivity({ leetcodeSnapshot: lc([
     ac('before', '2026-09-18', 'two-sum', '23:30'), ac('after', '2026-09-19', 'two-sum', '00:10'),
   ]) }, options);
   assert.equal(model.totals.leetcode, 1);
-  assert.equal(model.today.counts.leetcode, 1);
+  assert.equal(model.today.counts.leetcode, 0);
   assert.equal(model.days.find(item => item.day === '2026-09-18').counts.leetcode, 1);
 });
 
@@ -100,7 +163,7 @@ test('real standalone session output and restored daily answers dedup against ca
   assert.equal(model.totals.behavioral, 1);
 });
 
-test('deleted activities, drafts, unconfirmed answers and local coding reviews do not receive credit', () => {
+test('saved Behavioral answers count while deleted events, Tech drafts and local reviews do not', () => {
   const model = buildOverviewActivity({ personalState: {
     removedActivityIds: ['b1', 'daily:d1:q1', 'practice:s1', 'mental:t1'],
     activities: [activity('behavioral', 'b1', 'removed'), { id: 'coding', kind: 'coding', source: 'standalone', questionId: 'two-sum', count: 1, completedAt: stamp('2026-09-19') }],
@@ -111,7 +174,7 @@ test('deleted activities, drafts, unconfirmed answers and local coding reviews d
     trials: [trial('t1', 10)],
   }, legacyState: { problemStates: [{ problemId: 'undated', completed: true }, { ...done('incomplete', '2026-09-19'), completed: false }] } }, options);
   assert.equal(model.totals.technical, 0);
-  assert.equal(model.totals.behavioral, 0);
+  assert.equal(model.totals.behavioral, 1);
   assert.equal(model.today.counts.mentalMath, 0);
 });
 
@@ -189,7 +252,7 @@ test('owner changes, read conflicts and QA cannot leak other-account training or
   assert.equal(resolveOverviewActivity({ ...own, tracker: { ...own.tracker, syncError: 'blocked' } }, options).totals.applications, null);
 });
 
-test('real explicit completion actions drive BQ and experience counts without counting edits or private notes', () => {
+test('old Behavioral answers retain their date while experience reads remain explicit', () => {
   let state = { activities: [], behavioralAnswers: [{ id: 'answer', text: 'My own experience', updatedAt: stamp('2026-09-18') }] };
   state = completeBehavioralPractice(state, { id: 'answer' }, stamp('2026-09-19'));
   state = completeBehavioralPractice(state, { id: 'answer' }, stamp('2026-09-19', '13:00'));
@@ -197,7 +260,8 @@ test('real explicit completion actions drive BQ and experience counts without co
   state = markExperienceRead(state, 'read-note', stamp('2026-09-19'));
   const model = buildOverviewActivity({ personalState: state, legacyState: { interviewExperiences: [{ id: 'written-note' }] } }, options);
   assert.equal(model.totals.behavioral, 1);
-  assert.equal(model.today.counts.behavioral, 1);
+  assert.equal(model.today.counts.behavioral, 0);
+  assert.equal(model.days.find(day => day.day === '2026-09-18').counts.behavioral, 1);
   assert.equal(model.totals.experiences, 1);
 });
 

@@ -5,7 +5,8 @@ import { createPersonalStore, createPersonalState } from '../src/features/person
 import { createTrial } from '../src/features/personal/mental/mentalEngine.js';
 import { createReasoningTrial, transitionReasoningTrial, persistReasoningTransition, cancelTrialPreparation } from '../src/features/personal/mental/reasoningEngine.js';
 import { createDailySession, updateDailyAnswer } from '../src/features/personal/daily/dailyEngine.js';
-import { markExperienceRead } from '../src/features/personal/completionActivities.js';
+import { markExperienceRead, saveBehavioralAnswer } from '../src/features/personal/completionActivities.js';
+import { collectCalendarActivities } from '../src/features/personal/calendar/calendarModel.js';
 
 const iso = '2026-09-09T12:00:00.000Z';
 const clone = value => structuredClone(value);
@@ -33,6 +34,30 @@ test('known-fingerprint sync paths retain explicit reads omitted by an older sna
   assert.equal(first.store.getSnapshot().data.activities.some(row => row.id === event.id), true);
   assert.equal(server.data.activities.filter(row => row.id === event.id).length, 1);
   assert.equal(server.data.activities.some(row => row.id === 'older-device'), true);
+});
+
+test('answer preparation syncs once across devices and keeps its original date through edits and clearing', async () => {
+  const server = memoryServer();
+  const first = device(server);
+  const question = { id: 'behavioral-fixture' };
+  first.store.update(state => saveBehavioralAnswer(state, question, 'My initial answer', iso));
+  await first.cloud.sync();
+  const second = device(server);
+  await second.cloud.sync();
+  assert.equal(second.store.getSnapshot().data.behavioralAnswers[0].text, 'My initial answer');
+  first.store.update(state => saveBehavioralAnswer(state, question, 'My updated answer', '2026-09-10T12:00:00.000Z'));
+  second.store.update(state => saveBehavioralAnswer(state, question, '', '2026-09-11T12:00:00.000Z'));
+  await first.cloud.sync();
+  await second.cloud.sync();
+  await first.cloud.sync();
+  assert.equal(server.data.behavioralAnswers[0].text, '');
+  assert.equal(first.store.getSnapshot().data.behavioralAnswers[0].text, '');
+  assert.equal(server.data.activities.length, 1);
+  assert.equal(collectCalendarActivities(server.data).activities[0].completedAt, iso);
+  server.change({ ...server.data, activities: [] });
+  await first.cloud.sync();
+  assert.equal(server.data.activities.length, 1, 'a previous client omitting completion events cannot erase known preparation history');
+  assert.equal(collectCalendarActivities(server.data).activities[0].completedAt, iso);
 });
 function deferred() {
   let resolve;

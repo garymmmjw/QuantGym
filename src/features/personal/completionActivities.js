@@ -34,9 +34,14 @@ export function hasExplicitCompletion(state, kind, sourceId, now = new Date()) {
 
 export function hasPersonalBehavioralAnswer(state, question) {
   const answer = (state.behavioralAnswers || []).find(item => item.id === question.id);
-  const normalize = value => String(value || '').trim().replace(/\s+/g, ' ');
-  return Boolean(typeof answer?.text === 'string' && normalize(answer.text)
-    && (!question.answer || normalize(answer.text) !== normalize(question.answer)));
+  return Boolean(typeof answer?.text === 'string' && answer.text.trim());
+}
+
+function hasBehavioralHistory(state, sourceId) {
+  return (state.activities || []).some(activity => activity.kind === 'behavioral' && activity.source === 'explicit'
+    && (activity.sourceId || activity.questionId) === sourceId)
+    || (state.removedActivityIds || []).some(id => id.startsWith(`behavioral:explicit:${encodeURIComponent(sourceId)}:`)
+      || id === `behavioral:answer:${encodeURIComponent(sourceId)}`);
 }
 
 function recordCompletion(state, kind, sourceId, now) {
@@ -51,7 +56,27 @@ function recordCompletion(state, kind, sourceId, now) {
 
 export function completeBehavioralPractice(state, question, now = new Date()) {
   if (!hasPersonalBehavioralAnswer(state, question)) throw new Error('Write your own answer before completing this practice.');
-  return recordCompletion(state, 'behavioral', question.id, now);
+  if (hasBehavioralHistory(state, question.id)) return state;
+  const answer = (state.behavioralAnswers || []).find(item => item.id === question.id);
+  // Preserve the existing answer's known date when adopting the new counting
+  // rule. A later edit must not move a previously prepared question to today.
+  return recordCompletion(state, 'behavioral', question.id, instant(answer.updatedAt) ? answer.updatedAt : now);
+}
+
+export function saveBehavioralAnswer(state, question, text, now = new Date()) {
+  if (typeof text !== 'string') throw new Error('Invalid behavioral answer.');
+  let next = state;
+  const previous = (state.behavioralAnswers || []).find(item => item.id === question.id);
+  // Even a clear must first preserve preparation already represented by the
+  // old nonempty answer. Otherwise rewriting it later would move its date.
+  if (hasPersonalBehavioralAnswer(state, question) && instant(previous.updatedAt)) {
+    next = completeBehavioralPractice(state, question, now);
+  }
+  next = { ...next, behavioralAnswers: [
+    ...(next.behavioralAnswers || []).filter(item => item.id !== question.id),
+    { id: question.id, text, updatedAt: new Date(now).toISOString() },
+  ] };
+  return text.trim() ? completeBehavioralPractice(next, question, now) : next;
 }
 
 export function markExperienceRead(state, experienceId, now = new Date()) {
