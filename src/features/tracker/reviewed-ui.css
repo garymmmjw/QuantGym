@@ -1,19 +1,18 @@
 /* Approved compact Tracker layout. Dialogs retain their existing behavior. */
 .quantgym-tracker {
-  --qt-accent: var(--qg-nav-accent, #5b5ff5);
-  --qt-accent-end: var(--qg-nav-accent-end, #7d6cff);
-  --qt-accent-gradient: var(--qg-nav-active-gradient, linear-gradient(135deg, #5b5ff5, #7d6cff));
-  --qt-accent-soft: color-mix(in srgb, var(--qt-accent) 9%, white);
+  --qt-accent: #8657db;
+  --qt-accent-soft: #f4effc;
   --qt-accent-hover: color-mix(in srgb, var(--qt-accent) 15%, white);
   --qt-accent-border: color-mix(in srgb, var(--qt-accent) 20%, white);
   color: #625b73; font-size: 14px;
 }
+.quantgym-tracker .qt-btn.qt-primary { box-shadow: 0 3px 6px color-mix(in srgb, var(--qt-accent) 13%, transparent); }
 .quantgym-tracker .qt-page-heading { margin-bottom: 18px; gap: 16px; }
 .quantgym-tracker .qt-page-heading h1 { margin: 0; font-size: 32px; line-height: 1.35; color: #201c39; letter-spacing: -1px; }
 .quantgym-tracker .qt-heading-dot { padding-left: 7px; color: var(--qt-accent); }
 .quantgym-tracker .qt-heading-actions { padding-top: 0; }
 .quantgym-tracker .qt-heading-actions .qt-btn { font-size: 13px; min-height: 42px; padding: 10px 16px; }
-.quantgym-tracker .qt-heading-actions .qt-primary { background: var(--qt-accent-gradient); border-color: transparent; box-shadow: 0 2px 5px #5b5ff519; }
+.quantgym-tracker .qt-heading-actions .qt-primary { background: var(--qt-accent); border-color: transparent; box-shadow: 0 2px 5px color-mix(in srgb, var(--qt-accent) 10%, transparent); }
 .quantgym-tracker .qt-summary-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 15px 0; margin-bottom: 16px; border-radius: 10px; box-shadow: none; }
 .quantgym-tracker .qt-metric { padding: 0 26px; display: block; }
 .quantgym-tracker .qt-metric-label { font-size: 13px; line-height: 19px; margin-bottom: 6px; color: #827391; }
@@ -125,13 +124,13 @@
 .quantgym-tracker .qt-cloud-status { display: flex; align-items: center; gap: 10px; margin: -8px 0 14px; color: var(--qt-muted, #807789); font-size: 12px; }
 .quantgym-tracker .qt-cloud-status button { border: 0; padding: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
 
-/* Share the navigation accent across Tracker actions and their dialogs. */
+/* Apply the selected violet palette to Tracker actions and their dialogs. */
 .quantgym-tracker .qt-btn.qt-primary,
 .quantgym-tracker .qt-td-button-primary,
-.quantgym-tracker .career-button.career-primary { background: var(--qt-accent-gradient); border-color: transparent; color: #fff; }
+.quantgym-tracker .career-button.career-primary { background: var(--qt-accent); border-color: transparent; color: #fff; }
 .quantgym-tracker .qt-btn.qt-primary:hover,
 .quantgym-tracker .qt-td-button-primary:hover,
-.quantgym-tracker .career-button.career-primary:hover { background: var(--qt-accent); }
+.quantgym-tracker .career-button.career-primary:hover { background: color-mix(in srgb, var(--qt-accent) 92%, black); }
 .quantgym-tracker .qt-btn:not(.qt-primary):not(.qt-event-delete):hover,
 .quantgym-tracker .career-button:not(.career-primary):hover { background: var(--qt-accent-soft); border-color: var(--qt-accent-border); }
 .quantgym-tracker .qt-td-button-secondary,
