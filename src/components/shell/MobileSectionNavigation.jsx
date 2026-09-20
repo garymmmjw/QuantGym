@@ -15,7 +15,7 @@ export function MobileSectionNavigation() {
   const location = useLocation();
   const section = getMobileSectionForPath(location.pathname);
   const activeModuleId = getRouteModuleId(location.pathname);
-  if (section.modules.length < 2) return null;
+  if (section.modules.length < 2 || activeModuleId === "leetcode") return null;
 
   return <section className="qg-mobile-section-nav" aria-label={`${section.label}分类导航`}>
     <h2 className="qg-mobile-section-title">{section.label}</h2>

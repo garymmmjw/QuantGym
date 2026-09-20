@@ -76,6 +76,20 @@ test('entering a different category uses its default route without copying page-
   }
 });
 
+test('the compact LeetCode page returns to the training entry through its selected bottom category', () => {
+  for (const pathname of ['/leetcode', '/leetcode/']) {
+    const location = { pathname, search: '?qa=fixture&problem=two-sum', hash: '#notes' };
+    assert.equal(getMobileSectionHref('training', location), '/technical-interview?qa=fixture');
+    assert.equal(getMobileModuleHref('leetcode', location), `${pathname}?qa=fixture&problem=two-sum#notes`);
+    assert.equal(getMobileSectionHref('career', location), '/tracker?qa=fixture');
+  }
+  assert.equal(getMobileSectionHref('training', { pathname: '/leetcode', search: '?problem=two-sum', hash: '#notes' }), '/technical-interview');
+  for (const pathname of ['/technical-interview', '/behavioral-interview', '/tools']) {
+    const location = { pathname, search: '?qa=fixture&mode=current', hash: '#practice' };
+    assert.equal(getMobileSectionHref('training', location), `${pathname}?qa=fixture&mode=current#practice`);
+  }
+});
+
 test('cross-page links retain QA isolation while clearing the previous page filters', () => {
   const location = { pathname: '/tracker', search: '?qa=fixture&status=offer', hash: '#application' };
   assert.equal(getMobileSectionHref('training', location), '/technical-interview?qa=fixture');
