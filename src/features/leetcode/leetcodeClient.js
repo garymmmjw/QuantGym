@@ -9,6 +9,18 @@ function boundInstant(value) {
     ? instant : null;
 }
 
+function validBackpack(entries) {
+  if (!Array.isArray(entries) || entries.length > 20000) return false;
+  const seen = new Set();
+  return entries.every(entry => {
+    if (!entry || !problemUrl(entry.problemSlug) || seen.has(entry.problemSlug)
+      || boundInstant(entry.drawnAt) === null || (entry.baselineCompletedAt !== null
+        && (boundInstant(entry.baselineCompletedAt) === null || boundInstant(entry.baselineCompletedAt) > boundInstant(entry.drawnAt)))) return false;
+    seen.add(entry.problemSlug);
+    return true;
+  });
+}
+
 export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = globalThis.fetch, now = Date.now,
   eventTarget = globalThis.window, visibilityTarget = globalThis.document }) {
   const base = String(endpoint || "").replace(/\/+$/, "");
@@ -38,6 +50,7 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
       if (!Object.hasOwn(payload, "connection") || !Array.isArray(payload.problems) || !Array.isArray(payload.submissions)) throw new Error("invalid_response");
       if (payload.syncedSubmissions !== undefined && !Array.isArray(payload.syncedSubmissions)) throw new Error("invalid_response");
       if (payload.importedSubmissions !== undefined && !Array.isArray(payload.importedSubmissions)) throw new Error("invalid_response");
+      if (payload.reviewBackpack !== undefined && !validBackpack(payload.reviewBackpack)) throw new Error("invalid_response");
       if (payload.personalFirstSolveBounds !== undefined && (!Array.isArray(payload.personalFirstSolveBounds)
         || payload.personalFirstSolveBounds.some(bound => !bound || !problemUrl(bound.problemSlug)
           || boundInstant(bound.after) === null || boundInstant(bound.by) === null
@@ -47,11 +60,19 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
         || !(payload.problems.find((problem) => problem.slug === body?.problemSlug)?.review?.version > body?.expectedVersion))) {
         throw new Error("invalid_review_response");
       }
+      // Legacy servers may omit the optional read field, but a draw is saved
+      // only when the backpack endpoint acknowledges the exact connection.
+      // A replay can legitimately return an empty backpack after completion.
+      if (path === "/backpack" && (!Array.isArray(payload.reviewBackpack)
+        || payload.connection?.username !== body?.username || payload.connection?.linkedAt !== body?.linkedAt)) {
+        throw new Error("invalid_backpack_response");
+      }
       // Keep public sync and user-imported history separate. Older API versions
       // cannot supply imported counting records by falling back to submissions.
       return { ...payload, syncedSubmissions: payload.connection ? payload.syncedSubmissions || [] : [],
         importedSubmissions: payload.connection ? payload.importedSubmissions || [] : [],
-        personalFirstSolveBounds: payload.connection ? payload.personalFirstSolveBounds || [] : [] };
+        personalFirstSolveBounds: payload.connection ? payload.personalFirstSolveBounds || [] : [],
+        reviewBackpack: payload.connection ? (payload.reviewBackpack || []).map(({ problemSlug, drawnAt, baselineCompletedAt }) => ({ problemSlug, drawnAt, baselineCompletedAt })) : [] };
     } finally { clearTimeout(timeout); }
   }
 
@@ -134,6 +155,11 @@ export function createLeetCodeClient({ endpoint, token, userId, fetchImpl = glob
     async recordReview(payload) {
       let operationError = null;
       const data = await perform("/review", "POST", payload, "reviewing", (error) => { operationError = error; });
+      return { data, error: operationError };
+    },
+    async addReviewCard(payload) {
+      let operationError = null;
+      const data = await perform("/backpack", "POST", payload, "backpacking", (error) => { operationError = error; });
       return { data, error: operationError };
     },
   };

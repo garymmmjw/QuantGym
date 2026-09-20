@@ -6,7 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { createServer } from 'vite';
-import { initialReview, previewReview, reviewState, reviewStatus } from '../src/features/leetcode/leetcodeReviewModel.js';
+import { initialReview, reviewStatus } from '../src/features/leetcode/leetcodeReviewModel.js';
+import { createPersonalState } from '../src/features/personal/personalStore.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const output = path.join(root, 'artifacts/leetcode-review');
@@ -18,7 +19,7 @@ const day = 86400000;
 const iso = value => new Date(value).toISOString();
 const clone = value => structuredClone(value);
 const ownerId = 'local:leetcode-review-browser-fixture';
-const account = { id: ownerId, provider: 'local', name: 'Review QA', email: 'review-qa@example.invalid', country: 'china', region: '上海', graduationTerm: '2027-09', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: iso(now), passwordHash: 'fixture-device-hash-not-a-real-password' };
+const account = { id: ownerId, provider: 'local', name: 'Review QA', cloudLinked: true, emailVerified: true, email: 'review-qa@example.invalid', country: 'china', region: '上海', graduationTerm: '2027-09', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: iso(now), passwordHash: 'fixture-device-hash-not-a-real-password' };
 
 function problem(slug, title, frontendId, difficulty, dueOffset) {
   const row = { slug, title, titleEn: slug.split('-').map(word => word[0].toUpperCase() + word.slice(1)).join(' '), frontendId: String(frontendId), difficulty, firstAcceptedAt: dueOffset == null ? null : iso(now - 8 * day), lastAcceptedAt: dueOffset == null ? null : iso(now - 4 * day), source: dueOffset == null ? 'import' : 'public' };
@@ -26,16 +27,28 @@ function problem(slug, title, frontendId, difficulty, dueOffset) {
   row.review.status = reviewStatus(row, now);
   return row;
 }
-function fixtureData() {
-  return {
+function fixtureData(mode = 'connected', problemSlugs = null) {
+  const data = {
     connection: { username: 'review-fixture-user', site: 'cn', displayName: 'Review Fixture', profileUrl: 'https://leetcode.cn/u/review-fixture-user/', linkedAt: '2026-09-01T00:00:00.000Z', lastSyncedAt: iso(now) },
     stats: { solved: 37, easy: 15, medium: 17, hard: 5, totalSubmissions: 127, acceptedSubmissions: 63 },
     submissions: [{ id: 'fixture-submission-1', problemSlug: 'two-sum', submittedAt: iso(now - 4 * day), status: 'AC' }],
     calendar: [{ date: '2026-09-07', count: 1, acceptedCount: 1, distinctSolved: 1 }],
     problems: [problem('future-problem', '未来复习题', 500, 3, 3 * day), problem('binary-tree-level-order-traversal', '二叉树的层序遍历', 102, 2, -day), problem('two-sum', '两数之和', 1, 1, -3 * day), problem('reverse-linked-list', '反转链表', 206, 1, -2 * day), problem('imported-without-date', '历史导入题', 999, null, null), ...Array.from({ length: 30 }, (_, index) => problem(`practice-${index + 1}`, `练习题 ${String(index + 1).padStart(2, '0')}`, 1001 + index, index % 3 + 1, index < 4 ? null : (index + 1) * day))],
     coverage: { problemPoolComplete: false, recentOnly: true },
+    // Deliberately retain legacy schedules in data: the new UI must not expose them.
     reviewPolicy: { algorithm: 'sm2', version: 1, generatedAt: iso(now) },
+    reviewBackpack: [],
   };
+  if (problemSlugs) data.problems = data.problems.filter(row => problemSlugs.includes(row.slug));
+  data.stats.solved = data.problems.length;
+  for (const [difficulty, key] of [[1, 'easy'], [2, 'medium'], [3, 'hard']]) data.stats[key] = data.problems.filter(row => (row.difficulty || 1) === difficulty).length;
+  data.submissions = data.problems.filter(row => row.lastAcceptedAt).map((row, index) => ({ id: `fixture-ac-${index}`, problemSlug: row.slug, submittedAt: row.lastAcceptedAt, status: 'AC' }));
+  if (mode === 'empty' || mode === 'disconnected') {
+    data.problems = []; data.submissions = []; data.calendar = [];
+    data.stats = { solved: 0, easy: 0, medium: 0, hard: 0, totalSubmissions: 0 };
+  }
+  if (mode === 'disconnected') { data.connection = null; data.stats = null; }
+  return data;
 }
 fs.writeFileSync(path.join(output, 'snapshot-fixture.json'), JSON.stringify(fixtureData(), null, 2) + '\n');
 const summary = { startedAt: new Date().toISOString(), fixtureClock: iso(now), isolation: 'Fresh headless Chromium contexts; service workers blocked; every API and external request fulfilled locally.', checks: [], screenshots: [], runtimeErrors: [], unexpectedLocalResponses: [], interceptedExternalOrigins: [], contexts: [] };
@@ -44,11 +57,11 @@ let server;
 let browser;
 let currentPage;
 
-async function makePage({ name = 'desktop', viewport = { width: 1440, height: 1000 }, mobile = false, dark = false, reducedMotion = 'no-preference', language = 'zh' } = {}) {
+async function makePage({ name = 'desktop', viewport = { width: 1440, height: 1000 }, mobile = false, dark = false, reducedMotion = 'no-preference', language = 'zh', mode = 'connected', problemSlugs = null } = {}) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1, locale: language === 'en' ? 'en-US' : 'zh-CN', timezoneId: 'America/Chicago', isMobile: mobile, hasTouch: mobile, colorScheme: dark ? 'dark' : 'light', reducedMotion, serviceWorkers: 'block' });
   contexts.push(context);
-  const fixture = { data: fixtureData(), requestLog: [], reviews: [], events: new Map(), nextMode: 'success', release: null, getCount: 0 };
-  const contextSummary = { name, reviewRequests: [], externalLinks: [], unrelatedMockWrites: [] };
+  const fixture = { data: fixtureData(mode, problemSlugs), requestLog: [], reviews: [], backpackRequests: [], backpackEvents: new Map(), failNextBackpack: false, clock: now, getCount: 0, personal: createPersonalState(), revision: 1 };
+  const contextSummary = { name, reviewRequests: [], backpackRequests: fixture.backpackRequests, externalLinks: [], unrelatedMockWrites: [] };
   summary.contexts.push(contextSummary);
   await context.addInitScript(({ account, endpoint, now, dark, language }) => {
     if (!localStorage.getItem('quantMemoryBoard.auth.v1')) {
@@ -60,15 +73,15 @@ async function makePage({ name = 'desktop', viewport = { width: 1440, height: 10
     }
   }, { account, endpoint, now, dark, language });
   const fulfill = (route, body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body), headers: { 'access-control-allow-origin': baseUrl, 'access-control-allow-headers': 'content-type, authorization', 'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS' } });
-  function applyReview(body) {
-    const row = fixture.data.problems.find(item => item.slug === body.problemSlug);
-    assert.ok(row, 'Fixture received unknown problem');
-    const previous = reviewState(row);
-    row.review = { ...previous, ...previewReview(row, body.rating, now), version: previous.version + 1, source: 'review', status: 'upcoming', anchorAt: previous.anchorAt || iso(now), lastReviewedAt: iso(now), reviewCount: previous.reviewCount + 1, lapses: previous.lapses + (body.rating === 'again' ? 1 : 0), lastRating: body.rating };
-    const snapshot = clone(fixture.data);
-    fixture.events.set(body.eventId, snapshot);
-    return snapshot;
-  }
+  const lastAccepted = slug => fixture.data.submissions.filter(row => row.problemSlug === slug && row.status === 'AC'
+    && Date.parse(row.submittedAt) <= fixture.clock).map(row => row.submittedAt).sort().at(-1) || null;
+  const reconcile = () => {
+    fixture.data.reviewBackpack = fixture.data.reviewBackpack.filter(entry => {
+      const latest = lastAccepted(entry.problemSlug);
+      return !(latest && latest >= entry.drawnAt && (!entry.baselineCompletedAt || latest > entry.baselineCompletedAt));
+    });
+    return fixture.data;
+  };
   await context.route('**/*', async route => {
     const request = route.request();
     const url = new URL(request.url());
@@ -81,31 +94,41 @@ async function makePage({ name = 'desktop', viewport = { width: 1440, height: 10
       const method = request.method();
       fixture.requestLog.push({ path: requestPath, method });
       if (method === 'OPTIONS') return fulfill(route, {});
-      if (requestPath === '/leetcode' && method === 'GET') { fixture.getCount++; return fulfill(route, fixture.data); }
+      if (requestPath === '/leetcode' && method === 'GET') { fixture.getCount++; return fulfill(route, reconcile()); }
+      if (requestPath === '/leetcode/backpack' && method === 'POST') {
+        const body = request.postDataJSON();
+        fixture.backpackRequests.push(clone(body));
+        if (body.username !== fixture.data.connection?.username || body.linkedAt !== fixture.data.connection?.linkedAt) return fulfill(route, { error: 'connection_changed' }, 409);
+        if (!fixture.data.problems.some(problem => problem.slug === body.problemSlug)) return fulfill(route, { error: 'unknown_problem' }, 404);
+        const previous = fixture.backpackEvents.get(body.eventId);
+        if (previous && JSON.stringify(previous) !== JSON.stringify(body)) return fulfill(route, { error: 'event_conflict' }, 409);
+        if (fixture.failNextBackpack) { fixture.failNextBackpack = false; return fulfill(route, { error: 'fixture_save_failed' }, 503); }
+        reconcile();
+        if (!previous) {
+          if (!fixture.data.reviewBackpack.some(entry => entry.problemSlug === body.problemSlug)) fixture.data.reviewBackpack.push({ problemSlug: body.problemSlug, drawnAt: iso(fixture.clock), baselineCompletedAt: lastAccepted(body.problemSlug) });
+          fixture.backpackEvents.set(body.eventId, clone(body));
+        }
+        return fulfill(route, fixture.data);
+      }
       if (requestPath === '/leetcode/review' && method === 'POST') {
         const body = request.postDataJSON();
         fixture.reviews.push(clone(body)); contextSummary.reviewRequests.push(clone(body));
-        assert.deepEqual(Object.keys(body).sort(), ['eventId', 'expectedVersion', 'linkedAt', 'problemSlug', 'rating', 'username'].sort());
-        assert.equal(body.username, fixture.data.connection.username);
-        assert.equal(body.linkedAt, fixture.data.connection.linkedAt);
-        if (fixture.events.has(body.eventId)) return fulfill(route, fixture.events.get(body.eventId));
-        const row = fixture.data.problems.find(item => item.slug === body.problemSlug);
-        const mode = fixture.nextMode; fixture.nextMode = 'success';
-        if (mode === 'conflict') {
-          row.review = { ...row.review, version: row.review.version + 1, source: 'review', reviewCount: row.review.reviewCount + 1, nextReviewAt: iso(now + 4 * day), lastReviewedAt: iso(now), lastRating: 'hard', status: 'upcoming' };
-          return fulfill(route, { error: 'review_version_conflict' }, 409);
-        }
-        if (body.expectedVersion !== row.review.version) return fulfill(route, { error: 'review_version_conflict' }, 409);
-        if (mode === 'delay') await new Promise(resolve => { fixture.release = resolve; fixture.delayStarted?.(); });
-        const snapshot = applyReview(body);
-        if (mode === 'ambiguous') return fulfill(route, { error: 'fixture_response_lost_after_commit' }, 503);
-        return fulfill(route, snapshot);
+        return fulfill(route, { error: 'The card-only UI must never save review feedback.' }, 400);
       }
-      if (requestPath === '/leetcode/sync') return fulfill(route, fixture.data);
+      if (requestPath === '/leetcode/connect' && method === 'POST') {
+        fixture.data = fixtureData('connected', problemSlugs);
+        const username = request.postDataJSON().username;
+        fixture.data.connection = { ...fixture.data.connection, username, profileUrl: `https://leetcode.cn/u/${username}/` };
+        return fulfill(route, fixture.data);
+      }
+      if (requestPath === '/leetcode/sync') return fulfill(route, reconcile());
       if (!['GET', 'HEAD'].includes(method)) contextSummary.unrelatedMockWrites.push({ path: requestPath, method });
       if (requestPath === '/account') return fulfill(route, { account: { ...account, passwordHash: undefined } });
       if (requestPath === '/sync') return fulfill(route, { account: { ...account, passwordHash: undefined }, state: {}, problemStates: [], community: { posts: [] }, syncedAt: iso(now) });
-      if (requestPath === '/personal-prep') return fulfill(route, { version: 1, revision: 0, data: null, updatedAt: null });
+      if (requestPath === '/personal-prep') {
+        if (method === 'PUT') { fixture.personal = clone(request.postDataJSON().data); fixture.revision++; }
+        return fulfill(route, { version: 1, revision: fixture.revision, data: fixture.personal, updatedAt: iso(now) });
+      }
       return fulfill(route, { problems: [], jobs: [], news: [], leaderboard: [], profiles: [], community: { posts: [] }, state: {}, syncedAt: iso(now) });
     }
     if (url.hostname === 'leetcode.cn' && url.pathname.startsWith('/problems/')) {
@@ -123,14 +146,22 @@ async function makePage({ name = 'desktop', viewport = { width: 1440, height: 10
   page.on('response', response => { if (response.url().startsWith(baseUrl) && response.status() >= 400) summary.unexpectedLocalResponses.push({ context: name, status: response.status(), url: response.url() }); });
   await page.clock.setFixedTime(new Date(now));
   await page.goto(`${baseUrl}/leetcode`, { waitUntil: 'domcontentloaded' });
-  await page.locator('.lc-memory-review').waitFor();
-  await page.locator('.lc-problem-list li').first().waitFor();
+  if (mode === 'disconnected') await page.locator('#lc-profile-url').waitFor();
+  else {
+    await page.locator('.lc-review-entry').waitFor();
+    if (fixture.data.problems.length) await page.locator('.lc-library-list .lc-problem-row').first().waitFor();
+  }
   return { page, fixture, context };
 }
-const selectedTitle = page => page.locator('.lc-drawn-problem h3');
-const reviewFilter = (page, name) => page.getByRole('group', { name: '按复习状态筛选', exact: true }).getByRole('button', { name, exact: true });
-const difficultyFilter = (page, name) => page.getByRole('group', { name: '按难度筛选', exact: true }).getByRole('button', { name, exact: true });
-const row = (page, name) => page.locator('.lc-problem-list li').filter({ has: page.getByRole('button', { name: `复习 ${name}`, exact: true }) });
+const selectedTitle = page => page.locator('.lc-revealed-card h3');
+const rows = page => page.locator('.lc-library-list .lc-problem-row');
+const difficultyFilter = page => page.locator('select.lc-difficulty-filter');
+const row = (page, name) => rows(page).filter({ has: page.getByText(name, { exact: true }) });
+async function assertNoScheduling(page) {
+  assert.equal(await page.locator('[data-review-rating], .lc-recall, .lc-review-saved, .lc-problem-due, .lc-review-filters').count(), 0);
+  assert.equal(await difficultyFilter(page).count(), 1, 'difficulty uses one native select');
+  assert.doesNotMatch(await page.locator('.lc-page').textContent(), /待复习|逾期|未到期|待首次复习|复习安排|按到期复习|下次复习|复习已保存|回忆程度|SM-?2|Review schedule|Review next due|Next review|Recall rating|Upcoming|Overdue/);
+}
 async function capture(page, name, locator) {
   const file = `${name}.png`;
   if (locator) await locator.screenshot({ path: path.join(output, file), animations: 'disabled' });
@@ -147,163 +178,250 @@ async function noOverflow(page) {
   assert.ok(value.document <= value.viewport + 1, JSON.stringify(value));
   return value;
 }
-async function selectProblem(page, name) {
-  await page.getByLabel('搜索已通过题目', { exact: true }).fill(name);
-  await page.getByRole('button', { name: `复习 ${name}`, exact: true }).click();
-  await selectedTitle(page).filter({ hasText: name }).waitFor();
+async function waitForDraw(page) {
+  await selectedTitle(page).waitFor();
+  await page.locator('.lc-card-draw[aria-busy="false"]').waitFor();
 }
-
+async function drawRandom(page, en = false) {
+  await page.locator('.lc-review-entry').click();
+  await page.locator('dialog.lc-draw-dialog[open]').waitFor();
+  await waitForDraw(page);
+  await page.getByRole('button', { name: en ? 'Keep this card' : '收好卡片', exact: true }).waitFor();
+}
+async function keepCard(page, en = false) {
+  await page.getByRole('button', { name: en ? 'Keep this card' : '收好卡片', exact: true }).click();
+  await page.locator('.lc-draw-dialog').waitFor({ state: 'detached' });
+}
 try {
   server = await createServer({ root, server: { host: '127.0.0.1', port: 5211, strictPort: true, open: false }, logLevel: 'error' });
   await server.listen();
   browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--no-first-run', '--no-default-browser-check'] });
   const desktop = await makePage();
   const { page, fixture } = desktop;
-  const statistics = await page.locator('.lc-overview').innerText();
-  const originalRemoteStats = JSON.stringify({ stats: fixture.data.stats, submissions: fixture.data.submissions, calendar: fixture.data.calendar });
-  await check('Earliest due problem is selected first; opening and random selection never record feedback', async () => {
-    assert.equal(await page.locator('.lc-problem-list li').first().locator('strong').innerText(), '两数之和');
+  const originalRemote = clone(fixture.data);
+  await check('The compact default view exposes one review entry and no permanent draw workspace', async () => {
+    await assertNoScheduling(page);
+    assert.equal(await page.locator('.lc-review-workspace, .lc-memory-review, .lc-card-draw, .lc-draw-dialog').count(), 0);
+    assert.equal(await page.locator('.lc-review-entry').innerText(), '复习一下');
+    assert.equal(await page.getByRole('combobox', { name: '按难度筛选', exact: true }).count(), 1);
+    assert.deepEqual(await difficultyFilter(page).locator('option').evaluateAll(options => options.map(option => option.value)), ['all', '1', '2', '3']);
+    assert.equal(await difficultyFilter(page).inputValue(), 'all');
+    assert.equal(await page.locator('.lc-library table, .lc-library-tabs, .lc-row-review').count(), 0);
     await capture(page, 'desktop-overview');
-    await page.getByRole('button', { name: '开始复习', exact: false }).click();
-    assert.equal(await selectedTitle(page).innerText(), '两数之和');
-    const external = page.getByRole('link', { name: /去力扣挑战/ });
-    assert.equal(await external.getAttribute('href'), 'https://leetcode.cn/problems/two-sum/');
-    const popupPromise = page.waitForEvent('popup'); await external.click();
-    const popup = await popupPromise; await popup.waitForURL('https://leetcode.cn/problems/two-sum/', { waitUntil: 'domcontentloaded' });
-    assert.equal(popup.url(), 'https://leetcode.cn/problems/two-sum/'); await popup.close();
+  });
+  await check('The whole problem row is a native external link for pointer and Enter, with no draw or API write', async () => {
+    const search = page.getByLabel('搜索已通过题目', { exact: true });
+    await search.fill('两数之和');
+    const target = row(page, '两数之和');
+    assert.equal(await target.evaluate(element => element.tagName), 'A');
+    assert.equal(await target.getAttribute('href'), 'https://leetcode.cn/problems/two-sum/');
+    assert.equal(await target.getAttribute('target'), '_blank');
+    const rel = (await target.getAttribute('rel')).split(/\s+/);
+    assert.ok(rel.includes('noopener') && rel.includes('noreferrer'));
+    assert.equal(await target.locator('a, button').count(), 0, 'one link owns the complete row');
+    const writesBefore = fixture.requestLog.filter(request => ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method));
+    for (const action of ['pointer', 'keyboard']) {
+      const popupPromise = page.waitForEvent('popup');
+      if (action === 'pointer') await target.locator('.lc-problem-id').click();
+      else { await target.focus(); await page.keyboard.press('Enter'); }
+      const popup = await popupPromise;
+      await popup.waitForURL('https://leetcode.cn/problems/two-sum/', { waitUntil: 'domcontentloaded' });
+      await popup.close();
+    }
+    assert.deepEqual(fixture.requestLog.filter(request => ['POST', 'PUT', 'DELETE', 'PATCH'].includes(request.method)), writesBefore);
+    assert.equal(fixture.backpackRequests.length, 0);
+    assert.equal(await page.locator('.lc-draw-dialog').count(), 0);
+    assert.deepEqual(fixture.data, originalRemote);
+    await search.fill('');
+  });
+  await check('Opening the dialog draws and saves exactly one card, and reload restores its backpack entry', async () => {
+    await drawRandom(page);
+    const title = await selectedTitle(page).innerText();
+    const selected = fixture.data.problems.find(problem => problem.title === title);
+    assert.ok(selected);
+    assert.equal(fixture.backpackRequests.length, 1);
+    assert.equal(fixture.backpackRequests[0].problemSlug, selected.slug);
+    assert.equal(fixture.data.reviewBackpack.length, 1);
+    assert.deepEqual({ ...fixture.data, reviewBackpack: [] }, originalRemote, 'a draw changes only the backpack, never ACs, stats, or review schedules');
+    const saved = clone(fixture.data.reviewBackpack);
+    await capture(page, 'desktop-selected-card', page.locator('.lc-draw-dialog'));
+    await keepCard(page);
+    assert.equal(await page.locator('.lc-backpack-card').count(), 1);
+    await page.getByLabel('搜索已通过题目', { exact: true }).fill(title);
+    assert.equal(await row(page, title).getAttribute('href'), `https://leetcode.cn/problems/${selected.slug}/`);
+    assert.equal(await row(page, title).locator('button').count(), 0);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('.lc-backpack-card').waitFor();
+    assert.deepEqual(fixture.data.reviewBackpack, saved);
+    assert.equal(fixture.backpackRequests.length, 1, 'reload must not draw or write again');
+    await assertNoScheduling(page);
     assert.equal(fixture.reviews.length, 0);
-    await page.getByRole('button', { name: '随机换一道', exact: true }).click();
+  });
+  await check('Difficulty filters, bilingual search, pages and empty-filter reset retain their original data', async () => {
+    const search = page.getByLabel('搜索已通过题目', { exact: true });
+    await search.fill('');
+    await difficultyFilter(page).selectOption('all');
+    assert.equal(await rows(page).count(), 20);
+    const pagination = page.getByRole('navigation', { name: '题目分页' });
+    await pagination.getByRole('button', { name: '下一页', exact: true }).click();
+    assert.equal(await rows(page).count(), 15);
+    assert.ok(await pagination.getByRole('button', { name: '下一页', exact: true }).isDisabled());
+    for (const [query, title] of [['练习题 30', '练习题 30'], ['206', '反转链表'], ['Two Sum', '两数之和']]) {
+      await search.fill(query);
+      assert.equal(await rows(page).count(), 1);
+      assert.equal(await rows(page).locator('strong').innerText(), title);
+    }
+    await search.fill('');
+    for (const difficulty of [1, 2, 3]) {
+      await difficultyFilter(page).selectOption(String(difficulty));
+      assert.equal(await difficultyFilter(page).inputValue(), String(difficulty));
+      assert.equal(await rows(page).count(), fixture.data.problems.filter(problem => problem.difficulty === difficulty).length);
+      assert.equal(await rows(page).locator(`.lc-difficulty:not(.lc-difficulty-${difficulty})`).count(), 0);
+    }
+    await search.fill('no-matching-problem-fixture');
+    await page.locator('.lc-list-empty').waitFor();
+    assert.equal(await page.locator('.lc-draw-dialog').count(), 0);
+    await page.getByRole('button', { name: '重置筛选', exact: true }).click();
+    assert.equal(await search.inputValue(), '');
+    assert.equal(await difficultyFilter(page).inputValue(), 'all');
+    assert.equal(await rows(page).count(), 20);
     assert.equal(fixture.reviews.length, 0);
-    await selectProblem(page, '两数之和');
-    await page.getByLabel('搜索已通过题目', { exact: true }).fill('');
-    await capture(page, 'desktop-selected-review', page.locator('.lc-memory-review'));
-    return { earliestSlug: 'two-sum', reviewPostsBeforeRating: fixture.reviews.length };
   });
-  await check('Acknowledged review updates its date and due filter without changing LeetCode statistics', async () => {
-    await reviewFilter(page, '待复习').click();
-    assert.equal(await page.locator('.lc-problem-list li').count(), 3);
-    fixture.nextMode = 'delay';
-    const delayedRequest = new Promise(resolve => { fixture.delayStarted = resolve; });
-    await page.locator('[data-review-rating="good"]').click();
-    await delayedRequest;
-    await page.locator('.lc-recall[aria-busy="true"]').waitFor();
-    assert.equal(await page.locator('.lc-review-saved').count(), 0);
-    assert.equal(fixture.data.problems.find(item => item.slug === 'two-sum').review.version, 2);
-    assert.ok(await page.locator('[data-review-rating="again"]').isDisabled());
-    fixture.release();
-    await page.getByText('复习已保存', { exact: true }).waitFor();
-    const record = fixture.data.problems.find(item => item.slug === 'two-sum').review;
-    assert.equal(await page.locator('.lc-review-saved time').getAttribute('datetime'), record.nextReviewAt);
-    assert.equal(record.nextReviewAt, '2026-09-26T14:30:00.000Z');
-    assert.equal(await page.locator('.lc-problem-list li').count(), 2);
-    assert.equal(await page.locator('.lc-overview').innerText(), statistics);
-    assert.equal(JSON.stringify({ stats: fixture.data.stats, submissions: fixture.data.submissions, calendar: fixture.data.calendar }), originalRemoteStats);
-    await capture(page, 'desktop-review-confirmed', page.locator('.lc-memory-review'));
-    return { confirmedNextReviewAt: record.nextReviewAt, remoteReviewCount: record.reviewCount };
+  await check('Single-problem draws preserve both known and unknown completion dates through reload', async () => {
+    for (const [slug, title, completedAt] of [['two-sum', '两数之和', iso(now - 4 * day)], ['imported-without-date', '历史导入题', null]]) {
+      // Constrain the server fixture instead of relying on a removed row action
+      // or forcing production random selection to return a particular problem.
+      const { page: history, fixture: historyFixture } = await makePage({ name: `completion-${slug}`, problemSlugs: [slug] });
+      assert.equal(await rows(history).count(), 1);
+      await drawRandom(history);
+      assert.equal(await selectedTitle(history).innerText(), title);
+      assert.equal(historyFixture.backpackRequests.length, 1);
+      assert.equal(historyFixture.backpackRequests[0].problemSlug, slug);
+      if (completedAt) assert.equal(await history.locator('.lc-revealed-card time').getAttribute('datetime'), completedAt);
+      else {
+        assert.equal(await history.locator('.lc-revealed-card time').count(), 0);
+        assert.match(await history.locator('.lc-revealed-card').innerText(), /暂无时间记录/);
+      }
+      await keepCard(history);
+      assert.equal(historyFixture.data.reviewBackpack[0].baselineCompletedAt, completedAt);
+      assert.ok(await history.locator('.lc-review-entry').isDisabled(), 'a pending single-card pool cannot draw that card again');
+      assert.equal(await row(history, title).locator('.lc-last-completed time').count(), completedAt ? 1 : 0);
+      await history.reload({ waitUntil: 'domcontentloaded' });
+      await history.locator('.lc-backpack-card').waitFor();
+      assert.equal(await history.locator('.lc-backpack-card').count(), 1);
+      assert.equal(historyFixture.backpackRequests.length, 1);
+      assert.equal(historyFixture.data.reviewBackpack[0].baselineCompletedAt, completedAt);
+      await capture(history, `desktop-backpack-${slug}`);
+    }
   });
-  await check('Reload restores acknowledged schedule from GET and keeps due-first, search and pagination', async () => {
-    const gets = fixture.getCount; await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.locator('.lc-memory-review').waitFor();
-    assert.ok(fixture.getCount > gets);
-    await reviewFilter(page, '未到期').click();
-    await selectProblem(page, '两数之和');
-    assert.equal(await page.locator('.lc-drawn-problem .lc-problem-due time').getAttribute('datetime'), '2026-09-26T14:30:00.000Z');
-    await page.getByLabel('搜索已通过题目', { exact: true }).fill('');
-    await reviewFilter(page, '全部').click();
-    assert.equal(await page.locator('.lc-problem-list li').count(), 20);
-    await page.getByRole('navigation', { name: '题目分页' }).getByRole('button', { name: '下一页', exact: true }).click();
-    assert.equal(await page.locator('.lc-problem-list li').count(), 15);
-    await page.getByLabel('搜索已通过题目', { exact: true }).fill('练习题 30');
-    assert.equal(await page.locator('.lc-problem-list li').count(), 1);
-    assert.equal(await page.locator('.lc-problem-list strong').innerText(), '练习题 30');
-    await page.getByLabel('搜索已通过题目', { exact: true }).fill('');
-    await difficultyFilter(page, '简单').click();
-    assert.equal(await page.locator('.lc-problem-list .lc-difficulty:not(.lc-difficulty-1)').count(), 0);
-    await difficultyFilter(page, '全部').click();
-    await reviewFilter(page, '待复习').click();
-    assert.equal(await page.locator('.lc-problem-list li').count(), 2);
-    assert.equal(await page.locator('.lc-problem-list li').first().locator('strong').innerText(), '反转链表');
-    return { persistedGets: fixture.getCount, pages: 2 };
-  });
-  await check('Unknown imported completion history stays undated until the first explicit rating', async () => {
-    const { page: unknown, fixture: unknownFixture } = await makePage({ name: 'unknown-history' });
-    await reviewFilter(unknown, '待首次复习').click();
-    assert.equal(await unknown.locator('.lc-problem-list li').count(), 5);
-    await selectProblem(unknown, '历史导入题');
-    assert.match(await unknown.locator('.lc-drawn-problem').innerText(), /没有可靠的通过时间/);
-    assert.equal(await unknown.locator('.lc-drawn-problem .lc-problem-due time').count(), 0);
-    assert.match(await unknown.locator('.lc-drawn-problem .lc-problem-due').innerText(), /尚未安排时间/);
-    assert.equal(unknownFixture.reviews.length, 0);
-    await capture(unknown, 'undated-history', unknown.locator('.lc-memory-review'));
-    await unknown.locator('[data-review-rating="good"]').click();
-    await unknown.getByText('复习已保存', { exact: true }).waitFor();
-    assert.equal(await unknown.locator('.lc-review-saved time').getAttribute('datetime'), '2026-09-12T14:30:00.000Z');
-    assert.equal(unknownFixture.data.problems.find(item => item.slug === 'imported-without-date').lastAcceptedAt, null);
-  });
-  await check('Ambiguous save failure retains one event ID on retry and cannot double-record', async () => {
-    const { page: retry, fixture: retryFixture } = await makePage({ name: 'ambiguous-retry' });
-    await retry.getByRole('button', { name: '开始复习', exact: false }).click();
-    retryFixture.nextMode = 'ambiguous';
-    await retry.locator('[data-review-rating="hard"]').click();
-    await retry.getByRole('button', { name: '重试保存', exact: true }).waitFor();
-    assert.equal(await retry.locator('.lc-review-saved').count(), 0);
-    assert.ok(await retry.locator('[data-review-rating="easy"]').isDisabled());
-    assert.equal(retryFixture.reviews.length, 1);
-    const eventId = retryFixture.reviews[0].eventId;
-    await capture(retry, 'retry-unconfirmed', retry.locator('.lc-memory-review'));
+  await check('A failed automatic save retries the same event, then only a newer completion removes that card', async () => {
+    const { page: retry, fixture: retryFixture } = await makePage({ name: 'save-retry', problemSlugs: ['two-sum'] });
+    retryFixture.failNextBackpack = true;
+    await retry.locator('.lc-review-entry').click();
+    await waitForDraw(retry);
+    await retry.locator('.lc-draw-save-state [role="alert"]').waitFor();
+    assert.equal(retryFixture.data.reviewBackpack.length, 0);
     await retry.getByRole('button', { name: '重试保存', exact: true }).click();
-    await retry.getByText('复习已保存', { exact: true }).waitFor();
-    assert.equal(retryFixture.reviews.length, 2);
-    assert.equal(retryFixture.reviews[1].eventId, eventId);
-    assert.deepEqual(retryFixture.reviews[0], retryFixture.reviews[1]);
-    assert.equal(retryFixture.data.problems.find(item => item.slug === 'two-sum').review.reviewCount, 3);
-    return { requests: 2, recordedReviews: 1, reusedEventId: true };
+    await retry.getByRole('button', { name: '收好卡片', exact: true }).waitFor();
+    assert.equal(retryFixture.backpackRequests.length, 2);
+    assert.deepEqual(retryFixture.backpackRequests[0], retryFixture.backpackRequests[1]);
+    await keepCard(retry);
+    const baseline = clone(retryFixture.data.reviewBackpack[0]);
+    await retry.getByRole('button', { name: '刷新同步', exact: true }).click();
+    await retry.locator('.lc-backpack-card').waitFor();
+    assert.deepEqual(retryFixture.data.reviewBackpack, [baseline]);
+    retryFixture.data.submissions.push({ id: 'older-import', problemSlug: 'two-sum', status: 'AC', submittedAt: iso(now - day) });
+    await retry.getByRole('button', { name: '刷新同步', exact: true }).click();
+    await retry.getByRole('button', { name: '刷新同步', exact: true }).waitFor();
+    assert.deepEqual(retryFixture.data.reviewBackpack, [baseline], 'older imported history is not a new completion');
+    retryFixture.clock = now + 60000;
+    await retry.clock.setFixedTime(new Date(retryFixture.clock));
+    retryFixture.data.submissions.push({ id: 'new-completion', problemSlug: 'two-sum', status: 'AC', submittedAt: iso(retryFixture.clock) });
+    retryFixture.data.problems.find(problem => problem.slug === 'two-sum').lastAcceptedAt = iso(retryFixture.clock);
+    await retry.getByRole('button', { name: '刷新同步', exact: true }).click();
+    await retry.locator('.lc-backpack').waitFor({ state: 'detached' });
+    assert.deepEqual(retryFixture.data.reviewBackpack, []);
+    assert.ok(await retry.locator('.lc-review-entry').isEnabled(), 'a genuinely completed card can be drawn again');
+    assert.equal(await row(retry, '两数之和').locator('time').getAttribute('datetime'), iso(retryFixture.clock));
+    assert.equal(retryFixture.reviews.length, 0);
   });
-  await check('409 requires refreshed progress before a fresh rating uses the new version', async () => {
-    const { page: conflict, fixture: conflictFixture } = await makePage({ name: 'version-conflict' });
-    await conflict.getByRole('button', { name: '开始复习', exact: false }).click();
-    conflictFixture.nextMode = 'conflict';
-    await conflict.locator('[data-review-rating="easy"]').click();
-    await conflict.getByRole('button', { name: '刷新复习进度', exact: true }).waitFor();
-    assert.equal(await conflict.locator('.lc-review-saved').count(), 0);
-    const oldRequest = clone(conflictFixture.reviews[0]);
-    const gets = conflictFixture.getCount;
-    await capture(conflict, 'conflict-unconfirmed', conflict.locator('.lc-memory-review'));
-    await conflict.getByRole('button', { name: '刷新复习进度', exact: true }).click();
-    await conflict.getByText('已读取最新进度，请重新确认回忆程度。', { exact: true }).waitFor();
-    assert.ok(conflictFixture.getCount > gets);
-    assert.equal(await conflict.locator('.lc-drawn-problem .lc-problem-due time').getAttribute('datetime'), '2026-09-15T14:30:00.000Z');
-    await conflict.locator('[data-review-rating="good"]').click();
-    await conflict.getByText('复习已保存', { exact: true }).waitFor();
-    assert.equal(conflictFixture.reviews[1].expectedVersion, oldRequest.expectedVersion + 1);
-    assert.notEqual(conflictFixture.reviews[1].eventId, oldRequest.eventId);
-    return { refreshedBeforeRetry: true, changedExpectedVersion: true };
+  await check('Empty pools cannot draw, and connecting an account does not open a draw until requested', async () => {
+    const { page: empty } = await makePage({ name: 'empty', mode: 'empty' });
+    assert.equal(await empty.locator('.lc-card-draw, .lc-draw-dialog').count(), 0);
+    assert.ok(await empty.locator('.lc-review-entry').isDisabled());
+    await empty.locator('.lc-list-empty').waitFor();
+    await assertNoScheduling(empty);
+    await capture(empty, 'empty-pool');
+    const { page: disconnected, fixture: disconnectedFixture } = await makePage({ name: 'disconnected', mode: 'disconnected' });
+    assert.equal(await disconnected.locator('.lc-review-entry').count(), 0);
+    await disconnected.locator('#lc-profile-url').fill('review-fixture-user');
+    await disconnected.getByRole('button', { name: '关联并同步', exact: true }).click();
+    await rows(disconnected).first().waitFor();
+    assert.equal(await disconnected.locator('.lc-draw-dialog').count(), 0);
+    await drawRandom(disconnected);
+    assert.equal(disconnectedFixture.backpackRequests.length, 1);
+    assert.equal(disconnectedFixture.reviews.length, 0);
+    await keepCard(disconnected);
   });
-  await check('Mobile 390px fits overview, review choices and filtered problem list', async () => {
-    const { page: mobile } = await makePage({ name: 'mobile-390', viewport: { width: 390, height: 844 }, mobile: true });
-    const overview = await noOverflow(mobile); await capture(mobile, 'mobile-overview');
-    await mobile.getByRole('button', { name: '开始复习', exact: false }).click();
-    const selected = await noOverflow(mobile);
-    await capture(mobile, 'mobile-review', mobile.locator('.lc-memory-review'));
-    await reviewFilter(mobile, '待复习').click();
-    const list = await noOverflow(mobile);
-    await capture(mobile, 'mobile-filtered-list', mobile.locator('.lc-problems'));
-    assert.equal(await mobile.locator('.lc-recall-options button').count(), 4);
-    return { overview, selected, list };
+  await check('Mobile 390px and 320px fit the modal, saved backpack and filtered list', async () => {
+    const details = [];
+    for (const width of [390, 320]) {
+      const { page: mobile, fixture: mobileFixture } = await makePage({ name: `mobile-${width}`, viewport: { width, height: 844 }, mobile: true });
+      details.push(await noOverflow(mobile));
+      await drawRandom(mobile);
+      await noOverflow(mobile);
+      await capture(mobile, `mobile-${width}-selected`, mobile.locator('.lc-draw-dialog'));
+      await keepCard(mobile);
+      await difficultyFilter(mobile).selectOption('1');
+      await mobile.getByLabel('搜索已通过题目', { exact: true }).fill('两数之和');
+      assert.equal(await row(mobile, '两数之和').locator('.lc-last-completed time').getAttribute('datetime'), iso(now - 4 * day));
+      await assertNoScheduling(mobile); await noOverflow(mobile);
+      assert.equal(mobileFixture.backpackRequests.length, 1);
+      assert.equal(mobileFixture.reviews.length, 0);
+      await capture(mobile, `mobile-${width}-library`);
+    }
+    return { viewports: details };
   });
-  await check('Dark theme and reduced motion preserve accessible review controls', async () => {
-    const { page: dark } = await makePage({ name: 'dark-reduced-motion', dark: true, reducedMotion: 'reduce' });
+  await check('Dark reduced-motion dialog keeps keyboard focus inside and restores it on Escape', async () => {
+    const { page: dark, fixture: darkFixture } = await makePage({ name: 'dark-reduced-motion', dark: true, reducedMotion: 'reduce' });
     assert.equal(await dark.locator('html').getAttribute('data-qg-theme'), 'dark');
-    assert.equal(await dark.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches), true);
-    await dark.getByRole('button', { name: '开始复习', exact: false }).click();
-    await dark.locator('[data-review-rating="again"]').focus();
+    await drawRandom(dark);
+    assert.equal(await dark.locator('.lc-flying-card').count(), 0);
     await dark.keyboard.press('Tab');
-    const focus = await dark.locator('[data-review-rating="hard"]').evaluate(element => ({ focused: document.activeElement === element, outlineStyle: getComputedStyle(element).outlineStyle, outlineWidth: getComputedStyle(element).outlineWidth }));
-    assert.equal(focus.focused, true); assert.notEqual(focus.outlineStyle, 'none');
-    await noOverflow(dark);
-    await capture(dark, 'dark-reduced-motion-review', dark.locator('.lc-memory-review'));
-    return focus;
+    assert.equal(await dark.locator('.lc-draw-dialog').evaluate(dialog => dialog.contains(document.activeElement)), true);
+    await dark.keyboard.press('Shift+Tab');
+    assert.equal(await dark.locator('.lc-draw-dialog').evaluate(dialog => dialog.contains(document.activeElement)), true);
+    await assertNoScheduling(dark); await noOverflow(dark);
+    await capture(dark, 'dark-reduced-motion-cards', dark.locator('.lc-draw-dialog'));
+    await dark.keyboard.press('Escape');
+    await dark.locator('.lc-draw-dialog').waitFor({ state: 'detached' });
+    assert.equal(await dark.locator('.lc-review-entry').evaluate(element => document.activeElement === element), true);
+    assert.equal(darkFixture.backpackRequests.length, 1);
+    assert.equal(darkFixture.reviews.length, 0);
   });
+  await check('Closing before a card is revealed cancels its pending animation and makes no save', async () => {
+    const { page: canceled, fixture: canceledFixture } = await makePage({ name: 'cancel-draw' });
+    await canceled.locator('.lc-review-entry').click();
+    await canceled.getByRole('button', { name: '关闭抽卡', exact: true }).click();
+    await canceled.waitForTimeout(1800);
+    assert.equal(await canceled.locator('.lc-draw-dialog').count(), 0);
+    assert.equal(canceledFixture.backpackRequests.length, 0);
+    assert.deepEqual(canceledFixture.data.reviewBackpack, []);
+  });
+  await check('English difficulty controls, draw confirmation and backpack remain accessible', async () => {
+    const { page: english, fixture: englishFixture } = await makePage({ name: 'english', language: 'en' });
+    assert.equal(await english.getByRole('combobox', { name: 'Filter difficulty', exact: true }).count(), 1);
+    await difficultyFilter(english).selectOption('1');
+    assert.equal(await rows(english).locator('.lc-difficulty:not(.lc-difficulty-1)').count(), 0);
+    await drawRandom(english, true);
+    assert.ok((await selectedTitle(english).innerText()).length > 0);
+    await assertNoScheduling(english); await noOverflow(english);
+    await keepCard(english, true);
+    assert.equal(await english.locator('.lc-backpack-card').count(), 1);
+    assert.equal(englishFixture.reviews.length, 0);
+    await capture(english, 'english-backpack');
+  });
+  for (const context of summary.contexts) assert.deepEqual(context.reviewRequests, [], `${context.name} must not submit review feedback`);
   assert.deepEqual(summary.runtimeErrors, []);
   assert.deepEqual(summary.unexpectedLocalResponses, []);
   summary.status = 'passed';

@@ -55,6 +55,11 @@ export function getMobileModuleHref(moduleId, location = {}) {
 
 export function getMobileSectionHref(sectionId, location = {}) {
   const section = MOBILE_SECTIONS.find(item => item.id === sectionId) || MOBILE_SECTIONS[0];
+  // LeetCode has a compact header without the training switcher. Its active
+  // bottom tab must return to that switcher instead of linking to itself.
+  if (section.id === 'training' && getRouteModuleId(location.pathname) === 'leetcode') {
+    return getMobileModuleHref(section.defaultModuleId, location);
+  }
   if (getMobileSectionForPath(location.pathname).id === section.id) return currentHref(location);
   return getMobileModuleHref(section.defaultModuleId, location);
 }
