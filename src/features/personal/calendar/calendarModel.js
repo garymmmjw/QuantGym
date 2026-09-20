@@ -57,6 +57,47 @@ function normalizedActivity(raw, index) {
   };
 }
 
+/** One saved answer is one prepared question, independent of later text edits. */
+export function collectBehavioralAnswerActivities(state = {}) {
+  const records = new Map();
+  const removed = new Set(list(state.removedActivityIds));
+  // Tombstones target individual event ids. They suppress reconstructing an
+  // answer fallback, but do not erase another surviving historical event.
+  const questionsWithRemovedEvents = new Set();
+  const dated = value => hasExplicitProblemCompletion({ completed: true, completedAt: value }) && Boolean(localDayKey(value));
+  for (const id of removed) {
+    const match = /^behavioral:explicit:(.+):\d{4}-\d{2}-\d{2}$/.exec(id);
+    if (match) { try { questionsWithRemovedEvents.add(decodeURIComponent(match[1])); } catch { /* Ignore malformed historical ids. */ } }
+  }
+  for (const activity of list(state.activities)) {
+    if (activity?.kind !== 'behavioral' || activity.source !== 'explicit') continue;
+    const key = activity.sourceId || activity.questionId;
+    if (typeof key !== 'string' || !key.trim()) continue;
+    if (removed.has(activity.id)) { questionsWithRemovedEvents.add(key); continue; }
+    if (activity.count !== 1 || !dated(activity.completedAt)) continue;
+    const previous = records.get(key);
+    if (!previous || Date.parse(activity.completedAt) < Date.parse(previous.completedAt)
+      || Date.parse(activity.completedAt) === Date.parse(previous.completedAt) && activity.id < previous.id) {
+      records.set(key, { ...activity, sourceId: key, questionId: key });
+    }
+  }
+  let undatedLegacyCount = 0;
+  const seenAnswers = new Set();
+  for (const answer of list(state.behavioralAnswers)) {
+    if (typeof answer?.id !== 'string' || !answer.id.trim() || seenAnswers.has(answer.id)) continue;
+    seenAnswers.add(answer.id);
+    if (typeof answer.text !== 'string' || !answer.text.trim() || records.has(answer.id) || questionsWithRemovedEvents.has(answer.id)) continue;
+    // Older answers have no first-save field. Their stored edit time is the
+    // only known date; reading them must never assign today's date instead.
+    if (!dated(answer.updatedAt)) { undatedLegacyCount += 1; continue; }
+    const id = `behavioral:answer:${encodeURIComponent(answer.id)}`;
+    if (removed.has(id)) continue;
+    records.set(answer.id, { id, kind: 'behavioral', source: 'saved-answer', sourceId: answer.id,
+      questionId: answer.id, count: 1, completedAt: answer.updatedAt });
+  }
+  return { activities: [...records.values()], undatedLegacyCount };
+}
+
 function problemKind(problem, isInterview = false) {
   const category = String(problem?.category || "").toLowerCase();
   if (isTrainerCatalogProblem(problem)) {
@@ -137,7 +178,11 @@ export function collectCalendarActivities(state = {}, legacyState = {}) {
   };
   const practiceById = new Map(list(state.practiceSessions).map(session => [`practice:${session.id}`, session]));
   const recordedLegacyMental = new Set();
+  const behavioral = collectBehavioralAnswerActivities(state);
+  behavioral.activities.forEach(add);
+  undatedLegacyCount += behavioral.undatedLegacyCount;
   list(state.activities).forEach(raw => {
+    if (raw?.kind === 'behavioral' && raw.source === 'explicit') return;
     if (TRIAL_KINDS.includes(raw?.kind) && raw.source !== 'manual') {
       const trialId = raw.trialId || (String(raw.id).startsWith(`${raw.kind}:`) ? String(raw.id).slice(raw.kind.length + 1) : '');
       const key = `${raw.kind}:${trialId}`;

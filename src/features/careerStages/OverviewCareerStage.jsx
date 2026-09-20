@@ -17,7 +17,7 @@ function MetricValue({ value, average = false }) {
   return <span className="overview-stage-summary-value">{(average ? averageFormat : countFormat).format(value)}{average && <span className="overview-stage-summary-unit">分</span>}</span>;
 }
 
-export function OverviewCareerStage({ rows = [] }) {
+export function OverviewCareerStage({ rows = [], note = '' }) {
   const displayRows = [...rows].reverse();
   return <section className="overview-stage-summary" aria-label="求职准备阶段统计">
     {displayRows.length ? <table className="overview-stage-summary-table" role="table">
@@ -36,5 +36,6 @@ export function OverviewCareerStage({ rows = [] }) {
         </td>)}
       </tr>)}</tbody>
     </table> : <p className="overview-stage-summary-empty">暂无 Stage 记录。在投递 Tracker 中添加阶段后，这里会显示对应的投递与训练统计。</p>}
+    {note && <p className="overview-stage-count-note">{note}</p>}
   </section>;
 }

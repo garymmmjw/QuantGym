@@ -98,7 +98,7 @@ export default function StagePanel({ stageStore, practice, variant = 'tracker', 
           </div>
           <span className="career-stage-period" title={periodNote(stage)}>{formatStagePeriod(stage)}</span>
           <p className="career-stage-description">{stage.description || '—'}</p>
-          <div className="career-stage-count" title={`${periodNote(stage)}同一阶段内同题计一次。${stage.countSourceNote || ''}`}>
+          <div className="career-stage-count" title={`${periodNote(stage)}LeetCode 同题距上次计入的通过记录至少 3 小时可再计一次；其他题目同阶段计一次。${stage.countSourceNote || ''}`}>
             <div className="career-stage-count-line" aria-label={`${partial ? '本阶段已确认刷题' : '本阶段刷题'} ${stage.questionCount ?? '未知'} 题`}><span>本阶段刷题</span><strong>{stage.questionCount ?? '—'}</strong><span>题</span></div>
             {(partial || stage.countSourceNote) && <small className="career-stage-source-note">{[partial ? '已确认' : '', stage.countSourceNote].filter(Boolean).join(' · ')}</small>}
           </div>

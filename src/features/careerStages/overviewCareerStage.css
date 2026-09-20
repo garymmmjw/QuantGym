@@ -102,3 +102,4 @@
   .overview-stage-summary-value { font-size: 19px; }
   .overview-stage-summary-empty { padding: 20px; border: 1px solid var(--qg-border, #ecebf7); border-radius: 12px; background: var(--qg-surface, #fff); }
 }
+.overview-stage-count-note { margin: 14px 0 0; color: var(--qg-muted, #6d6c8e); font-size: 12px; line-height: 1.6; }

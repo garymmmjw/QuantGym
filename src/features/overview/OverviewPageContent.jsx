@@ -9,7 +9,7 @@ import "./overviewDashboard.css";
 
 const TOTALS = [
   { key: "applications", label: "已投递申请", unit: "份" },
-  { key: "leetcode", label: "LeetCode 已解", unit: "题" },
+  { key: "leetcode", label: "LeetCode 已完成", unit: "题" },
   { key: "technical", label: "Tech 已解决", unit: "题" },
   { key: "behavioral", label: "Behavioral 已准备", unit: "题" },
   { key: "mock", label: "Mock 已完成", unit: "次", note: "旧 Mock 历史未记录账号归属，暂无法核实累计次数。" },
@@ -59,9 +59,9 @@ export function OverviewPageContent() {
           <h2 className="overview-greeting"><span className="overview-greeting-name">加油，{model.displayName}</span><span>越努力，越幸运。</span></h2>
           <dl className="overview-lifetime-totals">
             {TOTALS.map(item => (
-              <div key={item.key} title={item.note || (activity.totals[item.key] == null ? "数据待同步，暂不显示为零。" : undefined)}>
+              <div key={item.key} title={item.note || (item.key === "leetcode" ? "同题距上次计入的通过记录至少 3 小时可再计一次；≥ 表示已确认的累计下界，缺日期的历史不计入 Stage。" : activity.totals[item.key] == null ? "数据待同步，暂不显示为零。" : undefined)}>
                 <dt>{item.label}</dt>
-                <dd><strong>{number(activity.totals[item.key])}</strong><span>{item.unit}</span></dd>
+                <dd><strong>{item.key === "leetcode" && activity.totals.leetcode != null && !activity.recordBundle.leetcodeComplete && <small className="overview-count-minimum" aria-label="至少">≥</small>}{number(activity.totals[item.key])}</strong><span>{item.unit}</span></dd>
               </div>
             ))}
           </dl>
@@ -78,7 +78,7 @@ export function OverviewPageContent() {
         </div>
       </section>
 
-      <OverviewCareerStage rows={activity.stageRows} />
+      <OverviewCareerStage rows={activity.stageRows} note={activity.leetcodeStageNote} />
 
       <section className="overview-daily-tasks qg-overview-quests" aria-labelledby="overviewDailyTasksTitle">
         <div className="qg-quests-head">

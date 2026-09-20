@@ -39,6 +39,7 @@ body.is-authenticated .app-route-root .overview-route-page.qg-overview-page.over
 .overview-dashboard .overview-lifetime-totals dd { display: flex; align-items: baseline; gap: 7px; margin: 5px 0 0; }
 .overview-dashboard .overview-lifetime-totals strong { color: var(--qg-text, #22203b); font-size: 31px; font-weight: 700; line-height: 1.1; }
 .overview-dashboard .overview-lifetime-totals dd span { color: var(--qg-muted-2, #9188a4); font-size: 12px; }
+.overview-dashboard .overview-count-minimum { font-size: .55em; margin-right: 3px; }
 .overview-dashboard .qg-quests-title h2 { font-size: 18px; font-weight: 700; }
 .overview-dashboard .overview-task { text-decoration: none; }
 .overview-dashboard a:focus-visible { outline: 3px solid var(--qg-brand, #5b5ff5); outline-offset: 3px; }
