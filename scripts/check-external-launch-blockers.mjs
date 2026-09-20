@@ -1070,10 +1070,18 @@ const blockers = [
         evidence.browserRouteSmoke.interactions?.results,
         "poker preflop matrix position, hand selection, and leave-table navigation"
       )?.leaveTableNavigated === true,
-      overviewLeaderboardPass: findResult(
-        evidence.browserRouteSmoke.interactions?.results,
-        "overview leaderboard controls and news ticker navigation"
-      )?.status === "pass",
+      overviewDashboardPass: (() => {
+        const item = findResult(
+          evidence.browserRouteSmoke.interactions?.results,
+          "overview daily task routes and activity dashboard"
+        );
+        return item?.status === "pass"
+          && JSON.stringify(item.taskRoutes) === JSON.stringify(["/leetcode", "/tools", "/tracker", "/technical-interview", "/behavioral-interview"])
+          && item.activityDayCount === 7
+          && item.removedModulesAbsent === true
+          && item.stageActionsAbsent === true
+          && item.reloaded === true;
+      })(),
       streakCheckInCalendarPass: (() => {
         const item = findResult(
           evidence.browserRouteSmoke.interactions?.results,
@@ -1577,7 +1585,7 @@ const summary = {
     browserPokerDefaultLocalNoAutoJoinPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.pokerDefaultLocalNoAutoJoinPass === true,
     browserPokerPreflopPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.pokerPreflopPass === true,
     browserPokerLeaveTablePass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.pokerLeaveTablePass === true,
-    browserOverviewLeaderboardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.overviewLeaderboardPass === true,
+    browserOverviewDashboardPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.overviewDashboardPass === true,
     browserStreakCheckInCalendarPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.streakCheckInCalendarPass === true,
     browserShellGlobalControlsPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.shellGlobalControlsPass === true,
     browserHashCompatDeepLinkPass: blockers.find((item) => item.id === "browser-journey-expansion")?.localCoverage?.hashCompatDeepLinkPass === true,

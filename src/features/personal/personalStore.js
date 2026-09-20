@@ -1,6 +1,7 @@
 import { patternCellKey, validatePatternCell } from "./mental/patternQuestions.js";
 import { validatePracticeSession, mergePracticeSessions, withPracticeActivities } from "./practice/practiceModel.js";
 import { validateTrackerOperations, mergeTrackerOperations } from "../tracker/trackerSyncModel.js";
+import { isExplicitCompletionActivity, validateExplicitCompletionActivity, retainExplicitCompletionActivities } from './completionActivities.js';
 
 export const PERSONAL_VERSION = 1;
 const PREFIX = "quantgym.personal-prep.v1:";
@@ -153,9 +154,10 @@ function validateDailySession(session) {
 }
 
 function validateActivity(activity) {
-  requireData(object(activity) && id(activity.id) && ["quant", "mental", ...REASONING_KINDS, ...DAILY_KINDS, "daily"].includes(activity.kind)
+  requireData(object(activity) && id(activity.id) && ["quant", "mental", ...REASONING_KINDS, ...DAILY_KINDS, "daily", "experience-read"].includes(activity.kind)
     && integer(activity.count) && timestamp(activity.completedAt)
     && optionalStrings(activity, ["source", "note", "title", "titleEn", "status", "trialId", "dailySessionId", "sessionId", "questionId", "problemId"]), "activity");
+  if (activity.kind === 'experience-read' || isExplicitCompletionActivity(activity)) validateExplicitCompletionActivity(activity);
 }
 
 function mergeDailySession(current, incoming) {
@@ -263,6 +265,7 @@ export function mergePersonalData(currentValue, incomingValue) {
     }
     next[field] = [...byId.values()];
   }
+  next.activities = retainExplicitCompletionActivities(next, current, incoming).activities;
   next.removedActivityIds = [...new Set([...current.removedActivityIds, ...incoming.removedActivityIds])].sort();
   next.practiceSessions = mergePracticeSessions(current.practiceSessions, incoming.practiceSessions);
   next.activities = withPracticeActivities(next).activities;

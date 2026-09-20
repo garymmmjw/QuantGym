@@ -31,7 +31,7 @@ const routeChecks = [
   {
     name: "overview",
     path: "/",
-    selectors: ["#heroTypewriter", "#overviewProblemProgress", "#leaderboardMetricSelect"],
+    selectors: [".overview-greeting", "#overviewDailyTasksTitle", "#overviewActivityBars", "#overviewProblemProgress"],
     minText: 60
   },
   {
@@ -580,6 +580,23 @@ async function checkRoutes(page) {
       for (const selector of route.selectors) {
         await page.waitForSelector(selector, { state: "visible", timeout: 15000 });
         routeResult.selectors[selector] = true;
+      }
+      if (route.name === "overview") {
+        const dashboard = await page.evaluate(() => {
+          const overview = document.querySelector(".overview-route-page");
+          const stage = overview?.querySelector(".overview-stage-summary");
+          return {
+            taskRoutes: [...(overview?.querySelectorAll(".overview-task") || [])].map(item => new URL(item.href, location.href).pathname),
+            activityDayCount: overview?.querySelectorAll("#overviewActivityBars .overview-activity-day").length || 0,
+            removedModulesAbsent: Boolean(overview) && !overview.querySelector("#heroTypewriter, #generateStudyPlanBtn, #leaderboardList, #leaderboardMetricSelect, #overviewContributionHeatmap, #overviewXpBars, #logForm, #newsTickerTrack, .today-plan, .feature-launch-grid"),
+            stageActionsAbsent: Boolean(stage) && !stage.querySelector("button, a")
+          };
+        });
+        routeResult.dashboard = dashboard;
+        if (JSON.stringify(dashboard.taskRoutes) !== JSON.stringify(["/leetcode", "/tools", "/tracker", "/technical-interview", "/behavioral-interview"])
+          || dashboard.activityDayCount !== 7 || !dashboard.removedModulesAbsent || !dashboard.stageActionsAbsent) {
+          throw new Error(`Overview dashboard contract failed: ${JSON.stringify(dashboard)}`);
+        }
       }
       await page.waitForTimeout(700);
       const health = await page.evaluate(() => {

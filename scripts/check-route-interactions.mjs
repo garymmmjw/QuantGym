@@ -20,16 +20,18 @@ const contracts = [
       {
         path: "src/features/overview/OverviewPageContent.jsx",
         checks: [
-          ["study plan CTA dispatches", /id="generateStudyPlanBtn"[\s\S]*?onClick=\{model\.generateTodayStudyPlan\}/],
-          ["problem progress CTA routes to Problems", /onClick=\{\(\) => model\.openModule\("problems"\)\}/],
-          ["leaderboard metric select updates on change/input", all("id=\"leaderboardMetricSelect\"", "onChange={updateLeaderboardMetric}", "onInput={updateLeaderboardMetric}")],
-          ["leaderboard scope/country/region selects update", all("id=\"leaderboardScopeSelect\"", "onChange={updateLeaderboardScope}", "id=\"leaderboardCountrySelect\"", "onChange={updateLeaderboardCountry}", "id=\"leaderboardRegionSelect\"", "onChange={updateLeaderboardRegion}")]
+          ["personal greeting and activity dashboard render", all('className="overview-greeting"', 'model.displayName', 'id="overviewDailyTasksTitle"', 'id="overviewActivityBars"', 'id="overviewProblemProgress"')],
+          ["all five daily tasks use real destinations", all('to: "/leetcode"', 'to: "/tools"', 'to: "/tracker"', 'to: "/technical-interview"', 'to: "/behavioral-interview"', 'to={to}')],
+          ["daily completion and weekly activity use recorded activity", all('activity.today.counts[key]', 'const done = count > 0', 'activity.days.map((day, index)', 'day.activityScore')],
+          ["problem progress link routes to Problems", all('to="/problems"', 'aria-label="打开题库"')],
+          ["Overview Stage receives real aggregated rows", all('<OverviewCareerStage rows={activity.stageRows} />')],
+          ["removed Overview modules stay removed", text => !['heroTypewriter', 'generateStudyPlanBtn', 'leaderboardList', 'overviewContributionHeatmap', 'logForm', 'newsTickerTrack'].some(marker => text.includes(marker))]
         ]
       },
       {
         path: "src/features/overview/overviewHooks.js",
         checks: [
-          ["leaderboard setting changes persist through page API", all("api?.updateLeaderboardSettings?.(patch)", "api?.switchModule?.(moduleId)")]
+          ["Overview reads account identity and recorded problem progress", all('state.currentUser', 'api?.getProblemProgress?.()', 'displayName:', 'problemProgress')]
         ]
       },
       {

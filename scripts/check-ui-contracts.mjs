@@ -15,17 +15,11 @@ const routeContracts = {
   overview: {
     page: "OverviewPage.jsx",
     content: "OverviewPageContent",
+    classes: ["overview-greeting"],
     selectors: [
-      "heroTypewriter",
-      "generateStudyPlanBtn",
+      "overviewDailyTasksTitle",
       "overviewProblemProgress",
-      "overviewXpBars",
-      "overviewContributionHeatmap",
-      "leaderboardMetricSelect",
-      "leaderboardScopeSelect",
-      "leaderboardList",
-      "logForm",
-      "newsTickerTrack"
+      "overviewActivityBars"
     ]
   },
   plan: {
@@ -472,6 +466,9 @@ function checkRouteContracts() {
 
     for (const selector of contract.selectors) {
       if (!hasStaticId(featureText, selector)) fail(`${featureDir} is missing #${selector}`);
+    }
+    for (const className of contract.classes || []) {
+      if (!new RegExp(`className\\s*=\\s*"[^"\\n]*\\b${escapeRegex(className)}\\b`).test(featureText)) fail(`${featureDir} is missing .${className}`);
     }
   }
 }
@@ -1123,8 +1120,12 @@ function validateBrowserRouteSmokeSummary(data, expect, label) {
   expect(problemRankingNavigation?.returnedToRanking === true, `${label} must verify Problems detail back returns to ranking view`);
   const leetcodeHotTracking = findResult(data.interactions?.results, "problems LeetCode Hot 100 tracking persistence");
   expect(leetcodeHotTracking?.status === "pass", `${label} must verify LeetCode Hot 100 tracking persistence`);
-  const overviewLeaderboard = findResult(data.interactions?.results, "overview leaderboard controls and news ticker navigation");
-  expect(overviewLeaderboard?.status === "pass", `${label} must verify Overview leaderboard persistence and news ticker navigation`);
+  const overviewDashboard = findResult(data.interactions?.results, "overview daily task routes and activity dashboard");
+  expect(overviewDashboard?.status === "pass", `${label} must verify the Overview activity dashboard and daily task navigation`);
+  expect(JSON.stringify(overviewDashboard?.taskRoutes) === JSON.stringify(["/leetcode", "/tools", "/tracker", "/technical-interview", "/behavioral-interview"]), `${label} must navigate all five Overview daily tasks`);
+  expect(overviewDashboard?.activityDayCount === 7, `${label} must show seven daily activity bars`);
+  expect(overviewDashboard?.removedModulesAbsent === true, `${label} must omit removed Overview modules`);
+  expect(overviewDashboard?.stageActionsAbsent === true, `${label} must keep Overview Stage summaries read-only`);
   const streakCheckIn = findResult(data.interactions?.results, "streak check-in calendar opens and persists activity");
   expect(streakCheckIn?.status === "pass", `${label} must verify streak check-in calendar opens and persists activity`);
   expect(streakCheckIn?.checkedIn === true, `${label} must verify streak check-in activity`);
@@ -3076,7 +3077,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(data.checks?.browserToolsMarketGamePass === true, `${label} must verify the Tools market game browser journey remains pass`);
   expect(data.checks?.browserPokerPreflopPass === true, `${label} must verify the Poker preflop browser journey remains pass`);
   expect(data.checks?.browserPokerLeaveTablePass === true, `${label} must verify the Poker leave-table browser journey remains pass`);
-  expect(data.checks?.browserOverviewLeaderboardPass === true, `${label} must verify the Overview leaderboard browser journey remains pass`);
+  expect(data.checks?.browserOverviewDashboardPass === true, `${label} must verify the Overview activity dashboard browser journey remains pass`);
   expect(data.checks?.browserStreakCheckInCalendarPass === true, `${label} must verify the streak check-in calendar browser journey remains pass`);
   expect(data.checks?.browserShellGlobalControlsPass === true, `${label} must verify the shell global controls browser journey remains pass`);
   expect(data.checks?.browserHashCompatDeepLinkPass === true, `${label} must verify the hash-compatible deep-link browser journey remains pass`);
@@ -3516,7 +3517,7 @@ function validateExternalLaunchBlockersSummary(data, expect, label, options = {}
   expect(browser?.localCoverage?.pokerDefaultLocalNoAutoJoinPass === true, `${label} must include Poker default local no-auto-join browser coverage`);
   expect(browser?.localCoverage?.pokerPreflopPass === true, `${label} must include Poker preflop matrix browser coverage`);
   expect(browser?.localCoverage?.pokerLeaveTablePass === true, `${label} must include Poker leave-table browser coverage`);
-  expect(browser?.localCoverage?.overviewLeaderboardPass === true, `${label} must include Overview leaderboard browser coverage`);
+  expect(browser?.localCoverage?.overviewDashboardPass === true, `${label} must include Overview activity dashboard browser coverage`);
   expect(browser?.localCoverage?.streakCheckInCalendarPass === true, `${label} must include streak check-in calendar browser coverage`);
   expect(browser?.localCoverage?.shellGlobalControlsPass === true, `${label} must include shell global controls browser coverage`);
   expect(browser?.localCoverage?.hashCompatDeepLinkPass === true, `${label} must include hash-compatible deep-link browser coverage`);

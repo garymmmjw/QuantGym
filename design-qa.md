@@ -194,3 +194,17 @@ Seven navigation tests, route integrity (26 routes), shell checks, and the stric
 Browser validation uses isolated local fixture records and real production shell/page components. The fixture intentionally shows an account-verification banner and empty cloud-only content; it does not certify live-account or cloud-write flows. Missing Account/Experiences fixture adapters caused early fixture-only errors; after using the production page API models, the final clean-tab ten-page sweep has zero error/warning logs. Screenshots show fixture data rather than a production account.
 
 final result: passed
+
+## Overview activity dashboard — September 19, 2026
+
+- Replaced the overview hero's streak/XP/rank/plan content with the signed-in account name and six cumulative metrics; retained Quanty.
+- Overview Stage now has application, LeetCode, Tech, Behavioral and Mental Math average columns. Existing Tracker Stage component and date semantics remain unchanged.
+- Five real daily task links derive completion from account records. Activity uses 2/5/10/10/5 points; question counts deduplicate per day, Math counts complete trials.
+- Explicit Behavioral completion and first-read experience markers persist through the shared owner-scoped personal store and cloud merge. Old unowned Mock history stays unknown.
+- Verified real full-shell local fixtures at 1440, 390 and 320 pixels with no horizontal overflow. Checked five task routes, problem progress link, removed sections, bottom navigation clearance and zero browser console errors.
+- Behavioral completion updated the cumulative count, daily check and today's score by 10; the read marker survived reload and counted once. Fixture data and screenshots remain local and are not shipped.
+- 278 related Node tests passed; one API activity round-trip/owner-isolation regression passed. Strict static build, route integrity, shell and growth checks passed.
+- Existing broad legacy contract checks still reference old routes and historical evidence: their unrelated failures were not hidden. Overview assertions now match the new page.
+- Local screenshots: /Users/miujiawei/.codex/visualizations/2026/09/19/overview-dashboard/desktop.png, desktop-detail.png, mobile.png, mobile-detail.png.
+
+Final result: passed for this change.

@@ -4,6 +4,8 @@ import { useAppServices, usePageApi } from "../../stores/usePageApi.js";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { useScopedRefreshIcons } from "../shared/useScopedRefreshIcons.js";
 import { timestampOrZero } from "../../lib/date.js";
+import { usePersonalData } from '../personal/usePersonalData.js';
+import { hasExplicitCompletion, markExperienceRead } from '../personal/completionActivities.js';
 
 const EMPTY_FORM = {
   id: "",
@@ -75,12 +77,33 @@ export function ExperiencesPageContent() {
   const pageApi = usePageApi();
   const api = pageApi.experiences;
   const userState = useUserStateStore((state) => state.value || {});
+  const personal = usePersonalData();
+  const [readNotice, setReadNotice] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("all");
   const [companyFilter, setCompanyFilter] = useState("all");
   const [pendingShareId, setPendingShareId] = useState("");
   const [communityTick, setCommunityTick] = useState(0);
+
+  useEffect(() => setReadNotice(''), [personal.ownerId]);
+
+  const confirmRead = (record) => {
+    if (!personal.ownerId || !personal.store || !record.id) return;
+    try {
+      const result = personal.store.update(current => markExperienceRead(current, record.id));
+      setReadNotice(result?.ok === false ? '已读标记暂存在本页，请重试保存。' : '已标记已读，同一篇面经只计一次。');
+    } catch {
+      setReadNotice('未能保存已读标记，请重试；原有记录没有改变。');
+    }
+  };
+
+  const retryReadSave = () => {
+    try {
+      const result = personal.store?.retry();
+      setReadNotice(result?.ok ? '已读标记已保存。' : '暂时无法保存，请保留此页并稍后重试。');
+    } catch { setReadNotice('暂时无法保存，请保留此页并稍后重试。'); }
+  };
 
   useEffect(() => {
     const onCommunityUpdated = () => setCommunityTick((tick) => tick + 1);
@@ -376,6 +399,7 @@ export function ExperiencesPageContent() {
             {STAGE_OPTIONS.map((stage) => <option key={stage} value={stage}>{stage}</option>)}
           </select>
         </div>
+        {readNotice && <p role="status">{readNotice}{personal.snapshot.dirty && <button type="button" className="secondary-button" onClick={retryReadSave}>重试保存</button>}</p>}
         <div className="experience-list" id="experienceList">
           {!visible.length ? <EmptyState title={records.length ? labels.emptyFiltered : labels.emptyRecords} /> : visible.map((record) => {
             const sharedPost = record.sharedPostId
@@ -430,6 +454,9 @@ export function ExperiencesPageContent() {
                 </div>
               ) : null}
               <div className="experience-share-row">
+                <button type="button" className="secondary-button" disabled={!personal.ownerId || hasExplicitCompletion(personal.snapshot.data, 'experience-read', record.id)} onClick={() => confirmRead(record)}>
+                  {hasExplicitCompletion(personal.snapshot.data, 'experience-read', record.id) ? '已读' : '标记已读'}
+                </button>
                 <button type="button" className="secondary-button" onClick={() => setPendingShareId(record.id)}>
                   <i data-lucide="share-2" />{record.sharedPostId ? labels.updateShare : labels.shareToCommunity}
                 </button>

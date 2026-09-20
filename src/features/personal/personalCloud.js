@@ -1,6 +1,7 @@
 import { createPersonalState, mergePersonalData, validatePersonalData } from './personalStore.js';
 import { mergeTrackerOperations } from '../tracker/trackerSyncModel.js';
 import { reportCloudSessionResponse } from '../../state/cloudSessionStatus.js';
+import { retainExplicitCompletionActivities } from './completionActivities.js';
 
 export async function personalFingerprint(data) {
   // Postgres jsonb can return object keys in a different order than the browser.
@@ -73,6 +74,7 @@ export function createPersonalCloudSync({ store, ownerId, config = {}, storage, 
       // unchanged side cannot acknowledge another client's missing journal.
       const careerTrackerOperations = mergeTrackerOperations(local.careerTrackerOperations, remoteData.careerTrackerOperations);
       if (JSON.stringify(next.careerTrackerOperations) !== JSON.stringify(careerTrackerOperations)) next = { ...next, careerTrackerOperations };
+      next = retainExplicitCompletionActivities(next, local, remoteData);
       // Inputs typed during the request always participate in the saved snapshot.
       if (next !== local || store.getSnapshot().data !== local) {
         applyingRemote = true;
