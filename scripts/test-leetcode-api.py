@@ -289,6 +289,25 @@ class LeetCodeApiTests(unittest.TestCase):
         self.assertEqual(status, 200, dashboard)
         self.assertEqual(next(row["progress"] for row in dashboard["goals"] if row["id"] == created["goal"]["id"]), 2)
 
+    def test_official_history_timestamp_skew_imports_and_reimports_without_changing_public_data(self):
+        token, _ = self.user()
+        _, before, _ = self.connect(token)
+        payload = full_history()
+        payload["submissions"][0]["submittedAt"] = "2026-09-08T23:44:52.000Z"
+        payload["submissions"][1]["submittedAt"] = "2026-09-08T23:44:59.000Z"
+        for _ in range(2):
+            status, saved, _ = self.request("POST", "/api/leetcode/import", token, payload)
+            self.assertEqual(status, 200, saved)
+            self.assertEqual(saved["syncedSubmissions"], before["syncedSubmissions"])
+            self.assertEqual(saved["syncedLifetimeSolvedCount"], before["syncedLifetimeSolvedCount"])
+            self.assertEqual([row["id"] for row in saved["importedSubmissions"]], ["history-1"])
+            self.assertTrue(saved["coverage"]["personalHistoryComplete"])
+            self.assertEqual(next(row["submittedAt"] for row in saved["submissions"] if row["id"] == "101"), "2026-09-08T23:45:00.000Z")
+        conflict = copy.deepcopy(payload)
+        conflict["submissions"][0]["submittedAt"] = "2026-09-08T23:44:49.999Z"
+        self.assertEqual(self.request("POST", "/api/leetcode/import", token, conflict)[0], 400)
+        self.assert_snapshot_equal(self.request("GET", token=token)[1], saved)
+
     def test_cas_rejects_sync_started_before_disconnect(self):
         token, owner = self.user()
         self.connect(token)
@@ -729,6 +748,77 @@ class ImportedHistoryTests(unittest.TestCase):
             with self.assertRaises(lc.LeetCodeError):
                 lc.import_metadata(original, {"username": "fixture-a", "submissions": rows})
             self.assertEqual(original, before)
+
+    def test_public_timestamp_canonicalization_includes_ten_seconds_and_crosses_midnight(self):
+        incoming = upstream()
+        incoming["submissions"][2] = record("103", "valid-parentheses", when="2026-09-09T00:00:03Z")
+        original = lc.fresh_snapshot(lc.empty_snapshot(), incoming)
+        rows = [record("101", "two-sum", when="2026-09-08T23:44:50Z"),
+                record("102", "two-sum", when="2026-09-08T23:45:10Z"),
+                record("103", "valid-parentheses", when="2026-09-08T23:59:55Z")]
+        saved = lc.import_metadata(original, full_history(rows))
+        canonical = {row["id"]: row["submittedAt"] for row in saved["_records"]}
+        self.assertEqual(canonical, {row["id"]: row["submittedAt"] for row in incoming["submissions"]})
+        self.assertEqual(saved["_syncedAcceptedSubmissions"], original["_syncedAcceptedSubmissions"])
+        self.assertTrue(lc.public_snapshot(saved)["coverage"]["personalHistoryComplete"])
+
+    def test_timestamp_compatibility_requires_bound_public_ac_and_exact_problem_identity(self):
+        original = self.snapshot()
+        before = copy.deepcopy(original)
+        invalid = [record("101", "two-sum", when="2026-09-08T23:44:49.999Z"),
+                   record("101", "two-sum", when="2026-09-08T23:45:10.001Z"),
+                   record("101", "other-question", when="2026-09-08T23:44:52Z"),
+                   record("101", "two-sum", "WA", when="2026-09-08T23:44:52Z")]
+        for row in invalid:
+            with self.subTest(row=row), self.assertRaises(lc.LeetCodeError):
+                lc.import_metadata(original, {"username": "fixture-a", "submissions": [row]})
+            self.assertEqual(original, before)
+        for binding in (None, {"username": "other", "linkedAt": original["connection"]["linkedAt"]}):
+            unbound = copy.deepcopy(original)
+            unbound["_syncedAcceptedConnection"] = binding
+            with self.assertRaises(lc.LeetCodeError):
+                lc.import_metadata(unbound, {"username": "fixture-a", "submissions": [record("101", "two-sum", when="2026-09-08T23:44:52Z")]})
+        # Untrusted imports do not authorize timestamp changes between themselves,
+        # and the shared merge function retains its exact timestamp comparison.
+        saved = lc.import_metadata(original, {"username": "fixture-a", "submissions": [record("private-ac", "binary-search")]})
+        with self.assertRaises(lc.LeetCodeError):
+            lc.import_metadata(saved, {"username": "fixture-a", "submissions": [record("private-ac", "binary-search", when="2026-09-08T23:44:52Z")]})
+        with self.assertRaises(lc.LeetCodeError):
+            lc.merge_records(copy.deepcopy(original), [record("101", "two-sum", when="2026-09-08T23:44:52Z")])
+
+    def test_first_public_observation_canonicalizes_existing_import_without_erasing_cutoff(self):
+        payload = full_history()
+        original = lc.import_metadata(self.snapshot(), payload)
+        public = record("history-1", "binary-search", when="2026-08-01T09:00:08Z")
+        incoming = {**upstream(), "submissions": [public]}
+        saved = lc.fresh_snapshot(original, incoming)
+        self.assertEqual(next(row["submittedAt"] for row in saved["_records"] if row["id"] == "history-1"), public["submittedAt"])
+        self.assertEqual(lc.public_snapshot(saved)["importedSubmissions"], [])
+        self.assertEqual(saved["_importedHistoryCoverage"], original["_importedHistoryCoverage"])
+        self.assertIn(public, saved["_syncedAcceptedSubmissions"])
+        # Re-uploading the original start timestamps after public sync is stable.
+        repeated = lc.import_metadata(saved, payload)
+        self.assertEqual(repeated["_records"], saved["_records"])
+        self.assertEqual(repeated["_syncedAcceptedSubmissions"], saved["_syncedAcceptedSubmissions"])
+        self.assertEqual(repeated["_importedHistoryCoverage"], saved["_importedHistoryCoverage"])
+        # Once public, a later upstream timestamp change is not import compatibility.
+        changed_public = {**public, "submittedAt": "2026-08-01T09:00:09.000Z"}
+        with self.assertRaises(lc.LeetCodeError):
+            lc.fresh_snapshot(saved, {**incoming, "submissions": [changed_public]})
+
+    def test_first_public_timestamp_conflicts_remain_atomic_and_binding_scoped(self):
+        original = lc.import_metadata(self.snapshot(), full_history())
+        before = copy.deepcopy(original)
+        for public in (record("history-1", "binary-search", when="2026-08-01T09:00:10.001Z"),
+                       record("history-1", "other-question", when="2026-08-01T09:00:08Z")):
+            with self.assertRaises(lc.LeetCodeError):
+                lc.fresh_snapshot(original, {**upstream(), "submissions": [public]})
+            self.assertEqual(original, before)
+        unbound = copy.deepcopy(original)
+        unbound["_importedAcceptedConnection"]["linkedAt"] = "2020-01-01T00:00:00Z"
+        public = record("history-1", "binary-search", when="2026-08-01T09:00:08Z")
+        with self.assertRaises(lc.LeetCodeError):
+            lc.fresh_snapshot(unbound, {**upstream(), "submissions": [public]})
 
 
 class LifetimeCountTests(unittest.TestCase):

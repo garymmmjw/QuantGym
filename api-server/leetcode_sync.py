@@ -25,6 +25,10 @@ REVIEW_RATINGS = {"again": 1, "hard": 3, "good": 4, "easy": 5}
 MIN_SYNC_SECONDS = 60
 FETCH_TIMEOUT_SECONDS = 10
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+# CN's authenticated history reports submission start time; public recent AC
+# can report acceptance a few seconds later. Only the same AC ID and problem
+# may use this bounded compatibility, always choosing the public timestamp.
+MAX_SOURCE_TIMESTAMP_SKEW_SECONDS = 10
 SLUG = re.compile(r"[a-zA-Z0-9_-]{1,100}\Z")
 PROBLEM_SLUG = re.compile(r"[a-zA-Z0-9_-]{1,200}\Z")
 STATUSES = {"AC", "WA", "TLE", "MLE", "RE", "CE", "OLE", "IE", "UNKNOWN"}
@@ -517,6 +521,15 @@ def merge_records(snapshot, incoming):
     return derive(snapshot)
 
 
+def canonical_import_record(record, public):
+    if not public or record["status"] != "AC" or public["status"] != "AC":
+        return record
+    skew = abs(datetime.fromisoformat(record["submittedAt"].replace("Z", "+00:00")) - datetime.fromisoformat(public["submittedAt"].replace("Z", "+00:00")))
+    if record["id"] != public["id"] or record["problemSlug"] != public["problemSlug"] or skew > timedelta(seconds=MAX_SOURCE_TIMESTAMP_SKEW_SECONDS):
+        raise LeetCodeError("An imported submission id conflicts with an existing record.")
+    return {**record, "submittedAt": public["submittedAt"]}
+
+
 def fresh_snapshot(previous, incoming):
     username = incoming["username"]
     same_user = previous.get("connection") and previous["connection"]["username"] == username
@@ -524,10 +537,18 @@ def fresh_snapshot(previous, incoming):
     now = now_iso()
     snapshot["connection"] = {"site": "cn", "username": username, "displayName": incoming["displayName"], "profileUrl": f"https://leetcode.cn/u/{username}/", "linkedAt": snapshot.get("connection", {}).get("linkedAt", now) if same_user else now, "lastSyncedAt": now}
     synced = {row["id"]: row for row in synced_accepted_submissions(snapshot)}
-    for row in incoming["submissions"]:
-        record = submission(row)
+    imported_ids = imported_submission_ids(snapshot) if imported_connection_matches(snapshot) else None
+    records = {row["id"]: row for row in snapshot.get("_records", [])}
+    incoming_records = [submission(row) for row in incoming["submissions"]]
+    for record in incoming_records:
         if record["status"] == "AC":
+            if imported_ids and record["id"] in imported_ids and record["id"] not in synced and record["id"] in records:
+                # The first public observation may canonicalize an existing
+                # imported AC. Keep its identity/status so complete history is
+                # not invalidated as though this were a newly discovered AC.
+                records[record["id"]] = canonical_import_record(records[record["id"]], record)
             synced[record["id"]] = record
+    snapshot["_records"] = list(records.values())
     if len(synced) > MAX_RECORDS:
         raise LeetCodeError("The synced submission collection exceeds the 20,000 record limit.", 413)
     snapshot["_syncedAcceptedConnection"] = {"username": username, "linkedAt": snapshot["connection"]["linkedAt"]}
@@ -539,7 +560,7 @@ def fresh_snapshot(previous, incoming):
     snapshot["calendar"] = sorted(calendar.values(), key=lambda row: row["date"])
     snapshot["coverage"]["calendarYears"] = sorted(set([*snapshot["coverage"].get("calendarYears", []), year]))
     snapshot["warning"] = None
-    return merge_records(snapshot, incoming["submissions"])
+    return merge_records(snapshot, incoming_records)
 
 
 def sync_is_recent(snapshot):
@@ -558,7 +579,11 @@ def import_metadata(previous, payload):
     records, problems = payload.get("submissions", []), payload.get("problems", [])
     if not isinstance(records, list) or not isinstance(problems, list) or len(records) + len(problems) > MAX_RECORDS or not (records or problems):
         raise LeetCodeError("Import between 1 and 20,000 metadata records.")
-    validated_records = [submission(row) for row in records]
+    public = {row["id"]: row for row in synced_accepted_submissions(previous)}
+    validated_records = []
+    for row in records:
+        record = submission(row)
+        validated_records.append(canonical_import_record(record, public.get(record["id"])))
     validated_problems = []
     for row in problems:
         if not isinstance(row, dict) or set(row) - {"slug", "title", "titleEn", "frontendId", "difficulty", "lastAcceptedAt"}:
