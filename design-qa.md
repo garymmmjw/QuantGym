@@ -151,3 +151,22 @@ final result: passed
 - [ ] 可选后续：微调系统字体字面及手机日期大小，均为 P3。
 
 final result: passed
+
+
+## Tracker selected palette 8 — 2026-09-19
+
+Scope: apply the user's eighth option (third from last in ten), bright violet `#8657DB`, to the existing Tracker. This is a palette-only acceptance; existing functionality, wording, typography, dimensions, semantic status colors, and global navigation remain unchanged.
+
+Reference: `/Users/miujiawei/.codex/generated_images/01a0bc02-57f7-7322-bb98-433e25031250/exec-105367cd-a8c3-44c0-ab9a-fa44383af12d.png` (1672×941). Implementation evidence: `/Users/miujiawei/.codex/visualizations/2026/09/19/tracker-palette-options/option8-implementation.png` and `option8-table.png` (1280×720). Root and independent reviewer each viewed all three in the same comparison input. Comparison uses corresponding regions and proportional visual scale, not pixel identity. The local fixture has 20 synthetic applications and an account-verification banner; differences from the reference's authenticated 51-application state are expected fixture differences.
+
+- Color: selected accent is `rgb(134, 87, 219)` on Stage 3, its current count, active tab, phase badge, progress action, and add-application button. Pale surfaces use `#F4EFFC`. Navigation retains its existing blue-violet gradient. DDL remains red and submission/OA status colors remain green/blue. The generated reference appears slightly more saturated than the precise palette token; implementation uses the selected palette's documented hex values.
+- Typography: current count remains 28px; historical 37/34 remain black `#1C1C1C` at 20px. All three measured right edges are 1204px. No font or size changes in the diff.
+- Layout: stage columns, black first divider, table height, and toolbar preserved. Document width equals viewport width at 1280px. No layout properties changed.
+- Assets/icons: existing icon assets and controls remain intact. No assets added or replaced.
+- Copy: no product wording changed. Fixture data and authentication copy are not part of the palette diff.
+
+Interaction verification: add-application dialog opened and cancelled successfully; its primary button inherits the same violet and derived shadow. Searching Blackstone returned that company only, with violet focus border; clearing restored the full list. Final browser error/warning logs were empty.
+
+Engineering verification: strict production build passed after the final CSS edit; independent diff review found no missing removed-token references or blocking issues. No automated tests added for this CSS-only change. This acceptance covers the desktop palette and sampled dialog/search states; it is not a new full responsive or account-system certification.
+
+final result: passed
