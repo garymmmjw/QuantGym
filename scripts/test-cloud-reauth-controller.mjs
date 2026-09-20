@@ -13,7 +13,7 @@ function setup({ recovery = false, provider = 'local', failure, session } = {}) 
   const records = { activities: [{ id: 'preserved-training', count: 3 }], trials: [{ id: 'preserved-trial', correct: 7 }] };
   const userState = { value: records };
   const appState = { auth: { accounts: [account], currentUserId: '', lastAuthenticatedAt: '' }, currentUser: null, community: {}, cloudConfig: { endpoint: 'https://fixture.example.test/api', token: 'expired-fixture-token', userId: account.id, lastSyncAt: '2026-09-01T00:00:00Z', lastError: '' } };
-  const messages = [], calls = [], savedTokens = [];
+  const messages = [], calls = [], savedTokens = [], appliedOptions = [];
   let cloudCalls = 0;
   const deps = {
     getAppState: () => appState,
@@ -35,6 +35,7 @@ function setup({ recovery = false, provider = 'local', failure, session } = {}) 
     renderSession: () => { calls.push('render'); appState.currentUser = appState.auth.accounts.find(item => item.id === appState.auth.currentUserId) || null; },
     applyCloudSession: (payload, options) => {
       calls.push('apply-cloud');
+      appliedOptions.push(options);
       assert.equal(options.localState, records);
       upsertAuthAccount(appState.auth, payload.account, { localFields: options.passwordHash ? { passwordHash: options.passwordHash } : {} });
       appState.currentUser = payload.account;
@@ -58,7 +59,7 @@ function setup({ recovery = false, provider = 'local', failure, session } = {}) 
   deps.loginCloudAccount = login;
   deps.loginCloudGoogle = login;
   const controller = createAccountAuthController(deps);
-  return { controller, deps, appState, records, userState, messages, calls, savedTokens, get cloudCalls() { return cloudCalls; } };
+  return { controller, deps, appState, records, userState, messages, calls, savedTokens, appliedOptions, get cloudCalls() { return cloudCalls; } };
 }
 
 function deferred() {
@@ -402,4 +403,54 @@ test('canceling recovery preserves only a safe destination for the eventual succ
   assert.equal(getPendingAuthReturnPath(), '/account');
   clearCloudReauthentication();
   clearPendingAuthReturnPath();
+});
+
+test('owner migration is bound to this successful cloud login and matching device password', async () => {
+  const remote = { ...localAccount, id: 'server-owner' };
+  const harness = setup({ session: { token: 'verified-server-token', account: remote } });
+  await harness.controller.loginLocal();
+  assert.deepEqual(harness.appliedOptions[0].careerOwnerLink, {
+    sourceOwnerId: 'local:fixture', targetOwnerId: 'server-owner', method: 'password',
+  });
+  assert.equal(harness.appState.currentUser.id, 'server-owner');
+});
+
+test('same email without the matching device password cannot migrate a different owner', async () => {
+  const harness = setup({ session: { token: 'verified-server-token', account: { ...localAccount, id: 'server-owner' } } });
+  harness.appState.auth.accounts[0].passwordHash = 'different-device-password';
+  await harness.controller.loginLocal();
+  assert.equal(harness.appliedOptions[0].careerOwnerLink, undefined);
+});
+
+test('a cloud identity with an unexpected email cannot link a cached owner', async () => {
+  const harness = setup({ session: { token: 'verified-server-token', account: { ...localAccount, id: 'server-owner', email: 'another@example.test' } } });
+  await harness.controller.loginLocal();
+  assert.equal(harness.appliedOptions[0].careerOwnerLink, undefined);
+});
+
+test('verified Google credentials link the exact subject owner, not another cached email owner', async () => {
+  const harness = setup({ provider: 'google', session: { token: 'verified-google-token', account: { ...googleAccount, id: 'server-google-owner' } } });
+  harness.appState.auth.accounts.push({ ...localAccount, id: 'unrelated-local-owner' });
+  await harness.controller.handleGoogleCredential({ credential: 'fixture-credential' });
+  assert.deepEqual(harness.appliedOptions[0].careerOwnerLink, {
+    sourceOwnerId: 'google:fixture', targetOwnerId: 'server-google-owner', method: 'google',
+  });
+});
+
+test('password reset never guesses an old device owner from email alone', async () => {
+  const harness = setup({ session: { token: 'verified-reset-token', account: { ...localAccount, id: 'server-owner' } } });
+  await harness.controller.resetPassword();
+  assert.equal(harness.appliedOptions[0].careerOwnerLink, undefined);
+});
+
+test('a migration conflict is explicit and never silently finishes authentication', async () => {
+  for (const provider of ['local', 'google']) {
+    const harness = setup({ provider });
+    harness.deps.applyCloudSession = () => { throw Object.assign(new Error('原始记录已保留，请解决投递记录冲突。'), { code: 'CAREER_OWNER_MIGRATION_FAILED' }); };
+    await (provider === 'local' ? harness.controller.loginLocal() : harness.controller.handleGoogleCredential({ credential: 'fixture-credential' }));
+    assert.equal(harness.messages.at(-1).message, '原始记录已保留，请解决投递记录冲突。');
+    assert.equal(harness.messages.at(-1).error, true);
+    assert.equal(harness.appState.currentUser, null);
+    assert.equal(harness.calls.includes('render'), false);
+  }
 });

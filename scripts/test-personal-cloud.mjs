@@ -35,6 +35,7 @@ function memoryServer(initial = null, initialRevision = 0) {
     beforeGet: null,
     beforePut: null,
     afterPut: null,
+    transformPut: null,
     change(next) { data = clone(next); revision += 1; },
     replace(next, nextRevision) { data = clone(next); revision = nextRevision; },
     async fetch(url, options) {
@@ -48,7 +49,7 @@ function memoryServer(initial = null, initialRevision = 0) {
       await api.beforePut?.(request);
       if (request.body.baseRevision !== revision) return response(409, { ...envelope(), error: 'Training changed on another device.' });
       assert.equal(request.body.version, 1);
-      data = clone(request.body.data);
+      data = clone(api.transformPut ? api.transformPut(request.body.data) : request.body.data);
       revision += 1;
       const saved = envelope();
       await api.afterPut?.(request);
@@ -66,6 +67,87 @@ function device(server, { ownerId = 'alice', storage = memoryStorage(), token = 
   controllers.add(cloud);
   return { store, cloud, storage, statuses };
 }
+
+const trackerOp = (id, clock = 1) => ({ id, clock, kind: 'application', applicationId: 'private-application', fields: { company: id } });
+test('metadata fast paths cannot clear immutable Tracker operations on either side', async () => {
+  const operation = trackerOp('keep-me');
+  const server = memoryServer();
+  const first = device(server);
+  first.store.update(data => ({ ...data, careerTrackerOperations: [operation] }));
+  await first.cloud.sync();
+  server.change({ ...server.data, careerTrackerOperations: [], activities: [activity('legacy-client')] });
+  await first.cloud.sync();
+  assert.deepEqual(first.store.getSnapshot().data.careerTrackerOperations, [operation]);
+  assert.deepEqual(server.data.careerTrackerOperations, [operation]);
+  assert.deepEqual(ids(first.store.getSnapshot().data), ['legacy-client']);
+  first.store.update(data => ({ ...data, careerTrackerOperations: [], activities: [...data.activities, activity('local-client')] }));
+  await first.cloud.sync();
+  assert.deepEqual(first.store.getSnapshot().data.careerTrackerOperations, [operation]);
+  assert.deepEqual(server.data.careerTrackerOperations, [operation]);
+  assert.deepEqual(ids(server.data), ['legacy-client', 'local-client']);
+});
+
+test('server-retained Tracker operations become the confirmed local journal without redundant uploads', async () => {
+  const server = memoryServer();
+  const retained = trackerOp('server-retained', 2);
+  server.transformPut = data => ({ ...data, careerTrackerOperations: [...data.careerTrackerOperations.filter(op => op.id !== retained.id), retained] });
+  const first = device(server);
+  first.store.update(data => ({ ...data, careerTrackerOperations: [trackerOp('local', 1)] }));
+  await first.cloud.sync();
+  assert.deepEqual(first.store.getSnapshot().data.careerTrackerOperations, [trackerOp('local', 1), retained]);
+  const meta = JSON.parse(first.storage.getItem('quantgym.personal-sync.v1:alice:https%3A%2F%2Fapi.example.test%2Fapi'));
+  assert.equal(meta.fingerprint, await personalFingerprint(server.data));
+  await first.cloud.sync();
+  assert.equal(server.calls.filter(call => call.method === 'PUT').length, 1);
+});
+
+test('server-retained data is applied immediately and its confirmed fingerprint is the next sync baseline', async () => {
+  const server = memoryServer();
+  const retained = activity('server-retained');
+  server.transformPut = data => ({ ...data, activities: [...data.activities.filter(row => row.id !== retained.id), retained] });
+  const first = device(server);
+  first.store.update(add('local'));
+  await first.cloud.sync();
+  assert.deepEqual(ids(first.store.getSnapshot().data), ['local', 'server-retained']);
+  assert.deepEqual(ids(createPersonalStore({ ownerId: 'alice', storage: first.storage }).getSnapshot().data), ['local', 'server-retained']);
+  const meta = JSON.parse(first.storage.getItem('quantgym.personal-sync.v1:alice:https%3A%2F%2Fapi.example.test%2Fapi'));
+  assert.equal(meta.fingerprint, await personalFingerprint(server.data));
+  assert.equal(meta.revision, 1);
+  await first.cloud.sync();
+  assert.equal(server.calls.filter(call => call.method === 'PUT').length, 1);
+  assert.equal(first.statuses.at(-1).phase, 'synced');
+});
+
+test('server-retained records and local edits during acknowledgement both survive and drain to cloud', async () => {
+  const server = memoryServer();
+  const retained = activity('server-retained');
+  server.transformPut = data => ({ ...data, activities: [...data.activities.filter(row => row.id !== retained.id), retained] });
+  const first = device(server);
+  first.store.update(add('before-request'));
+  const entered = deferred(), release = deferred();
+  server.afterPut = async () => { server.afterPut = null; entered.resolve(); await release.promise; };
+  const syncing = first.cloud.sync();
+  await entered.promise;
+  first.store.update(add('while-saving'));
+  release.resolve();
+  await syncing;
+  assert.deepEqual(ids(server.data), ['before-request', 'server-retained', 'while-saving']);
+  assert.deepEqual(ids(first.store.getSnapshot().data), ids(server.data));
+  assert.equal(server.calls.filter(call => call.method === 'PUT').length, 2);
+  assert.equal(first.statuses.at(-1).phase, 'synced');
+});
+
+test('a PUT acknowledgement without saved data cannot mark local work synced', async () => {
+  const server = memoryServer();
+  const first = device(server, { fetchImpl: async (url, options) => options.method === 'PUT'
+    ? response(200, { version: 1, revision: 1, data: null, updatedAt: iso }) : server.fetch(url, options) });
+  first.store.update(add('keep-local'));
+  await first.cloud.sync();
+  assert.deepEqual(ids(first.store.getSnapshot().data), ['keep-local']);
+  assert.equal(first.statuses.at(-1).phase, 'error');
+  assert.match(first.statuses.at(-1).message, /saved data/);
+  assert.equal(first.storage.getItem('quantgym.personal-sync.v1:alice:https%3A%2F%2Fapi.example.test%2Fapi'), null);
+});
 
 test('invalid credentials stop automatic retries while keeping subsequent local edits', async () => {
   const server = memoryServer();

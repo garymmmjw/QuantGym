@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Pencil } from 'lucide-react';
 import { localDateKey, nextStageLabel } from './stageStore.js';
 import { formatStagePeriod, summarizeStagePractice } from './stagePractice.js';
+import { stageFormChanges } from '../tracker/formChanges.js';
 import './stagePanel.css';
 
 function periodNote(stage) {
@@ -16,9 +17,13 @@ function StageDialog({ stageStore, stage, practice, onClose }) {
   const [description, setDescription] = useState(stage?.description || '');
   const [date, setDate] = useState(stage?.recordedDate || today);
   const [error, setError] = useState('');
-  const draft = { ...stage, id: stage?.id || 'new-stage-preview', label, recordedDate: date };
+  const original = useRef({ label, description, recordedDate: date });
   const savedStages = stageStore.getSnapshot().stages;
-  const draftStages = stage ? savedStages.map(item => item.id === stage.id ? draft : item) : [...savedStages, draft];
+  const latestStage = savedStages.find(item => item.id === stage?.id || item.importedIds?.includes(stage?.id));
+  const changes = stage ? stageFormChanges(original.current, { label, description, recordedDate: date }, latestStage || stage) : {};
+  const draft = stage ? { ...(latestStage || stage), ...changes }
+    : { id: 'new-stage-preview', label, description, recordedDate: date };
+  const draftStages = stage ? savedStages.map(item => item.id === draft.id ? draft : item) : [...savedStages, draft];
   const preview = summarizeStagePractice(draftStages, practice).find(item => item.id === draft.id);
 
   useEffect(() => {
@@ -36,7 +41,11 @@ function StageDialog({ stageStore, stage, practice, onClose }) {
     event.preventDefault();
     try {
       const payload = { label, description, recordedDate: date };
-      if (stage) stageStore.updateStage(stage.id, payload);
+      if (stage) {
+        const latest = stageStore.getSnapshot().stages.find(item => item.id === stage.id || item.importedIds?.includes(stage.id));
+        if (!latest) throw new Error('没有找到这个 Stage，请关闭表单后重试。');
+        stageStore.updateStage(latest.id, stageFormChanges(original.current, payload, latest));
+      }
       else stageStore.addStage(payload);
       onClose();
     } catch (failure) { setError(failure.message || '没有保存成功，请重试。'); }

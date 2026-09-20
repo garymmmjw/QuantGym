@@ -290,6 +290,16 @@ export function createCareerStageStore({ ownerId = "guest", namespace = "", stor
       };
     },
     ensureStages, addStage, updateStage, refresh,
+    readSyncState: () => copy(read().stages),
+    replaceSyncState(stages) {
+      validateStages(stages);
+      const envelope = copy({ version: VERSION, ownerId, stages });
+      const raw = JSON.stringify(envelope);
+      if (storage.getItem(key) === raw) return;
+      storage.setItem(key, raw);
+      publish(envelope.stages);
+      notifySaved();
+    },
     dispose() {
       disposed = true;
       listeners.clear();

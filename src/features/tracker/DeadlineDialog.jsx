@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import DeadlineFields from './DeadlineFields.jsx';
+import { deadlineFormChanges } from './formChanges.js';
 
 export default function DeadlineDialog({ application, event, onClose, onSave }) {
   const dialogRef = useRef(null);
@@ -8,6 +9,7 @@ export default function DeadlineDialog({ application, event, onClose, onSave }) 
     dueTime: event.dueDate ? event.dueTime || '' : '',
   }));
   const [error, setError] = useState('');
+  const original = useRef(deadline);
 
   useEffect(() => {
     const previouslyFocused = document.activeElement;
@@ -34,7 +36,7 @@ export default function DeadlineDialog({ application, event, onClose, onSave }) 
 
   function saveDeadline(formEvent) {
     formEvent.preventDefault();
-    const saved = onSave({ ...deadline, dueTime: deadline.dueDate ? deadline.dueTime : '' });
+    const saved = onSave(deadlineFormChanges(original.current, deadline));
     if (saved) onClose();
     else setError('保存失败，请检查浏览器存储空间后重试。');
   }

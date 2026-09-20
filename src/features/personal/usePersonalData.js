@@ -12,12 +12,12 @@ const getDisabledSnapshot = () => disabledSnapshot;
 const getDisabledCloud = () => disabledCloud;
 const syncDisabled = () => Promise.resolve();
 
-export function usePersonalData() {
+export function usePersonalData({ enabled = true } = {}) {
   const services = useAppServicesContext();
   const user = useAuthStore(state => state.currentUser);
   const legacyState = useUserStateStore(state => state.value || emptyLegacyState);
   const cloudConfig = useAppStore(state => state.cloudConfig);
-  const ownerId = typeof user?.id === 'string' && user.id ? user.id : '';
+  const ownerId = enabled && typeof user?.id === 'string' && user.id ? user.id : '';
   const language = services.getLanguage?.() || 'zh';
   const store = useMemo(() => registry.getStore(ownerId), [ownerId]);
   const connection = useMemo(() => registry.getConnection(ownerId, cloudConfig || {}),

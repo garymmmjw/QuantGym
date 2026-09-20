@@ -1,5 +1,6 @@
 import { patternCellKey, validatePatternCell } from "./mental/patternQuestions.js";
 import { validatePracticeSession, mergePracticeSessions, withPracticeActivities } from "./practice/practiceModel.js";
+import { validateTrackerOperations, mergeTrackerOperations } from "../tracker/trackerSyncModel.js";
 
 export const PERSONAL_VERSION = 1;
 const PREFIX = "quantgym.personal-prep.v1:";
@@ -202,7 +203,7 @@ function hasTrialWork(trial) {
 }
 
 export function createPersonalState() {
-  return { mentalSettings: null, activeTrial: null, trials: [], dailySettings: null, dailySessions: [], activities: [], removedActivityIds: [], practiceSessions: [], behavioralAnswers: [] };
+  return { mentalSettings: null, activeTrial: null, trials: [], dailySettings: null, dailySessions: [], activities: [], removedActivityIds: [], practiceSessions: [], behavioralAnswers: [], careerTrackerOperations: [] };
 }
 
 export function personalStorageKey(ownerId) {
@@ -235,7 +236,8 @@ export function validatePersonalData(data) {
     && behavioralAnswers.every(answer => object(answer) && id(answer.id) && answer.id.length <= 512
       && typeof answer.text === "string" && answer.text.length <= 20000 && timestamp(answer.updatedAt))
     && new Set(behavioralAnswers.map(answer => answer.id)).size === behavioralAnswers.length, "behavioral answers");
-  return { ...createPersonalState(), ...data, practiceSessions, behavioralAnswers, removedActivityIds: [...new Set(removedActivityIds)] };
+  const careerTrackerOperations = validateTrackerOperations(data.careerTrackerOperations === undefined ? [] : data.careerTrackerOperations);
+  return { ...createPersonalState(), ...data, practiceSessions, behavioralAnswers, careerTrackerOperations, removedActivityIds: [...new Set(removedActivityIds)] };
 }
 
 /** Merge valid backups or cloud snapshots without reviving terminal work or deleted entries. */
@@ -243,6 +245,7 @@ export function mergePersonalData(currentValue, incomingValue) {
   const current = validatePersonalData(currentValue);
   const incoming = validatePersonalData(incomingValue);
   const next = { ...current };
+  next.careerTrackerOperations = mergeTrackerOperations(current.careerTrackerOperations, incoming.careerTrackerOperations);
   const answers = new Map(incoming.behavioralAnswers.map(answer => [answer.id, answer]));
   for (const answer of current.behavioralAnswers) {
     const other = answers.get(answer.id);

@@ -115,3 +115,5 @@
   .quantgym-tracker .qt-phase-count { display: inline; }
   .quantgym-tracker .qt-table-footer { align-items: flex-start; flex-direction: column; padding: 12px; font-size: 11px; gap: 7px; }
 }
+.quantgym-tracker .qt-cloud-status { display: flex; align-items: center; gap: 10px; margin: -8px 0 14px; color: var(--qt-muted, #807789); font-size: 12px; }
+.quantgym-tracker .qt-cloud-status button { border: 0; padding: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }

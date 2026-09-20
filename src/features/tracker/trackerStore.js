@@ -168,6 +168,19 @@ export function createTrackerStore({ ownerId, namespace = '', storage = globalTh
       return () => { listeners.delete(listener); if (!listeners.size) detach(); };
     },
     refresh,
+    readSyncState: () => copy(read()),
+    replaceSyncState(value) {
+      const applications = validateApplications(value.applications);
+      const deletedEvents = validateDeletedEvents(value.deletedEvents, applications);
+      const raw = JSON.stringify({ version: VERSION, ownerId, applications, deletedEvents });
+      if (storage.getItem(key) === raw) return;
+      storage.setItem(key, raw);
+      publish(applications);
+      try {
+        const EventClass = eventTarget?.CustomEvent || globalThis.CustomEvent;
+        if (EventClass) eventTarget?.dispatchEvent?.(new EventClass(UPDATED_EVENT, { detail: { key } }));
+      } catch { /* The account cache is already durable. */ }
+    },
     addApplication(application) {
       mutate(applications => {
         if (applications.some(item => item.id === application.id)) throw new Error('这份申请已存在。');

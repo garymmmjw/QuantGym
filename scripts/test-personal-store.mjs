@@ -11,6 +11,35 @@ function memoryStorage() {
 }
 const addActivity = (id) => (state) => ({ ...state, activities: [...state.activities, { id, kind: "quant", count: 1, completedAt: "2026-09-09T12:00:00Z" }] });
 
+const trackerOp = (id, clock = 1) => ({ id, clock, kind: 'application', applicationId: 'private-application', fields: { company: id } });
+test('personal data defaults legacy Tracker journals and retains immutable operations in either merge direction', () => {
+  const legacy = createPersonalState();
+  delete legacy.careerTrackerOperations;
+  assert.deepEqual(validatePersonalData(legacy).careerTrackerOperations, []);
+  const first = { ...createPersonalState(), careerTrackerOperations: [trackerOp('first')] };
+  const second = { ...createPersonalState(), careerTrackerOperations: [trackerOp('second', 2)] };
+  for (const [a, b] of [[first, second], [second, first]]) {
+    assert.deepEqual(mergePersonalData(a, b).careerTrackerOperations, [trackerOp('first'), trackerOp('second', 2)]);
+  }
+  const conflict = { ...createPersonalState(), careerTrackerOperations: [{ ...trackerOp('first'), fields: { company: 'changed same ID' } }] };
+  assert.throws(() => mergePersonalData(first, conflict));
+  assert.throws(() => validatePersonalData({ ...legacy, careerTrackerOperations: {} }));
+});
+
+test('private Tracker journal survives storage and backup restore without crossing accounts', () => {
+  const storage = memoryStorage();
+  const first = createPersonalStore({ ownerId: 'alice', storage });
+  first.update(state => ({ ...state, careerTrackerOperations: [trackerOp('baseline')] }));
+  const backup = first.exportBackup();
+  first.update(state => ({ ...state, careerTrackerOperations: [...state.careerTrackerOperations, trackerOp('later', 2)] }));
+  first.restoreBackup(backup);
+  assert.equal(first.getSnapshot().data.careerTrackerOperations.length, 2);
+  assert.equal(createPersonalStore({ ownerId: 'alice', storage }).getSnapshot().data.careerTrackerOperations.length, 2);
+  const bob = createPersonalStore({ ownerId: 'bob', storage });
+  assert.deepEqual(bob.getSnapshot().data.careerTrackerOperations, []);
+  assert.throws(() => bob.restoreBackup(backup), /different account/);
+});
+
 test("no-op timers do not write storage, but still catch up with another tab", () => {
   const storage = memoryStorage();
   const store = createPersonalStore({ ownerId: "a", storage });
