@@ -171,16 +171,12 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
           </div>
           <button type="button" className="pc-icon-button pc-day-arrow" aria-label={t("后一天", "Next day")} onClick={() => selectDate(addLocalDays(selectedDay, 1))}>→</button>
         </div>
-        <p className="pc-swipe-hint">{t("左右滑动日期，或直接跳转到任意一天", "Swipe the dates, or jump directly to any day")}</p>
         {leetcodeLinked && <p className="pc-source-legend"><span aria-hidden="true">○</span> {t(`空心圆：力扣日历的提交日期${leetcodeRecords.calendarTimeZone ? `（${leetcodeRecords.calendarTimeZone}）` : "（源站时区）"}`, `Hollow dot: LeetCode calendar submission date (${leetcodeRecords.calendarTimeZone || "source time zone"})`)}</p>}
       </section>
 
       <section className="pc-selected-day" aria-labelledby="pc-day-title">
         <div className="pc-section-heading">
-          <div>
-            <p className="pc-eyebrow">{selectedDay === today ? "TODAY" : "DAILY RECORD"}</p>
-            <h2 id="pc-day-title">{fullDateFormatter.format(parseLocalDay(selectedDay))}</h2>
-          </div>
+          <h2 id="pc-day-title">{fullDateFormatter.format(parseLocalDay(selectedDay))}</h2>
           <button type="button" className="pc-secondary" aria-expanded={showManual} aria-controls="pc-manual-form" onClick={() => { if (!pendingManualRef.current) setManual((current) => ({ ...current, dateKey: selectedDay })); setShowManual((value) => !value); }}>{t("＋ 补记训练", "+ Add training")}</button>
         </div>
 
@@ -193,7 +189,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
         </dl>
 
         {leetcode && <section className="pc-leetcode" aria-labelledby="pc-leetcode-title">
-          <div className="pc-leetcode-heading"><div><h3 id="pc-leetcode-title">LeetCode</h3><p>{leetcodeLinked ? leetcode.data.connection.displayName || leetcode.data.connection.username : t("把力扣刷题也放进训练日历", "Include your LeetCode practice in the calendar")}</p></div><Link className="pc-text-button" to="/leetcode">{leetcodeLinked ? t("进入 LeetCode 模块", "Open LeetCode") : t("关联力扣账号", "Connect LeetCode")} <span aria-hidden="true">↗</span></Link></div>
+          <div className="pc-leetcode-heading"><div><h3 id="pc-leetcode-title">LeetCode</h3>{leetcodeLinked && <p>{leetcode.data.connection.displayName || leetcode.data.connection.username}</p>}</div><Link className="pc-text-button" to="/leetcode">{leetcodeLinked ? t("进入 LeetCode 模块", "Open LeetCode") : t("关联力扣账号", "Connect LeetCode")} <span aria-hidden="true">↗</span></Link></div>
           {leetcodeLinked ? <>
             <dl className="pc-leetcode-stats">
               <div><dt>{t("这一天计入总数的通过记录", "Synced completions counted this day")}</dt><dd><strong>{leetcodeDay.solved === null ? "—" : leetcodeDay.solved.toLocaleString(locale)}</strong>{leetcodeDay.solved !== null && <span>{t("题", "problems")}</span>}</dd><p>{leetcodeDay.solved === null ? t("题目明细未同步", "Problem details not synced") : t(`同题与上次计入记录相隔至少 3 小时可再计一次 · ${leetcodeDay.acceptedSubmissions} 次通过提交`, `The same problem counts again after at least 3 hours since its last counted solve · ${leetcodeDay.acceptedSubmissions} accepted submissions`)}</p></div>
@@ -201,7 +197,7 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
             </dl>
             <p className="pc-leetcode-note">{t("通过题目按设备本地日期归档；力扣日历提交量保留源站日期", "Solved problems use your device’s local date; daily submission totals retain LeetCode’s source date")}{leetcodeRecords.calendarTimeZone ? ` (${leetcodeRecords.calendarTimeZone})` : t("（源站时区未提供）", " (source time zone unavailable)")}{t("，跨日记录可能不同。", "; dates near midnight can differ.")}{!leetcodeRecords.historyComplete && t(" 公开近期记录不包含完整历史；题数与下方周统计仅计已同步的通过题目。", " Recent public records do not cover your full history. Problem counts and the weekly chart include only synced accepted problems.")}</p>
             {leetcode.error && <p className="pc-leetcode-note" role="status">{t("力扣数据暂时无法更新，当前展示已保存的记录。可进入 LeetCode 模块重试。", "LeetCode could not be updated. Saved records are shown; retry from the LeetCode module.")}</p>}
-          </> : <p className="pc-leetcode-note">{leetcode.phase === "loading" ? t("正在读取关联状态…", "Loading connection…") : t("关联后查看每日通过题目、提交次数，并从完成记录跳转回力扣复习。", "Connect to see daily solved problems and submissions, and revisit problems on LeetCode.")}</p>}
+          </> : leetcode.phase === "loading" && <p className="pc-leetcode-note" role="status">{t("正在读取关联状态…", "Loading connection…")}</p>}
         </section>}
 
         {notice && <div className={`pc-notice${notice.error ? " is-error" : ""}`} role={notice.error ? "alert" : "status"}>
@@ -230,14 +226,14 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
           </li>)}
         </ol> : <div className="pc-empty">
           <span className="pc-empty-symbol" aria-hidden="true">○</span>
-          <h3>{leetcodeDay.acceptedSubmissions > 0 ? t("这一天的通过记录尚未达到再次计数间隔", "Accepted attempts are within the repeat-count interval") : leetcodeDay.sourceSubmissions > 0 ? t("这一天的题目明细尚未同步", "Problem details have not been synced for this day") : t("这一天，还没有训练记录", "No training recorded for this day")}</h3>
-          <p>{leetcodeDay.acceptedSubmissions > 0 ? t(`已保留 ${leetcodeDay.acceptedSubmissions} 次通过提交；与同题上次计入记录相隔不足 3 小时，总数不再增加。`, `${leetcodeDay.acceptedSubmissions} accepted submissions are retained. They are less than 3 hours after the last counted solve of the same problem, so the total does not increase.`) : leetcodeDay.sourceSubmissions > 0 ? t("力扣日历中有提交记录，但没有对应的已同步通过题目。提交次数不计入完成题数。", "LeetCode’s calendar has submissions, but no accepted problem details are synced. Submission totals do not count as completed problems.") : t("完成一次练习后，它会出现在对应日期。也可以补记线下完成的训练。", "Completed practice appears on its date. You can also add your offline training.")}</p>
+          <h3>{leetcodeDay.acceptedSubmissions > 0 ? t("这一天的通过记录尚未达到再次计数间隔", "Accepted attempts are within the repeat-count interval") : leetcodeDay.sourceSubmissions > 0 ? t("这一天的题目明细尚未同步", "Problem details have not been synced for this day") : t("暂无训练记录", "No training records")}</h3>
+          {(leetcodeDay.acceptedSubmissions > 0 || leetcodeDay.sourceSubmissions > 0) && <p>{leetcodeDay.acceptedSubmissions > 0 ? t(`已保留 ${leetcodeDay.acceptedSubmissions} 次通过提交；与同题上次计入记录相隔不足 3 小时，总数不再增加。`, `${leetcodeDay.acceptedSubmissions} accepted submissions are retained. They are less than 3 hours after the last counted solve of the same problem, so the total does not increase.`) : t("力扣日历中有提交记录，但没有对应的已同步通过题目。提交次数不计入完成题数。", "LeetCode’s calendar has submissions, but no accepted problem details are synced. Submission totals do not count as completed problems.")}</p>}
           <div className="pc-empty-links"><Link to="/tools">Mental Math <span aria-hidden="true">↗</span></Link><Link to="/leetcode">LeetCode <span aria-hidden="true">↗</span></Link><Link to="/technical-interview">Technical Interview <span aria-hidden="true">↗</span></Link></div>
         </div>}
       </section>
 
       <section className="pc-week" aria-labelledby="pc-week-title">
-        <div className="pc-section-heading"><div><p className="pc-eyebrow">LAST 7 DAYS</p><h2 id="pc-week-title">{t("近 7 天的训练节奏", "Your last seven days")}</h2><p className="pc-week-range">{shortDateFormatter.format(parseLocalDay(recentDays[0].key))} – {shortDateFormatter.format(parseLocalDay(selectedDay))}</p></div><p className="pc-week-total"><strong>{recentActiveDays}</strong> / 7 {t("天有训练", "days active")}<span>{t(`完成总数 ${recentTotal.toLocaleString(locale)}`, `${recentTotal.toLocaleString(locale)} total completions`)}</span></p></div>
+        <div className="pc-section-heading"><div><h2 id="pc-week-title">{t("近 7 天训练", "Last 7 days")}</h2><p className="pc-week-range">{shortDateFormatter.format(parseLocalDay(recentDays[0].key))} – {shortDateFormatter.format(parseLocalDay(selectedDay))}</p></div><p className="pc-week-total"><strong>{recentActiveDays}</strong> / 7 {t("天有训练", "days active")}<span>{t(`完成总数 ${recentTotal.toLocaleString(locale)}`, `${recentTotal.toLocaleString(locale)} total completions`)}</span></p></div>
         <div className="pc-week-chart" role="group" aria-label={t("近七天每日完成总数", "Total completions each day")}>
           {recentDays.map((day) => <button type="button" key={day.key} className={`pc-week-day${day.key === selectedDay ? " is-selected" : ""}`} onClick={() => selectDate(day.key)} aria-label={`${fullDateFormatter.format(parseLocalDay(day.key))} · ${t(`完成总数 ${day.totalQuestions}`, `${day.totalQuestions} total completions`)}${day.daily ? t(`，${day.daily} 轮历史综合训练`, `, ${day.daily} past combined practice rounds`) : ""}`}>
             <strong>{day.totalQuestions.toLocaleString(locale)}</strong>
@@ -245,10 +241,12 @@ export function TrainingCalendar({ state = {}, update, legacyState = {}, languag
             <span>{weekdayFormatter.format(parseLocalDay(day.key))}</span><small>{shortDateFormatter.format(parseLocalDay(day.key))}</small>
           </button>)}
         </div>
-        <p className="pc-data-note">{t("Mental Math、数列和图形每次训练只要完成了题目，总数加 1；记录中另显示完成了多少题、其中正确多少题。跨午夜的一次训练也只计一次，归在最后一道已完成题目的日期。抽题、错误尝试、保存草稿和力扣复盘不增加总数。", "Each Mental Math, sequence, or pattern session with finished questions adds one to the total. Its completed-question and correct-answer counts remain visible separately. An overnight session counts once on the date of its last finished question. Drawing questions, wrong attempts, saving drafts, and LeetCode reviews do not add to the total.")}{recentDays.some((day) => day.daily > 0) && t(" 历史综合训练的轮数单独保留。", " Past combined practice rounds are retained separately.")}{leetcodeLinked && t(" LeetCode 仅计账号同步的通过记录；同题与上次计入记录相隔至少 3 小时可再计一次，跨午夜不重置间隔。导入记录和源站日历提交量不计入。", " LeetCode counts accepted account-sync records. The same problem counts again at least 3 hours after its last counted solve; midnight does not reset the interval. Imported history and source-calendar submission totals are excluded.")}</p>
+        <details className="pc-data-note">
+          <summary>{t("统计说明", "Counting details")}</summary>
+          <p>{t("Mental Math、数列和图形每次训练只要完成了题目，总数加 1；记录中另显示完成了多少题、其中正确多少题。跨午夜的一次训练也只计一次，归在最后一道已完成题目的日期。抽题、错误尝试、保存草稿和力扣复盘不增加总数。", "Each Mental Math, sequence, or pattern session with finished questions adds one to the total. Its completed-question and correct-answer counts remain visible separately. An overnight session counts once on the date of its last finished question. Drawing questions, wrong attempts, saving drafts, and LeetCode reviews do not add to the total.")}{recentDays.some((day) => day.daily > 0) && t(" 历史综合训练的轮数单独保留。", " Past combined practice rounds are retained separately.")}{leetcodeLinked && t(" LeetCode 仅计账号同步的通过记录；同题与上次计入记录相隔至少 3 小时可再计一次，跨午夜不重置间隔。导入记录和源站日历提交量不计入。", " LeetCode counts accepted account-sync records. The same problem counts again at least 3 hours after its last counted solve; midnight does not reset the interval. Imported history and source-calendar submission totals are excluded.")}</p>
+          <p>{t("记录按你设备的本地日期归档。已有明确完成时间的旧训练会自动汇入，未记录完成日期的历史进度可手动补记。", "Records follow your device’s local dates. Dated training history is included automatically; older progress without a completion date can be added manually.")}{undatedLegacyCount > 0 && <span> {t(`有 ${undatedLegacyCount} 条旧记录因缺少可靠日期未计入。`, `${undatedLegacyCount} older records have no reliable date and are not included.`)}</span>}</p>
+        </details>
       </section>
-
-      <footer className="pc-footer"><p>{t("记录按你设备的本地日期归档。已有明确完成时间的旧训练会自动汇入，未记录完成日期的历史进度可手动补记。", "Records follow your device’s local dates. Dated training history is included automatically; older progress without a completion date can be added manually.")}{undatedLegacyCount > 0 && <span> {t(`有 ${undatedLegacyCount} 条旧记录因缺少可靠日期未计入。`, `${undatedLegacyCount} older records have no reliable date and are not included.`)}</span>}</p></footer>
     </main>
   );
 }
