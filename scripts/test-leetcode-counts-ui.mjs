@@ -107,7 +107,7 @@ test('shared Stage table exposes editing only when requested and passes the disp
   assert.deepEqual(rows, before, 'rendering does not reorder or mutate source rows');
   const html = renderToStaticMarkup(tree);
   assert.equal((html.match(/aria-current="step"/g) || []).length, 1);
-  assert.ok(html.indexOf('当前阶段') < html.indexOf('aria-label="编辑 Current preparation"'));
+  assert.doesNotMatch(html, /当前阶段/);
   const readOnly = renderToStaticMarkup(createElement(OverviewCareerStage, { rows }));
   assert.doesNotMatch(readOnly, /<(?:button|a)\b/);
 });

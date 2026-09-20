@@ -314,3 +314,11 @@ The shared Overview/Tracker Stage header places Mental Math and 平均分 on one
 Browser checks: 1280/1024/390/320px, no document-level horizontal overflow, new/total LeetCode pairs share one line, and progress pills fit their cells after saving a new event in the isolated fixture. No real application record was changed. Calculation and synchronization code are unchanged.
 
 final result: passed
+
+## Stage label removal and LeetCode alignment — 2026-09-20
+
+Removed the visible 当前阶段 label and its reserved top spacing; retained the current row's accent, divider and aria-current. Centered the LeetCode heading over a centered, equal-column new/total group. Labels share left anchors and counts share right anchors across rows, including the current row's larger type and partial-count indicator.
+
+Measured the real shared component in the synthetic browser fixture: at 1280px the header and all three group centers match within 0.01px, and both label starts and number ends match across rows. The same center check passes at 1024px. At 390/320px the paired counts remain on one line, contained within their row, with document width equal to viewport width. Current/history desktop row heights are 56/46px. No data or calculation changes.
+
+final result: passed
