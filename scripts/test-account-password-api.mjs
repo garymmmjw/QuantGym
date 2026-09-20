@@ -131,23 +131,14 @@ test('an account with a missing cloud token cannot fall back to a local password
   assert.equal(stored(h), before);
 });
 
-test('explicit device account changes only its device password with an accurate success label', async () => {
-  const h = harness({ cloud: false });
-  const state = h.userState.value;
-  const result = await h.api.changePassword(fields);
-  assert.equal(result.ok, true);
-  assert.equal(result.scope, 'local');
-  assert.match(result.message, /本机密码/);
-  assert.equal(h.appState.currentUser.passwordHash, hash(email, fields.newPassword));
-  assert.equal(h.userState.value, state);
-  assert.deepEqual(h.calls, ['save-auth', 'sync-stores']);
-});
-
-test('incorrect device password cannot change credentials', async () => {
+test('legacy device credentials cannot authorize a password change', async () => {
   const h = harness({ cloud: false });
   const before = stored(h);
-  assert.equal((await h.api.changePassword({ ...fields, currentPassword: 'Wrong123' })).code, 'wrongPassword');
-  assert.equal(stored(h), before);
+  for (const currentPassword of ['Wrong123', fields.currentPassword]) {
+    assert.equal((await h.api.changePassword({ ...fields, currentPassword })).code, 'reauthRequired');
+    assert.equal(stored(h), before);
+    assert.deepEqual(h.calls, []);
+  }
 });
 
 test('profile save requires current password for email changes without mutating records', async () => {
@@ -159,100 +150,22 @@ test('profile save requires current password for email changes without mutating 
   assert.deepEqual(h.calls, []);
 });
 
-test('activation code first verifies the device password and checks cloud existence', async () => {
+test('old activation entry points cannot register another identity or mutate saved data', async () => {
   const h = harness({ cloud: false });
   const before = stored(h);
-  assert.equal((await h.api.sendCloudActivationCode({ password: 'Wrong123' })).code, 'wrongPassword');
-  assert.deepEqual(h.calls, []);
-  assert.equal((await h.api.sendCloudActivationCode({ password: fields.currentPassword })).ok, true);
-  assert.deepEqual(h.calls, [
-    { path: `/auth/account-status?email=${encodeURIComponent(email)}`, options: { auth: false } },
-    { path: '/auth/verification-code', options: { method: 'POST', auth: false, body: { email, purpose: 'register' } } }
-  ]);
-  assert.equal(stored(h), before);
-});
-
-test('existing cloud account cannot receive a new registration verification code', async () => {
-  const h = harness({ cloud: false });
-  h.deps.cloudApi = async (path) => { h.calls.push(path); return { exists: true }; };
-  assert.equal((await h.api.sendCloudActivationCode({ password: fields.currentPassword })).code, 'cloudAccountExists');
-  assert.equal(h.calls.length, 1);
-});
-
-test('activation syncs the original owner and personal records without publishing shared community', async () => {
-  const h = harness({ cloud: false });
-  const owner = h.appState.currentUser;
-  const state = h.userState.value;
-  const community = { posts: [{ id: 'device-community-snapshot' }] };
-  h.appState.community = community;
-  const result = await h.api.activateCloudAccount({ password: fields.currentPassword, verificationCode: 'fixture-code' });
-  assert.equal(result.ok, true);
-  const request = h.calls[0];
-  assert.equal(request.path, '/auth/register');
-  assert.equal(request.options.auth, false);
-  assert.equal(request.options.body.account.id, owner.id);
-  assert.equal(request.options.body.account.passwordHash, undefined);
-  assert.equal(request.options.body.community, undefined);
-  assert.equal(request.options.body.password, fields.currentPassword);
-  assert.equal(request.options.body.verificationCode, 'fixture-code');
-  assert.equal(h.appState.currentUser, owner);
-  assert.equal(h.appState.auth.currentUserId, owner.id);
-  assert.equal(h.userState.value, state);
-  assert.equal(h.appState.community, community);
-  assert.deepEqual(community, { posts: [{ id: 'device-community-snapshot' }] });
-  assert.equal(h.appState.cloudConfig.userId, owner.id);
-  assert.equal(h.appState.cloudConfig.token, 'fixture-new-token');
-  assert.deepEqual(h.calls.slice(1), ['save-cloud', 'sync-stores', 'queue:state', 'queue:account']);
-});
-
-test('activation cannot call register with an incorrect password or missing code', async () => {
-  const h = harness({ cloud: false });
-  const before = stored(h);
-  assert.equal((await h.api.activateCloudAccount({ password: 'Wrong123', verificationCode: 'fixture-code' })).code, 'wrongPassword');
-  assert.equal((await h.api.activateCloudAccount({ password: fields.currentPassword })).code, 'missingCode');
+  assert.equal((await h.api.sendCloudActivationCode({ password: fields.currentPassword })).code, 'reauthRequired');
+  assert.equal((await h.api.activateCloudAccount({ password: fields.currentPassword, verificationCode: 'fixture-code' })).code, 'reauthRequired');
   assert.equal(stored(h), before);
   assert.deepEqual(h.calls, []);
 });
 
-test('failed or wrong-owner activation leaves records and cloud configuration unchanged', async () => {
-  for (const response of ['conflict', 'unavailable', 'wrong-owner']) {
-    const h = harness({ cloud: false });
-    const before = stored(h);
-    h.deps.cloudApi = async () => {
-      if (response === 'conflict') throw Object.assign(new Error('Fixture conflict'), { status: 409 });
-      if (response === 'unavailable') throw Object.assign(new Error('Fixture unavailable'), { status: 503 });
-      return { token: 'fixture-token', account: { id: 'different-owner', email } };
-    };
-    assert.equal((await h.api.activateCloudAccount({ password: fields.currentPassword, verificationCode: 'fixture-code' })).ok, false);
-    assert.equal(stored(h), before);
-    assert.deepEqual(h.calls, []);
-  }
-});
-
-test('account APIs forward explicit device login and recovery cancellation options', () => {
+test('legacy device login forwards into the standard login flow', () => {
   const h = harness();
   h.deps.loginLocal = options => { h.calls.push(['login', options]); return true; };
   h.deps.logout = options => { h.calls.push(['logout', options]); return true; };
   assert.equal(h.api.loginDeviceAccount(), true);
   assert.equal(h.api.cancelCloudRecovery(), true);
-  assert.deepEqual(h.calls, [['login', { deviceOnly: true }], ['logout', { cancelRecovery: true }]]);
-});
-
-test('activation response cannot overwrite an account switched during registration', async () => {
-  const h = harness({ cloud: false });
-  const pending = deferred();
-  const started = deferred();
-  h.deps.cloudApi = () => { started.resolve(); return pending.promise; };
-  const operation = h.api.activateCloudAccount({ password: fields.currentPassword, verificationCode: 'fixture-code' });
-  await started.promise;
-  const other = { ...account(), id: 'local:other' };
-  h.appState.currentUser = other;
-  h.appState.auth.currentUserId = other.id;
-  const before = stored(h);
-  pending.resolve({ token: 'fixture-new-token', account: { id: 'local:fixture', email } });
-  assert.equal((await operation).code, 'sessionChanged');
-  assert.equal(stored(h), before);
-  assert.deepEqual(h.calls, []);
+  assert.deepEqual(h.calls, [['login', undefined], ['logout', { cancelRecovery: true }]]);
 });
 
 test('persistence failure after server success accurately reports that the cloud password changed', async () => {
@@ -261,20 +174,8 @@ test('persistence failure after server success accurately reports that the cloud
   const result = await h.api.changePassword(fields);
   assert.equal(result.ok, false);
   assert.equal(result.code, 'sessionSaveFailed');
-  assert.match(result.message, /云端密码已修改/);
+  assert.match(result.message, /登录密码已修改/);
 });
-
-test('persistence failure after registration accurately reports that the cloud account exists', async () => {
-  const h = harness({ cloud: false });
-  h.deps.saveCloudConfig = () => { throw new Error('Fixture storage failure'); };
-  const state = h.userState.value;
-  const result = await h.api.activateCloudAccount({ password: fields.currentPassword, verificationCode: 'fixture-code' });
-  assert.equal(result.ok, false);
-  assert.equal(result.code, 'sessionSaveFailed');
-  assert.match(result.message, /云端账户已启用/);
-  assert.equal(h.userState.value, state);
-});
-
 
 test('cloud password restores the authoritative email without losing the new token or records', async () => {
   const h = harness();

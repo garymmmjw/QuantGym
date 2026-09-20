@@ -1,4 +1,5 @@
 import { cancelCloudReauthentication, getCloudReauthentication } from "../../state/cloudReauthentication.js";
+import { deviceRecordStamp, deviceRecordStorage, markDeviceRecordsRecovered } from '../../state/deviceRecordRecovery.js';
 
 export function createAccountAuthController(deps = {}) {
   const getElements = () => deps.elements || {};
@@ -15,30 +16,51 @@ export function createAccountAuthController(deps = {}) {
   const beginAuthAttempt = () => ({ id: ++authAttemptSequence, cloudOnly: requiresCloudLogin() });
   const isCurrentAttempt = (attempt) => attempt.id === authAttemptSequence;
 
-  function clearCloudForOffline(messageKey) {
-    const appState = getAppState();
-    appState.cloudConfig = {
-      ...(appState.cloudConfig || {}),
-      token: "",
-      userId: "",
-      lastSyncAt: "",
-      lastError: text(messageKey)
-    };
-    deps.saveCloudConfig?.();
-  }
-
-  function requireValidCloudSession(session) {
-    if (typeof session?.token !== "string" || !session.token.trim() || typeof session?.account?.id !== "string" || !session.account.id.trim()) {
+  function requireValidCloudSession(session, email) {
+    if (typeof session?.token !== "string" || !session.token.trim() || typeof session?.account?.id !== "string" || !session.account.id.trim()
+      || (email && deps.normalizeEmail?.(session.account.email) !== email)) {
       throw new Error("Invalid cloud session response");
     }
     return session;
   }
 
-  function findLocalAccount(email) {
-    const appState = getAppState();
-    return appState.auth.accounts.find((item) => (
-      item.provider === "local" && deps.normalizeEmail?.(item.email) === email
-    ));
+  function savedProfiles() {
+    const auth = getAppState().auth || {};
+    return [...new Map([...(auth.legacyAccounts || []), ...(auth.accounts || [])]
+      .filter(account => account?.id).map(account => [account.id, account])).values()];
+  }
+
+  function passwordOwnerLinks(account, email, passwordHash) {
+    if (typeof passwordHash !== 'string' || !passwordHash || deps.normalizeEmail?.(account.email) !== email) return [];
+    return savedProfiles().filter(profile => profile.id !== account.id && profile.provider === 'local'
+      && deps.normalizeEmail?.(profile.email) === email && profile.passwordHash === passwordHash && sourceNeedsRecovery(profile, account.id))
+      .map(profile => ({ sourceOwnerId: profile.id, targetOwnerId: account.id, method: 'password' }));
+  }
+
+  function sourceNeedsRecovery(profile, targetOwnerId) {
+    if (profile?.recordRecovery?.targetOwnerId !== targetOwnerId) return true;
+    const stamp = deviceRecordStamp(profile.id, deviceRecordStorage(deps.storage));
+    return !stamp || stamp !== profile.recordRecovery.sourceStamp;
+  }
+
+  function verifiedLocalState(ownerId, links = []) {
+    const states = [...links.map(link => link.sourceOwnerId), ownerId]
+      .map(id => deps.loadStateForUser?.(id)).filter(Boolean);
+    if (!states.length) return deps.createBaseState?.();
+    return states.reduce((merged, state) => {
+      if (merged === state) return merged;
+      if (!deps.mergeCloudState) throw new Error('Verified record merge is unavailable.');
+      return deps.mergeCloudState(merged, state);
+    });
+  }
+
+  function ownerLinkOptions(links) {
+    return { careerOwnerLinks: links, ...(links.length === 1 ? { careerOwnerLink: links[0] } : {}) };
+  }
+
+  function recoverySources(links) {
+    const storage = deviceRecordStorage(deps.storage);
+    return links.map(link => ({ id: link.sourceOwnerId, sourceStamp: deviceRecordStamp(link.sourceOwnerId, storage) }));
   }
 
   function markAuthenticated(auth = {}) {
@@ -149,11 +171,9 @@ export function createAccountAuthController(deps = {}) {
     if (elements.loginPassword?.value) {
       return loginLocal();
     }
-    if (findLocalAccount(email)) {
-      return showPasswordStep(email, "local");
-    }
-
+    const attempt = beginAuthAttempt();
     const cloudExists = await getCloudAccountExists(email);
+    if (!isCurrentAttempt(attempt)) return false;
     if (cloudExists === false) {
       if (requiresCloudLogin()) {
         deps.showAuthMessage?.(text("authCloudAccountMissing"), true);
@@ -166,17 +186,11 @@ export function createAccountAuthController(deps = {}) {
 
   async function sendRegisterVerificationCode() {
     const elements = getElements();
-    const appState = getAppState();
     const email = deps.normalizeEmail?.(elements.registerEmail.value) || "";
     if (!email || !email.includes("@")) {
       deps.showAuthMessage?.(text("authNeedEmail"), true);
       return;
     }
-    if (appState.auth.accounts.some((account) => deps.normalizeEmail?.(account.email) === email)) {
-      deps.showAuthMessage?.(text("authDuplicateEmail"), true);
-      return;
-    }
-
     delete elements.registerForm.dataset.verificationOptional;
     deps.setRegisterCodeButtonBusy?.(true, text("sending"));
     try {
@@ -187,7 +201,6 @@ export function createAccountAuthController(deps = {}) {
       deps.showAuthMessage?.(text("authVerificationSent", { email, delivery, devCode }));
     } catch (error) {
       if (!error?.status) {
-        elements.registerForm.dataset.verificationOptional = "true";
         deps.showAuthMessage?.(text("authCloudVerificationUnavailable"), true);
       } else {
         deps.showAuthMessage?.(deps.getVerificationErrorMessage?.(error), true);
@@ -234,19 +247,12 @@ export function createAccountAuthController(deps = {}) {
       const email = deps.normalizeEmail?.(elements.registerEmail.value) || "";
       const password = elements.registerPassword.value;
       const verificationCode = elements.registerVerificationCode.value.trim();
-      const verificationOptional = elements.registerForm.dataset.verificationOptional === "true";
-
-      if (!name || !email || password.length < 6) {
+      if (!name || !email.includes('@') || password.length < 6) {
         deps.showAuthMessage?.(text("authMissingRegisterFields"), true);
         return;
       }
-      if (!verificationCode && !verificationOptional) {
+      if (!verificationCode) {
         deps.showAuthMessage?.(text("authNeedVerificationCode"), true);
-        return;
-      }
-
-      if (appState.auth.accounts.some((account) => deps.normalizeEmail?.(account.email) === email)) {
-        deps.showAuthMessage?.(text("authDuplicateEmail"), true);
         return;
       }
 
@@ -263,53 +269,33 @@ export function createAccountAuthController(deps = {}) {
       });
       if (!isCurrentAttempt(attempt)) return;
 
-      deps.migrateLegacyState?.(account.id);
-      const localState = deps.loadStateForUser?.(account.id);
-
-      if (!verificationOptional) {
-        try {
-          const cloudSession = await deps.registerCloudAccount?.(
-            account,
-            password,
-            localState,
-            appState.community,
-            verificationCode
-          );
-          if (!isCurrentAttempt(attempt)) return;
-          deps.applyCloudSession?.(cloudSession, {
-            localState,
-            localCommunity: appState.community,
-            passwordHash: account.passwordHash
-          });
-          markAuthenticated(appState.auth);
-          deps.saveAuth?.();
-          elements.registerForm.reset();
-          deps.showAuthMessage?.(text("authCreatedSynced"));
-          deps.renderSession?.();
-          return;
-        } catch (error) {
-          if (!isCurrentAttempt(attempt)) return;
-          if (error?.status) {
-            deps.showAuthMessage?.(deps.getVerificationErrorMessage?.(error), true);
-            return;
-          }
-          deps.showAuthMessage?.(text("authCloudLocalCreated"));
-        }
-      }
-
-      deps.addLocalAccount?.(appState.auth, account);
+      // Registration is complete only after the server verifies the code and
+      // returns its identity. Device profiles neither block it nor sign in.
+      const cloudSession = requireValidCloudSession(await deps.registerCloudAccount?.(
+        account, password, deps.createBaseState?.() || {}, appState.community, verificationCode
+      ), email);
+      if (!isCurrentAttempt(attempt)) return;
+      const links = passwordOwnerLinks(cloudSession.account, email, account.passwordHash);
+      const sources = recoverySources(links);
+      deps.applyCloudSession?.(cloudSession, {
+        localState: verifiedLocalState(cloudSession.account.id, links),
+        localCommunity: appState.community,
+        passwordHash: account.passwordHash,
+        ...ownerLinkOptions(links)
+      });
+      markDeviceRecordsRecovered(appState.auth, sources, cloudSession.account.id);
       markAuthenticated(appState.auth);
       deps.saveAuth?.();
       elements.registerForm.reset();
+      deps.showAuthMessage?.(text("authCreatedSynced"));
       deps.renderSession?.();
     } catch (error) {
       if (!isCurrentAttempt(attempt)) return;
-      deps.showAuthMessage?.(authErrorMessage(error), true);
+      deps.showAuthMessage?.(error?.status ? deps.getVerificationErrorMessage?.(error) : authErrorMessage(error), true);
     }
   }
 
-  async function loginLocal(options = {}) {
-    if (options.deviceOnly === true) return loginDeviceAccount();
+  async function loginLocal() {
     const elements = getElements();
     const appState = getAppState();
     const attempt = beginAuthAttempt();
@@ -317,32 +303,24 @@ export function createAccountAuthController(deps = {}) {
       const email = deps.normalizeEmail?.(elements.loginEmail.value) || "";
       const password = elements.loginPassword.value;
       try {
-        const cloudSession = requireValidCloudSession(await deps.loginCloudAccount?.(email, password));
+        const cloudSession = requireValidCloudSession(await deps.loginCloudAccount?.(email, password), email);
         if (!isCurrentAttempt(attempt)) return;
         const remoteAccount = deps.normalizeAccount?.(cloudSession.account || {}) || {};
-        const localAccount = appState.auth.accounts.find((item) => (
-          item.id === remoteAccount.id || deps.normalizeEmail?.(item.email) === email
-        ));
-        const localState = localAccount ? deps.loadStateForUser?.(localAccount.id) : deps.createBaseState?.();
         const localFields = { passwordHash: await deps.hashPassword?.(email, password) };
         if (!isCurrentAttempt(attempt)) return;
         // A matching email alone does not prove ownership of a device profile.
         // Bind the two IDs only after this same password passed both the server
         // login and the cached local credential, while this attempt still owns
         // the session. Never discover orphan storage keys by email.
-        const careerOwnerLink = localAccount?.provider === 'local'
-          && localAccount.id !== remoteAccount.id
-          && typeof localAccount.passwordHash === 'string' && localAccount.passwordHash
-          && localAccount.passwordHash === localFields.passwordHash
-          && deps.normalizeEmail?.(remoteAccount.email) === email
-          ? { sourceOwnerId: localAccount.id, targetOwnerId: remoteAccount.id, method: 'password' }
-          : undefined;
+        const links = passwordOwnerLinks(remoteAccount, email, localFields.passwordHash);
+        const sources = recoverySources(links);
         deps.applyCloudSession?.(cloudSession, {
-          localState,
+          localState: verifiedLocalState(remoteAccount.id, links),
           localCommunity: appState.community,
-          careerOwnerLink,
+          ...ownerLinkOptions(links),
           ...localFields
         });
+        markDeviceRecordsRecovered(appState.auth, sources, remoteAccount.id);
         markAuthenticated(appState.auth);
         deps.saveAuth?.();
         elements.loginForm.reset();
@@ -368,48 +346,10 @@ export function createAccountAuthController(deps = {}) {
     }
   }
 
-  async function loginDeviceAccount() {
-    const elements = getElements();
-    const appState = getAppState();
-    const attempt = beginAuthAttempt();
-    try {
-      const email = getLoginEmail();
-      const password = elements.loginPassword?.value || "";
-      const account = findLocalAccount(email);
-      if (!account?.id || typeof account.passwordHash !== "string" || !account.passwordHash) {
-        deps.showAuthMessage?.(text("authDeviceAccountMissing"), true);
-        return { ok: false };
-      }
-      if (!password) {
-        deps.showAuthMessage?.(text("authDevicePasswordRequired"), true);
-        elements.loginPassword?.focus?.();
-        return { ok: false };
-      }
-      const expectedHash = account.passwordHash;
-      const passwordHash = await deps.hashPassword?.(email, password);
-      if (!isCurrentAttempt(attempt)) return { ok: false };
-      const currentAccount = findLocalAccount(email);
-      if (passwordHash !== expectedHash || currentAccount?.id !== account.id || currentAccount?.passwordHash !== expectedHash) {
-        deps.showAuthMessage?.(text("authDevicePasswordWrong"), true);
-        return { ok: false };
-      }
-
-      // This action grants access only to the verified owner's device records.
-      // Clear cloud credentials before exposing that local identity to services.
-      clearCloudForOffline("authDeviceSession");
-      (deps.cancelCloudReauthentication || cancelCloudReauthentication)();
-      deps.setCurrentUserId?.(appState.auth, account.id);
-      markAuthenticated(appState.auth);
-      deps.saveAuth?.();
-      elements.loginForm?.reset();
-      deps.showAuthMessage?.(text("authDeviceSession"));
-      deps.renderSession?.();
-      return { ok: true, mode: "device" };
-    } catch (error) {
-      if (!isCurrentAttempt(attempt)) return { ok: false };
-      deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error), true);
-      return { ok: false };
-    }
+  function loginDeviceAccount() {
+    // Compatibility for older callers: this action has no offline authority.
+    // It uses the same server login and never clears an existing session.
+    return loginLocal();
   }
 
   function cancelCloudRecovery() {
@@ -432,13 +372,10 @@ export function createAccountAuthController(deps = {}) {
         return;
       }
 
-      const cloudSession = requireValidCloudSession(await deps.resetCloudPassword?.(email, password, verificationCode));
+      const cloudSession = requireValidCloudSession(await deps.resetCloudPassword?.(email, password, verificationCode), email);
       if (!isCurrentAttempt(attempt)) return;
       const remoteAccount = deps.normalizeAccount?.(cloudSession.account || {}) || {};
-      const localAccount = appState.auth.accounts.find((item) => (
-        item.id === remoteAccount.id || deps.normalizeEmail?.(item.email) === email
-      ));
-      const localState = localAccount ? deps.loadStateForUser?.(localAccount.id) : deps.createBaseState?.();
+      const localState = verifiedLocalState(remoteAccount.id);
       const passwordHash = await deps.hashPassword?.(email, password);
       if (!isCurrentAttempt(attempt)) return;
       deps.applyCloudSession?.(cloudSession, {
@@ -486,13 +423,14 @@ export function createAccountAuthController(deps = {}) {
     const attempt = beginAuthAttempt();
     try {
       const payload = deps.parseJwt?.(response.credential);
-      if (payload.aud !== deps.getGoogleClientId?.()) {
+      if (payload.aud !== deps.getGoogleClientId?.() || typeof payload.sub !== 'string' || !payload.sub.trim()
+        || !deps.normalizeEmail?.(payload.email)) {
         deps.showAuthMessage?.(text("authGoogleClientMismatch"));
         return;
       }
 
       const id = `google:${payload.sub}`;
-      const existing = appState.auth.accounts.find((account) => account.id === id);
+      const existing = savedProfiles().find((account) => account.id === id);
       const account = deps.buildGoogleAccountFromPayload?.(payload, {
         existing,
         defaultCountry: deps.defaultCountry || "china",
@@ -503,21 +441,32 @@ export function createAccountAuthController(deps = {}) {
       const localState = deps.loadStateForUser?.(id);
       let cloudSession;
       try {
-        cloudSession = requireValidCloudSession(await deps.loginCloudGoogle?.(account, response.credential, localState, appState.community));
+        cloudSession = requireValidCloudSession(await deps.loginCloudGoogle?.(account, response.credential, localState, appState.community), deps.normalizeEmail?.(payload.email));
         if (!isCurrentAttempt(attempt)) return;
       } catch (error) {
         if (!isCurrentAttempt(attempt)) return;
         deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error), true);
         return;
       }
-      deps.migrateLegacyState?.(id);
       const remoteAccount = cloudSession.account;
-      const careerOwnerLink = remoteAccount.id !== id && payload.sub
+      const careerOwnerLink = remoteAccount.id !== id && payload.sub && sourceNeedsRecovery(existing, remoteAccount.id)
         && deps.normalizeEmail?.(payload.email)
         && deps.normalizeEmail?.(remoteAccount.email) === deps.normalizeEmail?.(payload.email)
         ? { sourceOwnerId: id, targetOwnerId: remoteAccount.id, method: 'google' }
         : undefined;
-      deps.applyCloudSession?.(cloudSession, { localState: deps.loadStateForUser?.(id) || localState, localCommunity: appState.community, careerOwnerLink });
+      const links = careerOwnerLink ? [careerOwnerLink] : [];
+      const sources = recoverySources(links);
+      deps.applyCloudSession?.(cloudSession, {
+        localState: verifiedLocalState(remoteAccount.id, links),
+        localCommunity: appState.community,
+        ...ownerLinkOptions(links)
+      });
+      if (sources.some(source => source.id === id && source.sourceStamp) && !savedProfiles().some(profile => profile.id === id)) {
+        // The verified Google subject can prove an exact orphaned source ID.
+        // Retain its recovery stamp even if an older email upsert lost its index.
+        appState.auth.legacyAccounts = [...(appState.auth.legacyAccounts || []), { ...account, cloudLinked: false }];
+      }
+      markDeviceRecordsRecovered(appState.auth, sources, remoteAccount.id);
       markAuthenticated(appState.auth);
       deps.saveAuth?.();
       deps.showAuthMessage?.("");

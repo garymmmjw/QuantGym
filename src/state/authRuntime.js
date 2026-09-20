@@ -17,11 +17,16 @@ export function createAuthStateRuntime(deps = {}) {
   }
 
   function save() {
-    saveAuth(storageKey, getAuth());
+    return saveAuth(storageKey, getAuth());
   }
 
   function currentUser() {
-    return getCurrentUser(getAuth());
+    const user = getCurrentUser(getAuth());
+    if (!user) return null;
+    const config = deps.getCloudConfig?.() || {};
+    // Old device-only identities remain available for verified migration, but
+    // cannot authorize a session. Cached verified accounts keep offline access.
+    return user.cloudLinked === true || (config.token && config.userId === user.id) ? user : null;
   }
 
   function upsertLocalAccount(account, localFields = {}) {

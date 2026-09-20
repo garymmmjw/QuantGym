@@ -65,5 +65,24 @@ export function createPersonalDataRegistry({
     return connection;
   }
 
-  return { getStore, getConnection };
+  async function syncOwner(ownerId, config = {}) {
+    const connection = getConnection(ownerId, config);
+    if (!connection) return { phase: 'local' };
+    const release = connection.retain();
+    try {
+      await connection.sync();
+      const cloud = connection.getSnapshot();
+      const snapshot = getStore(ownerId).getSnapshot?.();
+      if (cloud.phase === 'synced' && (snapshot?.error || snapshot?.dirty || snapshot?.conflict)) {
+        return { phase: 'error', message: snapshot.error || 'Local records still need recovery before sync can be confirmed.' };
+      }
+      return cloud;
+    } finally { release(); }
+  }
+
+  return { getStore, getExistingStore: ownerId => stores.get(ownerId) || null, getConnection, syncOwner };
 }
+
+// Hooks and imperative account actions share this registry, including drafts
+// migrated before React has mounted a preparation or Tracker page.
+export const personalDataRegistry = createPersonalDataRegistry();
