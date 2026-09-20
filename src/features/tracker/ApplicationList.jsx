@@ -1,11 +1,10 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { getApplicationView, getProgressColumnCount, getSummary } from './dataModel.js';
 import ApplicationRow from './ApplicationRow.jsx';
-import ResizableTable from './ResizableTable.jsx';
 import Icon from './TrackerIcon.jsx';
 import { formatStagePeriod } from '../careerStages/stagePractice.js';
 
-export default function ApplicationList({ ownerId, namespace, applications, stages, status, onStatusChange, saveError, onOpenDetails, onUpdateProgress, onEditEvent, onEditDeadline, onAddApplication }) {
+export default function ApplicationList({ applications, stages, status, onStatusChange, saveError, onOpenDetails, onUpdateProgress, onEditEvent, onEditDeadline, onAddApplication }) {
   const [view, setView] = useState('table');
   const [collapsed, setCollapsed] = useState({});
   const [query, setQuery] = useState('');
@@ -58,9 +57,7 @@ export default function ApplicationList({ ownerId, namespace, applications, stag
         </div>
       </div>
     </div>
-    <ResizableTable ownerId={ownerId} namespace={namespace} view={view} footer={
-      <div className="qt-table-footer"><span role="status" aria-live="polite">显示 {visible.length} / {applications.length} 份申请</span><span><Icon name="MousePointer2" size={13}/>点击进展修改 · 点击岗位查看详情</span></div>
-    }>
+    <div className={`qt-table-scroll qt-${view}`} tabIndex={0} aria-label="横向滚动查看申请进展">
       <table className="qt-progress-table" style={{ '--qt-progress-column-count': progressColumnCount }}>
         <colgroup><col className="qt-col-company"/><col className="qt-col-role"/>{progressColumns.map(index => <col className="qt-col-event" key={index}/>)}<col className="qt-col-update"/><col className="qt-col-deadline"/></colgroup>
         <thead><tr><th scope="col">公司</th><th scope="col">岗位</th>{progressColumns.map(index => <th scope="col" key={index}>{index === 0 ? '投递' : `阶段 ${index + 1}`}</th>)}<th scope="col">更新进展</th><th scope="col">DDL</th></tr></thead>
@@ -86,6 +83,6 @@ export default function ApplicationList({ ownerId, namespace, applications, stag
         <p>{hasQuery ? '试试其他关键词，或清空搜索。' : applications.length ? '切回全部，查看所有投递记录。' : '记录公司、岗位和每一次进展。'}</p>
         <button type="button" className="qt-btn" onClick={() => hasQuery ? clearSearch() : applications.length ? onStatusChange('all') : onAddApplication()}>{hasQuery ? '清空搜索' : applications.length ? '查看全部申请' : '添加申请'}</button>
       </div>}
-    </ResizableTable>
+    </div>
   </section>;
 }
