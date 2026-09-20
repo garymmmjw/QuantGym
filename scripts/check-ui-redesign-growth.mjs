@@ -106,7 +106,7 @@ for (const marker of [
 }
 
 expect(overview.includes('import "./overviewDashboard.css"'), "Overview must load its dashboard styles");
-for (const marker of [".overview-greeting", ".overview-daily-tasks", ".overview-activity-bars", "@media (max-width: 760px)"]) {
+for (const marker of [".overview-greeting", ".qg-quests-title", ".overview-activity-bars", "@media (max-width: 760px)"]) {
   expect(overviewCss.includes(marker), `Overview dashboard CSS missing ${marker}`);
 }
 for (const removed of ["heroTypewriter", "generateStudyPlanBtn", "leaderboardList", "overviewContributionHeatmap", "logForm", "newsTickerTrack"]) {

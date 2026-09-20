@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowUpRight, ArrowRight, Check, Code2, Calculator, BriefcaseBusiness, BrainCircuit, MessagesSquare } from "lucide-react";
+import { ArrowUpRight, Check, Code2, Calculator, BriefcaseBusiness, BrainCircuit, MessagesSquare } from "lucide-react";
 import { useOverviewPageModel } from "./overviewHooks.js";
 import { useOverviewActivity } from "./useOverviewActivity.js";
 import { OverviewCareerStage } from "../careerStages/OverviewCareerStage.jsx";
@@ -62,20 +62,27 @@ export function OverviewPageContent() {
 
       <OverviewCareerStage rows={activity.stageRows} />
 
-      <section className="overview-daily-tasks" aria-labelledby="overviewDailyTasksTitle">
-        <div className="overview-section-heading">
-          <h2 id="overviewDailyTasksTitle">每日任务</h2>
-          <span className="overview-task-progress">{questsDone}<span> / 5</span></span>
+      <section className="overview-daily-tasks qg-overview-quests" aria-labelledby="overviewDailyTasksTitle">
+        <div className="qg-quests-head">
+          <div className="qg-quests-title">
+            <img src="/assets/generated/playful-precision/reward-target.webp" alt="" width="36" height="36" loading="lazy" />
+            <h2 id="overviewDailyTasksTitle">每日任务</h2>
+          </div>
+          <div className="qg-quests-progress" role="progressbar" aria-label="每日任务完成进度" aria-valuemin={0} aria-valuemax={TASKS.length} aria-valuenow={questsDone}>
+            <i aria-hidden="true"><span style={{ width: `${questsDone / TASKS.length * 100}%` }} /></i>
+            <b>{questsDone}/{TASKS.length}</b>
+          </div>
         </div>
-        <div className="overview-task-list">
+        <div className="overview-task-list qg-quest-list">
           {TASKS.map(({ key, title, points, to, Icon }) => {
             const count = activity.today.counts[key];
             const done = count > 0;
             return (
-              <Link className={`overview-task${done ? " is-done" : ""}`} key={key} to={to}>
-                <span className="overview-task-icon" aria-hidden="true"><Icon size={21} /></span>
-                <span className="overview-task-copy"><strong>{title}</strong><small>活跃度 +{points}</small></span>
-                <span className="overview-task-state">{done ? <><Check size={16} aria-hidden="true" /><span>已完成</span></> : <><span>{count == null ? "待同步" : "去完成"}</span><ArrowRight size={16} aria-hidden="true" /></>}</span>
+              <Link className={`overview-task qg-quest-row${done ? " is-done" : ""}`} key={key} to={to}>
+                <span className="qg-quest-badge" aria-hidden="true">{done ? <Check size={20} /> : <Icon size={20} />}</span>
+                <span className="qg-quest-copy"><strong>{title}</strong><small>{done ? "已完成" : count == null ? "待同步" : "待完成"}</small></span>
+                <span className="qg-quest-xp">+{points} 活跃度</span>
+                <span className="qg-quest-check" aria-hidden="true"><Check size={15} /></span>
               </Link>
             );
           })}
