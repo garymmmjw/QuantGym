@@ -5,6 +5,7 @@ import path from "node:path";
 import vm from "node:vm";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { readOverviewActivityChart, overviewActivityChartFailures } from "./overview-activity-smoke-contract.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -592,9 +593,11 @@ async function checkRoutes(page) {
             stageActionsAbsent: Boolean(stage) && !stage.querySelector("button, a")
           };
         });
+        dashboard.activityChart = await page.evaluate(readOverviewActivityChart);
+        dashboard.activityChartFailures = overviewActivityChartFailures(dashboard.activityChart);
         routeResult.dashboard = dashboard;
         if (JSON.stringify(dashboard.taskRoutes) !== JSON.stringify(["/leetcode", "/tools", "/tracker", "/technical-interview", "/behavioral-interview"])
-          || dashboard.activityDayCount !== 7 || !dashboard.removedModulesAbsent || !dashboard.stageActionsAbsent) {
+          || dashboard.activityChartFailures.length || !dashboard.removedModulesAbsent || !dashboard.stageActionsAbsent) {
           throw new Error(`Overview dashboard contract failed: ${JSON.stringify(dashboard)}`);
         }
       }

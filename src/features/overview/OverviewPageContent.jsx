@@ -1,9 +1,8 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Activity, Check, Code2, Calculator, BriefcaseBusiness, BrainCircuit, MessagesSquare } from "lucide-react";
+import { ArrowUpRight, Check, Code2, Calculator, BriefcaseBusiness, BrainCircuit, MessagesSquare } from "lucide-react";
 import { useOverviewPageModel } from "./overviewHooks.js";
 import { useOverviewActivity } from "./useOverviewActivity.js";
-import { ACTIVITY_WEIGHTS } from "./activityMetrics.js";
+import { OverviewActivityChart } from "./OverviewActivityChart.jsx";
 import { OverviewCareerStage } from "../careerStages/OverviewCareerStage.jsx";
 import { LeetCodeCounts } from "../careerStages/LeetCodeCounts.jsx";
 import "./overviewDashboard.css";
@@ -23,35 +22,13 @@ const TASKS = [
   { key: "technical", title: "一道 Tech", points: 10, to: "/technical-interview", Icon: BrainCircuit },
   { key: "behavioral", title: "一道 Behavioral", points: 10, to: "/behavioral-interview", Icon: MessagesSquare }
 ];
-const ACTIVITY_CATEGORIES = [
-  { key: "applications", label: "投递", title: "Application" },
-  { key: "leetcode", label: "LeetCode", title: "LeetCode" },
-  { key: "technical", label: "Tech", title: "Tech" },
-  { key: "behavioral", label: "Behavioral", title: "Behavioral" },
-  { key: "mentalMath", label: "速算", title: "Mental Math" }
-];
-const shortDate = day => day ? day.slice(5).split("-").map(Number).join("/") : "—";
-const WEEKDAYS = ["一", "二", "三", "四", "五", "六", "日"];
 const number = value => value == null ? "—" : Number(value).toLocaleString("zh-CN");
 
 export function OverviewPageContent() {
   const model = useOverviewPageModel();
   const activity = useOverviewActivity();
-  const [selectedDay, setSelectedDay] = useState(null);
   const questsDone = TASKS.filter(task => activity.today.counts[task.key] > 0).length;
   const totalSolved = model.problemProgress.reduce((max, item) => Math.max(max, item.done || 0), 0);
-  const recordedDays = activity.days.slice(0, activity.days.findIndex(day => day.isToday) + 1);
-  const weekTotal = recordedDays.some(day => day.activityScore != null)
-    ? recordedDays.reduce((sum, day) => sum + (day.activityScore || 0), 0) : null;
-  const sourcesComplete = Object.values(activity.recordBundle.sources).every(Boolean)
-    && activity.recordBundle.personalComplete && activity.recordBundle.applicationsComplete && activity.recordBundle.leetcodeComplete;
-  const isCompleteDay = day => Boolean(sourcesComplete && day && Object.values(day.counts).every(value => value != null));
-  const weekKnown = recordedDays.length > 0 && recordedDays.every(isCompleteDay);
-  const maxScore = Math.max(1, ...recordedDays.map(day => day.activityScore || 0));
-  const today = activity.days.find(day => day.isToday);
-  const selected = recordedDays.find(day => day.day === selectedDay) || today;
-  const activeDays = recordedDays.filter(day => day.activityScore > 0).length;
-  const hasRecordedDays = recordedDays.some(day => day.activityScore != null);
 
   return (
     <div className="overview-route-page qg-growth-page qg-overview-page overview-dashboard">
@@ -132,54 +109,7 @@ export function OverviewPageContent() {
           </div>
         </article>
 
-        <article className="overview-effect-panel overview-activity-panel qg-overview-rhythm" aria-labelledby="overviewActivityTitle">
-          <div className="overview-activity-heading">
-            <h2 id="overviewActivityTitle"><Activity size={18} aria-hidden="true" />活跃度</h2>
-            <span className="overview-activity-range">{shortDate(activity.days[0]?.day)} – {shortDate(activity.days.at(-1)?.day)}</span>
-          </div>
-          <div className="overview-activity-summary">
-            <div className="overview-activity-total">
-              <span>本周{weekKnown ? "累计" : "已记录"}</span>
-              <div><strong>{number(weekTotal)}</strong><span>分</span></div>
-            </div>
-            <dl className="overview-activity-highlights">
-              <div><dt>今日{isCompleteDay(today) ? "积分" : "已记录"}</dt><dd>{number(today?.activityScore)}<span>分</span></dd></div>
-              <div><dt>已活跃</dt><dd>{hasRecordedDays ? activeDays : "—"}<span>天</span></dd></div>
-            </dl>
-          </div>
-          <div className="overview-activity-bars" id="overviewActivityBars" role="group" aria-label="每日活跃度，选择日期查看明细">
-            {activity.days.map((day, index) => {
-              const future = !today || day.day > today.day;
-              const chosen = selected?.day === day.day;
-              return (
-                <button type="button"
-                  className={`overview-activity-day${day.isToday ? " is-today" : ""}${chosen ? " is-selected" : ""}${future ? " is-future" : ""}`}
-                  key={day.day} disabled={future} aria-pressed={chosen}
-                  aria-controls="overviewActivityDetails"
-                  aria-label={`${shortDate(day.day)} 周${WEEKDAYS[index]}${day.isToday ? " 今天" : ""}，${future ? "尚未开始" : day.activityScore == null ? "数据待同步" : `${number(day.activityScore)} 分${isCompleteDay(day) ? "" : "，部分记录"}`}`}
-                  onClick={() => setSelectedDay(day.day)}>
-                  <strong>{future ? "—" : number(day.activityScore)}</strong>
-                  <span className="overview-activity-track" aria-hidden="true"><i style={{ height: `${(day.activityScore || 0) / maxScore * 100}%` }} /></span>
-                  <span className="overview-activity-weekday">{day.isToday ? "今天" : WEEKDAYS[index]}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="overview-activity-details" id="overviewActivityDetails" aria-live="polite" aria-atomic="true">
-            <div className="overview-activity-detail-heading">
-              <span>{selected?.isToday ? "今日明细" : `${shortDate(selected?.day)} · 明细`}{selected && !isCompleteDay(selected) && <small> · 已记录</small>}</span>
-              <strong>{number(selected?.activityScore)}<small> 分</small></strong>
-            </div>
-            <dl className="overview-activity-breakdown">
-              {ACTIVITY_CATEGORIES.map(category => (
-                <div key={category.key} title={`${category.title}：${number(selected?.counts[category.key])} × ${ACTIVITY_WEIGHTS[category.key]} 分`}>
-                  <dt>{category.label}</dt>
-                  <dd><strong>{number(selected?.counts[category.key])}</strong><span>×{ACTIVITY_WEIGHTS[category.key]}</span></dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </article>
+        <OverviewActivityChart activity={activity} />
       </section>
       {activity.statusNote && <p className="overview-data-note">{activity.statusNote}</p>}
     </div>

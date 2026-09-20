@@ -248,3 +248,33 @@ Independent code and local-data review of the history import, client projection,
 Final result: passed for the reviewed code, protocol and local calculation assertions. Browser and release verification remain separate.
 
 Root browser validation used the real components with an isolated synthetic fixture: the overview, Tracker rows and Stage edit preview displayed the expected paired counts at 1280px; the overview and Tracker were checked at 390px and 320px, with no document-level horizontal overflow. Current-stage color, black first divider, historical black counts and aligned periods were retained. Completed historical ranges no longer display an incomplete-history warning. The final 143 related Node tests, strict production build, growth check and route-integrity check passed. The private repair file is not bundled or committed. Live import and release verification will be performed after deployment.
+
+## Activity stacked chart — September 20, 2026
+
+Source visual truth: the user's LeetCode activity reference, saved locally at `artifacts/activity-chart-qa/reference.png` (1406 × 504 px; source device density unknown). The requested target is its visual character, adapted to QuantGym's existing typography, blue-violet theme and five activity categories, rather than LeetCode's difficulty categories.
+
+Implementation evidence (ignored local artifacts): `artifacts/activity-chart-qa/desktop-full.png`, `artifacts/activity-chart-qa/stacked-desktop.png` (1280 × 720 px, CSS 1280 × 720, DPR 1), and `artifacts/activity-chart-qa/stacked-mobile.png` (390 × 844 px, CSS 390 × 844, DPR 1). The full-shell chart was also inspected at 320px. Local full-shell and isolated component previews contain synthetic data only. Source and implementation were opened together for comparison; no density-equivalence or pixel-perfect claim is made. The isolated card provides the focused chart/controls/legend evidence; full-shell captures verify surrounding layout.
+
+**Comparison history and findings**
+
+- Resolved P2: inherited grid display added excessive vertical gaps. The chart explicitly uses block layout; subsequent captures show the compact controls, plot and legend.
+- Resolved P2: light colored small labels had insufficient emphasis. Legend and tooltip labels now blend toward the theme's text color while bars keep their category colors.
+- Tightened the axis ceiling to avoid an oversized empty upper plot region while keeping readable rounded values.
+- No remaining P0/P1/P2. Intentional adaptations: a small activity heading and monthly total, five categories, a blue-violet primary series, and responsive layout alongside the retained question-progress panel.
+
+**Required fidelity surfaces**
+
+- Typography: existing product font, restrained weights, tabular numbers, readable compact labels; no new font dependency.
+- Layout: white rounded card, slim stacked columns, segmented metric control, day/week and month selectors, right-side scale, month-end labels and wrapping bottom legend. Both phone widths had no page overflow.
+- Colors: five stable category colors; no gradient-filled plot or oversized accent summary. Category labels remain identifiable in addition to color, with accessible button names and keyboard detail navigation.
+- Assets: the reference contains data visualization and standard UI controls, with no illustrative asset to recreate. Charts use actual numeric data; dropdown/close icons reuse the existing icon library.
+- Content: activity points retain 2/5/10/10/5 weights. Completion counts are a separate view. Unknown, confirmed zero and future periods remain distinct; future bars are disabled. Imports, account data and Stage calculations are unchanged.
+
+**Interactions and validation**
+
+- Browser verified: daily/month switches (September 30 days; September 5 clipped weeks; August 6 clipped weeks), metric switch, same monthly totals between day/week, 64 × 5 = 320 tooltip, close button, arrow-key navigation and Escape. Five-color stacks, empty/partial data styles and phone legend wrapping were inspected. The standalone component had no warning/error console entries.
+- 37 chart/projection/contract/overview tests passed. Growth and route-integrity checks passed; the full route-interaction checker retains seven unrelated pre-existing failures, independently compared with the baseline. The strict production build passed again after final color/axis polish.
+
+Implementation checklist: complete. Final visual result: no actionable differences within the user's requested adaptation.
+
+final result: passed
