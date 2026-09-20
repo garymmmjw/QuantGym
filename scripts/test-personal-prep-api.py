@@ -46,7 +46,20 @@ def empty_state(marker=None):
         "reviewEvents": [],
         "practiceSessions": [],
         "behavioralAnswers": [],
+        "careerTrackerOperations": [],
     }
+
+
+def tracker_operations():
+    event = {"id": "event-oa", "type": "oa_received", "date": "2026-09-19", "dueDate": "2026-09-23", "dueTime": "14:30", "year": 2026}
+    return [
+        {"id": "tracker-stage", "clock": 0, "kind": "stage", "stageId": "stage-one", "fields": {"label": "Stage 1", "description": "云端阶段", "recordedDate": "2026-08-21", "createdAt": "2026-08-21T12:00:00.000Z", "capturedAt": None, "updatedAt": None}, "aliases": ["old-stage"]},
+        {"id": "tracker-application", "clock": 1, "kind": "application", "applicationId": "application-one", "fields": {"company": "Private Tracker company", "role": "Quant researcher", "prepPhase": "stage-one", "season": "2027"}},
+        {"id": "tracker-submission", "clock": 2, "kind": "event", "applicationId": "application-one", "eventId": "event-submitted", "fields": {"type": "submitted", "date": "8/21", "year": None, "dueDate": "", "dueTime": ""}, "order": ["event-submitted"]},
+        {"id": "tracker-oa", "clock": 3, "kind": "event", "applicationId": "application-one", "eventId": event["id"], "fields": {key: value for key, value in event.items() if key != "id"}, "order": ["event-submitted", event["id"]]},
+        {"id": "tracker-delete", "clock": 4, "kind": "delete", "applicationId": "application-one", "eventId": event["id"], "deleteId": "delete-one", "event": event, "order": ["event-submitted", event["id"]]},
+        {"id": "tracker-restore", "clock": 5, "kind": "restore", "applicationId": "application-one", "eventId": event["id"], "deleteId": "delete-one"},
+    ]
 
 
 def archived_event_state():
@@ -92,6 +105,12 @@ def provenance_fixture():
 
 
 class PersonalPrepApiTests(unittest.TestCase):
+    def test_health_identifies_tracker_sync_capability_without_authentication(self):
+        status, health, _ = self.request("GET", "/api/health")
+        self.assertEqual(status, 200, health)
+        self.assertTrue(health["ok"])
+        self.assertEqual(health["capabilities"]["careerTrackerSync"], 1)
+
     def tearDown(self):
         result = self._outcome.result
         if any(case is self for case, _ in result.errors + result.failures):
@@ -678,6 +697,85 @@ class PersonalPrepApiTests(unittest.TestCase):
         with self.connect_database() as conn:
             stored = conn.execute(self.sql("SELECT data_json FROM user_personal_prep WHERE user_id = ?"), (owner,)).fetchone()[0]
         self.assertEqual(json.loads(stored) if isinstance(stored, str) else stored, changed)
+
+    def test_tracker_operations_round_trip_retain_old_client_data_and_isolate_accounts(self):
+        token, _ = self.new_user()
+        other, _ = self.new_user()
+        original = {**empty_state(), "careerTrackerOperations": tracker_operations()}
+        status, saved, _ = self.put(token, original)
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"], original)
+        self.assertIsNone(self.request("GET", token=other)[1]["data"])
+        for omit in (True, False):
+            legacy = empty_state("old client can still save practice")
+            if omit:
+                del legacy["careerTrackerOperations"]
+            status, updated, _ = self.put(token, legacy, saved["revision"])
+            self.assertEqual(status, 200, updated)
+            self.assertEqual(updated["data"]["careerTrackerOperations"], original["careerTrackerOperations"])
+            self.assertEqual(updated["data"]["dailySettings"], legacy["dailySettings"])
+            saved = updated
+        remote_edit = {"id": "tracker-phone", "clock": 6, "kind": "event", "applicationId": "application-one", "eventId": "event-oa", "fields": {"dueTime": "18:00"}}
+        status, saved, _ = self.put(token, {**empty_state(), "careerTrackerOperations": [remote_edit]}, saved["revision"])
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"]["careerTrackerOperations"], [*original["careerTrackerOperations"], remote_edit])
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+        for path in ("/api/community", "/api/leaderboard", "/api/state"):
+            status, public, _ = self.request("GET", path, token=other if path == "/api/state" else None)
+            self.assertEqual(status, 200, public)
+            self.assertNotIn("Private Tracker company", json.dumps(public))
+
+    def test_tracker_operation_identity_conflict_cannot_partially_save(self):
+        token, _ = self.new_user()
+        original = {**empty_state(), "careerTrackerOperations": tracker_operations()}
+        status, saved, _ = self.put(token, original)
+        self.assertEqual(status, 200, saved)
+        changed = copy.deepcopy(original)
+        changed["careerTrackerOperations"][1]["fields"]["company"] = "must not overwrite"
+        changed["dailySettings"] = {"marker": "must not save"}
+        status, rejected, _ = self.put(token, changed, saved["revision"])
+        self.assertEqual(status, 400, rejected)
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+        duplicate = copy.deepcopy(original)
+        duplicate["careerTrackerOperations"].append(copy.deepcopy(duplicate["careerTrackerOperations"][1]))
+        status, accepted, _ = self.put(token, duplicate, saved["revision"])
+        self.assertEqual(status, 200, accepted)
+        self.assertEqual(accepted["data"], original)
+
+    def test_real_javascript_migration_edit_delete_and_restore_operations_round_trip(self):
+        fixture = json.loads((ROOT / "scripts/fixtures/tracker-operations-v1.json").read_text(encoding="utf-8"))
+        operations = fixture["operations"]
+        self.assertEqual({operation["kind"] for operation in operations}, {"application", "event", "stage", "delete", "restore"})
+        token, _ = self.new_user()
+        state = {**empty_state(), "careerTrackerOperations": operations}
+        status, saved, _ = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(saved["data"], state)
+        self.assertEqual(self.request("GET", token=token)[1], saved)
+        reversed_state = {**empty_state(), "careerTrackerOperations": list(reversed(operations))}
+        status, updated, _ = self.put(token, reversed_state, saved["revision"])
+        self.assertEqual(status, 200, updated)
+        self.assertEqual(updated["data"], state)
+
+    def test_tracker_operations_reject_malformed_and_owner_injected_records(self):
+        token, _ = self.new_user()
+        original = {**empty_state(), "careerTrackerOperations": tracker_operations()}
+        status, saved, _ = self.put(token, original)
+        self.assertEqual(status, 200, saved)
+        malformed = []
+        for changes in ({"clock": True}, {"clock": -1}, {"clock": 9_007_199_254_740_992}, {"kind": "unknown"}, {"ownerId": "someone-else"}, {"id": "x" * 201}, {"stageId": ""}, {"fields": {"label": " "}}, {"fields": {"label": "😀" * 21}}, {"aliases": ["stage-one"]}, {"fields": {"recordedDate": "2026-02-30"}}):
+            malformed.append({**tracker_operations()[0], **changes})
+        for changes in ({"fields": {"type": "constructor"}}, {"fields": {"date": "2/30"}}, {"fields": {"year": True}}, {"fields": {"dueTime": "24:00"}}, {"order": ["other-event"]}, {"fields": {"company": "not an event field"}}):
+            malformed.append({**tracker_operations()[3], **changes})
+        malformed.append({**tracker_operations()[4], "event": {**tracker_operations()[4]["event"], "type": "submitted"}})
+        malformed.append({**tracker_operations()[4], "order": ["event-oa", "event-submitted"]})
+        malformed.append({**tracker_operations()[5], "fields": {}})
+        for operation in malformed:
+            with self.subTest(operation=operation):
+                invalid = {**empty_state(), "careerTrackerOperations": [operation]}
+                status, rejected, _ = self.put(token, invalid, saved["revision"])
+                self.assertEqual(status, 400, rejected)
+                self.assertEqual(self.request("GET", token=token)[1], saved)
 
     def test_rollback_compatibility_old_client_omission_and_empty_arrays_preserve_events(self):
         token, _ = self.new_user()

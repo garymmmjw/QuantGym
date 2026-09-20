@@ -19,7 +19,7 @@ MAX_PERSONAL_PREP_RECORDS = 100_000
 PERSONAL_PREP_FIELDS = {
     "mentalSettings", "activeTrial", "trials", "dailySettings", "dailySessions", "activities"
 }
-OPTIONAL_PERSONAL_FIELDS = {"removedActivityIds", "applicationEvents", "reviewEvents", "practiceSessions", "behavioralAnswers"}
+OPTIONAL_PERSONAL_FIELDS = {"removedActivityIds", "applicationEvents", "reviewEvents", "practiceSessions", "behavioralAnswers", "careerTrackerOperations"}
 APPLICATION_FIELDS = {"company", "role", "location", "url", "status", "deadline", "nextAction", "nextActionDate", "notes", "archived"}
 APPLICATION_STATUSES = {"wishlist", "applied", "oa", "interview", "offer", "rejected", "withdrawn"}
 APPLICATION_LIMITS = {"company": 200, "role": 300, "location": 300, "url": 2048, "nextAction": 2000, "notes": 20000}
@@ -43,6 +43,7 @@ def validate_personal_prep_request(payload: dict) -> tuple[int, str]:
     if not isinstance(data, dict) or not PERSONAL_PREP_FIELDS.issubset(data) or set(data) - PERSONAL_PREP_FIELDS - OPTIONAL_PERSONAL_FIELDS:
         raise PersonalPrepValidationError("A complete personal preparation state is required.")
     data = {**data, **{field: data.get(field, []) for field in OPTIONAL_PERSONAL_FIELDS}}
+    data["careerTrackerOperations"] = validate_tracker_operations(data["careerTrackerOperations"])
     removed = data["removedActivityIds"]
     if not isinstance(removed, list) or len(removed) > MAX_PERSONAL_PREP_RECORDS or any(not valid_record_id(item) for item in removed) or len(set(removed)) != len(removed):
         raise PersonalPrepValidationError("Invalid removedActivityIds.")
@@ -160,6 +161,114 @@ def bounded_practice_text(value, maximum):
         return False
 
 
+TRACKER_STATUSES = {"submitted", "oa_received", "oa_completed", "interview", "offer", "rejected", "withdrawn"}
+TRACKER_EVENT_FIELDS = {"type", "date", "year", "dueDate", "dueTime"}
+
+
+def tracker_id(value):
+    return bounded_practice_text(value, 200) and bool(value.strip())
+
+
+def tracker_date(value, partial=False):
+    if partial and isinstance(value, str) and re.fullmatch(r"[0-9]{1,2}/[0-9]{1,2}", value):
+        month, day = map(int, value.split("/"))
+        return 1 <= month <= 12 and 1 <= day <= (31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[month - 1]
+    return valid_civil_date(value)
+
+
+def tracker_ids(values, maximum, minimum=0):
+    return isinstance(values, list) and minimum <= len(values) <= maximum and all(tracker_id(value) for value in values) and len(set(values)) == len(values)
+
+
+def validate_tracker_event_fields(fields):
+    if not isinstance(fields, dict) or not fields or set(fields) - TRACKER_EVENT_FIELDS:
+        raise PersonalPrepValidationError("Invalid Tracker event fields.")
+    for field, value in fields.items():
+        if field == "type":
+            valid = isinstance(value, str) and value in TRACKER_STATUSES
+        elif field == "date":
+            valid = tracker_date(value, partial=True)
+        elif field == "year":
+            valid = value is None or (type(value) is int and 1 <= value <= 9999)
+        elif field == "dueDate":
+            valid = value == "" or tracker_date(value)
+        else:
+            valid = isinstance(value, str) and (value == "" or re.fullmatch(r"(?:[01][0-9]|2[0-3]):[0-5][0-9]", value) is not None)
+        if not valid:
+            raise PersonalPrepValidationError(f"Invalid Tracker event {field}.")
+
+
+def validate_tracker_operation(operation):
+    if not isinstance(operation, dict) or not tracker_id(operation.get("id")) or type(operation.get("clock")) is not int or not 0 <= operation["clock"] <= 9_007_199_254_740_991:
+        raise PersonalPrepValidationError("Invalid Tracker operation identity.")
+    operation = {**operation}
+    kind = operation.get("kind")
+    fields_by_kind = {
+        "application": {"applicationId", "fields"}, "event": {"applicationId", "eventId", "fields"},
+        "delete": {"applicationId", "eventId", "deleteId", "event", "order"},
+        "restore": {"applicationId", "eventId", "deleteId"}, "stage": {"stageId", "fields"},
+    }
+    if not isinstance(kind, str) or kind not in fields_by_kind:
+        raise PersonalPrepValidationError("Invalid Tracker operation kind.")
+    required = {"id", "clock", "kind"} | fields_by_kind[kind]
+    optional = {"order"} if kind == "event" else {"aliases"} if kind == "stage" else set()
+    if not required.issubset(operation) or set(operation) - required - optional:
+        raise PersonalPrepValidationError("Invalid Tracker operation fields.")
+    for field in ("applicationId", "eventId", "deleteId", "stageId"):
+        if field in operation and not tracker_id(operation[field]):
+            raise PersonalPrepValidationError(f"Invalid Tracker {field}.")
+    if "order" in operation and (not tracker_ids(operation["order"], 11000, 2 if kind == "delete" else 1) or operation["eventId"] not in operation["order"] or (kind == "delete" and operation["order"].index(operation["eventId"]) < 1)):
+        raise PersonalPrepValidationError("Invalid Tracker event order.")
+    if kind == "delete":
+        event = operation["event"]
+        required_event = {"id", "type", "date"}
+        if not isinstance(event, dict) or not required_event.issubset(event) or set(event) - required_event - {"year", "dueDate", "dueTime"} or event["id"] != operation["eventId"] or event["type"] == "submitted":
+            raise PersonalPrepValidationError("Invalid Tracker deleted event.")
+        event = {"dueDate": "", "dueTime": "", **event}
+        operation["event"] = event
+        validate_tracker_event_fields({field: value for field, value in event.items() if field != "id"})
+        if event["dueTime"] and not event["dueDate"]:
+            raise PersonalPrepValidationError("Invalid Tracker deleted event deadline.")
+    elif kind == "event":
+        validate_tracker_event_fields(operation["fields"])
+    elif kind in {"application", "stage"}:
+        fields = operation["fields"]
+        allowed = {"company", "role", "prepPhase", "season"} if kind == "application" else {"label", "description", "recordedDate", "createdAt", "capturedAt", "updatedAt", "trackerImportDate"}
+        if not isinstance(fields, dict) or not fields or set(fields) - allowed:
+            raise PersonalPrepValidationError(f"Invalid Tracker {kind} fields.")
+        limits = {"company": 120, "role": 400, "prepPhase": 200, "season": 20, "label": 40, "description": 200}
+        for field, value in fields.items():
+            if field in limits:
+                valid = bounded_practice_text(value, limits[field]) and (field not in {"company", "role", "label"} or bool(value.strip()))
+            elif field in {"recordedDate", "trackerImportDate"}:
+                valid = value is None or tracker_date(value)
+            else:
+                valid = value is None or valid_event_timestamp(value)
+            if not valid:
+                raise PersonalPrepValidationError(f"Invalid Tracker {kind} {field}.")
+        if "aliases" in operation and (not tracker_ids(operation["aliases"], 1000) or operation["stageId"] in operation["aliases"]):
+            raise PersonalPrepValidationError("Invalid Tracker stage aliases.")
+        if "aliases" in operation:
+            operation["aliases"] = sorted(operation["aliases"], key=lambda value: value.encode("utf-16-be"))
+    return operation
+
+
+def validate_tracker_operations(operations, merging=False):
+    if not isinstance(operations, list) or (not merging and len(operations) > MAX_PERSONAL_PREP_RECORDS):
+        raise PersonalPrepValidationError("Invalid Tracker operation collection.")
+    records = {}
+    for operation in operations:
+        operation = validate_tracker_operation(operation)
+        previous = records.get(operation["id"])
+        if previous is not None and previous != operation:
+            raise PersonalPrepValidationError("Conflicting immutable Tracker operation.")
+        records[operation["id"]] = operation
+    if len(records) > MAX_PERSONAL_PREP_RECORDS:
+        raise PersonalPrepValidationError("Invalid Tracker operation collection.")
+    # Python compares Unicode code points; use UTF-16 units to match JavaScript.
+    return sorted(records.values(), key=lambda operation: (operation["clock"], operation["id"].encode("utf-16-be")))
+
+
 def validate_practice_session(session):
     fields = {"id", "kind", "status", "startedAt", "updatedAt", "completedAt", "question", "text", "codeLanguage", "selfAssessment", "elapsedSeconds", "timerStartedAt", "reviewed"}
     if set(session) != fields or not bounded_practice_text(session["id"], 512) or not isinstance(session.get("kind"), str) or session["kind"] not in {"tech", "coding"} or not isinstance(session.get("status"), str) or session["status"] not in {"active", "completed"}:
@@ -266,6 +375,9 @@ def save_personal_prep(conn, user_id: str, base_revision: int, data_json: str) -
         return False, current
     incoming = json.loads(data_json)
     if current["data"] is not None:
+        incoming["careerTrackerOperations"] = validate_tracker_operations([
+            *current["data"].get("careerTrackerOperations", []), *incoming["careerTrackerOperations"],
+        ], merging=True)
         answers = {}
         for answer in [*current["data"].get("behavioralAnswers", []), *incoming.get("behavioralAnswers", [])]:
             previous = answers.get(answer["id"])
