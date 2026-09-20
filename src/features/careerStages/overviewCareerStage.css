@@ -14,8 +14,9 @@
   font-size: 14px;
   line-height: 1.5;
 }
-.overview-stage-summary-stage-column { width: 16%; }
-.overview-stage-summary-period-column { width: 22%; }
+.overview-stage-summary-stage-column { width: 15%; }
+.overview-stage-summary-period-column { width: 20%; }
+.overview-stage-summary-leetcode-column { width: 17%; }
 .overview-stage-summary-table th,
 .overview-stage-summary-table td {
   padding: 16px 12px;
@@ -42,6 +43,11 @@
 .overview-stage-summary-heading-detail { display: block; margin-top: 2px; font-size: 10px; font-weight: 500; }
 .overview-stage-summary-table tbody tr { border-top: 1px solid var(--qg-border, #ecebf7); }
 .overview-stage-summary-table tbody tr.is-current { background: var(--qg-brand-soft, #eef0ff); }
+.overview-stage-summary-table tbody tr.is-current + tr { border-top-color: var(--qg-text, #1c1c1c); }
+.overview-stage-summary-leetcode .leetcode-counts { max-width: 154px; margin-left: auto; --leetcode-count-size: 18px; }
+.overview-stage-summary-leetcode .leetcode-count { flex-wrap: wrap; gap: 0 5px; }
+.overview-stage-summary-leetcode .leetcode-count dd { margin-left: auto; }
+.overview-stage-summary-table .is-current .leetcode-counts { --leetcode-count-ink: var(--qg-brand-ink, #5b5ff5); }
 .overview-stage-summary-name { display: block; font-size: 16px; font-weight: 650; color: var(--qg-text, #1b1a38); }
 .overview-stage-summary-current { display: block; margin-top: 3px; font-size: 10px; font-weight: 500; color: var(--qg-brand-ink, #5b5ff5); }
 .overview-stage-summary-period { color: var(--qg-muted, #6d6c8e); font-size: 12px; font-variant-numeric: tabular-nums; }
@@ -98,6 +104,10 @@
   .overview-stage-summary-metric:nth-child(3),
   .overview-stage-summary-metric:nth-child(4) { margin-top: 14px; }
   .overview-stage-summary-table td.overview-stage-summary-average { grid-column: 1 / -1; }
+  .overview-stage-summary-table td.overview-stage-summary-leetcode { display: grid; align-items: start; gap: 7px; }
+  .overview-stage-summary-leetcode .leetcode-counts { width: 100%; max-width: none; margin-left: 0; --leetcode-count-size: 18px; }
+  .overview-stage-summary-leetcode .leetcode-count { gap: 4px; }
+  .overview-stage-summary-leetcode .leetcode-count dt { font-size: 10px; }
   .overview-stage-summary-mobile-label { display: block; min-width: 0; color: var(--qg-muted, #6d6c8e); font-size: 11px; line-height: 1.5; }
   .overview-stage-summary-value { font-size: 19px; }
   .overview-stage-summary-empty { padding: 20px; border: 1px solid var(--qg-border, #ecebf7); border-radius: 12px; background: var(--qg-surface, #fff); }

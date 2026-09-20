@@ -94,7 +94,7 @@ function LeetcodeWorkspace({ lc, practiceSessions }) {
   const importHistory = async () => {
     if (!pending || pending.username !== connection?.username) return;
     const result = await lc.importRecords?.(pending);
-    if (result) { setPending(null); setImportNote(t("历史已导入，复习题库和训练日历已更新。", "History imported. Your review pool and training calendar are updated.")); }
+    if (result) { setPending(null); setImportNote(t("历史已导入，题库、日历和 Stage 已更新。", "History imported. Your review pool, calendar and Stage counts are updated.")); }
   };
   const importSection = <section className="lc-history-import" id="lc-import" aria-labelledby="lc-import-title">
     <div className="lc-section-title"><div><p className="lc-eyebrow">YOUR HISTORY</p><h2 id="lc-import-title">{t("补齐历史记录", "Bring your history")}</h2></div><span className="lc-status">{t("通过记录 · 不包含代码", "Accepted history · no code")}</span></div>

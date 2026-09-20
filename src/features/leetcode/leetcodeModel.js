@@ -1,4 +1,4 @@
-export const EMPTY_LEETCODE = Object.freeze({ connection: null, stats: null, submissions: [], syncedSubmissions: [], problems: [], calendar: [], coverage: {} });
+export const EMPTY_LEETCODE = Object.freeze({ connection: null, stats: null, submissions: [], syncedSubmissions: [], importedSubmissions: [], problems: [], calendar: [], coverage: {} });
 
 export function problemUrl(slug) {
   return typeof slug === "string" && /^[a-zA-Z0-9_-]{1,200}$/.test(slug)
@@ -33,7 +33,23 @@ export function prepareHistory(value) {
     if (difficulty !== null && ![1, 2, 3].includes(difficulty)) throw new Error("invalid_import");
     return { [key]: row[key], title: scalar(row.title, 500), titleEn: scalar(row.titleEn, 500), frontendId: scalar(row.frontendId, 100), difficulty };
   };
-  return { username: value.username,
+  let historyCoverage = {};
+  if (value.coverage !== undefined) {
+    const coverage = value.coverage;
+    const capturedAt = value.capturedAt;
+    if (!coverage || typeof coverage !== 'object' || Array.isArray(coverage)
+      || ['problemsComplete', 'submissionsComplete', 'complete'].some(key => typeof coverage[key] !== 'boolean')
+      || !Number.isSafeInteger(coverage.skippedRecords) || coverage.skippedRecords < 0
+      || typeof coverage.reason !== 'string' || coverage.reason.length > 300
+      || typeof capturedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(capturedAt)
+      || !Number.isFinite(Date.parse(capturedAt))
+      || new Date(`${capturedAt.slice(0, 10)}T00:00:00Z`).toISOString().slice(0, 10) !== capturedAt.slice(0, 10)
+      || (coverage.complete && (!coverage.problemsComplete || !coverage.submissionsComplete || coverage.skippedRecords !== 0 || coverage.reason.trim()))) throw new Error('invalid_import');
+    historyCoverage = { capturedAt, coverage: { problemsComplete: coverage.problemsComplete,
+      submissionsComplete: coverage.submissionsComplete, complete: coverage.complete,
+      skippedRecords: coverage.skippedRecords, reason: coverage.reason } };
+  }
+  return { username: value.username, ...historyCoverage,
     problems: value.problems.map((row) => metadata(row, "slug")),
     submissions: value.submissions.map((row) => {
       const id = scalar(row?.id, 100, false);

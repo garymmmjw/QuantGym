@@ -40,6 +40,14 @@ body.is-authenticated .app-route-root .overview-route-page.qg-overview-page.over
 .overview-dashboard .overview-lifetime-totals strong { color: var(--qg-text, #22203b); font-size: 31px; font-weight: 700; line-height: 1.1; }
 .overview-dashboard .overview-lifetime-totals dd span { color: var(--qg-muted-2, #9188a4); font-size: 12px; }
 .overview-dashboard .overview-count-minimum { font-size: .55em; margin-right: 3px; }
+.overview-dashboard .overview-lifetime-totals .overview-lifetime-leetcode-values { display: block; margin-top: 7px; }
+.overview-dashboard .overview-lifetime-leetcode .leetcode-counts { gap: 4px; max-width: 156px; }
+.overview-dashboard .overview-lifetime-leetcode .leetcode-count dt { font-size: 11px; min-height: 0; }
+.overview-dashboard .overview-lifetime-leetcode .leetcode-count dd { margin: 0; gap: 4px; }
+.overview-dashboard .overview-lifetime-leetcode .leetcode-count strong { font-size: 24px; font-weight: 650; }
+.overview-dashboard .overview-lifetime-leetcode .leetcode-count-total strong { font-size: 18px; font-weight: 500; color: var(--qg-muted, #79728e); }
+.overview-dashboard .overview-lifetime-leetcode .leetcode-count strong.is-unknown { color: var(--qg-muted-2, #9998b6); font-weight: 500; }
+.overview-dashboard .overview-lifetime-leetcode .leetcode-count .leetcode-count-unit { font-size: 10px; }
 .overview-dashboard .qg-quests-title h2 { font-size: 18px; font-weight: 700; }
 .overview-dashboard .overview-task { text-decoration: none; }
 .overview-dashboard a:focus-visible { outline: 3px solid var(--qg-brand, #5b5ff5); outline-offset: 3px; }
@@ -99,6 +107,10 @@ body.is-authenticated .app-route-root .overview-dashboard .overview-data-note { 
   .overview-dashboard .overview-lifetime-totals { gap: 23px 12px; }
   .overview-dashboard .overview-lifetime-totals dt { min-height: 33px; font-size: 11px; }
   .overview-dashboard .overview-lifetime-totals strong { font-size: 26px; }
+  .overview-dashboard .overview-lifetime-leetcode .leetcode-count { flex-wrap: wrap; gap: 0 4px; }
+  .overview-dashboard .overview-lifetime-leetcode .leetcode-count dt { font-size: 10px; }
+  .overview-dashboard .overview-lifetime-leetcode .leetcode-count strong { font-size: 22px; }
+  .overview-dashboard .overview-lifetime-leetcode .leetcode-count-total strong { font-size: 17px; }
   body.is-authenticated .app-route-root .overview-route-page.qg-overview-page.overview-dashboard .quanty-hero .shark-stage { position: absolute !important; inset: 13px 3px auto auto !important; width: 116px !important; height: 115px !important; min-height: 0 !important; padding: 0 !important; }
   body.is-authenticated .app-route-root .overview-route-page.qg-overview-page.overview-dashboard .quanty-hero #heroShark { width: 102px !important; }
   body.is-authenticated .app-route-root .overview-route-page.qg-overview-page.overview-dashboard .quanty-hero .stage-shadow { bottom: 2px; width: 75px; }
