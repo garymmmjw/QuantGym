@@ -2116,3 +2116,162 @@ body.is-authenticated .qg-search-trigger { cursor: pointer; text-align: left; co
 body.is-authenticated .qg-command-actions > :is(.streak-widget, .qg-level-pill, .qg-notif) {
   display: none !important;
 }
+
+/* Mobile category navigation is separate from the desktop module rail. */
+.qg-mobile-section-nav,
+.qg-mobile-tabbar,
+.qg-tour-mobile-navigation {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  body.is-authenticated {
+    --qg-mobile-nav-height: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .qg-tour-desktop-navigation { display: none; }
+  .qg-tour-mobile-navigation { display: inline; }
+
+  body.is-authenticated .qg-app-shell .qg-command-bar {
+    min-height: 62px !important;
+    padding-inline: 16px !important;
+    gap: 12px !important;
+  }
+
+  body.is-authenticated .qg-app-shell .qg-command-brand strong {
+    display: inline !important;
+  }
+
+  body.is-authenticated .qg-app-shell .qg-command-actions .app-account-chip {
+    display: none !important;
+  }
+
+  body.is-authenticated .qg-app-shell .module-view {
+    padding: 18px 16px calc(var(--qg-mobile-nav-height) + 24px) !important;
+    min-width: 0;
+  }
+
+  body.is-authenticated .qg-app-shell .personal-workspace-bar {
+    display: none;
+  }
+
+  body.is-authenticated .qg-app-shell .ac-center {
+    padding: 4px 0 20px;
+  }
+
+  body.is-authenticated .quantgym-tracker .qt-toast,
+  body.is-authenticated .qg-fb-toasts {
+    bottom: calc(var(--qg-mobile-nav-height) + 12px);
+  }
+
+  body.is-authenticated .qg-mobile-section-nav {
+    display: block;
+    margin: 0 0 22px;
+  }
+
+  .qg-mobile-section-title {
+    margin: 0 0 12px;
+    color: var(--qg-text);
+    font-family: var(--qg-font-ui);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.3;
+  }
+
+  .qg-mobile-section-links {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 5px;
+    border: 1px solid var(--qg-border);
+    border-radius: 14px;
+    background: var(--qg-surface);
+  }
+
+  .qg-mobile-section-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 3px;
+    border-radius: 9px;
+    color: var(--qg-muted);
+    font: 500 12px/1.3 var(--qg-font-ui);
+    text-decoration: none;
+    text-align: center;
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  .qg-mobile-section-link[aria-current="page"] {
+    color: var(--qg-brand-ink);
+    background: var(--qg-brand-soft);
+    font-weight: 650;
+  }
+
+  body.is-authenticated .qg-mobile-tabbar {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 145;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+    min-height: var(--qg-mobile-nav-height);
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--qg-border);
+    background: var(--qg-header-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 -4px 18px -14px rgba(27, 26, 56, 0.25);
+  }
+
+  .qg-mobile-tabbar-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-width: 0;
+    min-height: 58px;
+    padding: 5px 2px;
+    border-radius: 12px;
+    color: var(--qg-muted);
+    font: 500 12px/1.25 var(--qg-font-ui);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  .qg-mobile-tabbar-link svg {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 auto;
+  }
+
+  .qg-mobile-tabbar-link[aria-current="page"] {
+    background: var(--qg-brand-soft);
+    color: var(--qg-brand-ink);
+    font-weight: 700;
+  }
+
+  .qg-mobile-tabbar-link:active,
+  .qg-mobile-section-link:active {
+    background: var(--qg-brand-soft);
+  }
+
+  .qg-mobile-tabbar-link:focus-visible,
+  .qg-mobile-section-link:focus-visible {
+    outline: 2px solid var(--qg-brand);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .qg-mobile-tabbar-link,
+    .qg-mobile-section-link {
+      transition: none;
+    }
+  }
+}

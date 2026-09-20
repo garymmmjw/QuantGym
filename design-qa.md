@@ -170,3 +170,27 @@ Interaction verification: add-application dialog opened and cancelled successful
 Engineering verification: strict production build passed after the final CSS edit; independent diff review found no missing removed-token references or blocking issues. No automated tests added for this CSS-only change. This acceptance covers the desktop palette and sampled dialog/search states; it is not a new full responsive or account-system certification.
 
 final result: passed
+
+
+## Mobile five-section navigation — 2026-09-19
+
+Scope: replace the phone hamburger/More sheet and shortcut bar with Overview, Career, Training, Resources, and Me. Desktop navigation and page presentation stay unchanged. Existing 860px shell breakpoint is retained; no routes or user data are migrated.
+
+### Visual and interaction evidence
+
+- Screenshots and structured results: `/Users/miujiawei/.codex/visualizations/2026/09/19/mobile-navigation/` (`desktop-before.png`, `desktop-after.png`, `career-390.png`, `training-390.png`, `account-390.png`, `navigation-qa.json`).
+- Desktop 1280×720: sidebar, command bar, Tracker heading, summary, stages, and table have identical before/after bounding boxes. Pixel comparison differs only inside the existing animated brand wordmark at (63,15)–(168,48); remaining pixels are identical.
+- Phone: all ten real page components opened successfully through the five categories and their child navigation at 390px. Overview, Tracker, Calendar, Technical Interview, Behavioral Interview, LeetCode, Mental Math, Problems, Experiences, and Account each resolve to the correct category with document width exactly 390px.
+- Responsive boundary checks at 320, 768, and 860px show no document overflow, no sidebar, and the five-item bottom bar. At 861px the desktop rail returns and both new mobile navigation blocks are hidden. The old hamburger, sheet, and shortcut bar are absent.
+- Back and forward between Mental Math and LeetCode retain the Training category and restore the child selection. Current-item links preserve the full address and replace history instead of adding duplicate entries.
+- Native Tracker edit dialog remains above the bottom bar. Deleting a synthetic OA event showed its undo notice 12px above the navigation (notice bottom 756px, bar top 768px), and Undo successfully restored the event.
+- Existing personal-workspace cross-category navigation is hidden only on mobile; its sync status, export, restore, and page content remain. Account padding is reduced only on mobile.
+- Onboarding step 2 presents the five-section instructions on mobile; resizing to desktop shows its unchanged original copy. Mobile step 3 explains the search button instead of a keyboard shortcut.
+
+### Validation and limitations
+
+Seven navigation tests, route integrity (26 routes), shell checks, and the strict production build pass. Independent read-only review found no blocking navigation, layout, or desktop regressions. The broad historical UI-contract gate still reports 64 pre-existing failures; substituting the four modified tracked files with their HEAD baseline contents yields identical output. Those stale contracts and historical screenshot requirements are outside this mobile change.
+
+Browser validation uses isolated local fixture records and real production shell/page components. The fixture intentionally shows an account-verification banner and empty cloud-only content; it does not certify live-account or cloud-write flows. Missing Account/Experiences fixture adapters caused early fixture-only errors; after using the production page API models, the final clean-tab ten-page sweep has zero error/warning logs. Screenshots show fixture data rather than a production account.
+
+final result: passed

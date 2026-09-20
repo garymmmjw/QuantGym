@@ -11,6 +11,7 @@ import { RouteProgressBar } from "./RouteProgressBar.jsx";
 import { CloudSessionBadge, CloudSessionNotice } from "../../features/account/CloudSessionNotice.jsx";
 import { AccountDataSync } from "../../features/account/AccountDataSync.jsx";
 import { isModuleVisible } from "../../modules/availability.js";
+import { MobileBottomNavigation, MobileSectionNavigation } from "./MobileSectionNavigation.jsx";
 
 const THEME_STORAGE_KEY = "quantgym.ui.theme.v1";
 
@@ -55,13 +56,6 @@ const VISIBLE_NAV_GROUPS = SHEET_NAV_GROUPS
   .map((group) => ({ ...group, items: group.items.filter(([moduleId]) => isModuleVisible(moduleId)) }))
   .filter((group) => group.items.length > 0);
 
-const BOTTOM_TABS = [
-  ["calendar", "日历", "calendar-days"],
-  ["leetcode", "LeetCode", "code-2"],
-  ["tools", "速算", "calculator"],
-  ["problems", "题目", "library-big"]
-];
-
 function getStoredTheme() {
   try {
     return globalThis.localStorage?.getItem(THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
@@ -76,7 +70,6 @@ export function AppShellMain() {
   const shellServicesRef = useRef(shellServices);
   const [theme, setTheme] = useState(getStoredTheme);
   const [notifOpen, setNotifOpen] = useState(false);
-  const [navSheetOpen, setNavSheetOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [themeError, setThemeError] = useState("");
   const themeSaving = useRef(false);
@@ -197,7 +190,6 @@ export function AppShellMain() {
       }
       if (event.key === "Escape") {
         setNotifOpen(false);
-        setNavSheetOpen(false);
       }
     };
     window.addEventListener("keydown", onKeydown);
@@ -246,8 +238,6 @@ export function AppShellMain() {
     }
   };
 
-  const closeNavSheet = () => setNavSheetOpen(false);
-
   return (
     <main id="appShell" className="hidden qg-app-shell">
           <nav className="module-nav qg-shell-rail" id="moduleNav" aria-label="模块导航" data-i18n-aria-label="moduleNavLabel">
@@ -280,9 +270,6 @@ export function AppShellMain() {
           </nav>
 
           <section className="app-command-bar qg-command-bar" aria-label="全局搜索和状态" data-i18n-aria-label="commandBarLabel">
-            <button className="qg-mobile-menu-btn" type="button" aria-label="打开模块菜单" title="打开模块菜单" onClick={() => setNavSheetOpen(true)}>
-              <i data-lucide="menu"></i>
-            </button>
             <span className="qg-command-brand" aria-hidden="true">
               <img src="/assets/generated/playful-precision/brand-q-mark.webp" alt="" />
               <strong>Quant<span className="qg-brand-accent">Gym</span></strong>
@@ -421,75 +408,12 @@ export function AppShellMain() {
             <div className="app-route-root qg-route-container">
               <AccountDataSync />
               <CloudSessionNotice />
+              <MobileSectionNavigation />
               <Outlet />
             </div>
           </section>
 
-          <nav className="qg-tabbar" aria-label="快捷导航">
-            {BOTTOM_TABS.map(([moduleId, label, icon]) => (
-              <button
-                className={moduleId === "overview" ? "qg-tabbar-tab active" : "qg-tabbar-tab"}
-                type="button"
-                key={moduleId}
-                data-module-tab={moduleId}
-                onClick={closeNavSheet}
-              >
-                <i data-lucide={icon}></i>
-                <span>{label}</span>
-              </button>
-            ))}
-            <button
-              className={navSheetOpen ? "qg-tabbar-tab qg-tabbar-more is-open" : "qg-tabbar-tab qg-tabbar-more"}
-              type="button"
-              aria-haspopup="dialog"
-              aria-expanded={navSheetOpen}
-              onClick={() => setNavSheetOpen((open) => !open)}
-            >
-              <i data-lucide="menu"></i>
-              <span>更多</span>
-            </button>
-          </nav>
-
-          <div
-            className={navSheetOpen ? "qg-nav-sheet is-open" : "qg-nav-sheet"}
-            aria-hidden={navSheetOpen ? undefined : "true"}
-            onClick={closeNavSheet}
-          >
-            <div className="qg-nav-sheet-panel" role="dialog" aria-label="全部模块" onClick={(event) => event.stopPropagation()}>
-              <div className="qg-nav-sheet-grip" aria-hidden="true"></div>
-              <div className="qg-nav-sheet-head">
-                <img src="/assets/generated/playful-precision/brand-q-mark.webp" alt="" />
-                <strong>全部模块</strong>
-                <button className="qg-nav-sheet-close" type="button" aria-label="关闭模块菜单" onClick={closeNavSheet}>
-                  <i data-lucide="x"></i>
-                </button>
-              </div>
-              <div className="qg-nav-sheet-groups">
-                {VISIBLE_NAV_GROUPS.map((group) => (
-                  <div className="qg-nav-sheet-group" key={group.label}>
-                    {group.label && <span className="qg-nav-sheet-label" data-i18n={group.labelKey}>{group.label}</span>}
-                    <div className="qg-nav-sheet-grid">
-                      {group.items.map(([moduleId, label, icon, labelKey, badge]) => (
-                        <button
-                          className="qg-nav-sheet-item"
-                          type="button"
-                          key={moduleId}
-                          data-module-tab={moduleId}
-                          onClick={closeNavSheet}
-                        >
-                          <i data-lucide={icon}></i>
-                          <span className="qg-nav-item-copy">
-                            <span data-i18n={labelKey}>{label}</span>
-                            {badge && <small className="qg-nav-beta">{badge}</small>}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <MobileBottomNavigation />
 
           <RouteProgressBar />
           <CommandPalette

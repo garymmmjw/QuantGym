@@ -96,8 +96,14 @@ export function OnboardingTour() {
           <img src={current.img} alt="" decoding="async" />
         </div>
         <div className="qg-onboard-kicker">{current.kicker}</div>
-        <div className="qg-onboard-title">{t(current.titleKey)}</div>
-        <div className="qg-onboard-sub">{t(current.subKey)}</div>
+        <div className="qg-onboard-title">{boundedStep === 0 ? t(current.titleKey) : <>
+          <span className="qg-tour-desktop-navigation">{t(current.titleKey)}</span>
+          <span className="qg-tour-mobile-navigation">{t(current.titleKey.replace('tourStep', 'tourMobileStep'))}</span>
+        </>}</div>
+        <div className="qg-onboard-sub">{boundedStep === 0 ? t(current.subKey) : <>
+          <span className="qg-tour-desktop-navigation">{t(current.subKey)}</span>
+          <span className="qg-tour-mobile-navigation">{t(current.subKey.replace('tourStep', 'tourMobileStep'))}</span>
+        </>}</div>
         <div className="qg-onboard-dots" aria-hidden="true">
           {ONBOARD_STEPS.map((item, index) => (
             <span
