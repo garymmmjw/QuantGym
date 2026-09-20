@@ -27,11 +27,10 @@ export function OverviewCareerStage({ rows = [], note = '', onEdit }) {
       <colgroup><col className="overview-stage-summary-stage-column" /><col className="overview-stage-summary-period-column" />{METRICS.map(metric => <col key={metric.key} className={metric.key === 'leetcode' ? 'overview-stage-summary-leetcode-column' : metric.average ? 'overview-stage-summary-average-column' : undefined} />)}</colgroup>
       <thead role="rowgroup"><tr role="row">
         <th scope="col" role="columnheader">Stage</th><th scope="col" role="columnheader">时间范围</th>
-        {METRICS.map(metric => <th scope="col" role="columnheader" key={metric.key} className={metric.average ? 'overview-stage-summary-average-heading' : undefined} title={metric.label}>{metric.compactLabel ? <><span className="overview-stage-heading-full">{metric.label}</span><span className="overview-stage-heading-compact">{metric.compactLabel}</span></> : metric.label}{metric.detail && <span className="overview-stage-summary-heading-detail">{metric.detail}</span>}</th>)}
+        {METRICS.map(metric => <th scope="col" role="columnheader" key={metric.key} className={metric.key === 'leetcode' ? 'overview-stage-summary-leetcode-heading' : metric.average ? 'overview-stage-summary-average-heading' : undefined} title={metric.label}>{metric.compactLabel ? <><span className="overview-stage-heading-full">{metric.label}</span><span className="overview-stage-heading-compact">{metric.compactLabel}</span></> : metric.label}{metric.detail && <span className="overview-stage-summary-heading-detail">{metric.detail}</span>}</th>)}
       </tr></thead>
       <tbody role="rowgroup">{displayRows.map(row => <tr key={row.id} role="row" className={row.isCurrent ? 'is-current' : undefined} aria-current={row.isCurrent ? 'step' : undefined}>
         <th scope="row" role="rowheader" className="overview-stage-summary-identity"><div className="overview-stage-summary-identity-content">
-          {row.isCurrent && <span className="overview-stage-summary-current">当前阶段</span>}
           {onEdit ? <button type="button" className="overview-stage-summary-edit" aria-label={`编辑 ${row.label}`} title={row.description || '修改阶段信息'} onClick={() => onEdit(row)}>
             <span className="overview-stage-summary-name">{row.label}</span><Pencil size={14} strokeWidth={1.6} aria-hidden="true" />
           </button> : <span className="overview-stage-summary-name">{row.label}</span>}
