@@ -2988,7 +2988,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.get_technical_practice_questions()
             if path == "/api/leetcode" and self.command in {"GET", "DELETE"}:
                 return self.leetcode_connection()
-            if path in {"/api/leetcode/connect", "/api/leetcode/sync", "/api/leetcode/import", "/api/leetcode/review"} and self.command == "POST":
+            if path in {"/api/leetcode/connect", "/api/leetcode/sync", "/api/leetcode/import", "/api/leetcode/review", "/api/leetcode/backpack"} and self.command == "POST":
                 return self.leetcode_connection()
             if path == "/api/problems" and self.command == "GET":
                 return self.get_problems()
@@ -3880,10 +3880,15 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                     raise HttpError(400, "Invalid Content-Length")
                 if length > leetcode_sync.MAX_IMPORT_BYTES:
                     raise HttpError(413, "LeetCode metadata request exceeds the 5 MiB limit.")
-                if path.endswith("/review") and length > 4096:
-                    raise HttpError(413, "LeetCode review request exceeds the 4 KiB limit.")
+                if path.endswith(("/review", "/backpack")) and length > 4096:
+                    raise HttpError(413, "LeetCode review/card request exceeds the 4 KiB limit.")
                 payload = self.read_json()
-                if path.endswith("/review"):
+                if path.endswith("/backpack"):
+                    self.enforce_rate_limit("leetcode-backpack", 60, user["id"])
+                    next_snapshot = leetcode_sync.apply_backpack(previous, payload)
+                    if next_snapshot is previous:
+                        return self.send_json(200, leetcode_sync.public_snapshot(previous))
+                elif path.endswith("/review"):
                     self.enforce_rate_limit("leetcode-review", 60, user["id"])
                     next_snapshot = leetcode_sync.apply_review(previous, payload)
                     if next_snapshot is previous:
@@ -3910,8 +3915,25 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                     result = leetcode_sync.save_snapshot(conn, user["id"], revision, next_snapshot)
                     guardian.evaluate(conn, user["id"])
             except leetcode_sync.LeetCodeError as error:
-                if not path.endswith("/review") or error.status != 409:
+                if error.status != 409 or not path.endswith(("/review", "/backpack")):
                     raise
+                if path.endswith("/backpack"):
+                    # A concurrent sync or another draw may win the revision.
+                    # Reapply against that saved snapshot; exact account binding
+                    # still rejects disconnect/relink, and event receipts never
+                    # recreate cards already completed after their original draw.
+                    for attempt in range(3):
+                        try:
+                            with db.connect() as conn:
+                                latest_revision, latest = leetcode_sync.get_record(conn, user["id"])
+                                retried = leetcode_sync.apply_backpack(latest, payload)
+                                result = leetcode_sync.public_snapshot(latest) if retried is latest else leetcode_sync.save_snapshot(conn, user["id"], latest_revision, retried)
+                            break
+                        except leetcode_sync.LeetCodeError as conflict:
+                            if conflict.status != 409 or attempt == 2:
+                                raise
+                    guardian.wake()
+                    return self.send_json(200, result)
                 # Two concurrent deliveries of one command are one event. A
                 # different review or disconnected account still conflicts.
                 with db.connect() as conn:

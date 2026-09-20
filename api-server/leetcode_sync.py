@@ -20,6 +20,7 @@ MAX_IMPORT_BYTES = 5 * 1024 * 1024
 MAX_SNAPSHOT_BYTES = 16 * 1024 * 1024
 MAX_RECORDS = 20_000
 MAX_REVIEW_EVENTS = 20_000
+MAX_BACKPACK_EVENTS = 20_000
 MAX_REVIEW_INTERVAL_DAYS = 36_500
 REVIEW_RATINGS = {"again": 1, "hard": 3, "good": 4, "easy": 5}
 MIN_SYNC_SECONDS = 60
@@ -238,6 +239,7 @@ def public_snapshot(snapshot):
     result.setdefault("coverage", {}).update(personal_history_coverage(snapshot, result["importedSubmissions"]))
     state = personal_solved_set(snapshot)
     result["personalFirstSolveBounds"] = state["bounds"] if state else []
+    result["reviewBackpack"] = review_backpack(snapshot, generated_at)
     result["problems"] = [{**problem, "review": problem_review(snapshot, problem, generated_at)} for problem in result.get("problems", [])]
     result["reviewPolicy"] = {"algorithm": "sm2", "version": 1, "generatedAt": generated_at}
     return result
@@ -496,6 +498,124 @@ def add_review_days(value, days):
     return (datetime.fromisoformat(value.replace("Z", "+00:00")) + timedelta(days=days)).astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
+def backpack_completions(snapshot, generated_at):
+    """Only dated AC records in this exact connection can complete a card.
+
+    Problem metadata and recall ratings are not accepted submission evidence.
+    Imported ACs may complete a card, but their timestamp must follow its draw;
+    merely importing older history can never empty the backpack.
+    """
+    synced = synced_accepted_submissions(snapshot)
+    latest = {}
+    for row in [*synced, *imported_accepted_submissions(snapshot, synced)]:
+        completed_at = row["submittedAt"]
+        if completed_at <= generated_at:
+            slug = row["problemSlug"]
+            latest[slug] = max(latest.get(slug, ""), completed_at)
+    return latest
+
+
+def backpack_state(snapshot):
+    connection, stored = snapshot.get("connection"), snapshot.get("_reviewBackpack")
+    if not isinstance(connection, dict) or not isinstance(stored, dict) or any(
+        stored.get(key) != connection.get(key) or not connection.get(key) for key in ("username", "linkedAt")
+    ):
+        return None
+    return stored
+
+
+def review_backpack(snapshot, generated_at=None):
+    """Project pending cards without erasing their saved draw/event history."""
+    generated_at = generated_at or now_iso()
+    stored = backpack_state(snapshot)
+    if stored is None:
+        return []
+    completed = backpack_completions(snapshot, generated_at)
+    pending = []
+    for entry in stored.get("entries", {}).values():
+        if entry.get("completedAt"):
+            continue
+        latest = completed.get(entry["problemSlug"])
+        if latest and latest >= entry["drawnAt"] and (entry["baselineCompletedAt"] is None or latest > entry["baselineCompletedAt"]):
+            continue
+        pending.append({key: entry[key] for key in ("problemSlug", "drawnAt", "baselineCompletedAt")})
+    return sorted(pending, key=lambda entry: (entry["drawnAt"], entry["problemSlug"]), reverse=True)
+
+
+def reconcile_backpack(snapshot, generated_at=None):
+    """Freeze observed completion before saving, even if history is later pruned."""
+    generated_at = generated_at or now_iso()
+    stored = backpack_state(snapshot)
+    if stored is None:
+        return snapshot
+    completed = backpack_completions(snapshot, generated_at)
+    changes = {}
+    for entry in stored.get("entries", {}).values():
+        latest = completed.get(entry["problemSlug"])
+        if not entry.get("completedAt") and latest and latest >= entry["drawnAt"] and (
+            entry["baselineCompletedAt"] is None or latest > entry["baselineCompletedAt"]
+        ):
+            changes[(entry["problemSlug"], entry["drawnAt"])] = latest
+    if not changes:
+        return snapshot
+    result = copy.deepcopy(snapshot)
+    for (slug, _), completed_at in changes.items():
+        result["_reviewBackpack"]["entries"][slug]["completedAt"] = completed_at
+    for event in result.get("_reviewBackpackEvents", {}).values():
+        completed_at = changes.get((event["problemSlug"], event["drawnAt"]))
+        if completed_at and all(event.get(key) == stored[key] for key in ("username", "linkedAt")):
+            event["completedAt"] = completed_at
+    return result
+
+
+def backpack_is_replay(snapshot, payload):
+    fields = {"username", "linkedAt", "problemSlug", "eventId"}
+    if not isinstance(payload, dict) or set(payload) != fields:
+        raise LeetCodeError("Provide the linked account, problem and draw event only.")
+    connection = snapshot.get("connection")
+    if not connection or any(payload[key] != connection.get(key) for key in ("username", "linkedAt")):
+        raise LeetCodeError("Your LeetCode connection changed. Reload before saving a card.", 409)
+    slug = payload["problemSlug"]
+    if not isinstance(slug, str) or not PROBLEM_SLUG.fullmatch(slug):
+        raise LeetCodeError("Invalid backpack problem slug.")
+    try:
+        if not isinstance(payload["eventId"], str) or str(UUID(payload["eventId"])) != payload["eventId"]:
+            raise ValueError()
+    except (ValueError, AttributeError):
+        raise LeetCodeError("A canonical UUID is required for this draw event.") from None
+    if not any(problem["slug"] == slug for problem in snapshot.get("problems", [])):
+        raise LeetCodeError("This problem is not in your completed LeetCode collection.", 404)
+    previous = snapshot.get("_reviewBackpackEvents", {}).get(payload["eventId"])
+    if previous is None:
+        return False
+    if any(previous.get(key) != value for key, value in payload.items()):
+        raise LeetCodeError("This draw event was already used for a different action.", 409)
+    return True
+
+
+def apply_backpack(previous, payload):
+    if backpack_is_replay(previous, payload):
+        return previous
+    previous = reconcile_backpack(previous)
+    if len(previous.get("_reviewBackpackEvents", {})) >= MAX_BACKPACK_EVENTS:
+        raise LeetCodeError("The saved card history has reached its 20,000 event limit.", 413)
+    drawn_at = now_iso()
+    pending = {entry["problemSlug"]: entry for entry in review_backpack(previous, drawn_at)}
+    entry = pending.get(payload["problemSlug"])
+    if entry is None:
+        entry = {"problemSlug": payload["problemSlug"], "drawnAt": drawn_at,
+                 "baselineCompletedAt": backpack_completions(previous, drawn_at).get(payload["problemSlug"])}
+    snapshot = copy.deepcopy(previous)
+    connection = {key: payload[key] for key in ("username", "linkedAt")}
+    stored = snapshot.get("_reviewBackpack")
+    if not isinstance(stored, dict) or any(stored.get(key) != value for key, value in connection.items()):
+        stored = {**connection, "entries": {}}
+        snapshot["_reviewBackpack"] = stored
+    stored["entries"][payload["problemSlug"]] = entry
+    snapshot.setdefault("_reviewBackpackEvents", {})[payload["eventId"]] = {**payload, **entry}
+    return snapshot
+
+
 def validate_review(snapshot, payload):
     fields = {"username", "linkedAt", "problemSlug", "rating", "eventId", "expectedVersion"}
     if not isinstance(payload, dict) or set(payload) != fields:
@@ -565,6 +685,7 @@ def get_snapshot(conn, user_id):
 
 
 def save_snapshot(conn, user_id, revision, snapshot):
+    snapshot = reconcile_backpack(snapshot)
     data = json.dumps(snapshot, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
     if len(data.encode("utf-8")) > MAX_SNAPSHOT_BYTES:
         raise LeetCodeError("Saved LeetCode metadata exceeds the 16 MiB limit.", 413)
@@ -660,7 +781,7 @@ def fresh_snapshot(previous, incoming):
     snapshot["coverage"]["calendarYears"] = sorted(set([*snapshot["coverage"].get("calendarYears", []), year]))
     snapshot["warning"] = None
     merge_records(snapshot, incoming_records)
-    return update_personal_solved_set(snapshot, prior=prior_solved, profile_observed_after=incoming.get("profileObservedAfter"))
+    return reconcile_backpack(update_personal_solved_set(snapshot, prior=prior_solved, profile_observed_after=incoming.get("profileObservedAfter")))
 
 
 def sync_is_recent(snapshot):
@@ -707,4 +828,4 @@ def import_metadata(previous, payload):
     prior_coverage = snapshot.get("_importedHistoryCoverage", {})
     if history_coverage and history_coverage["complete"] and (not prior_coverage.get("complete") or history_coverage["capturedAt"] > prior_coverage.get("capturedAt", "")):
         snapshot["_importedHistoryCoverage"] = history_coverage
-    return update_personal_solved_set(snapshot, prior=personal_solved_set(previous), seed_import=True)
+    return reconcile_backpack(update_personal_solved_set(snapshot, prior=personal_solved_set(previous), seed_import=True))
