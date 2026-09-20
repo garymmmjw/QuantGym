@@ -1,0 +1,104 @@
+.overview-stage-summary {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--qg-border, #ecebf7);
+  border-radius: 12px;
+  background: var(--qg-surface, #fff);
+  color: var(--qg-text, #1b1a38);
+}
+.overview-stage-summary-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.overview-stage-summary-stage-column { width: 16%; }
+.overview-stage-summary-period-column { width: 22%; }
+.overview-stage-summary-table th,
+.overview-stage-summary-table td {
+  padding: 16px 12px;
+  border: 0;
+  text-align: right;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+.overview-stage-summary-table th:first-child,
+.overview-stage-summary-table td.overview-stage-summary-period { padding-left: 20px; text-align: left; }
+.overview-stage-summary-table thead th:nth-child(2) { padding-left: 20px; text-align: left; }
+.overview-stage-summary-table th:last-child,
+.overview-stage-summary-table td:last-child { padding-right: 20px; }
+.overview-stage-summary-table thead th {
+  padding-top: 14px;
+  padding-bottom: 14px;
+  color: var(--qg-muted, #6d6c8e);
+  background: var(--qg-surface-2, #fbfbfd);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.overview-stage-summary-heading-detail { display: block; margin-top: 2px; font-size: 10px; font-weight: 500; }
+.overview-stage-summary-table tbody tr { border-top: 1px solid var(--qg-border, #ecebf7); }
+.overview-stage-summary-table tbody tr.is-current { background: var(--qg-brand-soft, #eef0ff); }
+.overview-stage-summary-name { display: block; font-size: 16px; font-weight: 650; color: var(--qg-text, #1b1a38); }
+.overview-stage-summary-current { display: block; margin-top: 3px; font-size: 10px; font-weight: 500; color: var(--qg-brand-ink, #5b5ff5); }
+.overview-stage-summary-period { color: var(--qg-muted, #6d6c8e); font-size: 12px; font-variant-numeric: tabular-nums; }
+.overview-stage-summary-value { font-family: var(--qg-font-number, inherit); font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.overview-stage-summary-unit { margin-left: 3px; font-family: var(--qg-font-ui, inherit); font-size: 10px; font-weight: 500; color: var(--qg-muted, #6d6c8e); }
+.overview-stage-summary-table .is-current .overview-stage-summary-name,
+.overview-stage-summary-table .is-current .overview-stage-summary-value { color: var(--qg-brand-ink, #5b5ff5); }
+.overview-stage-summary-unknown { color: var(--qg-muted-2, #9998b6); font-size: 17px; }
+.overview-stage-summary-mobile-label { display: none; }
+.overview-stage-summary-empty { margin: 0; padding: 22px 24px; color: var(--qg-muted, #6d6c8e); font-size: 13px; line-height: 1.8; }
+.overview-stage-summary-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .overview-stage-summary { border: 0; border-radius: 0; background: transparent; overflow: visible; }
+  .overview-stage-summary-table { display: block; }
+  .overview-stage-summary-table colgroup { display: none; }
+  .overview-stage-summary-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .overview-stage-summary-table tbody { display: grid; gap: 12px; }
+  .overview-stage-summary-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 18px;
+    padding: 16px 18px 10px;
+    border: 1px solid var(--qg-border, #ecebf7);
+    border-radius: 12px;
+    background: var(--qg-surface, #fff);
+  }
+  .overview-stage-summary-table th,
+  .overview-stage-summary-table td,
+  .overview-stage-summary-table th:first-child,
+  .overview-stage-summary-table td.overview-stage-summary-period,
+  .overview-stage-summary-table td:last-child {
+    min-width: 0;
+    padding: 0;
+    text-align: left;
+  }
+  .overview-stage-summary-identity { align-self: start; }
+  .overview-stage-summary-table td.overview-stage-summary-period { text-align: right; align-self: start; padding-top: 2px; }
+  .overview-stage-summary-table td.overview-stage-summary-metric {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 0;
+    border-top: 1px solid var(--qg-border, #ecebf7);
+  }
+  .overview-stage-summary-metric:nth-child(3),
+  .overview-stage-summary-metric:nth-child(4) { margin-top: 14px; }
+  .overview-stage-summary-table td.overview-stage-summary-average { grid-column: 1 / -1; }
+  .overview-stage-summary-mobile-label { display: block; min-width: 0; color: var(--qg-muted, #6d6c8e); font-size: 11px; line-height: 1.5; }
+  .overview-stage-summary-value { font-size: 19px; }
+  .overview-stage-summary-empty { padding: 20px; border: 1px solid var(--qg-border, #ecebf7); border-radius: 12px; background: var(--qg-surface, #fff); }
+}

@@ -8,11 +8,11 @@ const disabledSnapshot = { data: EMPTY_LEETCODE, phase: "local", error: null };
 const noSubscribe = () => () => {};
 const getDisabled = () => disabledSnapshot;
 
-export function useLeetCode() {
+export function useLeetCode({ enabled: requestedEnabled = true } = {}) {
   const services = useAppServicesContext();
   const user = useAuthStore((state) => state.currentUser);
   const config = useAppStore((state) => state.cloudConfig || services.appState?.cloudConfig || {});
-  const enabled = Boolean(user?.id && config.endpoint && config.token && config.userId === user.id);
+  const enabled = Boolean(requestedEnabled && user?.id && config.endpoint && config.token && config.userId === user.id);
   const client = useMemo(() => {
     if (!enabled) return null;
     const key = JSON.stringify([user.id, config.endpoint, config.token]);

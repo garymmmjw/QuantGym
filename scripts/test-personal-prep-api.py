@@ -603,6 +603,20 @@ class PersonalPrepApiTests(unittest.TestCase):
         self.assertEqual(cleared["revision"], 3)
         self.assertEqual(self.request("GET", token=token)[1]["data"], empty_state())
 
+    def test_explicit_completions_roundtrip_on_existing_activity_contract(self):
+        token, _ = self.new_user()
+        state = empty_state()
+        state["activities"] = [
+            {"id": "behavioral:explicit:general-introduction:2026-09-19", "kind": "behavioral", "source": "explicit", "sourceId": "general-introduction", "questionId": "general-introduction", "count": 1, "completedAt": "2026-09-19T12:00:00.000Z", "dateKey": "2026-09-19"},
+            {"id": "experience-read:fixture-experience", "kind": "experience-read", "source": "explicit", "sourceId": "fixture-experience", "count": 1, "completedAt": "2026-09-19T12:00:00.000Z", "dateKey": "2026-09-19"},
+        ]
+        status, saved, headers = self.put(token, state)
+        self.assertEqual(status, 200, saved)
+        self.assert_private(headers)
+        self.assertEqual(self.request("GET", token=token)[1]["data"]["activities"], state["activities"])
+        other, _ = self.new_user()
+        self.assertIsNone(self.request("GET", token=other)[1]["data"])
+
     def test_behavioral_answers_round_trip_legacy_writes_and_explicit_clear(self):
         token, _ = self.new_user()
         state = empty_state()

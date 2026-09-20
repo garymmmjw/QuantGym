@@ -5,6 +5,7 @@ import { createPersonalStore, createPersonalState } from '../src/features/person
 import { createTrial } from '../src/features/personal/mental/mentalEngine.js';
 import { createReasoningTrial, transitionReasoningTrial, persistReasoningTransition, cancelTrialPreparation } from '../src/features/personal/mental/reasoningEngine.js';
 import { createDailySession, updateDailyAnswer } from '../src/features/personal/daily/dailyEngine.js';
+import { markExperienceRead } from '../src/features/personal/completionActivities.js';
 
 const iso = '2026-09-09T12:00:00.000Z';
 const clone = value => structuredClone(value);
@@ -17,6 +18,22 @@ function memoryStorage() {
 const activity = id => ({ id, kind: 'quant', count: 1, completedAt: iso });
 const add = id => state => ({ ...state, activities: [...state.activities, activity(id)] });
 const ids = data => data.activities.map(item => item.id).sort();
+
+test('known-fingerprint sync paths retain explicit reads omitted by an older snapshot', async () => {
+  const server = memoryServer();
+  const first = device(server);
+  first.store.update(state => markExperienceRead(state, 'fixture-read', iso));
+  await first.cloud.sync();
+  const event = first.store.getSnapshot().data.activities[0];
+  server.change({ ...server.data, activities: [activity('older-device')] });
+  await first.cloud.sync();
+  assert.equal(server.data.activities.some(row => row.id === event.id), true);
+  first.store.update(state => ({ ...state, activities: state.activities.filter(row => row.id !== event.id) }));
+  await first.cloud.sync();
+  assert.equal(first.store.getSnapshot().data.activities.some(row => row.id === event.id), true);
+  assert.equal(server.data.activities.filter(row => row.id === event.id).length, 1);
+  assert.equal(server.data.activities.some(row => row.id === 'older-device'), true);
+});
 function deferred() {
   let resolve;
   const promise = new Promise(done => { resolve = done; });

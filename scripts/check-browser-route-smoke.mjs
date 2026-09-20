@@ -26,7 +26,7 @@ const browserSmokeAccount = {
 };
 browserSmokeAccount.passwordHash = hashLocalPassword(browserSmokeAccount.email, browserSmokeAccount.password);
 const routeTargets = {
-  overview: ["#heroTypewriter", "#overviewProblemProgress", "#leaderboardMetricSelect"],
+  overview: [".overview-greeting", "#overviewDailyTasksTitle", "#overviewActivityBars", "#overviewProblemProgress"],
   plan: ["#prepPlanSetupForm", "#prepPlanDashboard"],
   skills: ["#skillsPageTitle", "#skillRadar"],
   interview: ["#interviewSetup", "#startInterviewBtn"],
@@ -123,7 +123,7 @@ try {
   const interactionResults = [];
   const interactionChecks = [
     ["overview CTA opens problems", runOverviewToProblemsFlow],
-    ["overview leaderboard controls and news ticker navigation", runOverviewLeaderboardAndTickerFlow],
+    ["overview daily task routes and activity dashboard", runOverviewDashboardFlow],
     ["streak check-in calendar opens and persists activity", runStreakCheckInCalendarFlow],
     ["shell sidebar and command shortcuts persist navigation state", runShellSidebarAndCommandShortcutsFlow],
     ["hash compat deep links redirect without losing query state", runHashCompatDeepLinkFlow],
@@ -679,7 +679,7 @@ async function runOverviewToProblemsFlow(page, baseUrl) {
   try {
     await page.goto(`${baseUrl}/`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.locator(".problem-progress-panel button[aria-label='打开题库']").click({ timeout: 10000 });
+    await page.locator(".problem-progress-panel a[aria-label='打开题库']").click({ timeout: 10000 });
     await page.waitForURL(/\/problems$/, { timeout: 10000 });
     await page.waitForSelector("#problemSearch", { timeout: 10000 });
     result.path = new URL(page.url()).pathname;
@@ -691,134 +691,72 @@ async function runOverviewToProblemsFlow(page, baseUrl) {
   return result;
 }
 
-async function runOverviewLeaderboardAndTickerFlow(page, baseUrl) {
-  const result = { name: "overview leaderboard controls and news ticker navigation", status: "pass" };
+async function runOverviewDashboardFlow(page, baseUrl) {
+  const result = { name: "overview daily task routes and activity dashboard", status: "pass" };
+  const destinations = [
+    { path: "/leetcode", selector: "#lc-title" },
+    { path: "/tools", selector: ".personal-mental" },
+    { path: "/tracker", selector: ".quantgym-tracker" },
+    { path: "/technical-interview", selector: ".practice-page" },
+    { path: "/behavioral-interview", selector: ".personal-workspace" }
+  ];
+  const expectedPaths = destinations.map(item => item.path);
+  const checkDashboard = async () => {
+    for (const selector of routeTargets.overview) await page.waitForSelector(selector, { timeout: 10000 });
+    const dashboard = await collectOverviewDiagnostics(page);
+    if (!dashboard.greeting || !dashboard.problemProgressPresent || dashboard.activityDayCount !== 7
+      || !dashboard.removedModulesAbsent || !dashboard.stageActionsAbsent
+      || JSON.stringify(dashboard.taskRoutes) !== JSON.stringify(expectedPaths)) {
+      throw new Error(`Overview dashboard contract failed: ${JSON.stringify(dashboard)}`);
+    }
+    return dashboard;
+  };
   try {
-    result.step = "open overview";
+    result.step = "check activity dashboard";
     await page.goto(`${baseUrl}/`, { waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await page.waitForSelector("#leaderboardMetricSelect", { timeout: 10000 });
-    await page.waitForSelector("#leaderboardList", { timeout: 10000 });
-
-    result.step = "change leaderboard controls";
-    const metricValue = await page.evaluate(() => {
-      const select = document.querySelector("#leaderboardMetricSelect");
-      const options = [...(select?.options || [])].map((option) => option.value).filter(Boolean);
-      return options.find((value) => value !== select.value) || options[0] || "overall";
-    });
-    await page.locator("#leaderboardMetricSelect").selectOption(metricValue);
-    await page.locator("#leaderboardScopeSelect").selectOption("region");
-    await page.waitForFunction(() => !document.querySelector("#leaderboardCountrySelect")?.disabled, null, { timeout: 10000 });
-    await page.locator("#leaderboardCountrySelect").selectOption("unitedStates");
-    await page.waitForFunction(() => {
-      const region = document.querySelector("#leaderboardRegionSelect");
-      return region && !region.disabled && [...region.options].some((option) => option.value === "California");
-    }, null, { timeout: 10000 });
-    await page.locator("#leaderboardRegionSelect").selectOption("California");
-    const expectedLeaderboard = {
-      metric: metricValue,
-      scope: "region",
-      country: "unitedStates",
-      region: "California"
-    };
-    await expectOverviewLeaderboardControls(page, expectedLeaderboard);
-    await expectStoredOverviewLeaderboard(page, expectedLeaderboard);
-
-    result.step = "reload leaderboard settings";
+    const dashboard = await checkDashboard();
+    result.activityDayCount = dashboard.activityDayCount;
+    result.removedModulesAbsent = dashboard.removedModulesAbsent;
+    result.stageActionsAbsent = dashboard.stageActionsAbsent;
+    result.taskRoutes = [];
+    for (const destination of destinations) {
+      result.step = `open daily task ${destination.path}`;
+      await page.locator(`.overview-task[href="${destination.path}"]`).click({ timeout: 10000 });
+      await page.waitForURL(url => url.pathname === destination.path, { timeout: 10000 });
+      await page.waitForSelector(destination.selector, { timeout: 10000 });
+      result.taskRoutes.push(new URL(page.url()).pathname);
+      await page.goto(`${baseUrl}/`, { waitUntil: "domcontentloaded", timeout: 25000 });
+      await waitForAuthenticatedShell(page);
+      await checkDashboard();
+    }
+    result.step = "reload dashboard";
     await page.reload({ waitUntil: "domcontentloaded", timeout: 25000 });
     await waitForAuthenticatedShell(page);
-    await expectOverviewLeaderboardControls(page, expectedLeaderboard);
-    await expectStoredOverviewLeaderboard(page, expectedLeaderboard);
-
-    result.step = "open ticker news detail";
-    const ticker = page.locator(".news-ticker-item[data-news-id]").first();
-    await ticker.waitFor({ state: "visible", timeout: 10000 });
-    const newsId = await ticker.getAttribute("data-news-id");
-    const newsTitle = (await ticker.locator("strong").innerText()).trim();
-    await page.locator(".news-ticker").hover({ timeout: 10000 });
-    await page.waitForTimeout(160);
-    await ticker.click({ timeout: 10000 });
-    await page.waitForURL(/\/news$/, { timeout: 10000 });
-    await page.waitForSelector("#newsDetail", { timeout: 10000 });
-    await page.waitForFunction((title) => (
-      (document.querySelector("#newsDetailTitle")?.textContent || "").trim() === title
-    ), newsTitle, { timeout: 10000 });
-
-    result.metric = metricValue;
-    result.scope = expectedLeaderboard.scope;
-    result.country = expectedLeaderboard.country;
-    result.region = expectedLeaderboard.region;
-    result.newsId = newsId;
-    result.newsTitle = newsTitle.slice(0, 120);
+    await checkDashboard();
     result.reloaded = true;
     delete result.step;
   } catch (error) {
     result.status = "fail";
     result.error = error.message;
-    result.diagnostics = await collectOverviewDiagnostics(page).catch((diagnosticError) => ({
-      error: diagnosticError.message
-    }));
+    result.diagnostics = await collectOverviewDiagnostics(page).catch(diagnosticError => ({ error: diagnosticError.message }));
     fail(`${result.name} failed: ${error.message}`);
   }
   return result;
 }
 
-async function expectOverviewLeaderboardControls(page, expected) {
-  await page.waitForFunction((values) => {
-    const metric = document.querySelector("#leaderboardMetricSelect");
-    const scope = document.querySelector("#leaderboardScopeSelect");
-    const country = document.querySelector("#leaderboardCountrySelect");
-    const region = document.querySelector("#leaderboardRegionSelect");
-    const rows = document.querySelectorAll("#leaderboardList .leaderboard-item, #leaderboardList .leaderboard-empty");
-    return metric?.value === values.metric
-      && scope?.value === values.scope
-      && country?.value === values.country
-      && region?.value === values.region
-      && !country.disabled
-      && !region.disabled
-      && rows.length > 0;
-  }, expected, { timeout: 10000 });
-}
-
-async function expectStoredOverviewLeaderboard(page, expected) {
-  await page.waitForFunction((values) => {
-    try {
-      const state = JSON.parse(localStorage.getItem("quantMemoryBoard.userState.v1.local:browser-route-smoke") || "{}");
-      return state?.leaderboard?.metric === values.metric
-        && state?.leaderboard?.scope === values.scope
-        && state?.leaderboard?.country === values.country
-        && state?.leaderboard?.region === values.region;
-    } catch {
-      return false;
-    }
-  }, expected, { timeout: 10000 });
-}
-
 async function collectOverviewDiagnostics(page) {
   return page.evaluate(() => {
-    let state = {};
-    try {
-      state = JSON.parse(localStorage.getItem("quantMemoryBoard.userState.v1.local:browser-route-smoke") || "{}");
-    } catch {
-      state = {};
-    }
+    const overview = document.querySelector(".overview-route-page");
+    const stage = overview?.querySelector(".overview-stage-summary");
     return {
       pathname: window.location.pathname,
-      leaderboard: {
-        metric: document.querySelector("#leaderboardMetricSelect")?.value || "",
-        scope: document.querySelector("#leaderboardScopeSelect")?.value || "",
-        country: document.querySelector("#leaderboardCountrySelect")?.value || "",
-        region: document.querySelector("#leaderboardRegionSelect")?.value || "",
-        countryDisabled: Boolean(document.querySelector("#leaderboardCountrySelect")?.disabled),
-        regionDisabled: Boolean(document.querySelector("#leaderboardRegionSelect")?.disabled),
-        rowText: document.querySelector("#leaderboardList")?.textContent?.slice(0, 500) || ""
-      },
-      ticker: [...document.querySelectorAll(".news-ticker-item[data-news-id]")].slice(0, 3).map((item) => ({
-        id: item.getAttribute("data-news-id"),
-        text: item.textContent?.trim().slice(0, 200) || ""
-      })),
-      detailTitle: document.querySelector("#newsDetailTitle")?.textContent || "",
-      storedLeaderboard: state.leaderboard || {}
+      greeting: overview?.querySelector(".overview-greeting")?.textContent?.trim() || "",
+      taskRoutes: [...(overview?.querySelectorAll(".overview-task") || [])].map(item => new URL(item.href, location.href).pathname),
+      activityDayCount: overview?.querySelectorAll("#overviewActivityBars .overview-activity-day").length || 0,
+      problemProgressPresent: Boolean(overview?.querySelector("#overviewProblemProgress")),
+      removedModulesAbsent: Boolean(overview) && !overview.querySelector("#heroTypewriter, #generateStudyPlanBtn, #leaderboardList, #leaderboardMetricSelect, #overviewContributionHeatmap, #overviewXpBars, #logForm, #newsTickerTrack, .today-plan, .feature-launch-grid"),
+      stageActionsAbsent: Boolean(stage) && !stage.querySelector("button, a")
     };
   });
 }
@@ -975,7 +913,7 @@ async function runHashCompatDeepLinkFlow(page, baseUrl) {
         && url.searchParams.get("utm") === "browser-smoke"
         && !url.hash
     ), { timeout: 10000 });
-    await page.waitForSelector("#heroTypewriter", { timeout: 10000 });
+    await page.waitForSelector(".overview-greeting", { timeout: 10000 });
     const overviewHealth = await getRouteHealth(page);
     if (overviewHealth.pathname !== "/") throw new Error(`Hash dashboard alias landed on ${overviewHealth.pathname}`);
     if (overviewHealth.authShellVisible || !overviewHealth.appShellVisible) {
@@ -1264,7 +1202,7 @@ async function collectHashCompatDiagnostics(page) {
     appShellVisible: Boolean(document.querySelector("#appShell:not(.hidden)")),
     authShellVisible: Boolean(document.querySelector("#authShell:not(.hidden)")),
     jobsListVisible: Boolean(document.querySelector("#jobsList")),
-    overviewVisible: Boolean(document.querySelector("#heroTypewriter")),
+    overviewVisible: Boolean(document.querySelector(".overview-greeting")),
     bodyTextLength: (document.body?.innerText || "").trim().length
   }));
 }

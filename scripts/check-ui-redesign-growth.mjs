@@ -5,6 +5,7 @@ const root = process.cwd();
 const growthCssPath = path.join(root, "src", "styles", "playful-precision-growth.css");
 const mainPath = path.join(root, "src", "main.jsx");
 const overviewPath = path.join(root, "src", "features", "overview", "OverviewPageContent.jsx");
+const overviewCssPath = path.join(root, "src", "features", "overview", "overviewDashboard.css");
 const planPath = path.join(root, "src", "features", "plan", "PlanPageContent.jsx");
 const skillsPath = path.join(root, "src", "features", "skills", "SkillsPageContent.jsx");
 const capturePath = path.join(root, "scripts", "capture-ui-redesign-growth-review.mjs");
@@ -30,6 +31,7 @@ function readText(filePath) {
 
 const main = readText(mainPath);
 const overview = readText(overviewPath);
+const overviewCss = readText(overviewCssPath);
 const plan = readText(planPath);
 const skills = readText(skillsPath);
 const growthCss = readText(growthCssPath);
@@ -49,8 +51,10 @@ for (const marker of [
   "qg-growth-page",
   "qg-overview-page",
   "qg-overview-hero",
-  "qg-overview-heatmap",
-  "qg-overview-leaderboard",
+  "overview-greeting",
+  "overview-daily-tasks",
+  "overview-activity-bars",
+  "<OverviewCareerStage rows={activity.stageRows}",
   "/assets/generated/playful-precision/mascot-hero-v5-clean.png"
 ]) {
   expect(overview.includes(marker), `OverviewPageContent.jsx missing ${marker}`);
@@ -78,7 +82,7 @@ for (const marker of [
 }
 
 for (const [fileName, source, ids] of [
-  ["OverviewPageContent.jsx", overview, ["heroTypewriter", "overviewProblemProgress", "leaderboardMetricSelect", "leaderboardScopeSelect"]],
+  ["OverviewPageContent.jsx", overview, ["overviewDailyTasksTitle", "overviewActivityBars", "overviewProblemProgress"]],
   ["PlanPageContent.jsx", plan, ["prepPlanSetupForm", "prepPlanDashboard", "editPrepPlanBtn"]],
   ["SkillsPageContent.jsx", skills, ["skillsPageTitle", "skillRadar", "skillRadarTooltip", "skillsGrid"]]
 ]) {
@@ -89,8 +93,6 @@ for (const marker of [
   ".qg-growth-page",
   ".qg-overview-page",
   ".qg-overview-hero",
-  ".qg-overview-heatmap",
-  ".qg-overview-leaderboard",
   ".qg-plan-page",
   ".qg-plan-board",
   ".qg-plan-week",
@@ -101,6 +103,14 @@ for (const marker of [
   "@media (prefers-reduced-motion: reduce)"
 ]) {
   expect(growthCss.includes(marker), `growth CSS missing ${marker}`);
+}
+
+expect(overview.includes('import "./overviewDashboard.css"'), "Overview must load its dashboard styles");
+for (const marker of [".overview-greeting", ".overview-daily-tasks", ".overview-activity-bars", "@media (max-width: 760px)"]) {
+  expect(overviewCss.includes(marker), `Overview dashboard CSS missing ${marker}`);
+}
+for (const removed of ["heroTypewriter", "generateStudyPlanBtn", "leaderboardList", "overviewContributionHeatmap", "logForm", "newsTickerTrack"]) {
+  expect(!overview.includes(removed), `Overview must not restore removed module #${removed}`);
 }
 
 for (const marker of [
@@ -119,6 +129,7 @@ for (const marker of [
 for (const [fileName, source] of [
   ["playful-precision-growth.css", growthCss],
   ["OverviewPageContent.jsx", overview],
+  ["overviewDashboard.css", overviewCss],
   ["PlanPageContent.jsx", plan],
   ["SkillsPageContent.jsx", skills],
   ["capture-ui-redesign-growth-review.mjs", captureScript]
@@ -135,6 +146,6 @@ if (failures.length) {
 console.log(JSON.stringify({
   status: "pass",
   pages: 3,
-  cssMarkers: 13,
+  cssMarkers: 15,
   captureViews: 8
 }, null, 2));
