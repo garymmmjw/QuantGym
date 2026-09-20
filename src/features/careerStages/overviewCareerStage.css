@@ -18,12 +18,13 @@
 }
 .overview-stage-summary-table thead { position: static; }
 .overview-stage-summary .overview-stage-summary-table thead th { position: static; height: auto; border: 0; white-space: normal; }
-.overview-stage-summary-stage-column { width: 18.5%; }
-.overview-stage-summary-period-column { width: 14.5%; }
-.overview-stage-summary-leetcode-column { width: 29%; }
+.overview-stage-summary-stage-column { width: 17%; }
+.overview-stage-summary-period-column { width: 13%; }
+.overview-stage-summary-leetcode-column { width: 27.5%; }
+.overview-stage-summary-average-column { width: 132px; }
 .overview-stage-summary-table th,
 .overview-stage-summary-table td {
-  padding: 16px 8px;
+  padding: 8px;
   border: 0;
   text-align: right;
   vertical-align: middle;
@@ -35,8 +36,8 @@
 .overview-stage-summary-table th:last-child,
 .overview-stage-summary-table td:last-child { padding-right: 16px; }
 .overview-stage-summary-table thead th {
-  padding-top: 12px;
-  padding-bottom: 12px;
+  padding-top: 9px;
+  padding-bottom: 9px;
   color: var(--qg-muted, #6d6c8e);
   background: transparent;
   font-size: 11px;
@@ -44,30 +45,31 @@
   letter-spacing: 0;
   text-transform: none;
 }
-.overview-stage-summary-heading-detail { display: block; margin-top: 2px; font-size: 10px; font-weight: 500; }
+.overview-stage-summary .overview-stage-summary-table thead .overview-stage-summary-average-heading { white-space: nowrap; }
+.overview-stage-summary-heading-detail { display: inline; margin-left: 5px; font-size: 10px; font-weight: 500; }
 .overview-stage-heading-compact { display: none; }
-.overview-stage-summary-table tbody tr { border-top: 1px solid var(--qg-border, #ecebf7); }
-.overview-stage-summary-table tbody tr.is-current { background: transparent; }
-.overview-stage-summary-table tbody tr.is-current > * { padding-top: 30px; padding-bottom: 18px; }
+.overview-stage-summary-table tbody tr { height: 46px; border-top: 1px solid var(--qg-border, #ecebf7); }
+.overview-stage-summary-table tbody tr.is-current { height: 64px; background: transparent; }
+.overview-stage-summary-table tbody tr.is-current > * { padding-top: 22px; padding-bottom: 9px; }
 .overview-stage-summary-table tbody tr.is-current + tr { border-top: 2px solid var(--qg-text, #1c1c1c); }
 .overview-stage-summary-leetcode .leetcode-counts { margin-left: auto; --leetcode-count-size: 18px; }
 .overview-stage-summary-leetcode .leetcode-count dt { font-size: 10px; }
 .overview-stage-summary-table .is-current .leetcode-counts { --leetcode-count-ink: var(--stage-summary-accent); --leetcode-count-size: 22px; }
 .overview-stage-summary-identity-content { position: relative; min-width: 0; }
-.overview-stage-summary-name { display: block; font-size: 17px; font-weight: 600; line-height: 1.35; color: var(--qg-text, #1b1a38); }
-.overview-stage-summary-current { position: absolute; left: 0; bottom: calc(100% + 5px); color: var(--qg-muted, #6d6c8e); font-size: 11px; font-weight: 400; white-space: nowrap; }
-.overview-stage-summary-table .is-current .overview-stage-summary-name { font-size: 28px; font-weight: 650; letter-spacing: -.6px; }
-.overview-stage-summary-edit { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; margin: 0; padding: 0; border: 0; border-radius: 4px; background: transparent; text-align: left; font: inherit; cursor: pointer; }
+.overview-stage-summary-name { display: block; font-size: 16px; font-weight: 600; line-height: 1.35; color: var(--qg-text, #1b1a38); }
+.overview-stage-summary-current { position: absolute; left: 0; bottom: calc(100% + 3px); color: var(--qg-muted, #6d6c8e); font-size: 10px; line-height: 1.4; font-weight: 400; white-space: nowrap; }
+.overview-stage-summary-table .is-current .overview-stage-summary-name { font-size: 26px; line-height: 1.2; font-weight: 650; letter-spacing: -.6px; }
+.overview-stage-summary-edit { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 28px; margin: 0; padding: 0; border: 0; border-radius: 4px; background: transparent; text-align: left; font: inherit; cursor: pointer; }
 .overview-stage-summary-edit .overview-stage-summary-name { min-width: 0; }
 .overview-stage-summary-edit svg { flex: 0 0 14px; margin-left: auto; color: var(--stage-summary-accent); }
 .overview-stage-summary-edit:hover .overview-stage-summary-name { color: var(--stage-summary-accent); }
 .overview-stage-summary-edit:focus-visible { outline: 2px solid var(--stage-summary-accent); outline-offset: 4px; }
 .overview-stage-summary-period { color: var(--qg-muted, #6d6c8e); font-size: 12px; font-variant-numeric: tabular-nums; }
-.overview-stage-summary-value { font-family: var(--qg-font-number, inherit); font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.overview-stage-summary-value { font-family: var(--qg-font-number, inherit); font-size: 18px; line-height: 1.4; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .overview-stage-summary-unit { margin-left: 3px; font-family: var(--qg-font-ui, inherit); font-size: 10px; font-weight: 500; color: var(--qg-muted, #6d6c8e); }
 .overview-stage-summary-table .is-current .overview-stage-summary-name,
 .overview-stage-summary-table .is-current .overview-stage-summary-value { color: var(--stage-summary-accent); }
-.overview-stage-summary-table .is-current .overview-stage-summary-value { font-size: 23px; }
+.overview-stage-summary-table .is-current .overview-stage-summary-value { font-size: 22px; }
 .overview-stage-summary-unknown { color: var(--qg-muted-2, #9998b6); font-size: 17px; }
 .overview-stage-summary-mobile-label { display: none; }
 .overview-stage-summary-empty { margin: 0; padding: 22px 24px; color: var(--qg-muted, #6d6c8e); font-size: 13px; line-height: 1.8; }
@@ -83,11 +85,14 @@
 /* Tracker owns editing; both pages share the same aligned statistics surface. */
 .career-stage-panel.career-stage-panel-summary { padding: 0; border: 0; background: transparent; }
 .career-stage-panel-summary > .career-stage-heading-actions { margin: 0 0 12px; }
-@media (min-width: 761px) and (max-width: 1100px) {
+@media (min-width: 761px) and (max-width: 1250px) {
   .overview-stage-heading-full { display: none; }
   .overview-stage-heading-compact { display: inline; }
   .overview-stage-summary-table .is-current .overview-stage-summary-name { font-size: 24px; }
   .overview-stage-summary-table thead th { font-size: 10px; }
+  .overview-stage-summary-stage-column { width: 18.5%; }
+  .overview-stage-summary-leetcode-column { width: 28%; }
+  .overview-stage-summary-average-column { width: 88px; }
   .overview-stage-summary-edit { gap: 6px; }
 }
 @media (max-width: 760px) {
@@ -95,19 +100,20 @@
   .overview-stage-summary-table { display: block; }
   .overview-stage-summary-table colgroup { display: none; }
   .overview-stage-summary-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .overview-stage-summary-table tbody { display: grid; gap: 12px; }
+  .overview-stage-summary-table tbody { display: grid; gap: 8px; }
   .overview-stage-summary-table tbody tr {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 18px;
-    padding: 16px 18px 10px;
+    gap: 0 14px;
+    height: auto;
+    padding: 12px 14px 6px;
     border: 1px solid var(--qg-border, #ecebf7);
     border-radius: 12px;
     background: var(--qg-surface, #fff);
   }
-  .overview-stage-summary-table tbody tr.is-current { padding-top: 32px; background: var(--qg-surface, #fff); }
+  .overview-stage-summary-table tbody tr.is-current { height: auto; padding-top: 24px; background: var(--qg-surface, #fff); }
   .overview-stage-summary-table tbody tr.is-current + tr { border-top: 1px solid var(--qg-border, #ecebf7); }
-  .overview-stage-summary-table .is-current .overview-stage-summary-name { font-size: 27px; }
+  .overview-stage-summary-table .is-current .overview-stage-summary-name { font-size: 24px; }
   .overview-stage-summary-table th,
   .overview-stage-summary-table td,
   .overview-stage-summary-table th:first-child,
@@ -124,12 +130,12 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 8px;
-    padding: 10px 0;
+    gap: 6px;
+    padding: 7px 0;
     border-top: 1px solid var(--qg-border, #ecebf7);
   }
-  .overview-stage-summary-table .is-current td.overview-stage-summary-metric { padding: 10px 0; }
-  .overview-stage-summary-metric:nth-child(4) { margin-top: 12px; }
+  .overview-stage-summary-table .is-current td.overview-stage-summary-metric { padding: 7px 0; }
+  .overview-stage-summary-metric:nth-child(4) { margin-top: 8px; }
   .overview-stage-summary-table .is-current .overview-stage-summary-metric:nth-child(4) { border-top-color: var(--qg-text, #1c1c1c); }
   .overview-stage-summary-metric:nth-child(3) { grid-column: 1; grid-row: 3; }
   .overview-stage-summary-metric:nth-child(5) { grid-column: 2; grid-row: 3; }
@@ -139,8 +145,10 @@
   .overview-stage-summary-leetcode .leetcode-counts { margin-left: auto; --leetcode-count-size: 18px; gap: 10px; }
   .overview-stage-summary-leetcode .leetcode-count { gap: 3px; }
   .overview-stage-summary-leetcode .leetcode-count dt { font-size: 10px; }
+  .overview-stage-summary-table .is-current .leetcode-counts { --leetcode-count-size: 20px; }
   .overview-stage-summary-mobile-label { display: block; min-width: 0; color: var(--qg-muted, #6d6c8e); font-size: 11px; line-height: 1.5; }
-  .overview-stage-summary-value { font-size: 19px; }
+  .overview-stage-summary-value { font-size: 17px; }
+  .overview-stage-summary-table .is-current .overview-stage-summary-value { font-size: 20px; }
   .overview-stage-summary-empty { padding: 20px; border: 1px solid var(--qg-border, #ecebf7); border-radius: 12px; background: var(--qg-surface, #fff); }
 }
 @media (max-width: 380px) {

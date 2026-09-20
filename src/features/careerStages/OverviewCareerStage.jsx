@@ -24,10 +24,10 @@ export function OverviewCareerStage({ rows = [], note = '', onEdit }) {
   return <section className="overview-stage-summary" aria-label="求职准备阶段统计">
     {displayRows.length ? <table className="overview-stage-summary-table" role="table">
       <caption className="overview-stage-summary-sr-only">各阶段的投递与训练统计，按新到旧排列</caption>
-      <colgroup><col className="overview-stage-summary-stage-column" /><col className="overview-stage-summary-period-column" />{METRICS.map(metric => <col key={metric.key} className={metric.key === 'leetcode' ? 'overview-stage-summary-leetcode-column' : undefined} />)}</colgroup>
+      <colgroup><col className="overview-stage-summary-stage-column" /><col className="overview-stage-summary-period-column" />{METRICS.map(metric => <col key={metric.key} className={metric.key === 'leetcode' ? 'overview-stage-summary-leetcode-column' : metric.average ? 'overview-stage-summary-average-column' : undefined} />)}</colgroup>
       <thead role="rowgroup"><tr role="row">
         <th scope="col" role="columnheader">Stage</th><th scope="col" role="columnheader">时间范围</th>
-        {METRICS.map(metric => <th scope="col" role="columnheader" key={metric.key} title={metric.label}>{metric.compactLabel ? <><span className="overview-stage-heading-full">{metric.label}</span><span className="overview-stage-heading-compact">{metric.compactLabel}</span></> : metric.label}{metric.detail && <span className="overview-stage-summary-heading-detail">{metric.detail}</span>}</th>)}
+        {METRICS.map(metric => <th scope="col" role="columnheader" key={metric.key} className={metric.average ? 'overview-stage-summary-average-heading' : undefined} title={metric.label}>{metric.compactLabel ? <><span className="overview-stage-heading-full">{metric.label}</span><span className="overview-stage-heading-compact">{metric.compactLabel}</span></> : metric.label}{metric.detail && <span className="overview-stage-summary-heading-detail">{metric.detail}</span>}</th>)}
       </tr></thead>
       <tbody role="rowgroup">{displayRows.map(row => <tr key={row.id} role="row" className={row.isCurrent ? 'is-current' : undefined} aria-current={row.isCurrent ? 'step' : undefined}>
         <th scope="row" role="rowheader" className="overview-stage-summary-identity"><div className="overview-stage-summary-identity-content">
@@ -38,7 +38,7 @@ export function OverviewCareerStage({ rows = [], note = '', onEdit }) {
         </div></th>
         <td role="cell" className="overview-stage-summary-period" title={row.periodStart && row.periodEnd && row.periodStart <= row.periodEnd ? `统计 ${row.periodStart} 之后至 ${row.periodEnd} 当日的记录，不含起始日、包含结束日。` : '请在投递 Tracker 中补充或校正阶段日期。'}>{formatStagePeriod(row)}</td>
         {METRICS.map(metric => <td role="cell" key={metric.key} className={`overview-stage-summary-metric${metric.key === 'leetcode' ? ' overview-stage-summary-leetcode' : ''}${metric.average ? ' overview-stage-summary-average' : ''}`}>
-          <span className="overview-stage-summary-mobile-label" aria-hidden="true">{metric.label}{metric.detail && ` ${metric.detail}`}</span>
+          <span className="overview-stage-summary-mobile-label" aria-hidden="true">{metric.compactLabel || metric.label}{metric.detail && ` ${metric.detail}`}</span>
           {metric.key === 'leetcode' ? <LeetCodeCounts newCount={row.leetcodeNew} totalCount={row.leetcode} newStatus={row.leetcodeNewStatus} totalStatus={row.leetcodeCountStatus} layout="row" scope="stage" />
             : <MetricValue value={row[metric.key]} average={metric.average} />}
         </td>)}
