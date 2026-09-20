@@ -4,6 +4,7 @@ import { localDateKey, nextStageLabel } from './stageStore.js';
 import { formatStagePeriod, summarizeStagePractice } from './stagePractice.js';
 import { stageFormChanges } from '../tracker/formChanges.js';
 import { LeetCodeCounts } from './LeetCodeCounts.jsx';
+import { OverviewCareerStage } from './OverviewCareerStage.jsx';
 import './stagePanel.css';
 
 function periodNote(stage) {
@@ -78,17 +79,22 @@ function StageDialog({ stageStore, stage, practice, onClose }) {
   );
 }
 
-export default function StagePanel({ stageStore, practice, variant = 'tracker', addRequest = 0, showAddButton = true, headerActions = null }) {
+export default function StagePanel({ stageStore, practice, variant = 'tracker', addRequest = 0, showAddButton = true, headerActions = null, summaryRows, summaryNote = '' }) {
   const { stages, error } = useSyncExternalStore(stageStore.subscribe, stageStore.getSnapshot, stageStore.getSnapshot);
   const [editor, setEditor] = useState(null);
   const orderedStages = summarizeStagePractice(stages, practice);
   const current = orderedStages.at(-1);
   useEffect(() => { if (addRequest) setEditor({ stage: null }); }, [addRequest]);
   const displayStages = [...orderedStages].reverse();
+  const hasSummary = Array.isArray(summaryRows);
+  const editSummaryStage = row => {
+    const stage = stageStore.getSnapshot().stages.find(item => item.id === row.id || item.importedIds?.includes(row.id));
+    if (stage) setEditor({ stage });
+  };
   return (
-    <section className={`career-stage-panel career-stage-${variant}`} aria-label="求职准备阶段">
+    <section className={`career-stage-panel career-stage-${variant}${hasSummary ? ' career-stage-panel-summary' : ''}`} aria-label="求职准备阶段">
       {(headerActions || showAddButton) && <div className="career-stage-heading-actions">{headerActions}{showAddButton && <button type="button" className="career-button career-add" onClick={() => setEditor({ stage: null })}>＋ 添加 Stage</button>}</div>}
-      {current ? <ol className="career-stage-list" aria-label="准备阶段，按新到旧排列">{displayStages.map(stage => {
+      {hasSummary ? <OverviewCareerStage rows={summaryRows} note={summaryNote} onEdit={editSummaryStage} /> : current ? <ol className="career-stage-list" aria-label="准备阶段，按新到旧排列">{displayStages.map(stage => {
         const isCurrent = stage.id === current.id;
         const partial = stage.countStatus === 'partial' && Number.isSafeInteger(stage.questionCount);
         return <li className={`career-stage-row${isCurrent ? ' career-stage-row-current' : ''}`} key={stage.id} aria-current={isCurrent ? 'step' : undefined}>

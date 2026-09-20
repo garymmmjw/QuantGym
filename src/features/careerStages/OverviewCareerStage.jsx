@@ -1,4 +1,5 @@
 import { formatStagePeriod } from './stagePractice.js';
+import { Pencil } from 'lucide-react';
 import { LeetCodeCounts } from './LeetCodeCounts.jsx';
 import './overviewCareerStage.css';
 
@@ -18,7 +19,7 @@ function MetricValue({ value, average = false }) {
   return <span className="overview-stage-summary-value">{(average ? averageFormat : countFormat).format(value)}{average && <span className="overview-stage-summary-unit">分</span>}</span>;
 }
 
-export function OverviewCareerStage({ rows = [], note = '' }) {
+export function OverviewCareerStage({ rows = [], note = '', onEdit }) {
   const displayRows = [...rows].reverse();
   return <section className="overview-stage-summary" aria-label="求职准备阶段统计">
     {displayRows.length ? <table className="overview-stage-summary-table" role="table">
@@ -29,7 +30,12 @@ export function OverviewCareerStage({ rows = [], note = '' }) {
         {METRICS.map(metric => <th scope="col" role="columnheader" key={metric.key}>{metric.label}{metric.detail && <span className="overview-stage-summary-heading-detail">{metric.detail}</span>}</th>)}
       </tr></thead>
       <tbody role="rowgroup">{displayRows.map(row => <tr key={row.id} role="row" className={row.isCurrent ? 'is-current' : undefined} aria-current={row.isCurrent ? 'step' : undefined}>
-        <th scope="row" role="rowheader" className="overview-stage-summary-identity"><span className="overview-stage-summary-name">{row.label}</span>{row.isCurrent && <span className="overview-stage-summary-current">当前阶段</span>}</th>
+        <th scope="row" role="rowheader" className="overview-stage-summary-identity"><div className="overview-stage-summary-identity-content">
+          {row.isCurrent && <span className="overview-stage-summary-current">当前阶段</span>}
+          {onEdit ? <button type="button" className="overview-stage-summary-edit" aria-label={`编辑 ${row.label}`} title={row.description || '修改阶段信息'} onClick={() => onEdit(row)}>
+            <span className="overview-stage-summary-name">{row.label}</span><Pencil size={14} strokeWidth={1.6} aria-hidden="true" />
+          </button> : <span className="overview-stage-summary-name">{row.label}</span>}
+        </div></th>
         <td role="cell" className="overview-stage-summary-period" title={row.periodStart && row.periodEnd && row.periodStart <= row.periodEnd ? `统计 ${row.periodStart} 之后至 ${row.periodEnd} 当日的记录，不含起始日、包含结束日。` : '请在投递 Tracker 中补充或校正阶段日期。'}>{formatStagePeriod(row)}</td>
         {METRICS.map(metric => <td role="cell" key={metric.key} className={`overview-stage-summary-metric${metric.key === 'leetcode' ? ' overview-stage-summary-leetcode' : ''}${metric.average ? ' overview-stage-summary-average' : ''}`}>
           <span className="overview-stage-summary-mobile-label" aria-hidden="true">{metric.label}{metric.detail && ` ${metric.detail}`}</span>

@@ -278,3 +278,19 @@ Implementation evidence (ignored local artifacts): `artifacts/activity-chart-qa/
 Implementation checklist: complete. Final visual result: no actionable differences within the user's requested adaptation.
 
 final result: passed
+
+## Stage summary combination — 2026-09-20
+
+Brief: combine the Overview metric table with the Tracker's current-stage hierarchy on both pages. Preserve Stage ordering, date ranges, Applications, both LeetCode counts, Tech, Behavioral and Mental Math average. Keep Tracker editing and adding available.
+
+Reference comparison: inspected both user screenshots (11.07.16 and 11.07.29) together with `artifacts/stage-summary-qa/tracker-desktop.png`. This is an intentional combination, not a literal clone: the reference Tracker supplies the large accent title, muted current-stage label above it, white surface and dark separator; Overview supplies the aligned table and metrics. Existing repaired new/total LeetCode counts remain visible. Descriptions remain in the Tracker edit affordance tooltip and original editor.
+
+Implementation verification:
+- Overview and Tracker use the same metric renderer and `useOverviewActivity` projection; no count or storage formulas changed.
+- Desktop column x positions match across all rows. Current Stage uses 30px accent type vs 18px history; current values are larger and accented. The dated rows retain a single shared table grid.
+- Browser checks at 1280, 1024, 390 and 320 CSS pixels. Both narrow widths have matching viewport/document widths, with no page overflow. The 320px current title stays on one line. Mobile retains labeled metric groups and white cards.
+- Fixed issues found during QA: narrow desktop title wrapping, inherited Tracker table minimum width/sticky header borders, current-row mobile metric padding, and 320px edit-title wrapping.
+- Local synthetic fixture: edited and restored Stage description, saved Stage 4 and verified it became the current row, then reset only the dedicated fixture. Overview remains read-only. No production account records were changed.
+- 83 existing/updated relevant tests passed, growth and route-integrity checks passed, strict production build passed. Independent review found no P1/P2. The route-interactions checker retains its 7 previously known unrelated failures; Overview checks pass. Browser console error capture was empty.
+
+final result: passed
