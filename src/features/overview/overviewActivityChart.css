@@ -1,0 +1,95 @@
+body.is-authenticated .app-route-root .overview-route-page.overview-dashboard .overview-effect-grid {
+  grid-template-columns: minmax(250px, .85fr) minmax(0, 1.45fr) !important;
+  align-items: start;
+}
+body.is-authenticated .app-route-root .overview-route-page.overview-dashboard .activity-chart {
+  position: relative;
+  display: block !important;
+  min-width: 0;
+  min-height: 0;
+  padding: 24px !important;
+  overflow: visible;
+  border: 1px solid var(--qg-border, #e8e6ef) !important;
+  border-radius: 22px;
+  background: var(--qg-surface, #fff) !important;
+  box-shadow: none !important;
+  color: var(--qg-text, #24212a);
+  --activity-applications: #23aaa7;
+  --activity-leetcode: #7770de;
+  --activity-technical: #558ecb;
+  --activity-behavioral: #b181b8;
+  --activity-mentalMath: #dfa33c;
+}
+.activity-chart .activity-color-applications { --activity-color: var(--activity-applications); }
+.activity-chart .activity-color-leetcode { --activity-color: var(--activity-leetcode); }
+.activity-chart .activity-color-technical { --activity-color: var(--activity-technical); }
+.activity-chart .activity-color-behavioral { --activity-color: var(--activity-behavioral); }
+.activity-chart .activity-color-mentalMath { --activity-color: var(--activity-mentalMath); }
+.activity-chart-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.activity-chart-heading h2 { margin: 0; font-size: 16px; font-weight: 650; }
+.activity-chart-total { color: var(--qg-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.activity-chart-total strong { color: var(--qg-text); margin: 0 3px; font-size: 16px; font-weight: 600; }
+.activity-chart-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 24px; }
+.activity-chart-segments { display: inline-flex; flex: none; padding: 3px; border-radius: 24px; background: color-mix(in srgb, var(--qg-muted) 11%, var(--qg-surface)); }
+.activity-chart-segments button { border: 0; border-radius: 22px; margin: 0; padding: 6px 12px; background: transparent; color: var(--qg-muted); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.activity-chart-segments button[aria-pressed="true"] { background: var(--qg-surface); color: var(--qg-text); box-shadow: 0 1px 4px #16132620; }
+.activity-chart-filters { display: flex; flex: none; align-items: stretch; overflow: hidden; border: 1px solid var(--qg-border); border-radius: 22px; }
+.activity-chart-filters label { position: relative; display: flex; align-items: center; min-width: 0; }
+.activity-chart-filters label + label { border-left: 1px solid var(--qg-border); }
+.activity-chart-filters select { appearance: none; border: 0; border-radius: 0; width: auto; min-height: 34px; margin: 0; padding: 6px 30px 6px 13px; color: var(--qg-muted); background: transparent; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.activity-chart-filters svg { position: absolute; right: 10px; pointer-events: none; color: var(--qg-muted); }
+.activity-chart button:focus-visible, .activity-chart select:focus-visible { outline: 2px solid var(--qg-brand); outline-offset: 2px; }
+.activity-chart-filters:focus-within { outline: 2px solid var(--qg-brand); outline-offset: 2px; }
+.activity-chart-plot { position: relative; height: 180px; margin-right: 29px; }
+.activity-chart-grid { display: flex; position: absolute; inset: 0; flex-direction: column; justify-content: space-between; pointer-events: none; }
+.activity-chart-grid span { width: 100%; border-top: 1px solid color-mix(in srgb, var(--qg-border) 82%, var(--qg-surface)); }
+.activity-chart-grid span:nth-child(2) { opacity: .45; }
+.activity-chart-grid span:last-child { border-color: color-mix(in srgb, var(--qg-muted) 35%, var(--qg-surface)); }
+.activity-chart-scale { position: absolute; display: flex; flex-direction: column; justify-content: space-between; inset: -6px -30px -6px auto; color: var(--qg-muted); font-size: 10px; font-variant-numeric: tabular-nums; pointer-events: none; }
+.activity-chart .overview-activity-bars { position: relative; display: flex; gap: 0; height: 100%; width: 100%; align-items: stretch; }
+.activity-chart .overview-activity-day { position: relative; display: flex; flex: 1 1 0; min-width: 0; align-items: flex-end; justify-content: center; border: 0; border-radius: 0; padding: 0; margin: 0; background: transparent; cursor: pointer; touch-action: manipulation; }
+.activity-chart .overview-activity-day:disabled { cursor: default; }
+.activity-chart .overview-activity-day:not(:disabled):hover, .activity-chart .overview-activity-day.is-selected { background: color-mix(in srgb, var(--qg-brand) 5%, transparent); }
+.activity-chart .overview-activity-day.is-unknown:not(:disabled)::after { content: ''; position: absolute; bottom: 0; width: 3px; height: 3px; border: 1px solid var(--qg-muted-2); border-radius: 50%; }
+.activity-chart-stack { display: flex; flex-direction: column-reverse; width: 42%; max-width: 12px; min-width: 3px; border-radius: 7px 7px 0 0; overflow: hidden; pointer-events: none; }
+.activity-chart [data-mode="week"] .activity-chart-stack { width: 24%; max-width: 22px; }
+.activity-chart-piece { display: block; flex-basis: 0; flex-shrink: 0; background: var(--activity-color); }
+.activity-chart-piece + .activity-chart-piece { box-shadow: inset 0 -1px 0 var(--qg-surface); }
+.activity-chart-dates { display: flex; justify-content: space-between; margin: 7px 29px 0 0; color: var(--qg-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.activity-chart-legend { display: flex; flex-wrap: wrap; gap: 10px 20px; margin: 23px 0 0; }
+.activity-chart-legend > div { display: flex; align-items: baseline; gap: 7px; }
+.activity-chart-legend dt { color: color-mix(in srgb, var(--activity-color) 60%, var(--qg-text)); font-size: 12px; font-weight: 500; }
+.activity-chart-legend dd { margin: 0; color: var(--qg-muted); font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.activity-chart-empty { position: absolute; inset: 42% 0 auto; margin: 0; pointer-events: none; text-align: center; font-size: 12px; color: var(--qg-muted); }
+.activity-chart-tooltip { position: absolute; z-index: 5; left: clamp(100px, var(--tooltip-x), calc(100% - 100px)); bottom: 24px; transform: translateX(-50%); width: 196px; box-sizing: border-box; padding: 13px 14px; border: 1px solid var(--qg-border); border-radius: 13px; background: var(--qg-surface); box-shadow: 0 8px 30px #27213c16; }
+.activity-chart-tooltip-head { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.activity-chart-tooltip-head > strong { margin-right: auto; font-size: 12px; font-weight: 600; }
+.activity-chart-tooltip-head > span { font-size: 11px; white-space: nowrap; }
+.activity-chart-tooltip-head button { display: flex; border: 0; background: transparent; padding: 2px; color: var(--qg-muted); cursor: pointer; }
+.activity-chart-tooltip > small { color: var(--qg-muted); font-size: 10px; }
+.activity-chart-tooltip dl { display: grid; gap: 6px; margin: 10px 0 0; }
+.activity-chart-tooltip dl > div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11px; }
+.activity-chart-tooltip dt { color: color-mix(in srgb, var(--activity-color) 60%, var(--qg-text)); }
+.activity-chart-tooltip dd { margin: 0; font-variant-numeric: tabular-nums; }
+.activity-chart-tooltip dd span { color: var(--qg-muted); }
+@media (max-width: 1100px) {
+  body.is-authenticated .app-route-root .overview-route-page.overview-dashboard .overview-effect-grid { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (max-width: 760px) {
+  body.is-authenticated .app-route-root .overview-route-page.overview-dashboard .activity-chart { padding: 20px 18px !important; border-radius: 20px; }
+  .activity-chart-heading { margin-bottom: 16px; }
+  .activity-chart-toolbar { gap: 8px; margin-bottom: 25px; }
+  .activity-chart-segments button { padding: 6px 9px; font-size: 11px; }
+  .activity-chart-filters select { padding-left: 10px; padding-right: 25px; font-size: 11px; }
+  .activity-chart-filters svg { right: 7px; width: 12px; }
+  .activity-chart-plot { height: 162px; margin-right: 23px; }
+  .activity-chart-scale { right: -24px; }
+  .activity-chart-dates { margin-right: 23px; }
+  .activity-chart-legend { gap: 10px 16px; margin-top: 20px; }
+  .activity-chart-legend dt { font-size: 11px; }
+  .activity-chart-legend dd { font-size: 13px; }
+}
+@media (max-width: 360px) {
+  .activity-chart-toolbar { flex-wrap: wrap; }
+  .activity-chart-filters { margin-left: auto; }
+}

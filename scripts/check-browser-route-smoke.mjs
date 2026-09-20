@@ -8,6 +8,7 @@ import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { closeWithTimeout } from "./cleanup-timeout.mjs";
+import { readOverviewActivityChart, overviewActivityChartFailures } from "./overview-activity-smoke-contract.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = process.argv.slice(2);
@@ -704,7 +705,7 @@ async function runOverviewDashboardFlow(page, baseUrl) {
   const checkDashboard = async () => {
     for (const selector of routeTargets.overview) await page.waitForSelector(selector, { timeout: 10000 });
     const dashboard = await collectOverviewDiagnostics(page);
-    if (!dashboard.greeting || !dashboard.problemProgressPresent || dashboard.activityDayCount !== 7
+    if (!dashboard.greeting || !dashboard.problemProgressPresent || dashboard.activityChartFailures.length
       || !dashboard.removedModulesAbsent || !dashboard.stageActionsAbsent
       || JSON.stringify(dashboard.taskRoutes) !== JSON.stringify(expectedPaths)) {
       throw new Error(`Overview dashboard contract failed: ${JSON.stringify(dashboard)}`);
@@ -717,6 +718,7 @@ async function runOverviewDashboardFlow(page, baseUrl) {
     await waitForAuthenticatedShell(page);
     const dashboard = await checkDashboard();
     result.activityDayCount = dashboard.activityDayCount;
+    result.activityChart = dashboard.activityChart;
     result.removedModulesAbsent = dashboard.removedModulesAbsent;
     result.stageActionsAbsent = dashboard.stageActionsAbsent;
     result.taskRoutes = [];
@@ -746,7 +748,7 @@ async function runOverviewDashboardFlow(page, baseUrl) {
 }
 
 async function collectOverviewDiagnostics(page) {
-  return page.evaluate(() => {
+  const dashboard = await page.evaluate(() => {
     const overview = document.querySelector(".overview-route-page");
     const stage = overview?.querySelector(".overview-stage-summary");
     return {
@@ -759,6 +761,8 @@ async function collectOverviewDiagnostics(page) {
       stageActionsAbsent: Boolean(stage) && !stage.querySelector("button, a")
     };
   });
+  const activityChart = await page.evaluate(readOverviewActivityChart);
+  return { ...dashboard, activityChart, activityChartFailures: overviewActivityChartFailures(activityChart) };
 }
 
 async function runStreakCheckInCalendarFlow(page, baseUrl) {
