@@ -52,8 +52,9 @@
 .overview-stage-summary-table tbody tr { height: 46px; border-top: 1px solid var(--qg-border, #ecebf7); }
 .overview-stage-summary-table tbody tr.is-current { height: 56px; background: transparent; }
 .overview-stage-summary-table tbody tr.is-current + tr { border-top: 2px solid var(--qg-text, #1c1c1c); }
-.overview-stage-summary-leetcode .leetcode-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; max-width: 224px; margin-inline: auto; --leetcode-count-size: 18px; }
+.overview-stage-summary-leetcode .leetcode-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; max-width: 180px; margin-inline: auto; --leetcode-count-size: 18px; }
 .overview-stage-summary-leetcode .leetcode-counts-row .leetcode-count { display: grid; grid-template-columns: max-content minmax(0, 1fr); }
+.overview-stage-summary-leetcode .leetcode-count dd { justify-content: flex-start; }
 .overview-stage-summary-leetcode .leetcode-count dt { font-size: 10px; }
 .overview-stage-summary-table .is-current .leetcode-counts { --leetcode-count-ink: var(--stage-summary-accent); --leetcode-count-size: 22px; }
 .overview-stage-summary-identity-content { position: relative; min-width: 0; }
