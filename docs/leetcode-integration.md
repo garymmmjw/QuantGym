@@ -31,10 +31,11 @@ Review state belongs to the current QuantGym account and linked LeetCode profile
 
 ## Daily records and history coverage
 
-- Calendar problem counts come only from dated accepted submissions. The same problem counts once per device-local day; practicing it on another day counts again.
+- Calendar completion counts come only from dated accepted submissions. The same problem counts again when its AC is at least three hours after the previous counted AC. Midnight and Stage boundaries do not restart that interval; an earlier, uncounted AC does not move the anchor.
 - LeetCode's source calendar reports submission totals. Its Unix keys encode UTC-midnight date labels; QuantGym preserves those source labels instead of treating them as individual submission instants or converting them to local solved counts.
 - The public recent feed is limited. A partial pool is labeled with the number of known problems, and a day without accepted details is shown as unknown rather than a fabricated zero.
-- Public snapshots refresh when these views are opened or focused if stale, and at five-minute intervals while visible. The server caches successful syncs for at least 60 seconds. No background scheduler collects history while the app is closed.
+- The shared client checks the saved server snapshot each minute while a relevant view is visible, and on focus, reconnect, page restore, or return to a visible tab. Checks within 30 seconds reuse the current result. When the last upstream sync is at least five minutes old, it also refreshes LeetCode; the server caches successful syncs for at least 60 seconds. No background scheduler collects history while the app is closed.
+- Stage **新完成** counts distinct first solves; **总完成** includes qualifying three-hour repeats. A complete imported history certifies dated first solves only through its capture time. For later work, a private solved-set checkpoint advances only when the known AC problem set at the start of a public-profile request matches the official solved count. A newly seen problem is bounded between the preceding checkpoint and its earliest known AC. It counts as a confirmed new problem in a Stage only when that entire interval lies inside the Stage's left-open, right-closed local-date range. Missing problems, late older ACs, and intervals crossing Stage boundaries remain partial; checkpoints never claim complete submission history or increase Guardian's trusted coverage.
 
 ## Importing earlier completed problems
 

@@ -821,6 +821,125 @@ class ImportedHistoryTests(unittest.TestCase):
             lc.fresh_snapshot(unbound, {**upstream(), "submissions": [public]})
 
 
+class PersonalFirstSolveBoundTests(unittest.TestCase):
+    def seed(self):
+        with patch.object(lc, "now_iso", return_value="2026-09-10T12:00:00.000Z"):
+            saved = lc.fresh_snapshot(lc.empty_snapshot(), upstream())
+            return lc.import_metadata(saved, full_history())
+
+    def sync(self, previous, records, solved, observed="2026-09-12T12:00:00.000Z", **extra):
+        incoming = {**upstream(), "submissions": records, "profileObservedAfter": observed,
+                    "stats": {"solved": solved, "totalSubmissions": 100, "easy": solved, "medium": 0, "hard": 0}, **extra}
+        with patch.object(lc, "now_iso", return_value="2026-09-20T12:00:00.000Z"):
+            return lc.fresh_snapshot(previous, incoming)
+
+    def two_new(self, previous=None):
+        rows = [record("new-a", "new-question-a", when="2026-09-11T09:00:00Z"),
+                record("new-b", "new-question-b", when="2026-09-12T09:00:00Z")]
+        return self.sync(self.seed() if previous is None else previous, rows, 5)
+
+    def bounds(self, snapshot):
+        return lc.public_snapshot(snapshot)["personalFirstSolveBounds"]
+
+    def test_full_import_then_successive_public_new_questions_have_bounded_first_solves(self):
+        seed = self.seed()
+        self.assertEqual(seed["_personalSolvedSet"]["through"], "2026-09-10T12:00:00.000Z")
+        self.assertEqual(set(seed["_personalSolvedSet"]["slugs"]), {"two-sum", "valid-parentheses", "binary-search"})
+        self.assertEqual(self.bounds(seed), [])
+        first = self.two_new(seed)
+        expected = [
+            {"problemSlug": "new-question-a", "after": "2026-09-10T12:00:00.000Z", "by": "2026-09-11T09:00:00.000Z"},
+            {"problemSlug": "new-question-b", "after": "2026-09-10T12:00:00.000Z", "by": "2026-09-12T09:00:00.000Z"},
+        ]
+        self.assertEqual(self.bounds(first), expected)
+        second = self.sync(first, [record("new-c", "new-question-c", when="2026-09-13T15:00:00Z")], 6,
+                           observed="2026-09-14T12:00:00.000Z")
+        self.assertEqual(self.bounds(second), [*expected, {
+            "problemSlug": "new-question-c", "after": "2026-09-12T12:00:00.000Z", "by": "2026-09-13T15:00:00.000Z",
+        }])
+        self.assertEqual(second["_personalSolvedSet"]["through"], "2026-09-14T12:00:00.000Z")
+        # Checkpoints prove a solved set, not an exhaustive submission ledger.
+        self.assertEqual(second["_importedHistoryCoverage"], seed["_importedHistoryCoverage"])
+        self.assertEqual(lc.public_snapshot(second)["coverage"]["personalHistoryCompleteThrough"], "2026-09-10T12:00:00.000Z")
+        self.assertFalse(lc.public_snapshot(second)["coverage"]["historyComplete"])
+        self.assertNotIn("history-1", {row["id"] for row in lc.synced_accepted_submissions(second)})
+        self.assertEqual({row["id"] for row in lc.synced_accepted_submissions(second)}, {"101", "102", "103", "new-a", "new-b", "new-c"})
+
+    def test_missing_question_set_keeps_the_checkpoint_and_bounds_only_known_new_questions(self):
+        seed = self.seed()
+        saved = self.sync(seed, [record("new-a", "new-question-a", when="2026-09-11T09:00:00Z")], 5)
+        self.assertEqual(saved["_personalSolvedSet"]["through"], seed["_personalSolvedSet"]["through"])
+        self.assertEqual(self.bounds(saved), [{"problemSlug": "new-question-a", "after": "2026-09-10T12:00:00.000Z", "by": "2026-09-11T09:00:00.000Z"}])
+        # The missing page arrives later. Its AC keeps the older lower bound,
+        # because there was no complete solved set at the intervening sync.
+        repaired = self.sync(saved, [record("new-b", "new-question-b", when="2026-09-11T10:00:00Z")], 5,
+                             observed="2026-09-13T12:00:00.000Z")
+        self.assertEqual(len(self.bounds(repaired)), 2)
+        self.assertEqual({row["after"] for row in self.bounds(repaired)}, {"2026-09-10T12:00:00.000Z"})
+
+    def test_equal_initial_profile_count_establishes_only_a_checkpoint_not_full_history(self):
+        saved = self.sync(lc.empty_snapshot(), upstream()["submissions"], 2)
+        self.assertEqual(saved["_personalSolvedSet"]["through"], "2026-09-12T12:00:00.000Z")
+        self.assertEqual(self.bounds(saved), [])
+        self.assertFalse(lc.public_snapshot(saved)["coverage"]["personalHistoryComplete"])
+        self.assertFalse(lc.public_snapshot(saved)["coverage"]["historyComplete"])
+        self.assertNotIn("_importedHistoryCoverage", saved)
+
+    def test_existing_repaired_account_bootstraps_already_synced_new_problems_without_reimport(self):
+        saved = self.two_new()
+        saved.pop("_personalSolvedSet")
+        before = copy.deepcopy(saved)
+        bounds = self.bounds(saved)
+        self.assertEqual(len(bounds), 2)
+        self.assertEqual({row["after"] for row in bounds}, {"2026-09-10T12:00:00.000Z"})
+        self.assertEqual(saved, before, "reading a legacy snapshot does not write its checkpoint")
+        continued = self.sync(saved, [], 5, observed="2026-09-15T12:00:00.000Z")
+        self.assertEqual(self.bounds(continued), bounds)
+        self.assertEqual(continued["_personalSolvedSet"]["through"], "2026-09-15T12:00:00.000Z")
+        next_stage = self.sync(continued, [record("later", "next-stage-question", when="2026-09-17T12:00:00Z")], 6,
+                               observed="2026-09-18T12:00:00.000Z")
+        self.assertEqual(next(row for row in self.bounds(next_stage) if row["problemSlug"] == "next-stage-question")["after"],
+                         "2026-09-15T12:00:00.000Z")
+
+    def test_repeat_sync_is_idempotent_and_future_activity_cannot_complete_an_earlier_set(self):
+        first = self.two_new()
+        replayed = self.sync(first, [record("new-a", "new-question-a", when="2026-09-11T09:00:00Z"),
+                                    record("new-b", "new-question-b", when="2026-09-12T09:00:00Z")], 5)
+        self.assertEqual(replayed["_personalSolvedSet"], first["_personalSolvedSet"])
+        late = self.sync(self.seed(), [record("too-late", "new-question", when="2026-09-13T00:00:00Z")], 4)
+        self.assertEqual(late["_personalSolvedSet"]["through"], "2026-09-10T12:00:00.000Z")
+        self.assertEqual(self.bounds(late), [{"problemSlug": "new-question", "after": "2026-09-10T12:00:00.000Z", "by": "2026-09-13T00:00:00.000Z"}])
+
+    def test_missing_invalid_future_and_stale_observation_cannot_advance(self):
+        seed = self.seed()
+        for observed in (None, "invalid", "2099-01-01T00:00:00Z", "2026-09-09T12:00:00.000Z"):
+            saved = self.sync(seed, [], 3, observed=observed)
+            with self.subTest(observed=observed):
+                self.assertEqual(saved["_personalSolvedSet"], seed["_personalSolvedSet"])
+                self.assertEqual(self.bounds(saved), [])
+
+    def test_new_older_problem_or_earlier_ac_disproves_prior_bounds(self):
+        previous = self.two_new()
+        for row, solved in ((record("old-unknown", "missing-old-question", when="2026-09-08T00:00:00Z"), 6),
+                            (record("old-new-a", "new-question-a", when="2026-09-09T00:00:00Z"), 5)):
+            saved = self.sync(previous, [row], solved, observed="2026-09-15T12:00:00.000Z")
+            with self.subTest(slug=row["problemSlug"]):
+                self.assertEqual(self.bounds(saved), [])
+                self.assertEqual(saved["_personalSolvedSet"]["through"], "2026-09-15T12:00:00.000Z")
+
+    def test_account_and_linked_at_changes_do_not_expose_previous_bounds(self):
+        saved = self.two_new()
+        self.assertEqual(len(self.bounds(saved)), 2)
+        for field, value in (("username", "different-user"), ("linkedAt", "2026-09-16T00:00:00.000Z")):
+            changed = copy.deepcopy(saved)
+            changed["connection"][field] = value
+            self.assertEqual(self.bounds(changed), [])
+        switched = self.sync(saved, upstream()["submissions"], 2, username="different-user")
+        self.assertEqual(self.bounds(switched), [])
+        self.assertEqual(switched["_personalSolvedSet"]["binding"]["username"], "different-user")
+        self.assertEqual(set(switched["_personalSolvedSet"]["slugs"]), {"two-sum", "valid-parentheses"})
+
+
 class LifetimeCountTests(unittest.TestCase):
     def test_old_public_history_is_recovered_but_imports_cannot_gain_provenance(self):
         snapshot = lc.fresh_snapshot(lc.empty_snapshot(), upstream())
@@ -874,6 +993,22 @@ class LifetimeCountTests(unittest.TestCase):
 
 
 class AdapterTests(unittest.TestCase):
+    def test_profile_checkpoint_time_is_captured_before_the_profile_request(self):
+        profile = {"userProfilePublicProfile": {"username": "fixture", "profile": {}, "submissionProgress": {"acTotal": 0, "totalSubmissions": 0}},
+                   "userProfileUserQuestionProgress": {"numAcceptedQuestions": [{"difficulty": "EASY", "count": 0}, {"difficulty": "MEDIUM", "count": 0}, {"difficulty": "HARD", "count": 0}]}}
+        activity = {"recentACSubmissions": [], "userCalendar": {"submissionCalendar": "{}"}}
+        calls = []
+        def clock():
+            calls.append("clock")
+            return "2026-09-12T12:00:00.000Z"
+        def graph(query, variables, **kwargs):
+            calls.append("activity" if kwargs.get("activity") else "profile")
+            return activity if kwargs.get("activity") else profile
+        with patch.object(lc, "now_iso", side_effect=clock), patch.object(lc, "graphql", side_effect=graph):
+            result = lc.fetch_profile("fixture")
+        self.assertEqual(calls[:2], ["clock", "profile"])
+        self.assertEqual(result["profileObservedAfter"], "2026-09-12T12:00:00.000Z")
+
     def test_public_query_parsing_and_count_semantics(self):
         profile = {"userProfilePublicProfile": {"username": "fixture", "profile": {"realName": "Demo"}, "submissionProgress": {"acTotal": 2, "totalSubmissions": 9}}, "userProfileUserQuestionProgress": {"numAcceptedQuestions": [{"difficulty": "EASY", "count": 1}, {"difficulty": "MEDIUM", "count": 1}, {"difficulty": "HARD", "count": 0}]}}
         activity = {"recentACSubmissions": [{"submissionId": 101, "submitTime": 1788911100, "question": {"translatedTitle": "两数之和", "titleSlug": "two-sum", "questionFrontendId": "1"}}], "userCalendar": {"submissionCalendar": '{"1788825600": 9}'}}

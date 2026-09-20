@@ -294,3 +294,13 @@ Implementation verification:
 - 83 existing/updated relevant tests passed, growth and route-integrity checks passed, strict production build passed. Independent review found no P1/P2. The route-interactions checker retains its 7 previously known unrelated failures; Overview checks pass. Browser console error capture was empty.
 
 final result: passed
+
+## Compact Stage counts and continuing sync — 2026-09-20
+
+Follow-up brief: keep 新完成 and 总完成 on one physical line and tighten the surrounding Stage table on both Overview and Tracker. The shared renderer now uses an inline label/value/unit pair, wider LeetCode column and reduced row spacing. The current Stage retains accent emphasis and its dark lower divider. Narrow desktop headers shorten Applications and Mental Math; mobile reserves a full-width LeetCode row above a compact two-column metric grid.
+
+Browser evidence: `artifacts/stage-summary-qa/inline-desktop.png` and `artifacts/stage-summary-qa/inline-mobile.png` (ignored local synthetic fixtures). Verified desktop 1280/1024px and mobile 390/320px. Both LeetCode pairs share the same vertical position, mobile document width equals viewport width, and current-stage titles remain on one line. Existing edit controls, metric names, date alignment and table semantics remain available. No production data was used in the fixture.
+
+Sync validation: 76 LeetCode Node tests and 55 API tests passed, alongside the focused 87-test Stage/calendar/overview/activity regression run. Coverage includes continuing new problems after a historical repair, three-hour repeats, next-stage checkpoints, repeat sync, missing upstream history, account binding, late older ACs, legacy repaired snapshots, refresh lifecycle and retrying a failed upstream sync. Required syntax checks and strict production build passed. Complete-history coverage is not advanced from a limited public feed.
+
+final result: passed

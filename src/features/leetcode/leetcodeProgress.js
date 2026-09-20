@@ -44,8 +44,18 @@ export function summarizeLeetCodeRange(progress, start, end, available = true) {
   const hasCoveredPortion = Boolean(throughDay && start < throughDay);
   const within = item => item.dayKey > start && item.dayKey <= end;
   const total = progress.completions.filter(within).length;
-  const first = progress.firstCompletions.filter(item => within(item)
-    && (through ? Date.parse(item.completedAt) <= Date.parse(through) : progress.complete)).length;
+  const firstBounds = new Map((progress.calendar?.firstSolveBounds || []).map(bound => [bound.problemSlug, bound]));
+  const first = progress.firstCompletions.filter(item => {
+    if (!within(item)) return false;
+    if (through && Date.parse(item.completedAt) <= Date.parse(through)) return true;
+    if (!through && progress.complete) return true;
+    // An exhaustive solved set proves an unseen problem was first solved after
+    // its checkpoint, not necessarily at the earliest AC the recent feed kept.
+    // Count it only when the entire possible-first interval fits this Stage.
+    // A checkpoint on the excluded start day cannot establish that condition.
+    const bound = firstBounds.get(item.problemSlug);
+    return Boolean(bound?.afterDay > start || throughDay && throughDay > start);
+  }).length;
   return {
     leetcodeNew: empty ? 0 : complete || hasCoveredPortion || first > 0 ? first : null,
     leetcode: complete || hasCoveredPortion || total > 0 ? total : null,

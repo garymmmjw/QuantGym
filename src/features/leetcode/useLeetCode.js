@@ -20,15 +20,7 @@ export function useLeetCode({ enabled: requestedEnabled = true } = {}) {
     return clients.get(key);
   }, [enabled, user?.id, config.endpoint, config.token]);
   const snapshot = useSyncExternalStore(client?.subscribe || noSubscribe, client?.getSnapshot || getDisabled, getDisabled);
-  useEffect(() => {
-    if (!client) return undefined;
-    client.wake();
-    const wake = () => { if (document.visibilityState !== "hidden") client.wake(); };
-    window.addEventListener("focus", wake);
-    window.addEventListener("online", wake);
-    const timer = window.setInterval(wake, 300000);
-    return () => { window.removeEventListener("focus", wake); window.removeEventListener("online", wake); window.clearInterval(timer); };
-  }, [client]);
+  useEffect(() => client?.retain(), [client]);
   return { ...snapshot, enabled, ownerId: user?.id, language: services.getLanguage?.() || "zh", busy: ["loading", "connecting", "syncing", "disconnecting", "importing", "reviewing"].includes(snapshot.phase),
-    reload: client?.reload, connect: client?.connect, sync: client?.sync, disconnect: client?.disconnect, importRecords: client?.importRecords, recordReview: client?.recordReview };
+    reload: client?.reload, retry: client?.retry, connect: client?.connect, sync: client?.sync, disconnect: client?.disconnect, importRecords: client?.importRecords, recordReview: client?.recordReview };
 }

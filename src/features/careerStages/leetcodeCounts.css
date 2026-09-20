@@ -9,3 +9,6 @@
 .leetcode-counts-inline { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .leetcode-counts-inline .leetcode-count { display: grid; gap: 3px; }
 .leetcode-counts-inline .leetcode-count dd { justify-content: flex-start; }
+.leetcode-counts-row { display: flex; align-items: baseline; justify-content: flex-end; gap: 12px; }
+.leetcode-counts-row .leetcode-count { display: flex; flex-wrap: nowrap; align-items: baseline; gap: 5px; }
+.leetcode-counts-row .leetcode-count dd { margin: 0; }
