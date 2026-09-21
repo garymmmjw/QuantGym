@@ -300,12 +300,75 @@ test('unlinked, partial and genuinely empty LeetCode data stay distinguishable',
   assert.match(partial.statusNote, /仅含已记录历史/);
 });
 
-test('unknown application years count cumulatively but cannot earn daily or Stage credit', () => {
+test('yearless applications use a single-year Stage timeline without earning daily credit', () => {
   const model = buildOverviewActivity({ applications: [submitted('unknown', '9/19'), submitted('known', '9/19', 2026),
     submitted('invalid', '2/29', 2026), submitted('future', '2026-09-20')], stages }, options);
   assert.equal(model.totals.applications, 4);
   assert.equal(model.today.counts.applications, 1);
-  assert.equal(model.stageRows[1].applications, 1);
+  assert.equal(model.stageRows[1].applications, 2);
+});
+
+test('Stage application totals include pre-Stage history and yearless imports exactly once', () => {
+  const applications = [
+    ...Array.from({ length: 10 }, (_, i) => submitted(`early-${i}`, i === 0 ? '7/31' : i < 3 ? '9/10' : '9/13')),
+    ...Array.from({ length: 10 }, (_, i) => submitted(`import-${i}`, i < 5 ? '9/14' : '9/16')),
+    ...Array.from({ length: 31 }, (_, i) => submitted(`dated-${i}`, '2026-09-19')),
+    submitted('current', '2026-09-20'),
+  ];
+  const input = { stages, applications: [...applications, applications[0]],
+    legacyState: { problemStates: [done('early-training', '2026-07-31'), done('start-training', '2026-08-21')] },
+    leetcodeSnapshot: lc([ac('early-lc', '2026-07-31')]) };
+  const before = structuredClone(input);
+  const model = buildOverviewActivity(input, { ...options, today: '2026-09-20', now: stamp('2026-09-20', '23:59') });
+  assert.deepEqual(model.stageRows.map(row => row.applications), [10, 41, 1]);
+  assert.equal(model.stageRows.reduce((sum, row) => sum + row.applications, 0), model.totals.applications);
+  assert.equal(model.totals.applications, 52);
+  assert.equal(model.today.counts.applications, 1);
+  assert.equal(model.recordBundle.records.filter(row => row.kind === 'applications' && !row.day).length, 20);
+  assert.equal(model.stageRows[0].technical, 0, 'earlier history changes application attribution only');
+  assert.equal(model.stageRows[0].leetcode, 0);
+  assert.deepEqual(input, before, 'imports retain their original unknown years');
+});
+
+test('first-Stage applications include its own date and older years, even on the day it was created', () => {
+  const model = buildOverviewActivity({ stages: [{ id: 's1', label: 'Stage 1', recordedDate: options.today }],
+    applications: [submitted('old-year', '2025-12-01'), submitted('early', '2026-08-21'), submitted('today', options.today)],
+  }, options);
+  assert.equal(model.stageRows[0].applications, 3);
+  assert.equal(model.stageRows[0].includesEarlierApplications, true);
+});
+
+test('New Year and later Stages do not move historical imports with a recorded Stage context', () => {
+  const applications = [{ ...submitted('old-boundary', '9/13'), prepPhase: 's2' },
+    { ...submitted('old-stage-2', '9/14'), prepPhase: 's2' }];
+  const futureOptions = { ...options, today: '2027-01-10', now: stamp('2027-01-10') };
+  const original = buildOverviewActivity({ stages, applications }, options);
+  const later = buildOverviewActivity({ stages, applications }, futureOptions);
+  assert.deepEqual(later.stageRows.map(row => row.applications), original.stageRows.map(row => row.applications));
+  const extended = buildOverviewActivity({ stages: [...stages, { id: 's4', label: 'Stage 4', recordedDate: '2027-01-01' }], applications }, futureOptions);
+  assert.deepEqual(extended.stageRows.map(row => row.applications), [1, 1, 0, 0]);
+  const noPhase = buildOverviewActivity({ stages, applications: [submitted('old-no-phase', '9/10')] }, futureOptions);
+  assert.deepEqual(noPhase.stageRows.map(row => row.applications), [1, 0, 0]);
+  const noPhaseExtended = buildOverviewActivity({ stages: [...stages, { id: 's4', label: 'Stage 4', recordedDate: '2027-01-01' }],
+    applications: [submitted('old-no-phase', '9/10'), submitted('old-no-phase-second', '9/14')] }, futureOptions);
+  assert.deepEqual(noPhaseExtended.stageRows.map(row => row.applications), [1, 1, 0, 0]);
+});
+
+test('ambiguous cross-year imports use explicit Stage aliases without inventing dates or overriding known dates', () => {
+  const crossYearStages = [{ id: 'first', label: 'Stage 1', recordedDate: '2025-12-01', importedIds: ['legacy-first'] },
+    { id: 'second', label: 'Stage 2', recordedDate: '2026-01-10' }];
+  const model = buildOverviewActivity({ stages: crossYearStages, applications: [
+    submitted('ambiguous', '1/5'),
+    { ...submitted('assigned', '1/5'), prepPhase: 'legacy-first' },
+    { ...submitted('no-date', ''), prepPhase: 'second' },
+    { ...submitted('date-wins', '2026-01-11'), prepPhase: 'first' },
+    { ...submitted('future', '2027-01-01'), prepPhase: 'second' },
+    { ...submitted('future-instant', '2027-01-01T12:00:00Z'), prepPhase: 'second' },
+    { ...submitted('invalid', '2026-02-30'), prepPhase: 'second' },
+    { ...submitted('unmapped', ''), prepPhase: 'deleted-stage' },
+  ] }, options);
+  assert.deepEqual(model.stageRows.map(row => row.applications), [1, 2]);
+  assert.equal(model.today.counts.applications, 0);
 });
 
 test('local time conversion and future timestamps cannot create premature activity', () => {
