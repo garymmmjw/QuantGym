@@ -349,6 +349,9 @@ test('New Year and later Stages do not move historical imports with a recorded S
   assert.deepEqual(extended.stageRows.map(row => row.applications), [1, 1, 0, 0]);
   const noPhase = buildOverviewActivity({ stages, applications: [submitted('old-no-phase', '9/10')] }, futureOptions);
   assert.deepEqual(noPhase.stageRows.map(row => row.applications), [1, 0, 0]);
+  const noPhaseExtended = buildOverviewActivity({ stages: [...stages, { id: 's4', label: 'Stage 4', recordedDate: '2027-01-01' }],
+    applications: [submitted('old-no-phase', '9/10'), submitted('old-no-phase-second', '9/14')] }, futureOptions);
+  assert.deepEqual(noPhaseExtended.stageRows.map(row => row.applications), [1, 1, 0, 0]);
 });
 
 test('ambiguous cross-year imports use explicit Stage aliases without inventing dates or overriding known dates', () => {

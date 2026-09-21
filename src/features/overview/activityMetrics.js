@@ -170,8 +170,10 @@ export function summarizeOverviewStages(stages = [], bundle, { today = localDayK
     const assignedYear = assignedIndex >= 0 && assignedIndex < ordered.length - 1 && assignedPeriod.known
       && assignedPeriod.periodStart.slice(0, 4) === assignedPeriod.periodEnd.slice(0, 4) ? assignedPeriod.periodStart.slice(0, 4) : '';
     const year = assignedYear || applicationYear;
+    const candidates = !year && record.applicationMonthDay && periods.every(period => period.known)
+      ? [...years].map(value => localDayKey(`${value}-${record.applicationMonthDay}`)).filter(day => day && day <= endToday) : [];
     const day = record.day || (year && record.applicationMonthDay
-      ? localDayKey(`${year}-${record.applicationMonthDay}`) : '');
+      ? localDayKey(`${year}-${record.applicationMonthDay}`) : candidates.length === 1 ? candidates[0] : '');
     const matches = periods.flatMap((period, index) => {
       if (!period.known) return [];
       if (day) return day <= endToday && day <= period.periodEnd && (index === 0 || day > period.periodStart) ? [index] : [];
