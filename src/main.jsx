@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.jsx";
+import { versionProblemCatalogScript } from "./lib/problemCatalogScriptUrl.js";
 import "./styles/playful-precision-tokens.css";
 import "./styles/react-route-overrides.css";
 import "./styles/playful-precision-shell.css";
@@ -65,7 +66,7 @@ async function ensureRuntimeData() {
   const scripts = [
     {
       key: "quantProblemCatalog",
-      src: problemCatalogScript,
+      src: versionProblemCatalogScript(problemCatalogScript, config.buildCommit, window.location.href),
       isReady: Array.isArray
     },
     ...runtimeDataScripts.slice(1)
