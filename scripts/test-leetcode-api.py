@@ -105,6 +105,11 @@ class LeetCodeApiTests(unittest.TestCase):
         self.fetch = patch.object(lc, "fetch_profile", side_effect=lambda username: upstream(username))
         self.mock_fetch = self.fetch.start()
         self.addCleanup(self.fetch.stop)
+        # No test account may reach the official metadata endpoint. Focused
+        # adapter tests below exercise the real batch/cache with mocked GraphQL.
+        self.difficulties = patch.object(lc, "fetch_problem_difficulties", return_value={})
+        self.mock_difficulties = self.difficulties.start()
+        self.addCleanup(self.difficulties.stop)
 
     def request(self, method, path="/api/leetcode", token=None, payload=None):
         connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
@@ -182,6 +187,40 @@ class LeetCodeApiTests(unittest.TestCase):
             revision, data = lc.get_record(conn, owner)
             data["connection"]["lastSyncedAt"] = "2020-01-01T00:00:00Z"
             lc.save_snapshot(conn, owner, revision, data)
+
+    def test_sync_repairs_older_missing_difficulties_without_changing_completion_evidence(self):
+        token, owner = self.user()
+        self.connect(token)
+        self.request("POST", "/api/leetcode/import", token, {"username": "fixture-a",
+            "submissions": [record("older-import", "binary-search", when="2026-08-01T09:00:00Z")]})
+        self.age_snapshot(owner)
+        with self.api.db.connect() as conn:
+            _, before = lc.get_record(conn, owner)
+        self.mock_difficulties.return_value = {"two-sum": 1, "valid-parentheses": 1, "binary-search": 1}
+        observed_at = lc.now_iso()
+        with patch.object(lc, "now_iso", return_value=observed_at):
+            expected = lc.fresh_snapshot(before, upstream())
+            status, saved, _ = self.request("POST", "/api/leetcode/sync", token, {})
+        self.assertEqual(status, 200, saved)
+        self.assertEqual(set(self.mock_difficulties.call_args.args[0]), {"two-sum", "valid-parentheses", "binary-search"})
+        self.assertTrue(all(row["difficulty"] == 1 for row in saved["problems"]))
+        with self.api.db.connect() as conn:
+            _, actual = lc.get_record(conn, owner)
+
+        def without_difficulties(value):
+            if isinstance(value, dict):
+                return {key: without_difficulties(item) for key, item in value.items()
+                        if key not in {"difficulty", "_problemDifficulties"}}
+            if isinstance(value, list):
+                return [without_difficulties(item) for item in value]
+            return value
+
+        self.assertEqual(without_difficulties(actual), without_difficulties(expected))
+        self.mock_difficulties.reset_mock()
+        read = self.request("GET", token=token)[1]
+        self.mock_difficulties.assert_not_called()
+        self.assertTrue(all(type(row["difficulty"]) is int for row in read["problems"]))
+        self.assertNotIn("_problemDifficulties", read)
 
     def test_upstream_failure_does_not_replace_existing_connection(self):
         token, owner = self.user()
@@ -990,6 +1029,151 @@ class LifetimeCountTests(unittest.TestCase):
         invalid = copy.deepcopy(snapshot)
         invalid["connection"]["username"] = "different-profile"
         self.assertIsNone(lc.synced_lifetime_solved_count(invalid))
+
+
+class ProblemDifficultyTests(unittest.TestCase):
+    def setUp(self):
+        self.clock = 1000.0
+        for target, value in (("_difficulty_cache", lc.OrderedDict()), ("_difficulty_retry_after", 0), ("_difficulty_cursor", "")):
+            mocked = patch.object(lc, target, value)
+            mocked.start()
+            self.addCleanup(mocked.stop)
+        clock = patch.object(lc.time, "monotonic", side_effect=lambda: self.clock)
+        clock.start()
+        self.addCleanup(clock.stop)
+
+    @staticmethod
+    def response(variables, difficulty="Medium"):
+        return {f"q{index}": {"titleSlug": slug, "difficulty": difficulty}
+                for index, slug in enumerate(variables.values())}
+
+    def test_fixed_official_batch_maps_numbers_deduplicates_and_reuses_public_cache(self):
+        def graph(query, variables, **kwargs):
+            self.assertIn("question(titleSlug: $slug0)", query)
+            self.assertEqual(kwargs, {"timeout": lc.DIFFICULTY_FETCH_TIMEOUT_SECONDS})
+            self.assertEqual(set(variables.values()), {"two-sum", "3sum", "median-of-two-sorted-arrays"})
+            levels = {"two-sum": "Easy", "3sum": "Medium", "median-of-two-sorted-arrays": "Hard"}
+            return {f"q{index}": {"titleSlug": slug, "difficulty": levels[slug]}
+                    for index, slug in enumerate(variables.values())}
+        with patch.object(lc, "graphql", side_effect=graph) as upstream_call:
+            actual = lc.fetch_problem_difficulties(["two-sum", "3sum", "two-sum", "median-of-two-sorted-arrays", "../invalid", None])
+            self.assertEqual(actual, {"two-sum": 1, "3sum": 2, "median-of-two-sorted-arrays": 3})
+            self.assertEqual(lc.fetch_problem_difficulties(["two-sum"]), {"two-sum": 1})
+            upstream_call.assert_called_once()
+            self.assertTrue(all(type(value) is int for value in actual.values()))
+
+    def test_batch_budget_and_expired_unknown_results_do_not_starve_later_problems(self):
+        slugs = [f"unknown-{index:03d}" for index in range(lc.MAX_DIFFICULTY_BATCH)] + ["z-real-problem"]
+        def graph(query, variables, **kwargs):
+            self.assertLessEqual(len(variables), lc.MAX_DIFFICULTY_BATCH)
+            return {f"q{index}": {"titleSlug": slug, "difficulty": "Hard"} if slug == "z-real-problem" else None
+                    for index, slug in enumerate(variables.values())}
+        with patch.object(lc, "graphql", side_effect=graph) as upstream_call:
+            self.assertEqual(lc.fetch_problem_difficulties(slugs), {})
+            self.assertEqual(upstream_call.call_count, 1)
+            self.clock += lc.DIFFICULTY_MISS_SECONDS + 1
+            self.assertEqual(lc.fetch_problem_difficulties(slugs), {"z-real-problem": 3})
+            self.assertEqual(upstream_call.call_count, 2)
+            self.clock += lc.DIFFICULTY_MISS_SECONDS + 1
+            self.assertEqual(lc.fetch_problem_difficulties(slugs), {"z-real-problem": 3})
+            self.assertEqual(upstream_call.call_count, 3)
+
+    def test_malformed_mismatched_or_unknown_metadata_is_a_short_lived_miss(self):
+        invalid = [None, {}, {"titleSlug": "other", "difficulty": "Easy"},
+                   {"titleSlug": "two-sum", "difficulty": ["Easy"]},
+                   {"titleSlug": "two-sum", "difficulty": {"name": "Easy"}},
+                   {"titleSlug": "two-sum", "difficulty": True},
+                   {"titleSlug": "two-sum", "difficulty": "Expert"}]
+        for row in invalid:
+            with self.subTest(row=row):
+                lc._difficulty_cache.clear()
+                with patch.object(lc, "graphql", return_value={"q0": row}) as upstream_call:
+                    self.assertEqual(lc.fetch_problem_difficulties(["two-sum"]), {})
+                    self.assertEqual(lc.fetch_problem_difficulties(["two-sum"]), {})
+                    upstream_call.assert_called_once()
+                    self.clock += lc.DIFFICULTY_MISS_SECONDS + 1
+                    upstream_call.return_value = {"q0": {"titleSlug": "two-sum", "difficulty": "Easy"}}
+                    self.assertEqual(lc.fetch_problem_difficulties(["two-sum"]), {"two-sum": 1})
+
+    def test_rotation_reaches_later_problem_even_after_unknown_cache_entries_are_evicted(self):
+        slugs = ["unknown-a", "unknown-b", "unknown-c", "unknown-d", "z-real-problem"]
+        queried = []
+        def graph(query, variables, **kwargs):
+            queried.append(list(variables.values()))
+            return {f"q{index}": {"titleSlug": slug, "difficulty": "Easy"} if slug == "z-real-problem" else None
+                    for index, slug in enumerate(variables.values())}
+        with patch.object(lc, "MAX_DIFFICULTY_CACHE", 2), patch.object(lc, "MAX_DIFFICULTY_BATCH", 2), patch.object(lc, "graphql", side_effect=graph):
+            self.assertEqual(lc.fetch_problem_difficulties(slugs), {})
+            self.clock += lc.DIFFICULTY_MISS_SECONDS + 1
+            self.assertEqual(lc.fetch_problem_difficulties(slugs), {})
+            self.clock += lc.DIFFICULTY_MISS_SECONDS + 1
+            self.assertEqual(lc.fetch_problem_difficulties(slugs), {"z-real-problem": 1})
+            self.assertEqual(queried, [["unknown-a", "unknown-b"], ["unknown-c", "unknown-d"], ["z-real-problem", "unknown-a"]])
+            self.assertLessEqual(len(lc._difficulty_cache), 2)
+
+    def test_failure_backoff_keeps_synced_records_and_retries_later(self):
+        snapshot = lc.fresh_snapshot(lc.empty_snapshot(), upstream())
+        original = copy.deepcopy(snapshot)
+        with patch.object(lc, "graphql", side_effect=lc.LeetCodeError("Temporary upstream failure", 502)) as upstream_call:
+            self.assertEqual(lc.enrich_problem_difficulties(snapshot), original)
+            self.assertEqual(lc.enrich_problem_difficulties(snapshot), original)
+            upstream_call.assert_called_once()
+            self.clock += lc.DIFFICULTY_FAILURE_SECONDS + 1
+            upstream_call.side_effect = lambda query, variables, **kwargs: self.response(variables, "Easy")
+            enriched = lc.enrich_problem_difficulties(snapshot)
+            self.assertTrue(all(row["difficulty"] == 1 for row in enriched["problems"]))
+            self.assertEqual(snapshot, original, "Enrichment must not mutate its input")
+
+    def test_cache_expiry_size_and_busy_fetch_are_bounded(self):
+        with patch.object(lc, "graphql", side_effect=lambda query, variables, **kwargs: self.response(variables)) as upstream_call:
+            lc.fetch_problem_difficulties(["two-sum"])
+            self.clock += lc.DIFFICULTY_CACHE_SECONDS - 1
+            lc.fetch_problem_difficulties(["two-sum"])
+            self.assertEqual(upstream_call.call_count, 1)
+            self.clock += 2
+            lc.fetch_problem_difficulties(["two-sum"])
+            self.assertEqual(upstream_call.call_count, 2)
+            lc._difficulty_fetch_lock.acquire()
+            try:
+                self.assertEqual(lc.fetch_problem_difficulties(["two-sum", "unfetched"]), {"two-sum": 2})
+                self.assertEqual(upstream_call.call_count, 2)
+            finally:
+                lc._difficulty_fetch_lock.release()
+            with patch.object(lc, "MAX_DIFFICULTY_CACHE", 2):
+                lc.fetch_problem_difficulties(["problem-a", "problem-b", "problem-c"])
+            self.assertLessEqual(len(lc._difficulty_cache), 2)
+
+    def test_known_difficulty_survives_null_sync_and_conflicting_import(self):
+        incoming = upstream()
+        incoming["submissions"] = [{**row, "difficulty": 1} for row in incoming["submissions"]]
+        snapshot = lc.fresh_snapshot(lc.empty_snapshot(), incoming)
+        snapshot = lc.fresh_snapshot(snapshot, upstream())
+        self.assertTrue(all(row["difficulty"] == 1 for row in snapshot["_syncedAcceptedSubmissions"]))
+        imported = lc.import_metadata(snapshot, {"username": "fixture-a",
+            "submissions": [{**record("101", "two-sum"), "difficulty": 3}],
+            "problems": [{"slug": "valid-parentheses", "difficulty": 3}]})
+        self.assertTrue(all(row["difficulty"] == 1 for row in imported["problems"]))
+        with patch.object(lc, "graphql") as upstream_call:
+            self.assertEqual(lc.enrich_problem_difficulties(imported), imported)
+            upstream_call.assert_not_called()
+
+    def test_official_enrichment_protects_imports_and_does_not_cross_relinked_accounts(self):
+        original = lc.fresh_snapshot(lc.empty_snapshot(), upstream())
+        with patch.object(lc, "graphql", side_effect=lambda query, variables, **kwargs: self.response(variables, "Easy")):
+            enriched = lc.enrich_problem_difficulties(original)
+        # The metadata cache remains public, but its stored account projection
+        # and AC ledgers must still follow the existing connection lifecycle.
+        imported = lc.import_metadata(enriched, {"username": "fixture-a",
+            "submissions": [{**record("101", "two-sum"), "difficulty": 3},
+                            {**record("import-only", "two-sum", when="2026-09-10T00:00:00Z"), "difficulty": 3}]})
+        self.assertTrue(all(row["difficulty"] == 1 for row in imported["problems"]))
+        self.assertTrue(all(row["difficulty"] == 1 for row in imported["_records"]))
+        refreshed = lc.fresh_snapshot(imported, upstream())
+        self.assertTrue(all(row["difficulty"] == 1 for row in refreshed["problems"]))
+        switched = lc.fresh_snapshot(refreshed, upstream("different-user"))
+        self.assertNotIn("_problemDifficulties", switched)
+        self.assertNotIn("import-only", {row["id"] for row in switched["submissions"]})
+        self.assertTrue(all(row["difficulty"] is None for row in switched["problems"]))
 
 
 class AdapterTests(unittest.TestCase):

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, ChevronDown, RefreshCw, Search, Shuffle, Upload } from "lucide-react";
+import { ChevronDown, RefreshCw, Search, Shuffle, Upload } from "lucide-react";
 import { LeetCodeConnection } from "./LeetCodeConnection.jsx";
 import { useLeetCode } from "./useLeetCode.js";
 import { leetcodeError, prepareHistory, problemUrl, reviewPool } from "./leetcodeModel.js";
@@ -171,7 +171,7 @@ function LeetcodeWorkspace({ lc, practiceSessions }) {
           <label className="lc-search-wrap"><Search size={16} aria-hidden="true" /><input className="lc-search" type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder={t("搜索题名或编号…", "Search title or number…")} aria-label={t("搜索已通过题目", "Search solved problems")} /></label></div>
         </div>
         {pool.length ? <>
-          <div className="lc-library-columns" aria-hidden="true"><span>#</span><span>{t("题目", "Problem")}</span><span>{t("难度", "Difficulty")}</span><span>{t("上次完成", "Last completed")}</span><span /></div>
+          <div className="lc-library-columns" aria-hidden="true"><span>#</span><span>{t("题目", "Problem")}</span><span>{t("难度", "Difficulty")}</span><span>{t("上次完成", "Last completed")}</span></div>
           <ul className="lc-library-list" aria-label={t("已通过题目与完成时间", "Solved problems and completion times")}>{pool.slice((currentPage - 1) * pageSize, currentPage * pageSize).map(problem => {
             const title = en ? problem.titleEn || problem.title || problem.slug : problem.title || problem.titleEn || problem.slug;
             const secondary = en ? problem.title : problem.titleEn;
@@ -181,9 +181,8 @@ function LeetcodeWorkspace({ lc, practiceSessions }) {
             return <li key={problem.slug}><a className="lc-problem-row" href={problemUrl(problem.slug)} target="_blank" rel="noopener noreferrer" title={`${problem.frontendId || ""} · ${title}${secondary && secondary !== title ? ` · ${secondary}` : ""}`}>
               <span className="lc-problem-id">{problem.frontendId || "—"}</span>
               <span className="lc-problem-name"><strong>{title}</strong>{secondary && secondary !== title && <span>{secondary}</span>}</span>
-              <span className={`lc-difficulty lc-difficulty-${problem.difficulty || "unknown"}`}>{labels[problem.difficulty] || t("已通过", "Solved")}</span>
+              <span className={`lc-difficulty lc-difficulty-${problem.difficulty || "unknown"}`}>{labels[problem.difficulty] || "—"}</span>
               <span className="lc-last-completed"><span className="lc-sr-only">{t("上次完成", "Last completed")} </span>{completedAt ? <time dateTime={completedAt} title={fullDate} aria-label={fullDate}><span className="lc-date-wide">{fullDate}</span><span className="lc-date-compact" aria-hidden="true">{compactDate}</span></time> : <span title={t("暂无时间记录", "No completion time recorded")}>{t("暂无时间记录", "No record")}</span>}</span>
-              <ArrowUpRight className="lc-row-arrow" size={14} aria-hidden="true" />
             </a></li>;
           })}</ul>
         </> : <div className="lc-list-empty">{t("没有符合条件的题目", "No matching problems")}<button type="button" className="lc-text-button" onClick={() => { setSearch(""); setDifficulty("all"); }}>{t("重置筛选", "Reset filters")}</button></div>}
