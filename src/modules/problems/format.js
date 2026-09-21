@@ -137,7 +137,7 @@ export function isLegacyCatalogMarker(value) {
 
 export function isDisabledProblemId(problemId) {
   const id = String(problemId || "");
-  return id.startsWith("catalog-problem-") || id.startsWith("catalog-exercise-") || isLegacyCatalogMarker(id);
+  return isLegacyCatalogMarker(id);
 }
 
 export function isDisabledProblemSource(problem, options = {}) {

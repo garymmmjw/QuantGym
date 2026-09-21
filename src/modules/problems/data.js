@@ -1,6 +1,11 @@
 import { skillDefs } from '../../skills.js';
 import { parseTags as parseTagsValue } from '../../lib/text.js';
 import { isLegacyCatalogMarker } from './format.js';
+import {
+  mergeFreePracticeAttempts,
+  normalizeFreePracticeAttempts,
+  normalizeFreePracticeSession
+} from './freePracticeAttempts.js';
 
 const DEFAULT_PROBLEM_MEDIA_FIELD_KEYS = [
   "image",
@@ -27,7 +32,11 @@ const DEFAULT_PROBLEM_LOCALIZED_FIELD_KEYS = [
   "hint",
   "hintEn",
   "hintZh",
-  "quantguide"
+  "quantguide",
+  "practiceTaxonomy",
+  "provenance",
+  "review",
+  "interviewEvidence"
 ];
 
 export function normalizeCatalogProblemId(id) {
@@ -92,9 +101,12 @@ export function inferProblemCategory(raw = {}) {
   if (/algebra|inequalit(?:y|ies)|bernoulli inequality|polynomial|binomial|induction|代数|不等式|伯努利不等式|多项式|二项式|归纳法/.test(text)) return "algebra";
   if (text.includes("deep learning") || text.includes("transformer") || text.includes("neural")) return "deepLearning";
   if (text.includes("machine learning") || text.includes("xgboost") || text.includes("feature")) return "machineLearning";
+  if (/behavioral|tell me about|why (?:do )?you|walk me through your resume|leadership|conflict|自我介绍|为什么.*(?:公司|岗位)|行为面|简历深挖|项目经历/.test(text)) return "behavioral";
   if (text.includes("probability") || text.includes("expected") || text.includes("bayes")) return "probabilityExpectation";
   return "probabilityExpectation";
 }
+
+const REVIEWED_EXTRA_CATEGORIES = new Set(["systemDesign", "dataEngineering", "systemsNetworking", "aiEngineering", "enterpriseTools", "assessment"]);
 
 export function normalizeCategory(category, defs = skillDefs) {
   const key = String(category || "").trim();
@@ -152,9 +164,12 @@ export function normalizeCategory(category, defs = skillDefs) {
     complex_number: "complexNumbers",
     complex_numbers: "complexNumbers",
     complex_analysis: "complexNumbers",
-    communication: "leetcode"
+    communication: "leetcode",
+    behavior: "behavioral",
+    behavioral_fit: "behavioral",
+    fit: "behavioral"
   };
-  return defs[key] ? key : aliases[key] || aliases[lookupKey] || "probabilityExpectation";
+  return defs[key] || REVIEWED_EXTRA_CATEGORIES.has(key) ? key : aliases[key] || aliases[lookupKey] || "probabilityExpectation";
 }
 
 export function normalizeProblem(raw = {}, deps = {}) {
@@ -174,7 +189,7 @@ export function normalizeProblem(raw = {}, deps = {}) {
   const promptEn = String(raw?.promptEn || raw?.prompt || "").trim();
   const promptZh = String(raw?.promptZh || "").trim();
   const id = normalizeCatalogProblemId(raw?.id || stableId(titleEn || titleZh || sourceUrl || makeId(), sourceUrl));
-  if (!titleEn && id.startsWith("catalog-exercise-")) {
+  if (!titleEn && id.startsWith("catalog-exercise-") && !raw?.provenance?.originalNumber) {
     const number = id.match(/(\d+)$/)?.[1]?.padStart(3, "0");
     titleEn = exerciseTitleOverrides[number]?.en || "";
   }
@@ -182,11 +197,14 @@ export function normalizeProblem(raw = {}, deps = {}) {
   const sourceType = String(raw?.sourceType || raw?.collection || "").trim();
   const bookSlug = String(raw?.bookSlug || "").trim();
   const tags = sanitizeProblemTags(Array.isArray(raw?.tags) ? raw.tags.map(String).filter(Boolean) : parseTags(raw?.tags || ""));
-  const visibility = raw?.visibility || (
+  const visibility = String(raw?.visibility || (
     source === "seed" || source === "question-bank" || sourceType === "book" || bookSlug
       ? "public"
       : "user"
-  );
+  )).trim().toLowerCase();
+  const normalizedVisibility = ["public", "private", "user"].includes(visibility)
+    ? visibility
+    : "private";
   return {
     id,
     titleEn,
@@ -204,7 +222,7 @@ export function normalizeProblem(raw = {}, deps = {}) {
     promptZh,
     answer: String(raw?.answer || "").trim(),
     explanation: String(raw?.explanation || raw?.solution || "").trim(),
-    visibility: visibility === "public" ? "public" : "user",
+    visibility: normalizedVisibility,
     ownerUserId: String(raw?.ownerUserId || "").trim(),
     createdAt: isLegacyCatalogMarker(raw?.createdAt) ? "catalog" : raw?.createdAt || new Date().toISOString(),
     updatedAt: raw?.updatedAt || "",
@@ -252,6 +270,18 @@ export function mergeProblems(seed = [], saved = [], deps = {}) {
       byId.set(normalized.id, normalized);
       return;
     }
+    // A stored copy of the old book must not replace a reviewed edition or
+    // reintroduce stale translations. Practice history is stored separately.
+    const privatePurple = item => item.source === "question-bank" && item.visibility === "private";
+    if (privatePurple(previous) && privatePurple(normalized)
+      && (previous.provenance?.originalNumber || normalized.provenance?.originalNumber)) {
+      const reviewedPrevious = Boolean(previous.provenance?.originalNumber);
+      const reviewedNext = Boolean(normalized.provenance?.originalNumber);
+      const keepPrevious = reviewedPrevious && (!reviewedNext
+        || (Date.parse(previous.updatedAt) || 0) > (Date.parse(normalized.updatedAt) || 0));
+      byId.set(normalized.id, keepPrevious ? previous : normalized);
+      return;
+    }
     byId.set(normalized.id, {
       ...previous,
       ...normalized,
@@ -269,6 +299,11 @@ export function normalizeLeetcodeHot100Done(value, leetcodeHot100 = []) {
 
 export function normalizeProblemState(raw = {}, deps = {}) {
   const problemId = normalizeCatalogProblemId(raw.problemId);
+  const freePracticeAttempts = normalizeFreePracticeAttempts(raw.freePracticeAttempts);
+  const hasSession = Object.prototype.hasOwnProperty.call(raw, "freePracticeSession");
+  const session = hasSession ? normalizeFreePracticeSession(raw.freePracticeSession) : null;
+  const freePracticeSession = session && !freePracticeAttempts.some((attempt) => attempt.id === session.id
+    || attempt.syncRecords?.some((record) => record.id === session.id)) ? session : null;
   return {
     ...raw,
     problemId,
@@ -278,6 +313,8 @@ export function normalizeProblemState(raw = {}, deps = {}) {
     completedAt: raw.completedAt || "",
     favorites: Array.isArray(raw.favorites) ? raw.favorites.filter((favorite) => favorite?.id) : [],
     scoreHistory: Array.isArray(raw.scoreHistory) ? raw.scoreHistory.filter((score) => score?.id) : [],
+    freePracticeAttempts,
+    ...(hasSession ? { freePracticeSession } : {}),
     lastPracticedAt: raw.lastPracticedAt || "",
     updatedAt: raw.updatedAt || ""
   };
@@ -299,6 +336,21 @@ export function mergeProblemStates(lists = [], deps = {}) {
     const scoreSource = previous.lastScoreAt === lastScoreAt ? previous : next;
     const favoriteSource = latestIso(previous.updatedAt, next.updatedAt) === next.updatedAt ? next : previous;
     const completedSource = latestIso(previous.updatedAt, next.updatedAt) === next.updatedAt ? next : previous;
+    const freePracticeAttempts = mergeFreePracticeAttempts([previous.freePracticeAttempts, next.freePracticeAttempts]);
+    const previousHasSession = Object.prototype.hasOwnProperty.call(previous, "freePracticeSession");
+    const nextHasSession = Object.prototype.hasOwnProperty.call(next, "freePracticeSession");
+    const previousSessionTime = Date.parse(previous.updatedAt) || 0;
+    const nextSessionTime = Date.parse(next.updatedAt) || 0;
+    // Missing fields from older clients are not a request to clear a session.
+    // Explicit null is a tombstone; it wins a timestamp tie as well.
+    let sessionSource = nextHasSession ? next : previous;
+    if (previousHasSession && nextHasSession) {
+      sessionSource = nextSessionTime >= previousSessionTime ? next : previous;
+      if (previousSessionTime === nextSessionTime && previous.freePracticeSession === null) sessionSource = previous;
+    }
+    const session = sessionSource.freePracticeSession;
+    const freePracticeSession = session && !freePracticeAttempts.some((attempt) => attempt.id === session.id
+      || attempt.syncRecords?.some((record) => record.id === session.id)) ? session : null;
     byId.set(next.problemId, {
       ...previous,
       ...next,
@@ -308,11 +360,17 @@ export function mergeProblemStates(lists = [], deps = {}) {
       completedAt: completedSource.completed ? latestIso(previous.completedAt, next.completedAt) : "",
       favorites: mergeRecordsById(previous.favorites || [], next.favorites || []),
       scoreHistory: mergeRecordsById(previous.scoreHistory || [], next.scoreHistory || []),
+      freePracticeAttempts,
+      ...(previousHasSession || nextHasSession ? { freePracticeSession } : {}),
       lastScore: scoreSource.lastScore,
       lastScoreAt,
       lastEvaluation: scoreSource.lastEvaluation || "",
       lastPracticedAt: latestIso(previous.lastPracticedAt, next.lastPracticedAt),
-      updatedAt: latestIso(previous.updatedAt, next.updatedAt)
+      // The API uses seconds while local writes include milliseconds. Keep the
+      // session's true latest state timestamp for the next incremental merge.
+      updatedAt: previousHasSession || nextHasSession
+        ? (nextSessionTime >= previousSessionTime ? next.updatedAt : previous.updatedAt)
+        : latestIso(previous.updatedAt, next.updatedAt)
     });
   });
   return [...byId.values()];

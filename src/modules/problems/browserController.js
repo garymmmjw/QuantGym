@@ -16,6 +16,10 @@ export function createProblemBrowserController(deps = {}) {
   const windowRef = deps.windowRef || globalThis.window;
   const documentRef = deps.documentRef || globalThis.document;
 
+  function isFreePracticePage() {
+    return Boolean(documentRef?.querySelector?.("[data-free-practice-root]"));
+  }
+
   function getSearchOptions() {
     return {
       cache: deps.searchRecordCache,
@@ -60,7 +64,7 @@ export function createProblemBrowserController(deps = {}) {
     deps.setSelectedDetailId?.(problemId);
     deps.resetPagination?.();
     const elements = getElements();
-    if (elements.problemSearch) elements.problemSearch.value = "";
+    if (!isFreePracticePage() && elements.problemSearch) elements.problemSearch.value = "";
     render();
     const CustomEventCtor = windowRef?.CustomEvent || globalThis.CustomEvent;
     if (windowRef?.dispatchEvent && CustomEventCtor) {
@@ -68,12 +72,17 @@ export function createProblemBrowserController(deps = {}) {
         detail: { problemId, source: "search" }
       }));
     }
-    windowRef.setTimeout?.(() => deps.openProblemDetail?.(problemId), 40);
+    windowRef?.setTimeout?.(() => {
+      // Routing may mount the React page after the search event is dispatched.
+      // The selected ID and event above already give React the navigation state.
+      if (!isFreePracticePage()) deps.openProblemDetail?.(problemId);
+    }, 40);
     return route;
   }
 
   function render(options = {}) {
     deps.cancelSearchRender?.();
+    if (isFreePracticePage()) return;
     const elements = getElements();
     const state = getState();
     const filters = getFilters();
@@ -165,6 +174,7 @@ export function createProblemBrowserController(deps = {}) {
   }
 
   function renderCompanyPanel(problems = deps.getCatalogProblems?.() || []) {
+    if (isFreePracticePage()) return;
     renderProblemCompanyPanelView({
       elements: getElements(),
       companies: deps.companies,
@@ -179,6 +189,7 @@ export function createProblemBrowserController(deps = {}) {
   }
 
   function renderViewTabs() {
+    if (isFreePracticePage()) return;
     const filters = getFilters();
     renderProblemViewTabsView({
       root: documentRef,
@@ -192,6 +203,7 @@ export function createProblemBrowserController(deps = {}) {
   }
 
   function renderRanking(problems = []) {
+    if (isFreePracticePage()) return;
     renderProblemRankingView({
       container: getElements().problemRankingList,
       problems,

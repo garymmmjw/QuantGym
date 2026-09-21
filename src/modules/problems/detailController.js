@@ -26,9 +26,9 @@ import {
 
 export function createProblemDetailController(deps = {}) {
   const {
-    elements,
-    documentRef,
-    windowRef,
+    elements = {},
+    documentRef = globalThis.document,
+    windowRef = globalThis.window,
     detailState,
     socialState,
     getProblems,
@@ -58,6 +58,10 @@ export function createProblemDetailController(deps = {}) {
     refreshIcons
   } = deps;
   const revealState = new Set();
+
+  function isFreePracticePage() {
+    return Boolean(documentRef?.querySelector?.("[data-free-practice-root]"));
+  }
 
   function renderProblemBrowser() {
     if (typeof renderProblems === "function") renderProblems();
@@ -90,6 +94,7 @@ export function createProblemDetailController(deps = {}) {
   }
 
   function render(problem) {
+    if (isFreePracticePage() || !elements.problemDetail) return;
     renderProblemDetailView({
       container: elements.problemDetail,
       problem,
@@ -127,13 +132,25 @@ export function createProblemDetailController(deps = {}) {
     if (nextState.resetReveals) resetReveals();
     detailState.setDetailId(nextState.detailId);
     socialState.setNotice("");
-    elements.problemList.classList.add("hidden");
-    elements.problemRanking.classList.add("hidden");
-    elements.problemDetail.classList.remove("hidden");
+    if (isFreePracticePage()) {
+      const CustomEventCtor = windowRef?.CustomEvent || globalThis.CustomEvent;
+      if (windowRef?.dispatchEvent && CustomEventCtor) {
+        windowRef.dispatchEvent(new CustomEventCtor("quantgym:problem-open", {
+          detail: { problemId, source: "detail" }
+        }));
+      }
+      refreshSocial?.(problemId);
+      return;
+    }
+    elements.problemList?.classList.add("hidden");
+    elements.problemRanking?.classList.add("hidden");
+    elements.problemDetail?.classList.remove("hidden");
     render(problem);
-    refreshSocial(problemId);
-    const stickyOffset = (documentRef.querySelector(".topbar")?.getBoundingClientRect().height || 0) + 14;
-    const detailTop = elements.problemDetail.getBoundingClientRect().top + windowRef.scrollY - stickyOffset;
+    refreshSocial?.(problemId);
+    const detailBounds = elements.problemDetail?.getBoundingClientRect?.();
+    if (!detailBounds || !windowRef?.scrollTo) return;
+    const stickyOffset = (documentRef?.querySelector?.(".topbar")?.getBoundingClientRect().height || 0) + 14;
+    const detailTop = detailBounds.top + (windowRef.scrollY || 0) - stickyOffset;
     windowRef.scrollTo({ top: Math.max(0, detailTop), behavior: "smooth" });
   }
 
@@ -141,8 +158,10 @@ export function createProblemDetailController(deps = {}) {
     const nextState = getProblemDetailReturnState(detailState.getDetailId());
     detailState.setDetailId(nextState.detailId);
     if (nextState.resetReveals) resetReveals();
-    elements.problemDetail.classList.add("hidden");
-    elements.problemList.classList.remove("hidden");
+    if (!isFreePracticePage()) {
+      elements.problemDetail?.classList.add("hidden");
+      elements.problemList?.classList.remove("hidden");
+    }
     renderProblemBrowser();
   }
 

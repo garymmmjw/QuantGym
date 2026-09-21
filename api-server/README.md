@@ -236,6 +236,35 @@ For local development, CORS defaults to `*` and `QUANTGYM_HOST` defaults to `127
 
 ### Render private technical question bundle
 
+The five free-practice catalogs are imported into the API database through an
+operator's server session, without committing private question text or adding a
+public import endpoint. From the deployed checkout, run one source at a time:
+
+```bash
+python3 api-server/import_private_practice.py --source quantguide --expected-count 1201 --stdin
+```
+
+Send either a JSON array or `{ "problems": [...] }` on standard input; `--file`
+accepts a server-local path instead. `--validate-only` checks the package without
+opening a database. The allowed source names are `question-bank`, `quantguide`,
+`interview-xiaohongshu`, `interview-onepoint3acres`, and `interview-glassdoor`.
+Use the independently verified count for the selected edition. Import validates
+private visibility, unique IDs, source ownership, and approved review/chapter
+metadata, then atomically upserts that source. It emits only counts, a digest,
+and a timestamp. Original provenance, taxonomy, review and source metadata remain
+in the stored question document.
+
+Omitted old questions are retired from browsing without deleting their rows,
+comments, likes, or personal history. Runtime `privatePracticeCatalog` metadata
+identifies the curated source, so later repository catalog imports cannot
+overwrite it or restore omitted questions. Authenticated `/api/problems` reads
+include active private questions; anonymous reads exclude them. Both responses
+disable shared caching. This process does not replace the separate Purple Book
+Secret File used by the standalone technical-practice endpoint below.
+
+Synthetic checks: `python3 scripts/test-private-practice-catalog-api.py` and
+`python3 scripts/test-free-practice-state-api.py`.
+
 Keep restricted question text outside the public repository. Upload a JSON Secret File named `quantgym-purple-book.json` to the Render API service; the loader reads `/etc/secrets/quantgym-purple-book.json` by default. Set `QUANTGYM_TECHNICAL_BUNDLE_PATH` only to select another runtime path or an ignored local test fixture. The bundle contains `version: 1`, `source: "question-bank"`, a `problems` array, a `supplements` object, and a `metadata` object whose `problemCount` matches the array length. The questions and supplements use one cached snapshot until the process restarts.
 
 If no path override is set and the default file is absent, the API continues using the existing repository question bank and any existing local reading-list file. An explicit missing path, a broken symlink, an invalid bundle, or a file larger than 1 MiB makes the private question endpoint unavailable instead of silently falling back. This does not change the endpoint's existing account access requirements.

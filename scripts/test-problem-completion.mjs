@@ -65,8 +65,15 @@ test('opening, searching, filtering, revealing and selecting a question never re
   api.handleSearchKeydown({ key: 'Enter', preventDefault() {} });
   assert.equal(api.getViewModel().detail.id, 'technical-one');
   api.applyFilterAction({ type: 'viewMode', value: 'all' });
-  assert.deepEqual(state, before);
-  assert.equal(calls.saves, 0);
+  assert.deepEqual(state.problems, before.problems);
+  assert.deepEqual(state.skills, before.skills);
+  assert.deepEqual(state.leetcodeHot100Done, before.leetcodeHot100Done);
+  assert.equal(getProblemCompletionCount(state.problems, id => state.problemStates.find(row => row.problemId === id) || {}), 0);
+  assert.ok(state.problemStates.every(row => !row.completed && !row.interviewCount && !(row.freePracticeAttempts || []).length));
+  const practice = state.problemStates.find(row => row.problemId === 'catalog-one');
+  assert.equal(practice.freePracticeSession.answerViewed, true);
+  assert.equal(practice.freePracticeSession.hintViewed, true);
+  assert.equal(calls.saves, 2);
   assert.deepEqual(calls.selected, ['catalog-one']);
   assert.equal(calls.revealed.length, 2);
 });

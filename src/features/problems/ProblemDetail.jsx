@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EmptyState } from "../../components/common/EmptyState.jsx";
 import { difficultyClass } from "../../modules/problems/format.js";
 import {
@@ -9,6 +9,7 @@ import {
   localizeDifficultyLabel
 } from "./problemDisplayLabels.js";
 import { ProblemRichText } from "./ProblemRichText.jsx";
+import { FreePracticeTimer, FreePracticeOutcomes } from "./FreePracticeAttempt.jsx";
 
 const NOTE_STORAGE_PREFIX = "quantgym.problemNote.";
 
@@ -48,7 +49,9 @@ function DetailBlock({
 
 export function ProblemDetail({
   detail,
+  practiceAttempt,
   listItem,
+  problem,
   t,
   isEnglish,
   renderInto,
@@ -65,6 +68,7 @@ export function ProblemDetail({
 }) {
   const [commentDraft, setCommentDraft] = useState("");
   const [noteDraft, setNoteDraft] = useState("");
+  const bodyRef = useRef(null);
   const detailId = detail?.id || "";
 
   useEffect(() => {
@@ -83,12 +87,24 @@ export function ProblemDetail({
     ? (isEnglish ? "Completed · Undo" : "已完成 · 撤销")
     : (isEnglish ? "I finished this problem" : "我做完了");
 
-  const info = getCatalogProblemInfo(detail.id);
+  const info = problem || getCatalogProblemInfo(detail.id);
   const difficulty = info?.difficulty || detail.meta?.[1] || "";
   const diffKey = difficultyClass(difficulty) || "medium";
-  const { main: mainTitle, sub: subTitle } = getProblemTitlePair(detail.id, detail.title, isEnglish);
+  const titles = problem ? {
+    main: (isEnglish ? problem.titleEn || problem.titleZh : problem.titleZh || problem.titleEn) || detail.title,
+    sub: isEnglish ? problem.titleZh : problem.titleEn
+  } : getProblemTitlePair(detail.id, detail.title, isEnglish);
+  const mainTitle = titles.main;
+  const subTitle = titles.sub !== mainTitle ? titles.sub : "";
   const topicLabel = localizeCategoryLabel(info?.category || detail.meta?.[0] || "", isEnglish);
   const sourceLabel = getSourceShortLabel(info?.bookSlug) || info?.bookName || "";
+  const provenance = info?.provenance;
+  const answerStatusLabel = {
+    source: isEnglish ? "Source answer" : "原书解答",
+    corrected: isEnglish ? "Corrected answer" : "订正解答",
+    supplemented: isEnglish ? "Supplemented answer" : "补充解答",
+    reviewed: isEnglish ? "Reviewed answer" : "已核对解答"
+  }[provenance?.answerStatus];
   const extraTags = (detail.meta || []).slice(2, 5);
   const firms = (listItem?.companies || []).map((company) => company.name).filter(Boolean);
   const lastScore = listItem?.lastScore;
@@ -117,9 +133,17 @@ export function ProblemDetail({
         </div>
         <h2 className="qg-detail-title">{mainTitle}</h2>
         {subTitle ? <div className="qg-detail-sub">{subTitle}</div> : null}
+        {provenance?.originalNumber ? <div className="fp-source-reference" data-original-number={provenance.originalNumber}>
+          <span>{isEnglish ? "Book question " : "原书题号 "}{provenance.originalNumber}</span>
+          {provenance.pdfPage ? <span>{isEnglish ? `PDF page ${provenance.pdfPage}` : `PDF 第 ${provenance.pdfPage} 页`}</span> : null}
+        </div> : null}
       </header>
 
-      <div className="qg-problem-detail-body">
+      <div className="qg-problem-detail-body" ref={bodyRef}>
+        {practiceAttempt ? <FreePracticeTimer practice={practiceAttempt} isEnglish={isEnglish} onShowAnswer={() => {
+          onRevealBlock(detail.id, "answer");
+          window.requestAnimationFrame(() => bodyRef.current?.querySelector(".qg-block-answer")?.scrollIntoView({ block: "start", behavior: "smooth" }));
+        }} /> : null}
         {/* Legacy toolbar retained for functionality; visually hidden by the replica skin. */}
         <div className="problem-detail-top">
           <button className="secondary-button" type="button" onClick={onBack}>
@@ -155,7 +179,7 @@ export function ProblemDetail({
             </button>
           </div>
           <div className="problem-detail-actions">
-            {canComplete ? <button
+            {!practiceAttempt ? (canComplete ? <button
               type="button"
               aria-pressed={Boolean(detail.completed)}
               className={`secondary-button problem-detail-complete${detail.completed ? " active" : ""}`}
@@ -164,7 +188,7 @@ export function ProblemDetail({
               <i data-lucide={detail.completed ? "check-circle-2" : "circle"} />
               {" "}
               {completeLabel}
-            </button> : <a className="secondary-button" href="/leetcode">{isEnglish ? "View synced LeetCode progress" : "查看力扣同步进度"}</a>}
+            </button> : <a className="secondary-button" href="/leetcode">{isEnglish ? "View synced LeetCode progress" : "查看力扣同步进度"}</a>) : null}
             <button
               type="button"
               className={`secondary-button problem-detail-save${detail.favorite ? " active" : ""}`}
@@ -223,7 +247,16 @@ export function ProblemDetail({
           t={t}
         />
 
-        <div className="qg-detail-stats">
+        {detail.answerRevealed && provenance && answerStatusLabel ? <aside className="fp-answer-provenance" data-answer-status={provenance.answerStatus}>
+          <strong>{answerStatusLabel}</strong>
+          {provenance.reviewNotes ? <ProblemRichText content={provenance.reviewNotes} renderInto={renderInto} /> : null}
+          {provenance.sourceReference && provenance.answerStatus !== "source" ? <details>
+            <summary>{isEnglish ? "Compare the source answer" : "查看原书答案对照"}</summary>
+            <ProblemRichText content={provenance.sourceReference} renderInto={renderInto} />
+          </details> : null}
+        </aside> : null}
+
+        {practiceAttempt ? <FreePracticeOutcomes practice={practiceAttempt} isEnglish={isEnglish} /> : <div className="qg-detail-stats">
           <div>
             <span>{isEnglish ? "Pass rate" : "通过率"}</span>
             <b>{accText}</b>
@@ -236,7 +269,7 @@ export function ProblemDetail({
             <span>{isEnglish ? "Asked at" : "常考"}</span>
             <b className="is-firm">{firms.length ? firms.join(" · ") : "--"}</b>
           </div>
-        </div>
+        </div>}
 
         <textarea
           className="qg-detail-notes"
@@ -246,14 +279,14 @@ export function ProblemDetail({
         />
 
         <div className="qg-detail-cta-row">
-          {canComplete ? <button
+          {!practiceAttempt ? (canComplete ? <button
             type="button"
             aria-pressed={Boolean(detail.completed)}
             className={`qg-detail-solve${detail.completed ? " is-done" : ""}`}
             onClick={() => onToggleCompleted(detail.id)}
           >
             {completeLabel}
-          </button> : <a className="qg-detail-solve" href="/leetcode">{isEnglish ? "View synced LeetCode progress" : "查看力扣同步进度"}</a>}
+          </button> : <a className="qg-detail-solve" href="/leetcode">{isEnglish ? "View synced LeetCode progress" : "查看力扣同步进度"}</a>) : null}
           <button
             type="button"
             className={`qg-detail-bookmark${detail.favorite ? " active" : ""}`}
@@ -265,13 +298,13 @@ export function ProblemDetail({
           </button>
         </div>
 
-        <p className="problem-completion-note">
+        {!practiceAttempt ? <p className="problem-completion-note">
           {!canComplete
             ? (isEnglish ? "Completion comes from your linked LeetCode account. Opening or drawing a problem does not count." : "完成记录以关联的力扣账号为准，打开或抽取题目不会计数。")
             : detail.countsTowardPractice === false
               ? (isEnglish ? "This training item can be marked for your own progress; it is excluded from completed-problem totals." : "可标记这道训练题的个人进度；心算与推理训练不计入刷题数量。")
               : (isEnglish ? "Only clicking “I finished this problem” records completion. Opening a question or revealing its answer does not count." : "点击「我做完了」才记录完成；打开题目、查看答案不会增加刷题数量。")}
-        </p>
+        </p> : null}
 
         <section className="problem-social-panel">
           <div className="problem-social-header">

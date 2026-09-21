@@ -100,7 +100,7 @@ ON audit_events (event_type, created_at DESC);
 
 CREATE TABLE problems (
   id text PRIMARY KEY,
-  visibility text NOT NULL CHECK (visibility IN ('public', 'user')),
+  visibility text NOT NULL CHECK (visibility IN ('public', 'private', 'user')),
   owner_user_id text REFERENCES users(id) ON DELETE CASCADE,
   title_en text NOT NULL,
   title_zh text NOT NULL,
@@ -123,6 +123,11 @@ ON problems (visibility, category);
 
 CREATE INDEX idx_problems_owner
 ON problems (owner_user_id);
+
+-- Extend existing catalog tables as well as newly created databases.
+ALTER TABLE problems DROP CONSTRAINT IF EXISTS problems_visibility_check;
+ALTER TABLE problems ADD CONSTRAINT problems_visibility_check
+CHECK (visibility IN ('public', 'private', 'user'));
 
 CREATE TABLE user_problem_states (
   user_id text NOT NULL REFERENCES users(id) ON DELETE CASCADE,
