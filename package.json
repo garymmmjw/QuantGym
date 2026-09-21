@@ -108,7 +108,7 @@
     "test:leetcode:api": "python3 scripts/test-leetcode-api.py && python3 scripts/test-leetcode-backpack-api.py",
     "test:completion": "node --test scripts/test-problem-completion.mjs scripts/test-overview-completion.mjs scripts/test-overview-activity.mjs scripts/test-personal-completion-activities.mjs scripts/test-personal-calendar.mjs scripts/test-personal-practice.mjs scripts/test-leetcode-calendar.mjs scripts/test-mental-math-history.mjs",
     "test:account-center": "node --test scripts/test-account-center.mjs && python3 scripts/test-account-center-api.py",
-    "test:free-practice": "node --test scripts/test-free-practice-attempts.mjs scripts/test-free-practice-state.mjs scripts/test-free-practice-page-api.mjs scripts/test-practice-banks.mjs scripts/test-free-practice-integration.mjs scripts/test-library-practice-navigation.mjs scripts/test-math-typeset-scheduler.mjs scripts/test-static-catalog-privacy.mjs scripts/test-authenticated-catalog-wiring.mjs"
+    "test:free-practice": "node --test scripts/test-free-practice-attempts.mjs scripts/test-free-practice-state.mjs scripts/test-free-practice-page-api.mjs scripts/test-practice-banks.mjs scripts/test-free-practice-integration.mjs scripts/test-library-practice-navigation.mjs scripts/test-math-typeset-scheduler.mjs scripts/test-static-catalog-privacy.mjs scripts/test-authenticated-catalog-wiring.mjs scripts/test-problem-catalog-script-url.mjs"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",
