@@ -2,6 +2,7 @@ import { patternCellKey, validatePatternCell } from "./mental/patternQuestions.j
 import { validatePracticeSession, mergePracticeSessions, withPracticeActivities } from "./practice/practiceModel.js";
 import { validateTrackerOperations, mergeTrackerOperations } from "../tracker/trackerSyncModel.js";
 import { isExplicitCompletionActivity, validateExplicitCompletionActivity, retainExplicitCompletionActivities } from './completionActivities.js';
+import { migrateBehavioralQuestions, retainBehavioralData } from './behavioral/questions.js';
 
 export const PERSONAL_VERSION = 1;
 const PREFIX = "quantgym.personal-prep.v1:";
@@ -205,7 +206,7 @@ function hasTrialWork(trial) {
 }
 
 export function createPersonalState() {
-  return { mentalSettings: null, activeTrial: null, trials: [], dailySettings: null, dailySessions: [], activities: [], removedActivityIds: [], practiceSessions: [], behavioralAnswers: [], careerTrackerOperations: [] };
+  return { mentalSettings: null, activeTrial: null, trials: [], dailySettings: null, dailySessions: [], activities: [], removedActivityIds: [], practiceSessions: [], behavioralQuestions: [], behavioralAnswers: [], careerTrackerOperations: [] };
 }
 
 export function personalStorageKey(ownerId) {
@@ -238,8 +239,9 @@ export function validatePersonalData(data) {
     && behavioralAnswers.every(answer => object(answer) && id(answer.id) && answer.id.length <= 512
       && typeof answer.text === "string" && answer.text.length <= 20000 && timestamp(answer.updatedAt))
     && new Set(behavioralAnswers.map(answer => answer.id)).size === behavioralAnswers.length, "behavioral answers");
+  const behavioralQuestions = migrateBehavioralQuestions({ ...data, behavioralAnswers });
   const careerTrackerOperations = validateTrackerOperations(data.careerTrackerOperations === undefined ? [] : data.careerTrackerOperations);
-  return { ...createPersonalState(), ...data, practiceSessions, behavioralAnswers, careerTrackerOperations, removedActivityIds: [...new Set(removedActivityIds)] };
+  return { ...createPersonalState(), ...data, practiceSessions, behavioralQuestions, behavioralAnswers, careerTrackerOperations, removedActivityIds: [...new Set(removedActivityIds)] };
 }
 
 /** Merge valid backups or cloud snapshots without reviving terminal work or deleted entries. */
@@ -248,14 +250,7 @@ export function mergePersonalData(currentValue, incomingValue) {
   const incoming = validatePersonalData(incomingValue);
   const next = { ...current };
   next.careerTrackerOperations = mergeTrackerOperations(current.careerTrackerOperations, incoming.careerTrackerOperations);
-  const answers = new Map(incoming.behavioralAnswers.map(answer => [answer.id, answer]));
-  for (const answer of current.behavioralAnswers) {
-    const other = answers.get(answer.id);
-    // An explicitly cleared answer is still a revision; never revive an older draft.
-    if (!other || Date.parse(answer.updatedAt) > Date.parse(other.updatedAt)
-      || (Date.parse(answer.updatedAt) === Date.parse(other.updatedAt) && answer.text >= other.text)) answers.set(answer.id, answer);
-  }
-  next.behavioralAnswers = [...answers.values()].sort((a, b) => a.id.localeCompare(b.id));
+  Object.assign(next, retainBehavioralData(next, incoming));
   for (const field of ARRAY_FIELDS) {
     const byId = new Map(incoming[field].map((row) => [row.id, row]));
     for (const row of current[field]) {
@@ -341,13 +336,18 @@ export function createPersonalStore({ ownerId, storage, eventTarget, now = () =>
 
   function update(updater) {
     let latest = snapshot.data;
+    let reconciled = false;
     try {
       if (!blockedRead && !snapshot.dirty) {
         const raw = storage.getItem(key);
         if (raw !== persistedRaw) {
           // A reset in another tab must not silently erase this tab's work.
           if (raw === null && persistedRaw !== null) throw new Error("Training storage changed in another tab.");
-          if (raw) latest = parseEnvelope(raw, ownerId).data;
+          if (raw) {
+            const saved = parseEnvelope(raw, ownerId).data;
+            latest = retainBehavioralData(saved, latest);
+            reconciled = latest !== saved;
+          }
           persistedRaw = raw;
         }
       }
@@ -356,15 +356,18 @@ export function createPersonalStore({ ownerId, storage, eventTarget, now = () =>
       emit({ ...snapshot, error: `read:${error.message}` });
     }
     const proposed = updater(latest);
-    if (proposed === latest) {
+    if (proposed === latest && !reconciled) {
       if (latest !== snapshot.data) emit({ ...snapshot, data: latest });
       return { ok: !snapshot.dirty && !snapshot.error };
     }
-    const next = validatePersonalData(proposed);
+    return persist(validatePersonalData(proposed), reconciled);
+  }
+
+  function persist(next, verifyUnchanged = false) {
     const envelope = { version: PERSONAL_VERSION, ownerId, updatedAt: now(), data: next };
     try {
       if (blockedRead || snapshot.conflict) throw new Error("Previous data cannot be safely overwritten.");
-      if (snapshot.dirty && storage.getItem(key) !== persistedRaw) {
+      if ((snapshot.dirty || verifyUnchanged) && storage.getItem(key) !== persistedRaw) {
         emit({ ...snapshot, conflict: true });
         throw new Error("New training data was saved in another tab.");
       }
@@ -392,7 +395,14 @@ export function createPersonalStore({ ownerId, storage, eventTarget, now = () =>
       const envelope = parseEnvelope(raw, ownerId);
       persistedRaw = raw;
       blockedRead = false;
-      emit({ data: envelope.data, dirty: false, conflict: false, error: "" });
+      const reconciled = retainBehavioralData(envelope.data, snapshot.data);
+      if (reconciled !== envelope.data) {
+        // Retaining a title, answer clear or deletion only in memory would
+        // lose it on refresh. A failed repair remains visibly unsaved.
+        persist(validatePersonalData(reconciled), true);
+      } else {
+        emit({ data: envelope.data, dirty: false, conflict: false, error: "" });
+      }
     } catch (error) {
       blockedRead = true;
       emit({ ...snapshot, error: `read:${error.message}` });

@@ -1,3 +1,5 @@
+import { PRIVATE_WORKSPACES } from '../../modules/privacyPolicy.js';
+
 export const ACCOUNT_SECTIONS = [
   { id: "profile", icon: "user-round", zh: "个人资料", en: "Profile", description: ["头像、昵称与备考方向", "Your identity and preparation goals"], keywords: "头像 昵称 毕业 简历 目标 avatar name graduation resume goal" },
   { id: "security", icon: "key-round", zh: "登录与安全", en: "Login & security", description: ["邮箱、密码与登录方式", "Email, password and sign-in method"], keywords: "修改密码 更改密码 邮箱 登录 password email login google" },
@@ -6,7 +8,7 @@ export const ACCOUNT_SECTIONS = [
   { id: "guardian", icon: "users-round", zh: "监护人", en: "Guardian", description: ["监护码与访问权限", "Access codes and sharing permissions"], keywords: "监护人 监护码 家长 提醒 奖励 guardian parent reward sharing" },
   { id: "data", icon: "cloud", zh: "数据与同步", en: "Data & sync", description: ["同步状态、备份与恢复", "Sync status, backup and recovery"], keywords: "数据 云端 同步 备份 导入 导出 清空 cloud sync backup import export reset" },
   { id: "advanced", icon: "code-xml", zh: "高级设置", en: "Advanced", description: ["模型与服务连接", "Model and service connections"], keywords: "高级 接口 模型 API LLM endpoint model client config" }
-];
+].filter(section => !PRIVATE_WORKSPACES || section.id !== 'guardian');
 
 export function findAccountSections(query = "", sections = ACCOUNT_SECTIONS) {
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);

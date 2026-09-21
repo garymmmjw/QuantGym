@@ -8,6 +8,7 @@ import {
   isSafeRichMediaUrl
 } from "../../modules/interview/richText.js";
 import { InterviewRichText } from "./InterviewRichText.jsx";
+import { AccountImage } from "../account/AccountImage.jsx";
 
 const COACH_AVATAR_SRC = "assets/generated/shark-avatar-happy.webp?v=premium-system-4";
 
@@ -143,7 +144,7 @@ function InterviewMessageAttachments({ attachments = [], language = "zh" }) {
         return (
           <div className="message-attachment" key={`${attachment.name || "attachment"}-${attachment.size || 0}-${index}`}>
             {showImage ? (
-              <img className="rich-media" src={src} alt={attachment.name || "Uploaded image"} loading="lazy" />
+              <AccountImage className="rich-media" src={src} alt={attachment.name || "Uploaded image"} loading="lazy" fallback="" />
             ) : null}
             <span>{label}</span>
           </div>

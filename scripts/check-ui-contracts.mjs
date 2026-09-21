@@ -109,7 +109,7 @@ const routeContracts = {
       "experienceFirm",
       "experienceFilter",
       "experienceList",
-      "openCommunityExperiencesBtn"
+      "experienceCount"
     ]
   },
   news: {

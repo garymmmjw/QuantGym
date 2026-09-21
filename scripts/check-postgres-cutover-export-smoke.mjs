@@ -286,6 +286,7 @@ function startApi(port) {
       QUANTGYM_MEDIA_ROOT: path.join(tempDir, "media"),
       QUANTGYM_REQUIRE_EMAIL_VERIFICATION: "0",
       QUANTGYM_REQUIRE_INVITE_CODE: "0",
+      QUANTGYM_PRIVATE_WORKSPACES: "0", // Seed legacy shared records to verify export redaction.
       QUANTGYM_EMAIL_CODE_COOLDOWN_SECONDS: "0",
       QUANTGYM_RATE_LIMIT_DISABLED: "1",
       QUANTGYM_BETA_EMAIL_ALLOWLIST: ""

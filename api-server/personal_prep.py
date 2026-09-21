@@ -19,7 +19,7 @@ MAX_PERSONAL_PREP_RECORDS = 100_000
 PERSONAL_PREP_FIELDS = {
     "mentalSettings", "activeTrial", "trials", "dailySettings", "dailySessions", "activities"
 }
-OPTIONAL_PERSONAL_FIELDS = {"removedActivityIds", "applicationEvents", "reviewEvents", "practiceSessions", "behavioralAnswers", "careerTrackerOperations"}
+OPTIONAL_PERSONAL_FIELDS = {"removedActivityIds", "applicationEvents", "reviewEvents", "practiceSessions", "behavioralAnswers", "behavioralQuestions", "careerTrackerOperations"}
 APPLICATION_FIELDS = {"company", "role", "location", "url", "status", "deadline", "nextAction", "nextActionDate", "notes", "archived"}
 APPLICATION_STATUSES = {"wishlist", "applied", "oa", "interview", "offer", "rejected", "withdrawn"}
 APPLICATION_LIMITS = {"company": 200, "role": 300, "location": 300, "url": 2048, "nextAction": 2000, "notes": 20000}
@@ -44,6 +44,7 @@ def validate_personal_prep_request(payload: dict) -> tuple[int, str]:
         raise PersonalPrepValidationError("A complete personal preparation state is required.")
     data = {**data, **{field: data.get(field, []) for field in OPTIONAL_PERSONAL_FIELDS}}
     data["careerTrackerOperations"] = validate_tracker_operations(data["careerTrackerOperations"])
+    data["behavioralQuestions"] = validate_behavioral_questions(data["behavioralQuestions"])
     removed = data["removedActivityIds"]
     if not isinstance(removed, list) or len(removed) > MAX_PERSONAL_PREP_RECORDS or any(not valid_record_id(item) for item in removed) or len(set(removed)) != len(removed):
         raise PersonalPrepValidationError("Invalid removedActivityIds.")
@@ -159,6 +160,62 @@ def bounded_practice_text(value, maximum):
         return len(value.encode("utf-16-le")) // 2 <= maximum
     except UnicodeEncodeError:
         return False
+
+
+BEHAVIORAL_QUESTION_FIELDS = ("id", "title", "createdAt", "updatedAt", "deletedAt")
+
+
+def behavioral_timestamp(value):
+    if not valid_event_timestamp(value):
+        raise PersonalPrepValidationError("Invalid Behavioral question timestamp.")
+    # datetime.fromisoformat normalizes invalid offset minutes (e.g. +03:99),
+    # while browsers reject them. Require the same timestamp range on both.
+    if value[-1] != "Z" and (int(value[-5:-3]) > 23 or int(value[-2:]) > 59):
+        raise PersonalPrepValidationError("Invalid Behavioral question timezone.")
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    # Integer arithmetic avoids rounding far-future dates differently from JS.
+    elapsed = parsed - datetime(1970, 1, 1, tzinfo=timezone.utc)
+    return elapsed.days * 86_400_000 + elapsed.seconds * 1000 + elapsed.microseconds // 1000
+
+
+def validate_behavioral_questions(questions):
+    if not isinstance(questions, list) or len(questions) > 10000:
+        raise PersonalPrepValidationError("Invalid Behavioral question collection.")
+    identities = set()
+    for question in questions:
+        if (not isinstance(question, dict) or set(question) != set(BEHAVIORAL_QUESTION_FIELDS)
+                or not bounded_practice_text(question["id"], 200) or not question["id"].strip()
+                or question["id"].strip() != question["id"]
+                or question["id"] in identities or not bounded_practice_text(question["title"], 4000)
+                or not question["title"].strip()):
+            raise PersonalPrepValidationError("Invalid or duplicate Behavioral question.")
+        identities.add(question["id"])
+        created = behavioral_timestamp(question["createdAt"])
+        updated = behavioral_timestamp(question["updatedAt"])
+        if created > updated:
+            raise PersonalPrepValidationError("Behavioral question update precedes its creation.")
+        if question["deletedAt"] is not None:
+            deleted = behavioral_timestamp(question["deletedAt"])
+            if not created <= deleted <= updated:
+                raise PersonalPrepValidationError("Invalid Behavioral question deletion time.")
+    return sorted(questions, key=lambda question: question["id"].encode("utf-16-be"))
+
+
+def behavioral_question_order(question):
+    # Match the browser's JSON.stringify array and UTF-16 string comparison.
+    canonical = json.dumps([question[field] for field in BEHAVIORAL_QUESTION_FIELDS], ensure_ascii=False, separators=(",", ":"))
+    return question["deletedAt"] is not None, behavioral_timestamp(question["updatedAt"]), canonical.encode("utf-16-be")
+
+
+def merge_behavioral_questions(current, incoming):
+    questions = {}
+    for question in [*current, *incoming]:
+        previous = questions.get(question["id"])
+        # A deleted ID remains deleted, even when a stale device supplies a
+        # later edit. Creating a replacement requires a fresh question ID.
+        if previous is None or behavioral_question_order(question) > behavioral_question_order(previous):
+            questions[question["id"]] = question
+    return validate_behavioral_questions(list(questions.values()))
 
 
 TRACKER_STATUSES = {"submitted", "oa_received", "oa_completed", "interview", "offer", "rejected", "withdrawn"}
@@ -426,15 +483,18 @@ def save_personal_prep(conn, user_id: str, base_revision: int, data_json: str) -
         return False, current
     incoming = json.loads(data_json)
     if current["data"] is not None:
+        incoming["behavioralQuestions"] = merge_behavioral_questions(
+            current["data"].get("behavioralQuestions", []), incoming.get("behavioralQuestions", []),
+        )
         incoming["careerTrackerOperations"] = validate_tracker_operations([
             *current["data"].get("careerTrackerOperations", []), *incoming["careerTrackerOperations"],
         ], merging=True)
         answers = {}
         for answer in [*current["data"].get("behavioralAnswers", []), *incoming.get("behavioralAnswers", [])]:
             previous = answers.get(answer["id"])
-            if previous is None or (event_order(answer, "updatedAt"), answer["text"]) > (event_order(previous, "updatedAt"), previous["text"]):
+            if previous is None or (event_order(answer, "updatedAt"), answer["text"].encode("utf-16-be")) > (event_order(previous, "updatedAt"), previous["text"].encode("utf-16-be")):
                 answers[answer["id"]] = answer
-        incoming["behavioralAnswers"] = sorted(answers.values(), key=lambda answer: answer["id"])
+        incoming["behavioralAnswers"] = sorted(answers.values(), key=lambda answer: answer["id"].encode("utf-16-be"))
         for field, time_field in (("applicationEvents", "createdAt"), ("reviewEvents", "reviewedAt")):
             events = {}
             for event in [*current["data"].get(field, []), *incoming.get(field, [])]:

@@ -133,6 +133,7 @@ class GuardianApiTests(unittest.TestCase):
             "QUANTGYM_MEDIA_ROOT": str(cls.directory / "media"),
             "QUANTGYM_REQUIRE_EMAIL_VERIFICATION": "0", "QUANTGYM_REQUIRE_INVITE_CODE": "0", "QUANTGYM_BETA_EMAIL_ALLOWLIST": "",
             "QUANTGYM_AUTH_REGISTER_RATE_LIMIT_MAX": "500",
+            "QUANTGYM_PRIVATE_WORKSPACES": "0",  # Retain coverage for the explicitly enabled legacy sharing mode.
             "QUANTGYM_GUARDIAN_POLL_SECONDS": "0.1",
             "QUANTGYM_SMTP_HOST": "127.0.0.1", "QUANTGYM_SMTP_PORT": str(cls.smtp.server_address[1]),
             "QUANTGYM_SMTP_SSL": "0", "QUANTGYM_SMTP_STARTTLS": "0",

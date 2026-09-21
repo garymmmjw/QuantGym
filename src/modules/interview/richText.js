@@ -1,4 +1,5 @@
 import { clampNumber } from '../../lib/number.js';
+import { privateMediaRequest } from '../../features/account/privateMedia.js';
 import { parseInterviewFeedbackScore } from './format.js';
 
 export function renderRichText(node, text, options = {}) {
@@ -14,7 +15,7 @@ export function renderRichText(node, text, options = {}) {
   const flushParagraph = () => {
     if (!paragraph.length) return;
     const block = document.createElement("p");
-    appendInlineRichText(block, paragraph.join("\n"));
+    appendInlineRichText(block, paragraph.join("\n"), options);
     node.appendChild(block);
     paragraph = [];
   };
@@ -46,7 +47,7 @@ export function renderRichText(node, text, options = {}) {
           return;
         }
         const block = document.createElement("p");
-        appendInlineRichText(block, part.text);
+        appendInlineRichText(block, part.text, options);
         node.appendChild(block);
       });
       return;
@@ -62,7 +63,7 @@ export function renderRichText(node, text, options = {}) {
       list = null;
       const level = Math.min(6, 3 + heading[1].length);
       const block = document.createElement(`h${level}`);
-      appendInlineRichText(block, heading[2]);
+      appendInlineRichText(block, heading[2], options);
       node.appendChild(block);
       return;
     }
@@ -73,7 +74,7 @@ export function renderRichText(node, text, options = {}) {
         node.appendChild(list);
       }
       const item = document.createElement("li");
-      appendInlineRichText(item, bullet[1]);
+      appendInlineRichText(item, bullet[1], options);
       list.appendChild(item);
       return;
     }
@@ -83,14 +84,14 @@ export function renderRichText(node, text, options = {}) {
   flushParagraph();
 }
 
-export function renderRichTextBlocks(node, text) {
+export function renderRichTextBlocks(node, text, options = {}) {
   const lines = richTextLines(text);
   let paragraph = [];
   let list = null;
   const flush = () => {
     if (!paragraph.length) return;
     const block = document.createElement("p");
-    appendInlineRichText(block, paragraph.join("\n"));
+    appendInlineRichText(block, paragraph.join("\n"), options);
     node.appendChild(block);
     paragraph = [];
   };
@@ -115,7 +116,7 @@ export function renderRichTextBlocks(node, text) {
         node.appendChild(list);
       }
       const item = document.createElement("li");
-      appendInlineRichText(item, bullet[1]);
+      appendInlineRichText(item, bullet[1], options);
       list.appendChild(item);
       return;
     }
@@ -125,7 +126,7 @@ export function renderRichTextBlocks(node, text) {
   flush();
 }
 
-export function appendInlineRichText(node, text) {
+export function appendInlineRichText(node, text, options = {}) {
   const value = String(text || "");
   const pattern = /(!\[[^\]]*\]\([^)]+\)|\[[^\]]+\]\([^)]+\)|https?:\/\/[^\s)]+?\.(?:png|jpe?g|gif|webp|svg)(?:\?[^\s)]*)?|`[^`]+`|\*\*[^*]+\*\*)/gi;
   let cursor = 0;
@@ -135,7 +136,7 @@ export function appendInlineRichText(node, text) {
     const imageMatch = token.match(/^!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$/);
     const linkMatch = token.match(/^\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)$/);
     if (imageMatch && isSafeRichMediaUrl(imageMatch[2])) {
-      node.appendChild(createRichImage(imageMatch[2], imageMatch[1] || "Interview image"));
+      node.appendChild(createRichImage(imageMatch[2], imageMatch[1] || "Interview image", options));
     } else if (linkMatch && isSafeRichMediaUrl(linkMatch[2], { allowData: false })) {
       const link = document.createElement("a");
       link.href = linkMatch[2];
@@ -144,7 +145,7 @@ export function appendInlineRichText(node, text) {
       link.textContent = linkMatch[1];
       node.appendChild(link);
     } else if (/^https?:\/\//i.test(token) && isSafeRichMediaUrl(token)) {
-      node.appendChild(createRichImage(token, "Interview image"));
+      node.appendChild(createRichImage(token, "Interview image", options));
     } else {
       const inline = document.createElement(token.startsWith("`") ? "code" : "strong");
       inline.textContent = token.slice(token.startsWith("`") ? 1 : 2, token.startsWith("`") ? -1 : -2);
@@ -246,10 +247,13 @@ export function isSafeRichMediaUrl(url, options = {}) {
   return /^(?:\.{0,2}\/|assets\/|data\/)[\w./%-]+\.(?:png|jpe?g|gif|webp|svg)(?:\?.*)?$/i.test(value);
 }
 
-export function createRichImage(src, alt = "") {
+export function createRichImage(src, alt = "", options = {}) {
   const image = document.createElement("img");
   image.className = "rich-media";
-  image.src = src;
+  // API media needs the current owner's credentials. Legacy callers without
+  // an authenticated render context cannot fall back to an anonymous request.
+  if (options.privateMedia) options.privateMedia.loadImage(image, src);
+  else if (!privateMediaRequest(src)) image.src = src;
   image.alt = alt;
   image.loading = "lazy";
   return image;
@@ -265,7 +269,7 @@ export function appendMessageAttachments(node, attachments = [], options = {}) {
     const item = document.createElement("div");
     item.className = "message-attachment";
     if (isImageAttachment(attachment) && attachment.dataUrl) {
-      item.appendChild(createRichImage(attachment.dataUrl, attachment.name || "Uploaded image"));
+      item.appendChild(createRichImage(attachment.dataUrl, attachment.name || "Uploaded image", options));
     }
     const label = document.createElement("span");
     label.textContent = [
@@ -325,7 +329,7 @@ function renderInterviewQuestionCard(node, text, options = {}) {
   titleNode.textContent = title || heading[1];
   const body = document.createElement("div");
   body.className = "interview-prompt-body";
-  renderRichTextBlocks(body, prompt || (language === "zh" ? "暂无题干。" : "No prompt."));
+  renderRichTextBlocks(body, prompt || (language === "zh" ? "暂无题干。" : "No prompt."), options);
   card.append(top, titleNode, body);
   node.appendChild(card);
   return true;
@@ -372,7 +376,7 @@ function renderInterviewFeedbackCard(node, text, options = {}) {
     const title = document.createElement("h5");
     title.textContent = useZh ? "主要反馈" : "Key feedback";
     const copy = document.createElement("p");
-    appendInlineRichText(copy, data.summary);
+    appendInlineRichText(copy, data.summary, options);
     main.append(title, copy);
     card.appendChild(main);
   }
@@ -386,7 +390,7 @@ function renderInterviewFeedbackCard(node, text, options = {}) {
     const list = document.createElement("ul");
     data.missing.forEach((item) => {
       const li = document.createElement("li");
-      appendInlineRichText(li, item);
+      appendInlineRichText(li, item, options);
       list.appendChild(li);
     });
     section.appendChild(list);

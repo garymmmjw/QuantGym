@@ -135,7 +135,7 @@ export function InterviewQuestionPanel({
                   <small>
                     <InterviewRichText
                       content={item.evaluation}
-                      renderInto={(node, text) => appendInlineRichText?.(node, text)}
+                      renderInto={(node, text, options) => appendInlineRichText?.(node, text, options)}
                       className=""
                     />
                   </small>

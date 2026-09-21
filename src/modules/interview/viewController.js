@@ -48,14 +48,15 @@ export function createInterviewViewController(deps = {}) {
     });
   }
 
-  function renderRichTextNode(node, text) {
+  function renderRichTextNode(node, text, options = {}) {
     renderRichText(node, text, {
+      ...options,
       language: getLanguage()
     });
   }
 
-  function appendInlineRichTextNode(node, text) {
-    appendInlineRichText(node, text);
+  function appendInlineRichTextNode(node, text, options = {}) {
+    appendInlineRichText(node, text, options);
   }
 
   function updateLayout() {

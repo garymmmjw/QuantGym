@@ -242,7 +242,7 @@ function InterviewConsoleInner({ session, model }) {
                   <span className="interview-feedback-tip-label">建议 · </span>
                   <InterviewRichText
                     content={feedbackItem.evaluation}
-                    renderInto={(node, text) => session.appendInlineRichText?.(node, text)}
+                    renderInto={(node, text, options) => session.appendInlineRichText?.(node, text, options)}
                     className="interview-feedback-tip-body"
                   />
                 </div>
@@ -303,7 +303,7 @@ function InterviewConsoleInner({ session, model }) {
         </button>
         <button className={`secondary-button${action.completeActionsHidden || action.shareHidden ? " hidden" : ""}`} id="shareInterviewQuestionBtn" type="button" disabled={action.shareDisabled} onClick={model.shareQuestion}>
           <i data-lucide="copy" />
-          分享
+          复制对话
         </button>
         <button className={`primary-button interview-next-cta${action.completeActionsHidden || action.restartHidden ? " hidden" : ""}`} id="restartInterviewBtn" type="button" onClick={model.restart}>
           <i data-lucide="rotate-ccw" />

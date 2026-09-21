@@ -1,53 +1,126 @@
-export const BEHAVIORAL_PREP_QUESTIONS = [
-  {
-    id: 'general-introduction', section: 'general', title: 'Tell me about yourself.', label: 'Quick introduction', titleZh: '简短介绍一下你自己', duration: '45–60 sec',
-    guide: ['现在：用一句话介绍你的学习或工作方向。', '过去：选一段与目标岗位最相关的真实经历，讲清你做了什么。', '未来：说明这段经历如何引向你现在申请的岗位。'],
-    guideEn: ['Present: introduce your current academic or professional focus in one sentence.', 'Past: choose one relevant experience and explain your own contribution.', 'Future: connect that experience to the role you are pursuing.'],
-    cue: 'Present → relevant experience → why this role',
-  },
-  {
-    id: 'general-strength', section: 'general', title: 'What is your greatest strength?', label: 'Your strength', titleZh: '你最大的优势是什么？', duration: '60–90 sec',
-    guide: ['只选一个与岗位相关的优势，例如拆解问题、沟通或执行。', '用一个真实的小例子说明你的行动和可观察的结果。', '结尾解释这个优势会如何帮助你胜任岗位。'],
-    guideEn: ['Choose one strength relevant to the role, such as problem solving, communication, or execution.', 'Use one real example with your actions and an observable result.', 'Explain how this strength will help you contribute in the role.'],
-    cue: 'Strength → evidence → relevance',
-  },
-  {
-    id: 'general-weakness', section: 'general', title: 'What is a weakness you are working on?', label: 'Your weakness', titleZh: '你正在改进的不足是什么？', duration: '60–90 sec',
-    guide: ['选择真实、具体的不足，说明它曾造成什么影响。', '讲清你已经采取的改进措施，而非只说“我会努力”。', '用近期的变化证明进步，也可以坦诚还有哪些地方需要练习。'],
-    guideEn: ['Name a genuine, specific weakness and describe its impact.', 'Explain the concrete steps you have already taken to improve.', 'Show recent evidence of progress and what you are still working on.'],
-    cue: 'Weakness → impact → action → progress',
-  },
-  {
-    id: 'general-conflict', section: 'general', title: 'Tell me about a time you handled a conflict.', label: 'Handling a conflict', titleZh: '讲述一次你处理分歧的经历', duration: '90–120 sec',
-    guide: ['Situation / Task：简述分歧是什么、双方为什么持不同意见，以及共同目标。', 'Action：重点说你如何倾听、澄清假设、提出证据或推动折中方案。', 'Result：交代决定、结果和你学到的东西，避免把对方写成反派。'],
-    guideEn: ['Situation / Task: describe the disagreement, both perspectives, and the shared goal.', 'Action: focus on how you listened, clarified assumptions, used evidence, or proposed a compromise.', 'Result: explain the decision, outcome, and lesson without blaming the other person.'],
-    cue: 'Situation → task → action → result',
-  },
-  {
-    id: 'general-leadership', section: 'general', title: 'Tell me about a time you demonstrated leadership.', label: 'Showing leadership', titleZh: '讲述一次你发挥领导力的经历', duration: '90–120 sec',
-    guide: ['选一个你主动推动事情的真实场景，不一定需要正式头衔。', '说明你如何明确目标、分工、帮助队友或处理关键障碍。', '区分“我做了什么”和“团队完成了什么”，最后总结结果与反思。'],
-    guideEn: ['Choose a real situation where you took initiative; a formal title is not required.', 'Explain how you set direction, coordinated work, supported others, or removed a key obstacle.', 'Distinguish your contribution from the team’s outcome, then share the result and lesson.'],
-    cue: 'Shared goal → initiative → team impact → lesson',
-  },
-  {
-    id: 'bofa-why', section: 'company', company: 'Bank of America', title: 'Why Bank of America?', label: 'Why BofA?', titleZh: '为什么选择美国银行？', duration: '75–90 sec',
-    cue: 'Business breadth → responsible growth → learning & contribution',
-    guide: ['业务应用：从 BofA 的 Global Markets 业务切入，把量化分析与定价、对冲和风险管理联系起来。', '风险意识：用自己的语言解释 Responsible Growth 对你的吸引力，落到模型假设、局限和清晰沟通。', '个人连接：目前是 Quant 方向初稿；练习时补充一段你真实的项目或研究经历，让动机更具体。'],
-    guideEn: ['Business relevance: connect BofA’s Global Markets business to your interest in pricing, hedging, and risk management.', 'Risk awareness: explain what Responsible Growth means to you through assumptions, limitations, and clear communication.', 'Personal connection: this is a draft for a quant role. Add one real project or research experience to make your motivation specific.'],
-    answer: `I'm interested in Bank of America because I want to apply quantitative thinking to decisions that matter for clients and the business. Three things stand out to me.
+// Titles are used only to recover an account's previously saved answers. They
+// never seed a new account, and no example answer is copied into personal data.
+const LEGACY_TITLES = {
+  'general-introduction': 'Tell me about yourself.',
+  'general-strength': 'What is your greatest strength?',
+  'general-weakness': 'What is a weakness you are working on?',
+  'general-conflict': 'Tell me about a time you handled a conflict.',
+  'general-leadership': 'Tell me about a time you demonstrated leadership.',
+  'bofa-why': 'Why Bank of America?',
+};
+const RECOVERED_AT = '1970-01-01T00:00:00.000Z';
+const FIELDS = ['id', 'title', 'createdAt', 'updatedAt', 'deletedAt'];
+const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0;
+const wellFormed = value => !/[\uD800-\uDFFF]/.test(value.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ''));
+const identity = value => typeof value === 'string' && wellFormed(value) && value.trim() === value && value.length > 0 && value.length <= 200;
+function instant(value) {
+  if (typeof value !== 'string') return false;
+  const parts = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|([+-])(\d{2}):(\d{2}))$/.exec(value);
+  if (!parts || +parts[1] < 1 || +parts[4] > 23 || +parts[5] > 59 || +parts[6] > 59 || +parts[8] > 23 || +parts[9] > 59) return false;
+  const date = new Date(`${parts[1]}-${parts[2]}-${parts[3]}T00:00:00.000Z`);
+  return Number.isFinite(Date.parse(value)) && Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value.slice(0, 10);
+}
+function titleText(title) {
+  if (typeof title !== 'string' || !wellFormed(title) || !title.trim() || title.length > 4000) throw new Error('Invalid behavioral question title.');
+  return title.trim();
+}
 
-First, the breadth of its Global Markets business. BofA works across equities, fixed income, currencies, and commodities, so what appeals to me is the connection between quantitative analysis and practical questions around pricing, hedging, and risk. I want to understand how a model becomes a useful decision tool.
+export function validateBehavioralQuestions(rows = []) {
+  if (!Array.isArray(rows) || rows.length > 10000 || new Set(rows.map(row => row?.id)).size !== rows.length) {
+    throw new Error('Invalid behavioral questions in training backup.');
+  }
+  for (const row of rows) {
+    if (!row || typeof row !== 'object' || Array.isArray(row) || Object.keys(row).length !== FIELDS.length
+      || FIELDS.some(key => !Object.hasOwn(row, key)) || !identity(row.id)
+      || typeof row.title !== 'string' || !wellFormed(row.title) || !row.title.trim() || row.title.length > 4000
+      || !instant(row.createdAt) || !instant(row.updatedAt) || Date.parse(row.createdAt) > Date.parse(row.updatedAt)
+      || row.deletedAt !== null && (!instant(row.deletedAt) || Date.parse(row.deletedAt) < Date.parse(row.createdAt)
+        || Date.parse(row.deletedAt) > Date.parse(row.updatedAt))) throw new Error('Invalid behavioral question in training backup.');
+  }
+  return rows;
+}
 
-Second, the bank's focus on Responsible Growth resonates with me. For a quant, I see that as a reason to understand a model's assumptions, test where it can fail, and communicate its limitations clearly. That is the kind of judgment I want to develop alongside my technical skills.
+export function migrateBehavioralQuestions(state) {
+  const questions = validateBehavioralQuestions(state.behavioralQuestions);
+  const known = new Set(questions.map(question => question.id));
+  const recovered = [];
+  for (const answer of state.behavioralAnswers || []) {
+    // Malformed legacy identifiers remain in the answer backup, not in the
+    // editable library. Actual legacy catalog identifiers all fit this bound.
+    if (known.has(answer.id) || !identity(answer.id)) continue;
+    known.add(answer.id);
+    recovered.push({ id: answer.id, title: Object.hasOwn(LEGACY_TITLES, answer.id) ? LEGACY_TITLES[answer.id] : 'Recovered question',
+      createdAt: RECOVERED_AT, updatedAt: RECOVERED_AT, deletedAt: null });
+  }
+  // A fixed recovery revision cannot overwrite a title edited by the account,
+  // even if an older device later edits its answer and omits this new field.
+  return recovered.length ? validateBehavioralQuestions([...questions, ...recovered]) : questions;
+}
 
-Finally, I'm attracted to the opportunity to learn from people with different market and technical perspectives. Early in my career, I want to build a strong foundation while contributing careful analysis and a willingness to ask questions. That combination of practical impact, risk awareness, and learning is why BofA appeals to me.`,
-    sources: [
-      { label: 'Global Markets', url: 'https://careers.bankofamerica.com/en-us/company/organization/global-markets' },
-      { label: 'Responsible Growth', url: 'https://about.bankofamerica.com/en/our-company/responsible-growth' },
-    ],
-  },
-];
+export function getBehavioralQuestions(state) {
+  return migrateBehavioralQuestions(state).filter(question => question.deletedAt === null)
+    .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || compare(a.id, b.id));
+}
+
+export function mergeBehavioralQuestions(...sources) {
+  const byId = new Map();
+  const revision = row => JSON.stringify(FIELDS.map(key => row[key]));
+  for (const rows of sources) for (const row of validateBehavioralQuestions(rows)) {
+    const current = byId.get(row.id);
+    if (!current || Boolean(row.deletedAt) > Boolean(current.deletedAt)
+      || Boolean(row.deletedAt) === Boolean(current.deletedAt) && (Date.parse(row.updatedAt) > Date.parse(current.updatedAt)
+        || Date.parse(row.updatedAt) === Date.parse(current.updatedAt) && compare(revision(row), revision(current)) > 0)) byId.set(row.id, row);
+  }
+  return [...byId.values()].sort((a, b) => compare(a.id, b.id));
+}
+
+export function mergeBehavioralAnswers(...sources) {
+  const byId = new Map();
+  for (const answers of sources) for (const answer of answers || []) {
+    const current = byId.get(answer.id);
+    if (!current || Date.parse(answer.updatedAt) > Date.parse(current.updatedAt)
+      || Date.parse(answer.updatedAt) === Date.parse(current.updatedAt) && answer.text >= current.text) byId.set(answer.id, answer);
+  }
+  return [...byId.values()].sort((a, b) => compare(a.id, b.id));
+}
+
+// Metadata fast paths also merge personal question records and explicit answer
+// clears. Missing fields from an old client never mean deletion.
+export function retainBehavioralData(base, ...sources) {
+  const all = [base, ...sources];
+  const behavioralQuestions = mergeBehavioralQuestions(...all.map(migrateBehavioralQuestions));
+  const behavioralAnswers = mergeBehavioralAnswers(...all.map(state => state.behavioralAnswers));
+  return JSON.stringify(behavioralQuestions) === JSON.stringify(base.behavioralQuestions)
+    && JSON.stringify(behavioralAnswers) === JSON.stringify(base.behavioralAnswers)
+    ? base : { ...base, behavioralQuestions, behavioralAnswers };
+}
+
+export function addBehavioralQuestion(state, title, now = new Date(), { id = crypto.randomUUID() } = {}) {
+  const questions = migrateBehavioralQuestions(state);
+  if (!identity(id) || questions.some(question => question.id === id)) throw new Error('Invalid or duplicate behavioral question identity.');
+  const timestamp = new Date(now).toISOString();
+  const question = { id, title: titleText(title), createdAt: timestamp, updatedAt: timestamp, deletedAt: null };
+  return { ...state, behavioralQuestions: validateBehavioralQuestions([...questions, question]) };
+}
+
+export function updateBehavioralQuestion(state, questionId, title, now = new Date()) {
+  const questions = migrateBehavioralQuestions(state);
+  const current = questions.find(question => question.id === questionId);
+  if (!current || current.deletedAt !== null) return state;
+  const nextTitle = titleText(title);
+  if (nextTitle === current.title) return state;
+  const updatedAt = new Date(Math.max(new Date(now).getTime(), Date.parse(current.updatedAt) + 1)).toISOString();
+  return { ...state, behavioralQuestions: questions.map(question => question.id === questionId ? { ...question, title: nextTitle, updatedAt } : question) };
+}
+
+export function deleteBehavioralQuestion(state, questionId, now = new Date()) {
+  const questions = migrateBehavioralQuestions(state);
+  const current = questions.find(question => question.id === questionId);
+  if (!current || current.deletedAt !== null) return state;
+  const deletedAt = new Date(Math.max(new Date(now).getTime(), Date.parse(current.updatedAt) + 1)).toISOString();
+  return { ...state, behavioralQuestions: questions.map(question => question.id === questionId ? { ...question, updatedAt: deletedAt, deletedAt } : question) };
+}
 
 export function getBehavioralAnswer(question, answers = []) {
-  return answers.find(answer => answer.id === question.id)?.text ?? question.answer ?? '';
+  return answers.find(answer => answer.id === question.id)?.text ?? '';
 }

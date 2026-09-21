@@ -8,6 +8,7 @@ import { ACCOUNT_SECTIONS, findAccountSections, validPassword } from "./accountC
 import { GuardianAccessPanel } from "../guardian/GuardianAccessPanel.jsx";
 import { AdminOverviewPanel } from "./AdminOverviewPanel.jsx";
 import { AdminInvitationsPanel } from "./AdminInvitationsPanel.jsx";
+import { AccountImage } from './AccountImage.jsx';
 import { locationDefs } from "../../prep-data.js";
 import { getCountryLabel, getRegionLabel, getDefaultRegion } from "../../modules/account/data.js";
 import "./accountCenter.css";
@@ -72,7 +73,7 @@ function Profile({ model }) {
     <SectionHead title={copy("个人资料", "Profile")}>{copy("让你的训练空间更有个人风格。", "Make this training space your own.")}</SectionHead>
     <form className="ac-form" onSubmit={submit}>
       <div className="ac-avatar-editor">
-        <div className="ac-avatar">{form.picture ? <img src={form.picture} alt={copy("头像预览", "Avatar preview")} /> : (form.name || "Q").slice(0, 2).toUpperCase()}</div>
+        <div className="ac-avatar">{form.picture ? <AccountImage src={form.picture} alt={copy("头像预览", "Avatar preview")} /> : (form.name || "Q").slice(0, 2).toUpperCase()}</div>
         <div><h3>{copy("你的头像", "Your avatar")}</h3><p>{copy("选择一个伙伴，或上传自己的照片。", "Choose a companion or upload a photo.")}</p><div className="ac-avatar-choices">{AVATARS.map((src, index) => <button type="button" key={src} aria-label={`${copy("选择头像", "Choose avatar")} ${index + 1}`} aria-pressed={form.picture === src} onClick={() => update("picture", src)}><img src={src} alt="" /></button>)}</div><div className="ac-text-actions"><button type="button" onClick={() => uploadRef.current.click()} disabled={Boolean(model.busy)}>{copy("上传图片", "Upload image")}</button>{form.picture && <button type="button" onClick={() => update("picture", "")}>{copy("移除", "Remove")}</button>}</div></div>
         <input ref={uploadRef} hidden type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => { uploadAvatar(e.target.files?.[0]); e.target.value = ""; }} />
       </div>
@@ -207,7 +208,7 @@ export function AccountPageContent() {
   const panels = { profile: Profile, security: Security, preferences: Preferences, connections: Connections, data: DataSettings, advanced: Advanced };
   return <section className="ac-center" data-react-owned="true" key={model.user.id}>
     <header className="ac-heading"><div><span className="ac-eyebrow">YOUR SPACE</span><h1>{copy("账户与设置", "Account & settings")}</h1><p>{copy("你的资料、偏好与连接，都在这里。", "Your profile, preferences and connections, together.")}</p></div><span className={`ac-cloud-label ${model.connected && !model.cloud.lastError ? "is-connected" : ""}`}><span className="ac-status-dot" />{model.cloudSession.label}</span></header>
-    <div className="ac-workspace"><aside className="ac-sidebar"><div className="ac-identity"><div className="ac-mini-avatar">{model.user.picture ? <img src={model.user.picture} alt="" /> : (model.user.name || "Q").slice(0, 2)}</div><div><strong>{model.user.name}</strong><span>Lv.{model.stats.level} · {model.stats.xp.toLocaleString()} XP</span></div></div>
+    <div className="ac-workspace"><aside className="ac-sidebar"><div className="ac-identity"><div className="ac-mini-avatar">{model.user.picture ? <AccountImage src={model.user.picture} /> : (model.user.name || "Q").slice(0, 2)}</div><div><strong>{model.user.name}</strong><span>Lv.{model.stats.level} · {model.stats.xp.toLocaleString()} XP</span></div></div>
       <div className="ac-search"><Icon name="search" /><input type="search" aria-label={copy("搜索账户设置", "Search account settings")} placeholder={copy("搜索设置…", "Find a setting…")} value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.nativeEvent.isComposing) return; if (e.key === "Escape") setQuery(""); if (e.key === "Enter" && results.length) { e.preventDefault(); navigate(results[0].id); } }} />{query && <button type="button" aria-label={copy("清除搜索", "Clear search")} onClick={() => setQuery("")}>×</button>}</div>
       <nav className="ac-nav" aria-label={copy("账户设置导航", "Account settings navigation")}>{sections.map(item => <button key={item.id} type="button" aria-current={!query && section === item.id ? "page" : undefined} onClick={() => navigate(item.id)}><Icon name={item.icon} /><span>{title(item)}</span><Icon name="chevron-right" /></button>)}</nav><p className="ac-sidebar-note">{copy("专注下一次进步。", "Make room for your next step.")}</p>
     </aside><div className="ac-content">

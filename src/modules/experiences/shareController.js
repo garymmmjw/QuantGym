@@ -2,6 +2,7 @@ import {
   clearExperienceShareForPost,
   publishExperienceRecord
 } from './share.js';
+import { PRIVATE_WORKSPACES } from '../privacyPolicy.js';
 
 export function createExperienceShareController(deps = {}) {
   const getRecords = () => deps.getRecords?.() || [];
@@ -14,6 +15,7 @@ export function createExperienceShareController(deps = {}) {
   const renderExperiences = () => deps.renderExperiences?.();
 
   function publish(recordId) {
+    if (PRIVATE_WORKSPACES) return { ok: false, code: 'privateWorkspace', message: '面经仅对本人可见，无法分享到社群。' };
     const result = publishExperienceRecord({
       records: getRecords(),
       community: getCommunity(),
@@ -39,6 +41,7 @@ export function createExperienceShareController(deps = {}) {
   }
 
   function clearForPost(postId) {
+    if (PRIVATE_WORKSPACES) return getRecords();
     const records = clearExperienceShareForPost(getRecords(), postId, {
       normalizeExperience: deps.normalizeExperience,
       now: deps.now?.()

@@ -1,4 +1,5 @@
 import { GuardianEntry } from "../../features/guardian/GuardianEntry.jsx";
+import { PRIVATE_WORKSPACES } from "../../modules/privacyPolicy.js";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useLocation } from "react-router-dom";
 import { AUTH_KEY, USER_STATE_PREFIX } from "../../constants.js";
@@ -451,7 +452,7 @@ export function AuthShell() {
               <span className="qg-register-only">{en ? "Already have an account? " : "已经有账户？ "}</span><button className="auth-tab qg-register-only qg-return-login" type="button" data-auth-tab="login" data-i18n="login">登录</button>
             </div>
 
-            <GuardianEntry />
+            {!PRIVATE_WORKSPACES && <GuardianEntry />}
 
             <p className="auth-legal-note"><span data-i18n={inviteRequired ? "authInviteLegalNote" : "authOpenLegalNote"}>{inviteRequired ? (en ? "Private beta registration requires an invitation code. By continuing, you agree to" : "私测阶段凭邀请码注册 · 继续即同意") : (en ? "By continuing, you agree to" : "继续即同意")}</span> <span className="auth-legal-link">服务条款</span> 与 <span className="auth-legal-link">隐私政策</span></p>
 

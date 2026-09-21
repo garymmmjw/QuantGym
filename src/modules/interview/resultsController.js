@@ -74,7 +74,7 @@ export function createInterviewResultsController(deps = {}) {
     flashButtonLabel(
       elements.shareInterviewQuestionBtn,
       getLanguage() === "zh" ? "已复制" : "Copied",
-      getLanguage() === "zh" ? "分享" : "Share",
+      getLanguage() === "zh" ? "复制对话" : "Copy conversation",
       { setTimeoutImpl: windowRef.setTimeout?.bind(windowRef) }
     );
   }

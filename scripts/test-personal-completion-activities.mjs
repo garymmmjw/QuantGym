@@ -3,9 +3,8 @@ import assert from 'node:assert/strict';
 import { createPersonalState, createPersonalStore, mergePersonalData, validatePersonalData } from '../src/features/personal/personalStore.js';
 import { completeBehavioralPractice, hasExplicitCompletion, hasPersonalBehavioralAnswer, markExperienceRead, retainExplicitCompletionActivities, saveBehavioralAnswer } from '../src/features/personal/completionActivities.js';
 import { collectCalendarActivities } from '../src/features/personal/calendar/calendarModel.js';
-import { BEHAVIORAL_PREP_QUESTIONS } from '../src/features/personal/behavioral/questions.js';
 
-const question = BEHAVIORAL_PREP_QUESTIONS.at(-1);
+const question = { id: 'bofa-why', title: 'Why this company?', answer: 'An explicitly saved personal answer.' };
 const morning = new Date(2026, 8, 19, 9);
 const afternoon = new Date(2026, 8, 19, 16);
 const tomorrow = new Date(2026, 8, 20, 9);
