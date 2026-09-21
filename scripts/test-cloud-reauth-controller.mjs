@@ -18,6 +18,7 @@ function setup({ recovery = false, provider = 'local', failure, session } = {}) 
   const deps = {
     getAppState: () => appState,
     getUserStateStore: () => userState,
+    getCloudAuthConfig: async () => ({ inviteRequired: true }),
     getCloudReauthentication: () => recovery ? { ownerId: account.id, email: account.email, returnTo: '/leetcode' } : null,
     cancelCloudReauthentication: () => { recovery = false; calls.push('cancel-recovery'); },
     elements: { loginEmail: { value: account.email }, loginPassword: { value: 'fixture-password' }, loginForm: { dataset: {}, reset: () => calls.push('reset-form') }, resetPasswordEmail: { value: account.email }, resetPasswordNewPassword: { value: 'fixture-new-password' }, resetPasswordVerificationCode: { value: '123456' }, resetPasswordForm: { reset: () => calls.push('reset-password-form') } },
@@ -64,6 +65,7 @@ function setup({ recovery = false, provider = 'local', failure, session } = {}) 
   deps.loginCloudAccount = login;
   deps.loginCloudGoogle = login;
   deps.registerCloudAccount = login;
+  deps.elements.registerInviteCode = { value: 'QG-ReAuth-Fixture' };
   deps.elements.registerName = { value: 'Fixture New' };
   deps.elements.registerEmail = { value: account.email };
   deps.elements.registerPassword = { value: 'fixture-password' };
@@ -517,9 +519,11 @@ test('a pending registration cannot replace a later login or mutate records afte
   for (const next of ['login', 'logout']) {
     const harness = setup();
     const pending = deferred();
-    harness.deps.registerCloudAccount = () => pending.promise;
+    let registrationRequested = false;
+    harness.deps.registerCloudAccount = () => { registrationRequested = true; return pending.promise; };
     const registration = harness.controller.registerLocal();
-    await Promise.resolve(); await Promise.resolve();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(registrationRequested, true);
     if (next === 'login') await harness.controller.loginLocal();
     else harness.controller.logout();
     const before = structuredClone(harness.appState);

@@ -8,9 +8,9 @@ export const ACCOUNT_SECTIONS = [
   { id: "advanced", icon: "code-xml", zh: "高级设置", en: "Advanced", description: ["模型与服务连接", "Model and service connections"], keywords: "高级 接口 模型 API LLM endpoint model client config" }
 ];
 
-export function findAccountSections(query = "") {
+export function findAccountSections(query = "", sections = ACCOUNT_SECTIONS) {
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  return ACCOUNT_SECTIONS.filter(section => words.every(word =>
+  return sections.filter(section => words.every(word =>
     `${section.zh} ${section.en} ${section.description.join(" ")} ${section.keywords}`.toLowerCase().includes(word)));
 }
 

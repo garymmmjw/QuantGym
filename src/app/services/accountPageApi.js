@@ -22,7 +22,38 @@ export function createAccountPageApi(deps = {}) {
   const signInRequired = () => ({ ok: false, code: "reauthRequired", message: text(
     "请先登录并完成账号验证，原有记录会保留。", "Sign in and verify your account first. Existing records are preserved.") });
 
+  const invitationRequest = async (path, options) => {
+    if (!connected() || !deps.cloudApi) return { ok: false, code: "reauthenticate", message: "请先登录管理员账户。 / Sign in with an administrator account." };
+    const ownerId = deps.appState.currentUser.id;
+    const config = { ...deps.appState.cloudConfig };
+    try {
+      const payload = await deps.cloudApi(path, options);
+      if (!sameSession(ownerId, config)) {
+        return { ok: false, code: "sessionChanged", message: "账户已切换，请重新打开邀请码管理。 / Account changed. Reopen invitation management." };
+      }
+      return { ...payload, ok: true };
+    } catch (error) {
+      return { ok: false, code: error?.status === 403 ? "forbidden" : "requestFailed", message: error?.status === 403 ? "仅管理员可以管理邀请码。 / Only administrators can manage invitations." : error?.status === 401 ? "登录已过期，请重新登录。 / Your session expired. Sign in again." : "邀请码操作失败，请稍后重试。 / Could not complete the invitation request. Try again." };
+    }
+  };
+
   return {
+    listInvitations() {
+      return invitationRequest("/admin/invitations");
+    },
+
+    createInvitations({ count = 1, maxUses = 1, expiresInDays = 7, email = "" } = {}) {
+      if (!Number.isInteger(count) || count < 1 || count > 50 || !Number.isInteger(maxUses) || maxUses < 1 || maxUses > 1000 || !Number.isInteger(expiresInDays) || expiresInDays < 1 || expiresInDays > 365) {
+        return Promise.resolve({ ok: false, code: "invalid", message: "请检查数量、使用次数和有效天数。 / Check the quantity, use limit and validity period." });
+      }
+      return invitationRequest("/admin/invitations", { method: "POST", body: { count, maxUses, expiresInDays, email: String(email).trim().toLowerCase() } });
+    },
+
+    revokeInvitation(id) {
+      if (!id) return Promise.resolve({ ok: false, code: "invalid" });
+      return invitationRequest(`/admin/invitations/${encodeURIComponent(id)}/revoke`, { method: "POST", body: {} });
+    },
+
     getDeviceRecordRecovery() {
       try {
         return { count: deviceRecordCandidates(deps.appState?.auth, deps.appState?.currentUser, deviceRecordStorage(deps.storage)).length };

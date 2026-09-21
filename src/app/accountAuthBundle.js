@@ -166,7 +166,10 @@ export function createAccountAuthBundle(deps = {}) {
 
   return {
     accountAuthController,
-    initGoogleLogin: authUiRuntime.initGoogleLogin,
+    initGoogleLogin() {
+      void accountAuthController.loadRegistrationConfig();
+      authUiRuntime.initGoogleLogin();
+    },
     loginLocal: accountControllerBundle.loginLocal,
     logout: accountControllerBundle.logout,
     registerLocal: accountControllerBundle.registerLocal,

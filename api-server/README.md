@@ -205,7 +205,7 @@ export QUANTGYM_MEDIA_STORAGE="local" # local/disk for development or small priv
 export QUANTGYM_PUBLIC_API_BASE_URL="https://api.quantgym.app"
 export QUANTGYM_ALLOWED_ORIGINS="https://beta.quantgym.app"
 export QUANTGYM_SESSION_DAYS=30
-export QUANTGYM_BETA_EMAIL_ALLOWLIST="tester1@example.com,tester2@example.com"
+export QUANTGYM_REQUIRE_INVITE_CODE=1
 export QUANTGYM_GOOGLE_CLIENT_ID="xxxx.apps.googleusercontent.com"
 export QUANTGYM_RATE_LIMIT_WINDOW_SECONDS=60
 export QUANTGYM_AUTH_RATE_LIMIT_MAX=30
@@ -271,7 +271,7 @@ If no path override is set and the default file is absent, the API continues usi
 
 Do not commit the real bundle, its source captures, or private release backups. Keep them in ignored `artifacts/` or secure storage, and check the staged diff before publishing. Render Secret Files become runtime files when the service deploys; replacing the file and deploying refreshes the cached edition. See [Render Secret Files](https://render.com/docs/configure-environment-variables#secret-files) for the combined upload limit and runtime paths. Run public synthetic coverage with `python3 scripts/test-technical-source.py`; run the full private review with `QUANTGYM_TECHNICAL_BUNDLE_PATH=/absolute/path/to/private-bundle.json python3 scripts/test-purple-book-catalog.py`.
 
-Set `QUANTGYM_BETA_EMAIL_ALLOWLIST` during a closed beta to accept only those exact email addresses for local-account registration/login and Google cloud sessions. Leave it empty for local development.
+New accounts require an invitation by default (`QUANTGYM_REQUIRE_INVITE_CODE=1`), including new Google accounts. Existing users retain access. The old beta allowlist applies only when this flag is explicitly disabled. Email signups still require verification. See [invitation registration](../docs/invitation-registration.md) for administrator management, migration and testing.
 
 Set `QUANTGYM_ADMIN_EMAILS` to a comma-separated list of admin emails that may read basic admin metrics and audit events. Accounts whose stored plan/subscription tier is `admin` also pass the admin check.
 

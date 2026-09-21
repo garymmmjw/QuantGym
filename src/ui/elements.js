@@ -13,6 +13,7 @@ export const APP_ELEMENT_IDS = [
     "forgotPasswordBtn",
     "registerForm",
     "registerName",
+    "registerInviteCode",
     "registerEmail",
     "registerPassword",
     "registerVerificationCode",

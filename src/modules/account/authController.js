@@ -15,6 +15,46 @@ export function createAccountAuthController(deps = {}) {
   // session, even if an earlier request finishes after the login page closes.
   const beginAuthAttempt = () => ({ id: ++authAttemptSequence, cloudOnly: requiresCloudLogin() });
   const isCurrentAttempt = (attempt) => attempt.id === authAttemptSequence;
+  let registrationConfigRequest = null;
+
+  function getInviteCode() {
+    return String(getElements().registerInviteCode?.value || "").trim();
+  }
+
+  async function loadRegistrationConfig() {
+    if (registrationConfigRequest) return registrationConfigRequest;
+    registrationConfigRequest = (async () => {
+      let inviteRequired = true;
+      try {
+        const config = await deps.getCloudAuthConfig?.();
+        inviteRequired = config?.inviteRequired !== false;
+      } catch {
+        // Configuration failures cannot open registration.
+      }
+      const form = getElements().registerForm;
+      if (form) form.dataset.inviteRequired = String(inviteRequired);
+      return { inviteRequired };
+    })();
+    try {
+      return await registrationConfigRequest;
+    } finally {
+      registrationConfigRequest = null;
+    }
+  }
+
+  function requireInviteCode(inviteRequired, inviteCode) {
+    if (!inviteRequired || inviteCode) return true;
+    deps.showAuthMessage?.(text("authNeedInviteCode"), true);
+    getElements().registerInviteCode?.focus?.();
+    return false;
+  }
+
+  function showInvitationFields() {
+    const form = getElements().registerForm;
+    if (!form) return;
+    form.dataset.inviteRequired = "true";
+    form.dataset.verificationStatus = "invite-required";
+  }
 
   function requireValidCloudSession(session, email) {
     if (typeof session?.token !== "string" || !session.token.trim() || typeof session?.account?.id !== "string" || !session.account.id.trim()
@@ -192,14 +232,28 @@ export function createAccountAuthController(deps = {}) {
       return;
     }
     delete elements.registerForm.dataset.verificationOptional;
+    elements.registerForm.dataset.verificationStatus = "sending";
     deps.setRegisterCodeButtonBusy?.(true, text("sending"));
+    const { inviteRequired } = await loadRegistrationConfig();
+    const inviteCode = getInviteCode();
+    if (!requireInviteCode(inviteRequired, inviteCode)) {
+      elements.registerForm.dataset.verificationStatus = "failed";
+      deps.setRegisterCodeButtonBusy?.(false);
+      return;
+    }
     try {
-      const result = await deps.sendCloudVerificationCode?.(email, "register");
+      const result = await deps.sendCloudVerificationCode?.(email, "register", inviteCode);
+      if (!result?.ok) throw new Error("Verification service unavailable");
       deps.startRegisterCodeCooldown?.(Number(result?.cooldownSeconds || 60));
       const devCode = result?.devCode ? text("authDevCode", { code: result.devCode }) : "";
       const delivery = result?.delivery === "dev" ? text("authDeliveryDev") : text("authDeliveryEmail");
       deps.showAuthMessage?.(text("authVerificationSent", { email, delivery, devCode }));
+      elements.registerForm.dataset.verificationEmail = email;
+      elements.registerForm.dataset.verificationDelivery = result?.delivery === "dev" ? "dev" : "email";
+      elements.registerForm.dataset.verificationStatus = "sent";
     } catch (error) {
+      elements.registerForm.dataset.verificationStatus = error?.status ? "failed" : "unavailable";
+      if (/invitation code/i.test(String(error?.message || ""))) showInvitationFields();
       if (!error?.status) {
         deps.showAuthMessage?.(text("authCloudVerificationUnavailable"), true);
       } else {
@@ -251,6 +305,10 @@ export function createAccountAuthController(deps = {}) {
         deps.showAuthMessage?.(text("authMissingRegisterFields"), true);
         return;
       }
+      const { inviteRequired } = await loadRegistrationConfig();
+      if (!isCurrentAttempt(attempt)) return;
+      const inviteCode = getInviteCode();
+      if (!requireInviteCode(inviteRequired, inviteCode)) return;
       if (!verificationCode) {
         deps.showAuthMessage?.(text("authNeedVerificationCode"), true);
         return;
@@ -272,7 +330,7 @@ export function createAccountAuthController(deps = {}) {
       // Registration is complete only after the server verifies the code and
       // returns its identity. Device profiles neither block it nor sign in.
       const cloudSession = requireValidCloudSession(await deps.registerCloudAccount?.(
-        account, password, deps.createBaseState?.() || {}, appState.community, verificationCode
+        account, password, deps.createBaseState?.() || {}, appState.community, verificationCode, inviteCode
       ), email);
       if (!isCurrentAttempt(attempt)) return;
       const links = passwordOwnerLinks(cloudSession.account, email, account.passwordHash);
@@ -291,6 +349,7 @@ export function createAccountAuthController(deps = {}) {
       deps.renderSession?.();
     } catch (error) {
       if (!isCurrentAttempt(attempt)) return;
+      if (/invitation code/i.test(String(error?.message || ""))) showInvitationFields();
       deps.showAuthMessage?.(error?.status ? deps.getVerificationErrorMessage?.(error) : authErrorMessage(error), true);
     }
   }
@@ -441,10 +500,19 @@ export function createAccountAuthController(deps = {}) {
       const localState = deps.loadStateForUser?.(id);
       let cloudSession;
       try {
-        cloudSession = requireValidCloudSession(await deps.loginCloudGoogle?.(account, response.credential, localState, appState.community), deps.normalizeEmail?.(payload.email));
+        cloudSession = requireValidCloudSession(await deps.loginCloudGoogle?.(account, response.credential, localState, appState.community, getInviteCode()), deps.normalizeEmail?.(payload.email));
         if (!isCurrentAttempt(attempt)) return;
       } catch (error) {
         if (!isCurrentAttempt(attempt)) return;
+        if (!attempt.cloudOnly && /invitation code/i.test(String(error?.message || ""))) {
+          deps.switchAuthTab?.("register");
+          setEmailAuthStep("register", payload.email || "");
+          if (getElements().registerName) getElements().registerName.value = payload.name || "";
+          showInvitationFields();
+          deps.showAuthMessage?.(text(/required/i.test(error.message) ? "authGoogleNeedInviteCode" : "authGoogleInvalidInviteCode"), true);
+          getElements().registerInviteCode?.focus?.();
+          return;
+        }
         deps.showAuthMessage?.(deps.getAuthErrorMessage?.(error), true);
         return;
       }
@@ -469,6 +537,7 @@ export function createAccountAuthController(deps = {}) {
       markDeviceRecordsRecovered(appState.auth, sources, remoteAccount.id);
       markAuthenticated(appState.auth);
       deps.saveAuth?.();
+      getElements().registerForm?.reset();
       deps.showAuthMessage?.("");
       deps.renderSession?.();
     } catch (error) {
@@ -482,6 +551,7 @@ export function createAccountAuthController(deps = {}) {
     cancelPasswordReset,
     handleGoogleCredential,
     loginLocal,
+    loadRegistrationConfig,
     loginDeviceAccount,
     logout,
     registerLocal,

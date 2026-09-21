@@ -37,6 +37,8 @@ TIMESTAMP_COLUMNS = {
     "sent_at",
     "expires_at",
     "consumed_at",
+    "revoked_at",
+    "redeemed_at",
     "archived_at",
 }
 

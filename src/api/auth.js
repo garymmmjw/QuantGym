@@ -1,15 +1,20 @@
 import { sanitizeAccountForCloud } from "./cloud.js";
 
+export function requestCloudAuthConfig(options = {}) {
+  return options.cloudApi("/auth/config", { auth: false });
+}
+
 export function sendCloudVerificationCode(options = {}) {
   const {
     cloudApi = async () => ({}),
     email = "",
-    purpose = "register"
+    purpose = "register",
+    inviteCode = ""
   } = options;
   return cloudApi("/auth/verification-code", {
     method: "POST",
     auth: false,
-    body: { email, purpose }
+    body: { email, purpose, ...(purpose === "register" ? { inviteCode } : {}) }
   });
 }
 
@@ -31,6 +36,7 @@ export function registerCloudAccount(options = {}) {
     localState = {},
     localCommunity = {},
     verificationCode = "",
+    inviteCode = "",
     cloudStatePayload = (state) => state,
     getUserCatalogProblems = (problems) => problems || []
   } = options;
@@ -41,6 +47,7 @@ export function registerCloudAccount(options = {}) {
       account: sanitizeAccountForCloud(account),
       password,
       verificationCode,
+      inviteCode,
       state: cloudStatePayload(localState),
       problemStates: localState.problemStates || [],
       problems: getUserCatalogProblems(localState.problems),
@@ -81,6 +88,7 @@ export function loginCloudGoogle(options = {}) {
     cloudApi = async () => ({}),
     account = {},
     credential = "",
+    inviteCode = "",
     localState = {},
     localCommunity = {},
     cloudStatePayload = (state) => state,
@@ -92,6 +100,7 @@ export function loginCloudGoogle(options = {}) {
     body: {
       account: sanitizeAccountForCloud(account),
       credential,
+      inviteCode,
       state: cloudStatePayload(localState),
       problemStates: localState.problemStates || [],
       problems: getUserCatalogProblems(localState.problems),

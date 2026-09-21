@@ -7,11 +7,13 @@ import { useAccountPageModel, readLegacyGoal } from "./accountHooks.js";
 import { ACCOUNT_SECTIONS, findAccountSections, validPassword } from "./accountCenterData.js";
 import { GuardianAccessPanel } from "../guardian/GuardianAccessPanel.jsx";
 import { AdminOverviewPanel } from "./AdminOverviewPanel.jsx";
+import { AdminInvitationsPanel } from "./AdminInvitationsPanel.jsx";
 import { locationDefs } from "../../prep-data.js";
 import { getCountryLabel, getRegionLabel, getDefaultRegion } from "../../modules/account/data.js";
 import "./accountCenter.css";
 
 const AVATARS = ["happy", "focused", "wink", "wow"].map(name => `/assets/generated/playful-precision/avatar-${name}-v2.png`);
+const INVITATIONS_SECTION = { id: "invitations", icon: "ticket", zh: "邀请码管理", en: "Invitations", description: ["生成、查看与停用注册邀请码", "Create, review and revoke registration invitations"], keywords: "邀请码 注册 白名单 invite invitation registration allowlist" };
 
 function Icon({ name }) { return <i data-lucide={name} aria-hidden="true" />; }
 function Feedback({ model, section }) {
@@ -192,9 +194,11 @@ function Advanced({ model }) {
 export function AccountPageContent() {
   const model = useAccountPageModel();
   const [params, setParams] = useSearchParams();
-  const section = ACCOUNT_SECTIONS.some(item => item.id === params.get("section")) ? params.get("section") : "profile";
+  const admin = Boolean(model.user?.isAdmin || model.user?.subscriptionTier === "admin");
+  const sections = admin ? [...ACCOUNT_SECTIONS, INVITATIONS_SECTION] : ACCOUNT_SECTIONS;
+  const section = sections.some(item => item.id === params.get("section")) ? params.get("section") : "profile";
   const [query, setQuery] = useState("");
-  const results = findAccountSections(query);
+  const results = findAccountSections(query, sections);
   const navigate = id => { setQuery(""); setParams(previous => { const next = new URLSearchParams(previous); next.set("section", id); return next; }); };
   useEffect(() => { model.services.services?.refreshIcons?.({ root: document.querySelector(".ac-center") }); }, [section, query, model.zh, model.user, model.busy, model.status]);
   if (!model.user) return null;
@@ -205,10 +209,11 @@ export function AccountPageContent() {
     <header className="ac-heading"><div><span className="ac-eyebrow">YOUR SPACE</span><h1>{copy("账户与设置", "Account & settings")}</h1><p>{copy("你的资料、偏好与连接，都在这里。", "Your profile, preferences and connections, together.")}</p></div><span className={`ac-cloud-label ${model.connected && !model.cloud.lastError ? "is-connected" : ""}`}><span className="ac-status-dot" />{model.cloudSession.label}</span></header>
     <div className="ac-workspace"><aside className="ac-sidebar"><div className="ac-identity"><div className="ac-mini-avatar">{model.user.picture ? <img src={model.user.picture} alt="" /> : (model.user.name || "Q").slice(0, 2)}</div><div><strong>{model.user.name}</strong><span>Lv.{model.stats.level} · {model.stats.xp.toLocaleString()} XP</span></div></div>
       <div className="ac-search"><Icon name="search" /><input type="search" aria-label={copy("搜索账户设置", "Search account settings")} placeholder={copy("搜索设置…", "Find a setting…")} value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.nativeEvent.isComposing) return; if (e.key === "Escape") setQuery(""); if (e.key === "Enter" && results.length) { e.preventDefault(); navigate(results[0].id); } }} />{query && <button type="button" aria-label={copy("清除搜索", "Clear search")} onClick={() => setQuery("")}>×</button>}</div>
-      <nav className="ac-nav" aria-label={copy("账户设置导航", "Account settings navigation")}>{ACCOUNT_SECTIONS.map(item => <button key={item.id} type="button" aria-current={!query && section === item.id ? "page" : undefined} onClick={() => navigate(item.id)}><Icon name={item.icon} /><span>{title(item)}</span><Icon name="chevron-right" /></button>)}</nav><p className="ac-sidebar-note">{copy("专注下一次进步。", "Make room for your next step.")}</p>
+      <nav className="ac-nav" aria-label={copy("账户设置导航", "Account settings navigation")}>{sections.map(item => <button key={item.id} type="button" aria-current={!query && section === item.id ? "page" : undefined} onClick={() => navigate(item.id)}><Icon name={item.icon} /><span>{title(item)}</span><Icon name="chevron-right" /></button>)}</nav><p className="ac-sidebar-note">{copy("专注下一次进步。", "Make room for your next step.")}</p>
     </aside><div className="ac-content">
       {query ? <section className="ac-search-results" aria-live="polite"><SectionHead title={copy("搜索结果", "Search results")}>{results.length ? copy(`找到 ${results.length} 个相关设置`, `${results.length} matching settings`) : copy("未找到相关设置。试试“密码”“语言”或“LeetCode”。", "No matches. Try password, language or LeetCode.")}</SectionHead>{results.map(item => <button type="button" key={item.id} onClick={() => navigate(item.id)}><Icon name={item.icon} /><span><strong>{title(item)}</strong><small>{item.description[model.zh ? 0 : 1]}</small></span><Icon name="arrow-right" /></button>)}</section> : null}
       {Object.entries(panels).map(([id, Panel]) => <div key={`${model.user.id}-${id}`} hidden={Boolean(query) || section !== id}><Panel model={model} /></div>)}
+      {!query && section === "invitations" && admin && <AdminInvitationsPanel key={model.user.id} model={model} />}
       {!query && section === "guardian" && <><SectionHead title={copy("监护人", "Guardian")}>{copy("由你决定谁可以查看进度，以及何时停止共享。", "You decide who can see your progress and when sharing ends.")}</SectionHead><GuardianAccessPanel /></>}
     </div></div>
   </section>;
