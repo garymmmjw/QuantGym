@@ -3,7 +3,7 @@ import { ChevronDown, RefreshCw, Search, Shuffle, Upload } from "lucide-react";
 import { LeetCodeConnection } from "./LeetCodeConnection.jsx";
 import { useLeetCode } from "./useLeetCode.js";
 import { leetcodeError, prepareHistory, problemUrl, reviewPool } from "./leetcodeModel.js";
-import { getReviewCardHistories } from "./leetcodeCardDrawModel.js";
+import { getReviewCardHistories, sortProblemsByLastCompletion } from "./leetcodeCardDrawModel.js";
 import { LeetcodeReviewPanel } from "./LeetcodeReviewPanel.jsx";
 import { LeetcodeReviewBackpack } from "./LeetcodeReviewBackpack.jsx";
 import "./leetcode.css";
@@ -35,7 +35,6 @@ function LeetcodeWorkspace({ lc, practiceSessions }) {
   const seenTransfers = useRef(new Set());
   const savingDraw = useRef(null);
   const matchingProblems = useMemo(() => reviewPool(problems, "all", search), [problems, search]);
-  const pool = useMemo(() => reviewPool(matchingProblems, difficulty), [matchingProblems, difficulty]);
   const filterCounts = useMemo(() => matchingProblems.reduce((counts, problem) => {
     if ([1, 2, 3].includes(problem.difficulty)) counts[problem.difficulty] += 1;
     return counts;
@@ -44,6 +43,8 @@ function LeetcodeWorkspace({ lc, practiceSessions }) {
   const completionHistory = useMemo(() => new Map([...getReviewCardHistories(allProblems, {
     now, submissions: lc.data.submissions, practiceSessions, connection,
   })].map(([slug, history]) => [slug, history.lastPracticedAt])), [allProblems, now, lc.data.submissions, practiceSessions, connection]);
+  const pool = useMemo(() => sortProblemsByLastCompletion(reviewPool(matchingProblems, difficulty), completionHistory),
+    [matchingProblems, difficulty, completionHistory]);
   const difficultyTotal = [stats?.easy, stats?.medium, stats?.hard].reduce((sum, count) => sum + Math.max(0, Number(count) || 0), 0);
   const connectionKey = JSON.stringify([lc.ownerId, connection?.username, connection?.linkedAt]);
   const activeDraw = drawSession?.connectionKey === connectionKey ? drawSession : null;

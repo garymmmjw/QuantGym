@@ -28,6 +28,16 @@ export function getReviewCardHistory(problem, options) {
   return getReviewCardHistories([problem], options).get(problem?.slug) ?? { lastPracticedAt: null, elapsedDays: null };
 }
 
+// Use the same completion history as the displayed date, rather than relying
+// on the API/import's input order. Equal timestamps retain their input order.
+export function sortProblemsByLastCompletion(problems, completionHistory) {
+  return problems.map((problem, index) => {
+    const timestamp = Date.parse(completionHistory.get(problem.slug));
+    return { problem, index, timestamp: Number.isFinite(timestamp) ? timestamp : -Infinity };
+  }).sort((left, right) => (right.timestamp - left.timestamp) || (left.index - right.index))
+    .map(({ problem }) => problem);
+}
+
 /**
  * Draw original problem objects without replacement, using the existing weights.
  * The previous problem is avoided while another candidate remains. Small pools

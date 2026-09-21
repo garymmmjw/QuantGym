@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { drawReviewCards, getReviewCardHistories, getReviewCardHistory } from '../src/features/leetcode/leetcodeCardDrawModel.js';
+import { drawReviewCards, getReviewCardHistories, getReviewCardHistory, sortProblemsByLastCompletion } from '../src/features/leetcode/leetcodeCardDrawModel.js';
+import { reviewPool } from '../src/features/leetcode/leetcodeModel.js';
 
 const now = Date.parse('2026-09-20T12:00:00Z');
 const day = 86400000;
@@ -113,6 +114,44 @@ test('batch completion history scans accepted and Coding OA ledgers a bounded nu
   for (const { slug } of problems) assert.deepEqual(histories.get(slug), { lastPracticedAt: at(1), elapsedDays: 1 });
   assert.ok(acceptedReads <= submissions.length * 4, `accepted records were read ${acceptedReads} times`);
   assert.ok(completedReads <= practiceSessions.length * 4, `Coding OA records were read ${completedReads} times`);
+});
+
+test('completion sorting compares actual instants, keeps ties stable and unknowns last without mutating the pool', () => {
+  const problems = ['unknown', 'tie-first', 'oldest', 'newest', 'tie-second', 'missing'].map((slug, index) => ({
+    slug, frontendId: String(index + 1), lastAcceptedAt: at(index),
+  }));
+  const completionHistory = new Map([
+    ['unknown', null], ['tie-first', '2026-09-20T03:00:00-07:00'],
+    ['oldest', '2026-09-20T10:30:00+02:00'], ['newest', '2026-09-20T09:30:00-02:00'],
+    ['tie-second', '2026-09-20T10:00:00Z'],
+  ]);
+  const before = structuredClone(problems);
+  const sorted = sortProblemsByLastCompletion(problems, completionHistory);
+  assert.deepEqual(sorted.map(problem => problem.slug), ['newest', 'tie-first', 'tie-second', 'oldest', 'unknown', 'missing']);
+  assert.notEqual(sorted, problems);
+  assert.ok(sorted.every(problem => problems.includes(problem)), 'sorting preserves each original problem object');
+  assert.deepEqual(problems, before);
+});
+
+test('the displayed AC and Coding OA completion history orders the whole pool before search, difficulty and pagination', () => {
+  const problems = [
+    { slug: 'practice-a', title: 'Practice A', difficulty: 1, lastAcceptedAt: at(10) },
+    { slug: 'practice-b', title: 'Practice B', difficulty: 1, lastAcceptedAt: at(1) },
+    { slug: 'practice-c', title: 'Practice C', difficulty: 2, lastAcceptedAt: at(0) },
+    { slug: 'practice-d', title: 'Practice D', difficulty: 1, lastAcceptedAt: at(12) },
+    { slug: 'practice-e', title: 'Practice E', difficulty: 1, lastAcceptedAt: at(15), review: { lastReviewedAt: at(0) } },
+    { slug: 'other-problem', title: 'Other', difficulty: 1, lastAcceptedAt: at(.25) },
+  ];
+  const completionHistory = new Map([...getReviewCardHistories(problems, {
+    now, connection, submissions: [accepted('a', 'practice-a', 4), accepted('d', 'practice-d', 2)],
+    practiceSessions: [practice('b', 'practice-b', .5)],
+  })].map(([slug, history]) => [slug, history.lastPracticedAt]));
+  const sorted = sortProblemsByLastCompletion(problems, completionHistory);
+  assert.deepEqual(sorted.map(problem => problem.slug), ['practice-c', 'other-problem', 'practice-b', 'practice-d', 'practice-a', 'practice-e']);
+  const filtered = reviewPool(sorted, '1', 'practice');
+  assert.deepEqual(filtered.slice(0, 2).map(problem => problem.slug), ['practice-b', 'practice-d']);
+  assert.deepEqual(filtered.slice(2, 4).map(problem => problem.slug), ['practice-a', 'practice-e']);
+  assert.equal(completionHistory.get(filtered[0].slug), at(.5), 'the first displayed date is the completed Coding OA time');
 });
 
 test('a five-card hand is distinct, preserves original objects and avoids the previous problem when alternatives suffice', () => {
