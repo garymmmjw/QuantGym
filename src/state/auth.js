@@ -170,6 +170,8 @@ export function getAuthReadyMessage(options = {}) {
 export function getVerificationErrorMessage(error, options = {}) {
   const text = resolveText(options);
   const raw = String(error?.message || "");
+  if (/invitation code is required/i.test(raw)) return text("authNeedInviteCode");
+  if (/invitation code/i.test(raw)) return text("authInvalidInviteCode");
   if (error?.status === 409) return text("authDuplicateEmail");
   if (error?.status === 403) return text("verificationForbidden");
   if (error?.status === 429) return raw.includes("wait") ? text("verificationTooSoon") : text("verificationTooMany");
@@ -182,6 +184,8 @@ export function getAuthErrorMessage(error, options = {}) {
   const text = resolveText(options);
   const protocol = options.protocol ?? globalThis.location?.protocol ?? "";
   const raw = String(error?.message || "");
+  if (/invitation code is required/i.test(raw)) return text("authNeedInviteCode");
+  if (/invitation code/i.test(raw)) return text("authInvalidInviteCode");
   if (error?.status === 403 || /allowlist/i.test(raw)) {
     return text("verificationForbidden");
   }

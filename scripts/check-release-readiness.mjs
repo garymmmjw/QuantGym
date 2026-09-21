@@ -367,6 +367,7 @@ async function maybeStartLocalBoundaryServices(childEnv = baseChildEnv) {
       PORT: String(services.api.port),
       QUANTGYM_HOST: services.api.host,
       QUANTGYM_REQUIRE_EMAIL_VERIFICATION: boundaryEnv.QUANTGYM_REQUIRE_EMAIL_VERIFICATION || "0",
+      QUANTGYM_REQUIRE_INVITE_CODE: boundaryEnv.QUANTGYM_REQUIRE_INVITE_CODE || "0",
       QUANTGYM_GOOGLE_CLIENT_ID: boundaryEnv.QUANTGYM_GOOGLE_CLIENT_ID || runtimeConfig.googleClientId || ""
     }
   });

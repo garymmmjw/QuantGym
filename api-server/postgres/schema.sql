@@ -80,6 +80,35 @@ CREATE TABLE email_verification_codes (
 CREATE INDEX idx_email_verification_expires
 ON email_verification_codes (expires_at);
 
+-- Invitation plaintext is returned only when generated and is never persisted.
+CREATE TABLE registration_invitations (
+  id text PRIMARY KEY,
+  code_hash text NOT NULL UNIQUE,
+  label text NOT NULL DEFAULT '',
+  email_norm text,
+  max_uses integer NOT NULL DEFAULT 1 CHECK (max_uses BETWEEN 1 AND 1000),
+  uses integer NOT NULL DEFAULT 0 CHECK (uses >= 0 AND uses <= max_uses),
+  expires_at timestamptz,
+  revoked_at timestamptz,
+  created_by text REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL
+);
+
+CREATE INDEX idx_registration_invitations_created
+ON registration_invitations (created_at DESC);
+
+CREATE TABLE invitation_redemptions (
+  id text PRIMARY KEY,
+  invitation_id text NOT NULL REFERENCES registration_invitations(id),
+  user_id text REFERENCES users(id) ON DELETE SET NULL,
+  email_norm text NOT NULL,
+  redeemed_at timestamptz NOT NULL,
+  UNIQUE (invitation_id, user_id)
+);
+
+CREATE INDEX idx_invitation_redemptions_invitation
+ON invitation_redemptions (invitation_id, redeemed_at);
+
 CREATE TABLE audit_events (
   id text PRIMARY KEY,
   event_type text NOT NULL,

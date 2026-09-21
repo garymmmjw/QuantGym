@@ -412,7 +412,7 @@ QUANTGYM_DB=/var/data/quantgym.sqlite3
 # QUANTGYM_POSTGRES_DATABASE_URL=<Render managed Postgres internal/external URL>
 QUANTGYM_PUBLIC_API_BASE_URL=https://api.quantgym.app
 QUANTGYM_ALLOWED_ORIGINS=https://beta.quantgym.app
-QUANTGYM_BETA_EMAIL_ALLOWLIST=tester1@example.com,tester2@example.com
+QUANTGYM_REQUIRE_INVITE_CODE=1
 QUANTGYM_REQUIRE_EMAIL_VERIFICATION=1
 QUANTGYM_EMAIL_CODE_TTL_MINUTES=10
 QUANTGYM_EMAIL_CODE_COOLDOWN_SECONDS=60
@@ -475,7 +475,7 @@ Optional Google login variable, only if Google login is enabled on both frontend
 QUANTGYM_GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
 ```
 
-Closed beta email access is controlled by `QUANTGYM_BETA_EMAIL_ALLOWLIST`. To add or remove testers, update this Render variable and restart or redeploy the API. This is not a code change and should not be committed to Git.
+New accounts require an invitation by default (`QUANTGYM_REQUIRE_INVITE_CODE=1`). Administrators manage codes in **Account & settings → Invitations**; existing accounts continue to log in without a code. See [invitation registration](docs/invitation-registration.md). The old `QUANTGYM_BETA_EMAIL_ALLOWLIST` applies only when invitation mode is explicitly disabled.
 
 ### Render LLM Service: `quantgym-llm`
 

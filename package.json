@@ -13,6 +13,7 @@
     "start": "node llm-proxy/server.mjs",
     "build": "node scripts/build-static-site.mjs",
     "preview": "vite preview",
+    "test:invitations": "node --test scripts/test-invitations-admin.mjs scripts/test-invite-auth-client.mjs && python3 scripts/test-invitations-api.py",
     "check:stage1": "node scripts/check-stage1.mjs",
     "check:stage2": "node scripts/check-stage2.mjs --bridge",
     "check:stage2:full": "node scripts/check-stage2.mjs --full",

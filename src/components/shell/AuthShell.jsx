@@ -78,6 +78,9 @@ export function AuthShell() {
   const [registerStage, setRegisterStage] = useState("info");
   const [registerCode, setRegisterCode] = useState("");
   const [registerVerifyEmail, setRegisterVerifyEmail] = useState("");
+  const [registerSending, setRegisterSending] = useState(false);
+  const [registerDelivery, setRegisterDelivery] = useState("email");
+  const [inviteRequired, setInviteRequired] = useState(true);
   const registerStageRef = useRef("info");
   const bubbleTimerRef = useRef(null);
   const pokeTimerRef = useRef(null);
@@ -228,12 +231,36 @@ export function AuthShell() {
       registerStageRef.current = "info";
       setRegisterStage("info");
       setRegisterCode(codeInput?.value || "");
+      setRegisterSending(false);
+      delete form.dataset.verificationStatus;
+      delete form.dataset.verificationEmail;
+      delete form.dataset.verificationDelivery;
     };
 
-    // Capture-phase interception: while on the info step, a valid submit sends
-    // the verification code and advances to the verify screen instead of
-    // hitting the controller (which requires a code). Invalid fields fall
-    // through so the controller's i18n validation messages still show.
+    // Only a confirmed delivery may advance the registration form.
+    const syncVerificationStatus = () => {
+      const status = form.dataset.verificationStatus;
+      setRegisterSending(status === "sending");
+      if (status === "invite-required") {
+        registerStageRef.current = "info";
+        setRegisterStage("info");
+      }
+      const email = emailInput?.value?.trim().toLowerCase() || "";
+      if (status !== "sent" || form.classList.contains("hidden") || form.dataset.verificationEmail !== email) return;
+      setRegisterVerifyEmail(email);
+      setRegisterDelivery(form.dataset.verificationDelivery || "email");
+      registerStageRef.current = "verify";
+      setRegisterStage("verify");
+      focusTimer = window.setTimeout(() => codeInput?.focus?.(), 0);
+    };
+    const verificationObserver = new MutationObserver(syncVerificationStatus);
+    verificationObserver.observe(form, { attributes: true, attributeFilter: ["data-verification-status"] });
+    const syncInviteRequirement = () => setInviteRequired(form.dataset.inviteRequired !== "false");
+    syncInviteRequirement();
+    const inviteObserver = new MutationObserver(syncInviteRequirement);
+    inviteObserver.observe(form, { attributes: true, attributeFilter: ["data-invite-required"] });
+
+    // Valid details request a code first; rejected invitations stay visible.
     const interceptSubmit = (event) => {
       if (event.target !== form) return;
       if (registerStageRef.current !== "info") return;
@@ -244,10 +271,6 @@ export function AuthShell() {
       event.preventDefault();
       event.stopPropagation();
       if (sendCodeBtn && !sendCodeBtn.disabled) sendCodeBtn.click();
-      setRegisterVerifyEmail(email);
-      registerStageRef.current = "verify";
-      setRegisterStage("verify");
-      focusTimer = window.setTimeout(() => codeInput?.focus?.(), 0);
     };
     document.addEventListener("submit", interceptSubmit, true);
 
@@ -266,6 +289,8 @@ export function AuthShell() {
       codeInput?.removeEventListener("input", handleCodeInput);
       form.removeEventListener("reset", resetStage);
       classObserver.disconnect();
+      verificationObserver.disconnect();
+      inviteObserver.disconnect();
     };
   }, []);
 
@@ -347,7 +372,11 @@ export function AuthShell() {
             </form>
 
             <form className="auth-form auth-register-flow hidden" id="registerForm" autoComplete="on" data-register-stage={registerStage}>
-              <p className="auth-flow-note auth-register-info-only">这个邮箱还没有账号，继续创建你的 QuantGym 账号。</p>
+              <p className="auth-flow-note auth-register-info-only" data-i18n={inviteRequired ? "authInviteRegistrationNote" : "authRegistrationNote"}>{inviteRequired ? (en ? "An invitation code is required for new email and Google accounts." : "邮箱和 Google 新用户均需邀请码注册。") : (en ? "Verify your email to create your QuantGym account." : "创建你的 QuantGym 账号，先验证邮箱。")}</p>
+              <div className={`auth-field auth-register-info-only${inviteRequired ? "" : " hidden"}`}>
+                <label className="auth-field-label" htmlFor="registerInviteCode" data-i18n="invitationCode">邀请码</label>
+                <input id="registerInviteCode" type="text" autoComplete="off" autoCapitalize="none" spellCheck="false" maxLength="128" aria-required={inviteRequired} placeholder="填写收到的邀请码" data-i18n-placeholder="invitationCodePlaceholder" />
+              </div>
               <div className="auth-field auth-register-info-only">
                 <label className="auth-field-label" htmlFor="registerName" data-i18n="name">名字</label>
                 <input id="registerName" type="text" autoComplete="name" placeholder="名字" data-i18n-placeholder="name" />
@@ -360,12 +389,12 @@ export function AuthShell() {
                 <label className="auth-field-label" htmlFor="registerPassword" data-i18n="password">密码</label>
                 <input id="registerPassword" type="password" autoComplete="new-password" placeholder="设置密码，至少 6 位" data-i18n-placeholder="registerPasswordPlaceholder" />
               </div>
-              <button className="primary-button auth-submit auth-register-info-only" type="button" onClick={requestRegisterSubmit} data-i18n="createAccount">创建账户</button>
+              <button className="primary-button auth-submit auth-register-info-only" type="button" onClick={requestRegisterSubmit} disabled={registerSending} data-i18n={registerSending ? "sending" : "createAccount"}>{registerSending ? (en ? "Sending..." : "发送中…") : (en ? "Create account" : "创建账户")}</button>
 
               <div className="auth-verify-head auth-register-verify-only" aria-hidden={registerStage !== "verify"}>
                 <img className="auth-verify-mascot" src="/assets/generated/playful-precision/mascot-search.png" alt="" draggable="false" />
                 <h3 className="auth-verify-title">查收验证码</h3>
-                <p className="auth-verify-sub">{en ? "Enter the 6-digit verification code for" : "输入此邮箱收到的 6 位验证码"}<br /><b>{registerVerifyEmail || (en ? "your email" : "你的邮箱")}</b></p>
+                <p className="auth-verify-sub">{registerDelivery === "dev" ? (en ? "A development code has been generated. See the message below." : "开发验证码已生成，请查看下方提示。") : <>{en ? "A 6-digit verification code was sent to" : "已发送 6 位验证码到"}<br /><b>{registerVerifyEmail || (en ? "your email" : "你的邮箱")}</b></>}</p>
                 <div className="auth-code-boxes" aria-hidden="true">
                   {[0, 1, 2, 3, 4, 5].map((slot) => (
                     <span key={slot} className={`auth-code-box${registerCode[slot] ? " is-filled" : ""}`}>{registerCode[slot] || ""}</span>
@@ -424,7 +453,7 @@ export function AuthShell() {
 
             <GuardianEntry />
 
-            <p className="auth-legal-note">内测期间仅限白名单邮箱 · <span className="auth-legal-link">服务条款</span> 与 <span className="auth-legal-link">隐私政策</span></p>
+            <p className="auth-legal-note"><span data-i18n={inviteRequired ? "authInviteLegalNote" : "authOpenLegalNote"}>{inviteRequired ? (en ? "Private beta registration requires an invitation code. By continuing, you agree to" : "私测阶段凭邀请码注册 · 继续即同意") : (en ? "By continuing, you agree to" : "继续即同意")}</span> <span className="auth-legal-link">服务条款</span> 与 <span className="auth-legal-link">隐私政策</span></p>
 
             <details className="google-config hidden" aria-hidden="true">
               <summary data-i18n="googleClientSummary">配置 Google Client ID</summary>

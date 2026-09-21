@@ -140,6 +140,7 @@ class PersonalPrepApiTests(unittest.TestCase):
             "QUANTGYM_PROBLEM_CATALOG": str(catalog),
             "QUANTGYM_MEDIA_ROOT": str(cls.directory / "media"),
             "QUANTGYM_REQUIRE_EMAIL_VERIFICATION": "0",
+            "QUANTGYM_REQUIRE_INVITE_CODE": "0",
             "QUANTGYM_BETA_EMAIL_ALLOWLIST": "",
             "QUANTGYM_AUTH_REGISTER_RATE_LIMIT_MAX": "500",
             "QUANTGYM_ALERT_WEBHOOK_URL": "",

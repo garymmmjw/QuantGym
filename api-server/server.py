@@ -44,6 +44,15 @@ from personal_prep import (
 from guardian import GUARDIAN_SCHEMA, GuardianService
 from free_practice_attempts import merge_free_practice_state
 from private_practice_catalog import is_curated_private_problem, is_retired_private_problem, lock_problem_catalog
+from invitations import (
+    INVITATION_SCHEMA,
+    InvitationError,
+    create_invitations,
+    list_invitations,
+    redeem_invitation,
+    revoke_invitation,
+    validate_invitation,
+)
 
 try:
     import psycopg
@@ -208,6 +217,7 @@ AUTH_PASSWORD_RESET_RATE_LIMIT_MAX = int(
 EMAIL_VERIFICATION_PURPOSES = {"register", "password_reset"}
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 EMAIL_VERIFICATION_REQUIRED = env_bool("QUANTGYM_REQUIRE_EMAIL_VERIFICATION", True)
+INVITE_CODE_REQUIRED = env_bool("QUANTGYM_REQUIRE_INVITE_CODE", True)
 EMAIL_CODE_TTL_MINUTES = int(os.environ.get("QUANTGYM_EMAIL_CODE_TTL_MINUTES", "10"))
 EMAIL_CODE_COOLDOWN_SECONDS = int(os.environ.get("QUANTGYM_EMAIL_CODE_COOLDOWN_SECONDS", "60"))
 EMAIL_CODE_MAX_ATTEMPTS = int(os.environ.get("QUANTGYM_EMAIL_CODE_MAX_ATTEMPTS", "5"))
@@ -389,7 +399,7 @@ def ensure_valid_email(email: str) -> None:
 
 
 def ensure_email_allowed(email: str) -> None:
-    if BETA_EMAIL_ALLOWLIST and normalize_email(email) not in BETA_EMAIL_ALLOWLIST:
+    if not INVITE_CODE_REQUIRED and BETA_EMAIL_ALLOWLIST and normalize_email(email) not in BETA_EMAIL_ALLOWLIST:
         raise HttpError(403, "Email is not on the beta allowlist")
 
 
@@ -1801,6 +1811,7 @@ class Database:
                 """
             )
             conn.executescript(GUARDIAN_SCHEMA)
+            conn.executescript(INVITATION_SCHEMA)
             self.ensure_sqlite_private_problem_visibility(conn)
 
     def ensure_sqlite_private_problem_visibility(self, conn: sqlite3.Connection) -> None:
@@ -3038,6 +3049,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.send_json(200, {"ok": True, "database": db.health(), "capabilities": {"careerTrackerSync": 1}})
             if path.startswith("/api/guardian/"):
                 return guardian.handle(self, path)
+            if path == "/api/auth/config" and self.command == "GET":
+                return self.send_json(200, {"inviteRequired": INVITE_CODE_REQUIRED}, headers={"Cache-Control": "no-store"})
             if path == "/api/auth/verification-code" and self.command == "POST":
                 return self.send_verification_code()
             if path == "/api/auth/account-status" and self.command == "GET":
@@ -3060,6 +3073,13 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.get_admin_metrics()
             if path == "/api/admin/audit-events" and self.command == "GET":
                 return self.get_admin_audit_events()
+            if path == "/api/admin/invitations" and self.command == "GET":
+                return self.get_admin_invitations()
+            if path == "/api/admin/invitations" and self.command == "POST":
+                return self.post_admin_invitations()
+            invitation_revoke_match = re.fullmatch(r"/api/admin/invitations/([^/]+)/revoke", path)
+            if invitation_revoke_match and self.command == "POST":
+                return self.revoke_admin_invitation(unquote(invitation_revoke_match.group(1)))
             if path == "/api/media" and self.command == "POST":
                 return self.post_media()
             media_match = re.fullmatch(r"/api/media/([^/]+)", path)
@@ -3140,7 +3160,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 return self.serve_library_pdf(unquote(library_pdf_match.group(1)))
             self.record_http_error(404, "Not found")
             return self.send_json(404, {"error": "Not found"})
-        except HttpError as error:
+        except (HttpError, InvitationError) as error:
             self.record_http_error(error.status, error.message)
             return self.send_json(error.status, {"error": error.message})
         except Exception as error:  # pragma: no cover - defensive server boundary
@@ -3251,13 +3271,15 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 payload["errorClass"] = metadata["errorClass"]
             threading.Thread(target=send_alert_webhook, args=(payload,), daemon=True).start()
 
-    def send_json(self, status: int, payload: dict):
+    def send_json(self, status: int, payload: dict, headers: dict | None = None):
         body = json.dumps(payload, ensure_ascii=False, default=api_json_default).encode("utf-8")
         if status >= 400:
             self.close_connection = True
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        for name, value in (headers or {}).items():
+            self.send_header(str(name), str(value))
         if self.close_connection:
             self.send_header("Connection", "close")
         self.end_headers()
@@ -3286,7 +3308,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
         if not header.startswith(prefix):
             return None
         user = db.get_user_by_session(header[len(prefix) :].strip())
-        if user and BETA_EMAIL_ALLOWLIST and normalize_email(user.get("email_norm")) not in BETA_EMAIL_ALLOWLIST:
+        if user and not INVITE_CODE_REQUIRED and BETA_EMAIL_ALLOWLIST and normalize_email(user.get("email_norm")) not in BETA_EMAIL_ALLOWLIST:
             return None
         return user
 
@@ -3323,6 +3345,36 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 conn=conn,
             )
             self.send_json(200, {"events": events})
+
+    def get_admin_invitations(self):
+        user = self.require_admin_user()
+        query = parse_qs(urlparse(self.path).query)
+        try:
+            limit = int((query.get("limit") or ["200"])[0])
+        except ValueError:
+            raise HttpError(400, "Invalid invitation limit")
+        with db.connect() as conn:
+            invitations = list_invitations(conn, limit)
+            self.audit_event("admin.invitations.view", user=user, conn=conn)
+        self.send_json(200, {"invitations": invitations}, headers={"Cache-Control": "private, no-store"})
+
+    def post_admin_invitations(self):
+        user = self.require_admin_user()
+        self.enforce_rate_limit("admin:invitations", AUTH_RATE_LIMIT_MAX, user["id"])
+        data = self.read_json()
+        with db.connect() as conn:
+            invitations = create_invitations(conn, data, user["id"])
+            self.audit_event("admin.invitations.create", user=user,
+                             metadata={"invitationIds": [item["id"] for item in invitations]}, conn=conn)
+        self.send_json(201, {"invitations": invitations}, headers={"Cache-Control": "private, no-store"})
+
+    def revoke_admin_invitation(self, invitation_id):
+        user = self.require_admin_user()
+        with db.connect() as conn:
+            invitation = revoke_invitation(conn, invitation_id)
+            self.audit_event("admin.invitations.revoke", user=user,
+                             metadata={"invitationId": invitation_id}, conn=conn)
+        self.send_json(200, {"invitation": invitation}, headers={"Cache-Control": "private, no-store"})
 
     def absolute_api_url(self, path: str) -> str:
         if PUBLIC_API_BASE_URL:
@@ -3507,6 +3559,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             existing = conn.execute("SELECT id, provider FROM users WHERE email_norm = ?", (email,)).fetchone()
             if purpose == "register" and existing:
                 raise HttpError(409, "Email already exists")
+            if purpose == "register" and INVITE_CODE_REQUIRED:
+                validate_invitation(conn, data.get("inviteCode"), email)
             if purpose == "password_reset":
                 if not existing:
                     raise HttpError(404, "No local account exists for this email")
@@ -3590,6 +3644,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             "email": email,
             "exists": bool(user),
             "provider": user["provider"] if user else "",
+            "inviteRequired": INVITE_CODE_REQUIRED and not bool(user),
         })
 
     def consume_verification_code(self, conn: sqlite3.Connection, email: str, purpose: str, code: str) -> None:
@@ -3657,7 +3712,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             existing_id = conn.execute("SELECT id FROM users WHERE id = ?", (account["id"],)).fetchone()
             if existing_id:
                 raise HttpError(409, "Account id already exists")
-            if EMAIL_VERIFICATION_REQUIRED:
+            invitation_id = validate_invitation(conn, data.get("inviteCode"), email) if INVITE_CODE_REQUIRED else None
+            if EMAIL_VERIFICATION_REQUIRED or INVITE_CODE_REQUIRED:
                 self.consume_verification_code(conn, email, "register", str(data.get("verificationCode") or ""))
             conn.execute(
                 """
@@ -3676,6 +3732,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                     now,
                 ),
             )
+            if invitation_id:
+                redeem_invitation(conn, invitation_id, account["id"], email)
             db.save_state(conn, account["id"], data.get("state") if isinstance(data.get("state"), dict) else {})
             db.save_problem_states(conn, account["id"], data.get("problemStates"))
             db.upsert_problems(conn, data.get("problems"), visibility="user", owner_user_id=account["id"])
@@ -3684,7 +3742,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
             token = db.create_session(conn, account["id"])
             user = conn.execute("SELECT * FROM users WHERE id = ?", (account["id"],)).fetchone()
             self.audit_event("auth.register", user=dict(user), status="success", metadata={"provider": "local"}, conn=conn)
-            self.send_json(201, self.auth_response(conn, dict(user), token))
+            response = self.auth_response(conn, dict(user), token)
+        self.send_json(201, response)
 
     def login(self):
         data = self.read_json()
@@ -3824,6 +3883,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                     (account["email"], account["id"]),
                 ).fetchone()
             if not existing:
+                invitation_id = validate_invitation(conn, data.get("inviteCode"), account["email"]) if INVITE_CODE_REQUIRED else None
                 conn.execute(
                     """
                     INSERT INTO users
@@ -3839,6 +3899,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                         now,
                     ),
                 )
+                if invitation_id:
+                    redeem_invitation(conn, invitation_id, account["id"], account["email"])
                 db.save_state(conn, account["id"], data.get("state") if isinstance(data.get("state"), dict) else {})
                 db.save_problem_states(conn, account["id"], data.get("problemStates"))
                 db.upsert_problems(conn, data.get("problems"), visibility="user", owner_user_id=account["id"])
@@ -3895,7 +3957,8 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                 metadata={"linkedExistingAccount": bool(existing)},
                 conn=conn,
             )
-            self.send_json(200, self.auth_response(conn, dict(user), token))
+            response = self.auth_response(conn, dict(user), token)
+        self.send_json(200, response)
 
     def get_account(self):
         user = self.require_user()

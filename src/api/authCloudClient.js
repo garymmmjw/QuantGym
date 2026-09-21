@@ -2,6 +2,7 @@ import {
   loginCloudAccount,
   loginCloudGoogle,
   registerCloudAccount,
+  requestCloudAuthConfig,
   requestCloudAccountStatus,
   resetCloudPassword,
   sendCloudVerificationCode
@@ -13,6 +14,10 @@ export function createAuthCloudClient(deps = {}) {
   const getUserCatalogProblems = (problems) => deps.getUserCatalogProblems?.(problems) || problems || [];
 
   return {
+    authConfig() {
+      return requestCloudAuthConfig({ cloudApi });
+    },
+
     accountStatus(email) {
       return requestCloudAccountStatus({
         cloudApi,
@@ -20,15 +25,16 @@ export function createAuthCloudClient(deps = {}) {
       });
     },
 
-    sendVerificationCode(email, purpose = "register") {
+    sendVerificationCode(email, purpose = "register", inviteCode = "") {
       return sendCloudVerificationCode({
         cloudApi,
         email,
-        purpose
+        purpose,
+        inviteCode
       });
     },
 
-    registerAccount(account, password, localState, localCommunity, verificationCode = "") {
+    registerAccount(account, password, localState, localCommunity, verificationCode = "", inviteCode = "") {
       return registerCloudAccount({
         cloudApi,
         account,
@@ -36,6 +42,7 @@ export function createAuthCloudClient(deps = {}) {
         localState,
         localCommunity,
         verificationCode,
+        inviteCode,
         cloudStatePayload,
         getUserCatalogProblems
       });
@@ -58,11 +65,12 @@ export function createAuthCloudClient(deps = {}) {
       });
     },
 
-    loginGoogle(account, credential, localState, localCommunity) {
+    loginGoogle(account, credential, localState, localCommunity, inviteCode = "") {
       return loginCloudGoogle({
         cloudApi,
         account,
         credential,
+        inviteCode,
         localState,
         localCommunity,
         cloudStatePayload,
