@@ -130,12 +130,12 @@ function AccountTracker({ ownerId, namespace, legacyState }) {
         </div>}
         <section className="qt-summary-strip" aria-label="申请统计">
           {[
-            ['all', '申请总数', summary.total, 'all'],
-            ['received-oa', '收到 OA', summary.receivedOa, 'oa'],
-            ['received-interview', '收到 Interview', summary.receivedInterview, 'interview'],
-            ['rejected', '已拒绝', summary.rejected, 'closed'],
-            ['offer', 'Offer', summary.offer, 'offer'],
-          ].map(([id, label, count, tone]) => <button key={id} className={`qt-metric qt-metric-${tone}${status === id ? ' qt-selected' : ''}`} onClick={() => setStatus(status === id ? 'all' : id)} aria-pressed={status === id} aria-label={`${label} ${count}，查看申请`} title={id.startsWith('received-') ? '累计收到过的申请数，同一申请只计一次' : undefined}><span className="qt-metric-label"><span className="qt-metric-dot"/>{label}</span><strong>{String(count).padStart(2, '0')}</strong></button>)}
+            ['all', '申请总数', summary.total, 'all', '总申请'],
+            ['received-oa', '收到 OA', summary.receivedOa, 'oa', 'OA'],
+            ['received-interview', '收到 Interview', summary.receivedInterview, 'interview', '面试'],
+            ['rejected', '已拒绝', summary.rejected, 'closed', '已拒绝'],
+            ['offer', 'Offer', summary.offer, 'offer', 'Offer'],
+          ].map(([id, label, count, tone, compactLabel]) => <button key={id} className={`qt-metric qt-metric-${tone}${status === id ? ' qt-selected' : ''}`} onClick={() => setStatus(status === id ? 'all' : id)} aria-pressed={status === id} aria-label={`${label} ${count}，查看申请`} title={id.startsWith('received-') ? '累计收到过的申请数，同一申请只计一次' : undefined}><span className="qt-metric-label"><span className="qt-metric-dot" aria-hidden="true"/><span className="qt-metric-label-full">{label}</span><span className="qt-metric-label-compact" aria-hidden="true">{compactLabel}</span></span><strong>{String(count).padStart(2, '0')}</strong></button>)}
         </section>
         <StagePanel key={ownerId+namespace} stageStore={stageStore} practice={practice} summaryRows={activity.stageRows} summaryNote={activity.leetcodeStageNote} addRequest={addStageRequest} showAddButton={false}/>
         <ApplicationList

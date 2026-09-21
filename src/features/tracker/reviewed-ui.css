@@ -16,6 +16,7 @@
 .quantgym-tracker .qt-summary-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 15px 0; margin-bottom: 16px; border-radius: 10px; box-shadow: none; }
 .quantgym-tracker .qt-metric { padding: 0 26px; display: block; }
 .quantgym-tracker .qt-metric-label { font-size: 13px; line-height: 19px; margin-bottom: 6px; color: #827391; }
+.quantgym-tracker .qt-metric-label-compact { display: none; }
 .quantgym-tracker .qt-metric strong { font-size: 36px; font-family: inherit; font-weight: 600; letter-spacing: -1px; line-height: 1.2; font-variant-numeric: tabular-nums; }
 .quantgym-tracker .qt-metric-all { --metric-color: var(--qt-accent); }
 .quantgym-tracker .qt-metric-oa { --metric-color: #4364be; }
@@ -105,10 +106,6 @@
   .quantgym-tracker .qt-page-heading h1 { font-size: 28px; }
   .quantgym-tracker .qt-heading-actions { width: 100%; }
   .quantgym-tracker .qt-heading-actions .qt-btn { min-height: 44px; }
-  .quantgym-tracker .qt-summary-strip { grid-template-columns: repeat(5, minmax(90px, 1fr)); padding: 13px 0; }
-  .quantgym-tracker .qt-metric { padding: 0 13px; }
-  .quantgym-tracker .qt-metric-label { font-size: 11px; white-space: nowrap; }
-  .quantgym-tracker .qt-metric strong { font-size: 26px; }
   .quantgym-tracker .qt-table-toolbar { padding: 4px 10px 0; gap: 8px; }
   .quantgym-tracker .qt-filter-tabs button { font-size: 12px; padding: 11px 9px; }
   .quantgym-tracker .qt-search { min-height: 42px; padding-inline: 8px; gap: 5px; }
@@ -118,6 +115,15 @@
   .quantgym-tracker .qt-company-name { font-size: 13px; }
   .quantgym-tracker .qt-application-row td.qt-company-cell { padding-left: 12px; }
   .quantgym-tracker .qt-phase-count { display: inline; }
+}
+@media (max-width: 860px) {
+  .quantgym-tracker .qt-summary-strip { grid-template-columns: repeat(5, minmax(0, 1fr)); min-width: 0; padding: 12px 0; overflow: visible; }
+  .quantgym-tracker .qt-metric { min-width: 0; padding: 0 4px; text-align: center; }
+  .quantgym-tracker .qt-metric-label { justify-content: center; gap: 0; margin-bottom: 6px; font-size: 12px; line-height: 18px; white-space: nowrap; }
+  .quantgym-tracker .qt-metric-label-full,
+  .quantgym-tracker .qt-metric-dot { display: none; }
+  .quantgym-tracker .qt-metric-label-compact { display: inline; }
+  .quantgym-tracker .qt-metric strong { font-size: clamp(18px, 5.8vw, 26px); letter-spacing: -.5px; }
 }
 .quantgym-tracker .qt-cloud-status { display: flex; align-items: center; gap: 10px; margin: -8px 0 14px; color: var(--qt-muted, #807789); font-size: 12px; }
 .quantgym-tracker .qt-cloud-status button { border: 0; padding: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; }
