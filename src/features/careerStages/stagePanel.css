@@ -107,3 +107,36 @@
   .career-stage-count .leetcode-counts-inline .leetcode-count dd { justify-content: flex-end; }
   .career-stage-row .career-stage-name { min-height: 32px; }
 }
+
+/* Only Tracker's shared summary collapses with the mobile shell. */
+.career-stage-mobile-toggle { display: none; }
+.career-stage-panel-summary > .career-stage-mobile-content > .career-stage-heading-actions { margin: 0 0 12px; }
+@media (max-width: 860px) {
+  .career-stage-mobile-collapse .career-stage-mobile-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 52px;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--qg-border, #ecebf7);
+    border-radius: 10px;
+    background: var(--qg-surface, #fff);
+    color: var(--qg-text, #1b1a38);
+    font: inherit;
+    font-size: 13px;
+    line-height: 20px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .career-stage-mobile-title { flex: 0 0 auto; font-weight: 600; white-space: nowrap; }
+  .career-stage-mobile-preview { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; flex: 1; min-width: 0; color: var(--qg-muted, #6d6c8e); font-size: 11px; white-space: nowrap; }
+  .career-stage-mobile-preview > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .career-stage-mobile-preview > span:last-child { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+  .career-stage-mobile-chevron { flex: 0 0 16px; margin-left: auto; color: var(--qt-accent, #5b5ff5); }
+  .career-stage-mobile-toggle[aria-expanded="true"] .career-stage-mobile-chevron { transform: rotate(180deg); }
+  .career-stage-mobile-collapse > .career-stage-mobile-content[data-expanded="false"] { display: none; }
+  .career-stage-mobile-collapse > .career-stage-mobile-content[data-expanded="true"] { margin-top: 8px; }
+}

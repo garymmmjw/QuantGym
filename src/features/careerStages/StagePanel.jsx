@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Pencil } from 'lucide-react';
+import React, { useEffect, useId, useRef, useState, useSyncExternalStore } from 'react';
+import { ChevronDown, Pencil } from 'lucide-react';
 import { localDateKey, nextStageLabel } from './stageStore.js';
 import { formatStagePeriod, summarizeStagePractice } from './stagePractice.js';
 import { stageFormChanges } from '../tracker/formChanges.js';
@@ -82,17 +82,21 @@ function StageDialog({ stageStore, stage, practice, onClose }) {
 export default function StagePanel({ stageStore, practice, variant = 'tracker', addRequest = 0, showAddButton = true, headerActions = null, summaryRows, summaryNote = '' }) {
   const { stages, error } = useSyncExternalStore(stageStore.subscribe, stageStore.getSnapshot, stageStore.getSnapshot);
   const [editor, setEditor] = useState(null);
+  const [mobileExpanded, setMobileExpanded] = useState(false);
+  const mobileContentId = useId();
   const orderedStages = summarizeStagePractice(stages, practice);
   const current = orderedStages.at(-1);
   useEffect(() => { if (addRequest) setEditor({ stage: null }); }, [addRequest]);
   const displayStages = [...orderedStages].reverse();
   const hasSummary = Array.isArray(summaryRows);
+  const mobileCollapsible = variant === 'tracker' && hasSummary;
+  const latestSummary = hasSummary ? summaryRows.find(row => row.isCurrent) || summaryRows.at(-1) : null;
   const editSummaryStage = row => {
     const stage = stageStore.getSnapshot().stages.find(item => item.id === row.id || item.importedIds?.includes(row.id));
     if (stage) setEditor({ stage });
   };
-  return (
-    <section className={`career-stage-panel career-stage-${variant}${hasSummary ? ' career-stage-panel-summary' : ''}`} aria-label="求职准备阶段">
+  const content = (
+    <>
       {(headerActions || showAddButton) && <div className="career-stage-heading-actions">{headerActions}{showAddButton && <button type="button" className="career-button career-add" onClick={() => setEditor({ stage: null })}>＋ 添加 Stage</button>}</div>}
       {hasSummary ? <OverviewCareerStage rows={summaryRows} note={summaryNote} onEdit={editSummaryStage} /> : current ? <ol className="career-stage-list" aria-label="准备阶段，按新到旧排列">{displayStages.map(stage => {
         const isCurrent = stage.id === current.id;
@@ -115,6 +119,18 @@ export default function StagePanel({ stageStore, practice, variant = 'tracker', 
         </li>;
       })}</ol> : <div className="career-empty"><p>添加第一个 Stage，记录当前的求职准备状态。</p>{!showAddButton && <button className="career-button" type="button" onClick={() => setEditor({ stage: null })}>＋ 添加 Stage</button>}</div>}
       {error && <p className="career-error" role="alert">{error}</p>}
+    </>
+  );
+  return (
+    <section className={`career-stage-panel career-stage-${variant}${hasSummary ? ' career-stage-panel-summary' : ''}${mobileCollapsible ? ' career-stage-mobile-collapse' : ''}`} aria-label="求职准备阶段">
+      {mobileCollapsible ? <>
+        <button type="button" className="career-stage-mobile-toggle" aria-expanded={mobileExpanded} aria-controls={mobileContentId} onClick={() => setMobileExpanded(expanded => !expanded)}>
+          <span className="career-stage-mobile-title">Stage 概览</span>
+          {latestSummary && <span className="career-stage-mobile-preview"><span>{latestSummary.label}</span><span>{formatStagePeriod(latestSummary)}</span></span>}
+          <ChevronDown className="career-stage-mobile-chevron" size={16} strokeWidth={1.8} aria-hidden="true" />
+        </button>
+        <div id={mobileContentId} className="career-stage-mobile-content" data-expanded={mobileExpanded}>{content}</div>
+      </> : content}
       {editor && <StageDialog key={editor.stage?.id || 'new'} stageStore={stageStore} stage={editor.stage} practice={practice} onClose={() => setEditor(null)} />}
     </section>
   );
