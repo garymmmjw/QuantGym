@@ -196,13 +196,24 @@ export function normalizeProblem(raw = {}, deps = {}) {
   const source = normalizeProblemSource(raw?.source || inferSource(sourceUrl));
   const sourceType = String(raw?.sourceType || raw?.collection || "").trim();
   const bookSlug = String(raw?.bookSlug || "").trim();
+  const ownerUserId = String(raw?.ownerUserId || "").trim();
   const tags = sanitizeProblemTags(Array.isArray(raw?.tags) ? raw.tags.map(String).filter(Boolean) : parseTags(raw?.tags || ""));
   const visibility = String(raw?.visibility || (
     source === "seed" || source === "question-bank" || sourceType === "book" || bookSlug
       ? "public"
       : "user"
   )).trim().toLowerCase();
-  const normalizedVisibility = ["public", "private", "user"].includes(visibility)
+  // Older clients stored private platform rows as user questions. Recognize
+  // only the original, ownerless QuantGuide identity so retired rows can leave
+  // the catalog without changing genuine personal questions or their history.
+  const quantguideSlug = typeof raw?.quantguide?.slug === "string"
+    ? raw.quantguide.slug.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+    : "";
+  const legacyQuantguideCatalog = visibility === "user" && !ownerUserId
+    && source === "quantguide" && bookSlug === "quantguide" && sourceType === "platform"
+    && typeof raw?.quantguide?.id === "string" && raw.quantguide.id.trim()
+    && quantguideSlug && id === `quantguide-${quantguideSlug}`;
+  const normalizedVisibility = legacyQuantguideCatalog ? "private" : ["public", "private", "user"].includes(visibility)
     ? visibility
     : "private";
   return {
@@ -223,7 +234,7 @@ export function normalizeProblem(raw = {}, deps = {}) {
     answer: String(raw?.answer || "").trim(),
     explanation: String(raw?.explanation || raw?.solution || "").trim(),
     visibility: normalizedVisibility,
-    ownerUserId: String(raw?.ownerUserId || "").trim(),
+    ownerUserId,
     createdAt: isLegacyCatalogMarker(raw?.createdAt) ? "catalog" : raw?.createdAt || new Date().toISOString(),
     updatedAt: raw?.updatedAt || "",
     ...pickProblemExtendedFields(raw, { mediaFieldKeys, localizedFieldKeys })

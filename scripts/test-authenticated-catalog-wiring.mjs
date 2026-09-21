@@ -27,7 +27,7 @@ function harness(t, signedIn = true) {
   localStorage.setItem("fixture.cloud", JSON.stringify({ endpoint: "https://fixture.invalid/api", token: "fixture-token", userId: user?.id || "" }));
   const userQuestion = { ...question("user-own", "question-bank", "user"), ownerUserId: "fixture-owner" };
   localStorage.setItem("fixture.state.fixture-owner", JSON.stringify({
-    problems: [question("quantguide-stale", "quantguide"), userQuestion],
+    problems: [{ ...question("quantguide-stale", "quantguide", "user"), sourceType: "platform", quantguide: { id: "fixture-upstream", slug: "stale" } }, userQuestion],
     problemStates: [{ problemId: "quantguide-stale", completed: true }]
   }));
   const rows = [
