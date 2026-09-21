@@ -22,7 +22,8 @@ export function useProblemsPageModel() {
   const api = usePageApi("problems");
   const pageApi = usePageApi();
   const formatDate = pageApi?.formatDate;
-  const userState = useUserStateStore((state) => state.value || {});
+  const userStateSnapshot = useUserStateStore();
+  const userState = userStateSnapshot.value || {};
   const currentUser = useAuthStore((state) => state.currentUser);
   const catalogProblems = useMemo(() => api?.getPracticeCatalog?.() || [], [api, userState.problems]);
   const [searchQuery, setSearchQueryState] = useState(() => api?.getSearchQuery?.() || "");
