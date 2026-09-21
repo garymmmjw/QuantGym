@@ -16,7 +16,7 @@ export function LeetcodeReviewBackpack({ entries = [], problems = [], language =
         const date = entry.baselineCompletedAt && Number.isFinite(Date.parse(entry.baselineCompletedAt)) ? entry.baselineCompletedAt : null;
         return <li key={entry.problemSlug}>
           <a className="lc-backpack-card" href={problemUrl(entry.problemSlug)} target="_blank" rel="noopener noreferrer" aria-label={`${en ? "Review" : "复习"} ${title}`}>
-            <div className="lc-backpack-card-top"><span>#{problem?.frontendId || "—"}</span><span className={`lc-difficulty lc-difficulty-${problem?.difficulty || "unknown"}`}>{labels[problem?.difficulty] || (en ? "Solved" : "已通过")}</span></div>
+            <div className="lc-backpack-card-top"><span>#{problem?.frontendId || "—"}</span><span className={`lc-difficulty lc-difficulty-${problem?.difficulty || "unknown"}`}>{labels[problem?.difficulty] || "—"}</span></div>
             <h3>{title}</h3>
             {!en && problem?.titleEn && problem.titleEn !== title && <p>{problem.titleEn}</p>}
             <div className="lc-backpack-card-bottom"><div><span>{en ? "Last completed" : "上次完成"}</span>{date ? <time dateTime={date}>{new Date(date).toLocaleString(en ? "en-US" : "zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</time> : <span>{en ? "No time recorded" : "暂无时间记录"}</span>}</div><ArrowUpRight size={16} aria-hidden="true" /></div>

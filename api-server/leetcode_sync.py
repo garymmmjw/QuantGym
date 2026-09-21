@@ -6,10 +6,12 @@ third-party URLs and ownership assertions are deliberately outside this format.
 from __future__ import annotations
 
 import copy
+from collections import OrderedDict
 import json
 import math
 import re
 import time
+from threading import Lock
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 from urllib.error import HTTPError, URLError
@@ -26,6 +28,17 @@ REVIEW_RATINGS = {"again": 1, "hard": 3, "good": 4, "easy": 5}
 MIN_SYNC_SECONDS = 60
 FETCH_TIMEOUT_SECONDS = 10
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+MAX_DIFFICULTY_BATCH = 50
+MAX_DIFFICULTY_CACHE = 4096
+DIFFICULTY_FETCH_TIMEOUT_SECONDS = 5
+DIFFICULTY_CACHE_SECONDS = 7 * 24 * 60 * 60
+DIFFICULTY_MISS_SECONDS = 5 * 60
+DIFFICULTY_FAILURE_SECONDS = 60
+_difficulty_cache = OrderedDict()
+_difficulty_cache_lock = Lock()
+_difficulty_fetch_lock = Lock()
+_difficulty_retry_after = 0
+_difficulty_cursor = ""
 # CN's authenticated history reports submission start time; public recent AC
 # can report acceptance a few seconds later. Only the same AC ID and problem
 # may use this bounded compatibility, always choosing the public timestamp.
@@ -84,7 +97,7 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 
-def graphql(query, variables, *, activity=False):
+def graphql(query, variables, *, activity=False, timeout=FETCH_TIMEOUT_SECONDS):
     # These constants, rather than user input, determine every network request.
     endpoint = "https://leetcode.cn/graphql/noj-go/" if activity else "https://leetcode.cn/graphql/"
     request = Request(endpoint, data=json.dumps({"query": query, "variables": variables}).encode(), headers={
@@ -93,7 +106,7 @@ def graphql(query, variables, *, activity=False):
         "Referer": "https://leetcode.cn/",
     }, method="POST")
     try:
-        with build_opener(NoRedirect()).open(request, timeout=FETCH_TIMEOUT_SECONDS) as response:
+        with build_opener(NoRedirect()).open(request, timeout=timeout) as response:
             raw = response.read(MAX_RESPONSE_BYTES + 1)
         if len(raw) > MAX_RESPONSE_BYTES:
             raise LeetCodeError("LeetCode returned too much data. Please try again later.", 502)
@@ -212,6 +225,101 @@ def fetch_profile(username):
     except (KeyError, TypeError, ValueError, OverflowError, OSError):
         raise LeetCodeError("LeetCode returned incomplete activity data. Your saved records are unchanged.", 502) from None
     return {"username": username, "displayName": (profile.get("profile") or {}).get("realName") or profile.get("username") or username, "stats": stats, "submissions": records, "calendar": sorted(calendar, key=lambda row: row["date"]), "calendarYear": year, "profileObservedAfter": profile_observed_after}
+
+
+def fetch_problem_difficulties(slugs):
+    """Best-effort public metadata, bounded to one small GraphQL request.
+
+    CN's recentACSubmissions question shape omits difficulty. Query the public
+    question schema separately; never send an account, session or import data.
+    The process cache contains only public slug/difficulty pairs. A nonblocking
+    fetch lock prevents concurrent account syncs from queuing extra requests.
+    """
+    global _difficulty_retry_after, _difficulty_cursor
+    requested = list(dict.fromkeys(slug for slug in slugs
+                                  if isinstance(slug, str) and PROBLEM_SLUG.fullmatch(slug)))[:MAX_RECORDS]
+    result, missing = {}, []
+    current_time = time.monotonic()
+    with _difficulty_cache_lock:
+        for slug in requested:
+            cached = _difficulty_cache.get(slug)
+            if cached is not None and cached[0] > current_time:
+                _difficulty_cache.move_to_end(slug)
+                if cached[1] is not None:
+                    result[slug] = cached[1]
+            else:
+                missing.append(slug)
+        retry_after = _difficulty_retry_after
+    if not missing or current_time < retry_after or not _difficulty_fetch_lock.acquire(blocking=False):
+        return result
+    try:
+        # An expired/missing entry may have been filled between cache inspection
+        # and acquiring the fetch lock. Recheck instead of duplicating that call.
+        batch = []
+        with _difficulty_cache_lock:
+            # One public slug cursor also survives LRU eviction. A fixed prefix
+            # of unavailable questions must not starve later records, including
+            # libraries larger than the bounded process cache.
+            ordered = sorted(missing)
+            ordered = [slug for slug in ordered if slug > _difficulty_cursor] + [
+                slug for slug in ordered if slug <= _difficulty_cursor]
+            for slug in ordered:
+                cached = _difficulty_cache.get(slug)
+                if cached is not None and cached[0] > time.monotonic():
+                    if cached[1] is not None:
+                        result[slug] = cached[1]
+                elif len(batch) < MAX_DIFFICULTY_BATCH:
+                    batch.append(slug)
+            if batch:
+                _difficulty_cursor = batch[-1]
+        if not batch:
+            return result
+        variables = {f"slug{index}": slug for index, slug in enumerate(batch)}
+        arguments = ", ".join(f"${key}: String!" for key in variables)
+        fields = " ".join(f"q{index}: question(titleSlug: $slug{index}) {{ titleSlug difficulty }}"
+                          for index in range(len(batch)))
+        query = f"query QuantGymProblemDifficulties({arguments}) {{ {fields} }}"
+        try:
+            data = graphql(query, variables, timeout=DIFFICULTY_FETCH_TIMEOUT_SECONDS)
+        except LeetCodeError:
+            with _difficulty_cache_lock:
+                _difficulty_retry_after = time.monotonic() + DIFFICULTY_FAILURE_SECONDS
+            return result
+        received_at = time.monotonic()
+        with _difficulty_cache_lock:
+            for index, slug in enumerate(batch):
+                row = data.get(f"q{index}")
+                difficulty = None
+                if isinstance(row, dict) and row.get("titleSlug") == slug and isinstance(row.get("difficulty"), str):
+                    difficulty = {"Easy": 1, "Medium": 2, "Hard": 3}.get(row.get("difficulty"))
+                ttl = DIFFICULTY_CACHE_SECONDS if difficulty is not None else DIFFICULTY_MISS_SECONDS
+                _difficulty_cache[slug] = (received_at + ttl, difficulty)
+                _difficulty_cache.move_to_end(slug)
+                if difficulty is not None:
+                    result[slug] = difficulty
+            while len(_difficulty_cache) > MAX_DIFFICULTY_CACHE:
+                _difficulty_cache.popitem(last=False)
+        return result
+    finally:
+        _difficulty_fetch_lock.release()
+
+
+def enrich_problem_difficulties(snapshot):
+    """Fill missing library metadata after sync, including older saved ACs.
+
+    This is separate from fresh_snapshot so its model remains deterministic and
+    GET/import never contact LeetCode. Only public difficulty metadata changes.
+    Existing records, completion times and all statistics stay intact.
+    """
+    missing = [row["slug"] for row in snapshot.get("problems", []) if row.get("difficulty") is None]
+    if not missing:
+        return snapshot
+    difficulties = fetch_problem_difficulties(missing)
+    if not difficulties:
+        return snapshot
+    result = copy.deepcopy(snapshot)
+    result.setdefault("_problemDifficulties", {}).update(difficulties)
+    return derive(result)
 
 
 def empty_snapshot():
@@ -706,6 +814,17 @@ def merge_metadata(previous, current):
 
 
 def derive(snapshot):
+    # Official metadata is scoped to this snapshot's connection and cannot be
+    # set through import payloads. Preserve it across later unknown AC metadata
+    # and prevent an import from changing an already known public difficulty.
+    difficulties = {row["problemSlug"]: row["difficulty"] for row in synced_accepted_submissions(snapshot)
+                    if row.get("difficulty") in (1, 2, 3)}
+    difficulties.update(snapshot.get("_problemDifficulties", {}))
+    for key in ("_records", "_syncedAcceptedSubmissions", "_importedProblems"):
+        for row in snapshot.get(key, []):
+            difficulty = difficulties.get(row.get("problemSlug", row.get("slug")))
+            if difficulty is not None:
+                row["difficulty"] = difficulty
     records = snapshot.get("_records", [])
     accepted = sorted((row for row in records if row["status"] == "AC"), key=lambda row: (row["submittedAt"], row["id"]), reverse=True)
     problems = {row["slug"]: row for row in snapshot.get("_importedProblems", [])}
@@ -767,7 +886,7 @@ def fresh_snapshot(previous, incoming):
                 # imported AC. Keep its identity/status so complete history is
                 # not invalidated as though this were a newly discovered AC.
                 records[record["id"]] = canonical_import_record(records[record["id"]], record)
-            synced[record["id"]] = record
+            synced[record["id"]] = merge_metadata(synced.get(record["id"], {}), record)
     snapshot["_records"] = list(records.values())
     if len(synced) > MAX_RECORDS:
         raise LeetCodeError("The synced submission collection exceeds the 20,000 record limit.", 413)

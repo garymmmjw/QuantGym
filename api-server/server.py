@@ -4001,6 +4001,7 @@ class QuantGymHandler(BaseHTTPRequestHandler):
                         return self.send_json(200, leetcode_sync.public_snapshot(previous))
                     incoming = leetcode_sync.fetch_profile(username)
                     next_snapshot = leetcode_sync.fresh_snapshot(previous, incoming)
+                    next_snapshot = leetcode_sync.enrich_problem_difficulties(next_snapshot)
             try:
                 with db.connect() as conn:
                     result = leetcode_sync.save_snapshot(conn, user["id"], revision, next_snapshot)
