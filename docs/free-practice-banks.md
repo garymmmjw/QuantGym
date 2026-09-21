@@ -70,3 +70,9 @@ FREE_PRACTICE_QA_URL=http://127.0.0.1:5176 node scripts/check-free-practice-atte
 浏览器脚本默认使用本机 Google Chrome，可通过 `CHROME_PATH` 指定其他 Chromium。验收包括刷新、账号隔离及模拟经过 24 小时，报告和桌面、手机截图输出到 `artifacts/free-practice-attempts/`。
 
 在公开 checkout 中运行浏览器测试时，通过 `FREE_PRACTICE_QA_CATALOG` 和 `FREE_PRACTICE_QA_PURPLE` 指向本机私有测试目录；脚本只在隔离测试浏览器中注入题库。
+
+认证目录刷新还需在生产构建预览中验证：先让五库空目录显示，再放行模拟接口响应，确认不点击或刷新也会自动显示完整数量。此脚本拦截所有写请求，私有题目仅通过隔离浏览器内的模拟接口返回：
+
+```sh
+QA_URL=http://127.0.0.1:5178 PRIVATE_CATALOG=/path/to/private/problem-catalog.json node scripts/check-authenticated-catalog-browser.mjs
+```
