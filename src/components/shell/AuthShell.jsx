@@ -100,49 +100,6 @@ export function AuthShell() {
   }, [passwordVisible]);
 
   useEffect(() => {
-    const slot = document.getElementById("googleButton");
-    if (!slot) return undefined;
-    // GIS can render a personalized button in a cross-origin iframe. Retain
-    // its native viewport and scale its hit area, using GIS's own margins to
-    // exclude the transparent padding around the real button.
-    const fitGoogleFrames = () => {
-      const { width, height } = slot.getBoundingClientRect();
-      if (!width || !height) return;
-      slot.querySelectorAll("iframe").forEach(frame => {
-        const nativeWidth = Number.parseFloat(frame.style.width);
-        const nativeHeight = Number.parseFloat(frame.style.height);
-        const left = Number.parseFloat(frame.style.marginLeft) || 0;
-        const right = Number.parseFloat(frame.style.marginRight) || 0;
-        const top = Number.parseFloat(frame.style.marginTop) || 0;
-        const bottom = Number.parseFloat(frame.style.marginBottom) || 0;
-        const buttonWidth = nativeWidth + left + right;
-        const buttonHeight = nativeHeight + top + bottom;
-        if (!(buttonWidth > 0 && buttonHeight > 0)) return;
-        const properties = {
-          "--qg-google-frame-width": `${nativeWidth}px`,
-          "--qg-google-frame-height": `${nativeHeight}px`,
-          "--qg-google-frame-left": `${left}px`,
-          "--qg-google-frame-top": `${top}px`,
-          "--qg-google-origin-x": `${-left}px`,
-          "--qg-google-origin-y": `${-top}px`,
-          "--qg-google-scale-x": String(width / buttonWidth),
-          "--qg-google-scale-y": String(height / buttonHeight)
-        };
-        Object.entries(properties).forEach(([name, value]) => {
-          if (frame.style.getPropertyValue(name) !== value) frame.style.setProperty(name, value);
-        });
-        frame.classList.add("qg-google-fitted");
-      });
-    };
-    const resize = new ResizeObserver(fitGoogleFrames);
-    const changes = new MutationObserver(fitGoogleFrames);
-    resize.observe(slot);
-    changes.observe(slot, { childList: true, subtree: true, attributes: true, attributeFilter: ["style"] });
-    fitGoogleFrames();
-    return () => { resize.disconnect(); changes.disconnect(); };
-  }, []);
-
-  useEffect(() => {
     setSleepWallpaperOwned(lastLocalAccountOwnsSleepWallpaper());
   }, []);
 
@@ -373,7 +330,7 @@ export function AuthShell() {
             </form>
 
             <form className="auth-form auth-register-flow hidden" id="registerForm" autoComplete="on" data-register-stage={registerStage}>
-              <p className="auth-flow-note auth-register-info-only" data-i18n={inviteRequired ? "authInviteRegistrationNote" : "authRegistrationNote"}>{inviteRequired ? (en ? "An invitation code is required for new email and Google accounts." : "邮箱和 Google 新用户均需邀请码注册。") : (en ? "Verify your email to create your QuantGym account." : "创建你的 QuantGym 账号，先验证邮箱。")}</p>
+              <p className="auth-flow-note auth-register-info-only" data-i18n={inviteRequired ? "authInviteRegistrationNote" : "authRegistrationNote"}>{inviteRequired ? (en ? "Join with an invitation code and verify your email." : "凭邀请码注册；邮箱验证通过后即可加入。") : (en ? "Verify your email to create your QuantGym account." : "创建你的 QuantGym 账号，先验证邮箱。")}</p>
               <div className={`auth-field auth-register-info-only${inviteRequired ? "" : " hidden"}`}>
                 <label className="auth-field-label" htmlFor="registerInviteCode" data-i18n="invitationCode">邀请码</label>
                 <input id="registerInviteCode" type="text" autoComplete="off" autoCapitalize="none" spellCheck="false" maxLength="128" aria-required={inviteRequired} placeholder="填写收到的邀请码" data-i18n-placeholder="invitationCodePlaceholder" />
@@ -433,18 +390,6 @@ export function AuthShell() {
               <button className="auth-link-button" id="cancelResetPasswordBtn" type="button">← 返回登录</button>
             </form>
 
-            <div className="divider auth-provider-divider"><span data-i18n="authOr">或</span></div>
-
-            <div className="auth-provider-stack">
-              <div className="auth-google-slot">
-                <span className="auth-provider-button auth-google-visual" aria-hidden="true">
-                  <img className="qg-google-mark" src="/assets/generated/playful-precision/google-g.png" alt="" width="24" height="24" />
-                  <span>{en ? "Continue with Google" : "使用 Google 继续"}</span>
-                </span>
-                <div id="googleButton" className="google-button"></div>
-              </div>
-            </div>
-
             <p id="authMessage" className="auth-message" aria-live="polite"></p>
 
             <div className="qg-welcome-switch">
@@ -456,13 +401,6 @@ export function AuthShell() {
 
             <p className="auth-legal-note"><span data-i18n={inviteRequired ? "authInviteLegalNote" : "authOpenLegalNote"}>{inviteRequired ? (en ? "Private beta registration requires an invitation code. By continuing, you agree to" : "私测阶段凭邀请码注册 · 继续即同意") : (en ? "By continuing, you agree to" : "继续即同意")}</span> <span className="auth-legal-link">服务条款</span> 与 <span className="auth-legal-link">隐私政策</span></p>
 
-            <details className="google-config hidden" aria-hidden="true">
-              <summary data-i18n="googleClientSummary">配置 Google Client ID</summary>
-              <div className="config-row">
-                <input id="googleClientIdInput" type="text" spellCheck="false" placeholder="xxxx.apps.googleusercontent.com" />
-                <button className="secondary-button" id="saveGoogleClientBtn" type="button" data-i18n="save">保存</button>
-              </div>
-            </details>
           </div>
         </section>
   );
